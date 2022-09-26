@@ -14,7 +14,7 @@ import (
 
 var _ store.SpaceStore = (*SpaceStoreSync)(nil)
 
-// NewSpaceStoreSync returns a new SpaceStore.
+// NewSpaceStoreSync returns a new SpaceStoreSync.
 func NewSpaceStoreSync(base *SpaceStore) *SpaceStoreSync {
 	return &SpaceStoreSync{base}
 }
@@ -48,11 +48,11 @@ func (s *SpaceStoreSync) Create(ctx context.Context, space *types.Space) error {
 }
 
 // Move moves an existing space.
-func (s *SpaceStoreSync) Move(ctx context.Context, userID int64, spaceID int64, newParentID int64, newName string,
+func (s *SpaceStoreSync) Move(ctx context.Context, principalID int64, spaceID int64, newParentID int64, newName string,
 	keepAsAlias bool) (*types.Space, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.Move(ctx, userID, spaceID, newParentID, newName, keepAsAlias)
+	return s.base.Move(ctx, principalID, spaceID, newParentID, newName, keepAsAlias)
 }
 
 // Update the space details.

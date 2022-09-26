@@ -58,25 +58,25 @@ func (c *HTTPClient) SetDebug(debug bool) {
 }
 
 // Login authenticates the user and returns a JWT token.
-func (c *HTTPClient) Login(ctx context.Context, username, password string) (*types.Token, error) {
+func (c *HTTPClient) Login(ctx context.Context, username, password string) (*types.TokenResponse, error) {
 	form := &url.Values{}
 	form.Add("username", username)
 	form.Add("password", password)
-	out := new(types.UserToken)
-	uri := fmt.Sprintf("%s/api/v1/login?return_user=true", c.base)
+	out := new(types.TokenResponse)
+	uri := fmt.Sprintf("%s/api/v1/login", c.base)
 	err := c.post(ctx, uri, form, out)
-	return out.Token, err
+	return out, err
 }
 
 // Register registers a new  user and returns a JWT token.
-func (c *HTTPClient) Register(ctx context.Context, username, password string) (*types.Token, error) {
+func (c *HTTPClient) Register(ctx context.Context, username, password string) (*types.TokenResponse, error) {
 	form := &url.Values{}
 	form.Add("username", username)
 	form.Add("password", password)
-	out := new(types.UserToken)
-	uri := fmt.Sprintf("%s/api/v1/register?return_user=true", c.base)
+	out := new(types.TokenResponse)
+	uri := fmt.Sprintf("%s/api/v1/register", c.base)
 	err := c.post(ctx, uri, form, out)
-	return out.Token, err
+	return out, err
 }
 
 //
@@ -88,15 +88,6 @@ func (c *HTTPClient) Self(ctx context.Context) (*types.User, error) {
 	out := new(types.User)
 	uri := fmt.Sprintf("%s/api/v1/user", c.base)
 	err := c.get(ctx, uri, out)
-	return out, err
-}
-
-// Token returns an oauth2 bearer token for the currently
-// authenticated user.
-func (c *HTTPClient) Token(ctx context.Context) (*types.Token, error) {
-	out := new(types.Token)
-	uri := fmt.Sprintf("%s/api/v1/user/token", c.base)
-	err := c.post(ctx, uri, nil, out)
 	return out, err
 }
 

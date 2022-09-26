@@ -17,7 +17,7 @@ import (
 /*
  * Writes json-encoded repository information to the http response body.
  */
-func HandleFind(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
+func HandleFind(guard *guard.Guard, repoStore store.RepoStore) http.HandlerFunc {
 	return guard.Repo(
 		enum.PermissionRepoView,
 		true,

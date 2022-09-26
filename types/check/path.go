@@ -63,7 +63,7 @@ func Path(path string, isSpace bool) error {
 	for _, s := range segments {
 		if s == "" {
 			return ErrEmptyPathSegment
-		} else if err := Name(s); err != nil {
+		} else if err := PathName(s); err != nil {
 			return errors.Wrapf(err, "Invalid segment '%s'", s)
 		}
 	}

@@ -8,27 +8,13 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/render"
-	"github.com/harness/gitness/internal/api/render/platform"
 	"github.com/harness/gitness/internal/api/request"
 )
 
 // HandleFind returns an http.HandlerFunc that writes json-encoded
 // account information to the http response body.
-func HandleFind() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		user, _ := request.UserFrom(ctx)
-		render.JSON(w, http.StatusOK, user)
-	}
-}
-
-// func returns an http.HandlerFunc that writes json-encoded
-// account information to the http response body in platform
-// format.
-func HandleCurrent() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		user, _ := request.UserFrom(ctx)
-		platform.RenderResource(w, http.StatusOK, user)
-	}
+func HandleFind(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	user, _ := request.UserFrom(ctx)
+	render.JSON(w, http.StatusOK, user)
 }

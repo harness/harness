@@ -33,10 +33,13 @@ func New(
 	userStore store.UserStore,
 	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
+	tokenStore store.TokenStore,
+	saStore store.ServiceAccountStore,
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer,
 ) (http.Handler, error) {
-	api := newAPIHandler(restMount, systemStore, userStore, spaceStore, repoStore, authenticator, authorizer)
+	api := newAPIHandler(restMount, systemStore, userStore, spaceStore, repoStore, tokenStore, saStore,
+		authenticator, authorizer)
 	git := newGitHandler("/", systemStore, userStore, spaceStore, repoStore, authenticator, authorizer)
 	web := newWebHandler("/", systemStore)
 

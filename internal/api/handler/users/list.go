@@ -16,7 +16,7 @@ import (
 
 // HandleList returns an http.HandlerFunc that writes a json-encoded
 // list of all registered system users to the response body.
-func HandleList(users store.UserStore) http.HandlerFunc {
+func HandleList(userStore store.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
@@ -26,13 +26,13 @@ func HandleList(users store.UserStore) http.HandlerFunc {
 			params.Order = enum.OrderAsc
 		}
 
-		count, err := users.Count(ctx)
+		count, err := userStore.Count(ctx)
 		if err != nil {
 			log.Err(err).
 				Msg("Failed to retrieve user count")
 		}
 
-		list, err := users.List(ctx, params)
+		list, err := userStore.List(ctx, params)
 		if err != nil {
 			log.Err(err).
 				Msg("Failed to retrieve user list")

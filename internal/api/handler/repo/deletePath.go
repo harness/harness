@@ -18,7 +18,7 @@ import (
 /*
  * Deletes a given path.
  */
-func HandleDeletePath(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
+func HandleDeletePath(guard *guard.Guard, repoStore store.RepoStore) http.HandlerFunc {
 	return guard.Repo(
 		enum.PermissionRepoEdit,
 		false,
@@ -33,7 +33,7 @@ func HandleDeletePath(guard *guard.Guard, repos store.RepoStore) http.HandlerFun
 				return
 			}
 
-			err = repos.DeletePath(ctx, repo.ID, pathID)
+			err = repoStore.DeletePath(ctx, repo.ID, pathID)
 			if err != nil {
 				log.Err(err).Int64("path_id", pathID).
 					Msgf("Failed to delete repo path.")

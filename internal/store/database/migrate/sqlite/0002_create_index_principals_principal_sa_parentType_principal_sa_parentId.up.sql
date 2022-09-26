@@ -1,0 +1,2 @@
+CREATE INDEX IF NOT EXISTS index_principals_principal_sa_parentType_principal_sa_parentId
+ON principals(principal_sa_parentType, principal_sa_parentId);

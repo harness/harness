@@ -24,7 +24,7 @@ func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler 
 			ctx := r.Context()
 			log := hlog.FromRequest(r)
 
-			user, err := authenticator.Authenticate(r)
+			session, err := authenticator.Authenticate(r)
 
 			if errors.Is(err, authn.ErrNoAuthData) {
 				// if there was no auth data in the request - continue as is
@@ -33,26 +33,31 @@ func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler 
 			}
 
 			if err != nil {
+				log.Warn().Msgf("Failed to authenticate request: %s", err)
+
 				// for any other error we fail
 				render.Unauthorized(w)
 				return
 			}
 
-			if user == nil {
-				// when err == nil user should never be nil!
-				log.Error().Msg("User is nil eventhough the authenticator didn't return any error!")
+			if session == nil {
+				// when err == nil session should never be nil!
+				log.Error().Msg("auth session is nil eventhough the authenticator didn't return any error!")
 
 				render.InternalError(w)
 				return
 			}
 
-			// Update the logging context and inject user in context
+			// Update the logging context and inject principal in context
 			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-				return c.Int64("user_id", user.ID).Bool("user_admin", user.Admin)
+				return c.
+					Int64("principal_id", session.Principal.ID).
+					Str("principal_type", string(session.Principal.Type)).
+					Bool("principal_admin", session.Principal.Admin)
 			})
 
 			next.ServeHTTP(w, r.WithContext(
-				request.WithUser(ctx, user),
+				request.WithAuthSession(ctx, session),
 			))
 		})
 	}

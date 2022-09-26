@@ -10,29 +10,43 @@ import (
 )
 
 const (
-	minNameLength = 1
-	maxNameLength = 64
-	nameRegex     = "^[a-z][a-z0-9\\-\\_]*$"
+	minPathNameLength = 1
+	maxPathNameLength = 64
+	pathNameRegex     = "^[a-z][a-z0-9\\-\\_]*$"
 
-	minDisplayNameLength = 1
-	maxDisplayNameLength = 256
-	displayNameRegex     = "^[a-zA-Z][a-zA-Z0-9\\-\\_ ]*$"
+	minNameLength = 1
+	maxNameLength = 256
+	nameRegex     = "^[a-zA-Z][a-zA-Z0-9\\-\\_ ]*$"
 )
 
 var (
-	ErrNameLength = &ValidationError{
-		fmt.Sprintf("Name has to be between %d and %d in length.", minNameLength, maxNameLength),
+	ErrPathNameLength = &ValidationError{
+		fmt.Sprintf("Path name has to be between %d and %d in length.", minPathNameLength, maxPathNameLength),
 	}
-	ErrNameRegex = &ValidationError{"Name has start with a letter and only contain the following [a-z0-9-_]."}
+	ErrPathNameRegex = &ValidationError{"Path name has start with a letter and only contain the following [a-z0-9-_]."}
 
-	ErrDisplayNameLength = &ValidationError{
-		fmt.Sprintf("Display name has to be between %d and %d in length.",
-			minDisplayNameLength, maxDisplayNameLength),
+	ErrNameLength = &ValidationError{
+		fmt.Sprintf("Name has to be between %d and %d in length.",
+			minNameLength, maxNameLength),
 	}
-	ErrDisplayNameRegex = &ValidationError{
-		"Display name has start with a letter and only contain the following [a-zA-Z0-9-_ ].",
+	ErrNameRegex = &ValidationError{
+		"Name has start with a letter and only contain the following [a-zA-Z0-9-_ ].",
 	}
 )
+
+// PathName checks the provided name and returns an error in it isn't valid.
+func PathName(pathName string) error {
+	l := len(pathName)
+	if l < minPathNameLength || l > maxPathNameLength {
+		return ErrPathNameLength
+	}
+
+	if ok, _ := regexp.Match(pathNameRegex, []byte(pathName)); !ok {
+		return ErrPathNameRegex
+	}
+
+	return nil
+}
 
 // Name checks the provided name and returns an error in it isn't valid.
 func Name(name string) error {
@@ -43,20 +57,6 @@ func Name(name string) error {
 
 	if ok, _ := regexp.Match(nameRegex, []byte(name)); !ok {
 		return ErrNameRegex
-	}
-
-	return nil
-}
-
-// DisplayName checks the provided name and returns an error in it isn't valid.
-func DisplayName(name string) error {
-	l := len(name)
-	if l < minDisplayNameLength || l > maxDisplayNameLength {
-		return ErrDisplayNameLength
-	}
-
-	if ok, _ := regexp.Match(displayNameRegex, []byte(name)); !ok {
-		return ErrDisplayNameRegex
 	}
 
 	return nil

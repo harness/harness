@@ -13,25 +13,25 @@ type SpaceAttr int
 const (
 	SpaceAttrNone SpaceAttr = iota
 	SpaceAttrID
-	SpaceAttrName
+	SpaceAttrPathName
 	SpaceAttrPath
-	SpaceAttrDisplayName
+	SpaceAttrName
 	SpaceAttrCreated
 	SpaceAttrUpdated
 )
 
-// ParseSpaceAttr parses the user attribute string
+// ParseSpaceAttr parses the space attribute string
 // and returns the equivalent enumeration.
 func ParseSpaceAttr(s string) SpaceAttr {
 	switch strings.ToLower(s) {
 	case "id":
 		return SpaceAttrID
-	case "name":
-		return SpaceAttrName
+	case "pathname", "path_name":
+		return SpaceAttrPathName
 	case "path":
 		return SpaceAttrPath
-	case "displayname", "display_name":
-		return SpaceAttrDisplayName
+	case "name":
+		return SpaceAttrName
 	case "created", "created_at":
 		return SpaceAttrCreated
 	case "updated", "updated_at":

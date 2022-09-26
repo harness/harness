@@ -2,7 +2,7 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package cli
+package account
 
 import (
 	"os"
@@ -23,7 +23,7 @@ func (c *logoutCommand) run(*kingpin.ParseContext) error {
 }
 
 // helper function to register the logout command.
-func registerLogout(app *kingpin.Application) {
+func RegisterLogout(app *kingpin.Application) {
 	c := new(logoutCommand)
 
 	app.Command("logout", "logout from the remote server").

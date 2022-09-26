@@ -77,17 +77,21 @@ func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
 	switch opts.Sort {
-	case enum.UserAttrCreated:
+	case enum.UserAttrName, enum.UserAttrNone:
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("user_id " + opts.Order.String())
+		stmt = stmt.OrderBy("principal_name " + opts.Order.String())
+	case enum.UserAttrCreated:
+		stmt = stmt.OrderBy("principal_created " + opts.Order.String())
 	case enum.UserAttrUpdated:
-		stmt = stmt.OrderBy("user_updated " + opts.Order.String())
+		stmt = stmt.OrderBy("principal_updated " + opts.Order.String())
 	case enum.UserAttrEmail:
-		stmt = stmt.OrderBy("user_email " + opts.Order.String())
+		stmt = stmt.OrderBy("principal_user_email " + opts.Order.String())
 	case enum.UserAttrID:
-		stmt = stmt.OrderBy("user_id " + opts.Order.String())
+		stmt = stmt.OrderBy("principal_id " + opts.Order.String())
+	case enum.UserAttrAdmin:
+		stmt = stmt.OrderBy("principal_admin " + opts.Order.String())
 	}
 
 	sql, _, err := stmt.ToSql()
@@ -158,81 +162,80 @@ func (s *UserStore) Count(ctx context.Context) (int64, error) {
 
 const userCount = `
 SELECT count(*)
-FROM users
+FROM principals
+WHERE principal_type = "user"
 `
 
 const userBase = `
 SELECT
- user_id
-,user_email
-,user_name
-,user_company
-,user_password
-,user_salt
-,user_admin
-,user_blocked
-,user_created
-,user_updated
-,user_authed
-FROM users
+principal_id
+,principal_name
+,principal_admin
+,principal_externalId
+,principal_blocked
+,principal_salt
+,principal_created
+,principal_updated
+,principal_user_email
+,principal_user_password
+FROM principals
 `
 
 const userSelect = userBase + `
-ORDER BY user_email ASC
+WHERE principal_type = "user"
+ORDER BY principal_name ASC
 LIMIT $1 OFFSET $2
 `
 
 const userSelectID = userBase + `
-WHERE user_id = $1
+WHERE principal_type = "user" AND principal_id = $1
 `
 
 const userSelectEmail = userBase + `
-WHERE user_email = $1
+WHERE principal_type = "user" AND principal_user_email = $1
 `
 
 const userDelete = `
-DELETE FROM users
-WHERE user_id = $1
+DELETE FROM principals
+WHERE principal_type = "user" AND principal_id = $1
 `
 
 const userInsert = `
-INSERT INTO users (
- user_email
-,user_name
-,user_company
-,user_password
-,user_salt
-,user_admin
-,user_blocked
-,user_created
-,user_updated
-,user_authed
+INSERT INTO principals (
+principal_type
+,principal_name
+,principal_admin
+,principal_externalId
+,principal_blocked
+,principal_salt
+,principal_created
+,principal_updated
+,principal_user_email
+,principal_user_password
 ) values (
- :user_email
-,:user_name
-,:user_company
-,:user_password
-,:user_salt
-,:user_admin
-,:user_blocked
-,:user_created
-,:user_updated
-,:user_authed
-) RETURNING user_id
+"user"
+,:principal_name
+,:principal_admin
+,:principal_externalId
+,:principal_blocked
+,:principal_salt
+,:principal_created
+,:principal_updated
+,:principal_user_email
+,:principal_user_password
+) RETURNING principal_id
 `
 
 const userUpdate = `
-UPDATE users
+UPDATE principals
 SET
- user_email     = :user_email
-,user_name      = :user_name
-,user_company   = :user_company
-,user_password  = :user_password
-,user_salt     = :user_salt
-,user_admin     = :user_admin
-,user_blocked   = :user_blocked
-,user_created   = :user_created
-,user_updated   = :user_updated
-,user_authed    = :user_authed
-WHERE user_id = :user_id
+ principal_name    = :principal_name
+,principal_admin          = :principal_admin
+,principal_externalId     = :principal_externalId
+,principal_blocked        = :principal_blocked
+,principal_salt           = :principal_salt
+,principal_updated        = :principal_updated
+,principal_user_email     = :principal_user_email
+,principal_user_password  = :principal_user_password
+WHERE principal_type = "user" AND principal_id = :principal_id
 `

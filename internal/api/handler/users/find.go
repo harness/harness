@@ -8,27 +8,16 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/store"
-	"github.com/rs/zerolog/hlog"
-
-	"github.com/go-chi/chi"
 )
 
 // HandleFind returns an http.HandlerFunc that writes json-encoded
 // user account information to the the response body.
-func HandleFind(users store.UserStore) http.HandlerFunc {
+func HandleFind(userStore store.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		log := hlog.FromRequest(r)
-
-		key := chi.URLParam(r, "user")
-		user, err := users.FindKey(ctx, key)
-		if err != nil {
-			log.Debug().Err(err).Msgf("Failed to get user using key '%s'.", key)
-
-			render.UserfiedErrorOrInternal(w, err)
-			return
-		}
+		user, _ := request.UserFrom(ctx)
 
 		render.JSON(w, http.StatusOK, user)
 	}

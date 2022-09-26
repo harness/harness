@@ -22,10 +22,10 @@ https://www.slideshare.net/billkarwin/models-for-hierarchical-data
 */
 type Space struct {
 	ID          int64  `db:"space_id"              json:"id"`
-	Name        string `db:"space_name"            json:"name"`
-	Path        string `db:"space_path"             json:"path"`
 	ParentID    int64  `db:"space_parentId"        json:"parentId"`
-	DisplayName string `db:"space_displayName"     json:"displayName"`
+	PathName    string `db:"space_pathName"        json:"pathName"`
+	Path        string `db:"space_path"            json:"path"`
+	Name        string `db:"space_name"            json:"name"`
 	Description string `db:"space_description"     json:"description"`
 	IsPublic    bool   `db:"space_isPublic"        json:"isPublic"`
 	CreatedBy   int64  `db:"space_createdBy"       json:"createdBy"`

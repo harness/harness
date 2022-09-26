@@ -63,12 +63,13 @@ func (g *Guard) Space(permission enum.Permission, orPublic bool, guarded http.Ha
  * Enforces that the executing principal has requested permission on the space.
  * Returns true if that is the case, otherwise renders the appropriate error and returns false.
  */
-func (g *Guard) EnforceSpace(w http.ResponseWriter, r *http.Request, permission enum.Permission, path string) bool {
-	parentSpace, name, err := paths.Disect(path)
+func (g *Guard) EnforceSpace(w http.ResponseWriter, r *http.Request,
+	permission enum.Permission, spacePath string) bool {
+	parentSpace, name, err := paths.Disect(spacePath)
 	if err != nil {
 		// log error for debugging
 		hlog.FromRequest(r)
-		log.Err(err).Msgf("Failed to disect path '%s'.", path)
+		log.Err(err).Msgf("Failed to disect path '%s'.", spacePath)
 
 		render.InternalError(w)
 		return false
@@ -85,13 +86,13 @@ func (g *Guard) EnforceSpace(w http.ResponseWriter, r *http.Request, permission 
 
 /*
  * Checks whether the principal executing the request has the requested permission on the space.
- * Returns nil if the user is confirmed to be permitted to execute the action, otherwise returns errors
+ * Returns nil if the principal is confirmed to be permitted to execute the action, otherwise returns errors
  * NotAuthenticated, NotAuthorized, or any unerlaying error.
  */
-func (g *Guard) CheckSpace(r *http.Request, permission enum.Permission, path string) error {
-	parentSpace, name, err := paths.Disect(path)
+func (g *Guard) CheckSpace(r *http.Request, permission enum.Permission, spacePath string) error {
+	parentSpace, name, err := paths.Disect(spacePath)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to disect path '%s'", path)
+		return errors.Wrapf(err, "Failed to disect path '%s'", spacePath)
 	}
 
 	scope := &types.Scope{SpacePath: parentSpace}

@@ -8,29 +8,29 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/store"
 	"github.com/rs/zerolog/hlog"
-
-	"github.com/go-chi/chi"
 )
 
 // HandleDelete returns an http.HandlerFunc that processes an http.Request
 // to delete the named user account from the system.
-func HandleDelete(users store.UserStore) http.HandlerFunc {
+func HandleDelete(userStore store.UserStore, tokenStore store.TokenStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
+		user, _ := request.UserFrom(ctx)
 
-		key := chi.URLParam(r, "user")
-		user, err := users.FindKey(ctx, key)
+		// delete all tokens (okay if we fail after - user is tried to being deleted anyway)
+		err := tokenStore.DeleteForPrincipal(ctx, user.ID)
 		if err != nil {
-			log.Err(err).Msgf("Failed to get user using key '%s'.", key)
+			log.Error().Err(err).Msg("Failed to delete tokens for user.")
 
 			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
-		err = users.Delete(ctx, user)
+		err = userStore.Delete(ctx, user)
 		if err != nil {
 			log.Error().Err(err).
 				Int64("user_id", user.ID).

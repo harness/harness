@@ -24,7 +24,7 @@ var hashPassword = bcrypt.GenerateFromPassword
 
 // HandleUpdate returns an http.HandlerFunc that processes an http.Request
 // to update the current user account.
-func HandleUpdate(users store.UserStore) http.HandlerFunc {
+func HandleUpdate(userStore store.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
@@ -53,11 +53,7 @@ func HandleUpdate(users store.UserStore) http.HandlerFunc {
 			user.Name = ptr.ToString(in.Name)
 		}
 
-		if in.Company != nil {
-			user.Company = ptr.ToString(in.Company)
-		}
-
-		err = users.Update(ctx, user)
+		err = userStore.Update(ctx, user)
 		if err != nil {
 			log.Err(err).Msg("Failed to update the user.")
 

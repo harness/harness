@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 type (
@@ -39,6 +40,27 @@ type (
 		Count(ctx context.Context) (int64, error)
 	}
 
+	// ServiceAccountStore defines the service account data storage.
+	ServiceAccountStore interface {
+		// Find finds the service account by id.
+		Find(ctx context.Context, id int64) (*types.ServiceAccount, error)
+
+		// Create saves the service account.
+		Create(ctx context.Context, sa *types.ServiceAccount) error
+
+		// Update updates the service account details.
+		Update(ctx context.Context, sa *types.ServiceAccount) error
+
+		// Delete deletes the service account.
+		Delete(ctx context.Context, id int64) error
+
+		// List returns a list of service accounts for a specific parent.
+		List(ctx context.Context, parentType enum.ParentResourceType, parentID int64) ([]*types.ServiceAccount, error)
+
+		// Count returns a count of service accounts for a specific parent.
+		Count(ctx context.Context, parentType enum.ParentResourceType, parentID int64) (int64, error)
+	}
+
 	// SpaceStore defines the space data storage.
 	SpaceStore interface {
 		// Find the space by id.
@@ -51,7 +73,7 @@ type (
 		Create(ctx context.Context, space *types.Space) error
 
 		// Move moves an existing space.
-		Move(ctx context.Context, userID int64, spaceID int64, newParentID int64, newName string,
+		Move(ctx context.Context, principalID int64, spaceID int64, newParentID int64, newName string,
 			keepAsAlias bool) (*types.Space, error)
 
 		// Update updates the space details.
@@ -88,7 +110,7 @@ type (
 		Create(ctx context.Context, repo *types.Repository) error
 
 		// Move moves an existing repo.
-		Move(ctx context.Context, userID int64, repoID int64, newSpaceID int64, newName string,
+		Move(ctx context.Context, principalID int64, repoID int64, newSpaceID int64, newName string,
 			keepAsAlias bool) (*types.Repository, error)
 
 		// Update the repo details.
@@ -111,6 +133,27 @@ type (
 
 		// DeletePath delete an alias of a repo
 		DeletePath(ctx context.Context, repoID int64, pathID int64) error
+	}
+
+	// TokenStore defines the token data storage.
+	TokenStore interface {
+		// Find finds the token by id
+		Find(ctx context.Context, id int64) (*types.Token, error)
+
+		// Create saves the token details.
+		Create(ctx context.Context, token *types.Token) error
+
+		// Delete deletes the token with the given id.
+		Delete(ctx context.Context, id int64) error
+
+		// Delete deletes all tokens for a specific principal
+		DeleteForPrincipal(ctx context.Context, principalID int64) error
+
+		// List returns a list of tokens of a specific type for a specific principal.
+		List(ctx context.Context, principalID int64, tokenType enum.TokenType) ([]*types.Token, error)
+
+		// Count returns a count of tokens of a specifc type for a specific principal.
+		Count(ctx context.Context, principalID int64, tokenType enum.TokenType) (int64, error)
 	}
 
 	// SystemStore defines internal system metadata storage.

@@ -7,6 +7,7 @@ package cli
 import (
 	"os"
 
+	"github.com/harness/gitness/cli/util"
 	"github.com/harness/gitness/internal/api/openapi"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -22,7 +23,7 @@ func (c *swaggerCommand) run(*kingpin.ParseContext) error {
 		os.Stdout.Write(data)
 		return nil
 	}
-	return os.WriteFile(c.path, data, OwnerReadWrite)
+	return os.WriteFile(c.path, data, util.OwnerReadWrite)
 }
 
 // helper function to register the swagger command.

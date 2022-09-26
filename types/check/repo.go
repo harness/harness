@@ -17,12 +17,12 @@ var (
 // Repo checks the provided repository and returns an error in it isn't valid.
 func Repo(repo *types.Repository) error {
 	// validate name
-	if err := Name(repo.Name); err != nil {
+	if err := PathName(repo.PathName); err != nil {
 		return err
 	}
 
 	// validate display name
-	if err := DisplayName(repo.DisplayName); err != nil {
+	if err := Name(repo.Name); err != nil {
 		return err
 	}
 

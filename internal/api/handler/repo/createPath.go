@@ -24,7 +24,7 @@ import (
 /*
  * Writes json-encoded path information to the http response body.
  */
-func HandleCreatePath(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
+func HandleCreatePath(guard *guard.Guard, repoStore store.RepoStore) http.HandlerFunc {
 	return guard.Repo(
 		enum.PermissionRepoEdit,
 		false,
@@ -32,7 +32,7 @@ func HandleCreatePath(guard *guard.Guard, repos store.RepoStore) http.HandlerFun
 			ctx := r.Context()
 			log := hlog.FromRequest(r)
 			repo, _ := request.RepoFrom(ctx)
-			usr, _ := request.UserFrom(ctx)
+			principal, _ := request.PrincipalFrom(ctx)
 
 			in := new(common.CreatePathRequest)
 			err := json.NewDecoder(r.Body).Decode(in)
@@ -43,7 +43,7 @@ func HandleCreatePath(guard *guard.Guard, repos store.RepoStore) http.HandlerFun
 
 			params := &types.PathParams{
 				Path:      strings.ToLower(in.Path),
-				CreatedBy: usr.ID,
+				CreatedBy: principal.ID,
 				Created:   time.Now().UnixMilli(),
 				Updated:   time.Now().UnixMilli(),
 			}
@@ -54,8 +54,8 @@ func HandleCreatePath(guard *guard.Guard, repos store.RepoStore) http.HandlerFun
 				return
 			}
 
-			// TODO: ensure user is authorized to create a path pointing to in.Path
-			path, err := repos.CreatePath(ctx, repo.ID, params)
+			// TODO: ensure principal is authorized to create a path pointing to in.Path
+			path, err := repoStore.CreatePath(ctx, repo.ID, params)
 			if err != nil {
 				log.Error().Err(err).
 					Msg("Failed to create path for repo.")

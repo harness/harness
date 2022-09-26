@@ -7,11 +7,13 @@ package user
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/mocks"
 	"github.com/harness/gitness/types"
 	"golang.org/x/crypto/bcrypt"
@@ -43,9 +45,8 @@ func TestUpdate(t *testing.T) {
 	}()
 
 	userInput := &types.UserInput{
-		Username: ptr.String("octocat@google.com"),
+		Email:    ptr.String("octocat@google.com"),
 		Password: ptr.String("password"),
-		Company:  ptr.String("google"),
 	}
 	before := &types.User{
 		Email:    "octocat@google.com",
@@ -53,6 +54,7 @@ func TestUpdate(t *testing.T) {
 	}
 
 	users := mocks.NewMockUserStore(controller)
+	users.EXPECT().Find(gomock.Any(), before.ID).Return(before, nil)
 	users.EXPECT().Update(gomock.Any(), before)
 
 	in := new(bytes.Buffer)
@@ -60,7 +62,9 @@ func TestUpdate(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("PATCH", "/api/v1/user", in)
 	r = r.WithContext(
-		request.WithUser(r.Context(), before),
+		request.WithAuthSession(
+			r.Context(),
+			&auth.Session{Principal: *types.PrincipalFromUser(before), Metadata: &auth.EmptyMetadata{}}),
 	)
 
 	HandleUpdate(users)(w, r)
@@ -76,8 +80,7 @@ func TestUpdate(t *testing.T) {
 	}
 
 	after := &types.User{
-		Email:   "octocat@google.com",
-		Company: "google",
+		Email: "octocat@google.com",
 		// Password hash is not exposecd to JSON
 	}
 	got, want := new(types.User), after
@@ -102,22 +105,28 @@ func TestUpdate_HashError(t *testing.T) {
 	defer controller.Finish()
 
 	userInput := &types.UserInput{
-		Username: ptr.String("octocat@github.com"),
+		Email:    ptr.String("octocat@github.com"),
 		Password: ptr.String("password"),
 	}
 	user := &types.User{
 		Email: "octocat@github.com",
 	}
 
+	users := mocks.NewMockUserStore(controller)
+	users.EXPECT().Find(gomock.Any(), user.ID).Return(user, nil)
+
 	in := new(bytes.Buffer)
 	_ = json.NewEncoder(in).Encode(userInput)
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("PATCH", "/api/v1/user", in)
 	r = r.WithContext(
-		request.WithUser(r.Context(), user),
+		request.WithAuthSession(
+			r.Context(),
+			&auth.Session{Principal: *types.PrincipalFromUser(user), Metadata: &auth.EmptyMetadata{}}),
 	)
 
-	HandleUpdate(nil)(w, r)
+	HandleUpdate(users)(w, r)
+
 	if got, want := w.Code, 500; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -143,14 +152,19 @@ func TestUpdate_BadRequest(t *testing.T) {
 		Email: "octocat@github.com",
 	}
 
+	users := mocks.NewMockUserStore(controller)
+	users.EXPECT().Find(gomock.Any(), mockUser.ID).Return(mockUser, nil)
+
 	in := new(bytes.Buffer)
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("PATCH", "/api/v1/user", in)
 	r = r.WithContext(
-		request.WithUser(r.Context(), mockUser),
+		request.WithAuthSession(
+			r.Context(),
+			&auth.Session{Principal: *types.PrincipalFromUser(mockUser), Metadata: &auth.EmptyMetadata{}}),
 	)
 
-	HandleUpdate(nil)(w, r)
+	HandleUpdate(users)(w, r)
 	if got, want := w.Code, 400; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
@@ -172,21 +186,24 @@ func TestUpdate_ServerError(t *testing.T) {
 	defer controller.Finish()
 
 	userInput := &types.UserInput{
-		Username: ptr.String("octocat@github.com"),
+		Email: ptr.String("octocat@github.com"),
 	}
 	user := &types.User{
 		Email: "octocat@github.com",
 	}
 
 	users := mocks.NewMockUserStore(controller)
-	users.EXPECT().Update(gomock.Any(), user).Return(render.ErrNotFound)
+	users.EXPECT().Find(gomock.Any(), user.ID).Return(user, nil)
+	users.EXPECT().Update(gomock.Any(), user).Return(fmt.Errorf("Error from UT"))
 
 	in := new(bytes.Buffer)
 	_ = json.NewEncoder(in).Encode(userInput)
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest("PATCH", "/api/v1/user", in)
 	r = r.WithContext(
-		request.WithUser(r.Context(), user),
+		request.WithAuthSession(
+			r.Context(),
+			&auth.Session{Principal: *types.PrincipalFromUser(user), Metadata: &auth.EmptyMetadata{}}),
 	)
 
 	HandleUpdate(users)(w, r)

@@ -10,26 +10,26 @@ import (
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/token"
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/hlog"
 )
 
-// HandleToken returns an http.HandlerFunc that generates and
-// writes a json-encoded token to the http.Response body.
-func HandleToken(users store.UserStore) http.HandlerFunc {
+// HandleListPATs returns an http.HandlerFunc that
+// writes a json-encoded list of Tokens to the http.Response body.
+func HandleListPATs(tokenStore store.TokenStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log := hlog.FromRequest(r)
-		user, _ := request.UserFrom(r.Context())
+		ctx := r.Context()
+		user, _ := request.UserFrom(ctx)
 
-		token, err := token.Generate(user, user.Salt)
+		res, err := tokenStore.List(ctx, user.ID, enum.TokenTypePAT)
 		if err != nil {
-			log.Err(err).Msg("failed to generate token")
+			log.Err(err).Msg("failed to list PATs")
 
 			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, &types.Token{Value: token})
+		render.JSON(w, http.StatusOK, res)
 	}
 }

@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS spaces (
  space_id           SERIAL PRIMARY KEY
-,space_name         TEXT
+,space_pathName     TEXT
 ,space_parentId     INTEGER
-,space_displayName  TEXT
+,space_name         TEXT
 ,space_description  TEXT
 ,space_isPublic     BOOLEAN
 ,space_createdBy    INTEGER

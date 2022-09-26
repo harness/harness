@@ -118,6 +118,7 @@ func testUserCount(store store.UserStore) func(t *testing.T) {
 // this test fetches users from the database by id and key
 // and compares to the expected results (sourced from a json file)
 // to ensure all columns are correctly mapped.
+//nolint:gocognit,goimports // test method, keep for now
 func testUserFind(store store.UserStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		ctx := context.Background()
@@ -223,7 +224,6 @@ func testUserUpdate(store store.UserStore) func(t *testing.T) {
 			return
 		}
 		before.Updated = time.Now().Unix()
-		before.Authed = time.Now().Unix()
 		if err = store.Update(ctx, before); err != nil {
 			t.Error(err)
 			return

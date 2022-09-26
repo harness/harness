@@ -21,7 +21,7 @@ import (
 
 // HandleRegister returns an http.HandlerFunc that processes an http.Request
 // to register the named user account with the system.
-func HandleRegister(users store.UserStore, system store.SystemStore) http.HandlerFunc {
+func HandleRegister(userStore store.UserStore, system store.SystemStore, tokenStore store.TokenStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
@@ -58,7 +58,7 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 			return
 		}
 
-		if err = users.Create(ctx, user); err != nil {
+		if err = userStore.Create(ctx, user); err != nil {
 			log.Err(err).
 				Str("email", username).
 				Msg("Failed to create user")
@@ -72,7 +72,7 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 		// user system admin access.
 		if user.ID == 1 {
 			user.Admin = true
-			if err = users.Update(ctx, user); err != nil {
+			if err = userStore.Update(ctx, user); err != nil {
 				log.Err(err).
 					Str("email", username).
 					Int64("user_id", user.ID).
@@ -83,31 +83,16 @@ func HandleRegister(users store.UserStore, system store.SystemStore) http.Handle
 			}
 		}
 
-		expires := time.Now().Add(system.Config(ctx).Token.Expire)
-		token, err := token.GenerateExp(user, expires.Unix(), user.Salt)
+		token, jwtToken, err := token.CreateUserSession(ctx, tokenStore, user, "register")
 		if err != nil {
 			log.Err(err).
-				Str("email", username).
-				Int64("user_id", user.ID).
-				Msg("Failed to generate token")
+				Str("user", username).
+				Msg("failed to generate token")
 
 			render.InternalError(w)
 			return
 		}
 
-		// return the token if the with_user boolean
-		// query parameter is set to true.
-		if r.FormValue("return_user") == "true" {
-			render.JSON(w, http.StatusOK, &types.UserToken{
-				User: user,
-				Token: &types.Token{
-					Value:   token,
-					Expires: expires.UTC(),
-				},
-			})
-		} else {
-			// else return the token only.
-			render.JSON(w, http.StatusOK, &types.Token{Value: token})
-		}
+		render.JSON(w, http.StatusOK, &types.TokenResponse{Token: *token, AccessToken: jwtToken})
 	}
 }

@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS repositories (
  repo_id                INTEGER PRIMARY KEY AUTOINCREMENT
-,repo_name              TEXT COLLATE NOCASE
+,repo_pathName          TEXT COLLATE NOCASE
 ,repo_spaceId           INTEGER
-,repo_displayName       TEXT
+,repo_name              TEXT
 ,repo_description       TEXT
 ,repo_isPublic          BOOLEAN
 ,repo_createdBy         INTEGER

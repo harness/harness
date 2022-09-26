@@ -19,7 +19,7 @@ import (
 )
 
 type spaceUpdateRequest struct {
-	DisplayName *string `json:"displayName"`
+	Name        *string `json:"name"`
 	Description *string `json:"description"`
 	IsPublic    *bool   `json:"isPublic"`
 }
@@ -27,7 +27,7 @@ type spaceUpdateRequest struct {
 /*
  * Updates an existing space.
  */
-func HandleUpdate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
+func HandleUpdate(guard *guard.Guard, spaceStore store.SpaceStore) http.HandlerFunc {
 	return guard.Space(
 		enum.PermissionSpaceEdit,
 		false,
@@ -43,8 +43,8 @@ func HandleUpdate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			}
 
 			// update values only if provided
-			if in.DisplayName != nil {
-				space.DisplayName = *in.DisplayName
+			if in.Name != nil {
+				space.Name = *in.Name
 			}
 			if in.Description != nil {
 				space.Description = *in.Description
@@ -62,7 +62,7 @@ func HandleUpdate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 				return
 			}
 
-			err = spaces.Update(ctx, space)
+			err = spaceStore.Update(ctx, space)
 			if err != nil {
 				log.Error().Err(err).Msg("Space update failed.")
 

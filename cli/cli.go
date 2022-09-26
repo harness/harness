@@ -7,10 +7,10 @@ package cli
 import (
 	"os"
 
+	"github.com/harness/gitness/cli/operations/account"
+	"github.com/harness/gitness/cli/operations/user"
+	"github.com/harness/gitness/cli/operations/users"
 	"github.com/harness/gitness/cli/server"
-	"github.com/harness/gitness/cli/token"
-	"github.com/harness/gitness/cli/user"
-	"github.com/harness/gitness/cli/users"
 	"github.com/harness/gitness/version"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -28,10 +28,9 @@ func Command() {
 	server.Register(app)
 	user.Register(app)
 	users.Register(app)
-	token.Register(app)
-	registerLogin(app)
-	registerLogout(app)
-	registerRegister(app)
+	account.RegisterLogin(app)
+	account.RegisterLogout(app)
+	account.RegisterRegister(app)
 	registerSwagger(app)
 
 	kingpin.Version(version.Version.String())

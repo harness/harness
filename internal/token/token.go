@@ -5,55 +5,107 @@
 package token
 
 import (
+	"context"
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
-	"github.com/pkg/errors"
-
-	"github.com/dgrijalva/jwt-go"
+	"github.com/harness/gitness/types/enum"
 )
 
-// Claims defines custom token claims.
-type Claims struct {
-	Admin bool `json:"admin"`
+const (
+	userTokenLifeTime time.Duration = 24 * time.Hour   // 1 day.
+	oathTokenLifeTime time.Duration = 30 * time.Minute // 30 min.
+)
 
-	jwt.StandardClaims
+func CreateUserSession(ctx context.Context, tokenStore store.TokenStore,
+	user *types.User, name string) (*types.Token, string, error) {
+	principal := types.PrincipalFromUser(user)
+	return Create(
+		ctx,
+		tokenStore,
+		enum.TokenTypeSession,
+		principal,
+		principal,
+		name,
+		userTokenLifeTime,
+		enum.AccessGrantAll,
+	)
 }
 
-// Generate generates a token with no expiration.
-func Generate(user *types.User, secret string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
-		user.Admin,
-		jwt.StandardClaims{
-			Subject:  fmt.Sprint(user.ID),
-			IssuedAt: time.Now().Unix(),
-		},
-	})
-
-	res, err := token.SignedString([]byte(secret))
-	if err != nil {
-		return "", errors.Wrap(err, "Failed to sign token")
-	}
-
-	return res, nil
+func CreatePAT(ctx context.Context, tokenStore store.TokenStore,
+	createdBy *types.Principal, createdFor *types.User,
+	name string, lifeTime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
+	return Create(
+		ctx,
+		tokenStore,
+		enum.TokenTypePAT,
+		createdBy,
+		types.PrincipalFromUser(createdFor),
+		name,
+		lifeTime,
+		grants,
+	)
 }
 
-// GenerateExp generates a token with an expiration date.
-func GenerateExp(user *types.User, exp int64, secret string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
-		user.Admin,
-		jwt.StandardClaims{
-			ExpiresAt: exp,
-			Subject:   fmt.Sprint(user.ID),
-			IssuedAt:  time.Now().Unix(),
-		},
-	})
+func CreateSAT(ctx context.Context, tokenStore store.TokenStore,
+	createdBy *types.Principal, createdFor *types.ServiceAccount,
+	name string, lifeTime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
+	return Create(
+		ctx,
+		tokenStore,
+		enum.TokenTypeSAT,
+		createdBy,
+		types.PrincipalFromServiceAccount(createdFor),
+		name,
+		lifeTime,
+		grants,
+	)
+}
 
-	res, err := token.SignedString([]byte(secret))
-	if err != nil {
-		return "", errors.Wrap(err, "Failed to sign token")
+func CreateOAuth(ctx context.Context, tokenStore store.TokenStore,
+	createdBy *types.Principal, createdFor *types.User,
+	name string, grants enum.AccessGrant) (*types.Token, string, error) {
+	return Create(
+		ctx,
+		tokenStore,
+		enum.TokenTypeOAuth2,
+		createdBy,
+		types.PrincipalFromUser(createdFor),
+		name,
+		oathTokenLifeTime,
+		grants,
+	)
+}
+
+func Create(ctx context.Context, tokenStore store.TokenStore,
+	tokenType enum.TokenType, createdBy *types.Principal, createdFor *types.Principal,
+	name string, lifeTime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
+	issuedAt := time.Now()
+	expiresAt := issuedAt.Add(lifeTime)
+
+	// create db entry first so we get the id.
+	token := types.Token{
+		Type:        tokenType,
+		Name:        name,
+		PrincipalID: createdFor.ID,
+		IssuedAt:    issuedAt.UnixMilli(),
+		ExpiresAt:   expiresAt.UnixMilli(),
+		Grants:      grants,
+		CreatedBy:   createdBy.ID,
 	}
 
-	return res, nil
+	err := tokenStore.Create(ctx, &token)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to store token in db: %w", err)
+	}
+
+	// create jwt token.
+	jwtToken, err := GenerateJWTForToken(&token, createdFor.Salt)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to create jwt token: %w", err)
+	}
+
+	return &token, jwtToken, nil
 }

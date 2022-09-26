@@ -48,11 +48,11 @@ func (s *RepoStoreSync) Create(ctx context.Context, repo *types.Repository) erro
 }
 
 // Move an existing repo.
-func (s *RepoStoreSync) Move(ctx context.Context, userID int64, repoID int64, newSpaceID int64,
+func (s *RepoStoreSync) Move(ctx context.Context, principalID int64, repoID int64, newSpaceID int64,
 	newName string, keepAsAlias bool) (*types.Repository, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.Move(ctx, userID, repoID, newSpaceID, newName, keepAsAlias)
+	return s.base.Move(ctx, principalID, repoID, newSpaceID, newName, keepAsAlias)
 }
 
 // Update the repo details.

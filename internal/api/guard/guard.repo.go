@@ -62,11 +62,11 @@ func (g *Guard) Repo(permission enum.Permission, orPublic bool, guarded http.Han
  * Enforces that the executing principal has requested permission on the repository.
  * Returns true if that is the case, otherwise renders the appropriate error and returns false.
  */
-func (g *Guard) EnforceRepo(w http.ResponseWriter, r *http.Request, permission enum.Permission, path string) bool {
-	spacePath, name, err := paths.Disect(path)
+func (g *Guard) EnforceRepo(w http.ResponseWriter, r *http.Request, permission enum.Permission, repoPath string) bool {
+	spacePath, name, err := paths.Disect(repoPath)
 	if err != nil {
 		// log error for debugging
-		hlog.FromRequest(r).Err(err).Msgf("Failed to disect path '%s'.", path)
+		hlog.FromRequest(r).Err(err).Msgf("Failed to disect path '%s'.", repoPath)
 
 		render.InternalError(w)
 		return false
@@ -83,13 +83,13 @@ func (g *Guard) EnforceRepo(w http.ResponseWriter, r *http.Request, permission e
 
 /*
  * Checks whether the principal executing the request has the requested permission on the repository.
- * Returns nil if the user is confirmed to be permitted to execute the action, otherwise returns errors
+ * Returns nil if the principal is confirmed to be permitted to execute the action, otherwise returns errors
  * NotAuthenticated, NotAuthorized, or any unerlaying error.
  */
-func (g *Guard) CheckRepo(r *http.Request, permission enum.Permission, path string) error {
-	parentSpace, name, err := paths.Disect(path)
+func (g *Guard) CheckRepo(r *http.Request, permission enum.Permission, repoPath string) error {
+	parentSpace, name, err := paths.Disect(repoPath)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to disect path '%s'", path)
+		return errors.Wrapf(err, "Failed to disect path '%s'", repoPath)
 	}
 
 	scope := &types.Scope{SpacePath: parentSpace}

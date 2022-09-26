@@ -20,20 +20,21 @@ import (
 )
 
 type repoMoveRequest struct {
-	Name        *string `json:"name"`
+	PathName    *string `json:"pathName"`
 	SpaceID     *int64  `json:"spaceId"`
 	KeepAsAlias bool    `json:"keepAsAlias"`
 }
 
 // HandleMove moves an existing repo.
-func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceStore) http.HandlerFunc {
+//nolint:gocognit,goimports // exception for now, one of the more complicated parts of the code
+func HandleMove(guard *guard.Guard, repoStore store.RepoStore, spaceStore store.SpaceStore) http.HandlerFunc {
 	return guard.Repo(
 		enum.PermissionRepoEdit,
 		false,
 		func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			log := hlog.FromRequest(r)
-			usr, _ := request.UserFrom(ctx)
+			principal, _ := request.PrincipalFrom(ctx)
 			repo, _ := request.RepoFrom(ctx)
 
 			in := new(repoMoveRequest)
@@ -44,22 +45,22 @@ func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceSto
 			}
 
 			// backfill data
-			if in.Name == nil {
-				in.Name = &repo.Name
+			if in.PathName == nil {
+				in.PathName = &repo.PathName
 			}
 			if in.SpaceID == nil {
 				in.SpaceID = &repo.SpaceID
 			}
 
 			// convert name to lower case for easy of api use
-			*in.Name = strings.ToLower(*in.Name)
+			*in.PathName = strings.ToLower(*in.PathName)
 
 			// ensure we don't end up in any missconfiguration, and block no-ops
-			if err = check.Name(*in.Name); err != nil {
+			if err = check.PathName(*in.PathName); err != nil {
 				render.UserfiedErrorOrInternal(w, err)
 				return
 			}
-			if *in.SpaceID == repo.SpaceID && *in.Name == repo.Name {
+			if *in.SpaceID == repo.SpaceID && *in.PathName == repo.PathName {
 				render.BadRequestError(w, render.ErrNoChange)
 				return
 			}
@@ -71,7 +72,7 @@ func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceSto
 			// Ensure we have access to the target space (if it's a space move)
 			if *in.SpaceID != repo.SpaceID {
 				var newSpace *types.Space
-				newSpace, err = spaces.Find(ctx, *in.SpaceID)
+				newSpace, err = spaceStore.Find(ctx, *in.SpaceID)
 				if err != nil {
 					log.Err(err).Msgf("Failed to get target space with id %d for the move.", *in.SpaceID)
 
@@ -90,7 +91,7 @@ func HandleMove(guard *guard.Guard, repos store.RepoStore, spaces store.SpaceSto
 				}
 			}
 
-			res, err := repos.Move(ctx, usr.ID, repo.ID, *in.SpaceID, *in.Name, in.KeepAsAlias)
+			res, err := repoStore.Move(ctx, principal.ID, repo.ID, *in.SpaceID, *in.PathName, in.KeepAsAlias)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to move the repository.")
 

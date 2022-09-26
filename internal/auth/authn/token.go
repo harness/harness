@@ -5,17 +5,18 @@
 package authn
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/hlog"
 )
 
@@ -26,16 +27,23 @@ var _ Authenticator = (*TokenAuthenticator)(nil)
  * "Authorization" header or the "access_token" form value.
  */
 type TokenAuthenticator struct {
-	users store.UserStore
+	userStore  store.UserStore
+	saStore    store.ServiceAccountStore
+	tokenStore store.TokenStore
 }
 
-func NewTokenAuthenticator(userStore store.UserStore) Authenticator {
+func NewTokenAuthenticator(
+	userStore store.UserStore,
+	saStore store.ServiceAccountStore,
+	tokenStore store.TokenStore) Authenticator {
 	return &TokenAuthenticator{
-		users: userStore,
+		userStore:  userStore,
+		saStore:    saStore,
+		tokenStore: tokenStore,
 	}
 }
 
-func (a *TokenAuthenticator) Authenticate(r *http.Request) (*types.User, error) {
+func (a *TokenAuthenticator) Authenticate(r *http.Request) (*auth.Session, error) {
 	ctx := r.Context()
 	str := extractToken(r)
 
@@ -43,27 +51,25 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*types.User, error) 
 		return nil, ErrNoAuthData
 	}
 
-	var user *types.User
-	parsed, err := jwt.ParseWithClaims(str, &token.Claims{}, func(token_ *jwt.Token) (interface{}, error) {
-		sub := token_.Claims.(*token.Claims).Subject
-		id, err := strconv.ParseInt(sub, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-
-		user, err = a.users.Find(ctx, id)
+	var principal *types.Principal
+	var err error
+	claims := &token.JWTClaims{}
+	parsed, err := jwt.ParseWithClaims(str, claims, func(token_ *jwt.Token) (interface{}, error) {
+		principal, err = a.getPrincipal(ctx, claims)
 		if err != nil {
 			hlog.FromRequest(r).
 				Error().Err(err).
-				Int64("user", id).
-				Msg("cannot find user")
-			return nil, fmt.Errorf("failed to get user info: %w", err)
+				Str("token_type", string(claims.TokenType)).
+				Int64("principal_id", claims.PrincipalID).
+				Msg("cannot find principal")
+			return nil, fmt.Errorf("failed to get principal for token: %w", err)
 		}
-		return []byte(user.Salt), nil
+		return []byte(principal.Salt), nil
 	})
 	if err != nil {
 		return nil, err
 	}
+
 	if !parsed.Valid {
 		return nil, errors.New("invalid token")
 	}
@@ -72,18 +78,43 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*types.User, error) 
 		return nil, errors.New("invalid token")
 	}
 
-	// this code should be deprecated, since the jwt.ParseWithClaims
-	// should fail if the token is expired. TODO remove once we have
-	// proper unit tests in place.
-	if claims, ok := parsed.Claims.(*token.Claims); ok {
-		if claims.ExpiresAt > 0 {
-			if time.Now().Unix() > claims.ExpiresAt {
-				return nil, errors.New("expired token")
-			}
-		}
+	// ensure tkn exists
+	tkn, err := a.tokenStore.Find(ctx, claims.TokenID)
+	if err != nil {
+		return nil, fmt.Errorf("token wasn't found: %w", err)
 	}
 
-	return user, nil
+	return &auth.Session{
+		Principal: *principal,
+		Metadata: &auth.TokenMetadata{
+			TokenType: tkn.Type,
+			TokenID:   tkn.ID,
+			Grants:    tkn.Grants,
+		},
+	}, nil
+}
+
+func (a *TokenAuthenticator) getPrincipal(ctx context.Context, claims *token.JWTClaims) (*types.Principal, error) {
+	switch claims.TokenType {
+	case enum.TokenTypePAT, enum.TokenTypeSession, enum.TokenTypeOAuth2:
+		user, err := a.userStore.Find(ctx, claims.PrincipalID)
+		if err != nil {
+			return nil, err
+		}
+
+		return types.PrincipalFromUser(user), nil
+
+	case enum.TokenTypeSAT:
+		sa, err := a.saStore.Find(ctx, claims.PrincipalID)
+		if err != nil {
+			return nil, err
+		}
+
+		return types.PrincipalFromServiceAccount(sa), nil
+
+	default:
+		return nil, fmt.Errorf("unsupported token type '%s'", claims.TokenType)
+	}
 }
 
 func extractToken(r *http.Request) string {

@@ -6,7 +6,6 @@ package account
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/store"
@@ -19,14 +18,14 @@ import (
 
 // HandleLogin returns an http.HandlerFunc that authenticates
 // the user and returns an authentication token on success.
-func HandleLogin(users store.UserStore, system store.SystemStore) http.HandlerFunc {
+func HandleLogin(userStore store.UserStore, system store.SystemStore, tokenStore store.TokenStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
 
 		username := r.FormValue("username")
 		password := r.FormValue("password")
-		user, err := users.FindEmail(ctx, username)
+		user, err := userStore.FindEmail(ctx, username)
 		if err != nil {
 			log.Debug().Err(err).
 				Str("user", username).
@@ -50,8 +49,7 @@ func HandleLogin(users store.UserStore, system store.SystemStore) http.HandlerFu
 			return
 		}
 
-		expires := time.Now().Add(system.Config(ctx).Token.Expire)
-		token, err := token.GenerateExp(user, expires.Unix(), user.Salt)
+		token, jwtToken, err := token.CreateUserSession(ctx, tokenStore, user, "login")
 		if err != nil {
 			log.Err(err).
 				Str("user", username).
@@ -61,20 +59,6 @@ func HandleLogin(users store.UserStore, system store.SystemStore) http.HandlerFu
 			return
 		}
 
-		// return the token if the with_user boolean
-		// query parameter is set to true.
-		if r.FormValue("return_user") == "true" {
-			render.JSON(w, http.StatusOK,
-				&types.UserToken{
-					User: user,
-					Token: &types.Token{
-						Value:   token,
-						Expires: expires.UTC(),
-					},
-				})
-		} else {
-			// else return the token only.
-			render.JSON(w, http.StatusOK, &types.Token{Value: token})
-		}
+		render.JSON(w, http.StatusOK, &types.TokenResponse{Token: *token, AccessToken: jwtToken})
 	}
 }

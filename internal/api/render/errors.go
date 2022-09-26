@@ -11,13 +11,13 @@ var (
 	// ErrInvalidToken is returned when the api request token is invalid.
 	ErrInvalidToken = New("Invalid or missing token")
 
-	// ErrBadRequest is returned when there was an issue with the user input.
+	// ErrBadRequest is returned when there was an issue with the input.
 	ErrBadRequest = New("Bad Request")
 
-	// ErrUnauthorized is returned when the user is not authorized.
+	// ErrUnauthorized is returned when the acting principal is not authenticated.
 	ErrUnauthorized = New("Unauthorized")
 
-	// ErrForbidden is returned when user access is forbidden.
+	// ErrForbidden is returned when the acting principal is not authorized.
 	ErrForbidden = New("Forbidden")
 
 	// ErrNotFound is returned when a resource is not found.
@@ -29,18 +29,18 @@ var (
 	// ErrDuplicate is returned when a resource already exits.
 	ErrDuplicate = New("Resource already exists")
 
-	// ErrPrimaryPathCantBeDeleted is returned when the user is trying to delete a primary path.
+	// ErrPrimaryPathCantBeDeleted is returned when trying to delete a primary path.
 	ErrPrimaryPathCantBeDeleted = New("The primary path of an object can't be deleted")
 
-	// ErrPathTooLong is returned if user action would lead to a path that is too long.
+	// ErrPathTooLong is returned when an action would lead to a path that is too long.
 	ErrPathTooLong = New("The resource path is too long")
 
-	// ErrCyclicHierarchy is returned if the user action would create a cyclic dependency between spaces.
-	ErrCyclicHierarchy = New("Unable to perform the action as it would lead to a cyclic dependency.")
+	// ErrCyclicHierarchy is returned if the action would create a cyclic dependency between spaces.
+	ErrCyclicHierarchy = New("Unable to perform the action as it would lead to a cyclic dependency")
 
-	// ErrSpaceWithChildsCantBeDeleted is returned if the user is trying to delete a space that
+	// ErrSpaceWithChildsCantBeDeleted is returned if the principal is trying to delete a space that
 	// still has child resources.
-	ErrSpaceWithChildsCantBeDeleted = New("Space can't be deleted as it still contains child resources.")
+	ErrSpaceWithChildsCantBeDeleted = New("Space can't be deleted as it still contains child resources")
 )
 
 // Error represents a json-encoded API error.

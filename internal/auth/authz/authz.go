@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -20,29 +21,28 @@ var (
 // Authorizer abstraction of an entity responsible for authorizing access to resources.
 type Authorizer interface {
 	/*
-	 * Checks whether the provided principal has the permission to execute the action on the resource within the scope.
+	 * Checks whether the principal of the current session with the provided metadata
+	 * has the permission to execute the action on the resource within the scope.
 	 * Returns
-	 *		(true, nil)   - the principal has permission to perform the action
-	 *		(false, nil)  - the principal does not have permission to perform the action
+	 *		(true, nil)   - the action is permitted
+	 *		(false, nil)  - the action is not permitted
 	 *		(false, err)  - an error occured while performing the permission check and the action should be denied
 	 */
 	Check(ctx context.Context,
-		principalType enum.PrincipalType,
-		principalID string,
+		session *auth.Session,
 		scope *types.Scope,
 		resource *types.Resource,
 		permission enum.Permission) (bool, error)
 
 	/*
-	 * Checks whether the provided principal the required permission to execute ALL the requested actions on the
-	 * resource within the scope.
+	 * Checks whether the principal of the current session with the provided metadata
+	 * has the permission to execute ALL the action on the resource within the scope.
 	 * Returns
-	 *		(true, nil)   - the principal has permission to perform all the requested actions
-	 *		(false, nil)  - the principal does not have permission to perform all the actions (at least one is not allowed)
+	 *		(true, nil)   - all requested actions are permitted
+	 *		(false, nil)  - at least one requested action is not permitted
 	 *		(false, err)  - an error occured while performing the permission check and all actions should be denied
 	 */
 	CheckAll(ctx context.Context,
-		principalType enum.PrincipalType,
-		principalID string,
+		session *auth.Session,
 		permissionChecks ...types.PermissionCheck) (bool, error)
 }

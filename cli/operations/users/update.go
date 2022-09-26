@@ -40,7 +40,7 @@ func (c *updateCommand) run(*kingpin.ParseContext) error {
 
 	in := new(types.UserInput)
 	if v := c.email; v != "" {
-		in.Username = ptr.String(v)
+		in.Email = ptr.String(v)
 	}
 	if v := c.pass; v != "" {
 		in.Password = ptr.String(v)

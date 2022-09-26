@@ -5,12 +5,29 @@
 package request
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
+
+// ParseAsInt64 tries to retrieve the parameter from the request and parse it to in64.
+func ParseAsInt64(r *http.Request, paramName string) (int64, error) {
+	rawID := chi.URLParam(r, paramName)
+	if rawID == "" {
+		return 0, fmt.Errorf("parameter '%s' not found in request", paramName)
+	}
+
+	id, err := strconv.ParseInt(rawID, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse value '%s' of parameter '%s' to int64: %w", rawID, paramName, err)
+	}
+
+	return id, nil
+}
 
 // ParsePage extracts the page parameter from the url.
 func ParsePage(r *http.Request) int {

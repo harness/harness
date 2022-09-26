@@ -9,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -24,24 +25,25 @@ func NewUnsafeAuthorizer() Authorizer {
 	return &UnsafeAuthorizer{}
 }
 
-func (a *UnsafeAuthorizer) Check(ctx context.Context, principalType enum.PrincipalType, principalID string,
+func (a *UnsafeAuthorizer) Check(ctx context.Context, session *auth.Session,
 	scope *types.Scope, resource *types.Resource, permission enum.Permission) (bool, error) {
-	log.Debug().Msgf(
-		"[Authz] %s '%s' requests %s for %s '%s' in scope %v\n",
-		principalType,
-		principalID,
+	log.Info().Msgf(
+		"[Authz] %s with id '%d' requests %s for %s '%s' in scope %#v with metadata %#v\n",
+		session.Principal.Type,
+		session.Principal.ID,
 		permission,
 		resource.Type,
 		resource.Name,
 		scope,
+		session.Metadata,
 	)
 
 	return true, nil
 }
-func (a *UnsafeAuthorizer) CheckAll(ctx context.Context, principalType enum.PrincipalType, principalID string,
+func (a *UnsafeAuthorizer) CheckAll(ctx context.Context, session *auth.Session,
 	permissionChecks ...types.PermissionCheck) (bool, error) {
 	for _, p := range permissionChecks {
-		if _, err := a.Check(ctx, principalType, principalID, &p.Scope, &p.Resource, p.Permission); err != nil {
+		if _, err := a.Check(ctx, session, &p.Scope, &p.Resource, p.Permission); err != nil {
 			return false, err
 		}
 	}

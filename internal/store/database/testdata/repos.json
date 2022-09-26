@@ -1,9 +1,9 @@
 [
     {
         "id": 1,
-        "name": "repo1",
+        "pathName": "repo1",
         "spaceId": 1,
-        "displayName": "Repository 1",
+        "name": "Repository 1",
         "description": "Some repository.",
         "isPublic": true,
         "createdBy": 1,
@@ -17,9 +17,9 @@
     },
     {
         "id": 2,
-        "name": "repo2",
+        "pathName": "repo2",
         "spaceId": 2,
-        "displayName": "Repository 2",
+        "name": "Repository 2",
         "description": "Some other repository.",
         "isPublic": true,
         "createdBy": 1,

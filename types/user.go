@@ -10,28 +10,29 @@ import (
 )
 
 type (
-	// User stores user account details.
+	// User is a principal representing an end user.
 	User struct {
-		ID       int64  `db:"user_id"        json:"id"`
-		Email    string `db:"user_email"     json:"email"`
-		Password string `db:"user_password"  json:"-"`
-		Salt     string `db:"user_salt"      json:"-"`
-		Name     string `db:"user_name"      json:"name"`
-		Company  string `db:"user_company"   json:"company"`
-		Admin    bool   `db:"user_admin"     json:"admin"`
-		Blocked  bool   `db:"user_blocked"   json:"-"`
-		Created  int64  `db:"user_created"   json:"created"`
-		Updated  int64  `db:"user_updated"   json:"updated"`
-		Authed   int64  `db:"user_authed"    json:"authed"`
+		// Fields from Principal
+		ID         int64  `db:"principal_id"            json:"id"`
+		Name       string `db:"principal_name"          json:"name"`
+		Admin      bool   `db:"principal_admin"         json:"admin"`
+		ExternalID string `db:"principal_externalId"    json:"externalId"`
+		Blocked    bool   `db:"principal_blocked"       json:"blocked"`
+		Salt       string `db:"principal_salt"          json:"-"`
+		Created    int64  `db:"principal_created"       json:"created"`
+		Updated    int64  `db:"principal_updated"       json:"updated"`
+
+		// User specific fields
+		Email    string `db:"principal_user_email"       json:"email"`
+		Password string `db:"principal_user_password"    json:"-"`
 	}
 
 	// UserInput store user account details used to
 	// create or update a user.
 	UserInput struct {
-		Username *string `json:"email"`
+		Email    *string `json:"email"`
 		Password *string `json:"password"`
 		Name     *string `json:"name"`
-		Company  *string `json:"company"`
 		Admin    *bool   `json:"admin"`
 	}
 
@@ -41,11 +42,5 @@ type (
 		Size  int           `json:"size"`
 		Sort  enum.UserAttr `json:"sort"`
 		Order enum.Order    `json:"direction"`
-	}
-
-	// UserToken stores user account and token details.
-	UserToken struct {
-		User  *User  `json:"user"`
-		Token *Token `json:"token"`
 	}
 )

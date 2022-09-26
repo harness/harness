@@ -19,7 +19,7 @@ import (
 )
 
 type repoUpdateRequest struct {
-	DisplayName *string `json:"displayName"`
+	Name        *string `json:"name"`
 	Description *string `json:"description"`
 	IsPublic    *bool   `json:"isPublic"`
 }
@@ -27,7 +27,7 @@ type repoUpdateRequest struct {
 /*
  * Updates an existing repository.
  */
-func HandleUpdate(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
+func HandleUpdate(guard *guard.Guard, repoStore store.RepoStore) http.HandlerFunc {
 	return guard.Repo(
 		enum.PermissionRepoEdit,
 		false,
@@ -43,8 +43,8 @@ func HandleUpdate(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
 			}
 
 			// update values only if provided
-			if in.DisplayName != nil {
-				repo.DisplayName = *in.DisplayName
+			if in.Name != nil {
+				repo.Name = *in.Name
 			}
 			if in.Description != nil {
 				repo.Description = *in.Description
@@ -62,7 +62,7 @@ func HandleUpdate(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
 				return
 			}
 
-			err = repos.Update(ctx, repo)
+			err = repoStore.Update(ctx, repo)
 			if err != nil {
 				log.Error().Err(err).Msg("Repository update failed.")
 

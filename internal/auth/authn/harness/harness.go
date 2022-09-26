@@ -7,6 +7,7 @@ package harness
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/types"
 )
@@ -22,6 +23,6 @@ func NewAuthenticator() (authn.Authenticator, error) {
 	return &Authenticator{}, nil
 }
 
-func (a *Authenticator) Authenticate(r *http.Request) (*types.User, error) {
-	return &types.User{}, nil
+func (a *Authenticator) Authenticate(r *http.Request) (*auth.Session, error) {
+	return &auth.Session{Principal: types.Principal{}, Metadata: &auth.EmptyMetadata{}}, nil
 }

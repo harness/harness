@@ -8,7 +8,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/internal/auth"
 )
 
 var (
@@ -16,15 +16,15 @@ var (
 	ErrNoAuthData = errors.New("the request doesn't contain any auth data that can be used by the Authorizer")
 )
 
-// Authenticator is abstraction of an entity that's responsible for authenticating users
+// Authenticator is an abstraction of an entity that's responsible for authenticating principals
 // that are making calls via HTTP.
 type Authenticator interface {
 	/*
-	 * Tries to authenticate a user if credentials are available.
+	 * Tries to authenticate the acting principal if credentials are available.
 	 * Returns:
-	 *		(user, nil) 			- request contains auth data and user was verified
+	 *		(session, nil) 		    - request contains auth data and principal was verified
 	 *		(nil, ErrNoAuthData)	- request doesn't contain any auth data
 	 *		(nil, err)  			- request contains auth data but verification failed
 	 */
-	Authenticate(r *http.Request) (*types.User, error)
+	Authenticate(r *http.Request) (*auth.Session, error)
 }

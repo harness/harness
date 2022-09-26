@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -45,22 +46,23 @@ func NewAuthorizer(aclEndpoint, authToken string) (authz.Authorizer, error) {
 	}, nil
 }
 
-func (a *Authorizer) Check(ctx context.Context, principalType enum.PrincipalType, principalID string,
+func (a *Authorizer) Check(ctx context.Context, session *auth.Session,
 	scope *types.Scope, resource *types.Resource, permission enum.Permission) (bool, error) {
-	return a.CheckAll(ctx, principalType, principalID, types.PermissionCheck{
+	return a.CheckAll(ctx, session, types.PermissionCheck{
 		Scope:      *scope,
 		Resource:   *resource,
 		Permission: permission,
 	})
 }
 
-func (a *Authorizer) CheckAll(ctx context.Context, principalType enum.PrincipalType, principalID string,
+func (a *Authorizer) CheckAll(ctx context.Context, session *auth.Session,
 	permissionChecks ...types.PermissionCheck) (bool, error) {
 	if len(permissionChecks) == 0 {
 		return false, authz.ErrNoPermissionCheckProvided
 	}
 
-	requestDto, err := createACLRequest(principalType, principalID, permissionChecks)
+	// TODO: Ensure that we also handle HarnessMetadata!
+	requestDto, err := createACLRequest(&session.Principal, permissionChecks)
 	if err != nil {
 		return false, err
 	}
@@ -107,21 +109,29 @@ func (a *Authorizer) CheckAll(ctx context.Context, principalType enum.PrincipalT
 	return checkACLResponse(permissionChecks, responseDto)
 }
 
-func createACLRequest(principalType enum.PrincipalType, principalID string,
+func createACLRequest(principal *types.Principal,
 	permissionChecks []types.PermissionCheck) (*aclRequest, error) {
 	// Generate ACL req
 	req := aclRequest{
 		Permissions: []aclPermission{},
 		Principal: aclPrincipal{
-			PrincipalIdentifier: principalID,
-			PrincipalType:       string(principalType),
+			PrincipalIdentifier: principal.ExternalID,
 		},
 	}
+
+	// map principaltype
+	actualPrincipalType, err := mapPrincipalType(principal.Type)
+	if err != nil {
+		return nil, err
+	}
+	req.Principal.PrincipalType = actualPrincipalType
 
 	// map all permissionchecks to ACL permission checks
 	for _, c := range permissionChecks {
 		mappedPermission := mapPermission(c.Permission)
-		mappedResourceScope, err := mapScope(c.Scope)
+
+		var mappedResourceScope *aclResourceScope
+		mappedResourceScope, err = mapScope(c.Scope)
 		if err != nil {
 			return nil, err
 		}
@@ -217,4 +227,17 @@ func mapScope(scope types.Scope) (*aclResourceScope, error) {
 func mapPermission(permission enum.Permission) string {
 	// harness has multiple modules - add scm prefix
 	return "scm_" + string(permission)
+}
+
+func mapPrincipalType(principalType enum.PrincipalType) (string, error) {
+	switch principalType {
+	case enum.PrincipalTypeUser:
+		return "USER", nil
+	case enum.PrincipalTypeServiceAccount:
+		return "SERVICE_ACCOUNT", nil
+	case enum.PrincipalTypeService:
+		return "SERVICE", nil
+	default:
+		return "", fmt.Errorf("unknown principaltype '%s'", principalType)
+	}
 }

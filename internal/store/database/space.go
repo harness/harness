@@ -70,7 +70,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 	}
 
 	// Get path (get parent if needed)
-	path := space.Name
+	path := space.PathName
 	if space.ParentID > 0 {
 		var parentPath *types.Path
 		parentPath, err = FindPathTx(ctx, tx, enum.PathTargetTypeSpace, space.ParentID)
@@ -79,7 +79,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 		}
 
 		// all existing paths are valid, space name is assumed to be valid.
-		path = paths.Concatinate(parentPath.Value, space.Name)
+		path = paths.Concatinate(parentPath.Value, space.PathName)
 	}
 
 	// create path only once we know the id of the space
@@ -109,7 +109,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 }
 
 // Move moves an existing space.
-func (s *SpaceStore) Move(ctx context.Context, userID int64, spaceID int64, newParentID int64, newName string,
+func (s *SpaceStore) Move(ctx context.Context, principalID int64, spaceID int64, newParentID int64, newName string,
 	keepAsAlias bool) (*types.Space, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -153,7 +153,7 @@ func (s *SpaceStore) Move(ctx context.Context, userID int64, spaceID int64, newP
 		TargetID:   spaceID,
 		IsAlias:    false,
 		Value:      newPath,
-		CreatedBy:  userID,
+		CreatedBy:  principalID,
 		Created:    time.Now().UnixMilli(),
 		Updated:    time.Now().UnixMilli(),
 	}
@@ -255,7 +255,7 @@ func (s *SpaceStore) Count(ctx context.Context, id int64) (int64, error) {
 func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error) {
 	dst := []*types.Space{}
 
-	// if the user does not provide any customer filter
+	// if the principal does not provide any customer filter
 	// or sorting we use the default select statement.
 	if opts.Sort == enum.SpaceAttrNone {
 		err := s.db.SelectContext(ctx, &dst, spaceSelect, id, limit(opts.Size), offset(opts.Page, opts.Size))
@@ -275,17 +275,19 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
 	switch opts.Sort {
-	case enum.SpaceAttrCreated:
+	case enum.SpaceAttrName, enum.SpaceAttrNone:
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
+		stmt = stmt.OrderBy("space_name " + opts.Order.String())
+	case enum.SpaceAttrCreated:
 		stmt = stmt.OrderBy("space_created " + opts.Order.String())
 	case enum.SpaceAttrUpdated:
 		stmt = stmt.OrderBy("space_updated " + opts.Order.String())
 	case enum.SpaceAttrID:
 		stmt = stmt.OrderBy("space_id " + opts.Order.String())
-	case enum.SpaceAttrName:
-		stmt = stmt.OrderBy("space_name " + opts.Order.String())
+	case enum.SpaceAttrPathName:
+		stmt = stmt.OrderBy("space_pathName " + opts.Order.String())
 	case enum.SpaceAttrPath:
 		stmt = stmt.OrderBy("space_path " + opts.Order.String())
 	}
@@ -332,10 +334,10 @@ func (s *SpaceStore) DeletePath(ctx context.Context, spaceID int64, pathID int64
 const spaceSelectBase = `
 SELECT
  space_id
-,space_name
+,space_pathName
 ,paths.path_value AS space_path
 ,space_parentId
-,space_displayName
+,space_name
 ,space_description
 ,space_isPublic
 ,space_createdBy
@@ -351,7 +353,7 @@ ON spaces.space_id=paths.path_targetId AND paths.path_targetType='space' AND pat
 
 const spaceSelect = spaceSelectBaseWithJoin + `
 WHERE space_parentId = $1
-ORDER BY space_name ASC
+ORDER BY space_pathName ASC
 LIMIT $2 OFFSET $3
 `
 
@@ -376,20 +378,21 @@ DELETE FROM spaces
 WHERE space_id = $1
 `
 
+// TODO: do we have to worry about SQL injection for description?
 const spaceInsert = `
 INSERT INTO spaces (
-    space_name
+    space_pathName
    ,space_parentId
-   ,space_displayName
+   ,space_name
    ,space_description
    ,space_isPublic
    ,space_createdBy
    ,space_created
    ,space_updated
 ) values (
-   :space_name
+   :space_pathName
    ,:space_parentId
-   ,:space_displayName
+   ,:space_name
    ,:space_description
    ,:space_isPublic
    ,:space_createdBy
@@ -401,7 +404,7 @@ INSERT INTO spaces (
 const spaceUpdate = `
 UPDATE spaces
 SET
-space_displayName   = :space_displayName
+space_name   = :space_name
 ,space_description  = :space_description
 ,space_isPublic     = :space_isPublic
 ,space_updated      = :space_updated
@@ -411,7 +414,7 @@ WHERE space_id = :space_id
 const spaceUpdateNameAndParentID = `
 UPDATE spaces
 SET
-space_name = $1
+space_pathName = $1
 ,space_parentId = $2
 WHERE space_id = $3
 `

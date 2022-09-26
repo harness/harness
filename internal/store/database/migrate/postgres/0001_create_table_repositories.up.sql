@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS repositories (
  repo_id                SERIAL PRIMARY KEY
-,repo_name              TEXT
+,repo_pathName          TEXT
 ,repo_spaceId           INTEGER
-,repo_displayName       TEXT
+,repo_name              TEXT
 ,repo_description       TEXT
 ,repo_isPublic          BOOLEAN
 ,repo_createdBy         INTEGER

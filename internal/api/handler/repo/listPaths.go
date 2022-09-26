@@ -18,7 +18,7 @@ import (
 /*
  * Writes json-encoded path information to the http response body.
  */
-func HandleListPaths(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
+func HandleListPaths(guard *guard.Guard, repoStore store.RepoStore) http.HandlerFunc {
 	return guard.Repo(
 		enum.PermissionRepoView,
 		true,
@@ -32,7 +32,7 @@ func HandleListPaths(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc
 				params.Order = enum.OrderAsc
 			}
 
-			paths, err := repos.ListAllPaths(ctx, repo.ID, params)
+			paths, err := repoStore.ListAllPaths(ctx, repo.ID, params)
 			if err != nil {
 				log.Err(err).Msgf("Failed to get list of repo paths.")
 

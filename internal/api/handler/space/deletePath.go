@@ -18,7 +18,7 @@ import (
 /*
  * Deletes a given path.
  */
-func HandleDeletePath(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
+func HandleDeletePath(guard *guard.Guard, spaceStore store.SpaceStore) http.HandlerFunc {
 	return guard.Space(
 		enum.PermissionSpaceEdit,
 		false,
@@ -33,7 +33,7 @@ func HandleDeletePath(guard *guard.Guard, spaces store.SpaceStore) http.HandlerF
 				return
 			}
 
-			err = spaces.DeletePath(ctx, space.ID, pathID)
+			err = spaceStore.DeletePath(ctx, space.ID, pathID)
 			if err != nil {
 				log.Err(err).Int64("path_id", pathID).
 					Msgf("Failed to delete space path.")

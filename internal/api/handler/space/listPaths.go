@@ -18,7 +18,7 @@ import (
 /*
  * Writes json-encoded path information to the http response body.
  */
-func HandleListPaths(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
+func HandleListPaths(guard *guard.Guard, spaceStore store.SpaceStore) http.HandlerFunc {
 	return guard.Space(
 		enum.PermissionSpaceView,
 		true,
@@ -32,7 +32,7 @@ func HandleListPaths(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFu
 				params.Order = enum.OrderAsc
 			}
 
-			paths, err := spaces.ListAllPaths(ctx, space.ID, params)
+			paths, err := spaceStore.ListAllPaths(ctx, space.ID, params)
 			if err != nil {
 				log.Err(err).Msgf("Failed to get list of space paths.")
 

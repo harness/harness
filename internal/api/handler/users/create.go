@@ -27,7 +27,7 @@ type userCreateInput struct {
 
 // HandleCreate returns an http.HandlerFunc that processes an http.Request
 // to create the named user account in the system.
-func HandleCreate(users store.UserStore) http.HandlerFunc {
+func HandleCreate(userStore store.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
@@ -66,7 +66,7 @@ func HandleCreate(users store.UserStore) http.HandlerFunc {
 			return
 		}
 
-		err = users.Create(ctx, user)
+		err = userStore.Create(ctx, user)
 		if err != nil {
 			log.Err(err).
 				Str("email", user.Email).

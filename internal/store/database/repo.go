@@ -75,7 +75,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 	}
 
 	// all existing paths are valid, repo name is assumed to be valid.
-	path := paths.Concatinate(parentPath.Value, repo.Name)
+	path := paths.Concatinate(parentPath.Value, repo.PathName)
 
 	// create path only once we know the id of the repo
 	p := &types.Path{
@@ -104,7 +104,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 }
 
 // Move moves an existing space.
-func (s *RepoStore) Move(ctx context.Context, userID int64, repoID int64, newSpaceID int64, newName string,
+func (s *RepoStore) Move(ctx context.Context, principalID int64, repoID int64, newSpaceID int64, newName string,
 	keepAsAlias bool) (*types.Repository, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -136,7 +136,7 @@ func (s *RepoStore) Move(ctx context.Context, userID int64, repoID int64, newSpa
 		TargetID:   repoID,
 		IsAlias:    false,
 		Value:      newPath,
-		CreatedBy:  userID,
+		CreatedBy:  principalID,
 		Created:    time.Now().UnixMilli(),
 		Updated:    time.Now().UnixMilli(),
 	}
@@ -222,7 +222,7 @@ func (s *RepoStore) Count(ctx context.Context, spaceID int64) (int64, error) {
 func (s *RepoStore) List(ctx context.Context, spaceID int64, opts *types.RepoFilter) ([]*types.Repository, error) {
 	dst := []*types.Repository{}
 
-	// if the user does not provide any customer filter
+	// if the principal does not provide any customer filter
 	// or sorting we use the default select statement.
 	if opts.Sort == enum.RepoAttrNone {
 		err := s.db.SelectContext(ctx, &dst, repoSelect, spaceID, limit(opts.Size), offset(opts.Page, opts.Size))
@@ -243,23 +243,21 @@ func (s *RepoStore) List(ctx context.Context, spaceID int64, opts *types.RepoFil
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
 	switch opts.Sort {
-	case enum.RepoAttrCreated:
+	case enum.RepoAttrName, enum.RepoAttrNone:
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
+		stmt = stmt.OrderBy("repo_name " + opts.Order.String())
+	case enum.RepoAttrCreated:
 		stmt = stmt.OrderBy("repo_created " + opts.Order.String())
 	case enum.RepoAttrUpdated:
 		stmt = stmt.OrderBy("repo_updated " + opts.Order.String())
 	case enum.RepoAttrID:
 		stmt = stmt.OrderBy("repo_id " + opts.Order.String())
-	case enum.RepoAttrName:
-		stmt = stmt.OrderBy("repo_name " + opts.Order.String())
-	case enum.RepoAttrDisplayName:
-		stmt = stmt.OrderBy("repo_displayName " + opts.Order.String())
+	case enum.RepoAttrPathName:
+		stmt = stmt.OrderBy("repo_pathName " + opts.Order.String())
 	case enum.RepoAttrPath:
 		stmt = stmt.OrderBy("repo_path " + opts.Order.String())
-	case enum.RepoAttrNone:
-		// no order need here
 	}
 
 	sql, _, err := stmt.ToSql()
@@ -304,10 +302,10 @@ func (s *RepoStore) DeletePath(ctx context.Context, repoID int64, pathID int64) 
 const repoSelectBase = `
 SELECT
 repo_id
-,repo_name
+,repo_pathName
 ,repo_spaceId
 ,paths.path_value AS repo_path
-,repo_displayName
+,repo_name
 ,repo_description
 ,repo_isPublic
 ,repo_createdBy
@@ -328,7 +326,7 @@ ON repositories.repo_id=paths.path_targetId AND paths.path_targetType='repo' AND
 
 const repoSelect = repoSelectBaseWithJoin + `
 WHERE repo_spaceId = $1
-ORDER BY repo_name ASC
+ORDER BY repo_pathName ASC
 LIMIT $2 OFFSET $3
 `
 
@@ -354,11 +352,12 @@ DELETE FROM repositories
 WHERE repo_id = $1
 `
 
+// TODO: do we have to worry about SQL injection for description?
 const repoInsert = `
 INSERT INTO repositories (
-	repo_name
+	repo_pathName
 	,repo_spaceId
-	,repo_displayName
+	,repo_name
 	,repo_description
 	,repo_isPublic
 	,repo_createdBy
@@ -370,9 +369,9 @@ INSERT INTO repositories (
 	,repo_numClosedPulls
 	,repo_numOpenPulls
 ) values (
-	:repo_name
+	:repo_pathName
 	,:repo_spaceId
-	,:repo_displayName
+	,:repo_name
 	,:repo_description
 	,:repo_isPublic
 	,:repo_createdBy
@@ -389,7 +388,7 @@ INSERT INTO repositories (
 const repoUpdate = `
 UPDATE repositories
 SET
-,repo_displayName		= :repo_displayName
+repo_name		        = :repo_name
 ,repo_description		= :repo_description
 ,repo_isPublic			= :repo_isPublic
 ,repo_updated			= :repo_updated
@@ -403,7 +402,7 @@ WHERE repo_id = :repo_id
 const repoUpdateNameAndSpaceID = `
 UPDATE repositories
 SET
-repo_name = $1
+repo_pathName = $1
 ,repo_spaceId = $2
 WHERE repo_id = $3
 `

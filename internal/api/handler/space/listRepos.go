@@ -17,7 +17,7 @@ import (
 )
 
 // HandleListRepos writes json-encoded list of repos in the request body.
-func HandleListRepos(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
+func HandleListRepos(guard *guard.Guard, repoStore store.RepoStore) http.HandlerFunc {
 	return guard.Space(
 		enum.PermissionSpaceView,
 		true,
@@ -31,7 +31,7 @@ func HandleListRepos(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc
 				params.Order = enum.OrderAsc
 			}
 
-			count, err := repos.Count(ctx, space.ID)
+			count, err := repoStore.Count(ctx, space.ID)
 			if err != nil {
 				log.Err(err).Msgf("Failed to count child repos.")
 
@@ -39,7 +39,7 @@ func HandleListRepos(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc
 				return
 			}
 
-			allRepos, err := repos.List(ctx, space.ID, params)
+			allRepos, err := repoStore.List(ctx, space.ID, params)
 			if err != nil {
 				log.Err(err).Msgf("Failed to list child repos.")
 

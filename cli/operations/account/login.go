@@ -2,49 +2,45 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package cli
+package account
 
 import (
 	"context"
-	"encoding/json"
-	"os"
 	"time"
 
+	"github.com/harness/gitness/cli/session"
 	"github.com/harness/gitness/cli/util"
 	"github.com/harness/gitness/client"
+
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-type registerCommand struct {
+type loginCommand struct {
 	server string
 }
 
-func (c *registerCommand) run(*kingpin.ParseContext) error {
+func (c *loginCommand) run(*kingpin.ParseContext) error {
 	username, password := util.Credentials()
 	httpClient := client.New(c.server)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	token, err := httpClient.Register(ctx, username, password)
+	ts, err := httpClient.Login(ctx, username, password)
 	if err != nil {
 		return err
 	}
-	path, err := util.Config()
-	if err != nil {
-		return err
-	}
-	token.Address = c.server
-	data, err := json.Marshal(token)
-	if err != nil {
-		return err
-	}
-	return os.WriteFile(path, data, OwnerReadWrite)
+
+	return util.StoreSession(&session.Session{
+		URI:         c.server,
+		ExpiresAt:   ts.Token.ExpiresAt,
+		AccessToken: ts.AccessToken,
+	})
 }
 
-// helper function to register the register command.
-func registerRegister(app *kingpin.Application) {
-	c := new(registerCommand)
+// helper function to register the logout command.
+func RegisterLogin(app *kingpin.Application) {
+	c := new(loginCommand)
 
-	cmd := app.Command("register", "register a user").
+	cmd := app.Command("login", "login to the remote server").
 		Action(c.run)
 
 	cmd.Arg("server", "server address").

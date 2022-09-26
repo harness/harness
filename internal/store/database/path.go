@@ -92,7 +92,6 @@ func ListPrimaryChildPathsTx(ctx context.Context, tx *sqlx.Tx, prefix string) ([
 
 // ReplacePathTx replace the path for a target as part of a transaction - keeps the existing as alias if requested.
 func ReplacePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Path, keepAsAlias bool) error {
-
 	if path.IsAlias {
 		return store.ErrPrimaryPathRequired
 	}
@@ -112,52 +111,9 @@ func ReplacePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Pa
 
 	// Only look for children if the type can have children
 	if path.TargetType == enum.PathTargetTypeSpace {
-		var childPaths []*types.Path
-		// get all primary paths that start with the current path before updating (or we can run into recursion)
-		childPaths, err = ListPrimaryChildPathsTx(ctx, tx, existing.Value)
+		err = replaceChildrenPathsTx(ctx, db, tx, existing, path, keepAsAlias)
 		if err != nil {
-			return errors.Wrapf(err, "Failed to get primary child paths for '%s'", existing.Value)
-		}
-
-		for _, child := range childPaths {
-			// create path with updated path (child already is primary)
-			updatedChild := new(types.Path)
-			*updatedChild = *child
-			updatedChild.ID = 0 // will be regenerated
-			updatedChild.Created = path.Created
-			updatedChild.Updated = path.Updated
-			updatedChild.CreatedBy = path.CreatedBy
-			updatedChild.Value = path.Value + updatedChild.Value[len(existing.Value):]
-
-			// ensure new child path length is okay
-			if check.PathTooLong(updatedChild.Value, path.TargetType == enum.PathTargetTypeSpace) {
-				log.Warn().Msgf("Path '%s' is too long.", path.Value)
-				return store.ErrPathTooLong
-			}
-
-			var (
-				query string
-				args  []interface{}
-			)
-
-			query, args, err = db.BindNamed(pathInsert, updatedChild)
-			if err != nil {
-				return processSQLErrorf(err, "Failed to bind path object")
-			}
-
-			if _, err = tx.ExecContext(ctx, query, args...); err != nil {
-				return processSQLErrorf(err, "Failed to create new primary child path '%s'", updatedChild.Value)
-			}
-
-			// make current child an alias or delete it
-			query = pathDeleteID
-			if keepAsAlias {
-				query = pathMakeAlias
-			}
-			if _, err = tx.ExecContext(ctx, query, child.ID); err != nil {
-				return processSQLErrorf(err, "Failed to mark existing child path '%s' as alias",
-					updatedChild.Value)
-			}
+			return err
 		}
 	}
 
@@ -175,10 +131,63 @@ func ReplacePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Pa
 	// make existing an alias
 	query = pathDeleteID
 	if keepAsAlias {
-		query = pathMakeAlias
+		query = pathMakeAliasID
 	}
 	if _, err = tx.ExecContext(ctx, query, existing.ID); err != nil {
 		return processSQLErrorf(err, "Failed to mark existing path '%s' as alias", existing.Value)
+	}
+
+	return nil
+}
+
+func replaceChildrenPathsTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx,
+	existing *types.Path, path *types.Path, keepAsAlias bool) error {
+	var childPaths []*types.Path
+	// get all primary paths that start with the current path before updating (or we can run into recursion)
+	childPaths, err := ListPrimaryChildPathsTx(ctx, tx, existing.Value)
+	if err != nil {
+		return errors.Wrapf(err, "Failed to get primary child paths for '%s'", existing.Value)
+	}
+
+	for _, child := range childPaths {
+		// create path with updated path (child already is primary)
+		updatedChild := new(types.Path)
+		*updatedChild = *child
+		updatedChild.ID = 0 // will be regenerated
+		updatedChild.Created = path.Created
+		updatedChild.Updated = path.Updated
+		updatedChild.CreatedBy = path.CreatedBy
+		updatedChild.Value = path.Value + updatedChild.Value[len(existing.Value):]
+
+		// ensure new child path length is okay
+		if check.PathTooLong(updatedChild.Value, path.TargetType == enum.PathTargetTypeSpace) {
+			log.Warn().Msgf("Path '%s' is too long.", path.Value)
+			return store.ErrPathTooLong
+		}
+
+		var (
+			query string
+			args  []interface{}
+		)
+
+		query, args, err = db.BindNamed(pathInsert, updatedChild)
+		if err != nil {
+			return processSQLErrorf(err, "Failed to bind path object")
+		}
+
+		if _, err = tx.ExecContext(ctx, query, args...); err != nil {
+			return processSQLErrorf(err, "Failed to create new primary child path '%s'", updatedChild.Value)
+		}
+
+		// make current child an alias or delete it
+		query = pathDeleteID
+		if keepAsAlias {
+			query = pathMakeAliasID
+		}
+		if _, err = tx.ExecContext(ctx, query, child.ID); err != nil {
+			return processSQLErrorf(err, "Failed to mark existing child path '%s' as alias",
+				updatedChild.Value)
+		}
 	}
 
 	return nil
@@ -239,7 +248,7 @@ func ListPaths(ctx context.Context, db *sqlx.DB, targetType enum.PathTargetType,
 	opts *types.PathFilter) ([]*types.Path, error) {
 	dst := []*types.Path{}
 
-	// if the user does not provide any customer filter
+	// if the principal does not provide any customer filter
 	// or sorting we use the default select statement.
 	if opts.Sort == enum.PathAttrNone {
 		err := db.SelectContext(ctx, &dst, pathSelect, string(targetType), fmt.Sprint(targetID), limit(opts.Size),
@@ -368,9 +377,9 @@ DELETE FROM paths
 WHERE path_targetType = $1 AND path_targetId = $2
 `
 
-const pathMakeAlias = `
+const pathMakeAliasID = `
 UPDATE paths
 SET
 path_isAlias		= 1
-WHERE path_id = :path_id
+WHERE path_id = $1
 `

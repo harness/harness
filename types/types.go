@@ -6,8 +6,6 @@
 package types
 
 import (
-	"time"
-
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -18,12 +16,5 @@ type (
 		Size  int        `json:"size"`
 		Sort  string     `json:"sort"`
 		Order enum.Order `json:"direction"`
-	}
-
-	// Token stores token  details.
-	Token struct {
-		Value   string    `json:"access_token"`
-		Address string    `json:"uri,omitempty"`
-		Expires time.Time `json:"expires_at,omitempty"`
 	}
 )

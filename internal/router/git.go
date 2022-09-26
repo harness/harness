@@ -8,7 +8,7 @@ import (
 	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	middleware_authn "github.com/harness/gitness/internal/api/middleware/authn"
 	"github.com/harness/gitness/internal/api/middleware/encode"
-	"github.com/harness/gitness/internal/api/middleware/repo"
+	"github.com/harness/gitness/internal/api/middleware/resolve"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
@@ -29,11 +29,11 @@ func newGitHandler(
 	mountPath string,
 	_ store.SystemStore,
 	_ store.UserStore,
-	_ store.SpaceStore,
+	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer) http.Handler {
-	guard := guard.New(authorizer)
+	guard := guard.New(authorizer, spaceStore, repoStore)
 	// Use go-chi router for inner routing (restricted to mountPath!)
 	r := chi.NewRouter()
 	r.Route(mountPath, func(r chi.Router) {
@@ -53,7 +53,7 @@ func newGitHandler(
 
 		r.Route(fmt.Sprintf("/{%s}", request.RepoRefParamName), func(r chi.Router) {
 			// resolves the repo and stores in the context
-			r.Use(repo.Required(repoStore))
+			r.Use(resolve.Repo(repoStore))
 
 			// Write operations (need auth)
 			r.Group(func(r chi.Router) {
@@ -95,7 +95,7 @@ func stubGitHandler(w http.ResponseWriter, r *http.Request) {
 			"  Method: '%s'\n"+
 			"  Path: '%s'\n"+
 			"  Query: '%s'",
-		rep.DisplayName, rep.Path,
+		rep.Name, rep.Path,
 		r.Method,
 		r.URL.Path,
 		r.URL.RawQuery,

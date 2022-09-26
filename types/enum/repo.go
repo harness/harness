@@ -13,14 +13,14 @@ type RepoAttr int
 const (
 	RepoAttrNone RepoAttr = iota
 	RepoAttrID
-	RepoAttrName
+	RepoAttrPathName
 	RepoAttrPath
-	RepoAttrDisplayName
+	RepoAttrName
 	RepoAttrCreated
 	RepoAttrUpdated
 )
 
-// ParseRepoAtrr parses the user attribute string
+// ParseRepoAtrr parses the repo attribute string
 // and returns the equivalent enumeration.
 func ParseRepoAtrr(s string) RepoAttr {
 	switch strings.ToLower(s) {
@@ -30,8 +30,8 @@ func ParseRepoAtrr(s string) RepoAttr {
 		return RepoAttrName
 	case path:
 		return RepoAttrPath
-	case "displayName":
-		return RepoAttrDisplayName
+	case pathName:
+		return RepoAttrPathName
 	case created, createdAt:
 		return RepoAttrCreated
 	case updated, updatedAt:

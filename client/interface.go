@@ -13,17 +13,13 @@ import (
 // Client to access the remote APIs.
 type Client interface {
 	// Login authenticates the user and returns a JWT token.
-	Login(ctx context.Context, username, password string) (*types.Token, error)
+	Login(ctx context.Context, username, password string) (*types.TokenResponse, error)
 
 	// Register registers a new  user and returns a JWT token.
-	Register(ctx context.Context, username, password string) (*types.Token, error)
+	Register(ctx context.Context, username, password string) (*types.TokenResponse, error)
 
 	// Self returns the currently authenticated user.
 	Self(ctx context.Context) (*types.User, error)
-
-	// Token returns an oauth2 bearer token for the currently
-	// authenticated user.
-	Token(ctx context.Context) (*types.Token, error)
 
 	// User returns a user by ID or email.
 	User(ctx context.Context, key string) (*types.User, error)

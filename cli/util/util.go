@@ -17,34 +17,81 @@ import (
 
 	"golang.org/x/term"
 
+	"github.com/harness/gitness/cli/session"
 	"github.com/harness/gitness/client"
-	"github.com/harness/gitness/types"
 
 	"github.com/adrg/xdg"
 )
 
-// Client returns a client that is configured from file.
+const (
+	OwnerReadWrite = 0600
+)
+
+// Client returns a client that is configured from the default session file.
 func Client() (*client.HTTPClient, error) {
-	path, err := Config()
+	session, err := LoadSession()
 	if err != nil {
 		return nil, err
 	}
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	token := new(types.Token)
-	if err = json.Unmarshal(data, token); err != nil {
-		return nil, err
-	}
-	if time.Now().Unix() > token.Expires.Unix() {
-		return nil, errors.New("token is expired, please login")
-	}
-	client := client.NewToken(token.Address, token.Value)
+
+	client := client.NewToken(session.URI, session.AccessToken)
 	if os.Getenv("DEBUG") == "true" {
 		client.SetDebug(true)
 	}
 	return client, nil
+}
+
+// LoadSession loads an existing session from the default file.
+func LoadSession() (*session.Session, error) {
+	path, err := Config()
+	if err != nil {
+		return nil, err
+	}
+
+	return LoadSessionFromPath(path)
+}
+
+// LoadSessionFromPath loads an existing session from a file.
+func LoadSessionFromPath(path string) (*session.Session, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read session from file: %w", err)
+	}
+	session := new(session.Session)
+	if err = json.Unmarshal(data, session); err != nil {
+		return nil, fmt.Errorf("failed to deserialize session: %w", err)
+	}
+
+	if time.Now().Unix() > session.ExpiresAt {
+		return nil, errors.New("token is expired, please login")
+	}
+
+	return session, nil
+}
+
+// StoreSession stores an existing session to the default file.
+func StoreSession(session *session.Session) error {
+	path, err := Config()
+	if err != nil {
+		return err
+	}
+
+	return StoreSessionAtPath(path, session)
+}
+
+// StoreSessionAtPath writes a session to a file.
+func StoreSessionAtPath(path string, session *session.Session) error {
+	data, err := json.Marshal(session)
+	if err != nil {
+		return fmt.Errorf("failed to serialize session: %w", err)
+	}
+
+	err = os.WriteFile(path, data, OwnerReadWrite)
+	if err != nil {
+		return fmt.Errorf("failed to write session to file: %w", err)
+	}
+
+	return nil
 }
 
 // Config returns the configuration file path.

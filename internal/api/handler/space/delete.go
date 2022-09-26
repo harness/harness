@@ -18,7 +18,7 @@ import (
 /*
  * Deletes a space.
  */
-func HandleDelete(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
+func HandleDelete(guard *guard.Guard, spaceStore store.SpaceStore) http.HandlerFunc {
 	return guard.Space(
 		enum.PermissionSpaceDelete,
 		false,
@@ -27,7 +27,7 @@ func HandleDelete(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			log := hlog.FromRequest(r)
 			s, _ := request.SpaceFrom(ctx)
 
-			err := spaces.Delete(r.Context(), s.ID)
+			err := spaceStore.Delete(r.Context(), s.ID)
 			if err != nil {
 				log.Err(err).Msgf("Failed to delete the space.")
 

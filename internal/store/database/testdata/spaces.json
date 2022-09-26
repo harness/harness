@@ -1,9 +1,9 @@
 [
     {
         "id": 1,
-        "name": "space1",
+        "pathName": "space1",
         "parentId": 0,
-        "displayName": "Space 1",
+        "name": "Space 1",
         "description": "Some space.",
         "isPublic": true,
         "createdBy": 1,
@@ -12,9 +12,9 @@
     },
     {
         "id": 2,
-        "name": "space2",
+        "pathName": "space2",
         "parentId": 1,
-        "displayName": "Space 2",
+        "name": "Space 2",
         "description": "Some subspace.",
         "isPublic": true,
         "createdBy": 1,

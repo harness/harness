@@ -12,10 +12,10 @@ import (
 type Repository struct {
 	// Core properties
 	ID          int64  `db:"repo_id"              json:"id"`
-	Name        string `db:"repo_name"            json:"name"`
 	SpaceID     int64  `db:"repo_spaceId"         json:"spaceId"`
+	PathName    string `db:"repo_pathName"        json:"pathName"`
 	Path        string `db:"repo_path"            json:"path"`
-	DisplayName string `db:"repo_displayName"     json:"displayName"`
+	Name        string `db:"repo_name"            json:"name"`
 	Description string `db:"repo_description"     json:"description"`
 	IsPublic    bool   `db:"repo_isPublic"        json:"isPublic"`
 	CreatedBy   int64  `db:"repo_createdBy"       json:"createdBy"`

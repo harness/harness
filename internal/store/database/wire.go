@@ -20,8 +20,10 @@ const (
 var WireSet = wire.NewSet(
 	ProvideDatabase,
 	ProvideUserStore,
+	ProvideServiceAccountStore,
 	ProvideSpaceStore,
 	ProvideRepoStore,
+	ProvideTokenStore,
 )
 
 // ProvideDatabase provides a database connection.
@@ -40,6 +42,18 @@ func ProvideUserStore(db *sqlx.DB) store.UserStore {
 	default:
 		return NewUserStoreSync(
 			NewUserStore(db),
+		)
+	}
+}
+
+// ProvideServiceAccountStore provides a service account store.
+func ProvideServiceAccountStore(db *sqlx.DB) store.ServiceAccountStore {
+	switch db.DriverName() {
+	case postgres:
+		return NewServiceAccountStore(db)
+	default:
+		return NewServiceAccountStoreSync(
+			NewServiceAccountStore(db),
 		)
 	}
 }
@@ -64,6 +78,18 @@ func ProvideRepoStore(db *sqlx.DB) store.RepoStore {
 	default:
 		return NewRepoStoreSync(
 			NewRepoStore(db),
+		)
+	}
+}
+
+// ProvideTokenStore provides a token store.
+func ProvideTokenStore(db *sqlx.DB) store.TokenStore {
+	switch db.DriverName() {
+	case postgres:
+		return NewTokenStore(db)
+	default:
+		return NewTokenStoreSync(
+			NewTokenStore(db),
 		)
 	}
 }

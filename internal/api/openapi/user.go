@@ -40,7 +40,7 @@ func buildUser(reflector *openapi3.Reflector) {
 	opToken := openapi3.Operation{}
 	opToken.WithTags("user")
 	opToken.WithMapOfAnything(map[string]interface{}{"operationId": "createToken"})
-	_ = reflector.SetRequest(&opToken, new(types.Token), http.MethodPost)
+	_ = reflector.SetRequest(&opToken, new(types.TokenResponse), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opToken, new(types.User), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opToken, new(render.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/user/token", opToken)

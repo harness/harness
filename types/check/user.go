@@ -25,10 +25,16 @@ var (
 
 // User returns true if the User if valid.
 func User(user *types.User) error {
+	// validate name
+	if err := Name(user.Name); err != nil {
+		return err
+	}
+
 	// validate email
 	l := len(user.Email)
 	if l < minEmailLength || l > maxEmailLength {
 		return ErrEmailLen
 	}
+
 	return nil
 }

@@ -21,9 +21,9 @@ import (
 )
 
 type repoCreateInput struct {
-	Name        string `json:"name"`
+	PathName    string `json:"pathName"`
 	SpaceID     int64  `json:"spaceId"`
-	DisplayName string `json:"displayName"`
+	Name        string `json:"name"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"isPublic"`
 	ForkID      int64  `json:"forkId"`
@@ -32,7 +32,7 @@ type repoCreateInput struct {
 /*
  * HandleCreate returns an http.HandlerFunc that creates a new repository.
  */
-func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoStore) http.HandlerFunc {
+func HandleCreate(guard *guard.Guard, spaceStore store.SpaceStore, repoStore store.RepoStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
@@ -53,7 +53,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 			return
 		}
 
-		parentSpace, err := spaces.Find(ctx, in.SpaceID)
+		parentSpace, err := spaceStore.Find(ctx, in.SpaceID)
 		if err != nil {
 			log.Err(err).Msgf("Failed to get space with id '%d'.", in.SpaceID)
 
@@ -77,17 +77,17 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 			return
 		}
 
-		// get current user (safe to be there, or enforce would fail)
-		usr, _ := request.UserFrom(ctx)
+		// get current principal (safe to be there, or enforce would fail)
+		principal, _ := request.PrincipalFrom(ctx)
 
 		// create new repo object
 		repo := &types.Repository{
-			Name:        strings.ToLower(in.Name),
+			PathName:    strings.ToLower(in.PathName),
 			SpaceID:     in.SpaceID,
-			DisplayName: in.DisplayName,
+			Name:        in.Name,
 			Description: in.Description,
 			IsPublic:    in.IsPublic,
-			CreatedBy:   usr.ID,
+			CreatedBy:   principal.ID,
 			Created:     time.Now().UnixMilli(),
 			Updated:     time.Now().UnixMilli(),
 			ForkID:      in.ForkID,
@@ -100,7 +100,7 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore, repos store.RepoS
 		}
 
 		// create in store
-		err = repos.Create(ctx, repo)
+		err = repoStore.Create(ctx, repo)
 		if err != nil {
 			log.Error().Err(err).
 				Msg("Repository creation failed.")

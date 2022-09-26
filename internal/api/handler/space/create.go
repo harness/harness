@@ -22,9 +22,9 @@ import (
 )
 
 type spaceCreateRequest struct {
-	Name        string `json:"name"`
+	PathName    string `json:"pathName"`
 	ParentID    int64  `json:"parentId"`
-	DisplayName string `json:"displayName"`
+	Name        string `json:"name"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"isPublic"`
 }
@@ -32,7 +32,7 @@ type spaceCreateRequest struct {
 /*
  * HandleCreate returns an http.HandlerFunc that creates a new space.
  */
-func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc {
+func HandleCreate(guard *guard.Guard, spaceStore store.SpaceStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
@@ -44,8 +44,8 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 			return
 		}
 
-		// get current user (will be enforced to not be nil via explicit check or guard.Enforce)
-		usr, _ := request.UserFrom(ctx)
+		// get current principal (will be enforced to not be nil via explicit check or guard.Enforce)
+		principal, _ := request.PrincipalFrom(ctx)
 
 		// Collect parent path along the way - needed for duplicate error message
 		parentPath := ""
@@ -56,14 +56,14 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 		 */
 		if in.ParentID <= 0 {
 			// TODO: Restrict top level space creation.
-			if usr == nil {
+			if principal == nil {
 				render.Unauthorized(w)
 				return
 			}
 		} else {
 			// Create is a special case - we need the parent path
 			var parent *types.Space
-			parent, err = spaces.Find(ctx, in.ParentID)
+			parent, err = spaceStore.Find(ctx, in.ParentID)
 			if err != nil {
 				log.Err(err).Msgf("Failed to get space with id '%d'.", in.ParentID)
 
@@ -85,12 +85,12 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 
 		// create new space object
 		space := &types.Space{
-			Name:        strings.ToLower(in.Name),
+			PathName:    strings.ToLower(in.PathName),
 			ParentID:    in.ParentID,
-			DisplayName: in.DisplayName,
+			Name:        in.Name,
 			Description: in.Description,
 			IsPublic:    in.IsPublic,
-			CreatedBy:   usr.ID,
+			CreatedBy:   principal.ID,
 			Created:     time.Now().UnixMilli(),
 			Updated:     time.Now().UnixMilli(),
 		}
@@ -103,14 +103,14 @@ func HandleCreate(guard *guard.Guard, spaces store.SpaceStore) http.HandlerFunc 
 
 		// Validate path length (Due to racing conditions we can't be 100% sure on the path here only best effort
 		// to have a quick failure)
-		path := paths.Concatinate(parentPath, space.Name)
+		path := paths.Concatinate(parentPath, space.PathName)
 		if err = check.Path(path, true); err != nil {
 			render.UserfiedErrorOrInternal(w, err)
 			return
 		}
 
 		// create in store
-		err = spaces.Create(ctx, space)
+		err = spaceStore.Create(ctx, space)
 		if err != nil {
 			log.Error().Err(err).
 				Msg("Space creation failed.")

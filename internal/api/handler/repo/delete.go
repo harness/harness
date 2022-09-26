@@ -18,7 +18,7 @@ import (
 /*
  * Deletes a repository.
  */
-func HandleDelete(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
+func HandleDelete(guard *guard.Guard, repoStore store.RepoStore) http.HandlerFunc {
 	return guard.Repo(
 		enum.PermissionRepoDelete,
 		false,
@@ -27,7 +27,7 @@ func HandleDelete(guard *guard.Guard, repos store.RepoStore) http.HandlerFunc {
 			log := hlog.FromRequest(r)
 			repo, _ := request.RepoFrom(ctx)
 
-			err := repos.Delete(r.Context(), repo.ID)
+			err := repoStore.Delete(r.Context(), repo.ID)
 			if err != nil {
 				log.Err(err).Msgf("Failed to delete the Repository.")
 
