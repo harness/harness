@@ -5,6 +5,8 @@
 package database
 
 import (
+	"context"
+
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 
@@ -27,8 +29,9 @@ var WireSet = wire.NewSet(
 )
 
 // ProvideDatabase provides a database connection.
-func ProvideDatabase(config *types.Config) (*sqlx.DB, error) {
+func ProvideDatabase(ctx context.Context, config *types.Config) (*sqlx.DB, error) {
 	return Connect(
+		ctx,
 		config.Database.Driver,
 		config.Database.Datasource,
 	)

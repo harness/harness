@@ -15,9 +15,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// noContext is simple background context.
-var noContext = context.Background()
-
 //go:embed postgres/*.sql
 var postgres embed.FS
 
@@ -25,7 +22,7 @@ var postgres embed.FS
 var sqlite embed.FS
 
 // Migrate performs the database migration.
-func Migrate(db *sqlx.DB) error {
+func Migrate(ctx context.Context, db *sqlx.DB) error {
 	before := func(_ context.Context, _ *sql.Tx, version string) error {
 		log.Trace().Str("version", version).Msg("migration started")
 		return nil
@@ -54,5 +51,5 @@ func Migrate(db *sqlx.DB) error {
 		opts.FS = folder
 	}
 
-	return migrate.New(opts).MigrateUp(noContext)
+	return migrate.New(opts).MigrateUp(ctx)
 }

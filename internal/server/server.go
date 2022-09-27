@@ -15,6 +15,11 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+const (
+	// ReadHeaderTimeout defines the max time the server waits for request headers.
+	ReadHeaderTimeout = 2 * time.Second
+)
+
 // A Server defines parameters for running an HTTP server.
 type Server struct {
 	Acme    bool
@@ -25,43 +30,43 @@ type Server struct {
 	Handler http.Handler
 }
 
+// ShutdownFunction defines a function that is called to shutdown the server.
+type ShutdownFunction func(context.Context) error
+
 // ListenAndServe initializes a server to respond to HTTP network requests.
-func (s *Server) ListenAndServe(ctx context.Context) error {
+func (s *Server) ListenAndServe() (*errgroup.Group, ShutdownFunction) {
 	if s.Acme {
-		return s.listenAndServeAcme(ctx)
+		return s.listenAndServeAcme()
 	} else if s.Key != "" {
-		return s.listenAndServeTLS(ctx)
+		return s.listenAndServeTLS()
 	}
-	return s.listenAndServe(ctx)
+	return s.listenAndServe()
 }
 
-func (s *Server) listenAndServe(ctx context.Context) error {
+func (s *Server) listenAndServe() (*errgroup.Group, ShutdownFunction) {
 	var g errgroup.Group
 	s1 := &http.Server{
 		Addr:              s.Addr,
-		ReadHeaderTimeout: 2 * time.Second,
+		ReadHeaderTimeout: ReadHeaderTimeout,
 		Handler:           s.Handler,
 	}
 	g.Go(func() error {
-		<-ctx.Done()
-		return s1.Shutdown(ctx)
-	})
-	g.Go(func() error {
 		return s1.ListenAndServe()
 	})
-	return g.Wait()
+
+	return &g, s1.Shutdown
 }
 
-func (s *Server) listenAndServeTLS(ctx context.Context) error {
+func (s *Server) listenAndServeTLS() (*errgroup.Group, ShutdownFunction) {
 	var g errgroup.Group
 	s1 := &http.Server{
 		Addr:              ":http",
-		ReadHeaderTimeout: 2 * time.Second,
+		ReadHeaderTimeout: ReadHeaderTimeout,
 		Handler:           http.HandlerFunc(redirect),
 	}
 	s2 := &http.Server{
 		Addr:              ":https",
-		ReadHeaderTimeout: 2 * time.Second,
+		ReadHeaderTimeout: ReadHeaderTimeout,
 		Handler:           s.Handler,
 	}
 	g.Go(func() error {
@@ -73,20 +78,20 @@ func (s *Server) listenAndServeTLS(ctx context.Context) error {
 			s.Key,
 		)
 	})
-	g.Go(func() error {
-		<-ctx.Done()
-		if err := s1.Shutdown(ctx); err != nil {
-			return err
-		}
-		if err := s2.Shutdown(ctx); err != nil {
-			return err
-		}
-		return nil
-	})
-	return g.Wait()
+
+	return &g, func(ctx context.Context) error {
+		var sg errgroup.Group
+		sg.Go(func() error {
+			return s1.Shutdown(ctx)
+		})
+		sg.Go(func() error {
+			return s2.Shutdown(ctx)
+		})
+		return sg.Wait()
+	}
 }
 
-func (s Server) listenAndServeAcme(ctx context.Context) error {
+func (s Server) listenAndServeAcme() (*errgroup.Group, ShutdownFunction) {
 	var g errgroup.Group
 	m := &autocert.Manager{
 		Cache:      autocert.DirCache(".cache"),
@@ -95,13 +100,13 @@ func (s Server) listenAndServeAcme(ctx context.Context) error {
 	}
 	s1 := &http.Server{
 		Addr:              ":http",
-		ReadHeaderTimeout: 2 * time.Second,
+		ReadHeaderTimeout: ReadHeaderTimeout,
 		Handler:           m.HTTPHandler(nil),
 	}
 	s2 := &http.Server{
 		Addr:              ":https",
 		Handler:           s.Handler,
-		ReadHeaderTimeout: 2 * time.Second,
+		ReadHeaderTimeout: ReadHeaderTimeout,
 		TLSConfig: &tls.Config{
 			MinVersion:     tls.VersionTLS12,
 			GetCertificate: m.GetCertificate,
@@ -114,17 +119,17 @@ func (s Server) listenAndServeAcme(ctx context.Context) error {
 	g.Go(func() error {
 		return s2.ListenAndServeTLS("", "")
 	})
-	g.Go(func() error {
-		<-ctx.Done()
-		if err := s1.Shutdown(ctx); err != nil {
-			return err
-		}
-		if err := s2.Shutdown(ctx); err != nil {
-			return err
-		}
-		return nil
-	})
-	return g.Wait()
+
+	return &g, func(ctx context.Context) error {
+		var sg errgroup.Group
+		sg.Go(func() error {
+			return s1.Shutdown(ctx)
+		})
+		sg.Go(func() error {
+			return s2.Shutdown(ctx)
+		})
+		return sg.Wait()
+	}
 }
 
 func redirect(w http.ResponseWriter, req *http.Request) {

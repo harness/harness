@@ -7,11 +7,12 @@
 package database
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/harness/gitness/internal/store/database/migrate"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 
 	"github.com/Masterminds/squirrel"
@@ -23,19 +24,19 @@ import (
 var builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 // Connect to a database and verify with a ping.
-func Connect(driver, datasource string) (*sqlx.DB, error) {
+func Connect(ctx context.Context, driver string, datasource string) (*sqlx.DB, error) {
 	db, err := sql.Open(driver, datasource)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to open the db")
+		return nil, fmt.Errorf("failed to open the db: %w", err)
 	}
 
 	dbx := sqlx.NewDb(db, driver)
-	if err = pingDatabase(dbx); err != nil {
-		return nil, errors.Wrap(err, "Failed to ping the db")
+	if err = pingDatabase(ctx, dbx); err != nil {
+		return nil, fmt.Errorf("failed to ping the db: %w", err)
 	}
 
-	if err = setupDatabase(dbx); err != nil {
-		return nil, errors.Wrap(err, "Failed to setup the db")
+	if err = setupDatabase(ctx, dbx); err != nil {
+		return nil, fmt.Errorf("failed to setup the db: %w", err)
 	}
 
 	return dbx, nil
@@ -53,26 +54,26 @@ func Must(db *sqlx.DB, err error) *sqlx.DB {
 // helper function to ping the database with backoff to ensure
 // a connection can be established before we proceed with the
 // database setup and migration.
-func pingDatabase(db *sqlx.DB) error {
+func pingDatabase(ctx context.Context, db *sqlx.DB) error {
 	var err error
-	for i := 0; i < 30; i++ {
-		err = db.Ping()
+	for i := 1; i <= 30; i++ {
+		err = db.PingContext(ctx)
 
 		// We can complete on first successful ping
 		if err == nil {
 			return nil
 		}
 
-		log.Err(err).Msgf("Ping attempt #%d failed", i+1)
+		log.Debug().Err(err).Msgf("Ping attempt #%d failed", i)
 
 		time.Sleep(time.Second)
 	}
 
-	return err
+	return fmt.Errorf("all 30 tries failed, last failure: %w", err)
 }
 
 // helper function to setup the database by performing automated
 // database migration steps.
-func setupDatabase(db *sqlx.DB) error {
-	return migrate.Migrate(db)
+func setupDatabase(ctx context.Context, db *sqlx.DB) error {
+	return migrate.Migrate(ctx, db)
 }

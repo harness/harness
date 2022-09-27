@@ -8,6 +8,8 @@
 package server
 
 import (
+	"context"
+
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/cron"
@@ -20,7 +22,7 @@ import (
 	"github.com/google/wire"
 )
 
-func initSystem(config *types.Config) (*system, error) {
+func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	wire.Build(
 		database.WireSet,
 		memory.WireSet,

@@ -7,6 +7,8 @@
 package server
 
 import (
+	"context"
+
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/cron"
@@ -19,9 +21,9 @@ import (
 
 // Injectors from wire.go:
 
-func initSystem(config *types.Config) (*system, error) {
+func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	systemStore := memory.New(config)
-	db, err := database.ProvideDatabase(config)
+	db, err := database.ProvideDatabase(ctx, config)
 	if err != nil {
 		return nil, err
 	}

@@ -6,17 +6,27 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/joho/godotenv"
 	"github.com/mattn/go-isatty"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/sync/errgroup"
 	"gopkg.in/alecthomas/kingpin.v2"
+)
+
+const (
+	// GraceFullShutdownTime defines the max time we wait when shutting down a server.
+	// 5min should be enough for most git clones to complete.
+	GraceFullShutdownTime = 300 * time.Second
 )
 
 type command struct {
@@ -24,6 +34,10 @@ type command struct {
 }
 
 func (c *command) run(*kingpin.ParseContext) error {
+	// Create context that listens for the interrupt signal from the OS.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
 	// load environment variables from file.
 	err := godotenv.Load(c.envfile)
 	if err != nil {
@@ -34,40 +48,57 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// data from the environment.
 	config, err := load()
 	if err != nil {
-		log.Fatal().Err(err).
-			Msg("cannot load configuration")
+		return fmt.Errorf("encountered an error while loading configuration: %w", err)
 	}
 
 	// configure the log level
 	setupLogger(config)
 
-	system, err := initSystem(config)
+	// initialize system
+	system, err := initSystem(ctx, config)
 	if err != nil {
-		log.Fatal().Err(err).
-			Msg("cannot boot server")
+		return fmt.Errorf("encountered an error while initializing the system: %w", err)
 	}
 
-	var g errgroup.Group
+	// collects all go routines - gCTX cancels if any go routine encounters an error
+	g, gCtx := errgroup.WithContext(ctx)
 
-	// starts the http server.
-	g.Go(func() error {
-		log.Info().
-			Str("port", config.Server.Bind).
-			Str("revision", version.GitCommit).
-			Str("repository", version.GitRepository).
-			Stringer("version", version.Version).
-			Msg("server started")
-		return system.server.ListenAndServe(context.Background())
-	})
+	// start server
+	gHTTP, shutdownHTTP := system.server.ListenAndServe()
+	g.Go(gHTTP.Wait)
+	log.Info().
+		Str("port", config.Server.Bind).
+		Str("revision", version.GitCommit).
+		Str("repository", version.GitRepository).
+		Stringer("version", version.Version).
+		Msg("server started")
 
 	// start the purge routine.
 	g.Go(func() error {
-		log.Debug().Msg("starting the nightly subroutine")
-		system.nightly.Run(context.Background())
+		system.nightly.Run(gCtx)
 		return nil
 	})
+	log.Info().Msg("nightly subroutine started")
 
-	return g.Wait()
+	// wait until the error group context is done
+	<-gCtx.Done()
+
+	// restore default behavior on the interrupt signal and notify user of shutdown.
+	stop()
+	log.Info().Msg("shutting down gracefully (press Ctrl+C again to force)")
+
+	// shutdown servers gracefully
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), GraceFullShutdownTime)
+	defer cancel()
+
+	if sErr := shutdownHTTP(shutdownCtx); sErr != nil {
+		log.Err(sErr).Msg("failed to shutdown http server gracefully")
+	}
+
+	log.Info().Msg("wait for subroutines to complete")
+	err = g.Wait()
+
+	return err
 }
 
 // helper function configures the global logger from

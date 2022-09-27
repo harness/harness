@@ -5,6 +5,7 @@
 package database
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 
@@ -24,7 +25,7 @@ func connect() (*sqlx.DB, error) {
 		driver = os.Getenv("DATABASE_DRIVER")
 		config = os.Getenv("DATABASE_CONFIG")
 	}
-	return Connect(driver, config)
+	return Connect(context.Background(), driver, config)
 }
 
 // seed seed the database state.
