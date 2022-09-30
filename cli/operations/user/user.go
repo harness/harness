@@ -18,6 +18,8 @@ import (
 )
 
 const userTmpl = `
+uid:   {{ .UID }}
+name:  {{ .Name }}
 email: {{ .Email }}
 admin: {{ .Admin }}
 `

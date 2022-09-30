@@ -40,7 +40,7 @@ func offset(page, size int) int {
 // Logs the error and message, returns either the original error or a store equivalent if possible.
 func processSQLErrorf(err error, format string, args ...interface{}) error {
 	// always log DB error (print formated message)
-	log.Warn().Msgf("%s %s", fmt.Sprintf(format, args...), err)
+	log.Debug().Msgf("%s %s", fmt.Sprintf(format, args...), err)
 
 	// If it's a known error, return converted error instead.
 	if errors.Is(err, sql.ErrNoRows) {

@@ -47,7 +47,6 @@ func Space(spaceStore store.SpaceStore) func(http.Handler) http.Handler {
 
 			if err != nil {
 				log.Debug().Err(err).Msgf("Failed to get space using ref '%s'.", ref)
-
 				render.UserfiedErrorOrInternal(w, err)
 				return
 			}

@@ -30,11 +30,10 @@ func HandleDelete(userStore store.UserStore, tokenStore store.TokenStore) http.H
 			return
 		}
 
-		err = userStore.Delete(ctx, user)
+		err = userStore.Delete(ctx, user.ID)
 		if err != nil {
 			log.Error().Err(err).
-				Int64("user_id", user.ID).
-				Str("user_email", user.Email).
+				Str("user_uid", user.UID).
 				Msg("failed to delete user")
 
 			render.UserfiedErrorOrInternal(w, err)

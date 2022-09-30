@@ -17,20 +17,32 @@ const (
 	minNameLength = 1
 	maxNameLength = 256
 	nameRegex     = "^[a-zA-Z][a-zA-Z0-9\\-\\_ ]*$"
+
+	minUIDLength = 2
+	maxUIDLength = 64
+	uidRegex     = "^[a-z][a-z0-9\\-\\_]*$"
 )
 
 var (
 	ErrPathNameLength = &ValidationError{
 		fmt.Sprintf("Path name has to be between %d and %d in length.", minPathNameLength, maxPathNameLength),
 	}
-	ErrPathNameRegex = &ValidationError{"Path name has start with a letter and only contain the following [a-z0-9-_]."}
+	ErrPathNameRegex = &ValidationError{"Path name has to start with a letter and only contain the following [a-z0-9-_]."}
 
 	ErrNameLength = &ValidationError{
 		fmt.Sprintf("Name has to be between %d and %d in length.",
 			minNameLength, maxNameLength),
 	}
 	ErrNameRegex = &ValidationError{
-		"Name has start with a letter and only contain the following [a-zA-Z0-9-_ ].",
+		"Name has to start with a letter and only contain the following [a-zA-Z0-9-_ ].",
+	}
+
+	ErrUIDLength = &ValidationError{
+		fmt.Sprintf("UID has to be between %d and %d in length.",
+			minUIDLength, maxUIDLength),
+	}
+	ErrUIDRegex = &ValidationError{
+		"UID has to start with a letter and only contain the following [a-z0-9-_].",
 	}
 )
 
@@ -57,6 +69,20 @@ func Name(name string) error {
 
 	if ok, _ := regexp.Match(nameRegex, []byte(name)); !ok {
 		return ErrNameRegex
+	}
+
+	return nil
+}
+
+// UID checks the provided uid and returns an error in it isn't valid.
+func UID(uid string) error {
+	l := len(uid)
+	if l < minUIDLength || l > maxUIDLength {
+		return ErrUIDLength
+	}
+
+	if ok, _ := regexp.Match(uidRegex, []byte(uid)); !ok {
+		return ErrUIDRegex
 	}
 
 	return nil

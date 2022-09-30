@@ -13,7 +13,7 @@ type UserAttr int
 // Order enumeration.
 const (
 	UserAttrNone UserAttr = iota
-	UserAttrID
+	UserAttrUID
 	UserAttrName
 	UserAttrEmail
 	UserAttrAdmin
@@ -26,7 +26,7 @@ const (
 func ParseUserAttr(s string) UserAttr {
 	switch strings.ToLower(s) {
 	case "id":
-		return UserAttrID
+		return UserAttrUID
 	case "name":
 		return UserAttrName
 	case "email":

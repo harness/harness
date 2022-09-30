@@ -20,7 +20,9 @@ import (
 )
 
 type userCreateInput struct {
-	Username string `json:"email"`
+	UID      string `json:"uid"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 	Admin    bool   `json:"admin"`
 }
@@ -42,7 +44,7 @@ func HandleCreate(userStore store.UserStore) http.HandlerFunc {
 		hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
 		if err != nil {
 			log.Err(err).
-				Str("email", in.Username).
+				Str("uid", in.UID).
 				Msg("Failed to hash password")
 
 			render.InternalError(w)
@@ -50,7 +52,9 @@ func HandleCreate(userStore store.UserStore) http.HandlerFunc {
 		}
 
 		user := &types.User{
-			Email:    in.Username,
+			UID:      in.UID,
+			Name:     in.Name,
+			Email:    in.Email,
 			Admin:    in.Admin,
 			Password: string(hash),
 			Salt:     uniuri.NewLen(uniuri.UUIDLen),
@@ -59,7 +63,7 @@ func HandleCreate(userStore store.UserStore) http.HandlerFunc {
 		}
 		if err = check.User(user); err != nil {
 			log.Debug().Err(err).
-				Str("email", user.Email).
+				Str("uid", user.UID).
 				Msg("invalid user input")
 
 			render.UserfiedErrorOrInternal(w, err)
@@ -69,7 +73,7 @@ func HandleCreate(userStore store.UserStore) http.HandlerFunc {
 		err = userStore.Create(ctx, user)
 		if err != nil {
 			log.Err(err).
-				Str("email", user.Email).
+				Str("uid", user.UID).
 				Msg("failed to create user")
 
 			render.UserfiedErrorOrInternal(w, err)

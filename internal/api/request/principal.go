@@ -5,14 +5,14 @@ import (
 )
 
 const (
-	UserIDParamName           = "userId"
-	ServiceAccountIDParamName = "saId"
+	UserUIDParamName           = "userUID"
+	ServiceAccountUIDParamName = "saUID"
 )
 
-func GetUserID(r *http.Request) (int64, error) {
-	return ParseAsInt64(r, UserIDParamName)
+func GetUserUID(r *http.Request) (string, error) {
+	return ParamOrError(r, UserUIDParamName)
 }
 
-func GetServiceAccountID(r *http.Request) (int64, error) {
-	return ParseAsInt64(r, ServiceAccountIDParamName)
+func GetServiceAccountUID(r *http.Request) (string, error) {
+	return ParamOrError(r, ServiceAccountUIDParamName)
 }

@@ -31,18 +31,18 @@ func (s *UserStoreSync) Find(ctx context.Context, id int64) (*types.User, error)
 	return s.base.Find(ctx, id)
 }
 
+// FindUID finds the user by uid.
+func (s *UserStoreSync) FindUID(ctx context.Context, uid string) (*types.User, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return s.base.FindUID(ctx, uid)
+}
+
 // FindEmail finds the user by email.
 func (s *UserStoreSync) FindEmail(ctx context.Context, email string) (*types.User, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.FindEmail(ctx, email)
-}
-
-// FindKey finds the user unique key (email or id).
-func (s *UserStoreSync) FindKey(ctx context.Context, key string) (*types.User, error) {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	return s.base.FindKey(ctx, key)
 }
 
 // List returns a list of users.
@@ -67,10 +67,10 @@ func (s *UserStoreSync) Update(ctx context.Context, user *types.User) error {
 }
 
 // Delete deletes the user.
-func (s *UserStoreSync) Delete(ctx context.Context, user *types.User) error {
+func (s *UserStoreSync) Delete(ctx context.Context, id int64) error {
 	mutex.Lock()
 	defer mutex.Unlock()
-	return s.base.Delete(ctx, user)
+	return s.base.Delete(ctx, id)
 }
 
 // Count returns a count of users.

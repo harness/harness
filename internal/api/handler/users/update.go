@@ -43,8 +43,7 @@ func HandleUpdate(userStore store.UserStore) http.HandlerFunc {
 			hash, err := hashPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
 			if err != nil {
 				log.Err(err).
-					Int64("user_id", user.ID).
-					Str("user_email", user.Email).
+					Str("user_uid", user.UID).
 					Msg("Failed to hash password")
 
 				render.InternalError(w)
@@ -67,8 +66,7 @@ func HandleUpdate(userStore store.UserStore) http.HandlerFunc {
 			hash, err := bcrypt.GenerateFromPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
 			if err != nil {
 				log.Err(err).
-					Int64("user_id", user.ID).
-					Str("user_email", user.Email).
+					Str("user_uid", user.UID).
 					Msg("Failed to hash password")
 
 				render.InternalError(w)
@@ -78,8 +76,7 @@ func HandleUpdate(userStore store.UserStore) http.HandlerFunc {
 		}
 		if err := check.User(user); err != nil {
 			log.Debug().Err(err).
-				Int64("user_id", user.ID).
-				Str("user_email", user.Email).
+				Str("user_uid", user.UID).
 				Msg("invalid user input")
 
 			render.UserfiedErrorOrInternal(w, err)
@@ -91,8 +88,7 @@ func HandleUpdate(userStore store.UserStore) http.HandlerFunc {
 		err := userStore.Update(ctx, user)
 		if err != nil {
 			log.Err(err).
-				Int64("user_id", user.ID).
-				Str("user_email", user.Email).
+				Str("user_uid", user.UID).
 				Msg("Failed to update the usser")
 
 			render.UserfiedErrorOrInternal(w, err)

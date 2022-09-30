@@ -16,7 +16,7 @@ type Client interface {
 	Login(ctx context.Context, username, password string) (*types.TokenResponse, error)
 
 	// Register registers a new  user and returns a JWT token.
-	Register(ctx context.Context, username, password string) (*types.TokenResponse, error)
+	Register(ctx context.Context, username, name, email, password string) (*types.TokenResponse, error)
 
 	// Self returns the currently authenticated user.
 	Self(ctx context.Context) (*types.User, error)

@@ -26,23 +26,25 @@ func HandleRegister(userStore store.UserStore, system store.SystemStore, tokenSt
 		ctx := r.Context()
 		log := hlog.FromRequest(r)
 
-		username := r.FormValue("username")
+		uid := r.FormValue("username")
+		name := r.FormValue("name")
+		email := r.FormValue("email")
 		password := r.FormValue("password")
 
 		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
 			log.Err(err).
-				Str("email", username).
+				Str("uid", uid).
 				Msg("Failed to hash password")
 
 			render.InternalError(w)
 			return
 		}
 
-		// TODO: allow to provide email and name separately ...
 		user := &types.User{
-			Name:     username,
-			Email:    username,
+			UID:      uid,
+			Name:     name,
+			Email:    email,
 			Password: string(hash),
 			Salt:     uniuri.NewLen(uniuri.UUIDLen),
 			Created:  time.Now().UnixMilli(),
@@ -51,7 +53,7 @@ func HandleRegister(userStore store.UserStore, system store.SystemStore, tokenSt
 
 		if err = check.User(user); err != nil {
 			log.Debug().Err(err).
-				Str("email", username).
+				Str("uid", uid).
 				Msg("invalid user input")
 
 			render.UserfiedErrorOrInternal(w, err)
@@ -60,7 +62,7 @@ func HandleRegister(userStore store.UserStore, system store.SystemStore, tokenSt
 
 		if err = userStore.Create(ctx, user); err != nil {
 			log.Err(err).
-				Str("email", username).
+				Str("uid", uid).
 				Msg("Failed to create user")
 
 			render.InternalError(w)
@@ -74,8 +76,7 @@ func HandleRegister(userStore store.UserStore, system store.SystemStore, tokenSt
 			user.Admin = true
 			if err = userStore.Update(ctx, user); err != nil {
 				log.Err(err).
-					Str("email", username).
-					Int64("user_id", user.ID).
+					Str("user_uid", user.UID).
 					Msg("Failed to enable admin user")
 
 				render.InternalError(w)
@@ -86,7 +87,7 @@ func HandleRegister(userStore store.UserStore, system store.SystemStore, tokenSt
 		token, jwtToken, err := token.CreateUserSession(ctx, tokenStore, user, "register")
 		if err != nil {
 			log.Err(err).
-				Str("user", username).
+				Str("user", uid).
 				Msg("failed to generate token")
 
 			render.InternalError(w)

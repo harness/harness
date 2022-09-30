@@ -2,7 +2,7 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package authz
+package translator
 
 import (
 	"github.com/google/wire"
@@ -10,9 +10,9 @@ import (
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideAuthorizer,
+	ProvideRequestTranslator,
 )
 
-func ProvideAuthorizer() Authorizer {
-	return NewUnsafeAuthorizer()
+func ProvideRequestTranslator() RequestTranslator {
+	return NewTerminatedPathTranslator()
 }

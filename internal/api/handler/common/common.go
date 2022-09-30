@@ -13,6 +13,7 @@ type CreatePathRequest struct {
 
 // CreateServiceAccountRequest used for service account creation apis.
 type CreateServiceAccountRequest struct {
+	UID        string                  `json:"uid"`
 	Name       string                  `json:"name"`
 	ParentType enum.ParentResourceType `json:"parentType"`
 	ParentID   int64                   `json:"parentId"`

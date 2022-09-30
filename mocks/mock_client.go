@@ -51,18 +51,18 @@ func (mr *MockClientMockRecorder) Login(arg0, arg1, arg2 interface{}) *gomock.Ca
 }
 
 // Register mocks base method.
-func (m *MockClient) Register(arg0 context.Context, arg1, arg2 string) (*types.TokenResponse, error) {
+func (m *MockClient) Register(arg0 context.Context, arg1, arg2, arg3, arg4 string) (*types.TokenResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Register", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Register", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(*types.TokenResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Register indicates an expected call of Register.
-func (mr *MockClientMockRecorder) Register(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) Register(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockClient)(nil).Register), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockClient)(nil).Register), arg0, arg1, arg2, arg3, arg4)
 }
 
 // Self mocks base method.

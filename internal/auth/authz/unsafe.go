@@ -21,7 +21,7 @@ var _ Authorizer = (*UnsafeAuthorizer)(nil)
  */
 type UnsafeAuthorizer struct{}
 
-func NewUnsafeAuthorizer() Authorizer {
+func NewUnsafeAuthorizer() *UnsafeAuthorizer {
 	return &UnsafeAuthorizer{}
 }
 

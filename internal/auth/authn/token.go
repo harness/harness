@@ -35,7 +35,7 @@ type TokenAuthenticator struct {
 func NewTokenAuthenticator(
 	userStore store.UserStore,
 	saStore store.ServiceAccountStore,
-	tokenStore store.TokenStore) Authenticator {
+	tokenStore store.TokenStore) *TokenAuthenticator {
 	return &TokenAuthenticator{
 		userStore:  userStore,
 		saStore:    saStore,

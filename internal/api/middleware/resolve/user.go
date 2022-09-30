@@ -25,7 +25,7 @@ func User(userStore store.UserStore) func(http.Handler) http.Handler {
 			ctx := r.Context()
 			log := hlog.FromRequest(r)
 
-			id, err := request.GetUserID(r)
+			uid, err := request.GetUserUID(r)
 			if err != nil {
 				log.Info().Err(err).Msgf("Receieved no or invalid user id")
 
@@ -33,9 +33,9 @@ func User(userStore store.UserStore) func(http.Handler) http.Handler {
 				return
 			}
 
-			user, err := userStore.Find(ctx, id)
+			user, err := userStore.FindUID(ctx, uid)
 			if err != nil {
-				log.Info().Err(err).Msgf("Failed to get user with id '%d'.", id)
+				log.Info().Err(err).Msgf("Failed to get user with uid '%s'.", uid)
 
 				render.UserfiedErrorOrInternal(w, err)
 				return
@@ -43,7 +43,7 @@ func User(userStore store.UserStore) func(http.Handler) http.Handler {
 
 			// Update the logging context and inject repo in context
 			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-				return c.Int64("user_id", user.ID).Str("user_name", user.Name)
+				return c.Str("user_uid", user.UID)
 			})
 
 			next.ServeHTTP(w, r.WithContext(

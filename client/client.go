@@ -69,9 +69,12 @@ func (c *HTTPClient) Login(ctx context.Context, username, password string) (*typ
 }
 
 // Register registers a new  user and returns a JWT token.
-func (c *HTTPClient) Register(ctx context.Context, username, password string) (*types.TokenResponse, error) {
+func (c *HTTPClient) Register(ctx context.Context,
+	username, name, email, password string) (*types.TokenResponse, error) {
 	form := &url.Values{}
 	form.Add("username", username)
+	form.Add("name", name)
+	form.Add("email", email)
 	form.Add("password", password)
 	out := new(types.TokenResponse)
 	uri := fmt.Sprintf("%s/api/v1/register", c.base)

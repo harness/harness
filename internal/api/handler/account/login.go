@@ -5,6 +5,7 @@
 package account
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/render"
@@ -25,11 +26,14 @@ func HandleLogin(userStore store.UserStore, system store.SystemStore, tokenStore
 
 		username := r.FormValue("username")
 		password := r.FormValue("password")
-		user, err := userStore.FindEmail(ctx, username)
+		user, err := userStore.FindUID(ctx, username)
+		if errors.Is(err, store.ErrResourceNotFound) {
+			user, err = userStore.FindEmail(ctx, username)
+		}
+
 		if err != nil {
 			log.Debug().Err(err).
-				Str("user", username).
-				Msg("cannot find user")
+				Msgf("cannot find user with '%s'", username)
 
 			// always give not found error as extra security measurement.
 			render.NotFound(w)
@@ -42,7 +46,7 @@ func HandleLogin(userStore store.UserStore, system store.SystemStore, tokenStore
 		)
 		if err != nil {
 			log.Debug().Err(err).
-				Str("user", username).
+				Str("user_uid", user.UID).
 				Msg("invalid password")
 
 			render.NotFound(w)
@@ -52,7 +56,7 @@ func HandleLogin(userStore store.UserStore, system store.SystemStore, tokenStore
 		token, jwtToken, err := token.CreateUserSession(ctx, tokenStore, user, "login")
 		if err != nil {
 			log.Err(err).
-				Str("user", username).
+				Str("user_uid", user.UID).
 				Msg("failed to generate token")
 
 			render.InternalError(w)

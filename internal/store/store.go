@@ -18,11 +18,11 @@ type (
 		// Find finds the user by id.
 		Find(ctx context.Context, id int64) (*types.User, error)
 
+		// FindUID finds the user by uid.
+		FindUID(ctx context.Context, uid string) (*types.User, error)
+
 		// FindEmail finds the user by email.
 		FindEmail(ctx context.Context, email string) (*types.User, error)
-
-		// FindKey finds the user by unique key (email or id).
-		FindKey(ctx context.Context, key string) (*types.User, error)
 
 		// Create saves the user details.
 		Create(ctx context.Context, user *types.User) error
@@ -31,7 +31,7 @@ type (
 		Update(ctx context.Context, user *types.User) error
 
 		// Delete deletes the user.
-		Delete(ctx context.Context, user *types.User) error
+		Delete(ctx context.Context, id int64) error
 
 		// List returns a list of users.
 		List(ctx context.Context, params *types.UserFilter) ([]*types.User, error)
@@ -44,6 +44,9 @@ type (
 	ServiceAccountStore interface {
 		// Find finds the service account by id.
 		Find(ctx context.Context, id int64) (*types.ServiceAccount, error)
+
+		// FindUID finds the service account by uid.
+		FindUID(ctx context.Context, uid string) (*types.ServiceAccount, error)
 
 		// Create saves the service account.
 		Create(ctx context.Context, sa *types.ServiceAccount) error

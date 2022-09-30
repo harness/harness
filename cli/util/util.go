@@ -101,6 +101,11 @@ func Config() (string, error) {
 	)
 }
 
+// Registration returns the username, name, email and password from stdin.
+func Registration() (string, string, string, string) {
+	return Username(), Name(), Email(), Password()
+}
+
 // Credentials returns the username and password from stdin.
 func Credentials() (string, string) {
 	return Username(), Password()
@@ -114,6 +119,26 @@ func Username() string {
 	username, _ := reader.ReadString('\n')
 
 	return strings.TrimSpace(username)
+}
+
+// Name returns the name from stdin.
+func Name() string {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Enter Name: ")
+	name, _ := reader.ReadString('\n')
+
+	return strings.TrimSpace(name)
+}
+
+// Email returns the email from stdin.
+func Email() string {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Enter Email: ")
+	email, _ := reader.ReadString('\n')
+
+	return strings.TrimSpace(email)
 }
 
 // Password returns the password from stdin.

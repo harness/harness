@@ -17,6 +17,11 @@ var (
 
 // ServiceAccount returns true if the ServiceAccount if valid.
 func ServiceAccount(sa *types.ServiceAccount) error {
+	// validate UID
+	if err := UID(sa.UID); err != nil {
+		return err
+	}
+
 	// verify name
 	if err := Name(sa.Name); err != nil {
 		return err

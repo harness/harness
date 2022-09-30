@@ -35,12 +35,18 @@ tools: $(tools) ## Install tools required for the build
 mocks: $(mocks)
 	@echo "Generating Test Mocks"
 
-generate: $(mocks) cli/server/wire_gen.go mocks/mock_client.go
+wire: cli/server/harness.wire_gen.go cli/server/standalone.wire_gen.go
+
+generate: $(mocks) wire mocks/mock_client.go
 	@echo "Generating Code"
 
 build: generate ## Build the gitness service binary
 	@echo "Building Gitness Server"
 	go build -ldflags="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.Version.Major=${GITNESS_VERSION}" -o ./gitness .
+
+harness-build: generate ## Build the gitness service binary for harness embedded mode
+	@echo "Building Gitness Server for Harness"
+	go build -tags=harness -ldflags="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.Version.Major=${GITNESS_VERSION}" -o ./gitness .
 
 test: generate  ## Run the go tests
 	@echo "Running tests"
@@ -114,9 +120,19 @@ lint: tools generate # lint the golang code
 # Some code generation can be slow, so we only run it if
 # the source file has changed.
 ###########################################
-cli/server/wire_gen.go: cli/server/wire.go	## Update the wire dependency injection if wire.go has changed.
-	@echo "Updating wire_gen.go"
-	go generate ./cli/server/wire_gen.go
+cli/server/harness.wire_gen.go: cli/server/harness.wire.go	## Update the wire dependency injection if harness.wire.go has changed.
+	@echo "Updating harness.wire_gen.go"
+	@go run github.com/google/wire/cmd/wire gen -tags=harness -output_file_prefix="harness." github.com/harness/gitness/cli/server
+	@perl -ni -e 'print unless /go:generate/' cli/server/harness.wire_gen.go
+	@perl -i -pe's/\+build !wireinject/\+build !wireinject,harness/g' cli/server/harness.wire_gen.go
+	@perl -i -pe's/go:build !wireinject/go:build !wireinject && harness/g' cli/server/harness.wire_gen.go
+
+cli/server/standalone.wire_gen.go: cli/server/standalone.wire.go	## Update the wire dependency injection if standalone.wire.go has changed.
+	@echo "Updating standalone.wire_gen.go"
+	@go run github.com/google/wire/cmd/wire gen -tags= -output_file_prefix="standalone." github.com/harness/gitness/cli/server
+	@perl -ni -e 'print unless /go:generate/' cli/server/standalone.wire_gen.go
+	@perl -i -pe's/\+build !wireinject/\+build !wireinject,!harness/g' cli/server/standalone.wire_gen.go
+	@perl -i -pe's/go:build !wireinject/go:build !wireinject && !harness/g' cli/server/standalone.wire_gen.go
 
 mocks/mock_client.go: internal/store/store.go client/client.go
 	go generate mocks/mock.go

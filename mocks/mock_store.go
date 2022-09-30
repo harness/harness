@@ -102,7 +102,7 @@ func (mr *MockUserStoreMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call
 }
 
 // Delete mocks base method.
-func (m *MockUserStore) Delete(arg0 context.Context, arg1 *types.User) error {
+func (m *MockUserStore) Delete(arg0 context.Context, arg1 int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -145,19 +145,19 @@ func (mr *MockUserStoreMockRecorder) FindEmail(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindEmail", reflect.TypeOf((*MockUserStore)(nil).FindEmail), arg0, arg1)
 }
 
-// FindKey mocks base method.
-func (m *MockUserStore) FindKey(arg0 context.Context, arg1 string) (*types.User, error) {
+// FindUID mocks base method.
+func (m *MockUserStore) FindUID(arg0 context.Context, arg1 string) (*types.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindKey", arg0, arg1)
+	ret := m.ctrl.Call(m, "FindUID", arg0, arg1)
 	ret0, _ := ret[0].(*types.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindKey indicates an expected call of FindKey.
-func (mr *MockUserStoreMockRecorder) FindKey(arg0, arg1 interface{}) *gomock.Call {
+// FindUID indicates an expected call of FindUID.
+func (mr *MockUserStoreMockRecorder) FindUID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindKey", reflect.TypeOf((*MockUserStore)(nil).FindKey), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUID", reflect.TypeOf((*MockUserStore)(nil).FindUID), arg0, arg1)
 }
 
 // List mocks base method.

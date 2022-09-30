@@ -10,15 +10,15 @@ import "github.com/harness/gitness/types/enum"
 type (
 	// Service is a principal representing a different internal service that runs alongside gitness.
 	Service struct {
-		// Fields from Principal (without admin)
-		ID         int64  `db:"principal_id"          json:"id"`
-		Name       string `db:"principal_name"        json:"name"`
-		Admin      bool   `db:"principal_admin"       json:"admin"`
-		ExternalID string `db:"principal_externalId"  json:"externalId"`
-		Blocked    bool   `db:"principal_blocked"     json:"blocked"`
-		Salt       string `db:"principal_salt"        json:"-"`
-		Created    int64  `db:"principal_created"     json:"created"`
-		Updated    int64  `db:"principal_updated"     json:"updated"`
+		// Fields from Principal (without admin, as it's always admin for now)
+		ID      int64  `db:"principal_id"          json:"-"`
+		UID     string `db:"principal_uid"         json:"uid"`
+		Name    string `db:"principal_name"        json:"name"`
+		Admin   bool   `db:"principal_admin"       json:"admin"`
+		Blocked bool   `db:"principal_blocked"     json:"blocked"`
+		Salt    string `db:"principal_salt"        json:"-"`
+		Created int64  `db:"principal_created"     json:"created"`
+		Updated int64  `db:"principal_updated"     json:"updated"`
 	}
 
 	// ServiceAccountInput store details used to

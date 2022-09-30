@@ -19,11 +19,11 @@ type registerCommand struct {
 }
 
 func (c *registerCommand) run(*kingpin.ParseContext) error {
-	username, password := util.Credentials()
+	username, name, email, password := util.Registration()
 	httpClient := client.New(c.server)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	ts, err := httpClient.Register(ctx, username, password)
+	ts, err := httpClient.Register(ctx, username, name, email, password)
 	if err != nil {
 		return err
 	}

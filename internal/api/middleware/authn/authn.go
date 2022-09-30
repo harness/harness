@@ -51,7 +51,7 @@ func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler 
 			// Update the logging context and inject principal in context
 			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
 				return c.
-					Int64("principal_id", session.Principal.ID).
+					Str("principal_uid", session.Principal.UID).
 					Str("principal_type", string(session.Principal.Type)).
 					Bool("principal_admin", session.Principal.Admin)
 			})

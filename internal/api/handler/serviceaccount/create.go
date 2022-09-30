@@ -36,6 +36,7 @@ func HandleCreate(guard *guard.Guard, saStore store.ServiceAccountStore) http.Ha
 		}
 
 		sa := &types.ServiceAccount{
+			UID:        in.UID,
 			Name:       in.Name,
 			Salt:       uniuri.NewLen(uniuri.UUIDLen),
 			Created:    time.Now().UnixMilli(),

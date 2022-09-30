@@ -25,17 +25,17 @@ func ServiceAccount(saStore store.ServiceAccountStore) func(http.Handler) http.H
 			ctx := r.Context()
 			log := hlog.FromRequest(r)
 
-			id, err := request.GetServiceAccountID(r)
+			uid, err := request.GetServiceAccountUID(r)
 			if err != nil {
-				log.Info().Err(err).Msgf("Receieved no or invalid service account id")
+				log.Info().Err(err).Msgf("Receieved no or invalid service account uid")
 
 				render.BadRequest(w)
 				return
 			}
 
-			sa, err := saStore.Find(ctx, id)
+			sa, err := saStore.FindUID(ctx, uid)
 			if err != nil {
-				log.Warn().Err(err).Msgf("Failed to get service account with id '%d'.", id)
+				log.Warn().Err(err).Msgf("Failed to get service account with uid '%s'.", uid)
 
 				render.UserfiedErrorOrInternal(w, err)
 				return
@@ -43,7 +43,7 @@ func ServiceAccount(saStore store.ServiceAccountStore) func(http.Handler) http.H
 
 			// Update the logging context and inject repo in context
 			log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-				return c.Int64("sa_id", sa.ID).Str("sa_name", sa.Name)
+				return c.Str("sa_uid", sa.UID)
 			})
 
 			next.ServeHTTP(w, r.WithContext(

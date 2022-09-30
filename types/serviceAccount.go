@@ -10,14 +10,14 @@ import "github.com/harness/gitness/types/enum"
 type (
 	// ServiceAccount is a principal representing a service account.
 	ServiceAccount struct {
-		// Fields from Principal (without admin)
-		ID         int64  `db:"principal_id"          json:"id"`
-		Name       string `db:"principal_name"        json:"name"`
-		ExternalID string `db:"principal_externalId"  json:"externalId"`
-		Blocked    bool   `db:"principal_blocked"     json:"blocked"`
-		Salt       string `db:"principal_salt"        json:"-"`
-		Created    int64  `db:"principal_created"     json:"created"`
-		Updated    int64  `db:"principal_updated"     json:"updated"`
+		// Fields from Principal (without admin, as it's never an admin)
+		ID      int64  `db:"principal_id"          json:"-"`
+		UID     string `db:"principal_uid"         json:"uid"`
+		Name    string `db:"principal_name"        json:"name"`
+		Blocked bool   `db:"principal_blocked"     json:"blocked"`
+		Salt    string `db:"principal_salt"        json:"-"`
+		Created int64  `db:"principal_created"     json:"created"`
+		Updated int64  `db:"principal_updated"     json:"updated"`
 
 		// ServiceAccount specific fields
 		ParentType enum.ParentResourceType `db:"principal_sa_parentType"  json:"parentType"`

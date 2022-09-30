@@ -1,6 +1,7 @@
 [
     {
         "id": 1,
+        "uid": "jane21",
         "email": "jane@example.com",
         "name": "jane",
         "company": "acme",
@@ -12,6 +13,7 @@
     },
     {
         "id": 2,
+        "uid": "john21",
         "email": "john@example.com",
         "name": "john",
         "company": "acme",

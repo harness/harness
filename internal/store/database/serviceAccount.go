@@ -37,6 +37,15 @@ func (s *ServiceAccountStore) Find(ctx context.Context, id int64) (*types.Servic
 	return dst, nil
 }
 
+// FindUID finds the service account by uid.
+func (s *ServiceAccountStore) FindUID(ctx context.Context, uid string) (*types.ServiceAccount, error) {
+	dst := new(types.ServiceAccount)
+	if err := s.db.GetContext(ctx, dst, serviceAccountSelectUID, uid); err != nil {
+		return nil, processSQLErrorf(err, "Select by uid query failed")
+	}
+	return dst, nil
+}
+
 // Create saves the service account.
 func (s *ServiceAccountStore) Create(ctx context.Context, sa *types.ServiceAccount) error {
 	query, arg, err := s.db.BindNamed(serviceAccountInsert, sa)
@@ -113,8 +122,8 @@ WHERE principal_type = "serviceaccount" and principal_sa_parentType = $1 and pri
 const serviceAccountBase = `
 SELECT
 principal_id
+,principal_uid
 ,principal_name
-,principal_externalId
 ,principal_blocked
 ,principal_salt
 ,principal_created
@@ -133,6 +142,10 @@ const serviceAccountSelectID = serviceAccountBase + `
 WHERE principal_type = "serviceaccount" AND principal_id = $1
 `
 
+const serviceAccountSelectUID = serviceAccountBase + `
+WHERE principal_type = "serviceaccount" AND principal_uid = $1
+`
+
 const serviceAccountDelete = `
 DELETE FROM principals
 WHERE principal_type = "serviceaccount" AND principal_id = $1
@@ -141,9 +154,9 @@ WHERE principal_type = "serviceaccount" AND principal_id = $1
 const serviceAccountInsert = `
 INSERT INTO principals (
 principal_type
+,principal_uid
 ,principal_name
 ,principal_admin
-,principal_externalId
 ,principal_blocked
 ,principal_salt
 ,principal_created
@@ -152,9 +165,9 @@ principal_type
 ,principal_sa_parentId
 ) values (
  "serviceaccount"
+,:principal_uid
 ,:principal_name
 ,false
-,:principal_externalId
 ,:principal_blocked
 ,:principal_salt
 ,:principal_created
@@ -168,7 +181,6 @@ const serviceAccountUpdate = `
 UPDATE principals
 SET
  principal_name            = :principal_name
-,:principal_externalId     = :principal_externalId
 ,:principal_blocked        = :principal_blocked
 ,:principal_salt           = :principal_salt
 ,:principal_updated        = :principal_updated

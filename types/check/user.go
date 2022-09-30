@@ -25,6 +25,11 @@ var (
 
 // User returns true if the User if valid.
 func User(user *types.User) error {
+	// validate UID
+	if err := UID(user.UID); err != nil {
+		return err
+	}
+
 	// validate name
 	if err := Name(user.Name); err != nil {
 		return err

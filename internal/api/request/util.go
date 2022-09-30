@@ -14,11 +14,22 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+// ParamOrError tries to retrieve the parameter from the request and
+// returns the parameter if it exists and is not empty, otherwise returns an error.
+func ParamOrError(r *http.Request, paramName string) (string, error) {
+	value := chi.URLParam(r, paramName)
+	if value == "" {
+		return "", fmt.Errorf("parameter '%s' not found in request", paramName)
+	}
+
+	return value, nil
+}
+
 // ParseAsInt64 tries to retrieve the parameter from the request and parse it to in64.
 func ParseAsInt64(r *http.Request, paramName string) (int64, error) {
-	rawID := chi.URLParam(r, paramName)
-	if rawID == "" {
-		return 0, fmt.Errorf("parameter '%s' not found in request", paramName)
+	rawID, err := ParamOrError(r, paramName)
+	if err != nil {
+		return 0, err
 	}
 
 	id, err := strconv.ParseInt(rawID, 10, 64)

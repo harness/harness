@@ -14,7 +14,6 @@ import (
 	handleruser "github.com/harness/gitness/internal/api/handler/user"
 	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	middlewareauthn "github.com/harness/gitness/internal/api/middleware/authn"
-	"github.com/harness/gitness/internal/api/middleware/encode"
 	"github.com/harness/gitness/internal/api/middleware/resolve"
 
 	"github.com/harness/gitness/internal/api/request"
@@ -27,15 +26,12 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"github.com/rs/zerolog/hlog"
-	"github.com/rs/zerolog/log"
 )
 
 /*
- * Mounts the Rest API Router under mountPath (path has to end with ).
- * The handler is wrapped within a layer that handles encoding terminated Paths.
+ * newAPIHandler returns a new http handler for handling API calls.
  */
 func newAPIHandler(
-	mountPath string,
 	systemStore store.SystemStore,
 	userStore store.UserStore,
 	spaceStore store.SpaceStore,
@@ -50,36 +46,28 @@ func newAPIHandler(
 
 	// Use go-chi router for inner routing (restricted to mountPath!)
 	r := chi.NewRouter()
-	r.Route(mountPath, func(r chi.Router) {
-		// Apply common api middleware
-		r.Use(middleware.NoCache)
-		r.Use(middleware.Recoverer)
 
-		// configure logging middleware.
-		r.Use(hlog.NewHandler(log.Logger))
-		r.Use(hlog.URLHandler("path"))
-		r.Use(hlog.MethodHandler("method"))
-		r.Use(hlog.RequestIDHandler("request", "Request-Id"))
-		r.Use(accesslog.HlogHandler())
+	// Apply common api middleware
+	r.Use(middleware.NoCache)
+	r.Use(middleware.Recoverer)
 
-		// configure cors middleware
-		r.Use(corsHandler(config))
+	// configure logging middleware.
+	r.Use(hlog.URLHandler("url"))
+	r.Use(hlog.MethodHandler("method"))
+	r.Use(hlog.RequestIDHandler("request", "Request-Id"))
+	r.Use(accesslog.HlogHandler())
 
-		// for now always attempt auth - enforced per operation
-		r.Use(middlewareauthn.Attempt(authenticator))
+	// configure cors middleware
+	r.Use(corsHandler(config))
 
-		r.Route("/v1", func(r chi.Router) {
-			setupRoutesV1(r, systemStore, userStore, spaceStore, repoStore, tokenStore, saStore, authenticator, g)
-		})
+	// for now always attempt auth - enforced per operation
+	r.Use(middlewareauthn.Attempt(authenticator))
+
+	r.Route("/v1", func(r chi.Router) {
+		setupRoutesV1(r, systemStore, userStore, spaceStore, repoStore, tokenStore, saStore, authenticator, g)
 	})
 
-	// Generate list of all path prefixes that expect terminated Paths
-	terminatedPathPrefixes := []string{
-		mountPath + "/v1/spaces",
-		mountPath + "/v1/repos",
-	}
-
-	return encode.TerminatedPathBefore(terminatedPathPrefixes, r.ServeHTTP)
+	return r
 }
 
 func corsHandler(config *types.Config) func(http.Handler) http.Handler {
@@ -214,7 +202,7 @@ func setupServiceAccounts(r chi.Router, saStore store.ServiceAccountStore, token
 		// create takes parent information via body
 		r.Post("/", handlerserviceaccount.HandleCreate(guard, saStore))
 
-		r.Route(fmt.Sprintf("/{%s}", request.ServiceAccountIDParamName), func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.ServiceAccountUIDParamName), func(r chi.Router) {
 			// resolves the service account and stores it in the context
 			r.Use(resolve.ServiceAccount(saStore))
 
@@ -251,7 +239,7 @@ func setupAdmin(r chi.Router, userStore store.UserStore, guard *guard.Guard) {
 			_, _ = w.Write([]byte(fmt.Sprintf("Create user '%s'", chi.URLParam(r, "rref"))))
 		})
 
-		r.Route(fmt.Sprintf("/{%s}", request.UserIDParamName), func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.UserUIDParamName), func(r chi.Router) {
 			// resolves the user and stores it in the context
 			resolve.User(userStore)
 

@@ -6,9 +6,15 @@ package authn
 
 import (
 	"github.com/google/wire"
+	"github.com/harness/gitness/internal/store"
 )
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	NewTokenAuthenticator,
+	ProvideAuthenticator,
 )
+
+func ProvideAuthenticator(userStore store.UserStore, saStore store.ServiceAccountStore,
+	tokenStore store.TokenStore) Authenticator {
+	return NewTokenAuthenticator(userStore, saStore, tokenStore)
+}

@@ -141,6 +141,18 @@ func testUserFind(store store.UserStore) func(t *testing.T) {
 			}
 		})
 
+		t.Run("uid", func(t *testing.T) {
+			got, err := store.FindUID(ctx, "jane21")
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			if diff := cmp.Diff(got, want, userIgnore); len(diff) != 0 {
+				t.Errorf(diff)
+				return
+			}
+		})
+
 		t.Run("email", func(t *testing.T) {
 			got, err := store.FindEmail(ctx, want.Email)
 			if err != nil {
@@ -155,30 +167,6 @@ func testUserFind(store store.UserStore) func(t *testing.T) {
 
 		t.Run("email/nocase", func(t *testing.T) {
 			got, err := store.FindEmail(ctx, strings.ToUpper(want.Email))
-			if err != nil {
-				t.Error(err)
-				return
-			}
-			if diff := cmp.Diff(got, want, userIgnore); len(diff) != 0 {
-				t.Errorf(diff)
-				return
-			}
-		})
-
-		t.Run("key/id", func(t *testing.T) {
-			got, err := store.FindKey(ctx, "1")
-			if err != nil {
-				t.Error(err)
-				return
-			}
-			if diff := cmp.Diff(got, want, userIgnore); len(diff) != 0 {
-				t.Errorf(diff)
-				return
-			}
-		})
-
-		t.Run("key/email", func(t *testing.T) {
-			got, err := store.FindKey(ctx, want.Email)
 			if err != nil {
 				t.Error(err)
 				return
@@ -247,12 +235,12 @@ func testUserUpdate(store store.UserStore) func(t *testing.T) {
 func testUserDelete(s store.UserStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		ctx := context.Background()
-		v, err := s.Find(ctx, 1)
+		_, err := s.Find(ctx, 1)
 		if err != nil {
 			t.Error(err)
 			return
 		}
-		if err = s.Delete(ctx, v); err != nil {
+		if err = s.Delete(ctx, 1); err != nil {
 			t.Error(err)
 			return
 		}

@@ -34,6 +34,13 @@ func (s *ServiceAccountStoreSync) Find(ctx context.Context, id int64) (*types.Se
 	return s.base.Find(ctx, id)
 }
 
+// FindUID finds the service account by uid.
+func (s *ServiceAccountStoreSync) FindUID(ctx context.Context, uid string) (*types.ServiceAccount, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return s.base.FindUID(ctx, uid)
+}
+
 // Create saves the service account.
 func (s *ServiceAccountStoreSync) Create(ctx context.Context, sa *types.ServiceAccount) error {
 	mutex.RLock()

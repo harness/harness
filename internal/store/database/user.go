@@ -7,7 +7,6 @@ package database
 import (
 	"context"
 	"database/sql"
-	"strconv"
 
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
@@ -39,6 +38,15 @@ func (s *UserStore) Find(ctx context.Context, id int64) (*types.User, error) {
 	return dst, nil
 }
 
+// FindUID finds the user by uid.
+func (s *UserStore) FindUID(ctx context.Context, uid string) (*types.User, error) {
+	dst := new(types.User)
+	if err := s.db.GetContext(ctx, dst, userSelectUID, uid); err != nil {
+		return nil, processSQLErrorf(err, "Select by uid query failed")
+	}
+	return dst, nil
+}
+
 // FindEmail finds the user by email.
 func (s *UserStore) FindEmail(ctx context.Context, email string) (*types.User, error) {
 	dst := new(types.User)
@@ -46,15 +54,6 @@ func (s *UserStore) FindEmail(ctx context.Context, email string) (*types.User, e
 		return nil, processSQLErrorf(err, "Select by email query failed")
 	}
 	return dst, nil
-}
-
-// FindKey finds the user unique key (email or id).
-func (s *UserStore) FindKey(ctx context.Context, key string) (*types.User, error) {
-	id, err := strconv.ParseInt(key, 10, 64)
-	if err == nil {
-		return s.Find(ctx, id)
-	}
-	return s.FindEmail(ctx, key)
 }
 
 // List returns a list of users.
@@ -88,8 +87,8 @@ func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.
 		stmt = stmt.OrderBy("principal_updated " + opts.Order.String())
 	case enum.UserAttrEmail:
 		stmt = stmt.OrderBy("principal_user_email " + opts.Order.String())
-	case enum.UserAttrID:
-		stmt = stmt.OrderBy("principal_id " + opts.Order.String())
+	case enum.UserAttrUID:
+		stmt = stmt.OrderBy("principal_uid " + opts.Order.String())
 	case enum.UserAttrAdmin:
 		stmt = stmt.OrderBy("principal_admin " + opts.Order.String())
 	}
@@ -135,7 +134,7 @@ func (s *UserStore) Update(ctx context.Context, user *types.User) error {
 }
 
 // Delete deletes the user.
-func (s *UserStore) Delete(ctx context.Context, user *types.User) error {
+func (s *UserStore) Delete(ctx context.Context, id int64) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to start a new transaction")
@@ -144,7 +143,7 @@ func (s *UserStore) Delete(ctx context.Context, user *types.User) error {
 		_ = tx.Rollback()
 	}(tx)
 	// delete the user
-	if _, err = tx.ExecContext(ctx, userDelete, user.ID); err != nil {
+	if _, err = tx.ExecContext(ctx, userDelete, id); err != nil {
 		return processSQLErrorf(err, "The delete query failed")
 	}
 	return tx.Commit()
@@ -169,9 +168,9 @@ WHERE principal_type = "user"
 const userBase = `
 SELECT
 principal_id
+,principal_uid
 ,principal_name
 ,principal_admin
-,principal_externalId
 ,principal_blocked
 ,principal_salt
 ,principal_created
@@ -191,6 +190,10 @@ const userSelectID = userBase + `
 WHERE principal_type = "user" AND principal_id = $1
 `
 
+const userSelectUID = userBase + `
+WHERE principal_type = "user" AND principal_uid = $1
+`
+
 const userSelectEmail = userBase + `
 WHERE principal_type = "user" AND principal_user_email = $1
 `
@@ -203,9 +206,9 @@ WHERE principal_type = "user" AND principal_id = $1
 const userInsert = `
 INSERT INTO principals (
 principal_type
+,principal_uid
 ,principal_name
 ,principal_admin
-,principal_externalId
 ,principal_blocked
 ,principal_salt
 ,principal_created
@@ -214,9 +217,9 @@ principal_type
 ,principal_user_password
 ) values (
 "user"
+,:principal_uid
 ,:principal_name
 ,:principal_admin
-,:principal_externalId
 ,:principal_blocked
 ,:principal_salt
 ,:principal_created
@@ -231,7 +234,6 @@ UPDATE principals
 SET
  principal_name    = :principal_name
 ,principal_admin          = :principal_admin
-,principal_externalId     = :principal_externalId
 ,principal_blocked        = :principal_blocked
 ,principal_salt           = :principal_salt
 ,principal_updated        = :principal_updated
