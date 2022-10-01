@@ -5,20 +5,38 @@
 package router
 
 import (
-	"net/http"
-
 	"github.com/google/wire"
 	"github.com/harness/gitness/internal/auth/authn"
-	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/guard"
 	"github.com/harness/gitness/internal/router/translator"
 	"github.com/harness/gitness/internal/store"
 )
 
 // WireSet provides a wire set for this package.
-var WireSet = wire.NewSet(ProvideHTTPHandler)
+var WireSet = wire.NewSet(
+	ProvideRouter,
+	ProvideGitHandler,
+	ProvideAPIHandler,
+	ProvideWebHandler,
+)
 
-func ProvideHTTPHandler(
+func ProvideRouter(
 	translator translator.RequestTranslator,
+	api APIHandler,
+	git GitHandler,
+	web WebHandler,
+) *Router {
+	return NewRouter(translator, api, git, web)
+}
+
+func ProvideGitHandler(
+	repoStore store.RepoStore,
+	authenticator authn.Authenticator,
+	guard *guard.Guard) GitHandler {
+	return NewGitHandler(repoStore, authenticator, guard)
+}
+
+func ProvideAPIHandler(
 	systemStore store.SystemStore,
 	userStore store.UserStore,
 	spaceStore store.SpaceStore,
@@ -26,8 +44,11 @@ func ProvideHTTPHandler(
 	tokenStore store.TokenStore,
 	saStore store.ServiceAccountStore,
 	authenticator authn.Authenticator,
-	authorizer authz.Authorizer,
-) (http.Handler, error) {
-	return NewRouter(translator, systemStore, userStore, spaceStore,
-		repoStore, tokenStore, saStore, authenticator, authorizer)
+	guard *guard.Guard) APIHandler {
+	return NewAPIHandler(systemStore, userStore, spaceStore, repoStore, tokenStore,
+		saStore, authenticator, guard)
+}
+
+func ProvideWebHandler(systemStore store.SystemStore) WebHandler {
+	return NewWebHandler(systemStore)
 }

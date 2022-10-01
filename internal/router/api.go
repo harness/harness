@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/handler/account"
 	handlerrepo "github.com/harness/gitness/internal/api/handler/repo"
 	handlerserviceaccount "github.com/harness/gitness/internal/api/handler/serviceaccount"
@@ -15,10 +14,10 @@ import (
 	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	middlewareauthn "github.com/harness/gitness/internal/api/middleware/authn"
 	"github.com/harness/gitness/internal/api/middleware/resolve"
+	"github.com/harness/gitness/internal/guard"
 
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
-	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 
@@ -28,10 +27,15 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
+// APIHandler is an abstraction of an http handler that handles API calls.
+type APIHandler interface {
+	http.Handler
+}
+
 /*
- * newAPIHandler returns a new http handler for handling API calls.
+ * NewAPIHandler returns a new APIHandler.
  */
-func newAPIHandler(
+func NewAPIHandler(
 	systemStore store.SystemStore,
 	userStore store.UserStore,
 	spaceStore store.SpaceStore,
@@ -39,15 +43,13 @@ func newAPIHandler(
 	tokenStore store.TokenStore,
 	saStore store.ServiceAccountStore,
 	authenticator authn.Authenticator,
-	authorizer authz.Authorizer) http.Handler {
-	//
+	guard *guard.Guard) APIHandler {
 	config := systemStore.Config(context.Background())
-	g := guard.New(authorizer, spaceStore, repoStore)
 
-	// Use go-chi router for inner routing (restricted to mountPath!)
+	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
 
-	// Apply common api middleware
+	// Apply common api middleware.
 	r.Use(middleware.NoCache)
 	r.Use(middleware.Recoverer)
 
@@ -60,11 +62,11 @@ func newAPIHandler(
 	// configure cors middleware
 	r.Use(corsHandler(config))
 
-	// for now always attempt auth - enforced per operation
+	// for now always attempt auth - enforced per operation.
 	r.Use(middlewareauthn.Attempt(authenticator))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, systemStore, userStore, spaceStore, repoStore, tokenStore, saStore, authenticator, g)
+		setupRoutesV1(r, systemStore, userStore, spaceStore, repoStore, tokenStore, saStore, authenticator, guard)
 	})
 
 	return r

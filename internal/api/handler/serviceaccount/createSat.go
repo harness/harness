@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/guard"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"

@@ -11,11 +11,8 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/internal/api/render"
-	"github.com/harness/gitness/internal/auth/authn"
-	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/request"
 	"github.com/harness/gitness/internal/router/translator"
-	"github.com/harness/gitness/internal/store"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"
@@ -28,35 +25,25 @@ const (
 
 type Router struct {
 	translator translator.RequestTranslator
-	api        http.Handler
-	git        http.Handler
-	web        http.Handler
+	api        APIHandler
+	git        GitHandler
+	web        WebHandler
 }
 
 // NewRouter returns a new http.Handler that routes traffic
-// to the appropriate http.Handlers.
+// to the appropriate handlers.
 func NewRouter(
 	translator translator.RequestTranslator,
-	systemStore store.SystemStore,
-	userStore store.UserStore,
-	spaceStore store.SpaceStore,
-	repoStore store.RepoStore,
-	tokenStore store.TokenStore,
-	saStore store.ServiceAccountStore,
-	authenticator authn.Authenticator,
-	authorizer authz.Authorizer,
-) (*Router, error) {
-	api := newAPIHandler(systemStore, userStore, spaceStore, repoStore, tokenStore, saStore,
-		authenticator, authorizer)
-	git := newGitHandler(systemStore, userStore, spaceStore, repoStore, authenticator, authorizer)
-	web := newWebHandler(systemStore)
-
+	api APIHandler,
+	git GitHandler,
+	web WebHandler,
+) *Router {
 	return &Router{
 		translator: translator,
 		api:        api,
 		git:        git,
 		web:        web,
-	}, nil
+	}
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {

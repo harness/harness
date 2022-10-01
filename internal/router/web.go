@@ -12,13 +12,18 @@ import (
 	"github.com/go-chi/chi"
 )
 
+// WebHandler is an abstraction of an http handler that handles web calls.
+type WebHandler interface {
+	http.Handler
+}
+
 /*
- * newWebHandler returns a new http handler for handling WEB calls.
+ * NewWebHandler returns a new WebHandler.
  */
-func newWebHandler(systemStore store.SystemStore) http.Handler {
+func NewWebHandler(systemStore store.SystemStore) WebHandler {
 	config := systemStore.Config(context.Background())
 
-	// Use go-chi router for inner routing (restricted to mountPath!)
+	// Use go-chi router for inner routing
 	r := chi.NewRouter()
 	// create middleware to enforce security best practices for
 	// the user interface. note that theis middleware is only used

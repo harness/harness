@@ -5,8 +5,7 @@
 package server
 
 import (
-	"net/http"
-
+	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -16,11 +15,11 @@ import (
 var WireSet = wire.NewSet(ProvideServer)
 
 // ProvideServer provides a server instance.
-func ProvideServer(config *types.Config, handler http.Handler) *Server {
+func ProvideServer(config *types.Config, router *router.Router) *Server {
 	return &Server{
-		Acme:    config.Server.Acme.Enabled,
-		Addr:    config.Server.Bind,
-		Host:    config.Server.Host,
-		Handler: handler,
+		Acme:   config.Server.Acme.Enabled,
+		Addr:   config.Server.Bind,
+		Host:   config.Server.Host,
+		router: router,
 	}
 }

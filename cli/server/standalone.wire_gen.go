@@ -11,6 +11,7 @@ import (
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/cron"
+	"github.com/harness/gitness/internal/guard"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/router/translator"
 	"github.com/harness/gitness/internal/server"
@@ -35,11 +36,12 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	serviceAccountStore := database.ProvideServiceAccountStore(db)
 	authenticator := authn.ProvideAuthenticator(userStore, serviceAccountStore, tokenStore)
 	authorizer := authz.ProvideAuthorizer()
-	handler, err := router.ProvideHTTPHandler(requestTranslator, systemStore, userStore, spaceStore, repoStore, tokenStore, serviceAccountStore, authenticator, authorizer)
-	if err != nil {
-		return nil, err
-	}
-	serverServer := server.ProvideServer(config, handler)
+	guardGuard := guard.ProvideGuard(authorizer, spaceStore, repoStore)
+	apiHandler := router.ProvideAPIHandler(systemStore, userStore, spaceStore, repoStore, tokenStore, serviceAccountStore, authenticator, guardGuard)
+	gitHandler := router.ProvideGitHandler(repoStore, authenticator, guardGuard)
+	webHandler := router.ProvideWebHandler(systemStore)
+	routerRouter := router.ProvideRouter(requestTranslator, apiHandler, gitHandler, webHandler)
+	serverServer := server.ProvideServer(config, routerRouter)
 	nightly := cron.NewNightly()
 	serverSystem := newSystem(serverServer, nightly)
 	return serverSystem, nil

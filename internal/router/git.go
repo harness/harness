@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	middleware_authn "github.com/harness/gitness/internal/api/middleware/authn"
 	"github.com/harness/gitness/internal/api/middleware/resolve"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
-	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/guard"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/enum"
 
@@ -19,21 +18,22 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
+// GitHandler is an abstraction of an http handler that handles git calls.
+type GitHandler interface {
+	http.Handler
+}
+
 /*
- * newGitHandler returns a new http handler for handling GIT calls.
+ * NewGitHandler returns a new GitHandler.
  */
-func newGitHandler(
-	_ store.SystemStore,
-	_ store.UserStore,
-	spaceStore store.SpaceStore,
+func NewGitHandler(
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
-	authorizer authz.Authorizer) http.Handler {
-	guard := guard.New(authorizer, spaceStore, repoStore)
-
-	// Use go-chi router for inner routing (restricted to mountPath!)
+	guard *guard.Guard) GitHandler {
+	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
-	// Apply common api middleware
+
+	// Apply common api middleware.
 	r.Use(middleware.NoCache)
 	r.Use(middleware.Recoverer)
 
@@ -43,7 +43,7 @@ func newGitHandler(
 	r.Use(hlog.RequestIDHandler("request", "Request-Id"))
 	r.Use(accesslog.HlogHandler())
 
-	// for now always attempt auth - enforced per operation
+	// for now always attempt auth - enforced per operation.
 	r.Use(middleware_authn.Attempt(authenticator))
 
 	r.Route(fmt.Sprintf("/{%s}", request.RepoRefParamName), func(r chi.Router) {

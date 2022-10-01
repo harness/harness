@@ -7,9 +7,9 @@ package serviceaccount
 import (
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/guard"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/guard"
 	"github.com/harness/gitness/types/enum"
 )
 

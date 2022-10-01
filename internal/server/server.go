@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/harness/gitness/internal/router"
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/sync/errgroup"
 )
@@ -22,12 +23,12 @@ const (
 
 // A Server defines parameters for running an HTTP server.
 type Server struct {
-	Acme    bool
-	Addr    string
-	Cert    string
-	Key     string
-	Host    string
-	Handler http.Handler
+	Acme   bool
+	Addr   string
+	Cert   string
+	Key    string
+	Host   string
+	router *router.Router
 }
 
 // ShutdownFunction defines a function that is called to shutdown the server.
@@ -48,7 +49,7 @@ func (s *Server) listenAndServe() (*errgroup.Group, ShutdownFunction) {
 	s1 := &http.Server{
 		Addr:              s.Addr,
 		ReadHeaderTimeout: ReadHeaderTimeout,
-		Handler:           s.Handler,
+		Handler:           s.router,
 	}
 	g.Go(func() error {
 		return s1.ListenAndServe()
@@ -67,7 +68,7 @@ func (s *Server) listenAndServeTLS() (*errgroup.Group, ShutdownFunction) {
 	s2 := &http.Server{
 		Addr:              ":https",
 		ReadHeaderTimeout: ReadHeaderTimeout,
-		Handler:           s.Handler,
+		Handler:           s.router,
 	}
 	g.Go(func() error {
 		return s1.ListenAndServe()
@@ -105,7 +106,7 @@ func (s Server) listenAndServeAcme() (*errgroup.Group, ShutdownFunction) {
 	}
 	s2 := &http.Server{
 		Addr:              ":https",
-		Handler:           s.Handler,
+		Handler:           s.router,
 		ReadHeaderTimeout: ReadHeaderTimeout,
 		TLSConfig: &tls.Config{
 			MinVersion:     tls.VersionTLS12,

@@ -8,12 +8,15 @@
 package server
 
 import (
+	"context"
+
 	"github.com/harness/gitness/harness"
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
 	"github.com/harness/gitness/harness/client"
 	"github.com/harness/gitness/harness/router/translator"
 	"github.com/harness/gitness/internal/cron"
+	"github.com/harness/gitness/internal/guard"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
@@ -23,7 +26,7 @@ import (
 	"github.com/google/wire"
 )
 
-func initSystem(config *types.Config) (*system, error) {
+func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	wire.Build(
 		newSystem,
 		database.WireSet,
@@ -31,6 +34,7 @@ func initSystem(config *types.Config) (*system, error) {
 		router.WireSet,
 		server.WireSet,
 		cron.WireSet,
+		guard.WireSet,
 		harness.LoadConfig,
 		authn.WireSet,
 		authz.WireSet,

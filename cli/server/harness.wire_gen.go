@@ -6,12 +6,15 @@
 package server
 
 import (
+	"context"
+
 	"github.com/harness/gitness/harness"
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
 	"github.com/harness/gitness/harness/client"
 	"github.com/harness/gitness/harness/router/translator"
 	"github.com/harness/gitness/internal/cron"
+	"github.com/harness/gitness/internal/guard"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
@@ -21,10 +24,10 @@ import (
 
 // Injectors from harness.wire.go:
 
-func initSystem(config *types.Config) (*system, error) {
+func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	requestTranslator := translator.ProvideRequestTranslator()
 	systemStore := memory.New(config)
-	db, err := database.ProvideDatabase(config)
+	db, err := database.ProvideDatabase(ctx, config)
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +65,12 @@ func initSystem(config *types.Config) (*system, error) {
 		return nil, err
 	}
 	authorizer := authz.ProvideAuthorizer(aclClient)
-	handler, err := router.ProvideHTTPHandler(requestTranslator, systemStore, userStore, spaceStore, repoStore, tokenStore, serviceAccountStore, authenticator, authorizer)
-	if err != nil {
-		return nil, err
-	}
-	serverServer := server.ProvideServer(config, handler)
+	guardGuard := guard.ProvideGuard(authorizer, spaceStore, repoStore)
+	apiHandler := router.ProvideAPIHandler(systemStore, userStore, spaceStore, repoStore, tokenStore, serviceAccountStore, authenticator, guardGuard)
+	gitHandler := router.ProvideGitHandler(repoStore, authenticator, guardGuard)
+	webHandler := router.ProvideWebHandler(systemStore)
+	routerRouter := router.ProvideRouter(requestTranslator, apiHandler, gitHandler, webHandler)
+	serverServer := server.ProvideServer(config, routerRouter)
 	nightly := cron.NewNightly()
 	serverSystem := newSystem(serverServer, nightly)
 	return serverSystem, nil
