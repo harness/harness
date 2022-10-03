@@ -13,10 +13,11 @@ import { useAPIToken } from 'hooks/useAPIToken'
 import { languageLoader } from './framework/strings/languageLoader'
 import type { LanguageRecord } from './framework/strings/languageLoader'
 import { StringsContextProvider } from './framework/strings/StringsContextProvider'
+import './App.scss'
 
 FocusStyleManager.onlyShowFocusOnTabs()
 
-const App: React.FC<AppProps> = ({
+const App: React.FC<AppProps> = React.memo(function App({
   standalone = false,
   accountId = '',
   lang = 'en',
@@ -25,7 +26,7 @@ const App: React.FC<AppProps> = ({
   children,
   hooks = {},
   components = {}
-}) => {
+}: AppProps) {
   const [strings, setStrings] = useState<LanguageRecord>()
   const [token, setToken] = useAPIToken(apiToken)
   const getRequestOptions = useCallback((): Partial<RequestInit> => {
@@ -57,13 +58,13 @@ const App: React.FC<AppProps> = ({
               }
             }}>
             <TooltipContextProvider initialTooltipDictionary={tooltipDictionary}>
-              <ModalProvider>{children ? children : <RouteDestinations standalone={standalone} />}</ModalProvider>
+              <ModalProvider>{children ? children : <RouteDestinations />}</ModalProvider>
             </TooltipContextProvider>
           </RestfulProvider>
         </AppContextProvider>
       </AppErrorBoundary>
     </StringsContextProvider>
   ) : null
-}
+})
 
 export default App

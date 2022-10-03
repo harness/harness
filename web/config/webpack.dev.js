@@ -1,16 +1,19 @@
-const path = require('path');
-const util = require('util');
-const fs = require('fs');
+const path = require('path')
+const util = require('util')
+const fs = require('fs')
+require('dotenv').config()
 
-require('dotenv').config();
-
-const { merge } = require('webpack-merge');
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const HTMLWebpackPlugin = require('html-webpack-plugin');
-const { DefinePlugin, WatchIgnorePlugin, container: { ModuleFederationPlugin }} = require('webpack');
-const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
-const commonConfig = require('./webpack.common');
+const { merge } = require('webpack-merge')
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const HTMLWebpackPlugin = require('html-webpack-plugin')
+const {
+  DefinePlugin,
+  WatchIgnorePlugin,
+  container: { ModuleFederationPlugin }
+} = require('webpack')
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
+const commonConfig = require('./webpack.common')
 
 const baseUrl = process.env.BASE_URL ?? 'https://qa.harness.io/gateway'
 const targetLocalHost = JSON.parse(process.env.TARGET_LOCALHOST || 'true')
@@ -29,7 +32,7 @@ const devConfig = {
   },
   devServer: {
     hot: true,
-    host: "localhost",
+    host: 'localhost',
     historyApiFallback: true,
     port: 3000,
     proxy: {
@@ -47,29 +50,44 @@ const devConfig = {
       chunkFilename: '[name].[id].css'
     }),
     new HTMLWebpackPlugin({
-        template: 'src/index.html',
-        filename: 'index.html',
-        minify: false,
-        templateParameters: {
-            __DEV__: DEV,
-            __ON_PREM__: ON_PREM
-        }
+      template: 'src/index.html',
+      filename: 'index.html',
+      minify: false,
+      templateParameters: {
+        __DEV__: DEV,
+        __ON_PREM__: ON_PREM
+      }
     }),
     new DefinePlugin({
       'process.env': '{}', // required for @blueprintjs/core
       __DEV__: DEV
     }),
     new MonacoWebpackPlugin({
-        // available options are documented at https://github.com/Microsoft/monaco-editor-webpack-plugin#options
-        languages: ['yaml', 'json']
-    }),
+      // available options are documented at https://github.com/Microsoft/monaco-editor-webpack-plugin#options
+      languages: ['yaml', 'json']
+    })
     // new ForkTsCheckerWebpackPlugin()
     // new WatchIgnorePlugin({
     //   paths: [/node_modules(?!\/@wings-software)/, /\.d\.ts$/]
     // }),
-  ]
-};
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.md$/,
+        use: [
+          {
+            loader: 'raw-loader',
+            options: {
+              esModule: false
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
 
 console.table({ baseUrl, targetLocalHost })
 
-module.exports = merge(commonConfig, devConfig);
+module.exports = merge(commonConfig, devConfig)

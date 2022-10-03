@@ -146,3 +146,17 @@ export const useScrollToTop = (target: string, dependencies: unknown[]): void =>
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dependencies])
 }
+
+/**
+ * Make any HTML element as a clickable button with keyboard accessibility
+ * support (hit Enter/Space will trigger click event)
+ */
+export const ButtonRoleProps = {
+  onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>): void => {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar' || e.which === 13 || e.which === 32) {
+      ;(e.target as unknown as { click: () => void })?.click?.()
+    }
+  },
+  tabIndex: 0,
+  role: 'button'
+}

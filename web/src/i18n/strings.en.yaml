@@ -5,31 +5,22 @@ email: Email
 password: Password
 noAccount: No Account
 existingAccount: Existing Account
-failed: Failed
-status: Status
-success: Success
-details: Details
-overview: Overview
-back: Back
-finish: Finish
-delete: Delete
-apply: Apply
+public: Public
+private: Private
 cancel: Cancel
-continue: Continue
-type: Type
 name: Name
-action: Action
-edit: Edit
-executionsText: Executions
-outputLabel: Output
-description: Description
-optionalField: '{{name}} (optional)'
-descriptionPlaceholder: Enter Description
-tagsLabel: Tags
-yes: Yes
-no: No
-source: Source
-namePlaceholder: Enter Name
-banner:
-  expired: expired {{ days }} days ago
-  expiryCountdown: expires in {{ days }} days
+repositories: Repositories
+files: Files
+commits: Commits
+pullRequests: Pull Requests
+settings: Settings
+newFile: New File
+newFolder: New Folder
+content: Content
+history: History
+repos:
+  name: Repo Name
+  data: Repo Data
+  activities: Monthly Activities
+  updated: Updated Date
+  lastChange: Last Change

@@ -1,0 +1,71 @@
+.main {
+  min-height: var(--page-min-height, 100%);
+  background-color: var(--primary-bg) !important;
+}
+
+.breadcrumb {
+  align-items: center;
+}
+
+.repoDropdown {
+  color: var(--grey-700) !important;
+  font-size: 18px !important;
+  line-height: 28px !important;
+  cursor: pointer;
+}
+
+.targetClassName {
+  display: inline-flex !important;
+}
+
+.tabContainer {
+  [role='tablist'] {
+    background-color: var(--white) !important;
+    padding-left: var(--spacing-medium);
+    padding-right: var(--spacing-xlarge);
+    border-bottom: 1px solid var(--grey-200);
+  }
+
+  [role='tabpanel'] {
+    margin-top: 0;
+  }
+}
+
+.tabContent {
+  height: calc(100vh - var(--scm-files-page-header-height)) !important;
+  overflow: auto;
+}
+
+.resourceTree {
+  .repoBranch {
+    position: sticky;
+    top: 0;
+    background-color: var(--white);
+    padding-bottom: var(--spacing-small) !important;
+    padding-right: 0 !important;
+    z-index: 1;
+  }
+
+  .dropdown {
+    flex-grow: 1;
+  }
+
+  .branchDropdown {
+    background-color: var(--white);
+  }
+
+  .fileTree {
+    padding: var(--spacing-small) var(--spacing-large) var(--spacing-large) var(--spacing-xlarge) !important;
+    min-height: calc(100% - 128px);
+  }
+
+  .fileNewActions {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--white);
+    padding-top: var(--spacing-small) !important;
+  }
+}
+
+.resourceContent {
+}

@@ -25,14 +25,24 @@ const ExactSharedPackages = [
  * @type {import('webpack').ModuleFederationPluginOptions}
  */
 module.exports = {
-  name: 'gitness',
+  name: 'scm',
   filename: 'remoteEntry.js',
   library: {
     type: 'var',
-    name: 'HarnessGitness'
+    name: 'scmRemote'
   },
   exposes: {
-    './App': './src/App.tsx'
+    './App': './src/App.tsx',
+    './Welcome': './src/views/Welcome/Welcome.tsx',
+    './Repos': './src/views/Repos/Repos.tsx',
+    './NewRepo': './src/views/NewRepo/NewRepo.tsx',
+    './RepoFiles': './src/views/RepoFiles/RepoFiles.tsx',
+    './RepoFileDetails': './src/views/RepoFileDetails/RepoFileDetails.tsx',
+    './RepoCommits': './src/views/RepoCommits/RepoCommits.tsx',
+    './RepoCommitDetails': './src/views/RepoCommitDetails/RepoCommitDetails.tsx',
+    './RepoPullRequests': './src/views/RepoPullRequests/RepoPullRequests.tsx',
+    './RepoPullRequestDetails': './src/views/RepoPullRequestDetails/RepoPullRequestDetails.tsx',
+    './RepoSettings': './src/views/RepoSettings/RepoSettings.tsx'
   },
   shared: {
     formik: packageJSON.dependencies['formik'],

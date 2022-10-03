@@ -3,38 +3,29 @@
  * Use the command `yarn strings` to regenerate this file.
  */
 export interface StringsMap {
-  action: string
-  apply: string
-  back: string
-  'banner.expired': string
-  'banner.expiryCountdown': string
   cancel: string
-  continue: string
-  delete: string
-  description: string
-  descriptionPlaceholder: string
-  details: string
-  edit: string
+  commits: string
+  content: string
   email: string
-  executionsText: string
   existingAccount: string
-  failed: string
-  finish: string
+  files: string
+  history: string
   name: string
-  namePlaceholder: string
-  no: string
+  newFile: string
+  newFolder: string
   noAccount: string
-  optionalField: string
-  outputLabel: string
-  overview: string
   pageNotFound: string
   password: string
+  private: string
+  public: string
+  pullRequests: string
+  'repos.activities': string
+  'repos.data': string
+  'repos.lastChange': string
+  'repos.name': string
+  'repos.updated': string
+  repositories: string
+  settings: string
   signIn: string
   signUp: string
-  source: string
-  status: string
-  success: string
-  tagsLabel: string
-  type: string
-  yes: string
 }
