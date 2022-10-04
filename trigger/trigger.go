@@ -515,6 +515,15 @@ func trunc(s string, i int) string {
 }
 
 func (t *triggerer) createBuildError(ctx context.Context, repo *core.Repository, base *core.Hook, message string) (*core.Build, error) {
+	logger := logrus.WithFields(
+		logrus.Fields{
+			"repo":   repo.Slug,
+			"ref":    base.Ref,
+			"event":  base.Event,
+			"commit": base.After,
+		},
+	)
+
 	repo, err := t.repos.Increment(ctx, repo)
 	if err != nil {
 		return nil, err
@@ -553,6 +562,41 @@ func (t *triggerer) createBuildError(ctx context.Context, repo *core.Repository,
 	}
 
 	err = t.builds.Create(ctx, build, nil)
+	if err != nil {
+		logger = logger.WithError(err)
+		logger.Errorln("trigger: cannot create build error")
+		return nil, err
+	}
+
+	user, err := t.users.Find(ctx, repo.UserID)
+	if err != nil {
+		logger = logger.WithError(err)
+		logger.Warnln("trigger: cannot find repository owner")
+		return nil, err
+	}
+
+	err = t.status.Send(ctx, user, &core.StatusInput{
+		Repo:  repo,
+		Build: build,
+	})
+	if err != nil {
+		logger = logger.WithError(err)
+		logger.Warnln("trigger: cannot create status")
+	}
+
+	payload := &core.WebhookData{
+		Event:  core.WebhookEventBuild,
+		Action: core.WebhookActionCreated,
+		User:   user,
+		Repo:   repo,
+		Build:  build,
+	}
+	err = t.hooks.Send(ctx, payload)
+	if err != nil {
+		logger = logger.WithError(err)
+		logger.Warnln("trigger: cannot send webhook")
+	}
+
 	return build, err
 }
 
