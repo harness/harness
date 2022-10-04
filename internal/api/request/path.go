@@ -5,9 +5,9 @@ import (
 )
 
 const (
-	PathIDParamName = "pathId"
+	PathParamPathID = "pathID"
 )
 
 func GetPathID(r *http.Request) (int64, error) {
-	return ParseAsInt64(r, PathIDParamName)
+	return ParseAsInt64(r, PathParamPathID)
 }

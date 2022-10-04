@@ -6,8 +6,11 @@ package router
 
 import (
 	"github.com/google/wire"
+	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/controller/serviceaccount"
+	"github.com/harness/gitness/internal/api/controller/space"
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/auth/authn"
-	"github.com/harness/gitness/internal/guard"
 	"github.com/harness/gitness/internal/router/translator"
 	"github.com/harness/gitness/internal/store"
 )
@@ -29,24 +32,18 @@ func ProvideRouter(
 	return NewRouter(translator, api, git, web)
 }
 
-func ProvideGitHandler(
-	repoStore store.RepoStore,
-	authenticator authn.Authenticator,
-	guard *guard.Guard) GitHandler {
-	return NewGitHandler(repoStore, authenticator, guard)
+func ProvideGitHandler(repoStore store.RepoStore, authenticator authn.Authenticator) GitHandler {
+	return NewGitHandler(repoStore, authenticator)
 }
 
 func ProvideAPIHandler(
 	systemStore store.SystemStore,
-	userStore store.UserStore,
-	spaceStore store.SpaceStore,
-	repoStore store.RepoStore,
-	tokenStore store.TokenStore,
-	saStore store.ServiceAccountStore,
 	authenticator authn.Authenticator,
-	guard *guard.Guard) APIHandler {
-	return NewAPIHandler(systemStore, userStore, spaceStore, repoStore, tokenStore,
-		saStore, authenticator, guard)
+	repoCtrl *repo.Controller,
+	spaceCtrl *space.Controller,
+	saCtrl *serviceaccount.Controller,
+	userCtrl *user.Controller) APIHandler {
+	return NewAPIHandler(systemStore, authenticator, repoCtrl, spaceCtrl, saCtrl, userCtrl)
 }
 
 func ProvideWebHandler(systemStore store.SystemStore) WebHandler {

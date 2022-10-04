@@ -7,24 +7,30 @@ package repo
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/guard"
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types/enum"
 )
 
 /*
  * Writes json-encoded repository information to the http response body.
  */
-func HandleFind(guard *guard.Guard, repoStore store.RepoStore) http.HandlerFunc {
-	return guard.Repo(
-		enum.PermissionRepoView,
-		true,
-		func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			repo, _ := request.RepoFrom(ctx)
+func HandleFind(repoCtrl *repo.Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+		repoRef, err := request.GetRepoRef(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 
-			render.JSON(w, http.StatusOK, repo)
-		})
+		repo, err := repoCtrl.Find(ctx, session, repoRef)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, repo)
+	}
 }

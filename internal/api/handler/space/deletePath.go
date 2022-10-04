@@ -7,41 +7,36 @@ package space
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/guard"
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/hlog"
 )
 
 /*
  * Deletes a given path.
  */
-func HandleDeletePath(guard *guard.Guard, spaceStore store.SpaceStore) http.HandlerFunc {
-	return guard.Space(
-		enum.PermissionSpaceEdit,
-		false,
-		func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			log := hlog.FromRequest(r)
-			space, _ := request.SpaceFrom(ctx)
+func HandleDeletePath(spaceCtrl *space.Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+		spaceRef, err := request.GetSpaceRef(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 
-			pathID, err := request.GetPathID(r)
-			if err != nil {
-				render.BadRequest(w)
-				return
-			}
+		pathID, err := request.GetPathID(r)
+		if err != nil {
+			render.BadRequest(w)
+			return
+		}
 
-			err = spaceStore.DeletePath(ctx, space.ID, pathID)
-			if err != nil {
-				log.Err(err).Int64("path_id", pathID).
-					Msgf("Failed to delete space path.")
+		err = spaceCtrl.DeletePath(ctx, session, spaceRef, pathID)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 
-				render.UserfiedErrorOrInternal(w, err)
-				return
-			}
-
-			w.WriteHeader(http.StatusNoContent)
-		})
+		render.DeleteSuccessful(w)
+	}
 }

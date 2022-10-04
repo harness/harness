@@ -5,64 +5,29 @@
 package account
 
 import (
-	"errors"
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/render"
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/token"
-	"github.com/harness/gitness/types"
-
-	"github.com/rs/zerolog/hlog"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/harness/gitness/internal/api/request"
 )
 
 // HandleLogin returns an http.HandlerFunc that authenticates
 // the user and returns an authentication token on success.
-func HandleLogin(userStore store.UserStore, system store.SystemStore, tokenStore store.TokenStore) http.HandlerFunc {
+func HandleLogin(userCtrl *user.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		log := hlog.FromRequest(r)
+		session, _ := request.AuthSessionFrom(ctx)
 
 		username := r.FormValue("username")
 		password := r.FormValue("password")
-		user, err := userStore.FindUID(ctx, username)
-		if errors.Is(err, store.ErrResourceNotFound) {
-			user, err = userStore.FindEmail(ctx, username)
-		}
 
+		tokenResponse, err := userCtrl.Login(ctx, session, username, password)
 		if err != nil {
-			log.Debug().Err(err).
-				Msgf("cannot find user with '%s'", username)
-
-			// always give not found error as extra security measurement.
-			render.NotFound(w)
+			render.TranslatedUserError(w, err)
 			return
 		}
 
-		err = bcrypt.CompareHashAndPassword(
-			[]byte(user.Password),
-			[]byte(password),
-		)
-		if err != nil {
-			log.Debug().Err(err).
-				Str("user_uid", user.UID).
-				Msg("invalid password")
-
-			render.NotFound(w)
-			return
-		}
-
-		token, jwtToken, err := token.CreateUserSession(ctx, tokenStore, user, "login")
-		if err != nil {
-			log.Err(err).
-				Str("user_uid", user.UID).
-				Msg("failed to generate token")
-
-			render.InternalError(w)
-			return
-		}
-
-		render.JSON(w, http.StatusOK, &types.TokenResponse{Token: *token, AccessToken: jwtToken})
+		render.JSON(w, http.StatusOK, tokenResponse)
 	}
 }

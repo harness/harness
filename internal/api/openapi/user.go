@@ -7,7 +7,7 @@ package openapi
 import (
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 
 	"github.com/swaggest/openapi-go/openapi3"
@@ -26,7 +26,7 @@ func buildUser(reflector *openapi3.Reflector) {
 	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "getUser"})
 	_ = reflector.SetRequest(&opFind, nil, http.MethodGet)
 	_ = reflector.SetJSONResponse(&opFind, new(types.User), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opFind, new(render.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/user", opFind)
 
 	opUpdate := openapi3.Operation{}
@@ -34,7 +34,7 @@ func buildUser(reflector *openapi3.Reflector) {
 	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateUser"})
 	_ = reflector.SetRequest(&opUpdate, new(types.UserInput), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdate, new(types.User), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opUpdate, new(render.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodPatch, "/user", opUpdate)
 
 	opToken := openapi3.Operation{}
@@ -42,7 +42,7 @@ func buildUser(reflector *openapi3.Reflector) {
 	opToken.WithMapOfAnything(map[string]interface{}{"operationId": "createToken"})
 	_ = reflector.SetRequest(&opToken, new(types.TokenResponse), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opToken, new(types.User), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opToken, new(render.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opToken, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/user/token", opToken)
 
 	opCurrent := openapi3.Operation{}
@@ -50,6 +50,6 @@ func buildUser(reflector *openapi3.Reflector) {
 	opCurrent.WithMapOfAnything(map[string]interface{}{"operationId": "getCurrentUser"})
 	_ = reflector.SetRequest(&opFind, new(baseRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opCurrent, new(currentUserResponse), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opCurrent, new(render.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opCurrent, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/api/user/currentUser", opCurrent)
 }

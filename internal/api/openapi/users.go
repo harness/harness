@@ -7,7 +7,7 @@ package openapi
 import (
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 
 	"github.com/swaggest/openapi-go/openapi3"
@@ -45,9 +45,9 @@ func buildUsers(reflector *openapi3.Reflector) {
 	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "getUserEmail"})
 	_ = reflector.SetRequest(&opFind, new(userRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opFind, new(types.User), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opFind, new(render.Error), http.StatusBadRequest)
-	_ = reflector.SetJSONResponse(&opFind, new(render.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opFind, new(render.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/users/{email}", opFind)
 
 	opList := openapi3.Operation{}
@@ -55,9 +55,9 @@ func buildUsers(reflector *openapi3.Reflector) {
 	opList.WithMapOfAnything(map[string]interface{}{"operationId": "listUsers"})
 	_ = reflector.SetRequest(&opList, new(userListRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opList, new([]*types.User), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opList, new(render.Error), http.StatusBadRequest)
-	_ = reflector.SetJSONResponse(&opList, new(render.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opList, new(render.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opList, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opList, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opList, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/users", opList)
 
 	opCreate := openapi3.Operation{}
@@ -65,9 +65,9 @@ func buildUsers(reflector *openapi3.Reflector) {
 	opCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createUser"})
 	_ = reflector.SetRequest(&opCreate, new(types.UserInput), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opCreate, new(types.User), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opCreate, new(render.Error), http.StatusBadRequest)
-	_ = reflector.SetJSONResponse(&opCreate, new(render.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opCreate, new(render.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/users", opCreate)
 
 	opUpdate := openapi3.Operation{}
@@ -75,9 +75,9 @@ func buildUsers(reflector *openapi3.Reflector) {
 	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateUsers"})
 	_ = reflector.SetRequest(&opUpdate, new(userUpdateRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdate, new(types.User), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opUpdate, new(render.Error), http.StatusBadRequest)
-	_ = reflector.SetJSONResponse(&opUpdate, new(render.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opUpdate, new(render.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPatch, "/users/{email}", opUpdate)
 
 	opDelete := openapi3.Operation{}
@@ -85,7 +85,7 @@ func buildUsers(reflector *openapi3.Reflector) {
 	opDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deleteUser"})
 	_ = reflector.SetRequest(&opDelete, new(userRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDelete, nil, http.StatusNoContent)
-	_ = reflector.SetJSONResponse(&opDelete, new(render.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opDelete, new(render.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodDelete, "/users/{email}", opDelete)
 }

@@ -7,79 +7,32 @@ package users
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/render"
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/check"
-	"github.com/rs/zerolog/hlog"
-	"golang.org/x/crypto/bcrypt"
-
-	"github.com/dchest/uniuri"
+	"github.com/harness/gitness/internal/api/request"
 )
-
-type userCreateInput struct {
-	UID      string `json:"uid"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Admin    bool   `json:"admin"`
-}
 
 // HandleCreate returns an http.HandlerFunc that processes an http.Request
 // to create the named user account in the system.
-func HandleCreate(userStore store.UserStore) http.HandlerFunc {
+func HandleCreate(userCtrl user.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		log := hlog.FromRequest(r)
+		session, _ := request.AuthSessionFrom(ctx)
 
-		in := new(userCreateInput)
+		in := new(user.CreateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
 		}
 
-		hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
+		usr, err := userCtrl.Create(ctx, session, in)
 		if err != nil {
-			log.Err(err).
-				Str("uid", in.UID).
-				Msg("Failed to hash password")
-
-			render.InternalError(w)
+			render.TranslatedUserError(w, err)
 			return
 		}
 
-		user := &types.User{
-			UID:      in.UID,
-			Name:     in.Name,
-			Email:    in.Email,
-			Admin:    in.Admin,
-			Password: string(hash),
-			Salt:     uniuri.NewLen(uniuri.UUIDLen),
-			Created:  time.Now().UnixMilli(),
-			Updated:  time.Now().UnixMilli(),
-		}
-		if err = check.User(user); err != nil {
-			log.Debug().Err(err).
-				Str("uid", user.UID).
-				Msg("invalid user input")
-
-			render.UserfiedErrorOrInternal(w, err)
-			return
-		}
-
-		err = userStore.Create(ctx, user)
-		if err != nil {
-			log.Err(err).
-				Str("uid", user.UID).
-				Msg("failed to create user")
-
-			render.UserfiedErrorOrInternal(w, err)
-			return
-		}
-
-		render.JSON(w, http.StatusOK, user)
+		render.JSON(w, http.StatusOK, usr)
 	}
 }

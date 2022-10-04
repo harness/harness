@@ -6,12 +6,9 @@ import (
 
 	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	middleware_authn "github.com/harness/gitness/internal/api/middleware/authn"
-	"github.com/harness/gitness/internal/api/middleware/resolve"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
-	"github.com/harness/gitness/internal/guard"
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -28,8 +25,7 @@ type GitHandler interface {
  */
 func NewGitHandler(
 	repoStore store.RepoStore,
-	authenticator authn.Authenticator,
-	guard *guard.Guard) GitHandler {
+	authenticator authn.Authenticator) GitHandler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
 
@@ -46,52 +42,54 @@ func NewGitHandler(
 	// for now always attempt auth - enforced per operation.
 	r.Use(middleware_authn.Attempt(authenticator))
 
-	r.Route(fmt.Sprintf("/{%s}", request.RepoRefParamName), func(r chi.Router) {
-		// resolves the repo and stores in the context
-		r.Use(resolve.Repo(repoStore))
-
+	r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 		// Write operations (need auth)
 		r.Group(func(r chi.Router) {
-			// TODO: specific permission for pushing code?
-			r.Use(guard.ForRepo(enum.PermissionRepoEdit, false))
-
-			r.Handle("/git-upload-pack", http.HandlerFunc(stubGitHandler))
+			// middleware for authz?
+			r.Handle("/git-upload-pack", stubGitHandler(repoStore))
 		})
 
 		// Read operations (only need of it not public)
 		r.Group(func(r chi.Router) {
-			// middlewares
-			r.Use(guard.ForRepo(enum.PermissionRepoView, true))
+			// middleware for authz?
+
 			// handlers
-			r.Post("/git-receive-pack", stubGitHandler)
-			r.Get("/info/refs", stubGitHandler)
-			r.Get("/HEAD", stubGitHandler)
-			r.Get("/objects/info/alternates", stubGitHandler)
-			r.Get("/objects/info/http-alternates", stubGitHandler)
-			r.Get("/objects/info/packs", stubGitHandler)
-			r.Get("/objects/info/{file:[^/]*}", stubGitHandler)
-			r.Get("/objects/{head:[0-9a-f]{2}}/{hash:[0-9a-f]{38}}", stubGitHandler)
-			r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.pack", stubGitHandler)
-			r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.idx", stubGitHandler)
+			r.Post("/git-receive-pack", stubGitHandler(repoStore))
+			r.Get("/info/refs", stubGitHandler(repoStore))
+			r.Get("/HEAD", stubGitHandler(repoStore))
+			r.Get("/objects/info/alternates", stubGitHandler(repoStore))
+			r.Get("/objects/info/http-alternates", stubGitHandler(repoStore))
+			r.Get("/objects/info/packs", stubGitHandler(repoStore))
+			r.Get("/objects/info/{file:[^/]*}", stubGitHandler(repoStore))
+			r.Get("/objects/{head:[0-9a-f]{2}}/{hash:[0-9a-f]{38}}", stubGitHandler(repoStore))
+			r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.pack", stubGitHandler(repoStore))
+			r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.idx", stubGitHandler(repoStore))
 		})
 	})
 
 	return r
 }
 
-func stubGitHandler(w http.ResponseWriter, r *http.Request) {
-	rep, _ := request.RepoFrom(r.Context())
+func stubGitHandler(repoStore store.RepoStore) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		repoPath, _ := request.GetRepoRef(r)
+		repo, err := repoStore.FindByPath(r.Context(), repoPath)
+		if err != nil {
+			_, _ = w.Write([]byte(fmt.Sprintf("Repo '%s' not found.", repoPath)))
+			return
+		}
 
-	w.WriteHeader(http.StatusTeapot)
-	_, _ = w.Write([]byte(fmt.Sprintf(
-		"Oooops, seems you hit a major construction site ... \n"+
-			"  Repo: '%s' (%s)\n"+
-			"  Method: '%s'\n"+
-			"  Path: '%s'\n"+
-			"  Query: '%s'",
-		rep.Name, rep.Path,
-		r.Method,
-		r.URL.Path,
-		r.URL.RawQuery,
-	)))
+		w.WriteHeader(http.StatusTeapot)
+		_, _ = w.Write([]byte(fmt.Sprintf(
+			"Oooops, seems you hit a major construction site ... \n"+
+				"  Repo: '%s' (%s)\n"+
+				"  Method: '%s'\n"+
+				"  Path: '%s'\n"+
+				"  Query: '%s'",
+			repo.Name, repo.Path,
+			r.Method,
+			r.URL.Path,
+			r.URL.RawQuery,
+		)))
+	})
 }

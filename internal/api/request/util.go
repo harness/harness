@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi"
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -19,7 +20,7 @@ import (
 func ParamOrError(r *http.Request, paramName string) (string, error) {
 	value := chi.URLParam(r, paramName)
 	if value == "" {
-		return "", fmt.Errorf("parameter '%s' not found in request", paramName)
+		return "", usererror.BadRequest(fmt.Sprintf("Parameter '%s' not found in request path.", paramName))
 	}
 
 	return value, nil

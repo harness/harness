@@ -9,19 +9,21 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/harness/gitness/internal/api/usererror"
 )
 
 func TestWriteErrorf(t *testing.T) {
 	w := httptest.NewRecorder()
 
-	e := New("abc")
-	ErrorObject(w, 500, e)
+	e := usererror.New(500, "abc")
+	UserError(w, e)
 
 	if got, want := w.Code, 500; want != got {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 
-	errjson := &Error{}
+	errjson := &usererror.Error{}
 	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
 		t.Error(err)
 	}
@@ -39,7 +41,7 @@ func TestWriteErrorCode(t *testing.T) {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 
-	errjson := &Error{}
+	errjson := &usererror.Error{}
 	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
 		t.Error(err)
 	}
@@ -57,11 +59,11 @@ func TestWriteNotFound(t *testing.T) {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 
-	errjson := &Error{}
+	errjson := &usererror.Error{}
 	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
 		t.Error(err)
 	}
-	if got, want := errjson.Message, ErrNotFound.Message; got != want {
+	if got, want := errjson.Message, usererror.ErrNotFound.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
 }
@@ -75,11 +77,11 @@ func TestWriteUnauthorized(t *testing.T) {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 
-	errjson := &Error{}
+	errjson := &usererror.Error{}
 	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
 		t.Error(err)
 	}
-	if got, want := errjson.Message, ErrUnauthorized.Message; got != want {
+	if got, want := errjson.Message, usererror.ErrUnauthorized.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
 }
@@ -93,11 +95,11 @@ func TestWriteForbidden(t *testing.T) {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 
-	errjson := &Error{}
+	errjson := &usererror.Error{}
 	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
 		t.Error(err)
 	}
-	if got, want := errjson.Message, ErrForbidden.Message; got != want {
+	if got, want := errjson.Message, usererror.ErrForbidden.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
 }
@@ -111,11 +113,11 @@ func TestWriteBadRequest(t *testing.T) {
 		t.Errorf("Want response code %d, got %d", want, got)
 	}
 
-	errjson := &Error{}
+	errjson := &usererror.Error{}
 	if err := json.NewDecoder(w.Body).Decode(errjson); err != nil {
 		t.Error(err)
 	}
-	if got, want := errjson.Message, ErrBadRequest.Message; got != want {
+	if got, want := errjson.Message, usererror.ErrBadRequest.Message; got != want {
 		t.Errorf("Want error message %s, got %s", want, got)
 	}
 }

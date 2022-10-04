@@ -36,7 +36,7 @@ func CreateUserSession(ctx context.Context, tokenStore store.TokenStore,
 
 func CreatePAT(ctx context.Context, tokenStore store.TokenStore,
 	createdBy *types.Principal, createdFor *types.User,
-	name string, lifeTime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
+	name string, lifetime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
 	return Create(
 		ctx,
 		tokenStore,
@@ -44,14 +44,14 @@ func CreatePAT(ctx context.Context, tokenStore store.TokenStore,
 		createdBy,
 		types.PrincipalFromUser(createdFor),
 		name,
-		lifeTime,
+		lifetime,
 		grants,
 	)
 }
 
 func CreateSAT(ctx context.Context, tokenStore store.TokenStore,
 	createdBy *types.Principal, createdFor *types.ServiceAccount,
-	name string, lifeTime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
+	name string, lifetime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
 	return Create(
 		ctx,
 		tokenStore,
@@ -59,7 +59,7 @@ func CreateSAT(ctx context.Context, tokenStore store.TokenStore,
 		createdBy,
 		types.PrincipalFromServiceAccount(createdFor),
 		name,
-		lifeTime,
+		lifetime,
 		grants,
 	)
 }
@@ -81,9 +81,9 @@ func CreateOAuth(ctx context.Context, tokenStore store.TokenStore,
 
 func Create(ctx context.Context, tokenStore store.TokenStore,
 	tokenType enum.TokenType, createdBy *types.Principal, createdFor *types.Principal,
-	name string, lifeTime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
+	name string, lifetime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
 	issuedAt := time.Now()
-	expiresAt := issuedAt.Add(lifeTime)
+	expiresAt := issuedAt.Add(lifetime)
 
 	// create db entry first so we get the id.
 	token := types.Token{

@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-// RequestTranslator is responsible to translate an incomming request
+// RequestTranslator is responsible for translating an incomming request
 // before it's getting routed and handled.
 type RequestTranslator interface {
 	// TranslatePreRouting is called before any routing decisions are made.

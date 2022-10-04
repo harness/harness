@@ -7,39 +7,29 @@ package users
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/store"
-	"github.com/rs/zerolog/hlog"
 )
 
 // HandleDelete returns an http.HandlerFunc that processes an http.Request
 // to delete the named user account from the system.
-func HandleDelete(userStore store.UserStore, tokenStore store.TokenStore) http.HandlerFunc {
+func HandleDelete(userCtrl *user.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		log := hlog.FromRequest(r)
-		user, _ := request.UserFrom(ctx)
-
-		// delete all tokens (okay if we fail after - user is tried to being deleted anyway)
-		err := tokenStore.DeleteForPrincipal(ctx, user.ID)
+		session, _ := request.AuthSessionFrom(ctx)
+		userUID, err := request.GetUserUID(r)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to delete tokens for user.")
-
-			render.UserfiedErrorOrInternal(w, err)
+			render.TranslatedUserError(w, err)
 			return
 		}
 
-		err = userStore.Delete(ctx, user.ID)
+		err = userCtrl.Delete(ctx, session, userUID)
 		if err != nil {
-			log.Error().Err(err).
-				Str("user_uid", user.UID).
-				Msg("failed to delete user")
-
-			render.UserfiedErrorOrInternal(w, err)
+			render.TranslatedUserError(w, err)
 			return
 		}
 
-		w.WriteHeader(http.StatusNoContent)
+		render.DeleteSuccessful(w)
 	}
 }

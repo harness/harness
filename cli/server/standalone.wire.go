@@ -10,10 +10,13 @@ package server
 import (
 	"context"
 
+	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/controller/serviceaccount"
+	"github.com/harness/gitness/internal/api/controller/space"
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/cron"
-	"github.com/harness/gitness/internal/guard"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/router/translator"
 	"github.com/harness/gitness/internal/server"
@@ -32,7 +35,10 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		router.WireSet,
 		server.WireSet,
 		cron.WireSet,
-		guard.WireSet,
+		repo.WireSet,
+		serviceaccount.WireSet,
+		space.WireSet,
+		user.WireSet,
 		authn.WireSet,
 		authz.WireSet,
 		translator.WireSet,

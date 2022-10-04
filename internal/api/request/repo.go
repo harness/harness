@@ -1,26 +1,19 @@
 package request
 
 import (
-	"errors"
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/go-chi/chi"
 )
 
 const (
-	RepoRefParamName = "rref"
-)
-
-var (
-	ErrRepoReferenceNotFound = errors.New("no repository reference found in request")
+	PathParamRepoRef = "repositoryRef"
 )
 
 func GetRepoRef(r *http.Request) (string, error) {
-	rawRef := chi.URLParam(r, RepoRefParamName)
-	if rawRef == "" {
-		return "", ErrRepoReferenceNotFound
+	rawRef, err := ParamOrError(r, PathParamRepoRef)
+	if err != nil {
+		return "", err
 	}
 
 	// paths are unescaped and lower

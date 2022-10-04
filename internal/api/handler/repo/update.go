@@ -7,69 +7,38 @@ package repo
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
+	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/guard"
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types/check"
-	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/log"
 )
-
-type repoUpdateRequest struct {
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-	IsPublic    *bool   `json:"isPublic"`
-}
 
 /*
  * Updates an existing repository.
  */
-func HandleUpdate(guard *guard.Guard, repoStore store.RepoStore) http.HandlerFunc {
-	return guard.Repo(
-		enum.PermissionRepoEdit,
-		false,
-		func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			repo, _ := request.RepoFrom(ctx)
+func HandleUpdate(repoCtrl *repo.Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+		repoRef, err := request.GetRepoRef(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 
-			in := new(repoUpdateRequest)
-			err := json.NewDecoder(r.Body).Decode(in)
-			if err != nil {
-				render.BadRequestf(w, "Invalid request body: %s.", err)
-				return
-			}
+		in := new(repo.UpdateInput)
+		err = json.NewDecoder(r.Body).Decode(in)
+		if err != nil {
+			render.BadRequestf(w, "Invalid request body: %s.", err)
+			return
+		}
 
-			// update values only if provided
-			if in.Name != nil {
-				repo.Name = *in.Name
-			}
-			if in.Description != nil {
-				repo.Description = *in.Description
-			}
-			if in.IsPublic != nil {
-				repo.IsPublic = *in.IsPublic
-			}
+		repo, err := repoCtrl.Update(ctx, session, repoRef, in)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 
-			// always update time
-			repo.Updated = time.Now().UnixMilli()
-
-			// ensure provided values are valid
-			if err = check.Repo(repo); err != nil {
-				render.UserfiedErrorOrInternal(w, err)
-				return
-			}
-
-			err = repoStore.Update(ctx, repo)
-			if err != nil {
-				log.Error().Err(err).Msg("Repository update failed.")
-
-				render.UserfiedErrorOrInternal(w, err)
-				return
-			}
-
-			render.JSON(w, http.StatusOK, repo)
-		})
+		render.JSON(w, http.StatusOK, repo)
+	}
 }

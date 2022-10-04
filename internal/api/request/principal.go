@@ -5,14 +5,14 @@ import (
 )
 
 const (
-	UserUIDParamName           = "userUID"
-	ServiceAccountUIDParamName = "saUID"
+	PathParamUserUID           = "userUID"
+	PathParamServiceAccountUID = "saUID"
 )
 
 func GetUserUID(r *http.Request) (string, error) {
-	return ParamOrError(r, UserUIDParamName)
+	return ParamOrError(r, PathParamUserUID)
 }
 
 func GetServiceAccountUID(r *http.Request) (string, error) {
-	return ParamOrError(r, ServiceAccountUIDParamName)
+	return ParamOrError(r, PathParamServiceAccountUID)
 }

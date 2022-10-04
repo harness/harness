@@ -7,7 +7,7 @@ package openapi
 import (
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 
 	"github.com/swaggest/openapi-go/openapi3"
@@ -33,9 +33,9 @@ func buildAccount(reflector *openapi3.Reflector) {
 	onLogin.WithMapOfAnything(map[string]interface{}{"operationId": "onLogin"})
 	_ = reflector.SetRequest(&onLogin, new(loginRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&onLogin, new(types.TokenResponse), http.StatusOK)
-	_ = reflector.SetJSONResponse(&onLogin, new(render.Error), http.StatusBadRequest)
-	_ = reflector.SetJSONResponse(&onLogin, new(render.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&onLogin, new(render.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&onLogin, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&onLogin, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&onLogin, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/login", onLogin)
 
 	onRegister := openapi3.Operation{}
@@ -43,7 +43,7 @@ func buildAccount(reflector *openapi3.Reflector) {
 	onRegister.WithMapOfAnything(map[string]interface{}{"operationId": "onRegister"})
 	_ = reflector.SetRequest(&onRegister, new(registerRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&onRegister, new(types.TokenResponse), http.StatusOK)
-	_ = reflector.SetJSONResponse(&onRegister, new(render.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&onRegister, new(render.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&onRegister, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&onRegister, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/register", onRegister)
 }

@@ -13,8 +13,11 @@ import (
 	"github.com/harness/gitness/harness/auth/authz"
 	"github.com/harness/gitness/harness/client"
 	"github.com/harness/gitness/harness/router/translator"
+	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/controller/serviceaccount"
+	"github.com/harness/gitness/internal/api/controller/space"
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/cron"
-	"github.com/harness/gitness/internal/guard"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
@@ -32,10 +35,6 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	userStore := database.ProvideUserStore(db)
-	spaceStore := database.ProvideSpaceStore(db)
-	repoStore := database.ProvideRepoStore(db)
-	tokenStore := database.ProvideTokenStore(db)
-	serviceAccountStore := database.ProvideServiceAccountStore(db)
 	harnessConfig, err := harness.LoadConfig()
 	if err != nil {
 		return nil, err
@@ -56,6 +55,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
+	serviceAccountStore := database.ProvideServiceAccountStore(db)
 	authenticator, err := authn.ProvideAuthenticator(userStore, tokenClient, userClient, harnessConfig, serviceAccountClient, serviceAccountStore)
 	if err != nil {
 		return nil, err
@@ -65,9 +65,15 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	authorizer := authz.ProvideAuthorizer(aclClient)
-	guardGuard := guard.ProvideGuard(authorizer, spaceStore, repoStore)
-	apiHandler := router.ProvideAPIHandler(systemStore, userStore, spaceStore, repoStore, tokenStore, serviceAccountStore, authenticator, guardGuard)
-	gitHandler := router.ProvideGitHandler(repoStore, authenticator, guardGuard)
+	spaceStore := database.ProvideSpaceStore(db)
+	repoStore := database.ProvideRepoStore(db)
+	controller := repo.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
+	spaceController := space.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
+	tokenStore := database.ProvideTokenStore(db)
+	serviceaccountController := serviceaccount.NewController(authorizer, serviceAccountStore, spaceStore, repoStore, tokenStore)
+	userController := user.NewController(authorizer, userStore, tokenStore)
+	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, controller, spaceController, serviceaccountController, userController)
+	gitHandler := router.ProvideGitHandler(repoStore, authenticator)
 	webHandler := router.ProvideWebHandler(systemStore)
 	routerRouter := router.ProvideRouter(requestTranslator, apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)

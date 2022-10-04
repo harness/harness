@@ -28,7 +28,7 @@ func NewUnsafeAuthorizer() *UnsafeAuthorizer {
 func (a *UnsafeAuthorizer) Check(ctx context.Context, session *auth.Session,
 	scope *types.Scope, resource *types.Resource, permission enum.Permission) (bool, error) {
 	log.Info().Msgf(
-		"[Authz] %s with id '%d' requests %s for %s '%s' in scope %#v with metadata %#v\n",
+		"[Authz] %s with id '%d' requests %s for %s '%s' in scope %#v with metadata %#v",
 		session.Principal.Type,
 		session.Principal.ID,
 		permission,

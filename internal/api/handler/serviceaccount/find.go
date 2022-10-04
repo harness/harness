@@ -7,20 +7,29 @@ package serviceaccount
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/guard"
-	"github.com/harness/gitness/types/enum"
 )
 
 // HandleFind returns an http.HandlerFunc that writes json-encoded
 // service account information to the http response body.
-func HandleFind(guard *guard.Guard) http.HandlerFunc {
-	return guard.ServiceAccount(
-		enum.PermissionServiceAccountView,
-		func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			sa, _ := request.ServiceAccountFrom(ctx)
-			render.JSON(w, http.StatusOK, sa)
-		})
+func HandleFind(saCrl *serviceaccount.Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+		saUID, err := request.GetServiceAccountUID(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		sa, err := saCrl.Find(ctx, session, saUID)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, sa)
+	}
 }

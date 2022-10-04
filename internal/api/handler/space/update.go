@@ -7,69 +7,38 @@ package space
 import (
 	"encoding/json"
 	"net/http"
-	"time"
 
+	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/guard"
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types/check"
-	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/log"
 )
-
-type spaceUpdateRequest struct {
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-	IsPublic    *bool   `json:"isPublic"`
-}
 
 /*
  * Updates an existing space.
  */
-func HandleUpdate(guard *guard.Guard, spaceStore store.SpaceStore) http.HandlerFunc {
-	return guard.Space(
-		enum.PermissionSpaceEdit,
-		false,
-		func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			space, _ := request.SpaceFrom(ctx)
+func HandleUpdate(spaceCtrl *space.Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+		spaceRef, err := request.GetSpaceRef(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 
-			in := new(spaceUpdateRequest)
-			err := json.NewDecoder(r.Body).Decode(in)
-			if err != nil {
-				render.BadRequestf(w, "Invalid request body: %s.", err)
-				return
-			}
+		in := new(space.UpdateInput)
+		err = json.NewDecoder(r.Body).Decode(in)
+		if err != nil {
+			render.BadRequestf(w, "Invalid request body: %s.", err)
+			return
+		}
 
-			// update values only if provided
-			if in.Name != nil {
-				space.Name = *in.Name
-			}
-			if in.Description != nil {
-				space.Description = *in.Description
-			}
-			if in.IsPublic != nil {
-				space.IsPublic = *in.IsPublic
-			}
+		space, err := spaceCtrl.Update(ctx, session, spaceRef, in)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 
-			// always update time
-			space.Updated = time.Now().UnixMilli()
-
-			// ensure provided values are valid
-			if err = check.Space(space); err != nil {
-				render.UserfiedErrorOrInternal(w, err)
-				return
-			}
-
-			err = spaceStore.Update(ctx, space)
-			if err != nil {
-				log.Error().Err(err).Msg("Space update failed.")
-
-				render.UserfiedErrorOrInternal(w, err)
-				return
-			}
-
-			render.JSON(w, http.StatusOK, space)
-		})
+		render.JSON(w, http.StatusOK, space)
+	}
 }

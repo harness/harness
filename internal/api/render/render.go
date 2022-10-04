@@ -6,7 +6,6 @@ package render
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,8 +13,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types/check"
+	"github.com/harness/gitness/internal/api/usererror"
 )
 
 // indent the json-encoded API responses.
@@ -27,60 +25,34 @@ func init() {
 	)
 }
 
-// UserfiedErrorOrInternal renders the appropriate user facing message for the provided error.
-// If the error is unknown, an internal error is rendered.
-func UserfiedErrorOrInternal(w http.ResponseWriter, err error) {
-	switch {
-	// validation errors
-	case errors.Is(err, check.ErrAny):
-		ErrorObject(w, http.StatusBadRequest, &Error{err.Error()})
-
-		// store errors
-	case errors.Is(err, store.ErrResourceNotFound):
-		ErrorObject(w, http.StatusNotFound, ErrNotFound)
-	case errors.Is(err, store.ErrDuplicate):
-		ErrorObject(w, http.StatusBadRequest, ErrDuplicate)
-	case errors.Is(err, store.ErrPrimaryPathCantBeDeleted):
-		ErrorObject(w, http.StatusBadRequest, ErrPrimaryPathCantBeDeleted)
-	case errors.Is(err, store.ErrPathTooLong):
-		ErrorObject(w, http.StatusBadRequest, ErrPathTooLong)
-	case errors.Is(err, store.ErrNoChangeInRequestedMove):
-		ErrorObject(w, http.StatusBadRequest, ErrNoChange)
-	case errors.Is(err, store.ErrIllegalMoveCyclicHierarchy):
-		ErrorObject(w, http.StatusBadRequest, ErrCyclicHierarchy)
-	case errors.Is(err, store.ErrSpaceWithChildsCantBeDeleted):
-		ErrorObject(w, http.StatusBadRequest, ErrSpaceWithChildsCantBeDeleted)
-
-		// unknown error
-	default:
-		log.Err(err)
-		InternalError(w)
-	}
+// TranslatedUserError writes the translated user error of the provided error.
+func TranslatedUserError(w http.ResponseWriter, err error) {
+	UserError(w, usererror.Translate(err))
 }
 
 // NotFound writes the json-encoded message for a not found error.
 func NotFound(w http.ResponseWriter) {
-	ErrorObject(w, http.StatusNotFound, ErrNotFound)
+	UserError(w, usererror.ErrNotFound)
 }
 
 // Unauthorized writes the json-encoded message for an unauthorized error.
 func Unauthorized(w http.ResponseWriter) {
-	ErrorObject(w, http.StatusUnauthorized, ErrUnauthorized)
+	UserError(w, usererror.ErrUnauthorized)
 }
 
 // Forbidden writes the json-encoded message for a forbidden error.
 func Forbidden(w http.ResponseWriter) {
-	ErrorObject(w, http.StatusForbidden, ErrForbidden)
+	UserError(w, usererror.ErrForbidden)
 }
 
 // BadRequest writes the json-encoded message for a bad request error.
 func BadRequest(w http.ResponseWriter) {
-	ErrorObject(w, http.StatusBadRequest, ErrBadRequest)
+	UserError(w, usererror.ErrBadRequest)
 }
 
 // BadRequestError writes the json-encoded error with a bad request status code.
-func BadRequestError(w http.ResponseWriter, err *Error) {
-	ErrorObject(w, http.StatusBadRequest, err)
+func BadRequestError(w http.ResponseWriter, err *usererror.Error) {
+	UserError(w, err)
 }
 
 // BadRequest writes the json-encoded message with a bad request status code.
@@ -90,17 +62,22 @@ func BadRequestf(w http.ResponseWriter, format string, args ...interface{}) {
 
 // InternalError writes the json-encoded message for an internal error.
 func InternalError(w http.ResponseWriter) {
-	ErrorObject(w, http.StatusInternalServerError, ErrInternal)
+	UserError(w, usererror.ErrInternal)
 }
 
 // ErrorMessagef writes the json-encoded, formated error message.
 func ErrorMessagef(w http.ResponseWriter, code int, format string, args ...interface{}) {
-	JSON(w, code, &Error{Message: fmt.Sprintf(format, args...)})
+	JSON(w, code, &usererror.Error{Message: fmt.Sprintf(format, args...)})
 }
 
-// ErrorMessagef writes the json-encoded, formated error message.
-func ErrorObject(w http.ResponseWriter, code int, err *Error) {
-	JSON(w, code, err)
+// UserError writes the json-encoded user error.
+func UserError(w http.ResponseWriter, err *usererror.Error) {
+	JSON(w, err.Status, err)
+}
+
+// DeleteSuccessful writes the header for a successful delete.
+func DeleteSuccessful(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // JSON writes the json-encoded value to the response

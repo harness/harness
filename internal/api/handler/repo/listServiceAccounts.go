@@ -7,35 +7,31 @@ package repo
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/guard"
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/hlog"
 )
 
 /*
  * Writes json-encoded service account information to the http response body.
  */
-func HandleListServiceAccounts(guard *guard.Guard, saStore store.ServiceAccountStore) http.HandlerFunc {
-	return guard.Repo(
-		enum.PermissionServiceAccountView,
-		false,
-		func(w http.ResponseWriter, r *http.Request) {
-			ctx := r.Context()
-			log := hlog.FromRequest(r)
-			repo, _ := request.RepoFrom(ctx)
+func HandleListServiceAccounts(repoCtrl *repo.Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+		repoRef, err := request.GetRepoRef(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 
-			sas, err := saStore.List(ctx, enum.ParentResourceTypeRepo, repo.ID)
-			if err != nil {
-				log.Err(err).Msgf("Failed to get list of service accounts for repo.")
+		sas, err := repoCtrl.ListServiceAccounts(ctx, session, repoRef)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 
-				render.UserfiedErrorOrInternal(w, err)
-				return
-			}
-
-			// TODO: do we need pagination? we should block that many service accounts in the first place.
-			render.JSON(w, http.StatusOK, sas)
-		})
+		// TODO: implement pagination - or should we block that many service accounts in the first place.
+		render.JSON(w, http.StatusOK, sas)
+	}
 }

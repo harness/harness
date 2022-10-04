@@ -7,18 +7,29 @@ package users
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/store"
 )
 
 // HandleFind returns an http.HandlerFunc that writes json-encoded
 // user account information to the the response body.
-func HandleFind(userStore store.UserStore) http.HandlerFunc {
+func HandleFind(userCtrl *user.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		user, _ := request.UserFrom(ctx)
+		session, _ := request.AuthSessionFrom(ctx)
+		userUID, err := request.GetUserUID(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 
-		render.JSON(w, http.StatusOK, user)
+		usr, err := userCtrl.Find(ctx, session, userUID)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, usr)
 	}
 }

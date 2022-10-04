@@ -8,56 +8,29 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types"
-	"github.com/rs/zerolog/hlog"
-
-	"github.com/gotidy/ptr"
-	"golang.org/x/crypto/bcrypt"
 )
-
-// GenerateFromPassword returns the bcrypt hash of the
-// password at the given cost.
-var hashPassword = bcrypt.GenerateFromPassword
 
 // HandleUpdate returns an http.HandlerFunc that processes an http.Request
 // to update the current user account.
-func HandleUpdate(userStore store.UserStore) http.HandlerFunc {
+func HandleUpdate(userCtrl *user.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		log := hlog.FromRequest(r)
-		user, _ := request.UserFrom(ctx)
+		session, _ := request.AuthSessionFrom(ctx)
+		userUID := session.Principal.UID
 
-		in := new(types.UserInput)
+		in := new(user.UpdateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
 		}
 
-		if in.Password != nil {
-			var hash []byte
-			hash, err = hashPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
-			if err != nil {
-				log.Err(err).Msg("Failed to hash password.")
-
-				render.InternalError(w)
-				return
-			}
-			user.Password = string(hash)
-		}
-
-		if in.Name != nil {
-			user.Name = ptr.ToString(in.Name)
-		}
-
-		err = userStore.Update(ctx, user)
+		user, err := userCtrl.Update(ctx, session, userUID, in)
 		if err != nil {
-			log.Err(err).Msg("Failed to update the user.")
-
-			render.UserfiedErrorOrInternal(w, err)
+			render.TranslatedUserError(w, err)
 			return
 		}
 

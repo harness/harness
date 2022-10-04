@@ -6,94 +6,30 @@ package account
 
 import (
 	"net/http"
-	"time"
 
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/render"
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/token"
-	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/check"
-
-	"github.com/dchest/uniuri"
-	"github.com/rs/zerolog/hlog"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // HandleRegister returns an http.HandlerFunc that processes an http.Request
 // to register the named user account with the system.
-func HandleRegister(userStore store.UserStore, system store.SystemStore, tokenStore store.TokenStore) http.HandlerFunc {
+func HandleRegister(userCtrl *user.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		log := hlog.FromRequest(r)
 
-		uid := r.FormValue("username")
-		name := r.FormValue("name")
-		email := r.FormValue("email")
-		password := r.FormValue("password")
+		in := &user.CreateInput{
+			UID:      r.FormValue("username"),
+			Name:     r.FormValue("name"),
+			Email:    r.FormValue("email"),
+			Password: r.FormValue("password"),
+		}
 
-		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		tokenResponse, err := userCtrl.Register(ctx, in)
 		if err != nil {
-			log.Err(err).
-				Str("uid", uid).
-				Msg("Failed to hash password")
-
-			render.InternalError(w)
+			render.TranslatedUserError(w, err)
 			return
 		}
 
-		user := &types.User{
-			UID:      uid,
-			Name:     name,
-			Email:    email,
-			Password: string(hash),
-			Salt:     uniuri.NewLen(uniuri.UUIDLen),
-			Created:  time.Now().UnixMilli(),
-			Updated:  time.Now().UnixMilli(),
-		}
-
-		if err = check.User(user); err != nil {
-			log.Debug().Err(err).
-				Str("uid", uid).
-				Msg("invalid user input")
-
-			render.UserfiedErrorOrInternal(w, err)
-			return
-		}
-
-		if err = userStore.Create(ctx, user); err != nil {
-			log.Err(err).
-				Str("uid", uid).
-				Msg("Failed to create user")
-
-			render.InternalError(w)
-			return
-		}
-
-		// if the registered user is the first user of the system,
-		// assume they are the system administrator and grant the
-		// user system admin access.
-		if user.ID == 1 {
-			user.Admin = true
-			if err = userStore.Update(ctx, user); err != nil {
-				log.Err(err).
-					Str("user_uid", user.UID).
-					Msg("Failed to enable admin user")
-
-				render.InternalError(w)
-				return
-			}
-		}
-
-		token, jwtToken, err := token.CreateUserSession(ctx, tokenStore, user, "register")
-		if err != nil {
-			log.Err(err).
-				Str("user", uid).
-				Msg("failed to generate token")
-
-			render.InternalError(w)
-			return
-		}
-
-		render.JSON(w, http.StatusOK, &types.TokenResponse{Token: *token, AccessToken: jwtToken})
+		render.JSON(w, http.StatusOK, tokenResponse)
 	}
 }

@@ -1,26 +1,19 @@
 package request
 
 import (
-	"errors"
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/go-chi/chi"
 )
 
 const (
-	SpaceRefParamName = "sref"
-)
-
-var (
-	ErrSpaceReferenceNotFound = errors.New("no space reference found in request")
+	PathParamSpaceRef = "spaceRef"
 )
 
 func GetSpaceRef(r *http.Request) (string, error) {
-	rawRef := chi.URLParam(r, SpaceRefParamName)
-	if rawRef == "" {
-		return "", ErrSpaceReferenceNotFound
+	rawRef, err := ParamOrError(r, PathParamSpaceRef)
+	if err != nil {
+		return "", err
 	}
 
 	// paths are unescaped and lower

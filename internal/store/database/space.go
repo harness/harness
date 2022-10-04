@@ -140,11 +140,11 @@ func (s *SpaceStore) Move(ctx context.Context, principalID int64, spaceID int64,
 
 	/*
 	 * IMPORTANT
-	 *   To avoid cycles in the primary graph, we have to ensure that the old path isn't a prefix of the new path.
+	 *   To avoid cycles in the primary graph, we have to ensure that the old path isn't a parent of the new path.
 	 */
 	if newPath == currentPath.Value {
 		return nil, store.ErrNoChangeInRequestedMove
-	} else if strings.HasPrefix(newPath, currentPath.Value) {
+	} else if strings.HasPrefix(newPath, currentPath.Value+types.PathSeparator) {
 		return nil, store.ErrIllegalMoveCyclicHierarchy
 	}
 

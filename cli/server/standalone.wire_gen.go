@@ -8,10 +8,13 @@ package server
 import (
 	"context"
 
+	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/controller/serviceaccount"
+	"github.com/harness/gitness/internal/api/controller/space"
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/cron"
-	"github.com/harness/gitness/internal/guard"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/router/translator"
 	"github.com/harness/gitness/internal/server"
@@ -30,15 +33,18 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	userStore := database.ProvideUserStore(db)
-	spaceStore := database.ProvideSpaceStore(db)
-	repoStore := database.ProvideRepoStore(db)
-	tokenStore := database.ProvideTokenStore(db)
 	serviceAccountStore := database.ProvideServiceAccountStore(db)
+	tokenStore := database.ProvideTokenStore(db)
 	authenticator := authn.ProvideAuthenticator(userStore, serviceAccountStore, tokenStore)
 	authorizer := authz.ProvideAuthorizer()
-	guardGuard := guard.ProvideGuard(authorizer, spaceStore, repoStore)
-	apiHandler := router.ProvideAPIHandler(systemStore, userStore, spaceStore, repoStore, tokenStore, serviceAccountStore, authenticator, guardGuard)
-	gitHandler := router.ProvideGitHandler(repoStore, authenticator, guardGuard)
+	spaceStore := database.ProvideSpaceStore(db)
+	repoStore := database.ProvideRepoStore(db)
+	controller := repo.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
+	spaceController := space.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
+	serviceaccountController := serviceaccount.NewController(authorizer, serviceAccountStore, spaceStore, repoStore, tokenStore)
+	userController := user.NewController(authorizer, userStore, tokenStore)
+	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, controller, spaceController, serviceaccountController, userController)
+	gitHandler := router.ProvideGitHandler(repoStore, authenticator)
 	webHandler := router.ProvideWebHandler(systemStore)
 	routerRouter := router.ProvideRouter(requestTranslator, apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)

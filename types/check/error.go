@@ -13,11 +13,11 @@ var (
 // ValidationError is error returned by check methods for any validation errors
 // WARNING: This error will be printed to the user as is!
 type ValidationError struct {
-	msg string
+	Msg string
 }
 
 func (e *ValidationError) Error() string {
-	return e.msg
+	return e.Msg
 }
 
 func (e *ValidationError) Is(target error) bool {
@@ -33,5 +33,5 @@ func (e *ValidationError) Is(target error) bool {
 	}
 
 	// only the same if the message is the same
-	return e.msg == err.msg
+	return e.Msg == err.Msg
 }

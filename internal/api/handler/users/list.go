@@ -7,41 +7,31 @@ package users
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/hlog"
 )
 
 // HandleList returns an http.HandlerFunc that writes a json-encoded
 // list of all registered system users to the response body.
-func HandleList(userStore store.UserStore) http.HandlerFunc {
+func HandleList(userCtrl *user.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		log := hlog.FromRequest(r)
+		session, _ := request.AuthSessionFrom(ctx)
 
-		params := request.ParseUserFilter(r)
-		if params.Order == enum.OrderDefault {
-			params.Order = enum.OrderAsc
+		userFilter := request.ParseUserFilter(r)
+		if userFilter.Order == enum.OrderDefault {
+			userFilter.Order = enum.OrderAsc
 		}
 
-		count, err := userStore.Count(ctx)
+		totalCount, list, err := userCtrl.List(ctx, session, userFilter)
 		if err != nil {
-			log.Err(err).
-				Msg("Failed to retrieve user count")
-		}
-
-		list, err := userStore.List(ctx, params)
-		if err != nil {
-			log.Err(err).
-				Msg("Failed to retrieve user list")
-
-			render.UserfiedErrorOrInternal(w, err)
+			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.Pagination(r, w, params.Page, params.Size, int(count))
+		render.Pagination(r, w, userFilter.Page, userFilter.Size, int(totalCount))
 		render.JSON(w, http.StatusOK, list)
 	}
 }

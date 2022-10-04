@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/controller/serviceaccount"
+	"github.com/harness/gitness/internal/api/controller/space"
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/handler/account"
 	handlerrepo "github.com/harness/gitness/internal/api/handler/repo"
 	handlerserviceaccount "github.com/harness/gitness/internal/api/handler/serviceaccount"
@@ -13,8 +17,8 @@ import (
 	handleruser "github.com/harness/gitness/internal/api/handler/user"
 	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	middlewareauthn "github.com/harness/gitness/internal/api/middleware/authn"
-	"github.com/harness/gitness/internal/api/middleware/resolve"
-	"github.com/harness/gitness/internal/guard"
+	"github.com/harness/gitness/internal/api/middleware/principal"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
@@ -37,13 +41,11 @@ type APIHandler interface {
  */
 func NewAPIHandler(
 	systemStore store.SystemStore,
-	userStore store.UserStore,
-	spaceStore store.SpaceStore,
-	repoStore store.RepoStore,
-	tokenStore store.TokenStore,
-	saStore store.ServiceAccountStore,
 	authenticator authn.Authenticator,
-	guard *guard.Guard) APIHandler {
+	repoCtrl *repo.Controller,
+	spaceCtrl *space.Controller,
+	saCtrl *serviceaccount.Controller,
+	userCtrl *user.Controller) APIHandler {
 	config := systemStore.Config(context.Background())
 
 	// Use go-chi router for inner routing.
@@ -66,7 +68,7 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, systemStore, userStore, spaceStore, repoStore, tokenStore, saStore, authenticator, guard)
+		setupRoutesV1(r, repoCtrl, spaceCtrl, saCtrl, userCtrl)
 	})
 
 	return r
@@ -85,140 +87,123 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 	).Handler
 }
 
-func setupRoutesV1(r chi.Router, systemStore store.SystemStore, userStore store.UserStore, spaceStore store.SpaceStore,
-	repoStore store.RepoStore, tokenStore store.TokenStore, saStore store.ServiceAccountStore, _ authn.Authenticator,
-	guard *guard.Guard) {
-	setupSpaces(r, spaceStore, repoStore, saStore, guard)
-	setupRepos(r, spaceStore, repoStore, saStore, guard)
-	setupUsers(r, userStore, tokenStore, guard)
-	setupServiceAccounts(r, saStore, tokenStore, guard)
-	setupAdmin(r, userStore, guard)
-	setupAccount(r, userStore, systemStore, tokenStore)
+func setupRoutesV1(r chi.Router, repoCtrl *repo.Controller, spaceCtrl *space.Controller,
+	saCtrl *serviceaccount.Controller, userCtrl *user.Controller) {
+	setupSpaces(r, spaceCtrl)
+	setupRepos(r, repoCtrl)
+	setupUsers(r, userCtrl)
+	setupServiceAccounts(r, saCtrl)
+	setupAdmin(r, userCtrl)
+	setupAccount(r, userCtrl)
 	setupSystem(r)
 }
 
-func setupSpaces(r chi.Router, spaceStore store.SpaceStore, repoStore store.RepoStore,
-	saStore store.ServiceAccountStore, guard *guard.Guard) {
+func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 	r.Route("/spaces", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
-		r.Post("/", handlerspace.HandleCreate(guard, spaceStore))
+		r.Post("/", handlerspace.HandleCreate(spaceCtrl))
 
-		r.Route(fmt.Sprintf("/{%s}", request.SpaceRefParamName), func(r chi.Router) {
-			// resolves the space and stores in the context
-			r.Use(resolve.Space(spaceStore))
-
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamSpaceRef), func(r chi.Router) {
 			// space operations
-			r.Get("/", handlerspace.HandleFind(guard, spaceStore))
-			r.Put("/", handlerspace.HandleUpdate(guard, spaceStore))
-			r.Delete("/", handlerspace.HandleDelete(guard, spaceStore))
+			r.Get("/", handlerspace.HandleFind(spaceCtrl))
+			r.Put("/", handlerspace.HandleUpdate(spaceCtrl))
+			r.Delete("/", handlerspace.HandleDelete(spaceCtrl))
 
-			r.Post("/move", handlerspace.HandleMove(guard, spaceStore))
-			r.Get("/spaces", handlerspace.HandleList(guard, spaceStore))
-			r.Get("/repos", handlerspace.HandleListRepos(guard, repoStore))
-			r.Get("/serviceAccounts", handlerspace.HandleListServiceAccounts(guard, saStore))
+			r.Post("/move", handlerspace.HandleMove(spaceCtrl))
+			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))
+			r.Get("/repos", handlerspace.HandleListRepos(spaceCtrl))
+			r.Get("/serviceAccounts", handlerspace.HandleListServiceAccounts(spaceCtrl))
 
 			// Child collections
 			r.Route("/paths", func(r chi.Router) {
-				r.Get("/", handlerspace.HandleListPaths(guard, spaceStore))
-				r.Post("/", handlerspace.HandleCreatePath(guard, spaceStore))
+				r.Get("/", handlerspace.HandleListPaths(spaceCtrl))
+				r.Post("/", handlerspace.HandleCreatePath(spaceCtrl))
 
 				// per path operations
-				r.Route(fmt.Sprintf("/{%s}", request.PathIDParamName), func(r chi.Router) {
-					r.Delete("/", handlerspace.HandleDeletePath(guard, spaceStore))
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamPathID), func(r chi.Router) {
+					r.Delete("/", handlerspace.HandleDeletePath(spaceCtrl))
 				})
 			})
 		})
 	})
 }
 
-func setupRepos(r chi.Router, spaceStore store.SpaceStore, repoStore store.RepoStore, saStore store.ServiceAccountStore,
-	guard *guard.Guard) {
+func setupRepos(r chi.Router, repoCtrl *repo.Controller) {
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
-		r.Post("/", handlerrepo.HandleCreate(guard, spaceStore, repoStore))
+		r.Post("/", handlerrepo.HandleCreate(repoCtrl))
 
-		r.Route(fmt.Sprintf("/{%s}", request.RepoRefParamName), func(r chi.Router) {
-			// resolves the repo and stores in the context
-			r.Use(resolve.Repo(repoStore))
-
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 			// repo level operations
-			r.Get("/", handlerrepo.HandleFind(guard, repoStore))
-			r.Put("/", handlerrepo.HandleUpdate(guard, repoStore))
-			r.Delete("/", handlerrepo.HandleDelete(guard, repoStore))
+			r.Get("/", handlerrepo.HandleFind(repoCtrl))
+			r.Put("/", handlerrepo.HandleUpdate(repoCtrl))
+			r.Delete("/", handlerrepo.HandleDelete(repoCtrl))
 
-			r.Post("/move", handlerrepo.HandleMove(guard, repoStore, spaceStore))
-			r.Get("/serviceAccounts", handlerrepo.HandleListServiceAccounts(guard, saStore))
+			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
+			r.Get("/serviceAccounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
 
 			// repo path operations
 			r.Route("/paths", func(r chi.Router) {
-				r.Get("/", handlerrepo.HandleListPaths(guard, repoStore))
-				r.Post("/", handlerrepo.HandleCreatePath(guard, repoStore))
+				r.Get("/", handlerrepo.HandleListPaths(repoCtrl))
+				r.Post("/", handlerrepo.HandleCreatePath(repoCtrl))
 
 				// per path operations
-				r.Route(fmt.Sprintf("/{%s}", request.PathIDParamName), func(r chi.Router) {
-					r.Delete("/", handlerrepo.HandleDeletePath(guard, repoStore))
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamPathID), func(r chi.Router) {
+					r.Delete("/", handlerrepo.HandleDeletePath(repoCtrl))
 				})
 			})
 		})
 	})
 }
 
-func setupUsers(r chi.Router, userStore store.UserStore, tokenStore store.TokenStore, guard *guard.Guard) {
+func setupUsers(r chi.Router, userCtrl *user.Controller) {
 	r.Route("/user", func(r chi.Router) {
 		// enforce principial authenticated and it's a user
-		r.Use(guard.EnforceAuthenticated)
-		r.Use(resolve.UserFromPrincipal(userStore))
+		r.Use(principal.RestrictTo(enum.PrincipalTypeUser))
 
-		r.Get("/", handleruser.HandleFind)
-		r.Patch("/", handleruser.HandleUpdate(userStore))
+		r.Get("/", handleruser.HandleFind(userCtrl))
+		r.Patch("/", handleruser.HandleUpdate(userCtrl))
 
 		// PAT
 		r.Route("/tokens", func(r chi.Router) {
-			r.Get("/", handleruser.HandleListPATs(tokenStore))
-			r.Post("/", handleruser.HandleCreatePAT(tokenStore))
+			r.Get("/", handleruser.HandleListTokens(userCtrl, enum.TokenTypePAT))
+			r.Post("/", handleruser.HandleCreateAccessToken(userCtrl))
 
 			// per token operations
-			r.Route(fmt.Sprintf("/{%s}", request.PatIDParamName), func(r chi.Router) {
-				r.Delete("/", handleruser.HandleDeletePAT(tokenStore))
+			r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenID), func(r chi.Router) {
+				r.Delete("/", handleruser.HandleDeleteToken(userCtrl, enum.TokenTypePAT))
 			})
 		})
 
 		// SESSION TOKENS
 		r.Route("/sessions", func(r chi.Router) {
-			r.Get("/", handleruser.HandleListSessionTokens(tokenStore))
+			r.Get("/", handleruser.HandleListTokens(userCtrl, enum.TokenTypeSession))
 
 			// per token operations
-			r.Route(fmt.Sprintf("/{%s}", request.SessionTokenIDParamName), func(r chi.Router) {
-				r.Delete("/", handleruser.HandleDeleteSession(tokenStore))
+			r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenID), func(r chi.Router) {
+				r.Delete("/", handleruser.HandleDeleteToken(userCtrl, enum.TokenTypeSession))
 			})
 		})
 	})
 }
 
-func setupServiceAccounts(r chi.Router, saStore store.ServiceAccountStore, tokenStore store.TokenStore,
-	guard *guard.Guard) {
+func setupServiceAccounts(r chi.Router, saCtrl *serviceaccount.Controller) {
 	r.Route("/serviceAccounts", func(r chi.Router) {
-		// enfore principal is authenticated
-		r.Use(guard.EnforceAuthenticated)
-
 		// create takes parent information via body
-		r.Post("/", handlerserviceaccount.HandleCreate(guard, saStore))
+		r.Post("/", handlerserviceaccount.HandleCreate(saCtrl))
 
-		r.Route(fmt.Sprintf("/{%s}", request.ServiceAccountUIDParamName), func(r chi.Router) {
-			// resolves the service account and stores it in the context
-			r.Use(resolve.ServiceAccount(saStore))
-
-			r.Get("/", handlerserviceaccount.HandleFind(guard))
-			r.Delete("/", handlerserviceaccount.HandleDelete(guard, saStore, tokenStore))
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamServiceAccountUID), func(r chi.Router) {
+			r.Get("/", handlerserviceaccount.HandleFind(saCtrl))
+			r.Delete("/", handlerserviceaccount.HandleDelete(saCtrl))
 
 			// SAT
 			r.Route("/tokens", func(r chi.Router) {
-				r.Get("/", handlerserviceaccount.HandleListSATs(guard, tokenStore))
-				r.Post("/", handlerserviceaccount.HandleCreateSAT(guard, tokenStore))
+				r.Get("/", handlerserviceaccount.HandleListTokens(saCtrl))
+				r.Post("/", handlerserviceaccount.HandleCreateToken(saCtrl))
 
 				// per token operations
-				r.Route(fmt.Sprintf("/{%s}", request.SatIDParamName), func(r chi.Router) {
-					r.Delete("/", handlerserviceaccount.HandleDeleteSAT(guard, tokenStore))
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenID), func(r chi.Router) {
+					r.Delete("/", handlerserviceaccount.HandleDeleteToken(saCtrl))
 				})
 			})
 		})
@@ -232,19 +217,13 @@ func setupSystem(r chi.Router) {
 	})
 }
 
-func setupAdmin(r chi.Router, userStore store.UserStore, guard *guard.Guard) {
+func setupAdmin(r chi.Router, _ *user.Controller) {
 	r.Route("/users", func(r chi.Router) {
-		// enforce system admin
-		r.Use(guard.EnforceAdmin)
-
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 			_, _ = w.Write([]byte(fmt.Sprintf("Create user '%s'", chi.URLParam(r, "rref"))))
 		})
 
-		r.Route(fmt.Sprintf("/{%s}", request.UserUIDParamName), func(r chi.Router) {
-			// resolves the user and stores it in the context
-			resolve.User(userStore)
-
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamUserUID), func(r chi.Router) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				_, _ = w.Write([]byte(fmt.Sprintf("Get user '%s'", chi.URLParam(r, "rref"))))
 			})
@@ -258,8 +237,7 @@ func setupAdmin(r chi.Router, userStore store.UserStore, guard *guard.Guard) {
 	})
 }
 
-func setupAccount(r chi.Router, userStore store.UserStore, systemStore store.SystemStore,
-	tokenStore store.TokenStore) {
-	r.Post("/login", account.HandleLogin(userStore, systemStore, tokenStore))
-	r.Post("/register", account.HandleRegister(userStore, systemStore, tokenStore))
+func setupAccount(r chi.Router, userCtrl *user.Controller) {
+	r.Post("/login", account.HandleLogin(userCtrl))
+	r.Post("/register", account.HandleRegister(userCtrl))
 }
