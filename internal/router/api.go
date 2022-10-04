@@ -17,6 +17,7 @@ import (
 	handleruser "github.com/harness/gitness/internal/api/handler/user"
 	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	middlewareauthn "github.com/harness/gitness/internal/api/middleware/authn"
+	"github.com/harness/gitness/internal/api/middleware/encode"
 	"github.com/harness/gitness/internal/api/middleware/principal"
 	"github.com/harness/gitness/types/enum"
 
@@ -35,6 +36,11 @@ import (
 type APIHandler interface {
 	http.Handler
 }
+
+var (
+	// terminatedPathPrefixesAPI is the list of prefixes that will require resolving terminated paths.
+	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/"}
+)
 
 /*
  * NewAPIHandler returns a new APIHandler.
@@ -71,7 +77,8 @@ func NewAPIHandler(
 		setupRoutesV1(r, repoCtrl, spaceCtrl, saCtrl, userCtrl)
 	})
 
-	return r
+	// wrap router in terminatedPath encoder.
+	return encode.TerminatedPathBefore(terminatedPathPrefixesAPI, r)
 }
 
 func corsHandler(config *types.Config) func(http.Handler) http.Handler {

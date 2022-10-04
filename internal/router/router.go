@@ -12,7 +12,6 @@ import (
 
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/request"
-	"github.com/harness/gitness/internal/router/translator"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"
@@ -24,25 +23,22 @@ const (
 )
 
 type Router struct {
-	translator translator.RequestTranslator
-	api        APIHandler
-	git        GitHandler
-	web        WebHandler
+	api APIHandler
+	git GitHandler
+	web WebHandler
 }
 
 // NewRouter returns a new http.Handler that routes traffic
 // to the appropriate handlers.
 func NewRouter(
-	translator translator.RequestTranslator,
 	api APIHandler,
 	git GitHandler,
 	web WebHandler,
 ) *Router {
 	return &Router{
-		translator: translator,
-		api:        api,
-		git:        git,
-		web:        web,
+		api: api,
+		git: git,
+		web: web,
 	}
 }
 
@@ -56,14 +52,6 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			Str("original_url", req.URL.String())
 	})
 
-	// Initial translation of the request before any routing.
-	req, err = r.translator.TranslatePreRouting(req)
-	if err != nil {
-		log.Err(err).Msgf("Failed pre-routing translation of request.")
-		render.InternalError(w)
-		return
-	}
-
 	/*
 	 * 1. GIT
 	 *
@@ -76,14 +64,6 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		log.UpdateContext(func(c zerolog.Context) zerolog.Context {
 			return c.Str("handler", "git")
 		})
-
-		// Translate git request
-		req, err = r.translator.TranslateGit(req)
-		if err != nil {
-			hlog.FromRequest(req).Err(err).Msgf("Failed GIT translation of request.")
-			render.InternalError(w)
-			return
-		}
 
 		r.git.ServeHTTP(w, req)
 		return
@@ -107,14 +87,6 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		// Translate API request
-		req, err = r.translator.TranslateAPI(req)
-		if err != nil {
-			hlog.FromRequest(req).Err(err).Msgf("Failed API translation of request.")
-			render.InternalError(w)
-			return
-		}
-
 		r.api.ServeHTTP(w, req)
 		return
 	}
@@ -127,13 +99,6 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	log.UpdateContext(func(c zerolog.Context) zerolog.Context {
 		return c.Str("handler", "web")
 	})
-
-	req, err = r.translator.TranslateWeb(req)
-	if err != nil {
-		hlog.FromRequest(req).Err(err).Msgf("Failed Web translation of request.")
-		render.InternalError(w)
-		return
-	}
 
 	r.web.ServeHTTP(w, req)
 }

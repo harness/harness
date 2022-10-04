@@ -6,6 +6,7 @@ import (
 
 	"github.com/rs/zerolog/hlog"
 
+	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/request"
 	"github.com/harness/gitness/types"
 )
@@ -14,30 +15,40 @@ const (
 	EncodedPathSeparator = "%252F"
 )
 
-// GitPath encodes Paths coming as part of the GIT api (e.g. "space1/repo.git")
-// The first prefix that matches the URL.Path will be used during encoding.
-func GitPath(r *http.Request) error {
-	_, err := pathTerminatedWithMarker(r, "", ".git", false)
-	return err
+// GitPathBefore wraps an http.HandlerFunc in a layer that encodes a path coming
+// as part of the GIT api (e.g. "space1/repo.git") before executing the provided http.HandlerFunc.
+func GitPathBefore(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := pathTerminatedWithMarker(r, "", ".git", false)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
-// TerminatedPath wraps an http.HandlerFunc in a layer that encodes a terminated path (e.g. "/space1/space2/+")
+// TerminatedPathBefore wraps an http.HandlerFunc in a layer that encodes a terminated path (e.g. "/space1/space2/+")
 // before executing the provided http.HandlerFunc. The first prefix that matches the URL.Path will
 // be used during encoding (prefix is ignored during encoding).
-func TerminatedPath(prefixes []string, r *http.Request) error {
-	for _, p := range prefixes {
-		changed, err := pathTerminatedWithMarker(r, p, "/+", false)
-		if err != nil {
-			return err
+func TerminatedPathBefore(prefixes []string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		for _, p := range prefixes {
+			changed, err := pathTerminatedWithMarker(r, p, "/+", false)
+			if err != nil {
+				render.TranslatedUserError(w, err)
+				return
+			}
+
+			// first prefix that leads to success we can stop
+			if changed {
+				break
+			}
 		}
 
-		// first prefix that leads to success we can stop
-		if changed {
-			break
-		}
-	}
-
-	return nil
+		next.ServeHTTP(w, r)
+	})
 }
 
 // pathTerminatedWithMarker function encodes a path followed by a custom marker and returns a request with an

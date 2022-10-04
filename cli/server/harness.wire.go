@@ -14,7 +14,6 @@ import (
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
 	"github.com/harness/gitness/harness/client"
-	"github.com/harness/gitness/harness/router/translator"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
@@ -45,7 +44,6 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		authn.WireSet,
 		authz.WireSet,
 		client.WireSet,
-		translator.WireSet,
 	)
 	return &system{}, nil
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/auth/authn"
-	"github.com/harness/gitness/internal/router/translator"
 	"github.com/harness/gitness/internal/store"
 )
 
@@ -24,12 +23,11 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideRouter(
-	translator translator.RequestTranslator,
 	api APIHandler,
 	git GitHandler,
 	web WebHandler,
 ) *Router {
-	return NewRouter(translator, api, git, web)
+	return NewRouter(api, git, web)
 }
 
 func ProvideGitHandler(repoStore store.RepoStore, authenticator authn.Authenticator) GitHandler {

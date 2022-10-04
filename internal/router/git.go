@@ -6,6 +6,7 @@ import (
 
 	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	middleware_authn "github.com/harness/gitness/internal/api/middleware/authn"
+	"github.com/harness/gitness/internal/api/middleware/encode"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/store"
@@ -67,11 +68,14 @@ func NewGitHandler(
 		})
 	})
 
-	return r
+	// wrap router in git path encoder.
+	return encode.GitPathBefore(r)
 }
 
 func stubGitHandler(repoStore store.RepoStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTeapot)
+
 		repoPath, _ := request.GetRepoRef(r)
 		repo, err := repoStore.FindByPath(r.Context(), repoPath)
 		if err != nil {
@@ -79,7 +83,6 @@ func stubGitHandler(repoStore store.RepoStore) http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusTeapot)
 		_, _ = w.Write([]byte(fmt.Sprintf(
 			"Oooops, seems you hit a major construction site ... \n"+
 				"  Repo: '%s' (%s)\n"+

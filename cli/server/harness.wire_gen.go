@@ -12,7 +12,6 @@ import (
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
 	"github.com/harness/gitness/harness/client"
-	"github.com/harness/gitness/harness/router/translator"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
@@ -28,7 +27,6 @@ import (
 // Injectors from harness.wire.go:
 
 func initSystem(ctx context.Context, config *types.Config) (*system, error) {
-	requestTranslator := translator.ProvideRequestTranslator()
 	systemStore := memory.New(config)
 	db, err := database.ProvideDatabase(ctx, config)
 	if err != nil {
@@ -75,7 +73,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, controller, spaceController, serviceaccountController, userController)
 	gitHandler := router.ProvideGitHandler(repoStore, authenticator)
 	webHandler := router.ProvideWebHandler(systemStore)
-	routerRouter := router.ProvideRouter(requestTranslator, apiHandler, gitHandler, webHandler)
+	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
 	nightly := cron.NewNightly()
 	serverSystem := newSystem(serverServer, nightly)
