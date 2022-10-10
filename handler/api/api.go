@@ -340,6 +340,7 @@ func (s Server) Handler() http.Handler {
 		r.Post("/", users.HandleCreate(s.Users, s.Userz, s.Webhook))
 		r.Get("/{user}", users.HandleFind(s.Users))
 		r.Patch("/{user}", users.HandleUpdate(s.Users, s.Transferer))
+		r.Post("/{user}/token/rotate", users.HandleTokenRotation(s.Users))
 		r.Delete("/{user}", users.HandleDelete(s.Users, s.Transferer, s.Webhook))
 		r.Get("/{user}/repos", users.HandleRepoList(s.Users, s.Repos))
 	})
