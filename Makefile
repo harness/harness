@@ -8,7 +8,7 @@ ifndef DOCKER_BUILD_OPTS
 	DOCKER_BUILD_OPTS :=
 endif
 
-tools = $(addprefix $(GOBIN)/, golangci-lint goimports govulncheck)
+tools = $(addprefix $(GOBIN)/, golangci-lint goimports govulncheck protoc-gen-go protoc-gen-go-grpc)
 deps = $(addprefix $(GOBIN)/, wire dbmate mockgen)
 
 ifneq (,$(wildcard ./.local.env))
@@ -35,9 +35,9 @@ tools: $(tools) ## Install tools required for the build
 mocks: $(mocks)
 	@echo "Generating Test Mocks"
 
-wire: cli/server/harness.wire_gen.go cli/server/standalone.wire_gen.go
+wire: cli/server/harness.wire.go cli/server/standalone.wire.go
 
-generate: $(mocks) wire mocks/mock_client.go
+generate: $(mocks) wire mocks/mock_client.go proto
 	@echo "Generating Code"
 
 build: generate ## Build the gitness service binary
@@ -137,6 +137,15 @@ cli/server/standalone.wire_gen.go: cli/server/standalone.wire.go	## Update the w
 mocks/mock_client.go: internal/store/store.go client/client.go
 	go generate mocks/mock.go
 
+proto:
+	@protoc --proto_path=./internal/gitrpc/proto \
+			--go_out=./internal/gitrpc/rpc \
+			--go_opt=paths=source_relative \
+			--go-grpc_out=./internal/gitrpc/rpc \
+			--go-grpc_opt=paths=source_relative \
+			./internal/gitrpc/proto/*.proto
+
+
 ###########################################
 # Install Tools and deps
 #
@@ -168,6 +177,12 @@ $(GOBIN)/mockgen:
 
 $(GOBIN)/govulncheck:
 	go install golang.org/x/vuln/cmd/govulncheck@latest
+
+$(GOBIN)/protoc-gen-go:
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28
+
+$(GOBIN)/protoc-gen-go-grpc:
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
 help: ## show help message
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m\033[0m\n"} /^[$$()% 0-9a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)

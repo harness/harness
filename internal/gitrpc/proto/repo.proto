@@ -1,0 +1,64 @@
+syntax = "proto3";
+package rpc;
+
+option go_package = "github.com/harness/gitness/gitrpc/rpc";
+
+import "shared.proto";
+
+// RepositoryService is a service providing RPCs accessing repositories as a whole.
+service RepositoryService {
+  rpc CreateRepository(stream CreateRepositoryRequest) returns (CreateRepositoryResponse);
+  rpc AddFilesAndPush(AddFilesAndPushRequest) returns (AddFilesAndPushResponse);
+}
+
+service UploadService {
+  rpc Upload(stream UploadFileRequest) returns (UploadFileResponse) {};
+}
+
+message CreateRepositoryRequest {
+  oneof data {
+    Repository repository = 1;
+    string filepath       = 2;
+    bytes chunk_data      = 3;
+  }
+}
+
+message CreateRepositoryResponse {
+  string temp_path = 1;
+}
+
+message UploadFileRequest {
+  oneof data {
+    FileInfo info    = 1;
+    bytes chunk_data = 2;
+  };
+}
+
+message UploadFileResponse {
+  string id   = 1;
+  uint32 size = 2;
+}
+
+message FileInfo {
+  string id        = 1;
+  string username  = 2;
+  string repo      = 3;
+  string branch    = 4;
+  string repo_path = 5;
+  string path      = 6;
+  string file_type = 7;
+}
+
+message AddFilesAndPushRequest {
+  string repo_path      = 1;
+  string message        = 2;
+  repeated string files = 3;
+}
+
+message AddFilesAndPushResponse {}
+
+message Repository {
+  string owner          = 1;
+  string name           = 2;
+  string default_branch = 3;
+}

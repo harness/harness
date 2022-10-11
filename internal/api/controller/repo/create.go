@@ -5,10 +5,15 @@
 package repo
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/harness/gitness/resources"
+
+	"github.com/harness/gitness/internal/gitrpc"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
@@ -16,23 +21,25 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/log"
+	zerolog "github.com/rs/zerolog/log"
 )
 
 type CreateInput struct {
 	PathName    string `json:"pathName"`
 	SpaceID     int64  `json:"spaceId"`
 	Name        string `json:"name"`
+	Branch      string `json:"branch"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"isPublic"`
 	ForkID      int64  `json:"forkId"`
+	Readme      bool   `json:"readme"`
+	Licence     string `json:"licence"`
+	GitIgnore   string `json:"gitIgnore"`
 }
 
-/*
- * Create creates a new repository.
- */
+// Create creates a new repository.
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Repository, error) {
-	log := log.Ctx(ctx)
+	log := zerolog.Ctx(ctx)
 	// ensure we reference a space
 	if in.SpaceID <= 0 {
 		return nil, usererror.BadRequest("A repository can't exist by itself.")
@@ -41,10 +48,8 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	parentSpace, err := c.spaceStore.Find(ctx, in.SpaceID)
 	if err != nil {
 		log.Err(err).Msgf("Failed to get space with id '%d'.", in.SpaceID)
-
 		return nil, usererror.BadRequest("Parent not found'")
 	}
-
 	/*
 	 * AUTHORIZATION
 	 * Create is a special case - check permission without specific resource
@@ -77,6 +82,52 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	if err = check.Repo(repo); err != nil {
 		return nil, err
 	}
+	var content []byte
+	files := make([]gitrpc.File, 0, 3) // readme, gitignore, licence
+	if in.Readme {
+		content = createReadme(in.Name, in.Description)
+		files = append(files, gitrpc.File{
+			Name:    "README.md",
+			Base64:  false,
+			Content: content,
+		})
+	}
+
+	if in.Licence != "" && in.Licence != "none" {
+		content, err = resources.Licence.ReadFile(fmt.Sprintf("licence/%s.txt", in.Licence))
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, gitrpc.File{
+			Name:    "LICENCE",
+			Base64:  false,
+			Content: content,
+		})
+	}
+
+	if in.GitIgnore != "" {
+		content, err = resources.Gitignore.ReadFile(fmt.Sprintf("gitignore/%s.gitignore", in.GitIgnore))
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, gitrpc.File{
+			Name:    ".gitignore",
+			Base64:  false,
+			Content: content,
+		})
+	}
+
+	err = c.rpcClient.CreateRepository(ctx, &gitrpc.CreateRepositoryParams{
+		RepositoryParams: gitrpc.RepositoryParams{
+			Username: session.Principal.Name,
+			Name:     repo.Name,
+			Branch:   in.Branch,
+		},
+		Files: files,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error creating repository: %w", err)
+	}
 
 	// create in store
 	err = c.repoStore.Create(ctx, repo)
@@ -88,4 +139,13 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	return repo, nil
+}
+
+func createReadme(name, description string) []byte {
+	content := bytes.Buffer{}
+	content.WriteString("#" + name + "\n")
+	if description != "" {
+		content.WriteString(description)
+	}
+	return content.Bytes()
 }

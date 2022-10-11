@@ -7,6 +7,7 @@ package repo
 import (
 	"github.com/google/wire"
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/gitrpc"
 	"github.com/harness/gitness/internal/store"
 )
 
@@ -16,6 +17,6 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(authorizer authz.Authorizer, spaceStore store.SpaceStore,
-	repoStore store.RepoStore, saStore store.ServiceAccountStore) *Controller {
-	return NewController(authorizer, spaceStore, repoStore, saStore)
+	repoStore store.RepoStore, saStore store.ServiceAccountStore, rpcClient gitrpc.Interface) *Controller {
+	return NewController(authorizer, spaceStore, repoStore, saStore, rpcClient)
 }

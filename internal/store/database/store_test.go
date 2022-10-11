@@ -55,7 +55,8 @@ func seed(db *sqlx.DB) error {
 }
 
 // unmarshal a testdata file.
-//nolint:unparam, goimports // expected to be called for other paths in the future.
+//
+//nolint:unparam // expected to be called for other paths in the future.
 func unmarshal(path string, v interface{}) error {
 	out, err := os.ReadFile(path)
 	if err != nil {

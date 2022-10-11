@@ -1,0 +1,4 @@
+syntax = "proto3";
+package rpc;
+
+option go_package = "github.com/harness/gitness/gitrpc/rpc";

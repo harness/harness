@@ -17,9 +17,7 @@ type WebHandler interface {
 	http.Handler
 }
 
-/*
- * NewWebHandler returns a new WebHandler.
- */
+// NewWebHandler returns a new WebHandler.
 func NewWebHandler(systemStore store.SystemStore) WebHandler {
 	config := systemStore.Config(context.Background())
 

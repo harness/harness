@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/harness/gitness/internal/gitrpc"
+
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
 	"golang.org/x/sync/errgroup"
@@ -41,7 +43,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// load environment variables from file.
 	err := godotenv.Load(c.envfile)
 	if err != nil {
-		return err
+		return fmt.Errorf("error loading environment file %s: %w", c.envfile, err)
 	}
 
 	// create the system configuration store by loading
@@ -90,6 +92,15 @@ func (c *command) run(*kingpin.ParseContext) error {
 	})
 	log.Info().Msg("nightly subroutine started")
 
+	// start grpc server
+	rpcServer, err := gitrpc.NewServer(5001)
+	if err != nil {
+		return err
+	}
+	g.Go(func() error {
+		return rpcServer.Start()
+	})
+
 	// wait until the error group context is done
 	<-gCtx.Done()
 
@@ -103,6 +114,10 @@ func (c *command) run(*kingpin.ParseContext) error {
 
 	if sErr := shutdownHTTP(shutdownCtx); sErr != nil {
 		log.Err(sErr).Msg("failed to shutdown http server gracefully")
+	}
+
+	if rpcErr := rpcServer.Stop(); rpcErr != nil {
+		log.Err(rpcErr).Msg("failed to shutdown grpc server gracefully")
 	}
 
 	log.Info().Msg("wait for subroutines to complete")

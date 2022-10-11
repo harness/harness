@@ -42,9 +42,7 @@ var (
 	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/"}
 )
 
-/*
- * NewAPIHandler returns a new APIHandler.
- */
+// NewAPIHandler returns a new APIHandler.
 func NewAPIHandler(
 	systemStore store.SystemStore,
 	authenticator authn.Authenticator,
@@ -139,6 +137,8 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller) {
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerrepo.HandleCreate(repoCtrl))
+		r.Get("/gitignore", handlerrepo.HandleGitIgnore())
+		r.Get("/licence", handlerrepo.HandleLicence())
 
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 			// repo level operations

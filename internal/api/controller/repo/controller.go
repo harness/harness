@@ -6,6 +6,7 @@ package repo
 
 import (
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/gitrpc"
 	"github.com/harness/gitness/internal/store"
 )
 
@@ -14,14 +15,21 @@ type Controller struct {
 	spaceStore store.SpaceStore
 	repoStore  store.RepoStore
 	saStore    store.ServiceAccountStore
+	rpcClient  gitrpc.Interface
 }
 
-func NewController(authorizer authz.Authorizer, spaceStore store.SpaceStore,
-	repoStore store.RepoStore, saStore store.ServiceAccountStore) *Controller {
+func NewController(
+	authorizer authz.Authorizer,
+	spaceStore store.SpaceStore,
+	repoStore store.RepoStore,
+	saStore store.ServiceAccountStore,
+	rpcClient gitrpc.Interface,
+) *Controller {
 	return &Controller{
 		authorizer: authorizer,
 		spaceStore: spaceStore,
 		repoStore:  repoStore,
 		saStore:    saStore,
+		rpcClient:  rpcClient,
 	}
 }

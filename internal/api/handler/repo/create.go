@@ -13,9 +13,7 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 )
 
-/*
- * HandleCreate returns an http.HandlerFunc that creates a new repository.
- */
+// HandleCreate returns a http.HandlerFunc that creates a new repository.
 func HandleCreate(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
