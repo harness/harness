@@ -10,8 +10,8 @@ const (
 	PathParamSpaceRef = "spaceRef"
 )
 
-func GetSpaceRef(r *http.Request) (string, error) {
-	rawRef, err := ParamOrError(r, PathParamSpaceRef)
+func GetSpaceRefFromPath(r *http.Request) (string, error) {
+	rawRef, err := PathParamOrError(r, PathParamSpaceRef)
 	if err != nil {
 		return "", err
 	}

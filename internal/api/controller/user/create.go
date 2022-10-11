@@ -18,6 +18,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// CreateInput is the input used for create operations.
+// On purpose don't expose admin, has to be enabled explicitly.
 type CreateInput struct {
 	UID      string `json:"uid"`
 	Name     string `json:"name"`
@@ -38,13 +40,21 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, err
 	}
 
-	return c.createNoAuth(ctx, in)
+	return c.CreateNoAuth(ctx, in, false)
 }
 
 /*
- * createNoAuth creates a new user without auth checks.
+ * CreateNoAuth creates a new user without auth checks.
+ * WARNING: Never call as part of user flow.
+ *
+ * Note: take admin separately to avoid potential vulnerabilities for user calls.
  */
-func (c *Controller) createNoAuth(ctx context.Context, in *CreateInput) (*types.User, error) {
+func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bool) (*types.User, error) {
+	// validate password before hashing
+	if err := check.Password(in.Password); err != nil {
+		return nil, err
+	}
+
 	hash, err := hashPassword([]byte(in.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create hash: %w", err)
@@ -58,6 +68,7 @@ func (c *Controller) createNoAuth(ctx context.Context, in *CreateInput) (*types.
 		Salt:     uniuri.NewLen(uniuri.UUIDLen),
 		Created:  time.Now().UnixMilli(),
 		Updated:  time.Now().UnixMilli(),
+		Admin:    admin,
 	}
 
 	// validate user
@@ -71,6 +82,7 @@ func (c *Controller) createNoAuth(ctx context.Context, in *CreateInput) (*types.
 	}
 
 	// first user will be admin by default.
+	// TODO: move responsibility somewhere else.
 	if user.ID == 1 {
 		user.Admin = true
 		err = c.userStore.Update(ctx, user)

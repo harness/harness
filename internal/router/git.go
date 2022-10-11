@@ -76,7 +76,7 @@ func stubGitHandler(repoStore store.RepoStore) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTeapot)
 
-		repoPath, _ := request.GetRepoRef(r)
+		repoPath, _ := request.GetRepoRefFromPath(r)
 		repo, err := repoStore.FindByPath(r.Context(), repoPath)
 		if err != nil {
 			_, _ = w.Write([]byte(fmt.Sprintf("Repo '%s' not found.", repoPath)))

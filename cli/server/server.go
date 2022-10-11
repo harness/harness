@@ -54,10 +54,20 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// configure the log level
 	setupLogger(config)
 
+	// add logger to context
+	log := log.Logger.With().Logger()
+	ctx = log.WithContext(ctx)
+
 	// initialize system
 	system, err := initSystem(ctx, config)
 	if err != nil {
-		return fmt.Errorf("encountered an error while initializing the system: %w", err)
+		return fmt.Errorf("encountered an error while wiring the system: %w", err)
+	}
+
+	// bootstrap the system
+	err = system.bootstrap(ctx)
+	if err != nil {
+		return fmt.Errorf("encountered an error while bootstrapping the system: %w", err)
 	}
 
 	// collects all go routines - gCTX cancels if any go routine encounters an error

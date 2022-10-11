@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS repositories (
 ,repo_description       TEXT
 ,repo_isPublic          BOOLEAN
 ,repo_createdBy         INTEGER
-,repo_created           INTEGER
-,repo_updated           INTEGER
+,repo_created           BIGINT
+,repo_updated           BIGINT
 ,repo_forkId            INTEGER
 ,repo_numForks          INTEGER
 ,repo_numPulls          INTEGER

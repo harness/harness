@@ -18,7 +18,7 @@ func HandleListTokens(saCrl *serviceaccount.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		saUID, err := request.GetServiceAccountUID(r)
+		saUID, err := request.GetServiceAccountUIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

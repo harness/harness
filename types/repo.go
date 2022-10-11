@@ -10,7 +10,7 @@ import (
 
 // Repository represents a code repository.
 type Repository struct {
-	// Core properties
+	// TODO: int64 ID doesn't match DB
 	ID          int64  `db:"repo_id"              json:"id"`
 	SpaceID     int64  `db:"repo_spaceId"         json:"spaceId"`
 	PathName    string `db:"repo_pathName"        json:"pathName"`

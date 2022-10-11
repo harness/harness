@@ -181,8 +181,8 @@ const serviceAccountUpdate = `
 UPDATE principals
 SET
  principal_name            = :principal_name
-,:principal_blocked        = :principal_blocked
-,:principal_salt           = :principal_salt
-,:principal_updated        = :principal_updated
+,principal_blocked        = :principal_blocked
+,principal_salt           = :principal_salt
+,principal_updated        = :principal_updated
 WHERE principal_type = "serviceaccount" AND principal_id = :principal_id
 `

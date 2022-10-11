@@ -19,6 +19,19 @@ import (
 // Attempt returns an http.HandlerFunc middleware that authenticates
 // the http.Request if authentication payload is available.
 func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler {
+	return performAuthentication(authenticator, false)
+}
+
+// Required returns an http.HandlerFunc middleware that authenticates
+// the http.Request and fails the request if no auth data was available.
+func Required(authenticator authn.Authenticator) func(http.Handler) http.Handler {
+	return performAuthentication(authenticator, true)
+}
+
+// performAuthentication returns an http.HandlerFunc middleware that authenticates
+// the http.Request if authentication payload is available.
+// Depending on whether it is required or not, the request will be failed.
+func performAuthentication(authenticator authn.Authenticator, required bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -27,6 +40,11 @@ func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler 
 			session, err := authenticator.Authenticate(r)
 
 			if errors.Is(err, authn.ErrNoAuthData) {
+				if required {
+					render.Unauthorized(w)
+					return
+				}
+
 				// if there was no auth data in the request - continue as is
 				next.ServeHTTP(w, r)
 				return

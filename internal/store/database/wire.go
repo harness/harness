@@ -23,6 +23,7 @@ var WireSet = wire.NewSet(
 	ProvideDatabase,
 	ProvideUserStore,
 	ProvideServiceAccountStore,
+	ProvideServiceStore,
 	ProvideSpaceStore,
 	ProvideRepoStore,
 	ProvideTokenStore,
@@ -57,6 +58,18 @@ func ProvideServiceAccountStore(db *sqlx.DB) store.ServiceAccountStore {
 	default:
 		return NewServiceAccountStoreSync(
 			NewServiceAccountStore(db),
+		)
+	}
+}
+
+// ProvideServiceStore provides a service store.
+func ProvideServiceStore(db *sqlx.DB) store.ServiceStore {
+	switch db.DriverName() {
+	case postgres:
+		return NewServiceStore(db)
+	default:
+		return NewServiceStoreSync(
+			NewServiceStore(db),
 		)
 	}
 }

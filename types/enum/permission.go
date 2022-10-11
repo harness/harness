@@ -12,6 +12,7 @@ const (
 	ResourceTypeRepo           ResourceType = "REPOSITORY"
 	ResourceTypeUser           ResourceType = "USER"
 	ResourceTypeServiceAccount ResourceType = "SERVICEACCOUNT"
+	ResourceTypeService        ResourceType = "SERVICE"
 	//   ResourceType_Branch ResourceType = "BRANCH"
 )
 
@@ -51,10 +52,21 @@ const (
 
 const (
 	/*
-		----- REPOSITORY -----
+		----- SERVICE ACCOUNT -----
 	*/
 	PermissionServiceAccountCreate Permission = "serviceaccount_create"
 	PermissionServiceAccountView   Permission = "serviceaccount_view"
 	PermissionServiceAccountEdit   Permission = "serviceaccount_edit"
 	PermissionServiceAccountDelete Permission = "serviceaccount_delete"
+)
+
+const (
+	/*
+		----- SERVICE -----
+	*/
+	PermissionServiceCreate    Permission = "service_create"
+	PermissionServiceView      Permission = "service_view"
+	PermissionServiceEdit      Permission = "service_edit"
+	PermissionServiceDelete    Permission = "service_delete"
+	PermissionServiceEditAdmin Permission = "service_editadmin"
 )

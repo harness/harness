@@ -21,6 +21,7 @@ https://stackoverflow.com/questions/4048151/what-are-the-options-for-storing-hie
 https://www.slideshare.net/billkarwin/models-for-hierarchical-data
 */
 type Space struct {
+	// TODO: int64 ID doesn't match DB
 	ID          int64  `db:"space_id"              json:"id"`
 	ParentID    int64  `db:"space_parentId"        json:"parentId"`
 	PathName    string `db:"space_pathName"        json:"pathName"`

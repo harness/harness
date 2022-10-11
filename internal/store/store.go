@@ -64,6 +64,30 @@ type (
 		Count(ctx context.Context, parentType enum.ParentResourceType, parentID int64) (int64, error)
 	}
 
+	// ServiceStore defines the service data storage.
+	ServiceStore interface {
+		// Find finds the service by id.
+		Find(ctx context.Context, id int64) (*types.Service, error)
+
+		// FindUID finds the service by uid.
+		FindUID(ctx context.Context, uid string) (*types.Service, error)
+
+		// Create saves the service.
+		Create(ctx context.Context, sa *types.Service) error
+
+		// Update updates the service details.
+		Update(ctx context.Context, sa *types.Service) error
+
+		// Delete deletes the service.
+		Delete(ctx context.Context, id int64) error
+
+		// List returns a list of all services.
+		List(ctx context.Context) ([]*types.Service, error)
+
+		// Count returns a count of all services.
+		Count(ctx context.Context) (int64, error)
+	}
+
 	// SpaceStore defines the space data storage.
 	SpaceStore interface {
 		// Find the space by id.

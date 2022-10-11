@@ -10,37 +10,39 @@ package server
 import (
 	"context"
 
-	"github.com/harness/gitness/harness"
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
+	"github.com/harness/gitness/harness/bootstrap"
 	"github.com/harness/gitness/harness/client"
+	"github.com/harness/gitness/harness/router"
+	"github.com/harness/gitness/harness/types"
 	"github.com/harness/gitness/internal/api/controller/repo"
-	"github.com/harness/gitness/internal/api/controller/serviceaccount"
+	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/cron"
-	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/store/memory"
-	"github.com/harness/gitness/types"
+	gitnessTypes "github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
 
-func initSystem(ctx context.Context, config *types.Config) (*system, error) {
+func initSystem(ctx context.Context, config *gitnessTypes.Config) (*system, error) {
 	wire.Build(
 		newSystem,
+		bootstrap.WireSet,
 		database.WireSet,
 		memory.WireSet,
-		router.WireSet,
 		server.WireSet,
 		cron.WireSet,
 		repo.WireSet,
-		serviceaccount.WireSet,
 		space.WireSet,
 		user.WireSet,
-		harness.LoadConfig,
+		service.WireSet,
+		types.LoadConfig,
+		router.WireSet,
 		authn.WireSet,
 		authz.WireSet,
 		client.WireSet,

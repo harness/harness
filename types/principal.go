@@ -10,7 +10,7 @@ import "github.com/harness/gitness/types/enum"
 type (
 	// Represents the identity of an acting entity (User, ServiceAccount, Service).
 	Principal struct {
-		// ID is the internal identifier of a principal (primary key)
+		// TODO: int64 ID doesn't match DB
 		ID    int64              `db:"principal_id"          json:"-"`
 		UID   string             `db:"principal_uid"         json:"uid"`
 		Type  enum.PrincipalType `db:"principal_type"        json:"type"`
@@ -61,7 +61,7 @@ func PrincipalFromService(s *Service) *Principal {
 		UID:     s.UID,
 		Type:    enum.PrincipalTypeService,
 		Name:    s.Name,
-		Admin:   true,
+		Admin:   s.Admin,
 		Blocked: s.Blocked,
 		Salt:    s.Salt,
 		Created: s.Created,

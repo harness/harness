@@ -6,6 +6,6 @@ CREATE TABLE IF NOT EXISTS spaces (
 ,space_description  TEXT
 ,space_isPublic     BOOLEAN
 ,space_createdBy    INTEGER
-,space_created      INTEGER
-,space_updated      INTEGER
+,space_created      BIGINT
+,space_updated      BIGINT
 );

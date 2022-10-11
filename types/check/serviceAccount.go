@@ -22,12 +22,12 @@ func ServiceAccount(sa *types.ServiceAccount) error {
 		return err
 	}
 
-	// verify name
+	// validate name
 	if err := Name(sa.Name); err != nil {
 		return err
 	}
 
-	// verify parentType is valid
+	// validate parentType
 	if sa.ParentType != enum.ParentResourceTypeRepo && sa.ParentType != enum.ParentResourceTypeSpace {
 		return ErrServiceAccountParentTypeIsInvalid
 	}

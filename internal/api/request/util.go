@@ -15,9 +15,9 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// ParamOrError tries to retrieve the parameter from the request and
+// PathParamOrError tries to retrieve the parameter from the request and
 // returns the parameter if it exists and is not empty, otherwise returns an error.
-func ParamOrError(r *http.Request, paramName string) (string, error) {
+func PathParamOrError(r *http.Request, paramName string) (string, error) {
 	value := chi.URLParam(r, paramName)
 	if value == "" {
 		return "", usererror.BadRequest(fmt.Sprintf("Parameter '%s' not found in request path.", paramName))
@@ -26,9 +26,9 @@ func ParamOrError(r *http.Request, paramName string) (string, error) {
 	return value, nil
 }
 
-// ParseAsInt64 tries to retrieve the parameter from the request and parse it to in64.
-func ParseAsInt64(r *http.Request, paramName string) (int64, error) {
-	rawID, err := ParamOrError(r, paramName)
+// PathParamAsInt64 tries to retrieve the parameter from the request and parse it to in64.
+func PathParamAsInt64(r *http.Request, paramName string) (int64, error) {
+	rawID, err := PathParamOrError(r, paramName)
 	if err != nil {
 		return 0, err
 	}

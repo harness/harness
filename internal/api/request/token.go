@@ -8,6 +8,6 @@ const (
 	PathParamTokenID = "tokenID"
 )
 
-func GetTokenID(r *http.Request) (int64, error) {
-	return ParseAsInt64(r, PathParamTokenID)
+func GetTokenIDFromPath(r *http.Request) (int64, error) {
+	return PathParamAsInt64(r, PathParamTokenID)
 }

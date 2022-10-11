@@ -17,13 +17,13 @@ const (
 
 var (
 	// ErrEmailLen  is returned when the email address
-	// exceeds the maximum number of characters.
+	// exceeds the range of allowed number of characters.
 	ErrEmailLen = &ValidationError{
 		fmt.Sprintf("Email address has to be within %d and %d characters", minEmailLength, maxEmailLength),
 	}
 )
 
-// User returns true if the User if valid.
+// User returns true if the User is valid.
 func User(user *types.User) error {
 	// validate UID
 	if err := UID(user.UID); err != nil {

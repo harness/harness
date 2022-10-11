@@ -18,9 +18,9 @@ import (
  * functionalities (unable to create admin user for example).
  */
 func (c *Controller) Register(ctx context.Context, in *CreateInput) (*types.TokenResponse, error) {
-	// TODO: allows to configure if open register is allowed.
+	// TODO: allow to configure if open register is allowed.
 
-	user, err := c.createNoAuth(ctx, in)
+	user, err := c.CreateNoAuth(ctx, in, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}

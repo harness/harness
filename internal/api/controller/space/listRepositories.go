@@ -24,7 +24,7 @@ func (c *Controller) ListRepositories(ctx context.Context, session *auth.Session
 		return 0, nil, err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, true); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionRepoView, true); err != nil {
 		return 0, nil, err
 	}
 

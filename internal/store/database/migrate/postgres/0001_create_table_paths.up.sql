@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS paths (
 ,path_targetType  TEXT
 ,path_targetId    INTEGER
 ,path_createdBy   INTEGER
-,path_created     INTEGER
-,path_updated     INTEGER
+,path_created     BIGINT
+,path_updated     BIGINT
 ,UNIQUE(path_value)
 );

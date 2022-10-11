@@ -14,6 +14,7 @@ const (
 
 // Represents a path to a resource (e.g. space) that can be used to address the resource.
 type Path struct {
+	// TODO: int64 ID doesn't match DB
 	ID         int64               `db:"path_id"              json:"id"`
 	Value      string              `db:"path_value"           json:"value"`
 	IsAlias    bool                `db:"path_isAlias"         json:"isAlias"`

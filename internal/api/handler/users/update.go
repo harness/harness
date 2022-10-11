@@ -19,7 +19,7 @@ func HandleUpdate(userCtrl *user.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		userUID, err := request.GetUserUID(r)
+		userUID, err := request.GetUserUIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

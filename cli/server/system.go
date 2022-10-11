@@ -5,20 +5,23 @@
 package server
 
 import (
+	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/cron"
 	"github.com/harness/gitness/internal/server"
 )
 
 // system stores high level system sub-routines.
 type system struct {
-	server  *server.Server
-	nightly *cron.Nightly
+	bootstrap bootstrap.Bootstrap
+	server    *server.Server
+	nightly   *cron.Nightly
 }
 
 // newSystem returns a new system structure.
-func newSystem(server *server.Server, nightly *cron.Nightly) *system {
+func newSystem(bootstrap bootstrap.Bootstrap, server *server.Server, nightly *cron.Nightly) *system {
 	return &system{
-		server:  server,
-		nightly: nightly,
+		bootstrap: bootstrap,
+		server:    server,
+		nightly:   nightly,
 	}
 }

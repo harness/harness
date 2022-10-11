@@ -45,7 +45,7 @@ func Translate(err error) *Error {
 
 	// unknown error
 	default:
-		log.Err(err).Msgf("Unable to translate error: %s", err)
+		log.Warn().Msgf("Unable to translate error: %s", err)
 		return ErrInternal
 	}
 }

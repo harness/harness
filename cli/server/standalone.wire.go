@@ -16,6 +16,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/cron"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
@@ -29,6 +30,7 @@ import (
 func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	wire.Build(
 		newSystem,
+		bootstrap.WireSet,
 		database.WireSet,
 		memory.WireSet,
 		router.WireSet,

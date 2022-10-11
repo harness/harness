@@ -9,10 +9,10 @@ const (
 	PathParamServiceAccountUID = "saUID"
 )
 
-func GetUserUID(r *http.Request) (string, error) {
-	return ParamOrError(r, PathParamUserUID)
+func GetUserUIDFromPath(r *http.Request) (string, error) {
+	return PathParamOrError(r, PathParamUserUID)
 }
 
-func GetServiceAccountUID(r *http.Request) (string, error) {
-	return ParamOrError(r, PathParamServiceAccountUID)
+func GetServiceAccountUIDFromPath(r *http.Request) (string, error) {
+	return PathParamOrError(r, PathParamServiceAccountUID)
 }

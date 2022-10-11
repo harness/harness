@@ -19,13 +19,13 @@ func HandleDeletePath(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		spaceRef, err := request.GetSpaceRef(r)
+		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		pathID, err := request.GetPathID(r)
+		pathID, err := request.GetPathIDFromPath(r)
 		if err != nil {
 			render.BadRequest(w)
 			return

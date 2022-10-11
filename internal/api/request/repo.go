@@ -10,8 +10,8 @@ const (
 	PathParamRepoRef = "repositoryRef"
 )
 
-func GetRepoRef(r *http.Request) (string, error) {
-	rawRef, err := ParamOrError(r, PathParamRepoRef)
+func GetRepoRefFromPath(r *http.Request) (string, error) {
+	rawRef, err := PathParamOrError(r, PathParamRepoRef)
 	if err != nil {
 		return "", err
 	}

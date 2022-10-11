@@ -8,16 +8,18 @@ package server
 import (
 	"context"
 
-	"github.com/harness/gitness/harness"
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
+	"github.com/harness/gitness/harness/bootstrap"
 	"github.com/harness/gitness/harness/client"
+	"github.com/harness/gitness/harness/router"
+	types2 "github.com/harness/gitness/harness/types"
 	"github.com/harness/gitness/internal/api/controller/repo"
-	"github.com/harness/gitness/internal/api/controller/serviceaccount"
+	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/cron"
-	"github.com/harness/gitness/internal/router"
+	router2 "github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/store/memory"
@@ -27,55 +29,61 @@ import (
 // Injectors from harness.wire.go:
 
 func initSystem(ctx context.Context, config *types.Config) (*system, error) {
-	systemStore := memory.New(config)
+	typesConfig, err := types2.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+	serviceJWTProvider, err := client.ProvideServiceJWTProvider(typesConfig)
+	if err != nil {
+		return nil, err
+	}
+	aclClient, err := client.ProvideACLClient(serviceJWTProvider, typesConfig)
+	if err != nil {
+		return nil, err
+	}
+	authorizer := authz.ProvideAuthorizer(typesConfig, aclClient)
 	db, err := database.ProvideDatabase(ctx, config)
 	if err != nil {
 		return nil, err
 	}
 	userStore := database.ProvideUserStore(db)
-	harnessConfig, err := harness.LoadConfig()
+	tokenStore := database.ProvideTokenStore(db)
+	controller := user.NewController(authorizer, userStore, tokenStore)
+	serviceStore := database.ProvideServiceStore(db)
+	serviceController := service.NewController(authorizer, serviceStore)
+	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller, serviceController)
+	systemStore := memory.New(config)
+	tokenClient, err := client.ProvideTokenClient(serviceJWTProvider, typesConfig)
 	if err != nil {
 		return nil, err
 	}
-	serviceJWTProvider, err := client.ProvideServiceJWTProvider(harnessConfig)
+	userClient, err := client.ProvideUserClient(serviceJWTProvider, typesConfig)
 	if err != nil {
 		return nil, err
 	}
-	tokenClient, err := client.ProvideTokenClient(serviceJWTProvider, harnessConfig)
-	if err != nil {
-		return nil, err
-	}
-	userClient, err := client.ProvideUserClient(serviceJWTProvider, harnessConfig)
-	if err != nil {
-		return nil, err
-	}
-	serviceAccountClient, err := client.ProvideServiceAccountClient(serviceJWTProvider, harnessConfig)
+	serviceAccountClient, err := client.ProvideServiceAccountClient(serviceJWTProvider, typesConfig)
 	if err != nil {
 		return nil, err
 	}
 	serviceAccountStore := database.ProvideServiceAccountStore(db)
-	authenticator, err := authn.ProvideAuthenticator(userStore, tokenClient, userClient, harnessConfig, serviceAccountClient, serviceAccountStore)
+	authenticator, err := authn.ProvideAuthenticator(userStore, tokenClient, userClient, typesConfig, serviceAccountClient, serviceAccountStore, serviceStore)
 	if err != nil {
 		return nil, err
 	}
-	aclClient, err := client.ProvideACLClient(serviceJWTProvider, harnessConfig)
+	accountClient, err := client.ProvideAccountClient(serviceJWTProvider, typesConfig)
 	if err != nil {
 		return nil, err
 	}
-	authorizer := authz.ProvideAuthorizer(aclClient)
 	spaceStore := database.ProvideSpaceStore(db)
 	repoStore := database.ProvideRepoStore(db)
-	controller := repo.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
 	spaceController := space.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
-	tokenStore := database.ProvideTokenStore(db)
-	serviceaccountController := serviceaccount.NewController(authorizer, serviceAccountStore, spaceStore, repoStore, tokenStore)
-	userController := user.NewController(authorizer, userStore, tokenStore)
-	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, controller, spaceController, serviceaccountController, userController)
-	gitHandler := router.ProvideGitHandler(repoStore, authenticator)
-	webHandler := router.ProvideWebHandler(systemStore)
-	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler)
+	repoController := repo.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
+	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, accountClient, spaceController, repoController)
+	gitHandler := router2.ProvideGitHandler(repoStore, authenticator)
+	webHandler := router2.ProvideWebHandler(systemStore)
+	routerRouter := router2.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
 	nightly := cron.NewNightly()
-	serverSystem := newSystem(serverServer, nightly)
+	serverSystem := newSystem(bootstrapBootstrap, serverServer, nightly)
 	return serverSystem, nil
 }

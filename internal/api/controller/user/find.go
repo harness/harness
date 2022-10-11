@@ -18,7 +18,7 @@ import (
  */
 func (c *Controller) Find(ctx context.Context, session *auth.Session,
 	userUID string) (*types.User, error) {
-	user, err := findUserFromUID(ctx, c.userStore, userUID)
+	user, err := c.FindNoAuth(ctx, userUID)
 	if err != nil {
 		return nil, err
 	}
@@ -29,4 +29,12 @@ func (c *Controller) Find(ctx context.Context, session *auth.Session,
 	}
 
 	return user, nil
+}
+
+/*
+ * FindNoAuth finds a user without auth checks.
+ * WARNING: Never call as part of user flow.
+ */
+func (c *Controller) FindNoAuth(ctx context.Context, userUID string) (*types.User, error) {
+	return findUserFromUID(ctx, c.userStore, userUID)
 }

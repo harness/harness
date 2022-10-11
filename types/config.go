@@ -64,4 +64,11 @@ type Config struct {
 		ContentSecurityPolicy string            `envconfig:"GITNESS_HTTP_CONTENT_SECURITY_POLICY"`
 		ReferrerPolicy        string            `envconfig:"GITNESS_HTTP_REFERRER_POLICY"`
 	}
+
+	// Admin defines admin user params (no admin setup if either is empty)
+	Admin struct {
+		Name     string `envconfig:"GITNESS_ADMIN_NAME"`
+		Email    string `envconfig:"GITNESS_ADMIN_EMAIL"`
+		Password string `envconfig:"GITNESS_ADMIN_PASSWORD"`
+	}
 }
