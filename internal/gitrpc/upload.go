@@ -1,3 +1,7 @@
+// Copyright 2022 Harness Inc. All rights reserved.
+// Use of this source code is governed by the Polyform Free Trial License
+// that can be found in the LICENSE.md file for this repository.
+
 package gitrpc
 
 import (
@@ -12,7 +16,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const maxImageSize = 1 << 20
+const maxFileSize = 1 << 20
 
 type UploadStore interface {
 	Save(filePath string, data bytes.Buffer) (string, error)
@@ -55,29 +59,29 @@ func (s uploadService) Upload(stream rpc.UploadService_UploadServer) error {
 			return status.Errorf(codes.Unknown, "cannot receive chunk data: %v", err)
 		}
 
-		chunk := req.GetChunkData()
-		size := len(chunk)
+		chunk := req.GetChunk()
+		size := len(chunk.Data)
 
-		log.Printf("received a chunk with size: %d", size)
+		log.Info().Msgf("received a chunk with size: %d", size)
 
 		fileSize += size
-		if fileSize > maxImageSize {
-			return status.Errorf(codes.InvalidArgument, "file is too large: %d > %d", fileSize, maxImageSize)
+		if fileSize > maxFileSize {
+			return status.Errorf(codes.InvalidArgument, "file is too large: %d > %d", fileSize, maxFileSize)
 		}
-		_, err = fileData.Write(chunk)
+		_, err = fileData.Write(chunk.Data)
 		if err != nil {
 			return status.Errorf(codes.Internal, "cannot write chunk data: %v", err)
 		}
 	}
 	log.Info().Msgf("saving file %s in repo path %s", fi.GetPath(), fi.GetRepoPath())
 	fullPath := filepath.Join(fi.GetRepoPath(), fi.GetPath())
-	imageID, err := s.store.Save(fullPath, fileData)
+	fileID, err := s.store.Save(fullPath, fileData)
 	if err != nil {
 		return status.Errorf(codes.Internal, "cannot save file to the store: %v", err)
 	}
 
 	res := &rpc.UploadFileResponse{
-		Id:   imageID,
+		Id:   fileID,
 		Size: uint32(fileSize),
 	}
 
@@ -86,6 +90,6 @@ func (s uploadService) Upload(stream rpc.UploadService_UploadServer) error {
 		return status.Errorf(codes.Unknown, "cannot send response: %v", err)
 	}
 
-	log.Info().Msgf("saved file with id: %s, size: %d", imageID, fileSize)
+	log.Info().Msgf("saved file with id: %s, size: %d", fileID, fileSize)
 	return nil
 }

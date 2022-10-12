@@ -19,7 +19,7 @@ message CreateRepositoryRequest {
   oneof data {
     Repository repository = 1;
     string filepath       = 2;
-    bytes chunk_data      = 3;
+    Chunk chunk           = 3;
   }
 }
 
@@ -30,7 +30,7 @@ message CreateRepositoryResponse {
 message UploadFileRequest {
   oneof data {
     FileInfo info    = 1;
-    bytes chunk_data = 2;
+    Chunk chunk      = 2;
   };
 }
 
@@ -61,4 +61,9 @@ message Repository {
   string owner          = 1;
   string name           = 2;
   string default_branch = 3;
+}
+
+message Chunk {
+  bool eof   = 1;
+  bytes data = 2;
 }

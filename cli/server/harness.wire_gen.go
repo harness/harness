@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/cron"
+	"github.com/harness/gitness/internal/gitrpc"
 	router2 "github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
@@ -77,7 +78,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	spaceStore := database.ProvideSpaceStore(db)
 	repoStore := database.ProvideRepoStore(db)
 	spaceController := space.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
-	repoController := repo.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
+	gitrpcInterface, err := gitrpc.ProvideClient()
+	if err != nil {
+		return nil, err
+	}
+	repoController := repo.NewController(authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
 	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, accountClient, spaceController, repoController)
 	gitHandler := router2.ProvideGitHandler(repoStore, authenticator)
 	webHandler := router2.ProvideWebHandler(systemStore)

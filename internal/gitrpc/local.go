@@ -1,3 +1,7 @@
+// Copyright 2022 Harness Inc. All rights reserved.
+// Use of this source code is governed by the Polyform Free Trial License
+// that can be found in the LICENSE.md file for this repository.
+
 package gitrpc
 
 import (
@@ -9,13 +13,13 @@ import (
 )
 
 type localStore struct {
-	mutex  sync.RWMutex
-	images map[string]bool
+	mutex sync.RWMutex
+	files map[string]bool
 }
 
 func newLocalStore() *localStore {
 	return &localStore{
-		images: make(map[string]bool),
+		files: make(map[string]bool),
 	}
 }
 
@@ -38,7 +42,7 @@ func (store *localStore) Save(filePath string, data bytes.Buffer) (string, error
 	store.mutex.Lock()
 	defer store.mutex.Unlock()
 
-	store.images[filePath] = true
+	store.files[filePath] = true
 
 	return filePath, nil
 }

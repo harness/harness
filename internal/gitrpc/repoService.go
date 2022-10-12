@@ -1,3 +1,7 @@
+// Copyright 2022 Harness Inc. All rights reserved.
+// Use of this source code is governed by the Polyform Free Trial License
+// that can be found in the LICENSE.md file for this repository.
+
 package gitrpc
 
 import (
@@ -36,7 +40,7 @@ func (s repositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	log.Info().Msgf("receive an create repository request %v", repo)
 	targetPath := filepath.Join(repoRoot, repo.Name)
 	if _, err = os.Stat(targetPath); !os.IsNotExist(err) {
-		return fmt.Errorf("repository exists already: %v", targetPath)
+		return status.Errorf(codes.AlreadyExists, "repository exists already: %v", targetPath)
 	}
 
 	// create repository in repos folder
@@ -69,7 +73,7 @@ func (s repositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	// logic for receiving the files
 	files := make([]string, 0, 16)
 	for {
-		log.Info().Msg("waiting to receive filepath data")
+		log.Info().Msg("waiting to receive file path")
 		req, err = stream.Recv()
 		if errors.Is(err, io.EOF) {
 			log.Info().Msg("EOF found")
@@ -82,29 +86,31 @@ func (s repositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 		fileData := bytes.Buffer{}
 		fileSize := 0
 		for {
-			log.Info().Msg("waiting to receive more data")
+			log.Debug().Msg("waiting to receive data")
 
 			req, err = stream.Recv()
 			if errors.Is(err, io.EOF) {
-				log.Print("no more data")
+				return status.Errorf(codes.Internal, "received unexpected end of stream: %v", err)
+			}
+
+			chunk := req.GetChunk()
+			size := len(chunk.Data)
+
+			if size > 0 {
+				log.Debug().Msgf("received a chunk with size: %d", size)
+				fileSize += size
+				if fileSize > maxFileSize {
+					return status.Errorf(codes.InvalidArgument, "file is too large: %d > %d", fileSize, maxFileSize)
+				}
+				_, err = fileData.Write(chunk.Data)
+				if err != nil {
+					return status.Errorf(codes.Internal, "cannot write chunk data: %v", err)
+				}
+			}
+
+			if chunk.Eof {
+				log.Info().Msg("Received file EOF")
 				break
-			}
-
-			chunk := req.GetChunkData()
-			size := len(chunk)
-
-			if len("EOF") == size && chunk[0] == 'E' && chunk[1] == 'O' && chunk[2] == 'F' {
-				break
-			}
-
-			log.Printf("received a chunk with size: %d", size)
-			fileSize += size
-			if fileSize > maxImageSize {
-				return status.Errorf(codes.InvalidArgument, "file is too large: %d > %d", fileSize, maxImageSize)
-			}
-			_, err = fileData.Write(chunk)
-			if err != nil {
-				return status.Errorf(codes.Internal, "cannot write chunk data: %v", err)
 			}
 		}
 		log.Info().Msgf("saving file %s in repo path %s", filePath, tempDir)
@@ -121,7 +127,7 @@ func (s repositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 
 	if len(files) > 0 {
 		if _, err = s.AddFilesAndPush(ctx, &rpc.AddFilesAndPushRequest{
-			RepoPath: res.GetTempPath(),
+			RepoPath: tempDir,
 			Message:  "initial commit",
 			Files:    files,
 		}); err != nil {
@@ -131,10 +137,10 @@ func (s repositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 
 	err = stream.SendAndClose(res)
 	if err != nil {
-		return status.Errorf(codes.Unknown, "cannot send response: %v", err)
+		return status.Errorf(codes.Unknown, "cannot send completion response: %v", err)
 	}
 
-	log.Info().Msgf("repository created: %s, path: %s", repo.Name, res.GetTempPath())
+	log.Info().Msgf("repository created: %s, path: %s", repo.Name, targetPath)
 	return nil
 }
 
@@ -148,11 +154,13 @@ func (s repositoryService) AddFilesAndPush(
 	}
 	now := time.Now()
 	err = s.adapter.Commit(params.GetRepoPath(), commitChangesOptions{
+		// TODO: Add gitness signature
 		committer: &signature{
 			name:  "enver",
 			email: "enver.bisevac@harness.io",
 			when:  now,
 		},
+		// TODO: Add gitness signature
 		author: &signature{
 			name:  "enver",
 			email: "enver.bisevac@harness.io",
@@ -164,6 +172,7 @@ func (s repositoryService) AddFilesAndPush(
 		return nil, err
 	}
 	err = s.adapter.Push(ctx, params.GetRepoPath(), pushOptions{
+		// TODO: Don't hard-code
 		remote:  "origin",
 		branch:  "",
 		force:   false,
@@ -174,6 +183,7 @@ func (s repositoryService) AddFilesAndPush(
 	if err != nil {
 		return nil, err
 	}
+	// TODO: caller should delete repo if needed (as we didn't create it here)
 	err = os.RemoveAll(params.GetRepoPath())
 	if err != nil {
 		return nil, err

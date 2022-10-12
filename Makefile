@@ -35,7 +35,7 @@ tools: $(tools) ## Install tools required for the build
 mocks: $(mocks)
 	@echo "Generating Test Mocks"
 
-wire: cli/server/harness.wire.go cli/server/standalone.wire.go
+wire: cli/server/harness.wire_gen.go cli/server/standalone.wire_gen.go
 
 generate: $(mocks) wire mocks/mock_client.go proto
 	@echo "Generating Code"

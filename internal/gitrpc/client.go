@@ -1,3 +1,7 @@
+// Copyright 2022 Harness Inc. All rights reserved.
+// Use of this source code is governed by the Polyform Free Trial License
+// that can be found in the LICENSE.md file for this repository.
+
 package gitrpc
 
 import (
@@ -28,6 +32,7 @@ type File struct {
 }
 
 type RepositoryParams struct {
+	// TODO: What is it used for?
 	Username string
 	Name     string
 	Branch   string
@@ -147,22 +152,28 @@ func (c *Client) process(
 	stream rpc.RepositoryService_CreateRepositoryClient) error {
 	n, err := reader.Read(buffer)
 	if errors.Is(err, io.EOF) {
-		log.Info().Msgf("EOF detected at %v", filename)
-		buffer = []byte{'E', 'O', 'F'}
-		_ = c.send(buffer, stream)
+		log.Info().Msgf("EOF reached for %v", filename)
+		err = c.send(buffer[:n], true, stream)
+		if err != nil {
+			return err
+		}
+
 		return io.EOF
 	}
 	if err != nil {
 		return fmt.Errorf("cannot read buffer: %w", err)
 	}
 
-	return c.send(buffer[:n], stream)
+	return c.send(buffer[:n], false, stream)
 }
 
-func (c *Client) send(buffer []byte, stream rpc.RepositoryService_CreateRepositoryClient) error {
+func (c *Client) send(buffer []byte, eof bool, stream rpc.RepositoryService_CreateRepositoryClient) error {
 	req := &rpc.CreateRepositoryRequest{
-		Data: &rpc.CreateRepositoryRequest_ChunkData{
-			ChunkData: buffer,
+		Data: &rpc.CreateRepositoryRequest_Chunk{
+			Chunk: &rpc.Chunk{
+				Eof:  eof,
+				Data: buffer,
+			},
 		},
 	}
 
@@ -214,17 +225,20 @@ func (c *Client) Upload(ctx context.Context, params *UploadParams, reader io.Rea
 
 	for {
 		var n int
+		eof := false
 		n, err = reader.Read(buffer)
 		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
+			eof = true
+		} else if err != nil {
 			return "", fmt.Errorf("cannot read chunk to buffer: %w", err)
 		}
 
 		req = &rpc.UploadFileRequest{
-			Data: &rpc.UploadFileRequest_ChunkData{
-				ChunkData: buffer[:n],
+			Data: &rpc.UploadFileRequest_Chunk{
+				Chunk: &rpc.Chunk{
+					Eof:  eof,
+					Data: buffer[:n],
+				},
 			},
 		}
 
@@ -233,6 +247,10 @@ func (c *Client) Upload(ctx context.Context, params *UploadParams, reader io.Rea
 			err = stream.RecvMsg(nil)
 			return "", status.Errorf(codes.Internal, "cannot send chunk to server: %v", err)
 		}
+
+		if eof {
+			break
+		}
 	}
 
 	res, err := stream.CloseAndRecv()
@@ -240,7 +258,7 @@ func (c *Client) Upload(ctx context.Context, params *UploadParams, reader io.Rea
 		return "", fmt.Errorf("cannot receive response: %w", err)
 	}
 	fullPath := res.GetId()
-	log.Debug().Msgf("image uploaded with id: %s, size: %d", fullPath, res.GetSize())
+	log.Debug().Msgf("file uploaded with id: %s, size: %d", fullPath, res.GetSize())
 	return fullPath, nil
 }
 
