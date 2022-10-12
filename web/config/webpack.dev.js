@@ -34,10 +34,10 @@ const devConfig = {
     hot: true,
     host: 'localhost',
     historyApiFallback: true,
-    port: 3000,
+    port: 3001,
     proxy: {
       '/api': {
-        target: targetLocalHost ? 'http://localhost:3001' : baseUrl,
+        target: targetLocalHost ? 'http://localhost:3000' : baseUrl,
         logLevel: 'debug',
         secure: false,
         changeOrigin: true

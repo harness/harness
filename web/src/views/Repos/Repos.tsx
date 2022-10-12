@@ -13,51 +13,16 @@ import {
   Pagination
 } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
+import cx from 'classnames'
+import { useGet } from 'restful-react'
 import { useStrings } from 'framework/strings'
+import { formatDate, getErrorMessage, X_PER_PAGE, X_TOTAL, X_TOTAL_PAGES } from 'utils/Utils'
+import type { Repository } from 'types/Repository'
 import { NewRepoModalButton } from './NewRepoModalButton'
 import { PinnedRibbon } from './PinnedRibbon'
 import chartImg from './chart.svg'
+import emptyStateImage from './empty_state.png'
 import css from './Repos.module.scss'
-
-// TODO: USE FROM SERVICE (DOES NOT EXIST YET)
-interface Repository {
-  accountId: string
-  name: string
-  description?: string
-  pinned?: boolean
-  public?: boolean
-  metadata?: {
-    language: string
-    branch: number
-    commit: number
-    fork: number
-  }
-  activities: string
-  updated: number
-}
-
-const repodata: Repository[] = [...Array(50).keys()].map(number => ({
-  accountId: `Harness`,
-  name: `Repo ${number}`,
-  description:
-    number < 4
-      ? 'Repo very long name very long name long long long longRepo very long name very long name long long long long'
-      : '',
-  data: `Data ${number}`,
-  pinned: number < 3,
-  public: number < 2,
-  metadata:
-    number % 2
-      ? {
-          language: 'Java',
-          branch: 1000,
-          commit: 12323,
-          fork: 2
-        }
-      : undefined,
-  activities: `Activity ${number}`,
-  updated: Date.now() - 40000
-}))
 
 function RepoMetadata(): JSX.Element {
   return (
@@ -79,6 +44,20 @@ export default function Repos(): JSX.Element {
   const { getString } = useStrings()
   const ref = useRef<HTMLDivElement>(null)
   const [nameTextWidth, setNameTextWidth] = useState(300)
+  const space = 3
+  const {
+    data: repositories,
+    error,
+    loading,
+    refetch,
+    response
+  } = useGet<Repository[]>({
+    path: `/api/v1/spaces/${space}/repos`
+  })
+  const itemCount = useMemo(() => parseInt(response?.headers?.get(X_TOTAL) || '0'), [response])
+  const pageCount = useMemo(() => parseInt(response?.headers?.get(X_TOTAL_PAGES) || '0'), [response])
+  const pageSize = useMemo(() => parseInt(response?.headers?.get(X_PER_PAGE) || '0'), [response])
+
   const columns: Column<Repository>[] = useMemo(
     () => [
       {
@@ -140,7 +119,7 @@ export default function Repos(): JSX.Element {
         Cell: ({ row }: CellProps<Repository>) => {
           return (
             <Text color={Color.BLACK} lineClamp={1}>
-              {'July 13, 2022' || row.original.updated}
+              {formatDate(row.original.updated)}
             </Text>
           )
         },
@@ -155,66 +134,79 @@ export default function Repos(): JSX.Element {
       setNameTextWidth((ref.current.closest('div[role="cell"]') as HTMLDivElement)?.offsetWidth - 100)
     }
   }
+  const NewRepoButton = (
+    <NewRepoModalButton
+      space={space}
+      modalTitle={getString('newRepo')}
+      text={getString('newRepo')}
+      variation={ButtonVariation.PRIMARY}
+      icon="plus"
+      onSubmit={_data => {
+        // TODO: navigate to Repo instead of refetch
+        refetch()
+      }}
+    />
+  )
 
   useEffect(() => {
     onResize()
     window.addEventListener('resize', onResize)
-
     return () => {
       window.removeEventListener('resize', onResize)
     }
   }, [])
 
-  const itemCount = repodata.length
-  const pageSize = 25
-  const pageCount = itemCount
+  console.log({ response, repositories, pageCount, pageIndex, pageSize, itemCount })
 
   return (
     <Container className={css.main}>
       <PageHeader title={getString('repositories')} />
-      <PageBody>
+      <PageBody
+        loading={loading}
+        className={cx({ [css.withError]: !!error })}
+        error={error ? getErrorMessage(error) : null}
+        retryOnError={() => {
+          refetch()
+        }}
+        noData={{
+          when: () => repositories?.length === 0,
+          image: emptyStateImage,
+          messageTitle: getString('repos.noDataTitle'),
+          message: getString('repos.noDataMessage'),
+          button: NewRepoButton
+        }}>
         <Container padding="xlarge">
           <Layout.Horizontal spacing="large">
-            {/* <Button text="New Repository" variation={ButtonVariation.PRIMARY} icon="book" /> */}
-            <NewRepoModalButton
-              accountIdentifier=""
-              orgIdentifier=""
-              projectIdentifier=""
-              modalTitle="Create Repository"
-              text="New Repository"
-              variation={ButtonVariation.PRIMARY}
-              icon="plus"
-              onSubmit={_data => {
-                console.log(_data)
-              }}
-            />
+            {NewRepoButton}
             <FlexExpander />
-            <TextInput placeholder="Search" leftIcon="search" style={{ width: 350 }} autoFocus />
+            <TextInput placeholder={getString('search')} leftIcon="search" style={{ width: 350 }} autoFocus />
           </Layout.Horizontal>
           <Container margin={{ top: 'medium' }}>
             <Table<Repository>
               rowDataTestID={(_, index: number) => `scm-repo-${index}`}
               className={css.table}
               columns={columns}
-              data={repodata || []}
+              data={repositories || []}
               onRowClick={_data => {
                 // onPolicyClicked(data)
               }}
               getRowClassName={() => css.row}
             />
           </Container>
-          <Container margin={{ bottom: 'medium', left: 'xxxlarge', right: 'xxxlarge' }}>
-            <Pagination
-              className={css.pagination}
-              hidePageNumbers
-              gotoPage={index => setPageIndex(index)}
-              itemCount={itemCount}
-              pageCount={pageCount}
-              pageIndex={pageIndex}
-              pageSize={pageSize}
-              pageSizeOptions={[5, 10, 20, 40]}
-            />
-          </Container>
+          {!!repositories?.length && (
+            <Container margin={{ bottom: 'medium', left: 'xxxlarge', right: 'xxxlarge' }}>
+              <Pagination
+                className={css.pagination}
+                hidePageNumbers
+                gotoPage={index => setPageIndex(index)}
+                itemCount={itemCount}
+                pageCount={pageCount}
+                pageIndex={pageIndex}
+                pageSize={pageSize}
+                pageSizeOptions={[5, 10, 20, 40]}
+              />
+            </Container>
+          )}
         </Container>
       </PageBody>
     </Container>

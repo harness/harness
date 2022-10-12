@@ -3,3 +3,4 @@ dist
 coverage
 .env
 yarn-error*
+.DS_Store

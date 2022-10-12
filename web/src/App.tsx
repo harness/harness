@@ -29,9 +29,10 @@ const App: React.FC<AppProps> = React.memo(function App({
 }: AppProps) {
   const [strings, setStrings] = useState<LanguageRecord>()
   const [token, setToken] = useAPIToken(apiToken)
-  const getRequestOptions = useCallback((): Partial<RequestInit> => {
-    return buildResfulReactRequestOptions(hooks.useGetToken?.() || apiToken || 'default')
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const getRequestOptions = useCallback(
+    (): Partial<RequestInit> => buildResfulReactRequestOptions(hooks.useGetToken?.() || apiToken || token),
+    [apiToken, token, hooks]
+  ) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     languageLoader(lang).then(setStrings)

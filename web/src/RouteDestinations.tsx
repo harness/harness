@@ -4,7 +4,6 @@ import { SignIn } from 'pages/SignIn/SignIn'
 import { SignUp } from 'pages/SignUp/SignUp'
 import routes, { pathProps } from 'RouteDefinitions'
 import Welcome from 'views/Welcome/Welcome'
-import NewRepo from 'views/NewRepo/NewRepo'
 import Repos from 'views/Repos/Repos'
 import RepoSettings from 'views/RepoSettings/RepoSettings'
 import RepoFiles from 'views/RepoFiles/RepoFiles'
@@ -26,9 +25,6 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         </Route>
         <Route path={routes.toSCMHome(pathProps)}>
           <Welcome />
-        </Route>
-        <Route path={routes.toSCMNewRepo(pathProps)}>
-          <NewRepo />
         </Route>
         <Route path={routes.toSCMRepos(pathProps)} exact>
           <Repos />

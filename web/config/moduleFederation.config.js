@@ -35,7 +35,6 @@ module.exports = {
     './App': './src/App.tsx',
     './Welcome': './src/views/Welcome/Welcome.tsx',
     './Repos': './src/views/Repos/Repos.tsx',
-    './NewRepo': './src/views/NewRepo/NewRepo.tsx',
     './RepoFiles': './src/views/RepoFiles/RepoFiles.tsx',
     './RepoFileDetails': './src/views/RepoFileDetails/RepoFileDetails.tsx',
     './RepoCommits': './src/views/RepoCommits/RepoCommits.tsx',

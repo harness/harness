@@ -5,6 +5,7 @@ import SplitPane from 'react-split-pane'
 import { PopoverInteractionKind } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
 import { ButtonRoleProps } from 'utils/Utils'
+import { GitIcon } from 'utils/GitUtils'
 import { ResourceTree } from './ResourceTree/ResourceTree'
 import { ResourceContent } from './ResourceContent/ResourceContent'
 import css from './RepoFiles.module.scss'
@@ -27,7 +28,7 @@ export default function RepoFiles(): JSX.Element {
               <Text
                 inline
                 className={css.repoDropdown}
-                icon="git-repo"
+                icon={GitIcon.REPOSITORY}
                 iconProps={{
                   size: 14,
                   color: Color.GREY_500,
@@ -60,28 +61,28 @@ export default function RepoFiles(): JSX.Element {
                 id: 'files',
                 title: getString('files'),
                 panel: <Files />,
-                iconProps: { name: 'file' },
+                iconProps: { name: GitIcon.FILE },
                 disabled: false
               },
               {
                 id: 'commits',
                 title: getString('commits'),
                 panel: <Commits />,
-                iconProps: { name: 'git-branch-existing' },
+                iconProps: { name: GitIcon.COMMIT },
                 disabled: true
               },
               {
                 id: 'pull-requests',
                 title: getString('pullRequests'),
                 panel: <PullRequests />,
-                iconProps: { name: 'git-pull' },
+                iconProps: { name: GitIcon.PULL_REQUEST },
                 disabled: true
               },
               {
                 id: 'settings',
                 title: getString('settings'),
                 panel: <Settings />,
-                iconProps: { name: 'cog' },
+                iconProps: { name: GitIcon.SETTINGS },
                 disabled: true
               }
             ]}></Tabs>

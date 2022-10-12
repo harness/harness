@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react'
 import cx from 'classnames'
 // import root from 'react-shadow'
-// import MonacoEditor from 'react-monaco-editor'
+import MonacoEditor from 'react-monaco-editor'
 import type { editor as EDITOR } from 'monaco-editor/esm/vs/editor/editor.api'
 import {
   Container,
@@ -22,8 +22,9 @@ import { useStrings } from 'framework/strings'
 // import markdownCSS from '!raw-loader!@uiw/react-markdown-preview/dist/markdown.css'
 import markdown from './sampleREADME.md'
 import css from './ResourceContent.module.scss'
+import sampleCSs from '!raw-loader!./ResourceContent.module.scss'
 
-import('!raw-loader!./sampleREADME.md').then(foo => console.log('dynamic data:', foo.default))
+// import('!raw-loader!./sampleREADME.md').then(foo => console.log('dynamic data:', foo.default))
 
 // TODO: USE FROM SERVICE (DOES NOT EXIST YET)
 interface Folder {
@@ -169,9 +170,11 @@ export function FolderListing(): JSX.Element {
   const inputContainerRef = useRef<HTMLDivElement>(null)
   const [inputEditor, setInputEditor] = useState<EDITOR.IStandaloneCodeEditor>()
 
+  console.log({ sampleCSs })
+
   return (
     <Container>
-      <Table<Folder>
+      {/* <Table<Folder>
         className={css.table}
         columns={columns}
         data={repodata || []}
@@ -179,7 +182,7 @@ export function FolderListing(): JSX.Element {
           // onPolicyClicked(data)
         }}
         getRowClassName={() => css.row}
-      />
+      /> */}
 
       <Container className={css.fileContentContainer} background={Color.WHITE}>
         <Layout.Horizontal padding="small" className={css.fileContentHeading}>
@@ -187,27 +190,20 @@ export function FolderListing(): JSX.Element {
           <FlexExpander />
           <Button variation={ButtonVariation.ICON} icon="edit" />
         </Layout.Horizontal>
-        <Container className={css.readmeContainer}>
-          {/* <root.div style={{ all: 'initial' }}> */}
+        <Container className={css.readmeContainer} style={{ display: 'none' }}>
           <MarkdownPreview
             source={markdown}
-            rehypeRewrite={(node, _index, parent) => {
-              if (
-                (node as unknown as Element).tagName === 'a' &&
-                parent &&
-                /^h(1|2|3|4|5|6)/.test((parent as unknown as Element).tagName)
-              ) {
-                parent.children = parent.children.slice(1)
-              }
-            }}
+            // rehypeRewrite={(node, _index, parent) => {
+            //   if (
+            //     (node as unknown as Element).tagName === 'a' &&
+            //     parent &&
+            //     /^h(1|2|3|4|5|6)/.test((parent as unknown as Element).tagName)
+            //   ) {
+            //     parent.children = parent.children.slice(1)
+            //   }
+            // }}
           />
-          {/* <style type="text/css">{markdownCSS}</style>
-          </root.div> */}
-          {/* <Container
-            flex
-            // className={css.ioEditor}
-            ref={inputContainerRef}
-            style={{ maxHeight: '95%', height: '900px' }}>
+          <Container flex ref={inputContainerRef} style={{ maxHeight: '95%', height: '900px' }}>
             <MonacoEditor
               language="json"
               theme="vs-light"
@@ -216,7 +212,7 @@ export function FolderListing(): JSX.Element {
               onChange={updateInput}
               editorDidMount={setInputEditor}
             />
-          </Container> */}
+          </Container>
         </Container>
       </Container>
     </Container>

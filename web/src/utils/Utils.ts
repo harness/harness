@@ -5,7 +5,15 @@ import moment from 'moment'
 import { useEffect } from 'react'
 import { useAppContext } from 'AppContext'
 
+export const LIST_FETCHING_PAGE_SIZE = 20
+export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY hh:mm a'
+export const X_TOTAL = 'x-total'
+export const X_TOTAL_PAGES = 'x-total-pages'
+export const X_PER_PAGE = 'x-per-page'
 export type Unknown = any // eslint-disable-line @typescript-eslint/no-explicit-any
+export const DEFAULT_BRANCH_NAME = 'main'
+export const REGEX_VALID_REPO_NAME = /^[A-Za-z0-9_.-][A-Za-z0-9 _.-]*$/
+export const SUGGESTED_BRANCH_NAMES = ['main', 'master']
 
 /** This utility shows a toaster without being bound to any component.
  * It's useful to show cross-page/component messages */
@@ -25,7 +33,7 @@ export const MonacoEditorOptions = {
   codeLens: false,
   scrollBeyondLastLine: false,
   smartSelect: false,
-  tabSize: 4,
+  tabSize: 2,
   insertSpaces: true,
   overviewRulerBorder: false
 }
@@ -45,11 +53,36 @@ export const deselectAllMonacoEditor = (editor?: EDITOR.IStandaloneCodeEditor): 
   }, 0)
 }
 
-export const LIST_FETCHING_PAGE_SIZE = 20
-export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY hh:mm a'
-
 export const displayDateTime = (value: number): string | null => {
   return value ? moment.unix(value / 1000).format(DEFAULT_DATE_FORMAT) : null
+}
+
+const LOCALE = Intl.NumberFormat().resolvedOptions?.().locale || 'en-US'
+
+/**
+ * Format a timestamp to short format time (i.e: 7:41 AM)
+ * @param timestamp Timestamp
+ * @param timeStyle Optional DateTimeFormat's `timeStyle` option.
+ */
+export function formatTime(timestamp: number, timeStyle = 'short'): string {
+  return new Intl.DateTimeFormat(LOCALE, {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: TS built-in type for DateTimeFormat is not correct
+    timeStyle
+  }).format(new Date(timestamp))
+}
+
+/**
+ * Format a timestamp to medium format date (i.e: Jan 1, 2021)
+ * @param timestamp Timestamp
+ * @param dateStyle Optional DateTimeFormat's `dateStyle` option.
+ */
+export function formatDate(timestamp: number, dateStyle = 'medium'): string {
+  return new Intl.DateTimeFormat(LOCALE, {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: TS built-in type for DateTimeFormat is not correct
+    dateStyle
+  }).format(new Date(timestamp))
 }
 
 export enum Editions {

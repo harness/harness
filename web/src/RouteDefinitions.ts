@@ -9,6 +9,8 @@ interface PathProps {
   commitId?: string
 }
 
+interface QueryProps {}
+
 export const pathProps: Readonly<Required<PathProps>> = {
   accountId: ':accountId',
   orgIdentifier: ':orgIdentifier',
@@ -36,10 +38,6 @@ export default {
   toSCMRepos: withAccountId(
     ({ orgIdentifier, projectIdentifier }: PathProps) =>
       `/scm/orgs/${orgIdentifier}/projects/${projectIdentifier}/repos`
-  ),
-  toSCMNewRepo: withAccountId(
-    ({ orgIdentifier, projectIdentifier }: PathProps) =>
-      `/scm/orgs/${orgIdentifier}/projects/${projectIdentifier}/repos/new`
   ),
   toSCMRepoSettings: withAccountId(
     ({ orgIdentifier, projectIdentifier, repoName }: RequireField<PathProps, 'repoName'>) =>

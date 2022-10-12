@@ -2,6 +2,7 @@
 // this is an auto-generated file
 declare const styles: {
   readonly main: string
+  readonly withError: string
   readonly table: string
   readonly row: string
   readonly nameContainer: string
