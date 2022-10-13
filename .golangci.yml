@@ -110,7 +110,7 @@ linters-settings:
   nakedret:
     # Make an issue if func has more lines of code than this setting, and it has naked returns.
     # Default: 30
-    max-func-lines: 0
+    max-func-lines: 30
 
   nolintlint:
     # Exclude following linters from requiring an explanation.
@@ -134,6 +134,30 @@ linters-settings:
     # Otherwise, only methods that take `*testing.T`, `*testing.B`, and `testing.TB` as arguments are checked.
     # Default: false
     all: true
+
+  goheader:
+    # Supports two types 'const` and `regexp`.
+    # Values can be used recursively.
+    # Default: {}
+    values:
+      const:
+        # Define here const type values in format k:v.
+        # For example:
+        COMPANY: Harness Inc.
+      regexp:
+        # Define here regexp type values.
+        # for example:
+        # AUTHOR: .*@mycompany\.com
+    # The template use for checking.
+    # Default: ""
+    template: |-
+      Copyright 2022 {{ COMPANY }} All rights reserved.
+      Use of this source code is governed by the Polyform Free Trial License
+      that can be found in the LICENSE.md file for this repository.
+    # As alternative of directive 'template', you may put the path to file with the template source.
+    # Useful if you need to load the template from a specific file.
+    # Default: ""
+    # template-path: /path/to/my/template.tmpl
 
 
 linters:
@@ -184,7 +208,7 @@ linters:
     - nilnil # checks that there is no simultaneous return of nil error and an invalid value
     - noctx # finds sending http request without context.Context
     - nolintlint # reports ill-formed or insufficient nolint directives
-    - nonamedreturns # reports all named returns
+    # - nonamedreturns # reports all named returns
     - nosprintfhostport # checks for misuse of Sprintf to construct a host with port in a URL
     - predeclared # finds code that shadows one of Go's predeclared identifiers
     - promlinter # checks Prometheus metrics naming via promlint
@@ -207,7 +231,7 @@ linters:
     #- exhaustruct # checks if all structure fields are initialized
     #- gci # controls golang package import order and makes it always deterministic
     #- godox # detects FIXME, TODO and other comment keywords
-    #- goheader # checks is file header matches to pattern
+    - goheader # checks is file header matches to pattern
     #- interfacebloat # checks the number of methods inside an interface
     #- ireturn # accept interfaces, return concrete types
     #- prealloc # [premature optimization, but can be used in some cases] finds slice declarations that could potentially be preallocated
