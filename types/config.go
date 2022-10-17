@@ -11,11 +11,25 @@ type Config struct {
 	Debug bool `envconfig:"GITNESS_DEBUG"`
 	Trace bool `envconfig:"GITNESS_TRACE"`
 
+	// Git defines the git configuration parameters
+	Git struct {
+		Root          string `envconfig:"GITNESS_GIT_ROOT"`
+		DefaultBranch string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
+	}
+
 	// Server defines the server configuration parameters.
 	Server struct {
-		Bind  string `envconfig:"GITNESS_HTTP_BIND" default:":3000"`
-		Proto string `envconfig:"GITNESS_HTTP_PROTO"`
-		Host  string `envconfig:"GITNESS_HTTP_HOST"`
+		// HTTP defines the http configuration parameters
+		HTTP struct {
+			Bind  string `envconfig:"GITNESS_HTTP_BIND" default:":3000"`
+			Proto string `envconfig:"GITNESS_HTTP_PROTO"`
+			Host  string `envconfig:"GITNESS_HTTP_HOST"`
+		}
+
+		// GRPC defines the grpc configuration parameters
+		GRPC struct {
+			Bind string `envconfig:"GITNESS_GRPC_BIND" default:":3001"`
+		}
 
 		// Acme defines Acme configuration parameters.
 		Acme struct {

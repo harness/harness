@@ -20,15 +20,118 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type TreeNodeType int32
+
+const (
+	TreeNodeType_TreeNodeTypeTree   TreeNodeType = 0
+	TreeNodeType_TreeNodeTypeBlob   TreeNodeType = 1
+	TreeNodeType_TreeNodeTypeCommit TreeNodeType = 2
+)
+
+// Enum value maps for TreeNodeType.
+var (
+	TreeNodeType_name = map[int32]string{
+		0: "TreeNodeTypeTree",
+		1: "TreeNodeTypeBlob",
+		2: "TreeNodeTypeCommit",
+	}
+	TreeNodeType_value = map[string]int32{
+		"TreeNodeTypeTree":   0,
+		"TreeNodeTypeBlob":   1,
+		"TreeNodeTypeCommit": 2,
+	}
+)
+
+func (x TreeNodeType) Enum() *TreeNodeType {
+	p := new(TreeNodeType)
+	*p = x
+	return p
+}
+
+func (x TreeNodeType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TreeNodeType) Descriptor() protoreflect.EnumDescriptor {
+	return file_repo_proto_enumTypes[0].Descriptor()
+}
+
+func (TreeNodeType) Type() protoreflect.EnumType {
+	return &file_repo_proto_enumTypes[0]
+}
+
+func (x TreeNodeType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TreeNodeType.Descriptor instead.
+func (TreeNodeType) EnumDescriptor() ([]byte, []int) {
+	return file_repo_proto_rawDescGZIP(), []int{0}
+}
+
+type TreeNodeMode int32
+
+const (
+	TreeNodeMode_TreeNodeModeFile    TreeNodeMode = 0
+	TreeNodeMode_TreeNodeModeSymlink TreeNodeMode = 1
+	TreeNodeMode_TreeNodeModeExec    TreeNodeMode = 2
+	TreeNodeMode_TreeNodeModeTree    TreeNodeMode = 3
+	TreeNodeMode_TreeNodeModeCommit  TreeNodeMode = 4
+)
+
+// Enum value maps for TreeNodeMode.
+var (
+	TreeNodeMode_name = map[int32]string{
+		0: "TreeNodeModeFile",
+		1: "TreeNodeModeSymlink",
+		2: "TreeNodeModeExec",
+		3: "TreeNodeModeTree",
+		4: "TreeNodeModeCommit",
+	}
+	TreeNodeMode_value = map[string]int32{
+		"TreeNodeModeFile":    0,
+		"TreeNodeModeSymlink": 1,
+		"TreeNodeModeExec":    2,
+		"TreeNodeModeTree":    3,
+		"TreeNodeModeCommit":  4,
+	}
+)
+
+func (x TreeNodeMode) Enum() *TreeNodeMode {
+	p := new(TreeNodeMode)
+	*p = x
+	return p
+}
+
+func (x TreeNodeMode) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TreeNodeMode) Descriptor() protoreflect.EnumDescriptor {
+	return file_repo_proto_enumTypes[1].Descriptor()
+}
+
+func (TreeNodeMode) Type() protoreflect.EnumType {
+	return &file_repo_proto_enumTypes[1]
+}
+
+func (x TreeNodeMode) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TreeNodeMode.Descriptor instead.
+func (TreeNodeMode) EnumDescriptor() ([]byte, []int) {
+	return file_repo_proto_rawDescGZIP(), []int{1}
+}
+
 type CreateRepositoryRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Data:
-	//	*CreateRepositoryRequest_Repository
-	//	*CreateRepositoryRequest_Filepath
-	//	*CreateRepositoryRequest_Chunk
+	//	*CreateRepositoryRequest_Header
+	//	*CreateRepositoryRequest_File
 	Data isCreateRepositoryRequest_Data `protobuf_oneof:"data"`
 }
 
@@ -71,23 +174,16 @@ func (m *CreateRepositoryRequest) GetData() isCreateRepositoryRequest_Data {
 	return nil
 }
 
-func (x *CreateRepositoryRequest) GetRepository() *Repository {
-	if x, ok := x.GetData().(*CreateRepositoryRequest_Repository); ok {
-		return x.Repository
+func (x *CreateRepositoryRequest) GetHeader() *CreateRepositoryRequestHeader {
+	if x, ok := x.GetData().(*CreateRepositoryRequest_Header); ok {
+		return x.Header
 	}
 	return nil
 }
 
-func (x *CreateRepositoryRequest) GetFilepath() string {
-	if x, ok := x.GetData().(*CreateRepositoryRequest_Filepath); ok {
-		return x.Filepath
-	}
-	return ""
-}
-
-func (x *CreateRepositoryRequest) GetChunk() *Chunk {
-	if x, ok := x.GetData().(*CreateRepositoryRequest_Chunk); ok {
-		return x.Chunk
+func (x *CreateRepositoryRequest) GetFile() *FileUpload {
+	if x, ok := x.GetData().(*CreateRepositoryRequest_File); ok {
+		return x.File
 	}
 	return nil
 }
@@ -96,36 +192,83 @@ type isCreateRepositoryRequest_Data interface {
 	isCreateRepositoryRequest_Data()
 }
 
-type CreateRepositoryRequest_Repository struct {
-	Repository *Repository `protobuf:"bytes,1,opt,name=repository,proto3,oneof"`
+type CreateRepositoryRequest_Header struct {
+	Header *CreateRepositoryRequestHeader `protobuf:"bytes,1,opt,name=header,proto3,oneof"`
 }
 
-type CreateRepositoryRequest_Filepath struct {
-	Filepath string `protobuf:"bytes,2,opt,name=filepath,proto3,oneof"`
+type CreateRepositoryRequest_File struct {
+	File *FileUpload `protobuf:"bytes,2,opt,name=file,proto3,oneof"`
 }
 
-type CreateRepositoryRequest_Chunk struct {
-	Chunk *Chunk `protobuf:"bytes,3,opt,name=chunk,proto3,oneof"`
+func (*CreateRepositoryRequest_Header) isCreateRepositoryRequest_Data() {}
+
+func (*CreateRepositoryRequest_File) isCreateRepositoryRequest_Data() {}
+
+type CreateRepositoryRequestHeader struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Uid           string `protobuf:"bytes,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	DefaultBranch string `protobuf:"bytes,2,opt,name=default_branch,json=defaultBranch,proto3" json:"default_branch,omitempty"`
 }
 
-func (*CreateRepositoryRequest_Repository) isCreateRepositoryRequest_Data() {}
+func (x *CreateRepositoryRequestHeader) Reset() {
+	*x = CreateRepositoryRequestHeader{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_repo_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
 
-func (*CreateRepositoryRequest_Filepath) isCreateRepositoryRequest_Data() {}
+func (x *CreateRepositoryRequestHeader) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
 
-func (*CreateRepositoryRequest_Chunk) isCreateRepositoryRequest_Data() {}
+func (*CreateRepositoryRequestHeader) ProtoMessage() {}
+
+func (x *CreateRepositoryRequestHeader) ProtoReflect() protoreflect.Message {
+	mi := &file_repo_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateRepositoryRequestHeader.ProtoReflect.Descriptor instead.
+func (*CreateRepositoryRequestHeader) Descriptor() ([]byte, []int) {
+	return file_repo_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *CreateRepositoryRequestHeader) GetUid() string {
+	if x != nil {
+		return x.Uid
+	}
+	return ""
+}
+
+func (x *CreateRepositoryRequestHeader) GetDefaultBranch() string {
+	if x != nil {
+		return x.DefaultBranch
+	}
+	return ""
+}
 
 type CreateRepositoryResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	TempPath string `protobuf:"bytes,1,opt,name=temp_path,json=tempPath,proto3" json:"temp_path,omitempty"`
 }
 
 func (x *CreateRepositoryResponse) Reset() {
 	*x = CreateRepositoryResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_repo_proto_msgTypes[1]
+		mi := &file_repo_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -138,7 +281,7 @@ func (x *CreateRepositoryResponse) String() string {
 func (*CreateRepositoryResponse) ProtoMessage() {}
 
 func (x *CreateRepositoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_repo_proto_msgTypes[1]
+	mi := &file_repo_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -151,107 +294,22 @@ func (x *CreateRepositoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRepositoryResponse.ProtoReflect.Descriptor instead.
 func (*CreateRepositoryResponse) Descriptor() ([]byte, []int) {
-	return file_repo_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *CreateRepositoryResponse) GetTempPath() string {
-	if x != nil {
-		return x.TempPath
-	}
-	return ""
-}
-
-type UploadFileRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// Types that are assignable to Data:
-	//	*UploadFileRequest_Info
-	//	*UploadFileRequest_Chunk
-	Data isUploadFileRequest_Data `protobuf_oneof:"data"`
-}
-
-func (x *UploadFileRequest) Reset() {
-	*x = UploadFileRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_repo_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *UploadFileRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UploadFileRequest) ProtoMessage() {}
-
-func (x *UploadFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_repo_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UploadFileRequest.ProtoReflect.Descriptor instead.
-func (*UploadFileRequest) Descriptor() ([]byte, []int) {
 	return file_repo_proto_rawDescGZIP(), []int{2}
 }
 
-func (m *UploadFileRequest) GetData() isUploadFileRequest_Data {
-	if m != nil {
-		return m.Data
-	}
-	return nil
-}
-
-func (x *UploadFileRequest) GetInfo() *FileInfo {
-	if x, ok := x.GetData().(*UploadFileRequest_Info); ok {
-		return x.Info
-	}
-	return nil
-}
-
-func (x *UploadFileRequest) GetChunk() *Chunk {
-	if x, ok := x.GetData().(*UploadFileRequest_Chunk); ok {
-		return x.Chunk
-	}
-	return nil
-}
-
-type isUploadFileRequest_Data interface {
-	isUploadFileRequest_Data()
-}
-
-type UploadFileRequest_Info struct {
-	Info *FileInfo `protobuf:"bytes,1,opt,name=info,proto3,oneof"`
-}
-
-type UploadFileRequest_Chunk struct {
-	Chunk *Chunk `protobuf:"bytes,2,opt,name=chunk,proto3,oneof"`
-}
-
-func (*UploadFileRequest_Info) isUploadFileRequest_Data() {}
-
-func (*UploadFileRequest_Chunk) isUploadFileRequest_Data() {}
-
-type UploadFileResponse struct {
+type GetTreeNodeRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id   string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Size uint32 `protobuf:"varint,2,opt,name=size,proto3" json:"size,omitempty"`
+	RepoUid             string `protobuf:"bytes,1,opt,name=repo_uid,json=repoUid,proto3" json:"repo_uid,omitempty"`
+	GitRef              string `protobuf:"bytes,2,opt,name=git_ref,json=gitRef,proto3" json:"git_ref,omitempty"`
+	Path                string `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
+	IncludeLatestCommit bool   `protobuf:"varint,4,opt,name=include_latest_commit,json=includeLatestCommit,proto3" json:"include_latest_commit,omitempty"`
 }
 
-func (x *UploadFileResponse) Reset() {
-	*x = UploadFileResponse{}
+func (x *GetTreeNodeRequest) Reset() {
+	*x = GetTreeNodeRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_repo_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -259,13 +317,13 @@ func (x *UploadFileResponse) Reset() {
 	}
 }
 
-func (x *UploadFileResponse) String() string {
+func (x *GetTreeNodeRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UploadFileResponse) ProtoMessage() {}
+func (*GetTreeNodeRequest) ProtoMessage() {}
 
-func (x *UploadFileResponse) ProtoReflect() protoreflect.Message {
+func (x *GetTreeNodeRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_repo_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -277,41 +335,50 @@ func (x *UploadFileResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UploadFileResponse.ProtoReflect.Descriptor instead.
-func (*UploadFileResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetTreeNodeRequest.ProtoReflect.Descriptor instead.
+func (*GetTreeNodeRequest) Descriptor() ([]byte, []int) {
 	return file_repo_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *UploadFileResponse) GetId() string {
+func (x *GetTreeNodeRequest) GetRepoUid() string {
 	if x != nil {
-		return x.Id
+		return x.RepoUid
 	}
 	return ""
 }
 
-func (x *UploadFileResponse) GetSize() uint32 {
+func (x *GetTreeNodeRequest) GetGitRef() string {
 	if x != nil {
-		return x.Size
+		return x.GitRef
 	}
-	return 0
+	return ""
 }
 
-type FileInfo struct {
+func (x *GetTreeNodeRequest) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *GetTreeNodeRequest) GetIncludeLatestCommit() bool {
+	if x != nil {
+		return x.IncludeLatestCommit
+	}
+	return false
+}
+
+type GetTreeNodeResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id       string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Username string `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	Repo     string `protobuf:"bytes,3,opt,name=repo,proto3" json:"repo,omitempty"`
-	Branch   string `protobuf:"bytes,4,opt,name=branch,proto3" json:"branch,omitempty"`
-	RepoPath string `protobuf:"bytes,5,opt,name=repo_path,json=repoPath,proto3" json:"repo_path,omitempty"`
-	Path     string `protobuf:"bytes,6,opt,name=path,proto3" json:"path,omitempty"`
-	FileType string `protobuf:"bytes,7,opt,name=file_type,json=fileType,proto3" json:"file_type,omitempty"`
+	Node   *TreeNode `protobuf:"bytes,1,opt,name=node,proto3" json:"node,omitempty"`
+	Commit *Commit   `protobuf:"bytes,2,opt,name=commit,proto3" json:"commit,omitempty"`
 }
 
-func (x *FileInfo) Reset() {
-	*x = FileInfo{}
+func (x *GetTreeNodeResponse) Reset() {
+	*x = GetTreeNodeResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_repo_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -319,13 +386,13 @@ func (x *FileInfo) Reset() {
 	}
 }
 
-func (x *FileInfo) String() string {
+func (x *GetTreeNodeResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FileInfo) ProtoMessage() {}
+func (*GetTreeNodeResponse) ProtoMessage() {}
 
-func (x *FileInfo) ProtoReflect() protoreflect.Message {
+func (x *GetTreeNodeResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_repo_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -337,72 +404,39 @@ func (x *FileInfo) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use FileInfo.ProtoReflect.Descriptor instead.
-func (*FileInfo) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetTreeNodeResponse.ProtoReflect.Descriptor instead.
+func (*GetTreeNodeResponse) Descriptor() ([]byte, []int) {
 	return file_repo_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *FileInfo) GetId() string {
+func (x *GetTreeNodeResponse) GetNode() *TreeNode {
 	if x != nil {
-		return x.Id
+		return x.Node
 	}
-	return ""
+	return nil
 }
 
-func (x *FileInfo) GetUsername() string {
+func (x *GetTreeNodeResponse) GetCommit() *Commit {
 	if x != nil {
-		return x.Username
+		return x.Commit
 	}
-	return ""
+	return nil
 }
 
-func (x *FileInfo) GetRepo() string {
-	if x != nil {
-		return x.Repo
-	}
-	return ""
-}
-
-func (x *FileInfo) GetBranch() string {
-	if x != nil {
-		return x.Branch
-	}
-	return ""
-}
-
-func (x *FileInfo) GetRepoPath() string {
-	if x != nil {
-		return x.RepoPath
-	}
-	return ""
-}
-
-func (x *FileInfo) GetPath() string {
-	if x != nil {
-		return x.Path
-	}
-	return ""
-}
-
-func (x *FileInfo) GetFileType() string {
-	if x != nil {
-		return x.FileType
-	}
-	return ""
-}
-
-type AddFilesAndPushRequest struct {
+type ListTreeNodesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	RepoPath string   `protobuf:"bytes,1,opt,name=repo_path,json=repoPath,proto3" json:"repo_path,omitempty"`
-	Message  string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	Files    []string `protobuf:"bytes,3,rep,name=files,proto3" json:"files,omitempty"`
+	RepoUid             string `protobuf:"bytes,1,opt,name=repo_uid,json=repoUid,proto3" json:"repo_uid,omitempty"`
+	GitRef              string `protobuf:"bytes,2,opt,name=git_ref,json=gitRef,proto3" json:"git_ref,omitempty"`
+	Path                string `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
+	IncludeLatestCommit bool   `protobuf:"varint,4,opt,name=include_latest_commit,json=includeLatestCommit,proto3" json:"include_latest_commit,omitempty"`
+	Recursive           bool   `protobuf:"varint,5,opt,name=recursive,proto3" json:"recursive,omitempty"`
 }
 
-func (x *AddFilesAndPushRequest) Reset() {
-	*x = AddFilesAndPushRequest{}
+func (x *ListTreeNodesRequest) Reset() {
+	*x = ListTreeNodesRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_repo_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -410,13 +444,13 @@ func (x *AddFilesAndPushRequest) Reset() {
 	}
 }
 
-func (x *AddFilesAndPushRequest) String() string {
+func (x *ListTreeNodesRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AddFilesAndPushRequest) ProtoMessage() {}
+func (*ListTreeNodesRequest) ProtoMessage() {}
 
-func (x *AddFilesAndPushRequest) ProtoReflect() protoreflect.Message {
+func (x *ListTreeNodesRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_repo_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -428,40 +462,57 @@ func (x *AddFilesAndPushRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AddFilesAndPushRequest.ProtoReflect.Descriptor instead.
-func (*AddFilesAndPushRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListTreeNodesRequest.ProtoReflect.Descriptor instead.
+func (*ListTreeNodesRequest) Descriptor() ([]byte, []int) {
 	return file_repo_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *AddFilesAndPushRequest) GetRepoPath() string {
+func (x *ListTreeNodesRequest) GetRepoUid() string {
 	if x != nil {
-		return x.RepoPath
+		return x.RepoUid
 	}
 	return ""
 }
 
-func (x *AddFilesAndPushRequest) GetMessage() string {
+func (x *ListTreeNodesRequest) GetGitRef() string {
 	if x != nil {
-		return x.Message
+		return x.GitRef
 	}
 	return ""
 }
 
-func (x *AddFilesAndPushRequest) GetFiles() []string {
+func (x *ListTreeNodesRequest) GetPath() string {
 	if x != nil {
-		return x.Files
+		return x.Path
 	}
-	return nil
+	return ""
 }
 
-type AddFilesAndPushResponse struct {
+func (x *ListTreeNodesRequest) GetIncludeLatestCommit() bool {
+	if x != nil {
+		return x.IncludeLatestCommit
+	}
+	return false
+}
+
+func (x *ListTreeNodesRequest) GetRecursive() bool {
+	if x != nil {
+		return x.Recursive
+	}
+	return false
+}
+
+type ListTreeNodesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
+
+	Node   *TreeNode `protobuf:"bytes,1,opt,name=node,proto3" json:"node,omitempty"`
+	Commit *Commit   `protobuf:"bytes,2,opt,name=commit,proto3" json:"commit,omitempty"`
 }
 
-func (x *AddFilesAndPushResponse) Reset() {
-	*x = AddFilesAndPushResponse{}
+func (x *ListTreeNodesResponse) Reset() {
+	*x = ListTreeNodesResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_repo_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -469,13 +520,13 @@ func (x *AddFilesAndPushResponse) Reset() {
 	}
 }
 
-func (x *AddFilesAndPushResponse) String() string {
+func (x *ListTreeNodesResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AddFilesAndPushResponse) ProtoMessage() {}
+func (*ListTreeNodesResponse) ProtoMessage() {}
 
-func (x *AddFilesAndPushResponse) ProtoReflect() protoreflect.Message {
+func (x *ListTreeNodesResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_repo_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -487,23 +538,39 @@ func (x *AddFilesAndPushResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AddFilesAndPushResponse.ProtoReflect.Descriptor instead.
-func (*AddFilesAndPushResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListTreeNodesResponse.ProtoReflect.Descriptor instead.
+func (*ListTreeNodesResponse) Descriptor() ([]byte, []int) {
 	return file_repo_proto_rawDescGZIP(), []int{6}
 }
 
-type Repository struct {
+func (x *ListTreeNodesResponse) GetNode() *TreeNode {
+	if x != nil {
+		return x.Node
+	}
+	return nil
+}
+
+func (x *ListTreeNodesResponse) GetCommit() *Commit {
+	if x != nil {
+		return x.Commit
+	}
+	return nil
+}
+
+type TreeNode struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Owner         string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	Name          string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	DefaultBranch string `protobuf:"bytes,3,opt,name=default_branch,json=defaultBranch,proto3" json:"default_branch,omitempty"`
+	Type TreeNodeType `protobuf:"varint,1,opt,name=type,proto3,enum=rpc.TreeNodeType" json:"type,omitempty"`
+	Mode TreeNodeMode `protobuf:"varint,2,opt,name=mode,proto3,enum=rpc.TreeNodeMode" json:"mode,omitempty"`
+	Sha  string       `protobuf:"bytes,3,opt,name=sha,proto3" json:"sha,omitempty"`
+	Name string       `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	Path string       `protobuf:"bytes,5,opt,name=path,proto3" json:"path,omitempty"`
 }
 
-func (x *Repository) Reset() {
-	*x = Repository{}
+func (x *TreeNode) Reset() {
+	*x = TreeNode{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_repo_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -511,13 +578,13 @@ func (x *Repository) Reset() {
 	}
 }
 
-func (x *Repository) String() string {
+func (x *TreeNode) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Repository) ProtoMessage() {}
+func (*TreeNode) ProtoMessage() {}
 
-func (x *Repository) ProtoReflect() protoreflect.Message {
+func (x *TreeNode) ProtoReflect() protoreflect.Message {
 	mi := &file_repo_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -529,43 +596,59 @@ func (x *Repository) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Repository.ProtoReflect.Descriptor instead.
-func (*Repository) Descriptor() ([]byte, []int) {
+// Deprecated: Use TreeNode.ProtoReflect.Descriptor instead.
+func (*TreeNode) Descriptor() ([]byte, []int) {
 	return file_repo_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *Repository) GetOwner() string {
+func (x *TreeNode) GetType() TreeNodeType {
 	if x != nil {
-		return x.Owner
+		return x.Type
+	}
+	return TreeNodeType_TreeNodeTypeTree
+}
+
+func (x *TreeNode) GetMode() TreeNodeMode {
+	if x != nil {
+		return x.Mode
+	}
+	return TreeNodeMode_TreeNodeModeFile
+}
+
+func (x *TreeNode) GetSha() string {
+	if x != nil {
+		return x.Sha
 	}
 	return ""
 }
 
-func (x *Repository) GetName() string {
+func (x *TreeNode) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *Repository) GetDefaultBranch() string {
+func (x *TreeNode) GetPath() string {
 	if x != nil {
-		return x.DefaultBranch
+		return x.Path
 	}
 	return ""
 }
 
-type Chunk struct {
+type ListCommitsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Eof  bool   `protobuf:"varint,1,opt,name=eof,proto3" json:"eof,omitempty"`
-	Data []byte `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	RepoUid  string `protobuf:"bytes,1,opt,name=repo_uid,json=repoUid,proto3" json:"repo_uid,omitempty"`
+	GitRef   string `protobuf:"bytes,2,opt,name=git_ref,json=gitRef,proto3" json:"git_ref,omitempty"`
+	Page     int32  `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty"`
+	PageSize int32  `protobuf:"varint,4,opt,name=pageSize,proto3" json:"pageSize,omitempty"`
 }
 
-func (x *Chunk) Reset() {
-	*x = Chunk{}
+func (x *ListCommitsRequest) Reset() {
+	*x = ListCommitsRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_repo_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -573,13 +656,13 @@ func (x *Chunk) Reset() {
 	}
 }
 
-func (x *Chunk) String() string {
+func (x *ListCommitsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Chunk) ProtoMessage() {}
+func (*ListCommitsRequest) ProtoMessage() {}
 
-func (x *Chunk) ProtoReflect() protoreflect.Message {
+func (x *ListCommitsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_repo_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -591,23 +674,502 @@ func (x *Chunk) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Chunk.ProtoReflect.Descriptor instead.
-func (*Chunk) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListCommitsRequest.ProtoReflect.Descriptor instead.
+func (*ListCommitsRequest) Descriptor() ([]byte, []int) {
 	return file_repo_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *Chunk) GetEof() bool {
+func (x *ListCommitsRequest) GetRepoUid() string {
 	if x != nil {
-		return x.Eof
+		return x.RepoUid
 	}
-	return false
+	return ""
 }
 
-func (x *Chunk) GetData() []byte {
+func (x *ListCommitsRequest) GetGitRef() string {
 	if x != nil {
-		return x.Data
+		return x.GitRef
+	}
+	return ""
+}
+
+func (x *ListCommitsRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListCommitsRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+type ListCommitsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Types that are assignable to Data:
+	//	*ListCommitsResponse_Header
+	//	*ListCommitsResponse_Commit
+	Data isListCommitsResponse_Data `protobuf_oneof:"data"`
+}
+
+func (x *ListCommitsResponse) Reset() {
+	*x = ListCommitsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_repo_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListCommitsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCommitsResponse) ProtoMessage() {}
+
+func (x *ListCommitsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_repo_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCommitsResponse.ProtoReflect.Descriptor instead.
+func (*ListCommitsResponse) Descriptor() ([]byte, []int) {
+	return file_repo_proto_rawDescGZIP(), []int{9}
+}
+
+func (m *ListCommitsResponse) GetData() isListCommitsResponse_Data {
+	if m != nil {
+		return m.Data
 	}
 	return nil
+}
+
+func (x *ListCommitsResponse) GetHeader() *ListCommitsResponseHeader {
+	if x, ok := x.GetData().(*ListCommitsResponse_Header); ok {
+		return x.Header
+	}
+	return nil
+}
+
+func (x *ListCommitsResponse) GetCommit() *Commit {
+	if x, ok := x.GetData().(*ListCommitsResponse_Commit); ok {
+		return x.Commit
+	}
+	return nil
+}
+
+type isListCommitsResponse_Data interface {
+	isListCommitsResponse_Data()
+}
+
+type ListCommitsResponse_Header struct {
+	Header *ListCommitsResponseHeader `protobuf:"bytes,1,opt,name=header,proto3,oneof"`
+}
+
+type ListCommitsResponse_Commit struct {
+	Commit *Commit `protobuf:"bytes,2,opt,name=commit,proto3,oneof"`
+}
+
+func (*ListCommitsResponse_Header) isListCommitsResponse_Data() {}
+
+func (*ListCommitsResponse_Commit) isListCommitsResponse_Data() {}
+
+type ListCommitsResponseHeader struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	TotalCount int64 `protobuf:"varint,1,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+}
+
+func (x *ListCommitsResponseHeader) Reset() {
+	*x = ListCommitsResponseHeader{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_repo_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListCommitsResponseHeader) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCommitsResponseHeader) ProtoMessage() {}
+
+func (x *ListCommitsResponseHeader) ProtoReflect() protoreflect.Message {
+	mi := &file_repo_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCommitsResponseHeader.ProtoReflect.Descriptor instead.
+func (*ListCommitsResponseHeader) Descriptor() ([]byte, []int) {
+	return file_repo_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ListCommitsResponseHeader) GetTotalCount() int64 {
+	if x != nil {
+		return x.TotalCount
+	}
+	return 0
+}
+
+type GetBlobRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	RepoUid   string `protobuf:"bytes,1,opt,name=repo_uid,json=repoUid,proto3" json:"repo_uid,omitempty"`
+	Sha       string `protobuf:"bytes,2,opt,name=sha,proto3" json:"sha,omitempty"`
+	SizeLimit int64  `protobuf:"varint,3,opt,name=sizeLimit,proto3" json:"sizeLimit,omitempty"`
+}
+
+func (x *GetBlobRequest) Reset() {
+	*x = GetBlobRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_repo_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetBlobRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetBlobRequest) ProtoMessage() {}
+
+func (x *GetBlobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_repo_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetBlobRequest.ProtoReflect.Descriptor instead.
+func (*GetBlobRequest) Descriptor() ([]byte, []int) {
+	return file_repo_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *GetBlobRequest) GetRepoUid() string {
+	if x != nil {
+		return x.RepoUid
+	}
+	return ""
+}
+
+func (x *GetBlobRequest) GetSha() string {
+	if x != nil {
+		return x.Sha
+	}
+	return ""
+}
+
+func (x *GetBlobRequest) GetSizeLimit() int64 {
+	if x != nil {
+		return x.SizeLimit
+	}
+	return 0
+}
+
+type GetBlobResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Blob *Blob `protobuf:"bytes,1,opt,name=blob,proto3" json:"blob,omitempty"`
+}
+
+func (x *GetBlobResponse) Reset() {
+	*x = GetBlobResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_repo_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetBlobResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetBlobResponse) ProtoMessage() {}
+
+func (x *GetBlobResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_repo_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetBlobResponse.ProtoReflect.Descriptor instead.
+func (*GetBlobResponse) Descriptor() ([]byte, []int) {
+	return file_repo_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *GetBlobResponse) GetBlob() *Blob {
+	if x != nil {
+		return x.Blob
+	}
+	return nil
+}
+
+type Blob struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Sha     string `protobuf:"bytes,1,opt,name=sha,proto3" json:"sha,omitempty"`
+	Size    int64  `protobuf:"varint,2,opt,name=size,proto3" json:"size,omitempty"`
+	Content []byte `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+}
+
+func (x *Blob) Reset() {
+	*x = Blob{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_repo_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Blob) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Blob) ProtoMessage() {}
+
+func (x *Blob) ProtoReflect() protoreflect.Message {
+	mi := &file_repo_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Blob.ProtoReflect.Descriptor instead.
+func (*Blob) Descriptor() ([]byte, []int) {
+	return file_repo_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *Blob) GetSha() string {
+	if x != nil {
+		return x.Sha
+	}
+	return ""
+}
+
+func (x *Blob) GetSize() int64 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+func (x *Blob) GetContent() []byte {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
+type GetSubmoduleRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	RepoUid string `protobuf:"bytes,1,opt,name=repo_uid,json=repoUid,proto3" json:"repo_uid,omitempty"`
+	GitRef  string `protobuf:"bytes,2,opt,name=git_ref,json=gitRef,proto3" json:"git_ref,omitempty"`
+	Path    string `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
+}
+
+func (x *GetSubmoduleRequest) Reset() {
+	*x = GetSubmoduleRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_repo_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetSubmoduleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSubmoduleRequest) ProtoMessage() {}
+
+func (x *GetSubmoduleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_repo_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSubmoduleRequest.ProtoReflect.Descriptor instead.
+func (*GetSubmoduleRequest) Descriptor() ([]byte, []int) {
+	return file_repo_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *GetSubmoduleRequest) GetRepoUid() string {
+	if x != nil {
+		return x.RepoUid
+	}
+	return ""
+}
+
+func (x *GetSubmoduleRequest) GetGitRef() string {
+	if x != nil {
+		return x.GitRef
+	}
+	return ""
+}
+
+func (x *GetSubmoduleRequest) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+type GetSubmoduleResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Submodule *Submodule `protobuf:"bytes,1,opt,name=submodule,proto3" json:"submodule,omitempty"`
+}
+
+func (x *GetSubmoduleResponse) Reset() {
+	*x = GetSubmoduleResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_repo_proto_msgTypes[15]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetSubmoduleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSubmoduleResponse) ProtoMessage() {}
+
+func (x *GetSubmoduleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_repo_proto_msgTypes[15]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSubmoduleResponse.ProtoReflect.Descriptor instead.
+func (*GetSubmoduleResponse) Descriptor() ([]byte, []int) {
+	return file_repo_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *GetSubmoduleResponse) GetSubmodule() *Submodule {
+	if x != nil {
+		return x.Submodule
+	}
+	return nil
+}
+
+type Submodule struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Url  string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+}
+
+func (x *Submodule) Reset() {
+	*x = Submodule{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_repo_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Submodule) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Submodule) ProtoMessage() {}
+
+func (x *Submodule) ProtoReflect() protoreflect.Message {
+	mi := &file_repo_proto_msgTypes[16]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Submodule.ProtoReflect.Descriptor instead.
+func (*Submodule) Descriptor() ([]byte, []int) {
+	return file_repo_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *Submodule) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Submodule) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
 }
 
 var File_repo_proto protoreflect.FileDescriptor
@@ -615,77 +1177,154 @@ var File_repo_proto protoreflect.FileDescriptor
 var file_repo_proto_rawDesc = []byte{
 	0x0a, 0x0a, 0x72, 0x65, 0x70, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x03, 0x72, 0x70,
 	0x63, 0x1a, 0x0c, 0x73, 0x68, 0x61, 0x72, 0x65, 0x64, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
-	0x96, 0x01, 0x0a, 0x17, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69,
-	0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x31, 0x0a, 0x0a, 0x72,
-	0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x0f, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72, 0x79,
-	0x48, 0x00, 0x52, 0x0a, 0x72, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72, 0x79, 0x12, 0x1c,
-	0x0a, 0x08, 0x66, 0x69, 0x6c, 0x65, 0x70, 0x61, 0x74, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x48, 0x00, 0x52, 0x08, 0x66, 0x69, 0x6c, 0x65, 0x70, 0x61, 0x74, 0x68, 0x12, 0x22, 0x0a, 0x05,
-	0x63, 0x68, 0x75, 0x6e, 0x6b, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0a, 0x2e, 0x72, 0x70,
-	0x63, 0x2e, 0x43, 0x68, 0x75, 0x6e, 0x6b, 0x48, 0x00, 0x52, 0x05, 0x63, 0x68, 0x75, 0x6e, 0x6b,
-	0x42, 0x06, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x37, 0x0a, 0x18, 0x43, 0x72, 0x65, 0x61,
-	0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x74, 0x65, 0x6d, 0x70, 0x5f, 0x70, 0x61, 0x74,
-	0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x74, 0x65, 0x6d, 0x70, 0x50, 0x61, 0x74,
-	0x68, 0x22, 0x64, 0x0a, 0x11, 0x55, 0x70, 0x6c, 0x6f, 0x61, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x23, 0x0a, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x0d, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x46, 0x69, 0x6c, 0x65, 0x49,
-	0x6e, 0x66, 0x6f, 0x48, 0x00, 0x52, 0x04, 0x69, 0x6e, 0x66, 0x6f, 0x12, 0x22, 0x0a, 0x05, 0x63,
-	0x68, 0x75, 0x6e, 0x6b, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0a, 0x2e, 0x72, 0x70, 0x63,
-	0x2e, 0x43, 0x68, 0x75, 0x6e, 0x6b, 0x48, 0x00, 0x52, 0x05, 0x63, 0x68, 0x75, 0x6e, 0x6b, 0x42,
-	0x06, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x38, 0x0a, 0x12, 0x55, 0x70, 0x6c, 0x6f, 0x61,
-	0x64, 0x46, 0x69, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x0e, 0x0a,
-	0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a,
-	0x04, 0x73, 0x69, 0x7a, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x04, 0x73, 0x69, 0x7a,
-	0x65, 0x22, 0xb0, 0x01, 0x0a, 0x08, 0x46, 0x69, 0x6c, 0x65, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x0e,
-	0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1a,
-	0x0a, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x72, 0x65,
-	0x70, 0x6f, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x72, 0x65, 0x70, 0x6f, 0x12, 0x16,
-	0x0a, 0x06, 0x62, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
-	0x62, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x12, 0x1b, 0x0a, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x5f, 0x70,
-	0x61, 0x74, 0x68, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x50,
-	0x61, 0x74, 0x68, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74, 0x68, 0x18, 0x06, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x12, 0x1b, 0x0a, 0x09, 0x66, 0x69, 0x6c, 0x65, 0x5f,
-	0x74, 0x79, 0x70, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x69, 0x6c, 0x65,
-	0x54, 0x79, 0x70, 0x65, 0x22, 0x65, 0x0a, 0x16, 0x41, 0x64, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x73,
-	0x41, 0x6e, 0x64, 0x50, 0x75, 0x73, 0x68, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b,
-	0x0a, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x5f, 0x70, 0x61, 0x74, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x50, 0x61, 0x74, 0x68, 0x12, 0x18, 0x0a, 0x07, 0x6d,
-	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65,
-	0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x66, 0x69, 0x6c, 0x65, 0x73, 0x18, 0x03,
-	0x20, 0x03, 0x28, 0x09, 0x52, 0x05, 0x66, 0x69, 0x6c, 0x65, 0x73, 0x22, 0x19, 0x0a, 0x17, 0x41,
-	0x64, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x41, 0x6e, 0x64, 0x50, 0x75, 0x73, 0x68, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5d, 0x0a, 0x0a, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69,
-	0x74, 0x6f, 0x72, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61,
-	0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x25,
-	0x0a, 0x0e, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x62, 0x72, 0x61, 0x6e, 0x63, 0x68,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x42,
-	0x72, 0x61, 0x6e, 0x63, 0x68, 0x22, 0x2d, 0x0a, 0x05, 0x43, 0x68, 0x75, 0x6e, 0x6b, 0x12, 0x10,
-	0x0a, 0x03, 0x65, 0x6f, 0x66, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x03, 0x65, 0x6f, 0x66,
-	0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x04,
-	0x64, 0x61, 0x74, 0x61, 0x32, 0xb4, 0x01, 0x0a, 0x11, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74,
-	0x6f, 0x72, 0x79, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x51, 0x0a, 0x10, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72, 0x79, 0x12, 0x1c,
-	0x2e, 0x72, 0x70, 0x63, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x73,
-	0x69, 0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x72,
-	0x70, 0x63, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74,
-	0x6f, 0x72, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x28, 0x01, 0x12, 0x4c, 0x0a,
-	0x0f, 0x41, 0x64, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x41, 0x6e, 0x64, 0x50, 0x75, 0x73, 0x68,
-	0x12, 0x1b, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x41, 0x64, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x41,
-	0x6e, 0x64, 0x50, 0x75, 0x73, 0x68, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c, 0x2e,
-	0x72, 0x70, 0x63, 0x2e, 0x41, 0x64, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x41, 0x6e, 0x64, 0x50,
-	0x75, 0x73, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0x4e, 0x0a, 0x0d, 0x55,
-	0x70, 0x6c, 0x6f, 0x61, 0x64, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3d, 0x0a, 0x06,
-	0x55, 0x70, 0x6c, 0x6f, 0x61, 0x64, 0x12, 0x16, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x55, 0x70, 0x6c,
-	0x6f, 0x61, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x17,
-	0x2e, 0x72, 0x70, 0x63, 0x2e, 0x55, 0x70, 0x6c, 0x6f, 0x61, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x28, 0x01, 0x42, 0x27, 0x5a, 0x25, 0x67,
-	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x68, 0x61, 0x72, 0x6e, 0x65, 0x73,
-	0x73, 0x2f, 0x67, 0x69, 0x74, 0x6e, 0x65, 0x73, 0x73, 0x2f, 0x67, 0x69, 0x74, 0x72, 0x70, 0x63,
-	0x2f, 0x72, 0x70, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x86, 0x01, 0x0a, 0x17, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69,
+	0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3c, 0x0a, 0x06, 0x68,
+	0x65, 0x61, 0x64, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x72, 0x70,
+	0x63, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f,
+	0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x48, 0x65, 0x61, 0x64, 0x65, 0x72, 0x48,
+	0x00, 0x52, 0x06, 0x68, 0x65, 0x61, 0x64, 0x65, 0x72, 0x12, 0x25, 0x0a, 0x04, 0x66, 0x69, 0x6c,
+	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x46, 0x69,
+	0x6c, 0x65, 0x55, 0x70, 0x6c, 0x6f, 0x61, 0x64, 0x48, 0x00, 0x52, 0x04, 0x66, 0x69, 0x6c, 0x65,
+	0x42, 0x06, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x58, 0x0a, 0x1d, 0x43, 0x72, 0x65, 0x61,
+	0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x48, 0x65, 0x61, 0x64, 0x65, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x69, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x69, 0x64, 0x12, 0x25, 0x0a, 0x0e, 0x64,
+	0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x62, 0x72, 0x61, 0x6e, 0x63, 0x68, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0d, 0x64, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x42, 0x72, 0x61, 0x6e,
+	0x63, 0x68, 0x22, 0x1a, 0x0a, 0x18, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f,
+	0x73, 0x69, 0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x90,
+	0x01, 0x0a, 0x12, 0x47, 0x65, 0x74, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x5f, 0x75, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x72, 0x65, 0x70, 0x6f, 0x55, 0x69, 0x64,
+	0x12, 0x17, 0x0a, 0x07, 0x67, 0x69, 0x74, 0x5f, 0x72, 0x65, 0x66, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x06, 0x67, 0x69, 0x74, 0x52, 0x65, 0x66, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74,
+	0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x12, 0x32, 0x0a,
+	0x15, 0x69, 0x6e, 0x63, 0x6c, 0x75, 0x64, 0x65, 0x5f, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x5f,
+	0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x13, 0x69, 0x6e,
+	0x63, 0x6c, 0x75, 0x64, 0x65, 0x4c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
+	0x74, 0x22, 0x5d, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x21, 0x0a, 0x04, 0x6e, 0x6f, 0x64, 0x65,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0d, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x54, 0x72, 0x65,
+	0x65, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x04, 0x6e, 0x6f, 0x64, 0x65, 0x12, 0x23, 0x0a, 0x06, 0x63,
+	0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x72, 0x70,
+	0x63, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x06, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74,
+	0x22, 0xb0, 0x01, 0x0a, 0x14, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64,
+	0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x72, 0x65, 0x70,
+	0x6f, 0x5f, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x72, 0x65, 0x70,
+	0x6f, 0x55, 0x69, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x67, 0x69, 0x74, 0x5f, 0x72, 0x65, 0x66, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x67, 0x69, 0x74, 0x52, 0x65, 0x66, 0x12, 0x12, 0x0a,
+	0x04, 0x70, 0x61, 0x74, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x61, 0x74,
+	0x68, 0x12, 0x32, 0x0a, 0x15, 0x69, 0x6e, 0x63, 0x6c, 0x75, 0x64, 0x65, 0x5f, 0x6c, 0x61, 0x74,
+	0x65, 0x73, 0x74, 0x5f, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08,
+	0x52, 0x13, 0x69, 0x6e, 0x63, 0x6c, 0x75, 0x64, 0x65, 0x4c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x43,
+	0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x72, 0x65, 0x63, 0x75, 0x72, 0x73, 0x69,
+	0x76, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x72, 0x65, 0x63, 0x75, 0x72, 0x73,
+	0x69, 0x76, 0x65, 0x22, 0x5f, 0x0a, 0x15, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x72, 0x65, 0x65, 0x4e,
+	0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x21, 0x0a, 0x04,
+	0x6e, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0d, 0x2e, 0x72, 0x70, 0x63,
+	0x2e, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x04, 0x6e, 0x6f, 0x64, 0x65, 0x12,
+	0x23, 0x0a, 0x06, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x0b, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x06, 0x63, 0x6f,
+	0x6d, 0x6d, 0x69, 0x74, 0x22, 0x92, 0x01, 0x0a, 0x08, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64,
+	0x65, 0x12, 0x25, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32,
+	0x11, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x54, 0x79,
+	0x70, 0x65, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x25, 0x0a, 0x04, 0x6d, 0x6f, 0x64, 0x65,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x54, 0x72, 0x65,
+	0x65, 0x4e, 0x6f, 0x64, 0x65, 0x4d, 0x6f, 0x64, 0x65, 0x52, 0x04, 0x6d, 0x6f, 0x64, 0x65, 0x12,
+	0x10, 0x0a, 0x03, 0x73, 0x68, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x73, 0x68,
+	0x61, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74, 0x68, 0x18, 0x05, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x22, 0x78, 0x0a, 0x12, 0x4c, 0x69, 0x73,
+	0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x19, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x5f, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x07, 0x72, 0x65, 0x70, 0x6f, 0x55, 0x69, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x67, 0x69,
+	0x74, 0x5f, 0x72, 0x65, 0x66, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x67, 0x69, 0x74,
+	0x52, 0x65, 0x66, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x67, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x05, 0x52, 0x04, 0x70, 0x61, 0x67, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x67, 0x65, 0x53,
+	0x69, 0x7a, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x70, 0x61, 0x67, 0x65, 0x53,
+	0x69, 0x7a, 0x65, 0x22, 0x7e, 0x0a, 0x13, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
+	0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x38, 0x0a, 0x06, 0x68, 0x65,
+	0x61, 0x64, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x72, 0x70, 0x63,
+	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x48, 0x65, 0x61, 0x64, 0x65, 0x72, 0x48, 0x00, 0x52, 0x06, 0x68, 0x65,
+	0x61, 0x64, 0x65, 0x72, 0x12, 0x25, 0x0a, 0x06, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
+	0x74, 0x48, 0x00, 0x52, 0x06, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x42, 0x06, 0x0a, 0x04, 0x64,
+	0x61, 0x74, 0x61, 0x22, 0x3c, 0x0a, 0x19, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
+	0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x48, 0x65, 0x61, 0x64, 0x65, 0x72,
+	0x12, 0x1f, 0x0a, 0x0b, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0a, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x43, 0x6f, 0x75, 0x6e,
+	0x74, 0x22, 0x5b, 0x0a, 0x0e, 0x47, 0x65, 0x74, 0x42, 0x6c, 0x6f, 0x62, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x5f, 0x75, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x72, 0x65, 0x70, 0x6f, 0x55, 0x69, 0x64, 0x12, 0x10,
+	0x0a, 0x03, 0x73, 0x68, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x73, 0x68, 0x61,
+	0x12, 0x1c, 0x0a, 0x09, 0x73, 0x69, 0x7a, 0x65, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x03, 0x52, 0x09, 0x73, 0x69, 0x7a, 0x65, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x22, 0x30,
+	0x0a, 0x0f, 0x47, 0x65, 0x74, 0x42, 0x6c, 0x6f, 0x62, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x1d, 0x0a, 0x04, 0x62, 0x6c, 0x6f, 0x62, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x09, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x42, 0x6c, 0x6f, 0x62, 0x52, 0x04, 0x62, 0x6c, 0x6f, 0x62,
+	0x22, 0x46, 0x0a, 0x04, 0x42, 0x6c, 0x6f, 0x62, 0x12, 0x10, 0x0a, 0x03, 0x73, 0x68, 0x61, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x73, 0x68, 0x61, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x69,
+	0x7a, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x73, 0x69, 0x7a, 0x65, 0x12, 0x18,
+	0x0a, 0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x07, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x22, 0x5d, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x53,
+	0x75, 0x62, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x19, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x5f, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x07, 0x72, 0x65, 0x70, 0x6f, 0x55, 0x69, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x67, 0x69,
+	0x74, 0x5f, 0x72, 0x65, 0x66, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x67, 0x69, 0x74,
+	0x52, 0x65, 0x66, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x22, 0x44, 0x0a, 0x14, 0x47, 0x65, 0x74, 0x53, 0x75,
+	0x62, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x2c, 0x0a, 0x09, 0x73, 0x75, 0x62, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x53, 0x75, 0x62, 0x6d, 0x6f, 0x64, 0x75,
+	0x6c, 0x65, 0x52, 0x09, 0x73, 0x75, 0x62, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x22, 0x31, 0x0a,
+	0x09, 0x53, 0x75, 0x62, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61,
+	0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x10,
+	0x0a, 0x03, 0x75, 0x72, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x75, 0x72, 0x6c,
+	0x2a, 0x52, 0x0a, 0x0c, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x54, 0x79, 0x70, 0x65,
+	0x12, 0x14, 0x0a, 0x10, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x54, 0x79, 0x70, 0x65,
+	0x54, 0x72, 0x65, 0x65, 0x10, 0x00, 0x12, 0x14, 0x0a, 0x10, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f,
+	0x64, 0x65, 0x54, 0x79, 0x70, 0x65, 0x42, 0x6c, 0x6f, 0x62, 0x10, 0x01, 0x12, 0x16, 0x0a, 0x12,
+	0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x54, 0x79, 0x70, 0x65, 0x43, 0x6f, 0x6d, 0x6d,
+	0x69, 0x74, 0x10, 0x02, 0x2a, 0x81, 0x01, 0x0a, 0x0c, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64,
+	0x65, 0x4d, 0x6f, 0x64, 0x65, 0x12, 0x14, 0x0a, 0x10, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64,
+	0x65, 0x4d, 0x6f, 0x64, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x10, 0x00, 0x12, 0x17, 0x0a, 0x13, 0x54,
+	0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x4d, 0x6f, 0x64, 0x65, 0x53, 0x79, 0x6d, 0x6c, 0x69,
+	0x6e, 0x6b, 0x10, 0x01, 0x12, 0x14, 0x0a, 0x10, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65,
+	0x4d, 0x6f, 0x64, 0x65, 0x45, 0x78, 0x65, 0x63, 0x10, 0x02, 0x12, 0x14, 0x0a, 0x10, 0x54, 0x72,
+	0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x4d, 0x6f, 0x64, 0x65, 0x54, 0x72, 0x65, 0x65, 0x10, 0x03,
+	0x12, 0x16, 0x0a, 0x12, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x4d, 0x6f, 0x64, 0x65,
+	0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x10, 0x04, 0x32, 0xb1, 0x03, 0x0a, 0x11, 0x52, 0x65, 0x70,
+	0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72, 0x79, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x51,
+	0x0a, 0x10, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f,
+	0x72, 0x79, 0x12, 0x1c, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52,
+	0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x1d, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70,
+	0x6f, 0x73, 0x69, 0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x28,
+	0x01, 0x12, 0x40, 0x0a, 0x0b, 0x47, 0x65, 0x74, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65,
+	0x12, 0x17, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x47, 0x65, 0x74, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f,
+	0x64, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x18, 0x2e, 0x72, 0x70, 0x63, 0x2e,
+	0x47, 0x65, 0x74, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x48, 0x0a, 0x0d, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x72, 0x65, 0x65, 0x4e,
+	0x6f, 0x64, 0x65, 0x73, 0x12, 0x19, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54,
+	0x72, 0x65, 0x65, 0x4e, 0x6f, 0x64, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x1a, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x72, 0x65, 0x65, 0x4e, 0x6f,
+	0x64, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x30, 0x01, 0x12, 0x43, 0x0a,
+	0x0c, 0x47, 0x65, 0x74, 0x53, 0x75, 0x62, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x12, 0x18, 0x2e,
+	0x72, 0x70, 0x63, 0x2e, 0x47, 0x65, 0x74, 0x53, 0x75, 0x62, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x19, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x47, 0x65,
+	0x74, 0x53, 0x75, 0x62, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x34, 0x0a, 0x07, 0x47, 0x65, 0x74, 0x42, 0x6c, 0x6f, 0x62, 0x12, 0x13, 0x2e,
+	0x72, 0x70, 0x63, 0x2e, 0x47, 0x65, 0x74, 0x42, 0x6c, 0x6f, 0x62, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x14, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x47, 0x65, 0x74, 0x42, 0x6c, 0x6f, 0x62,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x42, 0x0a, 0x0b, 0x4c, 0x69, 0x73, 0x74,
+	0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x73, 0x12, 0x17, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x4c, 0x69,
+	0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x18, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
+	0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x30, 0x01, 0x42, 0x27, 0x5a, 0x25,
+	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x68, 0x61, 0x72, 0x6e, 0x65,
+	0x73, 0x73, 0x2f, 0x67, 0x69, 0x74, 0x6e, 0x65, 0x73, 0x73, 0x2f, 0x67, 0x69, 0x74, 0x72, 0x70,
+	0x63, 0x2f, 0x72, 0x70, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -700,34 +1339,61 @@ func file_repo_proto_rawDescGZIP() []byte {
 	return file_repo_proto_rawDescData
 }
 
-var file_repo_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_repo_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_repo_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_repo_proto_goTypes = []interface{}{
-	(*CreateRepositoryRequest)(nil),  // 0: rpc.CreateRepositoryRequest
-	(*CreateRepositoryResponse)(nil), // 1: rpc.CreateRepositoryResponse
-	(*UploadFileRequest)(nil),        // 2: rpc.UploadFileRequest
-	(*UploadFileResponse)(nil),       // 3: rpc.UploadFileResponse
-	(*FileInfo)(nil),                 // 4: rpc.FileInfo
-	(*AddFilesAndPushRequest)(nil),   // 5: rpc.AddFilesAndPushRequest
-	(*AddFilesAndPushResponse)(nil),  // 6: rpc.AddFilesAndPushResponse
-	(*Repository)(nil),               // 7: rpc.Repository
-	(*Chunk)(nil),                    // 8: rpc.Chunk
+	(TreeNodeType)(0),                     // 0: rpc.TreeNodeType
+	(TreeNodeMode)(0),                     // 1: rpc.TreeNodeMode
+	(*CreateRepositoryRequest)(nil),       // 2: rpc.CreateRepositoryRequest
+	(*CreateRepositoryRequestHeader)(nil), // 3: rpc.CreateRepositoryRequestHeader
+	(*CreateRepositoryResponse)(nil),      // 4: rpc.CreateRepositoryResponse
+	(*GetTreeNodeRequest)(nil),            // 5: rpc.GetTreeNodeRequest
+	(*GetTreeNodeResponse)(nil),           // 6: rpc.GetTreeNodeResponse
+	(*ListTreeNodesRequest)(nil),          // 7: rpc.ListTreeNodesRequest
+	(*ListTreeNodesResponse)(nil),         // 8: rpc.ListTreeNodesResponse
+	(*TreeNode)(nil),                      // 9: rpc.TreeNode
+	(*ListCommitsRequest)(nil),            // 10: rpc.ListCommitsRequest
+	(*ListCommitsResponse)(nil),           // 11: rpc.ListCommitsResponse
+	(*ListCommitsResponseHeader)(nil),     // 12: rpc.ListCommitsResponseHeader
+	(*GetBlobRequest)(nil),                // 13: rpc.GetBlobRequest
+	(*GetBlobResponse)(nil),               // 14: rpc.GetBlobResponse
+	(*Blob)(nil),                          // 15: rpc.Blob
+	(*GetSubmoduleRequest)(nil),           // 16: rpc.GetSubmoduleRequest
+	(*GetSubmoduleResponse)(nil),          // 17: rpc.GetSubmoduleResponse
+	(*Submodule)(nil),                     // 18: rpc.Submodule
+	(*FileUpload)(nil),                    // 19: rpc.FileUpload
+	(*Commit)(nil),                        // 20: rpc.Commit
 }
 var file_repo_proto_depIdxs = []int32{
-	7, // 0: rpc.CreateRepositoryRequest.repository:type_name -> rpc.Repository
-	8, // 1: rpc.CreateRepositoryRequest.chunk:type_name -> rpc.Chunk
-	4, // 2: rpc.UploadFileRequest.info:type_name -> rpc.FileInfo
-	8, // 3: rpc.UploadFileRequest.chunk:type_name -> rpc.Chunk
-	0, // 4: rpc.RepositoryService.CreateRepository:input_type -> rpc.CreateRepositoryRequest
-	5, // 5: rpc.RepositoryService.AddFilesAndPush:input_type -> rpc.AddFilesAndPushRequest
-	2, // 6: rpc.UploadService.Upload:input_type -> rpc.UploadFileRequest
-	1, // 7: rpc.RepositoryService.CreateRepository:output_type -> rpc.CreateRepositoryResponse
-	6, // 8: rpc.RepositoryService.AddFilesAndPush:output_type -> rpc.AddFilesAndPushResponse
-	3, // 9: rpc.UploadService.Upload:output_type -> rpc.UploadFileResponse
-	7, // [7:10] is the sub-list for method output_type
-	4, // [4:7] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	3,  // 0: rpc.CreateRepositoryRequest.header:type_name -> rpc.CreateRepositoryRequestHeader
+	19, // 1: rpc.CreateRepositoryRequest.file:type_name -> rpc.FileUpload
+	9,  // 2: rpc.GetTreeNodeResponse.node:type_name -> rpc.TreeNode
+	20, // 3: rpc.GetTreeNodeResponse.commit:type_name -> rpc.Commit
+	9,  // 4: rpc.ListTreeNodesResponse.node:type_name -> rpc.TreeNode
+	20, // 5: rpc.ListTreeNodesResponse.commit:type_name -> rpc.Commit
+	0,  // 6: rpc.TreeNode.type:type_name -> rpc.TreeNodeType
+	1,  // 7: rpc.TreeNode.mode:type_name -> rpc.TreeNodeMode
+	12, // 8: rpc.ListCommitsResponse.header:type_name -> rpc.ListCommitsResponseHeader
+	20, // 9: rpc.ListCommitsResponse.commit:type_name -> rpc.Commit
+	15, // 10: rpc.GetBlobResponse.blob:type_name -> rpc.Blob
+	18, // 11: rpc.GetSubmoduleResponse.submodule:type_name -> rpc.Submodule
+	2,  // 12: rpc.RepositoryService.CreateRepository:input_type -> rpc.CreateRepositoryRequest
+	5,  // 13: rpc.RepositoryService.GetTreeNode:input_type -> rpc.GetTreeNodeRequest
+	7,  // 14: rpc.RepositoryService.ListTreeNodes:input_type -> rpc.ListTreeNodesRequest
+	16, // 15: rpc.RepositoryService.GetSubmodule:input_type -> rpc.GetSubmoduleRequest
+	13, // 16: rpc.RepositoryService.GetBlob:input_type -> rpc.GetBlobRequest
+	10, // 17: rpc.RepositoryService.ListCommits:input_type -> rpc.ListCommitsRequest
+	4,  // 18: rpc.RepositoryService.CreateRepository:output_type -> rpc.CreateRepositoryResponse
+	6,  // 19: rpc.RepositoryService.GetTreeNode:output_type -> rpc.GetTreeNodeResponse
+	8,  // 20: rpc.RepositoryService.ListTreeNodes:output_type -> rpc.ListTreeNodesResponse
+	17, // 21: rpc.RepositoryService.GetSubmodule:output_type -> rpc.GetSubmoduleResponse
+	14, // 22: rpc.RepositoryService.GetBlob:output_type -> rpc.GetBlobResponse
+	11, // 23: rpc.RepositoryService.ListCommits:output_type -> rpc.ListCommitsResponse
+	18, // [18:24] is the sub-list for method output_type
+	12, // [12:18] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_repo_proto_init() }
@@ -750,7 +1416,7 @@ func file_repo_proto_init() {
 			}
 		}
 		file_repo_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateRepositoryResponse); i {
+			switch v := v.(*CreateRepositoryRequestHeader); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -762,7 +1428,7 @@ func file_repo_proto_init() {
 			}
 		}
 		file_repo_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UploadFileRequest); i {
+			switch v := v.(*CreateRepositoryResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -774,7 +1440,7 @@ func file_repo_proto_init() {
 			}
 		}
 		file_repo_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UploadFileResponse); i {
+			switch v := v.(*GetTreeNodeRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -786,7 +1452,7 @@ func file_repo_proto_init() {
 			}
 		}
 		file_repo_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FileInfo); i {
+			switch v := v.(*GetTreeNodeResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -798,7 +1464,7 @@ func file_repo_proto_init() {
 			}
 		}
 		file_repo_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddFilesAndPushRequest); i {
+			switch v := v.(*ListTreeNodesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -810,7 +1476,7 @@ func file_repo_proto_init() {
 			}
 		}
 		file_repo_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddFilesAndPushResponse); i {
+			switch v := v.(*ListTreeNodesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -822,7 +1488,7 @@ func file_repo_proto_init() {
 			}
 		}
 		file_repo_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Repository); i {
+			switch v := v.(*TreeNode); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -834,7 +1500,103 @@ func file_repo_proto_init() {
 			}
 		}
 		file_repo_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Chunk); i {
+			switch v := v.(*ListCommitsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_repo_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListCommitsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_repo_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListCommitsResponseHeader); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_repo_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetBlobRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_repo_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetBlobResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_repo_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Blob); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_repo_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetSubmoduleRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_repo_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetSubmoduleResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_repo_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Submodule); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -847,26 +1609,26 @@ func file_repo_proto_init() {
 		}
 	}
 	file_repo_proto_msgTypes[0].OneofWrappers = []interface{}{
-		(*CreateRepositoryRequest_Repository)(nil),
-		(*CreateRepositoryRequest_Filepath)(nil),
-		(*CreateRepositoryRequest_Chunk)(nil),
+		(*CreateRepositoryRequest_Header)(nil),
+		(*CreateRepositoryRequest_File)(nil),
 	}
-	file_repo_proto_msgTypes[2].OneofWrappers = []interface{}{
-		(*UploadFileRequest_Info)(nil),
-		(*UploadFileRequest_Chunk)(nil),
+	file_repo_proto_msgTypes[9].OneofWrappers = []interface{}{
+		(*ListCommitsResponse_Header)(nil),
+		(*ListCommitsResponse_Commit)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_repo_proto_rawDesc,
-			NumEnums:      0,
-			NumMessages:   9,
+			NumEnums:      2,
+			NumMessages:   17,
 			NumExtensions: 0,
-			NumServices:   2,
+			NumServices:   1,
 		},
 		GoTypes:           file_repo_proto_goTypes,
 		DependencyIndexes: file_repo_proto_depIdxs,
+		EnumInfos:         file_repo_proto_enumTypes,
 		MessageInfos:      file_repo_proto_msgTypes,
 	}.Build()
 	File_repo_proto = out.File

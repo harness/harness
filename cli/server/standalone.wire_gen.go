@@ -41,11 +41,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	authenticator := authn.ProvideAuthenticator(userStore, serviceAccountStore, tokenStore)
 	spaceStore := database.ProvideSpaceStore(db)
 	repoStore := database.ProvideRepoStore(db)
-	gitrpcInterface, err := gitrpc.ProvideClient()
+	gitrpcInterface, err := gitrpc.ProvideClient(config)
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.NewController(authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
+	repoController := repo.ProvideController(authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
 	spaceController := space.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
 	serviceaccountController := serviceaccount.NewController(authorizer, serviceAccountStore, spaceStore, repoStore, tokenStore)
 	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, repoController, spaceController, serviceaccountController, controller)
@@ -53,7 +53,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	webHandler := router.ProvideWebHandler(systemStore)
 	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
+	gitrpcServer, err := gitrpc.ProvideServer(config)
+	if err != nil {
+		return nil, err
+	}
 	nightly := cron.NewNightly()
-	serverSystem := newSystem(bootstrapBootstrap, serverServer, nightly)
+	serverSystem := newSystem(bootstrapBootstrap, serverServer, gitrpcServer, nightly)
 	return serverSystem, nil
 }

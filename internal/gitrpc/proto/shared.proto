@@ -2,3 +2,45 @@ syntax = "proto3";
 package rpc;
 
 option go_package = "github.com/harness/gitness/gitrpc/rpc";
+
+message FileUpload{
+  oneof data {
+    FileUploadHeader header = 1;
+    Chunk chunk             = 2;
+  }
+}
+
+message FileUploadHeader {
+  string path = 1;
+}
+
+message Chunk {
+  bool eof   = 1;
+  bytes data = 2;
+}
+
+message CommitRequest {
+  string title       = 1;
+  string message     = 2;
+  Identity author    = 3;
+  Identity committer = 4;
+}
+
+message Commit {
+  string sha          = 1;
+  string title        = 2;
+  string message      = 3;
+  Signature author    = 4;
+  Signature committer = 5;
+}
+
+message Signature {
+    Identity identity = 1;
+    int64 when        = 2;
+}
+
+
+message Identity {
+  string name  = 1;
+  string email = 2;
+}

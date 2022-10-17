@@ -23,7 +23,11 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RepositoryServiceClient interface {
 	CreateRepository(ctx context.Context, opts ...grpc.CallOption) (RepositoryService_CreateRepositoryClient, error)
-	AddFilesAndPush(ctx context.Context, in *AddFilesAndPushRequest, opts ...grpc.CallOption) (*AddFilesAndPushResponse, error)
+	GetTreeNode(ctx context.Context, in *GetTreeNodeRequest, opts ...grpc.CallOption) (*GetTreeNodeResponse, error)
+	ListTreeNodes(ctx context.Context, in *ListTreeNodesRequest, opts ...grpc.CallOption) (RepositoryService_ListTreeNodesClient, error)
+	GetSubmodule(ctx context.Context, in *GetSubmoduleRequest, opts ...grpc.CallOption) (*GetSubmoduleResponse, error)
+	GetBlob(ctx context.Context, in *GetBlobRequest, opts ...grpc.CallOption) (*GetBlobResponse, error)
+	ListCommits(ctx context.Context, in *ListCommitsRequest, opts ...grpc.CallOption) (RepositoryService_ListCommitsClient, error)
 }
 
 type repositoryServiceClient struct {
@@ -68,13 +72,95 @@ func (x *repositoryServiceCreateRepositoryClient) CloseAndRecv() (*CreateReposit
 	return m, nil
 }
 
-func (c *repositoryServiceClient) AddFilesAndPush(ctx context.Context, in *AddFilesAndPushRequest, opts ...grpc.CallOption) (*AddFilesAndPushResponse, error) {
-	out := new(AddFilesAndPushResponse)
-	err := c.cc.Invoke(ctx, "/rpc.RepositoryService/AddFilesAndPush", in, out, opts...)
+func (c *repositoryServiceClient) GetTreeNode(ctx context.Context, in *GetTreeNodeRequest, opts ...grpc.CallOption) (*GetTreeNodeResponse, error) {
+	out := new(GetTreeNodeResponse)
+	err := c.cc.Invoke(ctx, "/rpc.RepositoryService/GetTreeNode", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *repositoryServiceClient) ListTreeNodes(ctx context.Context, in *ListTreeNodesRequest, opts ...grpc.CallOption) (RepositoryService_ListTreeNodesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &RepositoryService_ServiceDesc.Streams[1], "/rpc.RepositoryService/ListTreeNodes", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &repositoryServiceListTreeNodesClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type RepositoryService_ListTreeNodesClient interface {
+	Recv() (*ListTreeNodesResponse, error)
+	grpc.ClientStream
+}
+
+type repositoryServiceListTreeNodesClient struct {
+	grpc.ClientStream
+}
+
+func (x *repositoryServiceListTreeNodesClient) Recv() (*ListTreeNodesResponse, error) {
+	m := new(ListTreeNodesResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *repositoryServiceClient) GetSubmodule(ctx context.Context, in *GetSubmoduleRequest, opts ...grpc.CallOption) (*GetSubmoduleResponse, error) {
+	out := new(GetSubmoduleResponse)
+	err := c.cc.Invoke(ctx, "/rpc.RepositoryService/GetSubmodule", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *repositoryServiceClient) GetBlob(ctx context.Context, in *GetBlobRequest, opts ...grpc.CallOption) (*GetBlobResponse, error) {
+	out := new(GetBlobResponse)
+	err := c.cc.Invoke(ctx, "/rpc.RepositoryService/GetBlob", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *repositoryServiceClient) ListCommits(ctx context.Context, in *ListCommitsRequest, opts ...grpc.CallOption) (RepositoryService_ListCommitsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &RepositoryService_ServiceDesc.Streams[2], "/rpc.RepositoryService/ListCommits", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &repositoryServiceListCommitsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type RepositoryService_ListCommitsClient interface {
+	Recv() (*ListCommitsResponse, error)
+	grpc.ClientStream
+}
+
+type repositoryServiceListCommitsClient struct {
+	grpc.ClientStream
+}
+
+func (x *repositoryServiceListCommitsClient) Recv() (*ListCommitsResponse, error) {
+	m := new(ListCommitsResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // RepositoryServiceServer is the server API for RepositoryService service.
@@ -82,7 +168,11 @@ func (c *repositoryServiceClient) AddFilesAndPush(ctx context.Context, in *AddFi
 // for forward compatibility
 type RepositoryServiceServer interface {
 	CreateRepository(RepositoryService_CreateRepositoryServer) error
-	AddFilesAndPush(context.Context, *AddFilesAndPushRequest) (*AddFilesAndPushResponse, error)
+	GetTreeNode(context.Context, *GetTreeNodeRequest) (*GetTreeNodeResponse, error)
+	ListTreeNodes(*ListTreeNodesRequest, RepositoryService_ListTreeNodesServer) error
+	GetSubmodule(context.Context, *GetSubmoduleRequest) (*GetSubmoduleResponse, error)
+	GetBlob(context.Context, *GetBlobRequest) (*GetBlobResponse, error)
+	ListCommits(*ListCommitsRequest, RepositoryService_ListCommitsServer) error
 	mustEmbedUnimplementedRepositoryServiceServer()
 }
 
@@ -93,8 +183,20 @@ type UnimplementedRepositoryServiceServer struct {
 func (UnimplementedRepositoryServiceServer) CreateRepository(RepositoryService_CreateRepositoryServer) error {
 	return status.Errorf(codes.Unimplemented, "method CreateRepository not implemented")
 }
-func (UnimplementedRepositoryServiceServer) AddFilesAndPush(context.Context, *AddFilesAndPushRequest) (*AddFilesAndPushResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddFilesAndPush not implemented")
+func (UnimplementedRepositoryServiceServer) GetTreeNode(context.Context, *GetTreeNodeRequest) (*GetTreeNodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTreeNode not implemented")
+}
+func (UnimplementedRepositoryServiceServer) ListTreeNodes(*ListTreeNodesRequest, RepositoryService_ListTreeNodesServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListTreeNodes not implemented")
+}
+func (UnimplementedRepositoryServiceServer) GetSubmodule(context.Context, *GetSubmoduleRequest) (*GetSubmoduleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSubmodule not implemented")
+}
+func (UnimplementedRepositoryServiceServer) GetBlob(context.Context, *GetBlobRequest) (*GetBlobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBlob not implemented")
+}
+func (UnimplementedRepositoryServiceServer) ListCommits(*ListCommitsRequest, RepositoryService_ListCommitsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListCommits not implemented")
 }
 func (UnimplementedRepositoryServiceServer) mustEmbedUnimplementedRepositoryServiceServer() {}
 
@@ -135,22 +237,100 @@ func (x *repositoryServiceCreateRepositoryServer) Recv() (*CreateRepositoryReque
 	return m, nil
 }
 
-func _RepositoryService_AddFilesAndPush_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddFilesAndPushRequest)
+func _RepositoryService_GetTreeNode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTreeNodeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RepositoryServiceServer).AddFilesAndPush(ctx, in)
+		return srv.(RepositoryServiceServer).GetTreeNode(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/rpc.RepositoryService/AddFilesAndPush",
+		FullMethod: "/rpc.RepositoryService/GetTreeNode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RepositoryServiceServer).AddFilesAndPush(ctx, req.(*AddFilesAndPushRequest))
+		return srv.(RepositoryServiceServer).GetTreeNode(ctx, req.(*GetTreeNodeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _RepositoryService_ListTreeNodes_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ListTreeNodesRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RepositoryServiceServer).ListTreeNodes(m, &repositoryServiceListTreeNodesServer{stream})
+}
+
+type RepositoryService_ListTreeNodesServer interface {
+	Send(*ListTreeNodesResponse) error
+	grpc.ServerStream
+}
+
+type repositoryServiceListTreeNodesServer struct {
+	grpc.ServerStream
+}
+
+func (x *repositoryServiceListTreeNodesServer) Send(m *ListTreeNodesResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _RepositoryService_GetSubmodule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSubmoduleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepositoryServiceServer).GetSubmodule(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.RepositoryService/GetSubmodule",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepositoryServiceServer).GetSubmodule(ctx, req.(*GetSubmoduleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RepositoryService_GetBlob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBlobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepositoryServiceServer).GetBlob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.RepositoryService/GetBlob",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepositoryServiceServer).GetBlob(ctx, req.(*GetBlobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RepositoryService_ListCommits_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ListCommitsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RepositoryServiceServer).ListCommits(m, &repositoryServiceListCommitsServer{stream})
+}
+
+type RepositoryService_ListCommitsServer interface {
+	Send(*ListCommitsResponse) error
+	grpc.ServerStream
+}
+
+type repositoryServiceListCommitsServer struct {
+	grpc.ServerStream
+}
+
+func (x *repositoryServiceListCommitsServer) Send(m *ListCommitsResponse) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 // RepositoryService_ServiceDesc is the grpc.ServiceDesc for RepositoryService service.
@@ -161,8 +341,16 @@ var RepositoryService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*RepositoryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddFilesAndPush",
-			Handler:    _RepositoryService_AddFilesAndPush_Handler,
+			MethodName: "GetTreeNode",
+			Handler:    _RepositoryService_GetTreeNode_Handler,
+		},
+		{
+			MethodName: "GetSubmodule",
+			Handler:    _RepositoryService_GetSubmodule_Handler,
+		},
+		{
+			MethodName: "GetBlob",
+			Handler:    _RepositoryService_GetBlob_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
@@ -171,125 +359,15 @@ var RepositoryService_ServiceDesc = grpc.ServiceDesc{
 			Handler:       _RepositoryService_CreateRepository_Handler,
 			ClientStreams: true,
 		},
-	},
-	Metadata: "repo.proto",
-}
-
-// UploadServiceClient is the client API for UploadService service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type UploadServiceClient interface {
-	Upload(ctx context.Context, opts ...grpc.CallOption) (UploadService_UploadClient, error)
-}
-
-type uploadServiceClient struct {
-	cc grpc.ClientConnInterface
-}
-
-func NewUploadServiceClient(cc grpc.ClientConnInterface) UploadServiceClient {
-	return &uploadServiceClient{cc}
-}
-
-func (c *uploadServiceClient) Upload(ctx context.Context, opts ...grpc.CallOption) (UploadService_UploadClient, error) {
-	stream, err := c.cc.NewStream(ctx, &UploadService_ServiceDesc.Streams[0], "/rpc.UploadService/Upload", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &uploadServiceUploadClient{stream}
-	return x, nil
-}
-
-type UploadService_UploadClient interface {
-	Send(*UploadFileRequest) error
-	CloseAndRecv() (*UploadFileResponse, error)
-	grpc.ClientStream
-}
-
-type uploadServiceUploadClient struct {
-	grpc.ClientStream
-}
-
-func (x *uploadServiceUploadClient) Send(m *UploadFileRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *uploadServiceUploadClient) CloseAndRecv() (*UploadFileResponse, error) {
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	m := new(UploadFileResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-// UploadServiceServer is the server API for UploadService service.
-// All implementations must embed UnimplementedUploadServiceServer
-// for forward compatibility
-type UploadServiceServer interface {
-	Upload(UploadService_UploadServer) error
-	mustEmbedUnimplementedUploadServiceServer()
-}
-
-// UnimplementedUploadServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedUploadServiceServer struct {
-}
-
-func (UnimplementedUploadServiceServer) Upload(UploadService_UploadServer) error {
-	return status.Errorf(codes.Unimplemented, "method Upload not implemented")
-}
-func (UnimplementedUploadServiceServer) mustEmbedUnimplementedUploadServiceServer() {}
-
-// UnsafeUploadServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to UploadServiceServer will
-// result in compilation errors.
-type UnsafeUploadServiceServer interface {
-	mustEmbedUnimplementedUploadServiceServer()
-}
-
-func RegisterUploadServiceServer(s grpc.ServiceRegistrar, srv UploadServiceServer) {
-	s.RegisterService(&UploadService_ServiceDesc, srv)
-}
-
-func _UploadService_Upload_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(UploadServiceServer).Upload(&uploadServiceUploadServer{stream})
-}
-
-type UploadService_UploadServer interface {
-	SendAndClose(*UploadFileResponse) error
-	Recv() (*UploadFileRequest, error)
-	grpc.ServerStream
-}
-
-type uploadServiceUploadServer struct {
-	grpc.ServerStream
-}
-
-func (x *uploadServiceUploadServer) SendAndClose(m *UploadFileResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *uploadServiceUploadServer) Recv() (*UploadFileRequest, error) {
-	m := new(UploadFileRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-// UploadService_ServiceDesc is the grpc.ServiceDesc for UploadService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var UploadService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "rpc.UploadService",
-	HandlerType: (*UploadServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Upload",
-			Handler:       _UploadService_Upload_Handler,
-			ClientStreams: true,
+			StreamName:    "ListTreeNodes",
+			Handler:       _RepositoryService_ListTreeNodes_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "ListCommits",
+			Handler:       _RepositoryService_ListCommits_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "repo.proto",

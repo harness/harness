@@ -31,5 +31,7 @@ func Repo(repo *types.Repository) error {
 		return ErrRepositoryRequiresSpaceID
 	}
 
+	// TODO: validate defaultBranch, ...
+
 	return nil
 }

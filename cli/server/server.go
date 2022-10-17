@@ -12,8 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/harness/gitness/internal/gitrpc"
-
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
 	"golang.org/x/sync/errgroup"
@@ -79,7 +77,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	gHTTP, shutdownHTTP := system.server.ListenAndServe()
 	g.Go(gHTTP.Wait)
 	log.Info().
-		Str("port", config.Server.Bind).
+		Str("port", config.Server.HTTP.Bind).
 		Str("revision", version.GitCommit).
 		Str("repository", version.GitRepository).
 		Stringer("version", version.Version).
@@ -93,13 +91,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	log.Info().Msg("nightly subroutine started")
 
 	// start grpc server
-	rpcServer, err := gitrpc.NewServer(5001)
-	if err != nil {
-		return err
-	}
-	g.Go(func() error {
-		return rpcServer.Start()
-	})
+	g.Go(system.gitRPCServer.Start)
 
 	// wait until the error group context is done
 	<-gCtx.Done()
@@ -116,7 +108,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 		log.Err(sErr).Msg("failed to shutdown http server gracefully")
 	}
 
-	if rpcErr := rpcServer.Stop(); rpcErr != nil {
+	if rpcErr := system.gitRPCServer.Stop(); rpcErr != nil {
 		log.Err(rpcErr).Msg("failed to shutdown grpc server gracefully")
 	}
 

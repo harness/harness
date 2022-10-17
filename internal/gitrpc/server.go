@@ -5,7 +5,6 @@
 package gitrpc
 
 import (
-	"fmt"
 	"net"
 
 	"code.gitea.io/gitea/modules/setting"
@@ -15,27 +14,32 @@ import (
 
 type Server struct {
 	*grpc.Server
-	Port int
+	Bind string
 }
 
-func NewServer(port int) (*Server, error) {
+// TODO: this wiring should be done by wire.
+func NewServer(bind string, gitRoot string) (*Server, error) {
+	// TODO: should be subdir of gitRoot? What is it being used for?
 	setting.Git.HomePath = "home"
-	adapter, err := newGitea()
+	adapter, err := newGiteaAdapter()
 	if err != nil {
 		return nil, err
 	}
 	s := grpc.NewServer()
 	store := newLocalStore()
-	rpc.RegisterRepositoryServiceServer(s, &repositoryService{adapter: adapter, store: store})
-	rpc.RegisterUploadServiceServer(s, newUploadService(adapter, store))
+	repoService, err := newRepositoryService(adapter, store, gitRoot)
+	if err != nil {
+		return nil, err
+	}
+	rpc.RegisterRepositoryServiceServer(s, repoService)
 	return &Server{
 		Server: s,
-		Port:   port,
+		Bind:   bind,
 	}, nil
 }
 
 func (s *Server) Start() error {
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", s.Port))
+	lis, err := net.Listen("tcp", s.Bind)
 	if err != nil {
 		return err
 	}

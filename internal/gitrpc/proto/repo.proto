@@ -8,62 +8,119 @@ import "shared.proto";
 // RepositoryService is a service providing RPCs accessing repositories as a whole.
 service RepositoryService {
   rpc CreateRepository(stream CreateRepositoryRequest) returns (CreateRepositoryResponse);
-  rpc AddFilesAndPush(AddFilesAndPushRequest) returns (AddFilesAndPushResponse);
-}
-
-service UploadService {
-  rpc Upload(stream UploadFileRequest) returns (UploadFileResponse) {};
+  rpc GetTreeNode(GetTreeNodeRequest) returns (GetTreeNodeResponse);
+  rpc ListTreeNodes(ListTreeNodesRequest) returns (stream ListTreeNodesResponse);
+  rpc GetSubmodule(GetSubmoduleRequest) returns (GetSubmoduleResponse);
+  rpc GetBlob(GetBlobRequest) returns (GetBlobResponse);
+  rpc ListCommits(ListCommitsRequest) returns (stream ListCommitsResponse);
 }
 
 message CreateRepositoryRequest {
   oneof data {
-    Repository repository = 1;
-    string filepath       = 2;
-    Chunk chunk           = 3;
+    CreateRepositoryRequestHeader header = 1;
+    FileUpload file                      = 2;
   }
 }
 
-message CreateRepositoryResponse {
-  string temp_path = 1;
+message CreateRepositoryRequestHeader {
+  string uid = 1;
+  string default_branch = 2;
 }
 
-message UploadFileRequest {
+message CreateRepositoryResponse { }
+
+message GetTreeNodeRequest {
+  string repo_uid                 = 1;
+  string git_ref                  = 2;
+  string path                     = 3;
+  bool include_latest_commit      = 4;
+}
+
+message GetTreeNodeResponse {
+  TreeNode node = 1;
+  Commit commit = 2;
+}
+
+message ListTreeNodesRequest {
+  string repo_uid            = 1;
+  string git_ref             = 2;
+  string path                = 3;
+  bool include_latest_commit = 4;
+  bool recursive             = 5;
+}
+
+message ListTreeNodesResponse {
+  TreeNode node = 1;
+  Commit commit = 2;
+}
+
+message TreeNode {
+  TreeNodeType type  = 1;
+  TreeNodeMode mode = 2;
+  string sha = 3;
+  string name = 4;
+  string path = 5;
+}
+
+enum TreeNodeType {
+  TreeNodeTypeTree = 0;
+  TreeNodeTypeBlob = 1;
+  TreeNodeTypeCommit = 2;
+}
+
+enum TreeNodeMode {
+  TreeNodeModeFile = 0;
+  TreeNodeModeSymlink = 1;
+  TreeNodeModeExec = 2;
+  TreeNodeModeTree = 3;
+  TreeNodeModeCommit = 4;
+}
+
+message ListCommitsRequest {
+  string repo_uid = 1;
+  string git_ref  = 2;
+  int32 page      = 3;
+  int32 pageSize  = 4;
+}
+
+message ListCommitsResponse {
   oneof data {
-    FileInfo info    = 1;
-    Chunk chunk      = 2;
-  };
+    ListCommitsResponseHeader header = 1;
+    Commit commit                    = 2;
+  }
 }
 
-message UploadFileResponse {
-  string id   = 1;
-  uint32 size = 2;
+message ListCommitsResponseHeader {
+  int64 total_count = 1;
 }
 
-message FileInfo {
-  string id        = 1;
-  string username  = 2;
-  string repo      = 3;
-  string branch    = 4;
-  string repo_path = 5;
-  string path      = 6;
-  string file_type = 7;
+message GetBlobRequest {
+  string repo_uid = 1;
+  string sha      = 2;
+  int64 sizeLimit = 3;
 }
 
-message AddFilesAndPushRequest {
-  string repo_path      = 1;
-  string message        = 2;
-  repeated string files = 3;
+message GetBlobResponse {
+  Blob blob = 1;
 }
 
-message AddFilesAndPushResponse {}
-
-message Repository {
-  string owner          = 1;
-  string name           = 2;
-  string default_branch = 3;
+message Blob {
+  string sha    = 1;
+  int64 size    = 2;
+  bytes content = 3; 
 }
 
-message Chunk {
-  bool eof   = 1;
-  bytes data = 2;
+message GetSubmoduleRequest {
+  string repo_uid = 1;
+  string git_ref  = 2;
+  string path     = 3;
+}
+
+message GetSubmoduleResponse {
+  Submodule submodule = 1;
+}
+
+message Submodule {
+  string name = 1;
+  string url  = 2;
 }

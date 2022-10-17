@@ -23,7 +23,9 @@ type Repository struct {
 	Updated     int64  `db:"repo_updated"         json:"updated"`
 
 	// Forking (omit isFork ... ForkID <= 0 is giving the same information)
-	ForkID int64 `db:"repo_forkId"             json:"forkId"`
+	GitUID        string `db:"repo_gitUid"             json:"-"`
+	DefaultBranch string `db:"repo_defaultBranch"      json:"defaultBranch"`
+	ForkID        int64  `db:"repo_forkId"             json:"forkId"`
 
 	// TODO: Check if we want to keep those values here
 	NumForks       int `db:"repo_numForks"             json:"numForks"`

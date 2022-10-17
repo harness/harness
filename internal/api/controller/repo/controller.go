@@ -11,11 +11,12 @@ import (
 )
 
 type Controller struct {
-	authorizer authz.Authorizer
-	spaceStore store.SpaceStore
-	repoStore  store.RepoStore
-	saStore    store.ServiceAccountStore
-	rpcClient  gitrpc.Interface
+	defaultBranch string
+	authorizer    authz.Authorizer
+	spaceStore    store.SpaceStore
+	repoStore     store.RepoStore
+	saStore       store.ServiceAccountStore
+	gitRPCClient  gitrpc.Interface
 }
 
 func NewController(
@@ -23,13 +24,13 @@ func NewController(
 	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
 	saStore store.ServiceAccountStore,
-	rpcClient gitrpc.Interface,
+	gitRPCClient gitrpc.Interface,
 ) *Controller {
 	return &Controller{
-		authorizer: authorizer,
-		spaceStore: spaceStore,
-		repoStore:  repoStore,
-		saStore:    saStore,
-		rpcClient:  rpcClient,
+		authorizer:   authorizer,
+		spaceStore:   spaceStore,
+		repoStore:    repoStore,
+		saStore:      saStore,
+		gitRPCClient: gitRPCClient,
 	}
 }

@@ -18,8 +18,8 @@ var WireSet = wire.NewSet(ProvideServer)
 func ProvideServer(config *types.Config, router *router.Router) *Server {
 	return &Server{
 		Acme:   config.Server.Acme.Enabled,
-		Addr:   config.Server.Bind,
-		Host:   config.Server.Host,
+		Addr:   config.Server.HTTP.Bind,
+		Host:   config.Server.HTTP.Host,
 		router: router,
 	}
 }

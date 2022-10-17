@@ -4,7 +4,9 @@
 
 package gitrpc
 
-import "time"
+import (
+	"time"
+)
 
 type cloneRepoOption struct {
 	timeout       time.Duration
@@ -18,20 +20,29 @@ type cloneRepoOption struct {
 	filter        string
 	skipTLSVerify bool
 }
+type commit struct {
+	sha       string
+	title     string
+	message   string
+	author    signature
+	committer signature
+}
 
 // signature represents the Author or Committer information.
 type signature struct {
-	// name represents a person name. It is an arbitrary string.
-	name string
-	// email is an email, but it cannot be assumed to be well-formed.
-	email string
+	identity identity
 	// When is the timestamp of the signature.
 	when time.Time
 }
 
+type identity struct {
+	name  string
+	email string
+}
+
 type commitChangesOptions struct {
-	committer *signature
-	author    *signature
+	committer signature
+	author    signature
 	message   string
 }
 
@@ -42,4 +53,46 @@ type pushOptions struct {
 	mirror  bool
 	env     []string
 	timeout time.Duration
+}
+
+type treeNode struct {
+	nodeType treeNodeType
+	mode     treeNodeMode
+	sha      string
+	name     string
+	path     string
+}
+
+// treeNodeType specifies the different types of nodes in a git tree.
+// IMPORTANT: has to be consistent with rpc.TreeNodeType (proto).
+type treeNodeType int
+
+const (
+	treeNodeTypeTree treeNodeType = iota
+	treeNodeTypeBlob
+	treeNodeTypeCommit
+)
+
+// treeNodeType specifies the different modes of a node in a git tree.
+// IMPORTANT: has to be consistent with rpc.TreeNodeMode (proto).
+type treeNodeMode int
+
+const (
+	treeNodeModeFile treeNodeMode = iota
+	treeNodeModeSymlink
+	treeNodeModeExec
+	treeNodeModeTree
+	treeNodeModeCommit
+)
+
+type submodule struct {
+	name string
+	url  string
+}
+
+type blob struct {
+	size int64
+	// content contains the content of the blob
+	// NOTE: can be only partial content - compare len(.content) with .size
+	content []byte
 }

@@ -66,17 +66,23 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, fmt.Errorf("auth check failed: %w", err)
 	}
 
+	// set default branch in case it wasn't passed
+	if in.Branch == "" {
+		in.Branch = c.defaultBranch
+	}
+
 	// create new repo object
 	repo := &types.Repository{
-		PathName:    strings.ToLower(in.PathName),
-		SpaceID:     in.SpaceID,
-		Name:        in.Name,
-		Description: in.Description,
-		IsPublic:    in.IsPublic,
-		CreatedBy:   session.Principal.ID,
-		Created:     time.Now().UnixMilli(),
-		Updated:     time.Now().UnixMilli(),
-		ForkID:      in.ForkID,
+		PathName:      strings.ToLower(in.PathName),
+		SpaceID:       in.SpaceID,
+		Name:          in.Name,
+		Description:   in.Description,
+		IsPublic:      in.IsPublic,
+		CreatedBy:     session.Principal.ID,
+		Created:       time.Now().UnixMilli(),
+		Updated:       time.Now().UnixMilli(),
+		ForkID:        in.ForkID,
+		DefaultBranch: in.Branch,
 	}
 
 	// validate repo
@@ -88,8 +94,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	if in.Readme {
 		content = createReadme(in.Name, in.Description)
 		files = append(files, gitrpc.File{
-			Name:    "README.md",
-			Base64:  false,
+			Path:    "README.md",
 			Content: content,
 		})
 	}
@@ -101,8 +106,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			return nil, err
 		}
 		files = append(files, gitrpc.File{
-			Name:    "LICENSE",
-			Base64:  false,
+			Path:    "LICENSE",
 			Content: content,
 		})
 	}
@@ -114,30 +118,28 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			return nil, err
 		}
 		files = append(files, gitrpc.File{
-			Name:    ".gitignore",
-			Base64:  false,
+			Path:    ".gitignore",
 			Content: content,
 		})
 	}
 
-	err = c.rpcClient.CreateRepository(ctx, &gitrpc.CreateRepositoryParams{
-		RepositoryParams: gitrpc.RepositoryParams{
-			Username: session.Principal.Name,
-			// TODO: use UID as name
-			Name:   repo.PathName,
-			Branch: in.Branch,
-		},
-		Files: files,
+	resp, err := c.gitRPCClient.CreateRepository(ctx, &gitrpc.CreateRepositoryParams{
+		DefaultBranch: repo.DefaultBranch,
+		Files:         files,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error creating repository: %w", err)
 	}
+
+	repo.GitUID = resp.UID
 
 	// create in store
 	err = c.repoStore.Create(ctx, repo)
 	if err != nil {
 		log.Error().Err(err).
 			Msg("Repository creation failed.")
+
+			// TODO: cleanup git repo!
 
 		return nil, err
 	}

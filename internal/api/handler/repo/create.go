@@ -11,10 +11,11 @@ import (
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/types"
 )
 
 // HandleCreate returns a http.HandlerFunc that creates a new repository.
-func HandleCreate(repoCtrl *repo.Controller) http.HandlerFunc {
+func HandleCreate(config *types.Config, repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -24,6 +25,11 @@ func HandleCreate(repoCtrl *repo.Controller) http.HandlerFunc {
 		if err != nil {
 			render.BadRequestf(w, "Invalid Request Body: %s.", err)
 			return
+		}
+
+		// set default branch if it wasn't provided by input
+		if in.Branch == "" {
+			in.Branch = config.Git.DefaultBranch
 		}
 
 		repo, err := repoCtrl.Create(ctx, session, in)

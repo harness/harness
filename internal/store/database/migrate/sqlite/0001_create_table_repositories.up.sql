@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS repositories (
 ,repo_createdBy         INTEGER
 ,repo_created           BIGINT
 ,repo_updated           BIGINT
+,repo_gitUid            TEXT
+,repo_defaultBranch     TEXT
 ,repo_forkId            INTEGER
 ,repo_numForks          INTEGER
 ,repo_numPulls          INTEGER

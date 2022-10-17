@@ -78,7 +78,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	spaceStore := database.ProvideSpaceStore(db)
 	repoStore := database.ProvideRepoStore(db)
 	spaceController := space.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
-	gitrpcInterface, err := gitrpc.ProvideClient()
+	gitrpcInterface, err := gitrpc.ProvideClient(config)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	webHandler := router2.ProvideWebHandler(systemStore)
 	routerRouter := router2.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
+	gitrpcServer, err := gitrpc.ProvideServer(config)
+	if err != nil {
+		return nil, err
+	}
 	nightly := cron.NewNightly()
-	serverSystem := newSystem(bootstrapBootstrap, serverServer, nightly)
+	serverSystem := newSystem(bootstrapBootstrap, serverServer, gitrpcServer, nightly)
 	return serverSystem, nil
 }

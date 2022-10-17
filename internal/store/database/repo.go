@@ -311,6 +311,8 @@ repo_id
 ,repo_createdBy
 ,repo_created
 ,repo_updated
+,repo_gitUid
+,repo_defaultBranch
 ,repo_forkId
 ,repo_numForks
 ,repo_numPulls
@@ -363,6 +365,8 @@ INSERT INTO repositories (
 	,repo_createdBy
 	,repo_created
 	,repo_updated
+	,repo_gitUid
+	,repo_defaultBranch
 	,repo_forkId
 	,repo_numForks
 	,repo_numPulls
@@ -377,6 +381,8 @@ INSERT INTO repositories (
 	,:repo_createdBy
 	,:repo_created
 	,:repo_updated
+	,:repo_gitUid
+	,:repo_defaultBranch
 	,:repo_forkId
 	,:repo_numForks
 	,:repo_numPulls
