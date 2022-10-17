@@ -25,9 +25,7 @@ type GitHandler interface {
 	http.Handler
 }
 
-/*
- * NewGitHandler returns a new GitHandler.
- */
+// NewGitHandler returns a new GitHandler.
 func NewGitHandler(
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator) GitHandler {

@@ -38,7 +38,8 @@ type CreateInput struct {
 }
 
 // Create creates a new repository.
-//nolint:funlen,goimports // needs refactor
+//
+//nolint:funlen // needs refactor
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Repository, error) {
 	log := zerolog.Ctx(ctx)
 	// ensure we reference a space
@@ -100,8 +101,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	if in.License != "" && in.License != "none" {
-		// TODO: The caller shouldn't need to know the actual location.
-		content, err = resources.Licence.ReadFile(fmt.Sprintf("license/%s.txt", in.License))
+		content, err = resources.ReadLicense(in.License)
 		if err != nil {
 			return nil, err
 		}
@@ -112,8 +112,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	if in.GitIgnore != "" {
-		// TODO: The caller shouldn't need to know the actual location.
-		content, err = resources.Gitignore.ReadFile(fmt.Sprintf("gitignore/%s.gitignore", in.GitIgnore))
+		content, err = resources.ReadGitIgnore(in.GitIgnore)
 		if err != nil {
 			return nil, err
 		}
@@ -139,7 +138,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		log.Error().Err(err).
 			Msg("Repository creation failed.")
 
-			// TODO: cleanup git repo!
+		// TODO: cleanup git repo!
 
 		return nil, err
 	}

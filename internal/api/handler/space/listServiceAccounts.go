@@ -12,9 +12,7 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 )
 
-/*
- * Writes json-encoded service account information to the http response body.
- */
+// HandleListServiceAccounts Writes json-encoded service account information to the http response body.
 func HandleListServiceAccounts(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

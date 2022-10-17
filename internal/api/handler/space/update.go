@@ -13,9 +13,7 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 )
 
-/*
- * Updates an existing space.
- */
+// HandleUpdate updates an existing space.
 func HandleUpdate(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

@@ -8,6 +8,9 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/openapi"
+	"github.com/harness/gitness/internal/api/render"
+
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/web"
 	"github.com/swaggest/swgui/v3emb"
@@ -51,7 +54,18 @@ func NewWebHandler(systemStore store.SystemStore) WebHandler {
 	)
 
 	// openapi playground endpoints
-	swagger := v3emb.NewHandler("API Definition", "/api/v1/swagger.yaml", "/swagger")
+	r.HandleFunc("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
+		spec := openapi.Generate()
+		data, err := spec.MarshalYAML()
+		if err != nil {
+			render.ErrorMessagef(w, http.StatusInternalServerError, "error serializing openapi.yaml: %v", err)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/yaml")
+		_, _ = w.Write(data)
+	})
+	swagger := v3emb.NewHandler("API Definition", "/openapi.yaml", "/swagger")
 	r.With(sec.Handler).Handle("/swagger", swagger)
 	r.With(sec.Handler).Handle("/swagger/*", swagger)
 

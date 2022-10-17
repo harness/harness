@@ -13,9 +13,7 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 )
 
-/*
- * Writes json-encoded path information to the http response body.
- */
+// HandleCreatePath writes json-encoded path information to the http response body.
 func HandleCreatePath(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

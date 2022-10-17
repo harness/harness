@@ -13,9 +13,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
- * Writes json-encoded path information to the http response body.
- */
+// HandleListPaths writes json-encoded path information to the http response body.
 func HandleListPaths(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

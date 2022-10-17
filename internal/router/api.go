@@ -141,9 +141,10 @@ func setupRepos(r chi.Router, config *types.Config, repoCtrl *repo.Controller) {
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerrepo.HandleCreate(config, repoCtrl))
-		r.Get("/gitignore", handlerrepo.HandleGitIgnore())
-		r.Get("/licence", handlerrepo.HandleLicence())
-
+		r.Route("/resources", func(r chi.Router) {
+			r.Get("/gitignore", handlerrepo.HandleGitIgnore())
+			r.Get("/license", handlerrepo.HandleLicence())
+		})
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 			// repo level operations
 			r.Get("/", handlerrepo.HandleFind(repoCtrl))
@@ -152,8 +153,6 @@ func setupRepos(r chi.Router, config *types.Config, repoCtrl *repo.Controller) {
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
 			r.Get("/serviceAccounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
-			r.Get("/commits", handlerrepo.HandleListCommits(repoCtrl))
-			r.Get("/content/*", handlerrepo.HandleGetContent(repoCtrl))
 
 			// repo path operations
 			r.Route("/paths", func(r chi.Router) {

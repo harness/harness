@@ -41,6 +41,8 @@ func Generate() *openapi3.Spec {
 	buildAccount(&reflector)
 	buildUser(&reflector)
 	buildUsers(&reflector)
+	spaceOperations(&reflector)
+	repoOperations(&reflector)
 
 	//
 	// define security scheme

@@ -2,8 +2,8 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-// Package router provides http handlers for serving the
-// web applicationa and API endpoints.
+// Package request provides http handlers for serving the
+// web applications and API endpoints.
 package request
 
 import (
