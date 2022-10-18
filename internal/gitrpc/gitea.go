@@ -210,10 +210,20 @@ func giteaParsePrettyFormatLogToList(giteaRepo *gitea.Repository, logs []byte) (
 	return giteaCommits, nil
 }
 
-// ListTreeNodes lists the nodes of a tree reachable from ref via the specified path.
+// ListTreeNodes lists the child nodes of a tree reachable from ref via the specified path
+// and includes the latest commit for all nodes if requested.
+// IMPORTANT: recursive and includeLatestCommit can't be used together.
 // Note: ref can be Branch / Tag / CommitSHA.
+//nolint:gocognit,goimports // refactor if needed
 func (g giteaAdapter) ListTreeNodes(ctx context.Context, repoPath string,
-	ref string, treePath string, recursive bool) ([]treeNode, error) {
+	ref string, treePath string, recursive bool, includeLatestCommit bool) ([]treeNodeWithCommit, error) {
+	if recursive && includeLatestCommit {
+		// To avoid potential performance catastrophies, block recursive with includeLatestCommit
+		// TODO: this should return bad error to caller if needed?
+		// TODO: should this be refactored in two methods?
+		return nil, fmt.Errorf("latest commit with recursive query is not supported")
+	}
+
 	treePath = cleanTreePath(treePath)
 
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
@@ -244,7 +254,20 @@ func (g giteaAdapter) ListTreeNodes(ctx context.Context, repoPath string,
 		return nil, fmt.Errorf("failed to list entries for tree '%s': %w", treePath, err)
 	}
 
-	nodes := make([]treeNode, len(giteaEntries))
+	var latestCommits []gitea.CommitInfo
+	if includeLatestCommit {
+		// TODO: can be speed up with latestCommitCache (currently nil)
+		latestCommits, _, err = giteaEntries.GetCommitsInfo(ctx, giteaCommit, treePath, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get latest commits for entries: %w", err)
+		}
+
+		if len(latestCommits) != len(giteaEntries) {
+			return nil, fmt.Errorf("latest commit info doesn't match tree node info - count differs")
+		}
+	}
+
+	nodes := make([]treeNodeWithCommit, len(giteaEntries))
 	for i := range giteaEntries {
 		giteaEntry := giteaEntries[i]
 
@@ -259,12 +282,23 @@ func (g giteaAdapter) ListTreeNodes(ctx context.Context, repoPath string,
 		relPath := giteaEntry.Name()
 		name := filepath.Base(relPath)
 
-		nodes[i] = treeNode{
-			nodeType: nodeType,
-			mode:     mode,
-			sha:      giteaEntry.ID.String(),
-			name:     name,
-			path:     filepath.Join(treePath, relPath),
+		var commit *commit
+		if includeLatestCommit {
+			commit, err = mapGiteaCommit(latestCommits[i].Commit)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		nodes[i] = treeNodeWithCommit{
+			treeNode: treeNode{
+				nodeType: nodeType,
+				mode:     mode,
+				sha:      giteaEntry.ID.String(),
+				name:     name,
+				path:     filepath.Join(treePath, relPath),
+			},
+			commit: commit,
 		}
 	}
 
@@ -309,6 +343,39 @@ func (g giteaAdapter) ListCommits(ctx context.Context, repoPath string,
 
 	// TODO: save to cast to int from int64, or we expect exceeding int.MaxValue?
 	return commits, totalCount, nil
+}
+
+// ListBranches lists the branches of the repo.
+func (g giteaAdapter) ListBranches(ctx context.Context, repoPath string,
+	page int, pageSize int) ([]branch, int64, error) {
+	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer giteaRepo.Close()
+
+	// first page is always 1 (anything lower is treated as page 1)
+	if page < 1 {
+		page = 1
+	}
+
+	giteaBranches, totalCount, err := giteaRepo.GetBranches((page-1)*pageSize, pageSize)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error getting branches: %w", err)
+	}
+
+	branches := make([]branch, len(giteaBranches))
+	for i := range giteaBranches {
+		var branch *branch
+		branch, err = mapGiteaBranch(giteaBranches[i])
+		if err != nil {
+			return nil, 0, err
+		}
+		branches[i] = *branch
+	}
+
+	// TODO: return int instead?
+	return branches, int64(totalCount), nil
 }
 
 // GetSubmodule returns the submodule at the given path reachable from ref.
@@ -377,7 +444,30 @@ func (g giteaAdapter) GetBlob(ctx context.Context, repoPath string, sha string, 
 	}, nil
 }
 
+func mapGiteaBranch(giteaBranch *gitea.Branch) (*branch, error) {
+	if giteaBranch == nil {
+		return nil, fmt.Errorf("gitea branch is nil")
+	}
+	giteaCommit, err := giteaBranch.GetCommit()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get commit of gitea branch")
+	}
+	commit, err := mapGiteaCommit(giteaCommit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map gitea commit: %w", err)
+	}
+
+	return &branch{
+		name:   giteaBranch.Name,
+		commit: *commit,
+	}, nil
+}
+
 func mapGiteaCommit(giteaCommit *gitea.Commit) (*commit, error) {
+	if giteaCommit == nil {
+		return nil, fmt.Errorf("gitea commit is nil")
+	}
+
 	author, err := mapGiteaSignature(giteaCommit.Author)
 	if err != nil {
 		return nil, fmt.Errorf("failed to map gitea author: %w", err)
@@ -415,7 +505,7 @@ func mapGiteaNodeToTreeNodeModeAndType(giteaMode gitea.EntryMode) (treeNodeType,
 
 func mapGiteaSignature(giteaSignature *gitea.Signature) (signature, error) {
 	if giteaSignature == nil {
-		return signature{}, fmt.Errorf("gitea signature is empty")
+		return signature{}, fmt.Errorf("gitea signature is nil")
 	}
 
 	return signature{

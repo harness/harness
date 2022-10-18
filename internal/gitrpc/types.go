@@ -20,6 +20,12 @@ type cloneRepoOption struct {
 	filter        string
 	skipTLSVerify bool
 }
+
+type branch struct {
+	name   string
+	commit commit
+}
+
 type commit struct {
 	sha       string
 	title     string
@@ -53,6 +59,11 @@ type pushOptions struct {
 	mirror  bool
 	env     []string
 	timeout time.Duration
+}
+
+type treeNodeWithCommit struct {
+	treeNode
+	commit *commit
 }
 
 type treeNode struct {

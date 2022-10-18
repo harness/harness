@@ -152,8 +152,23 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller) {
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
 			r.Get("/serviceAccounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
-			r.Get("/commits", handlerrepo.HandleListCommits(repoCtrl))
-			r.Get("/content/*", handlerrepo.HandleGetContent(repoCtrl))
+
+			// content operations
+			// NOTE: this allows /content and /content/ to both be valid (without any other tricks.)
+			// We don't expect there to be any other operations in that route (as that could overlap with file names)
+			r.Route("/content", func(r chi.Router) {
+				r.Get("/*", handlerrepo.HandleGetContent(repoCtrl))
+			})
+
+			// commit operations
+			r.Route("/commits", func(r chi.Router) {
+				r.Get("/", handlerrepo.HandleListCommits(repoCtrl))
+			})
+
+			// branch operations
+			r.Route("/branches", func(r chi.Router) {
+				r.Get("/", handlerrepo.HandleListBranches(repoCtrl))
+			})
 
 			// repo path operations
 			r.Route("/paths", func(r chi.Router) {

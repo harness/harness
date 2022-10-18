@@ -66,12 +66,12 @@ func (s repositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	// first get repo params from stream
 	req, err := stream.Recv()
 	if err != nil {
-		return status.Errorf(codes.Unknown, "cannot receive create repository data")
+		return status.Errorf(codes.Internal, "cannot receive create repository data")
 	}
 
 	header := req.GetHeader()
 	if header == nil {
-		return status.Errorf(codes.Unknown, "expected header to be first message in stream")
+		return status.Errorf(codes.Internal, "expected header to be first message in stream")
 	}
 	log.Info().Msgf("received a create repository request %v", header)
 
@@ -150,7 +150,7 @@ func (s repositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	res := &rpc.CreateRepositoryResponse{}
 	err = stream.SendAndClose(res)
 	if err != nil {
-		return status.Errorf(codes.Unknown, "cannot send completion response: %v", err)
+		return status.Errorf(codes.Internal, "cannot send completion response: %v", err)
 	}
 
 	log.Info().Msgf("repository created. Path: %s", repoPath)
@@ -331,12 +331,12 @@ func (s repositoryService) GetTreeNode(ctx context.Context,
 		},
 	}
 
-	// TODO: improve performance, should be done in lower layer?
+	// TODO: improve performance, could be done in lower layer?
 	if request.GetIncludeLatestCommit() {
 		var commit *rpc.Commit
 		commit, err = s.getLatestCommit(ctx, repoPath, request.GetGitRef(), request.GetPath())
 		if err != nil {
-			return nil, err
+			return nil, status.Errorf(codes.Internal, "failed to get latest commit: %v", err)
 		}
 		res.Commit = commit
 	}
@@ -383,7 +383,7 @@ func (s repositoryService) ListTreeNodes(request *rpc.ListTreeNodesRequest,
 	repoPath := s.getFullPathForRepo(request.GetRepoUid())
 
 	gitNodes, err := s.adapter.ListTreeNodes(stream.Context(), repoPath,
-		request.GetGitRef(), request.GetPath(), request.GetRecursive())
+		request.GetGitRef(), request.GetPath(), request.GetRecursive(), request.GetIncludeLatestCommit())
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to list nodes: %v", err)
 	}
@@ -393,10 +393,9 @@ func (s repositoryService) ListTreeNodes(request *rpc.ListTreeNodesRequest,
 	for _, gitNode := range gitNodes {
 		var commit *rpc.Commit
 		if request.GetIncludeLatestCommit() {
-			// TODO: improve performance, should be done in lower layer?
-			commit, err = s.getLatestCommit(stream.Context(), repoPath, request.GetGitRef(), gitNode.path)
+			commit, err = mapGitCommit(gitNode.commit)
 			if err != nil {
-				return status.Errorf(codes.Internal, "failed to get latest commit: %v", err)
+				return status.Errorf(codes.Internal, "failed to map git commit: %v", err)
 			}
 		}
 
@@ -439,15 +438,14 @@ func (s repositoryService) ListCommits(request *rpc.ListCommitsRequest,
 		},
 	})
 	if err != nil {
-		return status.Errorf(codes.Unknown, "failed to send response header: %v", err)
+		return status.Errorf(codes.Internal, "failed to send response header: %v", err)
 	}
 
-	for _, gitCommit := range gitCommits {
+	for i := range gitCommits {
 		var commit *rpc.Commit
-		localGitCommit := gitCommit // required for lint to not complain
-		commit, err = mapGitCommit(&localGitCommit)
+		commit, err = mapGitCommit(&gitCommits[i])
 		if err != nil {
-			return err
+			return status.Errorf(codes.Internal, "failed to map git commit: %v", err)
 		}
 
 		err = stream.Send(&rpc.ListCommitsResponse{
@@ -456,7 +454,51 @@ func (s repositoryService) ListCommits(request *rpc.ListCommitsRequest,
 			},
 		})
 		if err != nil {
-			return status.Errorf(codes.Unknown, "failed to send commit: %v", err)
+			return status.Errorf(codes.Internal, "failed to send commit: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (s repositoryService) ListBranches(request *rpc.ListBranchesRequest,
+	stream rpc.RepositoryService_ListBranchesServer) error {
+	repoPath := s.getFullPathForRepo(request.GetRepoUid())
+
+	gitBranches, totalCount, err := s.adapter.ListBranches(stream.Context(), repoPath,
+		int(request.GetPage()), int(request.GetPageSize()))
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to list branches: %v", err)
+	}
+
+	log.Trace().Msgf("git adapter returned %d branches (total: %d)", len(gitBranches), totalCount)
+
+	// send info about total number of branches first
+	err = stream.Send(&rpc.ListBranchesResponse{
+		Data: &rpc.ListBranchesResponse_Header{
+			Header: &rpc.ListBranchesResponseHeader{
+				TotalCount: totalCount,
+			},
+		},
+	})
+	if err != nil {
+		return status.Errorf(codes.Internal, "failed to send response header: %v", err)
+	}
+
+	for i := range gitBranches {
+		var branch *rpc.Branch
+		branch, err = mapGitBranch(&gitBranches[i])
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to map git branch: %v", err)
+		}
+
+		err = stream.Send(&rpc.ListBranchesResponse{
+			Data: &rpc.ListBranchesResponse_Branch{
+				Branch: branch,
+			},
+		})
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to send branch: %v", err)
 		}
 	}
 
@@ -483,9 +525,25 @@ func mapGitMode(m treeNodeMode) rpc.TreeNodeMode {
 	return rpc.TreeNodeMode(m)
 }
 
+func mapGitBranch(gitBranch *branch) (*rpc.Branch, error) {
+	if gitBranch == nil {
+		return nil, status.Errorf(codes.Internal, "git branch is nil")
+	}
+
+	commit, err := mapGitCommit(&gitBranch.commit)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.Branch{
+		Name:   gitBranch.name,
+		Commit: commit,
+	}, nil
+}
+
 func mapGitCommit(gitCommit *commit) (*rpc.Commit, error) {
 	if gitCommit == nil {
-		return nil, status.Errorf(codes.Internal, "commit is nil")
+		return nil, status.Errorf(codes.Internal, "git commit is nil")
 	}
 
 	return &rpc.Commit{

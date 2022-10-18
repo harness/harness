@@ -28,6 +28,7 @@ type RepositoryServiceClient interface {
 	GetSubmodule(ctx context.Context, in *GetSubmoduleRequest, opts ...grpc.CallOption) (*GetSubmoduleResponse, error)
 	GetBlob(ctx context.Context, in *GetBlobRequest, opts ...grpc.CallOption) (*GetBlobResponse, error)
 	ListCommits(ctx context.Context, in *ListCommitsRequest, opts ...grpc.CallOption) (RepositoryService_ListCommitsClient, error)
+	ListBranches(ctx context.Context, in *ListBranchesRequest, opts ...grpc.CallOption) (RepositoryService_ListBranchesClient, error)
 }
 
 type repositoryServiceClient struct {
@@ -163,6 +164,38 @@ func (x *repositoryServiceListCommitsClient) Recv() (*ListCommitsResponse, error
 	return m, nil
 }
 
+func (c *repositoryServiceClient) ListBranches(ctx context.Context, in *ListBranchesRequest, opts ...grpc.CallOption) (RepositoryService_ListBranchesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &RepositoryService_ServiceDesc.Streams[3], "/rpc.RepositoryService/ListBranches", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &repositoryServiceListBranchesClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type RepositoryService_ListBranchesClient interface {
+	Recv() (*ListBranchesResponse, error)
+	grpc.ClientStream
+}
+
+type repositoryServiceListBranchesClient struct {
+	grpc.ClientStream
+}
+
+func (x *repositoryServiceListBranchesClient) Recv() (*ListBranchesResponse, error) {
+	m := new(ListBranchesResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // RepositoryServiceServer is the server API for RepositoryService service.
 // All implementations must embed UnimplementedRepositoryServiceServer
 // for forward compatibility
@@ -173,6 +206,7 @@ type RepositoryServiceServer interface {
 	GetSubmodule(context.Context, *GetSubmoduleRequest) (*GetSubmoduleResponse, error)
 	GetBlob(context.Context, *GetBlobRequest) (*GetBlobResponse, error)
 	ListCommits(*ListCommitsRequest, RepositoryService_ListCommitsServer) error
+	ListBranches(*ListBranchesRequest, RepositoryService_ListBranchesServer) error
 	mustEmbedUnimplementedRepositoryServiceServer()
 }
 
@@ -197,6 +231,9 @@ func (UnimplementedRepositoryServiceServer) GetBlob(context.Context, *GetBlobReq
 }
 func (UnimplementedRepositoryServiceServer) ListCommits(*ListCommitsRequest, RepositoryService_ListCommitsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListCommits not implemented")
+}
+func (UnimplementedRepositoryServiceServer) ListBranches(*ListBranchesRequest, RepositoryService_ListBranchesServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListBranches not implemented")
 }
 func (UnimplementedRepositoryServiceServer) mustEmbedUnimplementedRepositoryServiceServer() {}
 
@@ -333,6 +370,27 @@ func (x *repositoryServiceListCommitsServer) Send(m *ListCommitsResponse) error 
 	return x.ServerStream.SendMsg(m)
 }
 
+func _RepositoryService_ListBranches_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ListBranchesRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RepositoryServiceServer).ListBranches(m, &repositoryServiceListBranchesServer{stream})
+}
+
+type RepositoryService_ListBranchesServer interface {
+	Send(*ListBranchesResponse) error
+	grpc.ServerStream
+}
+
+type repositoryServiceListBranchesServer struct {
+	grpc.ServerStream
+}
+
+func (x *repositoryServiceListBranchesServer) Send(m *ListBranchesResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // RepositoryService_ServiceDesc is the grpc.ServiceDesc for RepositoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -367,6 +425,11 @@ var RepositoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "ListCommits",
 			Handler:       _RepositoryService_ListCommits_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "ListBranches",
+			Handler:       _RepositoryService_ListBranches_Handler,
 			ServerStreams: true,
 		},
 	},

@@ -29,8 +29,8 @@ type ContentType string
 const (
 	ContentTypeFile      ContentType = "file"
 	ContentTypeDir       ContentType = "dir"
-	ContentTypeSubmodule ContentType = "submodule"
 	ContentTypeSymlink   ContentType = "symlink"
+	ContentTypeSubmodule ContentType = "submodule"
 )
 
 type ContentInfo struct {
@@ -78,14 +78,14 @@ type Content interface {
 type FileContent struct {
 	Encoding FileEncodingType `json:"encoding"`
 	Data     string           `json:"data"`
-	Size     int64            `jsong:"size"`
+	Size     int64            `json:"size"`
 }
 
 func (c *FileContent) isContent() {}
 
 type SymlinkContent struct {
 	Target string `json:"target"`
-	Size   int64  `jsong:"size"`
+	Size   int64  `json:"size"`
 }
 
 func (c *SymlinkContent) isContent() {}
@@ -97,7 +97,7 @@ type DirContent struct {
 func (c *DirContent) isContent() {}
 
 type SubmoduleContent struct {
-	URL       string `jsong:"url"`
+	URL       string `json:"url"`
 	CommitSHA string `json:"commitSha"`
 }
 

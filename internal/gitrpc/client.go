@@ -121,6 +121,23 @@ type ListCommitsOutput struct {
 	Commits    []Commit
 }
 
+type ListBranchesParams struct {
+	// RepoUID is the uid of the git repository
+	RepoUID  string
+	Page     int32
+	PageSize int32
+}
+
+type ListBranchesOutput struct {
+	TotalCount int64
+	Branches   []Branch
+}
+
+type Branch struct {
+	Name   string
+	Commit Commit
+}
+
 type TreeNode struct {
 	Type TreeNodeType
 	Mode TreeNodeMode
@@ -517,6 +534,80 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 	}
 
 	return output, nil
+}
+
+func (c *Client) ListBranches(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error) {
+	if params == nil {
+		return nil, ErrNoParamsProvided
+	}
+	stream, err := c.repoService.ListBranches(ctx, &rpc.ListBranchesRequest{
+		RepoUid:  params.RepoUID,
+		Page:     params.Page,
+		PageSize: params.PageSize,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to start stream for branches: %w", err)
+	}
+
+	// get header first
+	header, err := stream.Recv()
+	if err != nil {
+		return nil, fmt.Errorf("error occured while receiving header: %w", err)
+	}
+	if header.GetHeader() == nil {
+		return nil, fmt.Errorf("header missing")
+	}
+	output := &ListBranchesOutput{
+		TotalCount: header.GetHeader().TotalCount,
+		Branches:   make([]Branch, 0, params.PageSize),
+	}
+
+	for {
+		var next *rpc.ListBranchesResponse
+		next, err = stream.Recv()
+		if errors.Is(err, io.EOF) {
+			log.Ctx(ctx).Debug().Msg("received end of stream")
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("received unexpected error from rpc: %w", err)
+		}
+		if next.GetBranch() == nil {
+			return nil, fmt.Errorf("expected branch message")
+		}
+
+		var branch *Branch
+		branch, err = mapRPCBranch(next.GetBranch())
+		if err != nil {
+			return nil, fmt.Errorf("failed to map rpc branch: %w", err)
+		}
+
+		output.Branches = append(output.Branches, *branch)
+	}
+
+	// TODO: is this needed?
+	err = stream.CloseSend()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close stream")
+	}
+
+	return output, nil
+}
+
+func mapRPCBranch(b *rpc.Branch) (*Branch, error) {
+	if b == nil {
+		return nil, fmt.Errorf("rpc branch is nil")
+	}
+
+	commit, err := mapRPCCommit(b.GetCommit())
+	if err != nil {
+		return nil, err
+	}
+
+	return &Branch{
+		Name:   b.Name,
+		Commit: *commit,
+	}, nil
 }
 
 func mapRPCCommit(c *rpc.Commit) (*Commit, error) {

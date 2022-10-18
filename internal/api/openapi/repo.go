@@ -47,6 +47,48 @@ type deleteRepoPathRequest struct {
 	PathID string `json:"pathID" path:"pathID"`
 }
 
+type getContentRequest struct {
+	repoRequest
+	Path string `json:"path" path:"path"`
+}
+
+// contentType is a plugin for repo.ContentType to allow using oneof.
+type contentType string
+
+func (contentType) Enum() []interface{} {
+	return []interface{}{repo.ContentTypeFile, repo.ContentTypeDir, repo.ContentTypeSymlink, repo.ContentTypeSubmodule}
+}
+
+// contentInfo is used to overshadow the contentype of repo.ContentInfo.
+type contentInfo struct {
+	repo.ContentInfo
+	Type contentType `json:"type"`
+}
+
+// dirContent is used to overshadow the Entries type of repo.DirContent.
+type dirContent struct {
+	repo.DirContent
+	Entries []contentInfo `json:"entries"`
+}
+
+// content is a plugin for repo.content to allow using oneof.
+type content struct{}
+
+func (content) JSONSchemaOneOf() []interface{} {
+	return []interface{}{repo.FileContent{}, dirContent{}, repo.SymlinkContent{}, repo.SubmoduleContent{}}
+}
+
+// getContentOutput is used to overshadow the content and contenttype of repo.GetContentOutput.
+type getContentOutput struct {
+	repo.GetContentOutput
+	Type    contentType `json:"type"`
+	Content content     `json:"content"`
+}
+
+type listCommitsRequest struct {
+	repoRequest
+}
+
 //nolint:funlen
 func repoOperations(reflector *openapi3.Reflector) {
 	createRepository := openapi3.Operation{}
@@ -148,4 +190,37 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{ref}/paths/{pathID}", onDeletePath)
+
+	opGetContent := openapi3.Operation{}
+	opGetContent.WithTags("repository")
+	opGetContent.WithMapOfAnything(map[string]interface{}{"operationId": "getContent"})
+	_ = reflector.SetRequest(&opGetContent, new(getContentRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opGetContent, new(getContentOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{ref}/content/{path}", opGetContent)
+
+	opListCommits := openapi3.Operation{}
+	opListCommits.WithTags("repository")
+	opListCommits.WithMapOfAnything(map[string]interface{}{"operationId": "listCommits"})
+	_ = reflector.SetRequest(&opListCommits, new(listCommitsRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListCommits, []repo.Commit{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{ref}/commits", opListCommits)
+
+	opListBranches := openapi3.Operation{}
+	opListBranches.WithTags("repository")
+	opListBranches.WithMapOfAnything(map[string]interface{}{"operationId": "listBranches"})
+	_ = reflector.SetRequest(&opListBranches, new(listCommitsRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListBranches, []repo.Branch{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{ref}/branches", opListBranches)
 }

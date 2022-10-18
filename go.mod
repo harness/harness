@@ -26,7 +26,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.12
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.26.0
-	github.com/swaggest/openapi-go v0.2.13
+	github.com/swaggest/openapi-go v0.2.23
 	github.com/swaggest/swgui v1.4.2
 	github.com/unrolled/secure v1.0.8
 	golang.org/x/crypto v0.0.0-20220507011949-2cf3adece122
@@ -72,14 +72,14 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
-	github.com/swaggest/jsonschema-go v0.3.24 // indirect
-	github.com/swaggest/refl v1.0.1 // indirect
+	github.com/swaggest/jsonschema-go v0.3.40 // indirect
+	github.com/swaggest/refl v1.1.0 // indirect
 	github.com/vearutop/statigz v1.1.5 // indirect
 	github.com/xanzy/ssh-agent v0.3.1 // indirect
 	github.com/yuin/goldmark v1.4.13 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
-	golang.org/x/net v0.0.0-20220630215102-69896b714898 // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/net v0.0.0-20220805013720-a33c5aa5df48 // indirect
+	golang.org/x/sys v0.0.0-20220804214406-8e32c043e418 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.10 // indirect
 	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect

@@ -216,8 +216,18 @@ func ParsePathFilter(r *http.Request) *types.PathFilter {
 }
 
 // ParseCommitFilter extracts the commit query parameter from the url.
+// TODO: do we need a separate filter?
 func ParseCommitFilter(r *http.Request) *types.CommitFilter {
 	return &types.CommitFilter{
+		Page: ParsePage(r),
+		Size: ParseSize(r),
+	}
+}
+
+// ParseBranchFilter extracts the branch query parameter from the url.
+// TODO: do we need a separate filter?
+func ParseBranchFilter(r *http.Request) *types.BranchFilter {
+	return &types.BranchFilter{
 		Page: ParsePage(r),
 		Size: ParseSize(r),
 	}

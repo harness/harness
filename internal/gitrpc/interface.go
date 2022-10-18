@@ -13,6 +13,7 @@ type Interface interface {
 	GetSubmodule(ctx context.Context, params *GetSubmoduleParams) (*GetSubmoduleOutput, error)
 	GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobOutput, error)
 	ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error)
+	ListBranches(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error)
 }
 
 // gitAdapter for accessing git commands from gitea.
@@ -24,9 +25,11 @@ type gitAdapter interface {
 	Commit(repoPath string, opts commitChangesOptions) error
 	Push(ctx context.Context, repoPath string, opts pushOptions) error
 	GetTreeNode(ctx context.Context, repoPath string, ref string, treePath string) (*treeNode, error)
-	ListTreeNodes(ctx context.Context, repoPath string, ref string, treePath string, recursive bool) ([]treeNode, error)
+	ListTreeNodes(ctx context.Context, repoPath string, ref string, treePath string,
+		recursive bool, includeLatestCommit bool) ([]treeNodeWithCommit, error)
 	GetLatestCommit(ctx context.Context, repoPath string, ref string, treePath string) (*commit, error)
 	GetSubmodule(ctx context.Context, repoPath string, ref string, treePath string) (*submodule, error)
 	GetBlob(ctx context.Context, repoPath string, sha string, sizeLimit int64) (*blob, error)
 	ListCommits(ctx context.Context, repoPath string, ref string, page int, pageSize int) ([]commit, int64, error)
+	ListBranches(ctx context.Context, repoPath string, page int, pageSize int) ([]branch, int64, error)
 }

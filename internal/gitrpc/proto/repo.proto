@@ -13,6 +13,7 @@ service RepositoryService {
   rpc GetSubmodule(GetSubmoduleRequest) returns (GetSubmoduleResponse);
   rpc GetBlob(GetBlobRequest) returns (GetBlobResponse);
   rpc ListCommits(ListCommitsRequest) returns (stream ListCommitsResponse);
+  rpc ListBranches(ListBranchesRequest) returns (stream ListBranchesResponse);
 }
 
 message CreateRepositoryRequest {
@@ -94,6 +95,23 @@ message ListCommitsResponseHeader {
   int64 total_count = 1;
 }
 
+message ListBranchesRequest {
+  string repo_uid = 1;
+  int32 page      = 2;
+  int32 pageSize  = 3;
+}
+
+message ListBranchesResponse {
+  oneof data {
+    ListBranchesResponseHeader header = 1;
+    Branch branch                     = 2;
+  }
+}
+
+message ListBranchesResponseHeader {
+  int64 total_count = 1;
+}
+
 message GetBlobRequest {
   string repo_uid = 1;
   string sha      = 2;
@@ -123,4 +141,34 @@ message GetSubmoduleResponse {
 message Submodule {
   string name = 1;
   string url  = 2;
+}
+
+message Branch {
+  string name   = 1;
+  Commit commit = 2;
+}
+
+message CommitRequest {
+  string title       = 1;
+  string message     = 2;
+  Identity author    = 3;
+  Identity committer = 4;
+}
+
+message Commit {
+  string sha          = 1;
+  string title        = 2;
+  string message      = 3;
+  Signature author    = 4;
+  Signature committer = 5;
+}
+
+message Signature {
+    Identity identity = 1;
+    int64 when        = 2;
+}
+
+message Identity {
+  string name  = 1;
+  string email = 2;
 }

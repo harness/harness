@@ -9,3 +9,9 @@ type CommitFilter struct {
 	Page int `json:"page"`
 	Size int `json:"size"`
 }
+
+// BranchFilter stores commit query parameters.
+type BranchFilter struct {
+	Page int `json:"page"`
+	Size int `json:"size"`
+}
