@@ -33,6 +33,9 @@ func Generate() *openapi3.Spec {
 	reflector.Spec.Info.
 		WithTitle("API Specification").
 		WithVersion(version.Version.String())
+	reflector.Spec.Servers = []openapi3.Server{{
+		URL: "/api/v1/",
+	}}
 
 	//
 	// register endpoints
@@ -43,6 +46,7 @@ func Generate() *openapi3.Spec {
 	buildUsers(&reflector)
 	spaceOperations(&reflector)
 	repoOperations(&reflector)
+	resourceOperations(&reflector)
 
 	//
 	// define security scheme

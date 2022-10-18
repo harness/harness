@@ -7,6 +7,7 @@ package router
 import (
 	"context"
 	"fmt"
+	"github.com/harness/gitness/internal/api/handler/resource"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -105,6 +106,7 @@ func setupRoutesV1(r chi.Router, config *types.Config, repoCtrl *repo.Controller
 	setupAdmin(r, userCtrl)
 	setupAccount(r, userCtrl)
 	setupSystem(r)
+	setupResources(r)
 }
 
 func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
@@ -141,10 +143,6 @@ func setupRepos(r chi.Router, config *types.Config, repoCtrl *repo.Controller) {
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerrepo.HandleCreate(config, repoCtrl))
-		r.Route("/resources", func(r chi.Router) {
-			r.Get("/gitignore", handlerrepo.HandleGitIgnore())
-			r.Get("/license", handlerrepo.HandleLicence())
-		})
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 			// repo level operations
 			r.Get("/", handlerrepo.HandleFind(repoCtrl))
@@ -228,6 +226,13 @@ func setupSystem(r chi.Router) {
 	r.Route("/system", func(r chi.Router) {
 		r.Get("/health", system.HandleHealth)
 		r.Get("/version", system.HandleVersion)
+	})
+}
+
+func setupResources(r chi.Router) {
+	r.Route("/resources", func(r chi.Router) {
+		r.Get("/gitignore", resource.HandleGitIgnore())
+		r.Get("/license", resource.HandleLicence())
 	})
 }
 

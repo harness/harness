@@ -60,29 +60,6 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&createRepository, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos", createRepository)
 
-	opListGitignore := openapi3.Operation{}
-	opListGitignore.WithTags("repository")
-	opListGitignore.WithMapOfAnything(map[string]interface{}{"operationId": "listGitignore"})
-	_ = reflector.SetRequest(&opListGitignore, new(gitignoreRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opListGitignore, []string{}, http.StatusOK)
-	_ = reflector.SetJSONResponse(&opListGitignore, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opListGitignore, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opListGitignore, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/resources/gitignore", opListGitignore)
-
-	opListLicenses := openapi3.Operation{}
-	opListLicenses.WithTags("repository")
-	opListLicenses.WithMapOfAnything(map[string]interface{}{"operationId": "listLicenses"})
-	_ = reflector.SetRequest(&opListLicenses, new(licenseRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opListLicenses, []struct {
-		Label string `json:"label"`
-		Value string `json:"value"`
-	}{}, http.StatusOK)
-	_ = reflector.SetJSONResponse(&opListLicenses, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opListLicenses, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opListLicenses, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/resources/license", opListLicenses)
-
 	opFind := openapi3.Operation{}
 	opFind.WithTags("repository")
 	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "findRepository"})
