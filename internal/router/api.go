@@ -7,8 +7,9 @@ package router
 import (
 	"context"
 	"fmt"
-	"github.com/harness/gitness/internal/api/handler/resource"
 	"net/http"
+
+	"github.com/harness/gitness/internal/api/handler/resource"
 
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
@@ -77,7 +78,7 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, config, repoCtrl, spaceCtrl, saCtrl, userCtrl)
+		setupRoutesV1(r, repoCtrl, spaceCtrl, saCtrl, userCtrl)
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -97,10 +98,10 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 	).Handler
 }
 
-func setupRoutesV1(r chi.Router, config *types.Config, repoCtrl *repo.Controller, spaceCtrl *space.Controller,
+func setupRoutesV1(r chi.Router, repoCtrl *repo.Controller, spaceCtrl *space.Controller,
 	saCtrl *serviceaccount.Controller, userCtrl *user.Controller) {
 	setupSpaces(r, spaceCtrl)
-	setupRepos(r, config, repoCtrl)
+	setupRepos(r, repoCtrl)
 	setupUsers(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
 	setupAdmin(r, userCtrl)
@@ -139,10 +140,10 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 	})
 }
 
-func setupRepos(r chi.Router, config *types.Config, repoCtrl *repo.Controller) {
+func setupRepos(r chi.Router, repoCtrl *repo.Controller) {
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
-		r.Post("/", handlerrepo.HandleCreate(config, repoCtrl))
+		r.Post("/", handlerrepo.HandleCreate(repoCtrl))
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 			// repo level operations
 			r.Get("/", handlerrepo.HandleFind(repoCtrl))

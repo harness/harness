@@ -9,6 +9,7 @@ import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/gitrpc"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 )
 
 // WireSet provides a wire set for this package.
@@ -16,7 +17,7 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(authorizer authz.Authorizer, spaceStore store.SpaceStore,
+func ProvideController(config *types.Config, authorizer authz.Authorizer, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, saStore store.ServiceAccountStore, rpcClient gitrpc.Interface) *Controller {
-	return NewController(authorizer, spaceStore, repoStore, saStore, rpcClient)
+	return NewController(config.Git.DefaultBranch, authorizer, spaceStore, repoStore, saStore, rpcClient)
 }

@@ -18,7 +18,7 @@ type Interface interface {
 // gitAdapter for accessing git commands from gitea.
 type gitAdapter interface {
 	InitRepository(ctx context.Context, path string, bare bool) error
-	SetDefaultBranch(ctx context.Context, repoPath string, defaultBranch string) error
+	SetDefaultBranch(ctx context.Context, repoPath string, defaultBranch string, allowEmpty bool) error
 	Clone(ctx context.Context, from, to string, opts cloneRepoOption) error
 	AddFiles(repoPath string, all bool, files ...string) error
 	Commit(repoPath string, opts commitChangesOptions) error

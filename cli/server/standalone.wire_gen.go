@@ -46,7 +46,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.ProvideController(authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
+	repoController := repo.ProvideController(config, authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
 	spaceController := space.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
 	serviceaccountController := serviceaccount.NewController(authorizer, serviceAccountStore, spaceStore, repoStore, tokenStore)
 	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, repoController, spaceController, serviceaccountController, controller)

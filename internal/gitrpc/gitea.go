@@ -38,14 +38,27 @@ func (g giteaAdapter) InitRepository(ctx context.Context, repoPath string, bare 
 }
 
 // SetDefaultBranch sets the default branch of a repo.
-func (g giteaAdapter) SetDefaultBranch(ctx context.Context, repoPath string, defaultBranch string) error {
+func (g giteaAdapter) SetDefaultBranch(ctx context.Context, repoPath string,
+	defaultBranch string, allowEmpty bool) error {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
 		return err
 	}
 	defer giteaRepo.Close()
 
-	return giteaRepo.SetDefaultBranch(defaultBranch)
+	// if requested, error out if branch doesn't exist. Otherwise, blindly set it.
+	if !allowEmpty && !giteaRepo.IsBranchExist(defaultBranch) {
+		// TODO: ensure this returns not found error to caller
+		return fmt.Errorf("branch '%s' does not exist", defaultBranch)
+	}
+
+	// change default branch
+	err = giteaRepo.SetDefaultBranch(defaultBranch)
+	if err != nil {
+		return fmt.Errorf("failed to set new default branch: %w", err)
+	}
+
+	return nil
 }
 
 func (g giteaAdapter) Clone(ctx context.Context, from, to string, opts cloneRepoOption) error {

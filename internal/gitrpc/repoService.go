@@ -92,8 +92,8 @@ func (s repositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 		return fmt.Errorf("CreateRepository error: %w", err)
 	}
 
-	// update default branch
-	err = s.adapter.SetDefaultBranch(ctx, repoPath, header.GetDefaultBranch())
+	// update default branch (currently set to non-existent branch)
+	err = s.adapter.SetDefaultBranch(ctx, repoPath, header.GetDefaultBranch(), true)
 	if err != nil {
 		return fmt.Errorf("error updating default branch for repo %s: %w", header.GetUid(), err)
 	}
@@ -139,8 +139,9 @@ func (s repositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	}
 
 	if len(filePaths) > 0 {
+		// NOTE: This creates the branch in origin repo (as it doesn't exist as of now)
 		// TODO: this should at least be a constant and not hardcoded?
-		if err = s.AddFilesAndPush(ctx, tempDir, filePaths, "", SystemIdentity, SystemIdentity,
+		if err = s.AddFilesAndPush(ctx, tempDir, filePaths, "HEAD:"+header.GetDefaultBranch(), SystemIdentity, SystemIdentity,
 			"origin", "initial commit"); err != nil {
 			return err
 		}

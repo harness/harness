@@ -25,16 +25,16 @@ import (
 )
 
 type CreateInput struct {
-	PathName    string `json:"pathName"`
-	SpaceID     int64  `json:"spaceId"`
-	Name        string `json:"name"`
-	Branch      string `json:"branch"`
-	Description string `json:"description"`
-	IsPublic    bool   `json:"isPublic"`
-	ForkID      int64  `json:"forkId"`
-	Readme      bool   `json:"readme"`
-	License     string `json:"license"`
-	GitIgnore   string `json:"gitIgnore"`
+	PathName      string `json:"pathName"`
+	SpaceID       int64  `json:"spaceId"`
+	Name          string `json:"name"`
+	DefaultBranch string `json:"defaultBranch"`
+	Description   string `json:"description"`
+	IsPublic      bool   `json:"isPublic"`
+	ForkID        int64  `json:"forkId"`
+	Readme        bool   `json:"readme"`
+	License       string `json:"license"`
+	GitIgnore     string `json:"gitIgnore"`
 }
 
 // Create creates a new repository.
@@ -68,8 +68,8 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	// set default branch in case it wasn't passed
-	if in.Branch == "" {
-		in.Branch = c.defaultBranch
+	if in.DefaultBranch == "" {
+		in.DefaultBranch = c.defaultBranch
 	}
 
 	// create new repo object
@@ -83,7 +83,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		Created:       time.Now().UnixMilli(),
 		Updated:       time.Now().UnixMilli(),
 		ForkID:        in.ForkID,
-		DefaultBranch: in.Branch,
+		DefaultBranch: in.DefaultBranch,
 	}
 
 	// validate repo

@@ -5,12 +5,12 @@
 package openapi
 
 import (
+	"net/http"
+
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/swaggest/openapi-go/openapi3"
-	"net/http"
 )
 
-//nolint:funlen
 func resourceOperations(reflector *openapi3.Reflector) {
 	opListGitignore := openapi3.Operation{}
 	opListGitignore.WithTags("resource")

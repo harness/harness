@@ -20,6 +20,7 @@ type Controller struct {
 }
 
 func NewController(
+	defaultBranch string,
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
@@ -27,10 +28,11 @@ func NewController(
 	gitRPCClient gitrpc.Interface,
 ) *Controller {
 	return &Controller{
-		authorizer:   authorizer,
-		spaceStore:   spaceStore,
-		repoStore:    repoStore,
-		saStore:      saStore,
-		gitRPCClient: gitRPCClient,
+		defaultBranch: defaultBranch,
+		authorizer:    authorizer,
+		spaceStore:    spaceStore,
+		repoStore:     repoStore,
+		saStore:       saStore,
+		gitRPCClient:  gitRPCClient,
 	}
 }
