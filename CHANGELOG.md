@@ -1,5 +1,13 @@
 # Changelog
 
+## [v2.14.0](https://github.com/harness/drone/tree/v2.14.0) (2022-10-18)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.13.0...v2.14.0)
+
+**Implemented enhancements:**
+
+- \(DRON-418\) send webhook and set status for failed builds [\#3266](https://github.com/harness/drone/pull/3266) ([tphoney](https://github.com/tphoney))
+
 ## [v2.13.0](https://github.com/harness/drone/tree/v2.13.0) (2022-09-21)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.12.1...v2.13.0)
@@ -17,6 +25,7 @@
 
 **Merged pull requests:**
 
+- v2.13.0 release prep [\#3268](https://github.com/harness/drone/pull/3268) ([tphoney](https://github.com/tphoney))
 - \(maint\) disable arm builds [\#3262](https://github.com/harness/drone/pull/3262) ([tphoney](https://github.com/tphoney))
 - Update links to discourse in issue template [\#3233](https://github.com/harness/drone/pull/3233) ([alikhil](https://github.com/alikhil))
 
