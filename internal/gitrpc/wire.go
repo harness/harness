@@ -6,7 +6,6 @@ package gitrpc
 
 import (
 	"github.com/google/wire"
-	"github.com/harness/gitness/types"
 )
 
 // WireSet provides a wire set for this package.
@@ -15,10 +14,10 @@ var WireSet = wire.NewSet(
 	ProvideServer,
 )
 
-func ProvideClient(config *types.Config) (Interface, error) {
-	return InitClient(config.Server.GRPC.Bind)
+func ProvideClient(config *ClientConfig) (Interface, error) {
+	return InitClient(config.Bind)
 }
 
-func ProvideServer(config *types.Config) (*Server, error) {
-	return NewServer(config.Server.GRPC.Bind, config.Git.Root)
+func ProvideServer(config *ServerConfig) (*Server, error) {
+	return NewServer(config.Bind, config.GitRoot)
 }

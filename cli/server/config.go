@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/google/wire"
+	"github.com/harness/gitness/internal/gitrpc"
 	"github.com/harness/gitness/types"
 
 	"github.com/kelseyhightower/envconfig"
@@ -44,4 +46,23 @@ func ensureGitRootIsSet(config *types.Config) error {
 	}
 
 	return nil
+}
+
+// PackageConfigsWireSet contains providers that generate configs required for sub packages.
+var PackageConfigsWireSet = wire.NewSet(
+	ProvideGitRPCServerConfig,
+	ProvideGitRPCClientConfig,
+)
+
+func ProvideGitRPCServerConfig(config *types.Config) *gitrpc.ServerConfig {
+	return &gitrpc.ServerConfig{
+		Bind:    config.Server.GRPC.Bind,
+		GitRoot: config.Git.Root,
+	}
+}
+
+func ProvideGitRPCClientConfig(config *types.Config) *gitrpc.ClientConfig {
+	return &gitrpc.ClientConfig{
+		Bind: config.Server.GRPC.Bind,
+	}
 }

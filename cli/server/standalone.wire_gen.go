@@ -41,7 +41,8 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	authenticator := authn.ProvideAuthenticator(userStore, serviceAccountStore, tokenStore)
 	spaceStore := database.ProvideSpaceStore(db)
 	repoStore := database.ProvideRepoStore(db)
-	gitrpcInterface, err := gitrpc.ProvideClient(config)
+	clientConfig := ProvideGitRPCClientConfig(config)
+	gitrpcInterface, err := gitrpc.ProvideClient(clientConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +54,8 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	webHandler := router.ProvideWebHandler(systemStore)
 	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
-	gitrpcServer, err := gitrpc.ProvideServer(config)
+	serverConfig := ProvideGitRPCServerConfig(config)
+	gitrpcServer, err := gitrpc.ProvideServer(serverConfig)
 	if err != nil {
 		return nil, err
 	}

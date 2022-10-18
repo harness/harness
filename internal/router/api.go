@@ -153,6 +153,8 @@ func setupRepos(r chi.Router, config *types.Config, repoCtrl *repo.Controller) {
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
 			r.Get("/serviceAccounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
+			r.Get("/commits", handlerrepo.HandleListCommits(repoCtrl))
+			r.Get("/content/*", handlerrepo.HandleGetContent(repoCtrl))
 
 			// repo path operations
 			r.Route("/paths", func(r chi.Router) {

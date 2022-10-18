@@ -4,7 +4,13 @@
 
 package gitrpc
 
-type Config struct {
-	RepoRoot   string
-	RPCAddress string
+// ServerConfig represents the configuration for the gitrpc server.
+type ServerConfig struct {
+	GitRoot string
+	Bind    string
+}
+
+// ClientConfig represents the config for the gitrpc client.
+type ClientConfig struct {
+	Bind string
 }

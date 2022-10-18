@@ -231,26 +231,28 @@ func (g giteaAdapter) ListTreeNodes(ctx context.Context, repoPath string,
 		return nil, fmt.Errorf("failed to list entries for tree '%s': %w", treePath, err)
 	}
 
-	nodes := make([]treeNode, 0, len(giteaEntries))
-	for _, giteaNode := range giteaEntries {
+	nodes := make([]treeNode, len(giteaEntries))
+	for i := range giteaEntries {
+		giteaEntry := giteaEntries[i]
+
 		var nodeType treeNodeType
 		var mode treeNodeMode
-		nodeType, mode, err = mapGiteaNodeToTreeNodeModeAndType(giteaNode.Mode())
+		nodeType, mode, err = mapGiteaNodeToTreeNodeModeAndType(giteaEntry.Mode())
 		if err != nil {
 			return nil, err
 		}
 
 		// giteaNode.Name() returns the path of the node relative to the tree.
-		relPath := giteaNode.Name()
+		relPath := giteaEntry.Name()
 		name := filepath.Base(relPath)
 
-		nodes = append(nodes, treeNode{
+		nodes[i] = treeNode{
 			nodeType: nodeType,
 			mode:     mode,
-			sha:      giteaNode.ID.String(),
+			sha:      giteaEntry.ID.String(),
 			name:     name,
 			path:     filepath.Join(treePath, relPath),
-		})
+		}
 	}
 
 	return nodes, nil
@@ -282,14 +284,14 @@ func (g giteaAdapter) ListCommits(ctx context.Context, repoPath string,
 		return nil, 0, fmt.Errorf("error getting total commit count: %w", err)
 	}
 
-	commits := make([]commit, 0, len(giteaCommits))
-	for _, giteaCommit := range giteaCommits {
+	commits := make([]commit, len(giteaCommits))
+	for i := range giteaCommits {
 		var commit *commit
-		commit, err = mapGiteaCommit(giteaCommit)
+		commit, err = mapGiteaCommit(giteaCommits[i])
 		if err != nil {
 			return nil, 0, err
 		}
-		commits = append(commits, *commit)
+		commits[i] = *commit
 	}
 
 	// TODO: save to cast to int from int64, or we expect exceeding int.MaxValue?

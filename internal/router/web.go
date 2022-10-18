@@ -54,6 +54,7 @@ func NewWebHandler(systemStore store.SystemStore) WebHandler {
 	)
 
 	// openapi playground endpoints
+	// TODO: this should not be generated and marshaled on the fly every time?
 	r.HandleFunc("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
 		spec := openapi.Generate()
 		data, err := spec.MarshalYAML()

@@ -31,6 +31,7 @@ import (
 func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	wire.Build(
 		newSystem,
+		PackageConfigsWireSet,
 		bootstrap.WireSet,
 		database.WireSet,
 		memory.WireSet,

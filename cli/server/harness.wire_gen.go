@@ -78,17 +78,19 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	spaceStore := database.ProvideSpaceStore(db)
 	repoStore := database.ProvideRepoStore(db)
 	spaceController := space.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
-	gitrpcInterface, err := gitrpc.ProvideClient(config)
+	clientConfig := ProvideGitRPCClientConfig(config)
+	gitrpcInterface, err := gitrpc.ProvideClient(clientConfig)
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.NewController(authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
+	repoController := repo.ProvideController(authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
 	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, accountClient, spaceController, repoController)
 	gitHandler := router2.ProvideGitHandler(repoStore, authenticator)
 	webHandler := router2.ProvideWebHandler(systemStore)
 	routerRouter := router2.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
-	gitrpcServer, err := gitrpc.ProvideServer(config)
+	serverConfig := ProvideGitRPCServerConfig(config)
+	gitrpcServer, err := gitrpc.ProvideServer(serverConfig)
 	if err != nil {
 		return nil, err
 	}

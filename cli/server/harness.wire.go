@@ -33,6 +33,7 @@ import (
 func initSystem(ctx context.Context, config *gitnessTypes.Config) (*system, error) {
 	wire.Build(
 		newSystem,
+		PackageConfigsWireSet,
 		bootstrap.WireSet,
 		database.WireSet,
 		memory.WireSet,

@@ -43,10 +43,9 @@ func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 		return nil, 0, err
 	}
 
-	commits := make([]Commit, 0, len(rpcOut.Commits))
-	for _, rpcCommit := range rpcOut.Commits {
-		commit := mapCommit(rpcCommit)
-		commits = append(commits, commit)
+	commits := make([]Commit, len(rpcOut.Commits))
+	for i := range rpcOut.Commits {
+		commits[i] = mapCommit(rpcOut.Commits[i])
 	}
 
 	return commits, rpcOut.TotalCount, nil

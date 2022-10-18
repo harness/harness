@@ -240,14 +240,16 @@ func (c *Controller) getDirContent(ctx context.Context, gitRepoUID string, gitRe
 		return nil, fmt.Errorf("failed to get content of dir: %w", err)
 	}
 
-	entries := make([]ContentInfo, 0, len(output.Nodes))
-	for _, v := range output.Nodes {
+	entries := make([]ContentInfo, len(output.Nodes))
+	for i := range output.Nodes {
+		node := output.Nodes[i]
+
 		var entry *ContentInfo
-		entry, err = mapToContentInfo(&v.TreeNode, v.Commit)
+		entry, err = mapToContentInfo(&node.TreeNode, node.Commit)
 		if err != nil {
 			return nil, err
 		}
-		entries = append(entries, *entry)
+		entries[i] = *entry
 	}
 
 	return &DirContent{
