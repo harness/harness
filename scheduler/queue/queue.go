@@ -175,7 +175,7 @@ func (q *queue) signal(ctx context.Context) error {
 				if w.os != item.OS {
 					continue
 				}
-				if w.arch != item.Arch {
+				if item.Arch != "any" && w.arch != item.Arch {
 					continue
 				}
 				// if the pipeline defines a variant it must match

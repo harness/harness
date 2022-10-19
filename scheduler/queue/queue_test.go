@@ -46,6 +46,47 @@ func TestQueue(t *testing.T) {
 	}
 }
 
+func TestQueueArchFilter(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	items := []*core.Stage{
+		{ID: 3, OS: "linux", Arch: "any"},
+		{ID: 2, OS: "linux", Arch: "arm64"},
+		{ID: 1, OS: "linux", Arch: "amd64"},
+	}
+	expected_items := []*core.Stage{
+		items[0], items[2],
+	}
+
+	ctx := context.Background()
+	store := mock.NewMockStageStore(controller)
+	store.EXPECT().ListIncomplete(ctx).Return(items, nil).Times(1)
+	store.EXPECT().ListIncomplete(ctx).Return(items[1:], nil).Times(1)
+
+	q := newQueue(store)
+	for _, item := range expected_items {
+		if item != nil {
+			t.Logf("Want %d", item.ID)
+		} else {
+			t.Log("Want nil")
+		}
+		next, err := q.Request(ctx, core.Filter{OS: "linux", Arch: "amd64"})
+		if item != nil {
+			t.Logf("Got %d", next.ID)
+		} else {
+			t.Logf("Got nil")
+		}
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		if got, want := next, item; got != want {
+			t.Errorf("Want build %d, got %d", want.ID, got.ID)
+		}
+	}
+}
+
 func TestQueueCancel(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
