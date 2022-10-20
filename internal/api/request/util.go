@@ -17,6 +17,14 @@ import (
 
 const (
 	PathParamRemainder = "*"
+
+	QueryParamSort      = "sort"
+	QueryParamDirection = "direction"
+
+	QueryParamPage    = "page"
+	QueryParamPerPage = "per_page"
+	PerPageDefault    = 50
+	PerPageMax        = 100
 )
 
 // PathParamOrError tries to retrieve the parameter from the request and
@@ -104,9 +112,9 @@ func GetOptionalRemainderFromPath(r *http.Request) string {
 
 // ParsePage extracts the page parameter from the url.
 func ParsePage(r *http.Request) int {
-	s := r.FormValue("page")
+	s := r.FormValue(QueryParamPage)
 	i, _ := strconv.Atoi(s)
-	if i == 0 {
+	if i <= 0 {
 		i = 1
 	}
 	return i
@@ -114,13 +122,12 @@ func ParsePage(r *http.Request) int {
 
 // ParseSize extracts the size parameter from the url.
 func ParseSize(r *http.Request) int {
-	const itemsPerPage = 100
-	s := r.FormValue("per_page")
+	s := r.FormValue(QueryParamPerPage)
 	i, _ := strconv.Atoi(s)
-	if i == 0 {
-		i = itemsPerPage
-	} else if i > itemsPerPage {
-		i = itemsPerPage
+	if i <= 0 {
+		i = PerPageDefault
+	} else if i > PerPageMax {
+		i = PerPageMax
 	}
 	return i
 }
@@ -128,40 +135,40 @@ func ParseSize(r *http.Request) int {
 // ParseOrder extracts the order parameter from the url.
 func ParseOrder(r *http.Request) enum.Order {
 	return enum.ParseOrder(
-		r.FormValue("direction"),
+		r.FormValue(QueryParamDirection),
 	)
 }
 
 // ParseSort extracts the sort parameter from the url.
 func ParseSort(r *http.Request) string {
-	return r.FormValue("sort")
+	return r.FormValue(QueryParamSort)
 }
 
 // ParseSortUser extracts the user sort parameter from the url.
 func ParseSortUser(r *http.Request) enum.UserAttr {
 	return enum.ParseUserAttr(
-		r.FormValue("sort"),
+		r.FormValue(QueryParamSort),
 	)
 }
 
 // ParseSortSpace extracts the space sort parameter from the url.
 func ParseSortSpace(r *http.Request) enum.SpaceAttr {
 	return enum.ParseSpaceAttr(
-		r.FormValue("sort"),
+		r.FormValue(QueryParamSort),
 	)
 }
 
 // ParseSortRepo extracts the repo sort parameter from the url.
 func ParseSortRepo(r *http.Request) enum.RepoAttr {
 	return enum.ParseRepoAtrr(
-		r.FormValue("sort"),
+		r.FormValue(QueryParamSort),
 	)
 }
 
 // ParseSortPath extracts the path sort parameter from the url.
 func ParseSortPath(r *http.Request) enum.PathAttr {
 	return enum.ParsePathAttr(
-		r.FormValue("sort"),
+		r.FormValue(QueryParamSort),
 	)
 }
 

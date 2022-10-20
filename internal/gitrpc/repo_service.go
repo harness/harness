@@ -466,7 +466,7 @@ func (s repositoryService) ListBranches(request *rpc.ListBranchesRequest,
 	repoPath := s.getFullPathForRepo(request.GetRepoUid())
 
 	gitBranches, totalCount, err := s.adapter.ListBranches(stream.Context(), repoPath,
-		int(request.GetPage()), int(request.GetPageSize()))
+		request.GetIncludeCommit(), int(request.GetPage()), int(request.GetPageSize()))
 	if err != nil {
 		return status.Errorf(codes.Internal, "failed to list branches: %v", err)
 	}
@@ -530,9 +530,13 @@ func mapGitBranch(gitBranch *branch) (*rpc.Branch, error) {
 		return nil, status.Errorf(codes.Internal, "git branch is nil")
 	}
 
-	commit, err := mapGitCommit(&gitBranch.commit)
-	if err != nil {
-		return nil, err
+	var commit *rpc.Commit
+	if gitBranch.commit != nil {
+		var err error
+		commit, err = mapGitCommit(gitBranch.commit)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &rpc.Branch{

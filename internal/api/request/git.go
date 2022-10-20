@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	QueryParamGitRef        = "gitRef"
-	QueryParamIncludeCommit = "includeCommit"
+	QueryParamGitRef        = "git_ref"
+	QueryParamIncludeCommit = "include_commit"
 )
 
 func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {

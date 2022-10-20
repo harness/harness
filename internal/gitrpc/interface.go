@@ -31,5 +31,5 @@ type gitAdapter interface {
 	GetSubmodule(ctx context.Context, repoPath string, ref string, treePath string) (*submodule, error)
 	GetBlob(ctx context.Context, repoPath string, sha string, sizeLimit int64) (*blob, error)
 	ListCommits(ctx context.Context, repoPath string, ref string, page int, pageSize int) ([]commit, int64, error)
-	ListBranches(ctx context.Context, repoPath string, page int, pageSize int) ([]branch, int64, error)
+	ListBranches(ctx context.Context, repoPath string, includeCommit bool, page int, pageSize int) ([]branch, int64, error)
 }

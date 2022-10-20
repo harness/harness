@@ -96,9 +96,10 @@ message ListCommitsResponseHeader {
 }
 
 message ListBranchesRequest {
-  string repo_uid = 1;
-  int32 page      = 2;
-  int32 pageSize  = 3;
+  string repo_uid     = 1;
+  bool include_commit = 2;
+  int32 page          = 3;
+  int32 pageSize      = 4;
 }
 
 message ListBranchesResponse {

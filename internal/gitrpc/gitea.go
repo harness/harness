@@ -347,7 +347,7 @@ func (g giteaAdapter) ListCommits(ctx context.Context, repoPath string,
 
 // ListBranches lists the branches of the repo.
 func (g giteaAdapter) ListBranches(ctx context.Context, repoPath string,
-	page int, pageSize int) ([]branch, int64, error) {
+	includeCommit bool, page int, pageSize int) ([]branch, int64, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
 		return nil, 0, err
@@ -367,7 +367,7 @@ func (g giteaAdapter) ListBranches(ctx context.Context, repoPath string,
 	branches := make([]branch, len(giteaBranches))
 	for i := range giteaBranches {
 		var branch *branch
-		branch, err = mapGiteaBranch(giteaBranches[i])
+		branch, err = mapGiteaBranch(giteaBranches[i], includeCommit)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -444,22 +444,26 @@ func (g giteaAdapter) GetBlob(ctx context.Context, repoPath string, sha string, 
 	}, nil
 }
 
-func mapGiteaBranch(giteaBranch *gitea.Branch) (*branch, error) {
+func mapGiteaBranch(giteaBranch *gitea.Branch, includeCommit bool) (*branch, error) {
 	if giteaBranch == nil {
 		return nil, fmt.Errorf("gitea branch is nil")
 	}
-	giteaCommit, err := giteaBranch.GetCommit()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get commit of gitea branch")
-	}
-	commit, err := mapGiteaCommit(giteaCommit)
-	if err != nil {
-		return nil, fmt.Errorf("failed to map gitea commit: %w", err)
+
+	var commit *commit
+	if includeCommit {
+		giteaCommit, err := giteaBranch.GetCommit()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get commit of gitea branch")
+		}
+		commit, err = mapGiteaCommit(giteaCommit)
+		if err != nil {
+			return nil, fmt.Errorf("failed to map gitea commit: %w", err)
+		}
 	}
 
 	return &branch{
 		name:   giteaBranch.Name,
-		commit: *commit,
+		commit: commit,
 	}, nil
 }
 

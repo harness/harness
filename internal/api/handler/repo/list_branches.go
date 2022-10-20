@@ -25,9 +25,15 @@ func HandleListBranches(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
+		includeCommit, err := request.GetIncludeCommitFromQueryOrDefault(r, false)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
 		branchFilter := request.ParseBranchFilter(r)
 
-		branches, totalCount, err := repoCtrl.ListBranches(ctx, session, repoRef, branchFilter)
+		branches, totalCount, err := repoCtrl.ListBranches(ctx, session, repoRef, includeCommit, branchFilter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

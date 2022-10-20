@@ -6,6 +6,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -15,16 +16,15 @@ import (
 )
 
 type Branch struct {
-	Name    string `json:"name"`
-	Default bool   `json:"default"`
-	Commit  Commit `json:"commit"`
+	Name   string  `json:"name"`
+	Commit *Commit `json:"commit,omitempty"`
 }
 
 /*
 * ListBranches lists the branches of a repo.
  */
 func (c *Controller) ListBranches(ctx context.Context, session *auth.Session,
-	repoRef string, branchFilter *types.BranchFilter) ([]Branch, int64, error) {
+	repoRef string, includeCommit bool, branchFilter *types.BranchFilter) ([]Branch, int64, error) {
 	repo, err := findRepoFromRef(ctx, c.repoStore, repoRef)
 	if err != nil {
 		return nil, 0, err
@@ -35,9 +35,10 @@ func (c *Controller) ListBranches(ctx context.Context, session *auth.Session,
 	}
 
 	rpcOut, err := c.gitRPCClient.ListBranches(ctx, &gitrpc.ListBranchesParams{
-		RepoUID:  repo.GitUID,
-		Page:     int32(branchFilter.Page),
-		PageSize: int32(branchFilter.Size),
+		RepoUID:       repo.GitUID,
+		IncludeCommit: includeCommit,
+		Page:          int32(branchFilter.Page),
+		PageSize:      int32(branchFilter.Size),
 	})
 	if err != nil {
 		return nil, 0, err
@@ -45,16 +46,26 @@ func (c *Controller) ListBranches(ctx context.Context, session *auth.Session,
 
 	branches := make([]Branch, len(rpcOut.Branches))
 	for i := range rpcOut.Branches {
-		branches[i] = mapBranch(rpcOut.Branches[i], repo.DefaultBranch)
+		branches[i], err = mapBranch(rpcOut.Branches[i])
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to map branch: %w", err)
+		}
 	}
 
 	return branches, rpcOut.TotalCount, nil
 }
 
-func mapBranch(b gitrpc.Branch, defaultBranch string) Branch {
-	return Branch{
-		Name:    b.Name,
-		Default: b.Name == defaultBranch,
-		Commit:  mapCommit(b.Commit),
+func mapBranch(b gitrpc.Branch) (Branch, error) {
+	var commit *Commit
+	if b.Commit != nil {
+		var err error
+		commit, err = mapCommit(b.Commit)
+		if err != nil {
+			return Branch{}, err
+		}
 	}
+	return Branch{
+		Name:   b.Name,
+		Commit: commit,
+	}, nil
 }

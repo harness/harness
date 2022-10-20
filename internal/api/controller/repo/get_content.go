@@ -134,7 +134,8 @@ func (c *Controller) GetContent(ctx context.Context, session *auth.Session, repo
 	if err != nil {
 		// TODO: this should only return not found if it's an actual not found error.
 		// This requires gitrpc to also return notfound though!
-		log.Debug().Err(err).Msgf("unable to find node for ref '%s' and path '%s'", repoRef, repoPath)
+		log.Debug().Err(err).
+			Msgf("unable to find content for repo '%s', gitRef '%s' and path '%s'", repoRef, gitRef, repoPath)
 		return nil, usererror.ErrNotFound
 	}
 
@@ -276,15 +277,21 @@ func mapToContentInfo(node *gitrpc.TreeNode, commit *gitrpc.Commit) (*ContentInf
 
 	// parse commit only if available
 	if commit != nil {
-		mappedCommit := mapCommit(*commit)
-		res.LatestCommit = &mappedCommit
+		res.LatestCommit, err = mapCommit(commit)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return res, nil
 }
 
-func mapCommit(c gitrpc.Commit) Commit {
-	return Commit{
+func mapCommit(c *gitrpc.Commit) (*Commit, error) {
+	if c == nil {
+		return nil, fmt.Errorf("commit is nil")
+	}
+
+	return &Commit{
 		SHA:     c.SHA,
 		Title:   c.Title,
 		Message: c.Message,
@@ -302,7 +309,7 @@ func mapCommit(c gitrpc.Commit) Commit {
 			},
 			When: c.Committer.When,
 		},
-	}
+	}, nil
 }
 
 func mapNodeModeToContentType(m gitrpc.TreeNodeMode) (ContentType, error) {

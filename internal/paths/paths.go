@@ -48,3 +48,9 @@ func Concatinate(path1 string, path2 string) string {
 
 	return path1 + types.PathSeparator + path2
 }
+
+// Segments returns all segments of the path
+// e.g. /space1/space2/space3 -> [space1, space2, space3].
+func Segments(path string) []string {
+	return strings.Split(path, types.PathSeparator)
+}

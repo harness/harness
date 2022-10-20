@@ -123,9 +123,10 @@ type ListCommitsOutput struct {
 
 type ListBranchesParams struct {
 	// RepoUID is the uid of the git repository
-	RepoUID  string
-	Page     int32
-	PageSize int32
+	RepoUID       string
+	IncludeCommit bool
+	Page          int32
+	PageSize      int32
 }
 
 type ListBranchesOutput struct {
@@ -135,7 +136,7 @@ type ListBranchesOutput struct {
 
 type Branch struct {
 	Name   string
-	Commit Commit
+	Commit *Commit
 }
 
 type TreeNode struct {
@@ -541,9 +542,10 @@ func (c *Client) ListBranches(ctx context.Context, params *ListBranchesParams) (
 		return nil, ErrNoParamsProvided
 	}
 	stream, err := c.repoService.ListBranches(ctx, &rpc.ListBranchesRequest{
-		RepoUid:  params.RepoUID,
-		Page:     params.Page,
-		PageSize: params.PageSize,
+		RepoUid:       params.RepoUID,
+		IncludeCommit: params.IncludeCommit,
+		Page:          params.Page,
+		PageSize:      params.PageSize,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to start stream for branches: %w", err)
@@ -599,14 +601,18 @@ func mapRPCBranch(b *rpc.Branch) (*Branch, error) {
 		return nil, fmt.Errorf("rpc branch is nil")
 	}
 
-	commit, err := mapRPCCommit(b.GetCommit())
-	if err != nil {
-		return nil, err
+	var commit *Commit
+	if b.GetCommit() != nil {
+		var err error
+		commit, err = mapRPCCommit(b.GetCommit())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &Branch{
 		Name:   b.Name,
-		Commit: *commit,
+		Commit: commit,
 	}, nil
 }
 

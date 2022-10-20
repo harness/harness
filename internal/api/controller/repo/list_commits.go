@@ -6,6 +6,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -45,7 +46,12 @@ func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 
 	commits := make([]Commit, len(rpcOut.Commits))
 	for i := range rpcOut.Commits {
-		commits[i] = mapCommit(rpcOut.Commits[i])
+		var commit *Commit
+		commit, err = mapCommit(&rpcOut.Commits[i])
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to map commit: %w", err)
+		}
+		commits[i] = *commit
 	}
 
 	return commits, rpcOut.TotalCount, nil

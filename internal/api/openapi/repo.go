@@ -7,7 +7,9 @@ package openapi
 import (
 	"net/http"
 
+	"github.com/gotidy/ptr"
 	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 	"github.com/swaggest/openapi-go/openapi3"
@@ -24,7 +26,7 @@ type licenseRequest struct {
 }
 
 type repoRequest struct {
-	Ref string `json:"ref" path:"ref"`
+	Ref string `json:"ref" path:"repoRef"`
 }
 
 type updateRepoRequest struct {
@@ -89,11 +91,59 @@ type listCommitsRequest struct {
 	repoRequest
 }
 
+var queryParameterGitRef = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name: request.QueryParamGitRef,
+		In:   openapi3.ParameterInQuery,
+		Description: ptr.String("The git reference (branch / tag / commitID) that will be used to retrieve the data. " +
+			"If no value is provided the default branch of the repository is used."),
+		Required: ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr("{Repository Default Branch}"),
+			},
+		},
+	},
+}
+
+var queryParameterIncludeCommit = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamIncludeCommit,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Indicates whether optional commit information should be included in the response."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
+// TODO: this is technically coming from harness package, but we can't reference that.
+var queryParameterSpacePath = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        "spacePath",
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("path of parent space (Not needed in standalone)."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
 //nolint:funlen
 func repoOperations(reflector *openapi3.Reflector) {
 	createRepository := openapi3.Operation{}
 	createRepository.WithTags("repository")
 	createRepository.WithMapOfAnything(map[string]interface{}{"operationId": "createRepository"})
+	createRepository.WithParameters(queryParameterSpacePath)
 	_ = reflector.SetRequest(&createRepository, new(createRepositoryRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&createRepository, new(types.Repository), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&createRepository, new(usererror.Error), http.StatusBadRequest)
@@ -111,7 +161,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{ref}", opFind)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}", opFind)
 
 	opUpdate := openapi3.Operation{}
 	opUpdate.WithTags("repository")
@@ -123,7 +173,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodPatch, "/repos/{ref}", opUpdate)
+	_ = reflector.Spec.AddOperation(http.MethodPatch, "/repos/{repoRef}", opUpdate)
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("repository")
@@ -134,7 +184,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{ref}", opDelete)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repoRef}", opDelete)
 
 	opMove := openapi3.Operation{}
 	opMove.WithTags("repository")
@@ -145,7 +195,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{ref}/move", opMove)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repoRef}/move", opMove)
 
 	opServiceAccounts := openapi3.Operation{}
 	opServiceAccounts.WithTags("repository")
@@ -156,7 +206,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{ref}/serviceAccounts", opServiceAccounts)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/serviceAccounts", opServiceAccounts)
 
 	opListPaths := openapi3.Operation{}
 	opListPaths.WithTags("repository")
@@ -167,7 +217,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{ref}/paths", opListPaths)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/paths", opListPaths)
 
 	opCreatePath := openapi3.Operation{}
 	opCreatePath.WithTags("repository")
@@ -178,7 +228,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opCreatePath, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCreatePath, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opCreatePath, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{ref}/paths", opCreatePath)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repoRef}/paths", opCreatePath)
 
 	onDeletePath := openapi3.Operation{}
 	onDeletePath.WithTags("repository")
@@ -189,38 +239,42 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{ref}/paths/{pathID}", onDeletePath)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repoRef}/paths/{pathID}", onDeletePath)
 
 	opGetContent := openapi3.Operation{}
 	opGetContent.WithTags("repository")
 	opGetContent.WithMapOfAnything(map[string]interface{}{"operationId": "getContent"})
+	opGetContent.WithParameters(queryParameterGitRef, queryParameterIncludeCommit)
 	_ = reflector.SetRequest(&opGetContent, new(getContentRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opGetContent, new(getContentOutput), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{ref}/content/{path}", opGetContent)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/content/{path}", opGetContent)
 
 	opListCommits := openapi3.Operation{}
 	opListCommits.WithTags("repository")
 	opListCommits.WithMapOfAnything(map[string]interface{}{"operationId": "listCommits"})
+	opListCommits.WithParameters(queryParameterGitRef, queryParameterPage, queryParameterPerPage)
 	_ = reflector.SetRequest(&opListCommits, new(listCommitsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListCommits, []repo.Commit{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{ref}/commits", opListCommits)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/commits", opListCommits)
 
 	opListBranches := openapi3.Operation{}
 	opListBranches.WithTags("repository")
 	opListBranches.WithMapOfAnything(map[string]interface{}{"operationId": "listBranches"})
+	opListBranches.WithParameters(queryParameterGitRef, queryParameterIncludeCommit,
+		queryParameterPage, queryParameterPerPage)
 	_ = reflector.SetRequest(&opListBranches, new(listCommitsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListBranches, []repo.Branch{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{ref}/branches", opListBranches)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/branches", opListBranches)
 }

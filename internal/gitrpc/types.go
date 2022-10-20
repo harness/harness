@@ -23,7 +23,7 @@ type cloneRepoOption struct {
 
 type branch struct {
 	name   string
-	commit commit
+	commit *commit
 }
 
 type commit struct {
