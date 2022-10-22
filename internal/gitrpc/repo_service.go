@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -25,6 +26,8 @@ const (
 	maxFileSize    = 1 << 20
 	repoSubdirName = "repos"
 	gitRepoSuffix  = "git"
+
+	gitReferencePrefixBranch = "refs/heads/"
 )
 
 var (
@@ -463,39 +466,63 @@ func (s repositoryService) ListCommits(request *rpc.ListCommitsRequest,
 
 func (s repositoryService) ListBranches(request *rpc.ListBranchesRequest,
 	stream rpc.RepositoryService_ListBranchesServer) error {
+	ctx := stream.Context()
 	repoPath := s.getFullPathForRepo(request.GetRepoUid())
 
-	gitBranches, totalCount, err := s.adapter.ListBranches(stream.Context(), repoPath,
-		request.GetIncludeCommit(), int(request.GetPage()), int(request.GetPageSize()))
-	if err != nil {
-		return status.Errorf(codes.Internal, "failed to list branches: %v", err)
+	branchPatterns := []string{gitReferencePrefixBranch}
+	if request.GetQuery() != "" {
+		sanitizedQuery := sanitizeBranchQuery(request.GetQuery())
+		branchPatterns = []string{
+			// refs/heads/**/*QUERY* - finds all branches that have QUERY in the filename.
+			fmt.Sprintf("%s**/*%s*", gitReferencePrefixBranch, sanitizedQuery),
+
+			// refs/heads/**/*QUERY*/** - finds all branches that have a parent folder with QUERY in the name.
+			fmt.Sprintf("%s**/*%s*/**", gitReferencePrefixBranch, sanitizedQuery),
+		}
 	}
 
-	log.Trace().Msgf("git adapter returned %d branches (total: %d)", len(gitBranches), totalCount)
-
-	// send info about total number of branches first
-	err = stream.Send(&rpc.ListBranchesResponse{
-		Data: &rpc.ListBranchesResponse_Header{
-			Header: &rpc.ListBranchesResponseHeader{
-				TotalCount: totalCount,
-			},
-		},
-	})
+	gitReferences, err := s.adapter.ListReferences(ctx, repoPath,
+		branchPatterns,
+		mapToGitReferenceSortOption(request.Sort),
+		mapToGitSortOrder(request.Order),
+		int(request.GetPage()),
+		int(request.GetPageSize()))
 	if err != nil {
-		return status.Errorf(codes.Internal, "failed to send response header: %v", err)
+		return status.Errorf(codes.Internal, "failed to get branch references: %v", err)
 	}
 
-	for i := range gitBranches {
-		var branch *rpc.Branch
-		branch, err = mapGitBranch(&gitBranches[i])
+	log.Trace().Msgf("git adapter returned %d references", len(gitReferences))
+
+	// get commits if needed (single call for perf savings)
+	commits := make([]*rpc.Commit, len(gitReferences))
+	if request.GetIncludeCommit() {
+		shas := make([]string, len(gitReferences))
+		for i := range gitReferences {
+			shas[i] = gitReferences[i].target
+		}
+		var gitCommits []commit
+		gitCommits, err = s.adapter.GetCommits(ctx, repoPath, shas)
 		if err != nil {
-			return status.Errorf(codes.Internal, "failed to map git branch: %v", err)
+			return status.Errorf(codes.Internal, "failed to get commits: %v", err)
+		}
+
+		for i := range gitCommits {
+			commits[i], err = mapGitCommit(&gitCommits[i])
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// build all branches
+	for i, gitRef := range gitReferences {
+		branch := &rpc.Branch{
+			Name:   gitRef.name[len(gitReferencePrefixBranch):],
+			Commit: commits[i],
 		}
 
 		err = stream.Send(&rpc.ListBranchesResponse{
-			Data: &rpc.ListBranchesResponse_Branch{
-				Branch: branch,
-			},
+			Branch: branch,
 		})
 		if err != nil {
 			return status.Errorf(codes.Internal, "failed to send branch: %v", err)
@@ -503,6 +530,55 @@ func (s repositoryService) ListBranches(request *rpc.ListBranchesRequest,
 	}
 
 	return nil
+}
+
+func mapToGitSortOrder(s rpc.SortOrder) sortOrder {
+	switch s {
+	case rpc.SortOrder_Asc:
+		return SortOrderAsc
+	case rpc.SortOrder_Desc:
+		return sortOrderDesc
+	case rpc.SortOrder_Default:
+		return sortOrderDefault
+	default:
+		// no need to error out - just use default for sorting
+		return sortOrderDefault
+	}
+}
+
+func mapToGitReferenceSortOption(s rpc.ListBranchesRequest_SortOption) referenceSortOption {
+	switch s {
+	case rpc.ListBranchesRequest_Date:
+		return referenceSortOptionDate
+	case rpc.ListBranchesRequest_Name:
+		return referenceSortOptionName
+	case rpc.ListBranchesRequest_Default:
+		return referenceSortOptionDefault
+	default:
+		// no need to error out - just use default for sorting
+		return referenceSortOptionName
+	}
+}
+
+// sanitizeBranchQuery removes characters that aren't allowd in a branch name.
+// TODO: should this be done further up - and should we error out instead of ignore bad chars?
+func sanitizeBranchQuery(original string) string {
+	return strings.Map(func(r rune) rune {
+		// See https://git-scm.com/docs/git-check-ref-format#_description for more details.
+		switch {
+		// rule 4.
+		case r < 31 || r == ' ' || r == '~' || r == '^' || r == ':':
+			return -1
+
+		// rule 5
+		case r == '?' || r == '*' || r == '[':
+			return -1
+
+		// everything else we ignore
+		default:
+			return r
+		}
+	}, original)
 }
 
 func (s repositoryService) getLatestCommit(ctx context.Context, repoPath string,
@@ -523,26 +599,6 @@ func mapGitNodeType(t treeNodeType) rpc.TreeNodeType {
 // TODO: Add UTs to ensure enum values match!
 func mapGitMode(m treeNodeMode) rpc.TreeNodeMode {
 	return rpc.TreeNodeMode(m)
-}
-
-func mapGitBranch(gitBranch *branch) (*rpc.Branch, error) {
-	if gitBranch == nil {
-		return nil, status.Errorf(codes.Internal, "git branch is nil")
-	}
-
-	var commit *rpc.Commit
-	if gitBranch.commit != nil {
-		var err error
-		commit, err = mapGitCommit(gitBranch.commit)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &rpc.Branch{
-		Name:   gitBranch.name,
-		Commit: commit,
-	}, nil
 }
 
 func mapGitCommit(gitCommit *commit) (*rpc.Commit, error) {

@@ -21,9 +21,25 @@ type cloneRepoOption struct {
 	skipTLSVerify bool
 }
 
-type branch struct {
+type sortOrder int
+
+const (
+	sortOrderDefault sortOrder = iota
+	sortOrderAsc
+	sortOrderDesc
+)
+
+type referenceSortOption int
+
+const (
+	referenceSortOptionDefault referenceSortOption = iota
+	referenceSortOptionName
+	referenceSortOptionDate
+)
+
+type reference struct {
 	name   string
-	commit *commit
+	target string
 }
 
 type commit struct {

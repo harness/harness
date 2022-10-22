@@ -96,21 +96,23 @@ message ListCommitsResponseHeader {
 }
 
 message ListBranchesRequest {
+  enum SortOption {
+    Default = 0;
+    Name    = 1;
+    Date    = 2;
+  }
+
   string repo_uid     = 1;
   bool include_commit = 2;
-  int32 page          = 3;
-  int32 pageSize      = 4;
+  string query        = 3;
+  SortOption sort     = 4;
+  SortOrder order     = 5;
+  int32 page          = 6;
+  int32 pageSize      = 7;
 }
 
 message ListBranchesResponse {
-  oneof data {
-    ListBranchesResponseHeader header = 1;
-    Branch branch                     = 2;
-  }
-}
-
-message ListBranchesResponseHeader {
-  int64 total_count = 1;
+  Branch branch = 1;
 }
 
 message GetBlobRequest {

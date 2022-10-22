@@ -38,17 +38,6 @@ const (
 	PathAttrUpdated
 )
 
-const (
-	id        = "id"
-	path      = "path"
-	name      = "name"
-	pathName  = "path_name"
-	created   = "created"
-	createdAt = "created_at"
-	updated   = "updated"
-	updatedAt = "updated_at"
-)
-
 // ParsePathAttr parses the path attribute string
 // and returns the equivalent enumeration.
 func ParsePathAttr(s string) PathAttr {

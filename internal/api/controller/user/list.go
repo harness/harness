@@ -18,7 +18,7 @@ import (
  * List lists all users of the system.
  */
 func (c *Controller) List(ctx context.Context, session *auth.Session,
-	userFilter *types.UserFilter) (int64, []*types.User, error) {
+	filter *types.UserFilter) (int64, []*types.User, error) {
 	// Ensure principal has required permissions (user is global, no explicit resource)
 	scope := &types.Scope{}
 	resource := &types.Resource{
@@ -33,7 +33,7 @@ func (c *Controller) List(ctx context.Context, session *auth.Session,
 		return 0, nil, fmt.Errorf("failed to count users: %w", err)
 	}
 
-	repos, err := c.userStore.List(ctx, userFilter)
+	repos, err := c.userStore.List(ctx, filter)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to list users: %w", err)
 	}

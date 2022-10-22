@@ -24,12 +24,12 @@ func HandleListPaths(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		pathFilter := request.ParsePathFilter(r)
-		if pathFilter.Order == enum.OrderDefault {
-			pathFilter.Order = enum.OrderAsc
+		filter := request.ParsePathFilter(r)
+		if filter.Order == enum.OrderDefault {
+			filter.Order = enum.OrderAsc
 		}
 
-		paths, err := spaceCtrl.ListPaths(ctx, session, spaceRef, pathFilter)
+		paths, err := spaceCtrl.ListPaths(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

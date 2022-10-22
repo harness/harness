@@ -18,3 +18,9 @@ message Chunk {
   bool eof   = 1;
   bytes data = 2;
 }
+
+enum SortOrder {
+  Default = 0;
+  Asc     = 1;
+  Desc    = 2;
+}

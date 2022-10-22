@@ -121,17 +121,35 @@ type ListCommitsOutput struct {
 	Commits    []Commit
 }
 
+type SortOrder int
+
+const (
+	SortOrderDefault SortOrder = iota
+	SortOrderAsc               = iota
+	SortOrderDesc
+)
+
+type BranchSortOption int
+
+const (
+	BranchSortOptionDefault BranchSortOption = iota
+	BranchSortOptionName
+	BranchSortOptionDate
+)
+
 type ListBranchesParams struct {
 	// RepoUID is the uid of the git repository
 	RepoUID       string
 	IncludeCommit bool
+	Query         string
+	Sort          BranchSortOption
+	Order         SortOrder
 	Page          int32
 	PageSize      int32
 }
 
 type ListBranchesOutput struct {
-	TotalCount int64
-	Branches   []Branch
+	Branches []Branch
 }
 
 type Branch struct {
@@ -541,9 +559,13 @@ func (c *Client) ListBranches(ctx context.Context, params *ListBranchesParams) (
 	if params == nil {
 		return nil, ErrNoParamsProvided
 	}
+
 	stream, err := c.repoService.ListBranches(ctx, &rpc.ListBranchesRequest{
 		RepoUid:       params.RepoUID,
 		IncludeCommit: params.IncludeCommit,
+		Query:         params.Query,
+		Sort:          mapToRPCListBranchesSortOption(params.Sort),
+		Order:         mapToRPCSortOrder(params.Order),
 		Page:          params.Page,
 		PageSize:      params.PageSize,
 	})
@@ -551,19 +573,9 @@ func (c *Client) ListBranches(ctx context.Context, params *ListBranchesParams) (
 		return nil, fmt.Errorf("failed to start stream for branches: %w", err)
 	}
 
-	// get header first
-	header, err := stream.Recv()
-	if err != nil {
-		return nil, fmt.Errorf("error occured while receiving header: %w", err)
-	}
-	if header.GetHeader() == nil {
-		return nil, fmt.Errorf("header missing")
-	}
 	output := &ListBranchesOutput{
-		TotalCount: header.GetHeader().TotalCount,
-		Branches:   make([]Branch, 0, params.PageSize),
+		Branches: make([]Branch, 0, params.PageSize),
 	}
-
 	for {
 		var next *rpc.ListBranchesResponse
 		next, err = stream.Recv()
@@ -594,6 +606,34 @@ func (c *Client) ListBranches(ctx context.Context, params *ListBranchesParams) (
 	}
 
 	return output, nil
+}
+
+func mapToRPCSortOrder(o SortOrder) rpc.SortOrder {
+	switch o {
+	case SortOrderAsc:
+		return rpc.SortOrder_Asc
+	case SortOrderDesc:
+		return rpc.SortOrder_Desc
+	case SortOrderDefault:
+		return rpc.SortOrder_Default
+	default:
+		// no need to error out - just use default for sorting
+		return rpc.SortOrder_Default
+	}
+}
+
+func mapToRPCListBranchesSortOption(o BranchSortOption) rpc.ListBranchesRequest_SortOption {
+	switch o {
+	case BranchSortOptionName:
+		return rpc.ListBranchesRequest_Name
+	case BranchSortOptionDate:
+		return rpc.ListBranchesRequest_Date
+	case BranchSortOptionDefault:
+		return rpc.ListBranchesRequest_Default
+	default:
+		// no need to error out - just use default for sorting
+		return rpc.ListBranchesRequest_Default
+	}
 }
 
 func mapRPCBranch(b *rpc.Branch) (*Branch, error) {

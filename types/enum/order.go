@@ -4,7 +4,9 @@
 
 package enum
 
-import "strings"
+import (
+	"strings"
+)
 
 // Order defines the sort order.
 type Order int
@@ -18,10 +20,16 @@ const (
 
 // String returns the Order as a string.
 func (e Order) String() string {
-	if e == OrderDesc {
+	switch e {
+	case OrderDesc:
 		return "desc"
+	case OrderAsc:
+		return "asc"
+	case OrderDefault:
+		return "default"
+	default:
+		return "unknown"
 	}
-	return "asc"
 }
 
 // ParseOrder parses the order string and returns

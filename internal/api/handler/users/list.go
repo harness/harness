@@ -20,18 +20,18 @@ func HandleList(userCtrl *user.Controller) http.HandlerFunc {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		userFilter := request.ParseUserFilter(r)
-		if userFilter.Order == enum.OrderDefault {
-			userFilter.Order = enum.OrderAsc
+		filter := request.ParseUserFilter(r)
+		if filter.Order == enum.OrderDefault {
+			filter.Order = enum.OrderAsc
 		}
 
-		totalCount, list, err := userCtrl.List(ctx, session, userFilter)
+		totalCount, list, err := userCtrl.List(ctx, session, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.Pagination(r, w, userFilter.Page, userFilter.Size, int(totalCount))
+		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
 		render.JSON(w, http.StatusOK, list)
 	}
 }

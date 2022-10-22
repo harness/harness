@@ -20,6 +20,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type SortOrder int32
+
+const (
+	SortOrder_Default SortOrder = 0
+	SortOrder_Asc     SortOrder = 1
+	SortOrder_Desc    SortOrder = 2
+)
+
+// Enum value maps for SortOrder.
+var (
+	SortOrder_name = map[int32]string{
+		0: "Default",
+		1: "Asc",
+		2: "Desc",
+	}
+	SortOrder_value = map[string]int32{
+		"Default": 0,
+		"Asc":     1,
+		"Desc":    2,
+	}
+)
+
+func (x SortOrder) Enum() *SortOrder {
+	p := new(SortOrder)
+	*p = x
+	return p
+}
+
+func (x SortOrder) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SortOrder) Descriptor() protoreflect.EnumDescriptor {
+	return file_shared_proto_enumTypes[0].Descriptor()
+}
+
+func (SortOrder) Type() protoreflect.EnumType {
+	return &file_shared_proto_enumTypes[0]
+}
+
+func (x SortOrder) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SortOrder.Descriptor instead.
+func (SortOrder) EnumDescriptor() ([]byte, []int) {
+	return file_shared_proto_rawDescGZIP(), []int{0}
+}
+
 type FileUpload struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -218,10 +267,13 @@ var file_shared_proto_rawDesc = []byte{
 	0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x22, 0x2d, 0x0a, 0x05, 0x43, 0x68, 0x75, 0x6e, 0x6b, 0x12,
 	0x10, 0x0a, 0x03, 0x65, 0x6f, 0x66, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x03, 0x65, 0x6f,
 	0x66, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52,
-	0x04, 0x64, 0x61, 0x74, 0x61, 0x42, 0x27, 0x5a, 0x25, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
-	0x63, 0x6f, 0x6d, 0x2f, 0x68, 0x61, 0x72, 0x6e, 0x65, 0x73, 0x73, 0x2f, 0x67, 0x69, 0x74, 0x6e,
-	0x65, 0x73, 0x73, 0x2f, 0x67, 0x69, 0x74, 0x72, 0x70, 0x63, 0x2f, 0x72, 0x70, 0x63, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x04, 0x64, 0x61, 0x74, 0x61, 0x2a, 0x2b, 0x0a, 0x09, 0x53, 0x6f, 0x72, 0x74, 0x4f, 0x72, 0x64,
+	0x65, 0x72, 0x12, 0x0b, 0x0a, 0x07, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x10, 0x00, 0x12,
+	0x07, 0x0a, 0x03, 0x41, 0x73, 0x63, 0x10, 0x01, 0x12, 0x08, 0x0a, 0x04, 0x44, 0x65, 0x73, 0x63,
+	0x10, 0x02, 0x42, 0x27, 0x5a, 0x25, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x68, 0x61, 0x72, 0x6e, 0x65, 0x73, 0x73, 0x2f, 0x67, 0x69, 0x74, 0x6e, 0x65, 0x73, 0x73,
+	0x2f, 0x67, 0x69, 0x74, 0x72, 0x70, 0x63, 0x2f, 0x72, 0x70, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -236,15 +288,17 @@ func file_shared_proto_rawDescGZIP() []byte {
 	return file_shared_proto_rawDescData
 }
 
+var file_shared_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_shared_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_shared_proto_goTypes = []interface{}{
-	(*FileUpload)(nil),       // 0: rpc.FileUpload
-	(*FileUploadHeader)(nil), // 1: rpc.FileUploadHeader
-	(*Chunk)(nil),            // 2: rpc.Chunk
+	(SortOrder)(0),           // 0: rpc.SortOrder
+	(*FileUpload)(nil),       // 1: rpc.FileUpload
+	(*FileUploadHeader)(nil), // 2: rpc.FileUploadHeader
+	(*Chunk)(nil),            // 3: rpc.Chunk
 }
 var file_shared_proto_depIdxs = []int32{
-	1, // 0: rpc.FileUpload.header:type_name -> rpc.FileUploadHeader
-	2, // 1: rpc.FileUpload.chunk:type_name -> rpc.Chunk
+	2, // 0: rpc.FileUpload.header:type_name -> rpc.FileUploadHeader
+	3, // 1: rpc.FileUpload.chunk:type_name -> rpc.Chunk
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -304,13 +358,14 @@ func file_shared_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_shared_proto_rawDesc,
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_shared_proto_goTypes,
 		DependencyIndexes: file_shared_proto_depIdxs,
+		EnumInfos:         file_shared_proto_enumTypes,
 		MessageInfos:      file_shared_proto_msgTypes,
 	}.Build()
 	File_shared_proto = out.File

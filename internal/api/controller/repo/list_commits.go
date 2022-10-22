@@ -19,7 +19,7 @@ import (
 * ListCommits lists the commits of a repo.
  */
 func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
-	repoRef string, gitRef string, commitFilter *types.CommitFilter) ([]Commit, int64, error) {
+	repoRef string, gitRef string, filter *types.CommitFilter) ([]Commit, int64, error) {
 	repo, err := findRepoFromRef(ctx, c.repoStore, repoRef)
 	if err != nil {
 		return nil, 0, err
@@ -37,8 +37,8 @@ func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 	rpcOut, err := c.gitRPCClient.ListCommits(ctx, &gitrpc.ListCommitsParams{
 		RepoUID:  repo.GitUID,
 		GitREF:   gitRef,
-		Page:     int32(commitFilter.Page),
-		PageSize: int32(commitFilter.Size),
+		Page:     int32(filter.Page),
+		PageSize: int32(filter.Size),
 	})
 	if err != nil {
 		return nil, 0, err

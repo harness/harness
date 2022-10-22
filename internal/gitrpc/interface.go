@@ -27,9 +27,12 @@ type gitAdapter interface {
 	GetTreeNode(ctx context.Context, repoPath string, ref string, treePath string) (*treeNode, error)
 	ListTreeNodes(ctx context.Context, repoPath string, ref string, treePath string,
 		recursive bool, includeLatestCommit bool) ([]treeNodeWithCommit, error)
-	GetLatestCommit(ctx context.Context, repoPath string, ref string, treePath string) (*commit, error)
 	GetSubmodule(ctx context.Context, repoPath string, ref string, treePath string) (*submodule, error)
 	GetBlob(ctx context.Context, repoPath string, sha string, sizeLimit int64) (*blob, error)
+	ListReferences(ctx context.Context, repoPath string, patterns []string,
+		sortBy referenceSortOption, order sortOrder, page int, pageSize int) ([]reference, error)
+	GetCommit(ctx context.Context, repoPath string, sha string) (*commit, error)
+	GetCommits(ctx context.Context, repoPath string, shas []string) ([]commit, error)
 	ListCommits(ctx context.Context, repoPath string, ref string, page int, pageSize int) ([]commit, int64, error)
-	ListBranches(ctx context.Context, repoPath string, includeCommit bool, page int, pageSize int) ([]branch, int64, error)
+	GetLatestCommit(ctx context.Context, repoPath string, ref string, treePath string) (*commit, error)
 }

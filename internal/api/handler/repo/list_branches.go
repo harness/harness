@@ -31,15 +31,17 @@ func HandleListBranches(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		branchFilter := request.ParseBranchFilter(r)
+		filter := request.ParseBranchFilter(r)
 
-		branches, totalCount, err := repoCtrl.ListBranches(ctx, session, repoRef, includeCommit, branchFilter)
+		branches, err := repoCtrl.ListBranches(ctx, session, repoRef, includeCommit, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.Pagination(r, w, branchFilter.Page, branchFilter.Size, int(totalCount))
+		// ASSUMPTION: if we don't return a full page we reached the end.
+		isLastPage := len(branches) < filter.Size
+		render.PaginationNoTotal(r, w, filter.Page, filter.Size, isLastPage)
 		render.JSON(w, http.StatusOK, branches)
 	}
 }

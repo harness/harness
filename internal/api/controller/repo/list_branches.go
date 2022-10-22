@@ -24,35 +24,66 @@ type Branch struct {
 * ListBranches lists the branches of a repo.
  */
 func (c *Controller) ListBranches(ctx context.Context, session *auth.Session,
-	repoRef string, includeCommit bool, branchFilter *types.BranchFilter) ([]Branch, int64, error) {
+	repoRef string, includeCommit bool, filter *types.BranchFilter) ([]Branch, error) {
 	repo, err := findRepoFromRef(ctx, c.repoStore, repoRef)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	rpcOut, err := c.gitRPCClient.ListBranches(ctx, &gitrpc.ListBranchesParams{
 		RepoUID:       repo.GitUID,
 		IncludeCommit: includeCommit,
-		Page:          int32(branchFilter.Page),
-		PageSize:      int32(branchFilter.Size),
+		Query:         filter.Query,
+		Sort:          mapToRPCBranchSortOption(filter.Sort),
+		Order:         mapToRPCSortOrder(filter.Order),
+		Page:          int32(filter.Page),
+		PageSize:      int32(filter.Size),
 	})
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	branches := make([]Branch, len(rpcOut.Branches))
 	for i := range rpcOut.Branches {
 		branches[i], err = mapBranch(rpcOut.Branches[i])
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to map branch: %w", err)
+			return nil, fmt.Errorf("failed to map branch: %w", err)
 		}
 	}
 
-	return branches, rpcOut.TotalCount, nil
+	return branches, nil
+}
+
+func mapToRPCBranchSortOption(o enum.BranchSortOption) gitrpc.BranchSortOption {
+	switch o {
+	case enum.BranchSortOptionDate:
+		return gitrpc.BranchSortOptionDate
+	case enum.BranchSortOptionName:
+		return gitrpc.BranchSortOptionName
+	case enum.BranchSortOptionDefault:
+		return gitrpc.BranchSortOptionDefault
+	default:
+		// no need to error out - just use default for sorting
+		return gitrpc.BranchSortOptionDefault
+	}
+}
+
+func mapToRPCSortOrder(o enum.Order) gitrpc.SortOrder {
+	switch o {
+	case enum.OrderAsc:
+		return gitrpc.SortOrderAsc
+	case enum.OrderDesc:
+		return gitrpc.SortOrderDesc
+	case enum.OrderDefault:
+		return gitrpc.SortOrderDefault
+	default:
+		// no need to error out - just use default for sorting
+		return gitrpc.SortOrderDefault
+	}
 }
 
 func mapBranch(b gitrpc.Branch) (Branch, error) {

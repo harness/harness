@@ -27,15 +27,15 @@ func HandleListCommits(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		gitRef := request.GetGitRefFromQueryOrDefault(r, "")
 
-		commitFilter := request.ParseCommitFilter(r)
+		filter := request.ParseCommitFilter(r)
 
-		commits, totalCount, err := repoCtrl.ListCommits(ctx, session, repoRef, gitRef, commitFilter)
+		commits, totalCount, err := repoCtrl.ListCommits(ctx, session, repoRef, gitRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.Pagination(r, w, commitFilter.Page, commitFilter.Size, int(totalCount))
+		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
 		render.JSON(w, http.StatusOK, commits)
 	}
 }

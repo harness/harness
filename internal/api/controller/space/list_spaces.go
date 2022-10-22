@@ -18,7 +18,7 @@ import (
 * ListSpaces lists the child spaces of a space.
  */
 func (c *Controller) ListSpaces(ctx context.Context, session *auth.Session,
-	spaceRef string, spaceFilter *types.SpaceFilter) (int64, []*types.Space, error) {
+	spaceRef string, filter *types.SpaceFilter) (int64, []*types.Space, error) {
 	space, err := findSpaceFromRef(ctx, c.spaceStore, spaceRef)
 	if err != nil {
 		return 0, nil, err
@@ -33,7 +33,7 @@ func (c *Controller) ListSpaces(ctx context.Context, session *auth.Session,
 		return 0, nil, fmt.Errorf("failed to count child spaces: %w", err)
 	}
 
-	spaces, err := c.spaceStore.List(ctx, space.ID, spaceFilter)
+	spaces, err := c.spaceStore.List(ctx, space.ID, filter)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to list child spaces: %w", err)
 	}

@@ -20,6 +20,7 @@ const (
 
 	QueryParamSort      = "sort"
 	QueryParamDirection = "direction"
+	QueryParamQuery     = "query"
 
 	QueryParamPage    = "page"
 	QueryParamPerPage = "per_page"
@@ -93,7 +94,7 @@ func PathParamAsInt64(r *http.Request, paramName string) (int64, error) {
 // QueryParamAsBoolOrDefault tries to retrieve the parameter from the query and parse it to bool.
 func QueryParamAsBoolOrDefault(r *http.Request, paramName string, deflt bool) (bool, error) {
 	rawValue, ok := QueryParam(r, paramName)
-	if !ok {
+	if !ok || len(rawValue) == 0 {
 		return deflt, nil
 	}
 
@@ -108,6 +109,11 @@ func QueryParamAsBoolOrDefault(r *http.Request, paramName string, deflt bool) (b
 // GetOptionalRemainderFromPath returns the remainder ("*") from the path or an empty string if it doesn't exist.
 func GetOptionalRemainderFromPath(r *http.Request) string {
 	return PathParamOrEmpty(r, PathParamRemainder)
+}
+
+// ParseQuery extracts the query parameter from the url.
+func ParseQuery(r *http.Request) string {
+	return r.FormValue(QueryParamQuery)
 }
 
 // ParsePage extracts the page parameter from the url.
@@ -172,14 +178,11 @@ func ParseSortPath(r *http.Request) enum.PathAttr {
 	)
 }
 
-// ParseParams extracts the query parameter from the url.
-func ParseParams(r *http.Request) types.Params {
-	return types.Params{
-		Order: ParseOrder(r),
-		Page:  ParsePage(r),
-		Sort:  ParseSort(r),
-		Size:  ParseSize(r),
-	}
+// ParseSortBranch extracts the branch sort parameter from the url.
+func ParseSortBranch(r *http.Request) enum.BranchSortOption {
+	return enum.ParseBranchSortOption(
+		r.FormValue(QueryParamSort),
+	)
 }
 
 // ParseUserFilter extracts the user query parameter from the url.
@@ -235,7 +238,10 @@ func ParseCommitFilter(r *http.Request) *types.CommitFilter {
 // TODO: do we need a separate filter?
 func ParseBranchFilter(r *http.Request) *types.BranchFilter {
 	return &types.BranchFilter{
-		Page: ParsePage(r),
-		Size: ParseSize(r),
+		Query: ParseQuery(r),
+		Sort:  ParseSortBranch(r),
+		Order: ParseOrder(r),
+		Page:  ParsePage(r),
+		Size:  ParseSize(r),
 	}
 }

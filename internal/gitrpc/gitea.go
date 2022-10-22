@@ -9,15 +9,28 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"path"
 	"path/filepath"
 	"strings"
 
 	gitea "code.gitea.io/gitea/modules/git"
+	gitearef "code.gitea.io/gitea/modules/git/foreachref"
 )
 
 const (
 	giteaPrettyLogFormat = `--pretty=format:%H`
+)
+
+// giteaRefField represents the different fields available when listing references.
+// For the full list, see https://git-scm.com/docs/git-for-each-ref#_field_names
+type giteaRefField string
+
+const (
+	giteaRefFieldRefName     giteaRefField = "refname"
+	giteaRefFieldObjectType  giteaRefField = "objecttype"
+	giteaRefFieldObjectName  giteaRefField = "objectname"
+	giteaRefFieldCreatorDate giteaRefField = "creatordate"
 )
 
 type giteaAdapter struct {
@@ -345,37 +358,234 @@ func (g giteaAdapter) ListCommits(ctx context.Context, repoPath string,
 	return commits, totalCount, nil
 }
 
-// ListBranches lists the branches of the repo.
-func (g giteaAdapter) ListBranches(ctx context.Context, repoPath string,
-	includeCommit bool, page int, pageSize int) ([]branch, int64, error) {
+// GetCommit returns the commit for a specific sha.
+func (g giteaAdapter) GetCommit(ctx context.Context, repoPath string, sha string) (*commit, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 	defer giteaRepo.Close()
 
+	commit, err := giteaRepo.GetCommit(sha)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapGiteaCommit(commit)
+}
+
+// GetCommits returns the commits for a specific list of shas.
+func (g giteaAdapter) GetCommits(ctx context.Context, repoPath string, shas []string) ([]commit, error) {
+	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
+	if err != nil {
+		return nil, err
+	}
+	defer giteaRepo.Close()
+
+	commits := make([]commit, len(shas))
+	for i, sha := range shas {
+		var giteaCommit *gitea.Commit
+		giteaCommit, err = giteaRepo.GetCommit(sha)
+		if err != nil {
+			return nil, err
+		}
+
+		var commit *commit
+		commit, err = mapGiteaCommit(giteaCommit)
+		if err != nil {
+			return nil, err
+		}
+		commits[i] = *commit
+	}
+
+	return commits, nil
+}
+
+// ListBranches lists the branches of the repo.
+func (g giteaAdapter) ListReferences(ctx context.Context, repoPath string,
+	patterns []string, sort referenceSortOption, order sortOrder, page int, pageSize int) ([]reference, error) {
 	// first page is always 1 (anything lower is treated as page 1)
 	if page < 1 {
 		page = 1
 	}
 
-	giteaBranches, totalCount, err := giteaRepo.GetBranches((page-1)*pageSize, pageSize)
+	sortBy, desc := getGiteaReferenceFieldAndOrder(sort, order)
+
+	opts := &walkReferencesOptions{
+		patterns: patterns,
+		sortBy:   sortBy,
+		sortDesc: desc,
+		isHead: func(i int, _ map[string]string) bool {
+			return i >= (page-1)*pageSize
+		},
+		isTail: func(i int, m map[string]string) bool {
+			return i >= page*pageSize-1
+		},
+		maxWalkDistance: page * pageSize,
+	}
+
+	refs := make([]reference, 0, pageSize)
+	handle := func(_ int, ref map[string]string) error {
+		refs = append(refs, reference{
+			name:   ref[string(giteaRefFieldRefName)],
+			target: ref[string(giteaRefFieldObjectName)],
+		})
+
+		return nil
+	}
+
+	err := walkReferences(ctx, repoPath,
+		[]giteaRefField{giteaRefFieldRefName, giteaRefFieldObjectName}, handle, opts)
 	if err != nil {
-		return nil, 0, fmt.Errorf("error getting branches: %w", err)
+		return nil, err
 	}
 
-	branches := make([]branch, len(giteaBranches))
-	for i := range giteaBranches {
-		var branch *branch
-		branch, err = mapGiteaBranch(giteaBranches[i], includeCommit)
-		if err != nil {
-			return nil, 0, err
+	return refs, nil
+}
+
+type walkReferencesOptions struct {
+	// patterns are the patterns used to filter the references of the repo.
+	patterns []string
+
+	// sortBy specifies the field by which the output is sorted (doesn't have to be part of the output fields)
+	sortBy giteaRefField
+
+	// sortDesc specifices whether the references are handled in an ascending or descending order.
+	sortDesc bool
+
+	// isHead is a function that returns true for the first element that should be handled.
+	// NOTE: once isHead returned true (the head was found), isHead will never be called again.
+	isHead func(int, map[string]string) bool
+
+	// isTail is a function that returns true for the last element that should be handled.
+	// NOTE: once isTail returns true (the tail was found), isTail will never be called again.
+	isTail func(int, map[string]string) bool
+
+	// maxWalkDistance returns the maximum number of nodes that are iterated over before the walking stops.
+	// Only references of the filtered output are counted towards the walking distance.
+	// WARNING: the walking stops even if the head or the tail wans't found yet
+	maxWalkDistance int
+}
+
+// walkReferences uses the provided options to filter the available references of the repo,
+// and calls the handle function for every matching node between between [head, tail].
+// The handle function is called with a map that contains the matching value for every field provided in fields.
+// TODO: walkReferences related code should be moved to separate file.
+func walkReferences(ctx context.Context, repoPath string,
+	fields []giteaRefField, handle func(int, map[string]string) error, opts *walkReferencesOptions) error {
+	if len(fields) == 0 {
+		return fmt.Errorf("no fields provided")
+	}
+
+	// backfil optional options
+	if opts.isHead == nil {
+		opts.isHead = func(i int, m map[string]string) bool { return true }
+	}
+	if opts.isTail == nil {
+		opts.isTail = func(i int, m map[string]string) bool { return false }
+	}
+	if opts.sortBy == "" {
+		opts.sortBy = giteaRefFieldRefName
+	}
+	if opts.maxWalkDistance <= 0 {
+		opts.maxWalkDistance = math.MaxInt
+	}
+
+	// prepare for-each-ref output format
+	rawFields := make([]string, len(fields))
+	for i := range fields {
+		rawFields[i] = string(fields[i])
+	}
+	giteaFormat := gitearef.NewFormat(rawFields...)
+
+	// initializer pipeline for output processing
+	pipeOut, pipeIn := io.Pipe()
+	defer pipeOut.Close()
+	defer pipeIn.Close()
+	stderr := strings.Builder{}
+	rc := &gitea.RunOpts{Dir: repoPath, Stdout: pipeIn, Stderr: &stderr}
+
+	// create sort argument
+	sortArg := string(opts.sortBy)
+	if opts.sortDesc {
+		sortArg = "-" + sortArg
+	}
+
+	go func() {
+		// create array for args as patterns have to be passed as separate args.
+		args := []string{
+			"for-each-ref",
+			"--format",
+			giteaFormat.Flag(),
+			"--sort",
+			sortArg,
+			"--count",
+			fmt.Sprint(opts.maxWalkDistance),
+			"--ignore-case",
 		}
-		branches[i] = *branch
+		args = append(args, opts.patterns...)
+		err := gitea.NewCommand(ctx, args...).Run(rc)
+		if err != nil {
+			_ = pipeIn.CloseWithError(gitea.ConcatenateError(err, stderr.String()))
+		} else {
+			_ = pipeIn.Close()
+		}
+	}()
+
+	parser := giteaFormat.Parser(pipeOut)
+	return handleReferenceParser(parser, handle, opts)
+}
+
+func handleReferenceParser(parser *gitearef.Parser, handle func(int, map[string]string) error,
+	opts *walkReferencesOptions) error {
+	headFound := false
+	c := 0
+	for {
+		// parse next line - nil if end of output reached or an error occurred.
+		rawRef := parser.Next()
+		if rawRef == nil {
+			break
+		}
+
+		// increase count
+		c++
+
+		// check if we alraedy found the head (or the current element is the head)
+		headFound = headFound || opts.isHead(c-1, rawRef)
+		if !headFound {
+			continue
+		}
+
+		// handle the element
+		err := handle(c, rawRef)
+		if err != nil {
+			return fmt.Errorf("error handling reference: %w", err)
+		}
+
+		// if entry is the tail - break the loop
+		if opts.isTail(c-1, rawRef) {
+			break
+		}
+	}
+	if err := parser.Err(); err != nil {
+		return fmt.Errorf("failed to parse output: %w", err)
 	}
 
-	// TODO: return int instead?
-	return branches, int64(totalCount), nil
+	return nil
+}
+
+func getGiteaReferenceFieldAndOrder(s referenceSortOption, o sortOrder) (giteaRefField, bool) {
+	ref := giteaRefFieldRefName
+	desc := o == sortOrderDesc
+
+	if s == referenceSortOptionDate {
+		ref = giteaRefFieldCreatorDate
+		if o == sortOrderDefault {
+			desc = true
+		}
+	}
+
+	return ref, desc
 }
 
 // GetSubmodule returns the submodule at the given path reachable from ref.
@@ -441,29 +651,6 @@ func (g giteaAdapter) GetBlob(ctx context.Context, repoPath string, sha string, 
 	return &blob{
 		size:    giteaBlob.Size(),
 		content: buff,
-	}, nil
-}
-
-func mapGiteaBranch(giteaBranch *gitea.Branch, includeCommit bool) (*branch, error) {
-	if giteaBranch == nil {
-		return nil, fmt.Errorf("gitea branch is nil")
-	}
-
-	var commit *commit
-	if includeCommit {
-		giteaCommit, err := giteaBranch.GetCommit()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get commit of gitea branch")
-		}
-		commit, err = mapGiteaCommit(giteaCommit)
-		if err != nil {
-			return nil, fmt.Errorf("failed to map gitea commit: %w", err)
-		}
-	}
-
-	return &branch{
-		name:   giteaBranch.Name,
-		commit: commit,
 	}, nil
 }
 

@@ -18,7 +18,7 @@ import (
 * ListRepositories lists the repositories of a space.
  */
 func (c *Controller) ListRepositories(ctx context.Context, session *auth.Session,
-	spaceRef string, repoFilter *types.RepoFilter) (int64, []*types.Repository, error) {
+	spaceRef string, filter *types.RepoFilter) (int64, []*types.Repository, error) {
 	space, err := findSpaceFromRef(ctx, c.spaceStore, spaceRef)
 	if err != nil {
 		return 0, nil, err
@@ -33,7 +33,7 @@ func (c *Controller) ListRepositories(ctx context.Context, session *auth.Session
 		return 0, nil, fmt.Errorf("failed to count child repos: %w", err)
 	}
 
-	repos, err := c.repoStore.List(ctx, space.ID, repoFilter)
+	repos, err := c.repoStore.List(ctx, space.ID, filter)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to list child repos: %w", err)
 	}

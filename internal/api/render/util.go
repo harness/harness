@@ -25,14 +25,3 @@ func max(x, y int) int {
 	}
 	return y
 }
-
-// max returns the smaller of x or y.
-func min(x, y int) int {
-	if y == 0 {
-		return x
-	}
-	if x < y {
-		return x
-	}
-	return y
-}

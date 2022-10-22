@@ -17,7 +17,7 @@ import (
 * ListPaths lists all paths of a repo.
  */
 func (c *Controller) ListPaths(ctx context.Context, session *auth.Session,
-	repoRef string, pathFilter *types.PathFilter) ([]*types.Path, error) {
+	repoRef string, filter *types.PathFilter) ([]*types.Path, error) {
 	repo, err := findRepoFromRef(ctx, c.repoStore, repoRef)
 	if err != nil {
 		return nil, err
@@ -27,5 +27,5 @@ func (c *Controller) ListPaths(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	return c.repoStore.ListAllPaths(ctx, repo.ID, pathFilter)
+	return c.repoStore.ListAllPaths(ctx, repo.ID, filter)
 }

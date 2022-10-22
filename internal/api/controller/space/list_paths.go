@@ -17,7 +17,7 @@ import (
 * ListPaths lists all paths of a space.
  */
 func (c *Controller) ListPaths(ctx context.Context, session *auth.Session,
-	spaceRef string, pathFilter *types.PathFilter) ([]*types.Path, error) {
+	spaceRef string, filter *types.PathFilter) ([]*types.Path, error) {
 	space, err := findSpaceFromRef(ctx, c.spaceStore, spaceRef)
 	if err != nil {
 		return nil, err
@@ -27,5 +27,5 @@ func (c *Controller) ListPaths(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	return c.spaceStore.ListAllPaths(ctx, space.ID, pathFilter)
+	return c.spaceStore.ListAllPaths(ctx, space.ID, filter)
 }

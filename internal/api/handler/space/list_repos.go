@@ -24,18 +24,18 @@ func HandleListRepos(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		repoFilter := request.ParseRepoFilter(r)
-		if repoFilter.Order == enum.OrderDefault {
-			repoFilter.Order = enum.OrderAsc
+		filter := request.ParseRepoFilter(r)
+		if filter.Order == enum.OrderDefault {
+			filter.Order = enum.OrderAsc
 		}
 
-		totalCount, repos, err := spaceCtrl.ListRepositories(ctx, session, spaceRef, repoFilter)
+		totalCount, repos, err := spaceCtrl.ListRepositories(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.Pagination(r, w, repoFilter.Page, repoFilter.Size, int(totalCount))
+		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
 		render.JSON(w, http.StatusOK, repos)
 	}
 }

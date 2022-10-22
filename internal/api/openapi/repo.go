@@ -269,6 +269,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListBranches.WithTags("repository")
 	opListBranches.WithMapOfAnything(map[string]interface{}{"operationId": "listBranches"})
 	opListBranches.WithParameters(queryParameterGitRef, queryParameterIncludeCommit,
+		queryParameterQueryBranch, queryParameterDirection, queryParameterSortBranch,
 		queryParameterPage, queryParameterPerPage)
 	_ = reflector.SetRequest(&opListBranches, new(listCommitsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListBranches, []repo.Branch{}, http.StatusOK)

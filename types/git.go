@@ -4,6 +4,8 @@
 
 package types
 
+import "github.com/harness/gitness/types/enum"
+
 // CommitFilter stores commit query parameters.
 type CommitFilter struct {
 	Page int `json:"page"`
@@ -12,6 +14,9 @@ type CommitFilter struct {
 
 // BranchFilter stores commit query parameters.
 type BranchFilter struct {
-	Page int `json:"page"`
-	Size int `json:"size"`
+	Query string                `json:"query"`
+	Sort  enum.BranchSortOption `json:"sort"`
+	Order enum.Order            `json:"order"`
+	Page  int                   `json:"page"`
+	Size  int                   `json:"size"`
 }

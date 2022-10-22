@@ -26,12 +26,12 @@ func HandleListPaths(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		pathFilter := request.ParsePathFilter(r)
-		if pathFilter.Order == enum.OrderDefault {
-			pathFilter.Order = enum.OrderAsc
+		filter := request.ParsePathFilter(r)
+		if filter.Order == enum.OrderDefault {
+			filter.Order = enum.OrderAsc
 		}
 
-		paths, err := repoCtrl.ListPaths(ctx, session, repoRef, pathFilter)
+		paths, err := repoCtrl.ListPaths(ctx, session, repoRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
