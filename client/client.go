@@ -16,6 +16,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
 )
@@ -91,6 +92,14 @@ func (c *HTTPClient) Self(ctx context.Context) (*types.User, error) {
 	out := new(types.User)
 	uri := fmt.Sprintf("%s/api/v1/user", c.base)
 	err := c.get(ctx, uri, out)
+	return out, err
+}
+
+// UserCreatePAT creates a new PAT for the user.
+func (c *HTTPClient) UserCreatePAT(ctx context.Context, in user.CreateTokenInput) (*types.TokenResponse, error) {
+	out := new(types.TokenResponse)
+	uri := fmt.Sprintf("%s/api/v1/user/tokens", c.base)
+	err := c.post(ctx, uri, in, out)
 	return out, err
 }
 

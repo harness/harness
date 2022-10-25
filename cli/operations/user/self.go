@@ -53,10 +53,10 @@ func (c *command) run(*kingpin.ParseContext) error {
 }
 
 // Register the command.
-func Register(app *kingpin.Application) {
+func registerSelf(app *kingpin.CmdClause) {
 	c := new(command)
 
-	cmd := app.Command("account", "display authenticated user").
+	cmd := app.Command("self", "display authenticated user").
 		Action(c.run)
 
 	cmd.Flag("json", "json encode the output").

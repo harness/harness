@@ -23,8 +23,8 @@ $ popd
 Build the server and command line tools:
 
 ```bash
-$ go generate ./...
-$ go build -o release/gitness
+# STANDALONE
+$ make build
 ```
 
 # Test
@@ -42,7 +42,8 @@ This project supports all operating systems and architectures supported by Go.  
 Start the server at `localhost:3000`
 
 ```bash
-$ release/gitness server
+# STANDALONE
+./gitness server .local.env
 ```
 
 # User Interface
@@ -53,60 +54,70 @@ This project includes a simple user interface for interacting with the system. W
 
 This project includes a swagger specification. When you run the application, you can access the swagger specification by navigating to `http://localhost:3000/swagger` in your browser.
 
-# Command Line
-
+# CLI
 This project includes simple command line tools for interacting with the system. Please remember that you must start the server before you can execute commands.
 
 Register a new user:
 
 ```bash
-$ release/gitness register
+$ ./gitness register
 ```
+
+> NOTE: A user `admin` (pw: `changeit`) gets created by default.
+
 
 Login to the application:
 
 ```bash
-$ release/gitness login
+$ ./gitness login
 ```
 
 Logout from the application:
 
 ```bash
-$ release/gitness logout
+$ ./gitness logout
 ```
 
 View your account details:
 
 ```bash
-$ release/gitness account
+$ ./gitness user self
 ```
 
 Generate a personal access token:
 
 ```bash
-$ release/gitness token
-```
-
-Create a pipeline:
-
-```bash
-$ release/gitness pipeline create <name>
-```
-
-List pipelines:
-
-```bash
-$ release/gitness pipeline ls
+$ ./gitness user pat $NAME $LIFETIME_IN_S
 ```
 
 Debug and output http responses from the server:
 
 ```bash
-$ DEBUG=true release/gitness pipeline ls
+$ DEBUG=true ./gitness user self
 ```
 
 View all commands:
 
 ```bash
-$ release/gitness --help
+$ ./gitness --help
+```
+
+# REST API
+Please refer to the swagger for the specification of our rest API.
+
+For testing, it's simplest to execute operations as the default user `admin` using a PAT:
+```bash
+# LOGIN (user: admin, pw: changeit)
+$ ./gitness login
+
+# GENERATE PAT (1 YEAR VALIDITY)
+$ ./gitness user pat mypat 2592000
+```
+
+The command outputs a valid PAT that has been granted full access as the user.
+The token can then be send as part of the `Authorization` header with Postman or curl:
+
+```bash
+$ curl http://localhost:3000/api/v1/user \
+-H "Authorization: Bearer $TOKEN"
 ```

@@ -15,7 +15,7 @@ const (
 
 var (
 	ErrTokenLifeTimeOutOfBounds = &ValidationError{
-		"The life time of a token has to be between 1 second and 365 days.",
+		"The life time of a token has to be between 1 day and 365 days.",
 	}
 )
 
