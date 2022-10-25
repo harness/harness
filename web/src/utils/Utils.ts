@@ -2,6 +2,7 @@ import { Intent, IToaster, IToastProps, Position, Toaster } from '@blueprintjs/c
 import type { editor as EDITOR } from 'monaco-editor/esm/vs/editor/editor.api'
 import { get } from 'lodash-es'
 import moment from 'moment'
+import langMap from 'lang-map'
 import { useEffect } from 'react'
 import { useAppContext } from 'AppContext'
 
@@ -38,11 +39,6 @@ export const MonacoEditorOptions = {
   overviewRulerBorder: false
 }
 
-export const MonacoEditorJsonOptions = {
-  ...MonacoEditorOptions,
-  tabSize: 2
-}
-
 // Monaco editor has a bug where when its value is set, the value
 // is selected all by default.
 // Fix by set selection range to zero
@@ -64,7 +60,7 @@ const LOCALE = Intl.NumberFormat().resolvedOptions?.().locale || 'en-US'
  * @param timestamp Timestamp
  * @param timeStyle Optional DateTimeFormat's `timeStyle` option.
  */
-export function formatTime(timestamp: number, timeStyle = 'short'): string {
+export function formatTime(timestamp: number | string, timeStyle = 'short'): string {
   return new Intl.DateTimeFormat(LOCALE, {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: TS built-in type for DateTimeFormat is not correct
@@ -77,7 +73,7 @@ export function formatTime(timestamp: number, timeStyle = 'short'): string {
  * @param timestamp Timestamp
  * @param dateStyle Optional DateTimeFormat's `dateStyle` option.
  */
-export function formatDate(timestamp: number, dateStyle = 'medium'): string {
+export function formatDate(timestamp: number | string, dateStyle = 'medium'): string {
   return new Intl.DateTimeFormat(LOCALE, {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: TS built-in type for DateTimeFormat is not correct
@@ -192,4 +188,76 @@ export const ButtonRoleProps = {
   },
   tabIndex: 0,
   role: 'button'
+}
+
+const MONACO_SUPPORTED_LANGUAGES = [
+  'abap',
+  'apex',
+  'azcli',
+  'bat',
+  'cameligo',
+  'clojure',
+  'coffee',
+  'cpp',
+  'csharp',
+  'csp',
+  'css',
+  'dockerfile',
+  'fsharp',
+  'go',
+  'graphql',
+  'handlebars',
+  'html',
+  'ini',
+  'java',
+  'javascript',
+  'json',
+  'kotlin',
+  'less',
+  'lua',
+  'markdown',
+  'mips',
+  'msdax',
+  'mysql',
+  'objective-c',
+  'pascal',
+  'pascaligo',
+  'perl',
+  'pgsql',
+  'php',
+  'postiats',
+  'powerquery',
+  'powershell',
+  'pug',
+  'python',
+  'r',
+  'razor',
+  'redis',
+  'redshift',
+  'restructuredtext',
+  'ruby',
+  'rust',
+  'sb',
+  'scheme',
+  'scss',
+  'shell',
+  'solidity',
+  'sophia',
+  'sql',
+  'st',
+  'swift',
+  'tcl',
+  'twig',
+  'typescript',
+  'vb',
+  'xml',
+  'yaml'
+]
+
+export const filenameToLanguage = (name?: string): string | undefined => {
+  const map = langMap.languages(name?.split('.').pop() || '')
+
+  if (map?.length) {
+    return MONACO_SUPPORTED_LANGUAGES.find(lang => map.includes(lang))
+  }
 }

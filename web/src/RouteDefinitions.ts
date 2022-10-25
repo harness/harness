@@ -1,88 +1,77 @@
-interface PathProps {
-  accountId: string
-  orgIdentifier: string
-  projectIdentifier: string
+export interface SCMPathProps {
+  space?: string
   repoName?: string
-  branchName?: string
+  gitRef?: string
+  resourcePath?: string
+}
+
+export interface SCMQueryProps {
+  branch?: string
   filePath?: string
-  pullRequestId?: string
-  commitId?: string
 }
 
-interface QueryProps {}
-
-export const pathProps: Readonly<Required<PathProps>> = {
-  accountId: ':accountId',
-  orgIdentifier: ':orgIdentifier',
-  projectIdentifier: ':projectIdentifier',
+export const pathProps: Readonly<Required<SCMPathProps>> = {
+  space: ':space',
   repoName: ':repoName',
-  branchName: ':branchName',
-  filePath: ':filePath',
-  pullRequestId: ':pullRequestId',
-  commitId: ':commitId'
+  gitRef: ':gitRef*',
+  resourcePath: ':resourcePath'
 }
 
-function withAccountId<T>(fn: (args: T) => string) {
-  return (params: T & { accountId: string }): string => {
-    const path = fn(params)
-    return `/account/${params.accountId}/${path.replace(/^\//, '')}`
-  }
+// function withAccountId<T>(fn: (args: T) => string) {
+//   return (params: T & { accountId: string }): string => {
+//     const path = fn(params)
+//     return `/account/${params.accountId}/${path.replace(/^\//, '')}`
+//   }
+// }
+
+// function withQueryParams(path: string, params: Record<string, string>): string {
+//   return Object.entries(params).every(([key, value]) => ':' + key === value)
+//     ? path
+//     : [
+//         path,
+//         Object.entries(params)
+//           .reduce((value, entry) => {
+//             value.push(entry.join('='))
+//             return value
+//           }, [] as string[])
+//           .join('&')
+//       ].join('?')
+// }
+
+export interface SCMRoutes {
+  toSignIn: () => string
+  toSignUp: () => string
+  toSCMRepositoriesListing: ({ space }: { space: string }) => string
+  toSCMRepository: ({
+    repoPath,
+    gitRef,
+    resourcePath
+  }: {
+    repoPath: string
+    gitRef?: string
+    resourcePath?: string
+  }) => string
 }
 
-export default {
+export const routes: SCMRoutes = {
   toSignIn: (): string => '/signin',
   toSignUp: (): string => '/signup',
-
-  toSCM: withAccountId(() => `/scm`),
-  toSCMHome: withAccountId(() => `/scm/home`),
-  toSCMRepos: withAccountId(
-    ({ orgIdentifier, projectIdentifier }: PathProps) =>
-      `/scm/orgs/${orgIdentifier}/projects/${projectIdentifier}/repos`
-  ),
-  toSCMRepoSettings: withAccountId(
-    ({ orgIdentifier, projectIdentifier, repoName }: RequireField<PathProps, 'repoName'>) =>
-      `/scm/orgs/${orgIdentifier}/projects/${projectIdentifier}/repos/${repoName}/settings`
-  ),
-  toSCMFiles: withAccountId(
-    ({ orgIdentifier, projectIdentifier, repoName, branchName }: RequireField<PathProps, 'repoName' | 'branchName'>) =>
-      `/scm/orgs/${orgIdentifier}/projects/${projectIdentifier}/repos/${repoName}/branches/${branchName}`
-  ),
-  toSCMFileDetails: withAccountId(
-    ({
-      orgIdentifier,
-      projectIdentifier,
-      repoName,
-      branchName,
-      filePath
-    }: RequireField<PathProps, 'repoName' | 'branchName' | 'filePath'>) =>
-      `/scm/orgs/${orgIdentifier}/projects/${projectIdentifier}/repos/${repoName}/branches/${branchName}/files/${filePath}`
-  ),
-  toSCMPullRequests: withAccountId(
-    ({ orgIdentifier, projectIdentifier, repoName, branchName }: RequireField<PathProps, 'repoName' | 'branchName'>) =>
-      `/scm/orgs/${orgIdentifier}/projects/${projectIdentifier}/repos/${repoName}/branches/${branchName}/pull-requests`
-  ),
-  toSCMPullRequestDetails: withAccountId(
-    ({
-      orgIdentifier,
-      projectIdentifier,
-      repoName,
-      branchName,
-      pullRequestId
-    }: RequireField<PathProps, 'repoName' | 'branchName' | 'pullRequestId'>) =>
-      `/scm/orgs/${orgIdentifier}/projects/${projectIdentifier}/repos/${repoName}/branches/${branchName}/pull-requests/${pullRequestId}`
-  ),
-  toSCMCommits: withAccountId(
-    ({ orgIdentifier, projectIdentifier, repoName, branchName }: RequireField<PathProps, 'repoName' | 'branchName'>) =>
-      `/scm/orgs/${orgIdentifier}/projects/${projectIdentifier}/repos/${repoName}/branches/${branchName}/commits`
-  ),
-  toSCMCommitDetails: withAccountId(
-    ({
-      orgIdentifier,
-      projectIdentifier,
-      repoName,
-      branchName,
-      commitId
-    }: RequireField<PathProps, 'repoName' | 'branchName' | 'commitId'>) =>
-      `/scm/orgs/${orgIdentifier}/projects/${projectIdentifier}/repos/${repoName}/branches/${branchName}/commits/${commitId}`
-  )
+  toSCMRepositoriesListing: ({ space }: { space: string }) => {
+    const [accountId, orgIdentifier, projectIdentifier] = space.split('/')
+    return `/account/${accountId}/code/${orgIdentifier}/${projectIdentifier}`
+  },
+  toSCMRepository: ({
+    repoPath,
+    gitRef,
+    resourcePath
+  }: {
+    repoPath: string
+    gitRef?: string
+    resourcePath?: string
+  }) => {
+    const [accountId, orgIdentifier, projectIdentifier, repoName] = repoPath.split('/')
+    return `/account/${accountId}/code/${orgIdentifier}/${projectIdentifier}/${repoName}${gitRef ? '/' + gitRef : ''}${
+      resourcePath ? '/~/' + resourcePath : ''
+    }`
+  }
 }

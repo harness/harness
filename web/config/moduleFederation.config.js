@@ -33,15 +33,8 @@ module.exports = {
   },
   exposes: {
     './App': './src/App.tsx',
-    './Welcome': './src/views/Welcome/Welcome.tsx',
-    './Repos': './src/views/Repos/Repos.tsx',
-    './RepoFiles': './src/views/RepoFiles/RepoFiles.tsx',
-    './RepoFileDetails': './src/views/RepoFileDetails/RepoFileDetails.tsx',
-    './RepoCommits': './src/views/RepoCommits/RepoCommits.tsx',
-    './RepoCommitDetails': './src/views/RepoCommitDetails/RepoCommitDetails.tsx',
-    './RepoPullRequests': './src/views/RepoPullRequests/RepoPullRequests.tsx',
-    './RepoPullRequestDetails': './src/views/RepoPullRequestDetails/RepoPullRequestDetails.tsx',
-    './RepoSettings': './src/views/RepoSettings/RepoSettings.tsx'
+    './RepositoriesListing': './src/pages/RepositoriesListing/RepositoriesListing.tsx',
+    './Repository': './src/pages/Repository/Repository.tsx'
   },
   shared: {
     formik: packageJSON.dependencies['formik'],

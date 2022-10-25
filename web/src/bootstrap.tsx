@@ -8,7 +8,4 @@ import './bootstrap.scss'
 // Also being used in when generating proper URLs inside the app.
 window.STRIP_SCM_PREFIX = true
 
-ReactDOM.render(
-  <App standalone accountId="default" apiToken="" hooks={{}} components={{}} />,
-  document.getElementById('react-root')
-)
+ReactDOM.render(<App standalone apiToken="" hooks={{}} components={{}} />, document.getElementById('react-root'))

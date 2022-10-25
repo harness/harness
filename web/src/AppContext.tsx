@@ -1,6 +1,7 @@
-import React, { useState, useContext } from 'react'
+import React, { useState, useContext, useEffect } from 'react'
 import { noop } from 'lodash-es'
 import type { AppProps } from 'AppProps'
+import { routes } from 'RouteDefinitions'
 
 interface AppContextProps extends AppProps {
   setAppContext: (value: Partial<AppProps>) => void
@@ -9,6 +10,7 @@ interface AppContextProps extends AppProps {
 const AppContext = React.createContext<AppContextProps>({
   standalone: true,
   setAppContext: noop,
+  routes,
   hooks: {},
   components: {}
 })
@@ -18,6 +20,12 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(func
   children
 }) {
   const [appStates, setAppStates] = useState<AppProps>(initialValue)
+
+  useEffect(() => {
+    if (initialValue.space && initialValue.space !== appStates.space) {
+      setAppStates({ ...appStates, ...initialValue })
+    }
+  }, [initialValue, appStates])
 
   return (
     <AppContext.Provider

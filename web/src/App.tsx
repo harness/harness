@@ -10,6 +10,7 @@ import type { AppProps } from 'AppProps'
 import { buildResfulReactRequestOptions, handle401 } from 'AppUtils'
 import { RouteDestinations } from 'RouteDestinations'
 import { useAPIToken } from 'hooks/useAPIToken'
+import { routes as _routes } from 'RouteDefinitions'
 import { languageLoader } from './framework/strings/languageLoader'
 import type { LanguageRecord } from './framework/strings/languageLoader'
 import { StringsContextProvider } from './framework/strings/StringsContextProvider'
@@ -19,37 +20,31 @@ FocusStyleManager.onlyShowFocusOnTabs()
 
 const App: React.FC<AppProps> = React.memo(function App({
   standalone = false,
-  accountId = '',
+  space = '',
+  routes = _routes,
   lang = 'en',
-  apiToken,
   on401 = handle401,
   children,
   hooks = {},
   components = {}
 }: AppProps) {
   const [strings, setStrings] = useState<LanguageRecord>()
-  const [token, setToken] = useAPIToken(apiToken)
+  const token = useAPIToken()
   const getRequestOptions = useCallback(
-    (): Partial<RequestInit> => buildResfulReactRequestOptions(hooks.useGetToken?.() || apiToken || token),
-    [apiToken, token, hooks]
-  ) // eslint-disable-line react-hooks/exhaustive-deps
+    (): Partial<RequestInit> => buildResfulReactRequestOptions(hooks.useGetToken?.() || token),
+    [token, hooks]
+  )
 
   useEffect(() => {
     languageLoader(lang).then(setStrings)
   }, [lang, setStrings])
 
-  useEffect(() => {
-    if (!apiToken) {
-      setToken(token)
-    }
-  }, [apiToken, token, setToken])
-
   return strings ? (
     <StringsContextProvider initialStrings={strings}>
       <AppErrorBoundary>
-        <AppContextProvider value={{ standalone, accountId, lang, on401, hooks, components }}>
+        <AppContextProvider value={{ standalone, space, routes, lang, on401, hooks, components }}>
           <RestfulProvider
-            base="/"
+            base={standalone ? '/' : '/scm'}
             requestOptions={getRequestOptions}
             queryParams={{}}
             queryParamStringifyOptions={{ skipNulls: true }}

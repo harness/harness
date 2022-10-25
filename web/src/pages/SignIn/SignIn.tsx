@@ -3,7 +3,7 @@ import React, { useCallback, useState } from 'react'
 // import { get } from 'lodash-es'
 import { Button, Container, Layout, Text, TextInput } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
-import { useOnLogin } from 'services/pm'
+import { useOnLogin } from 'services/scm'
 // import routes from 'RouteDefinitions'
 // import { useAPIToken } from 'hooks/useAPIToken'
 

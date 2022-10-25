@@ -7,10 +7,15 @@ export interface StringsMap {
   addLicense: string
   addReadMe: string
   cancel: string
+  clone: string
   commits: string
   content: string
   create: string
   createRepo: string
+  'createRepoModal.branch': string
+  'createRepoModal.branchLabel': string
+  'createRepoModal.privateLabel': string
+  'createRepoModal.publicLabel': string
   description: string
   email: string
   enterDescription: string
@@ -19,6 +24,7 @@ export interface StringsMap {
   failedToCreateRepo: string
   files: string
   history: string
+  loading: string
   name: string
   newFile: string
   newFolder: string
@@ -37,13 +43,13 @@ export interface StringsMap {
   'repos.lastChange': string
   'repos.name': string
   'repos.noDataMessage': string
-  'repos.noDataTitle': string
   'repos.updated': string
   repositories: string
   search: string
   settings: string
   signIn: string
   signUp: string
+  status: string
   'validation.gitBranchNameInvalid': string
   'validation.namePatternIsNotValid': string
 }

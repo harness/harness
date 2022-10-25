@@ -2,6 +2,7 @@ import type React from 'react'
 import type * as History from 'history'
 import type { PermissionOptionsMenuButtonProps } from 'components/Permissions/PermissionsOptionsMenuButton'
 import type { Unknown } from 'utils/Utils'
+import type { SCMRoutes } from 'RouteDefinitions'
 import type { LangLocale } from './framework/strings/languageLoader'
 
 /**
@@ -28,14 +29,14 @@ export interface AppProps {
   /** App children. When provided, children is a remote view which will be mounted under App contexts */
   children?: React.ReactNode
 
-  /** Active account id when app is embedded */
-  accountId?: string
+  /** Active space when app is embedded */
+  space?: string
+
+  /** Routing utlis (used to generate app specific URLs) */
+  routes: SCMRoutes
 
   /** Language to use in the app, default is 'en' */
   lang?: LangLocale
-
-  /** API token to be used in Restful React */
-  apiToken?: string
 
   /** 401 handler. Used in parent app to override 401 handling from child app */
   on401?: () => void
