@@ -110,13 +110,16 @@ type (
 		Delete(ctx context.Context, id int64) error
 
 		// Count the child spaces of a space.
-		Count(ctx context.Context, id int64) (int64, error)
+		Count(ctx context.Context, id int64, opts *types.SpaceFilter) (int64, error)
 
 		// List returns a list of child spaces in a space.
 		List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error)
 
-		// ListAllPaths returns a list of all paths of a space.
-		ListAllPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error)
+		// CountPaths returns a count of all paths of a space.
+		CountPaths(ctx context.Context, id int64, opts *types.PathFilter) (int64, error)
+
+		// ListPaths returns a list of all paths of a space.
+		ListPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error)
 
 		// CreatePath create an alias for a space
 		CreatePath(ctx context.Context, spaceID int64, params *types.PathParams) (*types.Path, error)
@@ -147,13 +150,16 @@ type (
 		Delete(ctx context.Context, id int64) error
 
 		// Count of repos in a space.
-		Count(ctx context.Context, spaceID int64) (int64, error)
+		Count(ctx context.Context, spaceID int64, opts *types.RepoFilter) (int64, error)
 
 		// List returns a list of repos in a space.
 		List(ctx context.Context, spaceID int64, opts *types.RepoFilter) ([]*types.Repository, error)
 
-		// ListAllPaths returns a list of all alias paths of a repo.
-		ListAllPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error)
+		// CountPaths returns a count of all paths of a repo.
+		CountPaths(ctx context.Context, id int64, opts *types.PathFilter) (int64, error)
+
+		// ListPaths returns a list of all paths of a repo.
+		ListPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error)
 
 		// CreatePath an alias for a repo
 		CreatePath(ctx context.Context, repoID int64, params *types.PathParams) (*types.Path, error)

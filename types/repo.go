@@ -38,6 +38,7 @@ type Repository struct {
 type RepoFilter struct {
 	Page  int           `json:"page"`
 	Size  int           `json:"size"`
+	Query string        `json:"query"`
 	Sort  enum.RepoAttr `json:"sort"`
 	Order enum.Order    `json:"direction"`
 }

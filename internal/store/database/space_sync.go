@@ -70,10 +70,10 @@ func (s *SpaceStoreSync) Delete(ctx context.Context, id int64) error {
 }
 
 // Count the child spaces of a space.
-func (s *SpaceStoreSync) Count(ctx context.Context, id int64) (int64, error) {
+func (s *SpaceStoreSync) Count(ctx context.Context, id int64, opts *types.SpaceFilter) (int64, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.Count(ctx, id)
+	return s.base.Count(ctx, id, opts)
 }
 
 // List returns a list of spaces under the parent space.
@@ -83,9 +83,14 @@ func (s *SpaceStoreSync) List(ctx context.Context, id int64, opts *types.SpaceFi
 	return s.base.List(ctx, id, opts)
 }
 
-// ListAllPaths returns a list of all paths of a space.
-func (s *SpaceStoreSync) ListAllPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
-	return s.base.ListAllPaths(ctx, id, opts)
+// CountPaths returns a count of all paths of a space.
+func (s *SpaceStoreSync) CountPaths(ctx context.Context, id int64, opts *types.PathFilter) (int64, error) {
+	return s.base.CountPaths(ctx, id, opts)
+}
+
+// ListPaths returns a list of all paths of a space.
+func (s *SpaceStoreSync) ListPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
+	return s.base.ListPaths(ctx, id, opts)
 }
 
 // CreatePath a path for a space.

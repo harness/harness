@@ -29,7 +29,7 @@ func HandleListRepos(spaceCtrl *space.Controller) http.HandlerFunc {
 			filter.Order = enum.OrderAsc
 		}
 
-		totalCount, repos, err := spaceCtrl.ListRepositories(ctx, session, spaceRef, filter)
+		repos, totalCount, err := spaceCtrl.ListRepositories(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

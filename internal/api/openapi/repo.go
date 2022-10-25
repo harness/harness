@@ -12,6 +12,7 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
@@ -138,6 +139,39 @@ var queryParameterSpacePath = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterSortBranch = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSort,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The data by which the branches are sorted."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(enum.BranchSortOptionName.String()),
+				Enum: []interface{}{
+					ptr.String(enum.BranchSortOptionName.String()),
+					ptr.String(enum.BranchSortOptionDate.String()),
+				},
+			},
+		},
+	},
+}
+
+var queryParameterQueryBranch = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring by which the branches are filtered."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
 //nolint:funlen
 func repoOperations(reflector *openapi3.Reflector) {
 	createRepository := openapi3.Operation{}
@@ -211,6 +245,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListPaths := openapi3.Operation{}
 	opListPaths.WithTags("repository")
 	opListPaths.WithMapOfAnything(map[string]interface{}{"operationId": "listRepositoryPaths"})
+	opListPaths.WithParameters(queryParameterPage, queryParameterPerPage)
 	_ = reflector.SetRequest(&opListPaths, new(repoRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListPaths, []types.Path{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusInternalServerError)

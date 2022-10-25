@@ -4,7 +4,9 @@
 
 package enum
 
-import "strings"
+import (
+	"strings"
+)
 
 // Defines repo attributes that can be used for sorting and filtering.
 type RepoAttr int
@@ -12,7 +14,6 @@ type RepoAttr int
 // Order enumeration.
 const (
 	RepoAttrNone RepoAttr = iota
-	RepoAttrID
 	RepoAttrPathName
 	RepoAttrPath
 	RepoAttrName
@@ -24,8 +25,6 @@ const (
 // and returns the equivalent enumeration.
 func ParseRepoAtrr(s string) RepoAttr {
 	switch strings.ToLower(s) {
-	case id:
-		return RepoAttrID
 	case name:
 		return RepoAttrName
 	case path:
@@ -38,5 +37,25 @@ func ParseRepoAtrr(s string) RepoAttr {
 		return RepoAttrUpdated
 	default:
 		return RepoAttrNone
+	}
+}
+
+// String returns the string representation of the attribute.
+func (a RepoAttr) String() string {
+	switch a {
+	case RepoAttrPathName:
+		return pathName
+	case RepoAttrPath:
+		return path
+	case RepoAttrName:
+		return name
+	case RepoAttrCreated:
+		return created
+	case RepoAttrUpdated:
+		return updated
+	case RepoAttrNone:
+		return ""
+	default:
+		return undefined
 	}
 }

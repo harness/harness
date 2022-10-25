@@ -18,28 +18,28 @@ import (
 * ListSpaces lists the child spaces of a space.
  */
 func (c *Controller) ListSpaces(ctx context.Context, session *auth.Session,
-	spaceRef string, filter *types.SpaceFilter) (int64, []*types.Space, error) {
+	spaceRef string, filter *types.SpaceFilter) ([]*types.Space, int64, error) {
 	space, err := findSpaceFromRef(ctx, c.spaceStore, spaceRef)
 	if err != nil {
-		return 0, nil, err
+		return nil, 0, err
 	}
 
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, true); err != nil {
-		return 0, nil, err
+		return nil, 0, err
 	}
 
-	count, err := c.spaceStore.Count(ctx, space.ID)
+	count, err := c.spaceStore.Count(ctx, space.ID, filter)
 	if err != nil {
-		return 0, nil, fmt.Errorf("failed to count child spaces: %w", err)
+		return nil, 0, fmt.Errorf("failed to count child spaces: %w", err)
 	}
 
 	spaces, err := c.spaceStore.List(ctx, space.ID, filter)
 	if err != nil {
-		return 0, nil, fmt.Errorf("failed to list child spaces: %w", err)
+		return nil, 0, fmt.Errorf("failed to list child spaces: %w", err)
 	}
 
 	/*
 	 * TODO: needs access control? Might want to avoid that (makes paging and performance hard)
 	 */
-	return count, spaces, nil
+	return spaces, count, nil
 }

@@ -18,28 +18,28 @@ import (
 * ListRepositories lists the repositories of a space.
  */
 func (c *Controller) ListRepositories(ctx context.Context, session *auth.Session,
-	spaceRef string, filter *types.RepoFilter) (int64, []*types.Repository, error) {
+	spaceRef string, filter *types.RepoFilter) ([]*types.Repository, int64, error) {
 	space, err := findSpaceFromRef(ctx, c.spaceStore, spaceRef)
 	if err != nil {
-		return 0, nil, err
+		return nil, 0, err
 	}
 
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionRepoView, true); err != nil {
-		return 0, nil, err
+		return nil, 0, err
 	}
 
-	count, err := c.repoStore.Count(ctx, space.ID)
+	count, err := c.repoStore.Count(ctx, space.ID, filter)
 	if err != nil {
-		return 0, nil, fmt.Errorf("failed to count child repos: %w", err)
+		return nil, 0, fmt.Errorf("failed to count child repos: %w", err)
 	}
 
 	repos, err := c.repoStore.List(ctx, space.ID, filter)
 	if err != nil {
-		return 0, nil, fmt.Errorf("failed to list child repos: %w", err)
+		return nil, 0, fmt.Errorf("failed to list child repos: %w", err)
 	}
 
 	/*
 	 * TODO: needs access control? Might want to avoid that (makes paging and performance hard)
 	 */
-	return count, repos, nil
+	return repos, count, nil
 }

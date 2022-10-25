@@ -241,9 +241,23 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 }
 
 // Count the child spaces of a space.
-func (s *SpaceStore) Count(ctx context.Context, id int64) (int64, error) {
+func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilter) (int64, error) {
+	stmt := builder.
+		Select("count(*)").
+		From("spaces").
+		Where("space_parentId = ?", id)
+
+	if opts.Query != "" {
+		stmt = stmt.Where("space_pathName LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
 	var count int64
-	err := s.db.QueryRowContext(ctx, spaceCount, id).Scan(&count)
+	err = s.db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
 		return 0, processSQLErrorf(err, "Failed executing count query")
 	}
@@ -251,61 +265,56 @@ func (s *SpaceStore) Count(ctx context.Context, id int64) (int64, error) {
 }
 
 // List returns a list of spaces under the parent space.
-// TODO: speed up list - for some reason is 200ms for 1 space as well as 1000
 func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error) {
 	dst := []*types.Space{}
 
-	// if the principal does not provide any customer filter
-	// or sorting we use the default select statement.
-	if opts.Sort == enum.SpaceAttrNone {
-		err := s.db.SelectContext(ctx, &dst, spaceSelect, id, limit(opts.Size), offset(opts.Page, opts.Size))
-		if err != nil {
-			return nil, processSQLErrorf(err, "Failed executing default list query")
-		}
-		return dst, nil
-	}
-
-	// else we construct the sql statement.
 	stmt := builder.
 		Select("spaces.*,path_value AS space_path").
 		From("spaces").
 		InnerJoin("paths ON spaces.space_id=paths.path_targetId AND paths.path_targetType='space' AND paths.path_isAlias=0").
-		Where("space_parentId = " + fmt.Sprint(id))
+		Where("space_parentId = ?", fmt.Sprint(id))
 	stmt = stmt.Limit(uint64(limit(opts.Size)))
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
+
+	if opts.Query != "" {
+		stmt = stmt.Where("space_pathName LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+	}
 
 	switch opts.Sort {
 	case enum.SpaceAttrName, enum.SpaceAttrNone:
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("space_name " + opts.Order.String())
+		stmt = stmt.OrderBy("space_name COLLATE NOCASE " + opts.Order.String())
 	case enum.SpaceAttrCreated:
 		stmt = stmt.OrderBy("space_created " + opts.Order.String())
 	case enum.SpaceAttrUpdated:
 		stmt = stmt.OrderBy("space_updated " + opts.Order.String())
-	case enum.SpaceAttrID:
-		stmt = stmt.OrderBy("space_id " + opts.Order.String())
 	case enum.SpaceAttrPathName:
-		stmt = stmt.OrderBy("space_pathName " + opts.Order.String())
+		stmt = stmt.OrderBy("space_pathName COLLATE NOCASE " + opts.Order.String())
 	case enum.SpaceAttrPath:
-		stmt = stmt.OrderBy("space_path " + opts.Order.String())
+		stmt = stmt.OrderBy("space_path COLLATE NOCASE " + opts.Order.String())
 	}
 
-	sql, _, err := stmt.ToSql()
+	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
 
-	if err = s.db.SelectContext(ctx, &dst, sql); err != nil {
+	if err = s.db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, processSQLErrorf(err, "Failed executing custom list query")
 	}
 
 	return dst, nil
 }
 
-// ListAllPaths returns a list of all paths of a space.
-func (s *SpaceStore) ListAllPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
+// CountPaths returns a count of all paths of a space.
+func (s *SpaceStore) CountPaths(ctx context.Context, id int64, opts *types.PathFilter) (int64, error) {
+	return CountPaths(ctx, s.db, enum.PathTargetTypeSpace, id, opts)
+}
+
+// ListPaths returns a list of all paths of a space.
+func (s *SpaceStore) ListPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
 	return ListPaths(ctx, s.db, enum.PathTargetTypeSpace, id, opts)
 }
 
@@ -349,18 +358,6 @@ const spaceSelectBaseWithJoin = spaceSelectBase + `
 FROM spaces
 INNER JOIN paths
 ON spaces.space_id=paths.path_targetId AND paths.path_targetType='space' AND paths.path_isAlias=0
-`
-
-const spaceSelect = spaceSelectBaseWithJoin + `
-WHERE space_parentId = $1
-ORDER BY space_pathName ASC
-LIMIT $2 OFFSET $3
-`
-
-const spaceCount = `
-SELECT count(*)
-FROM spaces
-WHERE space_parentId = $1
 `
 
 const spaceSelectByID = spaceSelectBaseWithJoin + `

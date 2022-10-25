@@ -70,10 +70,10 @@ func (s *RepoStoreSync) Delete(ctx context.Context, id int64) error {
 }
 
 // Count of repos in a space.
-func (s *RepoStoreSync) Count(ctx context.Context, spaceID int64) (int64, error) {
+func (s *RepoStoreSync) Count(ctx context.Context, spaceID int64, opts *types.RepoFilter) (int64, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.Count(ctx, spaceID)
+	return s.base.Count(ctx, spaceID, opts)
 }
 
 // List returns a list of repos in a space.
@@ -83,9 +83,14 @@ func (s *RepoStoreSync) List(ctx context.Context, spaceID int64, opts *types.Rep
 	return s.base.List(ctx, spaceID, opts)
 }
 
-// ListAllPaths returns a list of all paths of a repo.
-func (s *RepoStoreSync) ListAllPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
-	return s.base.ListAllPaths(ctx, id, opts)
+// CountPaths returns a count of all paths of a repo.
+func (s *RepoStoreSync) CountPaths(ctx context.Context, id int64, opts *types.PathFilter) (int64, error) {
+	return s.base.CountPaths(ctx, id, opts)
+}
+
+// ListPaths returns a list of all paths of a repo.
+func (s *RepoStoreSync) ListPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
+	return s.base.ListPaths(ctx, id, opts)
 }
 
 // CreatePath an alias for a repository.

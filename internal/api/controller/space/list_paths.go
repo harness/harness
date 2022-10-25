@@ -6,6 +6,7 @@ package space
 
 import (
 	"context"
+	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -17,15 +18,25 @@ import (
 * ListPaths lists all paths of a space.
  */
 func (c *Controller) ListPaths(ctx context.Context, session *auth.Session,
-	spaceRef string, filter *types.PathFilter) ([]*types.Path, error) {
+	spaceRef string, filter *types.PathFilter) ([]*types.Path, int64, error) {
 	space, err := findSpaceFromRef(ctx, c.spaceStore, spaceRef)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, false); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return c.spaceStore.ListAllPaths(ctx, space.ID, filter)
+	count, err := c.spaceStore.CountPaths(ctx, space.ID, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count paths: %w", err)
+	}
+
+	paths, err := c.spaceStore.ListPaths(ctx, space.ID, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list paths: %w", err)
+	}
+
+	return paths, count, nil
 }

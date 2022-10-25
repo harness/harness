@@ -70,36 +70,3 @@ var queryParameterDirection = openapi3.ParameterOrRef{
 		},
 	},
 }
-
-var queryParameterSortBranch = openapi3.ParameterOrRef{
-	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamSort,
-		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The data by which the branches are sorted."),
-		Required:    ptr.Bool(false),
-		Schema: &openapi3.SchemaOrRef{
-			Schema: &openapi3.Schema{
-				Type:    ptrSchemaType(openapi3.SchemaTypeString),
-				Default: ptrptr(enum.BranchSortOptionName.String()),
-				Enum: []interface{}{
-					ptr.String(enum.BranchSortOptionName.String()),
-					ptr.String(enum.BranchSortOptionDate.String()),
-				},
-			},
-		},
-	},
-}
-
-var queryParameterQueryBranch = openapi3.ParameterOrRef{
-	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamQuery,
-		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The substring by which the branches are filtered."),
-		Required:    ptr.Bool(false),
-		Schema: &openapi3.SchemaOrRef{
-			Schema: &openapi3.Schema{
-				Type: ptrSchemaType(openapi3.SchemaTypeString),
-			},
-		},
-	},
-}

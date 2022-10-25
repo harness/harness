@@ -29,13 +29,13 @@ func HandleListPaths(spaceCtrl *space.Controller) http.HandlerFunc {
 			filter.Order = enum.OrderAsc
 		}
 
-		paths, err := spaceCtrl.ListPaths(ctx, session, spaceRef, filter)
+		paths, totalCount, err := spaceCtrl.ListPaths(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		// TODO: do we need pagination? we should block that many paths in the first place.
+		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
 		render.JSON(w, http.StatusOK, paths)
 	}
 }

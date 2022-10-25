@@ -38,6 +38,7 @@ type Space struct {
 type SpaceFilter struct {
 	Page  int            `json:"page"`
 	Size  int            `json:"size"`
+	Query string         `json:"query"`
 	Sort  enum.SpaceAttr `json:"sort"`
 	Order enum.Order     `json:"direction"`
 }

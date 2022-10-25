@@ -25,7 +25,7 @@ func HandleList(userCtrl *user.Controller) http.HandlerFunc {
 			filter.Order = enum.OrderAsc
 		}
 
-		totalCount, list, err := userCtrl.List(ctx, session, filter)
+		list, totalCount, err := userCtrl.List(ctx, session, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

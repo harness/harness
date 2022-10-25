@@ -29,7 +29,7 @@ func HandleListSpaces(spaceCtrl *space.Controller) http.HandlerFunc {
 			spaceFilter.Order = enum.OrderAsc
 		}
 
-		totalCount, spaces, err := spaceCtrl.ListSpaces(ctx, session, spaceRef, spaceFilter)
+		spaces, totalCount, err := spaceCtrl.ListSpaces(ctx, session, spaceRef, spaceFilter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

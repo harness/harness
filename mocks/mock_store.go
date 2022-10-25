@@ -213,18 +213,33 @@ func (m *MockSpaceStore) EXPECT() *MockSpaceStoreMockRecorder {
 }
 
 // Count mocks base method.
-func (m *MockSpaceStore) Count(arg0 context.Context, arg1 int64) (int64, error) {
+func (m *MockSpaceStore) Count(arg0 context.Context, arg1 int64, arg2 *types.SpaceFilter) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Count", arg0, arg1)
+	ret := m.ctrl.Call(m, "Count", arg0, arg1, arg2)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Count indicates an expected call of Count.
-func (mr *MockSpaceStoreMockRecorder) Count(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockSpaceStoreMockRecorder) Count(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockSpaceStore)(nil).Count), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockSpaceStore)(nil).Count), arg0, arg1, arg2)
+}
+
+// CountPaths mocks base method.
+func (m *MockSpaceStore) CountPaths(arg0 context.Context, arg1 int64, arg2 *types.PathFilter) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountPaths", arg0, arg1, arg2)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountPaths indicates an expected call of CountPaths.
+func (mr *MockSpaceStoreMockRecorder) CountPaths(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountPaths", reflect.TypeOf((*MockSpaceStore)(nil).CountPaths), arg0, arg1, arg2)
 }
 
 // Create mocks base method.
@@ -329,19 +344,19 @@ func (mr *MockSpaceStoreMockRecorder) List(arg0, arg1, arg2 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockSpaceStore)(nil).List), arg0, arg1, arg2)
 }
 
-// ListAllPaths mocks base method.
-func (m *MockSpaceStore) ListAllPaths(arg0 context.Context, arg1 int64, arg2 *types.PathFilter) ([]*types.Path, error) {
+// ListPaths mocks base method.
+func (m *MockSpaceStore) ListPaths(arg0 context.Context, arg1 int64, arg2 *types.PathFilter) ([]*types.Path, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAllPaths", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "ListPaths", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*types.Path)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ListAllPaths indicates an expected call of ListAllPaths.
-func (mr *MockSpaceStoreMockRecorder) ListAllPaths(arg0, arg1, arg2 interface{}) *gomock.Call {
+// ListPaths indicates an expected call of ListPaths.
+func (mr *MockSpaceStoreMockRecorder) ListPaths(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllPaths", reflect.TypeOf((*MockSpaceStore)(nil).ListAllPaths), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPaths", reflect.TypeOf((*MockSpaceStore)(nil).ListPaths), arg0, arg1, arg2)
 }
 
 // Move mocks base method.
@@ -397,18 +412,33 @@ func (m *MockRepoStore) EXPECT() *MockRepoStoreMockRecorder {
 }
 
 // Count mocks base method.
-func (m *MockRepoStore) Count(arg0 context.Context, arg1 int64) (int64, error) {
+func (m *MockRepoStore) Count(arg0 context.Context, arg1 int64, arg2 *types.RepoFilter) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Count", arg0, arg1)
+	ret := m.ctrl.Call(m, "Count", arg0, arg1, arg2)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Count indicates an expected call of Count.
-func (mr *MockRepoStoreMockRecorder) Count(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockRepoStoreMockRecorder) Count(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockRepoStore)(nil).Count), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockRepoStore)(nil).Count), arg0, arg1, arg2)
+}
+
+// CountPaths mocks base method.
+func (m *MockRepoStore) CountPaths(arg0 context.Context, arg1 int64, arg2 *types.PathFilter) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CountPaths", arg0, arg1, arg2)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CountPaths indicates an expected call of CountPaths.
+func (mr *MockRepoStoreMockRecorder) CountPaths(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountPaths", reflect.TypeOf((*MockRepoStore)(nil).CountPaths), arg0, arg1, arg2)
 }
 
 // Create mocks base method.
@@ -513,19 +543,19 @@ func (mr *MockRepoStoreMockRecorder) List(arg0, arg1, arg2 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockRepoStore)(nil).List), arg0, arg1, arg2)
 }
 
-// ListAllPaths mocks base method.
-func (m *MockRepoStore) ListAllPaths(arg0 context.Context, arg1 int64, arg2 *types.PathFilter) ([]*types.Path, error) {
+// ListPaths mocks base method.
+func (m *MockRepoStore) ListPaths(arg0 context.Context, arg1 int64, arg2 *types.PathFilter) ([]*types.Path, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAllPaths", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "ListPaths", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*types.Path)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ListAllPaths indicates an expected call of ListAllPaths.
-func (mr *MockRepoStoreMockRecorder) ListAllPaths(arg0, arg1, arg2 interface{}) *gomock.Call {
+// ListPaths indicates an expected call of ListPaths.
+func (mr *MockRepoStoreMockRecorder) ListPaths(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllPaths", reflect.TypeOf((*MockRepoStore)(nil).ListAllPaths), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPaths", reflect.TypeOf((*MockRepoStore)(nil).ListPaths), arg0, arg1, arg2)
 }
 
 // Move mocks base method.

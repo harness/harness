@@ -32,7 +32,6 @@ type PathAttr int
 // Order enumeration.
 const (
 	PathAttrNone PathAttr = iota
-	PathAttrID
 	PathAttrPath
 	PathAttrCreated
 	PathAttrUpdated
@@ -42,8 +41,6 @@ const (
 // and returns the equivalent enumeration.
 func ParsePathAttr(s string) PathAttr {
 	switch strings.ToLower(s) {
-	case id:
-		return PathAttrID
 	case path:
 		return PathAttrPath
 	case created, createdAt:
@@ -52,5 +49,21 @@ func ParsePathAttr(s string) PathAttr {
 		return PathAttrUpdated
 	default:
 		return PathAttrNone
+	}
+}
+
+// String returns the string representation of the attribute.
+func (a PathAttr) String() string {
+	switch a {
+	case PathAttrPath:
+		return path
+	case PathAttrCreated:
+		return created
+	case PathAttrUpdated:
+		return updated
+	case PathAttrNone:
+		return ""
+	default:
+		return undefined
 	}
 }

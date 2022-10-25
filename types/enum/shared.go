@@ -15,4 +15,5 @@ const (
 	updatedAt     = "updated_at"
 	date          = "date"
 	defaultString = "default"
+	undefined     = "undefined"
 )

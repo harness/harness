@@ -38,6 +38,6 @@ func (o BranchSortOption) String() string {
 	case BranchSortOptionDefault:
 		return defaultString
 	default:
-		return ""
+		return undefined
 	}
 }

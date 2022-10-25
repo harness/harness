@@ -7,9 +7,12 @@ package openapi
 import (
 	"net/http"
 
+	"github.com/gotidy/ptr"
 	"github.com/harness/gitness/internal/api/controller/space"
+	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
@@ -39,6 +42,78 @@ type createPathRequest struct {
 type deletePathRequest struct {
 	spaceRequest
 	PathID string `json:"pathID" path:"pathID"`
+}
+
+var queryParameterSortRepo = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSort,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The data by which the repositories are sorted."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(enum.RepoAttrName.String()),
+				Enum: []interface{}{
+					ptr.String(enum.RepoAttrName.String()),
+					ptr.String(enum.RepoAttrPath.String()),
+					ptr.String(enum.RepoAttrPathName.String()),
+					ptr.String(enum.RepoAttrCreated.String()),
+					ptr.String(enum.RepoAttrUpdated.String()),
+				},
+			},
+		},
+	},
+}
+
+var queryParameterQueryRepo = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring which is used to filter the repositories by their path name."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterSortSpace = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSort,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The data by which the spaces are sorted."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(enum.SpaceAttrName.String()),
+				Enum: []interface{}{
+					ptr.String(enum.SpaceAttrName.String()),
+					ptr.String(enum.SpaceAttrPath.String()),
+					ptr.String(enum.SpaceAttrPathName.String()),
+					ptr.String(enum.SpaceAttrCreated.String()),
+					ptr.String(enum.SpaceAttrUpdated.String()),
+				},
+			},
+		},
+	},
+}
+
+var queryParameterQuerySpace = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring which is used to filter the spaces by their path name."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
 }
 
 //nolint:funlen // api spec generation no need for checking func complexity
@@ -103,6 +178,8 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opSpaces.WithTags("space")
 	opSpaces.WithMapOfAnything(map[string]interface{}{"operationId": "listSpaces"})
 	opSpaces.WithParameters(queryParameterPage, queryParameterPerPage)
+	opSpaces.WithParameters(queryParameterQuerySpace, queryParameterSortSpace, queryParameterDirection,
+		queryParameterPage, queryParameterPerPage)
 	_ = reflector.SetRequest(&opSpaces, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opSpaces, []types.Space{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opSpaces, new(usererror.Error), http.StatusInternalServerError)
@@ -114,7 +191,8 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opRepos := openapi3.Operation{}
 	opRepos.WithTags("space")
 	opRepos.WithMapOfAnything(map[string]interface{}{"operationId": "listRepos"})
-	opRepos.WithParameters(queryParameterPage, queryParameterPerPage)
+	opRepos.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterDirection,
+		queryParameterPage, queryParameterPerPage)
 	_ = reflector.SetRequest(&opRepos, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opRepos, []types.Repository{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusInternalServerError)
@@ -137,6 +215,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opListPaths := openapi3.Operation{}
 	opListPaths.WithTags("space")
 	opListPaths.WithMapOfAnything(map[string]interface{}{"operationId": "listPaths"})
+	opListPaths.WithParameters(queryParameterPage, queryParameterPerPage)
 	_ = reflector.SetRequest(&opListPaths, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListPaths, []types.Path{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusInternalServerError)

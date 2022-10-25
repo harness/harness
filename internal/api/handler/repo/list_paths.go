@@ -31,13 +31,13 @@ func HandleListPaths(repoCtrl *repo.Controller) http.HandlerFunc {
 			filter.Order = enum.OrderAsc
 		}
 
-		paths, err := repoCtrl.ListPaths(ctx, session, repoRef, filter)
+		paths, totalCount, err := repoCtrl.ListPaths(ctx, session, repoRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		// TODO: implement pagination - or should we block that many paths in the first place.
+		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
 		render.JSON(w, http.StatusOK, paths)
 	}
 }

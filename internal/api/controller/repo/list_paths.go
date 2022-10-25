@@ -6,6 +6,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -17,15 +18,25 @@ import (
 * ListPaths lists all paths of a repo.
  */
 func (c *Controller) ListPaths(ctx context.Context, session *auth.Session,
-	repoRef string, filter *types.PathFilter) ([]*types.Path, error) {
+	repoRef string, filter *types.PathFilter) ([]*types.Path, int64, error) {
 	repo, err := findRepoFromRef(ctx, c.repoStore, repoRef)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return c.repoStore.ListAllPaths(ctx, repo.ID, filter)
+	count, err := c.repoStore.CountPaths(ctx, repo.ID, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count paths: %w", err)
+	}
+
+	paths, err := c.repoStore.ListPaths(ctx, repo.ID, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list paths: %w", err)
+	}
+
+	return paths, count, nil
 }

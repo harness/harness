@@ -90,7 +90,7 @@ func ListPrimaryChildPathsTx(ctx context.Context, tx *sqlx.Tx, prefix string) ([
 	return childs, nil
 }
 
-// ReplacePathTx replace the path for a target as part of a transaction - keeps the existing as alias if requested.
+// ReplacePathTx replaces the path for a target as part of a transaction - keeps the existing as alias if requested.
 func ReplacePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Path, keepAsAlias bool) error {
 	if path.IsAlias {
 		return store.ErrPrimaryPathRequired
@@ -204,7 +204,7 @@ func FindPathTx(ctx context.Context, tx *sqlx.Tx, targetType enum.PathTargetType
 	return dst, nil
 }
 
-// Deletes a specific path alias (primary can't be deleted, only with delete all).
+// DeletePath deletes a specific path alias (primary can't be deleted, only with delete all).
 func DeletePath(ctx context.Context, db *sqlx.DB, id int64) error {
 	tx, err := db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -234,7 +234,7 @@ func DeletePath(ctx context.Context, db *sqlx.DB, id int64) error {
 	return nil
 }
 
-// Deletes all paths for a target as part of a transaction.
+// DeleteAllPaths deletes all paths for a target as part of a transaction.
 func DeleteAllPaths(ctx context.Context, tx *sqlx.Tx, targetType enum.PathTargetType, targetID int64) error {
 	// delete all entries for the target
 	if _, err := tx.ExecContext(ctx, pathDeleteTarget, string(targetType), fmt.Sprint(targetID)); err != nil {
@@ -243,58 +243,54 @@ func DeleteAllPaths(ctx context.Context, tx *sqlx.Tx, targetType enum.PathTarget
 	return nil
 }
 
-// Lists all paths for a target.
+// CountPaths returns the count of paths for a specified target.
+func CountPaths(ctx context.Context, db *sqlx.DB, targetType enum.PathTargetType, targetID int64,
+	opts *types.PathFilter) (int64, error) {
+	var count int64
+	err := db.QueryRowContext(ctx, pathCount, string(targetType), fmt.Sprint(targetID)).Scan(&count)
+	if err != nil {
+		return 0, processSQLErrorf(err, "Failed executing count query")
+	}
+	return count, nil
+}
+
+// ListPaths lists all paths for a target.
 func ListPaths(ctx context.Context, db *sqlx.DB, targetType enum.PathTargetType, targetID int64,
 	opts *types.PathFilter) ([]*types.Path, error) {
 	dst := []*types.Path{}
-
-	// if the principal does not provide any customer filter
-	// or sorting we use the default select statement.
-	if opts.Sort == enum.PathAttrNone {
-		err := db.SelectContext(ctx, &dst, pathSelect, string(targetType), fmt.Sprint(targetID), limit(opts.Size),
-			offset(opts.Page, opts.Size))
-		if err != nil {
-			return nil, processSQLErrorf(err, "Default select query failed")
-		}
-
-		return dst, nil
-	}
-
 	// else we construct the sql statement.
-	stmt := builder.Select("*").From("paths").Where("path_targetType = $1 AND path_targetId = $2",
-		string(targetType), fmt.Sprint(targetID))
+	stmt := builder.
+		Select("*").
+		From("paths").
+		Where("path_targetType = ? AND path_targetId = ?", string(targetType), fmt.Sprint(targetID))
 	stmt = stmt.Limit(uint64(limit(opts.Size)))
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
 	switch opts.Sort {
-	case enum.PathAttrCreated:
+	case enum.PathAttrPath, enum.PathAttrNone:
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
+		stmt = stmt.OrderBy("path_value COLLATE NOCASE " + opts.Order.String())
+	case enum.PathAttrCreated:
 		stmt = stmt.OrderBy("path_created " + opts.Order.String())
 	case enum.PathAttrUpdated:
 		stmt = stmt.OrderBy("path_updated " + opts.Order.String())
-	case enum.PathAttrID:
-		stmt = stmt.OrderBy("path_id " + opts.Order.String())
-	case enum.PathAttrPath:
-		stmt = stmt.OrderBy("path_value" + opts.Order.String())
-	case enum.PathAttrNone:
-		// no sorting required
 	}
 
-	sql, _, err := stmt.ToSql()
+	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
 
-	if err = db.SelectContext(ctx, &dst, sql); err != nil {
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, processSQLErrorf(err, "Customer select query failed")
 	}
 
 	return dst, nil
 }
 
-// CountPathsTx Count paths for a target as part of a transaction.
+// CountPathsTx counts paths for a target as part of a transaction.
 func CountPathsTx(ctx context.Context, tx *sqlx.Tx, targetType enum.PathTargetType, targetID int64) (int64, error) {
 	var count int64
 	err := tx.QueryRowContext(ctx, pathCount, string(targetType), fmt.Sprint(targetID)).Scan(&count)
@@ -315,11 +311,6 @@ path_id
 ,path_created
 ,path_updated
 FROM paths
-`
-const pathSelect = pathBase + `
-WHERE path_targetType = $1 AND path_targetId = $2
-ORDER BY path_isAlias DESC, path_value ASC
-LIMIT $3 OFFSET $4
 `
 
 // there's only one entry with a given target & targetId for isAlias -- false.
