@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/drone/drone/core"
+	"github.com/drone/drone/handler/api/errors"
 	"github.com/drone/drone/mock"
 	"github.com/go-chi/chi"
 
@@ -64,35 +65,67 @@ func TestTokenRotate(t *testing.T) {
 	}
 }
 
-// // the purpose of this unit test is to verify that an error
-// // updating the database will result in an internal server
-// // error returned to the client.
-// func TestToken_UpdateError(t *testing.T) {
-// 	controller := gomock.NewController(t)
-// 	defer controller.Finish()
+// the purpose of this unit test is to verify we fail safely when a non existing user is provided
+func TestToken_UserNotFound(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
 
-// 	mockUser := &core.User{
-// 		ID:    1,
-// 		Login: "octocat",
-// 	}
+	startingHash := "MjAxOC0wOC0xMVQxNTo1ODowN1o"
+	mockUser := &core.User{
+		ID:    1,
+		Login: "octocat",
+		Hash:  startingHash,
+	}
+	c := new(chi.Context)
+	c.URLParams.Add("user", "octocat")
 
-// 	w := httptest.NewRecorder()
-// 	r := httptest.NewRequest("POST", "/?rotate=true", nil)
-// 	r = r.WithContext(
-// 		request.WithUser(r.Context(), mockUser),
-// 	)
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("POST", "/?rotate=true", nil)
+	r = r.WithContext(
+		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+	)
 
-// 	users := mock.NewMockUserStore(controller)
-// 	users.EXPECT().Update(gomock.Any(), gomock.Any()).Return(errors.ErrNotFound)
+	users := mock.NewMockUserStore(controller)
+	users.EXPECT().FindLogin(gomock.Any(), mockUser.Login).Return(mockUser, nil)
+	users.EXPECT().Update(gomock.Any(), gomock.Any()).Return(errors.ErrNotFound)
 
-// 	HandleToken(users)(w, r)
-// 	if got, want := w.Code, 500; want != got {
-// 		t.Errorf("Want response code %d, got %d", want, got)
-// 	}
+	HandleTokenRotation(users)(w, r)
+	if got, want := w.Code, 500; want != got {
+		t.Errorf("Want response code %d, got %d", want, got)
+	}
 
-// 	got, want := new(errors.Error), errors.ErrNotFound
-// 	json.NewDecoder(w.Body).Decode(got)
-// 	if diff := cmp.Diff(got, want); len(diff) != 0 {
-// 		t.Errorf(diff)
-// 	}
-// }
+	got, want := new(errors.Error), errors.ErrNotFound
+	json.NewDecoder(w.Body).Decode(got)
+	if diff := cmp.Diff(got, want); len(diff) != 0 {
+		t.Errorf(diff)
+	}
+}
+
+// the purpose of this unit test is to verify we fail safely when a non existing user is provided
+func TestToken_UpdateError(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	c := new(chi.Context)
+	c.URLParams.Add("user", "octocat")
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("POST", "/?rotate=true", nil)
+	r = r.WithContext(
+		context.WithValue(context.Background(), chi.RouteCtxKey, c),
+	)
+
+	users := mock.NewMockUserStore(controller)
+	users.EXPECT().FindLogin(gomock.Any(), mockUser.Login).Return(nil, errors.ErrNotFound)
+
+	HandleTokenRotation(users)(w, r)
+	if got, want := w.Code, 404; want != got {
+		t.Errorf("Want response code %d, got %d", want, got)
+	}
+
+	got, want := new(errors.Error), errors.ErrNotFound
+	json.NewDecoder(w.Body).Decode(got)
+	if diff := cmp.Diff(got, want); len(diff) != 0 {
+		t.Errorf(diff)
+	}
+}
