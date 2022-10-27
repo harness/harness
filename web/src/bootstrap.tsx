@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { routes } from 'RouteDefinitions'
 import App from './App'
 import './bootstrap.scss'
 
@@ -8,4 +9,4 @@ import './bootstrap.scss'
 // Also being used in when generating proper URLs inside the app.
 window.STRIP_SCM_PREFIX = true
 
-ReactDOM.render(<App standalone apiToken="" hooks={{}} components={{}} />, document.getElementById('react-root'))
+ReactDOM.render(<App standalone routes={routes} hooks={{}} />, document.getElementById('react-root'))

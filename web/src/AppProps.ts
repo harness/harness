@@ -1,8 +1,6 @@
 import type React from 'react'
-import type * as History from 'history'
-import type { PermissionOptionsMenuButtonProps } from 'components/Permissions/PermissionsOptionsMenuButton'
-import type { Unknown } from 'utils/Utils'
 import type { SCMRoutes } from 'RouteDefinitions'
+import type { Unknown } from 'utils/Utils'
 import type { LangLocale } from './framework/strings/languageLoader'
 
 /**
@@ -42,63 +40,7 @@ export interface AppProps {
   on401?: () => void
 
   /** React Hooks that Harness Platform passes down. Note: Pass only hooks that your app need */
-  hooks: Partial<AppPropsHook>
-
-  /** React Components that Harness Platform passes down. Note: Pass only components that your app need */
-  components: Partial<AppPropsComponent>
-}
-
-/**
- * AppPathProps defines all possible URL parameters that application accepts.
- */
-export interface AppPathProps {
-  accountId?: string
-  orgIdentifier?: string
-  projectIdentifier?: string
-  module?: string
-  policyIdentifier?: string
-  policySetIdentifier?: string
-  evaluationId?: string
-  repo?: string
-  branch?: string
-}
-
-/**
- * AppPropsHook defines a collection of React Hooks that application receives from
- * Platform integration.
- */
-export interface AppPropsHook {
-  usePermission(permissionRequest: Unknown, deps?: Array<Unknown>): Array<boolean>
-  useGetSchemaYaml(params: Unknown, deps?: Array<Unknown>): Record<string, Unknown>
-  useGetToken(): Unknown
-  useAppStore(): Unknown
-  useGitSyncStore(): Unknown
-  useSaveToGitDialog(props: { onSuccess: Unknown; onClose: Unknown; onProgessOverlayClose: Unknown }): Unknown
-  useGetListOfBranchesWithStatus(props: Unknown): Unknown
-  useAnyEnterpriseLicense(): boolean
-  useCurrentEnterpriseLicense(): boolean
-  useLicenseStore(): Unknown
-} // eslint-disable-line  @typescript-eslint/no-empty-interface
-
-/**
- * AppPropsComponent defines a collection of React Components that application receives from
- * Platform integration.
- */
-export interface AppPropsComponent {
-  NGBreadcrumbs: React.FC
-  RbacButton: React.FC
-  RbacOptionsMenuButton: React.FC<PermissionOptionsMenuButtonProps>
-  GitSyncStoreProvider: React.FC
-  GitContextForm: React.FC<Unknown>
-  NavigationCheck: React.FC<{
-    when?: boolean
-    textProps?: {
-      contentText?: string
-      titleText?: string
-      confirmButtonText?: string
-      cancelButtonText?: string
-    }
-    navigate: (path: string) => void
-    shouldBlockNavigation?: (location: History.Location) => boolean
+  hooks: Partial<{
+    useGetToken: Unknown
   }>
 }

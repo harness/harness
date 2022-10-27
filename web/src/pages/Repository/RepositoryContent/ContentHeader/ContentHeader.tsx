@@ -4,12 +4,13 @@ import {
   Layout,
   Button,
   FlexExpander,
-  TextInput,
+  // TextInput,
   ButtonVariation,
   Text,
   DropDown,
   Icon,
-  Color
+  Color,
+  SelectOption
 } from '@harness/uicore'
 import ReactJoin from 'react-join'
 import { Link, useHistory } from 'react-router-dom'
@@ -17,14 +18,13 @@ import { uniq } from 'lodash-es'
 import { useGet } from 'restful-react'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { RepoBranch } from 'services/scm'
-import type { RepositoryDTO } from 'types/SCMTypes'
+import type { RepoBranch, TypesRepository } from 'services/scm'
 import css from './ContentHeader.module.scss'
 
 interface ContentHeaderProps {
   gitRef?: string
   resourcePath?: string
-  repoMetadata: RepositoryDTO
+  repoMetadata: TypesRepository
 }
 
 export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: ContentHeaderProps): JSX.Element {
@@ -41,7 +41,9 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
     () => [repoMetadata.defaultBranch].concat(gitRef ? gitRef : []),
     [repoMetadata, gitRef]
   )
-  const [branches, setBranches] = useState(uniq(defaultBranches.map(_branch => ({ label: _branch, value: _branch }))))
+  const [branches, setBranches] = useState<SelectOption[]>(
+    uniq(defaultBranches.map(_branch => ({ label: _branch, value: _branch }))) as SelectOption[]
+  )
 
   useEffect(() => {
     if (data?.length) {
@@ -49,7 +51,7 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
         uniq(defaultBranches.concat(data.map(e => e.name) as string[])).map(_branch => ({
           label: _branch,
           value: _branch
-        }))
+        })) as SelectOption[]
       )
     }
   }, [data, defaultBranches])
@@ -65,7 +67,7 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
             setBranch(switchBranch as string)
             history.push(
               routes.toSCMRepository({
-                repoPath: repoMetadata.path,
+                repoPath: repoMetadata.path as string,
                 gitRef: switchBranch as string,
                 resourcePath // TODO: Handle 404 when resourcePath does not exist in newly switched branch
               })
@@ -75,7 +77,7 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
         />
         <Container>
           <Layout.Horizontal spacing="small">
-            <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path })}>
+            <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string })}>
               <Icon name="main-folder" />
             </Link>
             <Text color={Color.GREY_900}>/</Text>
@@ -86,7 +88,11 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
                 return (
                   <Link
                     key={path + index}
-                    to={routes.toSCMRepository({ repoPath: repoMetadata.path, gitRef, resourcePath: pathAtIndex })}>
+                    to={routes.toSCMRepository({
+                      repoPath: repoMetadata.path as string,
+                      gitRef,
+                      resourcePath: pathAtIndex
+                    })}>
                     <Text color={Color.GREY_900}>{path}</Text>
                   </Link>
                 )

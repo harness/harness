@@ -54,14 +54,12 @@ declare module '*.scss'
 
 type RequireField<T, K extends keyof T> = T & Required<Pick<T, K>>
 
-type Module =
-  | 'ci'
-  | 'cd'
-  | 'cf'
-  | 'cv'
-  | 'ce'
-  | ':module(ci)'
-  | ':module(cd)'
-  | ':module(cf)'
-  | ':module'
-  | ':module(cv)'
+declare module 'lang-map' {
+  const languages: { languages: (name: string) => string[] }
+  export default languages
+}
+
+declare module 'react-join' {
+  const ReactJoin: React.FC<{ separator: JSX.Element }>
+  export default ReactJoin
+}

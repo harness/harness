@@ -10,59 +10,59 @@ import {
   Text,
   Color,
   Pagination,
-  Icon
+  Icon,
+  TextInput
 } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
-import { formatDate, getErrorMessage, X_PER_PAGE, X_TOTAL, X_TOTAL_PAGES } from 'utils/Utils'
+import { formatDate, getErrorMessage, LIST_FETCHING_PER_PAGE, X_PER_PAGE, X_TOTAL, X_TOTAL_PAGES } from 'utils/Utils'
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
-import type { RepositoryDTO } from 'types/SCMTypes'
+import type { TypesRepository } from 'services/scm'
+import type { SCMPathProps } from 'RouteDefinitions'
 import { useAppContext } from 'AppContext'
 import emptyStateImage from './images/empty-state.svg'
 import css from './RepositoriesListing.module.scss'
-// import { useListRepos } from 'services/scm'
 
-export default function Repos(): JSX.Element {
+export default function RepositoriesListing(): JSX.Element {
   const { getString } = useStrings()
   const history = useHistory()
-  const ref = useRef<HTMLDivElement>(null)
+  const rowContainerRef = useRef<HTMLDivElement>(null)
   const [nameTextWidth, setNameTextWidth] = useState(600)
-  const { space = '', routes } = useAppContext() // TODO: Proper handling `space` for standalone version
-  const {
-    data: repositories,
-    error,
-    loading,
-    refetch,
-    response
-  } = useGet<RepositoryDTO[]>({
-    path: `/api/v1/spaces/${space}/+/repos`
-  })
-
-  // DOES NOT WORK !!! API URL IS NOT CONSTRUCTED PROPERLY
-  // const r = useListRepos({
-  //   spaceRef: space
-  // })
-  // console.log({ r })
-
+  const [pageIndex, setPageIndex] = useState(0)
+  const params = useParams<SCMPathProps>()
+  const [query, setQuery] = useState<string | undefined>()
+  const { space = params.space || '', routes } = useAppContext()
+  const path = useMemo(
+    () =>
+      `/api/v1/spaces/${space}/+/repos?page=${pageIndex + 1}&per_page=${LIST_FETCHING_PER_PAGE}${
+        query ? `&query=${query}` : ''
+      }`,
+    [space, query, pageIndex]
+  )
+  const { data: repositories, error, loading, refetch, response } = useGet<TypesRepository[]>({ path })
   const itemCount = useMemo(() => parseInt(response?.headers?.get(X_TOTAL) || '0'), [response])
   const pageCount = useMemo(() => parseInt(response?.headers?.get(X_TOTAL_PAGES) || '0'), [response])
   const pageSize = useMemo(() => parseInt(response?.headers?.get(X_PER_PAGE) || '0'), [response])
 
-  const columns: Column<RepositoryDTO>[] = useMemo(
+  useEffect(() => {
+    setQuery(undefined)
+    setPageIndex(0)
+  }, [space])
+
+  const columns: Column<TypesRepository>[] = useMemo(
     () => [
       {
         Header: getString('repos.name'),
-        accessor: row => row.name,
-        width: '75%',
-        Cell: ({ row }: CellProps<RepositoryDTO>) => {
+        width: 'calc(100% - 180px)',
+        Cell: ({ row }: CellProps<TypesRepository>) => {
           const record = row.original
           return (
             <Container className={css.nameContainer}>
               <Layout.Horizontal spacing="small" style={{ flexGrow: 1 }}>
-                <Layout.Vertical flex className={css.name} ref={ref}>
+                <Layout.Vertical flex className={css.name} ref={rowContainerRef}>
                   <Text className={css.repoName} width={nameTextWidth} lineClamp={2}>
                     {record.name}
                   </Text>
@@ -77,24 +77,14 @@ export default function Repos(): JSX.Element {
           )
         }
       },
-      // {
-      //   Header: getString('status'), // TODO: Status is not yet supported by backend
-      //   id: 'status',
-      //   accessor: row => row.updated,
-      //   width: '10%',
-      //   Cell: () => <Icon name="success-tick" padding={{ left: 'small' }} />,
-      //   disableSortBy: true
-      // },
       {
         Header: getString('repos.updated'),
-        id: 'menu',
-        accessor: row => row.updated,
-        width: '15%',
-        Cell: ({ row }: CellProps<RepositoryDTO>) => {
+        width: '180px',
+        Cell: ({ row }: CellProps<TypesRepository>) => {
           return (
             <Layout.Horizontal style={{ alignItems: 'center' }}>
               <Text color={Color.BLACK} lineClamp={1} rightIconProps={{ size: 10 }} width={120}>
-                {formatDate(row.original.updated)}
+                {formatDate(row.original.updated as number)}
               </Text>
               {row.original.isPublic === false ? <Icon name="lock" size={10} /> : undefined}
             </Layout.Horizontal>
@@ -103,12 +93,11 @@ export default function Repos(): JSX.Element {
         disableSortBy: true
       }
     ],
-    [history, module, nameTextWidth] // eslint-disable-line react-hooks/exhaustive-deps
+    [nameTextWidth, getString]
   )
-  const [pageIndex, setPageIndex] = useState(0)
   const onResize = useCallback((): void => {
-    if (ref.current) {
-      setNameTextWidth((ref.current.closest('div[role="cell"]') as HTMLDivElement)?.offsetWidth - 100)
+    if (rowContainerRef.current) {
+      setNameTextWidth((rowContainerRef.current.closest('div[role="cell"]') as HTMLDivElement)?.offsetWidth - 100)
     }
   }, [setNameTextWidth])
   const NewRepoButton = (
@@ -118,18 +107,7 @@ export default function Repos(): JSX.Element {
       text={getString('newRepo')}
       variation={ButtonVariation.PRIMARY}
       icon="plus"
-      onSubmit={_data => {
-        // TODO: Remove this when backend fixes https://harness.slack.com/archives/C03Q1Q4C9J8/p1666521412586789
-        const accountId = 'kmpySmUISimoRrJL6NL73w'
-        const [_accountId, orgIdentifier, projectIdentifier, repoName] = _data.path.split('/')
-        const url = routes.toSCMRepository({
-          repoPath: [accountId, orgIdentifier, projectIdentifier, repoName].join('/')
-        })
-        console.log({ _data, url, accountId, _accountId })
-        history.push(
-          routes.toSCMRepository({ repoPath: [accountId, orgIdentifier, projectIdentifier, repoName].join('/') })
-        )
-      }}
+      onSubmit={repoInfo => history.push(routes.toSCMRepository({ repoPath: repoInfo.path as string }))}
     />
   )
 
@@ -145,14 +123,12 @@ export default function Repos(): JSX.Element {
     <Container className={css.main}>
       <PageHeader title={getString('repositories')} />
       <PageBody
-        loading={loading}
+        loading={loading && query === undefined}
         className={cx({ [css.withError]: !!error })}
         error={error ? getErrorMessage(error) : null}
-        retryOnError={() => {
-          refetch()
-        }}
+        retryOnError={() => refetch()}
         noData={{
-          when: () => repositories?.length === 0,
+          when: () => repositories?.length === 0 && query === undefined,
           image: emptyStateImage,
           message: getString('repos.noDataMessage'),
           button: NewRepoButton
@@ -161,24 +137,25 @@ export default function Repos(): JSX.Element {
           <Layout.Horizontal spacing="large">
             {NewRepoButton}
             <FlexExpander />
-            {/* TODO: Search is not yet supported by backend */}
-            {/* <TextInput placeholder={getString('search')} leftIcon="search" style={{ width: 350 }} autoFocus /> */}
+            <TextInput
+              placeholder={getString('search')}
+              leftIcon={loading && query !== undefined ? 'steps-spinner' : 'search'}
+              style={{ width: 250 }}
+              autoFocus
+              onInput={event => {
+                setQuery(event.currentTarget.value || '')
+                setPageIndex(0)
+              }}
+            />
           </Layout.Horizontal>
           <Container margin={{ top: 'medium' }}>
-            <Table<RepositoryDTO>
+            <Table<TypesRepository>
               rowDataTestID={(_, index: number) => `scm-repo-${index}`}
               className={css.table}
               columns={columns}
               data={repositories || []}
-              onRowClick={data => {
-                // TODO: Remove this when backend fixes https://harness.slack.com/archives/C03Q1Q4C9J8/p1666521412586789
-                const accountId = 'kmpySmUISimoRrJL6NL73w'
-                const [_accountId, orgIdentifier, projectIdentifier, repoName] = data.path.split('/')
-                const url = routes.toSCMRepository({
-                  repoPath: [accountId, orgIdentifier, projectIdentifier, repoName].join('/')
-                })
-                console.info({ data, url, accountId, _accountId })
-                history.push(url)
+              onRowClick={repoInfo => {
+                history.push(routes.toSCMRepository({ repoPath: repoInfo.path as string }))
               }}
               getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
             />
@@ -193,7 +170,6 @@ export default function Repos(): JSX.Element {
                 pageCount={pageCount}
                 pageIndex={pageIndex}
                 pageSize={pageSize}
-                pageSizeOptions={[5, 10, 20, 40]}
               />
             </Container>
           )}

@@ -17,15 +17,14 @@ import ReactTimeago from 'react-timeago'
 import { Link, useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput } from 'services/scm'
+import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput, TypesRepository } from 'services/scm'
 import { formatDate } from 'utils/Utils'
 import { findReadmeInfo, GitIcon, isFile } from 'utils/GitUtils'
-import type { RepositoryDTO } from 'types/SCMTypes'
 import { Readme } from './Readme'
 import css from './FolderContent.module.scss'
 
 interface FolderContentProps {
-  repoMetadata: RepositoryDTO
+  repoMetadata: TypesRepository
   gitRef?: string
   contentInfo: OpenapiGetContentOutput
 }
@@ -106,7 +105,7 @@ export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderConte
         onRowClick={data => {
           history.push(
             routes.toSCMRepository({
-              repoPath: repoMetadata.path,
+              repoPath: repoMetadata.path as string,
               gitRef,
               resourcePath: data.path
             })

@@ -1,25 +1,25 @@
 import React from 'react'
 import { Container, Color, Layout, Button, FlexExpander, ButtonVariation, Heading } from '@harness/uicore'
-import { useHistory } from 'react-router-dom'
+// import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
-import { useStrings } from 'framework/strings'
+// import { useStrings } from 'framework/strings'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
-import { useAppContext } from 'AppContext'
-import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent } from 'services/scm'
+// import { useAppContext } from 'AppContext'
+import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/scm'
 import { GitIcon } from 'utils/GitUtils'
-import type { RepositoryDTO } from 'types/SCMTypes'
+import type {} from 'services/scm'
 import css from './Readme.module.scss'
 
 interface FolderContentProps {
-  metadata: RepositoryDTO
+  metadata: TypesRepository
   gitRef?: string
   readmeInfo: OpenapiContentInfo
 }
 
 export function Readme({ metadata, gitRef, readmeInfo }: FolderContentProps): JSX.Element {
-  const { getString } = useStrings()
-  const history = useHistory()
-  const { routes } = useAppContext()
+  // const { getString } = useStrings()
+  // const history = useHistory()
+  // const { routes } = useAppContext()
 
   const { data /*error, loading, refetch, response */ } = useGet<OpenapiGetContentOutput>({
     path: `/api/v1/repos/${metadata.path}/+/content/${readmeInfo.path}?include_commit=false${

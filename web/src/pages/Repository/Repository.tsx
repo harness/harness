@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import { useAppContext } from 'AppContext'
 import type { SCMPathProps } from 'RouteDefinitions'
-import type { RepositoryDTO } from 'types/SCMTypes'
+import type { TypesRepository } from 'services/scm'
 import { getErrorMessage } from 'utils/Utils'
 import { RepositoryContent } from './RepositoryContent/RepositoryContent'
 import { RepositoryHeader } from './RepositoryHeader/RepositoryHeader'
@@ -13,7 +13,7 @@ import css from './Repository.module.scss'
 export default function Repository(): JSX.Element {
   const { space: spaceFromParams, repoName, gitRef = '', resourcePath = '' } = useParams<SCMPathProps>()
   const { space = spaceFromParams || '' } = useAppContext()
-  const { data, error, loading } = useGet<RepositoryDTO>({
+  const { data, error, loading } = useGet<TypesRepository>({
     path: `/api/v1/repos/${space}/${repoName}/+/`
   })
 

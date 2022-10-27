@@ -3,10 +3,8 @@ import type { editor as EDITOR } from 'monaco-editor/esm/vs/editor/editor.api'
 import { get } from 'lodash-es'
 import moment from 'moment'
 import langMap from 'lang-map'
-import { useEffect } from 'react'
-import { useAppContext } from 'AppContext'
 
-export const LIST_FETCHING_PAGE_SIZE = 20
+export const LIST_FETCHING_PER_PAGE = 5
 export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY hh:mm a'
 export const X_TOTAL = 'x-total'
 export const X_TOTAL_PAGES = 'x-total-pages'
@@ -14,7 +12,7 @@ export const X_PER_PAGE = 'x-per-page'
 export type Unknown = any // eslint-disable-line @typescript-eslint/no-explicit-any
 export const DEFAULT_BRANCH_NAME = 'main'
 export const REGEX_VALID_REPO_NAME = /^[A-Za-z0-9_.-][A-Za-z0-9 _.-]*$/
-export const SUGGESTED_BRANCH_NAMES = ['main', 'master']
+export const SUGGESTED_BRANCH_NAMES = [DEFAULT_BRANCH_NAME, 'master']
 
 /** This utility shows a toaster without being bound to any component.
  * It's useful to show cross-page/component messages */
@@ -24,8 +22,7 @@ export function showToaster(message: string, props?: Partial<IToastProps>): IToa
   return toaster
 }
 
-// eslint-disable-next-line
-export const getErrorMessage = (error: any): string =>
+export const getErrorMessage = (error: Unknown): string =>
   get(error, 'data.error', get(error, 'data.message', error?.message))
 
 export const MonacoEditorOptions = {
@@ -79,101 +76,6 @@ export function formatDate(timestamp: number | string, dateStyle = 'medium'): st
     // @ts-ignore: TS built-in type for DateTimeFormat is not correct
     dateStyle
   }).format(new Date(timestamp))
-}
-
-export enum Editions {
-  ENTERPRISE = 'ENTERPRISE',
-  TEAM = 'TEAM',
-  FREE = 'FREE',
-  COMMUNITY = 'COMMUNITY'
-}
-
-export interface License {
-  accountIdentifier?: string
-  createdAt?: number
-  edition?: 'COMMUNITY' | 'FREE' | 'TEAM' | 'ENTERPRISE'
-  expiryTime?: number
-  id?: string
-  lastModifiedAt?: number
-  licenseType?: 'TRIAL' | 'PAID'
-  moduleType?: 'CD' | 'CI' | 'CV' | 'CF' | 'CE' | 'STO' | 'CORE' | 'PMS' | 'TEMPLATESERVICE' | 'GOVERNANCE'
-  premiumSupport?: boolean
-  selfService?: boolean
-  startTime?: number
-  status?: 'ACTIVE' | 'DELETED' | 'EXPIRED'
-  trialExtended?: boolean
-}
-
-export interface LicenseInformation {
-  [key: string]: License
-}
-
-export const findEnterprisePaid = (licenseInformation: LicenseInformation): boolean => {
-  return !!Object.values(licenseInformation).find(
-    (license: License) => license.edition === Editions.ENTERPRISE && license.licenseType === 'PAID'
-  )
-}
-
-export const useAnyTrialLicense = (): boolean => {
-  const {
-    hooks: { useLicenseStore = () => ({}) }
-  } = useAppContext()
-  const { licenseInformation }: { licenseInformation: LicenseInformation } = useLicenseStore()
-
-  const hasEnterprisePaid = findEnterprisePaid(licenseInformation)
-  if (hasEnterprisePaid) return false
-
-  const anyTrialEntitlements = Object.values(licenseInformation).find(
-    (license: License) => license?.edition === Editions.ENTERPRISE && license?.licenseType === 'TRIAL'
-  )
-
-  return !!anyTrialEntitlements
-}
-
-export const useGetTrialInfo = (): Unknown => {
-  const {
-    hooks: { useLicenseStore = () => ({}) }
-  } = useAppContext()
-  const { licenseInformation }: { licenseInformation: LicenseInformation } = useLicenseStore()
-
-  const hasEnterprisePaid = findEnterprisePaid(licenseInformation)
-  if (hasEnterprisePaid) return
-
-  const allEntitlements = Object.keys(licenseInformation).map(module => {
-    return licenseInformation[module]
-  })
-
-  const trialEntitlement = allEntitlements
-    .sort((a: License, b: License) => (b.expiryTime ?? 0) - (a.expiryTime ?? 0))
-    .find((license: License) => license?.edition === Editions.ENTERPRISE && license?.licenseType === 'TRIAL')
-
-  return trialEntitlement
-}
-
-export const useFindActiveEnterprise = (): boolean => {
-  const {
-    hooks: { useLicenseStore = () => ({}) }
-  } = useAppContext()
-  const { licenseInformation }: { licenseInformation: LicenseInformation } = useLicenseStore()
-  return Object.values(licenseInformation).some(
-    (license: License) => license.edition === Editions.ENTERPRISE && license.status === 'ACTIVE'
-  )
-}
-
-/**
- * Scrolls the target element to top when any dependency changes
- * @param {string} target Target element className selector
- * @param {array} dependencies Dependencies to watch
- * @returns {void}
- */
-export const useScrollToTop = (target: string, dependencies: unknown[]): void => {
-  useEffect(() => {
-    const element = document.querySelector(`.${target}`)
-    if (element) {
-      element.scrollTop = 0
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dependencies])
 }
 
 /**

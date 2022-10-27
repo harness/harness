@@ -25,13 +25,12 @@ const App: React.FC<AppProps> = React.memo(function App({
   lang = 'en',
   on401 = handle401,
   children,
-  hooks = {},
-  components = {}
+  hooks
 }: AppProps) {
   const [strings, setStrings] = useState<LanguageRecord>()
   const token = useAPIToken()
   const getRequestOptions = useCallback(
-    (): Partial<RequestInit> => buildResfulReactRequestOptions(hooks.useGetToken?.() || token),
+    (): Partial<RequestInit> => buildResfulReactRequestOptions(hooks?.useGetToken?.() || token),
     [token, hooks]
   )
 
@@ -42,7 +41,7 @@ const App: React.FC<AppProps> = React.memo(function App({
   return strings ? (
     <StringsContextProvider initialStrings={strings}>
       <AppErrorBoundary>
-        <AppContextProvider value={{ standalone, space, routes, lang, on401, hooks, components }}>
+        <AppContextProvider value={{ standalone, space, routes, lang, on401, hooks }}>
           <RestfulProvider
             base={standalone ? '/' : '/scm'}
             requestOptions={getRequestOptions}

@@ -5,13 +5,13 @@ import { PopoverInteractionKind } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
 import { ButtonRoleProps } from 'utils/Utils'
 import { GitIcon } from 'utils/GitUtils'
-import type { RepositoryDTO } from 'types/SCMTypes'
+import type { TypesRepository } from 'services/scm'
 import { useAppContext } from 'AppContext'
 import type { SCMPathProps } from 'RouteDefinitions'
 import css from './RepositoryHeader.module.scss'
 
 interface RepositoryHeaderProps {
-  repoMetadata: RepositoryDTO
+  repoMetadata: TypesRepository
 }
 
 export function RepositoryHeader({ repoMetadata }: RepositoryHeaderProps): JSX.Element {
@@ -27,7 +27,7 @@ export function RepositoryHeader({ repoMetadata }: RepositoryHeaderProps): JSX.E
           <Icon name="main-chevron-right" size={10} color={Color.GREY_500} /> */}
           <Link to={routes.toSCMRepositoriesListing({ space })}>{getString('repositories')}</Link>
           <Icon name="main-chevron-right" size={10} color={Color.GREY_500} />
-          <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path })}>{repoMetadata.name}</Link>
+          <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.name}</Link>
         </Layout.Horizontal>
         <Container padding={{ top: 'medium', bottom: 'medium' }}>
           <Text

@@ -1,8 +1,7 @@
 import React from 'react'
 import { Container } from '@harness/uicore'
 import { useGet } from 'restful-react'
-import type { RepositoryDTO } from 'types/SCMTypes'
-import type { OpenapiGetContentOutput } from 'services/scm'
+import type { OpenapiGetContentOutput, TypesRepository } from 'services/scm'
 import { isDir, isFile } from 'utils/GitUtils'
 import { ContentHeader } from './ContentHeader/ContentHeader'
 import { FolderContent } from './FolderContent/FolderContent'
@@ -12,7 +11,7 @@ import css from './RepositoryContent.module.scss'
 interface RepositoryContentProps {
   gitRef?: string
   resourcePath?: string
-  repoMetadata: RepositoryDTO
+  repoMetadata: TypesRepository
 }
 
 export function RepositoryContent({ repoMetadata, gitRef, resourcePath }: RepositoryContentProps): JSX.Element {

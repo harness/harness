@@ -11,8 +11,7 @@ const AppContext = React.createContext<AppContextProps>({
   standalone: true,
   setAppContext: noop,
   routes,
-  hooks: {},
-  components: {}
+  hooks: {}
 })
 
 export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(function AppContextProvider({

@@ -37,8 +37,8 @@ import {
   SUGGESTED_BRANCH_NAMES,
   Unknown
 } from 'utils/Utils'
-import type { RepositoryDTO, CreateRepositoryBody } from 'types/SCMTypes'
 import { isGitBranchNameValid } from 'utils/GitUtils'
+import type { TypesRepository, OpenapiCreateRepositoryRequest } from 'services/scm'
 import { useAppContext } from 'AppContext'
 import css from './NewRepoModalButton.module.scss'
 
@@ -72,7 +72,7 @@ export interface NewRepoModalButtonProps extends Omit<ButtonProps, 'onClick' | '
   modalTitle: string
   submitButtonTitle?: string
   cancelButtonTitle?: string
-  onSubmit: (data: RepositoryDTO) => void
+  onSubmit: (data: TypesRepository) => void
 }
 
 export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
@@ -88,7 +88,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
     const { getString } = useStrings()
     const [branchName, setBranchName] = useState(DEFAULT_BRANCH_NAME)
     const { showError } = useToaster()
-    const { mutate: createRepo, loading: submitLoading } = useMutate<RepositoryDTO>({
+    const { mutate: createRepo, loading: submitLoading } = useMutate<TypesRepository>({
       verb: 'POST',
       path: `/api/v1/repos?spacePath=${space}`,
       queryParams: {
@@ -129,7 +129,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
           pathName: get(formData, 'name', '').trim(),
           readme: get(formData, 'addReadme', false),
           spaceId: standalone ? space : 0
-        } as CreateRepositoryBody)
+        } as OpenapiCreateRepositoryRequest)
           .then(response => {
             hideModal()
             onSubmit(response)
