@@ -1,5 +1,14 @@
 # Changelog
 
+## [v2.15.0](https://github.com/harness/drone/tree/v2.15.0) (2022-10-28)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.14.0...v2.15.0)
+
+**Implemented enhancements:**
+
+- bump ui version [\#3279](https://github.com/harness/drone/pull/3279) ([d1wilko](https://github.com/d1wilko))
+- Add endpoint for allowing admins to force rotate a user's token [\#3272](https://github.com/harness/drone/pull/3272) ([ShiftedMr](https://github.com/ShiftedMr))
+
 ## [v2.14.0](https://github.com/harness/drone/tree/v2.14.0) (2022-10-18)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.13.0...v2.14.0)
@@ -7,6 +16,10 @@
 **Implemented enhancements:**
 
 - \(DRON-418\) send webhook and set status for failed builds [\#3266](https://github.com/harness/drone/pull/3266) ([tphoney](https://github.com/tphoney))
+
+**Merged pull requests:**
+
+- v2.14.0 release prep [\#3275](https://github.com/harness/drone/pull/3275) ([d1wilko](https://github.com/d1wilko))
 
 ## [v2.13.0](https://github.com/harness/drone/tree/v2.13.0) (2022-09-21)
 
