@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,7 +28,8 @@ const (
 	repoSubdirName = "repos"
 	gitRepoSuffix  = "git"
 
-	gitReferencePrefixBranch = "refs/heads/"
+	gitReferenceNamePrefixBranch = "refs/heads/"
+	gitReferenceNamePrefixTag    = "refs/tags/"
 )
 
 var (
@@ -115,7 +117,7 @@ func (s repositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	}(tempDir)
 
 	// Clone repository to temp dir
-	if err = s.adapter.Clone(ctx, repoPath, tempDir, cloneRepoOption{}); err != nil {
+	if err = s.adapter.Clone(ctx, repoPath, tempDir, cloneRepoOptions{}); err != nil {
 		return status.Errorf(codes.Internal, "failed to clone repo: %v", err)
 	}
 
@@ -464,63 +466,42 @@ func (s repositoryService) ListCommits(request *rpc.ListCommitsRequest,
 	return nil
 }
 
+var listBranchesRefFields = []gitReferenceField{gitReferenceFieldRefName, gitReferenceFieldObjectName}
+
 func (s repositoryService) ListBranches(request *rpc.ListBranchesRequest,
 	stream rpc.RepositoryService_ListBranchesServer) error {
 	ctx := stream.Context()
 	repoPath := s.getFullPathForRepo(request.GetRepoUid())
 
-	branchPatterns := []string{gitReferencePrefixBranch}
-	if request.GetQuery() != "" {
-		sanitizedQuery := sanitizeBranchQuery(request.GetQuery())
-		branchPatterns = []string{
-			// refs/heads/**/*QUERY* - finds all branches that have QUERY in the filename.
-			fmt.Sprintf("%s**/*%s*", gitReferencePrefixBranch, sanitizedQuery),
-
-			// refs/heads/**/*QUERY*/** - finds all branches that have a parent folder with QUERY in the name.
-			fmt.Sprintf("%s**/*%s*/**", gitReferencePrefixBranch, sanitizedQuery),
-		}
-	}
-
-	gitReferences, err := s.adapter.ListReferences(ctx, repoPath,
-		branchPatterns,
-		mapToGitReferenceSortOption(request.Sort),
-		mapToGitSortOrder(request.Order),
-		int(request.GetPage()),
-		int(request.GetPageSize()))
+	// get all required information from git refrences
+	branches, err := s.listBranchesLoadReferenceData(ctx, repoPath, request)
 	if err != nil {
-		return status.Errorf(codes.Internal, "failed to get branch references: %v", err)
+		return err
 	}
 
-	log.Trace().Msgf("git adapter returned %d references", len(gitReferences))
-
-	// get commits if needed (single call for perf savings)
-	commits := make([]*rpc.Commit, len(gitReferences))
+	// get commits if needed (single call for perf savings: 1s-4s vs 5s-20s)
 	if request.GetIncludeCommit() {
-		shas := make([]string, len(gitReferences))
-		for i := range gitReferences {
-			shas[i] = gitReferences[i].target
+		commitSHAs := make([]string, len(branches))
+		for i := range branches {
+			commitSHAs[i] = branches[i].Sha
 		}
+
 		var gitCommits []commit
-		gitCommits, err = s.adapter.GetCommits(ctx, repoPath, shas)
+		gitCommits, err = s.adapter.GetCommits(ctx, repoPath, commitSHAs)
 		if err != nil {
 			return status.Errorf(codes.Internal, "failed to get commits: %v", err)
 		}
 
 		for i := range gitCommits {
-			commits[i], err = mapGitCommit(&gitCommits[i])
+			branches[i].Commit, err = mapGitCommit(&gitCommits[i])
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	// build all branches
-	for i, gitRef := range gitReferences {
-		branch := &rpc.Branch{
-			Name:   gitRef.name[len(gitReferencePrefixBranch):],
-			Commit: commits[i],
-		}
-
+	// send out all branches
+	for _, branch := range branches {
 		err = stream.Send(&rpc.ListBranchesResponse{
 			Branch: branch,
 		})
@@ -532,7 +513,334 @@ func (s repositoryService) ListBranches(request *rpc.ListBranchesRequest,
 	return nil
 }
 
-func mapToGitSortOrder(s rpc.SortOrder) sortOrder {
+func (s repositoryService) listBranchesLoadReferenceData(ctx context.Context,
+	repoPath string, request *rpc.ListBranchesRequest) ([]*rpc.Branch, error) {
+	// TODO: can we be smarter with slice allocation
+	branches := make([]*rpc.Branch, 0, 16)
+	handler := listBranchesWalkReferencesHandler(&branches)
+	instructor, endsAfter, err := wrapInstructorWithOptionalPagination(
+		defaultInstructor, // branches only have one target type, default instructor is enough
+		request.GetPage(),
+		request.GetPageSize())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid pagination details: %v", err)
+	}
+
+	opts := &walkReferencesOptions{
+		patterns:   createReferenceWalkPatternsFromQuery(gitReferenceNamePrefixBranch, request.GetQuery()),
+		sort:       mapListBranchesSortOption(request.Sort),
+		order:      mapSortOrder(request.Order),
+		fields:     listBranchesRefFields,
+		instructor: instructor,
+		// we don't do any post-filtering, restrict git to only return as many elements as pagination needs.
+		maxWalkDistance: endsAfter,
+	}
+
+	err = s.adapter.WalkReferences(ctx, repoPath, handler, opts)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get branch references: %v", err)
+	}
+
+	log.Trace().Msgf("git adapter returned %d branches", len(branches))
+
+	return branches, nil
+}
+
+func listBranchesWalkReferencesHandler(branches *[]*rpc.Branch) walkReferencesHandler {
+	return func(e walkReferencesEntry) error {
+		fullRefName, ok := e[gitReferenceFieldRefName]
+		if !ok {
+			return fmt.Errorf("entry missing reference name")
+		}
+		objectSHA, ok := e[gitReferenceFieldObjectName]
+		if !ok {
+			return fmt.Errorf("entry missing object sha")
+		}
+
+		branch := &rpc.Branch{
+			Name: fullRefName[len(gitReferenceNamePrefixBranch):],
+			Sha:  objectSHA,
+		}
+
+		// TODO: refactor to not use slice pointers?
+		*branches = append(*branches, branch)
+
+		return nil
+	}
+}
+
+func newInstructorWithObjectTypeFilter(filter []gitObjectType) walkReferencesInstructor {
+	return func(wre walkReferencesEntry) (walkInstruction, error) {
+		v, ok := wre[gitReferenceFieldObjectType]
+		if !ok {
+			return walkInstructionStop, fmt.Errorf("ref field for object type is missing")
+		}
+
+		// only handle if any of the filters match
+		for _, field := range filter {
+			if v == string(field) {
+				return walkInstructionHandle, nil
+			}
+		}
+
+		// by default skip
+		return walkInstructionSkip, nil
+	}
+}
+
+// wrapInstructorWithOptionalPagination wraps the provided walkInstructor with pagination.
+// If no paging is enabled, the original instructor is returned.
+func wrapInstructorWithOptionalPagination(inner walkReferencesInstructor,
+	page int32, pageSize int32) (walkReferencesInstructor, int32, error) {
+	// ensure pagination is requested
+	if pageSize < 1 {
+		return inner, 0, nil
+	}
+
+	// sanitize page
+	if page < 1 {
+		page = 1
+	}
+
+	// ensure we don't overflow
+	if int64(page)*int64(pageSize) > int64(math.MaxInt) {
+		return nil, 0, fmt.Errorf("page %d with pageSize %d is out of range", page, pageSize)
+	}
+
+	startAfter := (page - 1) * pageSize
+	endAfter := page * pageSize
+
+	// we have to count ourselves for proper pagination
+	c := int32(0)
+	return func(e walkReferencesEntry) (walkInstruction, error) {
+			// execute inner instructor
+			inst, err := inner(e)
+			if err != nil {
+				return inst, err
+			}
+
+			// no pagination if element is filtered out
+			if inst != walkInstructionHandle {
+				return inst, nil
+			}
+
+			// increase count iff element is part of filtered output
+			c++
+
+			// add pagination on filtered output
+			switch {
+			case c <= startAfter:
+				return walkInstructionSkip, nil
+			case c > endAfter:
+				return walkInstructionStop, nil
+			default:
+				return walkInstructionHandle, nil
+			}
+		},
+		endAfter,
+		nil
+}
+
+//nolint:gocognit // need to refactor this code
+func (s repositoryService) ListCommitTags(request *rpc.ListCommitTagsRequest,
+	stream rpc.RepositoryService_ListCommitTagsServer) error {
+	ctx := stream.Context()
+	repoPath := s.getFullPathForRepo(request.GetRepoUid())
+
+	// get all required information from git references
+	tags, err := s.listCommitTagsLoadReferenceData(ctx, repoPath, request)
+	if err != nil {
+		return err
+	}
+
+	// get all tag and commit SHAs
+	annotatedTagSHAs := make([]string, 0, len(tags))
+	commitSHAs := make([]string, len(tags))
+	for i, tag := range tags {
+		// always set the commit sha (will be overwritten for annotated tags)
+		commitSHAs[i] = tag.Sha
+
+		if tag.IsAnnotated {
+			annotatedTagSHAs = append(annotatedTagSHAs, tag.Sha)
+		}
+	}
+
+	if len(annotatedTagSHAs) > 0 {
+		var gitTags []tag
+		gitTags, err = s.adapter.GetAnnotatedTags(ctx, repoPath, annotatedTagSHAs)
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to get annotated tag: %v", err)
+		}
+
+		ai := 0 // since only some tags are annotated, we need second index
+		for i := range tags {
+			if !tags[i].IsAnnotated {
+				continue
+			}
+
+			// correct the commitSHA for the annotated tag (currently it is the tag sha, not the commit sha)
+			// NOTE: This is required as otherwise gitea will wrongly set the committer to the tagger signature.
+			commitSHAs[i] = gitTags[ai].targetSha
+
+			// update tag information with annotation details
+			// NOTE: we keep the name from the reference and ignore the annotated name (similar to github)
+			tags[i].Message = gitTags[ai].message
+			tags[i].Title = gitTags[ai].title
+			tags[i].Tagger = mapGitSignature(gitTags[ai].tagger)
+
+			ai++
+		}
+	}
+
+	// get commits if needed (single call for perf savings: 1s-4s vs 5s-20s)
+	if request.GetIncludeCommit() {
+		var gitCommits []commit
+		gitCommits, err = s.adapter.GetCommits(ctx, repoPath, commitSHAs)
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to get commits: %v", err)
+		}
+
+		for i := range gitCommits {
+			tags[i].Commit, err = mapGitCommit(&gitCommits[i])
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// send out all tags
+	for _, tag := range tags {
+		err = stream.Send(&rpc.ListCommitTagsResponse{
+			Tag: tag,
+		})
+		if err != nil {
+			return status.Errorf(codes.Internal, "failed to send tag: %v", err)
+		}
+	}
+
+	return nil
+}
+
+var listCommitTagsRefFields = []gitReferenceField{gitReferenceFieldRefName,
+	gitReferenceFieldObjectType, gitReferenceFieldObjectName}
+var listCommitTagsObjectTypeFilter = []gitObjectType{gitObjectTypeCommit, gitObjectTypeTag}
+
+func (s repositoryService) listCommitTagsLoadReferenceData(ctx context.Context,
+	repoPath string, request *rpc.ListCommitTagsRequest) ([]*rpc.CommitTag, error) {
+	// TODO: can we be smarter with slice allocation
+	tags := make([]*rpc.CommitTag, 0, 16)
+	handler := listCommitTagsWalkReferencesHandler(&tags)
+	instructor, _, err := wrapInstructorWithOptionalPagination(
+		newInstructorWithObjectTypeFilter(listCommitTagsObjectTypeFilter),
+		request.GetPage(),
+		request.GetPageSize())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid pagination details: %v", err)
+	}
+
+	opts := &walkReferencesOptions{
+		patterns:   createReferenceWalkPatternsFromQuery(gitReferenceNamePrefixTag, request.GetQuery()),
+		sort:       mapListCommitTagsSortOption(request.Sort),
+		order:      mapSortOrder(request.Order),
+		fields:     listCommitTagsRefFields,
+		instructor: instructor,
+		// we do post-filtering, so we can't restrict the git output ...
+		maxWalkDistance: 0,
+	}
+
+	err = s.adapter.WalkReferences(ctx, repoPath, handler, opts)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get tag references: %v", err)
+	}
+
+	log.Trace().Msgf("git adapter returned %d tags", len(tags))
+
+	return tags, nil
+}
+
+func listCommitTagsWalkReferencesHandler(tags *[]*rpc.CommitTag) walkReferencesHandler {
+	return func(e walkReferencesEntry) error {
+		fullRefName, ok := e[gitReferenceFieldRefName]
+		if !ok {
+			return fmt.Errorf("entry missing reference name")
+		}
+		objectSHA, ok := e[gitReferenceFieldObjectName]
+		if !ok {
+			return fmt.Errorf("entry missing object sha")
+		}
+		objectTypeRaw, ok := e[gitReferenceFieldObjectType]
+		if !ok {
+			return fmt.Errorf("entry missing object type")
+		}
+
+		tag := &rpc.CommitTag{
+			Name:        fullRefName[len(gitReferenceNamePrefixTag):],
+			Sha:         objectSHA,
+			IsAnnotated: objectTypeRaw == string(gitObjectTypeTag),
+		}
+
+		// TODO: refactor to not use slice pointers?
+		*tags = append(*tags, tag)
+
+		return nil
+	}
+}
+
+// createReferenceWalkPatternsFromQuery returns a list of patterns that
+// ensure only references matching the basePath and query are part of the walk.
+func createReferenceWalkPatternsFromQuery(basePath string, query string) []string {
+	if basePath == "" && query == "" {
+		return []string{}
+	}
+
+	// ensure non-empty basepath ends with "/" for proper matching and concatination.
+	if basePath != "" && basePath[len(basePath)-1] != '/' {
+		basePath += "/"
+	}
+
+	// in case query is empty, we just match the basePath.
+	if query == "" {
+		return []string{basePath}
+	}
+
+	// sanitze the query and get special chars
+	query, matchPrefix, matchSuffix := sanitizeReferenceQuery(query)
+
+	// In general, there are two search patterns:
+	//   - refs/tags/**/*QUERY* - finds all refs that have QUERY in the filename.
+	//   - refs/tags/**/*QUERY*/** - finds all refs that have a parent folder with QUERY in the name.
+	//
+	// In case the suffix has to match, they will be the same, so we return only one pattern.
+	if matchSuffix {
+		// exact match (refs/tags/QUERY)
+		if matchPrefix {
+			return []string{basePath + query}
+		}
+
+		// suffix only match (refs/tags/**/*QUERY)
+		return []string{basePath + "**/*" + query}
+	}
+
+	// prefix only match
+	//   - refs/tags/QUERY*
+	//   - refs/tags/QUERY*/**
+	if matchPrefix {
+		return []string{
+			basePath + query + "*",    // file
+			basePath + query + "*/**", // folder
+		}
+	}
+
+	// arbitrary match
+	//   - refs/tags/**/*QUERY*
+	//   - refs/tags/**/*QUERY*/**
+	return []string{
+		basePath + "**/*" + query + "*",    // file
+		basePath + "**/*" + query + "*/**", // folder
+	}
+}
+
+func mapSortOrder(s rpc.SortOrder) sortOrder {
 	switch s {
 	case rpc.SortOrder_Asc:
 		return SortOrderAsc
@@ -546,39 +854,69 @@ func mapToGitSortOrder(s rpc.SortOrder) sortOrder {
 	}
 }
 
-func mapToGitReferenceSortOption(s rpc.ListBranchesRequest_SortOption) referenceSortOption {
+func mapListCommitTagsSortOption(s rpc.ListCommitTagsRequest_SortOption) gitReferenceField {
 	switch s {
-	case rpc.ListBranchesRequest_Date:
-		return referenceSortOptionDate
-	case rpc.ListBranchesRequest_Name:
-		return referenceSortOptionName
-	case rpc.ListBranchesRequest_Default:
-		return referenceSortOptionDefault
+	case rpc.ListCommitTagsRequest_Date:
+		return gitReferenceFieldCreatorDate
+	case rpc.ListCommitTagsRequest_Name:
+		return gitReferenceFieldRefName
+	case rpc.ListCommitTagsRequest_Default:
+		return gitReferenceFieldRefName
 	default:
 		// no need to error out - just use default for sorting
-		return referenceSortOptionName
+		return gitReferenceFieldRefName
 	}
 }
 
-// sanitizeBranchQuery removes characters that aren't allowd in a branch name.
-// TODO: should this be done further up - and should we error out instead of ignore bad chars?
-func sanitizeBranchQuery(original string) string {
+func mapListBranchesSortOption(s rpc.ListBranchesRequest_SortOption) gitReferenceField {
+	switch s {
+	case rpc.ListBranchesRequest_Date:
+		return gitReferenceFieldCreatorDate
+	case rpc.ListBranchesRequest_Name:
+		return gitReferenceFieldRefName
+	case rpc.ListBranchesRequest_Default:
+		return gitReferenceFieldRefName
+	default:
+		// no need to error out - just use default for sorting
+		return gitReferenceFieldRefName
+	}
+}
+
+// sanitizeReferenceQuery removes characters that aren't allowd in a branch name.
+// TODO: should we error out instead of ignore bad chars?
+func sanitizeReferenceQuery(query string) (string, bool, bool) {
+	if query == "" {
+		return "", false, false
+	}
+
+	// get special characters before anything else
+	matchPrefix := query[0] == '^' // will be removed by mapping
+	matchSuffix := query[len(query)-1] == '$'
+	if matchSuffix {
+		// Special char $ has to be removed manually as it's a valid char
+		// TODO: this restricts the query language to a certain degree, can we do better? (escaping)
+		query = query[:len(query)-1]
+	}
+
+	// strip all unwanted characters
 	return strings.Map(func(r rune) rune {
-		// See https://git-scm.com/docs/git-check-ref-format#_description for more details.
-		switch {
-		// rule 4.
-		case r < 31 || r == ' ' || r == '~' || r == '^' || r == ':':
-			return -1
+			// See https://git-scm.com/docs/git-check-ref-format#_description for more details.
+			switch {
+			// rule 4.
+			case r < 32 || r == 127 || r == ' ' || r == '~' || r == '^' || r == ':':
+				return -1
 
-		// rule 5
-		case r == '?' || r == '*' || r == '[':
-			return -1
+			// rule 5
+			case r == '?' || r == '*' || r == '[':
+				return -1
 
-		// everything else we ignore
-		default:
-			return r
-		}
-	}, original)
+			// everything else we map as is
+			default:
+				return r
+			}
+		}, query),
+		matchPrefix,
+		matchSuffix
 }
 
 func (s repositoryService) getLatestCommit(ctx context.Context, repoPath string,
@@ -607,22 +945,20 @@ func mapGitCommit(gitCommit *commit) (*rpc.Commit, error) {
 	}
 
 	return &rpc.Commit{
-		Sha:     gitCommit.sha,
-		Title:   gitCommit.title,
-		Message: gitCommit.message,
-		Author: &rpc.Signature{
-			Identity: &rpc.Identity{
-				Name:  gitCommit.author.identity.name,
-				Email: gitCommit.author.identity.email,
-			},
-			When: gitCommit.author.when.Unix(),
-		},
-		Committer: &rpc.Signature{
-			Identity: &rpc.Identity{
-				Name:  gitCommit.committer.identity.name,
-				Email: gitCommit.committer.identity.email,
-			},
-			When: gitCommit.committer.when.Unix(),
-		},
+		Sha:       gitCommit.sha,
+		Title:     gitCommit.title,
+		Message:   gitCommit.message,
+		Author:    mapGitSignature(gitCommit.author),
+		Committer: mapGitSignature(gitCommit.committer),
 	}, nil
+}
+
+func mapGitSignature(gitSignature signature) *rpc.Signature {
+	return &rpc.Signature{
+		Identity: &rpc.Identity{
+			Name:  gitSignature.identity.name,
+			Email: gitSignature.identity.email,
+		},
+		When: gitSignature.when.Unix(),
+	}
 }

@@ -291,24 +291,36 @@ func mapCommit(c *gitrpc.Commit) (*Commit, error) {
 		return nil, fmt.Errorf("commit is nil")
 	}
 
+	author, err := mapSignature(&c.Author)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map author: %w", err)
+	}
+
+	committer, err := mapSignature(&c.Committer)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map committer: %w", err)
+	}
+
 	return &Commit{
-		SHA:     c.SHA,
-		Title:   c.Title,
-		Message: c.Message,
-		Author: Signature{
-			Identity: Identity{
-				Name:  c.Author.Identity.Name,
-				Email: c.Author.Identity.Email,
-			},
-			When: c.Author.When,
+		SHA:       c.SHA,
+		Title:     c.Title,
+		Message:   c.Message,
+		Author:    *author,
+		Committer: *committer,
+	}, nil
+}
+
+func mapSignature(s *gitrpc.Signature) (*Signature, error) {
+	if s == nil {
+		return nil, fmt.Errorf("signature is nil")
+	}
+
+	return &Signature{
+		Identity: Identity{
+			Name:  s.Identity.Name,
+			Email: s.Identity.Email,
 		},
-		Committer: Signature{
-			Identity: Identity{
-				Name:  c.Committer.Identity.Name,
-				Email: c.Committer.Identity.Email,
-			},
-			When: c.Committer.When,
-		},
+		When: s.When,
 	}, nil
 }
 

@@ -7,12 +7,15 @@ package gitrpc
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"math"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	gitea "code.gitea.io/gitea/modules/git"
 	gitearef "code.gitea.io/gitea/modules/git/foreachref"
@@ -20,17 +23,6 @@ import (
 
 const (
 	giteaPrettyLogFormat = `--pretty=format:%H`
-)
-
-// giteaRefField represents the different fields available when listing references.
-// For the full list, see https://git-scm.com/docs/git-for-each-ref#_field_names
-type giteaRefField string
-
-const (
-	giteaRefFieldRefName     giteaRefField = "refname"
-	giteaRefFieldObjectType  giteaRefField = "objecttype"
-	giteaRefFieldObjectName  giteaRefField = "objectname"
-	giteaRefFieldCreatorDate giteaRefField = "creatordate"
 )
 
 type giteaAdapter struct {
@@ -74,7 +66,7 @@ func (g giteaAdapter) SetDefaultBranch(ctx context.Context, repoPath string,
 	return nil
 }
 
-func (g giteaAdapter) Clone(ctx context.Context, from, to string, opts cloneRepoOption) error {
+func (g giteaAdapter) Clone(ctx context.Context, from, to string, opts cloneRepoOptions) error {
 	return gitea.Clone(ctx, from, to, gitea.CloneRepoOptions{
 		Timeout:       opts.timeout,
 		Mirror:        opts.mirror,
@@ -358,15 +350,16 @@ func (g giteaAdapter) ListCommits(ctx context.Context, repoPath string,
 	return commits, totalCount, nil
 }
 
-// GetCommit returns the commit for a specific sha.
-func (g giteaAdapter) GetCommit(ctx context.Context, repoPath string, sha string) (*commit, error) {
+// GetCommit returns the (latest) commit for a specific ref.
+// Note: ref can be Branch / Tag / CommitSHA.
+func (g giteaAdapter) GetCommit(ctx context.Context, repoPath string, ref string) (*commit, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
 		return nil, err
 	}
 	defer giteaRepo.Close()
 
-	commit, err := giteaRepo.GetCommit(sha)
+	commit, err := giteaRepo.GetCommit(ref)
 	if err != nil {
 		return nil, err
 	}
@@ -374,16 +367,17 @@ func (g giteaAdapter) GetCommit(ctx context.Context, repoPath string, sha string
 	return mapGiteaCommit(commit)
 }
 
-// GetCommits returns the commits for a specific list of shas.
-func (g giteaAdapter) GetCommits(ctx context.Context, repoPath string, shas []string) ([]commit, error) {
+// GetCommits returns the (latest) commits for a specific list of refs.
+// Note: ref can be Branch / Tag / CommitSHA.
+func (g giteaAdapter) GetCommits(ctx context.Context, repoPath string, refs []string) ([]commit, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
 		return nil, err
 	}
 	defer giteaRepo.Close()
 
-	commits := make([]commit, len(shas))
-	for i, sha := range shas {
+	commits := make([]commit, len(refs))
+	for i, sha := range refs {
 		var giteaCommit *gitea.Commit
 		giteaCommit, err = giteaRepo.GetCommit(sha)
 		if err != nil {
@@ -401,100 +395,296 @@ func (g giteaAdapter) GetCommits(ctx context.Context, repoPath string, shas []st
 	return commits, nil
 }
 
-// ListBranches lists the branches of the repo.
-func (g giteaAdapter) ListReferences(ctx context.Context, repoPath string,
-	patterns []string, sort referenceSortOption, order sortOrder, page int, pageSize int) ([]reference, error) {
-	// first page is always 1 (anything lower is treated as page 1)
-	if page < 1 {
-		page = 1
+// GetAnnotatedTag returns the tag for a specific tag sha.
+func (g giteaAdapter) GetAnnotatedTag(ctx context.Context, repoPath string, sha string) (*tag, error) {
+	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
+	if err != nil {
+		return nil, err
+	}
+	defer giteaRepo.Close()
+
+	return giteaGetAnnotatedTag(giteaRepo, sha)
+}
+
+// GetAnnotatedTags returns the tags for a specific list of tag sha.
+func (g giteaAdapter) GetAnnotatedTags(ctx context.Context, repoPath string, shas []string) ([]tag, error) {
+	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
+	if err != nil {
+		return nil, err
+	}
+	defer giteaRepo.Close()
+
+	tags := make([]tag, len(shas))
+	for i, sha := range shas {
+		var tag *tag
+		tag, err = giteaGetAnnotatedTag(giteaRepo, sha)
+		if err != nil {
+			return nil, err
+		}
+
+		tags[i] = *tag
 	}
 
-	sortBy, desc := getGiteaReferenceFieldAndOrder(sort, order)
+	return tags, nil
+}
 
-	opts := &walkReferencesOptions{
-		patterns: patterns,
-		sortBy:   sortBy,
-		sortDesc: desc,
-		isHead: func(i int, _ map[string]string) bool {
-			return i >= (page-1)*pageSize
-		},
-		isTail: func(i int, m map[string]string) bool {
-			return i >= page*pageSize-1
-		},
-		maxWalkDistance: page * pageSize,
+// giteaGetAnnotatedTag is a custom implementation to retrieve an annotated tag from a sha.
+// The code is following parts of the gitea implementation.
+//
+// IMPORTANT: This is required as all gitea implementations of form get*Tag
+// are having huge performance issues (with 2,500 tags it took seconds per single tag!)
+func giteaGetAnnotatedTag(giteaRepo *gitea.Repository, sha string) (*tag, error) {
+	// The tag is an annotated tag with a message.
+	writer, reader, cancel := giteaRepo.CatFileBatch(giteaRepo.Ctx)
+	defer cancel()
+	if _, err := writer.Write([]byte(sha + "\n")); err != nil {
+		return nil, err
+	}
+	tagSha, typ, size, err := gitea.ReadBatchLine(reader)
+	if err != nil {
+		if errors.Is(err, io.EOF) || gitea.IsErrNotExist(err) {
+			return nil, fmt.Errorf("tag with sha %s does not exist", sha)
+		}
+		return nil, err
+	}
+	if typ != string(gitObjectTypeTag) {
+		return nil, fmt.Errorf("git object is of type '%s', expected tag", typ)
 	}
 
-	refs := make([]reference, 0, pageSize)
-	handle := func(_ int, ref map[string]string) error {
-		refs = append(refs, reference{
-			name:   ref[string(giteaRefFieldRefName)],
-			target: ref[string(giteaRefFieldObjectName)],
-		})
-
-		return nil
+	// read the remaining rawData
+	rawData, err := io.ReadAll(io.LimitReader(reader, size))
+	if err != nil {
+		return nil, err
 	}
-
-	err := walkReferences(ctx, repoPath,
-		[]giteaRefField{giteaRefFieldRefName, giteaRefFieldObjectName}, handle, opts)
+	_, err = reader.Discard(1)
 	if err != nil {
 		return nil, err
 	}
 
-	return refs, nil
-}
-
-type walkReferencesOptions struct {
-	// patterns are the patterns used to filter the references of the repo.
-	patterns []string
-
-	// sortBy specifies the field by which the output is sorted (doesn't have to be part of the output fields)
-	sortBy giteaRefField
-
-	// sortDesc specifices whether the references are handled in an ascending or descending order.
-	sortDesc bool
-
-	// isHead is a function that returns true for the first element that should be handled.
-	// NOTE: once isHead returned true (the head was found), isHead will never be called again.
-	isHead func(int, map[string]string) bool
-
-	// isTail is a function that returns true for the last element that should be handled.
-	// NOTE: once isTail returns true (the tail was found), isTail will never be called again.
-	isTail func(int, map[string]string) bool
-
-	// maxWalkDistance returns the maximum number of nodes that are iterated over before the walking stops.
-	// Only references of the filtered output are counted towards the walking distance.
-	// WARNING: the walking stops even if the head or the tail wans't found yet
-	maxWalkDistance int
-}
-
-// walkReferences uses the provided options to filter the available references of the repo,
-// and calls the handle function for every matching node between between [head, tail].
-// The handle function is called with a map that contains the matching value for every field provided in fields.
-// TODO: walkReferences related code should be moved to separate file.
-func walkReferences(ctx context.Context, repoPath string,
-	fields []giteaRefField, handle func(int, map[string]string) error, opts *walkReferencesOptions) error {
-	if len(fields) == 0 {
-		return fmt.Errorf("no fields provided")
+	tag, err := parseTagDataFromCatFile(rawData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse tag '%s': %w", sha, err)
 	}
 
+	// fill in the sha
+	tag.sha = string(tagSha)
+
+	return tag, nil
+}
+
+const (
+	pgpSignatureBeginToken = "\n-----BEGIN PGP SIGNATURE-----\n" //#nosec G101
+	pgpSignatureEndToken   = "\n-----END PGP SIGNATURE-----"     //#nosec G101
+)
+
+// parseTagDataFromCatFile parses a tag from a cat-file output.
+func parseTagDataFromCatFile(data []byte) (*tag, error) {
+	tag := &tag{}
+	p := 0
+	var err error
+
+	// parse object Id
+	tag.targetSha, p, err = giteaParseCatFileLine(data, p, "object")
+	if err != nil {
+		return nil, err
+	}
+
+	// parse object type
+	rawType, p, err := giteaParseCatFileLine(data, p, "type")
+	if err != nil {
+		return nil, err
+	}
+
+	tag.targetType, err = parseGitObjectType(rawType)
+	if err != nil {
+		return nil, err
+	}
+
+	// parse tag name
+	tag.name, p, err = giteaParseCatFileLine(data, p, "tag")
+	if err != nil {
+		return nil, err
+	}
+
+	// parse tagger
+	rawTaggerInfo, p, err := giteaParseCatFileLine(data, p, "tagger")
+	if err != nil {
+		return nil, err
+	}
+	tag.tagger, err = parseSignatureFromCatFileLine(rawTaggerInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	// remainder is message and gpg (remove leading and tailing new lines)
+	message := string(bytes.Trim(data[p:], "\n"))
+
+	// handle gpg signature
+	pgpEnd := strings.Index(message, pgpSignatureEndToken)
+	if pgpEnd > -1 {
+		messageStart := pgpEnd + len(pgpSignatureEndToken)
+		// for now we just remove the signature (and trim any separating new lines)
+		// TODO: add support for GPG signature of tags
+		message = strings.TrimLeft(message[messageStart:], "\n")
+	}
+
+	tag.message = message
+
+	// get title from message
+	tag.title = message
+	titleEnd := strings.IndexByte(message, '\n')
+	if titleEnd > -1 {
+		tag.title = message[:titleEnd]
+	}
+
+	return tag, nil
+}
+
+func giteaParseCatFileLine(data []byte, start int, header string) (string, int, error) {
+	// for simplicity only look at data from start onwards
+	data = data[start:]
+
+	lenHeader := len(header)
+	lenData := len(data)
+	if lenData < lenHeader {
+		return "", 0, fmt.Errorf("expected '%s' but line only contains '%s'", header, string(data))
+	}
+	if string(data[:lenHeader]) != header {
+		return "", 0, fmt.Errorf("expected '%s' but started with '%s'", header, string(data[:lenHeader]))
+	}
+
+	// get end of line and start of next line (used externaly, transpose with provided start index)
+	lineEnd := bytes.IndexByte(data, '\n')
+	externalNextLine := start + lineEnd + 1
+	if lineEnd == -1 {
+		lineEnd = lenData
+		externalNextLine = start + lenData
+	}
+
+	// if there's no data, return an error (have to consider for ' ')
+	if lineEnd <= lenHeader+1 {
+		return "", 0, fmt.Errorf("no data for line of type '%s'", header)
+	}
+
+	return string(data[lenHeader+1 : lineEnd]), externalNextLine, nil
+}
+
+// defaultGitTimeLayout is the (default) time format printed by git.
+const defaultGitTimeLayout = "Mon Jan _2 15:04:05 2006 -0700"
+
+// parseSignatureFromCatFileLine parses the signature from a cat-file output.
+// This is used for commit / tag outputs. Input will be similar to (without 'author 'prefix):
+// - author Max Mustermann <mm@gitness.io> 1666401234 -0700
+// - author Max Mustermann <mm@gitness.io> Tue Oct 18 05:13:26 2022 +0530
+// TODO: method is leaning on gitea code - requires reference?
+func parseSignatureFromCatFileLine(line string) (signature, error) {
+	sig := signature{}
+	emailStart := strings.LastIndexByte(line, '<')
+	emailEnd := strings.LastIndexByte(line, '>')
+	if emailStart == -1 || emailEnd == -1 || emailEnd < emailStart {
+		return signature{}, fmt.Errorf("signature is missing email ('%s')", line)
+	}
+
+	// name requires that there is at least one char followed by a space (so emailStart >= 2)
+	if emailStart < 2 {
+		return signature{}, fmt.Errorf("signature is missing name ('%s')", line)
+	}
+
+	sig.identity.name = line[:emailStart-1]
+	sig.identity.email = line[emailStart+1 : emailEnd]
+
+	timeStart := emailEnd + 2
+	if timeStart >= len(line) {
+		return signature{}, fmt.Errorf("signature is missing time ('%s')", line)
+	}
+
+	// Check if time format is written date time format (e.g Thu, 07 Apr 2005 22:13:13 +0200)
+	// we can check that by ensuring that the date time part starts with a non-digit character.
+	if line[timeStart] > '9' {
+		var err error
+		sig.when, err = time.Parse(defaultGitTimeLayout, line[timeStart:])
+		if err != nil {
+			return signature{}, fmt.Errorf("failed to time.parse signature time ('%s'): %w", line, err)
+		}
+
+		return sig, nil
+	}
+
+	// Otherwise we have to manually parse unix time and time zone
+	endOfUnixTime := timeStart + strings.IndexByte(line[timeStart:], ' ')
+	if endOfUnixTime <= timeStart {
+		return signature{}, fmt.Errorf("signature is missing unix time ('%s')", line)
+	}
+
+	unixSeconds, err := strconv.ParseInt(line[timeStart:endOfUnixTime], 10, 64)
+	if err != nil {
+		return signature{}, fmt.Errorf("failed to parse unix time ('%s'): %w", line, err)
+	}
+
+	// parse time zone
+	startOfTimeZone := endOfUnixTime + 1 // +1 for space
+	endOfTimeZone := startOfTimeZone + 5 // +5 for '+0700'
+	if startOfTimeZone >= len(line) || endOfTimeZone > len(line) {
+		return signature{}, fmt.Errorf("signature is missing time zone ('%s')", line)
+	}
+
+	// get and disect timezone, e.g. '+0700'
+	rawTimeZone := line[startOfTimeZone:endOfTimeZone]
+	rawTimeZoneH := rawTimeZone[1:3]  // gets +[07]00
+	rawTimeZoneMin := rawTimeZone[3:] // gets +07[00]
+	timeZoneH, err := strconv.ParseInt(rawTimeZoneH, 10, 64)
+	if err != nil {
+		return signature{}, fmt.Errorf("failed to parse hours of time zone ('%s'): %w", line, err)
+	}
+	timeZoneMin, err := strconv.ParseInt(rawTimeZoneMin, 10, 64)
+	if err != nil {
+		return signature{}, fmt.Errorf("failed to parse minutes of time zone ('%s'): %w", line, err)
+	}
+
+	timeZoneOffsetInSec := int(timeZoneH*60+timeZoneMin) * 60
+	if rawTimeZone[0] == '-' {
+		timeZoneOffsetInSec *= -1
+	}
+	timeZone := time.FixedZone("", timeZoneOffsetInSec)
+
+	// create final time using unix and timezone translation
+	sig.when = time.Unix(unixSeconds, 0).In(timeZone)
+
+	return sig, nil
+}
+
+func defaultInstructor(_ walkReferencesEntry) (walkInstruction, error) {
+	return walkInstructionHandle, nil
+}
+
+// WalkReferences uses the provided options to filter the available references of the repo,
+// and calls the handle function for every matching node.
+// The instructor & handler are called with a map that contains the matching value for every field provided in fields.
+// TODO: walkGiteaReferences related code should be moved to separate file.
+func (g giteaAdapter) WalkReferences(ctx context.Context,
+	repoPath string, handler walkReferencesHandler, opts *walkReferencesOptions) error {
 	// backfil optional options
-	if opts.isHead == nil {
-		opts.isHead = func(i int, m map[string]string) bool { return true }
+	if opts.instructor == nil {
+		opts.instructor = defaultInstructor
 	}
-	if opts.isTail == nil {
-		opts.isTail = func(i int, m map[string]string) bool { return false }
-	}
-	if opts.sortBy == "" {
-		opts.sortBy = giteaRefFieldRefName
+	if len(opts.fields) == 0 {
+		opts.fields = []gitReferenceField{gitReferenceFieldRefName, gitReferenceFieldObjectName}
 	}
 	if opts.maxWalkDistance <= 0 {
-		opts.maxWalkDistance = math.MaxInt
+		opts.maxWalkDistance = math.MaxInt32
+	}
+	if opts.patterns == nil {
+		opts.patterns = []string{}
+	}
+	if string(opts.sort) == "" {
+		opts.sort = gitReferenceFieldRefName
 	}
 
-	// prepare for-each-ref output format
-	rawFields := make([]string, len(fields))
-	for i := range fields {
-		rawFields[i] = string(fields[i])
+	// prepare for-each-ref input
+	sortArg := mapToGiteaReferenceSortingArgument(opts.sort, opts.order)
+	rawFields := make([]string, len(opts.fields))
+	for i := range opts.fields {
+		rawFields[i] = string(opts.fields[i])
 	}
 	giteaFormat := gitearef.NewFormat(rawFields...)
 
@@ -506,10 +696,6 @@ func walkReferences(ctx context.Context, repoPath string,
 	rc := &gitea.RunOpts{Dir: repoPath, Stdout: pipeIn, Stderr: &stderr}
 
 	// create sort argument
-	sortArg := string(opts.sortBy)
-	if opts.sortDesc {
-		sortArg = "-" + sortArg
-	}
 
 	go func() {
 		// create array for args as patterns have to be passed as separate args.
@@ -533,40 +719,44 @@ func walkReferences(ctx context.Context, repoPath string,
 	}()
 
 	parser := giteaFormat.Parser(pipeOut)
-	return handleReferenceParser(parser, handle, opts)
+	return walkGiteaReferenceParser(parser, handler, opts)
 }
 
-func handleReferenceParser(parser *gitearef.Parser, handle func(int, map[string]string) error,
+func walkGiteaReferenceParser(parser *gitearef.Parser, handler walkReferencesHandler,
 	opts *walkReferencesOptions) error {
-	headFound := false
-	c := 0
-	for {
+	for i := int32(0); i < opts.maxWalkDistance; i++ {
 		// parse next line - nil if end of output reached or an error occurred.
 		rawRef := parser.Next()
 		if rawRef == nil {
 			break
 		}
 
-		// increase count
-		c++
-
-		// check if we alraedy found the head (or the current element is the head)
-		headFound = headFound || opts.isHead(c-1, rawRef)
-		if !headFound {
-			continue
+		// convert to correct map.
+		ref, err := mapGiteaRawRef(rawRef)
+		if err != nil {
+			return err
 		}
 
-		// handle the element
-		err := handle(c, rawRef)
+		// check with the instructor on the next instruction.
+		instruction, err := opts.instructor(ref)
+		if err != nil {
+			return fmt.Errorf("error getting instruction: %w", err)
+		}
+
+		if instruction == walkInstructionSkip {
+			continue
+		}
+		if instruction == walkInstructionStop {
+			break
+		}
+
+		// otherwise handle the reference.
+		err = handler(ref)
 		if err != nil {
 			return fmt.Errorf("error handling reference: %w", err)
 		}
-
-		// if entry is the tail - break the loop
-		if opts.isTail(c-1, rawRef) {
-			break
-		}
 	}
+
 	if err := parser.Err(); err != nil {
 		return fmt.Errorf("failed to parse output: %w", err)
 	}
@@ -574,18 +764,35 @@ func handleReferenceParser(parser *gitearef.Parser, handle func(int, map[string]
 	return nil
 }
 
-func getGiteaReferenceFieldAndOrder(s referenceSortOption, o sortOrder) (giteaRefField, bool) {
-	ref := giteaRefFieldRefName
+func mapGiteaRawRef(raw map[string]string) (map[gitReferenceField]string, error) {
+	res := make(map[gitReferenceField]string, len(raw))
+	for k, v := range raw {
+		gitRefField, err := parseGitReferenceField(k)
+		if err != nil {
+			return nil, err
+		}
+		res[gitRefField] = v
+	}
+
+	return res, nil
+}
+
+func mapToGiteaReferenceSortingArgument(s gitReferenceField, o sortOrder) string {
+	sortBy := string(gitReferenceFieldRefName)
 	desc := o == sortOrderDesc
 
-	if s == referenceSortOptionDate {
-		ref = giteaRefFieldCreatorDate
+	if s == gitReferenceFieldCreatorDate {
+		sortBy = string(gitReferenceFieldCreatorDate)
 		if o == sortOrderDefault {
 			desc = true
 		}
 	}
 
-	return ref, desc
+	if desc {
+		return "-" + sortBy
+	}
+
+	return sortBy
 }
 
 // GetSubmodule returns the submodule at the given path reachable from ref.
@@ -668,9 +875,10 @@ func mapGiteaCommit(giteaCommit *gitea.Commit) (*commit, error) {
 		return nil, fmt.Errorf("failed to map gitea commiter: %w", err)
 	}
 	return &commit{
-		sha:       giteaCommit.ID.String(),
-		title:     giteaCommit.Summary(),
-		message:   giteaCommit.Message(),
+		sha:   giteaCommit.ID.String(),
+		title: giteaCommit.Summary(),
+		// remove potential tailing newlines from message
+		message:   strings.TrimRight(giteaCommit.Message(), "\n"),
 		author:    author,
 		committer: committer,
 	}, nil

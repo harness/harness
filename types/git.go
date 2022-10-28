@@ -12,11 +12,20 @@ type CommitFilter struct {
 	Size int `json:"size"`
 }
 
-// BranchFilter stores commit query parameters.
+// BranchFilter stores branch query parameters.
 type BranchFilter struct {
 	Query string                `json:"query"`
 	Sort  enum.BranchSortOption `json:"sort"`
 	Order enum.Order            `json:"order"`
 	Page  int                   `json:"page"`
 	Size  int                   `json:"size"`
+}
+
+// TagFilter stores commit tag query parameters.
+type TagFilter struct {
+	Query string             `json:"query"`
+	Sort  enum.TagSortOption `json:"sort"`
+	Order enum.Order         `json:"order"`
+	Page  int                `json:"page"`
+	Size  int                `json:"size"`
 }

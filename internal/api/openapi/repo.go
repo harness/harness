@@ -92,6 +92,14 @@ type listCommitsRequest struct {
 	repoRequest
 }
 
+type listBranchesRequest struct {
+	repoRequest
+}
+
+type listTagsRequest struct {
+	repoRequest
+}
+
 var queryParameterGitRef = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name: request.QueryParamGitRef,
@@ -158,11 +166,44 @@ var queryParameterSortBranch = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterQueryBranch = openapi3.ParameterOrRef{
+var queryParameterQueryBranches = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("The substring by which the branches are filtered."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterSortTags = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSort,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The data by which the tags are sorted."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(enum.TagSortOptionName.String()),
+				Enum: []interface{}{
+					ptr.String(enum.TagSortOptionName.String()),
+					ptr.String(enum.TagSortOptionDate.String()),
+				},
+			},
+		},
+	},
+}
+
+var queryParameterQueryTags = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring by which the tags are filtered."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
@@ -303,14 +344,28 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListBranches := openapi3.Operation{}
 	opListBranches.WithTags("repository")
 	opListBranches.WithMapOfAnything(map[string]interface{}{"operationId": "listBranches"})
-	opListBranches.WithParameters(queryParameterGitRef, queryParameterIncludeCommit,
-		queryParameterQueryBranch, queryParameterDirection, queryParameterSortBranch,
+	opListBranches.WithParameters(queryParameterIncludeCommit,
+		queryParameterQueryBranches, queryParameterDirection, queryParameterSortBranch,
 		queryParameterPage, queryParameterPerPage)
-	_ = reflector.SetRequest(&opListBranches, new(listCommitsRequest), http.MethodGet)
+	_ = reflector.SetRequest(&opListBranches, new(listBranchesRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListBranches, []repo.Branch{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opListBranches, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/branches", opListBranches)
+
+	opListTags := openapi3.Operation{}
+	opListTags.WithTags("repository")
+	opListTags.WithMapOfAnything(map[string]interface{}{"operationId": "listTags"})
+	opListTags.WithParameters(queryParameterIncludeCommit,
+		queryParameterQueryTags, queryParameterDirection, queryParameterSortTags,
+		queryParameterPage, queryParameterPerPage)
+	_ = reflector.SetRequest(&opListTags, new(listTagsRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListTags, []repo.CommitTag{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListTags, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListTags, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListTags, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opListTags, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/tags", opListTags)
 }

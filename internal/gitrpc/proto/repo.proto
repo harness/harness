@@ -14,6 +14,7 @@ service RepositoryService {
   rpc GetBlob(GetBlobRequest) returns (GetBlobResponse);
   rpc ListCommits(ListCommitsRequest) returns (stream ListCommitsResponse);
   rpc ListBranches(ListBranchesRequest) returns (stream ListBranchesResponse);
+  rpc ListCommitTags(ListCommitTagsRequest) returns (stream ListCommitTagsResponse);
 }
 
 message CreateRepositoryRequest {
@@ -115,6 +116,12 @@ message ListBranchesResponse {
   Branch branch = 1;
 }
 
+message Branch {
+  string name   = 1;
+  string sha    = 2;
+  Commit commit = 3;
+}
+
 message GetBlobRequest {
   string repo_uid = 1;
   string sha      = 2;
@@ -146,16 +153,34 @@ message Submodule {
   string url  = 2;
 }
 
-message Branch {
-  string name   = 1;
-  Commit commit = 2;
+message ListCommitTagsRequest {
+  enum SortOption {
+    Default = 0;
+    Name    = 1;
+    Date    = 2;
+  }
+
+  string repo_uid     = 1;
+  bool include_commit = 2;
+  string query        = 3;
+  SortOption sort     = 4;
+  SortOrder order     = 5;
+  int32 page          = 6;
+  int32 pageSize      = 7;
 }
 
-message CommitRequest {
-  string title       = 1;
-  string message     = 2;
-  Identity author    = 3;
-  Identity committer = 4;
+message ListCommitTagsResponse {
+  CommitTag tag = 1;
+}
+
+message CommitTag {
+  string name       = 1;
+  string sha        = 2;
+  bool is_annotated = 3;
+  string title      = 4;
+  string message    = 5;
+  Signature tagger  = 6;
+  Commit commit     = 7;
 }
 
 message Commit {

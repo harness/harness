@@ -29,6 +29,7 @@ type RepositoryServiceClient interface {
 	GetBlob(ctx context.Context, in *GetBlobRequest, opts ...grpc.CallOption) (*GetBlobResponse, error)
 	ListCommits(ctx context.Context, in *ListCommitsRequest, opts ...grpc.CallOption) (RepositoryService_ListCommitsClient, error)
 	ListBranches(ctx context.Context, in *ListBranchesRequest, opts ...grpc.CallOption) (RepositoryService_ListBranchesClient, error)
+	ListCommitTags(ctx context.Context, in *ListCommitTagsRequest, opts ...grpc.CallOption) (RepositoryService_ListCommitTagsClient, error)
 }
 
 type repositoryServiceClient struct {
@@ -196,6 +197,38 @@ func (x *repositoryServiceListBranchesClient) Recv() (*ListBranchesResponse, err
 	return m, nil
 }
 
+func (c *repositoryServiceClient) ListCommitTags(ctx context.Context, in *ListCommitTagsRequest, opts ...grpc.CallOption) (RepositoryService_ListCommitTagsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &RepositoryService_ServiceDesc.Streams[4], "/rpc.RepositoryService/ListCommitTags", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &repositoryServiceListCommitTagsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type RepositoryService_ListCommitTagsClient interface {
+	Recv() (*ListCommitTagsResponse, error)
+	grpc.ClientStream
+}
+
+type repositoryServiceListCommitTagsClient struct {
+	grpc.ClientStream
+}
+
+func (x *repositoryServiceListCommitTagsClient) Recv() (*ListCommitTagsResponse, error) {
+	m := new(ListCommitTagsResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // RepositoryServiceServer is the server API for RepositoryService service.
 // All implementations must embed UnimplementedRepositoryServiceServer
 // for forward compatibility
@@ -207,6 +240,7 @@ type RepositoryServiceServer interface {
 	GetBlob(context.Context, *GetBlobRequest) (*GetBlobResponse, error)
 	ListCommits(*ListCommitsRequest, RepositoryService_ListCommitsServer) error
 	ListBranches(*ListBranchesRequest, RepositoryService_ListBranchesServer) error
+	ListCommitTags(*ListCommitTagsRequest, RepositoryService_ListCommitTagsServer) error
 	mustEmbedUnimplementedRepositoryServiceServer()
 }
 
@@ -234,6 +268,9 @@ func (UnimplementedRepositoryServiceServer) ListCommits(*ListCommitsRequest, Rep
 }
 func (UnimplementedRepositoryServiceServer) ListBranches(*ListBranchesRequest, RepositoryService_ListBranchesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListBranches not implemented")
+}
+func (UnimplementedRepositoryServiceServer) ListCommitTags(*ListCommitTagsRequest, RepositoryService_ListCommitTagsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListCommitTags not implemented")
 }
 func (UnimplementedRepositoryServiceServer) mustEmbedUnimplementedRepositoryServiceServer() {}
 
@@ -391,6 +428,27 @@ func (x *repositoryServiceListBranchesServer) Send(m *ListBranchesResponse) erro
 	return x.ServerStream.SendMsg(m)
 }
 
+func _RepositoryService_ListCommitTags_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ListCommitTagsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RepositoryServiceServer).ListCommitTags(m, &repositoryServiceListCommitTagsServer{stream})
+}
+
+type RepositoryService_ListCommitTagsServer interface {
+	Send(*ListCommitTagsResponse) error
+	grpc.ServerStream
+}
+
+type repositoryServiceListCommitTagsServer struct {
+	grpc.ServerStream
+}
+
+func (x *repositoryServiceListCommitTagsServer) Send(m *ListCommitTagsResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // RepositoryService_ServiceDesc is the grpc.ServiceDesc for RepositoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -430,6 +488,11 @@ var RepositoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "ListBranches",
 			Handler:       _RepositoryService_ListBranches_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "ListCommitTags",
+			Handler:       _RepositoryService_ListCommitTags_Handler,
 			ServerStreams: true,
 		},
 	},

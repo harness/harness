@@ -13,9 +13,9 @@ import (
 )
 
 /*
- * Writes json-encoded branch information to the http response body.
+ * Writes json-encoded commit tag information to the http response body.
  */
-func HandleListBranches(repoCtrl *repo.Controller) http.HandlerFunc {
+func HandleListCommitTags(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -31,17 +31,17 @@ func HandleListBranches(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		filter := request.ParseBranchFilter(r)
+		filter := request.ParseTagFilter(r)
 
-		branches, err := repoCtrl.ListBranches(ctx, session, repoRef, includeCommit, filter)
+		tags, err := repoCtrl.ListCommitTags(ctx, session, repoRef, includeCommit, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
 		// TODO: get last page indicator explicitly - current check is wrong in case len % pageSize == 0
-		isLastPage := len(branches) < filter.Size
+		isLastPage := len(tags) < filter.Size
 		render.PaginationNoTotal(r, w, filter.Page, filter.Size, isLastPage)
-		render.JSON(w, http.StatusOK, branches)
+		render.JSON(w, http.StatusOK, tags)
 	}
 }

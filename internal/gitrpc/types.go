@@ -5,10 +5,11 @@
 package gitrpc
 
 import (
+	"fmt"
 	"time"
 )
 
-type cloneRepoOption struct {
+type cloneRepoOptions struct {
 	timeout       time.Duration
 	mirror        bool
 	bare          bool
@@ -29,17 +30,99 @@ const (
 	sortOrderDesc
 )
 
-type referenceSortOption int
+type gitObjectType string
 
 const (
-	referenceSortOptionDefault referenceSortOption = iota
-	referenceSortOptionName
-	referenceSortOptionDate
+	gitObjectTypeCommit gitObjectType = "commit"
+	gitObjectTypeTree   gitObjectType = "tree"
+	gitObjectTypeBlob   gitObjectType = "blob"
+	gitObjectTypeTag    gitObjectType = "tag"
 )
 
-type reference struct {
-	name   string
-	target string
+func parseGitObjectType(t string) (gitObjectType, error) {
+	switch t {
+	case string(gitObjectTypeCommit):
+		return gitObjectTypeCommit, nil
+	case string(gitObjectTypeBlob):
+		return gitObjectTypeBlob, nil
+	case string(gitObjectTypeTree):
+		return gitObjectTypeTree, nil
+	case string(gitObjectTypeTag):
+		return gitObjectTypeTag, nil
+	default:
+		return gitObjectTypeBlob, fmt.Errorf("unknown git object type '%s'", t)
+	}
+}
+
+// gitReferenceField represents the different fields available when listing references.
+// For the full list, see https://git-scm.com/docs/git-for-each-ref#_field_names
+type gitReferenceField string
+
+const (
+	gitReferenceFieldRefName     gitReferenceField = "refname"
+	gitReferenceFieldObjectType  gitReferenceField = "objecttype"
+	gitReferenceFieldObjectName  gitReferenceField = "objectname"
+	gitReferenceFieldCreatorDate gitReferenceField = "creatordate"
+)
+
+func parseGitReferenceField(f string) (gitReferenceField, error) {
+	switch f {
+	case string(gitReferenceFieldCreatorDate):
+		return gitReferenceFieldCreatorDate, nil
+	case string(gitReferenceFieldRefName):
+		return gitReferenceFieldRefName, nil
+	case string(gitReferenceFieldObjectName):
+		return gitReferenceFieldObjectName, nil
+	case string(gitReferenceFieldObjectType):
+		return gitReferenceFieldObjectType, nil
+	default:
+		return gitReferenceFieldRefName, fmt.Errorf("unknown git reference field '%s'", f)
+	}
+}
+
+type walkInstruction int
+
+const (
+	walkInstructionStop walkInstruction = iota
+	walkInstructionHandle
+	walkInstructionSkip
+)
+
+type walkReferencesEntry map[gitReferenceField]string
+
+// TODO: can be generic (so other walk methods can use the same)
+type walkReferencesInstructor func(walkReferencesEntry) (walkInstruction, error)
+
+// TODO: can be generic (so other walk methods can use the same)
+type walkReferencesHandler func(walkReferencesEntry) error
+
+type walkReferencesOptions struct {
+	// patterns are the patterns used to pre-filter the references of the repo.
+	// OPTIONAL. By default all references are walked.
+	patterns []string
+
+	// fields indicates the fields that are passed to the instructor & handler
+	// OPTIONAL. Default fields are:
+	// - gitReferenceFieldRefName
+	// - gitReferenceFieldObjectName
+	fields []gitReferenceField
+
+	// instructor indicates on how to handle the reference.
+	// OPTIONAL. By default all references are handled.
+	// NOTE: once walkInstructionStop is returned, the walking stops.
+	instructor walkReferencesInstructor
+
+	// sort indicates the field by which the references should be sorted.
+	// OPTIONAL. By default gitReferenceFieldRefName is used.
+	sort gitReferenceField
+
+	// order indicates the order (asc or desc) of the sorted output
+	order sortOrder
+
+	// maxWalkDistance is the maximum number of nodes that are iterated over before the walking stops.
+	// OPTIONAL. A value of <= 0 will walk all references.
+	// WARNING: Skipped elements count towards the walking distance
+	maxWalkDistance int32
 }
 
 type commit struct {
@@ -48,6 +131,16 @@ type commit struct {
 	message   string
 	author    signature
 	committer signature
+}
+
+type tag struct {
+	sha        string
+	name       string
+	targetSha  string
+	targetType gitObjectType
+	title      string
+	message    string
+	tagger     signature
 }
 
 // signature represents the Author or Committer information.

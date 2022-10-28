@@ -17,6 +17,7 @@ import (
 
 type Branch struct {
 	Name   string  `json:"name"`
+	SHA    string  `json:"sha"`
 	Commit *Commit `json:"commit,omitempty"`
 }
 
@@ -97,6 +98,7 @@ func mapBranch(b gitrpc.Branch) (Branch, error) {
 	}
 	return Branch{
 		Name:   b.Name,
+		SHA:    b.SHA,
 		Commit: commit,
 	}, nil
 }

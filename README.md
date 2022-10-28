@@ -9,6 +9,11 @@ Install the latest stable version of Node and Go version 1.19 or higher, and the
 $ make all
 ```
 
+Setup github access token required for UI dependencies:
+```bash
+$ yarn setup-github-registry
+```
+
 # Build
 
 Build the user interface:

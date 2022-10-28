@@ -154,7 +154,41 @@ type ListBranchesOutput struct {
 
 type Branch struct {
 	Name   string
+	SHA    string
 	Commit *Commit
+}
+
+type TagSortOption int
+
+const (
+	TagSortOptionDefault TagSortOption = iota
+	TagSortOptionName
+	TagSortOptionDate
+)
+
+type ListCommitTagsParams struct {
+	// RepoUID is the uid of the git repository
+	RepoUID       string
+	IncludeCommit bool
+	Query         string
+	Sort          TagSortOption
+	Order         SortOrder
+	Page          int32
+	PageSize      int32
+}
+
+type ListCommitTagsOutput struct {
+	Tags []CommitTag
+}
+
+type CommitTag struct {
+	Name        string
+	SHA         string
+	IsAnnotated bool
+	Title       string
+	Message     string
+	Tagger      *Signature
+	Commit      *Commit
 }
 
 type TreeNode struct {
@@ -518,9 +552,11 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 	if header.GetHeader() == nil {
 		return nil, fmt.Errorf("header missing")
 	}
+
+	// NOTE: don't use PageSize as initial slice capacity - as that theoretically could be MaxInt
 	output := &ListCommitsOutput{
 		TotalCount: header.GetHeader().TotalCount,
-		Commits:    make([]Commit, 0, params.PageSize),
+		Commits:    make([]Commit, 0, 16),
 	}
 
 	for {
@@ -573,8 +609,9 @@ func (c *Client) ListBranches(ctx context.Context, params *ListBranchesParams) (
 		return nil, fmt.Errorf("failed to start stream for branches: %w", err)
 	}
 
+	// NOTE: don't use PageSize as initial slice capacity - as that theoretically could be MaxInt
 	output := &ListBranchesOutput{
-		Branches: make([]Branch, 0, params.PageSize),
+		Branches: make([]Branch, 0, 16),
 	}
 	for {
 		var next *rpc.ListBranchesResponse
@@ -597,6 +634,60 @@ func (c *Client) ListBranches(ctx context.Context, params *ListBranchesParams) (
 		}
 
 		output.Branches = append(output.Branches, *branch)
+	}
+
+	// TODO: is this needed?
+	err = stream.CloseSend()
+	if err != nil {
+		return nil, fmt.Errorf("failed to close stream")
+	}
+
+	return output, nil
+}
+
+func (c *Client) ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, error) {
+	if params == nil {
+		return nil, ErrNoParamsProvided
+	}
+
+	stream, err := c.repoService.ListCommitTags(ctx, &rpc.ListCommitTagsRequest{
+		RepoUid:       params.RepoUID,
+		IncludeCommit: params.IncludeCommit,
+		Query:         params.Query,
+		Sort:          mapToRPCListCommitTagsSortOption(params.Sort),
+		Order:         mapToRPCSortOrder(params.Order),
+		Page:          params.Page,
+		PageSize:      params.PageSize,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to start stream for tags: %w", err)
+	}
+
+	// NOTE: don't use PageSize as initial slice capacity - as that theoretically could be MaxInt
+	output := &ListCommitTagsOutput{
+		Tags: make([]CommitTag, 0, 16),
+	}
+	for {
+		var next *rpc.ListCommitTagsResponse
+		next, err = stream.Recv()
+		if errors.Is(err, io.EOF) {
+			log.Ctx(ctx).Debug().Msg("received end of stream")
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("received unexpected error from rpc: %w", err)
+		}
+		if next.GetTag() == nil {
+			return nil, fmt.Errorf("expected tag message")
+		}
+
+		var tag *CommitTag
+		tag, err = mapRPCCommitTag(next.GetTag())
+		if err != nil {
+			return nil, fmt.Errorf("failed to map rpc tag: %w", err)
+		}
+
+		output.Tags = append(output.Tags, *tag)
 	}
 
 	// TODO: is this needed?
@@ -636,6 +727,20 @@ func mapToRPCListBranchesSortOption(o BranchSortOption) rpc.ListBranchesRequest_
 	}
 }
 
+func mapToRPCListCommitTagsSortOption(o TagSortOption) rpc.ListCommitTagsRequest_SortOption {
+	switch o {
+	case TagSortOptionName:
+		return rpc.ListCommitTagsRequest_Name
+	case TagSortOptionDate:
+		return rpc.ListCommitTagsRequest_Date
+	case TagSortOptionDefault:
+		return rpc.ListCommitTagsRequest_Default
+	default:
+		// no need to error out - just use default for sorting
+		return rpc.ListCommitTagsRequest_Default
+	}
+}
+
 func mapRPCBranch(b *rpc.Branch) (*Branch, error) {
 	if b == nil {
 		return nil, fmt.Errorf("rpc branch is nil")
@@ -652,7 +757,42 @@ func mapRPCBranch(b *rpc.Branch) (*Branch, error) {
 
 	return &Branch{
 		Name:   b.Name,
+		SHA:    b.Sha,
 		Commit: commit,
+	}, nil
+}
+
+func mapRPCCommitTag(t *rpc.CommitTag) (*CommitTag, error) {
+	if t == nil {
+		return nil, fmt.Errorf("rpc commit tag is nil")
+	}
+
+	var commit *Commit
+	if t.GetCommit() != nil {
+		var err error
+		commit, err = mapRPCCommit(t.GetCommit())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var tagger *Signature
+	if t.GetTagger() != nil {
+		var err error
+		tagger, err = mapRPCSignature(t.GetTagger())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &CommitTag{
+		Name:        t.Name,
+		SHA:         t.Sha,
+		IsAnnotated: t.IsAnnotated,
+		Title:       t.Title,
+		Message:     t.Message,
+		Tagger:      tagger,
+		Commit:      commit,
 	}, nil
 }
 
@@ -675,24 +815,24 @@ func mapRPCCommit(c *rpc.Commit) (*Commit, error) {
 		SHA:       c.GetSha(),
 		Title:     c.GetTitle(),
 		Message:   c.GetMessage(),
-		Author:    author,
-		Committer: comitter,
+		Author:    *author,
+		Committer: *comitter,
 	}, nil
 }
 
-func mapRPCSignature(s *rpc.Signature) (Signature, error) {
+func mapRPCSignature(s *rpc.Signature) (*Signature, error) {
 	if s == nil {
-		return Signature{}, fmt.Errorf("rpc signature is nil")
+		return nil, fmt.Errorf("rpc signature is nil")
 	}
 
 	identity, err := mapRPCIdentity(s.GetIdentity())
 	if err != nil {
-		return Signature{}, fmt.Errorf("failed to map rpc identity: %w", err)
+		return nil, fmt.Errorf("failed to map rpc identity: %w", err)
 	}
 
 	when := time.Unix(s.When, 0)
 
-	return Signature{
+	return &Signature{
 		Identity: identity,
 		When:     when,
 	}, nil

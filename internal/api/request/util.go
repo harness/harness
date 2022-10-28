@@ -185,6 +185,13 @@ func ParseSortBranch(r *http.Request) enum.BranchSortOption {
 	)
 }
 
+// ParseSortTag extracts the tag sort parameter from the url.
+func ParseSortTag(r *http.Request) enum.TagSortOption {
+	return enum.ParseTagSortOption(
+		r.FormValue(QueryParamSort),
+	)
+}
+
 // ParseUserFilter extracts the user query parameter from the url.
 func ParseUserFilter(r *http.Request) *types.UserFilter {
 	return &types.UserFilter{
@@ -242,6 +249,18 @@ func ParseBranchFilter(r *http.Request) *types.BranchFilter {
 	return &types.BranchFilter{
 		Query: ParseQuery(r),
 		Sort:  ParseSortBranch(r),
+		Order: ParseOrder(r),
+		Page:  ParsePage(r),
+		Size:  ParseSize(r),
+	}
+}
+
+// ParseTagFilter extracts the branch query parameter from the url.
+// TODO: do we need a separate filter?
+func ParseTagFilter(r *http.Request) *types.TagFilter {
+	return &types.TagFilter{
+		Query: ParseQuery(r),
+		Sort:  ParseSortTag(r),
 		Order: ParseOrder(r),
 		Page:  ParsePage(r),
 		Size:  ParseSize(r),
