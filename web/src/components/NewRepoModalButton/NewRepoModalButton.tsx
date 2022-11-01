@@ -90,10 +90,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
     const { showError } = useToaster()
     const { mutate: createRepo, loading: submitLoading } = useMutate<TypesRepository>({
       verb: 'POST',
-      path: `/api/v1/repos?spacePath=${space}`,
-      queryParams: {
-        // spacePath: space
-      }
+      path: `/api/v1/repos?spacePath=${space}`
     })
     const {
       data: gitignores,

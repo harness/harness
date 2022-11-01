@@ -25,7 +25,8 @@ export const GitIcon: Readonly<Record<string, IconName>> = {
   PULL_REQUEST: 'git-pull',
   SETTINGS: 'cog',
   FOLDER: 'main-folder',
-  EDIT: 'edit'
+  EDIT: 'edit',
+  BRANCH: 'git-branch'
 }
 
 export type Nullable<T> = T | undefined | null

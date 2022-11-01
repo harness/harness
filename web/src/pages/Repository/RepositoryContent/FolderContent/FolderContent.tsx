@@ -1,26 +1,15 @@
 import React, { useMemo } from 'react'
-import {
-  Container,
-  Color,
-  Layout,
-  Button,
-  ButtonSize,
-  FlexExpander,
-  ButtonVariation,
-  TableV2 as Table,
-  Text,
-  FontVariation
-} from '@harness/uicore'
+import { Container, Color, TableV2 as Table, Text } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { sortBy } from 'lodash-es'
-import ReactTimeago from 'react-timeago'
-import { Link, useHistory } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput, TypesRepository } from 'services/scm'
 import { formatDate } from 'utils/Utils'
 import { findReadmeInfo, GitIcon, isFile } from 'utils/GitUtils'
 import { Readme } from './Readme'
+import { LatestCommit } from '../LatestCommit/LatestCommit'
 import css from './FolderContent.module.scss'
 
 interface FolderContentProps {
@@ -37,11 +26,11 @@ export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderConte
     () => [
       {
         Header: getString('name'),
-        accessor: (row: OpenapiContentInfo) => row.name,
-        width: '30%',
+        width: '40%',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
             <Text
+              className={css.rowText}
               color={Color.BLACK}
               icon={isFile(row.original) ? GitIcon.FILE : GitIcon.FOLDER}
               lineClamp={1}
@@ -53,11 +42,10 @@ export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderConte
       },
       {
         Header: getString('commits'),
-        accessor: row => row.latestCommit,
-        width: '55%',
+        width: 'calc(60% - 100px)',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
-            <Text color={Color.BLACK} lineClamp={1}>
+            <Text color={Color.BLACK} lineClamp={1} className={css.rowText}>
               {row.original.latestCommit?.title}
             </Text>
           )
@@ -65,12 +53,14 @@ export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderConte
       },
       {
         Header: getString('repos.lastChange'),
-        accessor: row => row.latestCommit?.author?.when,
-        width: '15%',
+        width: '100px',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
-          return <Text lineClamp={1}>{formatDate(row.original.latestCommit?.author?.when as string)}</Text>
-        },
-        disableSortBy: true
+          return (
+            <Text lineClamp={1} color={Color.GREY_500} className={css.rowText}>
+              {formatDate(row.original.latestCommit?.author?.when as string)}
+            </Text>
+          )
+        }
       }
     ],
     [getString]
@@ -79,27 +69,11 @@ export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderConte
 
   return (
     <Container className={css.folderContent}>
-      <Container>
-        <Layout.Horizontal spacing="medium" padding={{ bottom: 'medium' }} className={css.lastCommit}>
-          <Text font={{ variation: FontVariation.SMALL_SEMI }}>
-            {contentInfo.latestCommit?.author?.identity?.name || contentInfo.latestCommit?.author?.identity?.email}
-          </Text>
-          <Link to="">{contentInfo.latestCommit?.title}</Link>
-          <FlexExpander />
-          <Button
-            className={css.shaBtn}
-            text={contentInfo.latestCommit?.sha?.substring(0, 6)}
-            variation={ButtonVariation.SECONDARY}
-            size={ButtonSize.SMALL}
-          />
-          <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-            <ReactTimeago date={contentInfo.latestCommit?.author?.when as string} />
-          </Text>
-        </Layout.Horizontal>
-      </Container>
+      <LatestCommit latestCommit={contentInfo?.latestCommit} />
 
       <Table<OpenapiContentInfo>
         className={css.table}
+        hideHeaders
         columns={columns}
         data={sortBy((contentInfo.content as OpenapiDirContent)?.entries || [], ['type', 'name'])}
         onRowClick={data => {

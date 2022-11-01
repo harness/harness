@@ -1918,15 +1918,15 @@
   dependencies:
     loader-utils "^2.0.0"
 
-"@harness/design-system@1.0.0":
-  version "1.0.0"
-  resolved "https://npm.pkg.github.com/download/@harness/design-system/1.0.0/e463410da2c7ad9bff84eaa43fbe4ba9ba347da1#e463410da2c7ad9bff84eaa43fbe4ba9ba347da1"
-  integrity sha512-sMsLP5Rxg08t87dJamTgpzEfRAef06C14bZO92SGqiXYtXsK01evjnXaOAiUS4gO36gMGi5cYJAqkJ0XBkERIg==
+"@harness/design-system@1.4.0":
+  version "1.4.0"
+  resolved "https://npm.pkg.github.com/download/@harness/design-system/1.4.0/b2a77f73696d71a53765c71efd0a5b28039fa1cf#b2a77f73696d71a53765c71efd0a5b28039fa1cf"
+  integrity sha512-LuzuPEHPkE6xgIuXxn16RCCvPY1NDXF3o1JWlIjxmepoDTkgFuwnV1OhBdQftvAVBawJ5wJP10IIKUL161LdYg==
 
-"@harness/icons@^1.59.0":
-  version "1.68.1"
-  resolved "https://npm.pkg.github.com/download/@harness/icons/1.68.1/56d8f98170aad544c44b3a77d15ffe0cbd6b5931#56d8f98170aad544c44b3a77d15ffe0cbd6b5931"
-  integrity sha512-9PLPVE/LffliSgYrP0TEWMWTZJX5ANYMTyqSSS4115tw8K52Wbl35C9Wg0ftLrzvJrt7ok+i+RZAdjc123kwpw==
+"@harness/icons@1.71.0":
+  version "1.71.0"
+  resolved "https://npm.pkg.github.com/download/@harness/icons/1.71.0/86c3b579e3785106a03af048a15a93ae684e7358#86c3b579e3785106a03af048a15a93ae684e7358"
+  integrity sha512-mnUvcI1o8mi7A1437/fG8xXS2spzVte4PZbKlbguZ5WtojKGxVe4FMT6xhUt7goSihEz9cu91WY5V/KE7Cc5Ew==
 
 "@harness/jarvis@^0.12.0":
   version "0.12.0"
@@ -1967,12 +1967,12 @@
   resolved "https://npm.pkg.github.com/download/@harness/telemetry/1.0.44/55e75d8caccbcdcb0a11226c813edd631578d9af#55e75d8caccbcdcb0a11226c813edd631578d9af"
   integrity sha512-t6N3Ie/F9Nw/tANAmptsunebGYBkC3j865bc75MZVL2ZqFM0CBRxFR1MG8zC+hU6uDpr8Drqsn81NmdlVlBSmA==
 
-"@harness/uicore@3.75.0":
-  version "3.75.0"
-  resolved "https://npm.pkg.github.com/download/@harness/uicore/3.75.0/fecb45629a1d55783bf6088424957bbdf81af743#fecb45629a1d55783bf6088424957bbdf81af743"
-  integrity sha512-j61mbRnfkJAWuBrVXBDaio+MR+lS//klVY277EiGb4iWRo0opX9nyBmRhd4hD+rtfux9JSS7BhqUHdG1pzCQ/A==
+"@harness/uicore@3.84.0":
+  version "3.84.0"
+  resolved "https://npm.pkg.github.com/download/@harness/uicore/3.84.0/9c02acd3106254a08530f68065317d031cd15e67#9c02acd3106254a08530f68065317d031cd15e67"
+  integrity sha512-3AvETaoDHGGKSbnFN9rZAg0HgWWBKMeqGpbonxWj/6gUEahlMnzd8QGvpjUdbYOVCAtPbUVxrtI0Yf4VQPuf5g==
 
-"@harness/use-modal@>=1.1.0":
+"@harness/use-modal@1.3.0":
   version "1.3.0"
   resolved "https://npm.pkg.github.com/download/@harness/use-modal/1.3.0/fdedeb097e62000c856ed9e73368ff439692549f#fdedeb097e62000c856ed9e73368ff439692549f"
   integrity sha512-2CxYlv4rLtHNAZz3Kg7zC+UyMaTeyLwYh3cr7xUtBVJsYpggm4GgyuJSui+gRaO75Os9mdtKQzBt+paPgY8krQ==

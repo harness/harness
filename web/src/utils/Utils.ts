@@ -4,7 +4,8 @@ import { get } from 'lodash-es'
 import moment from 'moment'
 import langMap from 'lang-map'
 
-export const LIST_FETCHING_PER_PAGE = 5
+export const LIST_FETCHING_PER_PAGE = 20
+export const BRANCH_PER_PAGE = 100
 export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY hh:mm a'
 export const X_TOTAL = 'x-total'
 export const X_TOTAL_PAGES = 'x-total-pages'
