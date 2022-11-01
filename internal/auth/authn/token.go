@@ -122,6 +122,15 @@ func extractToken(r *http.Request) string {
 	if bearer == "" {
 		return r.FormValue("access_token")
 	}
+	// pull/push git operations will require auth using
+	// Basic realm
+	if strings.HasPrefix(bearer, "Basic") {
+		_, tkn, ok := r.BasicAuth()
+		if !ok {
+			return ""
+		}
+		return tkn
+	}
 	bearer = strings.TrimPrefix(bearer, "Bearer ")
 	bearer = strings.TrimPrefix(bearer, "IdentityService ")
 	return bearer

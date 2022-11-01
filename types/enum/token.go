@@ -4,7 +4,7 @@
 
 package enum
 
-// Represents the type of the JWT token.
+// TokenType represents the type of the JWT token.
 type TokenType string
 
 const (

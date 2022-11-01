@@ -27,11 +27,19 @@ func NewServer(bind string, gitRoot string) (*Server, error) {
 	}
 	s := grpc.NewServer()
 	store := newLocalStore()
+	// initialize services
 	repoService, err := newRepositoryService(adapter, store, gitRoot)
 	if err != nil {
 		return nil, err
 	}
+	httpService, err := newHTTPService(adapter, gitRoot)
+	if err != nil {
+		return nil, err
+	}
+	// register services
 	rpc.RegisterRepositoryServiceServer(s, repoService)
+	rpc.RegisterSmartHTTPServiceServer(s, httpService)
+
 	return &Server{
 		Server: s,
 		Bind:   bind,

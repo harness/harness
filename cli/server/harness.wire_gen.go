@@ -85,7 +85,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	}
 	repoController := repo.ProvideController(config, authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
 	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, accountClient, spaceController, repoController)
-	gitHandler := router2.ProvideGitHandler(repoStore, authenticator)
+	gitHandler := router2.ProvideGitHandler(repoStore, authenticator, gitrpcInterface)
 	webHandler := router2.ProvideWebHandler(systemStore)
 	routerRouter := router2.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)

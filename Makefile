@@ -37,6 +37,10 @@ mocks: $(mocks)
 
 wire: cli/server/harness.wire_gen.go cli/server/standalone.wire_gen.go
 
+force-wire:
+	@sh ./scripts/wire/standalone.sh
+	@sh ./scripts/wire/harness.sh
+
 generate: $(mocks) wire mocks/mock_client.go proto
 	@echo "Generating Code"
 
@@ -121,18 +125,10 @@ lint: tools generate # lint the golang code
 # the source file has changed.
 ###########################################
 cli/server/harness.wire_gen.go: cli/server/harness.wire.go	## Update the wire dependency injection if harness.wire.go has changed.
-	@echo "Updating harness.wire_gen.go"
-	@go run github.com/google/wire/cmd/wire gen -tags=harness -output_file_prefix="harness." github.com/harness/gitness/cli/server
-	@perl -ni -e 'print unless /go:generate/' cli/server/harness.wire_gen.go
-	@perl -i -pe's/\+build !wireinject/\+build !wireinject,harness/g' cli/server/harness.wire_gen.go
-	@perl -i -pe's/go:build !wireinject/go:build !wireinject && harness/g' cli/server/harness.wire_gen.go
+
 
 cli/server/standalone.wire_gen.go: cli/server/standalone.wire.go	## Update the wire dependency injection if standalone.wire.go has changed.
-	@echo "Updating standalone.wire_gen.go"
-	@go run github.com/google/wire/cmd/wire gen -tags= -output_file_prefix="standalone." github.com/harness/gitness/cli/server
-	@perl -ni -e 'print unless /go:generate/' cli/server/standalone.wire_gen.go
-	@perl -i -pe's/\+build !wireinject/\+build !wireinject,!harness/g' cli/server/standalone.wire_gen.go
-	@perl -i -pe's/go:build !wireinject/go:build !wireinject && !harness/g' cli/server/standalone.wire_gen.go
+	@sh ./scripts/wire/standalone.sh
 
 mocks/mock_client.go: internal/store/store.go client/client.go
 	go generate mocks/mock.go

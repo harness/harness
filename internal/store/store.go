@@ -179,7 +179,7 @@ type (
 		// Delete deletes the token with the given id.
 		Delete(ctx context.Context, id int64) error
 
-		// Delete deletes all tokens for a specific principal
+		// DeleteForPrincipal deletes all tokens for a specific principal
 		DeleteForPrincipal(ctx context.Context, principalID int64) error
 
 		// List returns a list of tokens of a specific type for a specific principal.

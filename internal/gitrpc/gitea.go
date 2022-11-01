@@ -219,7 +219,8 @@ func giteaParsePrettyFormatLogToList(giteaRepo *gitea.Repository, logs []byte) (
 // and includes the latest commit for all nodes if requested.
 // IMPORTANT: recursive and includeLatestCommit can't be used together.
 // Note: ref can be Branch / Tag / CommitSHA.
-//nolint:gocognit,goimports // refactor if needed
+//
+//nolint:gocognit // refactor if needed
 func (g giteaAdapter) ListTreeNodes(ctx context.Context, repoPath string,
 	ref string, treePath string, recursive bool, includeLatestCommit bool) ([]treeNodeWithCommit, error) {
 	if recursive && includeLatestCommit {

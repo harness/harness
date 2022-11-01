@@ -4,7 +4,10 @@
 
 package gitrpc
 
-import "context"
+import (
+	"context"
+	"io"
+)
 
 type Interface interface {
 	CreateRepository(ctx context.Context, params *CreateRepositoryParams) (*CreateRepositoryOutput, error)
@@ -15,6 +18,12 @@ type Interface interface {
 	ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error)
 	ListBranches(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error)
 	ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, error)
+
+	/*
+	 * HTTP services
+	 */
+	GetInfoRefs(ctx context.Context, w io.Writer, params *InfoRefsParams) error
+	ServicePack(ctx context.Context, w io.Writer, params *ServicePackParams) error
 }
 
 // gitAdapter for accessing git commands from gitea.

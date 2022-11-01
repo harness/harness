@@ -11,6 +11,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/auth/authn"
+	"github.com/harness/gitness/internal/gitrpc"
 	"github.com/harness/gitness/internal/store"
 )
 
@@ -30,8 +31,12 @@ func ProvideRouter(
 	return NewRouter(api, git, web)
 }
 
-func ProvideGitHandler(repoStore store.RepoStore, authenticator authn.Authenticator) GitHandler {
-	return NewGitHandler(repoStore, authenticator)
+func ProvideGitHandler(
+	repoStore store.RepoStore,
+	authenticator authn.Authenticator,
+	client gitrpc.Interface,
+) GitHandler {
+	return NewGitHandler(repoStore, authenticator, client)
 }
 
 func ProvideAPIHandler(
