@@ -34,7 +34,8 @@ module.exports = {
   exposes: {
     './App': './src/App.tsx',
     './RepositoriesListing': './src/pages/RepositoriesListing/RepositoriesListing.tsx',
-    './Repository': './src/pages/Repository/Repository.tsx'
+    './Repository': './src/pages/Repository/Repository.tsx',
+    './RepositoryCommits': './src/pages/RepositoryCommits/RepositoryCommits.tsx'
   },
   shared: {
     formik: packageJSON.dependencies['formik'],

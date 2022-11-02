@@ -23,8 +23,6 @@ export function RepositoryHeader({ repoMetadata }: RepositoryHeaderProps): JSX.E
     <Container className={css.header}>
       <Container>
         <Layout.Horizontal spacing="small" className={css.breadcrumb}>
-          {/* <Link to="">SCM_Project</Link>
-          <Icon name="main-chevron-right" size={10} color={Color.GREY_500} /> */}
           <Link to={routes.toSCMRepositoriesListing({ space })}>{getString('repositories')}</Link>
           <Icon name="main-chevron-right" size={10} color={Color.GREY_500} />
           <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.name}</Link>

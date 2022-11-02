@@ -1,0 +1,28 @@
+.container {
+  .layout {
+    height: 22px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid var(--grey-200);
+    background-color: var(--grey-50) !important;
+    border-radius: 4px;
+    padding-left: var(--spacing-small) !important;
+
+    &.noCopy {
+      padding-right: var(--spacing-small) !important;
+    }
+
+    a {
+      font-size: 12px;
+      color: var(--primary-7);
+    }
+
+    button#commitCopyButton {
+      --button-height: 22px !important;
+      border-radius: 0 !important;
+      border-left: 1px solid var(--grey-200) !important;
+      margin-left: var(--spacing-small) !important;
+    }
+  }
+}

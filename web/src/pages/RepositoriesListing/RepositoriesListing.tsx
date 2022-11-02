@@ -161,7 +161,7 @@ export default function RepositoriesListing(): JSX.Element {
             />
           </Container>
           {!!repositories?.length && (
-            <Container margin={{ bottom: 'medium', left: 'xxxlarge', right: 'xxxlarge' }}>
+            <Container margin={{ left: 'medium', right: 'medium' }}>
               <Pagination
                 className={css.pagination}
                 hidePageNumbers

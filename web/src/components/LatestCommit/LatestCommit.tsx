@@ -1,27 +1,22 @@
 import React from 'react'
-import {
-  Container,
-  Color,
-  Layout,
-  Button,
-  ButtonSize,
-  FlexExpander,
-  ButtonVariation,
-  Text,
-  FontVariation
-} from '@harness/uicore'
+import { Container, Color, Layout, FlexExpander, Text, FontVariation } from '@harness/uicore'
 import { Link } from 'react-router-dom'
 import ReactTimeago from 'react-timeago'
 import cx from 'classnames'
-import type { RepoCommit } from 'services/scm'
+import type { RepoCommit, TypesRepository } from 'services/scm'
+import { CommitActions } from 'components/CommitActions/CommitActions'
+import { useAppContext } from 'AppContext'
 import css from './LatestCommit.module.scss'
 
 interface LatestCommitProps {
+  repoMetadata: TypesRepository
   latestCommit?: RepoCommit
   standaloneStyle?: boolean
 }
 
-export function LatestCommit({ latestCommit, standaloneStyle }: LatestCommitProps): JSX.Element | null {
+export function LatestCommit({ repoMetadata, latestCommit, standaloneStyle }: LatestCommitProps): JSX.Element | null {
+  const { routes } = useAppContext()
+
   return latestCommit ? (
     <Container>
       <Layout.Horizontal spacing="small" className={cx(css.latestCommit, standaloneStyle ? css.standalone : '')}>
@@ -32,11 +27,12 @@ export function LatestCommit({ latestCommit, standaloneStyle }: LatestCommitProp
           {latestCommit.title}
         </Link>
         <FlexExpander />
-        <Button
-          className={css.shaBtn}
-          text={latestCommit.sha?.substring(0, 6)}
-          variation={ButtonVariation.SECONDARY}
-          size={ButtonSize.SMALL}
+        <CommitActions
+          sha={latestCommit.sha as string}
+          href={routes.toSCMRepositoryCommits({
+            repoPath: repoMetadata.path as string,
+            commitRef: latestCommit.sha as string
+          })}
         />
         <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
           <ReactTimeago date={latestCommit.author?.when as string} />

@@ -31,7 +31,7 @@ export function RepositoryContent({ repoMetadata, gitRef, resourcePath }: Reposi
         resourcePath={resourcePath}
       />
       {data && isDir(data) && <FolderContent contentInfo={data} repoMetadata={repoMetadata} gitRef={gitRef} />}
-      {data && isFile(data) && <FileContent contentInfo={data} />}
+      {data && isFile(data) && <FileContent repoMetadata={repoMetadata} contentInfo={data} />}
     </Container>
   )
 }

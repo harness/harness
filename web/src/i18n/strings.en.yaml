@@ -28,12 +28,14 @@ addLicense: Add License
 none: None
 create: Create
 clone: Clone
+copy: Copy
 ok: OK
 loading: Loading...
 addGitIgnore: Add a .gitignore
 addReadMe: Add a README file
 failedToCreateRepo: Failed to create Repository. Please try again.
 status: Status
+commitsOn: Commits on {{date}}
 repos:
   name: Repo Name
   data: Repo Data

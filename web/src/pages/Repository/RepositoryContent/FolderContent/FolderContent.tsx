@@ -8,8 +8,8 @@ import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput, TypesRepository } from 'services/scm'
 import { formatDate } from 'utils/Utils'
 import { findReadmeInfo, GitIcon, isFile } from 'utils/GitUtils'
+import { LatestCommit } from 'components/LatestCommit/LatestCommit'
 import { Readme } from './Readme'
-import { LatestCommit } from '../LatestCommit/LatestCommit'
 import css from './FolderContent.module.scss'
 
 interface FolderContentProps {
@@ -33,7 +33,6 @@ export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderConte
               className={css.rowText}
               color={Color.BLACK}
               icon={isFile(row.original) ? GitIcon.FILE : GitIcon.FOLDER}
-              lineClamp={1}
               iconProps={{ margin: { right: 'xsmall' } }}>
               {row.original.name}
             </Text>
@@ -69,7 +68,7 @@ export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderConte
 
   return (
     <Container className={css.folderContent}>
-      <LatestCommit latestCommit={contentInfo?.latestCommit} />
+      <LatestCommit repoMetadata={repoMetadata} latestCommit={contentInfo?.latestCommit} />
 
       <Table<OpenapiContentInfo>
         className={css.table}

@@ -3,6 +3,7 @@ export interface SCMPathProps {
   repoName?: string
   gitRef?: string
   resourcePath?: string
+  commitRef?: string
 }
 
 export interface SCMQueryProps {
@@ -13,7 +14,8 @@ export const pathProps: Readonly<Required<SCMPathProps>> = {
   space: ':space',
   repoName: ':repoName',
   gitRef: ':gitRef*',
-  resourcePath: ':resourcePath*'
+  resourcePath: ':resourcePath*',
+  commitRef: ':commitRef*'
 }
 
 export interface SCMRoutes {
@@ -29,6 +31,7 @@ export interface SCMRoutes {
     gitRef?: string
     resourcePath?: string
   }) => string
+  toSCMRepositoryCommits: ({ repoPath, commitRef }: { repoPath: string; commitRef: string }) => string
 }
 
 export const routes: SCMRoutes = {
@@ -36,5 +39,7 @@ export const routes: SCMRoutes = {
   toSignUp: (): string => '/signup',
   toSCMRepositoriesListing: ({ space }: { space: string }) => `/${space}`,
   toSCMRepository: ({ repoPath, gitRef, resourcePath }: { repoPath: string; gitRef?: string; resourcePath?: string }) =>
-    `/${repoPath}/${gitRef ? '/' + gitRef : ''}${resourcePath ? '/~/' + resourcePath : ''}`
+    `/${repoPath}/${gitRef ? '/' + gitRef : ''}${resourcePath ? '/~/' + resourcePath : ''}`,
+  toSCMRepositoryCommits: ({ repoPath, commitRef }: { repoPath: string; commitRef: string }) =>
+    `/${repoPath}/commits/${commitRef}`
 }

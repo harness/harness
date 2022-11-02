@@ -9,7 +9,9 @@ export interface StringsMap {
   cancel: string
   clone: string
   commits: string
+  commitsOn: string
   content: string
+  copy: string
   create: string
   createRepo: string
   'createRepoModal.branch': string
