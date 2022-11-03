@@ -6,12 +6,14 @@ export interface StringsMap {
   addGitIgnore: string
   addLicense: string
   addReadMe: string
+  branches: string
   cancel: string
   clone: string
   commits: string
   commitsOn: string
   content: string
   copy: string
+  copyCommitSHA: string
   create: string
   createRepo: string
   'createRepoModal.branch': string
@@ -54,4 +56,5 @@ export interface StringsMap {
   status: string
   'validation.gitBranchNameInvalid': string
   'validation.namePatternIsNotValid': string
+  viewCommitDetails: string
 }

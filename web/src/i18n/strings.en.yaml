@@ -36,6 +36,9 @@ addReadMe: Add a README file
 failedToCreateRepo: Failed to create Repository. Please try again.
 status: Status
 commitsOn: Commits on {{date}}
+viewCommitDetails: View commit details
+copyCommitSHA: Copy commit SHA
+branches: Branches
 repos:
   name: Repo Name
   data: Repo Data

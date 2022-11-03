@@ -1,23 +1,23 @@
 import React from 'react'
 import { Container, Layout, Text, Color, Icon } from '@harness/uicore'
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { PopoverInteractionKind } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
 import { ButtonRoleProps } from 'utils/Utils'
 import { GitIcon } from 'utils/GitUtils'
 import type { TypesRepository } from 'services/scm'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
-import type { SCMPathProps } from 'RouteDefinitions'
 import css from './RepositoryHeader.module.scss'
 
 interface RepositoryHeaderProps {
   repoMetadata: TypesRepository
 }
 
-export function RepositoryHeader({ repoMetadata }: RepositoryHeaderProps): JSX.Element {
+export function RepositoryHeader({ repoMetadata }: RepositoryHeaderProps) {
   const { getString } = useStrings()
-  const { space: spaceFromPath = '' } = useParams<SCMPathProps>()
-  const { space = spaceFromPath || '', routes } = useAppContext()
+  const space = useGetSpaceParam()
+  const { routes } = useAppContext()
 
   return (
     <Container className={css.header}>

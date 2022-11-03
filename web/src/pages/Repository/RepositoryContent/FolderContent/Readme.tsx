@@ -16,7 +16,7 @@ interface FolderContentProps {
   readmeInfo: OpenapiContentInfo
 }
 
-export function Readme({ metadata, gitRef, readmeInfo }: FolderContentProps): JSX.Element {
+export function Readme({ metadata, gitRef, readmeInfo }: FolderContentProps) {
   // const { getString } = useStrings()
   // const history = useHistory()
   // const { routes } = useAppContext()

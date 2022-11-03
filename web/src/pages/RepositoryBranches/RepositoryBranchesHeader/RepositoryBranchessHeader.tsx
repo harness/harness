@@ -5,13 +5,13 @@ import { useStrings } from 'framework/strings'
 import type { TypesRepository } from 'services/scm'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import css from './RepositoryCommitsHeader.module.scss'
+import css from './RepositoryBranchesHeader.module.scss'
 
 interface RepositoryCommitsHeaderProps {
   repoMetadata: TypesRepository
 }
 
-export function RepositoryCommitsHeader({ repoMetadata }: RepositoryCommitsHeaderProps) {
+export function RepositoryBranchesHeader({ repoMetadata }: RepositoryCommitsHeaderProps) {
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { routes } = useAppContext()
@@ -25,7 +25,7 @@ export function RepositoryCommitsHeader({ repoMetadata }: RepositoryCommitsHeade
           <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.name}</Link>
         </Layout.Horizontal>
         <Container padding={{ top: 'medium', bottom: 'medium' }}>
-          <Text font={{ variation: FontVariation.H4 }}>{getString('commits')}</Text>
+          <Text font={{ variation: FontVariation.H4 }}>{getString('branches')}</Text>
         </Container>
       </Container>
     </Container>

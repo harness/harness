@@ -12,7 +12,7 @@ interface FileContentProps {
   contentInfo: OpenapiGetContentOutput
 }
 
-export function FileContent({ contentInfo, repoMetadata }: FileContentProps): JSX.Element {
+export function FileContent({ contentInfo, repoMetadata }: FileContentProps) {
   return (
     <Layout.Vertical spacing="small">
       <LatestCommit repoMetadata={repoMetadata} latestCommit={contentInfo.latestCommit} standaloneStyle />

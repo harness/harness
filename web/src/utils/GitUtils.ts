@@ -29,8 +29,6 @@ export const GitIcon: Readonly<Record<string, IconName>> = {
   BRANCH: 'git-branch'
 }
 
-export type Nullable<T> = T | undefined | null
-
 export const isDir = (content: Nullable<OpenapiGetContentOutput>): boolean => content?.type === GitContentType.DIR
 export const isFile = (content: Nullable<OpenapiGetContentOutput>): boolean => content?.type === GitContentType.FILE
 export const isSymlink = (content: Nullable<OpenapiGetContentOutput>): boolean =>

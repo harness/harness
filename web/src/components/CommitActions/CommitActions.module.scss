@@ -13,9 +13,10 @@
       padding-right: var(--spacing-small) !important;
     }
 
-    a {
-      font-size: 12px;
+    a span {
+      font-size: 12px !important;
       color: var(--primary-7);
+      font-family: var(--font-family-mono) !important;
     }
 
     button#commitCopyButton {

@@ -16,25 +16,27 @@ import {
 import type { CellProps, Column } from 'react-table'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
-import { useHistory, useParams } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
-import { formatDate, getErrorMessage, LIST_FETCHING_PER_PAGE, X_PER_PAGE, X_TOTAL, X_TOTAL_PAGES } from 'utils/Utils'
+import { formatDate, getErrorMessage, LIST_FETCHING_PER_PAGE } from 'utils/Utils'
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
 import type { TypesRepository } from 'services/scm'
-import type { SCMPathProps } from 'RouteDefinitions'
+import { usePageIndex } from 'hooks/usePageIndex'
+import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import emptyStateImage from './images/empty-state.svg'
 import css from './RepositoriesListing.module.scss'
 
-export default function RepositoriesListing(): JSX.Element {
+export default function RepositoriesListing() {
   const { getString } = useStrings()
   const history = useHistory()
   const rowContainerRef = useRef<HTMLDivElement>(null)
   const [nameTextWidth, setNameTextWidth] = useState(600)
-  const [pageIndex, setPageIndex] = useState(0)
-  const params = useParams<SCMPathProps>()
+  const space = useGetSpaceParam()
   const [query, setQuery] = useState<string | undefined>()
-  const { space = params.space || '', routes } = useAppContext()
+  const { routes } = useAppContext()
+  const [pageIndex, setPageIndex] = usePageIndex()
   const path = useMemo(
     () =>
       `/api/v1/spaces/${space}/+/repos?page=${pageIndex + 1}&per_page=${LIST_FETCHING_PER_PAGE}${
@@ -43,14 +45,12 @@ export default function RepositoriesListing(): JSX.Element {
     [space, query, pageIndex]
   )
   const { data: repositories, error, loading, refetch, response } = useGet<TypesRepository[]>({ path })
-  const itemCount = useMemo(() => parseInt(response?.headers?.get(X_TOTAL) || '0'), [response])
-  const pageCount = useMemo(() => parseInt(response?.headers?.get(X_TOTAL_PAGES) || '0'), [response])
-  const pageSize = useMemo(() => parseInt(response?.headers?.get(X_PER_PAGE) || '0'), [response])
+  const { totalItems, totalPages, pageSize } = useGetPaginationInfo(response)
 
   useEffect(() => {
     setQuery(undefined)
     setPageIndex(0)
-  }, [space])
+  }, [space, setPageIndex])
 
   const columns: Column<TypesRepository>[] = useMemo(
     () => [
@@ -166,8 +166,8 @@ export default function RepositoriesListing(): JSX.Element {
                 className={css.pagination}
                 hidePageNumbers
                 gotoPage={index => setPageIndex(index)}
-                itemCount={itemCount}
-                pageCount={pageCount}
+                itemCount={totalItems}
+                pageCount={totalPages}
                 pageIndex={pageIndex}
                 pageSize={pageSize}
               />

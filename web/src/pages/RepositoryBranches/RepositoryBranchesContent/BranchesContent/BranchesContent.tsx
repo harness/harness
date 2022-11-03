@@ -8,14 +8,14 @@ import type { RepoCommit, TypesRepository } from 'services/scm'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { formatDate } from 'utils/Utils'
 import { GitIcon } from 'utils/GitUtils'
-import css from './CommitsContent.module.scss'
+import css from './BranchesContent.module.scss'
 
-interface CommitsContentProps {
+interface BranchesContentProps {
   repoMetadata: TypesRepository
   commits: RepoCommit[]
 }
 
-export function CommitsContent({ repoMetadata, commits }: CommitsContentProps) {
+export function BranchesContent({ repoMetadata, commits }: BranchesContentProps) {
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const columns: Column<RepoCommit>[] = useMemo(

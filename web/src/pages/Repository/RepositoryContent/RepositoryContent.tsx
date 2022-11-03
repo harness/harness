@@ -14,7 +14,7 @@ interface RepositoryContentProps {
   repoMetadata: TypesRepository
 }
 
-export function RepositoryContent({ repoMetadata, gitRef, resourcePath }: RepositoryContentProps): JSX.Element {
+export function RepositoryContent({ repoMetadata, gitRef, resourcePath }: RepositoryContentProps) {
   const { data /*error, loading, refetch, response */ } = useGet<OpenapiGetContentOutput>({
     path: `/api/v1/repos/${repoMetadata.path}/+/content${resourcePath ? '/' + resourcePath : ''}?include_commit=true${
       gitRef ? `&git_ref=${gitRef}` : ''
@@ -30,7 +30,13 @@ export function RepositoryContent({ repoMetadata, gitRef, resourcePath }: Reposi
         gitRef={gitRef || repoMetadata.defaultBranch}
         resourcePath={resourcePath}
       />
-      {data && isDir(data) && <FolderContent contentInfo={data} repoMetadata={repoMetadata} gitRef={gitRef} />}
+      {data && isDir(data) && (
+        <FolderContent
+          contentInfo={data}
+          repoMetadata={repoMetadata}
+          gitRef={gitRef || (repoMetadata.defaultBranch as string)}
+        />
+      )}
       {data && isFile(data) && <FileContent repoMetadata={repoMetadata} contentInfo={data} />}
     </Container>
   )

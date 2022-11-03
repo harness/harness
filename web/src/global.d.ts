@@ -63,3 +63,5 @@ declare module 'react-join' {
   const ReactJoin: React.FC<{ separator: JSX.Element }>
   export default ReactJoin
 }
+
+declare type Nullable<T> = T | undefined | null

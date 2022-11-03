@@ -3,7 +3,6 @@ import { Container, Color, TableV2 as Table, Text } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { sortBy } from 'lodash-es'
 import { useHistory } from 'react-router-dom'
-import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput, TypesRepository } from 'services/scm'
 import { formatDate } from 'utils/Utils'
@@ -14,18 +13,17 @@ import css from './FolderContent.module.scss'
 
 interface FolderContentProps {
   repoMetadata: TypesRepository
-  gitRef?: string
+  gitRef: string
   contentInfo: OpenapiGetContentOutput
 }
 
-export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderContentProps): JSX.Element {
-  const { getString } = useStrings()
+export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderContentProps) {
   const history = useHistory()
   const { routes } = useAppContext()
   const columns: Column<OpenapiContentInfo>[] = useMemo(
     () => [
       {
-        Header: getString('name'),
+        id: 'name',
         width: '40%',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
@@ -40,7 +38,7 @@ export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderConte
         }
       },
       {
-        Header: getString('commits'),
+        id: 'message',
         width: 'calc(60% - 100px)',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
@@ -51,7 +49,7 @@ export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderConte
         }
       },
       {
-        Header: getString('repos.lastChange'),
+        id: 'when',
         width: '100px',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
@@ -62,7 +60,7 @@ export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderConte
         }
       }
     ],
-    [getString]
+    []
   )
   const readmeInfo = useMemo(() => findReadmeInfo(contentInfo), [contentInfo])
 

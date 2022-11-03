@@ -1,7 +1,7 @@
 import React from 'react'
 import { Container, Layout, Text, Color } from '@harness/uicore'
 
-export function RepoMetadata(): JSX.Element {
+export function RepoMetadata() {
   return (
     <Container width="70%">
       <Layout.Horizontal spacing="large">

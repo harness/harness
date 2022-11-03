@@ -29,7 +29,7 @@ interface ContentHeaderProps {
   repoMetadata: TypesRepository
 }
 
-export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: ContentHeaderProps): JSX.Element {
+export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: ContentHeaderProps) {
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const history = useHistory()

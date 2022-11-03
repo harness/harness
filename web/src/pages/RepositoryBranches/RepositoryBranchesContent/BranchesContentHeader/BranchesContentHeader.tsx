@@ -6,14 +6,14 @@ import { useStrings } from 'framework/strings'
 import type { RepoBranch, TypesRepository } from 'services/scm'
 import { BRANCH_PER_PAGE } from 'utils/Utils'
 import { GitIcon } from 'utils/GitUtils'
-import css from './CommitsContentHeader.module.scss'
+import css from './BranchesContentHeader.module.scss'
 
-interface CommitsContentHeaderProps {
+interface BranchesContentHeaderProps {
   repoMetadata: TypesRepository
   onSwitch: (gitRef: string) => void
 }
 
-export function CommitsContentHeader({ repoMetadata, onSwitch }: CommitsContentHeaderProps) {
+export function BranchesContentHeader({ repoMetadata, onSwitch }: BranchesContentHeaderProps) {
   const { getString } = useStrings()
   const [query, setQuery] = useState('')
   const [activeBranch, setActiveBranch] = useState(repoMetadata.defaultBranch)

@@ -1,11 +1,11 @@
 import React from 'react'
 import { Container, PageBody } from '@harness/uicore'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
-import { RepositoryCommitsContent } from './RepositoryCommitsContent/RepositoryCommitsContent'
-import { RepositoryCommitsHeader } from './RepositoryCommitsHeader/RepositoryCommitsHeader'
-import css from './RepositoryCommits.module.scss'
+import { RepositoryBranchesContent } from './RepositoryBranchesContent/RepositoryBranchesContent'
+import { RepositoryBranchesHeader } from './RepositoryBranchesHeader/RepositoryBranchessHeader'
+import css from './RepositoryBranches.module.scss'
 
-export default function RepositoryCommits() {
+export default function RepositoryBranches() {
   const { repoMetadata, error, loading, commitRef } = useGetRepositoryMetadata()
 
   return (
@@ -13,8 +13,8 @@ export default function RepositoryCommits() {
       <PageBody loading={loading} error={error}>
         {repoMetadata ? (
           <>
-            <RepositoryCommitsHeader repoMetadata={repoMetadata} />
-            <RepositoryCommitsContent
+            <RepositoryBranchesHeader repoMetadata={repoMetadata} />
+            <RepositoryBranchesContent
               repoMetadata={repoMetadata}
               commitRef={commitRef || (repoMetadata.defaultBranch as string)}
             />

@@ -9,7 +9,7 @@ interface MarkdownViewerProps {
   source: string
 }
 
-export function MarkdownViewer({ source }: MarkdownViewerProps): JSX.Element {
+export function MarkdownViewer({ source }: MarkdownViewerProps) {
   const { getString } = useStrings()
   const ReactMarkdownPreview = lazy(() => import('@uiw/react-markdown-preview'))
 
@@ -29,11 +29,7 @@ interface SourceCodeViewerProps {
   highlightLines?: string // i.e: {1,3-4}, not yet supported
 }
 
-function MonacoSourceCodeViewer({
-  source,
-  language = 'plaintext',
-  lineNumbers = true
-}: SourceCodeViewerProps): JSX.Element {
+function MonacoSourceCodeViewer({ source, language = 'plaintext', lineNumbers = true }: SourceCodeViewerProps) {
   const inputContainerRef = useRef<HTMLDivElement>(null)
 
   return (

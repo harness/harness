@@ -7,7 +7,7 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { BlueprintJsTree } from './TreeExample'
 import css from './ResourceTree.module.scss'
 
-export function ResourceTree(): JSX.Element {
+export function ResourceTree() {
   const { getString } = useStrings()
   const [branch, setBranch] = useState('dev')
 
@@ -47,7 +47,7 @@ export function ResourceTree(): JSX.Element {
             icon="folder-new"
             text={getString('newFolder')}
             onClick={() => {
-              console.log('TBD')
+              alert('TBD')
             }}
           />
         </SplitButton>

@@ -7,16 +7,16 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { LIST_FETCHING_PER_PAGE } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
-import { CommitsContentHeader } from './CommitsContentHeader/CommitsContentHeader'
-import { CommitsContent } from './CommitsContent/CommitsContent'
-import css from './RepositoryCommitsContent.module.scss'
+import { BranchesContentHeader } from './BranchesContentHeader/BranchesContentHeader'
+import { BranchesContent } from './BranchesContent/BranchesContent'
+import css from './RepositoryBranchesContent.module.scss'
 
-interface RepositoryCommitsContentProps {
+interface RepositoryBranchesContentProps {
   commitRef: string
   repoMetadata: TypesRepository
 }
 
-export function RepositoryCommitsContent({ repoMetadata, commitRef }: RepositoryCommitsContentProps) {
+export function RepositoryBranchesContent({ repoMetadata, commitRef }: RepositoryBranchesContentProps) {
   const { routes } = useAppContext()
   const history = useHistory()
   const [pageIndex, setPageIndex] = usePageIndex()
@@ -29,7 +29,7 @@ export function RepositoryCommitsContent({ repoMetadata, commitRef }: Repository
 
   return (
     <Container padding="xlarge" className={css.resourceContent}>
-      <CommitsContentHeader
+      <BranchesContentHeader
         repoMetadata={repoMetadata}
         onSwitch={gitRef => {
           setPageIndex(0)
@@ -43,7 +43,7 @@ export function RepositoryCommitsContent({ repoMetadata, commitRef }: Repository
       />
       {!!commits?.length && (
         <>
-          <CommitsContent commits={commits} repoMetadata={repoMetadata} />
+          <BranchesContent commits={commits} repoMetadata={repoMetadata} />
           <Container margin={{ left: 'large', right: 'large' }}>
             <Pagination
               className={css.pagination}
