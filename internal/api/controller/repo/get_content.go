@@ -10,10 +10,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/gitrpc"
+
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/internal/gitrpc"
 	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/log"
 )

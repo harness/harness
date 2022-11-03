@@ -2,13 +2,17 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package gitrpc
+package server
 
 import (
+	"github.com/harness/gitness/gitrpc/internal/gitea"
+	"github.com/harness/gitness/gitrpc/internal/service"
+	"github.com/harness/gitness/gitrpc/internal/storage"
+	"github.com/harness/gitness/gitrpc/rpc"
+
 	"net"
 
 	"code.gitea.io/gitea/modules/setting"
-	"github.com/harness/gitness/internal/gitrpc/rpc"
 	"google.golang.org/grpc"
 )
 
@@ -21,18 +25,18 @@ type Server struct {
 func NewServer(bind string, gitRoot string) (*Server, error) {
 	// TODO: should be subdir of gitRoot? What is it being used for?
 	setting.Git.HomePath = "home"
-	adapter, err := newGiteaAdapter()
+	adapter, err := gitea.New()
 	if err != nil {
 		return nil, err
 	}
 	s := grpc.NewServer()
-	store := newLocalStore()
+	store := storage.NewLocalStore()
 	// initialize services
-	repoService, err := newRepositoryService(adapter, store, gitRoot)
+	repoService, err := service.NewRepositoryService(adapter, store, gitRoot)
 	if err != nil {
 		return nil, err
 	}
-	httpService, err := newHTTPService(adapter, gitRoot)
+	httpService, err := service.NewHTTPService(adapter, gitRoot)
 	if err != nil {
 		return nil, err
 	}

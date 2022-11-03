@@ -8,6 +8,8 @@ package server
 import (
 	"context"
 
+	"github.com/harness/gitness/gitrpc"
+	server2 "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
 	"github.com/harness/gitness/harness/bootstrap"
@@ -19,7 +21,6 @@ import (
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/cron"
-	"github.com/harness/gitness/internal/gitrpc"
 	router2 "github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
@@ -78,8 +79,8 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	spaceStore := database.ProvideSpaceStore(db)
 	repoStore := database.ProvideRepoStore(db)
 	spaceController := space.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
-	clientConfig := ProvideGitRPCClientConfig(config)
-	gitrpcInterface, err := gitrpc.ProvideClient(clientConfig)
+	gitrpcConfig := ProvideGitRPCClientConfig(config)
+	gitrpcInterface, err := gitrpc.ProvideClient(gitrpcConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -90,11 +91,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	routerRouter := router2.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
 	serverConfig := ProvideGitRPCServerConfig(config)
-	gitrpcServer, err := gitrpc.ProvideServer(serverConfig)
+	server3, err := server2.ProvideServer(serverConfig)
 	if err != nil {
 		return nil, err
 	}
 	nightly := cron.NewNightly()
-	serverSystem := newSystem(bootstrapBootstrap, serverServer, gitrpcServer, nightly)
+	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, nightly)
 	return serverSystem, nil
 }

@@ -10,8 +10,8 @@ import (
 	"net/http"
 
 	"code.gitea.io/gitea/modules/setting"
+	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/api/handler/repo"
-	"github.com/harness/gitness/internal/gitrpc"
 
 	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	"github.com/harness/gitness/internal/api/middleware/encode"

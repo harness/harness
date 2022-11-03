@@ -9,8 +9,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/gitrpc/server"
+
 	"github.com/google/wire"
-	"github.com/harness/gitness/internal/gitrpc"
 	"github.com/harness/gitness/types"
 
 	"github.com/kelseyhightower/envconfig"
@@ -54,15 +56,15 @@ var PackageConfigsWireSet = wire.NewSet(
 	ProvideGitRPCClientConfig,
 )
 
-func ProvideGitRPCServerConfig(config *types.Config) *gitrpc.ServerConfig {
-	return &gitrpc.ServerConfig{
+func ProvideGitRPCServerConfig(config *types.Config) *server.Config {
+	return &server.Config{
 		Bind:    config.Server.GRPC.Bind,
 		GitRoot: config.Git.Root,
 	}
 }
 
-func ProvideGitRPCClientConfig(config *types.Config) *gitrpc.ClientConfig {
-	return &gitrpc.ClientConfig{
+func ProvideGitRPCClientConfig(config *types.Config) *gitrpc.Config {
+	return &gitrpc.Config{
 		Bind: config.Server.GRPC.Bind,
 	}
 }

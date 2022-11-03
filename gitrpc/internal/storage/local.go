@@ -2,7 +2,7 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package gitrpc
+package storage
 
 import (
 	"bytes"
@@ -12,18 +12,18 @@ import (
 	"sync"
 )
 
-type localStore struct {
+type LocalStore struct {
 	mutex sync.RWMutex
 	files map[string]bool
 }
 
-func newLocalStore() *localStore {
-	return &localStore{
+func NewLocalStore() *LocalStore {
+	return &LocalStore{
 		files: make(map[string]bool),
 	}
 }
 
-func (store *localStore) Save(filePath string, data bytes.Buffer) (string, error) {
+func (store *LocalStore) Save(filePath string, data bytes.Buffer) (string, error) {
 	err := os.MkdirAll(filepath.Dir(filePath), 0o777)
 	if err != nil {
 		return "", err

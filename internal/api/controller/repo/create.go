@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/resources"
+	"github.com/harness/gitness/gitrpc"
 
-	"github.com/harness/gitness/internal/gitrpc"
+	"github.com/harness/gitness/resources"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"

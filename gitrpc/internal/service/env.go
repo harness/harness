@@ -2,7 +2,7 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package gitrpc
+package service
 
 const (
 	EnvRepoUID     = "GITNESS_REPO_UID"

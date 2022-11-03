@@ -2,7 +2,7 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package gitrpc
+package service
 
 import (
 	"bytes"
@@ -17,8 +17,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/gitrpc/internal/streamio"
+	"github.com/harness/gitness/gitrpc/rpc"
+
 	"code.gitea.io/gitea/modules/git"
-	"github.com/harness/gitness/internal/gitrpc/rpc"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,13 +32,13 @@ const (
 
 var safeGitProtocolHeader = regexp.MustCompile(`^[0-9a-zA-Z]+=[0-9a-zA-Z]+(:[0-9a-zA-Z]+=[0-9a-zA-Z]+)*$`)
 
-type smartHTTPService struct {
+type SmartHTTPService struct {
 	rpc.UnimplementedSmartHTTPServiceServer
-	adapter   gitAdapter
+	adapter   GitAdapter
 	reposRoot string
 }
 
-func newHTTPService(adapter gitAdapter, gitRoot string) (*smartHTTPService, error) {
+func NewHTTPService(adapter GitAdapter, gitRoot string) (*SmartHTTPService, error) {
 	reposRoot := filepath.Join(gitRoot, repoSubdirName)
 	if _, err := os.Stat(reposRoot); errors.Is(err, os.ErrNotExist) {
 		if err = os.MkdirAll(reposRoot, 0o700); err != nil {
@@ -44,17 +46,17 @@ func newHTTPService(adapter gitAdapter, gitRoot string) (*smartHTTPService, erro
 		}
 	}
 
-	return &smartHTTPService{
+	return &SmartHTTPService{
 		adapter:   adapter,
 		reposRoot: reposRoot,
 	}, nil
 }
 
-func (s *smartHTTPService) getFullPathForRepo(uid string) string {
+func (s *SmartHTTPService) getFullPathForRepo(uid string) string {
 	return filepath.Join(s.reposRoot, fmt.Sprintf("%s.%s", uid, gitRepoSuffix))
 }
 
-func (s *smartHTTPService) InfoRefs(
+func (s *SmartHTTPService) InfoRefs(
 	r *rpc.InfoRefsRequest,
 	stream rpc.SmartHTTPService_InfoRefsServer,
 ) error {
@@ -69,7 +71,7 @@ func (s *smartHTTPService) InfoRefs(
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	w := NewWriter(func(p []byte) error {
+	w := streamio.NewWriter(func(p []byte) error {
 		return stream.Send(&rpc.InfoRefsResponse{Data: p})
 	})
 
@@ -96,7 +98,7 @@ func (s *smartHTTPService) InfoRefs(
 	return nil
 }
 
-func (s *smartHTTPService) ServicePack(stream rpc.SmartHTTPService_ServicePackServer) error {
+func (s *SmartHTTPService) ServicePack(stream rpc.SmartHTTPService_ServicePackServer) error {
 	ctx := stream.Context()
 	// Get basic repo data
 	req, err := stream.Recv()
@@ -114,12 +116,12 @@ func (s *smartHTTPService) ServicePack(stream rpc.SmartHTTPService_ServicePackSe
 
 	repoPath := s.getFullPathForRepo(req.GetRepoUid())
 
-	stdin := NewReader(func() ([]byte, error) {
+	stdin := streamio.NewReader(func() ([]byte, error) {
 		resp, streamErr := stream.Recv()
 		return resp.GetData(), streamErr
 	})
 
-	stdout := NewWriter(func(p []byte) error {
+	stdout := streamio.NewWriter(func(p []byte) error {
 		return stream.Send(&rpc.ServicePackResponse{Data: p})
 	})
 

@@ -8,9 +8,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/internal/gitrpc"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )

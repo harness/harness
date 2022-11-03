@@ -2,12 +2,14 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package gitrpc
+package gitea
 
 import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/harness/gitness/gitrpc/internal/types"
 
 	"github.com/stretchr/testify/require"
 )
@@ -47,42 +49,43 @@ func testParseSignatureFromCatFileLineFor(t *testing.T, name string, email strin
 	s, err := parseSignatureFromCatFileLine(line)
 
 	require.NoError(t, err, line)
-	require.Equal(t, name, s.identity.name, line)
-	require.Equal(t, email, s.identity.email, line)
+	require.Equal(t, name, s.Identity.Name, line)
+	require.Equal(t, email, s.Identity.Email, line)
 
 	// verify time and offset
-	_, offset := s.when.Zone()
-	require.Equal(t, expectedTimeUnix, s.when.Unix(), line)
+	_, offset := s.When.Zone()
+	require.Equal(t, expectedTimeUnix, s.When.Unix(), line)
 	require.Equal(t, expectedTimeOffset, offset, line)
 }
 
 func TestParseTagDataFromCatFile(t *testing.T) {
 	when, _ := time.Parse(defaultGitTimeLayout, "Fri Sep 23 10:57:49 2022 -0700")
-	testParseTagDataFromCatFileFor(t, "sha012", gitObjectTypeTag, "name1",
-		signature{identity: identity{name: "max", email: "max@mail.com"}, when: when},
+	testParseTagDataFromCatFileFor(t, "sha012", types.GitObjectTypeTag, "name1",
+		types.Signature{Identity: types.Identity{Name: "max", Email: "max@mail.com"}, When: when},
 		"some message", "some message")
 
 	// test with signature
-	testParseTagDataFromCatFileFor(t, "sha012", gitObjectTypeCommit, "name2",
-		signature{identity: identity{name: "max", email: "max@mail.com"}, when: when},
-		"gpgsig -----BEGIN PGP SIGNATURE-----\n\nw...B\n-----END PGP SIGNATURE-----\n\nsome message", "some message")
+	testParseTagDataFromCatFileFor(t, "sha012", types.GitObjectTypeCommit, "name2",
+		types.Signature{Identity: types.Identity{Name: "max", Email: "max@mail.com"}, When: when},
+		"gpgsig -----BEGIN PGP SIGNATURE-----\n\nw...B\n-----END PGP SIGNATURE-----\n\nsome message",
+		"some message")
 }
 
-func testParseTagDataFromCatFileFor(t *testing.T, object string, typ gitObjectType, name string, tagger signature,
-	remainder string, expectedMessage string) {
+func testParseTagDataFromCatFileFor(t *testing.T, object string, typ types.GitObjectType, name string,
+	tagger types.Signature, remainder string, expectedMessage string) {
 	data := fmt.Sprintf(
 		"object %s\ntype %s\ntag %s\ntagger %s <%s> %s\n%s",
 		object, string(typ), name,
-		tagger.identity.name, tagger.identity.email, tagger.when.Format(defaultGitTimeLayout),
+		tagger.Identity.Name, tagger.Identity.Email, tagger.When.Format(defaultGitTimeLayout),
 		remainder)
 	res, err := parseTagDataFromCatFile([]byte(data))
 	require.NoError(t, err)
 
-	require.Equal(t, name, res.name, data)
-	require.Equal(t, object, res.targetSha, data)
-	require.Equal(t, typ, res.targetType, data)
-	require.Equal(t, expectedMessage, res.message, data)
-	require.Equal(t, tagger.identity.name, res.tagger.identity.name, data)
-	require.Equal(t, tagger.identity.email, res.tagger.identity.email, data)
-	require.Equal(t, tagger.when, res.tagger.when, data)
+	require.Equal(t, name, res.Name, data)
+	require.Equal(t, object, res.TargetSha, data)
+	require.Equal(t, typ, res.TargetType, data)
+	require.Equal(t, expectedMessage, res.Message, data)
+	require.Equal(t, tagger.Identity.Name, res.Tagger.Identity.Name, data)
+	require.Equal(t, tagger.Identity.Email, res.Tagger.Identity.Email, data)
+	require.Equal(t, tagger.When, res.Tagger.When, data)
 }

@@ -5,8 +5,8 @@
 package repo
 
 import (
+	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/auth/authz"
-	"github.com/harness/gitness/internal/gitrpc"
 	"github.com/harness/gitness/internal/store"
 )
 

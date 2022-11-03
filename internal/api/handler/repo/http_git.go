@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/internal/gitrpc"
+	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/types"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"

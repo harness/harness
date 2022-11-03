@@ -22,14 +22,13 @@ func (c *Mutex) AcquireLock(ctx context.Context, key string) (*Lock, error) {
 		return nil, errors.New("mutex not initialized")
 	}
 
+	c.mux.Lock()
 	if c.locks == nil {
 		c.locks = make(map[string]*Lock)
 	}
-
-	c.mux.RLock()
-	defer c.mux.RUnlock()
-
 	lock, ok := c.locks[key]
+	c.mux.Unlock()
+
 	if !ok {
 		lock = &Lock{
 			state:    false,
@@ -37,9 +36,11 @@ func (c *Mutex) AcquireLock(ctx context.Context, key string) (*Lock, error) {
 			lockChan: make(chan struct{}, 1),
 		}
 	}
-	// TODO: One acquire having to wait causes all to wait?
+
 	select {
 	case lock.lockChan <- struct{}{}:
+		c.mux.Lock()
+		defer c.mux.Unlock()
 		lock.state = true
 		c.locks[key] = lock
 		return lock, nil

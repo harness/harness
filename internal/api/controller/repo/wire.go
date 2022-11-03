@@ -6,8 +6,8 @@ package repo
 
 import (
 	"github.com/google/wire"
+	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/auth/authz"
-	"github.com/harness/gitness/internal/gitrpc"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 )

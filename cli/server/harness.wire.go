@@ -10,6 +10,10 @@ package server
 import (
 	"context"
 
+	"github.com/harness/gitness/gitrpc"
+
+	gitrpcserver "github.com/harness/gitness/gitrpc/server"
+
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
 	"github.com/harness/gitness/harness/bootstrap"
@@ -21,7 +25,6 @@ import (
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/cron"
-	"github.com/harness/gitness/internal/gitrpc"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/store/memory"
@@ -43,6 +46,7 @@ func initSystem(ctx context.Context, config *gitnessTypes.Config) (*system, erro
 		space.WireSet,
 		user.WireSet,
 		service.WireSet,
+		gitrpcserver.WireSet,
 		gitrpc.WireSet,
 		types.LoadConfig,
 		router.WireSet,

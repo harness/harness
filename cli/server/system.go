@@ -5,9 +5,9 @@
 package server
 
 import (
+	gitrpcserver "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/cron"
-	"github.com/harness/gitness/internal/gitrpc"
 	"github.com/harness/gitness/internal/server"
 )
 
@@ -15,12 +15,12 @@ import (
 type system struct {
 	bootstrap    bootstrap.Bootstrap
 	server       *server.Server
-	gitRPCServer *gitrpc.Server
+	gitRPCServer *gitrpcserver.Server
 	nightly      *cron.Nightly
 }
 
 // newSystem returns a new system structure.
-func newSystem(bootstrap bootstrap.Bootstrap, server *server.Server, gitRPCServer *gitrpc.Server,
+func newSystem(bootstrap bootstrap.Bootstrap, server *server.Server, gitRPCServer *gitrpcserver.Server,
 	nightly *cron.Nightly) *system {
 	return &system{
 		bootstrap:    bootstrap,

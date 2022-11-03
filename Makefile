@@ -134,12 +134,12 @@ mocks/mock_client.go: internal/store/store.go client/client.go
 	go generate mocks/mock.go
 
 proto:
-	@protoc --proto_path=./internal/gitrpc/proto \
-			--go_out=./internal/gitrpc/rpc \
+	@protoc --proto_path=./gitrpc/proto \
+			--go_out=./gitrpc/rpc \
 			--go_opt=paths=source_relative \
-			--go-grpc_out=./internal/gitrpc/rpc \
+			--go-grpc_out=./gitrpc/rpc \
 			--go-grpc_opt=paths=source_relative \
-			./internal/gitrpc/proto/*.proto
+			./gitrpc/proto/*.proto
 
 
 ###########################################
