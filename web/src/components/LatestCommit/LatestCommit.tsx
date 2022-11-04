@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, Color, Layout, FlexExpander, Text, FontVariation } from '@harness/uicore'
+import { Container, Color, Layout, FlexExpander, Text, FontVariation, Avatar } from '@harness/uicore'
 import { Link } from 'react-router-dom'
 import ReactTimeago from 'react-timeago'
 import cx from 'classnames'
@@ -20,6 +20,7 @@ export function LatestCommit({ repoMetadata, latestCommit, standaloneStyle }: La
   return latestCommit ? (
     <Container>
       <Layout.Horizontal spacing="small" className={cx(css.latestCommit, standaloneStyle ? css.standalone : '')}>
+        <Avatar hoverCard={false} size="small" name={latestCommit.author?.identity?.name || ''} />
         <Text font={{ variation: FontVariation.SMALL_BOLD }}>
           {latestCommit.author?.identity?.name || latestCommit.author?.identity?.email}
         </Text>

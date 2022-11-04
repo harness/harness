@@ -25,7 +25,7 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
-import emptyStateImage from './images/empty-state.svg'
+import emptyStateImage from './empty-state.svg'
 import css from './RepositoriesListing.module.scss'
 
 export default function RepositoriesListing() {
@@ -150,7 +150,6 @@ export default function RepositoriesListing() {
           </Layout.Horizontal>
           <Container margin={{ top: 'medium' }}>
             <Table<TypesRepository>
-              rowDataTestID={(_, index: number) => `scm-repo-${index}`}
               className={css.table}
               columns={columns}
               data={repositories || []}

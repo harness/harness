@@ -62,7 +62,7 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
   }, [data, defaultBranches])
 
   return (
-    <Container className={css.folderHeader}>
+    <Container className={css.main}>
       <Layout.Horizontal spacing="medium">
         <DropDown
           icon={GitIcon.BRANCH}
@@ -134,8 +134,8 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
           }}
         /> */}
         <FlexExpander />
-        <Button text={getString('clone')} variation={ButtonVariation.SECONDARY} icon="main-clone" />
-        <Button text={getString('newFile')} variation={ButtonVariation.PRIMARY} icon="plus" />
+        <Button disabled text={getString('clone')} variation={ButtonVariation.SECONDARY} icon="main-clone" />
+        <Button disabled text={getString('newFile')} variation={ButtonVariation.PRIMARY} />
       </Layout.Horizontal>
     </Container>
   )

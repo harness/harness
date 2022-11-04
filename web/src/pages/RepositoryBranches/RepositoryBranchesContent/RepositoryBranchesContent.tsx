@@ -1,8 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Container, Pagination } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
-import type { RepoCommit, TypesRepository } from 'services/scm'
+import type { RepoBranch, TypesRepository } from 'services/scm'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { LIST_FETCHING_PER_PAGE } from 'utils/Utils'
@@ -12,18 +12,18 @@ import { BranchesContent } from './BranchesContent/BranchesContent'
 import css from './RepositoryBranchesContent.module.scss'
 
 interface RepositoryBranchesContentProps {
-  commitRef: string
   repoMetadata: TypesRepository
 }
 
-export function RepositoryBranchesContent({ repoMetadata, commitRef }: RepositoryBranchesContentProps) {
+export function RepositoryBranchesContent({ repoMetadata }: RepositoryBranchesContentProps) {
   const { routes } = useAppContext()
   const history = useHistory()
+  const [searchTerm, setSearchTerm] = useState('')
   const [pageIndex, setPageIndex] = usePageIndex()
-  const { data: commits, response /*error, loading, refetch */ } = useGet<RepoCommit[]>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/commits?per_page=${LIST_FETCHING_PER_PAGE}&page=${
+  const { data: branches, response /*error, loading, refetch */ } = useGet<RepoBranch[]>({
+    path: `/api/v1/repos/${repoMetadata.path}/+/branches?per_page=${LIST_FETCHING_PER_PAGE}&page=${
       pageIndex + 1
-    }&git_ref=${commitRef || repoMetadata.defaultBranch}`
+    }&direction=desc&include_commit=true&query=${searchTerm}`
   })
   const { totalItems, totalPages, pageSize } = useGetPaginationInfo(response)
 
@@ -31,7 +31,7 @@ export function RepositoryBranchesContent({ repoMetadata, commitRef }: Repositor
     <Container padding="xlarge" className={css.resourceContent}>
       <BranchesContentHeader
         repoMetadata={repoMetadata}
-        onSwitch={gitRef => {
+        onBranchTypeSwitched={gitRef => {
           setPageIndex(0)
           history.push(
             routes.toSCMRepositoryCommits({
@@ -40,10 +40,13 @@ export function RepositoryBranchesContent({ repoMetadata, commitRef }: Repositor
             })
           )
         }}
+        onSearchTermChanged={value => {
+          setSearchTerm(value)
+        }}
       />
-      {!!commits?.length && (
+      {!!branches?.length && (
         <>
-          <BranchesContent commits={commits} repoMetadata={repoMetadata} />
+          <BranchesContent branches={branches} repoMetadata={repoMetadata} />
           <Container margin={{ left: 'large', right: 'large' }}>
             <Pagination
               className={css.pagination}

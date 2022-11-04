@@ -1,12 +1,12 @@
-.folderHeader {
+.main {
   div[class*='TextInput'] {
     margin-bottom: 0 !important;
     margin-left: 0 !important;
 
-    input {
-      background: transparent !important;
-      border: none;
-    }
+    // input {
+    //   background: transparent !important;
+    //   border: none;
+    // }
   }
 
   > div {

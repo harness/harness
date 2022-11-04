@@ -1,100 +1,85 @@
 import React, { useMemo } from 'react'
-import { Container, Color, TableV2 as Table, Text, Avatar, Layout } from '@harness/uicore'
+import { Container, Color, TableV2 as Table, Text, Avatar, Tag } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
+import { Link } from 'react-router-dom'
 import { orderBy } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { RepoCommit, TypesRepository } from 'services/scm'
-import { CommitActions } from 'components/CommitActions/CommitActions'
+import type { RepoBranch, TypesRepository } from 'services/scm'
 import { formatDate } from 'utils/Utils'
-import { GitIcon } from 'utils/GitUtils'
 import css from './BranchesContent.module.scss'
 
 interface BranchesContentProps {
   repoMetadata: TypesRepository
-  commits: RepoCommit[]
+  branches: RepoBranch[]
 }
 
-export function BranchesContent({ repoMetadata, commits }: BranchesContentProps) {
-  const { getString } = useStrings()
+export function BranchesContent({ repoMetadata, branches }: BranchesContentProps) {
   const { routes } = useAppContext()
-  const columns: Column<RepoCommit>[] = useMemo(
+  const { getString } = useStrings()
+  const columns: Column<RepoBranch>[] = useMemo(
     () => [
       {
-        id: 'author',
-        width: '20%',
-        Cell: ({ row }: CellProps<RepoCommit>) => {
+        Header: getString('branch'),
+        width: '30%',
+        Cell: ({ row }: CellProps<RepoBranch>) => {
           return (
             <Text className={css.rowText} color={Color.BLACK}>
-              <Avatar size="small" name={row.original.author?.identity?.name || ''} />
-              <span className={css.spacer} />
-              {row.original.author?.identity?.name}
+              <Link
+                to={routes.toSCMRepository({
+                  repoPath: repoMetadata.path as string,
+                  gitRef: row.original?.name
+                })}
+                className={css.commitLink}>
+                {row.original?.name}
+              </Link>
+              {row.original?.name === repoMetadata.defaultBranch && (
+                <>
+                  <span className={css.spacer} />
+                  <span className={css.spacer} />
+                  <Tag>{getString('defaultBranch')}</Tag>
+                </>
+              )}
             </Text>
           )
         }
       },
       {
-        id: 'commit',
-        width: 'calc(80% - 100px)',
-        Cell: ({ row }: CellProps<RepoCommit>) => {
+        Header: getString('status'),
+        width: 'calc(70% - 200px)',
+        Cell: ({ row }: CellProps<RepoBranch>) => {
           return (
             <Text color={Color.BLACK} lineClamp={1} className={css.rowText}>
-              {row.original.message}
+              {/* TBD - Backend does not have information for branch status yet */}
             </Text>
           )
         }
       },
       {
-        id: 'sha',
-        width: '100px',
-        Cell: ({ row }: CellProps<RepoCommit>) => {
+        Header: getString('updated'),
+        width: '200px',
+        Cell: ({ row }: CellProps<RepoBranch>) => {
           return (
-            <CommitActions
-              sha={row.original.sha as string}
-              href={routes.toSCMRepositoryCommits({
-                repoPath: repoMetadata.path as string,
-                commitRef: row.original.sha as string
-              })}
-              enableCopy
-            />
+            <Text className={css.rowText} color={Color.BLACK}>
+              <Avatar hoverCard={false} size="small" name={row.original.commit?.author?.identity?.name || ''} />
+              <span className={css.spacer} />
+              {formatDate(row.original.commit?.author?.when as string)}
+            </Text>
           )
         }
       }
     ],
-    [repoMetadata.path, routes]
-  )
-  const commitsGroupedByDate: Record<string, RepoCommit[]> = useMemo(
-    () =>
-      commits?.reduce((group, commit) => {
-        const date = formatDate(commit.author?.when as string)
-        group[date] = (group[date] || []).concat(commit)
-        return group
-      }, {} as Record<string, RepoCommit[]>) || {},
-    [commits]
+    [getString, repoMetadata.defaultBranch]
   )
 
   return (
     <Container className={css.container}>
-      {Object.entries(commitsGroupedByDate).map(([date, commitsByDate]) => {
-        return (
-          <Container key={date} className={css.commitSection}>
-            <Layout.Vertical spacing="medium">
-              <Text icon={GitIcon.COMMIT} color={Color.GREY_500} className={css.label}>
-                {getString('commitsOn', { date })}
-              </Text>
-              <Container className={css.commitTableContainer}>
-                <Table<RepoCommit>
-                  className={css.table}
-                  hideHeaders
-                  columns={columns}
-                  data={orderBy(commitsByDate || [], ['author.when'], ['desc'])}
-                  getRowClassName={() => css.row}
-                />
-              </Container>
-            </Layout.Vertical>
-          </Container>
-        )
-      })}
+      <Table<RepoBranch>
+        className={css.table}
+        columns={columns}
+        data={orderBy(branches || [], ['commit.author.when'], ['desc'])}
+        getRowClassName={() => css.row}
+      />
     </Container>
   )
 }

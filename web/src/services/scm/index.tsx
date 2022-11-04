@@ -121,6 +121,7 @@ export interface OpenapiUserUpdateRequest {
 
 export interface RepoBranch {
   commit?: RepoCommit
+  sha?: string
   name?: string
 }
 

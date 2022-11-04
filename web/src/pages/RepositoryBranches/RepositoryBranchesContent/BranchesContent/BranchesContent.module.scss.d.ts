@@ -6,8 +6,6 @@ declare const styles: {
   readonly row: string
   readonly rowText: string
   readonly spacer: string
-  readonly commitSection: string
-  readonly label: string
-  readonly commitTableContainer: string
+  readonly commitLink: string
 }
 export default styles

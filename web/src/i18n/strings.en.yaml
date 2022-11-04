@@ -16,7 +16,7 @@ files: Files
 commits: Commits
 pullRequests: Pull Requests
 settings: Settings
-newFile: New File
+newFile: + New File
 newFolder: New Folder
 content: Content
 history: History
@@ -29,6 +29,7 @@ none: None
 create: Create
 clone: Clone
 copy: Copy
+defaultBranch: Default
 ok: OK
 loading: Loading...
 addGitIgnore: Add a .gitignore
@@ -39,6 +40,13 @@ commitsOn: Commits on {{date}}
 viewCommitDetails: View commit details
 copyCommitSHA: Copy commit SHA
 branches: Branches
+branch: Branch
+activeBranches: Active Branches
+inactiveBranches: Inactive Branches
+yourBranches: Your Branches
+createBranch: + Create Branch
+searchBranches: Search branches
+updated: Updated
 repos:
   name: Repo Name
   data: Repo Data

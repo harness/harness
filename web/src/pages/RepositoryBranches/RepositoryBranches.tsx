@@ -6,11 +6,11 @@ import { RepositoryBranchesHeader } from './RepositoryBranchesHeader/RepositoryB
 import css from './RepositoryBranches.module.scss'
 
 export default function RepositoryBranches() {
-  const { repoMetadata, error, loading, commitRef } = useGetRepositoryMetadata()
+  const { repoMetadata, error, loading, commitRef, refetch } = useGetRepositoryMetadata()
 
   return (
     <Container className={css.main}>
-      <PageBody loading={loading} error={error}>
+      <PageBody loading={loading} error={error} retryOnError={() => refetch()}>
         {repoMetadata ? (
           <>
             <RepositoryBranchesHeader repoMetadata={repoMetadata} />

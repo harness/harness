@@ -1,77 +1,60 @@
-import React, { ChangeEvent, useEffect, useMemo, useState } from 'react'
-import { Container, Layout, FlexExpander, DropDown, Icon, Color, SelectOption } from '@harness/uicore'
-import { uniq } from 'lodash-es'
-import { useGet } from 'restful-react'
+import React, { useMemo, useState } from 'react'
+import { Container, Layout, FlexExpander, DropDown, Button, ButtonVariation, TextInput } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
-import type { RepoBranch, TypesRepository } from 'services/scm'
-import { BRANCH_PER_PAGE } from 'utils/Utils'
-import { GitIcon } from 'utils/GitUtils'
+import type { TypesRepository } from 'services/scm'
+import { GitBranchType } from 'utils/GitUtils'
 import css from './BranchesContentHeader.module.scss'
 
 interface BranchesContentHeaderProps {
+  activeBranchType?: GitBranchType
   repoMetadata: TypesRepository
-  onSwitch: (gitRef: string) => void
+  onBranchTypeSwitched: (branchType: GitBranchType) => void
+  onSearchTermChanged: (searchTerm: string) => void
 }
 
-export function BranchesContentHeader({ repoMetadata, onSwitch }: BranchesContentHeaderProps) {
+export function BranchesContentHeader({
+  repoMetadata,
+  onBranchTypeSwitched,
+  onSearchTermChanged,
+  activeBranchType = GitBranchType.ACTIVE
+}: BranchesContentHeaderProps) {
   const { getString } = useStrings()
-  const [query, setQuery] = useState('')
-  const [activeBranch, setActiveBranch] = useState(repoMetadata.defaultBranch)
-  const path = useMemo(
-    () =>
-      `/api/v1/repos/${repoMetadata.path}/+/branches?sort=date&direction=desc&per_page=${BRANCH_PER_PAGE}&page=1&query=${query}`,
-    [query, repoMetadata.path]
+  const [branchType, setBranchType] = useState(activeBranchType)
+  const [searchTerm, setSearchTerm] = useState('')
+  const items = useMemo(
+    () => [
+      { label: getString('activeBranches'), value: GitBranchType.ACTIVE },
+      { label: getString('inactiveBranches'), value: GitBranchType.INACTIVE },
+      { label: getString('yourBranches'), value: GitBranchType.YOURS }
+    ],
+    [getString]
   )
-  const { data, loading } = useGet<RepoBranch[]>({ path })
-  // defaultBranches is computed using repository default branch, and gitRef in URL, if it exists
-  const defaultBranches = useMemo(() => [repoMetadata.defaultBranch].concat([]), [repoMetadata])
-  const [branches, setBranches] = useState<SelectOption[]>(
-    uniq(defaultBranches.map(_branch => ({ label: _branch, value: _branch }))) as SelectOption[]
-  )
-
-  useEffect(() => {
-    if (data?.length) {
-      setBranches(
-        uniq(defaultBranches.concat(data.map(e => e.name) as string[])).map(_branch => ({
-          label: _branch,
-          value: _branch
-        })) as SelectOption[]
-      )
-    }
-  }, [data, defaultBranches])
 
   return (
-    <Container className={css.folderHeader}>
+    <Container className={css.main}>
       <Layout.Horizontal spacing="medium">
         <DropDown
-          icon={GitIcon.BRANCH}
-          value={activeBranch}
-          items={branches}
-          {...{
-            inputProps: {
-              leftElement: (
-                <Icon name={loading ? 'steps-spinner' : 'thinner-search'} size={12} color={Color.GREY_500} />
-              ),
-              placeholder: getString('search'),
-              onInput: (event: ChangeEvent<HTMLInputElement>) => {
-                if (event.target.value !== query) {
-                  setQuery(event.target.value)
-                }
-              },
-              onBlur: (event: ChangeEvent<HTMLInputElement>) => {
-                setTimeout(() => {
-                  setQuery(event.target.value || '')
-                }, 250)
-              }
-            }
-          }}
-          onChange={({ value: switchBranch }) => {
-            setActiveBranch(switchBranch as string)
-            onSwitch(switchBranch as string)
+          value={branchType}
+          items={items}
+          onChange={({ value }) => {
+            setBranchType(value as GitBranchType)
+            onBranchTypeSwitched(value as GitBranchType)
           }}
           popoverClassName={css.branchDropdown}
         />
         <FlexExpander />
+        <TextInput
+          placeholder={getString('searchBranches')}
+          autoFocus
+          onFocus={event => event.target.select()}
+          value={searchTerm}
+          onInput={event => {
+            const value = event.currentTarget.value
+            setSearchTerm(value)
+            onSearchTermChanged(value)
+          }}
+        />
+        <Button disabled text={getString('createBranch')} variation={ButtonVariation.PRIMARY} />
       </Layout.Horizontal>
     </Container>
   )

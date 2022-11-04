@@ -4,7 +4,6 @@
 
 import type { IconName } from '@harness/icons'
 import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput } from 'services/scm'
-import { GitContentType } from 'types/SCMTypes'
 
 // eslint-disable-next-line no-control-regex
 const badGitRefRegrex = /(^|[/.])([/.]|$)|^@$|@{|[\x00-\x20\x7f~^:?*[\\]|\.lock(\/|$)/
@@ -16,6 +15,19 @@ function isGitRefValid(name: string, onelevel: boolean): boolean {
 
 export function isGitBranchNameValid(name: string): boolean {
   return isGitRefValid(name, true) && !badGitBranchRegrex.test(name)
+}
+
+export enum GitContentType {
+  FILE = 'file',
+  DIR = 'dir',
+  SYMLINK = 'symlink',
+  SUBMODULE = 'submodule'
+}
+
+export enum GitBranchType {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  YOURS = 'yours'
 }
 
 export const GitIcon: Readonly<Record<string, IconName>> = {

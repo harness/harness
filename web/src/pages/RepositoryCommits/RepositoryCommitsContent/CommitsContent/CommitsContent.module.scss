@@ -25,6 +25,11 @@
         font-size: 13px;
         font-weight: 400;
 
+        > div[class*='Avatar'] {
+          margin-left: 0 !important;
+          cursor: default !important;
+        }
+
         .spacer {
           display: inline-block;
           width: 6px;

@@ -26,7 +26,7 @@ export function CommitsContent({ repoMetadata, commits }: CommitsContentProps) {
         Cell: ({ row }: CellProps<RepoCommit>) => {
           return (
             <Text className={css.rowText} color={Color.BLACK}>
-              <Avatar size="small" name={row.original.author?.identity?.name || ''} />
+              <Avatar hoverCard={false} size="small" name={row.original.author?.identity?.name || ''} />
               <span className={css.spacer} />
               {row.original.author?.identity?.name}
             </Text>

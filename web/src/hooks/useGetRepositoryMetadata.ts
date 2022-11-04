@@ -29,3 +29,6 @@ export function useGetRepositoryMetadata() {
     ...otherPathParams
   }
 }
+
+// TODO: Repository metadata is rarely changed. It might be good to implement
+// some caching strategy
