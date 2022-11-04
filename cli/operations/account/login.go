@@ -9,41 +9,43 @@ import (
 	"time"
 
 	"github.com/harness/gitness/cli/session"
-	"github.com/harness/gitness/cli/util"
+
+	"github.com/harness/gitness/cli/textui"
+
 	"github.com/harness/gitness/client"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 type loginCommand struct {
-	server string
+	client  client.Client
+	session Session
+	server  string
 }
 
 func (c *loginCommand) run(*kingpin.ParseContext) error {
-	username, password := util.Credentials()
-	httpClient := client.New(c.server)
+	username, password := textui.Credentials()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	ts, err := httpClient.Login(ctx, username, password)
+	ts, err := c.client.Login(ctx, username, password)
 	if err != nil {
 		return err
 	}
 
-	return util.StoreSession(&session.Session{
-		URI:         c.server,
-		ExpiresAt:   ts.Token.ExpiresAt,
-		AccessToken: ts.AccessToken,
-	})
+	return c.session.SetURI(c.server).SetExpiresAt(ts.Token.ExpiresAt).SetAccessToken(ts.AccessToken).Store()
 }
 
-// helper function to register the logout command.
-func RegisterLogin(app *kingpin.Application) {
-	c := new(loginCommand)
+// RegisterLogin helper function to register the logout command.
+func RegisterLogin(app *kingpin.Application, client client.Client, session *session.Session) {
+	c := &loginCommand{
+		client:  client,
+		session: session,
+	}
 
 	cmd := app.Command("login", "login to the remote server").
 		Action(c.run)
 
 	cmd.Arg("server", "server address").
-		Default("http://localhost:3000").
+		Default(session.URI).
 		StringVar(&c.server)
 }

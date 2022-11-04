@@ -12,7 +12,8 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/harness/gitness/cli/util"
+	"github.com/harness/gitness/client"
+
 	"github.com/harness/gitness/types"
 
 	"github.com/dchest/uniuri"
@@ -22,6 +23,7 @@ import (
 )
 
 type updateCommand struct {
+	client  client.Client
 	id      string
 	email   string
 	admin   bool
@@ -33,11 +35,6 @@ type updateCommand struct {
 }
 
 func (c *updateCommand) run(*kingpin.ParseContext) error {
-	client, err := util.Client()
-	if err != nil {
-		return err
-	}
-
 	in := new(types.UserInput)
 	if v := c.email; v != "" {
 		in.Email = ptr.String(v)
@@ -61,7 +58,7 @@ func (c *updateCommand) run(*kingpin.ParseContext) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	user, err := client.UserUpdate(ctx, c.id, in)
+	user, err := c.client.UserUpdate(ctx, c.id, in)
 	if err != nil {
 		return err
 	}
@@ -78,8 +75,10 @@ func (c *updateCommand) run(*kingpin.ParseContext) error {
 }
 
 // helper function registers the user update command.
-func registerUpdate(app *kingpin.CmdClause) {
-	c := new(updateCommand)
+func registerUpdate(app *kingpin.CmdClause, client client.Client) {
+	c := &updateCommand{
+		client: client,
+	}
 
 	cmd := app.Command("update", "update a user").
 		Action(c.run)

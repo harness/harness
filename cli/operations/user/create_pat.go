@@ -11,7 +11,8 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/harness/gitness/cli/util"
+	"github.com/harness/gitness/client"
+
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/types/enum"
 
@@ -26,6 +27,7 @@ token:     {{ .AccessToken }}
 ` //#nosec G101
 
 type createPATCommand struct {
+	client      client.Client
 	name        string
 	lifetimeInS int64
 
@@ -34,10 +36,6 @@ type createPATCommand struct {
 }
 
 func (c *createPATCommand) run(*kingpin.ParseContext) error {
-	client, err := util.Client()
-	if err != nil {
-		return err
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -47,7 +45,7 @@ func (c *createPATCommand) run(*kingpin.ParseContext) error {
 		Grants:   enum.AccessGrantAll,
 	}
 
-	tokenResp, err := client.UserCreatePAT(ctx, in)
+	tokenResp, err := c.client.UserCreatePAT(ctx, in)
 	if err != nil {
 		return err
 	}
@@ -64,8 +62,10 @@ func (c *createPATCommand) run(*kingpin.ParseContext) error {
 }
 
 // Register the command.
-func registerCreatePAT(app *kingpin.CmdClause) {
-	c := new(createPATCommand)
+func registerCreatePAT(app *kingpin.CmdClause, client client.Client) {
+	c := &createPATCommand{
+		client: client,
+	}
 
 	cmd := app.Command("pat", "create personal access token").
 		Action(c.run)

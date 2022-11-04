@@ -11,7 +11,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/harness/gitness/cli/util"
+	"github.com/harness/gitness/client"
 
 	"github.com/drone/funcmap"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -25,18 +25,15 @@ admin: {{ .Admin }}
 `
 
 type command struct {
-	tmpl string
-	json bool
+	client client.Client
+	tmpl   string
+	json   bool
 }
 
 func (c *command) run(*kingpin.ParseContext) error {
-	client, err := util.Client()
-	if err != nil {
-		return err
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	user, err := client.Self(ctx)
+	user, err := c.client.Self(ctx)
 	if err != nil {
 		return err
 	}
@@ -53,8 +50,10 @@ func (c *command) run(*kingpin.ParseContext) error {
 }
 
 // Register the command.
-func registerSelf(app *kingpin.CmdClause) {
-	c := new(command)
+func registerSelf(app *kingpin.CmdClause, client client.Client) {
+	c := &command{
+		client: client,
+	}
 
 	cmd := app.Command("self", "display authenticated user").
 		Action(c.run)

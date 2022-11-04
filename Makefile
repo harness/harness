@@ -37,7 +37,7 @@ mocks: $(mocks)
 
 wire: cli/server/harness.wire_gen.go cli/server/standalone.wire_gen.go
 
-force-wire:
+force-wire: ## Force wire code generation
 	@sh ./scripts/wire/standalone.sh
 	@sh ./scripts/wire/harness.sh
 
@@ -70,7 +70,6 @@ update-tools: delete-tools $(tools) ## Update the tools by deleting and re-insta
 
 delete-tools: ## Delete the tools
 	@rm $(tools) || true
-
 
 #########################################
 # Docker environment commands

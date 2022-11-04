@@ -4,14 +4,17 @@
 
 package users
 
-import "gopkg.in/alecthomas/kingpin.v2"
+import (
+	"github.com/harness/gitness/client"
+	"gopkg.in/alecthomas/kingpin.v2"
+)
 
 // Register the command.
-func Register(app *kingpin.Application) {
+func Register(app *kingpin.Application, client client.Client) {
 	cmd := app.Command("users", "manage users")
-	registerFind(cmd)
-	registerList(cmd)
-	registerCreate(cmd)
-	registerUpdate(cmd)
-	registerDelete(cmd)
+	registerFind(cmd, client)
+	registerList(cmd, client)
+	registerCreate(cmd, client)
+	registerUpdate(cmd, client)
+	registerDelete(cmd, client)
 }

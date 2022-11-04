@@ -7,24 +7,24 @@ package account
 import (
 	"os"
 
-	"github.com/harness/gitness/cli/util"
+	"github.com/harness/gitness/cli/session"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-type logoutCommand struct{}
-
-func (c *logoutCommand) run(*kingpin.ParseContext) error {
-	path, err := util.Config()
-	if err != nil {
-		return err
-	}
-	return os.Remove(path)
+type logoutCommand struct {
+	session Session
 }
 
-// helper function to register the logout command.
-func RegisterLogout(app *kingpin.Application) {
-	c := new(logoutCommand)
+func (c *logoutCommand) run(*kingpin.ParseContext) error {
+	return os.Remove(c.session.Path())
+}
+
+// RegisterLogout helper function to register the logout command.
+func RegisterLogout(app *kingpin.Application, s *session.Session) {
+	c := &logoutCommand{
+		session: s,
+	}
 
 	app.Command("logout", "logout from the remote server").
 		Action(c.run)

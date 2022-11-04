@@ -11,8 +11,9 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/harness/gitness/client"
+
 	"github.com/drone/funcmap"
-	"github.com/harness/gitness/cli/util"
 	"github.com/harness/gitness/types"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -25,20 +26,17 @@ admin: {{ .Admin }}
 `
 
 type listCommand struct {
-	tmpl string
-	page int
-	size int
-	json bool
+	client client.Client
+	tmpl   string
+	page   int
+	size   int
+	json   bool
 }
 
 func (c *listCommand) run(*kingpin.ParseContext) error {
-	client, err := util.Client()
-	if err != nil {
-		return err
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	list, err := client.UserList(ctx, types.Params{
+	list, err := c.client.UserList(ctx, types.Params{
 		Size: c.size,
 		Page: c.page,
 	})
@@ -63,8 +61,10 @@ func (c *listCommand) run(*kingpin.ParseContext) error {
 }
 
 // helper function registers the user list command.
-func registerList(app *kingpin.CmdClause) {
-	c := new(listCommand)
+func registerList(app *kingpin.CmdClause, client client.Client) {
+	c := &listCommand{
+		client: client,
+	}
 
 	cmd := app.Command("ls", "display a list of users").
 		Action(c.run)

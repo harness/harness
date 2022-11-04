@@ -7,6 +7,8 @@ package client
 import (
 	"context"
 
+	"github.com/harness/gitness/internal/api/controller/user"
+
 	"github.com/harness/gitness/types"
 )
 
@@ -35,6 +37,9 @@ type Client interface {
 
 	// UserDelete deletes a user account by ID or email.
 	UserDelete(ctx context.Context, key string) error
+
+	// UserCreatePAT creates a new PAT for the user.
+	UserCreatePAT(ctx context.Context, in user.CreateTokenInput) (*types.TokenResponse, error)
 }
 
 // remoteError store the error payload returned

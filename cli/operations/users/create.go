@@ -11,7 +11,10 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/harness/gitness/cli/util"
+	"github.com/harness/gitness/client"
+
+	"github.com/harness/gitness/cli/textui"
+
 	"github.com/harness/gitness/types"
 
 	"github.com/drone/funcmap"
@@ -19,25 +22,22 @@ import (
 )
 
 type createCommand struct {
-	email string
-	admin bool
-	tmpl  string
-	json  bool
+	client client.Client
+	email  string
+	admin  bool
+	tmpl   string
+	json   bool
 }
 
 func (c *createCommand) run(*kingpin.ParseContext) error {
-	client, err := util.Client()
-	if err != nil {
-		return err
-	}
 	in := &types.User{
 		Admin:    c.admin,
 		Email:    c.email,
-		Password: util.Password(),
+		Password: textui.Password(),
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	user, err := client.UserCreate(ctx, in)
+	user, err := c.client.UserCreate(ctx, in)
 	if err != nil {
 		return err
 	}
@@ -54,8 +54,10 @@ func (c *createCommand) run(*kingpin.ParseContext) error {
 }
 
 // helper function registers the user create command.
-func registerCreate(app *kingpin.CmdClause) {
-	c := new(createCommand)
+func registerCreate(app *kingpin.CmdClause, client client.Client) {
+	c := &createCommand{
+		client: client,
+	}
 
 	cmd := app.Command("create", "create a user").
 		Action(c.run)

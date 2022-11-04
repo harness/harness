@@ -11,26 +11,23 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/harness/gitness/cli/util"
+	"github.com/harness/gitness/client"
 
 	"github.com/drone/funcmap"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 type findCommand struct {
-	email string
-	tmpl  string
-	json  bool
+	client client.Client
+	email  string
+	tmpl   string
+	json   bool
 }
 
 func (c *findCommand) run(*kingpin.ParseContext) error {
-	client, err := util.Client()
-	if err != nil {
-		return err
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	user, err := client.User(ctx, c.email)
+	user, err := c.client.User(ctx, c.email)
 	if err != nil {
 		return err
 	}
@@ -47,8 +44,10 @@ func (c *findCommand) run(*kingpin.ParseContext) error {
 }
 
 // helper function registers the user find command.
-func registerFind(app *kingpin.CmdClause) {
-	c := new(findCommand)
+func registerFind(app *kingpin.CmdClause, client client.Client) {
+	c := &findCommand{
+		client: client,
+	}
 
 	cmd := app.Command("find", "display user details").
 		Action(c.run)
