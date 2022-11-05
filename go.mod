@@ -51,7 +51,7 @@ require (
 	github.com/segmentio/ksuid v1.0.2
 	github.com/sirupsen/logrus v1.6.0
 	github.com/unrolled/secure v0.0.0-20181022170031-4b6b7cf51606
-	go.starlark.net v0.0.0-20201118183435-e55f603d8c79
+	go.starlark.net v0.0.0-20221020143700-22309ac47eac
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
