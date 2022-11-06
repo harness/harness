@@ -6,7 +6,7 @@ import { RepositoryBranchesHeader } from './RepositoryBranchesHeader/RepositoryB
 import css from './RepositoryBranches.module.scss'
 
 export default function RepositoryBranches() {
-  const { repoMetadata, error, loading, commitRef, refetch } = useGetRepositoryMetadata()
+  const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
 
   return (
     <Container className={css.main}>
@@ -14,10 +14,7 @@ export default function RepositoryBranches() {
         {repoMetadata ? (
           <>
             <RepositoryBranchesHeader repoMetadata={repoMetadata} />
-            <RepositoryBranchesContent
-              repoMetadata={repoMetadata}
-              commitRef={commitRef || (repoMetadata.defaultBranch as string)}
-            />
+            <RepositoryBranchesContent repoMetadata={repoMetadata} />
           </>
         ) : null}
       </PageBody>

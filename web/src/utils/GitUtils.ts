@@ -27,7 +27,8 @@ export enum GitContentType {
 export enum GitBranchType {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
-  YOURS = 'yours'
+  YOURS = 'yours',
+  ALL = 'all'
 }
 
 export const GitIcon: Readonly<Record<string, IconName>> = {

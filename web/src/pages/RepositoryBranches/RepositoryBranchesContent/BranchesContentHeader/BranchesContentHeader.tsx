@@ -25,7 +25,8 @@ export function BranchesContentHeader({
     () => [
       { label: getString('activeBranches'), value: GitBranchType.ACTIVE },
       { label: getString('inactiveBranches'), value: GitBranchType.INACTIVE },
-      { label: getString('yourBranches'), value: GitBranchType.YOURS }
+      { label: getString('yourBranches'), value: GitBranchType.YOURS },
+      { label: getString('allBranches'), value: GitBranchType.ALL }
     ],
     [getString]
   )

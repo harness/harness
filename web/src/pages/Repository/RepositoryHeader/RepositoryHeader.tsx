@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, Layout, Text, Color, Icon } from '@harness/uicore'
+import { Container, Layout, Text, Color, Icon, FontVariation } from '@harness/uicore'
 import { Link } from 'react-router-dom'
 import { PopoverInteractionKind } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
@@ -49,6 +49,7 @@ export function RepositoryHeader({ repoMetadata }: RepositoryHeaderProps) {
               targetClassName: css.targetClassName,
               minimal: true
             }}
+            font={{ variation: FontVariation.H4 }}
             {...ButtonRoleProps}>
             {repoMetadata.name}
           </Text>

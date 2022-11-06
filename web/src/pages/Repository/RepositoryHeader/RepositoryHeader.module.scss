@@ -13,6 +13,10 @@
   font-size: 18px !important;
   line-height: 28px !important;
   cursor: pointer;
+
+  span[icon] {
+    padding-top: 2px;
+  }
 }
 
 .targetClassName {

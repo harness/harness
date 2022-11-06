@@ -1,0 +1,28 @@
+.container {
+  .label {
+    font-size: 12px !important;
+    color: var(--black) !important;
+  }
+
+  .layout {
+    height: 24px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid var(--grey-200);
+    background-color: var(--grey-50) !important;
+    border-radius: 4px;
+    padding-left: var(--spacing-small) !important;
+
+    .url {
+      font-size: 12px !important;
+    }
+
+    button#cloneCopyButton {
+      --button-height: 24px !important;
+      border-radius: 0 !important;
+      border-left: 1px solid var(--grey-200) !important;
+      margin-left: var(--spacing-small) !important;
+    }
+  }
+}

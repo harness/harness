@@ -44,9 +44,11 @@ branch: Branch
 activeBranches: Active Branches
 inactiveBranches: Inactive Branches
 yourBranches: Your Branches
+allBranches: All Branches
 createBranch: + Create Branch
 searchBranches: Search branches
 updated: Updated
+cloneHTTPS: Clone with HTTPS
 repos:
   name: Repo Name
   data: Repo Data

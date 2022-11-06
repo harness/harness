@@ -4,7 +4,6 @@ import {
   Layout,
   Button,
   FlexExpander,
-  // TextInput,
   ButtonVariation,
   Text,
   DropDown,
@@ -20,6 +19,7 @@ import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type { RepoBranch, TypesRepository } from 'services/scm'
 import { BRANCH_PER_PAGE } from 'utils/Utils'
+import { CloneButtonTooltip } from 'components/CloneButtonTooltip/CloneButtonTooltip'
 import { GitIcon } from 'utils/GitUtils'
 import css from './ContentHeader.module.scss'
 
@@ -123,22 +123,23 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
             </ReactJoin>
           </Layout.Horizontal>
         </Container>
-
-        {/* <TextInput
-          placeholder="Search folder or file"
-          autoFocus
-          onFocus={event => event.target.select()}
-          value={searchTerm}
-          onInput={event => {
-            setSearchTerm(event.currentTarget.value)
-          }}
-        /> */}
         <FlexExpander />
-        <Button disabled text={getString('clone')} variation={ButtonVariation.SECONDARY} icon="main-clone" />
-        <Button disabled text={getString('newFile')} variation={ButtonVariation.PRIMARY} />
+        <Button
+          text={getString('clone')}
+          variation={ButtonVariation.SECONDARY}
+          icon="main-clone"
+          iconProps={{ size: 10 }}
+          tooltip={
+            <CloneButtonTooltip httpsURL={'https://localhost:8181/kmpySmUISimoRrJL6NL73w/default/scm1/policy-mgmt'} />
+          }
+          tooltipProps={{
+            interactionKind: 'click',
+            minimal: true,
+            position: 'bottom-right'
+          }}
+        />
+        <Button text={getString('newFile')} variation={ButtonVariation.PRIMARY} />
       </Layout.Horizontal>
     </Container>
   )
 }
-
-// TODO: Optimize branch fetching when first fetch return less than request PER_PAGE

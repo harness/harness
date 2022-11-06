@@ -14,6 +14,7 @@ import {
   TextInput
 } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
+import Keywords from 'react-keywords'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
@@ -34,21 +35,21 @@ export default function RepositoriesListing() {
   const rowContainerRef = useRef<HTMLDivElement>(null)
   const [nameTextWidth, setNameTextWidth] = useState(600)
   const space = useGetSpaceParam()
-  const [query, setQuery] = useState<string | undefined>()
+  const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const { routes } = useAppContext()
   const [pageIndex, setPageIndex] = usePageIndex()
   const path = useMemo(
     () =>
       `/api/v1/spaces/${space}/+/repos?page=${pageIndex + 1}&per_page=${LIST_FETCHING_PER_PAGE}${
-        query ? `&query=${query}` : ''
+        searchTerm ? `&query=${searchTerm}` : ''
       }`,
-    [space, query, pageIndex]
+    [space, searchTerm, pageIndex]
   )
   const { data: repositories, error, loading, refetch, response } = useGet<TypesRepository[]>({ path })
   const { totalItems, totalPages, pageSize } = useGetPaginationInfo(response)
 
   useEffect(() => {
-    setQuery(undefined)
+    setSearchTerm(undefined)
     setPageIndex(0)
   }, [space, setPageIndex])
 
@@ -64,7 +65,7 @@ export default function RepositoriesListing() {
               <Layout.Horizontal spacing="small" style={{ flexGrow: 1 }}>
                 <Layout.Vertical flex className={css.name} ref={rowContainerRef}>
                   <Text className={css.repoName} width={nameTextWidth} lineClamp={2}>
-                    {record.name}
+                    <Keywords value={searchTerm}>{record.name}</Keywords>
                   </Text>
                   {record.description && (
                     <Text className={css.desc} width={nameTextWidth} lineClamp={1}>
@@ -93,7 +94,7 @@ export default function RepositoriesListing() {
         disableSortBy: true
       }
     ],
-    [nameTextWidth, getString]
+    [nameTextWidth, getString, searchTerm]
   )
   const onResize = useCallback((): void => {
     if (rowContainerRef.current) {
@@ -123,12 +124,12 @@ export default function RepositoriesListing() {
     <Container className={css.main}>
       <PageHeader title={getString('repositories')} />
       <PageBody
-        loading={loading && query === undefined}
+        loading={loading && searchTerm === undefined}
         className={cx({ [css.withError]: !!error })}
         error={error ? getErrorMessage(error) : null}
         retryOnError={() => refetch()}
         noData={{
-          when: () => repositories?.length === 0 && query === undefined,
+          when: () => repositories?.length === 0 && searchTerm === undefined,
           image: emptyStateImage,
           message: getString('repos.noDataMessage'),
           button: NewRepoButton
@@ -139,11 +140,11 @@ export default function RepositoriesListing() {
             <FlexExpander />
             <TextInput
               placeholder={getString('search')}
-              leftIcon={loading && query !== undefined ? 'steps-spinner' : 'search'}
+              leftIcon={loading && searchTerm !== undefined ? 'steps-spinner' : 'search'}
               style={{ width: 250 }}
               autoFocus
               onInput={event => {
-                setQuery(event.currentTarget.value || '')
+                setSearchTerm(event.currentTarget.value || '')
                 setPageIndex(0)
               }}
             />

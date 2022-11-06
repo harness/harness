@@ -15893,6 +15893,11 @@ react-join@^1.1.4:
   resolved "https://registry.yarnpkg.com/react-join/-/react-join-1.1.4.tgz#77c9c69b75ea596c1782a5e61426a104fda556a2"
   integrity sha512-u0WPv3VtIm1QjHnO+tSaRXb4gAsE+IRuhluyqgjz1+Vyv+A/eP4bKQHPj0Wnq5eQj7LxbHCWfJTa/tUhV/qoUQ==
 
+react-keywords@^0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/react-keywords/-/react-keywords-0.0.5.tgz#4ea20805c7aad22dfa09804ca5a40904ea7043bb"
+  integrity sha512-kpWZm0uWXQKPEJEZqk5sGYY7CnusIqwJcNybeD9cT5Nk1UZbTNroWZQLjVEf8TdM6YBn4CXQby696GxaT+f2IA==
+
 react-lifecycles-compat@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz#4f1a273afdfc8f3488a8c516bfda78f872352362"

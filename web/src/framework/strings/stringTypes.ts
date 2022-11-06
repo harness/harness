@@ -7,10 +7,12 @@ export interface StringsMap {
   addGitIgnore: string
   addLicense: string
   addReadMe: string
+  allBranches: string
   branch: string
   branches: string
   cancel: string
   clone: string
+  cloneHTTPS: string
   commits: string
   commitsOn: string
   content: string

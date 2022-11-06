@@ -46,7 +46,7 @@ export function RepositoryBranchesContent({ repoMetadata }: RepositoryBranchesCo
       />
       {!!branches?.length && (
         <>
-          <BranchesContent branches={branches} repoMetadata={repoMetadata} />
+          <BranchesContent branches={branches} repoMetadata={repoMetadata} searchTerm={searchTerm} />
           <Container margin={{ left: 'large', right: 'large' }}>
             <Pagination
               className={css.pagination}

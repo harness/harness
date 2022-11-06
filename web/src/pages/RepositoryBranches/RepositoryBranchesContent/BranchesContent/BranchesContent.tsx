@@ -2,6 +2,7 @@ import React, { useMemo } from 'react'
 import { Container, Color, TableV2 as Table, Text, Avatar, Tag } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { Link } from 'react-router-dom'
+import Keywords from 'react-keywords'
 import { orderBy } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -10,11 +11,12 @@ import { formatDate } from 'utils/Utils'
 import css from './BranchesContent.module.scss'
 
 interface BranchesContentProps {
+  searchTerm?: string
   repoMetadata: TypesRepository
   branches: RepoBranch[]
 }
 
-export function BranchesContent({ repoMetadata, branches }: BranchesContentProps) {
+export function BranchesContent({ repoMetadata, searchTerm = '', branches }: BranchesContentProps) {
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const columns: Column<RepoBranch>[] = useMemo(
@@ -31,7 +33,7 @@ export function BranchesContent({ repoMetadata, branches }: BranchesContentProps
                   gitRef: row.original?.name
                 })}
                 className={css.commitLink}>
-                {row.original?.name}
+                <Keywords value={searchTerm}>{row.original?.name}</Keywords>
               </Link>
               {row.original?.name === repoMetadata.defaultBranch && (
                 <>
@@ -69,7 +71,7 @@ export function BranchesContent({ repoMetadata, branches }: BranchesContentProps
         }
       }
     ],
-    [getString, repoMetadata.defaultBranch]
+    [getString, repoMetadata.defaultBranch, repoMetadata.path, routes, searchTerm]
   )
 
   return (
@@ -77,7 +79,7 @@ export function BranchesContent({ repoMetadata, branches }: BranchesContentProps
       <Table<RepoBranch>
         className={css.table}
         columns={columns}
-        data={orderBy(branches || [], ['commit.author.when'], ['desc'])}
+        data={orderBy(branches || [], [searchTerm ? '' : 'commit.author.when'], ['desc'])}
         getRowClassName={() => css.row}
       />
     </Container>
