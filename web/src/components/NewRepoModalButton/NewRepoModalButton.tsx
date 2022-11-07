@@ -33,7 +33,7 @@ import { useStrings } from 'framework/strings'
 import {
   DEFAULT_BRANCH_NAME,
   getErrorMessage,
-  REGEX_VALID_IDENTIFIER,
+  REGEX_VALID_REPO_NAME,
   SUGGESTED_BRANCH_NAMES,
   Unknown
 } from 'utils/Utils'
@@ -48,7 +48,7 @@ enum RepoVisibility {
 }
 
 interface RepoFormData {
-  identifier: string
+  name: string
   description: string
   license: string
   defaultBranch: string
@@ -58,7 +58,7 @@ interface RepoFormData {
 }
 
 const formInitialValues: RepoFormData = {
-  identifier: '',
+  name: '',
   description: '',
   license: '',
   defaultBranch: 'main',
@@ -122,7 +122,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
           gitIgnore: get(formData, 'gitignore', 'none'),
           isPublic: get(formData, 'isPublic') === RepoVisibility.PUBLIC,
           license: get(formData, 'license', 'none'),
-          uid: get(formData, 'identifier', '').trim(),
+          uid: get(formData, 'name', '').trim(),
           readme: get(formData, 'addReadme', false),
           parentId: standalone ? space : 0
         } as OpenapiCreateRepositoryRequest)
@@ -159,22 +159,22 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
               formName="editVariations"
               enableReinitialize={true}
               validationSchema={yup.object().shape({
-                identifier: yup
+                name: yup
                   .string()
                   .trim()
                   .required()
-                  .matches(REGEX_VALID_IDENTIFIER, getString('validation.identifierPatternIsNotValid'))
+                  .matches(REGEX_VALID_REPO_NAME, getString('validation.repoNamePatternIsNotValid'))
               })}
               validateOnChange
               validateOnBlur
               onSubmit={handleSubmit}>
               <FormikForm>
                 <FormInput.Text
-                  name="identifier"
-                  label={getString('identifier')}
-                  placeholder={getString('enterRepoIdentifier')}
+                  name="name"
+                  label={getString('name')}
+                  placeholder={getString('enterRepoName')}
                   tooltipProps={{
-                    dataTooltipId: 'repositoryIdentifierTextField'
+                    dataTooltipId: 'repositoryNameTextField'
                   }}
                   inputGroup={{ autoFocus: true }}
                 />

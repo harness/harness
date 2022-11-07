@@ -56,7 +56,7 @@ export default function RepositoriesListing() {
   const columns: Column<TypesRepository>[] = useMemo(
     () => [
       {
-        Header: getString('repos.identifier'),
+        Header: getString('repos.name'),
         width: 'calc(100% - 180px)',
         Cell: ({ row }: CellProps<TypesRepository>) => {
           const record = row.original

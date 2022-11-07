@@ -14,9 +14,9 @@ const (
 	minDisplayNameLength = 1
 	maxDisplayNameLength = 256
 
-	minUIDLength = 2
-	maxUIDLength = 64
-	uidRegex     = "^[a-zA-Z_][a-zA-Z0-9-_]*$"
+	minUIDLength = 1
+	maxUIDLength = 100
+	uidRegex     = "^[a-zA-Z_][a-zA-Z0-9-_.]*$"
 
 	minEmailLength = 1
 	maxEmailLength = 250
@@ -33,7 +33,7 @@ var (
 			minUIDLength, maxUIDLength),
 	}
 	ErrUIDRegex = &ValidationError{
-		"UID has to start with a letter (or _) and only contain the following characters [a-zA-Z0-9-_].",
+		"UID has to start with a letter (or _) and only contain the following characters [a-zA-Z0-9-_.].",
 	}
 
 	ErrEmailLen = &ValidationError{

@@ -12,7 +12,7 @@ export const X_TOTAL_PAGES = 'x-total-pages'
 export const X_PER_PAGE = 'x-per-page'
 export type Unknown = any // eslint-disable-line @typescript-eslint/no-explicit-any
 export const DEFAULT_BRANCH_NAME = 'main'
-export const REGEX_VALID_IDENTIFIER = /^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$/
+export const REGEX_VALID_REPO_NAME = /^[a-zA-Z_][0-9a-zA-Z-_.$]*$/
 export const SUGGESTED_BRANCH_NAMES = [DEFAULT_BRANCH_NAME, 'master']
 
 /** This utility shows a toaster without being bound to any component.
