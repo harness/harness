@@ -20,7 +20,7 @@ const (
 )
 
 func CreateUserSession(ctx context.Context, tokenStore store.TokenStore,
-	user *types.User, name string) (*types.Token, string, error) {
+	user *types.User, uid string) (*types.Token, string, error) {
 	principal := types.PrincipalFromUser(user)
 	return Create(
 		ctx,
@@ -28,7 +28,7 @@ func CreateUserSession(ctx context.Context, tokenStore store.TokenStore,
 		enum.TokenTypeSession,
 		principal,
 		principal,
-		name,
+		uid,
 		userTokenLifeTime,
 		enum.AccessGrantAll,
 	)
@@ -36,14 +36,14 @@ func CreateUserSession(ctx context.Context, tokenStore store.TokenStore,
 
 func CreatePAT(ctx context.Context, tokenStore store.TokenStore,
 	createdBy *types.Principal, createdFor *types.User,
-	name string, lifetime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
+	uid string, lifetime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
 	return Create(
 		ctx,
 		tokenStore,
 		enum.TokenTypePAT,
 		createdBy,
 		types.PrincipalFromUser(createdFor),
-		name,
+		uid,
 		lifetime,
 		grants,
 	)
@@ -51,14 +51,14 @@ func CreatePAT(ctx context.Context, tokenStore store.TokenStore,
 
 func CreateSAT(ctx context.Context, tokenStore store.TokenStore,
 	createdBy *types.Principal, createdFor *types.ServiceAccount,
-	name string, lifetime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
+	uid string, lifetime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
 	return Create(
 		ctx,
 		tokenStore,
 		enum.TokenTypeSAT,
 		createdBy,
 		types.PrincipalFromServiceAccount(createdFor),
-		name,
+		uid,
 		lifetime,
 		grants,
 	)
@@ -81,14 +81,14 @@ func CreateOAuth(ctx context.Context, tokenStore store.TokenStore,
 
 func Create(ctx context.Context, tokenStore store.TokenStore,
 	tokenType enum.TokenType, createdBy *types.Principal, createdFor *types.Principal,
-	name string, lifetime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
+	uid string, lifetime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
 	issuedAt := time.Now()
 	expiresAt := issuedAt.Add(lifetime)
 
 	// create db entry first so we get the id.
 	token := types.Token{
 		Type:        tokenType,
-		Name:        name,
+		UID:         uid,
 		PrincipalID: createdFor.ID,
 		IssuedAt:    issuedAt.UnixMilli(),
 		ExpiresAt:   expiresAt.UnixMilli(),

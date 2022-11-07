@@ -7,23 +7,27 @@ package serviceaccount
 import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types/check"
 )
 
 type Controller struct {
-	authorizer authz.Authorizer
-	saStore    store.ServiceAccountStore
-	spaceStore store.SpaceStore
-	repoStore  store.RepoStore
-	tokenStore store.TokenStore
+	serviceAccountCheck check.ServiceAccount
+	authorizer          authz.Authorizer
+	saStore             store.ServiceAccountStore
+	spaceStore          store.SpaceStore
+	repoStore           store.RepoStore
+	tokenStore          store.TokenStore
 }
 
-func NewController(authorizer authz.Authorizer, saStore store.ServiceAccountStore,
-	spaceStore store.SpaceStore, repoStore store.RepoStore, tokenStore store.TokenStore) *Controller {
+func NewController(serviceAccountCheck check.ServiceAccount, authorizer authz.Authorizer,
+	saStore store.ServiceAccountStore, spaceStore store.SpaceStore, repoStore store.RepoStore,
+	tokenStore store.TokenStore) *Controller {
 	return &Controller{
-		authorizer: authorizer,
-		saStore:    saStore,
-		spaceStore: spaceStore,
-		repoStore:  repoStore,
-		tokenStore: tokenStore,
+		serviceAccountCheck: serviceAccountCheck,
+		authorizer:          authorizer,
+		saStore:             saStore,
+		spaceStore:          spaceStore,
+		repoStore:           repoStore,
+		tokenStore:          tokenStore,
 	}
 }

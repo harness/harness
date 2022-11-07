@@ -39,7 +39,7 @@ func TestUser(t *testing.T) {
 		return
 	}
 
-	userStoreSync := NewUserStoreSync(NewUserStore(db))
+	userStoreSync := NewUserStoreSync(NewUserStore(db, store.ToLowerPrincipalUIDTransformation))
 	t.Run("create", testUserCreate(userStoreSync))
 	t.Run("duplicate", testUserDuplicate(userStoreSync))
 	t.Run("count", testUserCount(userStoreSync))

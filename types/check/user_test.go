@@ -13,16 +13,20 @@ import (
 
 func TestUser(t *testing.T) {
 	tests := []struct {
-		email string
-		error error
+		uid         string
+		email       string
+		displayName string
+		error       error
 	}{
 		{
-			email: "jane@gmail.com",
+			uid:         "jane",
+			email:       "jane@gmail.com",
+			displayName: "Jane Smith",
 		},
 	}
 	for _, test := range tests {
-		user := &types.User{Email: test.email}
-		err := User(user)
+		user := &types.User{UID: test.uid, Email: test.email, DisplayName: test.displayName}
+		err := UserDefault(user)
 		if got, want := err, test.error; !errors.Is(got, want) {
 			t.Errorf("Want user %s error %v, got %v", test.email, want, got)
 		}

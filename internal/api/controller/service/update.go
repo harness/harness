@@ -12,13 +12,13 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
 // UpdateInput store infos to update an existing service.
 type UpdateInput struct {
-	Name *string `json:"name"`
+	Email       *string `json:"email"`
+	DisplayName *string `json:"displayName"`
 }
 
 /*
@@ -36,13 +36,16 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	if in.Name != nil {
-		svc.Name = ptr.ToString(in.Name)
+	if in.Email != nil {
+		svc.DisplayName = ptr.ToString(in.Email)
+	}
+	if in.DisplayName != nil {
+		svc.DisplayName = ptr.ToString(in.DisplayName)
 	}
 	svc.Updated = time.Now().UnixMilli()
 
 	// validate service
-	if err = check.Service(svc); err != nil {
+	if err = c.serviceCheck(svc); err != nil {
 		return nil, err
 	}
 

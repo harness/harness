@@ -7,7 +7,6 @@ package request
 import (
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 const (
@@ -21,6 +20,5 @@ func GetSpaceRefFromPath(r *http.Request) (string, error) {
 	}
 
 	// paths are unescaped and lower
-	ref, err := url.PathUnescape(rawRef)
-	return strings.ToLower(ref), err
+	return url.PathUnescape(rawRef)
 }

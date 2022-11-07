@@ -65,21 +65,21 @@ func (c *HTTPClient) Login(ctx context.Context, username, password string) (*typ
 	form.Add("password", password)
 	out := new(types.TokenResponse)
 	uri := fmt.Sprintf("%s/api/v1/login", c.base)
-	err := c.post(ctx, uri, form, out)
+	err := c.post(ctx, uri, true, form, out)
 	return out, err
 }
 
 // Register registers a new  user and returns a JWT token.
 func (c *HTTPClient) Register(ctx context.Context,
-	username, name, email, password string) (*types.TokenResponse, error) {
+	username, displayName, email, password string) (*types.TokenResponse, error) {
 	form := &url.Values{}
 	form.Add("username", username)
-	form.Add("name", name)
+	form.Add("displayname", displayName)
 	form.Add("email", email)
 	form.Add("password", password)
 	out := new(types.TokenResponse)
 	uri := fmt.Sprintf("%s/api/v1/register", c.base)
-	err := c.post(ctx, uri, form, out)
+	err := c.post(ctx, uri, true, form, out)
 	return out, err
 }
 
@@ -99,7 +99,7 @@ func (c *HTTPClient) Self(ctx context.Context) (*types.User, error) {
 func (c *HTTPClient) UserCreatePAT(ctx context.Context, in user.CreateTokenInput) (*types.TokenResponse, error) {
 	out := new(types.TokenResponse)
 	uri := fmt.Sprintf("%s/api/v1/user/tokens", c.base)
-	err := c.post(ctx, uri, in, out)
+	err := c.post(ctx, uri, false, in, out)
 	return out, err
 }
 
@@ -123,7 +123,7 @@ func (c *HTTPClient) UserList(ctx context.Context, params types.Params) ([]types
 func (c *HTTPClient) UserCreate(ctx context.Context, user *types.User) (*types.User, error) {
 	out := new(types.User)
 	uri := fmt.Sprintf("%s/api/v1/users", c.base)
-	err := c.post(ctx, uri, user, out)
+	err := c.post(ctx, uri, false, user, out)
 	return out, err
 }
 
@@ -148,29 +148,29 @@ func (c *HTTPClient) UserDelete(ctx context.Context, key string) error {
 
 // helper function for making an http GET request.
 func (c *HTTPClient) get(ctx context.Context, rawurl string, out interface{}) error {
-	return c.do(ctx, rawurl, "GET", nil, out)
+	return c.do(ctx, rawurl, "GET", false, nil, out)
 }
 
 // helper function for making an http POST request.
-func (c *HTTPClient) post(ctx context.Context, rawurl string, in, out interface{}) error {
-	return c.do(ctx, rawurl, "POST", in, out)
+func (c *HTTPClient) post(ctx context.Context, rawurl string, noToken bool, in, out interface{}) error {
+	return c.do(ctx, rawurl, "POST", noToken, in, out)
 }
 
 // helper function for making an http PATCH request.
 func (c *HTTPClient) patch(ctx context.Context, rawurl string, in, out interface{}) error {
-	return c.do(ctx, rawurl, "PATCH", in, out)
+	return c.do(ctx, rawurl, "PATCH", false, in, out)
 }
 
 // helper function for making an http DELETE request.
 func (c *HTTPClient) delete(ctx context.Context, rawurl string) error {
-	return c.do(ctx, rawurl, "DELETE", nil, nil)
+	return c.do(ctx, rawurl, "DELETE", false, nil, nil)
 }
 
 // helper function to make an http request.
-func (c *HTTPClient) do(ctx context.Context, rawurl, method string, in, out interface{}) error {
+func (c *HTTPClient) do(ctx context.Context, rawurl, method string, noToken bool, in, out interface{}) error {
 	// executes the http request and returns the body as
 	// and io.ReadCloser
-	body, err := c.stream(ctx, rawurl, method, in, out)
+	body, err := c.stream(ctx, rawurl, method, noToken, in, out)
 	if body != nil {
 		defer func(body io.ReadCloser) {
 			_ = body.Close()
@@ -189,7 +189,8 @@ func (c *HTTPClient) do(ctx context.Context, rawurl, method string, in, out inte
 }
 
 // helper function to stream a http request.
-func (c *HTTPClient) stream(ctx context.Context, rawurl, method string, in, _ interface{}) (io.ReadCloser, error) {
+func (c *HTTPClient) stream(ctx context.Context, rawurl, method string, noToken bool,
+	in, _ interface{}) (io.ReadCloser, error) {
 	uri, err := url.Parse(rawurl)
 	if err != nil {
 		return nil, err
@@ -218,7 +219,7 @@ func (c *HTTPClient) stream(ctx context.Context, rawurl, method string, in, _ in
 	if in != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	if c.token != "" {
+	if !noToken && c.token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.token)
 	}
 	if _, ok := in.(*url.Values); ok {

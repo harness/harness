@@ -52,18 +52,16 @@ export interface OpenapiCreateRepositoryRequest {
   gitIgnore?: string
   isPublic?: boolean
   license?: string
-  name?: string
-  pathName?: string
+  parentID?: number
   readme?: boolean
-  spaceId?: number
+  uid?: string
 }
 
 export interface OpenapiCreateSpaceRequest {
   description?: string
   isPublic?: boolean
-  name?: string
   parentId?: number
-  pathName?: string
+  uid?: string
 }
 
 export interface OpenapiCurrentUserResponse {
@@ -86,43 +84,35 @@ export interface OpenapiGetContentOutput {
 
 export interface OpenapiMoveRepoRequest {
   keepAsAlias?: boolean
-  pathName?: string | null
+  parentId?: number | null
   ref?: string
-  spaceId?: number | null
+  uid?: string | null
 }
 
 export interface OpenapiMoveSpaceRequest {
   keepAsAlias?: boolean
   parentId?: number | null
-  pathName?: string | null
   ref?: string
+  uid?: string | null
 }
 
 export interface OpenapiUpdateRepoRequest {
   description?: string | null
   isPublic?: boolean | null
-  name?: string | null
   ref?: string
 }
 
 export interface OpenapiUpdateSpaceRequest {
   description?: string | null
   isPublic?: boolean | null
-  name?: string | null
   ref?: string
-}
-
-export interface OpenapiUserUpdateRequest {
-  admin?: boolean | null
-  email?: string | null
-  name?: string | null
-  password?: string | null
 }
 
 export interface RepoBranch {
   commit?: RepoCommit
   sha?: string
   name?: string
+  sha?: string
 }
 
 export interface RepoCommit {
@@ -130,6 +120,16 @@ export interface RepoCommit {
   committer?: RepoSignature
   message?: string
   sha?: string
+  title?: string
+}
+
+export interface RepoCommitTag {
+  commit?: RepoCommit
+  isAnnotated?: boolean
+  message?: string
+  name?: string
+  sha?: string
+  tagger?: RepoSignature
   title?: string
 }
 
@@ -193,21 +193,21 @@ export interface TypesRepository {
   forkId?: number
   id?: number
   isPublic?: boolean
-  name?: string
   numClosedPulls?: number
   numForks?: number
   numOpenPulls?: number
   numPulls?: number
+  parentId?: number
   path?: string
-  pathName?: string
-  spaceId?: number
+  uid?: string
   updated?: number
 }
 
 export interface TypesServiceAccount {
   blocked?: boolean
   created?: number
-  name?: string
+  displayName?: string
+  email?: string
   parentId?: number
   parentType?: EnumParentResourceType
   uid?: string
@@ -220,10 +220,9 @@ export interface TypesSpace {
   description?: string
   id?: number
   isPublic?: boolean
-  name?: string
   parentId?: number
   path?: string
-  pathName?: string
+  uid?: string
   updated?: number
 }
 
@@ -231,11 +230,10 @@ export interface TypesToken {
   createdBy?: number
   expiresAt?: number
   grants?: EnumAccessGrant
-  id?: number
   issuedAt?: number
-  name?: string
   principalId?: number
   type?: EnumTokenType
+  uid?: string
 }
 
 export interface TypesTokenResponse {
@@ -247,8 +245,8 @@ export interface TypesUser {
   admin?: boolean
   blocked?: boolean
   created?: number
+  displayName?: string
   email?: string
-  name?: string
   uid?: string
   updated?: number
 }
@@ -257,6 +255,12 @@ export interface TypesUserInput {
   admin?: boolean | null
   email?: string | null
   name?: string | null
+  password?: string | null
+}
+
+export interface UserUpdateInput {
+  displayName?: string | null
+  email?: string | null
   password?: string | null
 }
 
@@ -439,13 +443,21 @@ export const useUpdateRepository = ({ repoRef, ...props }: UseUpdateRepositoryPr
 
 export interface ListBranchesQueryParams {
   /**
-   * The git reference (branch / tag / commitID) that will be used to retrieve the data. If no value is provided the default branch of the repository is used.
-   */
-  git_ref?: string
-  /**
    * Indicates whether optional commit information should be included in the response.
    */
   include_commit?: boolean
+  /**
+   * The substring by which the branches are filtered.
+   */
+  query?: string
+  /**
+   * The order of the output.
+   */
+  direction?: 'asc' | 'desc'
+  /**
+   * The data by which the branches are sorted.
+   */
+  sort?: 'name' | 'date'
   /**
    * The page to return.
    */
@@ -605,18 +617,29 @@ export const useMoveRepository = ({ repoRef, ...props }: UseMoveRepositoryProps)
     { base: getConfigNew('scm'), pathParams: { repoRef }, ...props }
   )
 
+export interface ListRepositoryPathsQueryParams {
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The number of entries returned per page.
+   */
+  per_page?: number
+}
+
 export interface ListRepositoryPathsPathParams {
   repoRef: string
 }
 
 export type ListRepositoryPathsProps = Omit<
-  GetProps<TypesPath[], UsererrorError, void, ListRepositoryPathsPathParams>,
+  GetProps<TypesPath[], UsererrorError, ListRepositoryPathsQueryParams, ListRepositoryPathsPathParams>,
   'path'
 > &
   ListRepositoryPathsPathParams
 
 export const ListRepositoryPaths = ({ repoRef, ...props }: ListRepositoryPathsProps) => (
-  <Get<TypesPath[], UsererrorError, void, ListRepositoryPathsPathParams>
+  <Get<TypesPath[], UsererrorError, ListRepositoryPathsQueryParams, ListRepositoryPathsPathParams>
     path={`/repos/${repoRef}/paths`}
     base={getConfigNew('scm')}
     {...props}
@@ -624,13 +647,13 @@ export const ListRepositoryPaths = ({ repoRef, ...props }: ListRepositoryPathsPr
 )
 
 export type UseListRepositoryPathsProps = Omit<
-  UseGetProps<TypesPath[], UsererrorError, void, ListRepositoryPathsPathParams>,
+  UseGetProps<TypesPath[], UsererrorError, ListRepositoryPathsQueryParams, ListRepositoryPathsPathParams>,
   'path'
 > &
   ListRepositoryPathsPathParams
 
 export const useListRepositoryPaths = ({ repoRef, ...props }: UseListRepositoryPathsProps) =>
-  useGet<TypesPath[], UsererrorError, void, ListRepositoryPathsPathParams>(
+  useGet<TypesPath[], UsererrorError, ListRepositoryPathsQueryParams, ListRepositoryPathsPathParams>(
     (paramsInPath: ListRepositoryPathsPathParams) => `/repos/${paramsInPath.repoRef}/paths`,
     { base: getConfigNew('scm'), pathParams: { repoRef }, ...props }
   )
@@ -726,6 +749,63 @@ export type UseListRepositoryServiceAccountsProps = Omit<
 export const useListRepositoryServiceAccounts = ({ repoRef, ...props }: UseListRepositoryServiceAccountsProps) =>
   useGet<TypesServiceAccount[], UsererrorError, void, ListRepositoryServiceAccountsPathParams>(
     (paramsInPath: ListRepositoryServiceAccountsPathParams) => `/repos/${paramsInPath.repoRef}/serviceAccounts`,
+    { base: getConfigNew('scm'), pathParams: { repoRef }, ...props }
+  )
+
+export interface ListTagsQueryParams {
+  /**
+   * Indicates whether optional commit information should be included in the response.
+   */
+  include_commit?: boolean
+  /**
+   * The substring by which the tags are filtered.
+   */
+  query?: string
+  /**
+   * The order of the output.
+   */
+  direction?: 'asc' | 'desc'
+  /**
+   * The data by which the tags are sorted.
+   */
+  sort?: 'name' | 'date'
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The number of entries returned per page.
+   */
+  per_page?: number
+}
+
+export interface ListTagsPathParams {
+  repoRef: string
+}
+
+export type ListTagsProps = Omit<
+  GetProps<RepoCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>,
+  'path'
+> &
+  ListTagsPathParams
+
+export const ListTags = ({ repoRef, ...props }: ListTagsProps) => (
+  <Get<RepoCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>
+    path={`/repos/${repoRef}/tags`}
+    base={getConfigNew('scm')}
+    {...props}
+  />
+)
+
+export type UseListTagsProps = Omit<
+  UseGetProps<RepoCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>,
+  'path'
+> &
+  ListTagsPathParams
+
+export const useListTags = ({ repoRef, ...props }: UseListTagsProps) =>
+  useGet<RepoCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>(
+    (paramsInPath: ListTagsPathParams) => `/repos/${paramsInPath.repoRef}/tags`,
     { base: getConfigNew('scm'), pathParams: { repoRef }, ...props }
   )
 
@@ -893,26 +973,43 @@ export const useMoveSpace = ({ spaceRef, ...props }: UseMoveSpaceProps) =>
     { base: getConfigNew('scm'), pathParams: { spaceRef }, ...props }
   )
 
+export interface ListPathsQueryParams {
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The number of entries returned per page.
+   */
+  per_page?: number
+}
+
 export interface ListPathsPathParams {
   spaceRef: string
 }
 
-export type ListPathsProps = Omit<GetProps<TypesPath[], UsererrorError, void, ListPathsPathParams>, 'path'> &
+export type ListPathsProps = Omit<
+  GetProps<TypesPath[], UsererrorError, ListPathsQueryParams, ListPathsPathParams>,
+  'path'
+> &
   ListPathsPathParams
 
 export const ListPaths = ({ spaceRef, ...props }: ListPathsProps) => (
-  <Get<TypesPath[], UsererrorError, void, ListPathsPathParams>
+  <Get<TypesPath[], UsererrorError, ListPathsQueryParams, ListPathsPathParams>
     path={`/spaces/${spaceRef}/paths`}
     base={getConfigNew('scm')}
     {...props}
   />
 )
 
-export type UseListPathsProps = Omit<UseGetProps<TypesPath[], UsererrorError, void, ListPathsPathParams>, 'path'> &
+export type UseListPathsProps = Omit<
+  UseGetProps<TypesPath[], UsererrorError, ListPathsQueryParams, ListPathsPathParams>,
+  'path'
+> &
   ListPathsPathParams
 
 export const useListPaths = ({ spaceRef, ...props }: UseListPathsProps) =>
-  useGet<TypesPath[], UsererrorError, void, ListPathsPathParams>(
+  useGet<TypesPath[], UsererrorError, ListPathsQueryParams, ListPathsPathParams>(
     (paramsInPath: ListPathsPathParams) => `/spaces/${paramsInPath.spaceRef}/paths`,
     { base: getConfigNew('scm'), pathParams: { spaceRef }, ...props }
   )
@@ -982,6 +1079,18 @@ export const useDeletePath = ({ spaceRef, ...props }: UseDeletePathProps) =>
   )
 
 export interface ListReposQueryParams {
+  /**
+   * The substring which is used to filter the repositories by their path name.
+   */
+  query?: string
+  /**
+   * The data by which the repositories are sorted.
+   */
+  sort?: 'uid' | 'path' | 'created' | 'updated'
+  /**
+   * The order of the output.
+   */
+  direction?: 'asc' | 'desc'
   /**
    * The page to return.
    */
@@ -1054,6 +1163,18 @@ export const useListServiceAccounts = ({ spaceRef, ...props }: UseListServiceAcc
 
 export interface ListSpacesQueryParams {
   /**
+   * The substring which is used to filter the spaces by their path name.
+   */
+  query?: string
+  /**
+   * The data by which the spaces are sorted.
+   */
+  sort?: 'uid' | 'path' | 'created' | 'updated'
+  /**
+   * The order of the output.
+   */
+  direction?: 'asc' | 'desc'
+  /**
    * The page to return.
    */
   page?: number
@@ -1104,10 +1225,10 @@ export type UseGetUserProps = Omit<UseGetProps<TypesUser, UsererrorError, void, 
 export const useGetUser = (props: UseGetUserProps) =>
   useGet<TypesUser, UsererrorError, void, void>(`/user`, { base: getConfigNew('scm'), ...props })
 
-export type UpdateUserProps = Omit<MutateProps<TypesUser, UsererrorError, void, TypesUserInput, void>, 'path' | 'verb'>
+export type UpdateUserProps = Omit<MutateProps<TypesUser, UsererrorError, void, UserUpdateInput, void>, 'path' | 'verb'>
 
 export const UpdateUser = (props: UpdateUserProps) => (
-  <Mutate<TypesUser, UsererrorError, void, TypesUserInput, void>
+  <Mutate<TypesUser, UsererrorError, void, UserUpdateInput, void>
     verb="PATCH"
     path={`/user`}
     base={getConfigNew('scm')}
@@ -1116,12 +1237,12 @@ export const UpdateUser = (props: UpdateUserProps) => (
 )
 
 export type UseUpdateUserProps = Omit<
-  UseMutateProps<TypesUser, UsererrorError, void, TypesUserInput, void>,
+  UseMutateProps<TypesUser, UsererrorError, void, UserUpdateInput, void>,
   'path' | 'verb'
 >
 
 export const useUpdateUser = (props: UseUpdateUserProps) =>
-  useMutate<TypesUser, UsererrorError, void, TypesUserInput, void>('PATCH', `/user`, {
+  useMutate<TypesUser, UsererrorError, void, UserUpdateInput, void>('PATCH', `/user`, {
     base: getConfigNew('scm'),
     ...props
   })
@@ -1228,37 +1349,5 @@ export type UseGetUserEmailProps = Omit<UseGetProps<TypesUser, UsererrorError, v
 export const useGetUserEmail = ({ email, ...props }: UseGetUserEmailProps) =>
   useGet<TypesUser, UsererrorError, void, GetUserEmailPathParams>(
     (paramsInPath: GetUserEmailPathParams) => `/users/${paramsInPath.email}`,
-    { base: getConfigNew('scm'), pathParams: { email }, ...props }
-  )
-
-export interface UpdateUsersPathParams {
-  email: string
-}
-
-export type UpdateUsersProps = Omit<
-  MutateProps<TypesUser, UsererrorError, void, OpenapiUserUpdateRequest, UpdateUsersPathParams>,
-  'path' | 'verb'
-> &
-  UpdateUsersPathParams
-
-export const UpdateUsers = ({ email, ...props }: UpdateUsersProps) => (
-  <Mutate<TypesUser, UsererrorError, void, OpenapiUserUpdateRequest, UpdateUsersPathParams>
-    verb="PATCH"
-    path={`/users/${email}`}
-    base={getConfigNew('scm')}
-    {...props}
-  />
-)
-
-export type UseUpdateUsersProps = Omit<
-  UseMutateProps<TypesUser, UsererrorError, void, OpenapiUserUpdateRequest, UpdateUsersPathParams>,
-  'path' | 'verb'
-> &
-  UpdateUsersPathParams
-
-export const useUpdateUsers = ({ email, ...props }: UseUpdateUsersProps) =>
-  useMutate<TypesUser, UsererrorError, void, OpenapiUserUpdateRequest, UpdateUsersPathParams>(
-    'PATCH',
-    (paramsInPath: UpdateUsersPathParams) => `/users/${paramsInPath.email}`,
     { base: getConfigNew('scm'), pathParams: { email }, ...props }
   )

@@ -273,15 +273,6 @@ paths:
     get:
       operationId: listBranches
       parameters:
-      - description: The git reference (branch / tag / commitID) that will be used
-          to retrieve the data. If no value is provided the default branch of the
-          repository is used.
-        in: query
-        name: git_ref
-        required: false
-        schema:
-          default: '{Repository Default Branch}'
-          type: string
       - description: Indicates whether optional commit information should be included
           in the response.
         in: query
@@ -290,6 +281,32 @@ paths:
         schema:
           default: false
           type: boolean
+      - description: The substring by which the branches are filtered.
+        in: query
+        name: query
+        required: false
+        schema:
+          type: string
+      - description: The order of the output.
+        in: query
+        name: direction
+        required: false
+        schema:
+          default: asc
+          enum:
+          - asc
+          - desc
+          type: string
+      - description: The data by which the branches are sorted.
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: name
+          enum:
+          - name
+          - date
+          type: string
       - description: The page to return.
         in: query
         name: page
@@ -532,6 +549,23 @@ paths:
     get:
       operationId: listRepositoryPaths
       parameters:
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The number of entries returned per page.
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 50
+          maximum: 100
+          minimum: 1
+          type: integer
       - in: path
         name: repoRef
         required: true
@@ -677,6 +711,101 @@ paths:
               schema:
                 items:
                   $ref: '#/components/schemas/TypesServiceAccount'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - repository
+  /repos/{repoRef}/tags:
+    get:
+      operationId: listTags
+      parameters:
+      - description: Indicates whether optional commit information should be included
+          in the response.
+        in: query
+        name: include_commit
+        required: false
+        schema:
+          default: false
+          type: boolean
+      - description: The substring by which the tags are filtered.
+        in: query
+        name: query
+        required: false
+        schema:
+          type: string
+      - description: The order of the output.
+        in: query
+        name: direction
+        required: false
+        schema:
+          default: asc
+          enum:
+          - asc
+          - desc
+          type: string
+      - description: The data by which the tags are sorted.
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: name
+          enum:
+          - name
+          - date
+          type: string
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The number of entries returned per page.
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 50
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/RepoCommitTag'
                 type: array
           description: OK
         "401":
@@ -997,6 +1126,23 @@ paths:
     get:
       operationId: listPaths
       parameters:
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The number of entries returned per page.
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 50
+          maximum: 100
+          minimum: 1
+          type: integer
       - in: path
         name: spaceRef
         required: true
@@ -1130,6 +1276,35 @@ paths:
     get:
       operationId: listRepos
       parameters:
+      - description: The substring which is used to filter the repositories by their
+          path name.
+        in: query
+        name: query
+        required: false
+        schema:
+          type: string
+      - description: The data by which the repositories are sorted.
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: uid
+          enum:
+          - uid
+          - path
+          - created
+          - updated
+          type: string
+      - description: The order of the output.
+        in: query
+        name: direction
+        required: false
+        schema:
+          default: asc
+          enum:
+          - asc
+          - desc
+          type: string
       - description: The page to return.
         in: query
         name: page
@@ -1235,6 +1410,35 @@ paths:
     get:
       operationId: listSpaces
       parameters:
+      - description: The substring which is used to filter the spaces by their path
+          name.
+        in: query
+        name: query
+        required: false
+        schema:
+          type: string
+      - description: The data by which the spaces are sorted.
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: uid
+          enum:
+          - uid
+          - path
+          - created
+          - updated
+          type: string
+      - description: The order of the output.
+        in: query
+        name: direction
+        required: false
+        schema:
+          default: asc
+          enum:
+          - asc
+          - desc
+          type: string
       - description: The page to return.
         in: query
         name: page
@@ -1316,7 +1520,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TypesUserInput'
+              $ref: '#/components/schemas/UserUpdateInput'
       responses:
         "200":
           content:
@@ -1509,46 +1713,6 @@ paths:
           description: Internal Server Error
       tags:
       - users
-    patch:
-      operationId: updateUsers
-      parameters:
-      - in: path
-        name: email
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpenapiUserUpdateRequest'
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TypesUser'
-          description: OK
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Bad Request
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-      - users
 components:
   schemas:
     EnumAccessGrant:
@@ -1628,14 +1792,12 @@ components:
           type: boolean
         license:
           type: string
-        name:
-          type: string
-        pathName:
-          type: string
+        parentID:
+          type: integer
         readme:
           type: boolean
-        spaceId:
-          type: integer
+        uid:
+          type: string
       type: object
     OpenapiCreateSpaceRequest:
       properties:
@@ -1643,11 +1805,9 @@ components:
           type: string
         isPublic:
           type: boolean
-        name:
-          type: string
         parentId:
           type: integer
-        pathName:
+        uid:
           type: string
       type: object
     OpenapiCurrentUserResponse:
@@ -1688,14 +1848,14 @@ components:
       properties:
         keepAsAlias:
           type: boolean
-        pathName:
-          nullable: true
-          type: string
-        ref:
-          type: string
-        spaceId:
+        parentId:
           nullable: true
           type: integer
+        ref:
+          type: string
+        uid:
+          nullable: true
+          type: string
       type: object
     OpenapiMoveSpaceRequest:
       properties:
@@ -1704,10 +1864,10 @@ components:
         parentId:
           nullable: true
           type: integer
-        pathName:
-          nullable: true
-          type: string
         ref:
+          type: string
+        uid:
+          nullable: true
           type: string
       type: object
     OpenapiUpdateRepoRequest:
@@ -1718,9 +1878,6 @@ components:
         isPublic:
           nullable: true
           type: boolean
-        name:
-          nullable: true
-          type: string
         ref:
           type: string
       type: object
@@ -1732,25 +1889,7 @@ components:
         isPublic:
           nullable: true
           type: boolean
-        name:
-          nullable: true
-          type: string
         ref:
-          type: string
-      type: object
-    OpenapiUserUpdateRequest:
-      properties:
-        admin:
-          nullable: true
-          type: boolean
-        email:
-          nullable: true
-          type: string
-        name:
-          nullable: true
-          type: string
-        password:
-          nullable: true
           type: string
       type: object
     RepoBranch:
@@ -1758,6 +1897,8 @@ components:
         commit:
           $ref: '#/components/schemas/RepoCommit'
         name:
+          type: string
+        sha:
           type: string
       type: object
     RepoCommit:
@@ -1770,6 +1911,23 @@ components:
           type: string
         sha:
           type: string
+        title:
+          type: string
+      type: object
+    RepoCommitTag:
+      properties:
+        commit:
+          $ref: '#/components/schemas/RepoCommit'
+        isAnnotated:
+          type: boolean
+        message:
+          type: string
+        name:
+          type: string
+        sha:
+          type: string
+        tagger:
+          $ref: '#/components/schemas/RepoSignature'
         title:
           type: string
       type: object
@@ -1864,8 +2022,6 @@ components:
           type: integer
         isPublic:
           type: boolean
-        name:
-          type: string
         numClosedPulls:
           type: integer
         numForks:
@@ -1874,12 +2030,12 @@ components:
           type: integer
         numPulls:
           type: integer
+        parentId:
+          type: integer
         path:
           type: string
-        pathName:
+        uid:
           type: string
-        spaceId:
-          type: integer
         updated:
           type: integer
       type: object
@@ -1889,7 +2045,9 @@ components:
           type: boolean
         created:
           type: integer
-        name:
+        displayName:
+          type: string
+        email:
           type: string
         parentId:
           type: integer
@@ -1912,13 +2070,11 @@ components:
           type: integer
         isPublic:
           type: boolean
-        name:
-          type: string
         parentId:
           type: integer
         path:
           type: string
-        pathName:
+        uid:
           type: string
         updated:
           type: integer
@@ -1931,16 +2087,14 @@ components:
           type: integer
         grants:
           $ref: '#/components/schemas/EnumAccessGrant'
-        id:
-          type: integer
         issuedAt:
           type: integer
-        name:
-          type: string
         principalId:
           type: integer
         type:
           $ref: '#/components/schemas/EnumTokenType'
+        uid:
+          type: string
       type: object
     TypesTokenResponse:
       properties:
@@ -1957,9 +2111,9 @@ components:
           type: boolean
         created:
           type: integer
-        email:
+        displayName:
           type: string
-        name:
+        email:
           type: string
         uid:
           type: string
@@ -1975,6 +2129,18 @@ components:
           nullable: true
           type: string
         name:
+          nullable: true
+          type: string
+        password:
+          nullable: true
+          type: string
+      type: object
+    UserUpdateInput:
+      properties:
+        displayName:
+          nullable: true
+          type: string
+        email:
           nullable: true
           type: string
         password:

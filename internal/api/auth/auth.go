@@ -93,7 +93,7 @@ func getScopeForParent(ctx context.Context, spaceStore store.SpaceStore, repoSto
 			return nil, fmt.Errorf("parent repo not found: %w", err)
 		}
 
-		spacePath, repoName, err := paths.Disect(repo.Path)
+		spacePath, repoName, err := paths.DisectLeaf(repo.Path)
 		if err != nil {
 			return nil, errors.Wrapf(err, "Failed to disect path '%s'", repo.Path)
 		}

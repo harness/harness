@@ -12,14 +12,14 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
 // CreateInput is the input used for create operations.
 type CreateInput struct {
-	UID  string
-	Name string
+	UID         string `json:"uid"`
+	Email       string `json:"email"`
+	DisplayName string `json:"displayName"`
 }
 
 /*
@@ -46,16 +46,17 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
  */
 func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bool) (*types.Service, error) {
 	svc := &types.Service{
-		UID:     in.UID,
-		Name:    in.Name,
-		Admin:   admin,
-		Salt:    uniuri.NewLen(uniuri.UUIDLen),
-		Created: time.Now().UnixMilli(),
-		Updated: time.Now().UnixMilli(),
+		UID:         in.UID,
+		Email:       in.Email,
+		DisplayName: in.DisplayName,
+		Admin:       admin,
+		Salt:        uniuri.NewLen(uniuri.UUIDLen),
+		Created:     time.Now().UnixMilli(),
+		Updated:     time.Now().UnixMilli(),
 	}
 
 	// validate service
-	if err := check.Service(svc); err != nil {
+	if err := c.serviceCheck(svc); err != nil {
 		return nil, err
 	}
 

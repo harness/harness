@@ -5,12 +5,12 @@
 const customGenerator = require('./scripts/swagger-custom-generator.js')
 
 module.exports = {
-  pm: {
-    output: 'src/services/policy-mgmt/index.tsx',
-    file: '../design/gen/http/openapi3.json',
+  scm: {
+    output: 'src/services/scm/index.tsx',
+    file: 'src/services/scm/swagger.yaml',
     customImport: `import { getConfigNew } from "../config";`,
     customProps: {
-      base: `{getConfigNew("pm")}`
+      base: `{getConfigNew("scm")}`
     }
   }
 }

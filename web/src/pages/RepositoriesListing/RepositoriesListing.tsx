@@ -56,7 +56,7 @@ export default function RepositoriesListing() {
   const columns: Column<TypesRepository>[] = useMemo(
     () => [
       {
-        Header: getString('repos.name'),
+        Header: getString('repos.identifier'),
         width: 'calc(100% - 180px)',
         Cell: ({ row }: CellProps<TypesRepository>) => {
           const record = row.original
@@ -65,7 +65,7 @@ export default function RepositoriesListing() {
               <Layout.Horizontal spacing="small" style={{ flexGrow: 1 }}>
                 <Layout.Vertical flex className={css.name} ref={rowContainerRef}>
                   <Text className={css.repoName} width={nameTextWidth} lineClamp={2}>
-                    <Keywords value={searchTerm}>{record.name}</Keywords>
+                    <Keywords value={searchTerm}>{record.uid}</Keywords>
                   </Text>
                   {record.description && (
                     <Text className={css.desc} width={nameTextWidth} lineClamp={1}>

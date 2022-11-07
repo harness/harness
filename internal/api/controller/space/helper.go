@@ -13,7 +13,7 @@ import (
 )
 
 func findSpaceFromRef(ctx context.Context, spaceStore store.SpaceStore, spaceRef string) (*types.Space, error) {
-	// check if ref is spaceId - ASSUMPTION: digit only is no valid space name
+	// check if ref is space ID - ASSUMPTION: digit only is no valid space name
 	id, err := strconv.ParseInt(spaceRef, 10, 64)
 	if err == nil {
 		return spaceStore.Find(ctx, id)

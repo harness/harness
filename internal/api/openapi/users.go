@@ -7,6 +7,7 @@ package openapi
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 
@@ -26,14 +27,6 @@ type (
 
 		// include pagination request
 		paginationRequest
-	}
-
-	// request for updating a user.
-	userUpdateRequest struct {
-		Param string `path:"email"`
-
-		// include request body input.
-		types.UserInput
 	}
 )
 
@@ -73,7 +66,7 @@ func buildUsers(reflector *openapi3.Reflector) {
 	opUpdate := openapi3.Operation{}
 	opUpdate.WithTags("users")
 	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateUsers"})
-	_ = reflector.SetRequest(&opUpdate, new(userUpdateRequest), http.MethodPatch)
+	_ = reflector.SetRequest(&opUpdate, new(user.UpdateInput), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdate, new(types.User), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusInternalServerError)

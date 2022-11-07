@@ -34,7 +34,7 @@ func System(config *types.Config, userCtrl *user.Controller) func(context.Contex
 // but then the duplicte might be due to email or name, not uid.
 // Futhermore, it would create unnecesary error logs.
 func Admin(ctx context.Context, config *types.Config, userCtrl *user.Controller) error {
-	if config.Admin.Name == "" {
+	if config.Admin.DisplayName == "" {
 		return nil
 	}
 
@@ -44,10 +44,10 @@ func Admin(ctx context.Context, config *types.Config, userCtrl *user.Controller)
 	}
 
 	in := &user.CreateInput{
-		UID:      adminUID,
-		Name:     config.Admin.Name,
-		Email:    config.Admin.Email,
-		Password: config.Admin.Password,
+		UID:         adminUID,
+		DisplayName: config.Admin.DisplayName,
+		Email:       config.Admin.Email,
+		Password:    config.Admin.Password,
 	}
 
 	// create user as admin

@@ -21,10 +21,10 @@ import (
 // CreateInput is the input used for create operations.
 // On purpose don't expose admin, has to be enabled explicitly.
 type CreateInput struct {
-	UID      string `json:"uid"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	UID         string `json:"uid"`
+	Email       string `json:"email"`
+	DisplayName string `json:"displayName"`
+	Password    string `json:"password"`
 }
 
 /*
@@ -61,18 +61,18 @@ func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bo
 	}
 
 	user := &types.User{
-		UID:      in.UID,
-		Name:     in.Name,
-		Email:    in.Email,
-		Password: string(hash),
-		Salt:     uniuri.NewLen(uniuri.UUIDLen),
-		Created:  time.Now().UnixMilli(),
-		Updated:  time.Now().UnixMilli(),
-		Admin:    admin,
+		UID:         in.UID,
+		DisplayName: in.DisplayName,
+		Email:       in.Email,
+		Password:    string(hash),
+		Salt:        uniuri.NewLen(uniuri.UUIDLen),
+		Created:     time.Now().UnixMilli(),
+		Updated:     time.Now().UnixMilli(),
+		Admin:       admin,
 	}
 
 	// validate user
-	if err = check.User(user); err != nil {
+	if err = c.userCheck(user); err != nil {
 		return nil, err
 	}
 

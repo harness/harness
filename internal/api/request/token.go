@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	PathParamTokenID = "tokenID"
+	PathParamTokenUID = "tokenUID"
 )
 
-func GetTokenIDFromPath(r *http.Request) (int64, error) {
-	return PathParamAsInt64(r, PathParamTokenID)
+func GetTokenUIDFromPath(r *http.Request) (string, error) {
+	return PathParamOrError(r, PathParamTokenUID)
 }

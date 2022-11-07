@@ -21,13 +21,13 @@ func HandleDeleteToken(userCtrl *user.Controller, tokenType enum.TokenType) http
 		session, _ := request.AuthSessionFrom(ctx)
 		userUID := session.Principal.UID
 
-		tokenID, err := request.GetTokenIDFromPath(r)
+		tokenUID, err := request.GetTokenUIDFromPath(r)
 		if err != nil {
 			render.BadRequest(w)
 			return
 		}
 
-		err = userCtrl.DeleteToken(ctx, session, userUID, tokenType, tokenID)
+		err = userCtrl.DeleteToken(ctx, session, userUID, tokenType, tokenUID)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

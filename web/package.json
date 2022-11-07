@@ -22,7 +22,7 @@
     "typecheck": "tsc",
     "clean": "rm -rf dist && rm -rf node_modules/.cache",
     "services": "npm-run-all services:*",
-    "services:pm": "restful-react import --config restful-react.config.js pm",
+    "services:scm": "restful-react import --config restful-react.config.js scm",
     "postservices": "prettier --write src/services/**/*.tsx",
     "build": "rm -rf dist && webpack --config config/webpack.prod.js",
     "coverage": "npm test --coverage",

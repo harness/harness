@@ -92,7 +92,7 @@ $ ./gitness user self
 Generate a personal access token:
 
 ```bash
-$ ./gitness user pat $NAME $LIFETIME_IN_S
+$ ./gitness user pat $UID $LIFETIME_IN_S
 ```
 
 Debug and output http responses from the server:

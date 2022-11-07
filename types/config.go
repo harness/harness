@@ -81,8 +81,8 @@ type Config struct {
 
 	// Admin defines admin user params (no admin setup if either is empty)
 	Admin struct {
-		Name     string `envconfig:"GITNESS_ADMIN_NAME"`
-		Email    string `envconfig:"GITNESS_ADMIN_EMAIL"`
-		Password string `envconfig:"GITNESS_ADMIN_PASSWORD"`
+		DisplayName string `envconfig:"GITNESS_ADMIN_DISPLAYNAME"`
+		Email       string `envconfig:"GITNESS_ADMIN_EMAIL"`
+		Password    string `envconfig:"GITNESS_ADMIN_PASSWORD"`
 	}
 }

@@ -27,7 +27,7 @@ func CheckSpace(ctx context.Context, authorizer authz.Authorizer, session *auth.
 		return nil
 	}
 
-	parentSpace, name, err := paths.Disect(space.Path)
+	parentSpace, name, err := paths.DisectLeaf(space.Path)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to disect path '%s'", space.Path)
 	}

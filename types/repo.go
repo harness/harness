@@ -12,10 +12,9 @@ import (
 type Repository struct {
 	// TODO: int64 ID doesn't match DB
 	ID          int64  `db:"repo_id"              json:"id"`
-	SpaceID     int64  `db:"repo_spaceId"         json:"spaceId"`
-	PathName    string `db:"repo_pathName"        json:"pathName"`
+	ParentID    int64  `db:"repo_parentId"        json:"parentId"`
+	UID         string `db:"repo_uid"             json:"uid"`
 	Path        string `db:"repo_path"            json:"path"`
-	Name        string `db:"repo_name"            json:"name"`
 	Description string `db:"repo_description"     json:"description"`
 	IsPublic    bool   `db:"repo_isPublic"        json:"isPublic"`
 	CreatedBy   int64  `db:"repo_createdBy"       json:"createdBy"`

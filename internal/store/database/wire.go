@@ -39,61 +39,62 @@ func ProvideDatabase(ctx context.Context, config *types.Config) (*sqlx.DB, error
 }
 
 // ProvideUserStore provides a user store.
-func ProvideUserStore(db *sqlx.DB) store.UserStore {
+func ProvideUserStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTransformation) store.UserStore {
 	switch db.DriverName() {
 	case postgres:
-		return NewUserStore(db)
+		return NewUserStore(db, uidTransformation)
 	default:
 		return NewUserStoreSync(
-			NewUserStore(db),
+			NewUserStore(db, uidTransformation),
 		)
 	}
 }
 
 // ProvideServiceAccountStore provides a service account store.
-func ProvideServiceAccountStore(db *sqlx.DB) store.ServiceAccountStore {
+func ProvideServiceAccountStore(db *sqlx.DB,
+	uidTransformation store.PrincipalUIDTransformation) store.ServiceAccountStore {
 	switch db.DriverName() {
 	case postgres:
-		return NewServiceAccountStore(db)
+		return NewServiceAccountStore(db, uidTransformation)
 	default:
 		return NewServiceAccountStoreSync(
-			NewServiceAccountStore(db),
+			NewServiceAccountStore(db, uidTransformation),
 		)
 	}
 }
 
 // ProvideServiceStore provides a service store.
-func ProvideServiceStore(db *sqlx.DB) store.ServiceStore {
+func ProvideServiceStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTransformation) store.ServiceStore {
 	switch db.DriverName() {
 	case postgres:
-		return NewServiceStore(db)
+		return NewServiceStore(db, uidTransformation)
 	default:
 		return NewServiceStoreSync(
-			NewServiceStore(db),
+			NewServiceStore(db, uidTransformation),
 		)
 	}
 }
 
 // ProvideSpaceStore provides a space store.
-func ProvideSpaceStore(db *sqlx.DB) store.SpaceStore {
+func ProvideSpaceStore(db *sqlx.DB, pathTransformation store.PathTransformation) store.SpaceStore {
 	switch db.DriverName() {
 	case postgres:
-		return NewSpaceStore(db)
+		return NewSpaceStore(db, pathTransformation)
 	default:
 		return NewSpaceStoreSync(
-			NewSpaceStore(db),
+			NewSpaceStore(db, pathTransformation),
 		)
 	}
 }
 
 // ProvideRepoStore provides a repo store.
-func ProvideRepoStore(db *sqlx.DB) store.RepoStore {
+func ProvideRepoStore(db *sqlx.DB, pathTransformation store.PathTransformation) store.RepoStore {
 	switch db.DriverName() {
 	case postgres:
-		return NewRepoStore(db)
+		return NewRepoStore(db, pathTransformation)
 	default:
 		return NewRepoStoreSync(
-			NewRepoStore(db),
+			NewRepoStore(db, pathTransformation),
 		)
 	}
 }

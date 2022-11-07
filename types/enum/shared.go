@@ -6,9 +6,9 @@ package enum
 
 const (
 	id            = "id"
+	uid           = "uid"
 	path          = "path"
 	name          = "name"
-	pathName      = "path_name"
 	created       = "created"
 	createdAt     = "created_at"
 	updated       = "updated"

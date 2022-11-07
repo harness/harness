@@ -114,7 +114,7 @@ func BasicAuth(realm string, auth authn.Authenticator, repoStore store.RepoStore
 			}
 
 			if !repository.IsPublic {
-				log.Debug().Msgf("BasicAuth middleware: repo %v is private", repository.Name)
+				log.Debug().Msgf("BasicAuth middleware: repo %v is private", repository.UID)
 				_, err = auth.Authenticate(r)
 				if err != nil {
 					basicAuthFailed(w, realm)
@@ -151,7 +151,7 @@ func stubGitHandler(repoStore store.RepoStore) http.HandlerFunc {
 				"  Method: '%s'\n"+
 				"  Path: '%s'\n"+
 				"  Query: '%s'",
-			repo.Name, repo.Path,
+			repo.UID, repo.Path,
 			r.Method,
 			r.URL.Path,
 			r.URL.RawQuery,

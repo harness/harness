@@ -11,9 +11,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/gitrpc"
-
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
-
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
@@ -24,9 +22,11 @@ import (
 	"github.com/harness/gitness/internal/cron"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
+	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/store/memory"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
 )
@@ -49,6 +49,8 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		authz.WireSet,
 		gitrpcserver.WireSet,
 		gitrpc.WireSet,
+		store.WireSet,
+		check.WireSet,
 	)
 	return &system{}, nil
 }

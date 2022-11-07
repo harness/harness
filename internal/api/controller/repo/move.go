@@ -6,9 +6,9 @@ package repo
 
 import (
 	"context"
-	"strings"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -18,13 +18,13 @@ import (
 
 // MoveInput is used for moving a repo.
 type MoveInput struct {
-	PathName    *string `json:"pathName"`
-	SpaceID     *int64  `json:"spaceId"`
+	UID         *string `json:"uid"`
+	ParentID    *int64  `json:"parentId"`
 	KeepAsAlias bool    `json:"keepAsAlias"`
 }
 
 /*
-* Move moves a repository to a new space and/or name.
+* Move moves a repository to a new space and/or uid.
  */
 func (c *Controller) Move(ctx context.Context, session *auth.Session,
 	repoRef string, in *MoveInput) (*types.Repository, error) {
@@ -38,37 +38,34 @@ func (c *Controller) Move(ctx context.Context, session *auth.Session,
 	}
 
 	// backfill data
-	if in.PathName == nil {
-		in.PathName = &repo.PathName
+	if in.UID == nil {
+		in.UID = &repo.UID
 	}
-	if in.SpaceID == nil {
-		in.SpaceID = &repo.SpaceID
+	if in.ParentID == nil {
+		in.ParentID = &repo.ParentID
 	}
-
-	// convert name to lower case for easy of api use
-	*in.PathName = strings.ToLower(*in.PathName)
 
 	// verify input
-	if err = check.PathName(*in.PathName); err != nil {
-		return nil, err
-	}
-
-	// ensure it's not a no-op
-	if *in.SpaceID == repo.SpaceID && *in.PathName == repo.PathName {
+	if err = check.UID(*in.UID); err != nil {
 		return nil, err
 	}
 
 	// ensure we move to another space
-	if *in.SpaceID <= 0 {
-		return nil, err
+	if *in.ParentID <= 0 {
+		return nil, usererror.ErrBadRequest
+	}
+
+	// ensure it's not a no-op
+	if *in.ParentID == repo.ParentID && *in.UID == repo.UID {
+		return nil, usererror.ErrNoChange
 	}
 
 	// Ensure we have access to the target space (if it's a space move)
-	if *in.SpaceID != repo.SpaceID {
+	if *in.ParentID != repo.ParentID {
 		var newSpace *types.Space
-		newSpace, err = c.spaceStore.Find(ctx, *in.SpaceID)
+		newSpace, err = c.spaceStore.Find(ctx, *in.ParentID)
 		if err != nil {
-			log.Err(err).Msgf("Failed to get target space with id %d for the move.", *in.SpaceID)
+			log.Err(err).Msgf("Failed to get target space with id %d for the move.", *in.ParentID)
 
 			return nil, err
 		}
@@ -84,5 +81,5 @@ func (c *Controller) Move(ctx context.Context, session *auth.Session,
 		}
 	}
 
-	return c.repoStore.Move(ctx, session.Principal.ID, repo.ID, *in.SpaceID, *in.PathName, in.KeepAsAlias)
+	return c.repoStore.Move(ctx, session.Principal.ID, repo.ID, *in.ParentID, *in.UID, in.KeepAsAlias)
 }

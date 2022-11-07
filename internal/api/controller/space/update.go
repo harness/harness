@@ -11,13 +11,11 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
 // UpdateInput is used for updating a space.
 type UpdateInput struct {
-	Name        *string `json:"name"`
 	Description *string `json:"description"`
 	IsPublic    *bool   `json:"isPublic"`
 }
@@ -37,9 +35,6 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	}
 
 	// update values only if provided
-	if in.Name != nil {
-		space.Name = *in.Name
-	}
 	if in.Description != nil {
 		space.Description = *in.Description
 	}
@@ -51,7 +46,7 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	space.Updated = time.Now().UnixMilli()
 
 	// ensure provided values are valid
-	if err = check.Space(space); err != nil {
+	if err = c.spaceCheck(space); err != nil {
 		return nil, err
 	}
 

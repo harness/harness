@@ -18,10 +18,10 @@ func HandleRegister(userCtrl *user.Controller) http.HandlerFunc {
 		ctx := r.Context()
 
 		in := &user.CreateInput{
-			UID:      r.FormValue("username"),
-			Name:     r.FormValue("name"),
-			Email:    r.FormValue("email"),
-			Password: r.FormValue("password"),
+			UID:         r.FormValue("username"),
+			DisplayName: r.FormValue("displayname"),
+			Email:       r.FormValue("email"),
+			Password:    r.FormValue("password"),
 		}
 
 		tokenResponse, err := userCtrl.Register(ctx, in)

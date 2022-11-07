@@ -203,7 +203,7 @@ func setupUsers(r chi.Router, userCtrl *user.Controller) {
 			r.Post("/", handleruser.HandleCreateAccessToken(userCtrl))
 
 			// per token operations
-			r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenID), func(r chi.Router) {
+			r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenUID), func(r chi.Router) {
 				r.Delete("/", handleruser.HandleDeleteToken(userCtrl, enum.TokenTypePAT))
 			})
 		})
@@ -213,7 +213,7 @@ func setupUsers(r chi.Router, userCtrl *user.Controller) {
 			r.Get("/", handleruser.HandleListTokens(userCtrl, enum.TokenTypeSession))
 
 			// per token operations
-			r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenID), func(r chi.Router) {
+			r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenUID), func(r chi.Router) {
 				r.Delete("/", handleruser.HandleDeleteToken(userCtrl, enum.TokenTypeSession))
 			})
 		})
@@ -235,7 +235,7 @@ func setupServiceAccounts(r chi.Router, saCtrl *serviceaccount.Controller) {
 				r.Post("/", handlerserviceaccount.HandleCreateToken(saCtrl))
 
 				// per token operations
-				r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenID), func(r chi.Router) {
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamTokenUID), func(r chi.Router) {
 					r.Delete("/", handlerserviceaccount.HandleDeleteToken(saCtrl))
 				})
 			})

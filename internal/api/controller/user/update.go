@@ -13,16 +13,15 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // UpdateInput store infos to update an existing user.
 type UpdateInput struct {
-	Email    *string `json:"email"`
-	Password *string `json:"password"`
-	Name     *string `json:"name"`
+	Email       *string `json:"email"`
+	Password    *string `json:"password"`
+	DisplayName *string `json:"displayName"`
 }
 
 /*
@@ -40,8 +39,8 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	if in.Name != nil {
-		user.Name = ptr.ToString(in.Name)
+	if in.DisplayName != nil {
+		user.DisplayName = ptr.ToString(in.DisplayName)
 	}
 	if in.Email != nil {
 		user.Email = ptr.ToString(in.Email)
@@ -57,7 +56,7 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	user.Updated = time.Now().UnixMilli()
 
 	// validate user
-	if err = check.User(user); err != nil {
+	if err = c.userCheck(user); err != nil {
 		return nil, err
 	}
 

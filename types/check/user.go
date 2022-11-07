@@ -5,40 +5,27 @@
 package check
 
 import (
-	"fmt"
-
 	"github.com/harness/gitness/types"
 )
 
-const (
-	minEmailLength = 1
-	maxEmailLength = 250
-)
-
-var (
-	// ErrEmailLen  is returned when the email address
-	// exceeds the range of allowed number of characters.
-	ErrEmailLen = &ValidationError{
-		fmt.Sprintf("Email address has to be within %d and %d characters", minEmailLength, maxEmailLength),
-	}
-)
-
 // User returns true if the User is valid.
-func User(user *types.User) error {
+type User func(*types.User) error
+
+// UserDefault is the default User validation.
+func UserDefault(user *types.User) error {
 	// validate UID
 	if err := UID(user.UID); err != nil {
 		return err
 	}
 
-	// validate name
-	if err := Name(user.Name); err != nil {
+	// Validate Email
+	if err := Email(user.Email); err != nil {
 		return err
 	}
 
-	// validate email
-	l := len(user.Email)
-	if l < minEmailLength || l > maxEmailLength {
-		return ErrEmailLen
+	// validate DisplayName
+	if err := DisplayName(user.DisplayName); err != nil {
+		return err
 	}
 
 	return nil

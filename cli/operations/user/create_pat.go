@@ -21,14 +21,15 @@ import (
 )
 
 const tokenTmpl = `
-name:      {{ .Token.Name }}
-expiresAt: {{ .Token.ExpiresAt }}
-token:     {{ .AccessToken }}
+principalID: {{ .Token.PrincipalID }}
+uid:         {{ .Token.UID }}
+expiresAt:   {{ .Token.ExpiresAt }}
+token:       {{ .AccessToken }}
 ` //#nosec G101
 
 type createPATCommand struct {
 	client      client.Client
-	name        string
+	uid         string
 	lifetimeInS int64
 
 	json bool
@@ -40,7 +41,7 @@ func (c *createPATCommand) run(*kingpin.ParseContext) error {
 	defer cancel()
 
 	in := user.CreateTokenInput{
-		Name:     c.name,
+		UID:      c.uid,
 		Lifetime: time.Duration(int64(time.Second) * c.lifetimeInS),
 		Grants:   enum.AccessGrantAll,
 	}
@@ -70,8 +71,8 @@ func registerCreatePAT(app *kingpin.CmdClause, client client.Client) {
 	cmd := app.Command("pat", "create personal access token").
 		Action(c.run)
 
-	cmd.Arg("name", "the name of the token").
-		Required().StringVar(&c.name)
+	cmd.Arg("uid", "the uid of the token").
+		Required().StringVar(&c.uid)
 
 	cmd.Arg("lifetime", "the lifetime of the token in seconds").
 		Required().Int64Var(&c.lifetimeInS)

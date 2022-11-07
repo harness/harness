@@ -124,7 +124,7 @@ lint: tools generate # lint the golang code
 # the source file has changed.
 ###########################################
 cli/server/harness.wire_gen.go: cli/server/harness.wire.go	## Update the wire dependency injection if harness.wire.go has changed.
-
+	@sh ./scripts/wire/harness.sh
 
 cli/server/standalone.wire_gen.go: cli/server/standalone.wire.go	## Update the wire dependency injection if standalone.wire.go has changed.
 	@sh ./scripts/wire/standalone.sh

@@ -8,10 +8,12 @@ import (
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types/check"
 )
 
 type Controller struct {
 	defaultBranch string
+	repoCheck     check.Repo
 	authorizer    authz.Authorizer
 	spaceStore    store.SpaceStore
 	repoStore     store.RepoStore
@@ -21,6 +23,7 @@ type Controller struct {
 
 func NewController(
 	defaultBranch string,
+	repoCheck check.Repo,
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
@@ -29,6 +32,7 @@ func NewController(
 ) *Controller {
 	return &Controller{
 		defaultBranch: defaultBranch,
+		repoCheck:     repoCheck,
 		authorizer:    authorizer,
 		spaceStore:    spaceStore,
 		repoStore:     repoStore,

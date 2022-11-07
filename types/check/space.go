@@ -17,31 +17,35 @@ var (
 	ErrRootSpaceNameNotAllowed = &ValidationError{
 		fmt.Sprintf("The following names are not allowed for a root space: %v", illegalRootSpaceNames),
 	}
-	ErrInvalidParentSpaceID = &ValidationError{
-		"Parent space ID has to be either zero for a root space or greater than zero for a child space.",
+	ErrInvalidParentID = &ValidationError{
+		"Parent ID has to be either zero for a root space or greater than zero for a child space.",
 	}
 )
 
-// Space checks the provided space and returns an error in it isn't valid.
-func Space(space *types.Space) error {
-	// validate name
-	if err := PathName(space.PathName); err != nil {
+// Space returns true if the Space is valid.
+type Space func(*types.Space) error
+
+// SpaceDefault is the default space validation.
+func SpaceDefault(space *types.Space) error {
+	// validate UID
+	if err := UID(space.UID); err != nil {
 		return err
 	}
 
-	// validate display name
-	if err := Name(space.Name); err != nil {
-		return err
-	}
+	// validate the rest
+	return SpaceNoUID(space)
+}
 
+// SpaceNoUID validates the space and ignores the UID field.
+func SpaceNoUID(space *types.Space) error {
 	if space.ParentID < 0 {
-		return ErrInvalidParentSpaceID
+		return ErrInvalidParentID
 	}
 
 	// root space specific validations
 	if space.ParentID == 0 {
 		for _, p := range illegalRootSpaceNames {
-			if strings.HasPrefix(space.PathName, p) {
+			if strings.HasPrefix(space.UID, p) {
 				return ErrRootSpaceNameNotAllowed
 			}
 		}

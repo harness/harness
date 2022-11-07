@@ -32,6 +32,13 @@ func (s *TokenStoreSync) Find(ctx context.Context, id int64) (*types.Token, erro
 	return s.base.Find(ctx, id)
 }
 
+// Find finds the token by principalId and tokenUID.
+func (s *TokenStoreSync) FindByUID(ctx context.Context, principalID int64, tokenUID string) (*types.Token, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return s.base.FindByUID(ctx, principalID, tokenUID)
+}
+
 // Create saves the token details.
 func (s *TokenStoreSync) Create(ctx context.Context, token *types.Token) error {
 	mutex.Lock()

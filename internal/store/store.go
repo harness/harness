@@ -100,7 +100,7 @@ type (
 		Create(ctx context.Context, space *types.Space) error
 
 		// Move moves an existing space.
-		Move(ctx context.Context, principalID int64, spaceID int64, newParentID int64, newName string,
+		Move(ctx context.Context, principalID int64, id int64, newParentID int64, newName string,
 			keepAsAlias bool) (*types.Space, error)
 
 		// Update updates the space details.
@@ -122,10 +122,10 @@ type (
 		ListPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error)
 
 		// CreatePath create an alias for a space
-		CreatePath(ctx context.Context, spaceID int64, params *types.PathParams) (*types.Path, error)
+		CreatePath(ctx context.Context, id int64, params *types.PathParams) (*types.Path, error)
 
 		// DeletePath delete an alias of a space
-		DeletePath(ctx context.Context, spaceID int64, pathID int64) error
+		DeletePath(ctx context.Context, id int64, pathID int64) error
 	}
 
 	// RepoStore defines the repository data storage.
@@ -140,7 +140,7 @@ type (
 		Create(ctx context.Context, repo *types.Repository) error
 
 		// Move moves an existing repo.
-		Move(ctx context.Context, principalID int64, repoID int64, newSpaceID int64, newName string,
+		Move(ctx context.Context, principalID int64, repoID int64, newParentID int64, newName string,
 			keepAsAlias bool) (*types.Repository, error)
 
 		// Update the repo details.
@@ -150,10 +150,10 @@ type (
 		Delete(ctx context.Context, id int64) error
 
 		// Count of repos in a space.
-		Count(ctx context.Context, spaceID int64, opts *types.RepoFilter) (int64, error)
+		Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error)
 
 		// List returns a list of repos in a space.
-		List(ctx context.Context, spaceID int64, opts *types.RepoFilter) ([]*types.Repository, error)
+		List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error)
 
 		// CountPaths returns a count of all paths of a repo.
 		CountPaths(ctx context.Context, id int64, opts *types.PathFilter) (int64, error)
@@ -172,6 +172,9 @@ type (
 	TokenStore interface {
 		// Find finds the token by id
 		Find(ctx context.Context, id int64) (*types.Token, error)
+
+		// Find finds the token by principalId and tokenUID
+		FindByUID(ctx context.Context, principalID int64, tokenUID string) (*types.Token, error)
 
 		// Create saves the token details.
 		Create(ctx context.Context, token *types.Token) error

@@ -48,11 +48,11 @@ func (s *RepoStoreSync) Create(ctx context.Context, repo *types.Repository) erro
 }
 
 // Move an existing repo.
-func (s *RepoStoreSync) Move(ctx context.Context, principalID int64, repoID int64, newSpaceID int64,
+func (s *RepoStoreSync) Move(ctx context.Context, principalID int64, id int64, newParentID int64,
 	newName string, keepAsAlias bool) (*types.Repository, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.Move(ctx, principalID, repoID, newSpaceID, newName, keepAsAlias)
+	return s.base.Move(ctx, principalID, id, newParentID, newName, keepAsAlias)
 }
 
 // Update the repo details.
@@ -70,17 +70,17 @@ func (s *RepoStoreSync) Delete(ctx context.Context, id int64) error {
 }
 
 // Count of repos in a space.
-func (s *RepoStoreSync) Count(ctx context.Context, spaceID int64, opts *types.RepoFilter) (int64, error) {
+func (s *RepoStoreSync) Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.Count(ctx, spaceID, opts)
+	return s.base.Count(ctx, parentID, opts)
 }
 
 // List returns a list of repos in a space.
-func (s *RepoStoreSync) List(ctx context.Context, spaceID int64, opts *types.RepoFilter) ([]*types.Repository, error) {
+func (s *RepoStoreSync) List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.List(ctx, spaceID, opts)
+	return s.base.List(ctx, parentID, opts)
 }
 
 // CountPaths returns a count of all paths of a repo.

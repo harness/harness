@@ -17,7 +17,7 @@ import (
 )
 
 type CreateTokenInput struct {
-	Name     string           `json:"name"`
+	UID      string           `json:"uid"`
 	Lifetime time.Duration    `json:"lifetime"`
 	Grants   enum.AccessGrant `json:"grants"`
 }
@@ -37,15 +37,18 @@ func (c *Controller) CreateAccessToken(ctx context.Context, session *auth.Sessio
 		return nil, err
 	}
 
-	if err = check.Name(in.Name); err != nil {
+	if err = check.UID(in.UID); err != nil {
 		return nil, err
 	}
 	if err = check.TokenLifetime(in.Lifetime); err != nil {
 		return nil, err
 	}
+	if err = check.AccessGrant(in.Grants, false); err != nil {
+		return nil, err
+	}
 
 	token, jwtToken, err := token.CreatePAT(ctx, c.tokenStore, &session.Principal,
-		user, in.Name, in.Lifetime, in.Grants)
+		user, in.UID, in.Lifetime, in.Grants)
 	if err != nil {
 		return nil, err
 	}

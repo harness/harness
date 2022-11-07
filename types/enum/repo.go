@@ -14,9 +14,8 @@ type RepoAttr int
 // Order enumeration.
 const (
 	RepoAttrNone RepoAttr = iota
-	RepoAttrPathName
 	RepoAttrPath
-	RepoAttrName
+	RepoAttrUID
 	RepoAttrCreated
 	RepoAttrUpdated
 )
@@ -25,12 +24,10 @@ const (
 // and returns the equivalent enumeration.
 func ParseRepoAtrr(s string) RepoAttr {
 	switch strings.ToLower(s) {
-	case name:
-		return RepoAttrName
+	case uid:
+		return RepoAttrUID
 	case path:
 		return RepoAttrPath
-	case pathName:
-		return RepoAttrPathName
 	case created, createdAt:
 		return RepoAttrCreated
 	case updated, updatedAt:
@@ -43,12 +40,10 @@ func ParseRepoAtrr(s string) RepoAttr {
 // String returns the string representation of the attribute.
 func (a RepoAttr) String() string {
 	switch a {
-	case RepoAttrPathName:
-		return pathName
 	case RepoAttrPath:
 		return path
-	case RepoAttrName:
-		return name
+	case RepoAttrUID:
+		return uid
 	case RepoAttrCreated:
 		return created
 	case RepoAttrUpdated:

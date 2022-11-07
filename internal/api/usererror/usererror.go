@@ -14,7 +14,7 @@ var (
 	ErrInvalidToken = New(http.StatusUnauthorized, "Invalid or missing token")
 
 	// ErrBadRequest is returned when there was an issue with the input.
-	ErrBadRequest = New(http.StatusBadGateway, "Bad Request")
+	ErrBadRequest = New(http.StatusBadRequest, "Bad Request")
 
 	// ErrUnauthorized is returned when the acting principal is not authenticated.
 	ErrUnauthorized = New(http.StatusUnauthorized, "Unauthorized")

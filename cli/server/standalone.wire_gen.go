@@ -7,7 +7,6 @@ package server
 
 import (
 	"context"
-
 	"github.com/harness/gitness/gitrpc"
 	server2 "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -20,36 +19,44 @@ import (
 	"github.com/harness/gitness/internal/cron"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
+	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/store/memory"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 )
 
 // Injectors from standalone.wire.go:
 
 func initSystem(ctx context.Context, config *types.Config) (*system, error) {
+	checkUser := check.ProvideUserCheck()
 	authorizer := authz.ProvideAuthorizer()
 	db, err := database.ProvideDatabase(ctx, config)
 	if err != nil {
 		return nil, err
 	}
-	userStore := database.ProvideUserStore(db)
+	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
+	userStore := database.ProvideUserStore(db, principalUIDTransformation)
 	tokenStore := database.ProvideTokenStore(db)
-	controller := user.NewController(authorizer, userStore, tokenStore)
+	controller := user.NewController(checkUser, authorizer, userStore, tokenStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller)
 	systemStore := memory.New(config)
-	serviceAccountStore := database.ProvideServiceAccountStore(db)
+	serviceAccountStore := database.ProvideServiceAccountStore(db, principalUIDTransformation)
 	authenticator := authn.ProvideAuthenticator(userStore, serviceAccountStore, tokenStore)
-	spaceStore := database.ProvideSpaceStore(db)
-	repoStore := database.ProvideRepoStore(db)
+	checkRepo := check.ProvideRepoCheck()
+	pathTransformation := store.ProvidePathTransformation()
+	spaceStore := database.ProvideSpaceStore(db, pathTransformation)
+	repoStore := database.ProvideRepoStore(db, pathTransformation)
 	gitrpcConfig := ProvideGitRPCClientConfig(config)
 	gitrpcInterface, err := gitrpc.ProvideClient(gitrpcConfig)
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.ProvideController(config, authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
-	spaceController := space.NewController(authorizer, spaceStore, repoStore, serviceAccountStore)
-	serviceaccountController := serviceaccount.NewController(authorizer, serviceAccountStore, spaceStore, repoStore, tokenStore)
+	repoController := repo.ProvideController(config, checkRepo, authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
+	checkSpace := check.ProvideSpaceCheck()
+	spaceController := space.NewController(checkSpace, authorizer, spaceStore, repoStore, serviceAccountStore)
+	serviceAccount := check.ProvideServiceAccountCheck()
+	serviceaccountController := serviceaccount.NewController(serviceAccount, authorizer, serviceAccountStore, spaceStore, repoStore, tokenStore)
 	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, repoController, spaceController, serviceaccountController, controller)
 	gitHandler := router.ProvideGitHandler(repoStore, authenticator, gitrpcInterface)
 	webHandler := router.ProvideWebHandler(systemStore)

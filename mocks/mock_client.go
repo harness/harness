@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	user "github.com/harness/gitness/internal/api/controller/user"
 	types "github.com/harness/gitness/types"
 )
 
@@ -108,6 +109,21 @@ func (m *MockClient) UserCreate(arg0 context.Context, arg1 *types.User) (*types.
 func (mr *MockClientMockRecorder) UserCreate(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserCreate", reflect.TypeOf((*MockClient)(nil).UserCreate), arg0, arg1)
+}
+
+// UserCreatePAT mocks base method.
+func (m *MockClient) UserCreatePAT(arg0 context.Context, arg1 user.CreateTokenInput) (*types.TokenResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UserCreatePAT", arg0, arg1)
+	ret0, _ := ret[0].(*types.TokenResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UserCreatePAT indicates an expected call of UserCreatePAT.
+func (mr *MockClientMockRecorder) UserCreatePAT(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UserCreatePAT", reflect.TypeOf((*MockClient)(nil).UserCreatePAT), arg0, arg1)
 }
 
 // UserDelete mocks base method.

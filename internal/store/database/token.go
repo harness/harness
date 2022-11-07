@@ -35,6 +35,15 @@ func (s *TokenStore) Find(ctx context.Context, id int64) (*types.Token, error) {
 	return dst, nil
 }
 
+// Find finds the token by principalId and tokenUID.
+func (s *TokenStore) FindByUID(ctx context.Context, principalID int64, tokenUID string) (*types.Token, error) {
+	dst := new(types.Token)
+	if err := s.db.GetContext(ctx, dst, TokenSelectByPrincipalIDAndUID, principalID, tokenUID); err != nil {
+		return nil, processSQLErrorf(err, "Select query failed")
+	}
+	return dst, nil
+}
+
 // Create saves the token details.
 func (s *TokenStore) Create(ctx context.Context, token *types.Token) error {
 	query, arg, err := s.db.BindNamed(tokenInsert, token)
@@ -96,7 +105,7 @@ const tokenSelectBase = `
 SELECT
 token_id
 ,token_type
-,token_name
+,token_uid
 ,token_principalId
 ,token_expiresAt
 ,token_grants
@@ -106,18 +115,22 @@ FROM tokens
 ` //#nosec G101
 
 const tokenSelectForPrincipalIDOfType = tokenSelectBase + `
-WHERE token_principalId = $1 and token_type = $2
+WHERE token_principalId = $1 AND token_type = $2
 ORDER BY token_issuedAt DESC
 ` //#nosec G101
 
 const tokenCountForPrincipalIDOfType = `
 SELECT count(*)
 FROM tokens
-WHERE token_principalId = $1 and token_type = $2
+WHERE token_principalId = $1 AND token_type = $2
 ` //#nosec G101
 
 const TokenSelectByID = tokenSelectBase + `
-WHERE token_id = $2
+WHERE token_id = $1
+`
+
+const TokenSelectByPrincipalIDAndUID = tokenSelectBase + `
+WHERE token_principalId = $1 AND token_uid = $2
 `
 
 const tokenDelete = `
@@ -133,7 +146,7 @@ WHERE token_principalId = $1
 const tokenInsert = `
 INSERT INTO tokens (
 	token_type
-	,token_name
+	,token_uid
 	,token_principalId
 	,token_expiresAt
 	,token_grants
@@ -141,7 +154,7 @@ INSERT INTO tokens (
 	,token_createdBy
 ) values (
 	:token_type
-	,:token_name
+	,:token_uid
 	,:token_principalId
 	,:token_expiresAt
 	,:token_grants

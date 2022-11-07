@@ -25,7 +25,7 @@ export function RepositoryHeader({ repoMetadata }: RepositoryHeaderProps) {
         <Layout.Horizontal spacing="small" className={css.breadcrumb}>
           <Link to={routes.toSCMRepositoriesListing({ space })}>{getString('repositories')}</Link>
           <Icon name="main-chevron-right" size={10} color={Color.GREY_500} />
-          <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.name}</Link>
+          <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.uid}</Link>
         </Layout.Horizontal>
         <Container padding={{ top: 'medium', bottom: 'medium' }}>
           <Text
@@ -51,7 +51,7 @@ export function RepositoryHeader({ repoMetadata }: RepositoryHeaderProps) {
             }}
             font={{ variation: FontVariation.H4 }}
             {...ButtonRoleProps}>
-            {repoMetadata.name}
+            {repoMetadata.uid}
           </Text>
         </Container>
       </Container>

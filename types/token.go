@@ -11,11 +11,10 @@ import (
 // Represents server side infos stored for tokens we distribute.
 type Token struct {
 	// TODO: int64 ID doesn't match DB
-	ID   int64          `db:"token_id"                 json:"id"`
-	Type enum.TokenType `db:"token_type"               json:"type"`
-	Name string         `db:"token_name"               json:"name"`
-	// TODO: change name to OwnerID?
+	ID          int64            `db:"token_id"                 json:"-"`
 	PrincipalID int64            `db:"token_principalId"        json:"principalId"`
+	Type        enum.TokenType   `db:"token_type"               json:"type"`
+	UID         string           `db:"token_uid"                json:"uid"`
 	ExpiresAt   int64            `db:"token_expiresAt"          json:"expiresAt"`
 	IssuedAt    int64            `db:"token_issuedAt"           json:"issuedAt"`
 	Grants      enum.AccessGrant `db:"token_grants"             json:"grants"`

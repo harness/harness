@@ -7,7 +7,6 @@ package space
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
@@ -20,9 +19,8 @@ import (
 )
 
 type CreateInput struct {
-	PathName    string `json:"pathName"`
 	ParentID    int64  `json:"parentId"`
-	Name        string `json:"name"`
+	UID         string `json:"uid"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"isPublic"`
 }
@@ -65,9 +63,8 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 
 	// create new space object
 	space := &types.Space{
-		PathName:    strings.ToLower(in.PathName),
 		ParentID:    in.ParentID,
-		Name:        in.Name,
+		UID:         in.UID,
 		Description: in.Description,
 		IsPublic:    in.IsPublic,
 		CreatedBy:   session.Principal.ID,
@@ -76,14 +73,14 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	// validate space
-	if err := check.Space(space); err != nil {
+	if err := c.spaceCheck(space); err != nil {
 		return nil, err
 	}
 
-	// Validate path length (Due to racing conditions we can't be 100% sure on the path here only best effort
+	// Validate path depth (Due to racing conditions we can't be 100% sure on the path here only best effort
 	// to have a quick failure)
-	path := paths.Concatinate(parentPath, space.PathName)
-	if err := check.Path(path, true); err != nil {
+	path := paths.Concatinate(parentPath, space.UID)
+	if err := check.PathDepth(path, true); err != nil {
 		return nil, err
 	}
 

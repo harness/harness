@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	minPathSegments         = 1
 	maxPathSegmentsForSpace = 9
 	maxPathSegments         = 10
 )
@@ -22,9 +21,9 @@ var (
 	ErrPathEmpty = &ValidationError{
 		"Path can't be empty.",
 	}
-	ErrPathInvalidSize = &ValidationError{
-		fmt.Sprintf("A path has to be between %d and %d segments long (%d for spaces).",
-			minPathSegments, maxPathSegments, maxPathSegmentsForSpace),
+	ErrPathInvalidDepth = &ValidationError{
+		fmt.Sprintf("A path can have at most %d segments (%d for spaces).",
+			maxPathSegments, maxPathSegmentsForSpace),
 	}
 	ErrEmptyPathSegment = &ValidationError{
 		"Empty segments are not allowed.",
@@ -53,17 +52,16 @@ func Path(path string, isSpace bool) error {
 	}
 
 	// ensure path is not too deep
-	segments := strings.Split(path, types.PathSeparator)
-	l := len(segments)
-	if l < minPathSegments || (!isSpace && l > maxPathSegments) || (isSpace && l > maxPathSegmentsForSpace) {
-		return ErrPathInvalidSize
+	if err := PathDepth(path, isSpace); err != nil {
+		return err
 	}
 
-	// ensure all segments of the path are valid
+	// ensure all segments of the path are valid uids
+	segments := strings.Split(path, types.PathSeparator)
 	for _, s := range segments {
 		if s == "" {
 			return ErrEmptyPathSegment
-		} else if err := PathName(s); err != nil {
+		} else if err := UID(s); err != nil {
 			return errors.Wrapf(err, "Invalid segment '%s'", s)
 		}
 	}
@@ -101,9 +99,18 @@ func PathParams(path *types.PathParams, currentPath string, isSpace bool) error 
 	return nil
 }
 
-// PathTooLong Checks if the provided path is too long.
+// PathDepth Checks the depth of the provided path.
+func PathDepth(path string, isSpace bool) error {
+	if IsPathTooDeep(path, isSpace) {
+		return ErrPathInvalidDepth
+	}
+
+	return nil
+}
+
+// IsPathTooDeep Checks if the provided path is too long.
 // NOTE: A repository path can be one deeper than a space path (as otherwise the space would be useless).
-func PathTooLong(path string, isSpace bool) bool {
+func IsPathTooDeep(path string, isSpace bool) bool {
 	l := strings.Count(path, types.PathSeparator) + 1
 	return (!isSpace && l > maxPathSegments) || (isSpace && l > maxPathSegmentsForSpace)
 }

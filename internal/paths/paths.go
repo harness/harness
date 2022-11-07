@@ -15,9 +15,9 @@ var (
 	ErrPathEmpty = errors.New("path is empty")
 )
 
-// Disect splits a path into its parent path and the leaf name
-// e.g. /space1/space2/space3 -> (/space1/space2, space3, nil).
-func Disect(path string) (string, string, error) {
+// DisectLeaf splits a path into its parent path and the leaf name
+// e.g. space1/space2/space3 -> (space1/space2, space3, nil).
+func DisectLeaf(path string) (string, string, error) {
 	if path == "" {
 		return "", "", ErrPathEmpty
 	}
@@ -25,6 +25,21 @@ func Disect(path string) (string, string, error) {
 	i := strings.LastIndex(path, types.PathSeparator)
 	if i == -1 {
 		return "", path, nil
+	}
+
+	return path[:i], path[i+1:], nil
+}
+
+// DisectRoot splits a path into its root space and sub-path
+// e.g. space1/space2/space3 -> (space1, space2/space3, nil).
+func DisectRoot(path string) (string, string, error) {
+	if path == "" {
+		return "", "", ErrPathEmpty
+	}
+
+	i := strings.Index(path, types.PathSeparator)
+	if i == -1 {
+		return path, "", nil
 	}
 
 	return path[:i], path[i+1:], nil

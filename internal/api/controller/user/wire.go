@@ -8,6 +8,7 @@ import (
 	"github.com/google/wire"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types/check"
 )
 
 // WireSet provides a wire set for this package.
@@ -15,7 +16,7 @@ var WireSet = wire.NewSet(
 	NewController,
 )
 
-func ProvideController(authorizer authz.Authorizer, userStore store.UserStore,
+func ProvideController(userCheck check.User, authorizer authz.Authorizer, userStore store.UserStore,
 	tokenStore store.TokenStore) *Controller {
-	return NewController(authorizer, userStore, tokenStore)
+	return NewController(userCheck, authorizer, userStore, tokenStore)
 }

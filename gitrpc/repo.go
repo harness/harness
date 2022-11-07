@@ -14,6 +14,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	// repoGitUIDLength is the length of the generated repo uid.
+	repoGitUIDLength = 21
+)
+
 type CreateRepositoryParams struct {
 	DefaultBranch string
 	Files         []File
@@ -83,5 +88,5 @@ func (c *Client) CreateRepository(ctx context.Context,
 }
 
 func newRepositoryUID() (string, error) {
-	return gonanoid.New()
+	return gonanoid.New(repoGitUIDLength)
 }

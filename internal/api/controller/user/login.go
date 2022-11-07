@@ -6,7 +6,11 @@ package user
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
+	"fmt"
+	"math/big"
+	"time"
 
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
@@ -49,11 +53,22 @@ func (c *Controller) Login(ctx context.Context, session *auth.Session,
 		return nil, usererror.ErrNotFound
 	}
 
-	// TODO: how should we name session tokens?
-	token, jwtToken, err := token.CreateUserSession(ctx, c.tokenStore, user, "login")
+	tokenUID, err := generateSessionTokenUID()
+	if err != nil {
+		return nil, err
+	}
+	token, jwtToken, err := token.CreateUserSession(ctx, c.tokenStore, user, tokenUID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &types.TokenResponse{Token: *token, AccessToken: jwtToken}, nil
+}
+
+func generateSessionTokenUID() (string, error) {
+	r, err := rand.Int(rand.Reader, big.NewInt(10000))
+	if err != nil {
+		return "", fmt.Errorf("failed to generate random number: %w", err)
+	}
+	return fmt.Sprintf("login-%d-%04d", time.Now().Unix(), r.Int64()), nil
 }

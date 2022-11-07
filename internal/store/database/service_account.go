@@ -7,48 +7,74 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/rs/zerolog/log"
 
 	"github.com/jmoiron/sqlx"
 )
 
 var _ store.ServiceAccountStore = (*ServiceAccountStore)(nil)
 
+// serviceAccount is a DB representation of a service account principal.
+// It is required to allow storing transformed UIDs used for uniquness constraints and searching.
+type serviceAccount struct {
+	types.ServiceAccount
+	UIDUnique string `db:"principal_uidUnique"`
+}
+
 // NewServiceAccountStore returns a new ServiceAccountStore.
-func NewServiceAccountStore(db *sqlx.DB) *ServiceAccountStore {
-	return &ServiceAccountStore{db}
+func NewServiceAccountStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTransformation) *ServiceAccountStore {
+	return &ServiceAccountStore{
+		db:                db,
+		uidTransformation: uidTransformation,
+	}
 }
 
 // ServiceAccountStore implements a ServiceAccountStore backed by a relational
 // database.
 type ServiceAccountStore struct {
-	db *sqlx.DB
+	db                *sqlx.DB
+	uidTransformation store.PrincipalUIDTransformation
 }
 
 // Find finds the service account by id.
 func (s *ServiceAccountStore) Find(ctx context.Context, id int64) (*types.ServiceAccount, error) {
-	dst := new(types.ServiceAccount)
+	dst := new(serviceAccount)
 	if err := s.db.GetContext(ctx, dst, serviceAccountSelectID, id); err != nil {
 		return nil, processSQLErrorf(err, "Select by id query failed")
 	}
-	return dst, nil
+	return s.mapDBServiceAccount(dst), nil
 }
 
 // FindUID finds the service account by uid.
 func (s *ServiceAccountStore) FindUID(ctx context.Context, uid string) (*types.ServiceAccount, error) {
-	dst := new(types.ServiceAccount)
-	if err := s.db.GetContext(ctx, dst, serviceAccountSelectUID, uid); err != nil {
+	// map the UID to unique UID before searching!
+	uidUnique, err := s.uidTransformation(enum.PrincipalTypeServiceAccount, uid)
+	if err != nil {
+		// in case we fail to transform, return a not found (as it can't exist in the first place)
+		log.Ctx(ctx).Debug().Msgf("failed to transform uid '%s': %s", uid, err.Error())
+		return nil, store.ErrResourceNotFound
+	}
+
+	dst := new(serviceAccount)
+	if err = s.db.GetContext(ctx, dst, serviceAccountSelectUIDUnique, uidUnique); err != nil {
 		return nil, processSQLErrorf(err, "Select by uid query failed")
 	}
-	return dst, nil
+	return s.mapDBServiceAccount(dst), nil
 }
 
 // Create saves the service account.
 func (s *ServiceAccountStore) Create(ctx context.Context, sa *types.ServiceAccount) error {
-	query, arg, err := s.db.BindNamed(serviceAccountInsert, sa)
+	dbSA, err := s.mapToDBserviceAccount(sa)
+	if err != nil {
+		return fmt.Errorf("failed to map db service account: %w", err)
+	}
+
+	query, arg, err := s.db.BindNamed(serviceAccountInsert, dbSA)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind service account object")
 	}
@@ -62,7 +88,12 @@ func (s *ServiceAccountStore) Create(ctx context.Context, sa *types.ServiceAccou
 
 // Update updates the service account details.
 func (s *ServiceAccountStore) Update(ctx context.Context, sa *types.ServiceAccount) error {
-	query, arg, err := s.db.BindNamed(serviceAccountUpdate, sa)
+	dbSA, err := s.mapToDBserviceAccount(sa)
+	if err != nil {
+		return fmt.Errorf("failed to map db service account: %w", err)
+	}
+
+	query, arg, err := s.db.BindNamed(serviceAccountUpdate, dbSA)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind service account object")
 	}
@@ -93,13 +124,13 @@ func (s *ServiceAccountStore) Delete(ctx context.Context, id int64) error {
 // List returns a list of service accounts for a specific parent.
 func (s *ServiceAccountStore) List(ctx context.Context, parentType enum.ParentResourceType,
 	parentID int64) ([]*types.ServiceAccount, error) {
-	dst := []*types.ServiceAccount{}
+	dst := []*serviceAccount{}
 
 	err := s.db.SelectContext(ctx, &dst, serviceAccountSelectByParentTypeAndID, parentType, parentID)
 	if err != nil {
 		return nil, processSQLErrorf(err, "Failed executing default list query")
 	}
-	return dst, nil
+	return s.mapDBServiceAccounts(dst), nil
 }
 
 // Count returns a count of service accounts for a specific parent.
@@ -113,6 +144,36 @@ func (s *ServiceAccountStore) Count(ctx context.Context,
 	return count, nil
 }
 
+func (s *ServiceAccountStore) mapDBServiceAccount(dbSA *serviceAccount) *types.ServiceAccount {
+	return &dbSA.ServiceAccount
+}
+
+func (s *ServiceAccountStore) mapDBServiceAccounts(dbSAs []*serviceAccount) []*types.ServiceAccount {
+	res := make([]*types.ServiceAccount, len(dbSAs))
+	for i := range dbSAs {
+		res[i] = s.mapDBServiceAccount(dbSAs[i])
+	}
+	return res
+}
+
+func (s *ServiceAccountStore) mapToDBserviceAccount(sa *types.ServiceAccount) (*serviceAccount, error) {
+	// service account comes from outside.
+	if sa == nil {
+		return nil, fmt.Errorf("service account is nil")
+	}
+
+	uidUnique, err := s.uidTransformation(enum.PrincipalTypeServiceAccount, sa.UID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to transform service account UID: %w", err)
+	}
+	dbSA := &serviceAccount{
+		ServiceAccount: *sa,
+		UIDUnique:      uidUnique,
+	}
+
+	return dbSA, nil
+}
+
 const serviceAccountCountByParentTypeAndID = `
 SELECT count(*)
 FROM principals
@@ -123,7 +184,9 @@ const serviceAccountBase = `
 SELECT
 principal_id
 ,principal_uid
-,principal_name
+,principal_uidUnique
+,principal_email
+,principal_displayName
 ,principal_blocked
 ,principal_salt
 ,principal_created
@@ -135,15 +198,15 @@ FROM principals
 
 const serviceAccountSelectByParentTypeAndID = serviceAccountBase + `
 WHERE principal_type = "serviceaccount" AND principal_sa_parentType = $1 AND principal_sa_parentId = $2
-ORDER BY principal_name ASC
+ORDER BY principal_uid ASC
 `
 
 const serviceAccountSelectID = serviceAccountBase + `
 WHERE principal_type = "serviceaccount" AND principal_id = $1
 `
 
-const serviceAccountSelectUID = serviceAccountBase + `
-WHERE principal_type = "serviceaccount" AND principal_uid = $1
+const serviceAccountSelectUIDUnique = serviceAccountBase + `
+WHERE principal_type = "serviceaccount" AND principal_uidUnique = $1
 `
 
 const serviceAccountDelete = `
@@ -155,7 +218,9 @@ const serviceAccountInsert = `
 INSERT INTO principals (
 principal_type
 ,principal_uid
-,principal_name
+,principal_uidUnique
+,principal_email
+,principal_displayName
 ,principal_admin
 ,principal_blocked
 ,principal_salt
@@ -166,7 +231,9 @@ principal_type
 ) values (
  "serviceaccount"
 ,:principal_uid
-,:principal_name
+,:principal_uidUnique
+,:principal_email
+,:principal_displayName
 ,false
 ,:principal_blocked
 ,:principal_salt
@@ -180,7 +247,8 @@ principal_type
 const serviceAccountUpdate = `
 UPDATE principals
 SET
- principal_name            = :principal_name
+principal_email     	  = :principal_email
+,principal_displayName    = :principal_displayName
 ,principal_blocked        = :principal_blocked
 ,principal_salt           = :principal_salt
 ,principal_updated        = :principal_updated

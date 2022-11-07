@@ -12,9 +12,8 @@ type SpaceAttr int
 // Order enumeration.
 const (
 	SpaceAttrNone SpaceAttr = iota
-	SpaceAttrPathName
 	SpaceAttrPath
-	SpaceAttrName
+	SpaceAttrUID
 	SpaceAttrCreated
 	SpaceAttrUpdated
 )
@@ -23,12 +22,10 @@ const (
 // and returns the equivalent enumeration.
 func ParseSpaceAttr(s string) SpaceAttr {
 	switch strings.ToLower(s) {
-	case name:
-		return SpaceAttrName
+	case uid:
+		return SpaceAttrUID
 	case path:
 		return SpaceAttrPath
-	case pathName:
-		return SpaceAttrPathName
 	case created, createdAt:
 		return SpaceAttrCreated
 	case updated, updatedAt:
@@ -41,12 +38,10 @@ func ParseSpaceAttr(s string) SpaceAttr {
 // String returns the string representation of the attribute.
 func (a SpaceAttr) String() string {
 	switch a {
-	case SpaceAttrPathName:
-		return pathName
 	case SpaceAttrPath:
 		return path
-	case SpaceAttrName:
-		return name
+	case SpaceAttrUID:
+		return uid
 	case SpaceAttrCreated:
 		return created
 	case SpaceAttrUpdated:

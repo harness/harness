@@ -7,6 +7,7 @@ package openapi
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 
@@ -32,7 +33,7 @@ func buildUser(reflector *openapi3.Reflector) {
 	opUpdate := openapi3.Operation{}
 	opUpdate.WithTags("user")
 	opUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateUser"})
-	_ = reflector.SetRequest(&opUpdate, new(types.UserInput), http.MethodPatch)
+	_ = reflector.SetRequest(&opUpdate, new(user.UpdateInput), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&opUpdate, new(types.User), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodPatch, "/user", opUpdate)

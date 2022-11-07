@@ -7,7 +7,6 @@ package request
 import (
 	"net/http"
 	"net/url"
-	"strings"
 )
 
 const (
@@ -20,7 +19,6 @@ func GetRepoRefFromPath(r *http.Request) (string, error) {
 		return "", err
 	}
 
-	// paths are unescaped and lower
-	ref, err := url.PathUnescape(rawRef)
-	return strings.ToLower(ref), err
+	// paths are unescaped
+	return url.PathUnescape(rawRef)
 }

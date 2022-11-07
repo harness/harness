@@ -18,7 +18,7 @@ import (
  * DeleteToken deletes a token of a user.
  */
 func (c *Controller) DeleteToken(ctx context.Context, session *auth.Session,
-	userUID string, tokenType enum.TokenType, tokenID int64) error {
+	userUID string, tokenType enum.TokenType, tokenUID string) error {
 	user, err := findUserFromUID(ctx, c.userStore, userUID)
 	if err != nil {
 		return err
@@ -29,7 +29,7 @@ func (c *Controller) DeleteToken(ctx context.Context, session *auth.Session,
 		return err
 	}
 
-	token, err := c.tokenStore.Find(ctx, tokenID)
+	token, err := c.tokenStore.FindByUID(ctx, user.ID, tokenUID)
 	if err != nil {
 		return err
 	}
@@ -48,5 +48,5 @@ func (c *Controller) DeleteToken(ctx context.Context, session *auth.Session,
 		return usererror.ErrNotFound
 	}
 
-	return c.tokenStore.Delete(ctx, tokenID)
+	return c.tokenStore.Delete(ctx, token.ID)
 }

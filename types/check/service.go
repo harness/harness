@@ -8,15 +8,23 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-// Service returns true if the Service if valid.
-func Service(sa *types.Service) error {
+// Service returns true if the Service is valid.
+type Service func(*types.Service) error
+
+// ServiceDefault is the default Service validation.
+func ServiceDefault(svc *types.Service) error {
 	// validate UID
-	if err := UID(sa.UID); err != nil {
+	if err := UID(svc.UID); err != nil {
 		return err
 	}
 
-	// validate name
-	if err := Name(sa.Name); err != nil {
+	// Validate Email
+	if err := Email(svc.Email); err != nil {
+		return err
+	}
+
+	// validate DisplayName
+	if err := DisplayName(svc.DisplayName); err != nil {
 		return err
 	}
 

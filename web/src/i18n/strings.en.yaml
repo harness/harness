@@ -9,6 +9,7 @@ public: Public
 private: Private
 cancel: Cancel
 name: Name
+identifier: Identifier
 search: Search
 description: Description
 repositories: Repositories
@@ -22,7 +23,7 @@ content: Content
 history: History
 newRepo: New Repository
 createRepo: Create Repository
-enterRepoName: Enter Repository Name
+enterRepoIdentifier: Enter Repository Identifier
 enterDescription: Enter a description (optional)
 addLicense: Add License
 none: None
@@ -50,7 +51,7 @@ searchBranches: Search branches
 updated: Updated
 cloneHTTPS: Clone with HTTPS
 repos:
-  name: Repo Name
+  identifier: Repo Identifier
   data: Repo Data
   activities: Monthly Activities
   updated: Updated Date
@@ -63,5 +64,5 @@ createRepoModal:
   publicLabel: Anyone on the internet can see this repository.
   privateLabel: You choose who can see and commit to this repository.
 validation:
-  namePatternIsNotValid: 'Name can only contain alphanumerics, . _ and -'
+  identifierPatternIsNotValid: 'Identifier can only contain alphanumerics, _ and $'
   gitBranchNameInvalid: Branch name is invalid.

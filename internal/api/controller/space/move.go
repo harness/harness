@@ -7,9 +7,9 @@ package space
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/types"
@@ -19,7 +19,7 @@ import (
 
 // MoveInput is used for moving a space.
 type MoveInput struct {
-	PathName    *string `json:"pathName"`
+	UID         *string `json:"uid"`
 	ParentID    *int64  `json:"parentId"`
 	KeepAsAlias bool    `json:"keepAsAlias"`
 }
@@ -39,24 +39,21 @@ func (c *Controller) Move(ctx context.Context, session *auth.Session,
 	}
 
 	// backfill data
-	if in.PathName == nil {
-		in.PathName = &space.PathName
+	if in.UID == nil {
+		in.UID = &space.UID
 	}
 	if in.ParentID == nil {
 		in.ParentID = &space.ParentID
 	}
 
-	// convert name to lower case for easy of api use
-	*in.PathName = strings.ToLower(*in.PathName)
-
 	// verify input
-	if err = check.PathName(*in.PathName); err != nil {
+	if err = check.UID(*in.UID); err != nil {
 		return nil, err
 	}
 
 	// ensure it's not a no-op
-	if *in.ParentID == space.ParentID && *in.PathName == space.PathName {
-		return nil, err
+	if *in.ParentID == space.ParentID && *in.UID == space.UID {
+		return nil, usererror.ErrNoChange
 	}
 
 	// Ensure we can create spaces within the target space (using parent space as scope, similar to create)
@@ -78,15 +75,15 @@ func (c *Controller) Move(ctx context.Context, session *auth.Session,
 		}
 
 		/*
-		 * Validate path length (Due to racing conditions we can't be 100% sure on the path here only best
+		 * Validate path depth (Due to racing conditions we can't be 100% sure on the path here only best
 		 * effort to avoid big transaction failure)
 		 * Only needed if we actually change the parent (and can skip top level, as we already validate the name)
 		 */
-		path := paths.Concatinate(newParent.Path, *in.PathName)
-		if err = check.Path(path, true); err != nil {
+		path := paths.Concatinate(newParent.Path, *in.UID)
+		if err = check.PathDepth(path, true); err != nil {
 			return nil, err
 		}
 	}
 
-	return c.spaceStore.Move(ctx, session.Principal.ID, space.ID, *in.ParentID, *in.PathName, in.KeepAsAlias)
+	return c.spaceStore.Move(ctx, session.Principal.ID, space.ID, *in.ParentID, *in.UID, in.KeepAsAlias)
 }

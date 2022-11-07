@@ -6,7 +6,6 @@ package repo
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
@@ -36,7 +35,7 @@ func (c *Controller) CreatePath(ctx context.Context, session *auth.Session,
 	}
 
 	params := &types.PathParams{
-		Path:      strings.ToLower(in.Path),
+		Path:      in.Path,
 		CreatedBy: session.Principal.ID,
 		Created:   time.Now().UnixMilli(),
 		Updated:   time.Now().UnixMilli(),

@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/gitrpc"
@@ -19,15 +18,13 @@ import (
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 	zerolog "github.com/rs/zerolog/log"
 )
 
 type CreateInput struct {
-	PathName      string `json:"pathName"`
-	SpaceID       int64  `json:"spaceId"`
-	Name          string `json:"name"`
+	ParentID      int64  `json:"parentID"`
+	UID           string `json:"uid"`
 	DefaultBranch string `json:"defaultBranch"`
 	Description   string `json:"description"`
 	IsPublic      bool   `json:"isPublic"`
@@ -43,13 +40,13 @@ type CreateInput struct {
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Repository, error) {
 	log := zerolog.Ctx(ctx)
 	// ensure we reference a space
-	if in.SpaceID <= 0 {
+	if in.ParentID <= 0 {
 		return nil, usererror.BadRequest("A repository can't exist by itself.")
 	}
 
-	parentSpace, err := c.spaceStore.Find(ctx, in.SpaceID)
+	parentSpace, err := c.spaceStore.Find(ctx, in.ParentID)
 	if err != nil {
-		log.Err(err).Msgf("Failed to get space with id '%d'.", in.SpaceID)
+		log.Err(err).Msgf("Failed to get space with id '%d'.", in.ParentID)
 		return nil, usererror.BadRequest("Parent not found'")
 	}
 	/*
@@ -74,9 +71,8 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 
 	// create new repo object
 	repo := &types.Repository{
-		PathName:      strings.ToLower(in.PathName),
-		SpaceID:       in.SpaceID,
-		Name:          in.Name,
+		ParentID:      in.ParentID,
+		UID:           in.UID,
 		Description:   in.Description,
 		IsPublic:      in.IsPublic,
 		CreatedBy:     session.Principal.ID,
@@ -87,13 +83,13 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	// validate repo
-	if err = check.Repo(repo); err != nil {
+	if err = c.repoCheck(repo); err != nil {
 		return nil, err
 	}
 	var content []byte
 	files := make([]gitrpc.File, 0, 3) // readme, gitignore, licence
 	if in.Readme {
-		content = createReadme(in.Name, in.Description)
+		content = createReadme(in.UID, in.Description)
 		files = append(files, gitrpc.File{
 			Path:    "README.md",
 			Content: content,

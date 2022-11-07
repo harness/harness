@@ -19,7 +19,7 @@ import (
 
 const userTmpl = `
 uid:   {{ .UID }}
-name:  {{ .Name }}
+name:  {{ .DisplayName }}
 email: {{ .Email }}
 admin: {{ .Admin }}
 `

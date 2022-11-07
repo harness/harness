@@ -13,17 +13,17 @@ type (
 	// User is a principal representing an end user.
 	User struct {
 		// Fields from Principal
-		ID      int64  `db:"principal_id"            json:"-"`
-		UID     string `db:"principal_uid"           json:"uid"`
-		Name    string `db:"principal_name"          json:"name"`
-		Admin   bool   `db:"principal_admin"         json:"admin"`
-		Blocked bool   `db:"principal_blocked"       json:"blocked"`
-		Salt    string `db:"principal_salt"          json:"-"`
-		Created int64  `db:"principal_created"       json:"created"`
-		Updated int64  `db:"principal_updated"       json:"updated"`
+		ID          int64  `db:"principal_id"            json:"-"`
+		UID         string `db:"principal_uid"           json:"uid"`
+		Email       string `db:"principal_email"         json:"email"`
+		DisplayName string `db:"principal_displayName"   json:"displayName"`
+		Admin       bool   `db:"principal_admin"         json:"admin"`
+		Blocked     bool   `db:"principal_blocked"       json:"blocked"`
+		Salt        string `db:"principal_salt"          json:"-"`
+		Created     int64  `db:"principal_created"       json:"created"`
+		Updated     int64  `db:"principal_updated"       json:"updated"`
 
 		// User specific fields
-		Email    string `db:"principal_user_email"       json:"email"`
 		Password string `db:"principal_user_password"    json:"-"`
 	}
 

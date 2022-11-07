@@ -48,11 +48,11 @@ func (s *SpaceStoreSync) Create(ctx context.Context, space *types.Space) error {
 }
 
 // Move moves an existing space.
-func (s *SpaceStoreSync) Move(ctx context.Context, principalID int64, spaceID int64, newParentID int64, newName string,
+func (s *SpaceStoreSync) Move(ctx context.Context, principalID int64, id int64, newParentID int64, newName string,
 	keepAsAlias bool) (*types.Space, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.Move(ctx, principalID, spaceID, newParentID, newName, keepAsAlias)
+	return s.base.Move(ctx, principalID, id, newParentID, newName, keepAsAlias)
 }
 
 // Update the space details.
@@ -94,15 +94,15 @@ func (s *SpaceStoreSync) ListPaths(ctx context.Context, id int64, opts *types.Pa
 }
 
 // CreatePath a path for a space.
-func (s *SpaceStoreSync) CreatePath(ctx context.Context, spaceID int64, params *types.PathParams) (*types.Path, error) {
+func (s *SpaceStoreSync) CreatePath(ctx context.Context, id int64, params *types.PathParams) (*types.Path, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.CreatePath(ctx, spaceID, params)
+	return s.base.CreatePath(ctx, id, params)
 }
 
 // DeletePath a path of a space.
-func (s *SpaceStoreSync) DeletePath(ctx context.Context, spaceID int64, pathID int64) error {
+func (s *SpaceStoreSync) DeletePath(ctx context.Context, id int64, pathID int64) error {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.DeletePath(ctx, spaceID, pathID)
+	return s.base.DeletePath(ctx, id, pathID)
 }

@@ -18,7 +18,7 @@ import (
  */
 func (c *Controller) Find(ctx context.Context, session *auth.Session,
 	saUID string) (*types.ServiceAccount, error) {
-	sa, err := findServiceAccountFromUID(ctx, c.saStore, saUID)
+	sa, err := c.FindNoAuth(ctx, saUID)
 	if err != nil {
 		return nil, err
 	}
@@ -30,4 +30,12 @@ func (c *Controller) Find(ctx context.Context, session *auth.Session,
 	}
 
 	return sa, nil
+}
+
+/*
+ * FindNoAuth finds a service account without auth checks.
+ * WARNING: Never call as part of user flow.
+ */
+func (c *Controller) FindNoAuth(ctx context.Context, saUID string) (*types.ServiceAccount, error) {
+	return findServiceAccountFromUID(ctx, c.saStore, saUID)
 }

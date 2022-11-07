@@ -11,17 +11,18 @@ import (
 	"context"
 
 	"github.com/harness/gitness/gitrpc"
-
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
-
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
 	"github.com/harness/gitness/harness/bootstrap"
 	"github.com/harness/gitness/harness/client"
 	"github.com/harness/gitness/harness/router"
+	"github.com/harness/gitness/harness/store"
 	"github.com/harness/gitness/harness/types"
+	"github.com/harness/gitness/harness/types/check"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/service"
+	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/cron"
@@ -46,6 +47,7 @@ func initSystem(ctx context.Context, config *gitnessTypes.Config) (*system, erro
 		space.WireSet,
 		user.WireSet,
 		service.WireSet,
+		serviceaccount.WireSet,
 		gitrpcserver.WireSet,
 		gitrpc.WireSet,
 		types.LoadConfig,
@@ -53,6 +55,8 @@ func initSystem(ctx context.Context, config *gitnessTypes.Config) (*system, erro
 		authn.WireSet,
 		authz.WireSet,
 		client.WireSet,
+		store.WireSet,
+		check.WireSet,
 	)
 	return &system{}, nil
 }

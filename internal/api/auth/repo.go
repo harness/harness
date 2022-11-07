@@ -27,7 +27,7 @@ func CheckRepo(ctx context.Context, authorizer authz.Authorizer, session *auth.S
 		return nil
 	}
 
-	parentSpace, name, err := paths.Disect(repo.Path)
+	parentSpace, name, err := paths.DisectLeaf(repo.Path)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to disect path '%s'", repo.Path)
 	}

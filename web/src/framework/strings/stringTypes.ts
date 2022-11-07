@@ -29,11 +29,12 @@ export interface StringsMap {
   description: string
   email: string
   enterDescription: string
-  enterRepoName: string
+  enterRepoIdentifier: string
   existingAccount: string
   failedToCreateRepo: string
   files: string
   history: string
+  identifier: string
   inactiveBranches: string
   loading: string
   name: string
@@ -51,8 +52,8 @@ export interface StringsMap {
   'repos.activities': string
   'repos.data': string
   'repos.enterBranchName': string
+  'repos.identifier': string
   'repos.lastChange': string
-  'repos.name': string
   'repos.noDataMessage': string
   'repos.updated': string
   repositories: string
@@ -64,7 +65,7 @@ export interface StringsMap {
   status: string
   updated: string
   'validation.gitBranchNameInvalid': string
-  'validation.namePatternIsNotValid': string
+  'validation.identifierPatternIsNotValid': string
   viewCommitDetails: string
   yourBranches: string
 }

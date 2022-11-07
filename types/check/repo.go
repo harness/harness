@@ -9,26 +9,30 @@ import (
 )
 
 var (
-	ErrRepositoryRequiresSpaceID = &ValidationError{
-		"SpaceID required - Repositories don't exist outside of a space.",
+	ErrRepositoryRequiresParentID = &ValidationError{
+		"ParentID required - Standalone repositories are not supported.",
 	}
 )
 
-// Repo checks the provided repository and returns an error in it isn't valid.
-func Repo(repo *types.Repository) error {
-	// validate name
-	if err := PathName(repo.PathName); err != nil {
+// Repo returns true if the Repo is valid.
+type Repo func(*types.Repository) error
+
+// RepoDefault is the default Repo validation.
+func RepoDefault(repo *types.Repository) error {
+	// validate UID
+	if err := UID(repo.UID); err != nil {
 		return err
 	}
 
-	// validate display name
-	if err := Name(repo.Name); err != nil {
-		return err
-	}
+	// validate the rest
+	return RepoNoUID(repo)
+}
 
+// RepoNoUID validates the repo and ignores the UID field.
+func RepoNoUID(repo *types.Repository) error {
 	// validate repo within a space
-	if repo.SpaceID <= 0 {
-		return ErrRepositoryRequiresSpaceID
+	if repo.ParentID <= 0 {
+		return ErrRepositoryRequiresParentID
 	}
 
 	// TODO: validate defaultBranch, ...

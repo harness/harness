@@ -53,11 +53,10 @@ var queryParameterSortRepo = openapi3.ParameterOrRef{
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeString),
-				Default: ptrptr(enum.RepoAttrName.String()),
+				Default: ptrptr(enum.RepoAttrUID.String()),
 				Enum: []interface{}{
-					ptr.String(enum.RepoAttrName.String()),
+					ptr.String(enum.RepoAttrUID.String()),
 					ptr.String(enum.RepoAttrPath.String()),
-					ptr.String(enum.RepoAttrPathName.String()),
 					ptr.String(enum.RepoAttrCreated.String()),
 					ptr.String(enum.RepoAttrUpdated.String()),
 				},
@@ -89,11 +88,10 @@ var queryParameterSortSpace = openapi3.ParameterOrRef{
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeString),
-				Default: ptrptr(enum.SpaceAttrName.String()),
+				Default: ptrptr(enum.SpaceAttrUID.String()),
 				Enum: []interface{}{
-					ptr.String(enum.SpaceAttrName.String()),
+					ptr.String(enum.SpaceAttrUID.String()),
 					ptr.String(enum.SpaceAttrPath.String()),
-					ptr.String(enum.SpaceAttrPathName.String()),
 					ptr.String(enum.SpaceAttrCreated.String()),
 					ptr.String(enum.SpaceAttrUpdated.String()),
 				},

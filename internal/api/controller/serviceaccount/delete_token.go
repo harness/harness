@@ -18,7 +18,7 @@ import (
  * DeleteToken deletes a token of a sevice account.
  */
 func (c *Controller) DeleteToken(ctx context.Context, session *auth.Session,
-	saUID string, tokenID int64) error {
+	saUID string, tokenUID string) error {
 	sa, err := findServiceAccountFromUID(ctx, c.saStore, saUID)
 	if err != nil {
 		return err
@@ -30,7 +30,7 @@ func (c *Controller) DeleteToken(ctx context.Context, session *auth.Session,
 		return err
 	}
 
-	token, err := c.tokenStore.Find(ctx, tokenID)
+	token, err := c.tokenStore.FindByUID(ctx, sa.ID, tokenUID)
 	if err != nil {
 		return err
 	}
@@ -43,5 +43,5 @@ func (c *Controller) DeleteToken(ctx context.Context, session *auth.Session,
 		return usererror.ErrNotFound
 	}
 
-	return c.tokenStore.Delete(ctx, tokenID)
+	return c.tokenStore.Delete(ctx, token.ID)
 }

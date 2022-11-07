@@ -7,15 +7,19 @@ package service
 import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types/check"
 )
 
 type Controller struct {
+	serviceCheck check.Service
 	authorizer   authz.Authorizer
 	serviceStore store.ServiceStore
 }
 
-func NewController(authorizer authz.Authorizer, serviceStore store.ServiceStore) *Controller {
+func NewController(serviceCheck check.Service, authorizer authz.Authorizer,
+	serviceStore store.ServiceStore) *Controller {
 	return &Controller{
+		serviceCheck: serviceCheck,
 		authorizer:   authorizer,
 		serviceStore: serviceStore,
 	}

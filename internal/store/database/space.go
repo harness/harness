@@ -7,7 +7,6 @@ package database
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/harness/gitness/internal/paths"
@@ -22,13 +21,17 @@ import (
 var _ store.SpaceStore = (*SpaceStore)(nil)
 
 // NewSpaceStore returns a new SpaceStore.
-func NewSpaceStore(db *sqlx.DB) *SpaceStore {
-	return &SpaceStore{db}
+func NewSpaceStore(db *sqlx.DB, pathTransformation store.PathTransformation) *SpaceStore {
+	return &SpaceStore{
+		db:                 db,
+		pathTransformation: pathTransformation,
+	}
 }
 
 // SpaceStore implements a SpaceStore backed by a relational database.
 type SpaceStore struct {
-	db *sqlx.DB
+	db                 *sqlx.DB
+	pathTransformation store.PathTransformation
 }
 
 // Find the space by id.
@@ -42,8 +45,14 @@ func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
 
 // FindByPath finds the space by path.
 func (s *SpaceStore) FindByPath(ctx context.Context, path string) (*types.Space, error) {
+	// ensure we transform path before searching (otherwise casing might be wrong)
+	pathUnique, err := s.pathTransformation(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to transform path '%s': %w", path, err)
+	}
+
 	dst := new(types.Space)
-	if err := s.db.GetContext(ctx, dst, spaceSelectByPath, path); err != nil {
+	if err = s.db.GetContext(ctx, dst, spaceSelectByPathUnique, pathUnique); err != nil {
 		return nil, processSQLErrorf(err, "Select query failed")
 	}
 	return dst, nil
@@ -70,7 +79,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 	}
 
 	// Get path (get parent if needed)
-	path := space.PathName
+	path := space.UID
 	if space.ParentID > 0 {
 		var parentPath *types.Path
 		parentPath, err = FindPathTx(ctx, tx, enum.PathTargetTypeSpace, space.ParentID)
@@ -78,8 +87,8 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 			return errors.Wrap(err, "Failed to find path of parent space")
 		}
 
-		// all existing paths are valid, space name is assumed to be valid.
-		path = paths.Concatinate(parentPath.Value, space.PathName)
+		// all existing paths are valid, space uid is assumed to be valid.
+		path = paths.Concatinate(parentPath.Value, space.UID)
 	}
 
 	// create path only once we know the id of the space
@@ -92,7 +101,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 		Created:    space.Created,
 		Updated:    space.Updated,
 	}
-	err = CreatePathTx(ctx, s.db, tx, p)
+	err = CreatePathTx(ctx, s.db, tx, p, s.pathTransformation)
 	if err != nil {
 		return errors.Wrap(err, "Failed to create primary path of space")
 	}
@@ -109,7 +118,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 }
 
 // Move moves an existing space.
-func (s *SpaceStore) Move(ctx context.Context, principalID int64, spaceID int64, newParentID int64, newName string,
+func (s *SpaceStore) Move(ctx context.Context, principalID int64, id int64, newParentID int64, newName string,
 	keepAsAlias bool) (*types.Space, error) {
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -120,13 +129,13 @@ func (s *SpaceStore) Move(ctx context.Context, principalID int64, spaceID int64,
 	}(tx)
 
 	// always get currentpath (either it didn't change or we need to for validation)
-	currentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, spaceID)
+	currentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, id)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to find the primary path of the space")
 	}
 
 	// get path of new parent if needed
-	newPath := newName
+	newPathValue := newName
 	if newParentID > 0 {
 		// get path of new parent space
 		var spacePath *types.Path
@@ -135,42 +144,37 @@ func (s *SpaceStore) Move(ctx context.Context, principalID int64, spaceID int64,
 			return nil, errors.Wrap(err, "Failed to find the primary path of the new parent space")
 		}
 
-		newPath = paths.Concatinate(spacePath.Value, newName)
+		newPathValue = paths.Concatinate(spacePath.Value, newName)
 	}
 
-	/*
-	 * IMPORTANT
-	 *   To avoid cycles in the primary graph, we have to ensure that the old path isn't a parent of the new path.
-	 */
-	if newPath == currentPath.Value {
+	// path is exactly the same => nothing to do
+	if newPathValue == currentPath.Value {
 		return nil, store.ErrNoChangeInRequestedMove
-	} else if strings.HasPrefix(newPath, currentPath.Value+types.PathSeparator) {
-		return nil, store.ErrIllegalMoveCyclicHierarchy
 	}
 
 	p := &types.Path{
 		TargetType: enum.PathTargetTypeSpace,
-		TargetID:   spaceID,
+		TargetID:   id,
 		IsAlias:    false,
-		Value:      newPath,
+		Value:      newPathValue,
 		CreatedBy:  principalID,
 		Created:    time.Now().UnixMilli(),
 		Updated:    time.Now().UnixMilli(),
 	}
 
 	// replace the primary path (also updates all child primary paths)
-	if err = ReplacePathTx(ctx, s.db, tx, p, keepAsAlias); err != nil {
+	if err = ReplacePathTx(ctx, s.db, tx, p, keepAsAlias, s.pathTransformation); err != nil {
 		return nil, errors.Wrap(err, "Failed to update the primary path of the space")
 	}
 
 	// Update the space itself
-	if _, err = tx.ExecContext(ctx, spaceUpdateNameAndParentID, newName, newParentID, spaceID); err != nil {
+	if _, err = tx.ExecContext(ctx, spaceUpdateUIDAndParentID, newName, newParentID, id); err != nil {
 		return nil, processSQLErrorf(err, "Query for renaming and updating the parent id failed")
 	}
 
 	// TODO: return space as part of rename operation
 	dst := new(types.Space)
-	if err = tx.GetContext(ctx, dst, spaceSelectByID, spaceID); err != nil {
+	if err = tx.GetContext(ctx, dst, spaceSelectByID, id); err != nil {
 		return nil, processSQLErrorf(err, "Select query to get the space's latest state failed")
 	}
 
@@ -213,7 +217,7 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 	}
 
 	// Get child count and ensure there are none
-	count, err := CountPrimaryChildPathsTx(ctx, tx, path.Value)
+	count, err := CountPrimaryChildPathsTx(ctx, tx, path.Value, s.pathTransformation)
 	if err != nil {
 		return fmt.Errorf("child count error: %w", err)
 	}
@@ -223,8 +227,7 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 	}
 
 	// delete all paths
-	err = DeleteAllPaths(ctx, tx, enum.PathTargetTypeSpace, id)
-	if err != nil {
+	if err = DeleteAllPaths(ctx, tx, enum.PathTargetTypeSpace, id); err != nil {
 		return errors.Wrap(err, "Failed to delete all paths of the space")
 	}
 
@@ -248,7 +251,7 @@ func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilte
 		Where("space_parentId = ?", id)
 
 	if opts.Query != "" {
-		stmt = stmt.Where("space_pathName LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+		stmt = stmt.Where("space_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -277,21 +280,19 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
 	if opts.Query != "" {
-		stmt = stmt.Where("space_pathName LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+		stmt = stmt.Where("space_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
 	}
 
 	switch opts.Sort {
-	case enum.SpaceAttrName, enum.SpaceAttrNone:
+	case enum.SpaceAttrUID, enum.SpaceAttrNone:
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("space_name COLLATE NOCASE " + opts.Order.String())
+		stmt = stmt.OrderBy("space_uid COLLATE NOCASE " + opts.Order.String())
 	case enum.SpaceAttrCreated:
 		stmt = stmt.OrderBy("space_created " + opts.Order.String())
 	case enum.SpaceAttrUpdated:
 		stmt = stmt.OrderBy("space_updated " + opts.Order.String())
-	case enum.SpaceAttrPathName:
-		stmt = stmt.OrderBy("space_pathName COLLATE NOCASE " + opts.Order.String())
 	case enum.SpaceAttrPath:
 		stmt = stmt.OrderBy("space_path COLLATE NOCASE " + opts.Order.String())
 	}
@@ -319,34 +320,33 @@ func (s *SpaceStore) ListPaths(ctx context.Context, id int64, opts *types.PathFi
 }
 
 // CreatePath creates an alias for a space.
-func (s *SpaceStore) CreatePath(ctx context.Context, spaceID int64, params *types.PathParams) (*types.Path, error) {
+func (s *SpaceStore) CreatePath(ctx context.Context, id int64, params *types.PathParams) (*types.Path, error) {
 	p := &types.Path{
 		TargetType: enum.PathTargetTypeSpace,
-		TargetID:   spaceID,
+		TargetID:   id,
 		IsAlias:    true,
 
-		// get remaining infor from params
+		// get remaining info from params
 		Value:     params.Path,
 		CreatedBy: params.CreatedBy,
 		Created:   params.Created,
 		Updated:   params.Updated,
 	}
 
-	return p, CreateAliasPath(ctx, s.db, p)
+	return p, CreateAliasPath(ctx, s.db, p, s.pathTransformation)
 }
 
 // DeletePath an alias of a space.
-func (s *SpaceStore) DeletePath(ctx context.Context, spaceID int64, pathID int64) error {
+func (s *SpaceStore) DeletePath(ctx context.Context, id int64, pathID int64) error {
 	return DeletePath(ctx, s.db, pathID)
 }
 
 const spaceSelectBase = `
 SELECT
  space_id
-,space_pathName
-,paths.path_value AS space_path
 ,space_parentId
-,space_name
+,space_uid
+,paths.path_value AS space_path
 ,space_description
 ,space_isPublic
 ,space_createdBy
@@ -364,9 +364,10 @@ const spaceSelectByID = spaceSelectBaseWithJoin + `
 WHERE space_id = $1
 `
 
-const spaceSelectByPath = spaceSelectBase + `
+const spaceSelectByPathUnique = spaceSelectBase + `
 FROM paths paths1
-INNER JOIN spaces ON spaces.space_id=paths1.path_targetId AND paths1.path_targetType='space' AND paths1.path_value = $1
+INNER JOIN spaces ON spaces.space_id=paths1.path_targetId AND paths1.path_targetType='space'
+  AND paths1.path_valueUnique = $1
 INNER JOIN paths ON spaces.space_id=paths.path_targetId AND paths.path_targetType='space' AND paths.path_isAlias=0
 `
 
@@ -378,18 +379,16 @@ WHERE space_id = $1
 // TODO: do we have to worry about SQL injection for description?
 const spaceInsert = `
 INSERT INTO spaces (
-    space_pathName
-   ,space_parentId
-   ,space_name
+   space_parentId
+   ,space_uid
    ,space_description
    ,space_isPublic
    ,space_createdBy
    ,space_created
    ,space_updated
 ) values (
-   :space_pathName
-   ,:space_parentId
-   ,:space_name
+   :space_parentId
+   ,:space_uid
    ,:space_description
    ,:space_isPublic
    ,:space_createdBy
@@ -401,17 +400,16 @@ INSERT INTO spaces (
 const spaceUpdate = `
 UPDATE spaces
 SET
-space_name   = :space_name
-,space_description  = :space_description
-,space_isPublic     = :space_isPublic
-,space_updated      = :space_updated
-WHERE space_id = :space_id
+space_description = :space_description
+,space_isPublic   = :space_isPublic
+,space_updated    = :space_updated
+WHERE space_id    = :space_id
 `
 
-const spaceUpdateNameAndParentID = `
+const spaceUpdateUIDAndParentID = `
 UPDATE spaces
 SET
-space_pathName = $1
+space_uid       = $1
 ,space_parentId = $2
-WHERE space_id = $3
+WHERE space_id  = $3
 `
