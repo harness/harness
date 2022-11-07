@@ -14,10 +14,12 @@ search: Search
 description: Description
 repositories: Repositories
 files: Files
+commit: Commit
 commits: Commits
 pullRequests: Pull Requests
 settings: Settings
-newFile: + New File
+newFile: New File
+editFile: Edit File
 newFolder: New Folder
 content: Content
 history: History

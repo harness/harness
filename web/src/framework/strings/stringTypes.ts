@@ -13,6 +13,7 @@ export interface StringsMap {
   cancel: string
   clone: string
   cloneHTTPS: string
+  commit: string
   commits: string
   commitsOn: string
   content: string
@@ -27,6 +28,7 @@ export interface StringsMap {
   'createRepoModal.publicLabel': string
   defaultBranch: string
   description: string
+  editFile: string
   email: string
   enterDescription: string
   enterRepoIdentifier: string

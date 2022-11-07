@@ -1,24 +1,25 @@
 import React from 'react'
 import { Container } from '@harness/uicore'
-import { useGet } from 'restful-react'
-import type { OpenapiGetContentOutput, TypesRepository } from 'services/scm'
+import type { TypesRepository } from 'services/scm'
 import { isDir, isFile } from 'utils/GitUtils'
+import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { ContentHeader } from './ContentHeader/ContentHeader'
 import { FolderContent } from './FolderContent/FolderContent'
 import { FileContent } from './FileContent/FileContent'
 import css from './RepositoryContent.module.scss'
 
 interface RepositoryContentProps {
-  gitRef?: string
-  resourcePath?: string
   repoMetadata: TypesRepository
+  gitRef: string
+  resourcePath: string
 }
 
 export function RepositoryContent({ repoMetadata, gitRef, resourcePath }: RepositoryContentProps) {
-  const { data /*error, loading, refetch, response */ } = useGet<OpenapiGetContentOutput>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/content${resourcePath ? '/' + resourcePath : ''}?include_commit=true${
-      gitRef ? `&git_ref=${gitRef}` : ''
-    }`
+  const { data /*error, loading, refetch, response */ } = useGetResourceContent({
+    repoMetadata,
+    gitRef,
+    resourcePath,
+    includeCommit: true
   })
 
   /* TODO: Handle loading and error */
@@ -37,7 +38,9 @@ export function RepositoryContent({ repoMetadata, gitRef, resourcePath }: Reposi
           gitRef={gitRef || (repoMetadata.defaultBranch as string)}
         />
       )}
-      {data && isFile(data) && <FileContent repoMetadata={repoMetadata} contentInfo={data} />}
+      {data && isFile(data) && (
+        <FileContent repoMetadata={repoMetadata} gitRef={gitRef} resourcePath={resourcePath} contentInfo={data} />
+      )}
     </Container>
   )
 }

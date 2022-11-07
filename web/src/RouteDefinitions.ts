@@ -31,15 +31,24 @@ export interface SCMRoutes {
     gitRef?: string
     resourcePath?: string
   }) => string
+  toSCMRepositoryFileEdit: ({
+    repoPath,
+    gitRef,
+    resourcePath
+  }: {
+    repoPath: string
+    gitRef: string
+    resourcePath: string
+  }) => string
   toSCMRepositoryCommits: ({ repoPath, commitRef }: { repoPath: string; commitRef: string }) => string
 }
 
 export const routes: SCMRoutes = {
   toSignIn: (): string => '/signin',
   toSignUp: (): string => '/signup',
-  toSCMRepositoriesListing: ({ space }: { space: string }) => `/${space}`,
-  toSCMRepository: ({ repoPath, gitRef, resourcePath }: { repoPath: string; gitRef?: string; resourcePath?: string }) =>
+  toSCMRepositoriesListing: ({ space }) => `/${space}`,
+  toSCMRepository: ({ repoPath, gitRef, resourcePath }) =>
     `/${repoPath}/${gitRef ? '/' + gitRef : ''}${resourcePath ? '/~/' + resourcePath : ''}`,
-  toSCMRepositoryCommits: ({ repoPath, commitRef }: { repoPath: string; commitRef: string }) =>
-    `/${repoPath}/commits/${commitRef}`
+  toSCMRepositoryFileEdit: ({ repoPath, gitRef, resourcePath }) => `/${repoPath}/edit/${gitRef}/~/${resourcePath}`,
+  toSCMRepositoryCommits: ({ repoPath, commitRef }) => `/${repoPath}/commits/${commitRef}`
 }

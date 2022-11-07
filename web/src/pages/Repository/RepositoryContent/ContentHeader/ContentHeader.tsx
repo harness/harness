@@ -138,7 +138,21 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
             position: 'bottom-right'
           }}
         />
-        <Button text={getString('newFile')} variation={ButtonVariation.PRIMARY} />
+        <Button
+          text={getString('newFile')}
+          icon="plus"
+          iconProps={{ size: 10 }}
+          variation={ButtonVariation.PRIMARY}
+          onClick={() => {
+            history.push(
+              routes.toSCMRepositoryFileEdit({
+                repoPath: repoMetadata.path as string,
+                resourcePath: '',
+                gitRef: gitRef || (repoMetadata.defaultBranch as string)
+              })
+            )
+          }}
+        />
       </Layout.Horizontal>
     </Container>
   )
