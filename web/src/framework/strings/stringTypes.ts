@@ -36,9 +36,12 @@ export interface StringsMap {
   failedToCreateRepo: string
   files: string
   history: string
+  identifier: string
+  in: string
   inactiveBranches: string
   loading: string
   name: string
+  nameYourFile: string
   newFile: string
   newFolder: string
   newRepo: string

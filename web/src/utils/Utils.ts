@@ -26,15 +26,17 @@ export function showToaster(message: string, props?: Partial<IToastProps>): IToa
 export const getErrorMessage = (error: Unknown): string =>
   get(error, 'data.error', get(error, 'data.message', error?.message))
 
-export const MonacoEditorOptions = {
-  ignoreTrimWhitespace: true,
-  minimap: { enabled: false },
-  codeLens: false,
-  scrollBeyondLastLine: false,
-  smartSelect: false,
-  tabSize: 2,
-  insertSpaces: true,
-  overviewRulerBorder: false
+export interface SourceCodeEditorProps {
+  source: string
+  language?: string
+  lineNumbers?: boolean
+  readOnly?: boolean
+  highlightLines?: string // i.e: {1,3-4}, TODO: not yet supported
+  className?: string
+  height?: number | string
+  autoHeight?: boolean
+  wordWrap?: boolean
+  onChange?: (value: string) => void
 }
 
 // Monaco editor has a bug where when its value is set, the value
@@ -157,10 +159,16 @@ const MONACO_SUPPORTED_LANGUAGES = [
   'yaml'
 ]
 
+const EXTENSION_TO_LANG: Record<string, string> = {
+  tsx: 'typescript',
+  jsx: 'typescript'
+}
+
 export const filenameToLanguage = (name?: string): string | undefined => {
-  const map = langMap.languages(name?.split('.').pop() || '')
+  const extension = name?.split('.').pop() || ''
+  const map = langMap.languages(extension)
 
   if (map?.length) {
-    return MONACO_SUPPORTED_LANGUAGES.find(lang => map.includes(lang))
+    return MONACO_SUPPORTED_LANGUAGES.find(lang => map.includes(lang)) || EXTENSION_TO_LANG[extension]
   }
 }

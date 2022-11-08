@@ -12,7 +12,6 @@ const {
   WatchIgnorePlugin,
   container: { ModuleFederationPlugin }
 } = require('webpack')
-const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 const commonConfig = require('./webpack.common')
 
 const baseUrl = process.env.BASE_URL ?? 'https://qa.harness.io/gateway'
@@ -61,72 +60,6 @@ const devConfig = {
     new DefinePlugin({
       'process.env': '{}', // required for @blueprintjs/core
       __DEV__: DEV
-    }),
-    new MonacoWebpackPlugin({
-      // available options are documented at https://github.com/Microsoft/monaco-editor-webpack-plugin#options
-      languages: [
-        'abap',
-        'apex',
-        'azcli',
-        'bat',
-        'cameligo',
-        'clojure',
-        'coffee',
-        'cpp',
-        'csharp',
-        'csp',
-        'css',
-        'dockerfile',
-        'fsharp',
-        'go',
-        'graphql',
-        'handlebars',
-        'html',
-        'ini',
-        'java',
-        'javascript',
-        'json',
-        'kotlin',
-        'less',
-        'lua',
-        'markdown',
-        'mips',
-        'msdax',
-        'mysql',
-        'objective-c',
-        'pascal',
-        'pascaligo',
-        'perl',
-        'pgsql',
-        'php',
-        'postiats',
-        'powerquery',
-        'powershell',
-        'pug',
-        'python',
-        'r',
-        'razor',
-        'redis',
-        'redshift',
-        'restructuredtext',
-        'ruby',
-        'rust',
-        'sb',
-        'scheme',
-        'scss',
-        'shell',
-        'solidity',
-        'sophia',
-        'sql',
-        'st',
-        'swift',
-        'tcl',
-        'twig',
-        'typescript',
-        'vb',
-        'xml',
-        'yaml'
-      ]
     })
     // new ForkTsCheckerWebpackPlugin()
     // new WatchIgnorePlugin({

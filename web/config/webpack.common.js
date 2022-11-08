@@ -1,17 +1,17 @@
-const path = require('path');
+const path = require('path')
 
 const webpack = require('webpack')
 const {
   container: { ModuleFederationPlugin },
   DefinePlugin
-} = require('webpack');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+} = require('webpack')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin')
 const GenerateStringTypesPlugin = require('../scripts/webpack/GenerateStringTypesPlugin').GenerateStringTypesPlugin
 const { RetryChunkLoadPlugin } = require('webpack-retry-chunk-load-plugin')
-
-const moduleFederationConfig = require('./moduleFederation.config');
-const CONTEXT = process.cwd();
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
+const moduleFederationConfig = require('./moduleFederation.config')
+const CONTEXT = process.cwd()
 
 const DEV = process.env.NODE_ENV === 'development'
 const ON_PREM = `${process.env.ON_PREM}` === 'true'
@@ -150,8 +150,7 @@ module.exports = {
   },
   resolve: {
     extensions: ['.mjs', '.js', '.ts', '.tsx', '.json', '.ttf', '.scss'],
-    plugins: [
-      new TsconfigPathsPlugin()]
+    plugins: [new TsconfigPathsPlugin()]
   },
   plugins: [
     new ModuleFederationPlugin(moduleFederationConfig),
@@ -164,5 +163,71 @@ module.exports = {
     new RetryChunkLoadPlugin({
       maxRetries: 2
     }),
+    new MonacoWebpackPlugin({
+      // available options are documented at https://github.com/Microsoft/monaco-editor-webpack-plugin#options
+      languages: [
+        'abap',
+        'apex',
+        'azcli',
+        'bat',
+        'cameligo',
+        'clojure',
+        'coffee',
+        'cpp',
+        'csharp',
+        'csp',
+        'css',
+        'dockerfile',
+        'fsharp',
+        'go',
+        'graphql',
+        'handlebars',
+        'html',
+        'ini',
+        'java',
+        'javascript',
+        'json',
+        'kotlin',
+        'less',
+        'lua',
+        'markdown',
+        'mips',
+        'msdax',
+        'mysql',
+        'objective-c',
+        'pascal',
+        'pascaligo',
+        'perl',
+        'pgsql',
+        'php',
+        'postiats',
+        'powerquery',
+        'powershell',
+        'pug',
+        'python',
+        'r',
+        'razor',
+        'redis',
+        'redshift',
+        'restructuredtext',
+        'ruby',
+        'rust',
+        'sb',
+        'scheme',
+        'scss',
+        'shell',
+        'solidity',
+        'sophia',
+        'sql',
+        'st',
+        'swift',
+        'tcl',
+        'twig',
+        'typescript',
+        'vb',
+        'xml',
+        'yaml'
+      ]
+    })
   ]
-};
+}

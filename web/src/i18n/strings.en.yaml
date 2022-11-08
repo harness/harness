@@ -32,6 +32,7 @@ create: Create
 clone: Clone
 copy: Copy
 defaultBranch: Default
+in: in
 ok: OK
 loading: Loading...
 addGitIgnore: Add a .gitignore
@@ -51,6 +52,7 @@ createBranch: + Create Branch
 searchBranches: Search branches
 updated: Updated
 cloneHTTPS: Clone with HTTPS
+nameYourFile: Name your file...
 repos:
   name: Repo Name
   data: Repo Data

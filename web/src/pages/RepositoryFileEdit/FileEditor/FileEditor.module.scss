@@ -7,13 +7,28 @@
   overflow: hidden;
 
   .heading {
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
+    // border-top-left-radius: 4px;
+    // border-top-right-radius: 4px;
     align-items: center;
     padding: 0 var(--spacing-xlarge) !important;
     height: 52px;
     background-color: var(--grey-100);
     box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+    border-bottom: 1px solid var(--grey-200);
+
+    .path {
+      align-items: center;
+
+      .inputContainer {
+        margin-left: var(--spacing-small) !important;
+        margin-bottom: 0;
+
+        input {
+          padding: var(--spacing-xsmall) var(--spacing-small);
+          height: 28px;
+        }
+      }
+    }
   }
 
   .content {
@@ -21,8 +36,7 @@
     overflow: hidden;
 
     .editorContainer {
-      height: calc(100vh - 95px - 52px);
-      background-color: red;
+      height: calc(100vh - 96px - 52px);
       overflow: hidden;
     }
   }

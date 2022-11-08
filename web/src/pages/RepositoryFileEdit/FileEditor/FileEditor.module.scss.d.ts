@@ -3,6 +3,8 @@
 declare const styles: {
   readonly container: string
   readonly heading: string
+  readonly path: string
+  readonly inputContainer: string
   readonly content: string
   readonly editorContainer: string
 }
