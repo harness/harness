@@ -1,7 +1,6 @@
 import React from 'react'
 import { Container } from '@harness/uicore'
 import type { TypesRepository } from 'services/scm'
-import { isFile } from 'utils/GitUtils'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { FileEditor } from '../FileEditor/FileEditor'
 import css from './RepositoryFileEditContent.module.scss'
@@ -19,10 +18,10 @@ export function RepositoryFileEditContent({ repoMetadata, gitRef, resourcePath }
 
   return (
     <Container className={css.resourceContent}>
-      {data && isFile(data) && (
+      {data && (
         <FileEditor
           repoMetadata={repoMetadata}
-          gitRef={gitRef || repoMetadata.defaultBranch}
+          gitRef={gitRef || (repoMetadata.defaultBranch as string)}
           resourcePath={resourcePath}
           contentInfo={data}
         />

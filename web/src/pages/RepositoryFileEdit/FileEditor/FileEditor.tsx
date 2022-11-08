@@ -8,10 +8,12 @@ import {
   FlexExpander,
   Icon,
   Layout,
-  Text
+  Text,
+  TextInput
 } from '@harness/uicore'
 import { Link } from 'react-router-dom'
 import ReactJoin from 'react-join'
+import cx from 'classnames'
 import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
 import type { OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/scm'
 import { useAppContext } from 'AppContext'
@@ -22,7 +24,7 @@ import css from './FileEditor.module.scss'
 
 interface FileEditorProps {
   repoMetadata: TypesRepository
-  gitRef?: string
+  gitRef: string
   resourcePath?: string
   contentInfo: OpenapiGetContentOutput
 }
@@ -30,12 +32,13 @@ interface FileEditorProps {
 export function FileEditor({ contentInfo, repoMetadata, gitRef, resourcePath = '' }: FileEditorProps) {
   const { getString } = useStrings()
   const { routes } = useAppContext()
+  const language = filenameToLanguage(contentInfo?.name)
 
   return (
     <Container className={css.container}>
       <Layout.Horizontal className={css.heading}>
         <Container>
-          <Layout.Horizontal spacing="small">
+          <Layout.Horizontal spacing="small" className={css.path}>
             <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string, gitRef })}>
               <Icon name="main-folder" />
             </Link>
@@ -44,7 +47,7 @@ export function FileEditor({ contentInfo, repoMetadata, gitRef, resourcePath = '
               {resourcePath.split('/').map((_path, index, paths) => {
                 const pathAtIndex = paths.slice(0, index + 1).join('/')
 
-                return (
+                return index < paths.length - 1 ? (
                   <Link
                     key={_path + index}
                     to={routes.toSCMRepository({
@@ -54,9 +57,25 @@ export function FileEditor({ contentInfo, repoMetadata, gitRef, resourcePath = '
                     })}>
                     <Text color={Color.GREY_900}>{_path}</Text>
                   </Link>
+                ) : (
+                  <TextInput
+                    key={_path + index}
+                    autoFocus
+                    value={_path || ''}
+                    wrapperClassName={css.inputContainer}
+                    placeholder={getString('nameYourFile')}
+                  />
                 )
               })}
             </ReactJoin>
+            <Text color={Color.GREY_900}>{getString('in')}</Text>
+            <Link
+              to={routes.toSCMRepository({
+                repoPath: repoMetadata.path as string,
+                gitRef
+              })}>
+              {gitRef}
+            </Link>
           </Layout.Horizontal>
         </Container>
         <FlexExpander />
@@ -69,16 +88,14 @@ export function FileEditor({ contentInfo, repoMetadata, gitRef, resourcePath = '
         />
       </Layout.Horizontal>
 
-      {(contentInfo?.content as RepoFileContent)?.data && (
-        <Container className={css.content}>
-          <SourceCodeEditor
-            className={css.editorContainer}
-            height="100%"
-            language={filenameToLanguage(contentInfo?.name)}
-            source={window.atob((contentInfo?.content as RepoFileContent)?.data || '')}
-          />
-        </Container>
-      )}
+      <Container className={cx(css.content, language)}>
+        <SourceCodeEditor
+          className={css.editorContainer}
+          height="100%"
+          language={language}
+          source={window.atob((contentInfo?.content as RepoFileContent)?.data || '')}
+        />
+      </Container>
     </Container>
   )
 }
