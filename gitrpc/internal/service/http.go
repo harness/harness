@@ -53,7 +53,13 @@ func NewHTTPService(adapter GitAdapter, gitRoot string) (*SmartHTTPService, erro
 }
 
 func (s *SmartHTTPService) getFullPathForRepo(uid string) string {
-	return filepath.Join(s.reposRoot, fmt.Sprintf("%s.%s", uid, gitRepoSuffix))
+	// split repos into subfolders using their prefix to distribute repos accross a set of folders.
+	return filepath.Join(
+		s.reposRoot, // root folder
+		uid[0:2],    // first subfolder
+		uid[2:4],    // second subfolder
+		fmt.Sprintf("%s.%s", uid[4:], gitRepoSuffix), // remainder with .git
+	)
 }
 
 func (s *SmartHTTPService) InfoRefs(
