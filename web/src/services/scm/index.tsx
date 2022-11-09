@@ -191,6 +191,7 @@ export interface TypesRepository {
   defaultBranch?: string
   description?: string
   forkId?: number
+  gitUrl?: string
   id?: number
   isPublic?: boolean
   numClosedPulls?: number

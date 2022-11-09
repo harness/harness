@@ -39,15 +39,6 @@ const App: React.FC<AppProps> = React.memo(function App({
     languageLoader(lang).then(setStrings)
   }, [lang, setStrings])
 
-  window.scmInfo = {
-    standalone,
-    getConfigNew,
-    apiUrl: window.apiUrl,
-    STRIP_SCM_PREFIX: window.STRIP_SCM_PREFIX
-  }
-  console.log('Add some debugging from SCM')
-  debugger
-
   return strings ? (
     <StringsContextProvider initialStrings={strings}>
       <AppErrorBoundary>

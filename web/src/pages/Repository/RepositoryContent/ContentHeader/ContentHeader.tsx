@@ -129,7 +129,7 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
           variation={ButtonVariation.SECONDARY}
           icon="main-clone"
           iconProps={{ size: 10 }}
-          tooltip={<CloneButtonTooltip httpsURL={`http://localhost:3000/${repoMetadata.path}.git`} />}
+          tooltip={<CloneButtonTooltip httpsURL={repoMetadata.gitUrl as string} />}
           tooltipProps={{
             interactionKind: 'click',
             minimal: true,
