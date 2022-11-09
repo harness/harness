@@ -94,6 +94,7 @@ export default function MonacoSourceCodeEditor({
           if (autoHeight) {
             autoAdjustEditorHeight(editor)
           }
+          editor.focus()
         }}
         onChange={onChange}
       />

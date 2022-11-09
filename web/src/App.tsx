@@ -11,6 +11,7 @@ import { buildResfulReactRequestOptions, handle401 } from 'AppUtils'
 import { RouteDestinations } from 'RouteDestinations'
 import { useAPIToken } from 'hooks/useAPIToken'
 import { routes as _routes } from 'RouteDefinitions'
+import { getConfigNew } from 'services/config'
 import { languageLoader } from './framework/strings/languageLoader'
 import type { LanguageRecord } from './framework/strings/languageLoader'
 import { StringsContextProvider } from './framework/strings/StringsContextProvider'
@@ -43,7 +44,7 @@ const App: React.FC<AppProps> = React.memo(function App({
       <AppErrorBoundary>
         <AppContextProvider value={{ standalone, space, routes, lang, on401, hooks }}>
           <RestfulProvider
-            base={standalone ? '/' : '/scm'}
+            base={standalone ? '/' : getConfigNew('scm')}
             requestOptions={getRequestOptions}
             queryParams={{}}
             queryParamStringifyOptions={{ skipNulls: true }}
