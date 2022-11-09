@@ -80,7 +80,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	repoStore := database.ProvideRepoStore(db, pathTransformation)
 	serviceaccountController := serviceaccount.NewController(serviceAccount, authorizer, serviceAccountStore, spaceStore, repoStore, tokenStore)
 	checkSpace := check.ProvideSpaceCheck()
-	spaceController := space.NewController(checkSpace, authorizer, spaceStore, repoStore, serviceAccountStore)
+	spaceController := space.ProvideController(config, checkSpace, authorizer, spaceStore, repoStore, serviceAccountStore)
 	accountClient, err := client.ProvideAccountClient(serviceJWTProvider, typesConfig)
 	if err != nil {
 		return nil, err

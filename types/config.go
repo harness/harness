@@ -13,7 +13,7 @@ type Config struct {
 
 	// Git defines the git configuration parameters
 	Git struct {
-		BaseURL       string `envconfig:"GITNESS_GIT_BASE_URL"` // clone url
+		BaseURL       string `envconfig:"GITNESS_GIT_BASE_URL" default:"http://localhost:3000"` // clone url
 		Root          string `envconfig:"GITNESS_GIT_ROOT"`
 		DefaultBranch string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
 	}

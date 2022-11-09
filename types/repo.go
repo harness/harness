@@ -33,7 +33,7 @@ type Repository struct {
 	NumOpenPulls   int `db:"repo_numOpenPulls"         json:"numOpenPulls"`
 
 	// git urls
-	URL string `db:"-" json:"url"`
+	GitURL string `db:"-" json:"gitUrl"`
 }
 
 // RepoFilter stores repo query parameters.

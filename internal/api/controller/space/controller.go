@@ -11,6 +11,7 @@ import (
 )
 
 type Controller struct {
+	gitBaseURL string
 	spaceCheck check.Space
 	authorizer authz.Authorizer
 	spaceStore store.SpaceStore
@@ -18,9 +19,10 @@ type Controller struct {
 	saStore    store.ServiceAccountStore
 }
 
-func NewController(spaceCheck check.Space, authorizer authz.Authorizer, spaceStore store.SpaceStore,
+func NewController(gitBaseURL string, spaceCheck check.Space, authorizer authz.Authorizer, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, saStore store.ServiceAccountStore) *Controller {
 	return &Controller{
+		gitBaseURL: gitBaseURL,
 		spaceCheck: spaceCheck,
 		authorizer: authorizer,
 		spaceStore: spaceStore,

@@ -139,6 +139,12 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, err
 	}
 
+	// populate repo url
+	repo.GitURL, err = GenerateRepoGitURL(c.gitBaseURL, repo.Path)
+	if err != nil {
+		return nil, err
+	}
+
 	return repo, nil
 }
 

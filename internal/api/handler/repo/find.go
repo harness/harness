@@ -6,10 +6,6 @@ package repo
 
 import (
 	"net/http"
-	"net/url"
-	"strings"
-
-	"github.com/harness/gitness/types"
 
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/render"
@@ -17,7 +13,7 @@ import (
 )
 
 // HandleFind writes json-encoded repository information to the http response body.
-func HandleFind(repoCtrl *repo.Controller, config *types.Config) http.HandlerFunc {
+func HandleFind(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -27,30 +23,11 @@ func HandleFind(repoCtrl *repo.Controller, config *types.Config) http.HandlerFun
 			return
 		}
 
-		repo, err := repoCtrl.Find(ctx, session, repoRef, config)
+		repo, err := repoCtrl.Find(ctx, session, repoRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
-
-		parse, err := url.Parse(repo.URL)
-		if err != nil {
-			render.TranslatedUserError(w, err)
-			return
-		}
-
-		if parse.Host == "" {
-			parse.Host = r.Host
-		}
-
-		if parse.Scheme == "" {
-			parse.Scheme = "http"
-			if !strings.Contains(parse.Host, "localhost") {
-				parse.Scheme = "https"
-			}
-		}
-
-		repo.URL = parse.String()
 
 		render.JSON(w, http.StatusOK, repo)
 	}

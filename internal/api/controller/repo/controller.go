@@ -13,6 +13,7 @@ import (
 
 type Controller struct {
 	defaultBranch string
+	gitBaseURL    string
 	repoCheck     check.Repo
 	authorizer    authz.Authorizer
 	spaceStore    store.SpaceStore
@@ -23,6 +24,7 @@ type Controller struct {
 
 func NewController(
 	defaultBranch string,
+	gitBaseURL string,
 	repoCheck check.Repo,
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
@@ -32,6 +34,7 @@ func NewController(
 ) *Controller {
 	return &Controller{
 		defaultBranch: defaultBranch,
+		gitBaseURL:    gitBaseURL,
 		repoCheck:     repoCheck,
 		authorizer:    authorizer,
 		spaceStore:    spaceStore,

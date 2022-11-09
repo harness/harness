@@ -21,5 +21,6 @@ var WireSet = wire.NewSet(
 func ProvideController(config *types.Config, repoCheck check.Repo, authorizer authz.Authorizer,
 	spaceStore store.SpaceStore, repoStore store.RepoStore, saStore store.ServiceAccountStore,
 	rpcClient gitrpc.Interface) *Controller {
-	return NewController(config.Git.DefaultBranch, repoCheck, authorizer, spaceStore, repoStore, saStore, rpcClient)
+	return NewController(config.Git.DefaultBranch, config.Git.BaseURL,
+		repoCheck, authorizer, spaceStore, repoStore, saStore, rpcClient)
 }

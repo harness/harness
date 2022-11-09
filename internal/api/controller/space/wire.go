@@ -8,15 +8,16 @@ import (
 	"github.com/google/wire"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 )
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	NewController,
+	ProvideController,
 )
 
-func ProvideController(spaceCheck check.Space, authorizer authz.Authorizer, spaceStore store.SpaceStore,
-	repoStore store.RepoStore, saStore store.ServiceAccountStore) *Controller {
-	return NewController(spaceCheck, authorizer, spaceStore, repoStore, saStore)
+func ProvideController(config *types.Config, spaceCheck check.Space, authorizer authz.Authorizer,
+	spaceStore store.SpaceStore, repoStore store.RepoStore, saStore store.ServiceAccountStore) *Controller {
+	return NewController(config.Git.BaseURL, spaceCheck, authorizer, spaceStore, repoStore, saStore)
 }
