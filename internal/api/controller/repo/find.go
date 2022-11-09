@@ -6,6 +6,9 @@ package repo
 
 import (
 	"context"
+	"net/url"
+	"path"
+	"strings"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -13,10 +16,9 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
-* Find finds a repo.
- */
-func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef string) (*types.Repository, error) {
+// Find finds a repo.
+func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef string,
+	cfg *types.Config) (*types.Repository, error) {
 	repo, err := findRepoFromRef(ctx, c.repoStore, repoRef)
 	if err != nil {
 		return nil, err
@@ -25,6 +27,13 @@ func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef st
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, true); err != nil {
 		return nil, err
 	}
-
+	repoPath := path.Clean(repo.Path)
+	if !strings.HasSuffix(repoPath, ".git") {
+		repoPath += ".git"
+	}
+	repo.URL, err = url.JoinPath(cfg.Git.BaseURL, repoPath)
+	if err != nil {
+		return nil, err
+	}
 	return repo, nil
 }

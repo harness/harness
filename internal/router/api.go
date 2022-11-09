@@ -78,7 +78,7 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, repoCtrl, spaceCtrl, saCtrl, userCtrl)
+		setupRoutesV1(r, repoCtrl, spaceCtrl, saCtrl, userCtrl, config)
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -99,9 +99,9 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 }
 
 func setupRoutesV1(r chi.Router, repoCtrl *repo.Controller, spaceCtrl *space.Controller,
-	saCtrl *serviceaccount.Controller, userCtrl *user.Controller) {
+	saCtrl *serviceaccount.Controller, userCtrl *user.Controller, config *types.Config) {
 	setupSpaces(r, spaceCtrl)
-	setupRepos(r, repoCtrl)
+	setupRepos(r, repoCtrl, config)
 	setupUsers(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
 	setupAdmin(r, userCtrl)
@@ -140,13 +140,13 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 	})
 }
 
-func setupRepos(r chi.Router, repoCtrl *repo.Controller) {
+func setupRepos(r chi.Router, repoCtrl *repo.Controller, config *types.Config) {
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerrepo.HandleCreate(repoCtrl))
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 			// repo level operations
-			r.Get("/", handlerrepo.HandleFind(repoCtrl))
+			r.Get("/", handlerrepo.HandleFind(repoCtrl, config))
 			r.Put("/", handlerrepo.HandleUpdate(repoCtrl))
 			r.Delete("/", handlerrepo.HandleDelete(repoCtrl))
 
