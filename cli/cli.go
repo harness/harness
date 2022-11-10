@@ -57,6 +57,10 @@ func Command() {
 }
 
 func initialize(ss *session.Session, httpClient *client.HTTPClient) error {
+	// todo: refactor asap, we need to get rid of literal value 'server'
+	if len(os.Args) > 1 && os.Args[1] == "server" {
+		return nil
+	}
 	path, err := xdg.ConfigFile(
 		filepath.Join("app", "config.json"),
 	)

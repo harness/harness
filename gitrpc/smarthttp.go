@@ -13,6 +13,7 @@ import (
 
 	"github.com/harness/gitness/gitrpc/internal/streamio"
 	"github.com/harness/gitness/gitrpc/rpc"
+	"github.com/rs/zerolog/log"
 )
 
 type InfoRefsParams struct {
@@ -78,10 +79,17 @@ func (c *Client) ServicePack(ctx context.Context, w io.Writer, params *ServicePa
 	if params == nil {
 		return ErrNoParamsProvided
 	}
+
+	log := log.Ctx(ctx)
+
 	stream, err := c.httpService.ServicePack(ctx)
 	if err != nil {
 		return err
 	}
+
+	log.Debug().Msgf("Start service pack '%s' with options '%v'.",
+		params.Service, params.Options)
+
 	// send basic information
 	if err = stream.Send(&rpc.ServicePackRequest{
 		RepoUid:          params.RepoUID,
@@ -92,6 +100,8 @@ func (c *Client) ServicePack(ctx context.Context, w io.Writer, params *ServicePa
 	}); err != nil {
 		return err
 	}
+
+	log.Debug().Msg("Send request stream.")
 
 	// send body as stream
 	stdout := streamio.NewWriter(func(p []byte) error {
@@ -105,9 +115,13 @@ func (c *Client) ServicePack(ctx context.Context, w io.Writer, params *ServicePa
 		return fmt.Errorf("PostUploadPack() error copying reader: %w", err)
 	}
 
+	log.Debug().Msg("completed sending request stream.")
+
 	if err = stream.CloseSend(); err != nil {
 		return fmt.Errorf("PostUploadPack() error closing the stream: %w", err)
 	}
+
+	log.Debug().Msg("start receiving response stream.")
 
 	// when we are done with inputs then we should expect
 	// git data
@@ -117,16 +131,23 @@ func (c *Client) ServicePack(ctx context.Context, w io.Writer, params *ServicePa
 	for {
 		response, err = stream.Recv()
 		if errors.Is(err, io.EOF) {
+			log.Debug().Msg("received end of response stream.")
 			break
 		}
 		if err != nil {
 			return fmt.Errorf("PostUploadPack() error receiving stream bytes: %w", err)
 		}
+		if response.GetData() == nil {
+			return fmt.Errorf("PostUploadPack() data is nil")
+		}
+
 		_, err = w.Write(response.GetData())
 		if err != nil {
-			return fmt.Errorf("PostUploadPack() error: %w", err)
+			return fmt.Errorf("PostUploadPack() error writing response data: %w", err)
 		}
 	}
+
+	log.Debug().Msg("completed service pack.")
 
 	return nil
 }

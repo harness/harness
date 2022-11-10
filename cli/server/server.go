@@ -39,10 +39,8 @@ func (c *command) run(*kingpin.ParseContext) error {
 	defer stop()
 
 	// load environment variables from file.
-	err := godotenv.Load(c.envfile)
-	if err != nil {
-		return fmt.Errorf("error loading environment file %s: %w", c.envfile, err)
-	}
+	// no error handling needed when file is not present
+	_ = godotenv.Load(c.envfile)
 
 	// create the system configuration store by loading
 	// data from the environment.
@@ -131,13 +129,17 @@ func setupLogger(config *types.Config) {
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 
+	// configure time format (ignored if running in terminal)
+	zerolog.TimeFieldFormat = time.RFC3339Nano
+
 	// if the terminal is a tty we should output the
 	// logs in pretty format
 	if isatty.IsTerminal(os.Stdout.Fd()) {
 		log.Logger = log.Output(
 			zerolog.ConsoleWriter{
-				Out:     os.Stderr,
-				NoColor: false,
+				Out:        os.Stderr,
+				NoColor:    false,
+				TimeFormat: "15:04:05.999",
 			},
 		)
 	}

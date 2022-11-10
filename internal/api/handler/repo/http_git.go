@@ -97,11 +97,18 @@ func serviceRPC(
 	w http.ResponseWriter,
 	r *http.Request,
 	client gitrpc.Interface,
-	repo, service string,
+	repoGitUID, service string,
 	principalID int64,
 ) error {
 	ctx := r.Context()
 	log := hlog.FromRequest(r)
+	// inject repoUid in logging context
+	// TODO: this should be moved somewhere higher up!
+	log.UpdateContext(func(c zerolog.Context) zerolog.Context {
+		return c.Str("repo_gitUid", repoGitUID)
+	})
+
+	// ensure we alwas close the request body.
 	defer func() {
 		if err := r.Body.Close(); err != nil {
 			log.Err(err).Msgf("serviceRPC: Close: %v", err)
@@ -121,7 +128,7 @@ func serviceRPC(
 		}
 	}
 	return client.ServicePack(ctx, w, &gitrpc.ServicePackParams{
-		RepoUID:     repo,
+		RepoUID:     repoGitUID,
 		Service:     service,
 		Data:        reqBody,
 		Options:     nil,
