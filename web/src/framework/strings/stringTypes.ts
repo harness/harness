@@ -11,9 +11,14 @@ export interface StringsMap {
   branch: string
   branches: string
   cancel: string
+  cancelChanges: string
   clone: string
   cloneHTTPS: string
   commit: string
+  commitChanges: string
+  commitDirectlyTo: string
+  commitMessage: string
+  commitToNewBranch: string
   commits: string
   commitsOn: string
   content: string
@@ -31,6 +36,7 @@ export interface StringsMap {
   editFile: string
   email: string
   enterDescription: string
+  enterNewBranchName: string
   enterRepoName: string
   existingAccount: string
   failedToCreateRepo: string
@@ -47,6 +53,8 @@ export interface StringsMap {
   noAccount: string
   none: string
   ok: string
+  optional: string
+  optionalExtendedDescription: string
   pageNotFound: string
   password: string
   private: string

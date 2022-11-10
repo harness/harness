@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { RestfulProvider } from 'restful-react'
 import { TooltipContextProvider } from '@harness/uicore'
 import { ModalProvider } from '@harness/use-modal'
@@ -34,6 +34,11 @@ const App: React.FC<AppProps> = React.memo(function App({
     (): Partial<RequestInit> => buildResfulReactRequestOptions(hooks?.useGetToken?.() || token),
     [token, hooks]
   )
+  const queryParams = useMemo(
+    () => (!standalone ? { routingId: space.split('/').shift() } : {}),
+
+    [space, standalone]
+  )
 
   useEffect(() => {
     languageLoader(lang).then(setStrings)
@@ -46,7 +51,7 @@ const App: React.FC<AppProps> = React.memo(function App({
           <RestfulProvider
             base={standalone ? '/' : getConfigNew('scm')}
             requestOptions={getRequestOptions}
-            queryParams={{}}
+            queryParams={queryParams}
             queryParamStringifyOptions={{ skipNulls: true }}
             onResponse={response => {
               if (!response.ok && response.status === 401) {

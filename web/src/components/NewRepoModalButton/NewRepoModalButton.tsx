@@ -96,16 +96,12 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
       data: gitignores,
       loading: gitIgnoreLoading,
       error: gitIgnoreError
-    } = useGet({
-      path: '/api/v1/resources/gitignore'
-    })
+    } = useGet({ path: '/api/v1/resources/gitignore' })
     const {
       data: licences,
       loading: licenseLoading,
       error: licenseError
-    } = useGet({
-      path: '/api/v1/resources/license'
-    })
+    } = useGet({ path: '/api/v1/resources/license' })
     const loading = submitLoading || gitIgnoreLoading || licenseLoading
 
     useEffect(() => {

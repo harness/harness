@@ -38,14 +38,9 @@ export default function RepositoriesListing() {
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const { routes } = useAppContext()
   const [pageIndex, setPageIndex] = usePageIndex()
-  const path = useMemo(
-    () =>
-      `/api/v1/spaces/${space}/+/repos?page=${pageIndex + 1}&per_page=${LIST_FETCHING_PER_PAGE}${
-        searchTerm ? `&query=${searchTerm}` : ''
-      }`,
-    [space, searchTerm, pageIndex]
-  )
-  const { data: repositories, error, loading, refetch, response } = useGet<TypesRepository[]>({ path })
+  const path = useMemo(() => `/api/v1/spaces/${space}/+/repos?page=${pageIndex + 1}`, [space, pageIndex])
+  const queryParams = useMemo(() => ({ per_page: LIST_FETCHING_PER_PAGE, query: searchTerm }), [searchTerm])
+  const { data: repositories, error, loading, refetch, response } = useGet<TypesRepository[]>({ path, queryParams })
   const { totalItems, totalPages, pageSize } = useGetPaginationInfo(response)
 
   useEffect(() => {

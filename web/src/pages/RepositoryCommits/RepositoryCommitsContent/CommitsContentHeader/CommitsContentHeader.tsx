@@ -17,12 +17,16 @@ export function CommitsContentHeader({ repoMetadata, onSwitch }: CommitsContentH
   const { getString } = useStrings()
   const [query, setQuery] = useState('')
   const [activeBranch, setActiveBranch] = useState(repoMetadata.defaultBranch)
-  const path = useMemo(
-    () =>
-      `/api/v1/repos/${repoMetadata.path}/+/branches?sort=date&direction=desc&per_page=${BRANCH_PER_PAGE}&page=1&query=${query}`,
-    [query, repoMetadata.path]
-  )
-  const { data, loading } = useGet<RepoBranch[]>({ path })
+  const { data, loading } = useGet<RepoBranch[]>({
+    path: `/api/v1/repos/${repoMetadata.path}/+/branches`,
+    queryParams: {
+      sort: 'date',
+      direction: 'desc',
+      per_page: BRANCH_PER_PAGE,
+      page: 1,
+      query
+    }
+  })
   // defaultBranches is computed using repository default branch, and gitRef in URL, if it exists
   const defaultBranches = useMemo(() => [repoMetadata.defaultBranch].concat([]), [repoMetadata])
   const [branches, setBranches] = useState<SelectOption[]>(

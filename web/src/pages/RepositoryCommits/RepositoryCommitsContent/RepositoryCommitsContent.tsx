@@ -21,9 +21,12 @@ export function RepositoryCommitsContent({ repoMetadata, commitRef }: Repository
   const history = useHistory()
   const [pageIndex, setPageIndex] = usePageIndex()
   const { data: commits, response /*error, loading, refetch */ } = useGet<RepoCommit[]>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/commits?per_page=${LIST_FETCHING_PER_PAGE}&page=${
-      pageIndex + 1
-    }&git_ref=${commitRef || repoMetadata.defaultBranch}`
+    path: `/api/v1/repos/${repoMetadata.path}/+/commits`,
+    queryParams: {
+      per_page: LIST_FETCHING_PER_PAGE,
+      page: pageIndex + 1,
+      git_ref: commitRef || repoMetadata.defaultBranch
+    }
   })
   const { totalItems, totalPages, pageSize } = useGetPaginationInfo(response)
 

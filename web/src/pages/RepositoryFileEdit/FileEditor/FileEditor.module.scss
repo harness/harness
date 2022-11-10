@@ -11,7 +11,7 @@
     // border-top-right-radius: 4px;
     align-items: center;
     padding: 0 var(--spacing-xlarge) !important;
-    height: 52px;
+    height: 58px;
     background-color: var(--grey-100);
     box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
     border-bottom: 1px solid var(--grey-200);
@@ -26,7 +26,20 @@
         input {
           padding: var(--spacing-xsmall) var(--spacing-small);
           height: 28px;
+          width: 200px;
+
+          &:focus {
+            width: 400px;
+          }
         }
+      }
+
+      .refLink {
+        font-weight: 600;
+        border-radius: 4px;
+        color: var(--primary-7);
+        background: var(--primary-1);
+        padding: 2px 8px;
       }
     }
   }
@@ -36,7 +49,7 @@
     overflow: hidden;
 
     .editorContainer {
-      height: calc(100vh - 96px - 52px);
+      height: calc(100vh - 96px - 58px);
       overflow: hidden;
     }
   }

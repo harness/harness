@@ -1,13 +1,11 @@
 import React from 'react'
 import { Container, Color, Layout, Button, FlexExpander, ButtonVariation, Heading } from '@harness/uicore'
-// import { useHistory } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
-// import { useStrings } from 'framework/strings'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
-// import { useAppContext } from 'AppContext'
+import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/scm'
 import { GitIcon } from 'utils/GitUtils'
-import type {} from 'services/scm'
 import css from './Readme.module.scss'
 
 interface FolderContentProps {
@@ -17,14 +15,15 @@ interface FolderContentProps {
 }
 
 export function Readme({ metadata, gitRef, readmeInfo }: FolderContentProps) {
-  // const { getString } = useStrings()
-  // const history = useHistory()
-  // const { routes } = useAppContext()
+  const history = useHistory()
+  const { routes } = useAppContext()
 
   const { data /*error, loading, refetch, response */ } = useGet<OpenapiGetContentOutput>({
-    path: `/api/v1/repos/${metadata.path}/+/content/${readmeInfo.path}?include_commit=false${
-      gitRef ? `&git_ref=${gitRef}` : ''
-    }`
+    path: `/api/v1/repos/${metadata.path}/+/content/${readmeInfo.path}`,
+    queryParams: {
+      include_commit: false,
+      git_ref: gitRef
+    }
   })
 
   return (
@@ -32,7 +31,19 @@ export function Readme({ metadata, gitRef, readmeInfo }: FolderContentProps) {
       <Layout.Horizontal padding="small" className={css.heading}>
         <Heading level={5}>{readmeInfo.name}</Heading>
         <FlexExpander />
-        <Button variation={ButtonVariation.ICON} icon={GitIcon.EDIT} />
+        <Button
+          variation={ButtonVariation.ICON}
+          icon={GitIcon.EDIT}
+          onClick={() => {
+            history.push(
+              routes.toSCMRepositoryFileEdit({
+                repoPath: metadata.path as string,
+                gitRef: gitRef || (metadata.defaultBranch as string),
+                resourcePath: readmeInfo.path as string
+              })
+            )
+          }}
+        />
       </Layout.Horizontal>
 
       {/* TODO: Loading and Error handling */}

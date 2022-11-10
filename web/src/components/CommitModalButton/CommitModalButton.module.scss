@@ -1,0 +1,58 @@
+.main {
+  padding-left: var(--spacing-xxlarge) !important;
+  height: 100%;
+
+  .extendedDescription textarea {
+    height: 100px !important;
+  }
+
+  .radioGroup {
+    > div {
+      margin-bottom: var(--spacing-small) !important;
+    }
+
+    &.directly {
+      label[class*='RadioButton']:first-of-type {
+        background: rgba(220, 238, 255, 0.5);
+        mix-blend-mode: normal;
+        border: 1px solid var(--primary-6);
+      }
+    }
+
+    &.newBranch {
+      label[class*='RadioButton']:last-of-type {
+        background: rgba(220, 238, 255, 0.5);
+        mix-blend-mode: normal;
+        border: 1px solid var(--primary-6);
+      }
+    }
+
+    label[class*='RadioButton'] {
+      border-radius: var(--spacing-2);
+      border: 1px solid var(--bp3-intent-color, var(--grey-200));
+      padding: var(--spacing-small) !important;
+
+      &:first-of-type {
+        margin-bottom: var(--spacing-small);
+      }
+
+      span {
+        font-size: var(--form-input-font-size);
+        font-weight: 500;
+      }
+    }
+
+    .newBranchContainer {
+      align-items: center;
+      padding-left: var(--spacing-medium);
+
+      > div {
+        margin-bottom: 0 !important;
+
+        input {
+          width: 588px;
+        }
+      }
+    }
+  }
+}

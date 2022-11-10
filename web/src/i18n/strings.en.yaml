@@ -15,6 +15,8 @@ repositories: Repositories
 files: Files
 commit: Commit
 commits: Commits
+commitChanges: Commit Changes
+cancelChanges: Cancel Changes
 pullRequests: Pull Requests
 settings: Settings
 newFile: New File
@@ -69,3 +71,9 @@ createRepoModal:
 validation:
   repoNamePatternIsNotValid: "Name can only contain alphanumerics, '-', '_', '.', and '$'"
   gitBranchNameInvalid: Branch name is invalid.
+commitMessage: Commit message
+optionalExtendedDescription: Optional extended description
+optional: Optional
+commitDirectlyTo: 'Commit directly to the <strong style="color: var(--primary-7)">{{gitRef}}</strong> branch'
+commitToNewBranch: Create a <strong>new branch</strong> for this commit and start a pull request
+enterNewBranchName: New branch name
