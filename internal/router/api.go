@@ -168,6 +168,8 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller) {
 			// branch operations
 			r.Route("/branches", func(r chi.Router) {
 				r.Get("/", handlerrepo.HandleListBranches(repoCtrl))
+				r.Post("/", handlerrepo.HandleCreateBranch(repoCtrl))
+				r.Delete("/*", handlerrepo.HandleDeleteBranch(repoCtrl))
 			})
 
 			// tags operations

@@ -39,7 +39,7 @@ func (c *Client) GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobOu
 		SizeLimit: params.SizeLimit,
 	})
 	if err != nil {
-		return nil, err
+		return nil, processRPCErrorf(err, "failed to get blob from server")
 	}
 
 	blob := resp.GetBlob()

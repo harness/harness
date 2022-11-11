@@ -52,7 +52,7 @@ func (c *Client) ListCommitTags(ctx context.Context, params *ListCommitTagsParam
 		return nil, ErrNoParamsProvided
 	}
 
-	stream, err := c.repoService.ListCommitTags(ctx, &rpc.ListCommitTagsRequest{
+	stream, err := c.refService.ListCommitTags(ctx, &rpc.ListCommitTagsRequest{
 		RepoUid:       params.RepoUID,
 		IncludeCommit: params.IncludeCommit,
 		Query:         params.Query,
@@ -77,7 +77,7 @@ func (c *Client) ListCommitTags(ctx context.Context, params *ListCommitTagsParam
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("received unexpected error from rpc: %w", err)
+			return nil, processRPCErrorf(err, "received unexpected error from server")
 		}
 		if next.GetTag() == nil {
 			return nil, fmt.Errorf("expected tag message")
@@ -92,7 +92,6 @@ func (c *Client) ListCommitTags(ctx context.Context, params *ListCommitTagsParam
 		output.Tags = append(output.Tags, *tag)
 	}
 
-	// TODO: is this needed?
 	err = stream.CloseSend()
 	if err != nil {
 		return nil, fmt.Errorf("failed to close stream")

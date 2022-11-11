@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/check"
@@ -46,6 +47,14 @@ func Translate(err error) *Error {
 		return ErrCyclicHierarchy
 	case errors.Is(err, store.ErrSpaceWithChildsCantBeDeleted):
 		return ErrSpaceWithChildsCantBeDeleted
+
+		// gitrpc errors
+	case errors.Is(err, gitrpc.ErrAlreadyExists):
+		return ErrDuplicate
+	case errors.Is(err, gitrpc.ErrInvalidArgument):
+		return ErrBadRequest
+	case errors.Is(err, gitrpc.ErrNotFound):
+		return ErrNotFound
 
 	// unknown error
 	default:

@@ -111,6 +111,11 @@ func GetOptionalRemainderFromPath(r *http.Request) string {
 	return PathParamOrEmpty(r, PathParamRemainder)
 }
 
+// GetRemainderFromPath returns the remainder ("*") from the path or an an error if it doesn't exist.
+func GetRemainderFromPath(r *http.Request) (string, error) {
+	return PathParamOrError(r, PathParamRemainder)
+}
+
 // ParseQuery extracts the query parameter from the url.
 func ParseQuery(r *http.Request) string {
 	return r.FormValue(QueryParamQuery)

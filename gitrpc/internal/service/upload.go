@@ -37,7 +37,7 @@ func (s RepositoryService) AddFilesAndPush(
 
 	err := s.adapter.AddFiles(repoPath, false, filePaths...)
 	if err != nil {
-		return err
+		return processGitErrorf(err, "failed to add files")
 	}
 	now := time.Now()
 	err = s.adapter.Commit(repoPath, types.CommitChangesOptions{
@@ -60,7 +60,7 @@ func (s RepositoryService) AddFilesAndPush(
 		Message: message,
 	})
 	if err != nil {
-		return err
+		return processGitErrorf(err, "failed to commit files")
 	}
 	err = s.adapter.Push(ctx, repoPath, types.PushOptions{
 		// TODO: Don't hard-code
@@ -72,7 +72,7 @@ func (s RepositoryService) AddFilesAndPush(
 		Timeout: 0,
 	})
 	if err != nil {
-		return err
+		return processGitErrorf(err, "failed to push files")
 	}
 
 	return nil

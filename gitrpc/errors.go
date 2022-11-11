@@ -7,3 +7,6 @@ package gitrpc
 import "errors"
 
 var ErrNoParamsProvided = errors.New("no params provided")
+var ErrAlreadyExists = errors.New("already exists")
+var ErrInvalidArgument = errors.New("invalid argument")
+var ErrNotFound = errors.New("not found")

@@ -2,4 +2,12 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package gitrpc
+package types
+
+import "errors"
+
+var (
+	ErrAlreadyExists   = errors.New("already exists")
+	ErrInvalidArgument = errors.New("invalid argument")
+	ErrNotFound        = errors.New("not found")
+)

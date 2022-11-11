@@ -6,7 +6,6 @@ package gitea
 
 import (
 	"context"
-	"fmt"
 
 	gitea "code.gitea.io/gitea/modules/git"
 	"github.com/harness/gitness/gitrpc/internal/types"
@@ -27,12 +26,12 @@ func (g Adapter) GetSubmodule(ctx context.Context, repoPath string,
 	// Get the giteaCommit object for the ref
 	giteaCommit, err := giteaRepo.GetCommit(ref)
 	if err != nil {
-		return nil, fmt.Errorf("error getting commit for ref '%s': %w", ref, err)
+		return nil, processGiteaErrorf(err, "error getting commit for ref '%s'", ref)
 	}
 
 	giteaSubmodule, err := giteaCommit.GetSubModule(treePath)
 	if err != nil {
-		return nil, fmt.Errorf("error getting submodule '%s' from commit: %w", ref, err)
+		return nil, processGiteaErrorf(err, "error getting submodule '%s' from commit", treePath)
 	}
 
 	return &types.Submodule{

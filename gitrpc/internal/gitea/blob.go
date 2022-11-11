@@ -24,12 +24,12 @@ func (g Adapter) GetBlob(ctx context.Context, repoPath string, sha string, sizeL
 
 	giteaBlob, err := giteaRepo.GetBlob(sha)
 	if err != nil {
-		return nil, fmt.Errorf("error getting blob '%s': %w", sha, err)
+		return nil, processGiteaErrorf(err, "error getting blob '%s'", sha)
 	}
 
 	reader, err := giteaBlob.DataAsync()
 	if err != nil {
-		return nil, fmt.Errorf("error opening data for blob '%s': %w", sha, err)
+		return nil, processGiteaErrorf(err, "error opening data for blob '%s'", sha)
 	}
 
 	returnSize := giteaBlob.Size()

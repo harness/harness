@@ -1,0 +1,88 @@
+syntax = "proto3";
+package rpc;
+
+option go_package = "github.com/harness/gitness/gitrpc/rpc";
+
+import "shared.proto";
+
+service ReferenceService {
+  rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse);
+  rpc DeleteBranch(DeleteBranchRequest) returns (DeleteBranchResponse);
+  rpc ListBranches(ListBranchesRequest) returns (stream ListBranchesResponse);
+  rpc ListCommitTags(ListCommitTagsRequest) returns (stream ListCommitTagsResponse);
+}
+
+message CreateBranchRequest {
+  string repo_uid     = 1;
+  string branch_name  = 2;
+  string target       = 3;
+}
+
+message CreateBranchResponse {
+  Branch branch = 1;
+}
+
+message DeleteBranchRequest {
+  string repo_uid     = 1;
+  string branch_name  = 2;
+  bool force          = 3;
+}
+
+message DeleteBranchResponse {
+}
+
+message ListBranchesRequest {
+  enum SortOption {
+    Default = 0;
+    Name    = 1;
+    Date    = 2;
+  }
+
+  string repo_uid     = 1;
+  bool include_commit = 2;
+  string query        = 3;
+  SortOption sort     = 4;
+  SortOrder order     = 5;
+  int32 page          = 6;
+  int32 pageSize      = 7;
+}
+
+message ListBranchesResponse {
+  Branch branch = 1;
+}
+
+message Branch {
+  string name   = 1;
+  string sha    = 2;
+  Commit commit = 3;
+}
+
+message ListCommitTagsRequest {
+  enum SortOption {
+    Default = 0;
+    Name    = 1;
+    Date    = 2;
+  }
+
+  string repo_uid     = 1;
+  bool include_commit = 2;
+  string query        = 3;
+  SortOption sort     = 4;
+  SortOrder order     = 5;
+  int32 page          = 6;
+  int32 pageSize      = 7;
+}
+
+message ListCommitTagsResponse {
+  CommitTag tag = 1;
+}
+
+message CommitTag {
+  string name       = 1;
+  string sha        = 2;
+  bool is_annotated = 3;
+  string title      = 4;
+  string message    = 5;
+  Signature tagger  = 6;
+  Commit commit     = 7;
+}

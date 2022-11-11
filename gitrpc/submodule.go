@@ -37,7 +37,7 @@ func (c *Client) GetSubmodule(ctx context.Context, params *GetSubmoduleParams) (
 		Path:    params.Path,
 	})
 	if err != nil {
-		return nil, err
+		return nil, processRPCErrorf(err, "failed to get submodule from server")
 	}
 	if resp.GetSubmodule() == nil {
 		return nil, fmt.Errorf("rpc submodule is nil")

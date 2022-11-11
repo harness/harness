@@ -135,7 +135,7 @@ func (c *Client) ServicePack(ctx context.Context, w io.Writer, params *ServicePa
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("PostUploadPack() error receiving stream bytes: %w", err)
+			return processRPCErrorf(err, "PostUploadPack() error receiving stream bytes")
 		}
 		if response.GetData() == nil {
 			return fmt.Errorf("PostUploadPack() data is nil")

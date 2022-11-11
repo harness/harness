@@ -37,19 +37,24 @@ func offset(page, size int) int {
 	return page * size
 }
 
-// Logs the error and message, returns either the original error or a store equivalent if possible.
+// Logs the error and message, returns either the provided message or a gitrpc equivalent if possible.
+// Always logs the full message with error as warning.
 func processSQLErrorf(err error, format string, args ...interface{}) error {
-	// always log DB error (print formated message)
-	log.Debug().Msgf("%s %s", fmt.Sprintf(format, args...), err)
+	// create fallback error returned if we can't map it
+	fallbackErr := fmt.Errorf(format, args...)
+
+	// always log internal error together with message.
+	log.Debug().Msgf("%v: [SQL] %v", fallbackErr, err)
 
 	// If it's a known error, return converted error instead.
-	if errors.Is(err, sql.ErrNoRows) {
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
 		return store.ErrResourceNotFound
-	} else if isSQLUniqueConstraintError(err) {
+	case isSQLUniqueConstraintError(err):
 		return store.ErrDuplicate
+	default:
+		return fallbackErr
 	}
-
-	return err
 }
 
 func isSQLUniqueConstraintError(original error) bool {

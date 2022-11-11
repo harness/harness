@@ -27,6 +27,7 @@ func init() {
 
 // TranslatedUserError writes the translated user error of the provided error.
 func TranslatedUserError(w http.ResponseWriter, err error) {
+	log.Warn().Msgf("operation resulted in user facing error. Internal details: %s", err)
 	UserError(w, usererror.Translate(err))
 }
 

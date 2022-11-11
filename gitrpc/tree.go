@@ -88,7 +88,7 @@ func (c *Client) GetTreeNode(ctx context.Context, params *GetTreeNodeParams) (*G
 		IncludeLatestCommit: params.IncludeLatestCommit,
 	})
 	if err != nil {
-		return nil, err
+		return nil, processRPCErrorf(err, "failed to get tree node from server")
 	}
 
 	node, err := mapRPCTreeNode(resp.GetNode())
@@ -133,7 +133,7 @@ func (c *Client) ListTreeNodes(ctx context.Context, params *ListTreeNodeParams) 
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("received unexpected error from rpc: %w", err)
+			return nil, processRPCErrorf(err, "received unexpected error from server")
 		}
 
 		var node TreeNode

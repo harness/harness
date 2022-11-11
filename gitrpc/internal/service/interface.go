@@ -32,4 +32,6 @@ type GitAdapter interface {
 	GetLatestCommit(ctx context.Context, repoPath string, ref string, treePath string) (*types.Commit, error)
 	GetAnnotatedTag(ctx context.Context, repoPath string, sha string) (*types.Tag, error)
 	GetAnnotatedTags(ctx context.Context, repoPath string, shas []string) ([]types.Tag, error)
+	CreateBranch(ctx context.Context, repoPath string, branchName string, target string) (*types.Branch, error)
+	DeleteBranch(ctx context.Context, repoPath string, branchName string, force bool) error
 }

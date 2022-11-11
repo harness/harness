@@ -15,12 +15,12 @@ import (
 
 func (s RepositoryService) ListCommits(request *rpc.ListCommitsRequest,
 	stream rpc.RepositoryService_ListCommitsServer) error {
-	repoPath := s.getFullPathForRepo(request.GetRepoUid())
+	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
 
 	gitCommits, totalCount, err := s.adapter.ListCommits(stream.Context(), repoPath, request.GetGitRef(),
 		int(request.GetPage()), int(request.GetPageSize()))
 	if err != nil {
-		return status.Errorf(codes.Internal, "failed to list commits: %v", err)
+		return processGitErrorf(err, "failed to get list of commits")
 	}
 
 	log.Trace().Msgf("git adapter returned %d commits (total: %d)", len(gitCommits), totalCount)
@@ -61,7 +61,7 @@ func (s RepositoryService) getLatestCommit(ctx context.Context, repoPath string,
 	ref string, path string) (*rpc.Commit, error) {
 	gitCommit, err := s.adapter.GetLatestCommit(ctx, repoPath, ref, path)
 	if err != nil {
-		return nil, err
+		return nil, processGitErrorf(err, "failed to get latest commit")
 	}
 
 	return mapGitCommit(gitCommit)

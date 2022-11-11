@@ -22,6 +22,26 @@ const (
 	BranchSortOptionDate
 )
 
+type CreateBranchParams struct {
+	// RepoUID is the uid of the git repository
+	RepoUID string
+	// BranchName is the name of the branch
+	BranchName string
+	// Target is a git reference (branch / tag / commit SHA)
+	Target string
+}
+
+type CreateBranchOutput struct {
+	Branch Branch
+}
+
+type DeleteBranchParams struct {
+	// RepoUID is the uid of the git repository
+	RepoUID string
+	// Name is the name of the branch
+	BranchName string
+}
+
 type ListBranchesParams struct {
 	// RepoUID is the uid of the git repository
 	RepoUID       string
@@ -43,12 +63,54 @@ type Branch struct {
 	Commit *Commit
 }
 
+func (c *Client) CreateBranch(ctx context.Context, params *CreateBranchParams) (*CreateBranchOutput, error) {
+	if params == nil {
+		return nil, ErrNoParamsProvided
+	}
+	resp, err := c.refService.CreateBranch(ctx, &rpc.CreateBranchRequest{
+		RepoUid:    params.RepoUID,
+		Target:     params.Target,
+		BranchName: params.BranchName,
+	})
+	if err != nil {
+		return nil, processRPCErrorf(err, "failed to create branch on server")
+	}
+
+	var branch *Branch
+	branch, err = mapRPCBranch(resp.GetBranch())
+	if err != nil {
+		return nil, fmt.Errorf("failed to map rpc branch: %w", err)
+	}
+
+	return &CreateBranchOutput{
+		Branch: *branch,
+	}, nil
+}
+
+func (c *Client) DeleteBranch(ctx context.Context, params *DeleteBranchParams) error {
+	if params == nil {
+		return ErrNoParamsProvided
+	}
+	_, err := c.refService.DeleteBranch(ctx, &rpc.DeleteBranchRequest{
+		RepoUid:    params.RepoUID,
+		BranchName: params.BranchName,
+		// TODO: what are scenarios where we wouldn't want to force delete?
+		// Branch protection is a different story, and build on top application layer.
+		Force: true,
+	})
+	if err != nil {
+		return processRPCErrorf(err, "failed to delete branch on server")
+	}
+
+	return nil
+}
+
 func (c *Client) ListBranches(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error) {
 	if params == nil {
 		return nil, ErrNoParamsProvided
 	}
 
-	stream, err := c.repoService.ListBranches(ctx, &rpc.ListBranchesRequest{
+	stream, err := c.refService.ListBranches(ctx, &rpc.ListBranchesRequest{
 		RepoUid:       params.RepoUID,
 		IncludeCommit: params.IncludeCommit,
 		Query:         params.Query,
@@ -73,7 +135,7 @@ func (c *Client) ListBranches(ctx context.Context, params *ListBranchesParams) (
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("received unexpected error from rpc: %w", err)
+			return nil, processRPCErrorf(err, "received unexpected error from rpc")
 		}
 		if next.GetBranch() == nil {
 			return nil, fmt.Errorf("expected branch message")

@@ -5,11 +5,36 @@
 package service
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+// Logs the error and message, returns either the provided message or a rpc equivalent if possible.
+// Always logs the full message with error as warning.
+func processGitErrorf(err error, format string, args ...interface{}) error {
+	// create fallback error returned if we can't map it
+	message := fmt.Sprintf(format, args...)
+
+	// always log internal error together with message.
+	log.Warn().Msgf("%s: [GIT] %v", message, err)
+
+	switch {
+	case errors.Is(err, types.ErrNotFound):
+		return status.Error(codes.NotFound, message)
+	case errors.Is(err, types.ErrAlreadyExists):
+		return status.Errorf(codes.AlreadyExists, message)
+	case errors.Is(err, types.ErrInvalidArgument):
+		return status.Errorf(codes.InvalidArgument, message)
+	default:
+		return status.Errorf(codes.Unknown, message)
+	}
+}
 
 func mapSortOrder(s rpc.SortOrder) types.SortOrder {
 	switch s {
@@ -63,13 +88,34 @@ func mapGitMode(m types.TreeNodeMode) rpc.TreeNodeMode {
 	return rpc.TreeNodeMode(m)
 }
 
+func mapGitBranch(gitBranch *types.Branch) (*rpc.Branch, error) {
+	if gitBranch == nil {
+		return nil, status.Errorf(codes.Internal, "git branch is nil")
+	}
+
+	var commit *rpc.Commit
+	var err error
+	if gitBranch.Commit != nil {
+		commit, err = mapGitCommit(gitBranch.Commit)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &rpc.Branch{
+		Name:   gitBranch.Name,
+		Sha:    gitBranch.SHA,
+		Commit: commit,
+	}, nil
+}
+
 func mapGitCommit(gitCommit *types.Commit) (*rpc.Commit, error) {
 	if gitCommit == nil {
 		return nil, status.Errorf(codes.Internal, "git commit is nil")
 	}
 
 	return &rpc.Commit{
-		Sha:       gitCommit.Sha,
+		Sha:       gitCommit.SHA,
 		Title:     gitCommit.Title,
 		Message:   gitCommit.Message,
 		Author:    mapGitSignature(gitCommit.Author),

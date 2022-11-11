@@ -35,14 +35,14 @@ func (g Adapter) SetDefaultBranch(ctx context.Context, repoPath string,
 	// change default branch
 	err = giteaRepo.SetDefaultBranch(defaultBranch)
 	if err != nil {
-		return fmt.Errorf("failed to set new default branch: %w", err)
+		return processGiteaErrorf(err, "failed to set new default branch")
 	}
 
 	return nil
 }
 
 func (g Adapter) Clone(ctx context.Context, from, to string, opts types.CloneRepoOptions) error {
-	return gitea.Clone(ctx, from, to, gitea.CloneRepoOptions{
+	err := gitea.Clone(ctx, from, to, gitea.CloneRepoOptions{
 		Timeout:       opts.Timeout,
 		Mirror:        opts.Mirror,
 		Bare:          opts.Bare,
@@ -54,14 +54,24 @@ func (g Adapter) Clone(ctx context.Context, from, to string, opts types.CloneRep
 		Filter:        opts.Filter,
 		SkipTLSVerify: opts.SkipTLSVerify,
 	})
+	if err != nil {
+		return processGiteaErrorf(err, "failed to clone repo")
+	}
+
+	return nil
 }
 
 func (g Adapter) AddFiles(repoPath string, all bool, files ...string) error {
-	return gitea.AddChanges(repoPath, all, files...)
+	err := gitea.AddChanges(repoPath, all, files...)
+	if err != nil {
+		return processGiteaErrorf(err, "failed to add changes")
+	}
+
+	return nil
 }
 
 func (g Adapter) Commit(repoPath string, opts types.CommitChangesOptions) error {
-	return gitea.CommitChanges(repoPath, gitea.CommitChangesOptions{
+	err := gitea.CommitChanges(repoPath, gitea.CommitChangesOptions{
 		Committer: &gitea.Signature{
 			Name:  opts.Committer.Identity.Name,
 			Email: opts.Committer.Identity.Email,
@@ -74,10 +84,15 @@ func (g Adapter) Commit(repoPath string, opts types.CommitChangesOptions) error 
 		},
 		Message: opts.Message,
 	})
+	if err != nil {
+		return processGiteaErrorf(err, "failed to commit changes")
+	}
+
+	return nil
 }
 
 func (g Adapter) Push(ctx context.Context, repoPath string, opts types.PushOptions) error {
-	return gitea.Push(ctx, repoPath, gitea.PushOptions{
+	err := gitea.Push(ctx, repoPath, gitea.PushOptions{
 		Remote:  opts.Remote,
 		Branch:  opts.Branch,
 		Force:   opts.Force,
@@ -85,4 +100,9 @@ func (g Adapter) Push(ctx context.Context, repoPath string, opts types.PushOptio
 		Env:     opts.Env,
 		Timeout: opts.Timeout,
 	})
+	if err != nil {
+		return processGiteaErrorf(err, "failed to push changes")
+	}
+
+	return nil
 }

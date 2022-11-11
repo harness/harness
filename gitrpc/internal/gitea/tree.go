@@ -34,13 +34,14 @@ func (g Adapter) GetTreeNode(ctx context.Context, repoPath string,
 	// Get the giteaCommit object for the ref
 	giteaCommit, err := giteaRepo.GetCommit(ref)
 	if err != nil {
-		return nil, fmt.Errorf("error getting commit for ref '%s': %w", ref, err)
+		return nil, processGiteaErrorf(err, "error getting commit for ref '%s'", ref)
 	}
 
 	// TODO: handle ErrNotExist :)
 	giteaTreeEntry, err := giteaCommit.GetTreeEntryByPath(treePath)
 	if err != nil {
-		return nil, err
+		return nil, processGiteaErrorf(err, "failed to get tree entry for commit '%s' at path '%s'",
+			giteaCommit.ID.String(), treePath)
 	}
 
 	nodeType, mode, err := mapGiteaNodeToTreeNodeModeAndType(giteaTreeEntry.Mode())
@@ -83,13 +84,13 @@ func (g Adapter) ListTreeNodes(ctx context.Context, repoPath string,
 	// Get the giteaCommit object for the ref
 	giteaCommit, err := giteaRepo.GetCommit(ref)
 	if err != nil {
-		return nil, fmt.Errorf("error getting commit for ref '%s': %w", ref, err)
+		return nil, processGiteaErrorf(err, "error getting commit for ref '%s'", ref)
 	}
 
 	// Get the giteaTree object for the ref
 	giteaTree, err := giteaCommit.SubTree(treePath)
 	if err != nil {
-		return nil, fmt.Errorf("error getting tree for '%s': %w", treePath, err)
+		return nil, processGiteaErrorf(err, "error getting tree for '%s'", treePath)
 	}
 
 	var giteaEntries gitea.Entries
@@ -99,7 +100,7 @@ func (g Adapter) ListTreeNodes(ctx context.Context, repoPath string,
 		giteaEntries, err = giteaTree.ListEntries()
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to list entries for tree '%s': %w", treePath, err)
+		return nil, processGiteaErrorf(err, "failed to list entries for tree '%s'", treePath)
 	}
 
 	var latestCommits []gitea.CommitInfo
@@ -107,7 +108,7 @@ func (g Adapter) ListTreeNodes(ctx context.Context, repoPath string,
 		// TODO: can be speed up with latestCommitCache (currently nil)
 		latestCommits, _, err = giteaEntries.GetCommitsInfo(ctx, giteaCommit, treePath, nil)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get latest commits for entries: %w", err)
+			return nil, processGiteaErrorf(err, "failed to get latest commits for entries")
 		}
 
 		if len(latestCommits) != len(giteaEntries) {

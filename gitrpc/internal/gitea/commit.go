@@ -31,7 +31,7 @@ func (g Adapter) GetLatestCommit(ctx context.Context, repoPath string,
 
 	giteaCommit, err := giteaGetCommitByPath(giteaRepo, ref, treePath)
 	if err != nil {
-		return nil, fmt.Errorf("error getting latest commit for '%s': %w", treePath, err)
+		return nil, processGiteaErrorf(err, "error getting latest commit for '%s'", treePath)
 	}
 
 	return mapGiteaCommit(giteaCommit)
@@ -47,7 +47,7 @@ func giteaGetCommitByPath(giteaRepo *gitea.Repository, ref string, treePath stri
 	stdout, _, runErr := gitea.NewCommand(giteaRepo.Ctx, "log", ref, "-1", giteaPrettyLogFormat, "--", treePath).
 		RunStdBytes(&gitea.RunOpts{Dir: giteaRepo.Path})
 	if runErr != nil {
-		return nil, runErr
+		return nil, fmt.Errorf("failed to trigger log command: %w", runErr)
 	}
 
 	giteaCommits, err := giteaParsePrettyFormatLogToList(giteaRepo, stdout)
@@ -70,7 +70,7 @@ func giteaParsePrettyFormatLogToList(giteaRepo *gitea.Repository, logs []byte) (
 	for _, commitID := range parts {
 		commit, err := giteaRepo.GetCommit(string(commitID))
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get commit '%s': %w", string(commitID), err)
 		}
 		giteaCommits = append(giteaCommits, commit)
 	}
@@ -91,17 +91,17 @@ func (g Adapter) ListCommits(ctx context.Context, repoPath string,
 	// Get the giteaTopCommit object for the ref
 	giteaTopCommit, err := giteaRepo.GetCommit(ref)
 	if err != nil {
-		return nil, 0, fmt.Errorf("error getting commit for ref '%s': %w", ref, err)
+		return nil, 0, processGiteaErrorf(err, "error getting commit top commit for ref '%s'", ref)
 	}
 
 	giteaCommits, err := giteaTopCommit.CommitsByRange(page, pageSize)
 	if err != nil {
-		return nil, 0, fmt.Errorf("error getting commits: %w", err)
+		return nil, 0, processGiteaErrorf(err, "error getting commits")
 	}
 
 	totalCount, err := giteaTopCommit.CommitsCount()
 	if err != nil {
-		return nil, 0, fmt.Errorf("error getting total commit count: %w", err)
+		return nil, 0, processGiteaErrorf(err, "error getting total commit count")
 	}
 
 	commits := make([]types.Commit, len(giteaCommits))
@@ -129,7 +129,7 @@ func (g Adapter) GetCommit(ctx context.Context, repoPath string, ref string) (*t
 
 	commit, err := giteaRepo.GetCommit(ref)
 	if err != nil {
-		return nil, err
+		return nil, processGiteaErrorf(err, "error getting commit for ref '%s'", ref)
 	}
 
 	return mapGiteaCommit(commit)
@@ -149,7 +149,7 @@ func (g Adapter) GetCommits(ctx context.Context, repoPath string, refs []string)
 		var giteaCommit *gitea.Commit
 		giteaCommit, err = giteaRepo.GetCommit(sha)
 		if err != nil {
-			return nil, err
+			return nil, processGiteaErrorf(err, "error getting commit '%s'", sha)
 		}
 
 		var commit *types.Commit

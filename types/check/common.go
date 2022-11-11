@@ -7,7 +7,6 @@ package check
 import (
 	"fmt"
 	"regexp"
-	"strings"
 )
 
 const (
@@ -26,7 +25,6 @@ var (
 	ErrDisplayNameLength = &ValidationError{
 		fmt.Sprintf("DisplayName has to be between %d and %d in length.", minDisplayNameLength, maxDisplayNameLength),
 	}
-	ErrDisplayNameContainsInvalidASCII = &ValidationError{"DisplayName has to consist of valid ASCII characters."}
 
 	ErrUIDLength = &ValidationError{
 		fmt.Sprintf("UID has to be between %d and %d in length.",
@@ -39,6 +37,8 @@ var (
 	ErrEmailLen = &ValidationError{
 		fmt.Sprintf("Email address has to be within %d and %d characters", minEmailLength, maxEmailLength),
 	}
+
+	ErrInvalidCharacters = &ValidationError{"Input contains invalid characters."}
 )
 
 // DisplayName checks the provided display name and returns an error if it isn't valid.
@@ -48,16 +48,15 @@ func DisplayName(displayName string) error {
 		return ErrDisplayNameLength
 	}
 
-	// created sanitized string restricted to ASCII characters (without control characters).
-	sanitizedString := strings.Map(func(r rune) rune {
-		if r < 32 || r == 127 || r > 255 {
-			return -1
-		}
-		return r
-	}, displayName)
+	return ForControlCharacters(displayName)
+}
 
-	if len(sanitizedString) != len(displayName) {
-		return ErrDisplayNameContainsInvalidASCII
+// ForControlCharacters ensures that there are no control characters in the provided string.
+func ForControlCharacters(s string) error {
+	for _, r := range s {
+		if r < 32 || r == 127 {
+			return ErrInvalidCharacters
+		}
 	}
 
 	return nil

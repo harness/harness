@@ -79,7 +79,7 @@ func (c *Client) CreateRepository(ctx context.Context,
 
 	_, err = stream.CloseAndRecv()
 	if err != nil {
-		return nil, err
+		return nil, processRPCErrorf(err, "failed to create repo on server (uid: '%s')", uid)
 	}
 
 	log.Ctx(ctx).Info().Msgf("completed git repo setup.")

@@ -29,7 +29,7 @@ var (
 	ErrNoChange = New(http.StatusBadRequest, "No Change")
 
 	// ErrDuplicate is returned when a resource already exits.
-	ErrDuplicate = New(http.StatusBadRequest, "Resource already exists")
+	ErrDuplicate = New(http.StatusConflict, "Resource already exists")
 
 	// ErrPrimaryPathCantBeDeleted is returned when trying to delete a primary path.
 	ErrPrimaryPathCantBeDeleted = New(http.StatusBadRequest, "The primary path of an object can't be deleted")
@@ -44,6 +44,9 @@ var (
 	// still has child resources.
 	ErrSpaceWithChildsCantBeDeleted = New(http.StatusBadRequest,
 		"Space can't be deleted as it still contains child resources")
+
+	// ErrDefaultBranchCantBeDeleted is returned if the user tries to delete the default branch of a repository.
+	ErrDefaultBranchCantBeDeleted = New(http.StatusBadRequest, "The default branch of a repository can't be deleted")
 )
 
 // Error represents a json-encoded API error.

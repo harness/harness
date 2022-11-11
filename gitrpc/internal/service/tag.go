@@ -16,10 +16,10 @@ import (
 )
 
 //nolint:gocognit // need to refactor this code
-func (s RepositoryService) ListCommitTags(request *rpc.ListCommitTagsRequest,
-	stream rpc.RepositoryService_ListCommitTagsServer) error {
+func (s ReferenceService) ListCommitTags(request *rpc.ListCommitTagsRequest,
+	stream rpc.ReferenceService_ListCommitTagsServer) error {
 	ctx := stream.Context()
-	repoPath := s.getFullPathForRepo(request.GetRepoUid())
+	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
 
 	// get all required information from git references
 	tags, err := s.listCommitTagsLoadReferenceData(ctx, repoPath, request)
@@ -43,7 +43,7 @@ func (s RepositoryService) ListCommitTags(request *rpc.ListCommitTagsRequest,
 		var gitTags []types.Tag
 		gitTags, err = s.adapter.GetAnnotatedTags(ctx, repoPath, annotatedTagSHAs)
 		if err != nil {
-			return status.Errorf(codes.Internal, "failed to get annotated tag: %v", err)
+			return processGitErrorf(err, "failed to get annotated tag")
 		}
 
 		ai := 0 // since only some tags are annotated, we need second index
@@ -71,7 +71,7 @@ func (s RepositoryService) ListCommitTags(request *rpc.ListCommitTagsRequest,
 		var gitCommits []types.Commit
 		gitCommits, err = s.adapter.GetCommits(ctx, repoPath, commitSHAs)
 		if err != nil {
-			return status.Errorf(codes.Internal, "failed to get commits: %v", err)
+			return processGitErrorf(err, "failed to get commits")
 		}
 
 		for i := range gitCommits {
@@ -118,7 +118,7 @@ var listCommitTagsRefFields = []types.GitReferenceField{types.GitReferenceFieldR
 	types.GitReferenceFieldObjectType, types.GitReferenceFieldObjectName}
 var listCommitTagsObjectTypeFilter = []types.GitObjectType{types.GitObjectTypeCommit, types.GitObjectTypeTag}
 
-func (s RepositoryService) listCommitTagsLoadReferenceData(ctx context.Context,
+func (s ReferenceService) listCommitTagsLoadReferenceData(ctx context.Context,
 	repoPath string, request *rpc.ListCommitTagsRequest) ([]*rpc.CommitTag, error) {
 	// TODO: can we be smarter with slice allocation
 	tags := make([]*rpc.CommitTag, 0, 16)
@@ -143,7 +143,7 @@ func (s RepositoryService) listCommitTagsLoadReferenceData(ctx context.Context,
 
 	err = s.adapter.WalkReferences(ctx, repoPath, handler, opts)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get tag references: %v", err)
+		return nil, processGitErrorf(err, "failed to walk tag references")
 	}
 
 	log.Trace().Msgf("git adapter returned %d tags", len(tags))

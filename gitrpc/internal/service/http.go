@@ -7,11 +7,9 @@ package service
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -38,28 +36,11 @@ type SmartHTTPService struct {
 	reposRoot string
 }
 
-func NewHTTPService(adapter GitAdapter, gitRoot string) (*SmartHTTPService, error) {
-	reposRoot := filepath.Join(gitRoot, repoSubdirName)
-	if _, err := os.Stat(reposRoot); errors.Is(err, os.ErrNotExist) {
-		if err = os.MkdirAll(reposRoot, 0o700); err != nil {
-			return nil, err
-		}
-	}
-
+func NewHTTPService(adapter GitAdapter, reposRoot string) (*SmartHTTPService, error) {
 	return &SmartHTTPService{
 		adapter:   adapter,
 		reposRoot: reposRoot,
 	}, nil
-}
-
-func (s *SmartHTTPService) getFullPathForRepo(uid string) string {
-	// split repos into subfolders using their prefix to distribute repos accross a set of folders.
-	return filepath.Join(
-		s.reposRoot, // root folder
-		uid[0:2],    // first subfolder
-		uid[2:4],    // second subfolder
-		fmt.Sprintf("%s.%s", uid[4:], gitRepoSuffix), // remainder with .git
-	)
 }
 
 func (s *SmartHTTPService) InfoRefs(
@@ -72,7 +53,7 @@ func (s *SmartHTTPService) InfoRefs(
 		environ = append(environ, "GIT_PROTOCOL="+r.GitProtocol)
 	}
 
-	repoPath := s.getFullPathForRepo(r.GetRepoUid())
+	repoPath := getFullPathForRepo(s.reposRoot, r.GetRepoUid())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
@@ -120,7 +101,7 @@ func (s *SmartHTTPService) ServicePack(stream rpc.SmartHTTPService_ServicePackSe
 		return status.Errorf(codes.InvalidArgument, "PostUploadPack(): repository UID is missing")
 	}
 
-	repoPath := s.getFullPathForRepo(req.GetRepoUid())
+	repoPath := getFullPathForRepo(s.reposRoot, req.GetRepoUid())
 
 	stdin := streamio.NewReader(func() ([]byte, error) {
 		resp, streamErr := stream.Recv()

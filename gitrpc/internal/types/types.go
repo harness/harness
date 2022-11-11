@@ -126,11 +126,17 @@ type WalkReferencesOptions struct {
 }
 
 type Commit struct {
-	Sha       string
+	SHA       string
 	Title     string
 	Message   string
 	Author    Signature
 	Committer Signature
+}
+
+type Branch struct {
+	Name   string
+	SHA    string
+	Commit *Commit
 }
 
 type Tag struct {

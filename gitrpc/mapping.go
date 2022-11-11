@@ -9,7 +9,37 @@ import (
 	"time"
 
 	"github.com/harness/gitness/gitrpc/rpc"
+	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
+
+// Logs the error and message, returns either the provided message or a gitrpc equivalent if possible.
+// Always logs the full message with error as warning.
+func processRPCErrorf(err error, format string, args ...interface{}) error {
+	// create fallback error returned if we can't map it
+	fallbackErr := fmt.Errorf(format, args...)
+
+	// always log internal error together with message.
+	log.Warn().Msgf("%v: [RPC] %v", fallbackErr, err)
+
+	// ensure it's an rpc error
+	rpcErr, ok := status.FromError(err)
+	if !ok {
+		return fallbackErr
+	}
+
+	switch {
+	case rpcErr.Code() == codes.AlreadyExists:
+		return ErrAlreadyExists
+	case rpcErr.Code() == codes.NotFound:
+		return ErrNotFound
+	case rpcErr.Code() == codes.InvalidArgument:
+		return ErrInvalidArgument
+	default:
+		return fallbackErr
+	}
+}
 
 func mapToRPCSortOrder(o SortOrder) rpc.SortOrder {
 	switch o {

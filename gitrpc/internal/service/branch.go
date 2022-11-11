@@ -18,10 +18,42 @@ import (
 
 var listBranchesRefFields = []types.GitReferenceField{types.GitReferenceFieldRefName, types.GitReferenceFieldObjectName}
 
-func (s RepositoryService) ListBranches(request *rpc.ListBranchesRequest,
-	stream rpc.RepositoryService_ListBranchesServer) error {
+func (s ReferenceService) CreateBranch(ctx context.Context,
+	request *rpc.CreateBranchRequest) (*rpc.CreateBranchResponse, error) {
+	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
+
+	gitBranch, err := s.adapter.CreateBranch(ctx, repoPath, request.GetBranchName(), request.GetTarget())
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to create branch")
+	}
+
+	branch, err := mapGitBranch(gitBranch)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.CreateBranchResponse{
+		Branch: branch,
+	}, nil
+}
+
+func (s ReferenceService) DeleteBranch(ctx context.Context,
+	request *rpc.DeleteBranchRequest) (*rpc.DeleteBranchResponse, error) {
+	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
+
+	// TODO: block deletion of protected branch (in the future)
+	err := s.adapter.DeleteBranch(ctx, repoPath, request.GetBranchName(), request.GetForce())
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to delete branch")
+	}
+
+	return &rpc.DeleteBranchResponse{}, nil
+}
+
+func (s ReferenceService) ListBranches(request *rpc.ListBranchesRequest,
+	stream rpc.ReferenceService_ListBranchesServer) error {
 	ctx := stream.Context()
-	repoPath := s.getFullPathForRepo(request.GetRepoUid())
+	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
 
 	// get all required information from git refrences
 	branches, err := s.listBranchesLoadReferenceData(ctx, repoPath, request)
@@ -63,7 +95,7 @@ func (s RepositoryService) ListBranches(request *rpc.ListBranchesRequest,
 	return nil
 }
 
-func (s RepositoryService) listBranchesLoadReferenceData(ctx context.Context,
+func (s ReferenceService) listBranchesLoadReferenceData(ctx context.Context,
 	repoPath string, request *rpc.ListBranchesRequest) ([]*rpc.Branch, error) {
 	// TODO: can we be smarter with slice allocation
 	branches := make([]*rpc.Branch, 0, 16)
@@ -88,7 +120,7 @@ func (s RepositoryService) listBranchesLoadReferenceData(ctx context.Context,
 
 	err = s.adapter.WalkReferences(ctx, repoPath, handler, opts)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get branch references: %v", err)
+		return nil, processGitErrorf(err, "failed to walk branch references")
 	}
 
 	log.Trace().Msgf("git adapter returned %d branches", len(branches))

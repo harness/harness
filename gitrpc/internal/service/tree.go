@@ -15,12 +15,12 @@ import (
 
 func (s RepositoryService) ListTreeNodes(request *rpc.ListTreeNodesRequest,
 	stream rpc.RepositoryService_ListTreeNodesServer) error {
-	repoPath := s.getFullPathForRepo(request.GetRepoUid())
+	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
 
 	gitNodes, err := s.adapter.ListTreeNodes(stream.Context(), repoPath,
 		request.GetGitRef(), request.GetPath(), request.GetRecursive(), request.GetIncludeLatestCommit())
 	if err != nil {
-		return status.Errorf(codes.Internal, "failed to list nodes: %v", err)
+		return processGitErrorf(err, "failed to list tree nodes")
 	}
 
 	log.Trace().Msgf("git adapter returned %d nodes", len(gitNodes))
@@ -54,11 +54,11 @@ func (s RepositoryService) ListTreeNodes(request *rpc.ListTreeNodesRequest,
 
 func (s RepositoryService) GetTreeNode(ctx context.Context,
 	request *rpc.GetTreeNodeRequest) (*rpc.GetTreeNodeResponse, error) {
-	repoPath := s.getFullPathForRepo(request.GetRepoUid())
+	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
 	// TODO: do we need to validate request for nil?
 	gitNode, err := s.adapter.GetTreeNode(ctx, repoPath, request.GetGitRef(), request.GetPath())
 	if err != nil {
-		return nil, err
+		return nil, processGitErrorf(err, "failed to get tree node")
 	}
 
 	res := &rpc.GetTreeNodeResponse{
@@ -76,7 +76,7 @@ func (s RepositoryService) GetTreeNode(ctx context.Context,
 		var commit *rpc.Commit
 		commit, err = s.getLatestCommit(ctx, repoPath, request.GetGitRef(), request.GetPath())
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, "failed to get latest commit: %v", err)
+			return nil, err
 		}
 		res.Commit = commit
 	}

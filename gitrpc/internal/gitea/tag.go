@@ -31,7 +31,12 @@ func (g Adapter) GetAnnotatedTag(ctx context.Context, repoPath string, sha strin
 	}
 	defer giteaRepo.Close()
 
-	return giteaGetAnnotatedTag(giteaRepo, sha)
+	tag, err := giteaGetAnnotatedTag(giteaRepo, sha)
+	if err != nil {
+		return nil, processGiteaErrorf(err, "failed to get annotated tag with sha '%s'", sha)
+	}
+
+	return tag, nil
 }
 
 // GetAnnotatedTags returns the tags for a specific list of tag sha.
@@ -47,7 +52,7 @@ func (g Adapter) GetAnnotatedTags(ctx context.Context, repoPath string, shas []s
 		var tag *types.Tag
 		tag, err = giteaGetAnnotatedTag(giteaRepo, sha)
 		if err != nil {
-			return nil, err
+			return nil, processGiteaErrorf(err, "failed to get annotated tag with sha '%s'", sha)
 		}
 
 		tags[i] = *tag

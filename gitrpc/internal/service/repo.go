@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -21,9 +20,8 @@ import (
 )
 
 const (
-	maxFileSize    = 1 << 20
-	repoSubdirName = "repos"
-	gitRepoSuffix  = "git"
+	maxFileSize   = 1 << 20
+	gitRepoSuffix = "git"
 
 	gitReferenceNamePrefixBranch = "refs/heads/"
 	gitReferenceNamePrefixTag    = "refs/tags/"
@@ -48,29 +46,12 @@ type RepositoryService struct {
 	reposRoot string
 }
 
-func NewRepositoryService(adapter GitAdapter, store Storage, gitRoot string) (*RepositoryService, error) {
-	reposRoot := filepath.Join(gitRoot, repoSubdirName)
-	if _, err := os.Stat(reposRoot); errors.Is(err, os.ErrNotExist) {
-		if err = os.MkdirAll(reposRoot, 0o700); err != nil {
-			return nil, err
-		}
-	}
-
+func NewRepositoryService(adapter GitAdapter, store Storage, reposRoot string) (*RepositoryService, error) {
 	return &RepositoryService{
 		adapter:   adapter,
 		store:     store,
 		reposRoot: reposRoot,
 	}, nil
-}
-
-func (s RepositoryService) getFullPathForRepo(uid string) string {
-	// split repos into subfolders using their prefix to distribute repos accross a set of folders.
-	return filepath.Join(
-		s.reposRoot, // root folder
-		uid[0:2],    // first subfolder
-		uid[2:4],    // second subfolder
-		fmt.Sprintf("%s.%s", uid[4:], gitRepoSuffix), // remainder with .git
-	)
 }
 
 //nolint:gocognit // need to refactor this code
@@ -87,7 +68,7 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	}
 	log.Info().Msgf("received a create repository request %v", header)
 
-	repoPath := s.getFullPathForRepo(header.GetUid())
+	repoPath := getFullPathForRepo(s.reposRoot, header.GetUid())
 	if _, err = os.Stat(repoPath); !os.IsNotExist(err) {
 		return status.Errorf(codes.AlreadyExists, "repository exists already: %v", repoPath)
 	}
@@ -101,13 +82,13 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 		defer func(path string) {
 			_ = os.RemoveAll(path)
 		}(repoPath)
-		return fmt.Errorf("CreateRepository error: %w", err)
+		return processGitErrorf(err, "failed to initialize the repository")
 	}
 
 	// update default branch (currently set to non-existent branch)
 	err = s.adapter.SetDefaultBranch(ctx, repoPath, header.GetDefaultBranch(), true)
 	if err != nil {
-		return fmt.Errorf("error updating default branch for repo %s: %w", header.GetUid(), err)
+		return processGitErrorf(err, "error updating default branch for repo '%s'", header.GetUid())
 	}
 
 	// we need temp dir for cloning
@@ -125,7 +106,7 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 
 	// Clone repository to temp dir
 	if err = s.adapter.Clone(ctx, repoPath, tempDir, types.CloneRepoOptions{}); err != nil {
-		return status.Errorf(codes.Internal, "failed to clone repo: %v", err)
+		return processGitErrorf(err, "failed to clone repo")
 	}
 
 	// logic for receiving files

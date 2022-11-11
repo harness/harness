@@ -64,7 +64,7 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 	// get header first
 	header, err := stream.Recv()
 	if err != nil {
-		return nil, fmt.Errorf("error occured while receiving header: %w", err)
+		return nil, processRPCErrorf(err, "error occured while receiving header")
 	}
 	if header.GetHeader() == nil {
 		return nil, fmt.Errorf("header missing")
@@ -84,7 +84,7 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("received unexpected error from rpc: %w", err)
+			return nil, processRPCErrorf(err, "received unexpected error from server")
 		}
 		if next.GetCommit() == nil {
 			return nil, fmt.Errorf("expected commit message")

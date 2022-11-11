@@ -13,8 +13,6 @@ service RepositoryService {
   rpc GetSubmodule(GetSubmoduleRequest) returns (GetSubmoduleResponse);
   rpc GetBlob(GetBlobRequest) returns (GetBlobResponse);
   rpc ListCommits(ListCommitsRequest) returns (stream ListCommitsResponse);
-  rpc ListBranches(ListBranchesRequest) returns (stream ListBranchesResponse);
-  rpc ListCommitTags(ListCommitTagsRequest) returns (stream ListCommitTagsResponse);
 }
 
 message CreateRepositoryRequest {
@@ -96,32 +94,6 @@ message ListCommitsResponseHeader {
   int64 total_count = 1;
 }
 
-message ListBranchesRequest {
-  enum SortOption {
-    Default = 0;
-    Name    = 1;
-    Date    = 2;
-  }
-
-  string repo_uid     = 1;
-  bool include_commit = 2;
-  string query        = 3;
-  SortOption sort     = 4;
-  SortOrder order     = 5;
-  int32 page          = 6;
-  int32 pageSize      = 7;
-}
-
-message ListBranchesResponse {
-  Branch branch = 1;
-}
-
-message Branch {
-  string name   = 1;
-  string sha    = 2;
-  Commit commit = 3;
-}
-
 message GetBlobRequest {
   string repo_uid = 1;
   string sha      = 2;
@@ -151,52 +123,4 @@ message GetSubmoduleResponse {
 message Submodule {
   string name = 1;
   string url  = 2;
-}
-
-message ListCommitTagsRequest {
-  enum SortOption {
-    Default = 0;
-    Name    = 1;
-    Date    = 2;
-  }
-
-  string repo_uid     = 1;
-  bool include_commit = 2;
-  string query        = 3;
-  SortOption sort     = 4;
-  SortOrder order     = 5;
-  int32 page          = 6;
-  int32 pageSize      = 7;
-}
-
-message ListCommitTagsResponse {
-  CommitTag tag = 1;
-}
-
-message CommitTag {
-  string name       = 1;
-  string sha        = 2;
-  bool is_annotated = 3;
-  string title      = 4;
-  string message    = 5;
-  Signature tagger  = 6;
-  Commit commit     = 7;
-}
-
-message Commit {
-  string sha          = 1;
-  string title        = 2;
-  string message      = 3;
-  Signature author    = 4;
-  Signature committer = 5;
-}
-
-message Signature {
-    Identity identity = 1;
-    int64 when        = 2;
-}
-
-message Identity {
-  string name  = 1;
-  string email = 2;
 }

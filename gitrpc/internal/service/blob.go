@@ -11,11 +11,11 @@ import (
 )
 
 func (s RepositoryService) GetBlob(ctx context.Context, request *rpc.GetBlobRequest) (*rpc.GetBlobResponse, error) {
-	repoPath := s.getFullPathForRepo(request.GetRepoUid())
+	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
 	// TODO: do we need to validate request for nil?
 	gitBlob, err := s.adapter.GetBlob(ctx, repoPath, request.GetSha(), request.GetSizeLimit())
 	if err != nil {
-		return nil, err
+		return nil, processGitErrorf(err, "failed to get blob")
 	}
 
 	return &rpc.GetBlobResponse{

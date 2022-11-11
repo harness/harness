@@ -119,7 +119,7 @@ func walkGiteaReferenceParser(parser *gitearef.Parser, handler types.WalkReferen
 	}
 
 	if err := parser.Err(); err != nil {
-		return fmt.Errorf("failed to parse output: %w", err)
+		return processGiteaErrorf(err, "failed to parse reference walk output")
 	}
 
 	return nil

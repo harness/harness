@@ -13,10 +13,8 @@ import (
 	"github.com/harness/gitness/gitrpc"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
-	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -125,7 +123,6 @@ func (c *Controller) GetContent(ctx context.Context, session *auth.Session, repo
 		gitRef = repo.DefaultBranch
 	}
 
-	log := log.Ctx(ctx)
 	treeNodeOutput, err := c.gitRPCClient.GetTreeNode(ctx, &gitrpc.GetTreeNodeParams{
 		RepoUID:             repo.GitUID,
 		GitREF:              gitRef,
@@ -133,11 +130,7 @@ func (c *Controller) GetContent(ctx context.Context, session *auth.Session, repo
 		IncludeLatestCommit: includeLatestCommit,
 	})
 	if err != nil {
-		// TODO: this should only return not found if it's an actual not found error.
-		// This requires gitrpc to also return notfound though!
-		log.Debug().Err(err).
-			Msgf("unable to find content for repo '%s', gitRef '%s' and path '%s'", repoRef, gitRef, repoPath)
-		return nil, usererror.ErrNotFound
+		return nil, err
 	}
 
 	info, err := mapToContentInfo(&treeNodeOutput.Node, treeNodeOutput.Commit)

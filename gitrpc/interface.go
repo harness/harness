@@ -16,6 +16,8 @@ type Interface interface {
 	GetSubmodule(ctx context.Context, params *GetSubmoduleParams) (*GetSubmoduleOutput, error)
 	GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobOutput, error)
 	ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error)
+	CreateBranch(ctx context.Context, params *CreateBranchParams) (*CreateBranchOutput, error)
+	DeleteBranch(ctx context.Context, params *DeleteBranchParams) error
 	ListBranches(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error)
 	ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, error)
 
