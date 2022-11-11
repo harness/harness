@@ -34,11 +34,7 @@ const App: React.FC<AppProps> = React.memo(function App({
     (): Partial<RequestInit> => buildResfulReactRequestOptions(hooks?.useGetToken?.() || token),
     [token, hooks]
   )
-  const queryParams = useMemo(
-    () => (!standalone ? { routingId: space.split('/').shift() } : {}),
-
-    [space, standalone]
-  )
+  const queryParams = useMemo(() => (!standalone ? { routingId: space.split('/').shift() } : {}), [space, standalone])
 
   useEffect(() => {
     languageLoader(lang).then(setStrings)
