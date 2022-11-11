@@ -17,7 +17,7 @@ import (
 * Find finds a space.
  */
 func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string) (*types.Space, error) {
-	space, err := findSpaceFromRef(ctx, c.spaceStore, spaceRef)
+	space, err := c.spaceStore.FindSpaceFromRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err
 	}

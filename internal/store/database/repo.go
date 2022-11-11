@@ -7,6 +7,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/harness/gitness/internal/paths"
@@ -34,7 +35,7 @@ type RepoStore struct {
 	pathTransformation store.PathTransformation
 }
 
-// Finds the repo by id.
+// Find finds the repo by id.
 func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, error) {
 	dst := new(types.Repository)
 	if err := s.db.GetContext(ctx, dst, repoSelectByID, id); err != nil {
@@ -43,7 +44,7 @@ func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, erro
 	return dst, nil
 }
 
-// Finds the repo by path.
+// FindByPath finds the repo by path.
 func (s *RepoStore) FindByPath(ctx context.Context, path string) (*types.Repository, error) {
 	// ensure we transform path before searching (otherwise casing might be wrong)
 	pathUnique, err := s.pathTransformation(path)
@@ -56,6 +57,16 @@ func (s *RepoStore) FindByPath(ctx context.Context, path string) (*types.Reposit
 		return nil, processSQLErrorf(err, "Select query failed")
 	}
 	return dst, nil
+}
+
+func (s *RepoStore) FindRepoFromRef(ctx context.Context, repoRef string) (*types.Repository, error) {
+	// check if ref is repoId - ASSUMPTION: digit only is no valid repo name
+	id, err := strconv.ParseInt(repoRef, 10, 64)
+	if err == nil {
+		return s.Find(ctx, id)
+	}
+
+	return s.FindByPath(ctx, repoRef)
 }
 
 // Create creates a new repository.

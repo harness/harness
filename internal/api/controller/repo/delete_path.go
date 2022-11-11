@@ -16,7 +16,7 @@ import (
 * DeletePath deletes a repo path.
  */
 func (c *Controller) DeletePath(ctx context.Context, session *auth.Session, repoRef string, pathID int64) error {
-	repo, err := findRepoFromRef(ctx, c.repoStore, repoRef)
+	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
 	if err != nil {
 		return err
 	}

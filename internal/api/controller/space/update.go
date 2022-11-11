@@ -25,7 +25,7 @@ type UpdateInput struct {
  */
 func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	spaceRef string, in *UpdateInput) (*types.Space, error) {
-	space, err := findSpaceFromRef(ctx, c.spaceStore, spaceRef)
+	space, err := c.spaceStore.FindSpaceFromRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err
 	}

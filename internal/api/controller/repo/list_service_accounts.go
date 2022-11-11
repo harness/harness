@@ -18,7 +18,7 @@ import (
  */
 func (c *Controller) ListServiceAccounts(ctx context.Context, session *auth.Session,
 	repoRef string) ([]*types.ServiceAccount, error) {
-	repo, err := findRepoFromRef(ctx, c.repoStore, repoRef)
+	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}

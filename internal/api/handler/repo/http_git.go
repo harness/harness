@@ -6,16 +6,19 @@ package repo
 
 import (
 	"compress/gzip"
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/harness/gitness/gitrpc"
-	"github.com/harness/gitness/types"
-	"github.com/rs/zerolog"
+	apiauth "github.com/harness/gitness/internal/api/auth"
+	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/api/usererror"
+	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/hlog"
+	"github.com/rs/zerolog/log"
 )
 
 type CtxRepoType string
@@ -24,12 +27,25 @@ const (
 	CtxRepoKey CtxRepoType = "repo"
 )
 
-func GetInfoRefs(client gitrpc.Interface) http.HandlerFunc {
+func GetInfoRefs(client gitrpc.Interface, repoStore store.RepoStore, authorizer authz.Authorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log := hlog.FromRequest(r)
-		repo, ok := r.Context().Value(CtxRepoKey).(*types.Repository)
-		if !ok {
-			ctxKeyError(w, log)
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+		repoRef, err := request.GetRepoRefFromPath(r)
+		if err != nil {
+			http.Error(w, usererror.Translate(err).Error(), http.StatusInternalServerError)
+			return
+		}
+
+		repo, err := repoStore.FindRepoFromRef(ctx, repoRef)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+
+		if err = apiauth.CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoView, true); err != nil {
+			w.Header().Add("WWW-Authenticate", fmt.Sprintf(`Basic realm="%s"`, repo.GitUID))
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 
@@ -42,10 +58,7 @@ func GetInfoRefs(client gitrpc.Interface) http.HandlerFunc {
 		log.Debug().Msgf("in GetInfoRefs: git service: %v", service)
 		w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-advertisement", service))
 
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-		defer cancel()
-
-		if err := client.GetInfoRefs(ctx, w, &gitrpc.InfoRefsParams{
+		if err = client.GetInfoRefs(ctx, w, &gitrpc.InfoRefsParams{
 			RepoUID:     repo.GitUID,
 			Service:     service,
 			Options:     nil,
@@ -59,34 +72,22 @@ func GetInfoRefs(client gitrpc.Interface) http.HandlerFunc {
 	}
 }
 
-func GetUploadPack(client gitrpc.Interface) http.HandlerFunc {
+func GetUploadPack(client gitrpc.Interface, repoStore store.RepoStore, authorizer authz.Authorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const service = "upload-pack"
-		log := hlog.FromRequest(r)
-		repo, ok := r.Context().Value(CtxRepoKey).(*types.Repository)
-		if !ok {
-			ctxKeyError(w, log)
-			return
-		}
 
-		if err := serviceRPC(w, r, client, repo.GitUID, service, repo.CreatedBy); err != nil {
+		if err := serviceRPC(w, r, client, repoStore, authorizer, service); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
-func PostReceivePack(client gitrpc.Interface) http.HandlerFunc {
+func PostReceivePack(client gitrpc.Interface, repoStore store.RepoStore, authorizer authz.Authorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const service = "receive-pack"
-		log := hlog.FromRequest(r)
-		repo, ok := r.Context().Value(CtxRepoKey).(*types.Repository)
-		if !ok {
-			ctxKeyError(w, log)
-			return
-		}
 
-		if err := serviceRPC(w, r, client, repo.GitUID, service, repo.CreatedBy); err != nil {
+		if err := serviceRPC(w, r, client, repoStore, authorizer, service); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -97,27 +98,35 @@ func serviceRPC(
 	w http.ResponseWriter,
 	r *http.Request,
 	client gitrpc.Interface,
-	repoGitUID, service string,
-	principalID int64,
+	repoStore store.RepoStore,
+	authorizer authz.Authorizer,
+	service string,
 ) error {
 	ctx := r.Context()
 	log := hlog.FromRequest(r)
-	// inject repoUid in logging context
-	// TODO: this should be moved somewhere higher up!
-	log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-		return c.Str("repo_gitUid", repoGitUID)
-	})
-
-	// ensure we alwas close the request body.
 	defer func() {
 		if err := r.Body.Close(); err != nil {
 			log.Err(err).Msgf("serviceRPC: Close: %v", err)
 		}
 	}()
 
+	session, _ := request.AuthSessionFrom(ctx)
+	repoRef, err := request.GetRepoRefFromPath(r)
+	if err != nil {
+		return err
+	}
+
+	repo, err := repoStore.FindRepoFromRef(ctx, repoRef)
+	if err != nil {
+		return err
+	}
+
+	if err = apiauth.CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit, true); err != nil {
+		return err
+	}
+
 	w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-result", service))
 
-	var err error
 	reqBody := r.Body
 
 	// Handle GZIP.
@@ -128,11 +137,11 @@ func serviceRPC(
 		}
 	}
 	return client.ServicePack(ctx, w, &gitrpc.ServicePackParams{
-		RepoUID:     repoGitUID,
+		RepoUID:     repo.GitUID,
 		Service:     service,
 		Data:        reqBody,
 		Options:     nil,
-		PrincipalID: principalID,
+		PrincipalID: session.Principal.ID,
 		GitProtocol: r.Header.Get("Git-Protocol"),
 	})
 }
@@ -149,10 +158,4 @@ func getServiceType(r *http.Request) string {
 		return ""
 	}
 	return strings.Replace(serviceType, "git-", "", 1)
-}
-
-func ctxKeyError(w http.ResponseWriter, log *zerolog.Logger) {
-	errMsg := "key 'repo' missing in context"
-	http.Error(w, errMsg, http.StatusBadRequest)
-	log.Error().Msg(errMsg)
 }

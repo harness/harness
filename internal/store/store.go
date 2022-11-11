@@ -96,6 +96,9 @@ type (
 		// FindByPath the space by its path.
 		FindByPath(ctx context.Context, path string) (*types.Space, error)
 
+		// FindSpaceFromRef finds space by path or ref
+		FindSpaceFromRef(ctx context.Context, spaceRef string) (*types.Space, error)
+
 		// Create creates a new space
 		Create(ctx context.Context, space *types.Space) error
 
@@ -136,7 +139,10 @@ type (
 		// FindByPath the repo by path.
 		FindByPath(ctx context.Context, path string) (*types.Repository, error)
 
-		// Create a new repo
+		// FindRepoFromRef finds the repo by path or ref.
+		FindRepoFromRef(ctx context.Context, repoRef string) (*types.Repository, error)
+
+		// Create a new repo.
 		Create(ctx context.Context, repo *types.Repository) error
 
 		// Move moves an existing repo.

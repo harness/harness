@@ -19,7 +19,7 @@ import (
  */
 func (c *Controller) ListSpaces(ctx context.Context, session *auth.Session,
 	spaceRef string, filter *types.SpaceFilter) ([]*types.Space, int64, error) {
-	space, err := findSpaceFromRef(ctx, c.spaceStore, spaceRef)
+	space, err := c.spaceStore.FindSpaceFromRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, err
 	}

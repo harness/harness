@@ -20,7 +20,7 @@ import (
  */
 func (c *Controller) ListRepositories(ctx context.Context, session *auth.Session,
 	spaceRef string, filter *types.RepoFilter) ([]*types.Repository, int64, error) {
-	space, err := findSpaceFromRef(ctx, c.spaceStore, spaceRef)
+	space, err := c.spaceStore.FindSpaceFromRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, err
 	}

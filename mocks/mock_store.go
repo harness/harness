@@ -329,6 +329,21 @@ func (mr *MockSpaceStoreMockRecorder) FindByPath(arg0, arg1 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByPath", reflect.TypeOf((*MockSpaceStore)(nil).FindByPath), arg0, arg1)
 }
 
+// FindSpaceFromRef mocks base method.
+func (m *MockSpaceStore) FindSpaceFromRef(arg0 context.Context, arg1 string) (*types.Space, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindSpaceFromRef", arg0, arg1)
+	ret0, _ := ret[0].(*types.Space)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindSpaceFromRef indicates an expected call of FindSpaceFromRef.
+func (mr *MockSpaceStoreMockRecorder) FindSpaceFromRef(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindSpaceFromRef", reflect.TypeOf((*MockSpaceStore)(nil).FindSpaceFromRef), arg0, arg1)
+}
+
 // List mocks base method.
 func (m *MockSpaceStore) List(arg0 context.Context, arg1 int64, arg2 *types.SpaceFilter) ([]*types.Space, error) {
 	m.ctrl.T.Helper()
@@ -526,6 +541,21 @@ func (m *MockRepoStore) FindByPath(arg0 context.Context, arg1 string) (*types.Re
 func (mr *MockRepoStoreMockRecorder) FindByPath(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByPath", reflect.TypeOf((*MockRepoStore)(nil).FindByPath), arg0, arg1)
+}
+
+// FindRepoFromRef mocks base method.
+func (m *MockRepoStore) FindRepoFromRef(arg0 context.Context, arg1 string) (*types.Repository, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindRepoFromRef", arg0, arg1)
+	ret0, _ := ret[0].(*types.Repository)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindRepoFromRef indicates an expected call of FindRepoFromRef.
+func (mr *MockRepoStoreMockRecorder) FindRepoFromRef(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindRepoFromRef", reflect.TypeOf((*MockRepoStore)(nil).FindRepoFromRef), arg0, arg1)
 }
 
 // List mocks base method.

@@ -6,6 +6,7 @@ package database
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/mutex"
@@ -38,6 +39,19 @@ func (s *RepoStoreSync) FindByPath(ctx context.Context, path string) (*types.Rep
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.FindByPath(ctx, path)
+}
+
+// FindRepoFromRef finds the repo by path or ref.
+func (s *RepoStoreSync) FindRepoFromRef(ctx context.Context, repoRef string) (*types.Repository, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+
+	id, err := strconv.ParseInt(repoRef, 10, 64)
+	if err == nil {
+		return s.Find(ctx, id)
+	}
+
+	return s.FindByPath(ctx, repoRef)
 }
 
 // Create a new repository.

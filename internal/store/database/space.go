@@ -7,6 +7,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/harness/gitness/internal/paths"
@@ -56,6 +57,16 @@ func (s *SpaceStore) FindByPath(ctx context.Context, path string) (*types.Space,
 		return nil, processSQLErrorf(err, "Select query failed")
 	}
 	return dst, nil
+}
+
+func (s *SpaceStore) FindSpaceFromRef(ctx context.Context, spaceRef string) (*types.Space, error) {
+	// check if ref is space ID - ASSUMPTION: digit only is no valid space name
+	id, err := strconv.ParseInt(spaceRef, 10, 64)
+	if err == nil {
+		return s.Find(ctx, id)
+	}
+
+	return s.FindByPath(ctx, spaceRef)
 }
 
 // Create a new space.

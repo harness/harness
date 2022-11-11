@@ -18,7 +18,7 @@ import (
  */
 func (c *Controller) ListServiceAccounts(ctx context.Context, session *auth.Session,
 	spaceRef string) ([]*types.ServiceAccount, error) {
-	space, err := findSpaceFromRef(ctx, c.spaceStore, spaceRef)
+	space, err := c.spaceStore.FindSpaceFromRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err
 	}

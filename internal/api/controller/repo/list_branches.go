@@ -26,7 +26,7 @@ type Branch struct {
  */
 func (c *Controller) ListBranches(ctx context.Context, session *auth.Session,
 	repoRef string, includeCommit bool, filter *types.BranchFilter) ([]Branch, error) {
-	repo, err := findRepoFromRef(ctx, c.repoStore, repoRef)
+	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}

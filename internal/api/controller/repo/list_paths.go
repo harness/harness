@@ -19,7 +19,7 @@ import (
  */
 func (c *Controller) ListPaths(ctx context.Context, session *auth.Session,
 	repoRef string, filter *types.PathFilter) ([]*types.Path, int64, error) {
-	repo, err := findRepoFromRef(ctx, c.repoStore, repoRef)
+	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
 	if err != nil {
 		return nil, 0, err
 	}

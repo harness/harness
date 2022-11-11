@@ -16,7 +16,7 @@ import (
 * Delete deletes a repo.
  */
 func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef string) error {
-	repo, err := findRepoFromRef(ctx, c.repoStore, repoRef)
+	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
 	if err != nil {
 		return err
 	}

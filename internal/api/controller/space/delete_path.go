@@ -16,7 +16,7 @@ import (
 * DeletePath deletes a space path.
  */
 func (c *Controller) DeletePath(ctx context.Context, session *auth.Session, spaceRef string, pathID int64) error {
-	space, err := findSpaceFromRef(ctx, c.spaceStore, spaceRef)
+	space, err := c.spaceStore.FindSpaceFromRef(ctx, spaceRef)
 	if err != nil {
 		return err
 	}

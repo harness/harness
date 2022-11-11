@@ -6,6 +6,7 @@ package database
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/mutex"
@@ -38,6 +39,16 @@ func (s *SpaceStoreSync) FindByPath(ctx context.Context, path string) (*types.Sp
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.FindByPath(ctx, path)
+}
+
+func (s *SpaceStoreSync) FindSpaceFromRef(ctx context.Context, spaceRef string) (*types.Space, error) {
+	// check if ref is space ID - ASSUMPTION: digit only is no valid space name
+	id, err := strconv.ParseInt(spaceRef, 10, 64)
+	if err == nil {
+		return s.Find(ctx, id)
+	}
+
+	return s.FindByPath(ctx, spaceRef)
 }
 
 // Create a new space.

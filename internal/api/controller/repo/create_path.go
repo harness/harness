@@ -25,7 +25,7 @@ type CreatePathInput struct {
  */
 func (c *Controller) CreatePath(ctx context.Context, session *auth.Session,
 	repoRef string, in *CreatePathInput) (*types.Path, error) {
-	repo, err := findRepoFromRef(ctx, c.repoStore, repoRef)
+	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}
