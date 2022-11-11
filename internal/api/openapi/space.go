@@ -21,7 +21,7 @@ type createSpaceRequest struct {
 }
 
 type spaceRequest struct {
-	Ref string `json:"ref" path:"spaceRef"`
+	Ref string `path:"spaceRef"`
 }
 
 type updateSpaceRequest struct {
@@ -41,7 +41,7 @@ type createPathRequest struct {
 
 type deletePathRequest struct {
 	spaceRequest
-	PathID string `json:"pathID" path:"pathID"`
+	PathID string `path:"pathID"`
 }
 
 var queryParameterSortRepo = openapi3.ParameterOrRef{

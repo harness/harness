@@ -35,14 +35,17 @@ export interface OpenapiContentInfo {
 
 export type OpenapiContentType = 'file' | 'dir' | 'symlink' | 'submodule'
 
+export interface OpenapiCreateBranchRequest {
+  name?: string
+  target?: string | null
+}
+
 export interface OpenapiCreatePathRequest {
   path?: string
-  ref?: string
 }
 
 export interface OpenapiCreateRepoPathRequest {
   path?: string
-  ref?: string
 }
 
 export interface OpenapiCreateRepositoryRequest {
@@ -85,32 +88,27 @@ export interface OpenapiGetContentOutput {
 export interface OpenapiMoveRepoRequest {
   keepAsAlias?: boolean
   parentId?: number | null
-  ref?: string
   uid?: string | null
 }
 
 export interface OpenapiMoveSpaceRequest {
   keepAsAlias?: boolean
   parentId?: number | null
-  ref?: string
   uid?: string | null
 }
 
 export interface OpenapiUpdateRepoRequest {
   description?: string | null
   isPublic?: boolean | null
-  ref?: string
 }
 
 export interface OpenapiUpdateSpaceRequest {
   description?: string | null
   isPublic?: boolean | null
-  ref?: string
 }
 
 export interface RepoBranch {
   commit?: RepoCommit
-  sha?: string
   name?: string
   sha?: string
 }
@@ -496,6 +494,70 @@ export type UseListBranchesProps = Omit<
 export const useListBranches = ({ repoRef, ...props }: UseListBranchesProps) =>
   useGet<RepoBranch[], UsererrorError, ListBranchesQueryParams, ListBranchesPathParams>(
     (paramsInPath: ListBranchesPathParams) => `/repos/${paramsInPath.repoRef}/branches`,
+    { base: getConfigNew('scm'), pathParams: { repoRef }, ...props }
+  )
+
+export interface CreateBranchPathParams {
+  repoRef: string
+}
+
+export type CreateBranchProps = Omit<
+  MutateProps<RepoBranch, UsererrorError, void, OpenapiCreateBranchRequest, CreateBranchPathParams>,
+  'path' | 'verb'
+> &
+  CreateBranchPathParams
+
+export const CreateBranch = ({ repoRef, ...props }: CreateBranchProps) => (
+  <Mutate<RepoBranch, UsererrorError, void, OpenapiCreateBranchRequest, CreateBranchPathParams>
+    verb="POST"
+    path={`/repos/${repoRef}/branches`}
+    base={getConfigNew('scm')}
+    {...props}
+  />
+)
+
+export type UseCreateBranchProps = Omit<
+  UseMutateProps<RepoBranch, UsererrorError, void, OpenapiCreateBranchRequest, CreateBranchPathParams>,
+  'path' | 'verb'
+> &
+  CreateBranchPathParams
+
+export const useCreateBranch = ({ repoRef, ...props }: UseCreateBranchProps) =>
+  useMutate<RepoBranch, UsererrorError, void, OpenapiCreateBranchRequest, CreateBranchPathParams>(
+    'POST',
+    (paramsInPath: CreateBranchPathParams) => `/repos/${paramsInPath.repoRef}/branches`,
+    { base: getConfigNew('scm'), pathParams: { repoRef }, ...props }
+  )
+
+export interface DeleteBranchPathParams {
+  repoRef: string
+}
+
+export type DeleteBranchProps = Omit<
+  MutateProps<void, UsererrorError, void, string, DeleteBranchPathParams>,
+  'path' | 'verb'
+> &
+  DeleteBranchPathParams
+
+export const DeleteBranch = ({ repoRef, ...props }: DeleteBranchProps) => (
+  <Mutate<void, UsererrorError, void, string, DeleteBranchPathParams>
+    verb="DELETE"
+    path={`/repos/${repoRef}/branches`}
+    base={getConfigNew('scm')}
+    {...props}
+  />
+)
+
+export type UseDeleteBranchProps = Omit<
+  UseMutateProps<void, UsererrorError, void, string, DeleteBranchPathParams>,
+  'path' | 'verb'
+> &
+  DeleteBranchPathParams
+
+export const useDeleteBranch = ({ repoRef, ...props }: UseDeleteBranchProps) =>
+  useMutate<void, UsererrorError, void, string, DeleteBranchPathParams>(
+    'DELETE',
+    (paramsInPath: DeleteBranchPathParams) => `/repos/${paramsInPath.repoRef}/branches`,
     { base: getConfigNew('scm'), pathParams: { repoRef }, ...props }
   )
 

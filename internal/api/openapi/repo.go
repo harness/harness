@@ -27,7 +27,7 @@ type licenseRequest struct {
 }
 
 type repoRequest struct {
-	Ref string `json:"ref" path:"repoRef"`
+	Ref string `path:"repoRef"`
 }
 
 type updateRepoRequest struct {
@@ -47,12 +47,12 @@ type createRepoPathRequest struct {
 
 type deleteRepoPathRequest struct {
 	repoRequest
-	PathID string `json:"pathID" path:"pathID"`
+	PathID string `path:"pathID"`
 }
 
 type getContentRequest struct {
 	repoRequest
-	Path string `json:"path" path:"path"`
+	Path string `path:"path"`
 }
 
 // contentType is a plugin for repo.ContentType to allow using oneof.
@@ -94,6 +94,15 @@ type listCommitsRequest struct {
 
 type listBranchesRequest struct {
 	repoRequest
+}
+type createBranchRequest struct {
+	repoRequest
+	repo.CreateBranchInput
+}
+
+type deleteBranchRequest struct {
+	repoRequest
+	BranchName string `path:"branchName"`
 }
 
 type listTagsRequest struct {
@@ -340,6 +349,28 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/commits", opListCommits)
+
+	opCreateBranch := openapi3.Operation{}
+	opCreateBranch.WithTags("repository")
+	opCreateBranch.WithMapOfAnything(map[string]interface{}{"operationId": "createBranch"})
+	_ = reflector.SetRequest(&opCreateBranch, new(createBranchRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opCreateBranch, new(repo.Branch), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opCreateBranch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repoRef}/branches", opCreateBranch)
+
+	onDeleteBranch := openapi3.Operation{}
+	onDeleteBranch.WithTags("repository")
+	onDeleteBranch.WithMapOfAnything(map[string]interface{}{"operationId": "deleteBranch"})
+	_ = reflector.SetRequest(&onDeleteBranch, new(deleteBranchRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&onDeleteBranch, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&onDeleteBranch, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&onDeleteBranch, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&onDeleteBranch, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&onDeleteBranch, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repoRef}/branches/{branchName}", onDeleteBranch)
 
 	opListBranches := openapi3.Operation{}
 	opListBranches.WithTags("repository")
