@@ -45,7 +45,7 @@ func Handler() http.HandlerFunc {
 		}
 
 		// Disable caching and sniffing via HTTP headers for UI main entry resources
-		if (r.URL.Path == "/" || r.URL.Path == "/remoteEntry.js" || r.URL.Path == "/index.html") {
+		if r.URL.Path == "/" || r.URL.Path == "/remoteEntry.js" || r.URL.Path == "/index.html" {
 			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate;")
 			w.Header().Set("pragma", "no-cache")
 			w.Header().Set("X-Content-Type-Options", "nosniff")
