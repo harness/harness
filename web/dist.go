@@ -43,6 +43,14 @@ func Handler() http.HandlerFunc {
 			// root of the project.
 			r.URL.Path = "/"
 		}
+
+		// Disable caching and sniffing via HTTP headers for UI main entry resources
+		if (r.URL.Path == "/" || r.URL.Path == "/remoteEntry.js" || r.URL.Path == "/index.html") {
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate;")
+			w.Header().Set("pragma", "no-cache")
+			w.Header().Set("X-Content-Type-Options", "nosniff")
+		}
+
 		// and finally server the file.
 		handler.ServeHTTP(w, r)
 	})
