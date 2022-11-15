@@ -2,21 +2,20 @@ import React from 'react'
 import { Container, Pagination } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
-import type { RepoCommit, TypesRepository } from 'services/scm'
+import type { RepoCommit } from 'services/scm'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { LIST_FETCHING_PER_PAGE } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
+import type { GitInfoProps } from 'utils/GitUtils'
 import { CommitsContentHeader } from './CommitsContentHeader/CommitsContentHeader'
 import { CommitsContent } from './CommitsContent/CommitsContent'
 import css from './RepositoryCommitsContent.module.scss'
 
-interface RepositoryCommitsContentProps {
-  commitRef: string
-  repoMetadata: TypesRepository
-}
-
-export function RepositoryCommitsContent({ repoMetadata, commitRef }: RepositoryCommitsContentProps) {
+export function RepositoryCommitsContent({
+  repoMetadata,
+  commitRef
+}: Pick<GitInfoProps, 'repoMetadata' | 'commitRef'>) {
   const { routes } = useAppContext()
   const history = useHistory()
   const [pageIndex, setPageIndex] = usePageIndex()

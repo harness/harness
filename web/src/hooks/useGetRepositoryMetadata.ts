@@ -7,7 +7,7 @@ import { useGetSpaceParam } from './useGetSpaceParam'
 
 export function useGetRepositoryMetadata() {
   const space = useGetSpaceParam()
-  const { repoName, ...otherPathParams } = useParams<SCMPathProps>()
+  const { repoName, gitRef, ...otherPathParams } = useParams<SCMPathProps>()
   const {
     data: repoMetadata,
     error,
@@ -26,6 +26,7 @@ export function useGetRepositoryMetadata() {
     loading,
     refetch,
     response,
+    gitRef: gitRef || repoMetadata?.defaultBranch || '',
     ...otherPathParams
   }
 }

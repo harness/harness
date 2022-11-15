@@ -1,10 +1,8 @@
 import { useGet } from 'restful-react'
-import type { OpenapiGetContentOutput, TypesRepository } from 'services/scm'
+import type { OpenapiGetContentOutput } from 'services/scm'
+import type { GitInfoProps } from 'utils/GitUtils'
 
-interface UseGetResourceContentParams {
-  repoMetadata: TypesRepository
-  gitRef?: string
-  resourcePath?: string
+interface UseGetResourceContentParams extends Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath'> {
   includeCommit?: boolean
 }
 

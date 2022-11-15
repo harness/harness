@@ -1,19 +1,16 @@
 import React, { useMemo, useState } from 'react'
 import { Container, Layout, FlexExpander, DropDown, Button, ButtonVariation, TextInput } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
-import type { TypesRepository } from 'services/scm'
-import { GitBranchType } from 'utils/GitUtils'
+import { GitBranchType, GitInfoProps } from 'utils/GitUtils'
 import css from './BranchesContentHeader.module.scss'
 
-interface BranchesContentHeaderProps {
+interface BranchesContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
   activeBranchType?: GitBranchType
-  repoMetadata: TypesRepository
   onBranchTypeSwitched: (branchType: GitBranchType) => void
   onSearchTermChanged: (searchTerm: string) => void
 }
 
 export function BranchesContentHeader({
-  repoMetadata,
   onBranchTypeSwitched,
   onSearchTermChanged,
   activeBranchType = GitBranchType.ACTIVE

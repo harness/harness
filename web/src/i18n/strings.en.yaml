@@ -15,8 +15,7 @@ repositories: Repositories
 files: Files
 commit: Commit
 commits: Commits
-commitChanges: Commit Changes
-cancelChanges: Cancel Changes
+commitChanges: Commit changes
 pullRequests: Pull Requests
 settings: Settings
 newFile: New File
@@ -50,7 +49,7 @@ activeBranches: Active Branches
 inactiveBranches: Inactive Branches
 yourBranches: Your Branches
 allBranches: All Branches
-createBranch: + Create Branch
+createBranch: Create Branch
 searchBranches: Search branches
 updated: Updated
 cloneHTTPS: Clone with HTTPS
@@ -77,3 +76,6 @@ optional: Optional
 commitDirectlyTo: 'Commit directly to the <strong style="color: var(--primary-7)">{{gitRef}}</strong> branch'
 commitToNewBranch: Create a <strong>new branch</strong> for this commit and start a pull request
 enterNewBranchName: New branch name
+onDate: on {{date}}
+deleteFile: Delete file __filePath__
+confirm: Confirm

@@ -3,7 +3,7 @@
 // Last updated for git 2.29.0.
 
 import type { IconName } from '@harness/icons'
-import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput } from 'services/scm'
+import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput, TypesRepository } from 'services/scm'
 
 // eslint-disable-next-line no-control-regex
 const badGitRefRegrex = /(^|[/.])([/.]|$)|^@$|@{|[\x00-\x20\x7f~^:?*[\\]|\.lock(\/|$)/
@@ -33,13 +33,16 @@ export enum GitBranchType {
 
 export const GitIcon: Readonly<Record<string, IconName>> = {
   FILE: 'file',
-  REPOSITORY: 'git-repo',
+  REPOSITORY: 'code-repo',
   COMMIT: 'git-branch-existing',
   PULL_REQUEST: 'git-pull',
   SETTINGS: 'cog',
-  FOLDER: 'main-folder',
-  EDIT: 'edit',
-  BRANCH: 'git-branch'
+  FOLDER: 'code-folder',
+  COPY: 'code-copy',
+  DELETE: 'code-delete',
+  EDIT: 'Edit',
+  BRANCH: 'git-branch',
+  HISTORY: 'code-history'
 }
 
 export const isDir = (content: Nullable<OpenapiGetContentOutput>): boolean => content?.type === GitContentType.DIR
@@ -53,3 +56,11 @@ export const findReadmeInfo = (content: Nullable<OpenapiGetContentOutput>): Open
   (content?.content as OpenapiDirContent)?.entries?.find(
     entry => entry.type === GitContentType.FILE && /^readme(.md)?$/.test(entry?.name?.toLowerCase() || '')
   )
+
+export interface GitInfoProps {
+  repoMetadata: TypesRepository
+  gitRef: string
+  resourcePath: string
+  resourceContent: OpenapiGetContentOutput
+  commitRef: string
+}

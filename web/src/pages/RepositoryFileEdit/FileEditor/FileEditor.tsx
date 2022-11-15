@@ -1,36 +1,39 @@
-import React, { ChangeEvent, useCallback, useMemo, useState } from 'react'
+import React, { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Button, ButtonVariation, Color, Container, FlexExpander, Icon, Layout, Text, TextInput } from '@harness/uicore'
 import { Link, useHistory } from 'react-router-dom'
 import ReactJoin from 'react-join'
 import cx from 'classnames'
 import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
-import type { OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/scm'
+import type { RepoFileContent } from 'services/scm'
 import { useAppContext } from 'AppContext'
-import { isDir } from 'utils/GitUtils'
+import { GitInfoProps, isDir } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { filenameToLanguage, FILE_SEPERATOR } from 'utils/Utils'
 import { CommitModalButton } from 'components/CommitModalButton/CommitModalButton'
 import css from './FileEditor.module.scss'
 
-interface FileEditorProps {
-  repoMetadata: TypesRepository
-  gitRef: string
-  resourcePath: string
-  contentInfo: OpenapiGetContentOutput
-}
-
 const PathSeparator = () => <Text color={Color.GREY_900}>/</Text>
 
-function Editor({ contentInfo, repoMetadata, gitRef, resourcePath }: FileEditorProps) {
+function Editor({
+  resourceContent,
+  repoMetadata,
+  gitRef,
+  resourcePath
+}: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent'>) {
   const history = useHistory()
-  const isNew = useMemo(() => isDir(contentInfo), [contentInfo])
-  const [fileName, setFileName] = useState(isNew ? '' : (contentInfo.name as string))
+  const inputRef = useRef<HTMLInputElement | null>()
+  const isNew = useMemo(() => isDir(resourceContent), [resourceContent])
+  const [fileName, setFileName] = useState(isNew ? '' : (resourceContent.name as string))
   const [parentPath, setParentPath] = useState(
     isNew ? resourcePath : resourcePath.split(FILE_SEPERATOR).slice(0, -1).join(FILE_SEPERATOR)
   )
   const { getString } = useStrings()
   const { routes } = useAppContext()
-  const language = filenameToLanguage(contentInfo?.name)
+  const [language, setLanguage] = useState(() => filenameToLanguage(fileName))
+  const [originalContent, setOriginalContent] = useState(
+    window.atob((resourceContent?.content as RepoFileContent)?.data || '')
+  )
+  const [content, setContent] = useState(originalContent)
   const rebuildPaths = useCallback(() => {
     const _tokens = fileName.split(FILE_SEPERATOR).filter(part => !!part.trim())
     const _fileName = _tokens.pop() as string
@@ -42,15 +45,32 @@ function Editor({ contentInfo, repoMetadata, gitRef, resourcePath }: FileEditorP
       .join(FILE_SEPERATOR)
 
     if (_fileName && _fileName !== fileName) {
-      setFileName(_fileName.trim())
+      const normalizedFilename = _fileName.trim()
+      const newLanguage = filenameToLanguage(normalizedFilename)
+
+      setFileName(normalizedFilename)
+
+      // This is a workaround to force Monaco update content
+      // with new language. Monaco still throws an error
+      // textModel.js:178 Uncaught Error: Model is disposed!
+      if (language !== newLanguage) {
+        setLanguage(newLanguage)
+        setOriginalContent(content)
+      }
     }
 
     setParentPath(_parentPath)
-  }, [fileName, setFileName, parentPath, setParentPath])
+  }, [fileName, setFileName, parentPath, setParentPath, language, content])
   const fileResourcePath = useMemo(
     () => [parentPath, fileName].filter(p => !!p.trim()).join(FILE_SEPERATOR),
     [parentPath, fileName]
   )
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.size = Math.min(Math.max(fileName.length - 2, 20), 50)
+    }
+  }, [fileName, inputRef])
 
   return (
     <Container className={css.container}>
@@ -87,19 +107,22 @@ function Editor({ contentInfo, repoMetadata, gitRef, resourcePath }: FileEditorP
               </>
             )}
             <TextInput
-              autoFocus
               value={fileName}
+              inputRef={ref => (inputRef.current = ref)}
               wrapperClassName={css.inputContainer}
               placeholder={getString('nameYourFile')}
               onInput={(event: ChangeEvent<HTMLInputElement>) => {
                 setFileName(event.currentTarget.value)
               }}
               onBlur={rebuildPaths}
-              onFocus={event => {
+              onFocus={({ target }) => {
                 const value = (parentPath ? parentPath + FILE_SEPERATOR : '') + fileName
                 setFileName(value)
                 setParentPath('')
-                setTimeout(() => event.target.setSelectionRange(value.length, value.length), 0)
+                setTimeout(() => {
+                  target.setSelectionRange(value.length, value.length)
+                  target.scrollLeft = Number.MAX_SAFE_INTEGER
+                }, 0)
               }}
             />
             <Text color={Color.GREY_900}>{getString('in')}</Text>
@@ -125,7 +148,7 @@ function Editor({ contentInfo, repoMetadata, gitRef, resourcePath }: FileEditorP
               onSubmit={data => console.log({ data })}
             />
             <Button
-              text={getString('cancelChanges')}
+              text={getString('cancel')}
               variation={ButtonVariation.TERTIARY}
               onClick={() => {
                 history.push(
@@ -146,7 +169,8 @@ function Editor({ contentInfo, repoMetadata, gitRef, resourcePath }: FileEditorP
           className={css.editorContainer}
           height="100%"
           language={language}
-          source={window.atob((contentInfo?.content as RepoFileContent)?.data || '')}
+          source={originalContent}
+          onChange={setContent}
         />
       </Container>
     </Container>

@@ -57,6 +57,7 @@ export interface CommitModalButtonProps extends Omit<ButtonProps, 'onClick' | 'o
   gitRef: string
   commitMessagePlaceHolder: string
   resourcePath: string
+  deleteFile?: boolean
   onSubmit: (data: TypesRepository) => void
 }
 
@@ -65,6 +66,7 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
   resourcePath,
   commitMessagePlaceHolder,
   onSubmit,
+  deleteFile,
   ...props
 }) => {
   const ModalComponent: React.FC = () => {
@@ -181,7 +183,7 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
                   spacing="small"
                   padding={{ right: 'xxlarge', top: 'xxlarge', bottom: 'large' }}
                   style={{ alignItems: 'center' }}>
-                  <Button type="submit" text={getString('commitChanges')} intent={Intent.PRIMARY} disabled={loading} />
+                  <Button type="submit" text={getString('commit')} intent={Intent.PRIMARY} disabled={loading} />
                   <Button text={getString('cancel')} minimal onClick={hideModal} />
                   <FlexExpander />
 

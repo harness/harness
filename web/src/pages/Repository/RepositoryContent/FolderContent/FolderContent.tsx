@@ -4,20 +4,18 @@ import type { CellProps, Column } from 'react-table'
 import { sortBy } from 'lodash-es'
 import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
-import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput, TypesRepository } from 'services/scm'
+import type { OpenapiContentInfo, OpenapiDirContent } from 'services/scm'
 import { formatDate } from 'utils/Utils'
-import { findReadmeInfo, GitIcon, isFile } from 'utils/GitUtils'
-import { LatestCommit } from 'components/LatestCommit/LatestCommit'
+import { findReadmeInfo, GitIcon, GitInfoProps, isFile } from 'utils/GitUtils'
+import { LatestCommitForFolder } from 'components/LatestCommit/LatestCommit'
 import { Readme } from './Readme'
 import css from './FolderContent.module.scss'
 
-interface FolderContentProps {
-  repoMetadata: TypesRepository
-  gitRef: string
-  contentInfo: OpenapiGetContentOutput
-}
-
-export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderContentProps) {
+export function FolderContent({
+  repoMetadata,
+  resourceContent,
+  gitRef
+}: Pick<GitInfoProps, 'repoMetadata' | 'resourceContent' | 'gitRef'>) {
   const history = useHistory()
   const { routes } = useAppContext()
   const columns: Column<OpenapiContentInfo>[] = useMemo(
@@ -62,17 +60,17 @@ export function FolderContent({ repoMetadata, contentInfo, gitRef }: FolderConte
     ],
     []
   )
-  const readmeInfo = useMemo(() => findReadmeInfo(contentInfo), [contentInfo])
+  const readmeInfo = useMemo(() => findReadmeInfo(resourceContent), [resourceContent])
 
   return (
     <Container className={css.folderContent}>
-      <LatestCommit repoMetadata={repoMetadata} latestCommit={contentInfo?.latestCommit} />
+      <LatestCommitForFolder repoMetadata={repoMetadata} latestCommit={resourceContent?.latestCommit} />
 
       <Table<OpenapiContentInfo>
         className={css.table}
         hideHeaders
         columns={columns}
-        data={sortBy((contentInfo.content as OpenapiDirContent)?.entries || [], ['type', 'name'])}
+        data={sortBy((resourceContent.content as OpenapiDirContent)?.entries || [], ['type', 'name'])}
         onRowClick={data => {
           history.push(
             routes.toSCMRepository({

@@ -165,11 +165,15 @@ const EXTENSION_TO_LANG: Record<string, string> = {
   jsx: 'typescript'
 }
 
+export const PLAIN_TEXT = 'plaintext'
+
 export const filenameToLanguage = (name?: string): string | undefined => {
   const extension = name?.split('.').pop() || ''
   const map = langMap.languages(extension)
 
   if (map?.length) {
-    return MONACO_SUPPORTED_LANGUAGES.find(lang => map.includes(lang)) || EXTENSION_TO_LANG[extension]
+    return MONACO_SUPPORTED_LANGUAGES.find(lang => map.includes(lang)) || EXTENSION_TO_LANG[extension] || PLAIN_TEXT
   }
+
+  return PLAIN_TEXT
 }

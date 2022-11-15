@@ -17,19 +17,18 @@ import { uniq } from 'lodash-es'
 import { useGet } from 'restful-react'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { RepoBranch, TypesRepository } from 'services/scm'
+import type { RepoBranch } from 'services/scm'
 import { BRANCH_PER_PAGE } from 'utils/Utils'
 import { CloneButtonTooltip } from 'components/CloneButtonTooltip/CloneButtonTooltip'
-import { GitIcon } from 'utils/GitUtils'
+import { GitIcon, GitInfoProps, isDir } from 'utils/GitUtils'
 import css from './ContentHeader.module.scss'
 
-interface ContentHeaderProps {
-  gitRef?: string
-  resourcePath?: string
-  repoMetadata: TypesRepository
-}
-
-export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: ContentHeaderProps) {
+export function ContentHeader({
+  repoMetadata,
+  gitRef,
+  resourcePath,
+  resourceContent
+}: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent'>) {
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const history = useHistory()
@@ -47,6 +46,7 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
   const [branches, setBranches] = useState<SelectOption[]>(
     uniq(defaultBranches.map(_branch => ({ label: _branch, value: _branch }))) as SelectOption[]
   )
+  const _isDir = isDir(resourceContent)
 
   useEffect(() => {
     if (data?.length) {
@@ -99,7 +99,7 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
         <Container>
           <Layout.Horizontal spacing="small">
             <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string, gitRef })}>
-              <Icon name="main-folder" />
+              <Icon name={GitIcon.FOLDER} />
             </Link>
             <Text color={Color.GREY_900}>/</Text>
             <ReactJoin separator={<Text color={Color.GREY_900}>/</Text>}>
@@ -122,33 +122,37 @@ export function ContentHeader({ repoMetadata, gitRef, resourcePath = '' }: Conte
           </Layout.Horizontal>
         </Container>
         <FlexExpander />
-        <Button
-          text={getString('clone')}
-          variation={ButtonVariation.SECONDARY}
-          icon="main-clone"
-          iconProps={{ size: 10 }}
-          tooltip={<CloneButtonTooltip httpsURL={repoMetadata.gitUrl as string} />}
-          tooltipProps={{
-            interactionKind: 'click',
-            minimal: true,
-            position: 'bottom-right'
-          }}
-        />
-        <Button
-          text={getString('newFile')}
-          icon="plus"
-          iconProps={{ size: 10 }}
-          variation={ButtonVariation.PRIMARY}
-          onClick={() => {
-            history.push(
-              routes.toSCMRepositoryFileEdit({
-                repoPath: repoMetadata.path as string,
-                resourcePath,
-                gitRef: gitRef || (repoMetadata.defaultBranch as string)
-              })
-            )
-          }}
-        />
+        {_isDir && (
+          <>
+            <Button
+              text={getString('clone')}
+              variation={ButtonVariation.SECONDARY}
+              icon="main-clone"
+              iconProps={{ size: 10 }}
+              tooltip={<CloneButtonTooltip httpsURL={repoMetadata.gitUrl as string} />}
+              tooltipProps={{
+                interactionKind: 'click',
+                minimal: true,
+                position: 'bottom-right'
+              }}
+            />
+            <Button
+              text={getString('newFile')}
+              icon="plus"
+              iconProps={{ size: 10 }}
+              variation={ButtonVariation.PRIMARY}
+              onClick={() => {
+                history.push(
+                  routes.toSCMRepositoryFileEdit({
+                    repoPath: repoMetadata.path as string,
+                    resourcePath,
+                    gitRef: gitRef || (repoMetadata.defaultBranch as string)
+                  })
+                )
+              }}
+            />
+          </>
+        )}
       </Layout.Horizontal>
     </Container>
   )

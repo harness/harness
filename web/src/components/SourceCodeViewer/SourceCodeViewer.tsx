@@ -1,8 +1,9 @@
 import React, { lazy, Suspense } from 'react'
 import { Container, Text } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
-import { SourceCodeEditor, SourceCodeEditorProps } from 'components/SourceCodeEditor/SourceCodeEditor'
+import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
 import './SourceCodeViewer.scss'
+import type { SourceCodeEditorProps } from 'utils/Utils'
 
 interface MarkdownViewerProps {
   source: string

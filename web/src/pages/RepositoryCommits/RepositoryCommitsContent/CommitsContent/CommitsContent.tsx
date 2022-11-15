@@ -4,14 +4,13 @@ import type { CellProps, Column } from 'react-table'
 import { orderBy } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { RepoCommit, TypesRepository } from 'services/scm'
+import type { RepoCommit } from 'services/scm'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { formatDate } from 'utils/Utils'
-import { GitIcon } from 'utils/GitUtils'
+import { GitIcon, GitInfoProps } from 'utils/GitUtils'
 import css from './CommitsContent.module.scss'
 
-interface CommitsContentProps {
-  repoMetadata: TypesRepository
+interface CommitsContentProps extends Pick<GitInfoProps, 'repoMetadata'> {
   commits: RepoCommit[]
 }
 

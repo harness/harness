@@ -4,17 +4,12 @@ import { Link } from 'react-router-dom'
 import { PopoverInteractionKind } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
 import { ButtonRoleProps } from 'utils/Utils'
-import { GitIcon } from 'utils/GitUtils'
-import type { TypesRepository } from 'services/scm'
+import { GitIcon, GitInfoProps } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import css from './RepositoryHeader.module.scss'
 
-interface RepositoryHeaderProps {
-  repoMetadata: TypesRepository
-}
-
-export function RepositoryHeader({ repoMetadata }: RepositoryHeaderProps) {
+export function RepositoryHeader({ repoMetadata }: Pick<GitInfoProps, 'repoMetadata'>) {
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { routes } = useAppContext()

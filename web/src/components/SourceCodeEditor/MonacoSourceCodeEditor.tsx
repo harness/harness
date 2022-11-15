@@ -3,7 +3,7 @@ import { Container } from '@harness/uicore'
 import type monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 import MonacoEditor from 'react-monaco-editor'
 import { noop } from 'lodash-es'
-import type { SourceCodeEditorProps } from 'utils/Utils'
+import { SourceCodeEditorProps, PLAIN_TEXT } from 'utils/Utils'
 
 export const MonacoEditorOptions = {
   ignoreTrimWhitespace: true,
@@ -55,7 +55,7 @@ const toOnOff = (flag: boolean) => (flag ? 'on' : 'off')
 
 export default function MonacoSourceCodeEditor({
   source,
-  language = 'plaintext',
+  language = PLAIN_TEXT,
   lineNumbers = true,
   readOnly = false,
   className,
@@ -90,11 +90,10 @@ export default function MonacoSourceCodeEditor({
             alwaysConsumeMouseWheel: false
           }
         }}
-        editorDidMount={editor => {
+        editorDidMount={_editor => {
           if (autoHeight) {
-            autoAdjustEditorHeight(editor)
+            autoAdjustEditorHeight(_editor)
           }
-          editor.focus()
         }}
         onChange={onChange}
       />

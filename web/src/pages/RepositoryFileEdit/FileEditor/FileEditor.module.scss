@@ -26,11 +26,7 @@
         input {
           padding: var(--spacing-xsmall) var(--spacing-small);
           height: 28px;
-          width: 200px;
-
-          &:focus {
-            width: 400px;
-          }
+          width: auto;
         }
       }
 

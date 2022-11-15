@@ -39,7 +39,7 @@
     "@emotion/core": "^10.0.28",
     "@emotion/styled": "^10.0.27",
     "@harness/design-system": "1.4.0",
-    "@harness/icons": "1.71.0",
+    "@harness/icons": "1.82.0",
     "@harness/monaco-yaml": ">=1.0.0",
     "@harness/ng-tooltip": ">=1.31.25",
     "@harness/telemetry": ">=1.0.42",

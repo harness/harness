@@ -11,7 +11,6 @@ export interface StringsMap {
   branch: string
   branches: string
   cancel: string
-  cancelChanges: string
   clone: string
   cloneHTTPS: string
   commit: string
@@ -21,6 +20,7 @@ export interface StringsMap {
   commitToNewBranch: string
   commits: string
   commitsOn: string
+  confirm: string
   content: string
   copy: string
   copyCommitSHA: string
@@ -32,6 +32,7 @@ export interface StringsMap {
   'createRepoModal.privateLabel': string
   'createRepoModal.publicLabel': string
   defaultBranch: string
+  deleteFile: string
   description: string
   editFile: string
   email: string
@@ -53,6 +54,7 @@ export interface StringsMap {
   noAccount: string
   none: string
   ok: string
+  onDate: string
   optional: string
   optionalExtendedDescription: string
   pageNotFound: string

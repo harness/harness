@@ -3,13 +3,12 @@ import { Container, Layout, FlexExpander, DropDown, Icon, Color, SelectOption } 
 import { uniq } from 'lodash-es'
 import { useGet } from 'restful-react'
 import { useStrings } from 'framework/strings'
-import type { RepoBranch, TypesRepository } from 'services/scm'
+import type { RepoBranch } from 'services/scm'
 import { BRANCH_PER_PAGE } from 'utils/Utils'
-import { GitIcon } from 'utils/GitUtils'
+import { GitIcon, GitInfoProps } from 'utils/GitUtils'
 import css from './CommitsContentHeader.module.scss'
 
-interface CommitsContentHeaderProps {
-  repoMetadata: TypesRepository
+interface CommitsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
   onSwitch: (gitRef: string) => void
 }
 

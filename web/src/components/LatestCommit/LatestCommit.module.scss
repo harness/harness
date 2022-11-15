@@ -18,6 +18,10 @@
     border-radius: 4px;
   }
 
+  &.forFile {
+    padding-right: var(--spacing-small) !important;
+  }
+
   .shaBtn span {
     font-size: 12px !important;
   }
