@@ -6,9 +6,12 @@ package repo
 
 import (
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/harness/gitness/internal/paths"
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
@@ -23,9 +26,13 @@ import (
 
 type CtxRepoType string
 
-const (
-	CtxRepoKey CtxRepoType = "repo"
-)
+type GitAuthError struct {
+	AccountID string
+}
+
+func (e GitAuthError) Error() string {
+	return fmt.Sprintf("Authentication failed for account %s", e.AccountID)
+}
 
 func GetInfoRefs(client gitrpc.Interface, repoStore store.RepoStore, authorizer authz.Authorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -43,9 +50,17 @@ func GetInfoRefs(client gitrpc.Interface, repoStore store.RepoStore, authorizer 
 			return
 		}
 
+		accountID, _, err := paths.DisectRoot(repo.Path)
+		if err != nil {
+			return
+		}
+
 		if err = apiauth.CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoView, true); err != nil {
-			w.Header().Add("WWW-Authenticate", fmt.Sprintf(`Basic realm="%s"`, repo.GitUID))
-			w.WriteHeader(http.StatusUnauthorized)
+			if errors.Is(err, apiauth.ErrNotAuthenticated) {
+				basicAuth(w, accountID)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -76,7 +91,7 @@ func GetUploadPack(client gitrpc.Interface, repoStore store.RepoStore, authorize
 	return func(w http.ResponseWriter, r *http.Request) {
 		const service = "upload-pack"
 
-		if err := serviceRPC(w, r, client, repoStore, authorizer, service); err != nil {
+		if err := serviceRPC(w, r, client, repoStore, authorizer, service, enum.PermissionRepoView, true); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -86,8 +101,12 @@ func GetUploadPack(client gitrpc.Interface, repoStore store.RepoStore, authorize
 func PostReceivePack(client gitrpc.Interface, repoStore store.RepoStore, authorizer authz.Authorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const service = "receive-pack"
-
-		if err := serviceRPC(w, r, client, repoStore, authorizer, service); err != nil {
+		if err := serviceRPC(w, r, client, repoStore, authorizer, service, enum.PermissionRepoEdit, false); err != nil {
+			var authError *GitAuthError
+			if errors.As(err, &authError) {
+				basicAuth(w, authError.AccountID)
+				return
+			}
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -101,6 +120,8 @@ func serviceRPC(
 	repoStore store.RepoStore,
 	authorizer authz.Authorizer,
 	service string,
+	permission enum.Permission,
+	orPublic bool,
 ) error {
 	ctx := r.Context()
 	log := hlog.FromRequest(r)
@@ -121,7 +142,17 @@ func serviceRPC(
 		return err
 	}
 
-	if err = apiauth.CheckRepo(ctx, authorizer, session, repo, enum.PermissionRepoEdit, true); err != nil {
+	accountID, _, err := paths.DisectRoot(repo.Path)
+	if err != nil {
+		return err
+	}
+
+	if err = apiauth.CheckRepo(ctx, authorizer, session, repo, permission, orPublic); err != nil {
+		if errors.Is(err, apiauth.ErrNotAuthenticated) {
+			return &GitAuthError{
+				AccountID: accountID,
+			}
+		}
 		return err
 	}
 
@@ -136,14 +167,17 @@ func serviceRPC(
 			return err
 		}
 	}
-	return client.ServicePack(ctx, w, &gitrpc.ServicePackParams{
+	params := &gitrpc.ServicePackParams{
 		RepoUID:     repo.GitUID,
 		Service:     service,
 		Data:        reqBody,
 		Options:     nil,
-		PrincipalID: session.Principal.ID,
 		GitProtocol: r.Header.Get("Git-Protocol"),
-	})
+	}
+	if session != nil {
+		params.PrincipalID = session.Principal.ID
+	}
+	return client.ServicePack(ctx, w, params)
 }
 
 func setHeaderNoCache(w http.ResponseWriter) {
@@ -158,4 +192,9 @@ func getServiceType(r *http.Request) string {
 		return ""
 	}
 	return strings.Replace(serviceType, "git-", "", 1)
+}
+
+func basicAuth(w http.ResponseWriter, accountID string) {
+	w.Header().Add("WWW-Authenticate", fmt.Sprintf(`Basic realm="%s"`, accountID))
+	w.WriteHeader(http.StatusUnauthorized)
 }
