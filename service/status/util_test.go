@@ -36,6 +36,11 @@ func TestCreateLabel(t *testing.T) {
 			label:    "continuous-integration/drone/promote/production",
 		},
 		{
+			event:    core.EventPromote,
+			deployTo: "$production%",
+			label:    "continuous-integration/drone/promote/production",
+		},
+		{
 			event: "unknown",
 			label: "continuous-integration/drone",
 		},
