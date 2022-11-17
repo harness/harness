@@ -17,7 +17,11 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
   const history = useHistory()
   const [searchTerm, setSearchTerm] = useState('')
   const [pageIndex, setPageIndex] = usePageIndex()
-  const { data: branches, response /*error, loading, refetch */ } = useGet<RepoBranch[]>({
+  const {
+    data: branches,
+    response /*error, loading,*/,
+    refetch
+  } = useGet<RepoBranch[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/branches`,
     queryParams: {
       per_page: LIST_FETCHING_PER_PAGE,
@@ -45,6 +49,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
         onSearchTermChanged={value => {
           setSearchTerm(value)
         }}
+        onNewBranchCreated={() => refetch()}
       />
       {!!branches?.length && (
         <>

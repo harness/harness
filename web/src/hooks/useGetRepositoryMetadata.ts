@@ -7,7 +7,7 @@ import { useGetSpaceParam } from './useGetSpaceParam'
 
 export function useGetRepositoryMetadata() {
   const space = useGetSpaceParam()
-  const { repoName, gitRef, ...otherPathParams } = useParams<SCMPathProps>()
+  const { repoName, gitRef, resourcePath = '', commitRef = '', ...otherPathParams } = useParams<SCMPathProps>()
   const {
     data: repoMetadata,
     error,
@@ -21,15 +21,17 @@ export function useGetRepositoryMetadata() {
   return {
     space,
     repoName,
-    repoMetadata,
+    repoMetadata: repoMetadata || undefined,
     error: getErrorMessage(error),
     loading,
     refetch,
     response,
     gitRef: gitRef || repoMetadata?.defaultBranch || '',
+    resourcePath,
+    commitRef,
     ...otherPathParams
   }
 }
 
 // TODO: Repository metadata is rarely changed. It might be good to implement
-// some caching strategy
+// some caching strategy in here

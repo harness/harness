@@ -1,7 +1,7 @@
 import React from 'react'
 import { Container, Layout, Text, Color, Icon, FontVariation } from '@harness/uicore'
 import { Link } from 'react-router-dom'
-import { PopoverInteractionKind } from '@blueprintjs/core'
+// import { PopoverInteractionKind } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
 import { ButtonRoleProps } from 'utils/Utils'
 import { GitIcon, GitInfoProps } from 'utils/GitUtils'
@@ -23,31 +23,28 @@ export function RepositoryHeader({ repoMetadata }: Pick<GitInfoProps, 'repoMetad
           <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.uid}</Link>
         </Layout.Horizontal>
         <Container padding={{ top: 'medium', bottom: 'medium' }}>
-          <Text
-            inline
-            className={css.repoDropdown}
-            icon={GitIcon.REPOSITORY}
-            iconProps={{
-              size: 14,
-              color: Color.GREY_500,
-              margin: { right: 'small' }
-            }}
-            rightIcon="main-chevron-down"
-            rightIconProps={{
-              size: 14,
-              color: Color.GREY_500,
-              margin: { left: 'xsmall' }
-            }}
-            tooltip={<Container padding="xlarge">TBD...</Container>}
-            tooltipProps={{
-              interactionKind: PopoverInteractionKind.CLICK,
-              targetClassName: css.targetClassName,
-              minimal: true
-            }}
-            font={{ variation: FontVariation.H4 }}
-            {...ButtonRoleProps}>
-            {repoMetadata.uid}
-          </Text>
+          <Layout.Horizontal spacing="small" className={css.name}>
+            <Icon name={GitIcon.CodeRepo} size={20} />
+            <Text
+              inline
+              className={css.repoDropdown}
+              // rightIcon="main-chevron-down"
+              // rightIconProps={{
+              //   size: 14,
+              //   color: Color.GREY_500,
+              //   margin: { left: 'xsmall' }
+              // }}
+              // tooltip={<Container padding="xlarge">TBD...</Container>}
+              // tooltipProps={{
+              //   interactionKind: PopoverInteractionKind.CLICK,
+              //   targetClassName: css.targetClassName,
+              //   minimal: true
+              // }}
+              font={{ variation: FontVariation.H4 }}
+              {...ButtonRoleProps}>
+              {repoMetadata.uid}
+            </Text>
+          </Layout.Horizontal>
         </Container>
       </Container>
     </Container>

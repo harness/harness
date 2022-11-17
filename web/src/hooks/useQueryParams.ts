@@ -2,7 +2,6 @@ import React from 'react'
 import { useLocation } from 'react-router-dom'
 import qs from 'qs'
 import type { IParseOptions } from 'qs'
-import type { Unknown } from 'utils/Utils'
 
 export interface UseQueryParamsOptions<T> extends IParseOptions {
   processQueryParams?(data: Unknown): T

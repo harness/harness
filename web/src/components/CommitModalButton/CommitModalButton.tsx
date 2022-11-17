@@ -27,7 +27,7 @@ import { useMutate } from 'restful-react'
 import { get } from 'lodash-es'
 import { useModalHook } from '@harness/use-modal'
 import { String, useStrings } from 'framework/strings'
-import { DEFAULT_BRANCH_NAME, getErrorMessage, Unknown } from 'utils/Utils'
+import { DEFAULT_BRANCH_NAME, getErrorMessage } from 'utils/Utils'
 import type { TypesRepository, OpenapiCreateRepositoryRequest } from 'services/scm'
 import { useAppContext } from 'AppContext'
 import css from './CommitModalButton.module.scss'
@@ -97,10 +97,10 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
             onSubmit(response)
           })
           .catch(_error => {
-            showError(getErrorMessage(_error), 0, 'failedToCreateRepo')
+            showError(getErrorMessage(_error), 0, getString('failedToCreateRepo'))
           })
       } catch (exception) {
-        showError(getErrorMessage(exception), 0, 'failedToCreateRepo')
+        showError(getErrorMessage(exception), 0, getString('failedToCreateRepo'))
       }
     }
 

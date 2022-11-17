@@ -2,6 +2,10 @@
   border-bottom: 1px solid var(--grey-200);
   padding: var(--spacing-medium) var(--spacing-xlarge) 0 var(--spacing-xlarge) !important;
   background: var(--white) !important;
+
+  .name {
+    align-items: center;
+  }
 }
 
 .breadcrumb {

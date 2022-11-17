@@ -1,6 +1,5 @@
 import type React from 'react'
 import type { SCMRoutes } from 'RouteDefinitions'
-import type { Unknown } from 'utils/Utils'
 import type { LangLocale } from './framework/strings/languageLoader'
 
 /**

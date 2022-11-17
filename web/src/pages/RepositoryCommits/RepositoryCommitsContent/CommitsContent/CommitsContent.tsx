@@ -78,7 +78,7 @@ export function CommitsContent({ repoMetadata, commits }: CommitsContentProps) {
         return (
           <Container key={date} className={css.commitSection}>
             <Layout.Vertical spacing="medium">
-              <Text icon={GitIcon.COMMIT} color={Color.GREY_500} className={css.label}>
+              <Text icon={GitIcon.CodeCommit} iconProps={{ size: 20 }} color={Color.GREY_500} className={css.label}>
                 {getString('commitsOn', { date })}
               </Text>
               <Container className={css.commitTableContainer}>

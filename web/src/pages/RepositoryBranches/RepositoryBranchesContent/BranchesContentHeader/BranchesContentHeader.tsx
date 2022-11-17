@@ -1,19 +1,23 @@
 import React, { useMemo, useState } from 'react'
-import { Container, Layout, FlexExpander, DropDown, Button, ButtonVariation, TextInput } from '@harness/uicore'
+import { Container, Layout, FlexExpander, DropDown, ButtonVariation, TextInput } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
-import { GitBranchType, GitInfoProps } from 'utils/GitUtils'
+import { GitBranchType, GitIcon, GitInfoProps } from 'utils/GitUtils'
+import { CreateBranchModalButton } from 'components/CreateBranchModalButton/CreateBranchModalButton'
 import css from './BranchesContentHeader.module.scss'
 
 interface BranchesContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
   activeBranchType?: GitBranchType
   onBranchTypeSwitched: (branchType: GitBranchType) => void
   onSearchTermChanged: (searchTerm: string) => void
+  onNewBranchCreated: () => void
 }
 
 export function BranchesContentHeader({
   onBranchTypeSwitched,
   onSearchTermChanged,
-  activeBranchType = GitBranchType.ACTIVE
+  activeBranchType = GitBranchType.ALL,
+  repoMetadata,
+  onNewBranchCreated
 }: BranchesContentHeaderProps) {
   const { getString } = useStrings()
   const [branchType, setBranchType] = useState(activeBranchType)
@@ -22,7 +26,7 @@ export function BranchesContentHeader({
     () => [
       { label: getString('activeBranches'), value: GitBranchType.ACTIVE },
       { label: getString('inactiveBranches'), value: GitBranchType.INACTIVE },
-      { label: getString('yourBranches'), value: GitBranchType.YOURS },
+      // { label: getString('yourBranches'), value: GitBranchType.YOURS },
       { label: getString('allBranches'), value: GitBranchType.ALL }
     ],
     [getString]
@@ -52,7 +56,14 @@ export function BranchesContentHeader({
             onSearchTermChanged(value)
           }}
         />
-        <Button disabled text={getString('createBranch')} variation={ButtonVariation.PRIMARY} />
+        <CreateBranchModalButton
+          text={getString('createBranch')}
+          icon={GitIcon.CodeAdd}
+          variation={ButtonVariation.PRIMARY}
+          repoMetadata={repoMetadata}
+          onSuccess={onNewBranchCreated}
+          showSuccessMessage
+        />
       </Layout.Horizontal>
     </Container>
   )

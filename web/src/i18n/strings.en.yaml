@@ -50,6 +50,7 @@ inactiveBranches: Inactive Branches
 yourBranches: Your Branches
 allBranches: All Branches
 createBranch: Create Branch
+searchBranch: Search branch
 searchBranches: Search branches
 updated: Updated
 cloneHTTPS: Clone with HTTPS
@@ -79,3 +80,12 @@ enterNewBranchName: New branch name
 onDate: on {{date}}
 deleteFile: Delete file __filePath__
 confirm: Confirm
+createABranch: Create a branch
+delete: Delete
+edit: Edit
+branchName: Branch name
+nameYourBranch: Name your branch
+branchSource: Branch source
+branchSourceDesc: Choose a source branch.
+failedToCreateBranch: Failed to create Branch. Please try again.
+branchCreated: Branch __branch__ created.

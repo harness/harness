@@ -37,7 +37,9 @@ export function FileContent({
           <Layout.Horizontal spacing="xsmall">
             <Button
               variation={ButtonVariation.ICON}
-              icon={GitIcon.EDIT}
+              icon={GitIcon.CodeEdit}
+              tooltip={getString('edit')}
+              tooltipProps={{ isDark: true }}
               onClick={() => {
                 history.push(
                   routes.toSCMRepositoryFileEdit({
@@ -48,10 +50,18 @@ export function FileContent({
                 )
               }}
             />
-            <Button variation={ButtonVariation.ICON} icon={GitIcon.COPY} onClick={() => Utils.copy(content)} />
+            <Button
+              variation={ButtonVariation.ICON}
+              tooltip={getString('copy')}
+              icon={GitIcon.CodeCopy}
+              tooltipProps={{ isDark: true }}
+              onClick={() => Utils.copy(content)}
+            />
             <CommitModalButton
               variation={ButtonVariation.ICON}
-              icon={GitIcon.DELETE}
+              icon={GitIcon.CodeDelete}
+              tooltipProps={{ isDark: true }}
+              tooltip={getString('delete')}
               commitMessagePlaceHolder={getString('deleteFile').replace('__filePath__', resourcePath)}
               gitRef={gitRef}
               resourcePath={resourcePath}

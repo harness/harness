@@ -31,18 +31,38 @@ export enum GitBranchType {
   ALL = 'all'
 }
 
-export const GitIcon: Readonly<Record<string, IconName>> = {
-  FILE: 'file',
-  REPOSITORY: 'code-repo',
-  COMMIT: 'git-branch-existing',
-  PULL_REQUEST: 'git-pull',
-  SETTINGS: 'cog',
-  FOLDER: 'code-folder',
-  COPY: 'code-copy',
-  DELETE: 'code-delete',
-  EDIT: 'Edit',
-  BRANCH: 'git-branch',
-  HISTORY: 'code-history'
+export const GitIcon: Record<string, IconName> = {
+  // CodeFile: 'file',
+  // CodeRepo: 'code-repo',
+  // CodeCommit: 'git-branch-existing',
+  CodePullRequest: 'git-pull',
+  // CodeSettings: 'cog',
+  // CodeFolder: 'code-folder',
+  // CodeCopy: 'code-copy',
+  // CodeDelete: 'code-delete',
+  // CodeEdit: 'Edit',
+  // CodeBranch: 'git-branch',
+  // CodeHistory: 'code-history',
+  CodeAdd: 'plus',
+  CodeBranchSmall: 'code-branch-small',
+  CodeBranch: 'code-branch',
+  CodeClone: 'code-clone',
+  CodeClose: 'code-close',
+  CodeCommitLight: 'code-commit-light',
+  CodeCommitSmall: 'code-commit-small',
+  CodeCommit: 'code-commit',
+  CodeCopy: 'code-copy',
+  CodeDelete: 'code-delete',
+  CodeEdit: 'code-edit',
+  CodeFileLight: 'code-file-light',
+  CodeFile: 'code-file',
+  CodeFolder: 'code-folder',
+  CodeHistory: 'code-history',
+  CodeInfo: 'code-info',
+  CodeMore: 'code-more',
+  CodeRepo: 'code-repo',
+  CodeSettings: 'code-settings',
+  CodeWebhook: 'code-webhook'
 }
 
 export const isDir = (content: Nullable<OpenapiGetContentOutput>): boolean => content?.type === GitContentType.DIR

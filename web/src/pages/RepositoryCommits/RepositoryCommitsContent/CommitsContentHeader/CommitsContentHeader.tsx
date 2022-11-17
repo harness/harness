@@ -47,7 +47,7 @@ export function CommitsContentHeader({ repoMetadata, onSwitch }: CommitsContentH
     <Container className={css.main}>
       <Layout.Horizontal spacing="medium">
         <DropDown
-          icon={GitIcon.BRANCH}
+          icon={GitIcon.CodeBranch}
           value={activeBranch}
           items={branches}
           {...{

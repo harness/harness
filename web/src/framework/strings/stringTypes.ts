@@ -9,6 +9,10 @@ export interface StringsMap {
   addReadMe: string
   allBranches: string
   branch: string
+  branchCreated: string
+  branchName: string
+  branchSource: string
+  branchSourceDesc: string
   branches: string
   cancel: string
   clone: string
@@ -25,6 +29,7 @@ export interface StringsMap {
   copy: string
   copyCommitSHA: string
   create: string
+  createABranch: string
   createBranch: string
   createRepo: string
   'createRepoModal.branch': string
@@ -32,14 +37,17 @@ export interface StringsMap {
   'createRepoModal.privateLabel': string
   'createRepoModal.publicLabel': string
   defaultBranch: string
+  delete: string
   deleteFile: string
   description: string
+  edit: string
   editFile: string
   email: string
   enterDescription: string
   enterNewBranchName: string
   enterRepoName: string
   existingAccount: string
+  failedToCreateBranch: string
   failedToCreateRepo: string
   files: string
   history: string
@@ -47,6 +55,7 @@ export interface StringsMap {
   inactiveBranches: string
   loading: string
   name: string
+  nameYourBranch: string
   nameYourFile: string
   newFile: string
   newFolder: string
@@ -71,6 +80,7 @@ export interface StringsMap {
   'repos.updated': string
   repositories: string
   search: string
+  searchBranch: string
   searchBranches: string
   settings: string
   signIn: string

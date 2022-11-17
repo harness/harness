@@ -52,7 +52,11 @@ declare const monaco: any
 
 declare module '*.scss'
 
+type Unknown = any
+
 type RequireField<T, K extends keyof T> = T & Required<Pick<T, K>>
+
+type Optional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>
 
 declare module 'lang-map' {
   const languages: { languages: (name: string) => string[] }

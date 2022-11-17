@@ -63,7 +63,7 @@ export function ContentHeader({
     <Container className={css.main}>
       <Layout.Horizontal spacing="medium">
         <DropDown
-          icon={GitIcon.BRANCH}
+          icon={GitIcon.CodeBranch}
           value={activeBranch}
           items={branches}
           {...{
@@ -99,7 +99,7 @@ export function ContentHeader({
         <Container>
           <Layout.Horizontal spacing="small">
             <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string, gitRef })}>
-              <Icon name={GitIcon.FOLDER} />
+              <Icon name={GitIcon.CodeFolder} />
             </Link>
             <Text color={Color.GREY_900}>/</Text>
             <ReactJoin separator={<Text color={Color.GREY_900}>/</Text>}>
@@ -127,8 +127,8 @@ export function ContentHeader({
             <Button
               text={getString('clone')}
               variation={ButtonVariation.SECONDARY}
-              icon="main-clone"
-              iconProps={{ size: 10 }}
+              icon={GitIcon.CodeClone}
+              className={css.btnColorFix}
               tooltip={<CloneButtonTooltip httpsURL={repoMetadata.gitUrl as string} />}
               tooltipProps={{
                 interactionKind: 'click',
@@ -138,8 +138,8 @@ export function ContentHeader({
             />
             <Button
               text={getString('newFile')}
-              icon="plus"
-              iconProps={{ size: 10 }}
+              icon={GitIcon.CodeAdd}
+              // withoutCurrentColor
               variation={ButtonVariation.PRIMARY}
               onClick={() => {
                 history.push(

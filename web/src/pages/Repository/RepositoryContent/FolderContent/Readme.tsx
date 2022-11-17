@@ -33,7 +33,7 @@ export function Readme({ metadata, gitRef, readmeInfo }: FolderContentProps) {
         <FlexExpander />
         <Button
           variation={ButtonVariation.ICON}
-          icon={GitIcon.EDIT}
+          icon={GitIcon.CodeEdit}
           onClick={() => {
             history.push(
               routes.toSCMRepositoryFileEdit({

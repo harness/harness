@@ -28,7 +28,7 @@ export function FolderContent({
             <Text
               className={css.rowText}
               color={Color.BLACK}
-              icon={isFile(row.original) ? GitIcon.FILE : GitIcon.FOLDER}
+              icon={isFile(row.original) ? GitIcon.CodeFile : GitIcon.CodeFolder}
               iconProps={{ margin: { right: 'xsmall' } }}>
               {row.original.name}
             </Text>

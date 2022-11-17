@@ -4,6 +4,7 @@ import cx from 'classnames'
 import { Container, Layout, Button, ButtonVariation, Utils, Text, Color } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
 import css from './CommitActions.module.scss'
+import { GitIcon } from 'utils/GitUtils'
 
 interface CommitActionButtonProps {
   sha: string
@@ -37,7 +38,7 @@ export function CommitActions({ sha, href, enableCopy }: CommitActionButtonProps
           <Button
             id={css.commitCopyButton}
             variation={ButtonVariation.ICON}
-            icon={copied ? 'tick' : 'copy-alt'}
+            icon={copied ? 'tick' : GitIcon.CodeCopy}
             iconProps={{ size: 14, color: copied ? Color.GREEN_500 : undefined }}
             onClick={() => {
               setCopied(true)

@@ -1923,10 +1923,10 @@
   resolved "https://npm.pkg.github.com/download/@harness/design-system/1.4.0/b2a77f73696d71a53765c71efd0a5b28039fa1cf#b2a77f73696d71a53765c71efd0a5b28039fa1cf"
   integrity sha512-LuzuPEHPkE6xgIuXxn16RCCvPY1NDXF3o1JWlIjxmepoDTkgFuwnV1OhBdQftvAVBawJ5wJP10IIKUL161LdYg==
 
-"@harness/icons@1.82.0":
-  version "1.82.0"
-  resolved "https://npm.pkg.github.com/download/@harness/icons/1.82.0/21b8683f43506c40ec4ef354d4a3d6e6723100cf#21b8683f43506c40ec4ef354d4a3d6e6723100cf"
-  integrity sha512-DfqYEdyLNRqvUJdRE322vuZitZQurTRRXlINmbYEEMuMeZES0LBsnhmISHiF0DZok5twBo8PNLDRFBAIOGZNfw==
+"@harness/icons@1.84.1":
+  version "1.84.1"
+  resolved "https://npm.pkg.github.com/download/@harness/icons/1.84.1/de7cfac20aae1a1fa7266d24f6d9e55a893201f6#de7cfac20aae1a1fa7266d24f6d9e55a893201f6"
+  integrity sha512-hmC2gcniGoD3akPac6HPMtstWdiCmuvI/c9+NaPwdPqWX+NENgO2KauAFLrA6nj3dSrOO9ZDe6Lia1gPosK6hw==
 
 "@harness/jarvis@^0.12.0":
   version "0.12.0"

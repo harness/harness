@@ -92,7 +92,7 @@ export function LatestCommitForFile({
         <FlexExpander />
         <Button
           size={ButtonSize.SMALL}
-          icon={GitIcon.HISTORY}
+          icon={GitIcon.CodeHistory}
           text={getString('history')}
           variation={ButtonVariation.PRIMARY}
         />
