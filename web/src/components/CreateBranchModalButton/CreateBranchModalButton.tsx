@@ -22,8 +22,7 @@ import {
   FormInput,
   Label,
   DropDown,
-  SelectOption,
-  Text
+  SelectOption
 } from '@harness/uicore'
 import { Color, FontVariation } from '@harness/design-system'
 import { useGet, useMutate } from 'restful-react'
@@ -70,14 +69,14 @@ export const CreateBranchModalButton: React.FC<CreateBranchModalButtonProps> = (
             hideModal()
             onSuccess(response)
             if (showSuccessMessage) {
-              showSuccess(getString('branchCreated').replace('__branch__', name), 5000)
+              showSuccess(getString('branchCreated', { branch: name }), 5000)
             }
           })
           .catch(_error => {
-            showError(getErrorMessage(_error), 0, getString('failedToCreateBranch'))
+            showError(getErrorMessage(_error), 0, 'failedToCreateBranch')
           })
       } catch (exception) {
-        showError(getErrorMessage(exception), 0, getString('failedToCreateBranch'))
+        showError(getErrorMessage(exception), 0, 'failedToCreateBranch')
       }
     }
 
@@ -124,8 +123,8 @@ export const CreateBranchModalButton: React.FC<CreateBranchModalButtonProps> = (
                   inputGroup={{ autoFocus: true }}
                 />
                 <Container margin={{ top: 'medium', bottom: 'medium' }}>
-                  <Label className={css.label}>{getString('branchSource')}</Label>
-                  <Text className={css.branchSourceDesc}>{getString('branchSourceDesc')}</Text>
+                  <Label className={css.label}>{getString('branchSourceDesc')}</Label>
+                  {/* <Text className={css.branchSourceDesc}>{getString('branchSourceDesc')}</Text> */}
                   <Layout.Horizontal spacing="medium" padding={{ top: 'xsmall' }}>
                     <BranchDropdown
                       repoMetadata={repoMetadata}
@@ -195,7 +194,7 @@ const BranchDropdown: React.FC<BranchDropdownProps> = ({ repoMetadata, onSelect 
       {...{
         inputProps: {
           leftElement: <Icon name={loading ? 'steps-spinner' : 'thinner-search'} size={12} color={Color.GREY_500} />,
-          placeholder: getString('searchBranch'),
+          placeholder: getString('findBranch'),
           onInput: (event: ChangeEvent<HTMLInputElement>) => {
             if (event.target.value !== query) {
               setQuery(event.target.value)

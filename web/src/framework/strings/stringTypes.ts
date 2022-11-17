@@ -10,10 +10,12 @@ export interface StringsMap {
   allBranches: string
   branch: string
   branchCreated: string
+  branchDeleted: string
   branchName: string
   branchSource: string
   branchSourceDesc: string
   branches: string
+  browse: string
   cancel: string
   clone: string
   cloneHTTPS: string
@@ -24,7 +26,9 @@ export interface StringsMap {
   commitToNewBranch: string
   commits: string
   commitsOn: string
+  compare: string
   confirm: string
+  confirmation: string
   content: string
   copy: string
   copyCommitSHA: string
@@ -38,6 +42,8 @@ export interface StringsMap {
   'createRepoModal.publicLabel': string
   defaultBranch: string
   delete: string
+  deleteBranch: string
+  deleteBranchConfirm: string
   deleteFile: string
   description: string
   edit: string
@@ -49,7 +55,9 @@ export interface StringsMap {
   existingAccount: string
   failedToCreateBranch: string
   failedToCreateRepo: string
+  failedToDeleteBranch: string
   files: string
+  findBranch: string
   history: string
   in: string
   inactiveBranches: string
@@ -80,7 +88,6 @@ export interface StringsMap {
   'repos.updated': string
   repositories: string
   search: string
-  searchBranch: string
   searchBranches: string
   settings: string
   signIn: string

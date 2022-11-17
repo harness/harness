@@ -23,6 +23,14 @@
       border-radius: 0;
       margin-bottom: 0;
 
+      &.odd {
+        background-color: var(--grey-50);
+      }
+
+      &:hover {
+        background-color: #0092e40a !important;
+      }
+
       .rowText {
         font-size: 13px;
         font-weight: 400;

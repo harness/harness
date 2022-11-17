@@ -4,6 +4,7 @@ declare const styles: {
   readonly container: string
   readonly table: string
   readonly row: string
+  readonly odd: string
   readonly rowText: string
   readonly spacer: string
   readonly commitLink: string

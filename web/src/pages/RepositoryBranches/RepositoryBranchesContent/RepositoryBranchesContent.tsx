@@ -53,7 +53,12 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
       />
       {!!branches?.length && (
         <>
-          <BranchesContent branches={branches} repoMetadata={repoMetadata} searchTerm={searchTerm} />
+          <BranchesContent
+            branches={branches}
+            repoMetadata={repoMetadata}
+            searchTerm={searchTerm}
+            onDeleteSuccess={() => refetch()}
+          />
           <Container margin={{ left: 'large', right: 'large' }}>
             <Pagination
               className={css.pagination}

@@ -50,7 +50,7 @@ inactiveBranches: Inactive Branches
 yourBranches: Your Branches
 allBranches: All Branches
 createBranch: Create Branch
-searchBranch: Search branch
+findBranch: Find a branch
 searchBranches: Search branches
 updated: Updated
 cloneHTTPS: Clone with HTTPS
@@ -78,7 +78,7 @@ commitDirectlyTo: 'Commit directly to the <strong style="color: var(--primary-7)
 commitToNewBranch: Create a <strong>new branch</strong> for this commit and start a pull request
 enterNewBranchName: New branch name
 onDate: on {{date}}
-deleteFile: Delete file __filePath__
+deleteFile: Delete file {{path}}
 confirm: Confirm
 createABranch: Create a branch
 delete: Delete
@@ -86,6 +86,13 @@ edit: Edit
 branchName: Branch name
 nameYourBranch: Name your branch
 branchSource: Branch source
-branchSourceDesc: Choose a source branch.
+branchSourceDesc: Choose a source branch
 failedToCreateBranch: Failed to create Branch. Please try again.
-branchCreated: Branch __branch__ created.
+branchCreated: Branch {{branch}} created.
+confirmation: Confirmation
+deleteBranch: Delete Branch
+deleteBranchConfirm: Are you sure you want to delete branch <strong>{{name}}</strong>? You can't undo this action.
+browse: Browse
+compare: Compare
+branchDeleted: Branch {{branch}} deleted.
+failedToDeleteBranch: Failed to delete Branch. Please try again.

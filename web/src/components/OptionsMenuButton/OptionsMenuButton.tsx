@@ -13,7 +13,7 @@ export const OptionsMenuButton = ({ items, ...props }: OptionsMenuButtonProps): 
   return (
     <Button
       minimal
-      icon="Options"
+      icon="code-more"
       tooltipProps={{ isDark: true, interactionKind: 'click', hasBackdrop: true } as PopoverProps}
       tooltip={
         <Menu style={{ minWidth: 'unset' }}>
