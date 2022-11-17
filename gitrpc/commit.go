@@ -101,3 +101,76 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 
 	return output, nil
 }
+
+type GetCommitDivergencesParams struct {
+	// RepoUID is the uid of the git repository
+	RepoUID  string
+	MaxCount int32
+	Requests []CommitDivergenceRequest
+}
+
+type GetCommitDivergencesOutput struct {
+	Divergences []CommitDivergence
+}
+
+// CommitDivergenceRequest contains the refs for which the converging commits should be counted.
+type CommitDivergenceRequest struct {
+	// From is the ref from which the counting of the diverging commits starts.
+	From string
+	// To is the ref at which the counting of the diverging commits ends.
+	To string
+}
+
+// CommitDivergence contains the information of the count of converging commits between two refs.
+type CommitDivergence struct {
+	// Ahead is the count of commits the 'From' ref is ahead of the 'To' ref.
+	Ahead int32
+	// Behind is the count of commits the 'From' ref is behind the 'To' ref.
+	Behind int32
+}
+
+func (c *Client) GetCommitDivergences(ctx context.Context,
+	params *GetCommitDivergencesParams) (*GetCommitDivergencesOutput, error) {
+	if params == nil {
+		return nil, ErrNoParamsProvided
+	}
+
+	// build rpc request
+	req := &rpc.GetCommitDivergencesRequest{
+		RepoUid:  params.RepoUID,
+		MaxCount: params.MaxCount,
+		Requests: make([]*rpc.CommitDivergenceRequest, len(params.Requests)),
+	}
+	for i := range params.Requests {
+		req.Requests[i] = &rpc.CommitDivergenceRequest{
+			From: params.Requests[i].From,
+			To:   params.Requests[i].To,
+		}
+	}
+	resp, err := c.repoService.GetCommitDivergences(ctx, req)
+	if err != nil {
+		return nil, processRPCErrorf(err, "failed to get diverging commits from server")
+	}
+
+	divergences := resp.GetDivergences()
+	if divergences == nil {
+		return nil, fmt.Errorf("server response divergences were nil")
+	}
+
+	// build output
+	output := &GetCommitDivergencesOutput{
+		Divergences: make([]CommitDivergence, len(divergences)),
+	}
+	for i := range divergences {
+		if divergences[i] == nil {
+			return nil, fmt.Errorf("server returned nil divergence")
+		}
+
+		output.Divergences[i] = CommitDivergence{
+			Ahead:  divergences[i].Ahead,
+			Behind: divergences[i].Behind,
+		}
+	}
+
+	return output, nil
+}

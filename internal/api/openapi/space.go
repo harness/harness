@@ -208,7 +208,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{spaceRef}/serviceAccounts", opServiceAccounts)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{spaceRef}/service_accounts", opServiceAccounts)
 
 	opListPaths := openapi3.Operation{}
 	opListPaths.WithTags("space")

@@ -7,6 +7,7 @@ package service
 import (
 	"context"
 
+	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
@@ -65,4 +66,43 @@ func (s RepositoryService) getLatestCommit(ctx context.Context, repoPath string,
 	}
 
 	return mapGitCommit(gitCommit)
+}
+
+func (s RepositoryService) GetCommitDivergences(ctx context.Context,
+	request *rpc.GetCommitDivergencesRequest) (*rpc.GetCommitDivergencesResponse, error) {
+	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
+
+	// map to gitea requests
+	requests := request.GetRequests()
+	if requests == nil {
+		return nil, status.Error(codes.InvalidArgument, "requests is nil")
+	}
+	giteaDivergenceRequests := make([]types.CommitDivergenceRequest, len(requests))
+	for i := range requests {
+		if requests[i] == nil {
+			return nil, status.Errorf(codes.InvalidArgument, "requests[%d] is nil", i)
+		}
+		giteaDivergenceRequests[i].From = requests[i].From
+		giteaDivergenceRequests[i].To = requests[i].To
+	}
+
+	// call gitea
+	giteaDivergenceResponses, err := s.adapter.GetCommitDivergences(ctx, repoPath,
+		giteaDivergenceRequests, request.GetMaxCount())
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to get diverging commits")
+	}
+
+	// map to rpc response
+	response := &rpc.GetCommitDivergencesResponse{
+		Divergences: make([]*rpc.CommitDivergence, len(giteaDivergenceResponses)),
+	}
+	for i := range giteaDivergenceResponses {
+		response.Divergences[i] = &rpc.CommitDivergence{
+			Ahead:  giteaDivergenceResponses[i].Ahead,
+			Behind: giteaDivergenceResponses[i].Behind,
+		}
+	}
+
+	return response, nil
 }

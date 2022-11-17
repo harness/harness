@@ -28,6 +28,7 @@ type RepositoryServiceClient interface {
 	GetSubmodule(ctx context.Context, in *GetSubmoduleRequest, opts ...grpc.CallOption) (*GetSubmoduleResponse, error)
 	GetBlob(ctx context.Context, in *GetBlobRequest, opts ...grpc.CallOption) (*GetBlobResponse, error)
 	ListCommits(ctx context.Context, in *ListCommitsRequest, opts ...grpc.CallOption) (RepositoryService_ListCommitsClient, error)
+	GetCommitDivergences(ctx context.Context, in *GetCommitDivergencesRequest, opts ...grpc.CallOption) (*GetCommitDivergencesResponse, error)
 }
 
 type repositoryServiceClient struct {
@@ -163,6 +164,15 @@ func (x *repositoryServiceListCommitsClient) Recv() (*ListCommitsResponse, error
 	return m, nil
 }
 
+func (c *repositoryServiceClient) GetCommitDivergences(ctx context.Context, in *GetCommitDivergencesRequest, opts ...grpc.CallOption) (*GetCommitDivergencesResponse, error) {
+	out := new(GetCommitDivergencesResponse)
+	err := c.cc.Invoke(ctx, "/rpc.RepositoryService/GetCommitDivergences", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RepositoryServiceServer is the server API for RepositoryService service.
 // All implementations must embed UnimplementedRepositoryServiceServer
 // for forward compatibility
@@ -173,6 +183,7 @@ type RepositoryServiceServer interface {
 	GetSubmodule(context.Context, *GetSubmoduleRequest) (*GetSubmoduleResponse, error)
 	GetBlob(context.Context, *GetBlobRequest) (*GetBlobResponse, error)
 	ListCommits(*ListCommitsRequest, RepositoryService_ListCommitsServer) error
+	GetCommitDivergences(context.Context, *GetCommitDivergencesRequest) (*GetCommitDivergencesResponse, error)
 	mustEmbedUnimplementedRepositoryServiceServer()
 }
 
@@ -197,6 +208,9 @@ func (UnimplementedRepositoryServiceServer) GetBlob(context.Context, *GetBlobReq
 }
 func (UnimplementedRepositoryServiceServer) ListCommits(*ListCommitsRequest, RepositoryService_ListCommitsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListCommits not implemented")
+}
+func (UnimplementedRepositoryServiceServer) GetCommitDivergences(context.Context, *GetCommitDivergencesRequest) (*GetCommitDivergencesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCommitDivergences not implemented")
 }
 func (UnimplementedRepositoryServiceServer) mustEmbedUnimplementedRepositoryServiceServer() {}
 
@@ -333,6 +347,24 @@ func (x *repositoryServiceListCommitsServer) Send(m *ListCommitsResponse) error 
 	return x.ServerStream.SendMsg(m)
 }
 
+func _RepositoryService_GetCommitDivergences_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCommitDivergencesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepositoryServiceServer).GetCommitDivergences(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.RepositoryService/GetCommitDivergences",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepositoryServiceServer).GetCommitDivergences(ctx, req.(*GetCommitDivergencesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RepositoryService_ServiceDesc is the grpc.ServiceDesc for RepositoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -351,6 +383,10 @@ var RepositoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetBlob",
 			Handler:    _RepositoryService_GetBlob_Handler,
+		},
+		{
+			MethodName: "GetCommitDivergences",
+			Handler:    _RepositoryService_GetCommitDivergences_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

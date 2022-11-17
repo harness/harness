@@ -53,6 +53,11 @@ func mapGiteaRunStdError(err gitea.RunStdError, fallback error) error {
 	// exit status 1 - error: branch 'mybranch' not found.
 	case err.IsExitCode(1) && strings.Contains(err.Stderr(), "not found"):
 		return types.ErrNotFound
+
+	// exit status 128 - fatal: ambiguous argument 'branch1...branch2': unknown revision or path not in the working tree.
+	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "unknown revision"):
+		return types.ErrNotFound
+
 	default:
 		return fallback
 	}

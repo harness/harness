@@ -92,6 +92,11 @@ type listCommitsRequest struct {
 	repoRequest
 }
 
+type calculateCommitDivergenceRequest struct {
+	repoRequest
+	repo.GetCommitDivergencesInput
+}
+
 type listBranchesRequest struct {
 	repoRequest
 }
@@ -290,7 +295,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/serviceAccounts", opServiceAccounts)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/service_accounts", opServiceAccounts)
 
 	opListPaths := openapi3.Operation{}
 	opListPaths.WithTags("repository")
@@ -349,6 +354,18 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/commits", opListCommits)
+
+	opCalulateCommitDivergence := openapi3.Operation{}
+	opCalulateCommitDivergence.WithTags("repository")
+	opCalulateCommitDivergence.WithMapOfAnything(map[string]interface{}{"operationId": "calculateCommitDivergence"})
+	_ = reflector.SetRequest(&opCalulateCommitDivergence, new(calculateCommitDivergenceRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, []repo.CommitDivergence{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opCalulateCommitDivergence, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repoRef}/commits/calculate_divergence",
+		opCalulateCommitDivergence)
 
 	opCreateBranch := openapi3.Operation{}
 	opCreateBranch.WithTags("repository")

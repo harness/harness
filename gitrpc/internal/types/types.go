@@ -222,3 +222,19 @@ type Blob struct {
 	// NOTE: can be only partial Content - compare len(.Content) with .Size
 	Content []byte
 }
+
+// CommitDivergenceRequest contains the refs for which the converging commits should be counted.
+type CommitDivergenceRequest struct {
+	// From is the ref from which the counting of the diverging commits starts.
+	From string
+	// To is the ref at which the counting of the diverging commits ends.
+	To string
+}
+
+// CommitDivergence contains the information of the count of converging commits between two refs.
+type CommitDivergence struct {
+	// Ahead is the count of commits the 'From' ref is ahead of the 'To' ref.
+	Ahead int32
+	// Behind is the count of commits the 'From' ref is behind the 'To' ref.
+	Behind int32
+}

@@ -410,7 +410,7 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/branches/{name}:
+  /repos/{repoRef}/branches/{branchName}:
     delete:
       operationId: deleteBranch
       parameters:
@@ -420,7 +420,7 @@ paths:
         schema:
           type: string
       - in: path
-        name: name
+        name: branchName
         required: true
         schema:
           type: string
@@ -495,6 +495,55 @@ paths:
               schema:
                 items:
                   $ref: '#/components/schemas/RepoCommit'
+                type: array
+          description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - repository
+  /repos/{repoRef}/commits/calculate_divergence:
+    post:
+      operationId: calculateCommitDivergence
+      parameters:
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCalculateCommitDivergenceRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/RepoDivergence'
                 type: array
           description: OK
         "401":
@@ -784,7 +833,7 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/serviceAccounts:
+  /repos/{repoRef}/service_accounts:
     get:
       operationId: listRepositoryServiceAccounts
       parameters:
@@ -1451,7 +1500,7 @@ paths:
           description: Internal Server Error
       tags:
       - space
-  /spaces/{spaceRef}/serviceAccounts:
+  /spaces/{spaceRef}/service_accounts:
     get:
       operationId: listServiceAccounts
       parameters:
@@ -1826,6 +1875,16 @@ components:
         username:
           type: string
       type: object
+    OpenapiCalculateCommitDivergenceRequest:
+      properties:
+        maxCount:
+          type: integer
+        requests:
+          items:
+            $ref: '#/components/schemas/RepoDivergenceRequest'
+          nullable: true
+          type: array
+      type: object
     OpenapiContent:
       oneOf:
       - $ref: '#/components/schemas/RepoFileContent'
@@ -2032,6 +2091,20 @@ components:
       type: object
     RepoContentType:
       type: string
+    RepoDivergence:
+      properties:
+        ahead:
+          type: integer
+        behind:
+          type: integer
+      type: object
+    RepoDivergenceRequest:
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+      type: object
     RepoFileContent:
       properties:
         data:

@@ -13,6 +13,7 @@ service RepositoryService {
   rpc GetSubmodule(GetSubmoduleRequest) returns (GetSubmoduleResponse);
   rpc GetBlob(GetBlobRequest) returns (GetBlobResponse);
   rpc ListCommits(ListCommitsRequest) returns (stream ListCommitsResponse);
+  rpc GetCommitDivergences(GetCommitDivergencesRequest) returns (GetCommitDivergencesResponse);
 }
 
 message CreateRepositoryRequest {
@@ -123,4 +124,25 @@ message GetSubmoduleResponse {
 message Submodule {
   string name = 1;
   string url  = 2;
+}
+
+message GetCommitDivergencesRequest {
+  string repo_uid                     = 1;
+  int32 max_count                     = 2;
+  repeated CommitDivergenceRequest requests = 3;
+}
+
+message CommitDivergenceRequest {
+  string from  = 1;
+  string to    = 2;
+}
+
+
+message GetCommitDivergencesResponse {
+  repeated CommitDivergence divergences = 1;
+}
+
+message CommitDivergence {
+  int32 ahead  = 1;
+  int32 behind = 2;
 }

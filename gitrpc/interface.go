@@ -20,6 +20,7 @@ type Interface interface {
 	DeleteBranch(ctx context.Context, params *DeleteBranchParams) error
 	ListBranches(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error)
 	ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, error)
+	GetCommitDivergences(ctx context.Context, params *GetCommitDivergencesParams) (*GetCommitDivergencesOutput, error)
 
 	/*
 	 * Git Cli Service

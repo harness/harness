@@ -23,6 +23,11 @@ export interface FormDataOpenapiRegisterRequest {
   username?: string
 }
 
+export interface OpenapiCalculateCommitDivergenceRequest {
+  maxCount?: number
+  requests?: RepoDivergenceRequest[] | null
+}
+
 export type OpenapiContent = RepoFileContent | OpenapiDirContent | RepoSymlinkContent | RepoSubmoduleContent
 
 export interface OpenapiContentInfo {
@@ -143,6 +148,16 @@ export interface RepoContentInfo {
 }
 
 export type RepoContentType = string
+
+export interface RepoDivergence {
+  ahead?: number
+  behind?: number
+}
+
+export interface RepoDivergenceRequest {
+  from?: string
+  to?: string
+}
 
 export interface RepoFileContent {
   data?: string
@@ -606,6 +621,63 @@ export const useListCommits = ({ repoRef, ...props }: UseListCommitsProps) =>
     { base: getConfigNew('scm'), pathParams: { repoRef }, ...props }
   )
 
+export interface CalculateCommitDivergencePathParams {
+  repoRef: string
+}
+
+export type CalculateCommitDivergenceProps = Omit<
+  MutateProps<
+    RepoDivergence[],
+    UsererrorError,
+    void,
+    OpenapiCalculateCommitDivergenceRequest,
+    CalculateCommitDivergencePathParams
+  >,
+  'path' | 'verb'
+> &
+  CalculateCommitDivergencePathParams
+
+export const CalculateCommitDivergence = ({ repoRef, ...props }: CalculateCommitDivergenceProps) => (
+  <Mutate<
+    RepoDivergence[],
+    UsererrorError,
+    void,
+    OpenapiCalculateCommitDivergenceRequest,
+    CalculateCommitDivergencePathParams
+  >
+    verb="POST"
+    path={`/repos/${repoRef}/commits/calculate_divergence`}
+    base={getConfigNew('scm')}
+    {...props}
+  />
+)
+
+export type UseCalculateCommitDivergenceProps = Omit<
+  UseMutateProps<
+    RepoDivergence[],
+    UsererrorError,
+    void,
+    OpenapiCalculateCommitDivergenceRequest,
+    CalculateCommitDivergencePathParams
+  >,
+  'path' | 'verb'
+> &
+  CalculateCommitDivergencePathParams
+
+export const useCalculateCommitDivergence = ({ repoRef, ...props }: UseCalculateCommitDivergenceProps) =>
+  useMutate<
+    RepoDivergence[],
+    UsererrorError,
+    void,
+    OpenapiCalculateCommitDivergenceRequest,
+    CalculateCommitDivergencePathParams
+  >(
+    'POST',
+    (paramsInPath: CalculateCommitDivergencePathParams) =>
+      `/repos/${paramsInPath.repoRef}/commits/calculate_divergence`,
+    { base: getConfigNew('scm'), pathParams: { repoRef }, ...props }
+  )
+
 export interface GetContentQueryParams {
   /**
    * The git reference (branch / tag / commitID) that will be used to retrieve the data. If no value is provided the default branch of the repository is used.
@@ -797,7 +869,7 @@ export type ListRepositoryServiceAccountsProps = Omit<
 
 export const ListRepositoryServiceAccounts = ({ repoRef, ...props }: ListRepositoryServiceAccountsProps) => (
   <Get<TypesServiceAccount[], UsererrorError, void, ListRepositoryServiceAccountsPathParams>
-    path={`/repos/${repoRef}/serviceAccounts`}
+    path={`/repos/${repoRef}/service_accounts`}
     base={getConfigNew('scm')}
     {...props}
   />
@@ -811,7 +883,7 @@ export type UseListRepositoryServiceAccountsProps = Omit<
 
 export const useListRepositoryServiceAccounts = ({ repoRef, ...props }: UseListRepositoryServiceAccountsProps) =>
   useGet<TypesServiceAccount[], UsererrorError, void, ListRepositoryServiceAccountsPathParams>(
-    (paramsInPath: ListRepositoryServiceAccountsPathParams) => `/repos/${paramsInPath.repoRef}/serviceAccounts`,
+    (paramsInPath: ListRepositoryServiceAccountsPathParams) => `/repos/${paramsInPath.repoRef}/service_accounts`,
     { base: getConfigNew('scm'), pathParams: { repoRef }, ...props }
   )
 
@@ -1206,7 +1278,7 @@ export type ListServiceAccountsProps = Omit<
 
 export const ListServiceAccounts = ({ spaceRef, ...props }: ListServiceAccountsProps) => (
   <Get<TypesServiceAccount[], UsererrorError, void, ListServiceAccountsPathParams>
-    path={`/spaces/${spaceRef}/serviceAccounts`}
+    path={`/spaces/${spaceRef}/service_accounts`}
     base={getConfigNew('scm')}
     {...props}
   />
@@ -1220,7 +1292,7 @@ export type UseListServiceAccountsProps = Omit<
 
 export const useListServiceAccounts = ({ spaceRef, ...props }: UseListServiceAccountsProps) =>
   useGet<TypesServiceAccount[], UsererrorError, void, ListServiceAccountsPathParams>(
-    (paramsInPath: ListServiceAccountsPathParams) => `/spaces/${paramsInPath.spaceRef}/serviceAccounts`,
+    (paramsInPath: ListServiceAccountsPathParams) => `/spaces/${paramsInPath.spaceRef}/service_accounts`,
     { base: getConfigNew('scm'), pathParams: { spaceRef }, ...props }
   )
 

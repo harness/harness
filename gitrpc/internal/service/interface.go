@@ -34,4 +34,6 @@ type GitAdapter interface {
 	GetAnnotatedTags(ctx context.Context, repoPath string, shas []string) ([]types.Tag, error)
 	CreateBranch(ctx context.Context, repoPath string, branchName string, target string) (*types.Branch, error)
 	DeleteBranch(ctx context.Context, repoPath string, branchName string, force bool) error
+	GetCommitDivergences(ctx context.Context, repoPath string,
+		requests []types.CommitDivergenceRequest, max int32) ([]types.CommitDivergence, error)
 }

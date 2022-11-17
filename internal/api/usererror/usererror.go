@@ -47,6 +47,9 @@ var (
 
 	// ErrDefaultBranchCantBeDeleted is returned if the user tries to delete the default branch of a repository.
 	ErrDefaultBranchCantBeDeleted = New(http.StatusBadRequest, "The default branch of a repository can't be deleted")
+
+	// ErrRequestTooLarge is returned if the request it too large.
+	ErrRequestTooLarge = New(http.StatusRequestEntityTooLarge, "The request is too large")
 )
 
 // Error represents a json-encoded API error.

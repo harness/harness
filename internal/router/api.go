@@ -124,7 +124,7 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 			r.Post("/move", handlerspace.HandleMove(spaceCtrl))
 			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))
 			r.Get("/repos", handlerspace.HandleListRepos(spaceCtrl))
-			r.Get("/serviceAccounts", handlerspace.HandleListServiceAccounts(spaceCtrl))
+			r.Get("/service_accounts", handlerspace.HandleListServiceAccounts(spaceCtrl))
 
 			// Child collections
 			r.Route("/paths", func(r chi.Router) {
@@ -151,7 +151,7 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller) {
 			r.Delete("/", handlerrepo.HandleDelete(repoCtrl))
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
-			r.Get("/serviceAccounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
+			r.Get("/service_accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
 
 			// content operations
 			// NOTE: this allows /content and /content/ to both be valid (without any other tricks.)
@@ -163,6 +163,8 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller) {
 			// commit operations
 			r.Route("/commits", func(r chi.Router) {
 				r.Get("/", handlerrepo.HandleListCommits(repoCtrl))
+
+				r.Post("/calculate_divergence", handlerrepo.HandleCalculateCommitDivergence(repoCtrl))
 			})
 
 			// branch operations
@@ -223,7 +225,7 @@ func setupUsers(r chi.Router, userCtrl *user.Controller) {
 }
 
 func setupServiceAccounts(r chi.Router, saCtrl *serviceaccount.Controller) {
-	r.Route("/serviceAccounts", func(r chi.Router) {
+	r.Route("/service_accounts", func(r chi.Router) {
 		// create takes parent information via body
 		r.Post("/", handlerserviceaccount.HandleCreate(saCtrl))
 
