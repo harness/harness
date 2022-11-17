@@ -26,6 +26,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
     queryParams: {
       per_page: LIST_FETCHING_PER_PAGE,
       page: pageIndex + 1,
+      sort: 'date',
       direction: 'desc',
       include_commit: true,
       query: searchTerm

@@ -4,7 +4,6 @@ import type { CellProps, Column } from 'react-table'
 import { Link, useHistory } from 'react-router-dom'
 import cx from 'classnames'
 import Keywords from 'react-keywords'
-import { orderBy } from 'lodash-es'
 import { useMutate } from 'restful-react'
 import { String, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -136,7 +135,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         }
       }
     ],
-    [getString, repoMetadata.defaultBranch, repoMetadata.path, routes, searchTerm, history]
+    [getString, repoMetadata.defaultBranch, repoMetadata.path, routes, searchTerm, history, onDeleteSuccess]
   )
 
   return (
@@ -144,7 +143,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
       <Table<RepoBranch>
         className={css.table}
         columns={columns}
-        data={orderBy(branches || [], [searchTerm ? '' : 'commit.author.when'], ['desc'])}
+        data={branches || []}
         getRowClassName={row => cx(css.row, (row.index + 1) % 2 ? css.odd : '')}
       />
     </Container>
