@@ -142,7 +142,7 @@ function Editor({
             <CommitModalButton
               text={getString('commitChanges')}
               variation={ButtonVariation.PRIMARY}
-              commitMessagePlaceHolder={'Update file...'}
+              commitMessagePlaceHolder={getString('updateFile').replace('__path__', fileResourcePath)}
               gitRef={gitRef}
               resourcePath={fileResourcePath}
               onSubmit={data => console.log({ data })}

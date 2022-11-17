@@ -62,7 +62,7 @@ export function FileContent({
               icon={GitIcon.CodeDelete}
               tooltipProps={{ isDark: true }}
               tooltip={getString('delete')}
-              commitMessagePlaceHolder={getString('deleteFile', { path: resourcePath })}
+              commitMessagePlaceHolder={getString('deleteFile').replace('__path__', resourcePath)}
               gitRef={gitRef}
               resourcePath={resourcePath}
               onSubmit={data => console.log({ data })}

@@ -93,6 +93,7 @@ export interface StringsMap {
   signIn: string
   signUp: string
   status: string
+  updateFile: string
   updated: string
   'validation.gitBranchNameInvalid': string
   'validation.repoNamePatternIsNotValid': string
