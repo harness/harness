@@ -62,8 +62,8 @@ func NewWebHandler(systemStore store.SystemStore) WebHandler {
 			render.ErrorMessagef(w, http.StatusInternalServerError, "error serializing openapi.yaml: %v", err)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
 		w.Header().Set("Content-Type", "application/yaml")
+		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(data)
 	})
 	swagger := v3emb.NewHandler("API Definition", "/openapi.yaml", "/swagger")
