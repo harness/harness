@@ -18,20 +18,21 @@ import {
   FontVariation,
   Text
 } from '@harness/uicore'
-import { Link, useHistory } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
+import { noop } from 'lodash-es'
 import { String, useStrings } from 'framework/strings'
 import { getErrorMessage, LIST_FETCHING_PER_PAGE } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { CodeIcon, GitInfoProps, GitRefType } from 'utils/GitUtils'
-import { useCreateBranchModal } from 'components/CreateBranchModal/CreateBranchModal'
 import css from './BranchTagSelect.module.scss'
 
 export interface BranchTagSelectProps extends Omit<ButtonProps, 'onSelect'>, Pick<GitInfoProps, 'repoMetadata'> {
   gitRef: string
   gitRefType: GitRefType
   onSelect: (ref: string, type: GitRefType) => void
+  onCreateBranch?: (newBranch?: string) => void
   disableBranchCreation?: boolean
   disableViewAllBranches?: boolean
   forBranchesOnly?: boolean
@@ -42,28 +43,13 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
   gitRef,
   gitRefType = GitRefType.BRANCH,
   onSelect,
+  onCreateBranch = noop,
   disableBranchCreation,
   disableViewAllBranches,
   forBranchesOnly,
   ...props
 }) => {
-  const { routes } = useAppContext()
-  const history = useHistory()
   const [query, onQuery] = useState('')
-  const openCreateNewBranchModal = useCreateBranchModal({
-    repoMetadata,
-    onSuccess: branchInfo => {
-      history.push(
-        routes.toSCMRepository({
-          repoPath: repoMetadata.path as string,
-          gitRef: branchInfo.name
-        })
-      )
-    },
-    suggestedBranchName: query,
-    suggestedSourceBranch: gitRef,
-    showSuccessMessage: true
-  })
 
   return (
     <Button
@@ -82,7 +68,7 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
           forBranchesOnly={forBranchesOnly}
           disableBranchCreation={disableBranchCreation}
           disableViewAllBranches={disableViewAllBranches}
-          openCreateNewBranchModal={openCreateNewBranchModal}
+          onCreateBranch={() => onCreateBranch(query)}
         />
       }
       tooltipProps={{
@@ -98,7 +84,6 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
 }
 
 interface PopoverContentProps extends BranchTagSelectProps {
-  openCreateNewBranchModal: () => void
   onQuery: (query: string) => void
 }
 
@@ -107,11 +92,11 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
   gitRef,
   gitRefType,
   onSelect,
+  onCreateBranch,
   onQuery,
   forBranchesOnly,
   disableBranchCreation,
-  disableViewAllBranches,
-  openCreateNewBranchModal
+  disableViewAllBranches
 }) => {
   const { getString } = useStrings()
   const [activeTab, setActiveTab] = useState(gitRefType)
@@ -152,7 +137,7 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
                   <GitRefList
                     gitRef={gitRef}
                     gitRefType={GitRefType.BRANCH}
-                    openCreateNewBranchModal={openCreateNewBranchModal}
+                    onCreateBranch={onCreateBranch}
                     onSelect={branch => onSelect(branch, GitRefType.BRANCH)}
                     repoMetadata={repoMetadata}
                     query={query}
@@ -169,7 +154,7 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
                   <GitRefList
                     gitRef={gitRef}
                     gitRefType={GitRefType.TAG}
-                    openCreateNewBranchModal={openCreateNewBranchModal}
+                    onCreateBranch={onCreateBranch}
                     onSelect={branch => onSelect(branch, GitRefType.TAG)}
                     repoMetadata={repoMetadata}
                     query={query}
@@ -201,7 +186,7 @@ function GitRefList({
   repoMetadata,
   query,
   onSelect,
-  openCreateNewBranchModal,
+  onCreateBranch = noop,
   disableBranchCreation,
   disableViewAllBranches,
   setLoading
@@ -268,7 +253,7 @@ function GitRefList({
                 }
                 icon={CodeIcon.Branch}
                 variation={ButtonVariation.SECONDARY}
-                onClick={openCreateNewBranchModal}
+                onClick={() => onCreateBranch()}
                 className={Classes.POPOVER_DISMISS}
               />
             ))) || (

@@ -5,7 +5,7 @@
  * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
  */
 
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { Dialog, Intent } from '@blueprintjs/core'
 import * as yup from 'yup'
 import {
@@ -57,6 +57,7 @@ export function useCreateBranchModal({
   repoMetadata,
   showSuccessMessage
 }: UseCreateBranchModalProps) {
+  const [branchName, setBranchName] = useState(suggestedBranchName)
   const ModalComponent: React.FC = () => {
     const { getString } = useStrings()
     const [sourceBranch, setSourceBranch] = useState(suggestedSourceBranch || (repoMetadata.defaultBranch as string))
@@ -101,7 +102,7 @@ export function useCreateBranchModal({
           <Container margin={{ right: 'xxlarge' }}>
             <Formik<FormData>
               initialValues={{
-                name: suggestedBranchName,
+                name: branchName,
                 sourceBranch: suggestedSourceBranch
               }}
               formName="createGitBranch"
@@ -171,8 +172,17 @@ export function useCreateBranchModal({
     suggestedSourceBranch,
     showSuccessMessage
   ])
+  const fn = useCallback(
+    (_branchName?: string) => {
+      if (_branchName) {
+        setBranchName(_branchName)
+      }
+      openModal()
+    },
+    [setBranchName, openModal]
+  )
 
-  return openModal
+  return fn
 }
 
 export const CreateBranchModalButton: React.FC<CreateBranchModalButtonProps> = ({
@@ -182,5 +192,5 @@ export const CreateBranchModalButton: React.FC<CreateBranchModalButtonProps> = (
   ...props
 }) => {
   const openModal = useCreateBranchModal({ repoMetadata, onSuccess, showSuccessMessage })
-  return <Button onClick={openModal} {...props} />
+  return <Button onClick={() => openModal()} {...props} />
 }

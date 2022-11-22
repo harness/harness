@@ -8,6 +8,7 @@ import { useAppContext } from 'AppContext'
 import { CloneButtonTooltip } from 'components/CloneButtonTooltip/CloneButtonTooltip'
 import { CodeIcon, GitInfoProps, GitRefType, isDir } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
+import { useCreateBranchModal } from 'components/CreateBranchModal/CreateBranchModal'
 import css from './ContentHeader.module.scss'
 
 export function ContentHeader({
@@ -21,6 +22,19 @@ export function ContentHeader({
   const history = useHistory()
   const [gitRefType, setGitRefType] = useState(GitRefType.BRANCH)
   const _isDir = isDir(resourceContent)
+  const openCreateNewBranchModal = useCreateBranchModal({
+    repoMetadata,
+    onSuccess: branchInfo => {
+      history.push(
+        routes.toSCMRepository({
+          repoPath: repoMetadata.path as string,
+          gitRef: branchInfo.name
+        })
+      )
+    },
+    suggestedSourceBranch: gitRef,
+    showSuccessMessage: true
+  })
 
   useVerifyGitRefATag({ repoMetadata, gitRef, setGitRefType })
 
@@ -41,6 +55,7 @@ export function ContentHeader({
               })
             )
           }}
+          onCreateBranch={openCreateNewBranchModal}
         />
         <Container>
           <Layout.Horizontal spacing="small">
