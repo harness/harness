@@ -97,3 +97,11 @@ compare: Compare
 branchDeleted: Branch {{branch}} deleted.
 failedToDeleteBranch: Failed to delete Branch. Please try again.
 updateFile: Update file __path__
+switchBranchesTags: Switch branches/tags
+tags: Tags
+findOrCreateBranch: Find or create a branch
+findATag: Find a tag
+viewAllBranches: View all branches
+viewAllTags: View all tags
+createBranchFromBranch: "<strong>Create branch: {{newBranch}}</strong> from '{{targetBranch}}'</strong>"
+tagNotFound: 'Tag <strong>{{tag}}</strong> not found.'

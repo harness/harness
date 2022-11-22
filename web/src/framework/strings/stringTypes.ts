@@ -35,6 +35,7 @@ export interface StringsMap {
   create: string
   createABranch: string
   createBranch: string
+  createBranchFromBranch: string
   createRepo: string
   'createRepoModal.branch': string
   'createRepoModal.branchLabel': string
@@ -57,7 +58,9 @@ export interface StringsMap {
   failedToCreateRepo: string
   failedToDeleteBranch: string
   files: string
+  findATag: string
   findBranch: string
+  findOrCreateBranch: string
   history: string
   in: string
   inactiveBranches: string
@@ -93,10 +96,15 @@ export interface StringsMap {
   signIn: string
   signUp: string
   status: string
+  switchBranchesTags: string
+  tagNotFound: string
+  tags: string
   updateFile: string
   updated: string
   'validation.gitBranchNameInvalid': string
   'validation.repoNamePatternIsNotValid': string
+  viewAllBranches: string
+  viewAllTags: string
   viewCommitDetails: string
   yourBranches: string
 }

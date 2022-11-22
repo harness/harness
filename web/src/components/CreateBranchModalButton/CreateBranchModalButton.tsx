@@ -30,7 +30,7 @@ import { get } from 'lodash-es'
 import { useModalHook } from '@harness/use-modal'
 import { useStrings } from 'framework/strings'
 import { BRANCH_PER_PAGE, getErrorMessage } from 'utils/Utils'
-import { GitIcon, GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
 import type { RepoBranch } from 'services/scm'
 import css from './CreateBranchModalButton.module.scss'
 
@@ -39,20 +39,28 @@ interface FormData {
   sourceBranch: string
 }
 
-export interface CreateBranchModalButtonProps extends Omit<ButtonProps, 'onClick'>, Pick<GitInfoProps, 'repoMetadata'> {
+interface UseCreateBranchModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
+  suggestedBranchName?: string
+  suggestedSourceBranch?: string
   onSuccess: (data: RepoBranch) => void
   showSuccessMessage?: boolean
 }
 
-export const CreateBranchModalButton: React.FC<CreateBranchModalButtonProps> = ({
+interface CreateBranchModalButtonProps extends Omit<ButtonProps, 'onClick'>, Pick<GitInfoProps, 'repoMetadata'> {
+  onSuccess: (data: RepoBranch) => void
+  showSuccessMessage?: boolean
+}
+
+export function useCreateBranchModal({
+  suggestedBranchName = '',
+  suggestedSourceBranch = '',
   onSuccess,
   repoMetadata,
-  showSuccessMessage,
-  ...props
-}) => {
+  showSuccessMessage
+}: UseCreateBranchModalProps) {
   const ModalComponent: React.FC = () => {
     const { getString } = useStrings()
-    const [sourceBranch, setSourceBranch] = useState(repoMetadata.defaultBranch as string)
+    const [sourceBranch, setSourceBranch] = useState(suggestedSourceBranch || (repoMetadata.defaultBranch as string))
     const { showError, showSuccess } = useToaster()
     const { mutate: createBranch, loading } = useMutate<RepoBranch>({
       verb: 'POST',
@@ -89,13 +97,13 @@ export const CreateBranchModalButton: React.FC<CreateBranchModalButtonProps> = (
         style={{ width: 700, maxHeight: '95vh', overflow: 'auto' }}>
         <Layout.Vertical padding={{ left: 'xxlarge' }} style={{ height: '100%' }} className={css.main}>
           <Heading className={css.title} font={{ variation: FontVariation.H3 }} margin={{ bottom: 'xlarge' }}>
-            <Icon name={GitIcon.CodeBranch} size={22} /> {getString('createABranch')}
+            <Icon name={CodeIcon.Branch} size={22} /> {getString('createABranch')}
           </Heading>
           <Container margin={{ right: 'xxlarge' }}>
             <Formik<FormData>
               initialValues={{
-                name: '',
-                sourceBranch: ''
+                name: suggestedBranchName,
+                sourceBranch: suggestedSourceBranch
               }}
               formName="createGitBranch"
               enableReinitialize={true}
@@ -152,9 +160,23 @@ export const CreateBranchModalButton: React.FC<CreateBranchModalButtonProps> = (
       </Dialog>
     )
   }
+  const [openModal, hideModal] = useModalHook(ModalComponent, [
+    onSuccess,
+    suggestedBranchName,
+    suggestedSourceBranch,
+    showSuccessMessage
+  ])
 
-  const [openModal, hideModal] = useModalHook(ModalComponent, [onSuccess])
+  return openModal
+}
 
+export const CreateBranchModalButton: React.FC<CreateBranchModalButtonProps> = ({
+  onSuccess,
+  repoMetadata,
+  showSuccessMessage,
+  ...props
+}) => {
+  const openModal = useCreateBranchModal({ repoMetadata, onSuccess, showSuccessMessage })
   return <Button onClick={openModal} {...props} />
 }
 
@@ -163,9 +185,9 @@ interface BranchDropdownProps extends Pick<GitInfoProps, 'repoMetadata'> {
   onSelect: (branchName: string) => void
 }
 
-const BranchDropdown: React.FC<BranchDropdownProps> = ({ repoMetadata, onSelect }) => {
+const BranchDropdown: React.FC<BranchDropdownProps> = ({ currentBranchName, repoMetadata, onSelect }) => {
   const { getString } = useStrings()
-  const [activeBranch, setActiveBranch] = useState(repoMetadata.defaultBranch)
+  const [activeBranch, setActiveBranch] = useState(currentBranchName || repoMetadata.defaultBranch)
   const [query, setQuery] = useState('')
   const [branches, setBranches] = useState<SelectOption[]>([])
   const { data, loading } = useGet<RepoBranch[]>({
@@ -188,12 +210,14 @@ const BranchDropdown: React.FC<BranchDropdownProps> = ({ repoMetadata, onSelect 
 
   return (
     <DropDown
-      icon={GitIcon.CodeBranch}
+      icon={CodeIcon.Branch}
       value={activeBranch}
       items={branches}
       {...{
         inputProps: {
-          leftElement: <Icon name={loading ? 'steps-spinner' : 'thinner-search'} size={12} color={Color.GREY_500} />,
+          leftElement: (
+            <Icon name={loading ? CodeIcon.InputSpinner : CodeIcon.InputSearch} size={12} color={Color.GREY_500} />
+          ),
           placeholder: getString('findBranch'),
           onInput: (event: ChangeEvent<HTMLInputElement>) => {
             if (event.target.value !== query) {

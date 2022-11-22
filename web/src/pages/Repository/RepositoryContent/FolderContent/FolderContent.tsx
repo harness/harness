@@ -6,7 +6,7 @@ import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiDirContent } from 'services/scm'
 import { formatDate } from 'utils/Utils'
-import { findReadmeInfo, GitIcon, GitInfoProps, isFile } from 'utils/GitUtils'
+import { findReadmeInfo, CodeIcon, GitInfoProps, isFile } from 'utils/GitUtils'
 import { LatestCommitForFolder } from 'components/LatestCommit/LatestCommit'
 import { Readme } from './Readme'
 import css from './FolderContent.module.scss'
@@ -28,7 +28,7 @@ export function FolderContent({
             <Text
               className={css.rowText}
               color={Color.BLACK}
-              icon={isFile(row.original) ? GitIcon.CodeFile : GitIcon.CodeFolder}
+              icon={isFile(row.original) ? CodeIcon.File : CodeIcon.Folder}
               iconProps={{ margin: { right: 'xsmall' } }}>
               {row.original.name}
             </Text>

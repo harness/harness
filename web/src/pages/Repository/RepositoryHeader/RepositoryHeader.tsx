@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 // import { PopoverInteractionKind } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
 import { ButtonRoleProps } from 'utils/Utils'
-import { GitIcon, GitInfoProps } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import css from './RepositoryHeader.module.scss'
@@ -24,7 +24,7 @@ export function RepositoryHeader({ repoMetadata }: Pick<GitInfoProps, 'repoMetad
         </Layout.Horizontal>
         <Container padding={{ top: 'medium', bottom: 'medium' }}>
           <Layout.Horizontal spacing="small" className={css.name}>
-            <Icon name={GitIcon.CodeRepo} size={20} />
+            <Icon name={CodeIcon.Repo} size={20} />
             <Text
               inline
               className={css.repoDropdown}

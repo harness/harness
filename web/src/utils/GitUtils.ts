@@ -5,16 +5,12 @@
 import type { IconName } from '@harness/icons'
 import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput, TypesRepository } from 'services/scm'
 
-// eslint-disable-next-line no-control-regex
-const badGitRefRegrex = /(^|[/.])([/.]|$)|^@$|@{|[\x00-\x20\x7f~^:?*[\\]|\.lock(\/|$)/
-const badGitBranchRegrex = /^(-|HEAD$)/
-
-function isGitRefValid(name: string, onelevel: boolean): boolean {
-  return !badGitRefRegrex.test(name) && (!!onelevel || name.includes('/'))
-}
-
-export function isGitBranchNameValid(name: string): boolean {
-  return isGitRefValid(name, true) && !badGitBranchRegrex.test(name)
+export interface GitInfoProps {
+  repoMetadata: TypesRepository
+  gitRef: string
+  resourcePath: string
+  resourceContent: OpenapiGetContentOutput
+  commitRef: string
 }
 
 export enum GitContentType {
@@ -31,38 +27,48 @@ export enum GitBranchType {
   ALL = 'all'
 }
 
-export const GitIcon: Record<string, IconName> = {
-  // CodeFile: 'file',
-  // CodeRepo: 'code-repo',
-  // CodeCommit: 'git-branch-existing',
-  CodePullRequest: 'git-pull',
-  // CodeSettings: 'cog',
-  // CodeFolder: 'code-folder',
-  // CodeCopy: 'code-copy',
-  // CodeDelete: 'code-delete',
-  // CodeEdit: 'Edit',
-  // CodeBranch: 'git-branch',
-  // CodeHistory: 'code-history',
-  CodeAdd: 'plus',
-  CodeBranchSmall: 'code-branch-small',
-  CodeBranch: 'code-branch',
-  CodeClone: 'code-clone',
-  CodeClose: 'code-close',
-  CodeCommitLight: 'code-commit-light',
-  CodeCommitSmall: 'code-commit-small',
-  CodeCommit: 'code-commit',
-  CodeCopy: 'code-copy',
-  CodeDelete: 'code-delete',
-  CodeEdit: 'code-edit',
-  CodeFileLight: 'code-file-light',
-  CodeFile: 'code-file',
-  CodeFolder: 'code-folder',
-  CodeHistory: 'code-history',
-  CodeInfo: 'code-info',
-  CodeMore: 'code-more',
-  CodeRepo: 'code-repo',
-  CodeSettings: 'code-settings',
-  CodeWebhook: 'code-webhook'
+export enum GitRefType {
+  BRANCH = 'branch',
+  TAG = 'tag'
+}
+
+export const CodeIcon = {
+  PullRequest: 'git-pull' as IconName,
+  Add: 'plus' as IconName,
+  BranchSmall: 'code-branch-small' as IconName,
+  Branch: 'code-branch' as IconName,
+  Tag: 'main-tags' as IconName,
+  Clone: 'code-clone' as IconName,
+  Close: 'code-close' as IconName,
+  CommitLight: 'code-commit-light' as IconName,
+  CommitSmall: 'code-commit-small' as IconName,
+  Commit: 'code-commit' as IconName,
+  Copy: 'code-copy' as IconName,
+  Delete: 'code-delete' as IconName,
+  Edit: 'code-edit' as IconName,
+  FileLight: 'code-file-light' as IconName,
+  File: 'code-file' as IconName,
+  Folder: 'code-folder' as IconName,
+  History: 'code-history' as IconName,
+  Info: 'code-info' as IconName,
+  More: 'code-more' as IconName,
+  Repo: 'code-repo' as IconName,
+  Settings: 'code-settings' as IconName,
+  Webhook: 'code-webhook' as IconName,
+  InputSpinner: 'steps-spinner' as IconName,
+  InputSearch: 'search' as IconName
+}
+
+// eslint-disable-next-line no-control-regex
+const BAD_GIT_REF_REGREX = /(^|[/.])([/.]|$)|^@$|@{|[\x00-\x20\x7f~^:?*[\\]|\.lock(\/|$)/
+const BAD_GIT_BRANCH_REGREX = /^(-|HEAD$)/
+
+function isGitRefValid(name: string, onelevel: boolean): boolean {
+  return !BAD_GIT_REF_REGREX.test(name) && (!!onelevel || name.includes('/'))
+}
+
+export function isGitBranchNameValid(name: string): boolean {
+  return isGitRefValid(name, true) && !BAD_GIT_BRANCH_REGREX.test(name)
 }
 
 export const isDir = (content: Nullable<OpenapiGetContentOutput>): boolean => content?.type === GitContentType.DIR
@@ -76,11 +82,3 @@ export const findReadmeInfo = (content: Nullable<OpenapiGetContentOutput>): Open
   (content?.content as OpenapiDirContent)?.entries?.find(
     entry => entry.type === GitContentType.FILE && /^readme(.md)?$/.test(entry?.name?.toLowerCase() || '')
   )
-
-export interface GitInfoProps {
-  repoMetadata: TypesRepository
-  gitRef: string
-  resourcePath: string
-  resourceContent: OpenapiGetContentOutput
-  commitRef: string
-}

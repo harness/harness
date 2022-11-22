@@ -18,7 +18,7 @@ import type { RepoCommit } from 'services/scm'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useAppContext } from 'AppContext'
 import { formatDate } from 'utils/Utils'
-import { GitIcon, GitInfoProps } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import css from './LatestCommit.module.scss'
 
@@ -92,7 +92,7 @@ export function LatestCommitForFile({
         <FlexExpander />
         <Button
           size={ButtonSize.SMALL}
-          icon={GitIcon.CodeHistory}
+          icon={CodeIcon.History}
           text={getString('history')}
           variation={ButtonVariation.PRIMARY}
         />

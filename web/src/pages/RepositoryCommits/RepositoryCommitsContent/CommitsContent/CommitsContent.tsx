@@ -7,7 +7,7 @@ import { useAppContext } from 'AppContext'
 import type { RepoCommit } from 'services/scm'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { formatDate } from 'utils/Utils'
-import { GitIcon, GitInfoProps } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import css from './CommitsContent.module.scss'
 
 interface CommitsContentProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -78,7 +78,7 @@ export function CommitsContent({ repoMetadata, commits }: CommitsContentProps) {
         return (
           <Container key={date} className={css.commitSection}>
             <Layout.Vertical spacing="medium">
-              <Text icon={GitIcon.CodeCommit} iconProps={{ size: 20 }} color={Color.GREY_500} className={css.label}>
+              <Text icon={CodeIcon.Commit} iconProps={{ size: 20 }} color={Color.GREY_500} className={css.label}>
                 {getString('commitsOn', { date })}
               </Text>
               <Container className={css.commitTableContainer}>

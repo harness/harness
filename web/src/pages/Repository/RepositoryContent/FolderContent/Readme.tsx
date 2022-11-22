@@ -5,7 +5,7 @@ import { useGet } from 'restful-react'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/scm'
-import { GitIcon } from 'utils/GitUtils'
+import { CodeIcon } from 'utils/GitUtils'
 import css from './Readme.module.scss'
 
 interface FolderContentProps {
@@ -33,7 +33,7 @@ export function Readme({ metadata, gitRef, readmeInfo }: FolderContentProps) {
         <FlexExpander />
         <Button
           variation={ButtonVariation.ICON}
-          icon={GitIcon.CodeEdit}
+          icon={CodeIcon.Edit}
           onClick={() => {
             history.push(
               routes.toSCMRepositoryFileEdit({

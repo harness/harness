@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { Container, Layout, FlexExpander, DropDown, ButtonVariation, TextInput } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
-import { GitBranchType, GitIcon, GitInfoProps } from 'utils/GitUtils'
+import { GitBranchType, CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { CreateBranchModalButton } from 'components/CreateBranchModalButton/CreateBranchModalButton'
 import css from './BranchesContentHeader.module.scss'
 
@@ -58,7 +58,7 @@ export function BranchesContentHeader({
         />
         <CreateBranchModalButton
           text={getString('createBranch')}
-          icon={GitIcon.CodeAdd}
+          icon={CodeIcon.Add}
           variation={ButtonVariation.PRIMARY}
           repoMetadata={repoMetadata}
           onSuccess={onNewBranchCreated}

@@ -5,7 +5,7 @@ import { useGet } from 'restful-react'
 import { useStrings } from 'framework/strings'
 import type { RepoBranch } from 'services/scm'
 import { BRANCH_PER_PAGE } from 'utils/Utils'
-import { GitIcon, GitInfoProps } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import css from './CommitsContentHeader.module.scss'
 
 interface CommitsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -47,13 +47,13 @@ export function CommitsContentHeader({ repoMetadata, onSwitch }: CommitsContentH
     <Container className={css.main}>
       <Layout.Horizontal spacing="medium">
         <DropDown
-          icon={GitIcon.CodeBranch}
+          icon={CodeIcon.Branch}
           value={activeBranch}
           items={branches}
           {...{
             inputProps: {
               leftElement: (
-                <Icon name={loading ? 'steps-spinner' : 'thinner-search'} size={12} color={Color.GREY_500} />
+                <Icon name={loading ? CodeIcon.InputSpinner : CodeIcon.InputSearch} size={12} color={Color.GREY_500} />
               ),
               placeholder: getString('search'),
               onInput: (event: ChangeEvent<HTMLInputElement>) => {

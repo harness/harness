@@ -3,7 +3,7 @@ import { Button, ButtonVariation, Color, Container, FlexExpander, Heading, Layou
 import { useHistory } from 'react-router-dom'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import type { RepoFileContent } from 'services/scm'
-import { GitIcon, GitInfoProps } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { filenameToLanguage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { LatestCommitForFile } from 'components/LatestCommit/LatestCommit'
@@ -37,7 +37,7 @@ export function FileContent({
           <Layout.Horizontal spacing="xsmall">
             <Button
               variation={ButtonVariation.ICON}
-              icon={GitIcon.CodeEdit}
+              icon={CodeIcon.Edit}
               tooltip={getString('edit')}
               tooltipProps={{ isDark: true }}
               onClick={() => {
@@ -53,13 +53,13 @@ export function FileContent({
             <Button
               variation={ButtonVariation.ICON}
               tooltip={getString('copy')}
-              icon={GitIcon.CodeCopy}
+              icon={CodeIcon.Copy}
               tooltipProps={{ isDark: true }}
               onClick={() => Utils.copy(content)}
             />
             <CommitModalButton
               variation={ButtonVariation.ICON}
-              icon={GitIcon.CodeDelete}
+              icon={CodeIcon.Delete}
               tooltipProps={{ isDark: true }}
               tooltip={getString('delete')}
               commitMessagePlaceHolder={getString('deleteFile').replace('__path__', resourcePath)}

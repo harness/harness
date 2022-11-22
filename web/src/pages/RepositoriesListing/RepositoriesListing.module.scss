@@ -12,6 +12,13 @@
       padding-top: var(--spacing-medium);
     }
   }
+
+  .input {
+    span[data-icon],
+    span[icon] {
+      margin-top: 10px !important;
+    }
+  }
 }
 
 .withError {

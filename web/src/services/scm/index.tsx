@@ -25,7 +25,7 @@ export interface FormDataOpenapiRegisterRequest {
 
 export interface OpenapiCalculateCommitDivergenceRequest {
   maxCount?: number
-  requests?: RepoDivergenceRequest[] | null
+  requests?: RepoCommitDivergenceRequest[] | null
 }
 
 export type OpenapiContent = RepoFileContent | OpenapiDirContent | RepoSymlinkContent | RepoSubmoduleContent
@@ -126,6 +126,16 @@ export interface RepoCommit {
   title?: string
 }
 
+export interface RepoCommitDivergence {
+  ahead?: number
+  behind?: number
+}
+
+export interface RepoCommitDivergenceRequest {
+  from?: string
+  to?: string
+}
+
 export interface RepoCommitTag {
   commit?: RepoCommit
   isAnnotated?: boolean
@@ -148,16 +158,6 @@ export interface RepoContentInfo {
 }
 
 export type RepoContentType = string
-
-export interface RepoDivergence {
-  ahead?: number
-  behind?: number
-}
-
-export interface RepoDivergenceRequest {
-  from?: string
-  to?: string
-}
 
 export interface RepoFileContent {
   data?: string
@@ -627,7 +627,7 @@ export interface CalculateCommitDivergencePathParams {
 
 export type CalculateCommitDivergenceProps = Omit<
   MutateProps<
-    RepoDivergence[],
+    RepoCommitDivergence[],
     UsererrorError,
     void,
     OpenapiCalculateCommitDivergenceRequest,
@@ -639,7 +639,7 @@ export type CalculateCommitDivergenceProps = Omit<
 
 export const CalculateCommitDivergence = ({ repoRef, ...props }: CalculateCommitDivergenceProps) => (
   <Mutate<
-    RepoDivergence[],
+    RepoCommitDivergence[],
     UsererrorError,
     void,
     OpenapiCalculateCommitDivergenceRequest,
@@ -654,7 +654,7 @@ export const CalculateCommitDivergence = ({ repoRef, ...props }: CalculateCommit
 
 export type UseCalculateCommitDivergenceProps = Omit<
   UseMutateProps<
-    RepoDivergence[],
+    RepoCommitDivergence[],
     UsererrorError,
     void,
     OpenapiCalculateCommitDivergenceRequest,
@@ -666,7 +666,7 @@ export type UseCalculateCommitDivergenceProps = Omit<
 
 export const useCalculateCommitDivergence = ({ repoRef, ...props }: UseCalculateCommitDivergenceProps) =>
   useMutate<
-    RepoDivergence[],
+    RepoCommitDivergence[],
     UsererrorError,
     void,
     OpenapiCalculateCommitDivergenceRequest,

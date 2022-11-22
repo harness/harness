@@ -1,105 +1,51 @@
-import React, { ChangeEvent, useEffect, useMemo, useState } from 'react'
-import {
-  Container,
-  Layout,
-  Button,
-  FlexExpander,
-  ButtonVariation,
-  Text,
-  DropDown,
-  Icon,
-  Color,
-  SelectOption
-} from '@harness/uicore'
+import React, { useEffect, useState } from 'react'
+import { Container, Layout, Button, FlexExpander, ButtonVariation, Text, Icon, Color } from '@harness/uicore'
 import ReactJoin from 'react-join'
 import { Link, useHistory } from 'react-router-dom'
-import { uniq } from 'lodash-es'
 import { useGet } from 'restful-react'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { RepoBranch } from 'services/scm'
-import { BRANCH_PER_PAGE } from 'utils/Utils'
 import { CloneButtonTooltip } from 'components/CloneButtonTooltip/CloneButtonTooltip'
-import { GitIcon, GitInfoProps, isDir } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps, GitRefType, isDir } from 'utils/GitUtils'
+import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import css from './ContentHeader.module.scss'
 
 export function ContentHeader({
   repoMetadata,
-  gitRef,
+  gitRef = repoMetadata.defaultBranch as string,
   resourcePath,
   resourceContent
 }: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent'>) {
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const history = useHistory()
-  const [query, setQuery] = useState('')
-  const [activeBranch, setActiveBranch] = useState(gitRef || repoMetadata.defaultBranch)
-  const { data, loading } = useGet<RepoBranch[]>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/branches`,
-    queryParams: { sort: 'date', direction: 'desc', per_page: BRANCH_PER_PAGE, page: 1, query }
-  })
-  // defaultBranches is computed using repository default branch, and gitRef in URL, if it exists
-  const defaultBranches = useMemo(
-    () => [repoMetadata.defaultBranch].concat(gitRef ? gitRef : []),
-    [repoMetadata, gitRef]
-  )
-  const [branches, setBranches] = useState<SelectOption[]>(
-    uniq(defaultBranches.map(_branch => ({ label: _branch, value: _branch }))) as SelectOption[]
-  )
+  const [gitRefType, setGitRefType] = useState(GitRefType.BRANCH)
   const _isDir = isDir(resourceContent)
 
-  useEffect(() => {
-    if (data?.length) {
-      setBranches(
-        uniq(defaultBranches.concat(data.map(e => e.name) as string[])).map(_branch => ({
-          label: _branch,
-          value: _branch
-        })) as SelectOption[]
-      )
-    }
-  }, [data, defaultBranches])
+  useVerifyGitRefATag({ repoMetadata, gitRef, setGitRefType })
 
   return (
     <Container className={css.main}>
       <Layout.Horizontal spacing="medium">
-        <DropDown
-          icon={GitIcon.CodeBranch}
-          value={activeBranch}
-          items={branches}
-          {...{
-            inputProps: {
-              leftElement: (
-                <Icon name={loading ? 'steps-spinner' : 'thinner-search'} size={12} color={Color.GREY_500} />
-              ),
-              placeholder: getString('search'),
-              onInput: (event: ChangeEvent<HTMLInputElement>) => {
-                if (event.target.value !== query) {
-                  setQuery(event.target.value)
-                }
-              },
-              onBlur: (event: ChangeEvent<HTMLInputElement>) => {
-                setTimeout(() => {
-                  setQuery(event.target.value || '')
-                }, 250)
-              }
-            }
-          }}
-          onChange={({ value: switchBranch }) => {
-            setActiveBranch(switchBranch as string)
+        <BranchTagSelect
+          repoMetadata={repoMetadata}
+          gitRef={gitRef}
+          gitRefType={gitRefType}
+          onSelect={(ref, type) => {
+            setGitRefType(type)
             history.push(
               routes.toSCMRepository({
                 repoPath: repoMetadata.path as string,
-                gitRef: switchBranch as string,
-                resourcePath // TODO: Handle 404 when resourcePath does not exist in newly switched branch
+                gitRef: ref,
+                resourcePath
               })
             )
           }}
-          popoverClassName={css.branchDropdown}
         />
         <Container>
           <Layout.Horizontal spacing="small">
             <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string, gitRef })}>
-              <Icon name={GitIcon.CodeFolder} />
+              <Icon name={CodeIcon.Folder} />
             </Link>
             <Text color={Color.GREY_900}>/</Text>
             <ReactJoin separator={<Text color={Color.GREY_900}>/</Text>}>
@@ -127,7 +73,7 @@ export function ContentHeader({
             <Button
               text={getString('clone')}
               variation={ButtonVariation.SECONDARY}
-              icon={GitIcon.CodeClone}
+              icon={CodeIcon.Clone}
               className={css.btnColorFix}
               tooltip={<CloneButtonTooltip httpsURL={repoMetadata.gitUrl as string} />}
               tooltipProps={{
@@ -138,8 +84,7 @@ export function ContentHeader({
             />
             <Button
               text={getString('newFile')}
-              icon={GitIcon.CodeAdd}
-              // withoutCurrentColor
+              icon={CodeIcon.Add}
               variation={ButtonVariation.PRIMARY}
               onClick={() => {
                 history.push(
@@ -156,4 +101,38 @@ export function ContentHeader({
       </Layout.Horizontal>
     </Container>
   )
+}
+
+interface UseVerifyGitRefATagProps extends Pick<GitInfoProps, 'repoMetadata' | 'gitRef'> {
+  setGitRefType: React.Dispatch<React.SetStateAction<GitRefType>>
+}
+
+// Since API does not have any field to determine if a content belongs to a branch or a tag. We need
+// to do a query to check if a gitRef is a tag by sending an optional API call to /tags and verify
+// if the exact tag is returned.
+function useVerifyGitRefATag({ repoMetadata, gitRef, setGitRefType }: UseVerifyGitRefATagProps) {
+  const { data, refetch } = useGet<{ name: string }[]>({
+    path: `/api/v1/repos/${repoMetadata.path}/+/tags`,
+    queryParams: {
+      per_page: 1,
+      page: 1,
+      include_commit: false,
+      query: gitRef
+    },
+    lazy: true
+  })
+
+  useEffect(() => {
+    if (gitRef) {
+      refetch()
+    }
+  }, [gitRef, refetch])
+
+  useEffect(() => {
+    if (data?.[0]?.name === gitRef) {
+      setGitRefType(GitRefType.TAG)
+    } else {
+      setGitRefType(GitRefType.BRANCH)
+    }
+  }, [gitRef, setGitRefType, data])
 }

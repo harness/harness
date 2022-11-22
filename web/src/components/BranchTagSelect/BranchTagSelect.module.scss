@@ -1,0 +1,41 @@
+.main {
+  .input {
+    margin-bottom: 0 !important;
+
+    span[data-icon],
+    span[icon] {
+      margin-top: 10px !important;
+    }
+  }
+
+  .tabContainer {
+    margin-top: 0 !important;
+
+    [role='tablist'] {
+      background-color: var(--white) !important;
+      padding-left: 0;
+      padding-right: 0;
+      border-bottom: 1px solid var(--grey-200);
+    }
+
+    [role='tabpanel'] {
+      margin-top: 0;
+    }
+  }
+}
+
+.popover {
+  > div[class*='popover-arrow'] {
+    display: none;
+  }
+
+  .listContainer {
+    min-height: 50px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .newBtnText {
+    font-weight: normal;
+  }
+}

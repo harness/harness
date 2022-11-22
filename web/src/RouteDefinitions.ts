@@ -41,6 +41,7 @@ export interface SCMRoutes {
     resourcePath: string
   }) => string
   toSCMRepositoryCommits: ({ repoPath, commitRef }: { repoPath: string; commitRef: string }) => string
+  toSCMRepositoryBranches: ({ repoPath, branch }: { repoPath: string; branch?: string }) => string
 }
 
 export const routes: SCMRoutes = {
@@ -50,5 +51,6 @@ export const routes: SCMRoutes = {
   toSCMRepository: ({ repoPath, gitRef, resourcePath }) =>
     `/${repoPath}/${gitRef ? '/' + gitRef : ''}${resourcePath ? '/~/' + resourcePath : ''}`,
   toSCMRepositoryFileEdit: ({ repoPath, gitRef, resourcePath }) => `/${repoPath}/edit/${gitRef}/~/${resourcePath}`,
-  toSCMRepositoryCommits: ({ repoPath, commitRef }) => `/${repoPath}/commits/${commitRef}`
+  toSCMRepositoryCommits: ({ repoPath, commitRef }) => `/${repoPath}/commits/${commitRef}`,
+  toSCMRepositoryBranches: ({ repoPath, branch }) => `/${repoPath}/branches/${branch ? '/' + branch : ''}`
 }

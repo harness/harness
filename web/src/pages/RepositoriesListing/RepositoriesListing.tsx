@@ -28,6 +28,7 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import emptyStateImage from './empty-state.svg'
 import css from './RepositoriesListing.module.scss'
+import { CodeIcon } from 'utils/GitUtils'
 
 export default function RepositoriesListing() {
   const { getString } = useStrings()
@@ -141,8 +142,9 @@ export default function RepositoriesListing() {
             {NewRepoButton}
             <FlexExpander />
             <TextInput
+              className={css.input}
               placeholder={getString('search')}
-              leftIcon={loading && searchTerm !== undefined ? 'steps-spinner' : 'search'}
+              leftIcon={loading && searchTerm !== undefined ? CodeIcon.InputSpinner : CodeIcon.InputSearch}
               style={{ width: 250 }}
               autoFocus
               onInput={event => {

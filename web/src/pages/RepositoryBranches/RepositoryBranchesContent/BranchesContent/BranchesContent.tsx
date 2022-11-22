@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { Container, Color, TableV2 as Table, Text, Avatar, Tag, Intent, useToaster } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { Link, useHistory } from 'react-router-dom'
@@ -7,7 +7,7 @@ import Keywords from 'react-keywords'
 import { useMutate } from 'restful-react'
 import { String, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { RepoBranch, TypesRepository } from 'services/scm'
+import type { OpenapiCalculateCommitDivergenceRequest, RepoBranch, TypesRepository } from 'services/scm'
 import { formatDate, getErrorMessage } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
 import { MenuDivider, OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
@@ -24,6 +24,24 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
   const { routes } = useAppContext()
   const history = useHistory()
   const { getString } = useStrings()
+  const { mutate: getBranchDivergence } = useMutate({
+    verb: 'POST',
+    path: `/api/v1/repos/${repoMetadata.path}/+/commits/calculate_divergence`
+  })
+  const branchDivergenceRequestBody: OpenapiCalculateCommitDivergenceRequest = useMemo(() => {
+    return {
+      maxCount: 0,
+      requests: branches?.map(branch => ({ from: branch.name, to: repoMetadata.defaultBranch }))
+    }
+  }, [repoMetadata, branches])
+
+  useEffect(() => {
+    if (branchDivergenceRequestBody.requests?.length) {
+      getBranchDivergence(branchDivergenceRequestBody).then(_response => {
+        console.log({ branchDivergenceRequestBody, _response })
+      })
+    }
+  }, [getBranchDivergence, branchDivergenceRequestBody])
 
   const columns: Column<RepoBranch>[] = useMemo(
     () => [
