@@ -16,10 +16,11 @@ type Config struct {
 }
 
 type Client struct {
-	conn        *grpc.ClientConn
-	repoService rpc.RepositoryServiceClient
-	refService  rpc.ReferenceServiceClient
-	httpService rpc.SmartHTTPServiceClient
+	conn               *grpc.ClientConn
+	repoService        rpc.RepositoryServiceClient
+	refService         rpc.ReferenceServiceClient
+	httpService        rpc.SmartHTTPServiceClient
+	commitFilesService rpc.CommitFilesServiceClient
 }
 
 func New(remoteAddr string) (*Client, error) {
@@ -29,9 +30,10 @@ func New(remoteAddr string) (*Client, error) {
 	}
 
 	return &Client{
-		conn:        conn,
-		repoService: rpc.NewRepositoryServiceClient(conn),
-		refService:  rpc.NewReferenceServiceClient(conn),
-		httpService: rpc.NewSmartHTTPServiceClient(conn),
+		conn:               conn,
+		repoService:        rpc.NewRepositoryServiceClient(conn),
+		refService:         rpc.NewReferenceServiceClient(conn),
+		httpService:        rpc.NewSmartHTTPServiceClient(conn),
+		commitFilesService: rpc.NewCommitFilesServiceClient(conn),
 	}, nil
 }

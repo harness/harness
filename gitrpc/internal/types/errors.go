@@ -7,7 +7,13 @@ package types
 import "errors"
 
 var (
-	ErrAlreadyExists   = errors.New("already exists")
-	ErrInvalidArgument = errors.New("invalid argument")
-	ErrNotFound        = errors.New("not found")
+	ErrAlreadyExists           = errors.New("already exists")
+	ErrInvalidArgument         = errors.New("invalid argument")
+	ErrNotFound                = errors.New("not found")
+	ErrInvalidPath             = errors.New("path is invalid")
+	ErrUndefinedAction         = errors.New("undefined action")
+	ErrContentSentBeforeAction = errors.New("content sent before action")
+	ErrActionListEmpty         = errors.New("no commit actions to perform on repository")
+	ErrHeaderCannotBeEmpty     = errors.New("header field cannot be empty")
+	ErrSHADoesNotMatch         = errors.New("sha does not match")
 )

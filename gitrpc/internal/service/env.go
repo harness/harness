@@ -7,6 +7,7 @@ package service
 const (
 	EnvRepoUID     = "GITNESS_REPO_UID"
 	EnvRepoName    = "GITNESS_REPO_NAME"
+	EnvRepoID      = "GITNESS_REPO_UID"
 	EnvPusherName  = "GITNESS_PUSHER_NAME"
 	EnvPusherID    = "GITNESS_PUSHER_ID"
 	EnvAppURL      = "GITNESS_ROOT_URL" // base url for Gitness server

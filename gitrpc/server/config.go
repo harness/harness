@@ -6,6 +6,7 @@ package server
 
 // Config represents the configuration for the gitrpc server.
 type Config struct {
-	GitRoot string
-	Bind    string
+	GitRoot       string
+	ReposTempPath string
+	Bind          string
 }

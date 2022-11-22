@@ -74,14 +74,14 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	}
 
 	// create repository in repos folder
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background()) // todo: there is stream.Context()
 	defer cancel()
 	err = s.adapter.InitRepository(ctx, repoPath, true)
 	if err != nil {
 		// on error cleanup repo dir
-		defer func(path string) {
-			_ = os.RemoveAll(path)
-		}(repoPath)
+		if errCleanup := os.RemoveAll(repoPath); errCleanup != nil {
+			log.Err(errCleanup).Msg("failed to cleanup repository dir")
+		}
 		return processGitErrorf(err, "failed to initialize the repository")
 	}
 

@@ -9,6 +9,10 @@ import (
 	"os"
 	"path/filepath"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	"github.com/harness/gitness/gitrpc/internal/middleware"
+
 	"github.com/harness/gitness/gitrpc/internal/gitea"
 	"github.com/harness/gitness/gitrpc/internal/service"
 	"github.com/harness/gitness/gitrpc/internal/storage"
@@ -29,10 +33,9 @@ type Server struct {
 	Bind string
 }
 
-// TODO: this wiring should be done by wire.
-func NewServer(bind string, gitRoot string) (*Server, error) {
+func NewServer(config Config, errIntc *middleware.ErrInterceptor) (*Server, error) {
 	// Create repos folder
-	reposRoot := filepath.Join(gitRoot, repoSubdirName)
+	reposRoot := filepath.Join(config.GitRoot, repoSubdirName)
 	if _, err := os.Stat(reposRoot); errors.Is(err, os.ErrNotExist) {
 		if err = os.MkdirAll(reposRoot, 0o700); err != nil {
 			return nil, err
@@ -45,14 +48,23 @@ func NewServer(bind string, gitRoot string) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_recovery.UnaryServerInterceptor(),
+			errIntc.UnaryInterceptor(),
+		)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			grpc_recovery.StreamServerInterceptor(),
+			errIntc.StreamInterceptor(),
+		)),
+	)
 	store := storage.NewLocalStore()
+
 	// initialize services
 	repoService, err := service.NewRepositoryService(adapter, store, reposRoot)
 	if err != nil {
 		return nil, err
 	}
-	// initialize services
 	refService, err := service.NewReferenceService(adapter, reposRoot)
 	if err != nil {
 		return nil, err
@@ -61,14 +73,20 @@ func NewServer(bind string, gitRoot string) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	commitFilesService, err := service.NewCommitFilesService(adapter, reposRoot, config.ReposTempPath)
+	if err != nil {
+		return nil, err
+	}
+
 	// register services
 	rpc.RegisterRepositoryServiceServer(s, repoService)
 	rpc.RegisterReferenceServiceServer(s, refService)
 	rpc.RegisterSmartHTTPServiceServer(s, httpService)
+	rpc.RegisterCommitFilesServiceServer(s, commitFilesService)
 
 	return &Server{
 		Server: s,
-		Bind:   bind,
+		Bind:   config.Bind,
 	}, nil
 }
 

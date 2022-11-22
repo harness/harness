@@ -56,10 +56,11 @@ var PackageConfigsWireSet = wire.NewSet(
 	ProvideGitRPCClientConfig,
 )
 
-func ProvideGitRPCServerConfig(config *types.Config) *server.Config {
-	return &server.Config{
-		Bind:    config.Server.GRPC.Bind,
-		GitRoot: config.Git.Root,
+func ProvideGitRPCServerConfig(config *types.Config) server.Config {
+	return server.Config{
+		Bind:          config.Server.GRPC.Bind,
+		GitRoot:       config.Git.Root,
+		ReposTempPath: config.Git.ReposTempPath,
 	}
 }
 

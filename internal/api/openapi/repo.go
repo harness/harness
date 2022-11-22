@@ -55,6 +55,11 @@ type getContentRequest struct {
 	Path string `path:"path"`
 }
 
+type commitFilesRequest struct {
+	repoRequest
+	repo.CommitFilesOptions
+}
+
 // contentType is a plugin for repo.ContentType to allow using oneof.
 type contentType string
 
@@ -416,4 +421,16 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opListTags, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opListTags, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/tags", opListTags)
+
+	opCommitFiles := openapi3.Operation{}
+	opCommitFiles.WithTags("repository")
+	opCommitFiles.WithMapOfAnything(map[string]interface{}{"operationId": "commitFiles"})
+	_ = reflector.SetRequest(&opCommitFiles, new(commitFilesRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opCommitFiles, repo.CommitFilesResponse{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repoRef}/commits", opCommitFiles)
 }

@@ -15,6 +15,7 @@ type Config struct {
 	Git struct {
 		BaseURL       string `envconfig:"GITNESS_GIT_BASE_URL" default:"http://localhost:3000"` // clone url
 		Root          string `envconfig:"GITNESS_GIT_ROOT"`
+		ReposTempPath string `envconfig:"GITNESS_GIT_REPOS_TEMP_PATH"` // temp path where all repos will be cloned
 		DefaultBranch string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
 	}
 

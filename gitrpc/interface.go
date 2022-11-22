@@ -15,12 +15,17 @@ type Interface interface {
 	ListTreeNodes(ctx context.Context, params *ListTreeNodeParams) (*ListTreeNodeOutput, error)
 	GetSubmodule(ctx context.Context, params *GetSubmoduleParams) (*GetSubmoduleOutput, error)
 	GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobOutput, error)
-	ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error)
 	CreateBranch(ctx context.Context, params *CreateBranchParams) (*CreateBranchOutput, error)
 	DeleteBranch(ctx context.Context, params *DeleteBranchParams) error
 	ListBranches(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error)
+
+	/*
+	 * Commits service
+	 */
+	ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error)
 	ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, error)
 	GetCommitDivergences(ctx context.Context, params *GetCommitDivergencesParams) (*GetCommitDivergencesOutput, error)
+	CommitFiles(ctx context.Context, params *CommitFilesOptions) (CommitFilesResponse, error)
 
 	/*
 	 * Git Cli Service

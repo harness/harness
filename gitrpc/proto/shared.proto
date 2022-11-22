@@ -11,7 +11,7 @@ message FileUpload{
 }
 
 message FileUploadHeader {
-  string path = 1;
+  string path         = 1;
 }
 
 message Chunk {

@@ -165,6 +165,7 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller) {
 				r.Get("/", handlerrepo.HandleListCommits(repoCtrl))
 
 				r.Post("/calculate_divergence", handlerrepo.HandleCalculateCommitDivergence(repoCtrl))
+				r.Post("/", handlerrepo.HandleCommitFiles(repoCtrl))
 			})
 
 			// branch operations

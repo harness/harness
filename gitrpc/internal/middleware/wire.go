@@ -2,18 +2,15 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package server
+package middleware
 
-import (
-	"github.com/google/wire"
-	"github.com/harness/gitness/gitrpc/internal/middleware"
-)
+import "github.com/google/wire"
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideServer,
+	ProvideErrInterceptor,
 )
 
-func ProvideServer(config Config) (*Server, error) {
-	return NewServer(config, middleware.NewErrInterceptor())
+func ProvideErrInterceptor() *ErrInterceptor {
+	return NewErrInterceptor()
 }
