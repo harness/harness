@@ -12,10 +12,9 @@ import (
 	"time"
 
 	"github.com/harness/gitness/client"
-
-	"github.com/drone/funcmap"
 	"github.com/harness/gitness/types"
 
+	"github.com/drone/funcmap"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

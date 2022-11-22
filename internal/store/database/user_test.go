@@ -11,14 +11,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
-
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // user fields to ignore in test comparisons.

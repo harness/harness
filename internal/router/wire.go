@@ -5,7 +5,6 @@
 package router
 
 import (
-	"github.com/google/wire"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
@@ -14,6 +13,8 @@ import (
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+
+	"github.com/google/wire"
 )
 
 // WireSet provides a wire set for this package.

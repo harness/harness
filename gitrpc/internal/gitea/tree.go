@@ -11,8 +11,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	gitea "code.gitea.io/gitea/modules/git"
 	"github.com/harness/gitness/gitrpc/internal/types"
+
+	gitea "code.gitea.io/gitea/modules/git"
 )
 
 func cleanTreePath(treePath string) string {

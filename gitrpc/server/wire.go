@@ -5,8 +5,9 @@
 package server
 
 import (
-	"github.com/google/wire"
 	"github.com/harness/gitness/gitrpc/internal/middleware"
+
+	"github.com/google/wire"
 )
 
 // WireSet provides a wire set for this package.

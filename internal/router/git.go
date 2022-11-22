@@ -8,16 +8,14 @@ import (
 	"fmt"
 	"net/http"
 
-	middlewareauthn "github.com/harness/gitness/internal/api/middleware/authn"
-	"github.com/harness/gitness/internal/auth/authz"
-
 	"github.com/harness/gitness/gitrpc"
 	handlerrepo "github.com/harness/gitness/internal/api/handler/repo"
-
 	"github.com/harness/gitness/internal/api/middleware/accesslog"
+	middlewareauthn "github.com/harness/gitness/internal/api/middleware/authn"
 	"github.com/harness/gitness/internal/api/middleware/encode"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
+	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
 
 	"github.com/go-chi/chi"

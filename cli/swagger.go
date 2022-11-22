@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/harness/gitness/internal/api/openapi"
+
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/harness/gitness/client"
-
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/types/enum"
 

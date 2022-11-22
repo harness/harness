@@ -11,15 +11,15 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/harness/gitness/internal/paths"
-
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/enum"
+
 	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"
 )

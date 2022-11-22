@@ -7,8 +7,9 @@ package gitea
 import (
 	"context"
 
-	gitea "code.gitea.io/gitea/modules/git"
 	"github.com/harness/gitness/gitrpc/internal/types"
+
+	gitea "code.gitea.io/gitea/modules/git"
 )
 
 // GetSubmodule returns the submodule at the given path reachable from ref.

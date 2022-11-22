@@ -6,6 +6,7 @@ package users
 
 import (
 	"github.com/harness/gitness/client"
+
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

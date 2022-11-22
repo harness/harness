@@ -5,9 +5,10 @@
 package bootstrap
 
 import (
-	"github.com/google/wire"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/types"
+
+	"github.com/google/wire"
 )
 
 // WireSet provides a wire set for this package.

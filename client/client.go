@@ -14,11 +14,11 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
+
+	"github.com/rs/zerolog/log"
 )
 
 // ensure HTTPClient implements Client interface.

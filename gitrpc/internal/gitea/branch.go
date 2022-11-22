@@ -9,8 +9,9 @@ import (
 	"fmt"
 	"strings"
 
-	gitea "code.gitea.io/gitea/modules/git"
 	"github.com/harness/gitness/gitrpc/internal/types"
+
+	gitea "code.gitea.io/gitea/modules/git"
 )
 
 // CreateBranch creates a new branch.

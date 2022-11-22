@@ -12,6 +12,7 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/check"
+
 	"github.com/rs/zerolog/log"
 )
 

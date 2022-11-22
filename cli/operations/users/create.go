@@ -11,10 +11,8 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/harness/gitness/client"
-
 	"github.com/harness/gitness/cli/textui"
-
+	"github.com/harness/gitness/client"
 	"github.com/harness/gitness/types"
 
 	"github.com/drone/funcmap"

@@ -14,12 +14,12 @@ import (
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/joho/godotenv"
 	"github.com/mattn/go-isatty"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

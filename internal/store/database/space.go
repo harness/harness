@@ -14,9 +14,9 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-	"github.com/pkg/errors"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 var _ store.SpaceStore = (*SpaceStore)(nil)

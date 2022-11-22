@@ -11,12 +11,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/dgrijalva/jwt-go"
 	"github.com/rs/zerolog/hlog"
 )
 

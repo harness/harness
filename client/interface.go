@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/harness/gitness/internal/api/controller/user"
-
 	"github.com/harness/gitness/types"
 )
 

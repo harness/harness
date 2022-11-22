@@ -9,11 +9,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dchest/uniuri"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/dchest/uniuri"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 

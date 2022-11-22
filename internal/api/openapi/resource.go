@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/usererror"
+
 	"github.com/swaggest/openapi-go/openapi3"
 )
 

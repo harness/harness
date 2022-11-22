@@ -12,10 +12,10 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 var _ store.UserStore = (*UserStore)(nil)

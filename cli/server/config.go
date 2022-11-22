@@ -11,10 +11,9 @@ import (
 
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/gitrpc/server"
-
-	"github.com/google/wire"
 	"github.com/harness/gitness/types"
 
+	"github.com/google/wire"
 	"github.com/kelseyhightower/envconfig"
 )
 

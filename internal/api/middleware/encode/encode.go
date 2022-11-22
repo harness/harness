@@ -8,11 +8,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rs/zerolog/hlog"
-
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/request"
 	"github.com/harness/gitness/types"
+
+	"github.com/rs/zerolog/hlog"
 )
 
 const (

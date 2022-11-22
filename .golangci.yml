@@ -158,6 +158,27 @@ linters-settings:
     # Useful if you need to load the template from a specific file.
     # Default: ""
     # template-path: /path/to/my/template.tmpl
+  gci:
+    # DEPRECATED: use `sections` and `prefix(github.com/org/project)` instead.
+    # local-prefixes: github.com/harness/gitness
+    # Section configuration to compare against.
+    # Section names are case-insensitive and may contain parameters in ().
+    # The default order of sections is `standard > default > custom > blank > dot`,
+    # If `custom-order` is `true`, it follows the order of `sections` option.
+    # Default: ["standard", "default"]
+    sections:
+      - standard # Standard section: captures all standard packages.
+      - prefix(github.com/harness/gitness) # Custom section: groups all imports with the specified Prefix.
+      - default # Default section: contains all imports that could not be matched to another section type.
+      - blank # Blank section: contains all blank imports. This section is not present unless explicitly enabled.
+      - dot # Dot section: contains all dot imports. This section is not present unless explicitly enabled.
+    # Skip generated files.
+    # Default: true
+    skip-generated: false
+    # Enable custom order of sections.
+    # If `true`, make the section order the same as the order of `sections`.
+    # Default: false
+    custom-order: true
 
 
 linters:
@@ -229,7 +250,7 @@ linters:
     ## you may want to enable
     #- decorder # checks declaration order and count of types, constants, variables and functions
     #- exhaustruct # checks if all structure fields are initialized
-    #- gci # controls golang package import order and makes it always deterministic
+    - gci # controls golang package import order and makes it always deterministic
     #- godox # detects FIXME, TODO and other comment keywords
     - goheader # checks is file header matches to pattern
     #- interfacebloat # checks the number of methods inside an interface

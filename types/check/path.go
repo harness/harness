@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/types"
+
 	"github.com/pkg/errors"
 )
 

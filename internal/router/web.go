@@ -10,13 +10,12 @@ import (
 
 	"github.com/harness/gitness/internal/api/openapi"
 	"github.com/harness/gitness/internal/api/render"
-
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/web"
-	"github.com/swaggest/swgui/v3emb"
-	"github.com/unrolled/secure"
 
 	"github.com/go-chi/chi"
+	"github.com/swaggest/swgui/v3emb"
+	"github.com/unrolled/secure"
 )
 
 // WebHandler is an abstraction of an http handler that handles web calls.

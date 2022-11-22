@@ -5,9 +5,10 @@
 package openapi
 
 import (
-	"github.com/gotidy/ptr"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/gotidy/ptr"
 	"github.com/swaggest/openapi-go/openapi3"
 )
 

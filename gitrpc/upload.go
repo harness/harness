@@ -11,6 +11,7 @@ import (
 	"io"
 
 	"github.com/harness/gitness/gitrpc/rpc"
+
 	"github.com/rs/zerolog/log"
 )
 

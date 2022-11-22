@@ -6,21 +6,19 @@ package server
 
 import (
 	"errors"
+	"net"
 	"os"
 	"path/filepath"
 
-	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	"github.com/harness/gitness/gitrpc/internal/middleware"
-
 	"github.com/harness/gitness/gitrpc/internal/gitea"
+	"github.com/harness/gitness/gitrpc/internal/middleware"
 	"github.com/harness/gitness/gitrpc/internal/service"
 	"github.com/harness/gitness/gitrpc/internal/storage"
 	"github.com/harness/gitness/gitrpc/rpc"
 
-	"net"
-
 	"code.gitea.io/gitea/modules/setting"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"google.golang.org/grpc"
 )
 

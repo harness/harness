@@ -15,11 +15,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/gitrpc/internal/tempdir"
+	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 
 	"code.gitea.io/gitea/modules/git"
-	"github.com/harness/gitness/gitrpc/internal/tempdir"
-	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/rs/zerolog/log"
 )
 

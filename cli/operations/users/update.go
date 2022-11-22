@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/harness/gitness/client"
-
 	"github.com/harness/gitness/types"
 
 	"github.com/dchest/uniuri"

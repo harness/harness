@@ -6,6 +6,7 @@ package gitrpc
 
 import (
 	"github.com/harness/gitness/gitrpc/rpc"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

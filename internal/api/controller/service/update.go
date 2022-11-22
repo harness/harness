@@ -8,11 +8,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/gotidy/ptr"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/gotidy/ptr"
 )
 
 // UpdateInput store infos to update an existing service.

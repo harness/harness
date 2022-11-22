@@ -7,9 +7,9 @@ package token
 import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-	"github.com/pkg/errors"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/pkg/errors"
 )
 
 const (

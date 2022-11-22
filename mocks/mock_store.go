@@ -8,8 +8,9 @@ import (
 	context "context"
 	reflect "reflect"
 
-	gomock "github.com/golang/mock/gomock"
 	types "github.com/harness/gitness/types"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
 // MockSystemStore is a mock of SystemStore interface.

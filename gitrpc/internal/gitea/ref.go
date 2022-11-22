@@ -11,9 +11,10 @@ import (
 	"math"
 	"strings"
 
+	"github.com/harness/gitness/gitrpc/internal/types"
+
 	gitea "code.gitea.io/gitea/modules/git"
 	gitearef "code.gitea.io/gitea/modules/git/foreachref"
-	"github.com/harness/gitness/gitrpc/internal/types"
 )
 
 func DefaultInstructor(_ types.WalkReferencesEntry) (types.WalkInstruction, error) {

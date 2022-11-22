@@ -8,7 +8,7 @@ ifndef DOCKER_BUILD_OPTS
 	DOCKER_BUILD_OPTS :=
 endif
 
-tools = $(addprefix $(GOBIN)/, golangci-lint goimports govulncheck protoc-gen-go protoc-gen-go-grpc)
+tools = $(addprefix $(GOBIN)/, golangci-lint goimports govulncheck protoc-gen-go protoc-gen-go-grpc gci)
 deps = $(addprefix $(GOBIN)/, wire dbmate mockgen)
 
 ifneq (,$(wildcard ./.local.env))
@@ -107,6 +107,7 @@ e2e: generate test-env ## Run e2e tests
 format: tools # Format go code and error if any changes are made
 	@echo "Formating ..."
 	@goimports -w .
+	@gci write --custom-order -s standard -s "prefix(github.com/harness/gitness)" -s default -s blank -s dot .
 	@echo "Formatting complete"
 
 sec:
@@ -178,6 +179,9 @@ $(GOBIN)/protoc-gen-go:
 
 $(GOBIN)/protoc-gen-go-grpc:
 	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+
+$(GOBIN)/gci:
+	go install github.com/daixiang0/gci@latest
 
 help: ## show help message
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m\033[0m\n"} /^[$$()% 0-9a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)

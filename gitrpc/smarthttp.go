@@ -13,6 +13,7 @@ import (
 
 	"github.com/harness/gitness/gitrpc/internal/streamio"
 	"github.com/harness/gitness/gitrpc/rpc"
+
 	"github.com/rs/zerolog/log"
 )
 

@@ -17,6 +17,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
+
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 )

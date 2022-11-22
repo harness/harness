@@ -14,6 +14,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )

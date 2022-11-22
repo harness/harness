@@ -11,9 +11,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/harness/gitness/internal/api/usererror"
+
+	"github.com/rs/zerolog/log"
 )
 
 // indent the json-encoded API responses.

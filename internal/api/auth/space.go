@@ -12,6 +12,7 @@ import (
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
 	"github.com/pkg/errors"
 )
 

@@ -9,14 +9,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/handler/resource"
-
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/handler/account"
 	handlerrepo "github.com/harness/gitness/internal/api/handler/repo"
+	"github.com/harness/gitness/internal/api/handler/resource"
 	handlerserviceaccount "github.com/harness/gitness/internal/api/handler/serviceaccount"
 	handlerspace "github.com/harness/gitness/internal/api/handler/space"
 	"github.com/harness/gitness/internal/api/handler/system"
@@ -25,12 +24,11 @@ import (
 	middlewareauthn "github.com/harness/gitness/internal/api/middleware/authn"
 	"github.com/harness/gitness/internal/api/middleware/encode"
 	"github.com/harness/gitness/internal/api/middleware/principal"
-	"github.com/harness/gitness/types/enum"
-
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"

@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"github.com/harness/gitness/internal/store/database/migrate"
-	"github.com/rs/zerolog/log"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog/log"
 )
 
 // build is a global instance of the sql builder. we are able to

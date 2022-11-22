@@ -12,6 +12,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
+
 	"github.com/rs/zerolog/log"
 )
 

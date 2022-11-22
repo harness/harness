@@ -9,9 +9,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/cli/session"
-
 	"github.com/harness/gitness/cli/textui"
-
 	"github.com/harness/gitness/client"
 
 	"gopkg.in/alecthomas/kingpin.v2"

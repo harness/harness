@@ -9,10 +9,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/go-chi/chi"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/go-chi/chi"
 )
 
 const (
