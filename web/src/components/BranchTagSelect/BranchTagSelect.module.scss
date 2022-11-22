@@ -21,6 +21,12 @@
     [role='tabpanel'] {
       margin-top: 0;
     }
+
+    &.branchesOnly {
+      [role='tablist'] {
+        display: none;
+      }
+    }
   }
 }
 

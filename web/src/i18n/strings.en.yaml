@@ -105,3 +105,4 @@ viewAllBranches: View all branches
 viewAllTags: View all tags
 createBranchFromBranch: "<strong>Create branch: {{newBranch}}</strong> from '{{targetBranch}}'</strong>"
 tagNotFound: 'Tag <strong>{{tag}}</strong> not found.'
+branchNotFound: 'Branch <strong>{{branch}}</strong> not found.'

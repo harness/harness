@@ -12,6 +12,7 @@ export interface StringsMap {
   branchCreated: string
   branchDeleted: string
   branchName: string
+  branchNotFound: string
   branchSource: string
   branchSourceDesc: string
   branches: string

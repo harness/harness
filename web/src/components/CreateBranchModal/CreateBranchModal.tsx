@@ -5,7 +5,7 @@
  * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
  */
 
-import React, { ChangeEvent, useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Dialog, Intent } from '@blueprintjs/core'
 import * as yup from 'yup'
 import {
@@ -20,19 +20,18 @@ import {
   Heading,
   useToaster,
   FormInput,
-  Label,
-  DropDown,
-  SelectOption
+  Label
 } from '@harness/uicore'
-import { Color, FontVariation } from '@harness/design-system'
-import { useGet, useMutate } from 'restful-react'
+import { FontVariation } from '@harness/design-system'
+import { useMutate } from 'restful-react'
 import { get } from 'lodash-es'
 import { useModalHook } from '@harness/use-modal'
 import { useStrings } from 'framework/strings'
-import { BRANCH_PER_PAGE, getErrorMessage } from 'utils/Utils'
-import { CodeIcon, GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
+import { getErrorMessage } from 'utils/Utils'
+import { CodeIcon, GitInfoProps, GitRefType, isGitBranchNameValid } from 'utils/GitUtils'
+import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import type { RepoBranch } from 'services/scm'
-import css from './CreateBranchModalButton.module.scss'
+import css from './CreateBranchModal.module.scss'
 
 interface FormData {
   name: string
@@ -134,10 +133,16 @@ export function useCreateBranchModal({
                   <Label className={css.label}>{getString('branchSourceDesc')}</Label>
                   {/* <Text className={css.branchSourceDesc}>{getString('branchSourceDesc')}</Text> */}
                   <Layout.Horizontal spacing="medium" padding={{ top: 'xsmall' }}>
-                    <BranchDropdown
+                    <BranchTagSelect
                       repoMetadata={repoMetadata}
-                      currentBranchName={sourceBranch}
-                      onSelect={name => setSourceBranch(name)}
+                      disableBranchCreation
+                      disableViewAllBranches
+                      forBranchesOnly
+                      gitRef={sourceBranch}
+                      gitRefType={GitRefType.BRANCH}
+                      onSelect={ref => {
+                        setSourceBranch(ref)
+                      }}
                     />
                     <FlexExpander />
                   </Layout.Horizontal>
@@ -178,65 +183,4 @@ export const CreateBranchModalButton: React.FC<CreateBranchModalButtonProps> = (
 }) => {
   const openModal = useCreateBranchModal({ repoMetadata, onSuccess, showSuccessMessage })
   return <Button onClick={openModal} {...props} />
-}
-
-interface BranchDropdownProps extends Pick<GitInfoProps, 'repoMetadata'> {
-  currentBranchName: string
-  onSelect: (branchName: string) => void
-}
-
-const BranchDropdown: React.FC<BranchDropdownProps> = ({ currentBranchName, repoMetadata, onSelect }) => {
-  const { getString } = useStrings()
-  const [activeBranch, setActiveBranch] = useState(currentBranchName || repoMetadata.defaultBranch)
-  const [query, setQuery] = useState('')
-  const [branches, setBranches] = useState<SelectOption[]>([])
-  const { data, loading } = useGet<RepoBranch[]>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/branches`,
-    queryParams: { sort: 'date', direction: 'desc', per_page: BRANCH_PER_PAGE, page: 1, query }
-  })
-
-  useEffect(() => {
-    if (data?.length) {
-      setBranches(
-        data
-          .map(e => e.name)
-          .map(_branch => ({
-            label: _branch,
-            value: _branch
-          })) as SelectOption[]
-      )
-    }
-  }, [data])
-
-  return (
-    <DropDown
-      icon={CodeIcon.Branch}
-      value={activeBranch}
-      items={branches}
-      {...{
-        inputProps: {
-          leftElement: (
-            <Icon name={loading ? CodeIcon.InputSpinner : CodeIcon.InputSearch} size={12} color={Color.GREY_500} />
-          ),
-          placeholder: getString('findBranch'),
-          onInput: (event: ChangeEvent<HTMLInputElement>) => {
-            if (event.target.value !== query) {
-              setQuery(event.target.value)
-            }
-          },
-          onBlur: (event: ChangeEvent<HTMLInputElement>) => {
-            setTimeout(() => {
-              setQuery(event.target.value || '')
-            }, 250)
-          }
-        }
-      }}
-      onChange={({ value: switchBranch }) => {
-        setActiveBranch(switchBranch as string)
-        onSelect(switchBranch as string)
-      }}
-      popoverClassName={css.branchDropdown}
-      usePortal
-    />
-  )
 }

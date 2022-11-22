@@ -19,18 +19,22 @@ import {
   Text
 } from '@harness/uicore'
 import { Link, useHistory } from 'react-router-dom'
+import cx from 'classnames'
 import { useGet } from 'restful-react'
 import { String, useStrings } from 'framework/strings'
 import { getErrorMessage, LIST_FETCHING_PER_PAGE } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { CodeIcon, GitInfoProps, GitRefType } from 'utils/GitUtils'
-import { useCreateBranchModal } from 'components/CreateBranchModalButton/CreateBranchModalButton'
+import { useCreateBranchModal } from 'components/CreateBranchModal/CreateBranchModal'
 import css from './BranchTagSelect.module.scss'
 
 export interface BranchTagSelectProps extends Omit<ButtonProps, 'onSelect'>, Pick<GitInfoProps, 'repoMetadata'> {
   gitRef: string
   gitRefType: GitRefType
   onSelect: (ref: string, type: GitRefType) => void
+  disableBranchCreation?: boolean
+  disableViewAllBranches?: boolean
+  forBranchesOnly?: boolean
 }
 
 export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
@@ -38,6 +42,9 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
   gitRef,
   gitRefType = GitRefType.BRANCH,
   onSelect,
+  disableBranchCreation,
+  disableViewAllBranches,
+  forBranchesOnly,
   ...props
 }) => {
   const { routes } = useAppContext()
@@ -72,6 +79,9 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
           repoMetadata={repoMetadata}
           onSelect={onSelect}
           onQuery={onQuery}
+          forBranchesOnly={forBranchesOnly}
+          disableBranchCreation={disableBranchCreation}
+          disableViewAllBranches={disableViewAllBranches}
           openCreateNewBranchModal={openCreateNewBranchModal}
         />
       }
@@ -98,6 +108,9 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
   gitRefType,
   onSelect,
   onQuery,
+  forBranchesOnly,
+  disableBranchCreation,
+  disableViewAllBranches,
   openCreateNewBranchModal
 }) => {
   const { getString } = useStrings()
@@ -115,7 +128,9 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
           inputRef={ref => (inputRef.current = ref)}
           defaultValue={query}
           autoFocus
-          placeholder={getString(isBranchesTabActive ? 'findOrCreateBranch' : 'findATag')}
+          placeholder={getString(
+            isBranchesTabActive ? (disableBranchCreation ? 'findBranch' : 'findOrCreateBranch') : 'findATag'
+          )}
           onInput={e => {
             const _value = (e.currentTarget.value || '').trim()
             setQuery(_value)
@@ -124,7 +139,7 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
           leftIcon={loading ? CodeIcon.InputSpinner : CodeIcon.InputSearch}
         />
 
-        <Container className={css.tabContainer}>
+        <Container className={cx(css.tabContainer, forBranchesOnly && css.branchesOnly)}>
           <Tabs
             id="branchesTags"
             defaultSelectedTabId={activeTab}
@@ -141,6 +156,8 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
                     onSelect={branch => onSelect(branch, GitRefType.BRANCH)}
                     repoMetadata={repoMetadata}
                     query={query}
+                    disableBranchCreation={disableBranchCreation}
+                    disableViewAllBranches={disableViewAllBranches}
                     setLoading={setLoading}
                   />
                 )
@@ -156,6 +173,7 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
                     onSelect={branch => onSelect(branch, GitRefType.TAG)}
                     repoMetadata={repoMetadata}
                     query={query}
+                    disableBranchCreation={disableBranchCreation}
                     setLoading={setLoading}
                   />
                 )
@@ -184,6 +202,8 @@ function GitRefList({
   query,
   onSelect,
   openCreateNewBranchModal,
+  disableBranchCreation,
+  disableViewAllBranches,
   setLoading
 }: GitRefListProps) {
   const { routes } = useAppContext()
@@ -230,23 +250,28 @@ function GitRefList({
 
       {data?.length === 0 && (
         <Container flex={{ align: 'center-center' }} padding="large">
-          {(gitRefType === GitRefType.BRANCH && (
-            <Button
-              text={
-                <String
-                  stringID="createBranchFromBranch"
-                  tagName="span"
-                  className={css.newBtnText}
-                  vars={{ newBranch: query, targetBranch: gitRef }}
-                  useRichText
-                />
-              }
-              icon={CodeIcon.Branch}
-              variation={ButtonVariation.SECONDARY}
-              onClick={openCreateNewBranchModal}
-              className={Classes.POPOVER_DISMISS}
-            />
-          )) || (
+          {(gitRefType === GitRefType.BRANCH &&
+            ((disableBranchCreation && (
+              <Text>
+                <String stringID="branchNotFound" tagName="span" vars={{ branch: query }} useRichText />
+              </Text>
+            )) || (
+              <Button
+                text={
+                  <String
+                    stringID="createBranchFromBranch"
+                    tagName="span"
+                    className={css.newBtnText}
+                    vars={{ newBranch: query, targetBranch: gitRef }}
+                    useRichText
+                  />
+                }
+                icon={CodeIcon.Branch}
+                variation={ButtonVariation.SECONDARY}
+                onClick={openCreateNewBranchModal}
+                className={Classes.POPOVER_DISMISS}
+              />
+            ))) || (
             <Text>
               <String stringID="tagNotFound" tagName="span" vars={{ tag: query }} useRichText />
             </Text>
@@ -254,7 +279,7 @@ function GitRefList({
         </Container>
       )}
 
-      {gitRefType === GitRefType.BRANCH && (
+      {!disableViewAllBranches && gitRefType === GitRefType.BRANCH && (
         <Container border={{ top: true }} flex={{ align: 'center-center' }} padding={{ top: 'small' }}>
           <Link to={routes.toSCMRepositoryBranches({ repoPath: repoMetadata.path as string })}>
             {getString('viewAllBranches')}

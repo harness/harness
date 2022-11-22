@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { Container, Layout, FlexExpander, DropDown, ButtonVariation, TextInput } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
 import { GitBranchType, CodeIcon, GitInfoProps } from 'utils/GitUtils'
-import { CreateBranchModalButton } from 'components/CreateBranchModalButton/CreateBranchModalButton'
+import { CreateBranchModalButton } from 'components/CreateBranchModal/CreateBranchModal'
 import css from './BranchesContentHeader.module.scss'
 
 interface BranchesContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
