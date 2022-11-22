@@ -84,7 +84,7 @@ func (s *service) Send(ctx context.Context, user *core.User, req *core.StatusInp
 	_, _, err = s.client.Repositories.CreateStatus(ctx, req.Repo.Slug, req.Build.After, &scm.StatusInput{
 		Title:  fmt.Sprintf("Build #%d", req.Build.Number),
 		Desc:   createDesc(req.Build.Status),
-		Label:  createLabel(s.name, req.Build.Event),
+		Label:  createLabel(s.name, req.Build.Event, req.Build.Deploy),
 		State:  convertStatus(req.Build.Status),
 		Target: fmt.Sprintf("%s/%s/%d", s.base, req.Repo.Slug, req.Build.Number),
 	})

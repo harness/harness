@@ -19,9 +19,10 @@ import (
 
 	"github.com/drone/drone/core"
 	"github.com/drone/go-scm/scm"
+	"github.com/gosimple/slug"
 )
 
-func createLabel(name, event string) string {
+func createLabel(name, event, deployTo string) string {
 	if name == "" {
 		name = "continuous-integration/drone"
 	}
@@ -32,6 +33,8 @@ func createLabel(name, event string) string {
 		return fmt.Sprintf("%s/pr", name)
 	case core.EventTag:
 		return fmt.Sprintf("%s/tag", name)
+	case core.EventPromote:
+		return fmt.Sprintf("%s/promote/%s", name, slug.Make(deployTo))
 	default:
 		return name
 	}
