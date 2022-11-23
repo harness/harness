@@ -20,6 +20,8 @@ pullRequests: Pull Requests
 settings: Settings
 newFile: New File
 editFile: Edit File
+prev: Prev
+next: Nexts
 newFolder: New Folder
 content: Content
 history: History
@@ -106,3 +108,7 @@ viewAllTags: View all tags
 createBranchFromBranch: "<strong>Create branch: {{newBranch}}</strong> from '{{targetBranch}}'</strong>"
 tagNotFound: 'Tag <strong>{{tag}}</strong> not found.'
 branchNotFound: 'Branch <strong>{{branch}}</strong> not found.'
+branchUpToDate: Up to date with {{defaultBranch}}
+branchDivergenceBehind: '{{behind}} commit(s) behind {{defaultBranch}}'
+branchDivergenceAhead: '{{ahead}} commit(s) ahead {{defaultBranch}}'
+branchDivergenceAheadBehind: '{{ahead}} commit(s) ahead, {{behind}} commit(s) behind {{defaultBranch}}'

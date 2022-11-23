@@ -4,14 +4,18 @@
 
     [class*='TableV2--header'] {
       box-shadow: 0px 0px 1px rgb(40 41 61 / 8%), 0px 0.5px 2px rgb(96 97 112 / 16%);
-      background-color: var(--primary-1);
-      border-bottom: 1px solid var(--grey-200);
+      border-bottom: 1px solid var(--grey-100);
 
       [class*='variation-table-headers'] {
         text-transform: none;
         color: var(--grey-400);
         font-weight: 500;
         font-size: 13px;
+      }
+
+      [role='columnheader']:nth-child(2) p {
+        width: 150px;
+        text-align: center;
       }
     }
 
@@ -36,6 +40,10 @@
       .rowText {
         font-size: 13px;
         font-weight: 400;
+
+        &.defaultBranch .commitLink {
+          font-weight: 600;
+        }
 
         .spacer {
           display: inline-block;

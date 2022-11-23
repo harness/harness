@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Container, Color, TableV2 as Table, Text, Avatar, Tag, Intent, useToaster } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { Link, useHistory } from 'react-router-dom'
@@ -7,10 +7,16 @@ import Keywords from 'react-keywords'
 import { useMutate } from 'restful-react'
 import { String, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { OpenapiCalculateCommitDivergenceRequest, RepoBranch, TypesRepository } from 'services/scm'
+import type {
+  OpenapiCalculateCommitDivergenceRequest,
+  RepoBranch,
+  RepoCommitDivergence,
+  TypesRepository
+} from 'services/scm'
 import { formatDate, getErrorMessage } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
 import { MenuDivider, OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
+import { CommitDivergence } from 'components/CommitDivergence/CommitDivergence'
 import css from './BranchesContent.module.scss'
 
 interface BranchesContentProps {
@@ -28,6 +34,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/commits/calculate_divergence`
   })
+  const [divergence, setDivergence] = useState<RepoCommitDivergence[]>([])
   const branchDivergenceRequestBody: OpenapiCalculateCommitDivergenceRequest = useMemo(() => {
     return {
       maxCount: 0,
@@ -37,8 +44,8 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
 
   useEffect(() => {
     if (branchDivergenceRequestBody.requests?.length) {
-      getBranchDivergence(branchDivergenceRequestBody).then(_response => {
-        console.log({ branchDivergenceRequestBody, _response })
+      getBranchDivergence(branchDivergenceRequestBody).then((response: RepoCommitDivergence[]) => {
+        setDivergence(response)
       })
     }
   }, [getBranchDivergence, branchDivergenceRequestBody])
@@ -50,7 +57,9 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         width: '30%',
         Cell: ({ row }: CellProps<RepoBranch>) => {
           return (
-            <Text className={css.rowText} color={Color.BLACK}>
+            <Text
+              className={cx(css.rowText, row.original?.name === repoMetadata.defaultBranch ? css.defaultBranch : '')}
+              color={Color.BLACK}>
               <Link
                 to={routes.toSCMRepository({
                   repoPath: repoMetadata.path as string,
@@ -59,25 +68,29 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
                 className={css.commitLink}>
                 <Keywords value={searchTerm}>{row.original?.name}</Keywords>
               </Link>
-              {row.original?.name === repoMetadata.defaultBranch && (
-                <>
-                  <span className={css.spacer} />
-                  <span className={css.spacer} />
-                  <Tag>{getString('defaultBranch')}</Tag>
-                </>
-              )}
             </Text>
           )
         }
       },
       {
         Header: getString('status'),
+        Id: 'status',
         width: 'calc(70% - 230px)',
         Cell: ({ row }: CellProps<RepoBranch>) => {
+          if (row.original?.name === repoMetadata.defaultBranch) {
+            return (
+              <Container flex={{ align: 'center-center' }} width={150}>
+                <Tag>{getString('defaultBranch')}</Tag>
+              </Container>
+            )
+          }
+
           return (
-            <Text color={Color.BLACK} lineClamp={1} className={css.rowText}>
-              {/* TBD - Backend does not have information for branch status yet */}
-            </Text>
+            <CommitDivergence
+              defaultBranch={repoMetadata.defaultBranch as string}
+              behind={divergence?.[row.index]?.behind as number}
+              ahead={divergence?.[row.index]?.ahead as number}
+            />
           )
         }
       },
@@ -153,7 +166,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         }
       }
     ],
-    [getString, repoMetadata.defaultBranch, repoMetadata.path, routes, searchTerm, history, onDeleteSuccess]
+    [getString, repoMetadata.defaultBranch, repoMetadata.path, routes, searchTerm, history, onDeleteSuccess, divergence]
   )
 
   return (

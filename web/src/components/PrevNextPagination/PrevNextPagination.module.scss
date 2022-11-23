@@ -1,0 +1,31 @@
+.roundedButton {
+  height: 32px !important;
+  background-color: var(--white) !important;
+  box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.04), 0px 2px 4px rgba(96, 97, 112, 0.16) !important;
+  border: none !important;
+  opacity: 1 !important;
+  border-radius: 0 !important;
+  outline: none !important;
+
+  &:hover {
+    background-color: var(--primary-1) !important;
+  }
+
+  &:disabled {
+    color: var(--grey-400) !important;
+    background-color: var(--white) !important;
+  }
+
+  &.selected {
+    background-color: var(--primary-6) !important;
+    color: var(--white) !important;
+  }
+}
+
+.buttonLeft {
+  border-radius: 32px 0 0 32px !important;
+}
+
+.buttonRight {
+  border-radius: 0 32px 32px 0 !important;
+}

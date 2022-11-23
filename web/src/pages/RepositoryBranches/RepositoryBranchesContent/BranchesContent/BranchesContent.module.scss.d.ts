@@ -6,7 +6,8 @@ declare const styles: {
   readonly row: string
   readonly odd: string
   readonly rowText: string
-  readonly spacer: string
+  readonly defaultBranch: string
   readonly commitLink: string
+  readonly spacer: string
 }
 export default styles

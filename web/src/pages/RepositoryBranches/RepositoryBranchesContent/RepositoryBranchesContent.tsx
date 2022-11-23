@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Container, Pagination } from '@harness/uicore'
+import { Container } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import type { RepoBranch } from 'services/scm'
@@ -8,6 +8,7 @@ import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { LIST_FETCHING_PER_PAGE } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import type { GitInfoProps } from 'utils/GitUtils'
+import { PrevNextPagination } from 'components/PrevNextPagination/PrevNextPagination'
 import { BranchesContentHeader } from './BranchesContentHeader/BranchesContentHeader'
 import { BranchesContent } from './BranchesContent/BranchesContent'
 import css from './RepositoryBranchesContent.module.scss'
@@ -32,7 +33,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
       query: searchTerm
     }
   })
-  const { totalItems, totalPages, pageSize } = useGetPaginationInfo(response)
+  const { X_NEXT_PAGE, X_PREV_PAGE } = useGetPaginationInfo(response)
 
   return (
     <Container padding="xlarge" className={css.resourceContent}>
@@ -49,30 +50,28 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
         }}
         onSearchTermChanged={value => {
           setSearchTerm(value)
+          setPageIndex(0)
         }}
-        onNewBranchCreated={() => refetch()}
+        onNewBranchCreated={refetch}
       />
+
       {!!branches?.length && (
-        <>
-          <BranchesContent
-            branches={branches}
-            repoMetadata={repoMetadata}
-            searchTerm={searchTerm}
-            onDeleteSuccess={() => refetch()}
-          />
-          <Container margin={{ left: 'large', right: 'large' }}>
-            <Pagination
-              className={css.pagination}
-              hidePageNumbers
-              gotoPage={index => setPageIndex(index)}
-              itemCount={totalItems}
-              pageCount={totalPages}
-              pageIndex={pageIndex}
-              pageSize={pageSize}
-            />
-          </Container>
-        </>
+        <BranchesContent
+          branches={branches}
+          repoMetadata={repoMetadata}
+          searchTerm={searchTerm}
+          onDeleteSuccess={refetch}
+        />
       )}
+
+      <Container padding={{ top: 'large' }} flex={{ align: 'center-center' }}>
+        <PrevNextPagination
+          onPrev={X_PREV_PAGE ? () => setPageIndex(pageIndex - 1) : undefined}
+          onNext={X_NEXT_PAGE ? () => setPageIndex(pageIndex + 1) : undefined}
+        />
+      </Container>
     </Container>
   )
 }
+
+// TODO: Handle loading and error

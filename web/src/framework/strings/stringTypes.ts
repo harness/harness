@@ -11,10 +11,14 @@ export interface StringsMap {
   branch: string
   branchCreated: string
   branchDeleted: string
+  branchDivergenceAhead: string
+  branchDivergenceAheadBehind: string
+  branchDivergenceBehind: string
   branchName: string
   branchNotFound: string
   branchSource: string
   branchSourceDesc: string
+  branchUpToDate: string
   branches: string
   browse: string
   cancel: string
@@ -72,6 +76,7 @@ export interface StringsMap {
   newFile: string
   newFolder: string
   newRepo: string
+  next: string
   noAccount: string
   none: string
   ok: string
@@ -80,6 +85,7 @@ export interface StringsMap {
   optionalExtendedDescription: string
   pageNotFound: string
   password: string
+  prev: string
   private: string
   public: string
   pullRequests: string
