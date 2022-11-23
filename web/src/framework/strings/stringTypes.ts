@@ -78,6 +78,7 @@ export interface StringsMap {
   newRepo: string
   next: string
   noAccount: string
+  noWebHooks: string
   none: string
   ok: string
   onDate: string

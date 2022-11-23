@@ -112,3 +112,4 @@ branchUpToDate: Up to date with {{defaultBranch}}
 branchDivergenceBehind: '{{behind}} commit(s) behind {{defaultBranch}}'
 branchDivergenceAhead: '{{ahead}} commit(s) ahead {{defaultBranch}}'
 branchDivergenceAheadBehind: '{{ahead}} commit(s) ahead, {{behind}} commit(s) behind {{defaultBranch}}'
+noWebHooks: 'Here is no Webhook. Try to'
