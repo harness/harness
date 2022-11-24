@@ -4,7 +4,7 @@ import type { CellProps, Column } from 'react-table'
 import { orderBy } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { RepoCommit } from 'services/scm'
+import type { RepoCommit } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { formatDate } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
@@ -50,7 +50,7 @@ export function CommitsContent({ repoMetadata, commits }: CommitsContentProps) {
           return (
             <CommitActions
               sha={row.original.sha as string}
-              href={routes.toSCMRepositoryCommits({
+              href={routes.toCODERepositoryCommits({
                 repoPath: repoMetadata.path as string,
                 commitRef: row.original.sha as string
               })}

@@ -2,7 +2,7 @@ import React from 'react'
 import { Container, Pagination } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
-import type { RepoCommit } from 'services/scm'
+import type { RepoCommit } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { LIST_FETCHING_PER_PAGE } from 'utils/Utils'
@@ -36,7 +36,7 @@ export function RepositoryCommitsContent({
         onSwitch={gitRef => {
           setPageIndex(0)
           history.push(
-            routes.toSCMRepositoryCommits({
+            routes.toCODERepositoryCommits({
               repoPath: repoMetadata.path as string,
               commitRef: gitRef
             })

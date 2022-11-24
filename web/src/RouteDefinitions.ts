@@ -1,4 +1,4 @@
-export interface SCMPathProps {
+export interface CODEPathProps {
   space?: string
   repoName?: string
   gitRef?: string
@@ -6,11 +6,11 @@ export interface SCMPathProps {
   commitRef?: string
 }
 
-export interface SCMQueryProps {
+export interface CODEQueryProps {
   query?: string
 }
 
-export const pathProps: Readonly<Required<SCMPathProps>> = {
+export const pathProps: Readonly<Required<CODEPathProps>> = {
   space: ':space',
   repoName: ':repoName',
   gitRef: ':gitRef*',
@@ -18,11 +18,11 @@ export const pathProps: Readonly<Required<SCMPathProps>> = {
   commitRef: ':commitRef*'
 }
 
-export interface SCMRoutes {
+export interface CODERoutes {
   toSignIn: () => string
   toSignUp: () => string
-  toSCMRepositoriesListing: ({ space }: { space: string }) => string
-  toSCMRepository: ({
+  toCODERepositoriesListing: ({ space }: { space: string }) => string
+  toCODERepository: ({
     repoPath,
     gitRef,
     resourcePath
@@ -31,7 +31,7 @@ export interface SCMRoutes {
     gitRef?: string
     resourcePath?: string
   }) => string
-  toSCMRepositoryFileEdit: ({
+  toCODERepositoryFileEdit: ({
     repoPath,
     gitRef,
     resourcePath
@@ -40,19 +40,20 @@ export interface SCMRoutes {
     gitRef: string
     resourcePath: string
   }) => string
-  toSCMRepositoryCommits: ({ repoPath, commitRef }: { repoPath: string; commitRef: string }) => string
-  toSCMRepositoryBranches: ({ repoPath, branch }: { repoPath: string; branch?: string }) => string
-  toSCMRepositorySettings: ({ repoPath }: { repoPath: string }) => string
+
+  toCODERepositoryCommits: ({ repoPath, commitRef }: { repoPath: string; commitRef: string }) => string
+  toCODERepositoryBranches: ({ repoPath, branch }: { repoPath: string; branch?: string }) => string
+  toCODERepositorySettings: ({ repoPath }: { repoPath: string }) => string
 }
 
-export const routes: SCMRoutes = {
+export const routes: CODERoutes = {
   toSignIn: (): string => '/signin',
   toSignUp: (): string => '/signup',
-  toSCMRepositoriesListing: ({ space }) => `/${space}`,
-  toSCMRepository: ({ repoPath, gitRef, resourcePath }) =>
+  toCODERepositoriesListing: ({ space }) => `/${space}`,
+  toCODERepository: ({ repoPath, gitRef, resourcePath }) =>
     `/${repoPath}/${gitRef ? '/' + gitRef : ''}${resourcePath ? '/~/' + resourcePath : ''}`,
-  toSCMRepositoryFileEdit: ({ repoPath, gitRef, resourcePath }) => `/${repoPath}/edit/${gitRef}/~/${resourcePath}`,
-  toSCMRepositoryCommits: ({ repoPath, commitRef }) => `/${repoPath}/commits/${commitRef}`,
-  toSCMRepositoryBranches: ({ repoPath, branch }) => `/${repoPath}/branches/${branch ? '/' + branch : ''}`,
-  toSCMRepositorySettings: ({ repoPath }) => `/${repoPath}/settings`
+  toCODERepositoryFileEdit: ({ repoPath, gitRef, resourcePath }) => `/${repoPath}/edit/${gitRef}/~/${resourcePath}`,
+  toCODERepositoryCommits: ({ repoPath, commitRef }) => `/${repoPath}/commits/${commitRef}`,
+  toCODERepositoryBranches: ({ repoPath, branch }) => `/${repoPath}/branches/${branch ? '/' + branch : ''}`,
+  toCODERepositorySettings: ({ repoPath }) => `/${repoPath}/settings`
 }

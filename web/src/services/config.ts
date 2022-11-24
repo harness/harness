@@ -2,11 +2,11 @@ import { mapKeys } from 'lodash-es'
 import qs from 'qs'
 
 export const getConfigNew = (str: string): string => {
-  // NOTE: Replace /^scm\// with your service prefixes when running in standalone mode
-  // I.e: 'scm/api/v1' -> 'api/v1'     (standalone)
-  //                   -> 'scm/api/v1' (embedded inside Harness platform)
-  if (window.STRIP_SCM_PREFIX) {
-    str = str.replace(/^scm\//, '')
+  // NOTE: Replace /^code\// with your service prefixes when running in standalone mode
+  // I.e: 'code/api/v1' -> 'api/v1'     (standalone)
+  //                   -> 'code/api/v1' (embedded inside Harness platform)
+  if (window.STRIP_CODE_PREFIX) {
+    str = str.replace(/^code\//, '')
   }
 
   return window.apiUrl ? `${window.apiUrl}/${str}` : window.location.pathname.replace('ng/', '') + str

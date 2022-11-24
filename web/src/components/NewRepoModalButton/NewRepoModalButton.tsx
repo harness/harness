@@ -32,7 +32,7 @@ import { useModalHook } from '@harness/use-modal'
 import { useStrings } from 'framework/strings'
 import { DEFAULT_BRANCH_NAME, getErrorMessage, REGEX_VALID_REPO_NAME, SUGGESTED_BRANCH_NAMES } from 'utils/Utils'
 import { isGitBranchNameValid } from 'utils/GitUtils'
-import type { TypesRepository, OpenapiCreateRepositoryRequest } from 'services/scm'
+import type { TypesRepository, OpenapiCreateRepositoryRequest } from 'services/code'
 import { useAppContext } from 'AppContext'
 import css from './NewRepoModalButton.module.scss'
 

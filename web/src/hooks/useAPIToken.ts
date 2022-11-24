@@ -1,6 +1,6 @@
 import { useLocalStorage } from 'hooks/useLocalStorage'
 
-const API_TOKEN_KEY = 'HARNESS_SCM_STANDALONE_APP_API_TOKEN'
+const API_TOKEN_KEY = 'HARNESS_CODE_MODULE_STANDALONE_APP_API_TOKEN'
 
 /**
  * Get and Set API token to use in Restful React calls.

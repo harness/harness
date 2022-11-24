@@ -4,7 +4,7 @@ import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import { useAppContext } from 'AppContext'
-import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/scm'
+import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/code'
 import { CodeIcon } from 'utils/GitUtils'
 import css from './Readme.module.scss'
 
@@ -36,7 +36,7 @@ export function Readme({ metadata, gitRef, readmeInfo }: FolderContentProps) {
           icon={CodeIcon.Edit}
           onClick={() => {
             history.push(
-              routes.toSCMRepositoryFileEdit({
+              routes.toCODERepositoryFileEdit({
                 repoPath: metadata.path as string,
                 gitRef: gitRef || (metadata.defaultBranch as string),
                 resourcePath: readmeInfo.path as string

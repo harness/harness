@@ -26,7 +26,7 @@ export function ContentHeader({
     repoMetadata,
     onSuccess: branchInfo => {
       history.push(
-        routes.toSCMRepository({
+        routes.toCODERepository({
           repoPath: repoMetadata.path as string,
           gitRef: branchInfo.name
         })
@@ -48,7 +48,7 @@ export function ContentHeader({
           onSelect={(ref, type) => {
             setGitRefType(type)
             history.push(
-              routes.toSCMRepository({
+              routes.toCODERepository({
                 repoPath: repoMetadata.path as string,
                 gitRef: ref,
                 resourcePath
@@ -59,7 +59,7 @@ export function ContentHeader({
         />
         <Container>
           <Layout.Horizontal spacing="small">
-            <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string, gitRef })}>
+            <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef })}>
               <Icon name={CodeIcon.Folder} />
             </Link>
             <Text color={Color.GREY_900}>/</Text>
@@ -70,7 +70,7 @@ export function ContentHeader({
                 return (
                   <Link
                     key={_path + index}
-                    to={routes.toSCMRepository({
+                    to={routes.toCODERepository({
                       repoPath: repoMetadata.path as string,
                       gitRef,
                       resourcePath: pathAtIndex
@@ -103,7 +103,7 @@ export function ContentHeader({
               variation={ButtonVariation.PRIMARY}
               onClick={() => {
                 history.push(
-                  routes.toSCMRepositoryFileEdit({
+                  routes.toCODERepositoryFileEdit({
                     repoPath: repoMetadata.path as string,
                     resourcePath,
                     gitRef: gitRef || (repoMetadata.defaultBranch as string)

@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import { Button, ButtonVariation, Color, Container, FlexExpander, Heading, Layout, Utils } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
-import type { RepoFileContent } from 'services/scm'
+import type { RepoFileContent } from 'services/code'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { filenameToLanguage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
@@ -42,7 +42,7 @@ export function FileContent({
               tooltipProps={{ isDark: true }}
               onClick={() => {
                 history.push(
-                  routes.toSCMRepositoryFileEdit({
+                  routes.toCODERepositoryFileEdit({
                     repoPath: repoMetadata.path as string,
                     gitRef,
                     resourcePath

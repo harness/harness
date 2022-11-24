@@ -28,7 +28,7 @@ import { get } from 'lodash-es'
 import { useModalHook } from '@harness/use-modal'
 import { String, useStrings } from 'framework/strings'
 import { DEFAULT_BRANCH_NAME, getErrorMessage } from 'utils/Utils'
-import type { TypesRepository, OpenapiCreateRepositoryRequest } from 'services/scm'
+import type { TypesRepository, OpenapiCreateRepositoryRequest } from 'services/code'
 import { useAppContext } from 'AppContext'
 import css from './CommitModalButton.module.scss'
 

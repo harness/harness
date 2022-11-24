@@ -266,7 +266,7 @@ function GitRefList({
 
       {!disableViewAllBranches && gitRefType === GitRefType.BRANCH && (
         <Container border={{ top: true }} flex={{ align: 'center-center' }} padding={{ top: 'small' }}>
-          <Link to={routes.toSCMRepositoryBranches({ repoPath: repoMetadata.path as string })}>
+          <Link to={routes.toCODERepositoryBranches({ repoPath: repoMetadata.path as string })}>
             {getString('viewAllBranches')}
           </Link>
         </Container>

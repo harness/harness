@@ -14,7 +14,7 @@ import {
 import { Link } from 'react-router-dom'
 import ReactTimeago from 'react-timeago'
 import cx from 'classnames'
-import type { RepoCommit } from 'services/scm'
+import type { RepoCommit } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useAppContext } from 'AppContext'
 import { formatDate } from 'utils/Utils'
@@ -33,7 +33,7 @@ export function LatestCommitForFolder({
   standaloneStyle
 }: LatestCommitProps): JSX.Element | null {
   const { routes } = useAppContext()
-  const commitURL = routes.toSCMRepositoryCommits({
+  const commitURL = routes.toCODERepositoryCommits({
     repoPath: repoMetadata.path as string,
     commitRef: latestCommit?.sha as string
   })
@@ -65,7 +65,7 @@ export function LatestCommitForFile({
 }: LatestCommitProps): JSX.Element | null {
   const { routes } = useAppContext()
   const { getString } = useStrings()
-  const commitURL = routes.toSCMRepositoryCommits({
+  const commitURL = routes.toCODERepositoryCommits({
     repoPath: repoMetadata.path as string,
     commitRef: latestCommit?.sha as string
   })

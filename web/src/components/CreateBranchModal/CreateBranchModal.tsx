@@ -30,7 +30,7 @@ import { useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
 import { CodeIcon, GitInfoProps, GitRefType, isGitBranchNameValid } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
-import type { RepoBranch } from 'services/scm'
+import type { RepoBranch } from 'services/code'
 import css from './CreateBranchModal.module.scss'
 
 interface FormData {

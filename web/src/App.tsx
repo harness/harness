@@ -45,7 +45,7 @@ const App: React.FC<AppProps> = React.memo(function App({
       <AppErrorBoundary>
         <AppContextProvider value={{ standalone, space, routes, lang, on401, hooks }}>
           <RestfulProvider
-            base={standalone ? '/' : getConfigNew('scm')}
+            base={standalone ? '/' : getConfigNew('code')}
             requestOptions={getRequestOptions}
             queryParams={queryParams}
             queryParamStringifyOptions={{ skipNulls: true }}

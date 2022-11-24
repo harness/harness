@@ -1,5 +1,5 @@
 import { useGet } from 'restful-react'
-import type { OpenapiGetContentOutput } from 'services/scm'
+import type { OpenapiGetContentOutput } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
 
 interface UseGetResourceContentParams

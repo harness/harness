@@ -4,7 +4,7 @@ import { Link, useHistory } from 'react-router-dom'
 import ReactJoin from 'react-join'
 import cx from 'classnames'
 import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
-import type { RepoFileContent } from 'services/scm'
+import type { RepoFileContent } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { GitInfoProps, isDir } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
@@ -77,7 +77,7 @@ function Editor({
       <Layout.Horizontal className={css.heading}>
         <Container>
           <Layout.Horizontal spacing="small" className={css.path}>
-            <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string, gitRef })}>
+            <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef })}>
               <Icon name="main-folder" padding={{ right: 'small' }} />
               <Text color={Color.GREY_900} inline>
                 {repoMetadata.uid}
@@ -93,7 +93,7 @@ function Editor({
                     return (
                       <Link
                         key={_path + index}
-                        to={routes.toSCMRepository({
+                        to={routes.toCODERepository({
                           repoPath: repoMetadata.path as string,
                           gitRef,
                           resourcePath: pathAtIndex
@@ -127,7 +127,7 @@ function Editor({
             />
             <Text color={Color.GREY_900}>{getString('in')}</Text>
             <Link
-              to={routes.toSCMRepository({
+              to={routes.toCODERepository({
                 repoPath: repoMetadata.path as string,
                 gitRef
               })}
@@ -152,7 +152,7 @@ function Editor({
               variation={ButtonVariation.TERTIARY}
               onClick={() => {
                 history.push(
-                  routes.toSCMRepository({
+                  routes.toCODERepository({
                     repoPath: repoMetadata.path as string,
                     gitRef,
                     resourcePath

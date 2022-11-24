@@ -3,17 +3,17 @@
  * versions. Be careful! Don't introduce global states that could be conflict
  * with Harness Platform and other modules.
  *
- * Use a prefix (like --scm-) to name variables.
+ * Use a prefix (like --code-) to name variables.
  */
 @import '~react-complex-tree/lib/style.css';
 
 :root {
-  --scm-files-page-header-height: 130px;
-  --scm-split-pane-divider-color: var(--grey-300);
+  --code-files-page-header-height: 130px;
+  --code-split-pane-divider-color: var(--grey-300);
 }
 
 .Resizer {
-  background: var(--scm-split-pane-divider-color);
+  background: var(--code-split-pane-divider-color);
   opacity: 0.2;
   z-index: 1;
   -moz-box-sizing: border-box;

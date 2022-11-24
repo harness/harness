@@ -1,5 +1,5 @@
 import type React from 'react'
-import type { SCMRoutes } from 'RouteDefinitions'
+import type { CODERoutes } from 'RouteDefinitions'
 import type { LangLocale } from './framework/strings/languageLoader'
 
 /**
@@ -30,7 +30,7 @@ export interface AppProps {
   space?: string
 
   /** Routing utlis (used to generate app specific URLs) */
-  routes: SCMRoutes
+  routes: CODERoutes
 
   /** Language to use in the app, default is 'en' */
   lang?: LangLocale

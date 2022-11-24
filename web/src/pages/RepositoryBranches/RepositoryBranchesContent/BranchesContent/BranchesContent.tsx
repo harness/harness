@@ -12,7 +12,7 @@ import type {
   RepoBranch,
   RepoCommitDivergence,
   TypesRepository
-} from 'services/scm'
+} from 'services/code'
 import { formatDate, getErrorMessage } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
 import { MenuDivider, OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
@@ -61,7 +61,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
               className={cx(css.rowText, row.original?.name === repoMetadata.defaultBranch ? css.defaultBranch : '')}
               color={Color.BLACK}>
               <Link
-                to={routes.toSCMRepository({
+                to={routes.toCODERepository({
                   repoPath: repoMetadata.path as string,
                   gitRef: row.original?.name
                 })}
@@ -141,7 +141,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
                   text: getString('browse'),
                   onClick: () => {
                     history.push(
-                      routes.toSCMRepository({
+                      routes.toCODERepository({
                         repoPath: repoMetadata.path as string,
                         gitRef: row.original?.name
                       })

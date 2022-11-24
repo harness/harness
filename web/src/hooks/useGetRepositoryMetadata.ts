@@ -1,13 +1,13 @@
 import { useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
-import type { SCMPathProps } from 'RouteDefinitions'
-import type { TypesRepository } from 'services/scm'
+import type { CODEPathProps } from 'RouteDefinitions'
+import type { TypesRepository } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 import { useGetSpaceParam } from './useGetSpaceParam'
 
 export function useGetRepositoryMetadata() {
   const space = useGetSpaceParam()
-  const { repoName, gitRef, resourcePath = '', commitRef = '', ...otherPathParams } = useParams<SCMPathProps>()
+  const { repoName, gitRef, resourcePath = '', commitRef = '', ...otherPathParams } = useParams<CODEPathProps>()
   const {
     data: repoMetadata,
     error,

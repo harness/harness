@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Container } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
-import type { RepoBranch } from 'services/scm'
+import type { RepoBranch } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { LIST_FETCHING_PER_PAGE } from 'utils/Utils'
@@ -42,7 +42,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
         onBranchTypeSwitched={gitRef => {
           setPageIndex(0)
           history.push(
-            routes.toSCMRepositoryCommits({
+            routes.toCODERepositoryCommits({
               repoPath: repoMetadata.path as string,
               commitRef: gitRef
             })

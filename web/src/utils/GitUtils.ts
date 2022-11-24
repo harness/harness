@@ -3,7 +3,7 @@
 // Last updated for git 2.29.0.
 
 import type { IconName } from '@harness/icons'
-import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput, TypesRepository } from 'services/scm'
+import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput, TypesRepository } from 'services/code'
 
 export interface GitInfoProps {
   repoMetadata: TypesRepository

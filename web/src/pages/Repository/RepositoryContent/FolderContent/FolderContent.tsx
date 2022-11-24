@@ -4,7 +4,7 @@ import type { CellProps, Column } from 'react-table'
 import { sortBy } from 'lodash-es'
 import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
-import type { OpenapiContentInfo, OpenapiDirContent } from 'services/scm'
+import type { OpenapiContentInfo, OpenapiDirContent } from 'services/code'
 import { formatDate } from 'utils/Utils'
 import { findReadmeInfo, CodeIcon, GitInfoProps, isFile } from 'utils/GitUtils'
 import { LatestCommitForFolder } from 'components/LatestCommit/LatestCommit'
@@ -73,7 +73,7 @@ export function FolderContent({
         data={sortBy((resourceContent.content as OpenapiDirContent)?.entries || [], ['type', 'name'])}
         onRowClick={data => {
           history.push(
-            routes.toSCMRepository({
+            routes.toCODERepository({
               repoPath: repoMetadata.path as string,
               gitRef,
               resourcePath: data.path

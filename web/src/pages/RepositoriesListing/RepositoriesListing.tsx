@@ -21,7 +21,7 @@ import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { formatDate, getErrorMessage, LIST_FETCHING_PER_PAGE } from 'utils/Utils'
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
-import type { TypesRepository } from 'services/scm'
+import type { TypesRepository } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -111,7 +111,7 @@ export default function RepositoriesListing() {
       text={getString('newRepo')}
       variation={ButtonVariation.PRIMARY}
       icon="plus"
-      onSubmit={repoInfo => history.push(routes.toSCMRepository({ repoPath: repoInfo.path as string }))}
+      onSubmit={repoInfo => history.push(routes.toCODERepository({ repoPath: repoInfo.path as string }))}
     />
   )
 
@@ -159,7 +159,7 @@ export default function RepositoriesListing() {
               columns={columns}
               data={repositories || []}
               onRowClick={repoInfo => {
-                history.push(routes.toSCMRepository({ repoPath: repoInfo.path as string }))
+                history.push(routes.toCODERepository({ repoPath: repoInfo.path as string }))
               }}
               getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
             />

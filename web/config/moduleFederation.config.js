@@ -25,11 +25,11 @@ const ExactSharedPackages = [
  * @type {import('webpack').ModuleFederationPluginOptions}
  */
 module.exports = {
-  name: 'scm',
+  name: 'code',
   filename: 'remoteEntry.js',
   library: {
     type: 'var',
-    name: 'scmRemote'
+    name: 'codeRemote'
   },
   exposes: {
     './App': './src/App.tsx',

@@ -16,17 +16,17 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         <Route path={routes.toSignUp()}>
           <SignUp />
         </Route>
-        <Route path={routes.toSCMRepositoriesListing({ space: pathProps.space })} exact>
+        <Route path={routes.toCODERepositoriesListing({ space: pathProps.space })} exact>
           <RepositoriesListing />
         </Route>
         <Route
           path={[
-            routes.toSCMRepository({
+            routes.toCODERepository({
               repoPath: `${pathProps.space}/${pathProps.repoName}`,
               gitRef: pathProps.gitRef,
               resourcePath: pathProps.resourcePath
             }),
-            routes.toSCMRepository({
+            routes.toCODERepository({
               repoPath: `${pathProps.space}/${pathProps.repoName}`,
               gitRef: pathProps.gitRef
             })

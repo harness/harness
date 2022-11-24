@@ -3,7 +3,7 @@ import { Container, Layout, FlexExpander, DropDown, Icon, Color, SelectOption } 
 import { uniq } from 'lodash-es'
 import { useGet } from 'restful-react'
 import { useStrings } from 'framework/strings'
-import type { RepoBranch } from 'services/scm'
+import type { RepoBranch } from 'services/code'
 import { BRANCH_PER_PAGE } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import css from './CommitsContentHeader.module.scss'
