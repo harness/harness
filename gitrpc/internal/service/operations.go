@@ -239,27 +239,15 @@ func (s *CommitFilesService) processAction(
 	}
 
 	mode := "100644" // 0o644 default file permission
-
-	content := &bytes.Buffer{}
-	newPath, err := parsePayload(bytes.NewReader(action.content), content)
-	if err != nil {
-		return err
-	}
-
-	if content.Len() == 0 && newPath != "" {
-		err = shared.ShowFile(ctx, filePath, commit.ID.String(), content)
-		if err != nil {
-			return err
-		}
-	}
+	reader := bytes.NewReader(action.content)
 
 	switch header.Action {
 	case rpc.CommitFilesActionHeader_CREATE:
-		err = createFile(ctx, shared, commit, filePath, mode, content)
+		err = createFile(ctx, shared, commit, filePath, mode, reader)
 	case rpc.CommitFilesActionHeader_UPDATE:
-		err = updateFile(ctx, shared, commit, filePath, header.GetSha(), mode, content)
+		err = updateFile(ctx, shared, commit, filePath, header.GetSha(), mode, reader)
 	case rpc.CommitFilesActionHeader_MOVE:
-		err = moveFile(ctx, shared, commit, filePath, newPath, mode, content)
+		err = moveFile(ctx, shared, commit, filePath, mode, reader)
 	case rpc.CommitFilesActionHeader_DELETE:
 		err = deleteFile(ctx, shared, filePath)
 	}
@@ -320,8 +308,21 @@ func updateFile(ctx context.Context, repo *SharedRepo, commit *git.Commit, fileP
 }
 
 func moveFile(ctx context.Context, repo *SharedRepo, commit *git.Commit,
-	filePath, newPath, mode string, reader io.Reader) error {
-	if err := checkPath(commit, newPath, false); err != nil {
+	filePath, mode string, reader io.Reader) error {
+	buffer := &bytes.Buffer{}
+	newPath, err := parsePayload(reader, buffer)
+	if err != nil {
+		return err
+	}
+
+	if buffer.Len() == 0 && newPath != "" {
+		err = repo.ShowFile(ctx, filePath, commit.ID.String(), buffer)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err = checkPath(commit, newPath, false); err != nil {
 		return err
 	}
 	filesInIndex, err := repo.LsFiles(ctx, filePath)
@@ -334,7 +335,7 @@ func moveFile(ctx context.Context, repo *SharedRepo, commit *git.Commit,
 	if slices.Contains(filesInIndex, newPath) {
 		return fmt.Errorf("%s %w", filePath, types.ErrAlreadyExists)
 	}
-	hash, err := repo.HashObject(ctx, reader)
+	hash, err := repo.HashObject(ctx, buffer)
 	if err != nil {
 		return fmt.Errorf("error hashing object %w", err)
 	}

@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/harness/gitness/gitrpc/internal/streamio"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -55,15 +54,12 @@ func (s *SmartHTTPService) InfoRefs(
 
 	repoPath := getFullPathForRepo(s.reposRoot, r.GetRepoUid())
 
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-
 	w := streamio.NewWriter(func(p []byte) error {
 		return stream.Send(&rpc.InfoRefsResponse{Data: p})
 	})
 
 	cmd := &bytes.Buffer{}
-	if err := git.NewCommand(ctx, r.GetService(), "--stateless-rpc", "--advertise-refs", ".").
+	if err := git.NewCommand(stream.Context(), r.GetService(), "--stateless-rpc", "--advertise-refs", ".").
 		Run(&git.RunOpts{
 			Env:    environ,
 			Dir:    repoPath,

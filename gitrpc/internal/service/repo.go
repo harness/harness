@@ -99,9 +99,9 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	}
 	defer func(path string) {
 		// when repo is successfully created remove temp dir
-		err2 := os.RemoveAll(path)
-		if err2 != nil {
-			log.Err(err2).Msg("failed to cleanup temporary dir.")
+		errRm := os.RemoveAll(path)
+		if errRm != nil {
+			log.Err(errRm).Msg("failed to cleanup temporary dir.")
 		}
 	}(tempDir)
 
@@ -115,9 +115,9 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	for {
 		var filePath string
 		filePath, err = s.handleFileUploadIfAvailable(tempDir, func() (*rpc.FileUpload, error) {
-			m, err2 := stream.Recv()
-			if err2 != nil {
-				return nil, err2
+			m, errStream := stream.Recv()
+			if errStream != nil {
+				return nil, errStream
 			}
 			return m.GetFile(), nil
 		})
