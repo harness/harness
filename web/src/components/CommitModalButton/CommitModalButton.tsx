@@ -52,6 +52,7 @@ interface CommitModalButtonProps extends Omit<ButtonProps, 'onClick' | 'onSubmit
   commitTitlePlaceHolder: string
   oldResourcePath?: string
   payload?: string
+  sha?: string
   onSuccess: (data: RepoCommitFilesResponse, newBranch?: string) => void
 }
 
@@ -63,6 +64,7 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
   commitTitlePlaceHolder,
   oldResourcePath,
   payload = '',
+  sha,
   onSuccess,
   ...props
 }) => {
@@ -82,7 +84,8 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
             {
               action: commitAction,
               path: oldResourcePath || resourcePath,
-              payload: `${oldResourcePath ? `file://${resourcePath}\n` : ''}${payload}`
+              payload: `${oldResourcePath ? `file://${resourcePath}\n` : ''}${payload}`,
+              sha
               // encoding: 'base64',
               // payload: window.btoa(payload || '')
             }

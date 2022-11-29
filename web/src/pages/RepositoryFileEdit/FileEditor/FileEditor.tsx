@@ -179,9 +179,10 @@ function Editor({
               oldResourcePath={commitAction === GitCommitAction.MOVE ? resourcePath : undefined}
               resourcePath={fileResourcePath}
               payload={content}
+              sha={resourceContent.sha}
               onSuccess={(_data, newBranch) => {
                 history.replace(
-                  routes.toCODERepositoryFileEdit({
+                  routes.toCODERepository({
                     repoPath: repoMetadata.path as string,
                     resourcePath: fileResourcePath,
                     gitRef: newBranch || gitRef
