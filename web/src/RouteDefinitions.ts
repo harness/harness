@@ -44,6 +44,7 @@ export interface CODERoutes {
   toCODERepositoryCommits: ({ repoPath, commitRef }: { repoPath: string; commitRef: string }) => string
   toCODERepositoryBranches: ({ repoPath, branch }: { repoPath: string; branch?: string }) => string
   toCODERepositorySettings: ({ repoPath }: { repoPath: string }) => string
+  toCODECreateWebhook: ({ repoPath }: { repoPath: string }) => string
 }
 
 export const routes: CODERoutes = {
@@ -55,5 +56,6 @@ export const routes: CODERoutes = {
   toCODERepositoryFileEdit: ({ repoPath, gitRef, resourcePath }) => `/${repoPath}/edit/${gitRef}/~/${resourcePath}`,
   toCODERepositoryCommits: ({ repoPath, commitRef }) => `/${repoPath}/commits/${commitRef}`,
   toCODERepositoryBranches: ({ repoPath, branch }) => `/${repoPath}/branches/${branch ? '/' + branch : ''}`,
-  toCODERepositorySettings: ({ repoPath }) => `/${repoPath}/settings`
+  toCODERepositorySettings: ({ repoPath }) => `/${repoPath}/settings`,
+  toCODECreateWebhook: ({ repoPath }) => `/${repoPath}/settings/webhook/new`
 }

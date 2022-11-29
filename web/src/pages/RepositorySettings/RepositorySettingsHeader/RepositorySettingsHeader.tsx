@@ -16,9 +16,9 @@ export function RepositorySettingsHeader({ repoMetadata }: Pick<GitInfoProps, 'r
     <Container className={css.header}>
       <Container>
         <Layout.Horizontal spacing="small" className={css.breadcrumb}>
-          <Link to={routes.toSCMRepositoriesListing({ space })}>{getString('repositories')}</Link>
+          <Link to={routes.toCODERepositoriesListing({ space })}>{getString('repositories')}</Link>
           <Icon name="main-chevron-right" size={10} color={Color.GREY_500} />
-          <Link to={routes.toSCMRepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.uid}</Link>
+          <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.uid}</Link>
         </Layout.Horizontal>
         <Container padding={{ top: 'medium', bottom: 'medium' }}>
           <Text font={{ variation: FontVariation.H4 }}>{getString('settings')}</Text>

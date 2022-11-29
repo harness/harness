@@ -38,7 +38,8 @@ module.exports = {
     './RepositoryFileEdit': './src/pages/RepositoryFileEdit/RepositoryFileEdit.tsx',
     './RepositoryCommits': './src/pages/RepositoryCommits/RepositoryCommits.tsx',
     './RepositoryBranches': './src/pages/RepositoryBranches/RepositoryBranches.tsx',
-    './RepositorySettings': './src/pages/RepositorySettings/RepositorySettings.tsx'
+    './RepositorySettings': './src/pages/RepositorySettings/RepositorySettings.tsx',
+    './RepositoryCreateWebhook': './src/pages/RepositoryCreateWebhook/RepositoryCreateWebhook.tsx'
   },
   shared: {
     formik: packageJSON.dependencies['formik'],
