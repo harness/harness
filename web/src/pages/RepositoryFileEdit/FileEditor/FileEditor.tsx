@@ -60,11 +60,13 @@ function Editor({
       .filter(part => !!part.trim())
       .join(FILE_SEPERATOR)
 
-    if (_fileName && _fileName !== fileName) {
+    if (_fileName) {
       const normalizedFilename = _fileName.trim()
       const newLanguage = filenameToLanguage(normalizedFilename)
 
-      setFileName(normalizedFilename)
+      if (normalizedFilename !== fileName) {
+        setFileName(normalizedFilename)
+      }
 
       // A workaround to force Monaco update content
       // with new language. Monaco still throws an error
@@ -104,10 +106,10 @@ function Editor({
         <Container>
           <Layout.Horizontal spacing="small" className={css.path}>
             <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef })}>
-              <Icon name="main-folder" padding={{ right: 'small' }} />
-              <Text color={Color.GREY_900} inline>
+              <Icon name="main-folder" padding={{ right: 'xsmall' }} />
+              {/* <Text color={Color.GREY_900} inline>
                 {repoMetadata.uid}
-              </Text>
+              </Text> */}
             </Link>
             <PathSeparator />
             {parentPath && (
