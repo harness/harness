@@ -3,7 +3,13 @@
 // Last updated for git 2.29.0.
 
 import type { IconName } from '@harness/icons'
-import type { OpenapiContentInfo, OpenapiDirContent, OpenapiGetContentOutput, TypesRepository } from 'services/code'
+import type {
+  OpenapiContentInfo,
+  OpenapiDirContent,
+  OpenapiGetContentOutput,
+  RepoCommit,
+  TypesRepository
+} from 'services/code'
 
 export interface GitInfoProps {
   repoMetadata: TypesRepository
@@ -11,6 +17,7 @@ export interface GitInfoProps {
   resourcePath: string
   resourceContent: OpenapiGetContentOutput
   commitRef: string
+  commits: RepoCommit[]
 }
 
 export enum GitContentType {
@@ -30,6 +37,13 @@ export enum GitBranchType {
 export enum GitRefType {
   BRANCH = 'branch',
   TAG = 'tag'
+}
+
+export enum GitCommitAction {
+  DELETE = 'DELETE',
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  MOVE = 'MOVE'
 }
 
 export const CodeIcon = {
@@ -59,6 +73,8 @@ export const CodeIcon = {
   InputSearch: 'search' as IconName
 }
 
+export const REFS_TAGS_PREFIX = 'refs/tags/'
+
 // eslint-disable-next-line no-control-regex
 const BAD_GIT_REF_REGREX = /(^|[/.])([/.]|$)|^@$|@{|[\x00-\x20\x7f~^:?*[\\]|\.lock(\/|$)/
 const BAD_GIT_BRANCH_REGREX = /^(-|HEAD$)/
@@ -82,3 +98,5 @@ export const findReadmeInfo = (content: Nullable<OpenapiGetContentOutput>): Open
   (content?.content as OpenapiDirContent)?.entries?.find(
     entry => entry.type === GitContentType.FILE && /^readme(.md)?$/.test(entry?.name?.toLowerCase() || '')
   )
+
+export const isRefATag = (gitRef: string) => gitRef.includes(REFS_TAGS_PREFIX)

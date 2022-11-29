@@ -20,7 +20,8 @@ import {
   Heading,
   useToaster,
   FormInput,
-  Label
+  Label,
+  ButtonVariation
 } from '@harness/uicore'
 import { FontVariation } from '@harness/design-system'
 import { useMutate } from 'restful-react'
@@ -28,7 +29,7 @@ import { get } from 'lodash-es'
 import { useModalHook } from '@harness/use-modal'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
-import { CodeIcon, GitInfoProps, GitRefType, isGitBranchNameValid } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import type { RepoBranch } from 'services/code'
 import css from './CreateBranchModal.module.scss'
@@ -66,7 +67,7 @@ export function useCreateBranchModal({
       verb: 'POST',
       path: `/api/v1/repos/${repoMetadata.path}/+/branches`
     })
-    const handleSubmit = (formData?: Unknown): void => {
+    const handleSubmit = (formData: FormData) => {
       const name = get(formData, 'name').trim()
       try {
         createBranch({
@@ -140,10 +141,7 @@ export function useCreateBranchModal({
                       disableViewAllBranches
                       forBranchesOnly
                       gitRef={sourceBranch}
-                      gitRefType={GitRefType.BRANCH}
-                      onSelect={ref => {
-                        setSourceBranch(ref)
-                      }}
+                      onSelect={setSourceBranch}
                     />
                     <FlexExpander />
                   </Layout.Horizontal>
@@ -153,8 +151,13 @@ export function useCreateBranchModal({
                   spacing="small"
                   padding={{ right: 'xxlarge', top: 'xxxlarge', bottom: 'large' }}
                   style={{ alignItems: 'center' }}>
-                  <Button type="submit" text={getString('createBranch')} intent={Intent.PRIMARY} disabled={loading} />
-                  <Button text={getString('cancel')} minimal onClick={hideModal} />
+                  <Button
+                    type="submit"
+                    text={getString('createBranch')}
+                    variation={ButtonVariation.PRIMARY}
+                    disabled={loading}
+                  />
+                  <Button text={getString('cancel')} variation={ButtonVariation.LINK} onClick={hideModal} />
                   <FlexExpander />
 
                   {loading && <Icon intent={Intent.PRIMARY} name="spinner" size={16} />}

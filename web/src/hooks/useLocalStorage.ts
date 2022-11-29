@@ -19,7 +19,7 @@ export function useLocalStorage<T>(key: string, initalValue: T): [T, Dispatch<Se
     }
   })
 
-  function setItem(value: SetStateAction<T>): void {
+  function setItem(value: SetStateAction<T>) {
     try {
       const valueToSet = isFunction(value) ? value(state) : value
 

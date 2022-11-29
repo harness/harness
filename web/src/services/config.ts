@@ -9,7 +9,7 @@ export const getConfigNew = (str: string): string => {
     str = str.replace(/^code\//, '')
   }
 
-  return window.apiUrl ? `${window.apiUrl}/${str}` : window.location.pathname.replace('ng/', '') + str
+  return window.apiUrl ? `${window.apiUrl}/${str}` : `${window.harnessNameSpace || ''}/${str}`
 }
 
 export interface GetUsingFetchProps<

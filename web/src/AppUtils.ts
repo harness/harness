@@ -6,7 +6,7 @@
  *
  * Mostly, the implementation of this function is just a redirection to signin page.
  */
-export function handle401(): void {
+export function handle401() {
   // eslint-disable-next-line no-console
   console.error('TODO: Handle 401 error...')
 }

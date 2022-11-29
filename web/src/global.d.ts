@@ -44,6 +44,7 @@ declare module '*.gql' {
 
 declare interface Window {
   apiUrl: string
+  harnessNameSpace: string
   bugsnagClient?: any
   STRIP_CODE_PREFIX?: boolean
 }

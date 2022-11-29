@@ -6,13 +6,12 @@ import cx from 'classnames'
 import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
 import type { RepoFileContent } from 'services/code'
 import { useAppContext } from 'AppContext'
-import { GitInfoProps, isDir } from 'utils/GitUtils'
+import { GitCommitAction, GitContentType, GitInfoProps, isDir } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { filenameToLanguage, FILE_SEPERATOR } from 'utils/Utils'
+import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { CommitModalButton } from 'components/CommitModalButton/CommitModalButton'
 import css from './FileEditor.module.scss'
-
-const PathSeparator = () => <Text color={Color.GREY_900}>/</Text>
 
 function Editor({
   resourceContent,
@@ -34,9 +33,26 @@ function Editor({
     window.atob((resourceContent?.content as RepoFileContent)?.data || '')
   )
   const [content, setContent] = useState(originalContent)
+  const fileResourcePath = useMemo(
+    () => [(parentPath || '').trim(), (fileName || '').trim()].filter(p => !!p.trim()).join(FILE_SEPERATOR),
+    [parentPath, fileName]
+  )
+  const { data: folderContent, refetch: verifyFolder } = useGetResourceContent({
+    repoMetadata,
+    gitRef,
+    resourcePath: fileResourcePath,
+    includeCommit: false,
+    lazy: true
+  })
+  const isUpdate = useMemo(() => resourcePath === fileResourcePath, [resourcePath, fileResourcePath])
+  const commitAction = useMemo(
+    () => (isNew ? GitCommitAction.CREATE : isUpdate ? GitCommitAction.UPDATE : GitCommitAction.MOVE),
+    [isNew, isUpdate]
+  )
+  const [startVerifyFolder, setStartVerifyFolder] = useState(false)
   const rebuildPaths = useCallback(() => {
     const _tokens = fileName.split(FILE_SEPERATOR).filter(part => !!part.trim())
-    const _fileName = _tokens.pop() as string
+    const _fileName = ((_tokens.pop() as string) || '').trim()
     const _parentPath = parentPath
       .split(FILE_SEPERATOR)
       .concat(_tokens)
@@ -50,7 +66,7 @@ function Editor({
 
       setFileName(normalizedFilename)
 
-      // This is a workaround to force Monaco update content
+      // A workaround to force Monaco update content
       // with new language. Monaco still throws an error
       // textModel.js:178 Uncaught Error: Model is disposed!
       if (language !== newLanguage) {
@@ -60,17 +76,27 @@ function Editor({
     }
 
     setParentPath(_parentPath)
-  }, [fileName, setFileName, parentPath, setParentPath, language, content])
-  const fileResourcePath = useMemo(
-    () => [parentPath, fileName].filter(p => !!p.trim()).join(FILE_SEPERATOR),
-    [parentPath, fileName]
-  )
 
+    // Make API call to verify if fileResourcePath is an existing folder
+    verifyFolder().then(() => setStartVerifyFolder(true))
+  }, [fileName, parentPath, language, content, verifyFolder])
+
+  // Calculate file name input field width based on number of characters inside
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.size = Math.min(Math.max(fileName.length - 2, 20), 50)
     }
   }, [fileName, inputRef])
+
+  // When file name is modified, verify if fileResourcePath is a folder. If it is
+  // then rebuild parentPath and fileName (becomes empty)
+  useEffect(() => {
+    if (startVerifyFolder && folderContent?.type === GitContentType.DIR) {
+      setStartVerifyFolder(false)
+      setParentPath(fileResourcePath)
+      setFileName('')
+    }
+  }, [startVerifyFolder, folderContent, fileResourcePath])
 
   return (
     <Container className={css.container}>
@@ -107,6 +133,7 @@ function Editor({
               </>
             )}
             <TextInput
+              autoFocus={isNew}
               value={fileName}
               inputRef={ref => (inputRef.current = ref)}
               wrapperClassName={css.inputContainer}
@@ -142,16 +169,32 @@ function Editor({
             <CommitModalButton
               text={getString('commitChanges')}
               variation={ButtonVariation.PRIMARY}
-              commitMessagePlaceHolder={getString('updateFile').replace('__path__', fileResourcePath)}
+              disabled={!fileName || (isUpdate && content === originalContent)}
+              repoMetadata={repoMetadata}
+              commitAction={commitAction}
+              commitTitlePlaceHolder={getString(isNew ? 'createFile' : isUpdate ? 'updateFile' : 'renameFile')
+                .replace('__path__', isUpdate || isNew ? fileResourcePath : resourcePath)
+                .replace('__newPath__', fileResourcePath)}
               gitRef={gitRef}
+              oldResourcePath={commitAction === GitCommitAction.MOVE ? resourcePath : undefined}
               resourcePath={fileResourcePath}
-              onSubmit={data => console.log({ data })}
+              payload={content}
+              onSuccess={(_data, newBranch) => {
+                history.replace(
+                  routes.toCODERepositoryFileEdit({
+                    repoPath: repoMetadata.path as string,
+                    resourcePath: fileResourcePath,
+                    gitRef: newBranch || gitRef
+                  })
+                )
+                setOriginalContent(content)
+              }}
             />
             <Button
               text={getString('cancel')}
               variation={ButtonVariation.TERTIARY}
               onClick={() => {
-                history.push(
+                history.replace(
                   routes.toCODERepository({
                     repoPath: repoMetadata.path as string,
                     gitRef,
@@ -176,5 +219,7 @@ function Editor({
     </Container>
   )
 }
+
+const PathSeparator = () => <Text color={Color.GREY_900}>/</Text>
 
 export const FileEditor = React.memo(Editor)

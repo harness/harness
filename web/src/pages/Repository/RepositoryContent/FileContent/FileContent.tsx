@@ -3,7 +3,7 @@ import { Button, ButtonVariation, Color, Container, FlexExpander, Heading, Layou
 import { useHistory } from 'react-router-dom'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import type { RepoFileContent } from 'services/code'
-import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
+import { CodeIcon, GitCommitAction, GitInfoProps, isRefATag } from 'utils/GitUtils'
 import { filenameToLanguage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { LatestCommitForFile } from 'components/LatestCommit/LatestCommit'
@@ -38,8 +38,9 @@ export function FileContent({
             <Button
               variation={ButtonVariation.ICON}
               icon={CodeIcon.Edit}
-              tooltip={getString('edit')}
+              tooltip={isRefATag(gitRef) ? getString('editNotAllowed') : getString('edit')}
               tooltipProps={{ isDark: true }}
+              disabled={isRefATag(gitRef)}
               onClick={() => {
                 history.push(
                   routes.toCODERepositoryFileEdit({
@@ -60,13 +61,22 @@ export function FileContent({
             <CommitModalButton
               variation={ButtonVariation.ICON}
               icon={CodeIcon.Delete}
+              disabled={isRefATag(gitRef)}
+              tooltip={getString(isRefATag(gitRef) ? 'deleteNotAllowed' : 'delete')}
               tooltipProps={{ isDark: true }}
-              tooltip={getString('delete')}
-              commitMessagePlaceHolder={getString('deleteFile').replace('__path__', resourcePath)}
+              repoMetadata={repoMetadata}
               gitRef={gitRef}
               resourcePath={resourcePath}
-              onSubmit={data => console.log({ data })}
-              deleteFile
+              commitAction={GitCommitAction.DELETE}
+              commitTitlePlaceHolder={getString('deleteFile').replace('__path__', resourcePath)}
+              onSuccess={(_commitInfo, newBranch) => {
+                history.push(
+                  routes.toCODERepository({
+                    repoPath: repoMetadata.path as string,
+                    gitRef: newBranch || gitRef
+                  })
+                )
+              }}
             />
           </Layout.Horizontal>
         </Layout.Horizontal>

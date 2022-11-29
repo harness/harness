@@ -99,7 +99,7 @@ export default function RepositoriesListing() {
     ],
     [nameTextWidth, getString, searchTerm]
   )
-  const onResize = useCallback((): void => {
+  const onResize = useCallback(() => {
     if (rowContainerRef.current) {
       setNameTextWidth((rowContainerRef.current.closest('div[role="cell"]') as HTMLDivElement)?.offsetWidth - 100)
     }

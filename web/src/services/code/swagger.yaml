@@ -523,6 +523,58 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+    post:
+      operationId: commitFiles
+      parameters:
+        - in: path
+          name: repoRef
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCommitFilesRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepoCommitFilesResponse'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repoRef}/commits/calculate_divergence:
     post:
       operationId: calculateCommitDivergence
@@ -1875,6 +1927,13 @@ components:
         username:
           type: string
       type: object
+    GitrpcFileAction:
+      enum:
+        - CREATE
+        - UPDATE
+        - DELETE
+        - MOVE
+      type: string
     OpenapiCalculateCommitDivergenceRequest:
       properties:
         maxCount:
@@ -1884,6 +1943,22 @@ components:
             $ref: '#/components/schemas/RepoCommitDivergenceRequest'
           nullable: true
           type: array
+      type: object
+    OpenapiCommitFilesRequest:
+      properties:
+        actions:
+          items:
+            $ref: '#/components/schemas/RepoCommitFileAction'
+          nullable: true
+          type: array
+        branch:
+          type: string
+        message:
+          type: string
+        newBranch:
+          type: string
+        title:
+          type: string
       type: object
     OpenapiContent:
       oneOf:
@@ -2070,6 +2145,24 @@ components:
         from:
           type: string
         to:
+          type: string
+      type: object
+    RepoCommitFileAction:
+      properties:
+        action:
+          $ref: '#/components/schemas/GitrpcFileAction'
+        encoding:
+          type: string
+        path:
+          type: string
+        payload:
+          type: string
+        sha:
+          type: string
+      type: object
+    RepoCommitFilesResponse:
+      properties:
+        commitID:
           type: string
       type: object
     RepoCommitTag:

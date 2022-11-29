@@ -19,7 +19,8 @@ import {
   FormikForm,
   Heading,
   useToaster,
-  FormInput
+  FormInput,
+  ButtonVariation
 } from '@harness/uicore'
 import cx from 'classnames'
 import { FontVariation } from '@harness/design-system'
@@ -27,9 +28,9 @@ import { useMutate } from 'restful-react'
 import { get } from 'lodash-es'
 import { useModalHook } from '@harness/use-modal'
 import { String, useStrings } from 'framework/strings'
-import { DEFAULT_BRANCH_NAME, getErrorMessage } from 'utils/Utils'
-import type { TypesRepository, OpenapiCreateRepositoryRequest } from 'services/code'
-import { useAppContext } from 'AppContext'
+import { getErrorMessage } from 'utils/Utils'
+import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse } from 'services/code'
+import { GitCommitAction, GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
 import css from './CommitModalButton.module.scss'
 
 enum CommitToGitRefOption {
@@ -37,64 +38,69 @@ enum CommitToGitRefOption {
   NEW_BRANCH = 'new-branch'
 }
 
-interface RepoFormData {
-  message: string
-  extendedDescription: string
-  newBranch: string
-  branch: string
-  commitToGitRefOption: CommitToGitRefOption
+interface FormData {
+  title?: string
+  message?: string
+  branch?: string
+  newBranch?: string
 }
 
-const formInitialValues: RepoFormData = {
-  message: '',
-  extendedDescription: '',
-  newBranch: '',
-  branch: '',
-  commitToGitRefOption: CommitToGitRefOption.DIRECTLY
-}
-
-export interface CommitModalButtonProps extends Omit<ButtonProps, 'onClick' | 'onSubmit'> {
+interface CommitModalButtonProps extends Omit<ButtonProps, 'onClick' | 'onSubmit'>, Pick<GitInfoProps, 'repoMetadata'> {
+  commitAction: GitCommitAction
   gitRef: string
-  commitMessagePlaceHolder: string
   resourcePath: string
-  deleteFile?: boolean
-  onSubmit: (data: TypesRepository) => void
+  commitTitlePlaceHolder: string
+  oldResourcePath?: string
+  payload?: string
+  onSuccess: (data: RepoCommitFilesResponse, newBranch?: string) => void
 }
 
 export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
+  repoMetadata,
+  commitAction,
   gitRef,
   resourcePath,
-  commitMessagePlaceHolder,
-  onSubmit,
-  deleteFile,
+  commitTitlePlaceHolder,
+  oldResourcePath,
+  payload = '',
+  onSuccess,
   ...props
 }) => {
   const ModalComponent: React.FC = () => {
-    const { standalone } = useAppContext()
     const { getString } = useStrings()
     const [targetBranchOption, setTargetBranchOption] = useState(CommitToGitRefOption.DIRECTLY)
-    const [branchName, setBranchName] = useState(gitRef)
-    const { showError } = useToaster()
-    const { mutate: createRepo, loading: submitLoading } = useMutate<TypesRepository>({
+    const { showError, showSuccess } = useToaster()
+    const { mutate, loading } = useMutate<RepoCommitFilesResponse>({
       verb: 'POST',
-      path: `/api/v1/repos?spacePath=${gitRef}`
+      path: `/api/v1/repos/${repoMetadata.path}/+/commits`
     })
-    const loading = submitLoading
 
-    console.log('Commit to', { targetBranchOption, branchName })
-
-    const handleSubmit = (formData?: Unknown): void => {
+    const handleSubmit = (formData: FormData) => {
       try {
-        createRepo({
-          message: branchName || get(formData, 'message', DEFAULT_BRANCH_NAME),
-          extendedDescription: get(formData, 'extendedDescription', '').trim(),
-          commitToGitRefOption: get(formData, 'commitToGitRefOption') === CommitToGitRefOption.DIRECTLY,
-          uid: get(formData, 'name', '').trim(),
-          parentId: standalone ? gitRef : 0
-        } as OpenapiCreateRepositoryRequest)
+        const data: OpenapiCommitFilesRequest = {
+          actions: [
+            {
+              action: commitAction,
+              path: oldResourcePath || resourcePath,
+              payload: `${oldResourcePath ? `file://${resourcePath}\n` : ''}${payload}`
+              // encoding: 'base64',
+              // payload: window.btoa(payload || '')
+            }
+          ],
+          branch: gitRef,
+          newBranch: formData.newBranch,
+          title: formData.title || commitTitlePlaceHolder,
+          message: formData.message
+        }
+
+        mutate(data)
           .then(response => {
             hideModal()
-            onSubmit(response)
+            onSuccess(response, formData.newBranch)
+
+            if (commitAction === GitCommitAction.DELETE) {
+              showSuccess(getString('fileDeleted').replace('__path__', resourcePath))
+            }
           })
           .catch(_error => {
             showError(getErrorMessage(_error), 0, getString('failedToCreateRepo'))
@@ -117,19 +123,35 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
           </Heading>
 
           <Container margin={{ right: 'xxlarge' }}>
-            <Formik
-              initialValues={formInitialValues}
+            <Formik<FormData>
+              initialValues={{
+                title: '',
+                message: '',
+                branch: CommitToGitRefOption.DIRECTLY,
+                newBranch: ''
+              }}
               formName="commitChanges"
               enableReinitialize={true}
-              validationSchema={yup.object().shape({})}
+              validationSchema={yup.object().shape({
+                newBranch: yup
+                  .string()
+                  .trim()
+                  .test('valid-branch-name', getString('validation.gitBranchNameInvalid'), value => {
+                    if (targetBranchOption === CommitToGitRefOption.NEW_BRANCH) {
+                      const val = value || ''
+                      return !!val && isGitBranchNameValid(val)
+                    }
+                    return true
+                  })
+              })}
               validateOnChange
               validateOnBlur
               onSubmit={handleSubmit}>
               <FormikForm>
                 <FormInput.Text
-                  name="message"
+                  name="title"
                   label={getString('commitMessage')}
-                  placeholder={commitMessagePlaceHolder}
+                  placeholder={commitTitlePlaceHolder}
                   tooltipProps={{
                     dataTooltipId: 'commitMessage'
                   }}
@@ -137,7 +159,7 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
                 />
                 <FormInput.TextArea
                   className={css.extendedDescription}
-                  name="extendedDescription"
+                  name="message"
                   placeholder={getString('optionalExtendedDescription')}
                 />
                 <Container
@@ -146,7 +168,7 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
                     targetBranchOption === CommitToGitRefOption.DIRECTLY ? css.directly : css.newBranch
                   )}>
                   <FormInput.RadioGroup
-                    name="commitToGitRefOption"
+                    name="branch"
                     label=""
                     onChange={e => {
                       setTargetBranchOption(get(e.target, 'defaultValue'))
@@ -179,12 +201,14 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
                   )}
                 </Container>
 
-                <Layout.Horizontal
-                  spacing="small"
-                  padding={{ right: 'xxlarge', top: 'xxlarge', bottom: 'large' }}
-                  style={{ alignItems: 'center' }}>
-                  <Button type="submit" text={getString('commit')} intent={Intent.PRIMARY} disabled={loading} />
-                  <Button text={getString('cancel')} minimal onClick={hideModal} />
+                <Layout.Horizontal spacing="small" padding={{ right: 'xxlarge', top: 'xxlarge', bottom: 'large' }}>
+                  <Button
+                    type="submit"
+                    variation={ButtonVariation.PRIMARY}
+                    text={getString('commit')}
+                    disabled={loading}
+                  />
+                  <Button text={getString('cancel')} variation={ButtonVariation.LINK} onClick={hideModal} />
                   <FlexExpander />
 
                   {loading && <Icon intent={Intent.PRIMARY} name="spinner" size={16} />}
@@ -197,12 +221,7 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
     )
   }
 
-  const [openModal, hideModal] = useModalHook(ModalComponent, [
-    onSubmit,
-    gitRef,
-    resourcePath,
-    commitMessagePlaceHolder
-  ])
+  const [openModal, hideModal] = useModalHook(ModalComponent, [onSuccess, gitRef, resourcePath, commitTitlePlaceHolder])
 
   return <Button onClick={openModal} {...props} />
 }

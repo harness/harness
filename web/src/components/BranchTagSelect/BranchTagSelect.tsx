@@ -25,12 +25,11 @@ import { noop } from 'lodash-es'
 import { String, useStrings } from 'framework/strings'
 import { getErrorMessage, LIST_FETCHING_PER_PAGE } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
-import { CodeIcon, GitInfoProps, GitRefType } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps, GitRefType, isRefATag, REFS_TAGS_PREFIX } from 'utils/GitUtils'
 import css from './BranchTagSelect.module.scss'
 
 export interface BranchTagSelectProps extends Omit<ButtonProps, 'onSelect'>, Pick<GitInfoProps, 'repoMetadata'> {
   gitRef: string
-  gitRefType: GitRefType
   onSelect: (ref: string, type: GitRefType) => void
   onCreateBranch?: (newBranch?: string) => void
   disableBranchCreation?: boolean
@@ -41,7 +40,6 @@ export interface BranchTagSelectProps extends Omit<ButtonProps, 'onSelect'>, Pic
 export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
   repoMetadata,
   gitRef,
-  gitRefType = GitRefType.BRANCH,
   onSelect,
   onCreateBranch = noop,
   disableBranchCreation,
@@ -50,10 +48,11 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
   ...props
 }) => {
   const [query, onQuery] = useState('')
+  const [gitRefType, setGitRefType] = useState(isRefATag(gitRef) ? GitRefType.TAG : GitRefType.BRANCH)
 
   return (
     <Button
-      text={gitRef}
+      text={gitRef.replace(REFS_TAGS_PREFIX, '')}
       icon={gitRefType == GitRefType.BRANCH ? CodeIcon.Branch : CodeIcon.Tag}
       rightIcon="chevron-down"
       variation={ButtonVariation.TERTIARY}
@@ -63,7 +62,10 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
           gitRef={gitRef}
           gitRefType={gitRefType}
           repoMetadata={repoMetadata}
-          onSelect={onSelect}
+          onSelect={(ref, type) => {
+            onSelect(type === GitRefType.BRANCH ? ref : `${REFS_TAGS_PREFIX}${ref}`, type)
+            setGitRefType(type)
+          }}
           onQuery={onQuery}
           forBranchesOnly={forBranchesOnly}
           disableBranchCreation={disableBranchCreation}
@@ -84,6 +86,7 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
 }
 
 interface PopoverContentProps extends BranchTagSelectProps {
+  gitRefType: GitRefType
   onQuery: (query: string) => void
 }
 
@@ -136,6 +139,7 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
                 panel: (
                   <GitRefList
                     gitRef={gitRef}
+                    activeGitRefType={gitRefType}
                     gitRefType={GitRefType.BRANCH}
                     onCreateBranch={onCreateBranch}
                     onSelect={branch => onSelect(branch, GitRefType.BRANCH)}
@@ -152,7 +156,8 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
                 title: getString('tags'),
                 panel: (
                   <GitRefList
-                    gitRef={gitRef}
+                    gitRef={gitRef.replace(REFS_TAGS_PREFIX, '')}
+                    activeGitRefType={gitRefType}
                     gitRefType={GitRefType.TAG}
                     onCreateBranch={onCreateBranch}
                     onSelect={branch => onSelect(branch, GitRefType.TAG)}
@@ -176,6 +181,7 @@ const PopoverContent: React.FC<PopoverContentProps> = ({
 }
 
 interface GitRefListProps extends Omit<PopoverContentProps, 'onQuery'> {
+  activeGitRefType: GitRefType
   query: string
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
 }
@@ -183,6 +189,7 @@ interface GitRefListProps extends Omit<PopoverContentProps, 'onQuery'> {
 function GitRefList({
   gitRef,
   gitRefType,
+  activeGitRefType,
   repoMetadata,
   query,
   onSelect,
@@ -244,10 +251,10 @@ function GitRefList({
               <Button
                 text={
                   <String
-                    stringID="createBranchFromBranch"
+                    stringID={activeGitRefType === GitRefType.BRANCH ? 'createBranchFromBranch' : 'createBranchFromTag'}
                     tagName="span"
                     className={css.newBtnText}
-                    vars={{ newBranch: query, targetBranch: gitRef }}
+                    vars={{ newBranch: query, target: gitRef }}
                     useRichText
                   />
                 }

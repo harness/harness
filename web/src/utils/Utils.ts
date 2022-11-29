@@ -39,7 +39,7 @@ export interface SourceCodeEditorProps {
 // Monaco editor has a bug where when its value is set, the value
 // is selected all by default.
 // Fix by set selection range to zero
-export const deselectAllMonacoEditor = (editor?: EDITOR.IStandaloneCodeEditor): void => {
+export const deselectAllMonacoEditor = (editor?: EDITOR.IStandaloneCodeEditor) => {
   editor?.focus()
   setTimeout(() => {
     editor?.setSelection(new monaco.Selection(0, 0, 0, 0))
@@ -83,7 +83,7 @@ export function formatDate(timestamp: number | string, dateStyle = 'medium'): st
  * support (hit Enter/Space will trigger click event)
  */
 export const ButtonRoleProps = {
-  onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>): void => {
+  onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar' || e.which === 13 || e.which === 32) {
       ;(e.target as unknown as { click: () => void })?.click?.()
     }

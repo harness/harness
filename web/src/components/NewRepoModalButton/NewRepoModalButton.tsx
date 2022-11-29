@@ -107,9 +107,9 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
       }
     }, [gitIgnoreError, licenseError, showError])
 
-    const handleSubmit = (formData?: Unknown): void => {
+    const handleSubmit = (formData: RepoFormData) => {
       try {
-        createRepo({
+        const payload: OpenapiCreateRepositoryRequest = {
           defaultBranch: branchName || get(formData, 'defaultBranch', DEFAULT_BRANCH_NAME),
           description: get(formData, 'description', '').trim(),
           gitIgnore: get(formData, 'gitignore', 'none'),
@@ -117,8 +117,9 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
           license: get(formData, 'license', 'none'),
           uid: get(formData, 'name', '').trim(),
           readme: get(formData, 'addReadme', false),
-          parentId: standalone ? space : 0
-        } as OpenapiCreateRepositoryRequest)
+          parentID: standalone ? (space as unknown as number) : 0 // TODO: Backend needs to fix parentID: accept string or number
+        }
+        createRepo(payload)
           .then(response => {
             hideModal()
             onSubmit(response)

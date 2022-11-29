@@ -41,6 +41,8 @@ export interface StringsMap {
   createABranch: string
   createBranch: string
   createBranchFromBranch: string
+  createBranchFromTag: string
+  createFile: string
   createRepo: string
   'createRepoModal.branch': string
   'createRepoModal.branchLabel': string
@@ -51,9 +53,11 @@ export interface StringsMap {
   deleteBranch: string
   deleteBranchConfirm: string
   deleteFile: string
+  deleteNotAllowed: string
   description: string
   edit: string
   editFile: string
+  editNotAllowed: string
   email: string
   enterDescription: string
   enterNewBranchName: string
@@ -62,6 +66,7 @@ export interface StringsMap {
   failedToCreateBranch: string
   failedToCreateRepo: string
   failedToDeleteBranch: string
+  fileDeleted: string
   files: string
   findATag: string
   findBranch: string
@@ -74,6 +79,7 @@ export interface StringsMap {
   nameYourBranch: string
   nameYourFile: string
   newFile: string
+  newFileNotAllowed: string
   newFolder: string
   newRepo: string
   next: string
@@ -90,6 +96,7 @@ export interface StringsMap {
   private: string
   public: string
   pullRequests: string
+  renameFile: string
   'repos.activities': string
   'repos.data': string
   'repos.enterBranchName': string

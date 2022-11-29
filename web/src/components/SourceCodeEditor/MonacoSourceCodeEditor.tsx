@@ -36,7 +36,7 @@ function autoAdjustEditorHeight(editor: monacoEditor.editor.IStandaloneCodeEdito
   const editorNode = editor.getDomNode() as HTMLElement
   const codeContainer = editorNode.getElementsByClassName('view-lines')[0]
   let prevLineCount = 0
-  const adjustHeight = (): void => {
+  const adjustHeight = () => {
     const _height =
       codeContainer.childElementCount > prevLineCount
         ? (codeContainer as HTMLElement).offsetHeight // unfold

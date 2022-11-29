@@ -98,14 +98,17 @@ browse: Browse
 compare: Compare
 branchDeleted: Branch {{branch}} deleted.
 failedToDeleteBranch: Failed to delete Branch. Please try again.
-updateFile: Update file __path__
+createFile: Create __path__
+updateFile: Update __path__
+renameFile: Rename __path__ to __newPath__
 switchBranchesTags: Switch branches/tags
 tags: Tags
 findOrCreateBranch: Find or create a branch
 findATag: Find a tag
 viewAllBranches: View all branches
 viewAllTags: View all tags
-createBranchFromBranch: "<strong>Create branch: {{newBranch}}</strong> from '{{targetBranch}}'</strong>"
+createBranchFromBranch: "<strong>Create branch: {{newBranch}}</strong> from '{{target}}'</strong>"
+createBranchFromTag: "<strong>Create branch: {{newBranch}}</strong> from tag '{{target}}'</strong>"
 tagNotFound: 'Tag <strong>{{tag}}</strong> not found.'
 branchNotFound: 'Branch <strong>{{branch}}</strong> not found.'
 branchUpToDate: Up to date with {{defaultBranch}}
@@ -113,3 +116,7 @@ branchDivergenceBehind: '{{behind}} commit(s) behind {{defaultBranch}}'
 branchDivergenceAhead: '{{ahead}} commit(s) ahead {{defaultBranch}}'
 branchDivergenceAheadBehind: '{{ahead}} commit(s) ahead, {{behind}} commit(s) behind {{defaultBranch}}'
 noWebHooks: 'Here is no Webhook. Try to'
+deleteNotAllowed: You must be on a branch to delete this file.
+editNotAllowed: You must be on a branch to edit this file.
+newFileNotAllowed: You must be on a branch to create a new file.
+fileDeleted: '__path__ successfully deleted.'

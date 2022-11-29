@@ -73,7 +73,7 @@ export function BrowserView(props: BrowserViewProps): React.ReactElement {
     return <>{children}</>
   }
 
-  function handlePathChange(e: React.ChangeEvent<HTMLInputElement>): void {
+  function handlePathChange(e: React.ChangeEvent<HTMLInputElement>) {
     history.replace(e.currentTarget.value)
   }
 
@@ -157,7 +157,7 @@ export const queryByNameAttribute = (name: string, container: HTMLElement): HTML
  * @param moduleName
  * @param implementation
  */
-export function mockImport(moduleName: string, implementation: Record<string, UnknownType>): void {
+export function mockImport(moduleName: string, implementation: Record<string, UnknownType>) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, global-require
   const module = require(moduleName)
 

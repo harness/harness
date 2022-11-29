@@ -23,9 +23,19 @@ export interface FormDataOpenapiRegisterRequest {
   username?: string
 }
 
+export type GitrpcFileAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE'
+
 export interface OpenapiCalculateCommitDivergenceRequest {
   maxCount?: number
   requests?: RepoCommitDivergenceRequest[] | null
+}
+
+export interface OpenapiCommitFilesRequest {
+  actions?: RepoCommitFileAction[] | null
+  branch?: string
+  message?: string
+  newBranch?: string
+  title?: string
 }
 
 export type OpenapiContent = RepoFileContent | OpenapiDirContent | RepoSymlinkContent | RepoSubmoduleContent
@@ -134,6 +144,18 @@ export interface RepoCommitDivergence {
 export interface RepoCommitDivergenceRequest {
   from?: string
   to?: string
+}
+
+export interface RepoCommitFileAction {
+  action?: GitrpcFileAction
+  encoding?: string
+  path?: string
+  payload?: string
+  sha?: string
+}
+
+export interface RepoCommitFilesResponse {
+  commitID?: string
 }
 
 export interface RepoCommitTag {
@@ -618,6 +640,38 @@ export type UseListCommitsProps = Omit<
 export const useListCommits = ({ repoRef, ...props }: UseListCommitsProps) =>
   useGet<RepoCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>(
     (paramsInPath: ListCommitsPathParams) => `/repos/${paramsInPath.repoRef}/commits`,
+    { base: getConfigNew('code'), pathParams: { repoRef }, ...props }
+  )
+
+export interface CommitFilesPathParams {
+  repoRef: string
+}
+
+export type CommitFilesProps = Omit<
+  MutateProps<RepoCommitFilesResponse, UsererrorError, void, OpenapiCommitFilesRequest, CommitFilesPathParams>,
+  'path' | 'verb'
+> &
+  CommitFilesPathParams
+
+export const CommitFiles = ({ repoRef, ...props }: CommitFilesProps) => (
+  <Mutate<RepoCommitFilesResponse, UsererrorError, void, OpenapiCommitFilesRequest, CommitFilesPathParams>
+    verb="POST"
+    path={`/repos/${repoRef}/commits`}
+    base={getConfigNew('code')}
+    {...props}
+  />
+)
+
+export type UseCommitFilesProps = Omit<
+  UseMutateProps<RepoCommitFilesResponse, UsererrorError, void, OpenapiCommitFilesRequest, CommitFilesPathParams>,
+  'path' | 'verb'
+> &
+  CommitFilesPathParams
+
+export const useCommitFiles = ({ repoRef, ...props }: UseCommitFilesProps) =>
+  useMutate<RepoCommitFilesResponse, UsererrorError, void, OpenapiCommitFilesRequest, CommitFilesPathParams>(
+    'POST',
+    (paramsInPath: CommitFilesPathParams) => `/repos/${paramsInPath.repoRef}/commits`,
     { base: getConfigNew('code'), pathParams: { repoRef }, ...props }
   )
 
