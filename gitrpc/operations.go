@@ -228,6 +228,7 @@ func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesOptions) (C
 				RepoUid:       params.RepoID,
 				BranchName:    params.Branch,
 				NewBranchName: params.NewBranch,
+				Title:         params.Title,
 				Message:       params.Message,
 				Author: &rpc.Identity{
 					Name:  params.Author.Name,
