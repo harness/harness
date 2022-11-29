@@ -38,6 +38,7 @@ export default function RepositorySettings() {
     <Container className={css.main}>
       <PageHeader
         title=""
+        className={css.webhookHeader}
         breadcrumbs={repoMetadata ? <RepositorySettingsHeader repoMetadata={repoMetadata} /> : null}></PageHeader>
       <PageBody
         loading={loading}
@@ -47,13 +48,7 @@ export default function RepositorySettings() {
           message: getString('noWebHooks'),
           image: emptyStateImage,
           button: NewWebHookButton
-        }}>
-        {repoMetadata ? (
-          <>
-            <RepositorySettingsHeader repoMetadata={repoMetadata} />
-          </>
-        ) : null}
-      </PageBody>
+        }}></PageBody>
     </Container>
   )
 }
