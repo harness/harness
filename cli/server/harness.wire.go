@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/harness/store"
 	"github.com/harness/gitness/harness/types"
 	"github.com/harness/gitness/harness/types/check"
+	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
@@ -43,8 +44,9 @@ func initSystem(ctx context.Context, config *gitnessTypes.Config) (*system, erro
 		memory.WireSet,
 		server.WireSet,
 		cron.WireSet,
-		repo.WireSet,
 		space.WireSet,
+		repo.WireSet,
+		pullreq.WireSet,
 		user.WireSet,
 		service.WireSet,
 		serviceaccount.WireSet,

@@ -47,6 +47,7 @@ func Generate() *openapi3.Spec {
 	spaceOperations(&reflector)
 	repoOperations(&reflector)
 	resourceOperations(&reflector)
+	pullReqOperations(&reflector)
 
 	//
 	// define security scheme

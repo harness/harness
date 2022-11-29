@@ -7,7 +7,6 @@ package server
 
 import (
 	"context"
-
 	"github.com/harness/gitness/gitrpc"
 	server2 "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/harness/auth/authn"
@@ -18,6 +17,7 @@ import (
 	"github.com/harness/gitness/harness/store"
 	types2 "github.com/harness/gitness/harness/types"
 	"github.com/harness/gitness/harness/types/check"
+	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
@@ -96,7 +96,9 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	repoController := repo.ProvideController(config, checkRepo, authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
-	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, accountClient, spaceController, repoController)
+	pullReqStore := database.ProvidePullReqStore(db)
+	pullreqController := pullreq.ProvideController(db, authorizer, pullReqStore, repoStore, serviceAccountStore, gitrpcInterface)
+	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, accountClient, spaceController, repoController, pullreqController)
 	gitHandler := router.ProvideGitHandler(repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router2.ProvideWebHandler(systemStore)
 	routerRouter := router2.ProvideRouter(apiHandler, gitHandler, webHandler)

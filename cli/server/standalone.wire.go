@@ -12,6 +12,7 @@ import (
 
 	"github.com/harness/gitness/gitrpc"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
+	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
@@ -41,9 +42,10 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		router.WireSet,
 		server.WireSet,
 		cron.WireSet,
-		repo.WireSet,
-		serviceaccount.WireSet,
 		space.WireSet,
+		repo.WireSet,
+		pullreq.WireSet,
+		serviceaccount.WireSet,
 		user.WireSet,
 		authn.WireSet,
 		authz.WireSet,

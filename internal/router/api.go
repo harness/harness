@@ -9,11 +9,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/handler/account"
+	handlerpullreq "github.com/harness/gitness/internal/api/handler/pullreq"
 	handlerrepo "github.com/harness/gitness/internal/api/handler/repo"
 	"github.com/harness/gitness/internal/api/handler/resource"
 	handlerserviceaccount "github.com/harness/gitness/internal/api/handler/serviceaccount"
@@ -52,6 +54,7 @@ func NewAPIHandler(
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
 	spaceCtrl *space.Controller,
+	pullreqCtrl *pullreq.Controller,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller) APIHandler {
 	config := systemStore.Config(context.Background())
@@ -76,7 +79,7 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, repoCtrl, spaceCtrl, saCtrl, userCtrl)
+		setupRoutesV1(r, repoCtrl, spaceCtrl, pullreqCtrl, saCtrl, userCtrl)
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -96,10 +99,12 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 	).Handler
 }
 
-func setupRoutesV1(r chi.Router, repoCtrl *repo.Controller, spaceCtrl *space.Controller,
+func setupRoutesV1(r chi.Router,
+	repoCtrl *repo.Controller, spaceCtrl *space.Controller,
+	pullreqCtrl *pullreq.Controller,
 	saCtrl *serviceaccount.Controller, userCtrl *user.Controller) {
 	setupSpaces(r, spaceCtrl)
-	setupRepos(r, repoCtrl)
+	setupRepos(r, repoCtrl, pullreqCtrl)
 	setupUsers(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
 	setupAdmin(r, userCtrl)
@@ -138,7 +143,7 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 	})
 }
 
-func setupRepos(r chi.Router, repoCtrl *repo.Controller) {
+func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Controller) {
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerrepo.HandleCreate(repoCtrl))
@@ -188,6 +193,18 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller) {
 					r.Delete("/", handlerrepo.HandleDeletePath(repoCtrl))
 				})
 			})
+
+			setupPullReq(r, pullreqCtrl)
+		})
+	})
+}
+
+func setupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
+	r.Route("/pullreq", func(r chi.Router) {
+		r.Post("/", handlerpullreq.HandleCreate(pullreqCtrl))
+
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqNumber), func(r chi.Router) {
+			r.Get("/", handlerpullreq.HandleFind(pullreqCtrl))
 		})
 	})
 }

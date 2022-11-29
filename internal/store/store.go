@@ -198,6 +198,33 @@ type (
 		Count(ctx context.Context, principalID int64, tokenType enum.TokenType) (int64, error)
 	}
 
+	// PullReqStore defines the pull request data storage.
+	PullReqStore interface {
+		// Find the pull request by id.
+		Find(ctx context.Context, id int64) (*types.PullReq, error)
+
+		// FindByNumber finds the pull request by repo ID and the pull request number.
+		FindByNumber(ctx context.Context, repoId, number int64) (*types.PullReq, error)
+
+		// Create a new pull request.
+		Create(ctx context.Context, pullreq *types.PullReq) error
+
+		// Update the pull request.
+		Update(ctx context.Context, repo *types.PullReq) error
+
+		// Delete the pull request.
+		Delete(ctx context.Context, id int64) error
+
+		// LastNumber returns the last pull request number for a repo.
+		LastNumber(ctx context.Context, repoID int64) (int64, error)
+
+		// Count of pull requests in a space.
+		Count(ctx context.Context, repoID int64, opts *types.PullReqFilter) (int64, error)
+
+		// List returns a list of pull requests in a space.
+		List(ctx context.Context, repoID int64, opts *types.PullReqFilter) ([]*types.PullReq, error)
+	}
+
 	// SystemStore defines internal system metadata storage.
 	SystemStore interface {
 		// Config returns the system configuration.
