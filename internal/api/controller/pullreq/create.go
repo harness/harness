@@ -25,7 +25,7 @@ type CreateInput struct {
 	TargetBranch  string `json:"targetBranch"`
 }
 
-// Create creates a new repository.
+// Create creates a new pull request.
 func (c *Controller) Create(ctx context.Context, session *auth.Session, repoRef string, in *CreateInput) (*types.PullReq, error) {
 	var pr *types.PullReq
 	now := time.Now().UnixMilli()
@@ -64,7 +64,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, repoRef 
 			return err
 		}
 
-		// create new repo object
+		// create new pull request object
 		pr = &types.PullReq{
 			ID:            0, // the ID will be populated in the data layer
 			CreatedBy:     session.Principal.ID,
