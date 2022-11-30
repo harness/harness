@@ -83,6 +83,7 @@ func provideConvertPlugin(client *scm.Client, fileService core.FileService, conf
 		converter.Starlark(
 			conf.Starlark.Enabled,
 			conf.Starlark.StepLimit,
+			conf.Starlark.SizeLimit,
 		),
 		converter.Jsonnet(
 			conf.Jsonnet.Enabled,
@@ -92,6 +93,7 @@ func provideConvertPlugin(client *scm.Client, fileService core.FileService, conf
 		converter.Template(
 			templateStore,
 			conf.Starlark.StepLimit,
+			conf.Starlark.SizeLimit,
 		),
 		converter.Memoize(
 			converter.Remote(
