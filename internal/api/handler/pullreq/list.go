@@ -5,12 +5,12 @@
 package pullreq
 
 import (
-	"github.com/harness/gitness/types/enum"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/types/enum"
 )
 
 // HandleList returns a http.HandlerFunc that lists pull requests for a repository.

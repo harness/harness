@@ -139,7 +139,7 @@ export interface StringsMap {
   viewAllBranches: string
   viewAllTags: string
   viewCommitDetails: string
+  webhook: string
   webhookEventsLabel: string
   yourBranches: string
-  webhook: string
 }

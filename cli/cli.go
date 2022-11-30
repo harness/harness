@@ -6,13 +6,13 @@ package cli
 
 import (
 	"errors"
-	"github.com/harness/gitness/cli/operations/hooks"
 	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
 
 	"github.com/harness/gitness/cli/operations/account"
+	"github.com/harness/gitness/cli/operations/hooks"
 	"github.com/harness/gitness/cli/operations/user"
 	"github.com/harness/gitness/cli/operations/users"
 	"github.com/harness/gitness/cli/server"

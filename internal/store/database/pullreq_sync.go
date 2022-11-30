@@ -36,10 +36,10 @@ func (s *PullReqStoreSync) Find(ctx context.Context, id int64) (*types.PullReq, 
 }
 
 // FindByNumber finds the pull request by repo ID and pull request number.
-func (s *PullReqStoreSync) FindByNumber(ctx context.Context, repoId, number int64) (*types.PullReq, error) {
+func (s *PullReqStoreSync) FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReq, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
-	return s.base.FindByNumber(ctx, repoId, number)
+	return s.base.FindByNumber(ctx, repoID, number)
 }
 
 // Create creates a new pull request.
@@ -78,7 +78,11 @@ func (s *PullReqStoreSync) Count(ctx context.Context, repoID int64, opts *types.
 }
 
 // List returns a list of pull requests for a repo.
-func (s *PullReqStoreSync) List(ctx context.Context, repoID int64, opts *types.PullReqFilter) ([]*types.PullReq, error) {
+func (s *PullReqStoreSync) List(
+	ctx context.Context,
+	repoID int64,
+	opts *types.PullReqFilter,
+) ([]*types.PullReq, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.List(ctx, repoID, opts)

@@ -26,7 +26,12 @@ type CreateInput struct {
 }
 
 // Create creates a new pull request.
-func (c *Controller) Create(ctx context.Context, session *auth.Session, repoRef string, in *CreateInput) (*types.PullReq, error) {
+func (c *Controller) Create(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	in *CreateInput,
+) (*types.PullReq, error) {
 	var pr *types.PullReq
 	now := time.Now().UnixMilli()
 

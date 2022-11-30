@@ -204,7 +204,7 @@ type (
 		Find(ctx context.Context, id int64) (*types.PullReq, error)
 
 		// FindByNumber finds the pull request by repo ID and the pull request number.
-		FindByNumber(ctx context.Context, repoId, number int64) (*types.PullReq, error)
+		FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReq, error)
 
 		// Create a new pull request.
 		Create(ctx context.Context, pullreq *types.PullReq) error

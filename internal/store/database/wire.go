@@ -6,7 +6,6 @@ package database
 
 import (
 	"context"
-	"github.com/harness/gitness/internal/store/database/_dbtx"
 
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
@@ -38,10 +37,6 @@ func ProvideDatabase(ctx context.Context, config *types.Config) (*sqlx.DB, error
 		config.Database.Driver,
 		config.Database.Datasource,
 	)
-}
-
-func ProvideTransactor(ctx context.Context, db *sqlx.DB) _dbtx.Transactor {
-	return _dbtx.New(db.DB)
 }
 
 // ProvideUserStore provides a user store.

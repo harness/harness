@@ -6,6 +6,7 @@ package repo
 
 import (
 	"context"
+	"strings"
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
@@ -49,10 +50,11 @@ func (c *Controller) CommitFiles(ctx context.Context, session *auth.Session,
 
 	actions := make([]gitrpc.CommitFileAction, len(in.Actions))
 	for i, action := range in.Actions {
+		payload := strings.ReplaceAll(action.Payload, "\r", "")
 		actions[i] = gitrpc.CommitFileAction{
 			Action:   action.Action,
 			Path:     action.Path,
-			Payload:  []byte(action.Payload),
+			Payload:  []byte(payload),
 			Encoding: action.Encoding,
 			SHA:      action.SHA,
 		}

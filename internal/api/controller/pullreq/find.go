@@ -15,7 +15,12 @@ import (
 )
 
 // Find returns a pull request from the provided repository.
-func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef string, pullreqNum int64) (*types.PullReq, error) {
+func (c *Controller) Find(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	pullreqNum int64,
+) (*types.PullReq, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}

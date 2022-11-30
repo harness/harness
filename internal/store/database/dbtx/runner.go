@@ -7,6 +7,7 @@ package dbtx
 import (
 	"context"
 	"database/sql"
+	"errors"
 )
 
 type runnerDB struct {
@@ -52,9 +53,9 @@ func (r runnerDB) WithTx(ctx context.Context, txFn func(context.Context) error, 
 
 	if !rtx.commit && !rtx.rollback {
 		err = rtx.Commit()
-		if err == sql.ErrTxDone {
+		if errors.Is(err, sql.ErrTxDone) {
 			// Check if the transaction failed because of the context, if yes return the ctx error.
-			if ctxErr := ctx.Err(); ctxErr == context.Canceled || ctxErr == context.DeadlineExceeded {
+			if ctxErr := ctx.Err(); errors.Is(ctxErr, context.Canceled) || errors.Is(ctxErr, context.DeadlineExceeded) {
 				err = ctxErr
 			}
 		}

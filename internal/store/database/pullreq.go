@@ -6,6 +6,7 @@ package database
 
 import (
 	"context"
+
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -66,7 +67,7 @@ WHERE pullreq_id = $1
 }
 
 // FindByNumber finds the pull request by repo ID and pull request number.
-func (s *PullReqStore) FindByNumber(ctx context.Context, repoId, number int64) (*types.PullReq, error) {
+func (s *PullReqStore) FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReq, error) {
 	const sqlQuery = pullReqSelectBase + `
 WHERE pullreq_target_repo_id = $1 AND pullreq_number = $2
 `
@@ -74,7 +75,7 @@ WHERE pullreq_target_repo_id = $1 AND pullreq_number = $2
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(types.PullReq)
-	if err := db.GetContext(ctx, dst, sqlQuery, repoId, number); err != nil {
+	if err := db.GetContext(ctx, dst, sqlQuery, repoID, number); err != nil {
 		return nil, processSQLErrorf(err, "Select query failed")
 	}
 	return dst, nil

@@ -8,10 +8,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/jmoiron/sqlx"
 	"testing"
+
+	"github.com/jmoiron/sqlx"
 )
 
+//nolint:gocognit
 func TestWithTx(t *testing.T) {
 	errTest := errors.New("dummy error")
 
@@ -113,7 +115,7 @@ func TestWithTx(t *testing.T) {
 
 			func() {
 				defer func() {
-					recover()
+					_ = recover()
 				}()
 
 				err = run.WithTx(ctx, func(ctx context.Context) error {
@@ -134,7 +136,7 @@ func TestWithTx(t *testing.T) {
 				t.Error("transaction not finished")
 			}
 
-			if want, got := test.expectErr, err; want != got {
+			if want, got := test.expectErr, err; !errors.Is(got, want) {
 				t.Errorf("expected error %v, but got %v", want, got)
 			}
 
