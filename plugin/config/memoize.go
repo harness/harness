@@ -18,6 +18,7 @@ package config
 
 import (
 	"context"
+	"crypto/md5"
 	"fmt"
 
 	"github.com/drone/drone/core"
@@ -28,7 +29,7 @@ import (
 
 // cache key pattern used in the cache, comprised of the
 // repository slug and commit sha.
-const keyf = "%d|%d|%s|%s|%s|%s|%s"
+const keyf = "%d|%d|%s|%s|%s|%s|%s|%s"
 
 // Memoize caches the conversion results for subsequent calls.
 // This micro-optimization is intended for multi-pipeline
@@ -62,6 +63,7 @@ func (c *memoize) Find(ctx context.Context, req *core.ConfigArgs) (*core.Config,
 		req.Build.Ref,
 		req.Build.After,
 		req.Repo.Config,
+		getParamsCacheKey(req.Build.Params),
 	)
 
 	logger := logrus.WithField("repo", req.Repo.Slug).
@@ -103,4 +105,20 @@ func (c *memoize) Find(ctx context.Context, req *core.ConfigArgs) (*core.Config,
 	}
 
 	return config, nil
+}
+
+// function to build cache key part for build params
+// if string representation of the params map
+// is longer than 100, a hash is used instead
+// in order to prevent huge cache keys
+func getParamsCacheKey(params map[string]string) string {
+	
+	mapString := fmt.Sprintf("%s", params)
+	
+	if len(mapString) < 100 {
+		return mapString 
+	}
+
+	hmd5 := fmt.Sprintf("%x", md5.Sum([]byte(mapString)))
+	return hmd5
 }

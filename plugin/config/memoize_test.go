@@ -157,3 +157,48 @@ func TestMemoize_Error(t *testing.T) {
 		t.Errorf("Expect %d items in cache, got %d", want, got)
 	}
 }
+
+func TestMemoize_DifferentBuildParams(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	confA := &core.Config{Data: "{kind: pipeline, type: docker, name: pipeline-A, steps: []}"}
+	argsA := &core.ConfigArgs{
+		Build:  &core.Build{After: "3950521325d4744760a96c18e3d0c67d86495af3", Params: map[string]string {"pipeline_name": "pipeline-A"}},
+		Repo:   &core.Repository{ID: 42},
+		Config: confA,
+	}
+
+	confB := &core.Config{Data: "{kind: pipeline, type: docker, name: pipeline-B, steps: []}"}
+	argsB := &core.ConfigArgs{
+		Build:  &core.Build{After: "3950521325d4744760a96c18e3d0c67d86495af3", Params: map[string]string {"pipeline_name": "pipeline-B"}},
+		Repo:   &core.Repository{ID: 42},
+		Config: confB,
+	}
+
+	base := mock.NewMockConfigService(controller)
+	base.EXPECT().Find(gomock.Any(), gomock.Any()).Return(argsA.Config, nil)
+
+	service := Memoize(base).(*memoize)
+	_, err := service.Find(noContext, argsA)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	base.EXPECT().Find(gomock.Any(), gomock.Any()).Return(argsB.Config, nil)
+
+	res, err := service.Find(noContext, argsB)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if res != confB {
+		t.Errorf("The result should not be taken from cache when Build.Params are different")
+	}
+
+	if got, want := service.cache.Len(), 2; got != want {
+		t.Errorf("Expect %d items in cache, got %d", want, got)
+	}
+}
