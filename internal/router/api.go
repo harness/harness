@@ -202,6 +202,7 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Co
 func setupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 	r.Route("/pullreq", func(r chi.Router) {
 		r.Post("/", handlerpullreq.HandleCreate(pullreqCtrl))
+		r.Get("/", handlerpullreq.HandleList(pullreqCtrl))
 
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqNumber), func(r chi.Router) {
 			r.Get("/", handlerpullreq.HandleFind(pullreqCtrl))

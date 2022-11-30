@@ -9,6 +9,7 @@ const (
 	uid           = "uid"
 	path          = "path"
 	name          = "name"
+	number        = "number"
 	created       = "created"
 	createdAt     = "created_at"
 	createdBy     = "created_by"

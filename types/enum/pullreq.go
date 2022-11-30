@@ -17,37 +17,42 @@ const (
 	PullReqStateRejected PullReqState = "rejected"
 )
 
-// PullReqAttr defines pull request attribute that can be used for sorting and filtering.
-type PullReqAttr int
+// PullReqSort defines pull request attribute that can be used for sorting.
+type PullReqSort int
 
 // PullReqAttr enumeration.
 const (
-	PullReqAttrNone PullReqAttr = iota
-	PullReqAttrCreated
-	PullReqAttrUpdated
+	PullReqSortNone PullReqSort = iota
+	PullReqSortNumber
+	PullReqSortCreated
+	PullReqSortUpdated
 )
 
-// ParsePullReqAttr parses the pull request attribute string
+// ParsePullReqSort parses the pull request attribute string
 // and returns the equivalent enumeration.
-func ParsePullReqAttr(s string) PullReqAttr {
+func ParsePullReqSort(s string) PullReqSort {
 	switch strings.ToLower(s) {
+	case number:
+		return PullReqSortNumber
 	case created, createdAt:
-		return PullReqAttrCreated
+		return PullReqSortCreated
 	case updated, updatedAt:
-		return PullReqAttrUpdated
+		return PullReqSortUpdated
 	default:
-		return PullReqAttrNone
+		return PullReqSortNone
 	}
 }
 
 // String returns the string representation of the attribute.
-func (a PullReqAttr) String() string {
+func (a PullReqSort) String() string {
 	switch a {
-	case PullReqAttrCreated:
+	case PullReqSortNumber:
+		return number
+	case PullReqSortCreated:
 		return created
-	case PullReqAttrUpdated:
+	case PullReqSortUpdated:
 		return updated
-	case PullReqAttrNone:
+	case PullReqSortNone:
 		return ""
 	default:
 		return undefined

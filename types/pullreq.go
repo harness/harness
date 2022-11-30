@@ -36,8 +36,9 @@ type PullReq struct {
 type PullReqFilter struct {
 	Page      int                 `json:"page"`
 	Size      int                 `json:"size"`
+	Query     string              `json:"query"`
 	CreatedBy int64               `json:"createdBy"`
 	States    []enum.PullReqState `json:"state"`
-	Sort      enum.PullReqAttr    `json:"sort"`
+	Sort      enum.PullReqSort    `json:"sort"`
 	Order     enum.Order          `json:"direction"`
 }

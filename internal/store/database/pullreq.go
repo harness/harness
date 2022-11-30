@@ -6,7 +6,6 @@ package database
 
 import (
 	"context"
-
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -238,20 +237,26 @@ func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullR
 		stmt = stmt.Where(squirrel.Eq{"pullreq_state": opts.States})
 	}
 
-	if opts.CreatedBy != 0 {
+	if opts.Query != "" {
+		stmt = stmt.Where("pullreq_title LIKE ?", "%"+opts.Query+"%")
+	}
+
+	if opts.CreatedBy > 0 {
 		stmt = stmt.Where("pullreq_created_by = ?", opts.CreatedBy)
 	}
 
 	stmt = stmt.Limit(uint64(limit(opts.Size)))
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
+	// NOTE: string concatenation is safe because the
+	// order attribute is an enum and is not user-defined,
+	// and is therefore not subject to injection attacks.
 	switch opts.Sort {
-	case enum.PullReqAttrCreated, enum.PullReqAttrNone:
-		// NOTE: string concatenation is safe because the
-		// order attribute is an enum and is not user-defined,
-		// and is therefore not subject to injection attacks.
+	case enum.PullReqSortNumber, enum.PullReqSortNone:
+		stmt = stmt.OrderBy("pullreq_number " + opts.Order.String())
+	case enum.PullReqSortCreated:
 		stmt = stmt.OrderBy("pullreq_created " + opts.Order.String())
-	case enum.PullReqAttrUpdated:
+	case enum.PullReqSortUpdated:
 		stmt = stmt.OrderBy("pullreq_updated " + opts.Order.String())
 	}
 
