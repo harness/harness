@@ -116,7 +116,27 @@ branchDivergenceBehind: '{{behind}} commit(s) behind {{defaultBranch}}'
 branchDivergenceAhead: '{{ahead}} commit(s) ahead {{defaultBranch}}'
 branchDivergenceAheadBehind: '{{ahead}} commit(s) ahead, {{behind}} commit(s) behind {{defaultBranch}}'
 noWebHooks: 'Here is no Webhook. Try to'
-deleteNotAllowed: You must be on a branch to delete this file
-editNotAllowed: You must be on a branch to edit this file
-newFileNotAllowed: You must be on a branch to create a new file
+deleteNotAllowed: You must be on a branch to delete this file.
+editNotAllowed: You must be on a branch to edit this file.
+newFileNotAllowed: You must be on a branch to create a new file.
 fileDeleted: '__path__ successfully deleted.'
+payloadUrl: 'Payload URL'
+samplePayloadUrl: 'https://examples.com/harness'
+payloadUrlLabel: 'Payload URL'
+secret: 'Secret'
+webhookEventsLabel: 'Which events do you like to trigger this webhook'
+pushEvent: 'Just the push event'
+allEvents: 'Send me everything'
+individualEvents: 'Let me select individual events'
+branchTagCreation: 'Branch or tag creation'
+branchTagDeletion: 'Branch or tag deletion'
+branchProtectionRules: 'Branch protection rules'
+checkRuns: 'Check runs'
+checkSuites: 'Check suites'
+scanAlerts: 'Code scanning alerts'
+botAlerts: 'Dependabot alerts'
+deployKeys: 'Deploy keys'
+sslVerificationLabel: 'SSL verification'
+enableSSLVerification: 'Enable SSL verification'
+createWebhook: 'Create Webhook'
+webhook: 'Webhook'

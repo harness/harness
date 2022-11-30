@@ -8,6 +8,8 @@ export interface StringsMap {
   addLicense: string
   addReadMe: string
   allBranches: string
+  allEvents: string
+  botAlerts: string
   branch: string
   branchCreated: string
   branchDeleted: string
@@ -16,12 +18,17 @@ export interface StringsMap {
   branchDivergenceBehind: string
   branchName: string
   branchNotFound: string
+  branchProtectionRules: string
   branchSource: string
   branchSourceDesc: string
+  branchTagCreation: string
+  branchTagDeletion: string
   branchUpToDate: string
   branches: string
   browse: string
   cancel: string
+  checkRuns: string
+  checkSuites: string
   clone: string
   cloneHTTPS: string
   commit: string
@@ -48,17 +55,20 @@ export interface StringsMap {
   'createRepoModal.branchLabel': string
   'createRepoModal.privateLabel': string
   'createRepoModal.publicLabel': string
+  createWebhook: string
   defaultBranch: string
   delete: string
   deleteBranch: string
   deleteBranchConfirm: string
   deleteFile: string
   deleteNotAllowed: string
+  deployKeys: string
   description: string
   edit: string
   editFile: string
   editNotAllowed: string
   email: string
+  enableSSLVerification: string
   enterDescription: string
   enterNewBranchName: string
   enterRepoName: string
@@ -74,6 +84,7 @@ export interface StringsMap {
   history: string
   in: string
   inactiveBranches: string
+  individualEvents: string
   loading: string
   name: string
   nameYourBranch: string
@@ -92,10 +103,13 @@ export interface StringsMap {
   optionalExtendedDescription: string
   pageNotFound: string
   password: string
+  payloadUrl: string
+  payloadUrlLabel: string
   prev: string
   private: string
   public: string
   pullRequests: string
+  pushEvent: string
   renameFile: string
   'repos.activities': string
   'repos.data': string
@@ -105,11 +119,15 @@ export interface StringsMap {
   'repos.noDataMessage': string
   'repos.updated': string
   repositories: string
+  samplePayloadUrl: string
+  scanAlerts: string
   search: string
   searchBranches: string
+  secret: string
   settings: string
   signIn: string
   signUp: string
+  sslVerificationLabel: string
   status: string
   switchBranchesTags: string
   tagNotFound: string
@@ -121,5 +139,7 @@ export interface StringsMap {
   viewAllBranches: string
   viewAllTags: string
   viewCommitDetails: string
+  webhookEventsLabel: string
   yourBranches: string
+  webhook: string
 }

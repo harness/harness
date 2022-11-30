@@ -1,0 +1,108 @@
+.main {
+  min-height: var(--page-min-height, 100%);
+  background-color: var(--primary-bg) !important;
+}
+
+.form {
+  .title {
+    --typography-size: 20px !important;
+  }
+
+  .label {
+    color: var(--grey-600) !important;
+    font-size: var(--form-input-font-size) !important;
+    font-weight: 500 !important;
+  }
+}
+
+.eventRadioGroup {
+  margin-top: 20px !important;
+
+  :global {
+    .RadioButton--radio {
+      margin-top: 10px;
+    }
+  }
+}
+
+.addVerticalAlign {
+  vertical-align: middle;
+}
+
+.sslVerificationLabel {
+  display: flex;
+  flex-direction: column;
+  height: 60px;
+  justify-content: space-between;
+}
+
+.checkbox {
+  height: 20px;
+}
+
+.breadcrumb {
+  align-items: center;
+}
+
+.resourceContent {
+  background-color: var(--primary-bg);
+}
+
+.header {
+  border-bottom: 1px solid var(--grey-200);
+  padding: var(--spacing-medium) var(--spacing-xlarge) 0 var(--spacing-xlarge) !important;
+  background: var(--white) !important;
+}
+
+.container {
+  background-color: var(--white) !important;
+  margin-top: 0 !important;
+  // box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+  // border-radius: 4px;
+  height: calc(100vh - 96px);
+  overflow: hidden;
+
+  .heading {
+    // border-top-left-radius: 4px;
+    // border-top-right-radius: 4px;
+    align-items: center;
+    padding: 0 var(--spacing-xlarge) !important;
+    height: 58px;
+    background-color: var(--grey-100);
+    box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+    border-bottom: 1px solid var(--grey-200);
+
+    .path {
+      align-items: center;
+
+      .inputContainer {
+        margin-left: var(--spacing-small) !important;
+        margin-bottom: 0;
+
+        input {
+          padding: var(--spacing-xsmall) var(--spacing-small);
+          height: 28px;
+          width: auto;
+        }
+      }
+
+      .refLink {
+        font-weight: 600;
+        border-radius: 4px;
+        color: var(--primary-7);
+        background: var(--primary-1);
+        padding: 2px 8px;
+      }
+    }
+  }
+
+  .content {
+    padding-left: var(--spacing-medium) !important;
+    overflow: hidden;
+
+    .editorContainer {
+      height: calc(100vh - 96px - 58px);
+      overflow: hidden;
+    }
+  }
+}
