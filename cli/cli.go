@@ -6,8 +6,10 @@ package cli
 
 import (
 	"errors"
+	"github.com/harness/gitness/cli/operations/hooks"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/harness/gitness/cli/operations/account"
@@ -30,6 +32,7 @@ const (
 // Command parses the command line arguments and then executes a
 // subcommand program.
 func Command() {
+	args := getArguments()
 	s := &session.Session{}
 	httpClient := &client.HTTPClient{}
 
@@ -48,10 +51,12 @@ func Command() {
 	account.RegisterRegister(app, httpClient, s)
 	account.RegisterLogout(app, s)
 
+	hooks.Register(app, httpClient)
+
 	registerSwagger(app)
 
 	kingpin.Version(version.Version.String())
-	kingpin.MustParse(app.Parse(os.Args[1:]))
+	kingpin.MustParse(app.Parse(args))
 }
 
 func initialize(ss *session.Session, httpClient *client.HTTPClient) error {
@@ -82,4 +87,12 @@ func initialize(ss *session.Session, httpClient *client.HTTPClient) error {
 	}
 
 	return nil
+}
+
+func getArguments() []string {
+	// for git operations, the first argument is "hooks", followed by other relevant arguments
+	if os.Args[0] == "hooks/update" || os.Args[0] == "hooks/pre-receive" || os.Args[0] == "hooks/post-receive" {
+		return append([]string{"hooks", path.Base(os.Args[0])}, os.Args[1:]...)
+	}
+	return os.Args[1:]
 }
