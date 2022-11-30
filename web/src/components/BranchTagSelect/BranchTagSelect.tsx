@@ -225,7 +225,7 @@ function GitRefList({
       )}
 
       {!!data?.length && (
-        <Container className={css.listContainer}>
+        <Container className={css.listContainer} padding={{ top: 'small', bottom: 'small' }}>
           <Menu>
             {data.map(({ name }) => (
               <MenuItem
@@ -244,7 +244,7 @@ function GitRefList({
         <Container flex={{ align: 'center-center' }} padding="large">
           {(gitRefType === GitRefType.BRANCH &&
             ((disableBranchCreation && (
-              <Text>
+              <Text padding={{ top: 'small' }}>
                 <String stringID="branchNotFound" tagName="span" vars={{ branch: query }} useRichText />
               </Text>
             )) || (
@@ -264,7 +264,7 @@ function GitRefList({
                 className={Classes.POPOVER_DISMISS}
               />
             ))) || (
-            <Text>
+            <Text padding={{ top: 'small' }}>
               <String stringID="tagNotFound" tagName="span" vars={{ tag: query }} useRichText />
             </Text>
           )}

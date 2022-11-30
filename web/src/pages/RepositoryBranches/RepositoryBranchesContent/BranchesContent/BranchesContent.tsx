@@ -44,6 +44,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
 
   useEffect(() => {
     if (branchDivergenceRequestBody.requests?.length) {
+      setDivergence([])
       getBranchDivergence(branchDivergenceRequestBody).then((response: RepoCommitDivergence[]) => {
         setDivergence(response)
       })
