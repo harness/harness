@@ -100,3 +100,14 @@ export const findReadmeInfo = (content: Nullable<OpenapiGetContentOutput>): Open
   )
 
 export const isRefATag = (gitRef: string) => gitRef.includes(REFS_TAGS_PREFIX)
+
+export const makeDiffRefs = (base: string, compare: string) => `${base}...${compare}`
+
+export const diffRefsToRefs = (diffRefs: string) => {
+  const parts = diffRefs.split('...')
+
+  return {
+    baseRef: parts[0] || '',
+    compareRef: parts[1] || ''
+  }
+}

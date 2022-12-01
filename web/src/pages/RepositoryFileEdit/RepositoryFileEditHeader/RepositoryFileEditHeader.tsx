@@ -19,7 +19,7 @@ export function RepositoryFileEditHeader({
     <Container className={css.header}>
       <Container>
         <Layout.Horizontal spacing="small" className={css.breadcrumb}>
-          <Link to={routes.toCODERepositoriesListing({ space })}>{getString('repositories')}</Link>
+          <Link to={routes.toCODERepositories({ space })}>{getString('repositories')}</Link>
           <Icon name="main-chevron-right" size={10} color={Color.GREY_500} />
           <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.uid}</Link>
         </Layout.Horizontal>

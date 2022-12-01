@@ -16,7 +16,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         <Route path={routes.toSignUp()}>
           <SignUp />
         </Route>
-        <Route path={routes.toCODERepositoriesListing({ space: pathProps.space })} exact>
+        <Route path={routes.toCODERepositories({ space: pathProps.space })} exact>
           <RepositoriesListing />
         </Route>
         <Route

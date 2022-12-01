@@ -63,7 +63,7 @@ repos:
   activities: Monthly Activities
   updated: Updated Date
   lastChange: Last Change
-  noDataMessage: Here is no repository. Try to
+  noDataMessage: Here is no Repository. Try to
   enterBranchName: Enter a branch name
 createRepoModal:
   branchLabel: 'Your repository will be initialized with a '
@@ -116,10 +116,19 @@ branchDivergenceBehind: '{{behind}} commit(s) behind {{defaultBranch}}'
 branchDivergenceAhead: '{{ahead}} commit(s) ahead {{defaultBranch}}'
 branchDivergenceAheadBehind: '{{ahead}} commit(s) ahead, {{behind}} commit(s) behind {{defaultBranch}}'
 noWebHooks: 'Here is no Webhook. Try to'
-deleteNotAllowed: You must be on a branch to delete this file.
-editNotAllowed: You must be on a branch to edit this file.
-newFileNotAllowed: You must be on a branch to create a new file.
+deleteNotAllowed: You must be on a branch to delete this file
+editNotAllowed: You must be on a branch to edit this file
+newFileNotAllowed: You must be on a branch to create a new file
 fileDeleted: '__path__ successfully deleted.'
+newPullRequest: New Pull Request
+pullRequestEmpty: Here is no Pull Request. Try to
+comparingChanges: Comparing Changes
+selectToViewMore: Select branch to view more here.
+createPullRequest: Create Pull Request
+prefixBase: 'base: '
+prefixCompare: 'compare: '
+selectBranchPlaceHolder: select a branch here
+pullMustBeMadeFromBranches: Pull Request can only be created from two diffrent branches
 payloadUrl: 'Payload URL'
 samplePayloadUrl: 'https://examples.com/harness'
 payloadUrlLabel: 'Payload URL'

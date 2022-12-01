@@ -1,0 +1,12 @@
+.header {
+  padding-top: var(--spacing-medium) !important;
+
+  a {
+    font-size: var(--font-size-small);
+    color: var(--primary-7);
+  }
+}
+
+.breadcrumb {
+  align-items: center;
+}

@@ -55,7 +55,7 @@ declare module '*.scss'
 
 type Unknown = any
 
-type RequireField<T, K extends keyof T> = T & Required<Pick<T, K>>
+type RequiredField<T, K extends keyof T> = T & Required<Pick<T, K>>
 
 type Optional<Type, Key extends keyof Type> = Omit<Type, Key> & Partial<Pick<Type, Key>>
 

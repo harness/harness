@@ -17,11 +17,11 @@ export function RepositoryCreateWebhookHeader({ repoMetadata }: Pick<GitInfoProp
     <Container className={css.header}>
       <Container>
         <Layout.Horizontal spacing="small" className={css.breadcrumb}>
-          <Link to={routes.toCODERepositoriesListing({ space })}>{getString('repositories')}</Link>
+          <Link to={routes.toCODERepositories({ space })}>{getString('repositories')}</Link>
           <Icon name="main-chevron-right" size={10} color={Color.GREY_500} />
           <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.uid}</Link>
           <Icon name="main-chevron-right" size={10} color={Color.GREY_500} />
-          <Link to={routes.toCODERepositorySettings({ repoPath: repoMetadata.path as string })}>Settings</Link>
+          <Link to={routes.toCODESettings({ repoPath: repoMetadata.path as string })}>Settings</Link>
         </Layout.Horizontal>
         <Container padding={{ top: 'medium', bottom: 'medium' }}>
           <Text font={{ variation: FontVariation.H4 }}>

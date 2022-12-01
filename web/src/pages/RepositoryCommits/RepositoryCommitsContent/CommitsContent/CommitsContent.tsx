@@ -50,7 +50,7 @@ export function CommitsContent({ repoMetadata, commits }: CommitsContentProps) {
           return (
             <CommitActions
               sha={row.original.sha as string}
-              href={routes.toCODERepositoryCommits({
+              href={routes.toCODECommits({
                 repoPath: repoMetadata.path as string,
                 commitRef: row.original.sha as string
               })}

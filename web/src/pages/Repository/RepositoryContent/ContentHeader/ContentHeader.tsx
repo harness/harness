@@ -100,7 +100,7 @@ export function ContentHeader({
               tooltipProps={{ isDark: true }}
               onClick={() => {
                 history.push(
-                  routes.toCODERepositoryFileEdit({
+                  routes.toCODEFileEdit({
                     repoPath: repoMetadata.path as string,
                     resourcePath,
                     gitRef: gitRef || (repoMetadata.defaultBranch as string)

@@ -39,6 +39,7 @@ export interface StringsMap {
   commits: string
   commitsOn: string
   compare: string
+  comparingChanges: string
   confirm: string
   confirmation: string
   content: string
@@ -50,6 +51,7 @@ export interface StringsMap {
   createBranchFromBranch: string
   createBranchFromTag: string
   createFile: string
+  createPullRequest: string
   createRepo: string
   'createRepoModal.branch': string
   'createRepoModal.branchLabel': string
@@ -92,6 +94,7 @@ export interface StringsMap {
   newFile: string
   newFileNotAllowed: string
   newFolder: string
+  newPullRequest: string
   newRepo: string
   next: string
   noAccount: string
@@ -105,9 +108,13 @@ export interface StringsMap {
   password: string
   payloadUrl: string
   payloadUrlLabel: string
+  prefixBase: string
+  prefixCompare: string
   prev: string
   private: string
   public: string
+  pullMustBeMadeFromBranches: string
+  pullRequestEmpty: string
   pullRequests: string
   pushEvent: string
   renameFile: string
@@ -124,6 +131,8 @@ export interface StringsMap {
   search: string
   searchBranches: string
   secret: string
+  selectBranchPlaceHolder: string
+  selectToViewMore: string
   settings: string
   signIn: string
   signUp: string

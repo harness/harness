@@ -33,13 +33,15 @@ module.exports = {
   },
   exposes: {
     './App': './src/App.tsx',
-    './RepositoriesListing': './src/pages/RepositoriesListing/RepositoriesListing.tsx',
+    './Repositories': './src/pages/RepositoriesListing/RepositoriesListing.tsx',
     './Repository': './src/pages/Repository/Repository.tsx',
-    './RepositoryFileEdit': './src/pages/RepositoryFileEdit/RepositoryFileEdit.tsx',
-    './RepositoryCommits': './src/pages/RepositoryCommits/RepositoryCommits.tsx',
-    './RepositoryBranches': './src/pages/RepositoryBranches/RepositoryBranches.tsx',
-    './RepositorySettings': './src/pages/RepositorySettings/RepositorySettings.tsx',
-    './RepositoryCreateWebhook': './src/pages/RepositoryCreateWebhook/RepositoryCreateWebhook.tsx'
+    './FileEdit': './src/pages/RepositoryFileEdit/RepositoryFileEdit.tsx',
+    './Commits': './src/pages/RepositoryCommits/RepositoryCommits.tsx',
+    './Branches': './src/pages/RepositoryBranches/RepositoryBranches.tsx',
+    './PullRequests': './src/pages/PullRequests/PullRequests.tsx',
+    './Compare': './src/pages/Compare/Compare.tsx',
+    './Settings': './src/pages/RepositorySettings/RepositorySettings.tsx',
+    './CreateWebhook': './src/pages/RepositoryCreateWebhook/RepositoryCreateWebhook.tsx'
   },
   shared: {
     formik: packageJSON.dependencies['formik'],

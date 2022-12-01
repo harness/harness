@@ -42,7 +42,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
         onBranchTypeSwitched={gitRef => {
           setPageIndex(0)
           history.push(
-            routes.toCODERepositoryCommits({
+            routes.toCODECommits({
               repoPath: repoMetadata.path as string,
               commitRef: gitRef
             })

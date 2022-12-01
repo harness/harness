@@ -26,9 +26,9 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
+import { CodeIcon } from 'utils/GitUtils'
 import emptyStateImage from './empty-state.svg'
 import css from './RepositoriesListing.module.scss'
-import { CodeIcon } from 'utils/GitUtils'
 
 export default function RepositoriesListing() {
   const { getString } = useStrings()

@@ -1,0 +1,8 @@
+.main {
+  min-height: var(--page-min-height, 100%);
+  background-color: var(--white) !important;
+
+  .noDataContainer > div {
+    height: calc(100vh - var(--page-header-height, 64px) - 80px) !important;
+  }
+}

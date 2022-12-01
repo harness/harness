@@ -35,6 +35,8 @@ export interface BranchTagSelectProps extends Omit<ButtonProps, 'onSelect'>, Pic
   disableBranchCreation?: boolean
   disableViewAllBranches?: boolean
   forBranchesOnly?: boolean
+  labelPrefix?: string
+  placeHolder?: string
 }
 
 export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
@@ -45,14 +47,31 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
   disableBranchCreation,
   disableViewAllBranches,
   forBranchesOnly,
+  labelPrefix,
+  placeHolder,
   ...props
 }) => {
   const [query, onQuery] = useState('')
   const [gitRefType, setGitRefType] = useState(isRefATag(gitRef) ? GitRefType.TAG : GitRefType.BRANCH)
+  const text = gitRef.replace(REFS_TAGS_PREFIX, '')
 
   return (
     <Button
-      text={gitRef.replace(REFS_TAGS_PREFIX, '')}
+      className={css.button}
+      text={
+        text ? (
+          labelPrefix ? (
+            <>
+              <span className={css.prefix}>{labelPrefix}</span>
+              {text}
+            </>
+          ) : (
+            text
+          )
+        ) : (
+          <span className={css.prefix}>{placeHolder}</span>
+        )
+      }
       icon={gitRefType == GitRefType.BRANCH ? CodeIcon.Branch : CodeIcon.Tag}
       rightIcon="chevron-down"
       variation={ButtonVariation.TERTIARY}
@@ -273,7 +292,7 @@ function GitRefList({
 
       {!disableViewAllBranches && gitRefType === GitRefType.BRANCH && (
         <Container border={{ top: true }} flex={{ align: 'center-center' }} padding={{ top: 'small' }}>
-          <Link to={routes.toCODERepositoryBranches({ repoPath: repoMetadata.path as string })}>
+          <Link to={routes.toCODEBranches({ repoPath: repoMetadata.path as string })}>
             {getString('viewAllBranches')}
           </Link>
         </Container>

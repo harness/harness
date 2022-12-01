@@ -1,7 +1,6 @@
 /* eslint-disable */
 // this is an auto-generated file
 declare const styles: {
-  readonly header: string
-  readonly breadcrumb: string
+  readonly main: string
 }
 export default styles

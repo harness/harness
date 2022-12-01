@@ -43,7 +43,7 @@ export function FileContent({
               disabled={isRefATag(gitRef)}
               onClick={() => {
                 history.push(
-                  routes.toCODERepositoryFileEdit({
+                  routes.toCODEFileEdit({
                     repoPath: repoMetadata.path as string,
                     gitRef,
                     resourcePath

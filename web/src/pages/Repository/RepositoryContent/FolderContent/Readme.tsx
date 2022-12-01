@@ -36,7 +36,7 @@ export function Readme({ metadata, gitRef, readmeInfo }: FolderContentProps) {
           icon={CodeIcon.Edit}
           onClick={() => {
             history.push(
-              routes.toCODERepositoryFileEdit({
+              routes.toCODEFileEdit({
                 repoPath: metadata.path as string,
                 gitRef: gitRef || (metadata.defaultBranch as string),
                 resourcePath: readmeInfo.path as string

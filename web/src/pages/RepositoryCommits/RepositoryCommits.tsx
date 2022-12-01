@@ -8,8 +8,9 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import type { RepoCommit } from 'services/code'
 import { getErrorMessage, LIST_FETCHING_PER_PAGE } from 'utils/Utils'
 import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
+import { useStrings } from 'framework/strings'
+import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
-import { RepositoryCommitsHeader } from './RepositoryCommitsHeader/RepositoryCommitsHeader'
 import { CommitsContent } from './RepositoryCommitsContent/CommitsContent/CommitsContent'
 import css from './RepositoryCommits.module.scss'
 
@@ -17,6 +18,7 @@ export default function RepositoryCommits() {
   const { repoMetadata, error, loading, commitRef, refetch } = useGetRepositoryMetadata()
   const { routes } = useAppContext()
   const history = useHistory()
+  const { getString } = useStrings()
   const [pageIndex, setPageIndex] = usePageIndex()
   const {
     data: commits,
@@ -36,54 +38,55 @@ export default function RepositoryCommits() {
 
   return (
     <Container className={css.main}>
+      <RepositoryPageHeader
+        repoMetadata={repoMetadata}
+        title={getString('commits')}
+        dataTooltipId="repositoryCommits"
+      />
+
       <PageBody
         loading={loading || loadingCommits}
         error={getErrorMessage(error || errorCommits)}
         retryOnError={() => refetch()}>
-        {repoMetadata ? (
-          <>
-            <RepositoryCommitsHeader repoMetadata={repoMetadata} />
+        {(repoMetadata && !!commits?.length && (
+          <Container padding="xlarge" className={css.resourceContent}>
+            <Container className={css.contentHeader}>
+              <Layout.Horizontal spacing="medium">
+                <BranchTagSelect
+                  repoMetadata={repoMetadata}
+                  disableBranchCreation
+                  disableViewAllBranches
+                  gitRef={commitRef || (repoMetadata.defaultBranch as string)}
+                  onSelect={ref => {
+                    setPageIndex(0)
+                    history.push(
+                      routes.toCODECommits({
+                        repoPath: repoMetadata.path as string,
+                        commitRef: ref
+                      })
+                    )
+                  }}
+                />
+                <FlexExpander />
+              </Layout.Horizontal>
+            </Container>
 
-            {!!commits?.length && (
-              <Container padding="xlarge" className={css.resourceContent}>
-                <Container className={css.contentHeader}>
-                  <Layout.Horizontal spacing="medium">
-                    <BranchTagSelect
-                      repoMetadata={repoMetadata}
-                      disableBranchCreation
-                      disableViewAllBranches
-                      gitRef={commitRef || (repoMetadata.defaultBranch as string)}
-                      onSelect={ref => {
-                        setPageIndex(0)
-                        history.push(
-                          routes.toCODERepositoryCommits({
-                            repoPath: repoMetadata.path as string,
-                            commitRef: ref
-                          })
-                        )
-                      }}
-                    />
-                    <FlexExpander />
-                  </Layout.Horizontal>
-                </Container>
+            <CommitsContent commits={commits} repoMetadata={repoMetadata} />
 
-                <CommitsContent commits={commits} repoMetadata={repoMetadata} />
-
-                <Container margin={{ left: 'large', right: 'large' }}>
-                  <Pagination
-                    className={css.pagination}
-                    hidePageNumbers
-                    gotoPage={index => setPageIndex(index)}
-                    itemCount={totalItems}
-                    pageCount={totalPages}
-                    pageIndex={pageIndex}
-                    pageSize={pageSize}
-                  />
-                </Container>
-              </Container>
-            )}
-          </>
-        ) : null}
+            <Container margin={{ left: 'large', right: 'large' }}>
+              <Pagination
+                className={css.pagination}
+                hidePageNumbers
+                gotoPage={index => setPageIndex(index)}
+                itemCount={totalItems}
+                pageCount={totalPages}
+                pageIndex={pageIndex}
+                pageSize={pageSize}
+              />
+            </Container>
+          </Container>
+        )) ||
+          null}
       </PageBody>
     </Container>
   )

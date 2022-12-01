@@ -33,7 +33,7 @@ export function LatestCommitForFolder({
   standaloneStyle
 }: LatestCommitProps): JSX.Element | null {
   const { routes } = useAppContext()
-  const commitURL = routes.toCODERepositoryCommits({
+  const commitURL = routes.toCODECommits({
     repoPath: repoMetadata.path as string,
     commitRef: latestCommit?.sha as string
   })
@@ -65,7 +65,7 @@ export function LatestCommitForFile({
 }: LatestCommitProps): JSX.Element | null {
   const { routes } = useAppContext()
   const { getString } = useStrings()
-  const commitURL = routes.toCODERepositoryCommits({
+  const commitURL = routes.toCODECommits({
     repoPath: repoMetadata.path as string,
     commitRef: latestCommit?.sha as string
   })

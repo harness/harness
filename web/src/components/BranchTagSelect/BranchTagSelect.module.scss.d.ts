@@ -1,6 +1,8 @@
 /* eslint-disable */
 // this is an auto-generated file
 declare const styles: {
+  readonly button: string
+  readonly prefix: string
   readonly main: string
   readonly input: string
   readonly tabContainer: string

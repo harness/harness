@@ -18,6 +18,7 @@ import { useConfirmAction } from 'hooks/useConfirmAction'
 import { MenuDivider, OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { CommitDivergence } from 'components/CommitDivergence/CommitDivergence'
 import css from './BranchesContent.module.scss'
+import { makeDiffRefs } from 'utils/GitUtils'
 
 interface BranchesContentProps {
   searchTerm?: string
@@ -152,8 +153,14 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
                 {
                   icon: 'comparison',
                   text: getString('compare'),
-                  onClick: confirmDeleteBranch,
-                  disabled: true
+                  onClick: () => {
+                    history.push(
+                      routes.toCODECompare({
+                        repoPath: repoMetadata.path as string,
+                        diffRefs: makeDiffRefs(repoMetadata.defaultBranch as string, row.original?.name as string)
+                      })
+                    )
+                  }
                 },
                 MenuDivider,
                 {

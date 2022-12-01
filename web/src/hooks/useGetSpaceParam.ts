@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import type { CODEPathProps } from 'RouteDefinitions'
+import type { CODEProps } from 'RouteDefinitions'
 import { useAppContext } from 'AppContext'
 
 /**
@@ -12,7 +12,7 @@ import { useAppContext } from 'AppContext'
  * @returns space parameter.
  */
 export function useGetSpaceParam() {
-  const { space: spaceFromParams = '' } = useParams<CODEPathProps>()
+  const { space: spaceFromParams = '' } = useParams<CODEProps>()
   const { space = spaceFromParams } = useAppContext()
   return space
 }

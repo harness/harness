@@ -1,13 +1,14 @@
 import { useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
-import type { CODEPathProps } from 'RouteDefinitions'
+import type { CODEProps } from 'RouteDefinitions'
 import type { TypesRepository } from 'services/code'
+import { diffRefsToRefs, makeDiffRefs } from 'utils/GitUtils'
 import { getErrorMessage } from 'utils/Utils'
 import { useGetSpaceParam } from './useGetSpaceParam'
 
 export function useGetRepositoryMetadata() {
   const space = useGetSpaceParam()
-  const { repoName, gitRef, resourcePath = '', commitRef = '', ...otherPathParams } = useParams<CODEPathProps>()
+  const { repoName, gitRef, resourcePath = '', commitRef = '', diffRefs, ...otherPathParams } = useParams<CODEProps>()
   const {
     data: repoMetadata,
     error,
@@ -17,6 +18,7 @@ export function useGetRepositoryMetadata() {
   } = useGet<TypesRepository>({
     path: `/api/v1/repos/${space}/${repoName}/+/`
   })
+  const defaultBranch = repoMetadata?.defaultBranch || ''
 
   return {
     space,
@@ -26,9 +28,10 @@ export function useGetRepositoryMetadata() {
     loading,
     refetch,
     response,
-    gitRef: gitRef || repoMetadata?.defaultBranch || '',
+    gitRef: gitRef || defaultBranch,
     resourcePath,
     commitRef,
+    diffRefs: diffRefsToRefs(diffRefs || makeDiffRefs(defaultBranch, defaultBranch)),
     ...otherPathParams
   }
 }

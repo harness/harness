@@ -1,16 +1,14 @@
 import React from 'react'
 import { useHistory } from 'react-router-dom'
 
-import { PageBody, Button, Intent, Container, PageHeader } from '@harness/uicore'
+import { PageBody, Button, Intent, Container } from '@harness/uicore'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { CodeIcon } from 'utils/GitUtils'
-
-import { RepositorySettingsHeader } from './RepositorySettingsHeader/RepositorySettingsHeader'
-
-import emptyStateImage from './empty-state.svg'
-
+import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import { getErrorMessage } from 'utils/Utils'
+import emptyStateImage from 'images/empty-state.svg'
 import css from './RepositorySettings.module.scss'
 
 export default function RepositorySettings() {
@@ -36,19 +34,22 @@ export default function RepositorySettings() {
   const { getString } = useStrings()
   return (
     <Container className={css.main}>
-      <PageHeader
-        title=""
-        className={css.webhookHeader}
-        breadcrumbs={repoMetadata ? <RepositorySettingsHeader repoMetadata={repoMetadata} /> : null}></PageHeader>
+      <RepositoryPageHeader
+        repoMetadata={repoMetadata}
+        title={getString('settings')}
+        dataTooltipId="repositorySettings"
+      />
       <PageBody
         loading={loading}
-        error={error}
+        error={getErrorMessage(error)}
         noData={{
           when: () => repoMetadata !== null,
           message: getString('noWebHooks'),
           image: emptyStateImage,
           button: NewWebHookButton
-        }}></PageBody>
+        }}>
+        {repoMetadata ? <></> : null}
+      </PageBody>
     </Container>
   )
 }
