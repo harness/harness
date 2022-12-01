@@ -150,5 +150,6 @@ export interface StringsMap {
   viewCommitDetails: string
   webhook: string
   webhookEventsLabel: string
+  webhookListingContent: string
   yourBranches: string
 }

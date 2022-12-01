@@ -43,7 +43,7 @@ export default function RepositorySettings() {
         loading={loading}
         error={getErrorMessage(error)}
         noData={{
-          when: () => repoMetadata !== null,
+          when: () => !hooks.length,
           message: getString('noWebHooks'),
           image: emptyStateImage,
           button: NewWebHookButton

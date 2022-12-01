@@ -3,5 +3,6 @@
 declare const styles: {
   readonly main: string
   readonly webhookHeader: string
+  readonly contentContainer: string
 }
 export default styles
