@@ -9,6 +9,8 @@ import { CodeIcon } from 'utils/GitUtils'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { getErrorMessage } from 'utils/Utils'
 import emptyStateImage from 'images/empty-state.svg'
+import hooks from './mockWebhooks.json'
+import { SettingsContent } from './SettingsContent'
 import css from './RepositorySettings.module.scss'
 
 export default function RepositorySettings() {
@@ -48,7 +50,12 @@ export default function RepositorySettings() {
           image: emptyStateImage,
           button: NewWebHookButton
         }}>
-        {repoMetadata ? <></> : null}
+        {hooks.length && repoMetadata ? (
+          <Container className={css.contentContainer}>
+            <Container>{NewWebHookButton}</Container>
+            <SettingsContent repoMetadata={repoMetadata} hooks={hooks} />
+          </Container>
+        ) : null}
       </PageBody>
     </Container>
   )
