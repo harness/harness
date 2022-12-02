@@ -71,13 +71,18 @@ var queryParameterStatePullRequest = openapi3.ParameterOrRef{
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
-				Type:    ptrSchemaType(openapi3.SchemaTypeArray),
-				Default: ptrptr(enum.PullReqStateOpen),
-				Enum: []interface{}{
-					ptr.String(string(enum.PullReqStateOpen)),
-					ptr.String(string(enum.PullReqStateClosed)),
-					ptr.String(string(enum.PullReqStateMerged)),
-					ptr.String(string(enum.PullReqStateRejected)),
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type:    ptrSchemaType(openapi3.SchemaTypeString),
+						Default: ptrptr(string(enum.PullReqStateOpen)),
+						Enum: []interface{}{
+							ptr.String(string(enum.PullReqStateOpen)),
+							ptr.String(string(enum.PullReqStateClosed)),
+							ptr.String(string(enum.PullReqStateMerged)),
+							ptr.String(string(enum.PullReqStateRejected)),
+						},
+					},
 				},
 			},
 		},
