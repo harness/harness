@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/adrg/xdg"
 	"github.com/harness/gitness/cli/operations/account"
 	"github.com/harness/gitness/cli/operations/hooks"
 	"github.com/harness/gitness/cli/operations/user"
@@ -19,8 +20,6 @@ import (
 	"github.com/harness/gitness/cli/session"
 	"github.com/harness/gitness/client"
 	"github.com/harness/gitness/version"
-
-	"github.com/adrg/xdg"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
