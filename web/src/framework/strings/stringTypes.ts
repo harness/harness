@@ -83,6 +83,7 @@ export interface StringsMap {
   findATag: string
   findBranch: string
   findOrCreateBranch: string
+  general: string
   history: string
   in: string
   inactiveBranches: string
@@ -151,5 +152,6 @@ export interface StringsMap {
   webhook: string
   webhookEventsLabel: string
   webhookListingContent: string
+  webhooks: string
   yourBranches: string
 }

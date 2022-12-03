@@ -1,6 +1,47 @@
 .main {
   min-height: var(--page-min-height, 100%);
   background-color: var(--primary-bg) !important;
+  width: 100%;
+  margin: var(--spacing-small);
+  :global {
+    .bp3-tab {
+      width: 184px !important;
+      height: 34px;
+    }
+
+    .bp3-tab-panel {
+      width: 100%;
+      height: 500px;
+    }
+
+    .bp3-tab {
+      margin-top: 20px;
+    }
+
+    .bp3-tabs.bp3-vertical > .bp3-tab-list .bp3-tab[aria-selected='true'] {
+      background-color: var(--primary-2);
+      -webkit-box-shadow: none;
+      box-shadow: none;
+    }
+
+    // .bp3-tab-indicator-wrapper {
+    //   height: unset !important;
+    // }
+
+    // .bp3-tab:not([aria-disabled='true']):active {
+    //   color: var(--primary-7) !important;
+    //   background: #cdf4fe !important;
+    //   padding: 5px;
+    // }
+  }
+}
+
+.webhooksContent {
+  width: 100%;
+}
+
+.btn {
+  margin-top: 5px;
 }
 
 .webhookHeader {
