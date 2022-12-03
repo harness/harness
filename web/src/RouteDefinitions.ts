@@ -7,6 +7,7 @@ export interface CODEProps {
   commitRef?: string
   branch?: string
   diffRefs?: string
+  pullRequestId?: string
 }
 
 export interface CODEQueryProps {
@@ -19,7 +20,8 @@ export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch'
   gitRef: ':gitRef*',
   resourcePath: ':resourcePath*',
   commitRef: ':commitRef*',
-  diffRefs: ':diffRefs*'
+  diffRefs: ':diffRefs*',
+  pullRequestId: ':pullRequestId'
 }
 
 export interface CODERoutes {
@@ -30,6 +32,7 @@ export interface CODERoutes {
   toCODEFileEdit: (args: Required<Pick<CODEProps, 'repoPath' | 'gitRef' | 'resourcePath'>>) => string
   toCODECommits: (args: Required<Pick<CODEProps, 'repoPath' | 'commitRef'>>) => string
   toCODEPullRequests: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+  toCODEPullRequest: (args: Required<Pick<CODEProps, 'repoPath' | 'pullRequestId'>>) => string
   toCODECompare: (args: Required<Pick<CODEProps, 'repoPath' | 'diffRefs'>>) => string
   toCODEBranches: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODESettings: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
@@ -45,6 +48,7 @@ export const routes: CODERoutes = {
   toCODEFileEdit: ({ repoPath, gitRef, resourcePath }) => `/${repoPath}/edit/${gitRef}/~/${resourcePath}`,
   toCODECommits: ({ repoPath, commitRef }) => `/${repoPath}/commits/${commitRef}`,
   toCODEPullRequests: ({ repoPath }) => `/${repoPath}/pulls`,
+  toCODEPullRequest: ({ repoPath, pullRequestId }) => `/${repoPath}/pulls/${pullRequestId}`,
   toCODECompare: ({ repoPath, diffRefs }) => `/${repoPath}/pulls/compare/${diffRefs}`,
   toCODEBranches: ({ repoPath }) => `/${repoPath}/branches`,
   toCODESettings: ({ repoPath }) => `/${repoPath}/settings`,

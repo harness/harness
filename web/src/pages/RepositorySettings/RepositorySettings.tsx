@@ -1,7 +1,7 @@
 import React from 'react'
 import { useHistory } from 'react-router-dom'
 
-import { PageBody, Button, Intent, Container, Tabs, Text, Layout } from '@harness/uicore'
+import { PageBody, Button, Intent, Container, Tabs } from '@harness/uicore'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -41,7 +41,7 @@ export default function RepositorySettings() {
   )
   const { getString } = useStrings()
   return (
-    <>
+    <Container className={css.main}>
       <RepositoryPageHeader
         repoMetadata={repoMetadata}
         title={getString('settings')}
@@ -86,6 +86,6 @@ export default function RepositorySettings() {
             }
           ]}></Tabs>
       </Container>
-    </>
+    </Container>
   )
 }

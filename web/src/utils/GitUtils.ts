@@ -101,13 +101,24 @@ export const findReadmeInfo = (content: Nullable<OpenapiGetContentOutput>): Open
 
 export const isRefATag = (gitRef: string) => gitRef.includes(REFS_TAGS_PREFIX)
 
-export const makeDiffRefs = (base: string, compare: string) => `${base}...${compare}`
+/**
+ * Make a diff refs string to use in URL.
+ * @param targetGitRef target git ref (base ref).
+ * @param sourceGitRef source git ref (compare ref).
+ * @returns A concatenation string of `targetGitRef...sourceGitRef`.
+ */
+export const makeDiffRefs = (targetGitRef: string, sourceGitRef: string) => `${targetGitRef}...${sourceGitRef}`
 
+/**
+ * Split a diff refs string into targetRef and sourceRef.
+ * @param diffRefs diff refs string.
+ * @returns An object of { targetGitRef, sourceGitRef }
+ */
 export const diffRefsToRefs = (diffRefs: string) => {
   const parts = diffRefs.split('...')
 
   return {
-    baseRef: parts[0] || '',
-    compareRef: parts[1] || ''
+    targetGitRef: parts[0] || '',
+    sourceGitRef: parts[1] || ''
   }
 }

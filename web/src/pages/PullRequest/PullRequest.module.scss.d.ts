@@ -2,7 +2,7 @@
 // this is an auto-generated file
 declare const styles: {
   readonly main: string
-  readonly branchDropdown: string
-  readonly mergeText: string
+  readonly tabsContainer: string
+  readonly prNumber: string
 }
 export default styles

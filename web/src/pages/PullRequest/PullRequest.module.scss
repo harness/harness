@@ -2,11 +2,13 @@
   min-height: var(--page-min-height, 100%);
   background-color: var(--white) !important;
 
-  .noDataContainer > div {
-    height: calc(100vh - var(--page-header-height, 64px) - 80px) !important;
+  > div[class*='PageHeader'] {
+    border-bottom: none !important;
   }
 
   .tabsContainer {
+    padding-top: var(--spacing-medium);
+
     [role='tablist'] {
       background-color: var(--white) !important;
       padding-left: var(--spacing-medium);
@@ -18,4 +20,11 @@
       margin-top: 0;
     }
   }
+}
+
+.prNumber {
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--grey-500);
+  padding-left: var(--spacing-small);
 }

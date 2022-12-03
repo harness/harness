@@ -38,6 +38,7 @@ defaultBranch: Default
 in: in
 ok: OK
 loading: Loading...
+title: Title
 addGitIgnore: Add a .gitignore
 addReadMe: Add a README file
 failedToCreateRepo: Failed to create Repository. Please try again.
@@ -112,9 +113,9 @@ createBranchFromTag: "<strong>Create branch: {{newBranch}}</strong> from tag '{{
 tagNotFound: 'Tag <strong>{{tag}}</strong> not found.'
 branchNotFound: 'Branch <strong>{{branch}}</strong> not found.'
 branchUpToDate: Up to date with {{defaultBranch}}
-branchDivergenceBehind: '{{behind}} commit(s) behind {{defaultBranch}}'
-branchDivergenceAhead: '{{ahead}} commit(s) ahead {{defaultBranch}}'
-branchDivergenceAheadBehind: '{{ahead}} commit(s) ahead, {{behind}} commit(s) behind {{defaultBranch}}'
+branchDivergenceBehind: '{behind} {behindCommits|1:commit,commits} behind {defaultBranch}'
+branchDivergenceAhead: '{ahead} {aheadCommits|1:commit,commits} ahead {defaultBranch}'
+branchDivergenceAheadBehind: '{ahead} {aheadCommits|1:commit,commits} ahead, {behind} {behindCommits|1:commit,commits} behind {defaultBranch}'
 noWebHooks: 'Here is no Webhook. Try to'
 deleteNotAllowed: You must be on a branch to delete this file
 editNotAllowed: You must be on a branch to edit this file
@@ -149,6 +150,17 @@ sslVerificationLabel: 'SSL verification'
 enableSSLVerification: 'Enable SSL verification'
 createWebhook: 'Create Webhook'
 webhook: 'Webhook'
+diff: Diff
+conversation: Conversation
+pr:
+  ableToMerge: Able to merge.
+  cantMerge: 'Can’t be merged. You can still create the pull request.'
+  failedToCreate: Failed to create Pull Request.
+  titlePlaceHolder: Enter the pull request title
+  descriptionPlaceHolder: Leave pull request comment here
+  modalTitle: Open a pull request
+  buttonText: Open pull request
+  metaLine: '{user} wants to merge {number} {number|1:commit,commits} into {target} from {source}'
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'

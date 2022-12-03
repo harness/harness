@@ -46,7 +46,7 @@ interface UseCreateBranchModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
   showSuccessMessage?: boolean
 }
 
-interface CreateBranchModalButtonProps extends Omit<ButtonProps, 'onClick'>, Pick<GitInfoProps, 'repoMetadata'> {
+interface CreateBranchModalButtonProps extends Omit<ButtonProps, 'onClick'>, UseCreateBranchModalProps {
   onSuccess: (data: RepoBranch) => void
   showSuccessMessage?: boolean
 }

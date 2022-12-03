@@ -39,6 +39,7 @@ module.exports = {
     './Commits': './src/pages/RepositoryCommits/RepositoryCommits.tsx',
     './Branches': './src/pages/RepositoryBranches/RepositoryBranches.tsx',
     './PullRequests': './src/pages/PullRequests/PullRequests.tsx',
+    './PullRequest': './src/pages/PullRequest/PullRequest.tsx',
     './Compare': './src/pages/Compare/Compare.tsx',
     './Settings': './src/pages/RepositorySettings/RepositorySettings.tsx',
     './CreateWebhook': './src/pages/RepositoryCreateWebhook/RepositoryCreateWebhook.tsx'

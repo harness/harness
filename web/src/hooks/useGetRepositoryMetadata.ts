@@ -8,7 +8,15 @@ import { useGetSpaceParam } from './useGetSpaceParam'
 
 export function useGetRepositoryMetadata() {
   const space = useGetSpaceParam()
-  const { repoName, gitRef, resourcePath = '', commitRef = '', diffRefs, ...otherPathParams } = useParams<CODEProps>()
+  const {
+    repoName,
+    gitRef,
+    resourcePath = '',
+    commitRef = '',
+    pullRequestId = '',
+    diffRefs,
+    ...otherPathParams
+  } = useParams<CODEProps>()
   const {
     data: repoMetadata,
     error,
@@ -32,6 +40,7 @@ export function useGetRepositoryMetadata() {
     resourcePath,
     commitRef,
     diffRefs: diffRefsToRefs(diffRefs || makeDiffRefs(defaultBranch, defaultBranch)),
+    pullRequestId,
     ...otherPathParams
   }
 }

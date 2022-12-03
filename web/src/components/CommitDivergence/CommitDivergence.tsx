@@ -1,6 +1,7 @@
 import React, { CSSProperties } from 'react'
 import { Container, Popover, Text } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
+import { StringSubstitute } from 'components/StringSubstitute/StringSubstitute'
 import css from './CommitDivergence.module.scss'
 
 interface CommitDivergenceProps {
@@ -12,13 +13,40 @@ interface CommitDivergenceProps {
 export function CommitDivergence({ behind, ahead, defaultBranch }: CommitDivergenceProps) {
   const { getString } = useStrings()
   const message =
-    behind === 0
-      ? ahead === 0
-        ? getString('branchUpToDate', { defaultBranch })
-        : getString('branchDivergenceAhead', { defaultBranch, ahead })
-      : ahead === 0
-      ? getString('branchDivergenceBehind', { defaultBranch, behind })
-      : getString('branchDivergenceAheadBehind', { defaultBranch, ahead, behind })
+    behind === 0 ? (
+      ahead === 0 ? (
+        getString('branchUpToDate', { defaultBranch })
+      ) : (
+        <StringSubstitute
+          str={getString('branchDivergenceAhead')}
+          vars={{
+            ahead,
+            aheadCommits: ahead,
+            defaultBranch
+          }}
+        />
+      )
+    ) : ahead === 0 ? (
+      <StringSubstitute
+        str={getString('branchDivergenceBehind')}
+        vars={{
+          behind,
+          behindCommits: behind,
+          defaultBranch
+        }}
+      />
+    ) : (
+      <StringSubstitute
+        str={getString('branchDivergenceAheadBehind')}
+        vars={{
+          ahead,
+          aheadCommits: ahead,
+          behind,
+          behindCommits: behind,
+          defaultBranch
+        }}
+      />
+    )
 
   return (
     <Popover content={<Text padding="small">{message}</Text>} interactionKind="hover">

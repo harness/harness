@@ -21,6 +21,7 @@ import { formatDate } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import css from './LatestCommit.module.scss'
+import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 
 interface LatestCommitProps extends Pick<GitInfoProps, 'repoMetadata'> {
   latestCommit?: RepoCommit
@@ -79,13 +80,13 @@ export function LatestCommitForFile({
         <Text font={{ variation: FontVariation.SMALL_BOLD }}>
           {latestCommit.author?.identity?.name || latestCommit.author?.identity?.email}
         </Text>
-        <PipeSeparator />
+        <PipeSeparator height={9} />
         <Link to={commitURL} className={css.commitLink}>
           {latestCommit.title}
         </Link>
-        <PipeSeparator />
+        <PipeSeparator height={9} />
         <CommitActions sha={latestCommit.sha as string} href={commitURL} />
-        <PipeSeparator />
+        <PipeSeparator height={9} />
         <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
           {getString('onDate', { date: formatDate(latestCommit.author?.when as string) })}
         </Text>
@@ -100,5 +101,3 @@ export function LatestCommitForFile({
     </Container>
   ) : null
 }
-
-const PipeSeparator = () => <Text color={Color.GREY_200}>|</Text>

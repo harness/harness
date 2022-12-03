@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Container, PageBody, NoDataCard } from '@harness/uicore'
+import { Container, PageBody, NoDataCard, Tabs } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -16,8 +16,8 @@ export default function Compare() {
   const history = useHistory()
   const { routes } = useAppContext()
   const { repoMetadata, error, loading, refetch, diffRefs } = useGetRepositoryMetadata()
-  const [baseRef, setBaseRef] = useState(diffRefs.baseRef)
-  const [compareRef, setCompareRef] = useState(diffRefs.compareRef)
+  const [sourceGitRef, setSourceGitRef] = useState(diffRefs.sourceGitRef)
+  const [targetGitRef, setTargetGitRef] = useState(diffRefs.targetGitRef)
 
   return (
     <Container className={css.main}>
@@ -30,32 +30,57 @@ export default function Compare() {
         {repoMetadata && (
           <CompareContentHeader
             repoMetadata={repoMetadata}
-            baseRef={baseRef}
-            compareRef={compareRef}
-            onBaseRefChanged={gitRef => {
-              setBaseRef(gitRef)
+            targetGitRef={targetGitRef}
+            onTargetGitRefChanged={gitRef => {
+              setTargetGitRef(gitRef)
               history.replace(
                 routes.toCODECompare({
                   repoPath: repoMetadata.path as string,
-                  diffRefs: makeDiffRefs(gitRef, compareRef)
+                  diffRefs: makeDiffRefs(gitRef, sourceGitRef)
                 })
               )
             }}
-            onCompareRefChanged={gitRef => {
-              setCompareRef(gitRef)
+            sourceGitRef={sourceGitRef}
+            onSourceGitRefChanged={gitRef => {
+              setSourceGitRef(gitRef)
               history.replace(
                 routes.toCODECompare({
                   repoPath: repoMetadata.path as string,
-                  diffRefs: makeDiffRefs(baseRef, gitRef)
+                  diffRefs: makeDiffRefs(targetGitRef, gitRef)
                 })
               )
             }}
           />
         )}
 
-        <Container className={css.noDataContainer}>
-          <NoDataCard image={emptyStateImage} message={getString('selectToViewMore')} />
-        </Container>
+        {!targetGitRef ||
+          (!sourceGitRef && (
+            <Container className={css.noDataContainer}>
+              <NoDataCard image={emptyStateImage} message={getString('selectToViewMore')} />
+            </Container>
+          ))}
+
+        {!!targetGitRef && !!sourceGitRef && (
+          <Container className={css.tabsContainer} padding="xlarge">
+            <Tabs
+              id="branchesTags"
+              defaultSelectedTabId={'diff'}
+              large={false}
+              tabList={[
+                {
+                  id: 'commits',
+                  title: getString('commits'),
+                  panel: <div>Commit</div>
+                },
+                {
+                  id: 'diff',
+                  title: getString('diff'),
+                  panel: <div>Diff</div>
+                }
+              ]}
+            />
+          </Container>
+        )}
       </PageBody>
     </Container>
   )

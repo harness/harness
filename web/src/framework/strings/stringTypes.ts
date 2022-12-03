@@ -43,6 +43,7 @@ export interface StringsMap {
   confirm: string
   confirmation: string
   content: string
+  conversation: string
   copy: string
   copyCommitSHA: string
   create: string
@@ -66,6 +67,7 @@ export interface StringsMap {
   deleteNotAllowed: string
   deployKeys: string
   description: string
+  diff: string
   edit: string
   editFile: string
   editNotAllowed: string
@@ -109,6 +111,14 @@ export interface StringsMap {
   password: string
   payloadUrl: string
   payloadUrlLabel: string
+  'pr.ableToMerge': string
+  'pr.buttonText': string
+  'pr.cantMerge': string
+  'pr.descriptionPlaceHolder': string
+  'pr.failedToCreate': string
+  'pr.metaLine': string
+  'pr.modalTitle': string
+  'pr.titlePlaceHolder': string
   prefixBase: string
   prefixCompare: string
   prev: string
@@ -142,6 +152,7 @@ export interface StringsMap {
   switchBranchesTags: string
   tagNotFound: string
   tags: string
+  title: string
   updateFile: string
   updated: string
   'validation.gitBranchNameInvalid': string
