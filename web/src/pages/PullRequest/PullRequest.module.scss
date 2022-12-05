@@ -7,7 +7,7 @@
   }
 
   .tabsContainer {
-    padding-top: var(--spacing-medium);
+    padding-top: var(--spacing-xsmall);
 
     [role='tablist'] {
       background-color: var(--white) !important;
@@ -18,6 +18,29 @@
 
     [role='tabpanel'] {
       margin-top: 0;
+    }
+
+    [aria-selected='true'] {
+      .tabTitle {
+        color: var(--grey-900);
+        font-weight: 600;
+      }
+    }
+
+    .tabTitle {
+      font-weight: 500;
+      color: var(--grey-700);
+
+      .count {
+        margin-left: var(--spacing-small);
+        display: inline-block;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 12px;
+        color: var(--primary-7) !important;
+        background-color: var(--primary-1) !important;
+        padding: 3px 6px !important;
+      }
     }
   }
 }

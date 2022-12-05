@@ -10,6 +10,7 @@ import type {
   RepoCommit,
   TypesRepository
 } from 'services/code'
+import type { PullRequestResponse } from './types'
 
 export interface GitInfoProps {
   repoMetadata: TypesRepository
@@ -18,6 +19,7 @@ export interface GitInfoProps {
   resourceContent: OpenapiGetContentOutput
   commitRef: string
   commits: RepoCommit[]
+  pullRequestMetadata: PullRequestResponse
 }
 
 export enum GitContentType {
@@ -70,7 +72,8 @@ export const CodeIcon = {
   Settings: 'code-settings' as IconName,
   Webhook: 'code-webhook' as IconName,
   InputSpinner: 'steps-spinner' as IconName,
-  InputSearch: 'search' as IconName
+  InputSearch: 'search' as IconName,
+  Chat: 'chat' as IconName
 }
 
 export const REFS_TAGS_PREFIX = 'refs/tags/'

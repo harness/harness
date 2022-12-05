@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, PageBody, Text, FontVariation, Tabs } from '@harness/uicore'
+import { Container, PageBody, Text, FontVariation, Tabs, IconName } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -7,7 +7,11 @@ import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { getErrorMessage } from 'utils/Utils'
 import type { PullRequestResponse } from 'utils/types'
+import { CodeIcon } from 'utils/GitUtils'
 import { PullRequestMetadataInfo } from './PullRequestMetadataInfo'
+import { PullRequestConversation } from './PullRequestConversation/PullRequestConversation'
+import { PullRequestDiff } from './PullRequestDiff/PullRequestDiff'
+import { PullRequestCommits } from './PullRequestCommits/PullRequestCommits'
 import css from './PullRequest.module.scss'
 
 export default function PullRequest() {
@@ -39,35 +43,37 @@ export default function PullRequest() {
         }
       />
       <PageBody loading={loading || prLoading} error={getErrorMessage(error || prError)} retryOnError={() => refetch()}>
-        {!!repoMetadata && !!prData && <PullRequestMetadataInfo repoMetadata={repoMetadata} {...prData} />}
-
-        {!!prData && (
-          <Container className={css.tabsContainer}>
-            <Tabs
-              id="pullRequestTabs"
-              defaultSelectedTabId={'conversation'}
-              large={false}
-              tabList={[
-                {
-                  id: 'conversation',
-                  title: getString('conversation'),
-                  panel: <div>conversation</div>
-                },
-                {
-                  id: 'commits',
-                  title: getString('commits'),
-                  panel: <div>Commit</div>
-                },
-                {
-                  id: 'diff',
-                  title: getString('diff'),
-                  panel: <div>Diff</div>
-                }
-              ]}
-            />
-          </Container>
-        )}
-        {/* <pre>{JSON.stringify(prData || {}, null, 2)}</pre> */}
+        {repoMetadata ? (
+          prData ? (
+            <>
+              <PullRequestMetadataInfo repoMetadata={repoMetadata} {...prData} />
+              <Container className={css.tabsContainer}>
+                <Tabs
+                  id="pullRequestTabs"
+                  defaultSelectedTabId={'conversation'}
+                  large={false}
+                  tabList={[
+                    {
+                      id: 'conversation',
+                      title: <TabTitle icon={CodeIcon.Chat} title={getString('conversation')} count={100} />,
+                      panel: <PullRequestConversation repoMetadata={repoMetadata} pullRequestMetadata={prData} />
+                    },
+                    {
+                      id: 'commits',
+                      title: <TabTitle icon={CodeIcon.Commit} title={getString('commits')} count={15} />,
+                      panel: <PullRequestCommits repoMetadata={repoMetadata} pullRequestMetadata={prData} />
+                    },
+                    {
+                      id: 'diff',
+                      title: <TabTitle icon={CodeIcon.Commit} title={getString('diff')} count={20} />,
+                      panel: <PullRequestDiff repoMetadata={repoMetadata} pullRequestMetadata={prData} />
+                    }
+                  ]}
+                />
+              </Container>
+            </>
+          ) : null
+        ) : null}
       </PageBody>
     </Container>
   )
@@ -76,5 +82,16 @@ export default function PullRequest() {
 const PullRequestTitle: React.FC<PullRequestResponse> = ({ title, number }) => (
   <Text tag="h1" font={{ variation: FontVariation.H4 }}>
     {title} <span className={css.prNumber}>#{number}</span>
+  </Text>
+)
+
+const TabTitle: React.FC<{ icon: IconName; title: string; count?: number }> = ({ icon, title, count }) => (
+  <Text icon={icon} className={css.tabTitle}>
+    {title}{' '}
+    {!!count && (
+      <Text inline className={css.count}>
+        {count}
+      </Text>
+    )}
   </Text>
 )
