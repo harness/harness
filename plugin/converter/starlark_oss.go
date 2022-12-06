@@ -18,6 +18,6 @@ package converter
 
 import "github.com/drone/drone/core"
 
-func Starlark(enabled bool, stepLimit uint64) core.ConvertService {
+func Starlark(enabled bool, stepLimit uint64, sizeLimit uint64) core.ConvertService {
 	return new(noop)
 }
