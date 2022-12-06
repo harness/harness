@@ -130,6 +130,7 @@ type CreateRepositoryRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Data:
+	//
 	//	*CreateRepositoryRequest_Header
 	//	*CreateRepositoryRequest_File
 	Data isCreateRepositoryRequest_Data `protobuf_oneof:"data"`
@@ -713,6 +714,7 @@ type ListCommitsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Data:
+	//
 	//	*ListCommitsResponse_Header
 	//	*ListCommitsResponse_Commit
 	Data isListCommitsResponse_Data `protobuf_oneof:"data"`

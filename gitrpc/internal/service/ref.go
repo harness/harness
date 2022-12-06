@@ -5,12 +5,16 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strings"
 
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type ReferenceService struct {
@@ -168,4 +172,26 @@ func wrapInstructorWithOptionalPagination(inner types.WalkReferencesInstructor,
 		},
 		endAfter,
 		nil
+}
+
+func (s ReferenceService) GetRef(ctx context.Context,
+	request *rpc.GetRefRequest) (*rpc.GetRefResponse, error) {
+	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
+
+	var refType types.RefType
+	switch request.RefType {
+	case rpc.GetRefRequest_Branch:
+		refType = types.RefTypeBranch
+	case rpc.GetRefRequest_Tag:
+		refType = types.RefTypeTag
+	default:
+		return nil, status.Error(codes.InvalidArgument, "invalid value of refType argument")
+	}
+
+	sha, err := s.adapter.GetRef(ctx, repoPath, request.RefName, refType)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.GetRefResponse{Sha: sha}, nil
 }

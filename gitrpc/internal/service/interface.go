@@ -36,4 +36,5 @@ type GitAdapter interface {
 	DeleteBranch(ctx context.Context, repoPath string, branchName string, force bool) error
 	GetCommitDivergences(ctx context.Context, repoPath string,
 		requests []types.CommitDivergenceRequest, max int32) ([]types.CommitDivergence, error)
+	GetRef(ctx context.Context, repoPath string, name string, refType types.RefType) (string, error)
 }

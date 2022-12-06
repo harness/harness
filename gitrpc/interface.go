@@ -18,6 +18,7 @@ type Interface interface {
 	CreateBranch(ctx context.Context, params *CreateBranchParams) (*CreateBranchOutput, error)
 	DeleteBranch(ctx context.Context, params *DeleteBranchParams) error
 	ListBranches(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error)
+	GetRef(ctx context.Context, params *GetRefParams) (*GetRefResponse, error)
 
 	/*
 	 * Commits service

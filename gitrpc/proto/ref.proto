@@ -10,6 +10,7 @@ service ReferenceService {
   rpc DeleteBranch(DeleteBranchRequest) returns (DeleteBranchResponse);
   rpc ListBranches(ListBranchesRequest) returns (stream ListBranchesResponse);
   rpc ListCommitTags(ListCommitTagsRequest) returns (stream ListCommitTagsResponse);
+  rpc GetRef(GetRefRequest) returns (GetRefResponse);
 }
 
 message CreateBranchRequest {
@@ -85,4 +86,18 @@ message CommitTag {
   string message    = 5;
   Signature tagger  = 6;
   Commit commit     = 7;
+}
+
+message GetRefRequest {
+  enum RefType {
+    Branch = 0;
+    Tag = 1;
+  }
+  string repo_uid    = 1;
+  string ref_name = 2;
+  RefType ref_type = 3;
+}
+
+message GetRefResponse {
+  string sha = 1;
 }

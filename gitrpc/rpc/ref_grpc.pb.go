@@ -26,6 +26,7 @@ type ReferenceServiceClient interface {
 	DeleteBranch(ctx context.Context, in *DeleteBranchRequest, opts ...grpc.CallOption) (*DeleteBranchResponse, error)
 	ListBranches(ctx context.Context, in *ListBranchesRequest, opts ...grpc.CallOption) (ReferenceService_ListBranchesClient, error)
 	ListCommitTags(ctx context.Context, in *ListCommitTagsRequest, opts ...grpc.CallOption) (ReferenceService_ListCommitTagsClient, error)
+	GetRef(ctx context.Context, in *GetRefRequest, opts ...grpc.CallOption) (*GetRefResponse, error)
 }
 
 type referenceServiceClient struct {
@@ -118,6 +119,15 @@ func (x *referenceServiceListCommitTagsClient) Recv() (*ListCommitTagsResponse, 
 	return m, nil
 }
 
+func (c *referenceServiceClient) GetRef(ctx context.Context, in *GetRefRequest, opts ...grpc.CallOption) (*GetRefResponse, error) {
+	out := new(GetRefResponse)
+	err := c.cc.Invoke(ctx, "/rpc.ReferenceService/GetRef", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ReferenceServiceServer is the server API for ReferenceService service.
 // All implementations must embed UnimplementedReferenceServiceServer
 // for forward compatibility
@@ -126,6 +136,7 @@ type ReferenceServiceServer interface {
 	DeleteBranch(context.Context, *DeleteBranchRequest) (*DeleteBranchResponse, error)
 	ListBranches(*ListBranchesRequest, ReferenceService_ListBranchesServer) error
 	ListCommitTags(*ListCommitTagsRequest, ReferenceService_ListCommitTagsServer) error
+	GetRef(context.Context, *GetRefRequest) (*GetRefResponse, error)
 	mustEmbedUnimplementedReferenceServiceServer()
 }
 
@@ -144,6 +155,9 @@ func (UnimplementedReferenceServiceServer) ListBranches(*ListBranchesRequest, Re
 }
 func (UnimplementedReferenceServiceServer) ListCommitTags(*ListCommitTagsRequest, ReferenceService_ListCommitTagsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListCommitTags not implemented")
+}
+func (UnimplementedReferenceServiceServer) GetRef(context.Context, *GetRefRequest) (*GetRefResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRef not implemented")
 }
 func (UnimplementedReferenceServiceServer) mustEmbedUnimplementedReferenceServiceServer() {}
 
@@ -236,6 +250,24 @@ func (x *referenceServiceListCommitTagsServer) Send(m *ListCommitTagsResponse) e
 	return x.ServerStream.SendMsg(m)
 }
 
+func _ReferenceService_GetRef_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRefRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReferenceServiceServer).GetRef(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.ReferenceService/GetRef",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReferenceServiceServer).GetRef(ctx, req.(*GetRefRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ReferenceService_ServiceDesc is the grpc.ServiceDesc for ReferenceService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -250,6 +282,10 @@ var ReferenceService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteBranch",
 			Handler:    _ReferenceService_DeleteBranch_Handler,
+		},
+		{
+			MethodName: "GetRef",
+			Handler:    _ReferenceService_GetRef_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

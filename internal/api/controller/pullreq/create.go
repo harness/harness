@@ -6,8 +6,11 @@ package pullreq
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
+	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
@@ -35,36 +38,65 @@ func (c *Controller) Create(
 	var pr *types.PullReq
 	now := time.Now().UnixMilli()
 
-	err := dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
-		var (
-			sourceRepo *types.Repository
-			targetRepo *types.Repository
-			err        error
-		)
+	var (
+		sourceRepo *types.Repository
+		targetRepo *types.Repository
+		err        error
+	)
 
-		targetRepo, err = c.repoStore.FindRepoFromRef(ctx, repoRef)
+	targetRepo, err = c.repoStore.FindRepoFromRef(ctx, repoRef)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, targetRepo, enum.PermissionRepoEdit, false); err != nil {
+		return nil, err
+	}
+
+	sourceRepo = targetRepo
+	if in.SourceRepoRef != "" {
+		sourceRepo, err = c.repoStore.FindRepoFromRef(ctx, repoRef)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		if in.SourceRepoRef != "" {
-			sourceRepo, err = c.repoStore.FindRepoFromRef(ctx, repoRef)
-			if err != nil {
-				return err
-			}
-		} else {
-			sourceRepo = targetRepo
+		if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo, enum.PermissionRepoView, false); err != nil {
+			return nil, err
 		}
+	}
 
-		if sourceRepo.ID == targetRepo.ID && in.TargetBranch == in.SourceBranch {
-			return usererror.BadRequest("target and source branch can't be the same")
-		}
+	if sourceRepo.ID == targetRepo.ID && in.TargetBranch == in.SourceBranch {
+		return nil, usererror.BadRequest("target and source branch can't be the same")
+	}
 
-		if err = apiauth.CheckRepo(ctx, c.authorizer, session, targetRepo, enum.PermissionRepoEdit, false); err != nil {
-			return err
-		}
+	_, err = c.gitRPCClient.GetRef(ctx,
+		&gitrpc.GetRefParams{RepoUID: sourceRepo.GitUID, Name: in.SourceBranch, Type: gitrpc.RefTypeBranch})
+	if errors.Is(err, gitrpc.ErrNotFound) {
+		return nil, usererror.BadRequest(
+			fmt.Sprintf("branch %s does not exist in the repository %s", in.SourceBranch, sourceRepo.UID))
+	}
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to check existence of the branch %s in the repository %s: %w",
+			in.SourceBranch, sourceRepo.UID, err)
+	}
 
-		lastNumber, err := c.pullreqStore.LastNumber(ctx, targetRepo.ID)
+	_, err = c.gitRPCClient.GetRef(ctx,
+		&gitrpc.GetRefParams{RepoUID: targetRepo.GitUID, Name: in.TargetBranch, Type: gitrpc.RefTypeBranch})
+	if errors.Is(err, gitrpc.ErrNotFound) {
+		return nil, usererror.BadRequest(
+			fmt.Sprintf("branch %s does not exist in the repository %s", in.TargetBranch, targetRepo.UID))
+	}
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to check existence of the branch %s in the repository %s: %w",
+			in.TargetBranch, targetRepo.UID, err)
+	}
+
+	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+		var lastNumber int64
+
+		lastNumber, err = c.pullreqStore.LastNumber(ctx, targetRepo.ID)
 		if err != nil {
 			return err
 		}

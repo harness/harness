@@ -125,3 +125,27 @@ func walkGiteaReferenceParser(parser *gitearef.Parser, handler types.WalkReferen
 
 	return nil
 }
+
+func (g Adapter) GetRef(ctx context.Context, repoPath, refName string, refType types.RefType) (string, error) {
+	switch refType {
+	case types.RefTypeBranch:
+		refName = gitea.BranchPrefix + refName
+	case types.RefTypeTag:
+		refName = gitea.TagPrefix + refName
+	default:
+		return "", types.ErrInvalidArgument
+	}
+
+	cmd := gitea.NewCommand(ctx, "show-ref", "--verify", "-s", "--", refName)
+	stdout, _, err := cmd.RunStdString(&gitea.RunOpts{
+		Dir: repoPath,
+	})
+	if err != nil {
+		if err.IsExitCode(128) && strings.Contains(err.Stderr(), "not a valid ref") {
+			return "", types.ErrNotFound
+		}
+		return "", err
+	}
+
+	return strings.TrimSpace(stdout), nil
+}
