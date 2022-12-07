@@ -20,7 +20,7 @@ func (c *Controller) Find(
 	session *auth.Session,
 	repoRef string,
 	pullreqNum int64,
-) (*types.PullReq, error) {
+) (*types.PullReqInfo, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
@@ -38,10 +38,5 @@ func (c *Controller) Find(
 		return nil, err
 	}
 
-	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, pullreqNum)
-	if err != nil {
-		return nil, err
-	}
-
-	return pr, nil
+	return c.pullreqStore.FindByNumber(ctx, repo.ID, pullreqNum)
 }

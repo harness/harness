@@ -20,7 +20,7 @@ func (c *Controller) List(
 	session *auth.Session,
 	repoRef string,
 	filter *types.PullReqFilter,
-) ([]*types.PullReq, error) {
+) ([]*types.PullReqInfo, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}

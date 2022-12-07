@@ -8,9 +8,9 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/pullreq"
+	handler "github.com/harness/gitness/internal/api/handler/pullreq"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/gotidy/ptr"
@@ -114,7 +114,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	createPullReq.WithTags("pullreq")
 	createPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "createPullReq"})
 	_ = reflector.SetRequest(&createPullReq, new(createPullReqRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&createPullReq, new(types.PullReq), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&createPullReq, new(handler.PullReq), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&createPullReq, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&createPullReq, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&createPullReq, new(usererror.Error), http.StatusUnauthorized)
@@ -130,7 +130,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		queryParameterDirection, queryParameterSortPullRequest,
 		queryParameterPage, queryParameterPerPage)
 	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReq), http.StatusOK)
+	_ = reflector.SetJSONResponse(&listPullReq, new([]handler.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusUnauthorized)
@@ -141,7 +141,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	getPullReq.WithTags("pullreq")
 	getPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "getPullReq"})
 	_ = reflector.SetRequest(&getPullReq, new(getPullReqRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&getPullReq, new(types.PullReq), http.StatusOK)
+	_ = reflector.SetJSONResponse(&getPullReq, new(handler.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusUnauthorized)

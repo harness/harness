@@ -41,6 +41,11 @@ func HandleList(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, result)
+		list := make([]*PullReq, len(result))
+		for i, pri := range result {
+			list[i] = mapPullReqInfo(pri)
+		}
+
+		render.JSON(w, http.StatusOK, list)
 	}
 }

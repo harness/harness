@@ -31,35 +31,45 @@ type PullReqStore struct {
 	db *sqlx.DB
 }
 
-const pullReqSelectBase = `
-SELECT
-	 pullreq_id
-	,pullreq_created_by
-	,pullreq_created
-	,pullreq_updated
-	,pullreq_state
-    ,pullreq_number
-	,pullreq_title
-	,pullreq_description
-	,pullreq_source_repo_id
-	,pullreq_source_branch
-	,pullreq_target_repo_id
-	,pullreq_target_branch
-	,pullreq_merged_by
-	,pullreq_merged
-	,pullreq_merge_strategy
-FROM pullreq
-`
+const (
+	pullReqColumns = `
+		 pullreq_id
+		,pullreq_created_by
+		,pullreq_created
+		,pullreq_updated
+		,pullreq_state
+	    ,pullreq_number
+		,pullreq_title
+		,pullreq_description
+		,pullreq_source_repo_id
+		,pullreq_source_branch
+		,pullreq_target_repo_id
+		,pullreq_target_branch
+		,pullreq_merged_by
+		,pullreq_merged
+		,pullreq_merge_strategy
+		,author.principal_id as "author_id"
+		,author.principal_displayName as "author_name"
+		,author.principal_email as "author_email"
+		,merger.principal_id as "merger_id"
+		,merger.principal_displayName as "merger_name"
+		,merger.principal_email as "merger_email"`
+
+	pullReqSelectBase = `
+	SELECT` + pullReqColumns + `
+	FROM pullreq
+	INNER JOIN principals author on author.principal_id = pullreq_created_by
+	LEFT  JOIN principals merger on merger.principal_id = pullreq_merged_by`
+)
 
 // Find finds the pull request by id.
-func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReq, error) {
+func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReqInfo, error) {
 	const sqlQuery = pullReqSelectBase + `
-WHERE pullreq_id = $1
-`
+	WHERE pullreq_id = $1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := new(types.PullReq)
+	dst := new(types.PullReqInfo)
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
 		return nil, processSQLErrorf(err, "Select query failed")
 	}
@@ -67,14 +77,13 @@ WHERE pullreq_id = $1
 }
 
 // FindByNumber finds the pull request by repo ID and pull request number.
-func (s *PullReqStore) FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReq, error) {
+func (s *PullReqStore) FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReqInfo, error) {
 	const sqlQuery = pullReqSelectBase + `
-WHERE pullreq_target_repo_id = $1 AND pullreq_number = $2
-`
+	WHERE pullreq_target_repo_id = $1 AND pullreq_number = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := new(types.PullReq)
+	dst := new(types.PullReqInfo)
 	if err := db.GetContext(ctx, dst, sqlQuery, repoID, number); err != nil {
 		return nil, processSQLErrorf(err, "Select query failed")
 	}
@@ -84,37 +93,37 @@ WHERE pullreq_target_repo_id = $1 AND pullreq_number = $2
 // Create creates a new pull request.
 func (s *PullReqStore) Create(ctx context.Context, pullReq *types.PullReq) error {
 	const sqlQuery = `
-INSERT INTO pullreq (
-	 pullreq_created_by
-	,pullreq_created
-	,pullreq_updated
-	,pullreq_state
-	,pullreq_number
-	,pullreq_title
-	,pullreq_description
-	,pullreq_source_repo_id
-	,pullreq_source_branch
-	,pullreq_target_repo_id
-	,pullreq_target_branch
-	,pullreq_merged_by
-	,pullreq_merged
-	,pullreq_merge_strategy
-) values (
-	 :pullreq_created_by
-	,:pullreq_created
-	,:pullreq_updated
-	,:pullreq_state
-	,:pullreq_number
-	,:pullreq_title
-	,:pullreq_description
-	,:pullreq_source_repo_id
-	,:pullreq_source_branch
-	,:pullreq_target_repo_id
-	,:pullreq_target_branch
-	,:pullreq_merged_by
-	,:pullreq_merged
-	,:pullreq_merge_strategy
-) RETURNING pullreq_id
+	INSERT INTO pullreq (
+		 pullreq_created_by
+		,pullreq_created
+		,pullreq_updated
+		,pullreq_state
+		,pullreq_number
+		,pullreq_title
+		,pullreq_description
+		,pullreq_source_repo_id
+		,pullreq_source_branch
+		,pullreq_target_repo_id
+		,pullreq_target_branch
+		,pullreq_merged_by
+		,pullreq_merged
+		,pullreq_merge_strategy
+	) values (
+		 :pullreq_created_by
+		,:pullreq_created
+		,:pullreq_updated
+		,:pullreq_state
+		,:pullreq_number
+		,:pullreq_title
+		,:pullreq_description
+		,:pullreq_source_repo_id
+		,:pullreq_source_branch
+		,:pullreq_target_repo_id
+		,:pullreq_target_branch
+		,:pullreq_merged_by
+		,:pullreq_merged
+		,:pullreq_merge_strategy
+	) RETURNING pullreq_id
 `
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -134,17 +143,16 @@ INSERT INTO pullreq (
 // Update updates the pull request.
 func (s *PullReqStore) Update(ctx context.Context, pullReq *types.PullReq) error {
 	const sqlQuery = `
-UPDATE pullreq
-SET
-	 pullreq_updated = :pullreq_updated
-	,pullreq_state = :pullreq_state
-	,pullreq_title = :pullreq_title
-	,pullreq_description = :pullreq_description
-	,pullreq_merged_by = :pullreq_merged_by
-	,pullreq_merged = :pullreq_merged
-	,pullreq_merge_strategy = :pullreq_merge_strategy
-WHERE pullreq_id = :pullreq_id
-`
+	UPDATE pullreq
+	SET
+		 pullreq_updated = :pullreq_updated
+		,pullreq_state = :pullreq_state
+		,pullreq_title = :pullreq_title
+		,pullreq_description = :pullreq_description
+		,pullreq_merged_by = :pullreq_merged_by
+		,pullreq_merged = :pullreq_merged
+		,pullreq_merge_strategy = :pullreq_merge_strategy
+	WHERE pullreq_id = :pullreq_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -226,10 +234,12 @@ func (s *PullReqStore) Count(ctx context.Context, repoID int64, opts *types.Pull
 }
 
 // List returns a list of pull requests for a repo.
-func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullReqFilter) ([]*types.PullReq, error) {
+func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullReqFilter) ([]*types.PullReqInfo, error) {
 	stmt := builder.
-		Select("*").
+		Select(pullReqColumns).
 		From("pullreq").
+		InnerJoin("principals author on author.principal_id = pullreq_created_by").
+		LeftJoin("principals merger on merger.principal_id = pullreq_merged_by").
 		Where("pullreq_target_repo_id = ?", repoID)
 
 	if len(opts.States) == 1 {
@@ -266,7 +276,7 @@ func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullR
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
 
-	dst := make([]*types.PullReq, 0)
+	dst := make([]*types.PullReqInfo, 0)
 
 	db := dbtx.GetAccessor(ctx, s.db)
 

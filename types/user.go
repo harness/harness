@@ -43,4 +43,10 @@ type (
 		Sort  enum.UserAttr `json:"sort"`
 		Order enum.Order    `json:"direction"`
 	}
+
+	Identity struct {
+		ID    int64  `db:"id"    json:"id"`
+		Name  string `db:"name"  json:"name"`
+		Email string `db:"email" json:"email"`
+	}
 )

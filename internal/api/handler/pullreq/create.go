@@ -32,12 +32,14 @@ func HandleCreate(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		repo, err := pullreqCtrl.Create(ctx, session, repoRef, in)
+		result, err := pullreqCtrl.Create(ctx, session, repoRef, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, repo)
+		pr := mapPullReqInfo(result)
+
+		render.JSON(w, http.StatusOK, pr)
 	}
 }

@@ -23,9 +23,9 @@ type CreateInput struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 
-	SourceRepoRef string `json:"sourceRepoRef"`
-	SourceBranch  string `json:"sourceBranch"`
-	TargetBranch  string `json:"targetBranch"`
+	SourceRepoRef string `json:"source_repo_ref"`
+	SourceBranch  string `json:"source_branch"`
+	TargetBranch  string `json:"target_branch"`
 }
 
 // Create creates a new pull request.
@@ -34,8 +34,7 @@ func (c *Controller) Create(
 	session *auth.Session,
 	repoRef string,
 	in *CreateInput,
-) (*types.PullReq, error) {
-	var pr *types.PullReq
+) (*types.PullReqInfo, error) {
 	now := time.Now().UnixMilli()
 
 	var (
@@ -93,6 +92,8 @@ func (c *Controller) Create(
 			in.TargetBranch, targetRepo.UID, err)
 	}
 
+	var pr *types.PullReq
+
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
 		var lastNumber int64
 
@@ -126,5 +127,12 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
-	return pr, nil
+	pri := &types.PullReqInfo{
+		PullReq:     *pr,
+		AuthorID:    session.Principal.ID,
+		AuthorName:  session.Principal.DisplayName,
+		AuthorEmail: session.Principal.Email,
+	}
+
+	return pri, nil
 }

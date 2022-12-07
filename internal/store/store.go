@@ -201,10 +201,10 @@ type (
 	// PullReqStore defines the pull request data storage.
 	PullReqStore interface {
 		// Find the pull request by id.
-		Find(ctx context.Context, id int64) (*types.PullReq, error)
+		Find(ctx context.Context, id int64) (*types.PullReqInfo, error)
 
 		// FindByNumber finds the pull request by repo ID and the pull request number.
-		FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReq, error)
+		FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReqInfo, error)
 
 		// Create a new pull request.
 		Create(ctx context.Context, pullreq *types.PullReq) error
@@ -222,7 +222,7 @@ type (
 		Count(ctx context.Context, repoID int64, opts *types.PullReqFilter) (int64, error)
 
 		// List returns a list of pull requests in a space.
-		List(ctx context.Context, repoID int64, opts *types.PullReqFilter) ([]*types.PullReq, error)
+		List(ctx context.Context, repoID int64, opts *types.PullReqFilter) ([]*types.PullReqInfo, error)
 	}
 
 	// SystemStore defines internal system metadata storage.

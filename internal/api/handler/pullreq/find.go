@@ -36,6 +36,8 @@ func HandleFind(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, result)
+		pr := mapPullReqInfo(result)
+
+		render.JSON(w, http.StatusOK, pr)
 	}
 }
