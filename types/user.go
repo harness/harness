@@ -45,8 +45,15 @@ type (
 	}
 
 	Identity struct {
-		ID    int64  `db:"id"    json:"id"`
-		Name  string `db:"name"  json:"name"`
-		Email string `db:"email" json:"email"`
+		ID    int64  `json:"id"`
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	}
+
+	PrincipalInfo struct {
+		ID    int64  `json:"id"`
+		UID   string `json:"uid"`
+		Name  string `json:"name"`
+		Email string `json:"email"`
 	}
 )

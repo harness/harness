@@ -19,7 +19,7 @@ func (c *Controller) Find(
 	session *auth.Session,
 	repoRef string,
 	pullreqNum int64,
-) (*types.PullReqInfo, error) {
+) (*types.PullReq, error) {
 	if pullreqNum <= 0 {
 		return nil, usererror.BadRequest("A valid pull request number must be provided.")
 	}

@@ -9,6 +9,7 @@ import (
 
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
+	"github.com/harness/gitness/internal/store/database/null"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -31,14 +32,44 @@ type PullReqStore struct {
 	db *sqlx.DB
 }
 
+// pullReq is used to fetch pull request data from the database.
+// The object should be later re-packed into a different struct to return it as an API response.
+type pullReq struct {
+	ID        int64             `db:"pullreq_id"`
+	CreatedBy int64             `db:"pullreq_created_by"`
+	Created   int64             `db:"pullreq_created"`
+	Updated   int64             `db:"pullreq_updated"`
+	Number    int64             `db:"pullreq_number"`
+	State     enum.PullReqState `db:"pullreq_state"`
+
+	Title       string `db:"pullreq_title"`
+	Description string `db:"pullreq_description"`
+
+	SourceRepoID int64  `db:"pullreq_source_repo_id"`
+	SourceBranch string `db:"pullreq_source_branch"`
+	TargetRepoID int64  `db:"pullreq_target_repo_id"`
+	TargetBranch string `db:"pullreq_target_branch"`
+
+	MergedBy      null.Int64  `db:"pullreq_merged_by"`
+	Merged        null.Int64  `db:"pullreq_merged"`
+	MergeStrategy null.String `db:"pullreq_merge_strategy"`
+
+	AuthorUID   string      `db:"author_uid"`
+	AuthorName  string      `db:"author_name"`
+	AuthorEmail string      `db:"author_email"`
+	MergerUID   null.String `db:"merger_uid"`
+	MergerName  null.String `db:"merger_name"`
+	MergerEmail null.String `db:"merger_email"`
+}
+
 const (
 	pullReqColumns = `
 		 pullreq_id
 		,pullreq_created_by
 		,pullreq_created
 		,pullreq_updated
+		,pullreq_number
 		,pullreq_state
-	    ,pullreq_number
 		,pullreq_title
 		,pullreq_description
 		,pullreq_source_repo_id
@@ -48,10 +79,10 @@ const (
 		,pullreq_merged_by
 		,pullreq_merged
 		,pullreq_merge_strategy
-		,author.principal_id as "author_id"
+		,author.principal_uid as "author_uid"
 		,author.principal_displayName as "author_name"
 		,author.principal_email as "author_email"
-		,merger.principal_id as "merger_id"
+		,merger.principal_uid as "merger_uid"
 		,merger.principal_displayName as "merger_name"
 		,merger.principal_email as "merger_email"`
 
@@ -63,31 +94,33 @@ const (
 )
 
 // Find finds the pull request by id.
-func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReqInfo, error) {
+func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReq, error) {
 	const sqlQuery = pullReqSelectBase + `
 	WHERE pullreq_id = $1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := new(types.PullReqInfo)
+	dst := &pullReq{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
 		return nil, processSQLErrorf(err, "Select query failed")
 	}
-	return dst, nil
+
+	return mapPullReq(dst), nil
 }
 
 // FindByNumber finds the pull request by repo ID and pull request number.
-func (s *PullReqStore) FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReqInfo, error) {
+func (s *PullReqStore) FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReq, error) {
 	const sqlQuery = pullReqSelectBase + `
 	WHERE pullreq_target_repo_id = $1 AND pullreq_number = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := new(types.PullReqInfo)
+	dst := &pullReq{}
 	if err := db.GetContext(ctx, dst, sqlQuery, repoID, number); err != nil {
 		return nil, processSQLErrorf(err, "Select query failed")
 	}
-	return dst, nil
+
+	return mapPullReq(dst), nil
 }
 
 // Create creates a new pull request.
@@ -123,8 +156,7 @@ func (s *PullReqStore) Create(ctx context.Context, pullReq *types.PullReq) error
 		,:pullreq_merged_by
 		,:pullreq_merged
 		,:pullreq_merge_strategy
-	) RETURNING pullreq_id
-`
+	) RETURNING pullreq_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -234,7 +266,7 @@ func (s *PullReqStore) Count(ctx context.Context, repoID int64, opts *types.Pull
 }
 
 // List returns a list of pull requests for a repo.
-func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullReqFilter) ([]*types.PullReqInfo, error) {
+func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullReqFilter) ([]*types.PullReq, error) {
 	stmt := builder.
 		Select(pullReqColumns).
 		From("pullreq").
@@ -276,7 +308,7 @@ func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullR
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
 
-	dst := make([]*types.PullReqInfo, 0)
+	dst := make([]*pullReq, 0)
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -284,5 +316,51 @@ func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullR
 		return nil, processSQLErrorf(err, "Failed executing custom list query")
 	}
 
-	return dst, nil
+	return mapSlicePullReq(dst), nil
+}
+
+func mapPullReq(pr *pullReq) *types.PullReq {
+	m := &types.PullReq{
+		ID:            pr.ID,
+		CreatedBy:     pr.CreatedBy,
+		Created:       pr.Created,
+		Updated:       pr.Updated,
+		Number:        pr.Number,
+		State:         pr.State,
+		Title:         pr.Title,
+		Description:   pr.Description,
+		SourceRepoID:  pr.SourceRepoID,
+		SourceBranch:  pr.SourceBranch,
+		TargetRepoID:  pr.TargetRepoID,
+		TargetBranch:  pr.TargetBranch,
+		MergedBy:      pr.MergedBy.ToPtrInt64(),
+		Merged:        pr.Merged.ToPtrInt64(),
+		MergeStrategy: pr.MergeStrategy.ToPtrString(),
+		Author:        types.PrincipalInfo{},
+		Merger:        nil,
+	}
+	m.Author = types.PrincipalInfo{
+		ID:    pr.CreatedBy,
+		UID:   pr.AuthorUID,
+		Name:  pr.AuthorName,
+		Email: pr.AuthorEmail,
+	}
+	if pr.MergedBy.Valid {
+		m.Merger = &types.PrincipalInfo{
+			ID:    pr.MergedBy.Int64,
+			UID:   pr.MergerUID.String,
+			Name:  pr.MergerName.String,
+			Email: pr.MergerEmail.String,
+		}
+	}
+
+	return m
+}
+
+func mapSlicePullReq(prs []*pullReq) []*types.PullReq {
+	m := make([]*types.PullReq, len(prs))
+	for i, pr := range prs {
+		m[i] = mapPullReq(pr)
+	}
+	return m
 }

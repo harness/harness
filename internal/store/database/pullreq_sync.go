@@ -29,14 +29,14 @@ type PullReqStoreSync struct {
 }
 
 // Find finds the pull request by id.
-func (s *PullReqStoreSync) Find(ctx context.Context, id int64) (*types.PullReqInfo, error) {
+func (s *PullReqStoreSync) Find(ctx context.Context, id int64) (*types.PullReq, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.Find(ctx, id)
 }
 
 // FindByNumber finds the pull request by repo ID and pull request number.
-func (s *PullReqStoreSync) FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReqInfo, error) {
+func (s *PullReqStoreSync) FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReq, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.FindByNumber(ctx, repoID, number)
@@ -82,7 +82,7 @@ func (s *PullReqStoreSync) List(
 	ctx context.Context,
 	repoID int64,
 	opts *types.PullReqFilter,
-) ([]*types.PullReqInfo, error) {
+) ([]*types.PullReq, error) {
 	mutex.RLock()
 	defer mutex.RUnlock()
 	return s.base.List(ctx, repoID, opts)

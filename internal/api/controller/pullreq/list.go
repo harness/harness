@@ -18,7 +18,7 @@ func (c *Controller) List(
 	session *auth.Session,
 	repoRef string,
 	filter *types.PullReqFilter,
-) ([]*types.PullReqInfo, error) {
+) ([]*types.PullReq, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, err

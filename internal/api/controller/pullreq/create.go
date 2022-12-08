@@ -30,7 +30,7 @@ func (c *Controller) Create(
 	session *auth.Session,
 	repoRef string,
 	in *CreateInput,
-) (*types.PullReqInfo, error) {
+) (*types.PullReq, error) {
 	now := time.Now().UnixMilli()
 
 	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
@@ -84,6 +84,13 @@ func (c *Controller) Create(
 			MergedBy:      nil,
 			Merged:        nil,
 			MergeStrategy: nil,
+			Author: types.PrincipalInfo{
+				ID:    session.Principal.ID,
+				UID:   session.Principal.UID,
+				Name:  session.Principal.DisplayName,
+				Email: session.Principal.Email,
+			},
+			Merger: nil,
 		}
 
 		return c.pullreqStore.Create(ctx, pr)
@@ -92,12 +99,5 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
-	pri := &types.PullReqInfo{
-		PullReq:     *pr,
-		AuthorID:    session.Principal.ID,
-		AuthorName:  session.Principal.DisplayName,
-		AuthorEmail: session.Principal.Email,
-	}
-
-	return pri, nil
+	return pr, nil
 }

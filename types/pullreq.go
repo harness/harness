@@ -10,25 +10,28 @@ import (
 
 // PullReq represents a pull request.
 type PullReq struct {
-	ID        int64 `db:"pullreq_id"         json:"id"`
-	CreatedBy int64 `db:"pullreq_created_by" json:"-"`
-	Created   int64 `db:"pullreq_created"    json:"created"`
-	Updated   int64 `db:"pullreq_updated"    json:"updated"`
-	Number    int64 `db:"pullreq_number"    json:"number"`
+	ID        int64 `json:"id"`
+	CreatedBy int64 `json:"-"`
+	Created   int64 `json:"created"`
+	Updated   int64 `json:"updated"`
+	Number    int64 `json:"number"`
 
-	State enum.PullReqState `db:"pullreq_state" json:"state"`
+	State enum.PullReqState `json:"state"`
 
-	Title       string `db:"pullreq_title"        json:"title"`
-	Description string `db:"pullreq_description"  json:"description"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
 
-	SourceRepoID int64  `db:"pullreq_source_repo_id"   json:"source_repo_id"`
-	SourceBranch string `db:"pullreq_source_branch"    json:"source_branch"`
-	TargetRepoID int64  `db:"pullreq_target_repo_id"   json:"target_repo_id"`
-	TargetBranch string `db:"pullreq_target_branch"    json:"target_branch"`
+	SourceRepoID int64  `json:"source_repo_id"`
+	SourceBranch string `json:"source_branch"`
+	TargetRepoID int64  `json:"target_repo_id"`
+	TargetBranch string `json:"target_branch"`
 
-	MergedBy      *int64  `db:"pullreq_merged_by"        json:"-"`
-	Merged        *int64  `db:"pullreq_merged"           json:"merged"`
-	MergeStrategy *string `db:"pullreq_merge_strategy"   json:"merge_strategy"`
+	MergedBy      *int64  `json:"-"`
+	Merged        *int64  `json:"merged"`
+	MergeStrategy *string `json:"merge_strategy"`
+
+	Author PrincipalInfo  `json:"author"`
+	Merger *PrincipalInfo `json:"merger"`
 }
 
 // PullReqFilter stores pull request query parameters.
@@ -40,16 +43,4 @@ type PullReqFilter struct {
 	States    []enum.PullReqState `json:"state"`
 	Sort      enum.PullReqSort    `json:"sort"`
 	Order     enum.Order          `json:"direction"`
-}
-
-// PullReqInfo is used to fetch pull request data from the database.
-// The object should be later re-packed into a different struct to return it as an API response.
-type PullReqInfo struct {
-	PullReq
-	AuthorID    int64   `db:"author_id"`
-	AuthorName  string  `db:"author_name"`
-	AuthorEmail string  `db:"author_email"`
-	MergerID    *int64  `db:"merger_id"`
-	MergerName  *string `db:"merger_name"`
-	MergerEmail *string `db:"merger_email"`
 }

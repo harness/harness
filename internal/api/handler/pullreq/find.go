@@ -30,13 +30,11 @@ func HandleFind(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		result, err := pullreqCtrl.Find(ctx, session, repoRef, pullreqNumber)
+		pr, err := pullreqCtrl.Find(ctx, session, repoRef, pullreqNumber)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
-
-		pr := mapPullReqInfo(result)
 
 		render.JSON(w, http.StatusOK, pr)
 	}
