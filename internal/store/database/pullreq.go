@@ -9,11 +9,11 @@ import (
 
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
-	"github.com/harness/gitness/internal/store/database/null"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -50,8 +50,8 @@ type pullReq struct {
 	TargetRepoID int64  `db:"pullreq_target_repo_id"`
 	TargetBranch string `db:"pullreq_target_branch"`
 
-	MergedBy      null.Int64  `db:"pullreq_merged_by"`
-	Merged        null.Int64  `db:"pullreq_merged"`
+	MergedBy      null.Int    `db:"pullreq_merged_by"`
+	Merged        null.Int    `db:"pullreq_merged"`
 	MergeStrategy null.String `db:"pullreq_merge_strategy"`
 
 	AuthorUID   string      `db:"author_uid"`
@@ -333,9 +333,9 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		SourceBranch:  pr.SourceBranch,
 		TargetRepoID:  pr.TargetRepoID,
 		TargetBranch:  pr.TargetBranch,
-		MergedBy:      pr.MergedBy.ToPtrInt64(),
-		Merged:        pr.Merged.ToPtrInt64(),
-		MergeStrategy: pr.MergeStrategy.ToPtrString(),
+		MergedBy:      pr.MergedBy.Ptr(),
+		Merged:        pr.Merged.Ptr(),
+		MergeStrategy: pr.MergeStrategy.Ptr(),
 		Author:        types.PrincipalInfo{},
 		Merger:        nil,
 	}

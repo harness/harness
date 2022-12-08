@@ -18,6 +18,7 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/gotidy/ptr v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
+	github.com/guregu/null v4.0.0+incompatible
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/joho/godotenv v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
