@@ -28,7 +28,7 @@ type listPullReqRequest struct {
 
 type pullReqRequest struct {
 	repoRequest
-	ID int64 `path:"pullreqNumber"`
+	ID int64 `path:"pullreq_number"`
 }
 
 type getPullReqRequest struct {
@@ -40,6 +40,48 @@ var queryParameterQueryPullRequest = openapi3.ParameterOrRef{
 		Name:        request.QueryParamQuery,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("The substring by which the pull requests are filtered."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterSourceRepoRefPullRequest = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        "source_repo_ref",
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Source repository ref of the pull requests."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterSourceBranchPullRequest = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        "source_branch",
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Source branch of the pull requests."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterTargetBranchPullRequest = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        "target_branch",
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Target branch of the pull requests."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
@@ -125,7 +167,8 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	listPullReq.WithTags("pullreq")
 	listPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "listPullReq"})
 	listPullReq.WithParameters(
-		queryParameterStatePullRequest,
+		queryParameterStatePullRequest, queryParameterSourceRepoRefPullRequest,
+		queryParameterSourceBranchPullRequest, queryParameterTargetBranchPullRequest,
 		queryParameterQueryPullRequest, queryParameterCreatedByPullRequest,
 		queryParameterDirection, queryParameterSortPullRequest,
 		queryParameterPage, queryParameterPerPage)
@@ -146,5 +189,5 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/pullreq/{pullreqNumber}", getPullReq)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/pullreq/{pullreq_number}", getPullReq)
 }

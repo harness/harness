@@ -6,6 +6,7 @@ package pullreq
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/harness/gitness/internal/api/usererror"
@@ -60,6 +61,21 @@ func (c *Controller) Create(
 	var pr *types.PullReq
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+		var existing int64
+		existing, err = c.pullreqStore.Count(ctx, targetRepo.ID, &types.PullReqFilter{
+			SourceRepoID: sourceRepo.ID,
+			SourceBranch: in.SourceBranch,
+			TargetBranch: in.TargetBranch,
+			States:       []enum.PullReqState{enum.PullReqStateOpen},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to count existing pull requests: %w", err)
+		}
+
+		if existing > 0 {
+			return usererror.BadRequest("a pull request for this target and source branch already exists")
+		}
+
 		var lastNumber int64
 
 		lastNumber, err = c.pullreqStore.LastNumber(ctx, targetRepo.ID)

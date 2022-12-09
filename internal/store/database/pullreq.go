@@ -245,6 +245,18 @@ func (s *PullReqStore) Count(ctx context.Context, repoID int64, opts *types.Pull
 		stmt = stmt.Where(squirrel.Eq{"pullreq_state": opts.States})
 	}
 
+	if opts.SourceRepoID != 0 {
+		stmt = stmt.Where("pullreq_source_repo_id = ?", opts.SourceRepoID)
+	}
+
+	if opts.SourceBranch != "" {
+		stmt = stmt.Where("pullreq_source_branch = ?", opts.SourceBranch)
+	}
+
+	if opts.TargetBranch != "" {
+		stmt = stmt.Where("pullreq_target_branch = ?", opts.TargetBranch)
+	}
+
 	if opts.CreatedBy != 0 {
 		stmt = stmt.Where("pullreq_created_by = ?", opts.CreatedBy)
 	}
@@ -278,6 +290,18 @@ func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullR
 		stmt = stmt.Where("pullreq_state = ?", opts.States[0])
 	} else if len(opts.States) > 1 {
 		stmt = stmt.Where(squirrel.Eq{"pullreq_state": opts.States})
+	}
+
+	if opts.SourceRepoID != 0 {
+		stmt = stmt.Where("pullreq_source_repo_id = ?", opts.SourceRepoID)
+	}
+
+	if opts.SourceBranch != "" {
+		stmt = stmt.Where("pullreq_source_branch = ?", opts.SourceBranch)
+	}
+
+	if opts.TargetBranch != "" {
+		stmt = stmt.Where("pullreq_target_branch = ?", opts.TargetBranch)
 	}
 
 	if opts.Query != "" {

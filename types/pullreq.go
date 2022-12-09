@@ -36,11 +36,15 @@ type PullReq struct {
 
 // PullReqFilter stores pull request query parameters.
 type PullReqFilter struct {
-	Page      int                 `json:"page"`
-	Size      int                 `json:"size"`
-	Query     string              `json:"query"`
-	CreatedBy int64               `json:"created_by"`
-	States    []enum.PullReqState `json:"state"`
-	Sort      enum.PullReqSort    `json:"sort"`
-	Order     enum.Order          `json:"direction"`
+	Page          int                 `json:"page"`
+	Size          int                 `json:"size"`
+	Query         string              `json:"query"`
+	CreatedBy     int64               `json:"created_by"`
+	SourceRepoID  int64               `json:"-"` // caller should use source_repo_ref
+	SourceRepoRef string              `json:"source_repo_ref"`
+	SourceBranch  string              `json:"source_branch"`
+	TargetBranch  string              `json:"target_branch"`
+	States        []enum.PullReqState `json:"state"`
+	Sort          enum.PullReqSort    `json:"sort"`
+	Order         enum.Order          `json:"direction"`
 }

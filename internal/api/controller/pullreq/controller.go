@@ -49,6 +49,10 @@ func NewController(
 }
 
 func (c *Controller) verifyBranchExistence(ctx context.Context, repo *types.Repository, branch string) error {
+	if branch == "" {
+		return usererror.BadRequest("branch name can't be empty")
+	}
+
 	_, err := c.gitRPCClient.GetRef(ctx,
 		&gitrpc.GetRefParams{RepoUID: repo.GitUID, Name: branch, Type: gitrpc.RefTypeBranch})
 	if errors.Is(err, gitrpc.ErrNotFound) {

@@ -24,5 +24,16 @@ func (c *Controller) List(
 		return nil, err
 	}
 
+	if filter.SourceRepoRef == repoRef {
+		filter.SourceRepoID = repo.ID
+	} else if filter.SourceRepoRef != "" {
+		var sourceRepo *types.Repository
+		sourceRepo, err = c.getRepoCheckAccess(ctx, session, filter.SourceRepoRef, enum.PermissionRepoView)
+		if err != nil {
+			return nil, err
+		}
+		filter.SourceRepoID = sourceRepo.ID
+	}
+
 	return c.pullreqStore.List(ctx, repo.ID, filter)
 }

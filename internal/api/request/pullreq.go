@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	PathParamPullReqNumber = "pullreqNumber"
+	PathParamPullReqNumber = "pullreq_number"
 )
 
 func GetPullReqNumberFromPath(r *http.Request) (int64, error) {
@@ -58,12 +58,15 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		return nil, err
 	}
 	return &types.PullReqFilter{
-		Page:      ParsePage(r),
-		Size:      ParseSize(r),
-		Query:     ParseQuery(r),
-		CreatedBy: createdBy,
-		States:    ParsePullReqStates(r),
-		Sort:      ParseSortPullReq(r),
-		Order:     ParseOrder(r),
+		Page:          ParsePage(r),
+		Size:          ParseSize(r),
+		Query:         ParseQuery(r),
+		CreatedBy:     createdBy,
+		SourceRepoRef: r.FormValue("source_repo_ref"),
+		SourceBranch:  r.FormValue("source_branch"),
+		TargetBranch:  r.FormValue("target_branch"),
+		States:        ParsePullReqStates(r),
+		Sort:          ParseSortPullReq(r),
+		Order:         ParseOrder(r),
 	}, nil
 }
