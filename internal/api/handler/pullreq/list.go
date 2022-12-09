@@ -35,12 +35,13 @@ func HandleList(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			filter.Order = enum.OrderDesc
 		}
 
-		prs, err := pullreqCtrl.List(ctx, session, repoRef, filter)
+		list, total, err := pullreqCtrl.List(ctx, session, repoRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, prs)
+		render.Pagination(r, w, filter.Page, filter.Size, int(total))
+		render.JSON(w, http.StatusOK, list)
 	}
 }
