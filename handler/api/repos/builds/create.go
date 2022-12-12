@@ -40,6 +40,7 @@ func HandleCreate(
 			name      = chi.URLParam(r, "name")
 			sha       = r.FormValue("commit")
 			branch    = r.FormValue("branch")
+			message   = r.FormValue("message")
 			user, _   = request.UserFrom(ctx)
 		)
 
@@ -92,6 +93,9 @@ func HandleCreate(
 			AuthorAvatar: commit.Author.Avatar,
 			Sender:       user.Login,
 			Params:       map[string]string{},
+		}
+		if len(message) > 0 {
+			hook.Message = message
 		}
 
 		for key, value := range r.URL.Query() {
