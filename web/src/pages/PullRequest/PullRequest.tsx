@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Container, PageBody, Text, FontVariation, Tabs, IconName } from '@harness/uicore'
 import { useGet } from 'restful-react'
+import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
@@ -8,16 +9,30 @@ import { RepositoryPageHeader } from 'components/RepositoryPageHeader/Repository
 import { getErrorMessage } from 'utils/Utils'
 import type { PullRequestResponse } from 'utils/types'
 import { CodeIcon } from 'utils/GitUtils'
-import { PullRequestMetadataInfo } from './PullRequestMetadataInfo'
+import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { PullRequestConversation } from './PullRequestConversation/PullRequestConversation'
 import { PullRequestDiff } from './PullRequestDiff/PullRequestDiff'
 import { PullRequestCommits } from './PullRequestCommits/PullRequestCommits'
 import css from './PullRequest.module.scss'
 
+enum PullRequestSection {
+  CONVERSATION = 'conversation',
+  COMMITS = 'commits',
+  DIFFS = 'diffs'
+}
+
 export default function PullRequest() {
+  const history = useHistory()
   const { getString } = useStrings()
   const { routes } = useAppContext()
-  const { repoMetadata, error, loading, refetch, pullRequestId } = useGetRepositoryMetadata()
+  const {
+    repoMetadata,
+    error,
+    loading,
+    refetch,
+    pullRequestId,
+    pullRequestSection = PullRequestSection.CONVERSATION
+  } = useGetRepositoryMetadata()
   const {
     data: prData,
     error: prError,
@@ -26,6 +41,13 @@ export default function PullRequest() {
     path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestId}`,
     lazy: !repoMetadata
   })
+  const activeTab = useMemo(
+    () =>
+      Object.values(PullRequestSection).find(value => value === pullRequestSection)
+        ? pullRequestSection
+        : PullRequestSection.CONVERSATION,
+    [pullRequestSection]
+  )
 
   return (
     <Container className={css.main}>
@@ -46,26 +68,35 @@ export default function PullRequest() {
         {repoMetadata ? (
           prData ? (
             <>
-              <PullRequestMetadataInfo repoMetadata={repoMetadata} {...prData} />
+              <PullRequestMetaLine repoMetadata={repoMetadata} {...prData} />
               <Container className={css.tabsContainer}>
                 <Tabs
                   id="pullRequestTabs"
-                  defaultSelectedTabId={'conversation'}
+                  defaultSelectedTabId={activeTab}
                   large={false}
+                  onChange={tabId => {
+                    history.replace(
+                      routes.toCODEPullRequest({
+                        repoPath: repoMetadata.path as string,
+                        pullRequestId,
+                        pullRequestSection: tabId !== PullRequestSection.CONVERSATION ? (tabId as string) : undefined
+                      })
+                    )
+                  }}
                   tabList={[
                     {
-                      id: 'conversation',
+                      id: PullRequestSection.CONVERSATION,
                       title: <TabTitle icon={CodeIcon.Chat} title={getString('conversation')} count={100} />,
                       panel: <PullRequestConversation repoMetadata={repoMetadata} pullRequestMetadata={prData} />
                     },
                     {
-                      id: 'commits',
+                      id: PullRequestSection.COMMITS,
                       title: <TabTitle icon={CodeIcon.Commit} title={getString('commits')} count={15} />,
                       panel: <PullRequestCommits repoMetadata={repoMetadata} pullRequestMetadata={prData} />
                     },
                     {
-                      id: 'diff',
-                      title: <TabTitle icon={CodeIcon.Commit} title={getString('diff')} count={20} />,
+                      id: PullRequestSection.DIFFS,
+                      title: <TabTitle icon={CodeIcon.File} title={getString('diff')} count={20} />,
                       panel: <PullRequestDiff repoMetadata={repoMetadata} pullRequestMetadata={prData} />
                     }
                   ]}
@@ -87,7 +118,7 @@ const PullRequestTitle: React.FC<PullRequestResponse> = ({ title, number }) => (
 
 const TabTitle: React.FC<{ icon: IconName; title: string; count?: number }> = ({ icon, title, count }) => (
   <Text icon={icon} className={css.tabTitle}>
-    {title}{' '}
+    {title}
     {!!count && (
       <Text inline className={css.count}>
         {count}

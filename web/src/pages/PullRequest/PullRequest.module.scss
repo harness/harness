@@ -9,6 +9,14 @@
   .tabsContainer {
     padding-top: var(--spacing-xsmall);
 
+    // TODO: This looks bad and does not
+    // perform well. Need a way to fix
+    :global {
+      .Tabs--main .bp3-tab:not([aria-disabled='true']):hover .bp3-icon svg path {
+        fill: var(--grey-50) !important;
+      }
+    }
+
     [role='tablist'] {
       background-color: var(--white) !important;
       padding-left: var(--spacing-medium);
@@ -21,9 +29,10 @@
     }
 
     [aria-selected='true'] {
-      .tabTitle {
-        color: var(--grey-900);
-        font-weight: 600;
+      .tabTitle,
+      .tabTitle:hover {
+        color: var(--grey-900) !important;
+        font-weight: 600 !important;
       }
     }
 
@@ -50,4 +59,9 @@
   font-weight: 400;
   color: var(--grey-500);
   padding-left: var(--spacing-small);
+}
+
+.tabContentContainer {
+  min-height: calc(100vh - 153px) !important;
+  background-color: var(--primary-bg) !important;
 }

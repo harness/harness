@@ -53,7 +53,6 @@ export default function CreateWehookForm() {
                   tooltipProps={{
                     dataTooltipId: 'secret'
                   }}
-                  inputGroup={{ autoFocus: true }}
                 />
                 <FormGroup className={css.eventRadioGroup}>
                   <FormInput.RadioGroup

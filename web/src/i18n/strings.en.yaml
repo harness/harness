@@ -161,6 +161,25 @@ pr:
   modalTitle: Open a pull request
   buttonText: Open pull request
   metaLine: '{user} wants to merge {number} {number|1:commit,commits} into {target} from {source}'
+  state: '{state|closed:Closed,merged:Merged,rejected:Rejected,Open}'
+  openBy: '#{number} opened {time} by {user}'
+  diffStatus: '{status|deleted:Deleted,new:Added,renamed:Renamed,copied:Copied,Changed}'
+  showDiff: Show Diff
+  fileDeleted: This file was deleted.
+  fileUnchanged: File without changes.
+  showLink: '{count} changed {count|1:file,files}'
+  showLabel: 'Showing {showLink} with {addedLines} {addedLines|1:addition,additions} and {deletedLines} {deletedLines|1:deletion,deletions} {config}'
+  diffView: Diff View
+  split: Split
+  unified: Unified
+  reviewChanges: Review changes
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'
+open: Open
+merged: Merged
+closed: Closed
+rejected: Rejected
+yours: Yours
+all: All
+scrollToTop: Scroll to top

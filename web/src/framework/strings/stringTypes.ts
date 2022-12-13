@@ -7,6 +7,7 @@ export interface StringsMap {
   addGitIgnore: string
   addLicense: string
   addReadMe: string
+  all: string
   allBranches: string
   allEvents: string
   botAlerts: string
@@ -31,6 +32,7 @@ export interface StringsMap {
   checkSuites: string
   clone: string
   cloneHTTPS: string
+  closed: string
   commit: string
   commitChanges: string
   commitDirectlyTo: string
@@ -91,6 +93,7 @@ export interface StringsMap {
   inactiveBranches: string
   individualEvents: string
   loading: string
+  merged: string
   name: string
   nameYourBranch: string
   nameYourFile: string
@@ -105,6 +108,7 @@ export interface StringsMap {
   none: string
   ok: string
   onDate: string
+  open: string
   optional: string
   optionalExtendedDescription: string
   pageNotFound: string
@@ -115,10 +119,22 @@ export interface StringsMap {
   'pr.buttonText': string
   'pr.cantMerge': string
   'pr.descriptionPlaceHolder': string
+  'pr.diffStatus': string
+  'pr.diffView': string
   'pr.failedToCreate': string
+  'pr.fileDeleted': string
+  'pr.fileUnchanged': string
   'pr.metaLine': string
   'pr.modalTitle': string
+  'pr.openBy': string
+  'pr.reviewChanges': string
+  'pr.showDiff': string
+  'pr.showLabel': string
+  'pr.showLink': string
+  'pr.split': string
+  'pr.state': string
   'pr.titlePlaceHolder': string
+  'pr.unified': string
   prefixBase: string
   prefixCompare: string
   prev: string
@@ -128,6 +144,7 @@ export interface StringsMap {
   pullRequestEmpty: string
   pullRequests: string
   pushEvent: string
+  rejected: string
   renameFile: string
   'repos.activities': string
   'repos.data': string
@@ -139,6 +156,7 @@ export interface StringsMap {
   repositories: string
   samplePayloadUrl: string
   scanAlerts: string
+  scrollToTop: string
   search: string
   searchBranches: string
   secret: string
@@ -165,4 +183,5 @@ export interface StringsMap {
   webhookListingContent: string
   webhooks: string
   yourBranches: string
+  yours: string
 }

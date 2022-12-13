@@ -11,7 +11,7 @@ import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
-import { CommitsContent } from './RepositoryCommitsContent/CommitsContent/CommitsContent'
+import { CommitsView } from '../../components/CommitsView/CommitsView'
 import css from './RepositoryCommits.module.scss'
 
 export default function RepositoryCommits() {
@@ -71,7 +71,7 @@ export default function RepositoryCommits() {
               </Layout.Horizontal>
             </Container>
 
-            <CommitsContent commits={commits} repoMetadata={repoMetadata} />
+            <CommitsView commits={commits} repoMetadata={repoMetadata} />
 
             <Container margin={{ left: 'large', right: 'large' }}>
               <Pagination

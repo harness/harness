@@ -1,2 +1,52 @@
-.main {
+.wrapper {
+  padding-top: 0 !important;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  padding: var(--spacing-medium) 0 !important;
+  background-color: var(--white) !important;
+  z-index: 2;
+}
+
+.showLabel {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--grey-700) !important;
+
+  .showLabelLink {
+    all: unset !important;
+    height: auto !important;
+    min-height: auto !important;
+    padding: 0 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: var(--grey-700) !important;
+    color: var(--primary-7) !important;
+    display: inline-block !important;
+    margin: 0 4px !important;
+    cursor: pointer !important;
+  }
+}
+
+.layout {
+  border-radius: 5px;
+}
+
+.filesMenu {
+  max-height: 350px;
+  overflow: auto;
+  padding: var(--spacing-xsmall) !important;
+
+  :global {
+    .bp3-menu-item:hover {
+      background-color: rgba(167, 182, 194, 0.3);
+      color: inherit;
+    }
+  }
+
+  .menuItem {
+    align-items: center;
+  }
 }

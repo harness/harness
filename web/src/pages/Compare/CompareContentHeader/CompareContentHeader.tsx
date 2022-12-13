@@ -60,7 +60,7 @@ export function CompareContentHeader({
             history.replace(
               routes.toCODEPullRequest({
                 repoPath: repoMetadata.path as string,
-                pullRequestId: String(data.id)
+                pullRequestId: String(data.number)
               })
             )
           }}

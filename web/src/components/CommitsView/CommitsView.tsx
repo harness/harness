@@ -8,13 +8,13 @@ import type { RepoCommit } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { formatDate } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
-import css from './CommitsContent.module.scss'
+import css from './CommitsView.module.scss'
 
-interface CommitsContentProps extends Pick<GitInfoProps, 'repoMetadata'> {
+interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
   commits: RepoCommit[]
 }
 
-export function CommitsContent({ repoMetadata, commits }: CommitsContentProps) {
+export function CommitsView({ repoMetadata, commits }: CommitsViewProps) {
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const columns: Column<RepoCommit>[] = useMemo(

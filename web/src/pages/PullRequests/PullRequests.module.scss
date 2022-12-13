@@ -1,4 +1,16 @@
 .main {
   min-height: var(--page-min-height, 100%);
   background-color: var(--primary-bg) !important;
+
+  .table {
+    .row {
+      height: 80px;
+      display: flex;
+      justify-content: center;
+
+      .title {
+        font-weight: 600;
+      }
+    }
+  }
 }

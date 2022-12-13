@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Container, PageBody, NoDataCard, Tabs } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
+import { useGet } from 'restful-react'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
@@ -8,6 +9,8 @@ import { RepositoryPageHeader } from 'components/RepositoryPageHeader/Repository
 import { getErrorMessage } from 'utils/Utils'
 import emptyStateImage from 'images/empty-state.svg'
 import { makeDiffRefs } from 'utils/GitUtils'
+import { CommitsView } from 'components/CommitsView/CommitsView'
+import type { RepoCommit } from 'services/code'
 import { CompareContentHeader } from './CompareContentHeader/CompareContentHeader'
 import css from './Compare.module.scss'
 
@@ -18,6 +21,18 @@ export default function Compare() {
   const { repoMetadata, error, loading, refetch, diffRefs } = useGetRepositoryMetadata()
   const [sourceGitRef, setSourceGitRef] = useState(diffRefs.sourceGitRef)
   const [targetGitRef, setTargetGitRef] = useState(diffRefs.targetGitRef)
+  const {
+    data: commits,
+    error: commitsError,
+    loading: commitsLoading,
+    refetch: commitsRefetch
+  } = useGet<RepoCommit[]>({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
+    queryParams: {
+      git_ref: sourceGitRef
+    },
+    lazy: !repoMetadata
+  })
 
   return (
     <Container className={css.main}>
@@ -60,22 +75,28 @@ export default function Compare() {
             </Container>
           ))}
 
-        {!!targetGitRef && !!sourceGitRef && (
+        {!!repoMetadata && !!targetGitRef && !!sourceGitRef && (
           <Container className={css.tabsContainer} padding="xlarge">
             <Tabs
               id="branchesTags"
-              defaultSelectedTabId={'diff'}
+              defaultSelectedTabId={'commits'}
               large={false}
               tabList={[
                 {
                   id: 'commits',
                   title: getString('commits'),
-                  panel: <div>Commit</div>
+                  panel: commits?.length ? (
+                    <Container padding={{ top: 'xlarge' }}>
+                      <CommitsView commits={commits} repoMetadata={repoMetadata} />
+                    </Container>
+                  ) : (
+                    <></>
+                  )
                 },
                 {
                   id: 'diff',
                   title: getString('diff'),
-                  panel: <div>Diff</div>
+                  panel: <Container padding={{ top: 'xlarge' }}>To be defined...</Container>
                 }
               ]}
             />

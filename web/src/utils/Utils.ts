@@ -21,7 +21,7 @@ export function showToaster(message: string, props?: Partial<IToastProps>): IToa
 }
 
 export const getErrorMessage = (error: Unknown): string =>
-  get(error, 'data.error', get(error, 'data.message', error?.message))
+  get(error, 'data.error', get(error, 'data.message', get(error, 'message', error)))
 
 export interface SourceCodeEditorProps {
   source: string
@@ -79,6 +79,15 @@ export function formatDate(timestamp: number | string, dateStyle = 'medium'): st
 }
 
 /**
+ * Format a number with current locale.
+ * @param num number
+ * @returns Formatted string.
+ */
+export function formatNumber(num: number | bigint): string {
+  return new Intl.NumberFormat(LOCALE).format(num)
+}
+
+/**
  * Make any HTML element as a clickable button with keyboard accessibility
  * support (hit Enter/Space will trigger click event)
  */
@@ -89,7 +98,8 @@ export const ButtonRoleProps = {
     }
   },
   tabIndex: 0,
-  role: 'button'
+  role: 'button',
+  style: { cursor: 'pointer ' }
 }
 
 const MONACO_SUPPORTED_LANGUAGES = [
@@ -172,4 +182,16 @@ export const filenameToLanguage = (name?: string): string | undefined => {
   }
 
   return PLAIN_TEXT
+}
+
+export function waitUntil(condition: () => boolean, callback: () => void, maxCount = 100, timeout = 50) {
+  if (condition()) {
+    callback()
+  } else {
+    if (maxCount) {
+      setTimeout(() => {
+        waitUntil(condition, callback, maxCount - 1)
+      }, timeout)
+    }
+  }
 }

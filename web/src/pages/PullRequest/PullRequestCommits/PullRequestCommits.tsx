@@ -1,20 +1,30 @@
 import React from 'react'
-import { Container } from '@harness/uicore'
-import { useAppContext } from 'AppContext'
-import { useStrings } from 'framework/strings'
+import { useGet } from 'restful-react'
+import type { RepoCommit } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
-import css from './PullRequestCommits.module.scss'
+import { CommitsView } from 'components/CommitsView/CommitsView'
+import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 
 export const PullRequestCommits: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>> = ({
   repoMetadata,
   pullRequestMetadata
 }) => {
-  const { getString } = useStrings()
-  const { routes } = useAppContext()
+  const {
+    data: commits,
+    error,
+    loading,
+    refetch
+  } = useGet<RepoCommit[]>({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
+    queryParams: {
+      git_ref: pullRequestMetadata.sourceBranch
+    },
+    lazy: !repoMetadata
+  })
 
   return (
-    <Container className={css.main} padding="xlarge">
-      COMMITS...
-    </Container>
+    <PullRequestTabContentWrapper loading={loading} error={error} onRetry={() => refetch()}>
+      {!!commits?.length && <CommitsView commits={commits} repoMetadata={repoMetadata} />}
+    </PullRequestTabContentWrapper>
   )
 }

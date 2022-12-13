@@ -1,0 +1,43 @@
+.main {
+  .state {
+    --color: var(--green-700) !important;
+    --bg: var(--green-50) !important;
+
+    color: var(--color);
+    background-color: var(--bg);
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    padding: 2px 6px !important;
+    border-radius: 4px;
+
+    &.merged {
+      --color: var(--purple-700) !important;
+      --bg: var(--purple-50) !important;
+    }
+
+    &.closed {
+      --color: var(--grey-700) !important;
+      --bg: var(--grey-100) !important;
+    }
+
+    &.rejected {
+      --color: var(--red-700) !important;
+      --bg: var(--red-50) !important;
+    }
+  }
+
+  .metaline {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    line-height: 20px !important;
+    color: var(--grey-500) !important;
+
+    &.time {
+      color: var(--grey-400) !important;
+    }
+
+    strong {
+      color: var(--grey-700) !important;
+    }
+  }
+}
