@@ -6,6 +6,7 @@ package pullreq
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
@@ -26,7 +27,7 @@ func (c *Controller) Find(
 
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to acquire access to the repo: %w", err)
 	}
 
 	return c.pullreqStore.FindByNumber(ctx, repo.ID, pullreqNum)

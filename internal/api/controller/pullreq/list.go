@@ -22,7 +22,7 @@ func (c *Controller) List(
 ) ([]*types.PullReq, int64, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to check access to target repo: %w", err)
+		return nil, 0, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
 	if filter.SourceRepoRef == repoRef {
@@ -31,7 +31,7 @@ func (c *Controller) List(
 		var sourceRepo *types.Repository
 		sourceRepo, err = c.getRepoCheckAccess(ctx, session, filter.SourceRepoRef, enum.PermissionRepoView)
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to check access to source repo: %w", err)
+			return nil, 0, fmt.Errorf("failed to acquire access to source repo: %w", err)
 		}
 		filter.SourceRepoID = sourceRepo.ID
 	}

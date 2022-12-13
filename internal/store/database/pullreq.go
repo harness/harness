@@ -124,7 +124,7 @@ func (s *PullReqStore) FindByNumber(ctx context.Context, repoID, number int64) (
 }
 
 // Create creates a new pull request.
-func (s *PullReqStore) Create(ctx context.Context, pullReq *types.PullReq) error {
+func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 	const sqlQuery = `
 	INSERT INTO pullreq (
 		 pullreq_created_by
@@ -160,12 +160,12 @@ func (s *PullReqStore) Create(ctx context.Context, pullReq *types.PullReq) error
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	query, arg, err := db.BindNamed(sqlQuery, pullReq)
+	query, arg, err := db.BindNamed(sqlQuery, mapInternalPullReq(pr))
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind pullReq object")
 	}
 
-	if err = db.QueryRowContext(ctx, query, arg...).Scan(&pullReq.ID); err != nil {
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&pr.ID); err != nil {
 		return processSQLErrorf(err, "Insert query failed")
 	}
 
@@ -173,7 +173,7 @@ func (s *PullReqStore) Create(ctx context.Context, pullReq *types.PullReq) error
 }
 
 // Update updates the pull request.
-func (s *PullReqStore) Update(ctx context.Context, pullReq *types.PullReq) error {
+func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 	const sqlQuery = `
 	UPDATE pullreq
 	SET
@@ -188,7 +188,7 @@ func (s *PullReqStore) Update(ctx context.Context, pullReq *types.PullReq) error
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	query, arg, err := db.BindNamed(sqlQuery, pullReq)
+	query, arg, err := db.BindNamed(sqlQuery, mapInternalPullReq(pr))
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind pull request object")
 	}
@@ -376,6 +376,28 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 			Name:  pr.MergerName.String,
 			Email: pr.MergerEmail.String,
 		}
+	}
+
+	return m
+}
+
+func mapInternalPullReq(pr *types.PullReq) *pullReq {
+	m := &pullReq{
+		ID:            pr.ID,
+		CreatedBy:     pr.CreatedBy,
+		Created:       pr.Created,
+		Updated:       pr.Updated,
+		Number:        pr.Number,
+		State:         pr.State,
+		Title:         pr.Title,
+		Description:   pr.Description,
+		SourceRepoID:  pr.SourceRepoID,
+		SourceBranch:  pr.SourceBranch,
+		TargetRepoID:  pr.TargetRepoID,
+		TargetBranch:  pr.TargetBranch,
+		MergedBy:      null.IntFromPtr(pr.MergedBy),
+		Merged:        null.IntFromPtr(pr.Merged),
+		MergeStrategy: null.StringFromPtr(pr.MergeStrategy),
 	}
 
 	return m

@@ -35,6 +35,11 @@ type getPullReqRequest struct {
 	pullReqRequest
 }
 
+type updatePullReqRequest struct {
+	pullReqRequest
+	pullreq.UpdateInput
+}
+
 var queryParameterQueryPullRequest = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
@@ -190,4 +195,15 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/pullreq/{pullreq_number}", getPullReq)
+
+	putPullReq := openapi3.Operation{}
+	putPullReq.WithTags("pullreq")
+	putPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "updatePullReq"})
+	_ = reflector.SetRequest(&putPullReq, new(updatePullReqRequest), http.MethodPut)
+	_ = reflector.SetJSONResponse(&putPullReq, new(types.PullReq), http.StatusOK)
+	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPut, "/repos/{repoRef}/pullreq/{pullreq_number}", putPullReq)
 }

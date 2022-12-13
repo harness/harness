@@ -7,6 +7,7 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/internal/api/usererror"
@@ -34,16 +35,21 @@ func (c *Controller) Create(
 ) (*types.PullReq, error) {
 	now := time.Now().UnixMilli()
 
+	in.Title = strings.TrimSpace(in.Title)
+	if in.Title == "" {
+		return nil, usererror.BadRequest("pull request title can't be empty")
+	}
+
 	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to acquire access access to target repo: %w", err)
 	}
 
 	sourceRepo := targetRepo
 	if in.SourceRepoRef != "" {
 		sourceRepo, err = c.getRepoCheckAccess(ctx, session, in.SourceRepoRef, enum.PermissionRepoView)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to acquire access access to source repo: %w", err)
 		}
 	}
 
