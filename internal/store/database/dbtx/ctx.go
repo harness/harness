@@ -32,7 +32,7 @@ func GetAccessor(ctx context.Context, db *sqlx.DB) Accessor {
 	if a, ok := ctx.Value(ctxKeyTx{}).(Accessor); ok {
 		return a
 	}
-	return db
+	return New(db)
 }
 
 // GetTransaction returns Transaction interface from the context if it exists or return nil.

@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/stretchr/testify/assert"
 )
 
 //nolint:gocognit
@@ -106,7 +107,10 @@ func TestWithTx(t *testing.T) {
 				t:         t,
 				errCommit: test.errCommit,
 			}
-			run := &runnerDB{mock}
+			run := &runnerDB{
+				db: mock,
+				mx: lockerNop{},
+			}
 
 			ctx, cancelFn := context.WithCancel(context.Background())
 			defer cancelFn()
@@ -203,3 +207,129 @@ func (tx *txMock) Rollback() error {
 	tx.rollback = true
 	return nil
 }
+
+func TestLocking(t *testing.T) {
+	const dummyQuery = ""
+	tests := []struct {
+		name string
+		fn   func(db Transactor, l *lockerCounter)
+	}{
+		{
+			name: "exec-lock",
+			fn: func(db Transactor, l *lockerCounter) {
+				ctx := context.Background()
+				_, _ = db.ExecContext(ctx, dummyQuery)
+				_, _ = db.ExecContext(ctx, dummyQuery)
+				_, _ = db.ExecContext(ctx, dummyQuery)
+
+				assert.Zero(t, l.RLocks)
+				assert.Zero(t, l.RUnlocks)
+				assert.Equal(t, 3, l.Locks)
+				assert.Equal(t, 3, l.Unlocks)
+			},
+		},
+		{
+			name: "tx-lock",
+			fn: func(db Transactor, l *lockerCounter) {
+				ctx := context.Background()
+				_ = db.WithTx(ctx, func(ctx context.Context) error {
+					_, _ = GetAccessor(ctx, nil).ExecContext(ctx, dummyQuery)
+					_, _ = GetAccessor(ctx, nil).ExecContext(ctx, dummyQuery)
+					return nil
+				})
+
+				assert.Zero(t, l.RLocks)
+				assert.Zero(t, l.RUnlocks)
+				assert.Equal(t, 1, l.Locks)
+				assert.Equal(t, 1, l.Unlocks)
+			},
+		},
+		{
+			name: "tx-read-lock",
+			fn: func(db Transactor, l *lockerCounter) {
+				ctx := context.Background()
+				_ = db.WithTx(ctx, func(ctx context.Context) error {
+					_, _ = GetAccessor(ctx, nil).QueryContext(ctx, dummyQuery)
+					_, _ = GetAccessor(ctx, nil).QueryContext(ctx, dummyQuery)
+					return nil
+				}, TxDefaultReadOnly)
+
+				assert.Equal(t, 1, l.RLocks)
+				assert.Equal(t, 1, l.RUnlocks)
+				assert.Zero(t, l.Locks)
+				assert.Zero(t, l.Unlocks)
+			},
+		},
+	}
+
+	for _, test := range tests {
+		l := &lockerCounter{}
+		t.Run(test.name, func(t *testing.T) {
+			test.fn(runnerDB{
+				db: dbMockNop{},
+				mx: l,
+			}, l)
+		})
+	}
+}
+
+type lockerCounter struct {
+	Locks    int
+	Unlocks  int
+	RLocks   int
+	RUnlocks int
+}
+
+func (l *lockerCounter) Lock()    { l.Locks++ }
+func (l *lockerCounter) Unlock()  { l.Unlocks++ }
+func (l *lockerCounter) RLock()   { l.RLocks++ }
+func (l *lockerCounter) RUnlock() { l.RUnlocks++ }
+
+type dbMockNop struct{}
+
+func (dbMockNop) DriverName() string                                           { return "" }
+func (dbMockNop) Rebind(string) string                                         { return "" }
+func (dbMockNop) BindNamed(string, interface{}) (string, []interface{}, error) { return "", nil, nil }
+
+//nolint:nilnil // it's a mock
+func (dbMockNop) QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error) {
+	return nil, nil
+}
+
+//nolint:nilnil // it's a mock
+func (dbMockNop) QueryxContext(context.Context, string, ...interface{}) (*sqlx.Rows, error) {
+	return nil, nil
+}
+func (dbMockNop) QueryRowxContext(context.Context, string, ...interface{}) *sqlx.Row { return nil }
+func (dbMockNop) ExecContext(context.Context, string, ...interface{}) (sql.Result, error) {
+	return nil, nil
+}
+func (dbMockNop) QueryRowContext(context.Context, string, ...any) *sql.Row {
+	return nil
+}
+
+//nolint:nilnil // it's a mock
+func (dbMockNop) PrepareContext(context.Context, string) (*sql.Stmt, error) {
+	return nil, nil
+}
+
+//nolint:nilnil // it's a mock
+func (dbMockNop) PreparexContext(context.Context, string) (*sqlx.Stmt, error) {
+	return nil, nil
+}
+
+//nolint:nilnil // it's a mock
+func (dbMockNop) PrepareNamedContext(context.Context, string) (*sqlx.NamedStmt, error) {
+	return nil, nil
+}
+func (dbMockNop) GetContext(context.Context, interface{}, string, ...interface{}) error {
+	return nil
+}
+func (dbMockNop) SelectContext(context.Context, interface{}, string, ...interface{}) error {
+	return nil
+}
+
+func (dbMockNop) Commit() error   { return nil }
+func (dbMockNop) Rollback() error { return nil }
+
+func (d dbMockNop) startTx(context.Context, *sql.TxOptions) (Tx, error) { return d, nil }

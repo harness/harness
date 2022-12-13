@@ -13,7 +13,11 @@ import (
 
 // New returns new database Runner interface.
 func New(db *sqlx.DB) Transactor {
-	run := &runnerDB{sqlDB{db}}
+	mx := getLocker(db)
+	run := &runnerDB{
+		db: sqlDB{db},
+		mx: mx,
+	}
 	return run
 }
 

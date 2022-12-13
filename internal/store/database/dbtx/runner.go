@@ -8,10 +8,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
+	"github.com/jmoiron/sqlx"
 )
 
+// runnerDB executes individual sqlx database calls wrapped with the locker calls (Lock/Unlock)
+// or a transaction wrapped with the locker calls (RLock/RUnlock or Lock/Unlock depending on the transaction type).
 type runnerDB struct {
-	transactor
+	db transactor
+	mx locker
 }
 
 var _ Transactor = runnerDB{}
@@ -28,7 +33,15 @@ func (r runnerDB) WithTx(ctx context.Context, txFn func(context.Context) error, 
 		txOpts = TxDefault
 	}
 
-	tx, err := r.startTx(ctx, txOpts)
+	if txOpts.ReadOnly {
+		r.mx.RLock()
+		defer r.mx.RUnlock()
+	} else {
+		r.mx.Lock()
+		defer r.mx.Unlock()
+	}
+
+	tx, err := r.db.startTx(ctx, txOpts)
 	if err != nil {
 		return err
 	}
@@ -64,6 +77,80 @@ func (r runnerDB) WithTx(ctx context.Context, txFn func(context.Context) error, 
 	return err
 }
 
+func (r runnerDB) DriverName() string {
+	return r.db.DriverName()
+}
+
+func (r runnerDB) Rebind(query string) string {
+	return r.db.Rebind(query)
+}
+
+func (r runnerDB) BindNamed(query string, arg interface{}) (string, []interface{}, error) {
+	return r.db.BindNamed(query, arg)
+}
+
+func (r runnerDB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	return r.db.QueryContext(ctx, query, args...)
+}
+
+func (r runnerDB) QueryxContext(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	return r.db.QueryxContext(ctx, query, args...)
+}
+
+func (r runnerDB) QueryRowxContext(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	return r.db.QueryRowxContext(ctx, query, args...)
+}
+
+func (r runnerDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	return r.db.ExecContext(ctx, query, args...)
+}
+
+func (r runnerDB) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	return r.db.QueryRowContext(ctx, query, args...)
+}
+
+func (r runnerDB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	return r.db.PrepareContext(ctx, query)
+}
+
+func (r runnerDB) PreparexContext(ctx context.Context, query string) (*sqlx.Stmt, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	return r.db.PreparexContext(ctx, query)
+}
+
+func (r runnerDB) PrepareNamedContext(ctx context.Context, query string) (*sqlx.NamedStmt, error) {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	return r.db.PrepareNamedContext(ctx, query)
+}
+
+func (r runnerDB) GetContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	return r.db.GetContext(ctx, dest, query, args...)
+}
+
+func (r runnerDB) SelectContext(ctx context.Context, dest interface{}, query string, args ...interface{}) error {
+	r.mx.Lock()
+	defer r.mx.Unlock()
+	return r.db.SelectContext(ctx, dest, query, args...)
+}
+
+// runnerTx executes sqlx database transaction calls.
+// Locking is not used because runnerDB locks the entire transaction.
 type runnerTx struct {
 	Tx
 	commit   bool
