@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.16.0](https://github.com/harness/drone/tree/2.16.0) (2022-12-15)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.15.0...2.16.0)
+
+**Implemented enhancements:**
+
+- Make Starlark file size limit configurable [\#3291](https://github.com/harness/drone/pull/3291) ([andrii-kasparevych](https://github.com/andrii-kasparevych))
+- Enhance status check label for promotions [\#3263](https://github.com/harness/drone/pull/3263) ([michelangelomo](https://github.com/michelangelomo))
+
+**Fixed bugs:**
+
+- \(bugfix\) bump go-scm to v1.28.0 [\#3290](https://github.com/harness/drone/pull/3290) ([tphoney](https://github.com/tphoney))
+
 ## [v2.15.0](https://github.com/harness/drone/tree/v2.15.0) (2022-10-28)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.14.0...v2.15.0)
@@ -8,6 +21,10 @@
 
 - bump ui version [\#3279](https://github.com/harness/drone/pull/3279) ([d1wilko](https://github.com/d1wilko))
 - Add endpoint for allowing admins to force rotate a user's token [\#3272](https://github.com/harness/drone/pull/3272) ([ShiftedMr](https://github.com/ShiftedMr))
+
+**Merged pull requests:**
+
+- release prep v2.15.0 [\#3281](https://github.com/harness/drone/pull/3281) ([d1wilko](https://github.com/d1wilko))
 
 ## [v2.14.0](https://github.com/harness/drone/tree/v2.14.0) (2022-10-18)
 
