@@ -18,9 +18,9 @@ func HlogHandler() func(http.Handler) http.Handler {
 	return hlog.AccessHandler(
 		func(r *http.Request, status, size int, duration time.Duration) {
 			hlog.FromRequest(r).Info().
-				Int("status_code", status).
-				Int("response_size_bytes", size).
-				Dur("elapsed_ms", duration).
+				Int("http.status_code", status).
+				Int("http.response_size_bytes", size).
+				Dur("http.elapsed_ms", duration).
 				Msg("request completed.")
 		},
 	)

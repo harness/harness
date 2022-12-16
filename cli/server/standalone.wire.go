@@ -25,7 +25,6 @@ import (
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database"
-	"github.com/harness/gitness/internal/store/memory"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 
@@ -38,7 +37,6 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		PackageConfigsWireSet,
 		bootstrap.WireSet,
 		database.WireSet,
-		memory.WireSet,
 		router.WireSet,
 		server.WireSet,
 		cron.WireSet,

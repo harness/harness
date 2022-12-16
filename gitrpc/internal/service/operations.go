@@ -82,7 +82,7 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 	if err != nil {
 		return err
 	}
-	defer shared.Close()
+	defer shared.Close(ctx)
 
 	if err = s.clone(ctx, repo, shared, header.GetBranchName()); err != nil {
 		return err

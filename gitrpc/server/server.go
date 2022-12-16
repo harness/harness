@@ -31,7 +31,7 @@ type Server struct {
 	Bind string
 }
 
-func NewServer(config Config, errIntc *middleware.ErrInterceptor) (*Server, error) {
+func NewServer(config Config) (*Server, error) {
 	// Create repos folder
 	reposRoot := filepath.Join(config.GitRoot, repoSubdirName)
 	if _, err := os.Stat(reposRoot); errors.Is(err, os.ErrNotExist) {
@@ -46,13 +46,20 @@ func NewServer(config Config, errIntc *middleware.ErrInterceptor) (*Server, erro
 	if err != nil {
 		return nil, err
 	}
+
+	// interceptors
+	errIntc := middleware.NewErrInterceptor()
+	logIntc := middleware.NewLogInterceptor()
+
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpc_recovery.UnaryServerInterceptor(),
+			logIntc.UnaryInterceptor(),
 			errIntc.UnaryInterceptor(),
 		)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_recovery.StreamServerInterceptor(),
+			logIntc.StreamInterceptor(),
 			errIntc.StreamInterceptor(),
 		)),
 	)

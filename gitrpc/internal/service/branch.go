@@ -124,7 +124,7 @@ func (s ReferenceService) listBranchesLoadReferenceData(ctx context.Context,
 		return nil, processGitErrorf(err, "failed to walk branch references")
 	}
 
-	log.Trace().Msgf("git adapter returned %d branches", len(branches))
+	log.Ctx(ctx).Trace().Msgf("git adapter returned %d branches", len(branches))
 
 	return branches, nil
 }

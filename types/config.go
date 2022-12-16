@@ -23,9 +23,10 @@ type Config struct {
 	Server struct {
 		// HTTP defines the http configuration parameters
 		HTTP struct {
-			Bind  string `envconfig:"GITNESS_HTTP_BIND" default:":3000"`
-			Proto string `envconfig:"GITNESS_HTTP_PROTO"`
-			Host  string `envconfig:"GITNESS_HTTP_HOST"`
+			Bind                    string `envconfig:"GITNESS_HTTP_BIND" default:":3000"`
+			Proto                   string `envconfig:"GITNESS_HTTP_PROTO"`
+			Host                    string `envconfig:"GITNESS_HTTP_HOST"`
+			RequestIDResponseHeader string `envconfig:"GITNESS_HTTP_REQUEST_ID_RESPONSE_HEADER" default:"request-id"`
 		}
 
 		// GRPC defines the grpc configuration parameters

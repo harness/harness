@@ -25,7 +25,21 @@ type Client struct {
 }
 
 func New(remoteAddr string) (*Client, error) {
-	conn, err := grpc.Dial(remoteAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// create interceptors
+	logIntc := NewClientLogInterceptor()
+
+	// preparate all grpc options
+	grpcOpts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithChainUnaryInterceptor(
+			logIntc.UnaryClientInterceptor(),
+		),
+		grpc.WithChainStreamInterceptor(
+			logIntc.StreamClientInterceptor(),
+		),
+	}
+
+	conn, err := grpc.Dial(remoteAddr, grpcOpts...)
 	if err != nil {
 		return nil, err
 	}

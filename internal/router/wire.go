@@ -14,6 +14,7 @@ import (
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -35,25 +36,26 @@ func ProvideRouter(
 }
 
 func ProvideGitHandler(
+	config *types.Config,
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer,
 	client gitrpc.Interface,
 ) GitHandler {
-	return NewGitHandler(repoStore, authenticator, authorizer, client)
+	return NewGitHandler(config, repoStore, authenticator, authorizer, client)
 }
 
 func ProvideAPIHandler(
-	systemStore store.SystemStore,
+	config *types.Config,
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
 	spaceCtrl *space.Controller,
 	pullreqCtrl *pullreq.Controller,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller) APIHandler {
-	return NewAPIHandler(systemStore, authenticator, repoCtrl, spaceCtrl, pullreqCtrl, saCtrl, userCtrl)
+	return NewAPIHandler(config, authenticator, repoCtrl, spaceCtrl, pullreqCtrl, saCtrl, userCtrl)
 }
 
-func ProvideWebHandler(systemStore store.SystemStore) WebHandler {
-	return NewWebHandler(systemStore)
+func ProvideWebHandler(config *types.Config) WebHandler {
+	return NewWebHandler(config)
 }

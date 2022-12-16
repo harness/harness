@@ -147,7 +147,7 @@ func (s ReferenceService) listCommitTagsLoadReferenceData(ctx context.Context,
 		return nil, processGitErrorf(err, "failed to walk tag references")
 	}
 
-	log.Trace().Msgf("git adapter returned %d tags", len(tags))
+	log.Ctx(ctx).Trace().Msgf("git adapter returned %d tags", len(tags))
 
 	return tags, nil
 }

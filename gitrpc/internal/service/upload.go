@@ -79,8 +79,10 @@ func (s RepositoryService) AddFilesAndPush(
 	return nil
 }
 
-func (s RepositoryService) handleFileUploadIfAvailable(basePath string,
+func (s RepositoryService) handleFileUploadIfAvailable(ctx context.Context, basePath string,
 	nextFSElement func() (*rpc.FileUpload, error)) (string, error) {
+	log := log.Ctx(ctx)
+
 	log.Info().Msg("waiting to receive file upload header")
 	header, err := getFileStreamHeader(nextFSElement)
 	if err != nil {

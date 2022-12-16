@@ -5,12 +5,11 @@
 package router
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/openapi"
 	"github.com/harness/gitness/internal/api/render"
-	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/web"
 
 	"github.com/go-chi/chi"
@@ -24,9 +23,7 @@ type WebHandler interface {
 }
 
 // NewWebHandler returns a new WebHandler.
-func NewWebHandler(systemStore store.SystemStore) WebHandler {
-	config := systemStore.Config(context.Background())
-
+func NewWebHandler(config *types.Config) WebHandler {
 	// Use go-chi router for inner routing
 	r := chi.NewRouter()
 	// create middleware to enforce security best practices for

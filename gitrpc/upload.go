@@ -6,6 +6,7 @@ package gitrpc
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -26,10 +27,13 @@ type File struct {
 }
 
 func uploadFile(
+	ctx context.Context,
 	file File,
 	chunkSize int,
 	send func(*rpc.FileUpload) error,
 ) error {
+	log := log.Ctx(ctx)
+
 	log.Info().Msgf("start sending %v", file.Path)
 
 	// send filename message

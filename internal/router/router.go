@@ -50,7 +50,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	req = req.WithContext(log.WithContext(req.Context()))
 	log.UpdateContext(func(c zerolog.Context) zerolog.Context {
 		return c.
-			Str("original_url", req.URL.String())
+			Str("http.original_url", req.URL.String())
 	})
 
 	/*
@@ -63,7 +63,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ua := req.Header.Get("user-agent")
 	if strings.HasPrefix(ua, gitUserAgentPrefix) {
 		log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-			return c.Str("handler", "git")
+			return c.Str("http.handler", "git")
 		})
 
 		r.git.ServeHTTP(w, req)
@@ -78,7 +78,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	p := req.URL.Path
 	if strings.HasPrefix(p, APIMount) {
 		log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-			return c.Str("handler", "api")
+			return c.Str("http.handler", "api")
 		})
 
 		// remove matched prefix to simplify API handlers
@@ -98,7 +98,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	 * Everything else will be routed to web (or return 404)
 	 */
 	log.UpdateContext(func(c zerolog.Context) zerolog.Context {
-		return c.Str("handler", "web")
+		return c.Str("http.handler", "web")
 	})
 
 	r.web.ServeHTTP(w, req)

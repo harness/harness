@@ -17,6 +17,7 @@ import (
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -30,6 +31,7 @@ type GitHandler interface {
 
 // NewGitHandler returns a new GitHandler.
 func NewGitHandler(
+	config *types.Config,
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer,
@@ -43,9 +45,9 @@ func NewGitHandler(
 	r.Use(middleware.Recoverer)
 
 	// configure logging middleware.
-	r.Use(hlog.URLHandler("url"))
-	r.Use(hlog.MethodHandler("method"))
-	r.Use(hlog.RequestIDHandler("request", "Request-Id"))
+	r.Use(hlog.URLHandler("http.url"))
+	r.Use(hlog.MethodHandler("http.method"))
+	r.Use(hlog.RequestIDHandler("http.request", config.Server.HTTP.RequestIDResponseHeader))
 	r.Use(accesslog.HlogHandler())
 
 	r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {

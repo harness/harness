@@ -6,6 +6,7 @@ package hooks
 
 import (
 	"github.com/harness/gitness/client"
+
 	"github.com/rs/zerolog/log"
 	"gopkg.in/alecthomas/kingpin.v2"
 )

@@ -35,11 +35,13 @@ func (c *Client) CreateRepository(ctx context.Context,
 		return nil, ErrNoParamsProvided
 	}
 
+	log := log.Ctx(ctx)
+
 	uid, err := newRepositoryUID()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new uid: %w", err)
 	}
-	log.Ctx(ctx).Info().
+	log.Info().
 		Msgf("Create new git repository with uid '%s' and default branch '%s'", uid, params.DefaultBranch)
 
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
@@ -49,7 +51,7 @@ func (c *Client) CreateRepository(ctx context.Context,
 		return nil, err
 	}
 
-	log.Ctx(ctx).Info().Msgf("Send header")
+	log.Info().Msgf("Send header")
 
 	req := &rpc.CreateRepositoryRequest{
 		Data: &rpc.CreateRepositoryRequest_Header{
@@ -64,9 +66,9 @@ func (c *Client) CreateRepository(ctx context.Context,
 	}
 
 	for _, file := range params.Files {
-		log.Ctx(ctx).Info().Msgf("Send file %s", file.Path)
+		log.Info().Msgf("Send file %s", file.Path)
 
-		err = uploadFile(file, FileTransferChunkSize, func(fs *rpc.FileUpload) error {
+		err = uploadFile(ctx, file, FileTransferChunkSize, func(fs *rpc.FileUpload) error {
 			return stream.Send(&rpc.CreateRepositoryRequest{
 				Data: &rpc.CreateRepositoryRequest_File{
 					File: fs,
@@ -83,7 +85,7 @@ func (c *Client) CreateRepository(ctx context.Context,
 		return nil, processRPCErrorf(err, "failed to create repo on server (uid: '%s')", uid)
 	}
 
-	log.Ctx(ctx).Info().Msgf("completed git repo setup.")
+	log.Info().Msgf("completed git repo setup.")
 
 	return &CreateRepositoryOutput{UID: uid}, nil
 }

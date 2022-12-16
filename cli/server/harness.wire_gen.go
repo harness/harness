@@ -28,7 +28,6 @@ import (
 	router2 "github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
-	"github.com/harness/gitness/internal/store/memory"
 	"github.com/harness/gitness/types"
 )
 
@@ -61,7 +60,6 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	serviceStore := database.ProvideServiceStore(db, principalUIDTransformation)
 	serviceController := service.NewController(checkService, authorizer, serviceStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller, serviceController)
-	systemStore := memory.New(config)
 	tokenClient, err := client.ProvideTokenClient(serviceJWTProvider, typesConfig)
 	if err != nil {
 		return nil, err
@@ -99,9 +97,9 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	repoController := repo.ProvideController(config, checkRepo, authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
 	pullReqStore := database.ProvidePullReqStore(db)
 	pullreqController := pullreq.ProvideController(db, authorizer, pullReqStore, repoStore, serviceAccountStore, gitrpcInterface)
-	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, accountClient, spaceController, repoController, pullreqController)
-	gitHandler := router.ProvideGitHandler(repoStore, authenticator, authorizer, gitrpcInterface)
-	webHandler := router2.ProvideWebHandler(systemStore)
+	apiHandler := router.ProvideAPIHandler(config, authenticator, accountClient, spaceController, repoController, pullreqController)
+	gitHandler := router.ProvideGitHandler(config, repoStore, authenticator, authorizer, gitrpcInterface)
+	webHandler := router2.ProvideWebHandler(config)
 	routerRouter := router2.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
 	serverConfig := ProvideGitRPCServerConfig(config)

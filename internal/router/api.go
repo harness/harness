@@ -5,7 +5,6 @@
 package router
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -28,7 +27,6 @@ import (
 	"github.com/harness/gitness/internal/api/middleware/principal"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
-	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -50,15 +48,13 @@ var (
 
 // NewAPIHandler returns a new APIHandler.
 func NewAPIHandler(
-	systemStore store.SystemStore,
+	config *types.Config,
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
 	spaceCtrl *space.Controller,
 	pullreqCtrl *pullreq.Controller,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller) APIHandler {
-	config := systemStore.Config(context.Background())
-
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
 
@@ -67,9 +63,9 @@ func NewAPIHandler(
 	r.Use(middleware.Recoverer)
 
 	// configure logging middleware.
-	r.Use(hlog.URLHandler("url"))
-	r.Use(hlog.MethodHandler("method"))
-	r.Use(hlog.RequestIDHandler("request", "Request-Id"))
+	r.Use(hlog.URLHandler("http.url"))
+	r.Use(hlog.MethodHandler("http.method"))
+	r.Use(hlog.RequestIDHandler("http.request", config.Server.HTTP.RequestIDResponseHeader))
 	r.Use(accesslog.HlogHandler())
 
 	// configure cors middleware

@@ -6,14 +6,14 @@ package hooks
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"strings"
 
 	"github.com/harness/gitness/client"
+
 	"github.com/rs/zerolog/log"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -30,6 +30,9 @@ func Register(app *kingpin.Application, client client.Client) {
 	registerPreReceive(cmd, client)
 }
 
+// getUpdatedReferencesFromStdIn reads the updated references provided by git from stdin.
+// The expected format is "<old-value> SP <new-value> SP <ref-name> LF"
+// For more details see https://git-scm.com/docs/githooks#pre-receive
 func getUpdatedReferencesFromStdIn() ([]updatedRefData, error) {
 	reader := bufio.NewReader(os.Stdin)
 	var lines []string
@@ -44,13 +47,14 @@ func getUpdatedReferencesFromStdIn() ([]updatedRefData, error) {
 			return nil, err
 		}
 		lines = append(lines, line)
-
 	}
 	var updatedRefs []updatedRefData
 	for _, data := range lines {
+		// splitting line of expected form "<old-value> SP <new-value> SP <ref-name> LF"
 		splitGitHookData := strings.Split(data, " ")
 		if len(splitGitHookData) != 3 {
-			return nil, status.Errorf(codes.Unknown, "received invalid data format or didn't receive enough parameters - %v", splitGitHookData)
+			return nil, fmt.Errorf("received invalid data format or didn't receive enough parameters - %v",
+				splitGitHookData)
 		}
 
 		updatedRefs = append(updatedRefs, updatedRefData{

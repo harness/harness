@@ -19,34 +19,40 @@ import (
 type ErrInterceptor struct {
 }
 
-func NewErrInterceptor() *ErrInterceptor {
-	return &ErrInterceptor{}
+func NewErrInterceptor() ErrInterceptor {
+	return ErrInterceptor{}
 }
 
-func (i *ErrInterceptor) UnaryInterceptor() grpc.UnaryServerInterceptor {
+func (i ErrInterceptor) UnaryInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (interface{}, error) {
 		value, err := handler(ctx, req)
 		if (value == nil || reflect.ValueOf(value).IsNil()) && err == nil {
 			return nil, status.Error(codes.Internal, "service returned no error and no object")
 		}
-		err = i.processError(err)
+		err = processError(err)
 		return value, err
 	}
 }
 
-func (i *ErrInterceptor) StreamInterceptor() grpc.StreamServerInterceptor {
+func (i ErrInterceptor) StreamInterceptor() grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler) error {
 		err := handler(srv, stream)
-		err = i.processError(err)
+		err = processError(err)
 		return err
 	}
 }
 
-func (i *ErrInterceptor) processError(err error) error {
+func processError(err error) error {
 	if err == nil {
 		return nil
+	}
+
+	// check if error already is grpc error
+	// TODO: this should be removed once all error handling has been refactored.
+	if status, ok := status.FromError(err); ok {
+		return status.Err()
 	}
 
 	message := err.Error()

@@ -47,10 +47,10 @@ func NewSharedRepo(tempDir, repoUID string, remoteRepo *git.Repository) (*Shared
 }
 
 // Close the repository cleaning up all files.
-func (r *SharedRepo) Close() {
+func (r *SharedRepo) Close(ctx context.Context) {
 	defer r.repo.Close()
 	if err := tempdir.RemoveTemporaryPath(r.basePath); err != nil {
-		log.Err(err).Msgf("Failed to remove temporary path %s", r.basePath)
+		log.Ctx(ctx).Err(err).Msgf("Failed to remove temporary path %s", r.basePath)
 	}
 }
 
@@ -316,7 +316,7 @@ func (r *SharedRepo) Push(ctx context.Context, doer *rpc.Identity, commitHash, b
 		} else if git.IsErrPushRejected(err) {
 			rejectErr := new(git.ErrPushRejected)
 			if errors.As(err, &rejectErr) {
-				log.Info().Msgf("Unable to push back to repo from temporary repo due to rejection:"+
+				log.Ctx(ctx).Info().Msgf("Unable to push back to repo from temporary repo due to rejection:"+
 					" %s (%s)\nStdout: %s\nStderr: %s\nError: %v",
 					r.repoUID, r.basePath, rejectErr.StdOut, rejectErr.StdErr, rejectErr.Err)
 			}

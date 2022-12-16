@@ -57,6 +57,9 @@ func NewRepositoryService(adapter GitAdapter, store Storage, reposRoot string) (
 
 //nolint:gocognit // need to refactor this code
 func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateRepositoryServer) error {
+	ctx := stream.Context()
+	log := log.Ctx(ctx)
+
 	// first get repo params from stream
 	req, err := stream.Recv()
 	if err != nil {
@@ -75,7 +78,7 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	}
 
 	// create repository in repos folder
-	ctx, cancel := context.WithCancel(context.Background()) // todo: there is stream.Context()
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	err = s.adapter.InitRepository(ctx, repoPath, true)
 	if err != nil {
@@ -114,7 +117,7 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	filePaths := make([]string, 0, 16)
 	for {
 		var filePath string
-		filePath, err = s.handleFileUploadIfAvailable(tempDir, func() (*rpc.FileUpload, error) {
+		filePath, err = s.handleFileUploadIfAvailable(ctx, tempDir, func() (*rpc.FileUpload, error) {
 			m, errStream := stream.Recv()
 			if errStream != nil {
 				return nil, errStream

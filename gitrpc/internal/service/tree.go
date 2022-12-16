@@ -16,15 +16,16 @@ import (
 
 func (s RepositoryService) ListTreeNodes(request *rpc.ListTreeNodesRequest,
 	stream rpc.RepositoryService_ListTreeNodesServer) error {
+	ctx := stream.Context()
 	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
 
-	gitNodes, err := s.adapter.ListTreeNodes(stream.Context(), repoPath,
+	gitNodes, err := s.adapter.ListTreeNodes(ctx, repoPath,
 		request.GetGitRef(), request.GetPath(), request.GetRecursive(), request.GetIncludeLatestCommit())
 	if err != nil {
 		return processGitErrorf(err, "failed to list tree nodes")
 	}
 
-	log.Trace().Msgf("git adapter returned %d nodes", len(gitNodes))
+	log.Ctx(ctx).Trace().Msgf("git adapter returned %d nodes", len(gitNodes))
 
 	for _, gitNode := range gitNodes {
 		var commit *rpc.Commit

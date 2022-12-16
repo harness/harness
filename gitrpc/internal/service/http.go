@@ -145,7 +145,7 @@ func serviceRPC(ctx context.Context, stdin io.Reader, stdout io.Writer, req *rpc
 		UseContextTimeout: true,
 	})
 	if err != nil && err.Error() != "signal: killed" {
-		log.Err(err).Msgf("Fail to serve RPC(%s) in %s: %v - %s", service, dir, err, stderr.String())
+		log.Ctx(ctx).Err(err).Msgf("Fail to serve RPC(%s) in %s: %v - %s", service, dir, err, stderr.String())
 	}
 	return err
 }

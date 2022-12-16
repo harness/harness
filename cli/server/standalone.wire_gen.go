@@ -23,7 +23,6 @@ import (
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database"
-	"github.com/harness/gitness/internal/store/memory"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 )
@@ -42,7 +41,6 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	tokenStore := database.ProvideTokenStore(db)
 	controller := user.NewController(checkUser, authorizer, userStore, tokenStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller)
-	systemStore := memory.New(config)
 	serviceAccountStore := database.ProvideServiceAccountStore(db, principalUIDTransformation)
 	authenticator := authn.ProvideAuthenticator(userStore, serviceAccountStore, tokenStore)
 	checkRepo := check.ProvideRepoCheck()
@@ -61,9 +59,9 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	pullreqController := pullreq.ProvideController(db, authorizer, pullReqStore, repoStore, serviceAccountStore, gitrpcInterface)
 	serviceAccount := check.ProvideServiceAccountCheck()
 	serviceaccountController := serviceaccount.NewController(serviceAccount, authorizer, serviceAccountStore, spaceStore, repoStore, tokenStore)
-	apiHandler := router.ProvideAPIHandler(systemStore, authenticator, repoController, spaceController, pullreqController, serviceaccountController, controller)
-	gitHandler := router.ProvideGitHandler(repoStore, authenticator, authorizer, gitrpcInterface)
-	webHandler := router.ProvideWebHandler(systemStore)
+	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, spaceController, pullreqController, serviceaccountController, controller)
+	gitHandler := router.ProvideGitHandler(config, repoStore, authenticator, authorizer, gitrpcInterface)
+	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
 	serverConfig := ProvideGitRPCServerConfig(config)
