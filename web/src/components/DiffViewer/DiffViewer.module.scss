@@ -11,6 +11,64 @@
 
     .d2h-file-wrapper {
       border: 0;
+
+      .d2h-diff-tbody {
+        &,
+        tr {
+          position: relative;
+        }
+      }
+
+      &.side-by-side-file-diff {
+        .d2h-code-side-linenumber.d2h-info {
+          pointer-events: none;
+        }
+      }
+
+      [data-annotated='true'] [data-content-for-line-number],
+      [data-content-for-line-number=''] {
+        &,
+        :hover {
+          [data-annotation-for-line] {
+            pointer-events: none;
+            display: none;
+          }
+        }
+      }
+
+      [data-content-for-line-number] {
+        cursor: default;
+
+        [data-annotation-for-line] {
+          position: absolute;
+          top: 1px;
+          left: 60px;
+          display: flex;
+          height: 14px;
+          width: 14px;
+          font-weight: 600;
+          background: var(--purple-500);
+          color: var(--white);
+          text-align: center;
+          border-radius: 5px;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          visibility: hidden;
+        }
+
+        &:hover [data-annotation-for-line] {
+          visibility: visible;
+          transform: scale(1.5);
+          transition: transform 0.75s;
+        }
+      }
+
+      &.line-by-line-file-diff {
+        [data-annotation-for-line] {
+          left: 102px;
+        }
+      }
     }
 
     .d2h-file-header {
@@ -30,10 +88,6 @@
 
     .d2h-code-side-linenumber {
       width: 56px;
-    }
-
-    .d2h-diff-tbody {
-      position: relative;
     }
   }
 
@@ -98,9 +152,24 @@
     border-bottom-right-radius: 5px;
 
     max-width: calc(100vw - 320px);
+  }
+}
 
-    // &[data-display='none'] {
-    //   visibility: hidden;
-    // }
+.annotationCell {
+  box-sizing: border-box;
+  padding: var(--spacing-medium);
+
+  .annotationCellContainer {
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    height: 100%;
+    padding: var(--spacing-medium);
+    max-width: 800px;
+
+    &[data-view-style='side-by-side'] {
+      width: 600px;
+      position: sticky;
+      left: var(--spacing-medium);
+    }
   }
 }

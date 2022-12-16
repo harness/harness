@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Container,
   FlexExpander,
@@ -23,55 +23,41 @@ import type { DiffFile } from 'diff2html/lib/types'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { ButtonRoleProps, formatNumber, waitUntil } from 'utils/Utils'
-import { DiffViewer, DIFF2HTML_CONFIG, DiffViewStyle } from 'components/DiffViewer/DiffViewer'
+import { DiffViewer, DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewer'
+import { useEventListener } from 'hooks/useEventListener'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
-import diffExample from 'raw-loader!./example2.diff'
+import diffExample from 'raw-loader!./example.diff'
 import css from './PullRequestDiff.module.scss'
 
 const STICKY_TOP_POSITION = 64
+const STICKY_HEADER_HEIGHT = 150
 
 export const PullRequestDiff: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>> = () => {
   const { getString } = useStrings()
-  const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, DiffViewStyle.SPLIT)
+  const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SPLIT)
   const [diffs, setDiffs] = useState<DiffFile[]>([])
-  const [stickyInAction, setStickyInAction] = useState(false)
-  const diffStats = useMemo(() => {
-    return (diffs || []).reduce(
-      (obj, diff) => {
-        obj.addedLines += diff.addedLines
-        obj.deletedLines += diff.deletedLines
-        return obj
-      },
-      { addedLines: 0, deletedLines: 0 }
-    )
-  }, [diffs])
+  const [isSticky, setSticky] = useState(false)
+  const diffStats = useMemo(
+    () =>
+      (diffs || []).reduce(
+        (obj, diff) => {
+          obj.addedLines += diff.addedLines
+          obj.deletedLines += diff.deletedLines
+          return obj
+        },
+        { addedLines: 0, deletedLines: 0 }
+      ),
+    [diffs]
+  )
 
-  useEffect(() => {
-    setDiffs(Diff2Html.parse(diffExample, DIFF2HTML_CONFIG))
-  }, [])
+  useEffect(() => setDiffs(Diff2Html.parse(diffExample, DIFF2HTML_CONFIG)), [])
 
-  useEffect(() => {
-    const onScroll = () => {
-      if (window.scrollY >= 150) {
-        if (!stickyInAction) {
-          setStickyInAction(true)
-        }
-      } else {
-        if (stickyInAction) {
-          setStickyInAction(false)
-        }
-      }
-    }
-    window.addEventListener('scroll', onScroll)
-
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-    }
-  }, [stickyInAction])
-
-  // console.log({ diffs, viewStyle })
+  useEventListener(
+    'scroll',
+    useCallback(() => setSticky(window.scrollY >= STICKY_HEADER_HEIGHT), [])
+  )
 
   return (
     <PullRequestTabContentWrapper loading={undefined} error={undefined} onRetry={noop} className={css.wrapper}>
@@ -87,59 +73,69 @@ export const PullRequestDiff: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pull
                       variation={ButtonVariation.LINK}
                       className={css.showLabelLink}
                       tooltip={
-                        <Menu className={css.filesMenu}>
-                          {diffs?.map((diff, index) => (
-                            <MenuItem
-                              key={index}
-                              className={css.menuItem}
-                              icon={<Icon name={CodeIcon.File} padding={{ right: 'xsmall' }} />}
-                              labelElement={
-                                <Layout.Horizontal spacing="xsmall">
-                                  {!!diff.addedLines && (
-                                    <Text color={Color.GREEN_600} style={{ fontSize: '12px' }}>
-                                      +{diff.addedLines}
-                                    </Text>
-                                  )}
-                                  {!!diff.addedLines && !!diff.deletedLines && <PipeSeparator height={8} />}
-                                  {!!diff.deletedLines && (
-                                    <Text color={Color.RED_500} style={{ fontSize: '12px' }}>
-                                      -{diff.deletedLines}
-                                    </Text>
-                                  )}
-                                </Layout.Horizontal>
-                              }
-                              text={
-                                diff.isDeleted
-                                  ? diff.oldName
-                                  : diff.isRename
-                                  ? `${diff.oldName} -> ${diff.newName}`
-                                  : diff.newName
-                              }
-                              onClick={() => {
-                                const containerDOM = document.getElementById(`file-diff-container-${index}`)
+                        <Container padding="small" className={css.filesMenu}>
+                          <Menu>
+                            {diffs?.map((diff, index) => (
+                              <MenuItem
+                                key={index}
+                                className={css.menuItem}
+                                icon={<Icon name={CodeIcon.File} padding={{ right: 'xsmall' }} />}
+                                labelElement={
+                                  <Layout.Horizontal spacing="xsmall">
+                                    {!!diff.addedLines && (
+                                      <Text color={Color.GREEN_600} style={{ fontSize: '12px' }}>
+                                        +{diff.addedLines}
+                                      </Text>
+                                    )}
+                                    {!!diff.addedLines && !!diff.deletedLines && <PipeSeparator height={8} />}
+                                    {!!diff.deletedLines && (
+                                      <Text color={Color.RED_500} style={{ fontSize: '12px' }}>
+                                        -{diff.deletedLines}
+                                      </Text>
+                                    )}
+                                  </Layout.Horizontal>
+                                }
+                                text={
+                                  diff.isDeleted
+                                    ? diff.oldName
+                                    : diff.isRename
+                                    ? `${diff.oldName} -> ${diff.newName}`
+                                    : diff.newName
+                                }
+                                onClick={() => {
+                                  // When an item is clicked, do these:
+                                  //  1. Scroll into the diff container of the file.
+                                  //     The diff content might not be rendered yet since it's off-screen
+                                  //  2. Wait until its content is rendered
+                                  //  3. Adjust scroll position as when diff content is rendered, current
+                                  //     window scroll position might push diff content up, we need to push
+                                  //     it down again to make sure first line of content is visible and not
+                                  //     covered by sticky headers
+                                  const containerDOM = document.getElementById(`file-diff-container-${index}`)
 
-                                if (containerDOM) {
-                                  containerDOM.scrollIntoView()
-                                  waitUntil(
-                                    () => !!containerDOM.querySelector('[data-rendered="true"]'),
-                                    () => {
-                                      containerDOM.scrollIntoView()
-                                      // Fix scrolling position messes up with sticky header
-                                      const { y } = containerDOM.getBoundingClientRect()
-                                      if (y - STICKY_TOP_POSITION < 1) {
-                                        if (STICKY_TOP_POSITION) {
-                                          window.scroll({ top: window.scrollY - STICKY_TOP_POSITION })
+                                  if (containerDOM) {
+                                    containerDOM.scrollIntoView()
+
+                                    waitUntil(
+                                      () => !!containerDOM.querySelector('[data-rendered="true"]'),
+                                      () => {
+                                        containerDOM.scrollIntoView()
+
+                                        if (containerDOM.getBoundingClientRect().y - STICKY_TOP_POSITION < 1) {
+                                          if (STICKY_TOP_POSITION) {
+                                            window.scroll({ top: window.scrollY - STICKY_TOP_POSITION })
+                                          }
                                         }
                                       }
-                                    }
-                                  )
-                                }
-                              }}
-                            />
-                          ))}
-                        </Menu>
+                                    )
+                                  }
+                                }}
+                              />
+                            ))}
+                          </Menu>
+                        </Container>
                       }
-                      tooltipProps={{ interactionKind: 'click', hasBackdrop: true }}>
+                      tooltipProps={{ interactionKind: 'click', hasBackdrop: true, popoverClassName: css.popover }}>
                       <StringSubstitute str={getString('pr.showLink')} vars={{ count: diffs?.length || 0 }} />
                     </Button>
                   ),
@@ -159,10 +155,10 @@ export const PullRequestDiff: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pull
                               <BButton
                                 className={cx(
                                   Classes.POPOVER_DISMISS,
-                                  viewStyle === DiffViewStyle.SPLIT ? Classes.ACTIVE : ''
+                                  viewStyle === ViewStyle.SPLIT ? Classes.ACTIVE : ''
                                 )}
                                 onClick={() => {
-                                  setViewStyle(DiffViewStyle.SPLIT)
+                                  setViewStyle(ViewStyle.SPLIT)
                                   window.scroll({ top: 0 })
                                 }}>
                                 {getString('pr.split')}
@@ -170,10 +166,10 @@ export const PullRequestDiff: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pull
                               <BButton
                                 className={cx(
                                   Classes.POPOVER_DISMISS,
-                                  viewStyle === DiffViewStyle.UNIFIED ? Classes.ACTIVE : ''
+                                  viewStyle === ViewStyle.UNIFIED ? Classes.ACTIVE : ''
                                 )}
                                 onClick={() => {
-                                  setViewStyle(DiffViewStyle.UNIFIED)
+                                  setViewStyle(ViewStyle.UNIFIED)
                                   window.scroll({ top: 0 })
                                 }}>
                                 {getString('pr.unified')}
@@ -182,6 +178,7 @@ export const PullRequestDiff: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pull
                           </Layout.Horizontal>
                         </Container>
                       }
+                      tooltipProps={{ interactionKind: 'click' }}
                       iconProps={{ size: 14, padding: { right: 3 } }}
                       rightIconProps={{ size: 13, padding: { left: 0 } }}
                       padding={{ left: 'small' }}
@@ -191,7 +188,7 @@ export const PullRequestDiff: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pull
                 }}
               />
             </Text>
-            {stickyInAction && (
+            {isSticky && (
               <Layout.Horizontal padding={{ left: 'small' }}>
                 <PipeSeparator height={10} />
                 <Button

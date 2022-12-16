@@ -8,5 +8,7 @@ declare const styles: {
   readonly offscreen: string
   readonly fname: string
   readonly viewLabel: string
+  readonly annotationCell: string
+  readonly annotationCellContainer: string
 }
 export default styles

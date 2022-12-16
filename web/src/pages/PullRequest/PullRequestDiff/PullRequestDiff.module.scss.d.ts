@@ -8,5 +8,6 @@ declare const styles: {
   readonly layout: string
   readonly filesMenu: string
   readonly menuItem: string
+  readonly popover: string
 }
 export default styles

@@ -116,6 +116,9 @@ export const findReadmeInfo = (content: Nullable<OpenapiGetContentOutput>): Open
     entry => entry.type === GitContentType.FILE && /^readme(.md)?$/.test(entry?.name?.toLowerCase() || '')
   )
 
+export const findMarkdownInfo = (content: Nullable<OpenapiGetContentOutput>): OpenapiContentInfo | undefined =>
+  content?.type === GitContentType.FILE && /.md$/.test(content?.name?.toLowerCase() || '') ? content : undefined
+
 export const isRefATag = (gitRef: string) => gitRef.includes(REFS_TAGS_PREFIX)
 
 /**

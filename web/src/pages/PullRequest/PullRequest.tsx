@@ -18,7 +18,7 @@ import css from './PullRequest.module.scss'
 enum PullRequestSection {
   CONVERSATION = 'conversation',
   COMMITS = 'commits',
-  DIFFS = 'diffs'
+  FILES_CHANGED = 'files'
 }
 
 export default function PullRequest() {
@@ -95,8 +95,8 @@ export default function PullRequest() {
                       panel: <PullRequestCommits repoMetadata={repoMetadata} pullRequestMetadata={prData} />
                     },
                     {
-                      id: PullRequestSection.DIFFS,
-                      title: <TabTitle icon={CodeIcon.File} title={getString('diff')} count={20} />,
+                      id: PullRequestSection.FILES_CHANGED,
+                      title: <TabTitle icon={CodeIcon.File} title={getString('filesChanged')} count={20} />,
                       panel: <PullRequestDiff repoMetadata={repoMetadata} pullRequestMetadata={prData} />
                     }
                   ]}

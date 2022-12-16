@@ -3,12 +3,13 @@ import { Button, ButtonVariation, Color, Container, FlexExpander, Heading, Layou
 import { useHistory } from 'react-router-dom'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import type { RepoFileContent } from 'services/code'
-import { CodeIcon, GitCommitAction, GitInfoProps, isRefATag } from 'utils/GitUtils'
+import { CodeIcon, findMarkdownInfo, GitCommitAction, GitInfoProps, isRefATag } from 'utils/GitUtils'
 import { filenameToLanguage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { LatestCommitForFile } from 'components/LatestCommit/LatestCommit'
 import { CommitModalButton } from 'components/CommitModalButton/CommitModalButton'
 import { useStrings } from 'framework/strings'
+import { Readme } from '../FolderContent/Readme'
 import css from './FileContent.module.scss'
 
 export function FileContent({
@@ -24,6 +25,7 @@ export function FileContent({
     () => window.atob((resourceContent?.content as RepoFileContent)?.data || ''),
     [resourceContent?.content]
   )
+  const markdownInfo = useMemo(() => findMarkdownInfo(resourceContent), [resourceContent])
 
   return (
     <Layout.Vertical spacing="small">
@@ -83,7 +85,11 @@ export function FileContent({
 
         {(resourceContent?.content as RepoFileContent)?.data && (
           <Container className={css.content}>
-            <SourceCodeViewer language={filenameToLanguage(resourceContent?.name)} source={content} />
+            {!markdownInfo ? (
+              <SourceCodeViewer language={filenameToLanguage(resourceContent?.name)} source={content} />
+            ) : (
+              <Readme metadata={repoMetadata} readmeInfo={markdownInfo} contentOnly maxWidth="calc(100vw - 346px)" />
+            )}
           </Container>
         )}
       </Container>

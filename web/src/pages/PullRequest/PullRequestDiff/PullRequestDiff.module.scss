@@ -35,9 +35,8 @@
 }
 
 .filesMenu {
-  max-height: 350px;
+  max-height: 400px;
   overflow: auto;
-  padding: var(--spacing-xsmall) !important;
 
   :global {
     .bp3-menu-item:hover {
@@ -49,4 +48,8 @@
   .menuItem {
     align-items: center;
   }
+}
+
+.popover {
+  border-radius: 8px !important;
 }

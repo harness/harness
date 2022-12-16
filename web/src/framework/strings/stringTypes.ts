@@ -84,6 +84,7 @@ export interface StringsMap {
   failedToDeleteBranch: string
   fileDeleted: string
   files: string
+  filesChanged: string
   findATag: string
   findBranch: string
   findOrCreateBranch: string

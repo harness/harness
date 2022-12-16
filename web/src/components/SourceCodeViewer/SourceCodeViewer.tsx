@@ -16,7 +16,7 @@ export function MarkdownViewer({ source }: MarkdownViewerProps) {
   return (
     <Container className="sourceCodeViewer">
       <Suspense fallback={<Text>{getString('loading')}</Text>}>
-        <ReactMarkdownPreview source={source} skipHtml={false} />
+        <ReactMarkdownPreview source={source} skipHtml={true} warpperElement={{ 'data-color-mode': 'light' }} />
       </Suspense>
     </Container>
   )
