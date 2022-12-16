@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/gitrpc/events"
 	"github.com/harness/gitness/gitrpc/internal/gitea"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -28,6 +29,13 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 		return nil, processGitErrorf(err, "failed to create branch")
 	}
 
+	// at this point the branch got created (emit event even if we'd fail to map the git branch)
+	s.eventReporter.BranchCreated(ctx, &events.BranchCreatedPayload{
+		RepoUID:    request.RepoUid,
+		BranchName: request.BranchName,
+		SHA:        gitBranch.SHA,
+	})
+
 	branch, err := mapGitBranch(gitBranch)
 	if err != nil {
 		return nil, err
@@ -47,6 +55,12 @@ func (s ReferenceService) DeleteBranch(ctx context.Context,
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to delete branch")
 	}
+
+	// at this point the branch got created (emit event even if we'd fail to map the git branch)
+	s.eventReporter.BranchDeleted(ctx, &events.BranchDeletedPayload{
+		RepoUID:    request.RepoUid,
+		BranchName: request.BranchName,
+	})
 
 	return &rpc.DeleteBranchResponse{}, nil
 }

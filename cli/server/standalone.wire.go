@@ -10,7 +10,9 @@ package server
 import (
 	"context"
 
+	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
+	gitrpcevents "github.com/harness/gitness/gitrpc/events"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -25,6 +27,7 @@ import (
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database"
+	"github.com/harness/gitness/internal/webhook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 
@@ -35,6 +38,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	wire.Build(
 		newSystem,
 		PackageConfigsWireSet,
+		ProvideRedis,
 		bootstrap.WireSet,
 		database.WireSet,
 		router.WireSet,
@@ -47,10 +51,13 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		user.WireSet,
 		authn.WireSet,
 		authz.WireSet,
+		gitrpcevents.WireSet,
 		gitrpcserver.WireSet,
 		gitrpc.WireSet,
 		store.WireSet,
 		check.WireSet,
+		events.WireSet,
+		webhook.WireSet,
 	)
 	return &system{}, nil
 }

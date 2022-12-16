@@ -10,6 +10,7 @@ import (
 	"math"
 	"strings"
 
+	"github.com/harness/gitness/gitrpc/events"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 
@@ -19,14 +20,17 @@ import (
 
 type ReferenceService struct {
 	rpc.UnimplementedReferenceServiceServer
-	adapter   GitAdapter
-	reposRoot string
+	adapter       GitAdapter
+	eventReporter *events.Reporter
+	reposRoot     string
 }
 
-func NewReferenceService(adapter GitAdapter, reposRoot string) (*ReferenceService, error) {
+func NewReferenceService(adapter GitAdapter, eventReporter *events.Reporter,
+	reposRoot string) (*ReferenceService, error) {
 	return &ReferenceService{
-		adapter:   adapter,
-		reposRoot: reposRoot,
+		adapter:       adapter,
+		reposRoot:     reposRoot,
+		eventReporter: eventReporter,
 	}, nil
 }
 

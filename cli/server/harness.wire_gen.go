@@ -7,8 +7,9 @@ package server
 
 import (
 	"context"
-
+	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
+	events2 "github.com/harness/gitness/gitrpc/events"
 	server2 "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
@@ -28,6 +29,7 @@ import (
 	router2 "github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
+	"github.com/harness/gitness/internal/webhook"
 	"github.com/harness/gitness/types"
 )
 
@@ -103,11 +105,28 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	routerRouter := router2.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
 	serverConfig := ProvideGitRPCServerConfig(config)
-	server3, err := server2.ProvideServer(serverConfig)
+	eventsConfig := ProvideEventsConfig(config)
+	cmdable, err := ProvideRedis(config)
+	if err != nil {
+		return nil, err
+	}
+	eventsSystem, err := events.ProvideSystem(eventsConfig, cmdable)
+	if err != nil {
+		return nil, err
+	}
+	server3, err := server2.ProvideServer(serverConfig, eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	readerFactory, err := events2.ProvideReaderFactory(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	webhookServer, err := webhook.ProvideServer(ctx, config, readerFactory)
 	if err != nil {
 		return nil, err
 	}
 	nightly := cron.NewNightly()
-	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, nightly)
+	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, webhookServer, nightly)
 	return serverSystem, nil
 }

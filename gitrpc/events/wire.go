@@ -2,15 +2,19 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package gitrpc
+package events
 
-import "github.com/google/wire"
+import (
+	"github.com/harness/gitness/events"
+
+	"github.com/google/wire"
+)
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideClient,
+	ProvideReaderFactory,
 )
 
-func ProvideClient(config Config) (Interface, error) {
-	return New(config.Bind)
+func ProvideReaderFactory(eventsSystem *events.System) (*events.ReaderFactory[*Reader], error) {
+	return NewReaderFactory(eventsSystem)
 }

@@ -4,12 +4,17 @@
 
 package types
 
-import "time"
+import (
+	"time"
+)
 
 // Config stores the system configuration.
 type Config struct {
-	Debug bool `envconfig:"GITNESS_DEBUG"`
-	Trace bool `envconfig:"GITNESS_TRACE"`
+	// InstanceID specifis the ID of the gitness instance.
+	// NOTE: If the value is not provided the hostname of the machine is used.
+	InstanceID string `envconfig:"GITNESS_INSTANCE_ID"`
+	Debug      bool   `envconfig:"GITNESS_DEBUG"`
+	Trace      bool   `envconfig:"GITNESS_TRACE"`
 
 	// Git defines the git configuration parameters
 	Git struct {
@@ -87,5 +92,23 @@ type Config struct {
 		DisplayName string `envconfig:"GITNESS_ADMIN_DISPLAYNAME"`
 		Email       string `envconfig:"GITNESS_ADMIN_EMAIL"`
 		Password    string `envconfig:"GITNESS_ADMIN_PASSWORD"`
+	}
+
+	Redis struct {
+		Endpoint           string `envconfig:"GITNESS_REDIS_ENDPOINT"             default:"localhost:6379"`
+		MaxRetries         int    `envconfig:"GITNESS_REDIS_MAX_RETRIES"          default:"3"`
+		MinIdleConnections int    `envconfig:"GITNESS_REDIS_MIN_IDLE_CONNECTIONS" default:"0"`
+		Password           string `envconfig:"GITNESS_REDIS_PASSWORD"`
+	}
+
+	Events struct {
+		Mode                  string `envconfig:"GITNESS_EVENTS_MODE"                     default:"inmemory"`
+		Namespace             string `envconfig:"GITNESS_EVENTS_NAMESPACE"                default:"gitness"`
+		MaxStreamLength       int64  `envconfig:"GITNESS_EVENTS_MAX_STREAM_LENGTH"        default:"1000"`
+		ApproxMaxStreamLength bool   `envconfig:"GITNESS_EVENTS_APPROX_MAX_STREAM_LENGTH" default:"true"`
+	}
+
+	Webhook struct {
+		Concurrency int `envconfig:"GITNESS_WEBHOOK_CONCURRENCY" default:"4"`
 	}
 }

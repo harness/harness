@@ -9,23 +9,26 @@ import (
 	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/cron"
 	"github.com/harness/gitness/internal/server"
+	"github.com/harness/gitness/internal/webhook"
 )
 
 // system stores high level system sub-routines.
 type system struct {
-	bootstrap    bootstrap.Bootstrap
-	server       *server.Server
-	gitRPCServer *gitrpcserver.Server
-	nightly      *cron.Nightly
+	bootstrap     bootstrap.Bootstrap
+	server        *server.Server
+	gitRPCServer  *gitrpcserver.Server
+	webhookServer *webhook.Server
+	nightly       *cron.Nightly
 }
 
 // newSystem returns a new system structure.
 func newSystem(bootstrap bootstrap.Bootstrap, server *server.Server, gitRPCServer *gitrpcserver.Server,
-	nightly *cron.Nightly) *system {
+	webhookServer *webhook.Server, nightly *cron.Nightly) *system {
 	return &system{
-		bootstrap:    bootstrap,
-		server:       server,
-		gitRPCServer: gitRPCServer,
-		nightly:      nightly,
+		bootstrap:     bootstrap,
+		server:        server,
+		gitRPCServer:  gitRPCServer,
+		webhookServer: webhookServer,
+		nightly:       nightly,
 	}
 }

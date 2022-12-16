@@ -10,7 +10,9 @@ package server
 import (
 	"context"
 
+	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
+	gitrpcevents "github.com/harness/gitness/gitrpc/events"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
@@ -29,15 +31,17 @@ import (
 	"github.com/harness/gitness/internal/cron"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
-	gitnessTypes "github.com/harness/gitness/types"
+	"github.com/harness/gitness/internal/webhook"
+	gitnesstypes "github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
 
-func initSystem(ctx context.Context, config *gitnessTypes.Config) (*system, error) {
+func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, error) {
 	wire.Build(
 		newSystem,
 		PackageConfigsWireSet,
+		ProvideRedis,
 		bootstrap.WireSet,
 		database.WireSet,
 		server.WireSet,
@@ -48,6 +52,7 @@ func initSystem(ctx context.Context, config *gitnessTypes.Config) (*system, erro
 		user.WireSet,
 		service.WireSet,
 		serviceaccount.WireSet,
+		gitrpcevents.WireSet,
 		gitrpcserver.WireSet,
 		gitrpc.WireSet,
 		types.LoadConfig,
@@ -57,6 +62,8 @@ func initSystem(ctx context.Context, config *gitnessTypes.Config) (*system, erro
 		client.WireSet,
 		store.WireSet,
 		check.WireSet,
+		events.WireSet,
+		webhook.WireSet,
 	)
 	return &system{}, nil
 }

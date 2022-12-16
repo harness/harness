@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/types"
@@ -28,12 +30,49 @@ func load() (*types.Config, error) {
 		return nil, err
 	}
 
+	err = ensureInstanceIDIsSet(config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to ensure that instance ID is set in config: %w", err)
+	}
+
 	err = ensureGitRootIsSet(config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to ensure that git root is set in config: %w", err)
 	}
 
 	return config, nil
+}
+
+func ensureInstanceIDIsSet(config *types.Config) error {
+	if config.InstanceID == "" {
+		// use the hostname as default id of the instance
+		hostName, err := os.Hostname()
+		if err != nil {
+			return err
+		}
+
+		// Always cast to lower and remove all unwanted chars
+		// NOTE: this could theoretically lead to overlaps, then it should be passed explicitly
+		// NOTE: for k8s names/ids below modifications are all noops
+		// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
+		hostName = strings.ToLower(hostName)
+		hostName = strings.Map(func(r rune) rune {
+			switch {
+			case 'a' <= r && r <= 'z':
+				return r
+			case '0' <= r && r <= '9':
+				return r
+			case r == '-', r == '.':
+				return r
+			default:
+				return '_'
+			}
+		}, hostName)
+
+		config.InstanceID = hostName
+	}
+
+	return nil
 }
 
 func ensureGitRootIsSet(config *types.Config) error {
@@ -53,6 +92,7 @@ func ensureGitRootIsSet(config *types.Config) error {
 var PackageConfigsWireSet = wire.NewSet(
 	ProvideGitRPCServerConfig,
 	ProvideGitRPCClientConfig,
+	ProvideEventsConfig,
 )
 
 func ProvideGitRPCServerConfig(config *types.Config) server.Config {
@@ -63,8 +103,16 @@ func ProvideGitRPCServerConfig(config *types.Config) server.Config {
 	}
 }
 
-func ProvideGitRPCClientConfig(config *types.Config) *gitrpc.Config {
-	return &gitrpc.Config{
+func ProvideGitRPCClientConfig(config *types.Config) gitrpc.Config {
+	return gitrpc.Config{
 		Bind: config.Server.GRPC.Bind,
+	}
+}
+
+func ProvideEventsConfig(config *types.Config) events.Config {
+	return events.Config{
+		Mode:            events.Mode(config.Events.Mode),
+		Namespace:       config.Events.Namespace,
+		MaxStreamLength: config.Events.MaxStreamLength,
 	}
 }
