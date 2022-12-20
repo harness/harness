@@ -9,6 +9,10 @@ declare const styles: {
   readonly fname: string
   readonly viewLabel: string
   readonly annotationCell: string
-  readonly annotationCellContainer: string
+  readonly annotationContainer: string
+  readonly commentContainer: string
+  readonly hasContents: string
+  readonly actionsBar: string
+  readonly editorContainer: string
 }
 export default styles

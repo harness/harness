@@ -3,9 +3,9 @@
 declare const styles: {
   readonly wrapper: string
   readonly header: string
-  readonly showLabel: string
+  readonly diffStatsLabel: string
   readonly showLabelLink: string
-  readonly layout: string
+  readonly diffs: string
   readonly filesMenu: string
   readonly menuItem: string
   readonly popover: string

@@ -120,6 +120,7 @@ export interface StringsMap {
   'pr.buttonText': string
   'pr.cantMerge': string
   'pr.descriptionPlaceHolder': string
+  'pr.diffStatsLabel': string
   'pr.diffStatus': string
   'pr.diffView': string
   'pr.failedToCreate': string
@@ -130,7 +131,6 @@ export interface StringsMap {
   'pr.openBy': string
   'pr.reviewChanges': string
   'pr.showDiff': string
-  'pr.showLabel': string
   'pr.showLink': string
   'pr.split': string
   'pr.state': string
@@ -179,6 +179,7 @@ export interface StringsMap {
   viewAllBranches: string
   viewAllTags: string
   viewCommitDetails: string
+  viewed: string
   webhook: string
   webhookEventsLabel: string
   webhookListingContent: string

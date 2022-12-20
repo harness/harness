@@ -154,7 +154,7 @@ diff: Diff
 conversation: Conversation
 pr:
   ableToMerge: Able to merge.
-  cantMerge: 'Can’t be merged. You can still create the pull request.'
+  cantMerge: Can't be merged. You can still create the pull request.
   failedToCreate: Failed to create Pull Request.
   titlePlaceHolder: Enter the pull request title
   descriptionPlaceHolder: Leave pull request comment here
@@ -168,7 +168,7 @@ pr:
   fileDeleted: This file was deleted.
   fileUnchanged: File without changes.
   showLink: '{count} changed {count|1:file,files}'
-  showLabel: 'Showing {showLink} with {addedLines} {addedLines|1:addition,additions} and {deletedLines} {deletedLines|1:deletion,deletions} {config}'
+  diffStatsLabel: 'Showing {changedFilesLink} with {addedLines} {addedLines|1:addition,additions} and {deletedLines} {deletedLines|1:deletion,deletions} {configuration}'
   diffView: Diff View
   split: Split
   unified: Unified
@@ -183,4 +183,5 @@ rejected: Rejected
 yours: Yours
 all: All
 scrollToTop: Scroll to top
-filesChanged: File Changed
+filesChanged: Files Changed
+viewed: Viewed

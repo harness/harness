@@ -7,9 +7,9 @@ export function useEventListener<K extends keyof HTMLElementEventMap>(
   options?: boolean | AddEventListenerOptions
 ) {
   useEffect(() => {
-    element.addEventListener(type, listener, options)
+    element?.addEventListener(type, listener, options)
     return () => {
-      element.removeEventListener(type, listener)
+      element?.removeEventListener(type, listener)
     }
   }, [element, type, listener, options])
 }

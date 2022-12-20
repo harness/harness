@@ -4,11 +4,11 @@ export enum UserPreference {
   DIFF_VIEW_STYLE = 'DIFF_VIEW_STYLE'
 }
 
-export function useUserPreference(key: UserPreference, defaultValue: string) {
+export function useUserPreference<T = string>(key: UserPreference, defaultValue: T): [T, (val: T) => void] {
   const prefKey = `CODE_MODULE_USER_PREFERENCE_${key}`
-  const [preference, setPreference] = useState(localStorage[prefKey] || defaultValue)
+  const [preference, setPreference] = useState<T>(localStorage[prefKey] || (defaultValue as T))
   const savePreference = useCallback(
-    val => {
+    (val: T) => {
       localStorage[prefKey] = val
       setPreference(val)
     },

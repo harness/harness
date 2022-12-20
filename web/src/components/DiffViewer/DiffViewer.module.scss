@@ -26,7 +26,8 @@
       }
 
       [data-annotated='true'] [data-content-for-line-number],
-      [data-content-for-line-number=''] {
+      [data-content-for-line-number=''],
+      .d2h-emptyplaceholder[data-content-for-line-number=''] {
         &,
         :hover {
           [data-annotation-for-line] {
@@ -156,20 +157,78 @@
 }
 
 .annotationCell {
-  box-sizing: border-box;
   padding: var(--spacing-medium);
 
-  .annotationCellContainer {
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
+  .annotationContainer {
+    box-sizing: border-box;
     height: 100%;
-    padding: var(--spacing-medium);
-    max-width: 800px;
+    max-width: 900px;
+    position: sticky;
+    left: 0;
+    background: var(--white);
+    box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+    border-radius: 4px;
 
     &[data-view-style='side-by-side'] {
-      width: 600px;
-      position: sticky;
-      left: var(--spacing-medium);
+      width: calc(100vw / 2 - 194px);
+    }
+
+    :global {
+      .cm-editor .cm-line {
+        &,
+        * {
+          font-family: var(--font-family);
+          font-size: 13px;
+        }
+      }
+
+      .md-editor-preview {
+        display: none;
+      }
+
+      .md-editor,
+      .md-editor-toolbar-warp {
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+      }
+
+      .md-editor-content {
+        padding: var(--spacing-small) var(--spacing-xsmall);
+        background-color: var(--white);
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+
+        .ͼ1.cm-editor.cm-focused {
+          outline: none !important;
+        }
+      }
+
+      .cm-content {
+        min-height: 46px;
+      }
+    }
+  }
+}
+
+.commentContainer {
+  box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+
+  &.hasContents {
+    .actionsBar {
+      display: none;
+    }
+
+    &:focus-within .actionsBar {
+      display: block;
+    }
+  }
+
+  .editorContainer {
+    border-radius: 4px;
+    border: 1.5px solid var(--grey-100);
+
+    &:focus-within {
+      border: 1.5px solid var(--primary-7);
     }
   }
 }
