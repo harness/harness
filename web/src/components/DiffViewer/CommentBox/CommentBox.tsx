@@ -28,7 +28,7 @@ interface CommentBoxProps {
   getString: UseStringsReturn['getString']
   onHeightChange: (height: number | 'auto') => void
   onCancel: () => void
-  width: string
+  width?: string
   contents?: string[]
   currentUser: CurrentUser
 }
@@ -55,7 +55,7 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
       onHeightChange(ref.current?.offsetHeight)
     }
   })
-  // Note: Send 'auto' to avoid rendering flickering
+  // Note: Send 'auto' to avoid render flickering
   const onCancelBtnClick = useCallback(() => {
     if (!contents.length) {
       onCancel()

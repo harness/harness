@@ -18,6 +18,10 @@
           position: relative;
 
           &[data-annotated-line] {
+            background-color: var(--white);
+
+            // These cause one or two pixels mismatched
+            // calculation due to table spacing gaps
             // border-top: 1px solid var(--grey-200);
             // border-bottom: 1px solid var(--grey-200);
           }
@@ -53,7 +57,7 @@
           height: 14px;
           width: 14px;
           font-weight: 600;
-          background: var(--purple-500);
+          background: var(--primary-7);
           color: var(--white);
           text-align: center;
           border-radius: 5px;
@@ -65,8 +69,11 @@
 
         &:hover [data-annotation-for-line] {
           visibility: visible;
-          transform: scale(1.5);
-          transition: transform 0.75s;
+
+          &:hover {
+            transform: scale(1.3);
+            transition: transform 0.75s;
+          }
         }
       }
 

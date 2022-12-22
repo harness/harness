@@ -18,7 +18,7 @@ import css from './PullRequest.module.scss'
 enum PullRequestSection {
   CONVERSATION = 'conversation',
   COMMITS = 'commits',
-  FILES_CHANGED = 'files'
+  FILES_CHANGED = 'changes'
 }
 
 export default function PullRequest() {

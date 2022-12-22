@@ -55,10 +55,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
             height: 0,
             lineNumber: 101,
             contents: [
-              `## Example\nLogs will looks similar to\n<img width="1494" alt="image" src="https://user-images.githubusercontent.com/98799615/207994246-19ce9eb2-604f-4226-9a3c-6f4125d3b7cc.png">\n\ngitrpc logs using the \`ctx\` will have the following annotations:\n- \`grpc.service=rpc.ReferenceService\`\n- \`grpc.method=CreateBranch\`\n- \`grpc.peer=127.0.0.1:49364\`\n- \`grpc.request_id=cedrl6p1eqltblt13mgg\`\n\nAdditionally, there will be one extra log entry that logs completion of a grpc call.\n\nIt will contain the additional field:\n- \`grpc.status_code=AlreadyExists\`\n- \`grpc.elapsed_ms=424.349542\``,
+              `Logs will looks similar to\n\n<img width="1494" alt="image" src="https://user-images.githubusercontent.com/98799615/207994246-19ce9eb2-604f-4226-9a3c-6f4125d3b7cc.png">\n\n\ngitrpc logs using the \`ctx\` will have the following annotations:\n- \`grpc.service=rpc.ReferenceService\`\n- \`grpc.method=CreateBranch\`\n- \`grpc.peer=127.0.0.1:49364\`\n- \`grpc.request_id=cedrl6p1eqltblt13mgg\`\n\nAdditionally, there will be one extra log entry that logs completion of a grpc call.\n\nIt will contain the additional field:\n- \`grpc.status_code=AlreadyExists\`\n- \`grpc.elapsed_ms=424.349542\``,
               `it seems we don't actually do anything with the explicit error type other than calling .Error(), which technically we could do on the original err object too? unless I'm missing something, could we then use errors.Is instead? (would avoid the extra var definitions at the top)`,
-              `If error is not converted then it will be detailed error: in BranchDelete: Branch doesn't exists. What we want is human readable error: Branch 'name' doesn't exists.`,
-              `* GitRPC isolated errors, bcoz this will be probably separate repo in future and we dont want every where to include grpc status codes in our main app\n* Errors are explicit for repsonses based on error passing by types`,
+              //`If error is not converted then it will be detailed error: in BranchDelete: Branch doesn't exists. What we want is human readable error: Branch 'name' doesn't exists.`,
+              //  `* GitRPC isolated errors, bcoz this will be probably separate repo in future and we dont want every where to include grpc status codes in our main app\n* Errors are explicit for repsonses based on error passing by types`,
               `> global ctx in wire will kill all routines, right? is this affect middlewares and interceptors? because requests should finish they work, right?\n\nI've changed the code now to pass the config directly instead of the systemstore and context, to avoid confusion (what we discussed yesterday - I remove systemstore itself another time).\n\nThe context that was passed didn't impact any go routines, it was only used to load the config from the systmstore.`
             ]
           }
@@ -182,9 +182,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
             const lineNum1 = lineInfoTD?.querySelector('.line-num1')
             const lineNum2 = lineInfoTD?.querySelector('.line-num2')
 
-            commentItem.left = !!lineNum1?.textContent
-            commentItem.right = !commentItem.left
-            commentItem.lineNumber = Number(lineNum1?.textContent || lineNum2?.textContent)
+            // Right has priority
+            commentItem.right = !!lineNum2?.textContent
+            commentItem.left = !commentItem.right
+            commentItem.lineNumber = Number(lineNum2?.textContent || lineNum1?.textContent)
           }
 
           setComments([...comments, commentItem])
@@ -236,7 +237,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
 
             const element = commentRowElement.firstElementChild as HTMLTableCellElement
 
-            // Note: Since CommentBox is rendered as an independent React component
+            // Note: CommentBox is rendered as an independent React component
             //       everything passed to it must be either values, or refs. If you
             //       pass callbacks or states, they won't be updated and might
             // .     cause unexpected bugs
@@ -245,7 +246,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
               <CommentBox
                 contents={comment.contents}
                 getString={getString}
-                width="calc(100vw / 2 - 163px)"
+                width={isSideBySide ? 'calc(100vw / 2 - 163px)' : undefined}
                 onHeightChange={boxHeight => {
                   if (typeof boxHeight === 'string') {
                     element.style.height = boxHeight
@@ -277,6 +278,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
               renderCommentOppositePlaceHolder(comment, lineInfo.oppositeRowElement)
             }
           }
+        } else {
+          // Comment no longer has UI relevant anchors to be rendered
+          console.info('Comment is discarded due to no UI relevant anchors', { comment, lineInfo })
         }
       })
     },
