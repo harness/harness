@@ -1,3 +1,12 @@
 {
-    "go.testTags": "sqlite_fts5"
+    "go.testTags": "sqlite_fts5",
+    "sqltools.useNodeRuntime": true,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "gitness",
+            "database": "${workspaceFolder:gitness}/database.sqlite3"
+        }
+    ]
 }

@@ -33,4 +33,9 @@ type Interface interface {
 	 */
 	GetInfoRefs(ctx context.Context, w io.Writer, params *InfoRefsParams) error
 	ServicePack(ctx context.Context, w io.Writer, params *ServicePackParams) error
+
+	/*
+	 * Diff services
+	 */
+	RawDiff(ctx context.Context, in *RawDiffRequest, w io.Writer) error
 }

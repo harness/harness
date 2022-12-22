@@ -10,3 +10,4 @@ release
 gitness
 .idea
 coverage.out
+gitness.session.sql

@@ -1,0 +1,20 @@
+syntax = "proto3";
+package rpc;
+
+option go_package = "github.com/harness/gitness/gitrpc/rpc";
+
+// DiffService is a service which provides RPCs to inspect differences
+// introduced between a set of commits.
+service DiffService {
+  rpc RawDiff(RawDiffRequest) returns (stream RawDiffResponse) {}
+}
+
+message RawDiffRequest {
+  string repo_id         = 1;
+  string left_commit_id  = 2;
+  string right_commit_id = 3;
+}
+
+message RawDiffResponse {
+  bytes data = 1;
+}

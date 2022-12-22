@@ -22,6 +22,7 @@ type Client struct {
 	refService         rpc.ReferenceServiceClient
 	httpService        rpc.SmartHTTPServiceClient
 	commitFilesService rpc.CommitFilesServiceClient
+	diffService        rpc.DiffServiceClient
 }
 
 func New(remoteAddr string) (*Client, error) {
@@ -50,5 +51,6 @@ func New(remoteAddr string) (*Client, error) {
 		refService:         rpc.NewReferenceServiceClient(conn),
 		httpService:        rpc.NewSmartHTTPServiceClient(conn),
 		commitFilesService: rpc.NewCommitFilesServiceClient(conn),
+		diffService:        rpc.NewDiffServiceClient(conn),
 	}, nil
 }

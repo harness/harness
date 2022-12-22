@@ -190,6 +190,11 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Co
 				})
 			})
 
+			// diffs
+			r.Route("/compare", func(r chi.Router) {
+				r.Get("/*", handlerrepo.HandleRawDiff(repoCtrl))
+			})
+
 			setupPullReq(r, pullreqCtrl)
 		})
 	})

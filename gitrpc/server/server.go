@@ -89,12 +89,17 @@ func NewServer(config Config, eventsSystem *events.System) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	diffService, err := service.NewDiffService(adapter, reposRoot)
+	if err != nil {
+		return nil, err
+	}
 
 	// register services
 	rpc.RegisterRepositoryServiceServer(s, repoService)
 	rpc.RegisterReferenceServiceServer(s, refService)
 	rpc.RegisterSmartHTTPServiceServer(s, httpService)
 	rpc.RegisterCommitFilesServiceServer(s, commitFilesService)
+	rpc.RegisterDiffServiceServer(s, diffService)
 
 	return &Server{
 		Server: s,
