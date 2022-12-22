@@ -1,5 +1,6 @@
-import React, { lazy, Suspense } from 'react'
+import React, { Suspense } from 'react'
 import { Container, Text } from '@harness/uicore'
+import MarkdownEditor from '@uiw/react-markdown-editor'
 import { useStrings } from 'framework/strings'
 import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
 import './SourceCodeViewer.scss'
@@ -11,12 +12,11 @@ interface MarkdownViewerProps {
 
 export function MarkdownViewer({ source }: MarkdownViewerProps) {
   const { getString } = useStrings()
-  const ReactMarkdownPreview = lazy(() => import('@uiw/react-markdown-preview'))
 
   return (
     <Container className="sourceCodeViewer">
       <Suspense fallback={<Text>{getString('loading')}</Text>}>
-        <ReactMarkdownPreview source={source} skipHtml={true} warpperElement={{ 'data-color-mode': 'light' }} />
+        <MarkdownEditor.Markdown source={source} skipHtml={true} warpperElement={{ 'data-color-mode': 'light' }} />
       </Suspense>
     </Container>
   )

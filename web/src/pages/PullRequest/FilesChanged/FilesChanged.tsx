@@ -19,7 +19,7 @@ import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { FilesChangedDropdown } from './FilesChangedDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
 import css from './FilesChanged.module.scss'
-import diffExample from 'raw-loader!./example.diff'
+import diffExample from 'raw-loader!./example2.diff'
 
 const STICKY_TOP_POSITION = 64
 const STICKY_HEADER_HEIGHT = 150
@@ -77,7 +77,15 @@ export const FilesChanged: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
                   changedFilesLink: <FilesChangedDropdown diffs={diffs} />,
                   addedLines: formatNumber(diffStats.addedLines),
                   deletedLines: formatNumber(diffStats.deletedLines),
-                  configuration: <DiffViewConfiguration viewStyle={viewStyle} setViewStyle={setViewStyle} />
+                  configuration: (
+                    <DiffViewConfiguration
+                      viewStyle={viewStyle}
+                      setViewStyle={val => {
+                        // cleanUpCommentBoxRendering()
+                        setViewStyle(val)
+                      }}
+                    />
+                  )
                 }}
               />
             </Text>
@@ -102,11 +110,12 @@ export const FilesChanged: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
         </Layout.Horizontal>
       </Container>
 
-      <Layout.Vertical spacing="medium" className={css.diffs}>
+      <Layout.Vertical spacing="large" className={css.diffs}>
         {diffs?.map((diff, index) => (
           // Note: `key={viewStyle + index}` will reset DiffView when viewStyle
           // is changed. Making it easier to control states inside DiffView itself, as it does not have to deal with viewStyle
           <DiffViewer
+            index={index}
             key={viewStyle + index}
             diff={diff}
             viewStyle={viewStyle}

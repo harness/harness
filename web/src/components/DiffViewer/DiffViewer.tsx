@@ -1,12 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
 import { useInView } from 'react-intersection-observer'
-import { useResizeDetector } from 'react-resize-detector'
 import { Button, Color, Container, FlexExpander, ButtonVariation, Layout, Text, ButtonSize } from '@harness/uicore'
-import MarkdownEditor from '@uiw/react-markdown-editor'
-import { indentWithTab } from '@codemirror/commands'
-import cx from 'classnames'
-import { keymap } from '@codemirror/view'
 import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
 import 'highlight.js/styles/github.css'
 import 'diff2html/bundles/css/diff2html.min.css'
@@ -15,21 +10,19 @@ import { CodeIcon } from 'utils/GitUtils'
 import { useEventListener } from 'hooks/useEventListener'
 import type { DiffFileEntry } from 'utils/types'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
-import { DIFF2HTML_CONFIG, DIFF_VIEWER_HEADER_HEIGHT, INITIAL_ANNOTATION_HEIGHT, ViewStyle } from './DiffViewerUtils'
+import {
+  CommentItem,
+  DIFF2HTML_CONFIG,
+  DIFF_VIEWER_HEADER_HEIGHT,
+  getCommentLineInfo,
+  renderCommentOppositePlaceHolder,
+  ViewStyle
+} from './DiffViewerUtils'
+import { CommentBox } from './CommentBox/CommentBox'
 import css from './DiffViewer.module.scss'
 
-interface AnnotationEntry {
-  left: boolean
-  right: boolean
-  lineNumber: number
-  width: number
-  height: number
-  rowNodeNthChildNumber: number
-  element: HTMLDivElement | null
-  contents: string[]
-}
-
 interface DiffViewerProps {
+  index: number
   diff: DiffFileEntry
   viewStyle: ViewStyle
   stickyTopPosition?: number
@@ -37,21 +30,34 @@ interface DiffViewerProps {
 
 //
 // Note: Lots of direct DOM manipulations are used to boost performance.
-// Avoid React re-rendering at all cost as it might cause unresponsive UI
-// when diff content is big, or when a PR has a lot of changed files.
+//       Avoid React re-rendering at all cost as it might cause unresponsive UI
+//       when diff content is big, or when a PR has a lot of changed files.
 //
-export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, viewStyle, stickyTopPosition = 0 }) => {
+export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, stickyTopPosition = 0 }) => {
   const { getString } = useStrings()
   const [viewed, setViewed] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [fileUnchanged] = useState(diff.unchangedPercentage === 100)
   const [fileDeleted] = useState(diff.isDeleted)
   const [renderCustomContent, setRenderCustomContent] = useState(fileUnchanged || fileDeleted)
-  const [height, setHeight] = useState<number | string>('auto')
+  const [heightWithoutComments, setHeightWithoutComents] = useState<number | string>('auto')
   const [diffRenderer, setDiffRenderer] = useState<Diff2HtmlUI>()
   const { ref: inViewRef, inView } = useInView({ rootMargin: '100px 0px' })
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const [annotations, setAnnotations] = useState<AnnotationEntry[]>([])
+  const [comments, setComments] = useState<CommentItem[]>(
+    !index
+      ? [
+          {
+            left: true,
+            right: false,
+            height: 0,
+            lineNumber: 100,
+            contents: ['# Header 1', 'Test1', 'Test 2']
+          }
+        ]
+      : []
+  )
+  const commentsRef = useRef<CommentItem[]>(comments)
   const setContainerRef = useCallback(
     node => {
       containerRef.current = node
@@ -80,7 +86,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, viewStyle, stickyT
           diffRenderer?.draw()
         }
         contentDOM.dataset.rendered = 'true'
-        setHeight(containerDOM.clientHeight)
+        setHeightWithoutComents(containerDOM.clientHeight)
       }
     },
     [diffRenderer, renderCustomContent]
@@ -97,16 +103,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, viewStyle, stickyT
 
   useEffect(
     function renderInitialContent() {
-      if (diffRenderer) {
-        const container = containerRef.current as HTMLDivElement
-        const { classList: containerClassList } = container
-
-        if (inView) {
-          containerClassList.remove(css.offscreen)
-          renderDiffAndUpdateContainerHeightIfNeeded()
-        } else {
-          containerClassList.add(css.offscreen)
-        }
+      if (diffRenderer && inView) {
+        renderDiffAndUpdateContainerHeightIfNeeded()
       }
     },
     [inView, diffRenderer, renderDiffAndUpdateContainerHeightIfNeeded]
@@ -120,7 +118,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, viewStyle, stickyT
       if (collapsed) {
         containerClassList.add(css.collapsed)
 
-        // Fix scrolling position messes up with sticky header
+        // Fix scrolling position messes up with sticky header: When content of the diff content
+        // is above the diff header, we need to scroll it back to below the header, adjust window
+        // scrolling position to avoid the next diff scroll jump
         const { y } = containerDOM.getBoundingClientRect()
         if (y - stickyTopPosition < 1) {
           containerDOM.scrollIntoView()
@@ -136,116 +136,152 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, viewStyle, stickyT
       } else {
         containerClassList.remove(css.collapsed)
 
-        const annotationHeights = annotations.reduce((total, annotation) => total + annotation.height, 0) || 0
-        const newHeight = Number(height) + annotationHeights
+        const commentsHeight = comments.reduce((total, comment) => total + comment.height, 0) || 0
+        const newHeight = Number(heightWithoutComments) + commentsHeight
 
         if (parseInt(containerStyle.height) != newHeight) {
           containerStyle.height = `${newHeight}px`
         }
       }
     },
-    [collapsed, height, stickyTopPosition, annotations]
+    [collapsed, heightWithoutComments, stickyTopPosition, comments]
   )
 
   useEventListener(
     'click',
     useCallback(
-      // TODO: Re-implement this function to just build data-structure in annotations
-      // and not do any rendering. The rendering should be done by another function in
-      // which it reads annotations and render them. By doing that then annotations can be
-      // constructed from backend data and rendering process can work with both data
-      // from backend and event from UI
-      function clickToAnnotate(event: MouseEvent) {
-        const isSideBySideView = viewStyle === ViewStyle.SIDE_BY_SIDE
+      function clickToAddAnnotation(event: MouseEvent) {
         const target = event.target as HTMLDivElement
         const targetButton = target?.closest('[data-annotation-for-line]') as HTMLDivElement
         const annotatedLineRow = targetButton?.closest('tr') as HTMLTableRowElement
 
-        const annotationEntry: AnnotationEntry = {
+        const commentItem: CommentItem = {
           left: false,
           right: false,
           lineNumber: 0,
           height: 0,
-          width: 0,
-          rowNodeNthChildNumber: 1,
-          element: null,
           contents: []
         }
 
         if (targetButton && annotatedLineRow) {
-          if (isSideBySideView) {
+          if (viewStyle === ViewStyle.SIDE_BY_SIDE) {
             const leftParent = targetButton.closest('.d2h-file-side-diff.left')
-            annotationEntry.left = !!leftParent
-            annotationEntry.right = !leftParent
-            annotationEntry.lineNumber = Number(targetButton.dataset.annotationForLine)
+            commentItem.left = !!leftParent
+            commentItem.right = !leftParent
+            commentItem.lineNumber = Number(targetButton.dataset.annotationForLine)
           } else {
             const lineInfoTD = targetButton.closest('td')?.previousElementSibling
             const lineNum1 = lineInfoTD?.querySelector('.line-num1')
             const lineNum2 = lineInfoTD?.querySelector('.line-num2')
 
-            annotationEntry.left = !!lineNum1?.textContent
-            annotationEntry.right = !annotationEntry.left
-            annotationEntry.lineNumber = Number(lineNum1?.textContent || lineNum2?.textContent)
+            commentItem.left = !!lineNum1?.textContent
+            commentItem.right = !commentItem.left
+            commentItem.lineNumber = Number(lineNum1?.textContent || lineNum2?.textContent)
           }
 
-          annotatedLineRow.dataset.annotated = 'true'
-          annotatedLineRow.dataset.line = String(annotationEntry.lineNumber)
-
-          const annotationEntryRowElement = document.createElement('tr')
-          annotationEntryRowElement.dataset.annotatedLine = String(annotationEntry.lineNumber)
-
-          annotationEntry.height = INITIAL_ANNOTATION_HEIGHT
-
-          annotationEntryRowElement.innerHTML = `
-          <td colspan="2" class="${css.annotationCell}" height="${annotationEntry.height}px">
-          <div class="${css.annotationContainer}" data-view-style="${viewStyle}"></div>
-          </td>
-          `
-          annotatedLineRow.after(annotationEntryRowElement)
-          annotationEntry.element = annotationEntryRowElement.querySelector(`.${css.annotationContainer}`)
-
-          // TODO: Find a way to clean up ReactDOM.render() as it may leak memory
-          // when we do inline like below
-
-          // Render custom React inside element
-          ReactDOM.unmountComponentAtNode(annotationEntry.element as HTMLDivElement)
-          ReactDOM.render(<Comment />, annotationEntry.element)
-
-          // Determine the location of the annotation inside its parent
-          let node = annotatedLineRow as Element
-          while (node.previousElementSibling) {
-            annotationEntry.rowNodeNthChildNumber++
-            node = node.previousElementSibling
-          }
-
-          // Split view: Calculate, inject, and adjust an empty place-holder row in the opposite pane
-          if (isSideBySideView) {
-            const filesDiff = annotatedLineRow.closest('.d2h-files-diff') as HTMLElement
-            const sideDiff = filesDiff?.querySelector(`div.${annotationEntry.left ? 'right' : 'left'}`) as HTMLElement
-            const sideRow = sideDiff?.querySelector(`tr:nth-child(${annotationEntry.rowNodeNthChildNumber})`)
-
-            const tr2 = document.createElement('tr')
-            tr2.innerHTML = `
-            <td height="${annotationEntry.height}px" class="d2h-code-side-linenumber d2h-code-side-emptyplaceholder d2h-cntx d2h-emptyplaceholder"></td>
-            <td class="d2h-cntx d2h-emptyplaceholder" height="${annotationEntry.height}px">
-              <div class="d2h-code-side-line d2h-code-side-emptyplaceholder">
-                <span class="d2h-code-line-prefix">&nbsp;</span>
-                <span class="d2h-code-line-ctn hljs"><br></span>
-              </div>
-            </td>
-            `
-            sideRow?.after(tr2)
-          }
-
-          console.log(annotationEntry)
-
-          setAnnotations([...annotations, annotationEntry])
+          setComments([...comments, commentItem])
         }
       },
-      [viewStyle, annotations]
+      [viewStyle, comments]
     ),
     containerRef.current as HTMLDivElement
   )
+
+  useEffect(
+    function renderAnnotatations() {
+      const isSideBySide = viewStyle === ViewStyle.SIDE_BY_SIDE
+
+      // Update latest commentsRef to use it inside CommentBox callbacks
+      commentsRef.current = comments
+
+      comments.forEach(comment => {
+        const lineInfo = getCommentLineInfo(contentRef.current, comment, viewStyle)
+
+        if (lineInfo.rowElement) {
+          const { rowElement } = lineInfo
+
+          if (lineInfo.hasCommentsRendered) {
+            if (isSideBySide) {
+              const filesDiff = rowElement?.closest('.d2h-files-diff') as HTMLElement
+              const sideDiff = filesDiff?.querySelector(`div.${comment.left ? 'right' : 'left'}`) as HTMLElement
+              const oppositeRowPlaceHolder = sideDiff?.querySelector(
+                `tr[data-place-holder-for-line="${comment.lineNumber}"]`
+              )
+
+              const first = oppositeRowPlaceHolder?.firstElementChild as HTMLTableCellElement
+              const last = oppositeRowPlaceHolder?.lastElementChild as HTMLTableCellElement
+
+              if (first && last) {
+                first.style.height = `${comment.height}px`
+                last.style.height = `${comment.height}px`
+              }
+            }
+          } else {
+            // Mark row that it has comment/annotation
+            rowElement.dataset.annotated = 'true'
+
+            // Create a new row below it and render CommentBox inside
+            const commentRowElement = document.createElement('tr')
+            commentRowElement.dataset.annotatedLine = String(comment.lineNumber)
+            commentRowElement.innerHTML = `<td colspan="2"></td>`
+            rowElement.after(commentRowElement)
+
+            const element = commentRowElement.firstElementChild as HTMLTableCellElement
+
+            // Note: Since CommentBox is rendered as an independent React component
+            //       everything passed to it must be either values, or refs. If you
+            //       pass callbacks or states, they won't be updated and might
+            // .     cause unexpected bugs
+            ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
+            ReactDOM.render(
+              <CommentBox
+                contents={comment.contents}
+                getString={getString}
+                width="calc(100vw / 2 - 163px)"
+                onHeightChange={boxHeight => {
+                  if (typeof boxHeight === 'string') {
+                    element.style.height = boxHeight
+                  } else {
+                    if (comment.height !== boxHeight) {
+                      comment.height = boxHeight
+                      element.style.height = `${boxHeight}px`
+                      setTimeout(() => setComments([...commentsRef.current]), 0)
+                    }
+                  }
+                }}
+                onCancel={() => {
+                  // Clean up CommentBox rendering and reset states bound to lineInfo
+                  ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
+                  commentRowElement.parentElement?.removeChild(commentRowElement)
+                  lineInfo.oppositeRowElement?.parentElement?.removeChild(
+                    lineInfo.oppositeRowElement?.nextElementSibling as Element
+                  )
+                  delete lineInfo.rowElement.dataset.annotated
+                  setTimeout(() => setComments(commentsRef.current.filter(item => item !== comment)), 0)
+                }}
+              />,
+              element
+            )
+
+            // Split view: Calculate, inject, and adjust an empty place-holder row in the opposite pane
+            if (isSideBySide && lineInfo.oppositeRowElement) {
+              renderCommentOppositePlaceHolder(comment, lineInfo.oppositeRowElement)
+            }
+          }
+        }
+      })
+    },
+    [comments, viewStyle, getString]
+  )
+
+  useEffect(function cleanUpCommentBoxRendering() {
+    const contentDOM = contentRef.current
+    return () => {
+      contentDOM
+        ?.querySelectorAll('[data-annotated-line]')
+        .forEach(element => ReactDOM.unmountComponentAtNode(element.firstElementChild as HTMLTableCellElement))
+    }
+  }, [])
 
   return (
     <Container
@@ -280,16 +316,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, viewStyle, stickyT
             <Text inline className={css.fname}>
               {diff.isDeleted ? diff.oldName : diff.isRename ? `${diff.oldName} -> ${diff.newName}` : diff.newName}
             </Text>
-            <Button
-              variation={ButtonVariation.ICON}
-              icon={CodeIcon.Copy}
-              size={ButtonSize.SMALL}
-              tooltip={
-                <Container style={{ overflow: 'auto', width: 500, height: 400 }}>
-                  <pre>{JSON.stringify(diff, null, 2)}</pre>
-                </Container>
-              }
-            />
+            <Button variation={ButtonVariation.ICON} icon={CodeIcon.Copy} size={ButtonSize.SMALL} />
             <FlexExpander />
             <Container>
               <label className={css.viewLabel}>
@@ -333,82 +360,5 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, viewStyle, stickyT
         </Container>
       </Layout.Vertical>
     </Container>
-  )
-}
-
-const Comment = () => {
-  const [contents, setContents] = useState<string[]>([])
-  const [markdown, setMarkdown] = useState('')
-  const resizeDetector = useResizeDetector()
-
-  useEffect(() => {
-    // console.log('resizeDetector.height', resizeDetector.height, 'annotationEntry.height', annotationEntry.height)
-    // if (resizeDetector.height !== annotationEntry.height) {
-    //   annotationEntry.height = resizeDetector.height as number
-    //   setAnnotations([...annotations])
-    // }
-  }, [resizeDetector.height])
-
-  return (
-    <Layout.Vertical
-      padding="xlarge"
-      spacing="medium"
-      className={cx(css.commentContainer, contents.length && css.hasContents)}
-      ref={resizeDetector.ref}>
-      {!!contents.length && (
-        <Container>
-          <Layout.Vertical spacing="large">
-            {contents.map((content, index) => (
-              <MarkdownEditor.Markdown key={index} source={content} />
-            ))}
-          </Layout.Vertical>
-        </Container>
-      )}
-      <Container className={css.editorContainer}>
-        <MarkdownEditor
-          value={markdown}
-          visible={false}
-          placeholder={contents.length ? 'Reply here...' : 'Leave a comment here...'}
-          theme="light"
-          indentWithTab={false}
-          autoFocus
-          toolbars={[
-            'header',
-            'bold',
-            'italic',
-            // 'strike',
-            'quote',
-            'olist',
-            'ulist',
-            'todo',
-            'link',
-            'image',
-            'codeBlock'
-          ]}
-          toolbarsMode={[]}
-          basicSetup={{
-            lineNumbers: false,
-            foldGutter: false,
-            highlightActiveLine: false
-          }}
-          extensions={[keymap.of([indentWithTab])]}
-          onChange={(value, _viewUpdate) => setMarkdown(value)}
-        />
-      </Container>
-      <Container className={css.actionsBar}>
-        <Layout.Horizontal spacing="small">
-          <Button
-            disabled={!(markdown || '').trim()}
-            variation={ButtonVariation.PRIMARY}
-            onClick={() => {
-              setContents([...contents, markdown])
-              setMarkdown('')
-            }}>
-            {contents.length ? 'Comment' : 'Add comment'}
-          </Button>
-          {!contents.length && <Button variation={ButtonVariation.TERTIARY}>Cancel</Button>}
-        </Layout.Horizontal>
-      </Container>
-    </Layout.Vertical>
   )
 }

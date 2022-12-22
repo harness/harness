@@ -4,6 +4,7 @@
  */
 export interface StringsMap {
   activeBranches: string
+  addComment: string
   addGitIgnore: string
   addLicense: string
   addReadMe: string
@@ -33,6 +34,7 @@ export interface StringsMap {
   clone: string
   cloneHTTPS: string
   closed: string
+  comment: string
   commit: string
   commitChanges: string
   commitDirectlyTo: string
@@ -93,6 +95,7 @@ export interface StringsMap {
   in: string
   inactiveBranches: string
   individualEvents: string
+  leaveAComment: string
   loading: string
   merged: string
   name: string
@@ -147,6 +150,7 @@ export interface StringsMap {
   pushEvent: string
   rejected: string
   renameFile: string
+  replyHere: string
   'repos.activities': string
   'repos.data': string
   'repos.enterBranchName': string

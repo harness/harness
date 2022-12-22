@@ -40,6 +40,9 @@ const App: React.FC<AppProps> = React.memo(function App({
     languageLoader(lang).then(setStrings)
   }, [lang, setStrings])
 
+  // Workaround to disable editor dark mode (https://github.com/uiwjs/react-markdown-editor#support-dark-modenight-mode)
+  document.documentElement.setAttribute('data-color-mode', 'light')
+
   return strings ? (
     <StringsContextProvider initialStrings={strings}>
       <AppErrorBoundary>

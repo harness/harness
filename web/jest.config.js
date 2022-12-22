@@ -49,6 +49,6 @@ module.exports = {
       lines: 60
     }
   },
-  transformIgnorePatterns: ['node_modules/(?!(date-fns|lodash-es|p-debounce)/)'],
+  transformIgnorePatterns: ['node_modules/(?!(date-fns|lodash-es)/)'],
   testPathIgnorePatterns: ['<rootDir>/dist']
 }

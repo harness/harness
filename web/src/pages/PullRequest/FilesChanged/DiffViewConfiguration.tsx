@@ -18,6 +18,7 @@ export const DiffViewConfiguration: React.FC<{ viewStyle: ViewStyle; setViewStyl
     <Text
       icon="cog"
       rightIcon="caret-down"
+      tag="span"
       tooltip={
         <Container padding="large">
           <Layout.Horizontal spacing="xsmall" flex={{ alignItems: 'center' }}>

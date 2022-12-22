@@ -185,3 +185,7 @@ all: All
 scrollToTop: Scroll to top
 filesChanged: Files Changed
 viewed: Viewed
+comment: Comment
+addComment: Add comment
+replyHere: Reply here...
+leaveAComment: Leave a comment here...
