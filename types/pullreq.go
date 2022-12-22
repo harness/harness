@@ -10,11 +10,14 @@ import (
 
 // PullReq represents a pull request.
 type PullReq struct {
-	ID        int64 `json:"id"`
-	CreatedBy int64 `json:"-"`
+	ID      int64 `json:"id"`
+	Version int64 `json:"version"`
+	Number  int64 `json:"number"`
+
+	CreatedBy int64 `json:"-"` // not returned, because the author info is in the Author field
 	Created   int64 `json:"created"`
 	Updated   int64 `json:"updated"`
-	Number    int64 `json:"number"`
+	Edited    int64 `json:"edited"`
 
 	State enum.PullReqState `json:"state"`
 
@@ -26,7 +29,9 @@ type PullReq struct {
 	TargetRepoID int64  `json:"target_repo_id"`
 	TargetBranch string `json:"target_branch"`
 
-	MergedBy      *int64  `json:"-"`
+	PullReqActivitySeq int64 `json:"-"` // not returned, because it's a server internal field
+
+	MergedBy      *int64  `json:"-"` // not returned, because the merger info is in the Merger field
 	Merged        *int64  `json:"merged"`
 	MergeStrategy *string `json:"merge_strategy"`
 
@@ -47,4 +52,34 @@ type PullReqFilter struct {
 	States        []enum.PullReqState `json:"state"`
 	Sort          enum.PullReqSort    `json:"sort"`
 	Order         enum.Order          `json:"direction"`
+}
+
+// PullReqActivity represents a pull request activity.
+type PullReqActivity struct {
+	ID      int64 `json:"id"`
+	Version int64 `json:"version"`
+
+	CreatedBy int64 `json:"-"` // not returned, because the author info is in the Author field
+	Created   int64 `json:"created"`
+	Updated   int64 `json:"updated"`
+	Edited    int64 `json:"edited"`
+	Deleted   int64 `json:"deleted"`
+
+	RepoID    int64 `json:"repo_id"`
+	PullReqID int64 `json:"pullreq_id"`
+
+	Seq    int64 `json:"seq"`
+	SubSeq int64 `json:"subseq"`
+
+	Type int64 `json:"type"`
+	Kind int64 `json:"kind"`
+
+	Text    string                 `json:"title"`
+	Payload map[string]interface{} `json:"payload"`
+
+	ResolvedBy *int64 `json:"-"` // not returned, because the resolver info is in the Resolver field
+	Resolved   *int64 `json:"resolved"`
+
+	Author   PrincipalInfo  `json:"author"`
+	Resolver *PrincipalInfo `json:"resolver"`
 }

@@ -209,7 +209,7 @@ type (
 		// Create a new pull request.
 		Create(ctx context.Context, pullreq *types.PullReq) error
 
-		// Update the pull request.
+		// Update the pull request. It will set new values to the Version and Updated fields.
 		Update(ctx context.Context, repo *types.PullReq) error
 
 		// Delete the pull request.

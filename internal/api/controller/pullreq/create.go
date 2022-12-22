@@ -33,8 +33,6 @@ func (c *Controller) Create(
 	repoRef string,
 	in *CreateInput,
 ) (*types.PullReq, error) {
-	now := time.Now().UnixMilli()
-
 	in.Title = strings.TrimSpace(in.Title)
 	if in.Title == "" {
 		return nil, usererror.BadRequest("pull request title can't be empty")
@@ -89,31 +87,7 @@ func (c *Controller) Create(
 			return err
 		}
 
-		// create new pull request object
-		pr = &types.PullReq{
-			ID:            0, // the ID will be populated in the data layer
-			CreatedBy:     session.Principal.ID,
-			Created:       now,
-			Updated:       now,
-			Number:        lastNumber + 1,
-			State:         enum.PullReqStateOpen,
-			Title:         in.Title,
-			Description:   in.Description,
-			SourceRepoID:  sourceRepo.ID,
-			SourceBranch:  in.SourceBranch,
-			TargetRepoID:  targetRepo.ID,
-			TargetBranch:  in.TargetBranch,
-			MergedBy:      nil,
-			Merged:        nil,
-			MergeStrategy: nil,
-			Author: types.PrincipalInfo{
-				ID:    session.Principal.ID,
-				UID:   session.Principal.UID,
-				Name:  session.Principal.DisplayName,
-				Email: session.Principal.Email,
-			},
-			Merger: nil,
-		}
+		pr = newPullReq(session, lastNumber+1, sourceRepo, targetRepo, in)
 
 		return c.pullreqStore.Create(ctx, pr)
 	})
@@ -122,4 +96,37 @@ func (c *Controller) Create(
 	}
 
 	return pr, nil
+}
+
+// newPullReq creates new pull request object.
+func newPullReq(session *auth.Session, number int64,
+	sourceRepo, targetRepo *types.Repository, in *CreateInput) *types.PullReq {
+	now := time.Now().UnixMilli()
+	return &types.PullReq{
+		ID:                 0, // the ID will be populated in the data layer
+		Version:            0,
+		Number:             number,
+		CreatedBy:          session.Principal.ID,
+		Created:            now,
+		Updated:            now,
+		Edited:             now,
+		State:              enum.PullReqStateOpen,
+		Title:              in.Title,
+		Description:        in.Description,
+		SourceRepoID:       sourceRepo.ID,
+		SourceBranch:       in.SourceBranch,
+		TargetRepoID:       targetRepo.ID,
+		TargetBranch:       in.TargetBranch,
+		PullReqActivitySeq: 0,
+		MergedBy:           nil,
+		Merged:             nil,
+		MergeStrategy:      nil,
+		Author: types.PrincipalInfo{
+			ID:    session.Principal.ID,
+			UID:   session.Principal.UID,
+			Name:  session.Principal.DisplayName,
+			Email: session.Principal.Email,
+		},
+		Merger: nil,
+	}
 }

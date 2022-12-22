@@ -1,8 +1,10 @@
-CREATE TABLE pullreq (
+CREATE TABLE pullreqs (
 pullreq_id SERIAL PRIMARY KEY
+,pullreq_version INTEGER NOT NULL DEFAULT 0
 ,pullreq_created_by INTEGER NOT NULL
 ,pullreq_created BIGINT NOT NULL
 ,pullreq_updated BIGINT NOT NULL
+,pullreq_edited BIGINT NOT NULL
 ,pullreq_number INTEGER NOT NULL
 ,pullreq_state TEXT NOT NULL
 ,pullreq_title TEXT NOT NULL
@@ -11,6 +13,7 @@ pullreq_id SERIAL PRIMARY KEY
 ,pullreq_source_branch TEXT NOT NULL
 ,pullreq_target_repo_id INTEGER NOT NULL
 ,pullreq_target_branch TEXT NOT NULL
+,pullreq_activity_seq INTEGER DEFAULT 0
 ,pullreq_merged_by INTEGER
 ,pullreq_merged BIGINT
 ,pullreq_merge_strategy TEXT

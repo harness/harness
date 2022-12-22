@@ -6,6 +6,7 @@ package database
 
 import (
 	"context"
+	"time"
 
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
@@ -35,12 +36,16 @@ type PullReqStore struct {
 // pullReq is used to fetch pull request data from the database.
 // The object should be later re-packed into a different struct to return it as an API response.
 type pullReq struct {
-	ID        int64             `db:"pullreq_id"`
-	CreatedBy int64             `db:"pullreq_created_by"`
-	Created   int64             `db:"pullreq_created"`
-	Updated   int64             `db:"pullreq_updated"`
-	Number    int64             `db:"pullreq_number"`
-	State     enum.PullReqState `db:"pullreq_state"`
+	ID      int64 `db:"pullreq_id"`
+	Version int64 `db:"pullreq_version"`
+	Number  int64 `db:"pullreq_number"`
+
+	CreatedBy int64 `db:"pullreq_created_by"`
+	Created   int64 `db:"pullreq_created"`
+	Updated   int64 `db:"pullreq_updated"`
+	Edited    int64 `db:"pullreq_edited"`
+
+	State enum.PullReqState `db:"pullreq_state"`
 
 	Title       string `db:"pullreq_title"`
 	Description string `db:"pullreq_description"`
@@ -49,6 +54,8 @@ type pullReq struct {
 	SourceBranch string `db:"pullreq_source_branch"`
 	TargetRepoID int64  `db:"pullreq_target_repo_id"`
 	TargetBranch string `db:"pullreq_target_branch"`
+
+	PullReqActivitySeq int64 `db:"pullreq_activity_seq"`
 
 	MergedBy      null.Int    `db:"pullreq_merged_by"`
 	Merged        null.Int    `db:"pullreq_merged"`
@@ -65,10 +72,12 @@ type pullReq struct {
 const (
 	pullReqColumns = `
 		 pullreq_id
+		,pullreq_version
+		,pullreq_number
 		,pullreq_created_by
 		,pullreq_created
 		,pullreq_updated
-		,pullreq_number
+		,pullreq_edited
 		,pullreq_state
 		,pullreq_title
 		,pullreq_description
@@ -76,6 +85,7 @@ const (
 		,pullreq_source_branch
 		,pullreq_target_repo_id
 		,pullreq_target_branch
+		,pullreq_activity_seq
 		,pullreq_merged_by
 		,pullreq_merged
 		,pullreq_merge_strategy
@@ -88,7 +98,7 @@ const (
 
 	pullReqSelectBase = `
 	SELECT` + pullReqColumns + `
-	FROM pullreq
+	FROM pullreqs
 	INNER JOIN principals author on author.principal_id = pullreq_created_by
 	LEFT  JOIN principals merger on merger.principal_id = pullreq_merged_by`
 )
@@ -126,33 +136,39 @@ func (s *PullReqStore) FindByNumber(ctx context.Context, repoID, number int64) (
 // Create creates a new pull request.
 func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 	const sqlQuery = `
-	INSERT INTO pullreq (
-		 pullreq_created_by
+	INSERT INTO pullreqs (
+		 pullreq_version
+		,pullreq_number
+		,pullreq_created_by
 		,pullreq_created
 		,pullreq_updated
+		,pullreq_edited
 		,pullreq_state
-		,pullreq_number
 		,pullreq_title
 		,pullreq_description
 		,pullreq_source_repo_id
 		,pullreq_source_branch
 		,pullreq_target_repo_id
 		,pullreq_target_branch
+		,pullreq_activity_seq
 		,pullreq_merged_by
 		,pullreq_merged
 		,pullreq_merge_strategy
 	) values (
-		 :pullreq_created_by
+		 :pullreq_version
+		,:pullreq_number
+		,:pullreq_created_by
 		,:pullreq_created
 		,:pullreq_updated
+		,:pullreq_edited
 		,:pullreq_state
-		,:pullreq_number
 		,:pullreq_title
 		,:pullreq_description
 		,:pullreq_source_repo_id
 		,:pullreq_source_branch
 		,:pullreq_target_repo_id
 		,:pullreq_target_branch
+		,:pullreq_activity_seq
 		,:pullreq_merged_by
 		,:pullreq_merged
 		,:pullreq_merge_strategy
@@ -175,34 +191,56 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 // Update updates the pull request.
 func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 	const sqlQuery = `
-	UPDATE pullreq
+	UPDATE pullreqs
 	SET
-		 pullreq_updated = :pullreq_updated
+	     pullreq_version = :pullreq_version
+		,pullreq_updated = :pullreq_updated
+		,pullreq_edited = :pullreq_edited
 		,pullreq_state = :pullreq_state
 		,pullreq_title = :pullreq_title
 		,pullreq_description = :pullreq_description
+		,pullreq_activity_seq = :pullreq_activity_seq
 		,pullreq_merged_by = :pullreq_merged_by
 		,pullreq_merged = :pullreq_merged
 		,pullreq_merge_strategy = :pullreq_merge_strategy
-	WHERE pullreq_id = :pullreq_id`
+	WHERE pullreq_id = :pullreq_id AND pullreq_version = :pullreq_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	query, arg, err := db.BindNamed(sqlQuery, mapInternalPullReq(pr))
+	updatedAt := time.Now()
+
+	dbPR := mapInternalPullReq(pr)
+	dbPR.Version++
+	dbPR.Updated = updatedAt.UnixMilli()
+
+	query, arg, err := db.BindNamed(sqlQuery, dbPR)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind pull request object")
 	}
 
-	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
-		return processSQLErrorf(err, "Update query failed")
+	result, err := db.ExecContext(ctx, query, arg...)
+	if err != nil {
+		return processSQLErrorf(err, "Failed to update pull request")
 	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return processSQLErrorf(err, "Failed to get number of updated rows")
+	}
+
+	if count == 0 {
+		return store.ErrConflict
+	}
+
+	pr.Version = dbPR.Version
+	pr.Updated = dbPR.Updated
 
 	return nil
 }
 
 // Delete the pull request.
 func (s *PullReqStore) Delete(ctx context.Context, id int64) error {
-	const pullReqDelete = `DELETE FROM pullreq WHERE pullreq_id = $1`
+	const pullReqDelete = `DELETE FROM pullreqs WHERE pullreq_id = $1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -215,7 +253,7 @@ func (s *PullReqStore) Delete(ctx context.Context, id int64) error {
 
 // LastNumber return the number of the most recent pull request.
 func (s *PullReqStore) LastNumber(ctx context.Context, repoID int64) (int64, error) {
-	const sqlQuery = `select coalesce(max(pullreq_number), 0) from pullreq where pullreq_target_repo_id = $1 limit 1`
+	const sqlQuery = `select coalesce(max(pullreq_number), 0) from pullreqs where pullreq_target_repo_id = $1 limit 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -236,7 +274,7 @@ func (s *PullReqStore) LastNumber(ctx context.Context, repoID int64) (int64, err
 func (s *PullReqStore) Count(ctx context.Context, repoID int64, opts *types.PullReqFilter) (int64, error) {
 	stmt := builder.
 		Select("count(*)").
-		From("pullreq").
+		From("pullreqs").
 		Where("pullreq_target_repo_id = ?", repoID)
 
 	if len(opts.States) == 1 {
@@ -281,7 +319,7 @@ func (s *PullReqStore) Count(ctx context.Context, repoID int64, opts *types.Pull
 func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullReqFilter) ([]*types.PullReq, error) {
 	stmt := builder.
 		Select(pullReqColumns).
-		From("pullreq").
+		From("pullreqs").
 		InnerJoin("principals author on author.principal_id = pullreq_created_by").
 		LeftJoin("principals merger on merger.principal_id = pullreq_merged_by").
 		Where("pullreq_target_repo_id = ?", repoID)
@@ -345,23 +383,26 @@ func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullR
 
 func mapPullReq(pr *pullReq) *types.PullReq {
 	m := &types.PullReq{
-		ID:            pr.ID,
-		CreatedBy:     pr.CreatedBy,
-		Created:       pr.Created,
-		Updated:       pr.Updated,
-		Number:        pr.Number,
-		State:         pr.State,
-		Title:         pr.Title,
-		Description:   pr.Description,
-		SourceRepoID:  pr.SourceRepoID,
-		SourceBranch:  pr.SourceBranch,
-		TargetRepoID:  pr.TargetRepoID,
-		TargetBranch:  pr.TargetBranch,
-		MergedBy:      pr.MergedBy.Ptr(),
-		Merged:        pr.Merged.Ptr(),
-		MergeStrategy: pr.MergeStrategy.Ptr(),
-		Author:        types.PrincipalInfo{},
-		Merger:        nil,
+		ID:                 pr.ID,
+		Version:            pr.Version,
+		Number:             pr.Number,
+		CreatedBy:          pr.CreatedBy,
+		Created:            pr.Created,
+		Updated:            pr.Updated,
+		Edited:             pr.Edited,
+		State:              pr.State,
+		Title:              pr.Title,
+		Description:        pr.Description,
+		SourceRepoID:       pr.SourceRepoID,
+		SourceBranch:       pr.SourceBranch,
+		TargetRepoID:       pr.TargetRepoID,
+		TargetBranch:       pr.TargetBranch,
+		PullReqActivitySeq: pr.PullReqActivitySeq,
+		MergedBy:           pr.MergedBy.Ptr(),
+		Merged:             pr.Merged.Ptr(),
+		MergeStrategy:      pr.MergeStrategy.Ptr(),
+		Author:             types.PrincipalInfo{},
+		Merger:             nil,
 	}
 	m.Author = types.PrincipalInfo{
 		ID:    pr.CreatedBy,
@@ -383,21 +424,24 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 
 func mapInternalPullReq(pr *types.PullReq) *pullReq {
 	m := &pullReq{
-		ID:            pr.ID,
-		CreatedBy:     pr.CreatedBy,
-		Created:       pr.Created,
-		Updated:       pr.Updated,
-		Number:        pr.Number,
-		State:         pr.State,
-		Title:         pr.Title,
-		Description:   pr.Description,
-		SourceRepoID:  pr.SourceRepoID,
-		SourceBranch:  pr.SourceBranch,
-		TargetRepoID:  pr.TargetRepoID,
-		TargetBranch:  pr.TargetBranch,
-		MergedBy:      null.IntFromPtr(pr.MergedBy),
-		Merged:        null.IntFromPtr(pr.Merged),
-		MergeStrategy: null.StringFromPtr(pr.MergeStrategy),
+		ID:                 pr.ID,
+		Version:            pr.Version,
+		Number:             pr.Number,
+		CreatedBy:          pr.CreatedBy,
+		Created:            pr.Created,
+		Updated:            pr.Updated,
+		Edited:             pr.Edited,
+		State:              pr.State,
+		Title:              pr.Title,
+		Description:        pr.Description,
+		SourceRepoID:       pr.SourceRepoID,
+		SourceBranch:       pr.SourceBranch,
+		TargetRepoID:       pr.TargetRepoID,
+		TargetBranch:       pr.TargetBranch,
+		PullReqActivitySeq: pr.PullReqActivitySeq,
+		MergedBy:           null.IntFromPtr(pr.MergedBy),
+		Merged:             null.IntFromPtr(pr.Merged),
+		MergeStrategy:      null.StringFromPtr(pr.MergeStrategy),
 	}
 
 	return m

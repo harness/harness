@@ -64,7 +64,7 @@ func (c *Controller) Update(ctx context.Context,
 
 		pr.Title = in.Title
 		pr.Description = in.Description
-		pr.Updated = time.Now().UnixMilli()
+		pr.Edited = time.Now().UnixMilli()
 
 		err = c.pullreqStore.Update(ctx, pr)
 		if err != nil {
@@ -76,6 +76,8 @@ func (c *Controller) Update(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: Write a row to the pull request activity
 
 	return pr, nil
 }
