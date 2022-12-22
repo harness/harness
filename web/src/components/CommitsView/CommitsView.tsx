@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react'
-import { Container, Color, TableV2 as Table, Text, Avatar, Layout } from '@harness/uicore'
+import { Container, Color, TableV2 as Table, Text, Avatar } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { orderBy } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type { RepoCommit } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
+import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { formatDate } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import css from './CommitsView.module.scss'
@@ -76,22 +77,21 @@ export function CommitsView({ repoMetadata, commits }: CommitsViewProps) {
     <Container className={css.container}>
       {Object.entries(commitsGroupedByDate).map(([date, commitsByDate]) => {
         return (
-          <Container key={date} className={css.commitSection}>
-            <Layout.Vertical spacing="medium">
+          <ThreadSection
+            key={date}
+            title={
               <Text icon={CodeIcon.Commit} iconProps={{ size: 20 }} color={Color.GREY_500} className={css.label}>
                 {getString('commitsOn', { date })}
               </Text>
-              <Container className={css.commitTableContainer}>
-                <Table<RepoCommit>
-                  className={css.table}
-                  hideHeaders
-                  columns={columns}
-                  data={orderBy(commitsByDate || [], ['author.when'], ['desc'])}
-                  getRowClassName={() => css.row}
-                />
-              </Container>
-            </Layout.Vertical>
-          </Container>
+            }>
+            <Table<RepoCommit>
+              className={css.table}
+              hideHeaders
+              columns={columns}
+              data={orderBy(commitsByDate || [], ['author.when'], ['desc'])}
+              getRowClassName={() => css.row}
+            />
+          </ThreadSection>
         )
       })}
     </Container>

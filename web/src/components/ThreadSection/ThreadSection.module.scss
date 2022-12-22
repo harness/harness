@@ -1,0 +1,22 @@
+.thread {
+  margin-bottom: var(--spacing-medium) !important;
+
+  .content {
+    padding-left: 25px;
+    position: relative;
+
+    > ::before {
+      position: absolute;
+      top: -8px;
+      left: 7px;
+      content: '';
+      width: 1px;
+      height: calc(100% + 18px);
+      border: 1px dashed var(--grey-200);
+    }
+
+    &.hideGutter > ::before {
+      display: none;
+    }
+  }
+}

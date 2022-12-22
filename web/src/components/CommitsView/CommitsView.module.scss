@@ -38,28 +38,9 @@
     }
   }
 
-  .commitSection {
-    margin-bottom: var(--spacing-medium);
-
-    .label {
-      svg path {
-        fill: var(--grey-300);
-      }
-    }
-
-    .commitTableContainer {
-      padding-left: 25px;
-      position: relative;
-
-      > ::before {
-        position: absolute;
-        top: -13px;
-        left: 8px;
-        content: '';
-        width: 1px;
-        height: calc(100% + 26px);
-        background-color: var(--grey-200);
-      }
+  .label {
+    svg path {
+      fill: var(--grey-300);
     }
   }
 }

@@ -37,7 +37,7 @@
     "@blueprintjs/datetime": "3.13.0",
     "@blueprintjs/select": "3.12.3",
     "@harness/design-system": "1.4.0",
-    "@harness/icons": "1.84.1",
+    "@harness/icons": "1.95.1`",
     "@harness/ng-tooltip": ">=1.31.25",
     "@harness/telemetry": ">=1.0.42",
     "@harness/uicore": "3.95.1",

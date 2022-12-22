@@ -1,13 +1,27 @@
 import React, { useCallback, useState } from 'react'
 import { useResizeDetector } from 'react-resize-detector'
-import { Button, Container, ButtonVariation, Layout, Avatar, TextInput } from '@harness/uicore'
+import {
+  Button,
+  Container,
+  ButtonVariation,
+  Layout,
+  Avatar,
+  TextInput,
+  Text,
+  Color,
+  FontVariation
+} from '@harness/uicore'
 import MarkdownEditor from '@uiw/react-markdown-editor'
 import { Tab, Tabs } from '@blueprintjs/core'
 import { indentWithTab } from '@codemirror/commands'
+import ReactTimeago from 'react-timeago'
 import { keymap } from '@codemirror/view'
 import 'highlight.js/styles/github.css'
 import 'diff2html/bundles/css/diff2html.min.css'
+import type { CurrentUser } from 'hooks/useCurrentUser'
 import type { UseStringsReturn } from 'framework/strings'
+import { ThreadSection } from 'components/ThreadSection/ThreadSection'
+import { CodeIcon } from 'utils/GitUtils'
 import css from './CommentBox.module.scss'
 
 interface CommentBoxProps {
@@ -16,6 +30,7 @@ interface CommentBoxProps {
   onCancel: () => void
   width: string
   contents?: string[]
+  currentUser: CurrentUser
 }
 
 export const CommentBox: React.FC<CommentBoxProps> = ({
@@ -23,7 +38,8 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
   onHeightChange,
   onCancel,
   width,
-  contents: _contents = []
+  contents: _contents = [],
+  currentUser
 }) => {
   const [contents, setContents] = useState<string[]>(_contents)
   const [showReplyPlaceHolder, setShowReplyPlaceHolder] = useState(!!contents.length)
@@ -59,18 +75,37 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
         <Layout.Vertical className={css.boxLayout}>
           {!!contents.length && (
             <Container className={css.viewer} padding="xlarge">
-              <Layout.Vertical spacing="large">
-                {contents.map((content, index) => (
-                  <MarkdownEditor.Markdown key={index} source={content} />
-                ))}
-              </Layout.Vertical>
+              {contents.map((content, index) => {
+                const isLastItem = index === contents.length - 1
+                return (
+                  <ThreadSection
+                    key={index}
+                    title={
+                      <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
+                        <Text inline icon={CodeIcon.Chat}></Text>
+                        <Avatar name={currentUser.name} size="small" hoverCard={false} />
+                        <Text inline>
+                          <strong>{currentUser.name}</strong>
+                        </Text>
+                        <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
+                          <ReactTimeago date={'2022-12-22'} />
+                        </Text>
+                      </Layout.Horizontal>
+                    }
+                    hideGutter={isLastItem}>
+                    <Container padding={{ left: 'medium', bottom: isLastItem ? undefined : 'xsmall' }}>
+                      <MarkdownEditor.Markdown key={index} source={content} />
+                    </Container>
+                  </ThreadSection>
+                )
+              })}
             </Container>
           )}
           <Container className={css.editor}>
             {(showReplyPlaceHolder && (
               <Container>
                 <Layout.Horizontal spacing="small" className={css.replyPlaceHolder} padding="medium">
-                  <Avatar name="Tan Nhu" size="small" hoverCard={false} />
+                  <Avatar name={currentUser.name} size="small" hoverCard={false} />
                   <TextInput placeholder={getString('replyHere')} onFocus={hidePlaceHolder} onClick={hidePlaceHolder} />
                 </Layout.Horizontal>
               </Container>

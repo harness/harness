@@ -10,6 +10,7 @@ import { CodeIcon } from 'utils/GitUtils'
 import { useEventListener } from 'hooks/useEventListener'
 import type { DiffFileEntry } from 'utils/types'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
+import { useCurrentUser } from 'hooks/useCurrentUser'
 import {
   CommentItem,
   DIFF2HTML_CONFIG,
@@ -44,15 +45,22 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
   const [diffRenderer, setDiffRenderer] = useState<Diff2HtmlUI>()
   const { ref: inViewRef, inView } = useInView({ rootMargin: '100px 0px' })
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const currentUser = useCurrentUser()
   const [comments, setComments] = useState<CommentItem[]>(
     !index
       ? [
           {
-            left: true,
-            right: false,
+            left: false,
+            right: true,
             height: 0,
-            lineNumber: 100,
-            contents: ['# Header 1', 'Test1', 'Test 2']
+            lineNumber: 101,
+            contents: [
+              `## Example\nLogs will looks similar to\n<img width="1494" alt="image" src="https://user-images.githubusercontent.com/98799615/207994246-19ce9eb2-604f-4226-9a3c-6f4125d3b7cc.png">\n\ngitrpc logs using the \`ctx\` will have the following annotations:\n- \`grpc.service=rpc.ReferenceService\`\n- \`grpc.method=CreateBranch\`\n- \`grpc.peer=127.0.0.1:49364\`\n- \`grpc.request_id=cedrl6p1eqltblt13mgg\`\n\nAdditionally, there will be one extra log entry that logs completion of a grpc call.\n\nIt will contain the additional field:\n- \`grpc.status_code=AlreadyExists\`\n- \`grpc.elapsed_ms=424.349542\``,
+              `it seems we don't actually do anything with the explicit error type other than calling .Error(), which technically we could do on the original err object too? unless I'm missing something, could we then use errors.Is instead? (would avoid the extra var definitions at the top)`,
+              `If error is not converted then it will be detailed error: in BranchDelete: Branch doesn't exists. What we want is human readable error: Branch 'name' doesn't exists.`,
+              `* GitRPC isolated errors, bcoz this will be probably separate repo in future and we dont want every where to include grpc status codes in our main app\n* Errors are explicit for repsonses based on error passing by types`,
+              `> global ctx in wire will kill all routines, right? is this affect middlewares and interceptors? because requests should finish they work, right?\n\nI've changed the code now to pass the config directly instead of the systemstore and context, to avoid confusion (what we discussed yesterday - I remove systemstore itself another time).\n\nThe context that was passed didn't impact any go routines, it was only used to load the config from the systmstore.`
+            ]
           }
         ]
       : []
@@ -259,6 +267,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
                   delete lineInfo.rowElement.dataset.annotated
                   setTimeout(() => setComments(commentsRef.current.filter(item => item !== comment)), 0)
                 }}
+                currentUser={currentUser}
               />,
               element
             )
@@ -271,7 +280,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
         }
       })
     },
-    [comments, viewStyle, getString]
+    [comments, viewStyle, getString, currentUser]
   )
 
   useEffect(function cleanUpCommentBoxRendering() {
