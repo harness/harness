@@ -7,14 +7,14 @@ import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { GitRefLink } from 'components/GitRefLink/GitRefLink'
-import type { PullRequestResponse } from 'utils/types'
 import css from './PullRequestMetaLine.module.scss'
+import type { TypesPullReq } from 'services/code'
 
-export const PullRequestMetaLine: React.FC<PullRequestResponse & Pick<GitInfoProps, 'repoMetadata'>> = ({
+export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 'repoMetadata'>> = ({
   repoMetadata,
-  targetBranch,
-  sourceBranch,
-  createdBy = '',
+  target_branch,
+  source_branch,
+  author,
   updated,
   merged,
   state
@@ -22,18 +22,18 @@ export const PullRequestMetaLine: React.FC<PullRequestResponse & Pick<GitInfoPro
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const vars = {
-    user: <strong>{createdBy}</strong>,
+    user: <strong>{author?.name}</strong>,
     number: <strong>5</strong>, // TODO: No data from backend now
     target: (
       <GitRefLink
-        text={targetBranch}
-        url={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef: targetBranch })}
+        text={target_branch!}
+        url={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef: target_branch })}
       />
     ),
     source: (
       <GitRefLink
-        text={sourceBranch}
-        url={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef: sourceBranch })}
+        text={source_branch!}
+        url={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef: source_branch })}
       />
     )
   }
@@ -47,7 +47,7 @@ export const PullRequestMetaLine: React.FC<PullRequestResponse & Pick<GitInfoPro
         </Text>
         <PipeSeparator height={9} />
         <Text inline className={cx(css.metaline, css.time)}>
-          <ReactTimeago date={updated} />
+          <ReactTimeago date={updated!} />
         </Text>
       </Layout.Horizontal>
     </Container>

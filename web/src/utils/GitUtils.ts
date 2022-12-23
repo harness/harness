@@ -8,9 +8,9 @@ import type {
   OpenapiDirContent,
   OpenapiGetContentOutput,
   RepoCommit,
+  TypesPullReq,
   TypesRepository
 } from 'services/code'
-import type { PullRequestResponse } from './types'
 
 export interface GitInfoProps {
   repoMetadata: TypesRepository
@@ -19,7 +19,7 @@ export interface GitInfoProps {
   resourceContent: OpenapiGetContentOutput
   commitRef: string
   commits: RepoCommit[]
-  pullRequestMetadata: PullRequestResponse
+  pullRequestMetadata: TypesPullReq
 }
 
 export enum GitContentType {

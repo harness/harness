@@ -17,7 +17,7 @@ export const PullRequestCommits: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'p
   } = useGet<RepoCommit[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
-      git_ref: pullRequestMetadata.sourceBranch
+      git_ref: pullRequestMetadata.source_branch
     },
     lazy: !repoMetadata
   })

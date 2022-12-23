@@ -7,13 +7,13 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { getErrorMessage } from 'utils/Utils'
-import type { PullRequestResponse } from 'utils/types'
 import { CodeIcon } from 'utils/GitUtils'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { PullRequestConversation } from './PullRequestConversation/PullRequestConversation'
 import { FilesChanged } from './FilesChanged/FilesChanged'
 import { PullRequestCommits } from './PullRequestCommits/PullRequestCommits'
 import css from './PullRequest.module.scss'
+import type { TypesPullReq } from 'services/code'
 
 enum PullRequestSection {
   CONVERSATION = 'conversation',
@@ -37,7 +37,7 @@ export default function PullRequest() {
     data: prData,
     error: prError,
     loading: prLoading
-  } = useGet<PullRequestResponse>({
+  } = useGet<TypesPullReq>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestId}`,
     lazy: !repoMetadata
   })
@@ -110,7 +110,7 @@ export default function PullRequest() {
   )
 }
 
-const PullRequestTitle: React.FC<PullRequestResponse> = ({ title, number }) => (
+const PullRequestTitle: React.FC<TypesPullReq> = ({ title, number }) => (
   <Text tag="h1" font={{ variation: FontVariation.H4 }}>
     {title} <span className={css.prNumber}>#{number}</span>
   </Text>

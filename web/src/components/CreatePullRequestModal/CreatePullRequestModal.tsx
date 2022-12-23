@@ -29,8 +29,8 @@ import { useModalHook } from '@harness/use-modal'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
-import type { PullRequestPayload, PullRequestResponse } from 'utils/types'
 import css from './CreatePullRequestModal.module.scss'
+import type { OpenapiCreatePullReqRequest, TypesPullReq } from 'services/code'
 
 interface FormData {
   title: string
@@ -40,7 +40,7 @@ interface FormData {
 interface CreatePullRequestModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
   targetGitRef: string
   sourceGitRef: string
-  onSuccess: (data: PullRequestResponse) => void
+  onSuccess: (data: TypesPullReq) => void
 }
 
 interface CreatePullRequestModalButtonProps extends Omit<ButtonProps, 'onClick'>, CreatePullRequestModalProps {}
@@ -54,18 +54,18 @@ export function useCreatePullRequestModal({
   const ModalComponent: React.FC = () => {
     const { getString } = useStrings()
     const { showError } = useToaster()
-    const { mutate: createPullRequest, loading } = useMutate<PullRequestResponse>({
+    const { mutate: createPullRequest, loading } = useMutate<TypesPullReq>({
       verb: 'POST',
       path: `/api/v1/repos/${repoMetadata.path}/+/pullreq`
     })
     const handleSubmit = (formData: FormData) => {
       const title = get(formData, 'title', '').trim()
       const description = get(formData, 'description', '').trim()
-      const payload: PullRequestPayload = {
-        targetBranch: targetGitRef,
-        sourceBranch: sourceGitRef,
-        title,
-        description
+      const payload: OpenapiCreatePullReqRequest = {
+        target_branch: targetGitRef,
+        source_branch: sourceGitRef,
+        title: title,
+        description: description
       }
 
       try {

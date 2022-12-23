@@ -11,6 +11,8 @@ export type EnumParentResourceType = string
 
 export type EnumPathTargetType = string
 
+export type EnumPullReqState = string
+
 export type EnumTokenType = string
 
 export interface FormDataOpenapiLoginRequest {
@@ -57,6 +59,14 @@ export interface OpenapiCreateBranchRequest {
 
 export interface OpenapiCreatePathRequest {
   path?: string
+}
+
+export interface OpenapiCreatePullReqRequest {
+  description?: string
+  source_branch?: string
+  source_repo_ref?: string
+  target_branch?: string
+  title?: string
 }
 
 export interface OpenapiCreateRepoPathRequest {
@@ -110,6 +120,11 @@ export interface OpenapiMoveSpaceRequest {
   keepAsAlias?: boolean
   parentId?: number | null
   uid?: string | null
+}
+
+export interface OpenapiUpdatePullReqRequest {
+  description?: string
+  title?: string
 }
 
 export interface OpenapiUpdateRepoRequest {
@@ -218,6 +233,33 @@ export interface TypesPath {
   targetType?: EnumPathTargetType
   updated?: number
   value?: string
+}
+
+export type TypesPrincipalInfo = {
+  email?: string
+  id?: number
+  name?: string
+  uid?: string
+} | null
+
+export interface TypesPullReq {
+  author?: TypesPrincipalInfo
+  created?: number
+  description?: string
+  edited?: number
+  id?: number
+  merge_strategy?: string | null
+  merged?: number | null
+  merger?: TypesPrincipalInfo
+  number?: number
+  source_branch?: string
+  source_repo_id?: number
+  state?: EnumPullReqState
+  target_branch?: string
+  target_repo_id?: number
+  title?: string
+  updated?: number
+  version?: number
 }
 
 export interface TypesRepository {
@@ -909,6 +951,169 @@ export const useDeleteRepositoryPath = ({ repoRef, ...props }: UseDeleteReposito
     'DELETE',
     (paramsInPath: DeleteRepositoryPathPathParams) => `/repos/${paramsInPath.repoRef}/paths`,
     { base: getConfigNew('code'), pathParams: { repoRef }, ...props }
+  )
+
+export interface ListPullReqQueryParams {
+  /**
+   * The state of the pull requests to include in the result.
+   */
+  state?: ('open' | 'closed' | 'merged' | 'rejected')[]
+  /**
+   * Source repository ref of the pull requests.
+   */
+  source_repo_ref?: string
+  /**
+   * Source branch of the pull requests.
+   */
+  source_branch?: string
+  /**
+   * Target branch of the pull requests.
+   */
+  target_branch?: string
+  /**
+   * The substring by which the pull requests are filtered.
+   */
+  query?: string
+  /**
+   * The principal ID who created pull requests.
+   */
+  created_by?: number
+  /**
+   * The order of the output.
+   */
+  direction?: 'asc' | 'desc'
+  /**
+   * The data by which the pull requests are sorted.
+   */
+  sort?: 'number' | 'created' | 'updated'
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The number of entries returned per page.
+   */
+  per_page?: number
+}
+
+export interface ListPullReqPathParams {
+  repoRef: string
+}
+
+export type ListPullReqProps = Omit<
+  GetProps<TypesPullReq[], UsererrorError, ListPullReqQueryParams, ListPullReqPathParams>,
+  'path'
+> &
+  ListPullReqPathParams
+
+export const ListPullReq = ({ repoRef, ...props }: ListPullReqProps) => (
+  <Get<TypesPullReq[], UsererrorError, ListPullReqQueryParams, ListPullReqPathParams>
+    path={`/repos/${repoRef}/pullreq`}
+    base={getConfigNew('code')}
+    {...props}
+  />
+)
+
+export type UseListPullReqProps = Omit<
+  UseGetProps<TypesPullReq[], UsererrorError, ListPullReqQueryParams, ListPullReqPathParams>,
+  'path'
+> &
+  ListPullReqPathParams
+
+export const useListPullReq = ({ repoRef, ...props }: UseListPullReqProps) =>
+  useGet<TypesPullReq[], UsererrorError, ListPullReqQueryParams, ListPullReqPathParams>(
+    (paramsInPath: ListPullReqPathParams) => `/repos/${paramsInPath.repoRef}/pullreq`,
+    { base: getConfigNew('code'), pathParams: { repoRef }, ...props }
+  )
+
+export interface CreatePullReqPathParams {
+  repoRef: string
+}
+
+export type CreatePullReqProps = Omit<
+  MutateProps<TypesPullReq, UsererrorError, void, OpenapiCreatePullReqRequest, CreatePullReqPathParams>,
+  'path' | 'verb'
+> &
+  CreatePullReqPathParams
+
+export const CreatePullReq = ({ repoRef, ...props }: CreatePullReqProps) => (
+  <Mutate<TypesPullReq, UsererrorError, void, OpenapiCreatePullReqRequest, CreatePullReqPathParams>
+    verb="POST"
+    path={`/repos/${repoRef}/pullreq`}
+    base={getConfigNew('code')}
+    {...props}
+  />
+)
+
+export type UseCreatePullReqProps = Omit<
+  UseMutateProps<TypesPullReq, UsererrorError, void, OpenapiCreatePullReqRequest, CreatePullReqPathParams>,
+  'path' | 'verb'
+> &
+  CreatePullReqPathParams
+
+export const useCreatePullReq = ({ repoRef, ...props }: UseCreatePullReqProps) =>
+  useMutate<TypesPullReq, UsererrorError, void, OpenapiCreatePullReqRequest, CreatePullReqPathParams>(
+    'POST',
+    (paramsInPath: CreatePullReqPathParams) => `/repos/${paramsInPath.repoRef}/pullreq`,
+    { base: getConfigNew('code'), pathParams: { repoRef }, ...props }
+  )
+
+export interface GetPullReqPathParams {
+  repoRef: string
+  pullreq_number: number
+}
+
+export type GetPullReqProps = Omit<GetProps<TypesPullReq, UsererrorError, void, GetPullReqPathParams>, 'path'> &
+  GetPullReqPathParams
+
+export const GetPullReq = ({ repoRef, pullreq_number, ...props }: GetPullReqProps) => (
+  <Get<TypesPullReq, UsererrorError, void, GetPullReqPathParams>
+    path={`/repos/${repoRef}/pullreq/${pullreq_number}`}
+    base={getConfigNew('code')}
+    {...props}
+  />
+)
+
+export type UseGetPullReqProps = Omit<UseGetProps<TypesPullReq, UsererrorError, void, GetPullReqPathParams>, 'path'> &
+  GetPullReqPathParams
+
+export const useGetPullReq = ({ repoRef, pullreq_number, ...props }: UseGetPullReqProps) =>
+  useGet<TypesPullReq, UsererrorError, void, GetPullReqPathParams>(
+    (paramsInPath: GetPullReqPathParams) => `/repos/${paramsInPath.repoRef}/pullreq/${paramsInPath.pullreq_number}`,
+    { base: getConfigNew('code'), pathParams: { repoRef, pullreq_number }, ...props }
+  )
+
+export interface UpdatePullReqPathParams {
+  repoRef: string
+  pullreq_number: number
+}
+
+export type UpdatePullReqProps = Omit<
+  MutateProps<TypesPullReq, UsererrorError, void, OpenapiUpdatePullReqRequest, UpdatePullReqPathParams>,
+  'path' | 'verb'
+> &
+  UpdatePullReqPathParams
+
+export const UpdatePullReq = ({ repoRef, pullreq_number, ...props }: UpdatePullReqProps) => (
+  <Mutate<TypesPullReq, UsererrorError, void, OpenapiUpdatePullReqRequest, UpdatePullReqPathParams>
+    verb="PUT"
+    path={`/repos/${repoRef}/pullreq/${pullreq_number}`}
+    base={getConfigNew('code')}
+    {...props}
+  />
+)
+
+export type UseUpdatePullReqProps = Omit<
+  UseMutateProps<TypesPullReq, UsererrorError, void, OpenapiUpdatePullReqRequest, UpdatePullReqPathParams>,
+  'path' | 'verb'
+> &
+  UpdatePullReqPathParams
+
+export const useUpdatePullReq = ({ repoRef, pullreq_number, ...props }: UseUpdatePullReqProps) =>
+  useMutate<TypesPullReq, UsererrorError, void, OpenapiUpdatePullReqRequest, UpdatePullReqPathParams>(
+    'PUT',
+    (paramsInPath: UpdatePullReqPathParams) => `/repos/${paramsInPath.repoRef}/pullreq/${paramsInPath.pullreq_number}`,
+    { base: getConfigNew('code'), pathParams: { repoRef, pullreq_number }, ...props }
   )
 
 export interface ListRepositoryServiceAccountsPathParams {

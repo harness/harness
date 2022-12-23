@@ -21,11 +21,11 @@ import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { getErrorMessage, LIST_FETCHING_PER_PAGE } from 'utils/Utils'
 import emptyStateImage from 'images/empty-state.svg'
-import type { PullRequestResponse } from 'utils/types'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
 import prOpenImg from './pull-request-open.svg'
 import css from './PullRequests.module.scss'
+import type { TypesPullReq } from 'services/code'
 
 export default function PullRequests() {
   const { getString } = useStrings()
@@ -38,7 +38,7 @@ export default function PullRequests() {
     data,
     error: prError,
     loading: prLoading
-  } = useGet<PullRequestResponse[]>({
+  } = useGet<TypesPullReq[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq`,
     queryParams: {
       per_page: LIST_FETCHING_PER_PAGE,
@@ -50,12 +50,12 @@ export default function PullRequests() {
     },
     lazy: !repoMetadata
   })
-  const columns: Column<PullRequestResponse>[] = useMemo(
+  const columns: Column<TypesPullReq>[] = useMemo(
     () => [
       {
         id: 'title',
         width: '100%',
-        Cell: ({ row }: CellProps<PullRequestResponse>) => {
+        Cell: ({ row }: CellProps<TypesPullReq>) => {
           return (
             <Layout.Horizontal spacing="medium" padding={{ left: 'medium' }}>
               <img src={prOpenImg} />
@@ -69,8 +69,8 @@ export default function PullRequests() {
                       str={getString('pr.openBy')}
                       vars={{
                         number: <Text inline>{row.original.number}</Text>,
-                        time: <ReactTimeago date={row.original.updated} />,
-                        user: row.original.createdBy
+                        time: <ReactTimeago date={row.original.created!} />,
+                        user: row.original.author?.name
                       }}
                     />
                   </Text>
@@ -131,7 +131,7 @@ export default function PullRequests() {
             />
             {!!data?.length && (
               <Container padding="xlarge">
-                <TableV2<PullRequestResponse>
+                <TableV2<TypesPullReq>
                   className={css.table}
                   hideHeaders
                   columns={columns}
