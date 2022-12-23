@@ -8,7 +8,8 @@ import { CodeIcon } from 'utils/GitUtils'
 import { waitUntil } from 'utils/Utils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
-import css from './FilesChanged.module.scss'
+import css from './FilesChangedDropdown.module.scss'
+// import { TreeExample } from 'pages/Repository/RepositoryTree/TreeExample'
 
 const STICKY_TOP_POSITION = 64
 
@@ -18,9 +19,10 @@ export const FilesChangedDropdown: React.FC<{ diffs: DiffFileEntry[] }> = ({ dif
   return (
     <Button
       variation={ButtonVariation.LINK}
-      className={css.showLabelLink}
+      className={css.link}
       tooltip={
         <Container padding="small" className={css.filesMenu}>
+          {/* <TreeExample /> */}
           <Menu>
             {diffs?.map((diff, index) => (
               <MenuItem

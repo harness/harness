@@ -42,6 +42,11 @@
       .cm-content {
         min-height: 46px;
       }
+
+      // .d2h-code-line,
+      // .d2h-code-line-ctn {
+      //   white-space: pre-wrap;
+      // }
     }
 
     .boxLayout {
@@ -50,6 +55,8 @@
   }
 
   .viewer {
+    padding-bottom: var(--spacing-xsmall) !important;
+
     :global {
       .wmde-markdown .anchor {
         display: none;

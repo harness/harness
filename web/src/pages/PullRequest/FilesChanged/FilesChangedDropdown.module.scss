@@ -1,0 +1,33 @@
+.link {
+  all: unset !important;
+  height: auto !important;
+  min-height: auto !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--grey-700) !important;
+  color: var(--primary-7) !important;
+  display: inline-block !important;
+  margin: 0 4px !important;
+  cursor: pointer !important;
+}
+
+.filesMenu {
+  max-height: 400px;
+  overflow: auto;
+
+  :global {
+    .bp3-menu-item:hover {
+      background-color: rgba(167, 182, 194, 0.3);
+      color: inherit;
+    }
+  }
+
+  .menuItem {
+    align-items: center;
+  }
+}
+
+.popover {
+  border-radius: 8px !important;
+}

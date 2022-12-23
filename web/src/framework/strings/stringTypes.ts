@@ -96,6 +96,7 @@ export interface StringsMap {
   inactiveBranches: string
   individualEvents: string
   leaveAComment: string
+  lineBreaks: string
   loading: string
   merged: string
   name: string
@@ -110,7 +111,9 @@ export interface StringsMap {
   noAccount: string
   noWebHooks: string
   none: string
+  off: string
   ok: string
+  on: string
   onDate: string
   open: string
   optional: string

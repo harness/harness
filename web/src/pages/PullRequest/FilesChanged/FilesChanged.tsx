@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Container, FlexExpander, ButtonVariation, Layout, Text, StringSubstitute, Button } from '@harness/uicore'
 import { noop } from 'lodash-es'
 import * as Diff2Html from 'diff2html'
+import cx from 'classnames'
 // import { useAppContext } from 'AppContext'
 // import { useStrings } from 'framework/strings'
 import 'highlight.js/styles/github.css'
@@ -19,7 +20,7 @@ import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { FilesChangedDropdown } from './FilesChangedDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
 import css from './FilesChanged.module.scss'
-import diffExample from 'raw-loader!./example2.diff'
+import diffExample from 'raw-loader!./example.diff'
 
 const STICKY_TOP_POSITION = 64
 const STICKY_HEADER_HEIGHT = 150
@@ -28,6 +29,7 @@ const diffViewerId = (collection: Unknown[]) => collection.filter(Boolean).join(
 export const FilesChanged: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>> = () => {
   const { getString } = useStrings()
   const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SIDE_BY_SIDE)
+  const [lineBreaks, setLineBreaks] = useUserPreference(UserPreference.DIFF_LINE_BREAKS, false)
   const [diffs, setDiffs] = useState<DiffFileEntry[]>([])
   const [isSticky, setSticky] = useState(false)
   const diffStats = useMemo(
@@ -70,7 +72,7 @@ export const FilesChanged: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
         <Layout.Horizontal>
           <Container flex={{ alignItems: 'center' }}>
             {/* Files Changed stats */}
-            <Text icon="accordion-collapsed" iconProps={{ size: 12 }} className={css.diffStatsLabel}>
+            <Text flex className={css.diffStatsLabel}>
               <StringSubstitute
                 str={getString('pr.diffStatsLabel')}
                 vars={{
@@ -80,10 +82,9 @@ export const FilesChanged: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
                   configuration: (
                     <DiffViewConfiguration
                       viewStyle={viewStyle}
-                      setViewStyle={val => {
-                        // cleanUpCommentBoxRendering()
-                        setViewStyle(val)
-                      }}
+                      setViewStyle={setViewStyle}
+                      lineBreaks={lineBreaks}
+                      setLineBreaks={setLineBreaks}
                     />
                   )
                 }}
@@ -110,7 +111,7 @@ export const FilesChanged: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
         </Layout.Horizontal>
       </Container>
 
-      <Layout.Vertical spacing="large" className={css.diffs}>
+      <Layout.Vertical spacing="large" className={cx(css.main, lineBreaks ? css.enableDiffLineBreaks : '')}>
         {diffs?.map((diff, index) => (
           // Note: `key={viewStyle + index}` will reset DiffView when viewStyle
           // is changed. Making it easier to control states inside DiffView itself, as it does not have to deal with viewStyle

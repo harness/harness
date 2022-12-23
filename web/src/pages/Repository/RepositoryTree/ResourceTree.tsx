@@ -4,7 +4,7 @@ import { PopoverInteractionKind } from '@blueprintjs/core'
 import { Container, Color, DropDown, ButtonVariation, SplitButton, SplitButtonOption, Layout } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
-import { BlueprintJsTree } from './TreeExample'
+import { TreeExample } from './TreeExample'
 import css from './ResourceTree.module.scss'
 
 export function ResourceTree() {
@@ -39,7 +39,7 @@ export function ResourceTree() {
         </Layout.Horizontal>
       </Container>
       <Container className={css.fileTree}>
-        <BlueprintJsTree />
+        <TreeExample />
       </Container>
       <Container padding="xlarge" className={css.fileNewActions}>
         <SplitButton text={getString('newFile')} icon="plus" variation={ButtonVariation.SECONDARY}>

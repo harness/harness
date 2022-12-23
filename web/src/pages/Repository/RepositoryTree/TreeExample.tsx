@@ -7,7 +7,7 @@ import { sampleTree } from './demodata'
 
 const TREE_ID = 'repoTree'
 
-export const BlueprintJsTree = (): JSX.Element => (
+export const TreeExample = (): JSX.Element => (
   <Container onMouseDown={FocusStyleManager.onlyShowFocusOnTabs} onKeyDown={FocusStyleManager.alwaysShowFocus}>
     <UncontrolledTreeEnvironment<string>
       canDragAndDrop={false}
@@ -15,18 +15,26 @@ export const BlueprintJsTree = (): JSX.Element => (
       canReorderItems={true}
       dataProvider={new StaticTreeDataProvider(sampleTree.items, (item, data) => ({ ...item, data }))}
       getItemTitle={item => item.data}
-      canSearchByStartingTyping={false}
+      canSearchByStartingTyping={true}
       keyboardBindings={{
         startSearch: ['f1']
       }}
       viewState={{
         [TREE_ID]: {
-          expandedItems: ['src/components']
+          expandedItems: [
+            'config',
+            'cypress',
+            'cypress/integration',
+            'cypress/videos',
+            'src',
+            'src/components',
+            'scripts'
+          ]
         }
       }}
       onRenameItem={(item, name) => alert(`${item.data} renamed to ${name}`)}
-      onFocusItem={(data, _treeId) => alert('Focus' + data)}
-      onSelectItems={(data, _treeId) => alert('Selected' + data)}
+      onFocusItem={(data, _treeId) => console.log('Focus' + data)}
+      onSelectItems={(data, _treeId) => console.log('Selected' + data)}
       {...renderers}>
       <Tree treeId={TREE_ID} rootItem="root" />
     </UncontrolledTreeEnvironment>

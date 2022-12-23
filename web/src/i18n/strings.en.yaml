@@ -37,6 +37,8 @@ copy: Copy
 defaultBranch: Default
 in: in
 ok: OK
+on: On
+off: Off
 loading: Loading...
 title: Title
 addGitIgnore: Add a .gitignore
@@ -189,3 +191,4 @@ comment: Comment
 addComment: Add comment
 replyHere: Reply here...
 leaveAComment: Leave a comment here...
+lineBreaks: Line Breaks

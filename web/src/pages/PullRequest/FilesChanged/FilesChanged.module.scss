@@ -14,42 +14,25 @@
   font-size: 12px !important;
   font-weight: 600 !important;
   color: var(--grey-700) !important;
-
-  .showLabelLink {
-    all: unset !important;
-    height: auto !important;
-    min-height: auto !important;
-    padding: 0 !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    color: var(--grey-700) !important;
-    color: var(--primary-7) !important;
-    display: inline-block !important;
-    margin: 0 4px !important;
-    cursor: pointer !important;
-  }
 }
 
-.diffs {
+.main {
   border-radius: 5px;
-}
 
-.filesMenu {
-  max-height: 400px;
-  overflow: auto;
+  // This is buggy, especially when scrolling
+  // @see https://github.com/rtfpessoa/diff2html/issues/99
+  &.enableDiffLineBreaks {
+    :global {
+      .d2h-code-line,
+      .d2h-code-line-ctn {
+        white-space: pre-wrap !important;
+      }
 
-  :global {
-    .bp3-menu-item:hover {
-      background-color: rgba(167, 182, 194, 0.3);
-      color: inherit;
+      .d2h-code-line,
+      .d2h-code-side-line,
+      .d2h-code-line-ctn {
+        width: revert !important;
+      }
     }
   }
-
-  .menuItem {
-    align-items: center;
-  }
-}
-
-.popover {
-  border-radius: 8px !important;
 }

@@ -17,8 +17,8 @@ import { formatDate, getErrorMessage } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
 import { MenuDivider, OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { CommitDivergence } from 'components/CommitDivergence/CommitDivergence'
-import css from './BranchesContent.module.scss'
 import { makeDiffRefs } from 'utils/GitUtils'
+import css from './BranchesContent.module.scss'
 
 interface BranchesContentProps {
   searchTerm?: string

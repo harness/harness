@@ -9,6 +9,8 @@ export enum ViewStyle {
 }
 
 export const DIFF_VIEWER_HEADER_HEIGHT = 36
+// const DIFF_MAX_CHANGES = 100
+// const DIFF_MAX_LINE_LENGTH = 100
 
 export interface CommentItem {
   left: boolean
@@ -23,6 +25,9 @@ export const DIFF2HTML_CONFIG = {
   drawFileList: false,
   fileListStartVisible: false,
   fileContentToggle: true,
+  // diffMaxChanges: DIFF_MAX_CHANGES,
+  // diffMaxLineLength: DIFF_MAX_LINE_LENGTH,
+  // diffTooBigMessage: index => `${index} - is too big`,
   matching: 'lines',
   synchronisedScroll: true,
   highlight: true,
