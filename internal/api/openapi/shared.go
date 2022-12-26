@@ -71,3 +71,48 @@ var queryParameterDirection = openapi3.ParameterOrRef{
 		},
 	},
 }
+
+var queryParameterLimit = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamLimit,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The maximum number of results to return."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Minimum: ptr.Float64(1),
+			},
+		},
+	},
+}
+
+var queryParameterSince = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSince,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The result should contain only entries created at and after this timestamp (unix millis)."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Minimum: ptr.Float64(0),
+			},
+		},
+	},
+}
+
+var queryParameterUntil = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamUntil,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The result should contain only entries created before this timestamp (unix millis)."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Minimum: ptr.Float64(0),
+			},
+		},
+	},
+}

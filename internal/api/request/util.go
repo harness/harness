@@ -26,7 +26,13 @@ const (
 	QueryParamCreatedBy = "created_by"
 
 	QueryParamState = "state"
+	QueryParamKind  = "kind"
+	QueryParamType  = "type"
 
+	QueryParamSince = "since"
+	QueryParamUntil = "until"
+
+	QueryParamLimit   = "limit"
 	QueryParamPage    = "page"
 	QueryParamPerPage = "per_page"
 	PerPageDefault    = 50
@@ -83,6 +89,26 @@ func QueryParamOrError(r *http.Request, paramName string) (string, error) {
 
 // QueryParamAsID extracts an ID parameter from the url.
 func QueryParamAsID(r *http.Request, paramName string) (int64, error) {
+	return QueryParamAsPositiveInt64(r, paramName)
+}
+
+// QueryParamAsInt64 extracts an integer parameter from the url.
+func QueryParamAsInt64(r *http.Request, paramName string) (int64, error) {
+	value, ok := QueryParam(r, paramName)
+	if !ok {
+		return 0, nil
+	}
+
+	valueInt, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		return 0, usererror.BadRequest(fmt.Sprintf("Parameter '%s' must be an integer.", paramName))
+	}
+
+	return valueInt, nil
+}
+
+// QueryParamAsPositiveInt64 extracts an integer parameter from the url.
+func QueryParamAsPositiveInt64(r *http.Request, paramName string) (int64, error) {
 	value, ok := QueryParam(r, paramName)
 	if !ok {
 		return 0, nil

@@ -212,6 +212,10 @@ type (
 		// Update the pull request. It will set new values to the Version and Updated fields.
 		Update(ctx context.Context, repo *types.PullReq) error
 
+		// UpdateActivitySeq the pull request's activity sequence number.
+		// It will set new values to the ActivitySeq, Version and Updated fields.
+		UpdateActivitySeq(ctx context.Context, pr *types.PullReq) (*types.PullReq, error)
+
 		// Delete the pull request.
 		Delete(ctx context.Context, id int64) error
 
@@ -223,6 +227,28 @@ type (
 
 		// List returns a list of pull requests in a space.
 		List(ctx context.Context, repoID int64, opts *types.PullReqFilter) ([]*types.PullReq, error)
+	}
+
+	PullReqActivityStore interface {
+		// Find the pull request activity by id.
+		Find(ctx context.Context, id int64) (*types.PullReqActivity, error)
+
+		// Create a new pull request activity. Value of the Order field should be fetched with UpdateActivitySeq.
+		// Value of the SubOrder field (for replies) should be fetched with UpdateReplySeq (non-replies have 0).
+		Create(ctx context.Context, act *types.PullReqActivity) error
+
+		// Update the pull request activity. It will set new values to the Version and Updated fields.
+		Update(ctx context.Context, act *types.PullReqActivity) error
+
+		// UpdateReplySeq the pull request activity's reply sequence number.
+		// It will set new values to the ReplySeq, Version and Updated fields.
+		UpdateReplySeq(ctx context.Context, act *types.PullReqActivity) (*types.PullReqActivity, error)
+
+		// Count returns number of pull request activities in a pull request.
+		Count(ctx context.Context, prID int64, opts *types.PullReqActivityFilter) (int64, error)
+
+		// List returns a list of pull request activities in a pull request (a timeline).
+		List(ctx context.Context, prID int64, opts *types.PullReqActivityFilter) ([]*types.PullReqActivity, error)
 	}
 
 	// SystemStore defines internal system metadata storage.

@@ -19,4 +19,7 @@ const (
 	date          = "date"
 	defaultString = "default"
 	undefined     = "undefined"
+	system        = "system"
+	comment       = "comment"
+	code          = "code"
 )

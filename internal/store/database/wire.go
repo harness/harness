@@ -26,8 +26,9 @@ var WireSet = wire.NewSet(
 	ProvideServiceStore,
 	ProvideSpaceStore,
 	ProvideRepoStore,
-	ProvidePullReqStore,
 	ProvideTokenStore,
+	ProvidePullReqStore,
+	ProvidePullReqActivityStore,
 )
 
 // ProvideDatabase provides a database connection.
@@ -114,12 +115,10 @@ func ProvideTokenStore(db *sqlx.DB) store.TokenStore {
 
 // ProvidePullReqStore provides a pull request store.
 func ProvidePullReqStore(db *sqlx.DB) store.PullReqStore {
-	switch db.DriverName() {
-	case postgres:
-		return NewPullReqStore(db)
-	default:
-		return NewPullReqStoreSync(
-			NewPullReqStore(db),
-		)
-	}
+	return NewPullReqStore(db)
+}
+
+// ProvidePullReqActivityStore provides a pull request activity store.
+func ProvidePullReqActivityStore(db *sqlx.DB) store.PullReqActivityStore {
+	return NewPullReqActivityStore(db)
 }

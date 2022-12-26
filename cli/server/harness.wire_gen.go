@@ -98,7 +98,8 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	}
 	repoController := repo.ProvideController(config, checkRepo, authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
 	pullReqStore := database.ProvidePullReqStore(db)
-	pullreqController := pullreq.ProvideController(db, authorizer, pullReqStore, repoStore, serviceAccountStore, gitrpcInterface)
+	pullReqActivityStore := database.ProvidePullReqActivityStore(db)
+	pullreqController := pullreq.ProvideController(db, authorizer, pullReqStore, pullReqActivityStore, repoStore, serviceAccountStore, gitrpcInterface)
 	apiHandler := router.ProvideAPIHandler(config, authenticator, accountClient, spaceController, repoController, pullreqController)
 	gitHandler := router.ProvideGitHandler(config, repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router2.ProvideWebHandler(config)

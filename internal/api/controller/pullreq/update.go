@@ -24,6 +24,8 @@ type UpdateInput struct {
 }
 
 // Update updates an pull request.
+//
+//nolint:gocognit
 func (c *Controller) Update(ctx context.Context,
 	session *auth.Session, repoRef string, pullreqNum int64, in *UpdateInput) (*types.PullReq, error) {
 	var pr *types.PullReq
@@ -37,6 +39,8 @@ func (c *Controller) Update(ctx context.Context,
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
+
+	var activity *types.PullReqActivity
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
 		pr, err = c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
@@ -62,6 +66,8 @@ func (c *Controller) Update(ctx context.Context,
 			return nil
 		}
 
+		activity = getUpdateActivity(session, pr, in)
+
 		pr.Title = in.Title
 		pr.Description = in.Description
 		pr.Edited = time.Now().UnixMilli()
@@ -77,7 +83,45 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, err
 	}
 
-	// TODO: Write a row to the pull request activity
+	// Write a row to the pull request activity
+	if activity != nil {
+		pr, activity = c.writeActivity(ctx, pr, activity)
+	}
 
 	return pr, nil
+}
+
+func getUpdateActivity(session *auth.Session, pr *types.PullReq, in *UpdateInput) *types.PullReqActivity {
+	if pr.Title == in.Title {
+		return nil
+	}
+
+	now := time.Now().UnixMilli()
+
+	act := &types.PullReqActivity{
+		ID:        0, // Will be populated in the data layer
+		Version:   0,
+		CreatedBy: session.Principal.ID,
+		Created:   now,
+		Updated:   now,
+		Edited:    now,
+		Deleted:   nil,
+		RepoID:    pr.TargetRepoID,
+		PullReqID: pr.ID,
+		Order:     0, // Will be filled in writeActivity
+		SubOrder:  0,
+		ReplySeq:  0,
+		Type:      enum.PullReqActivityTypeTitleChange,
+		Kind:      enum.PullReqActivityKindSystem,
+		Text:      "",
+		Payload: map[string]interface{}{
+			"old": pr.Title,
+			"new": in.Title,
+		},
+		Metadata:   nil,
+		ResolvedBy: nil,
+		Resolved:   nil,
+	}
+
+	return act
 }

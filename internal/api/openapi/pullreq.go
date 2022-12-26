@@ -40,6 +40,10 @@ type updatePullReqRequest struct {
 	pullreq.UpdateInput
 }
 
+type listPullReqActivitiesRequest struct {
+	pullReqRequest
+}
+
 var queryParameterQueryPullRequest = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
@@ -156,6 +160,55 @@ var queryParameterSortPullRequest = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterKindPullRequestActivity = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamKind,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The kind of the pull request activity to include in the result."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeString),
+						Enum: []interface{}{
+							ptr.String(string(enum.PullReqActivityKindSystem)),
+							ptr.String(string(enum.PullReqActivityKindComment)),
+							ptr.String(string(enum.PullReqActivityKindCodeComment)),
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var queryParameterTypePullRequestActivity = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamType,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The type of the pull request activity to include in the result."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeArray),
+				Items: &openapi3.SchemaOrRef{
+					Schema: &openapi3.Schema{
+						Type: ptrSchemaType(openapi3.SchemaTypeString),
+						Enum: []interface{}{
+							ptr.String(string(enum.PullReqActivityTypeComment)),
+							ptr.String(string(enum.PullReqActivityTypeCodeComment)),
+							ptr.String(string(enum.PullReqActivityTypeTitleChange)),
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+//nolint:funlen
 func pullReqOperations(reflector *openapi3.Reflector) {
 	createPullReq := openapi3.Operation{}
 	createPullReq.WithTags("pullreq")
@@ -206,4 +259,19 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPut, "/repos/{repoRef}/pullreq/{pullreq_number}", putPullReq)
+
+	listPullReqActivities := openapi3.Operation{}
+	listPullReqActivities.WithTags("pullreq")
+	listPullReqActivities.WithMapOfAnything(map[string]interface{}{"operationId": "listPullReqActivities"})
+	listPullReqActivities.WithParameters(
+		queryParameterKindPullRequestActivity, queryParameterTypePullRequestActivity,
+		queryParameterSince, queryParameterUntil, queryParameterLimit)
+	_ = reflector.SetRequest(&listPullReqActivities, new(listPullReqActivitiesRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&listPullReqActivities, new([]types.PullReqActivity), http.StatusOK)
+	_ = reflector.SetJSONResponse(&listPullReqActivities, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&listPullReqActivities, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&listPullReqActivities, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&listPullReqActivities, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repoRef}/pullreq/{pullreq_number}/activities", listPullReqActivities)
 }

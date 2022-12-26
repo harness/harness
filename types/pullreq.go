@@ -29,7 +29,7 @@ type PullReq struct {
 	TargetRepoID int64  `json:"target_repo_id"`
 	TargetBranch string `json:"target_branch"`
 
-	PullReqActivitySeq int64 `json:"-"` // not returned, because it's a server internal field
+	ActivitySeq int64 `json:"-"` // not returned, because it's a server's internal field
 
 	MergedBy      *int64  `json:"-"` // not returned, because the merger info is in the Merger field
 	Merged        *int64  `json:"merged"`
@@ -59,27 +59,39 @@ type PullReqActivity struct {
 	ID      int64 `json:"id"`
 	Version int64 `json:"version"`
 
-	CreatedBy int64 `json:"-"` // not returned, because the author info is in the Author field
-	Created   int64 `json:"created"`
-	Updated   int64 `json:"updated"`
-	Edited    int64 `json:"edited"`
-	Deleted   int64 `json:"deleted"`
+	CreatedBy int64  `json:"-"` // not returned, because the author info is in the Author field
+	Created   int64  `json:"created"`
+	Updated   int64  `json:"updated"`
+	Edited    int64  `json:"edited"`
+	Deleted   *int64 `json:"deleted"`
 
 	RepoID    int64 `json:"repo_id"`
 	PullReqID int64 `json:"pullreq_id"`
 
-	Seq    int64 `json:"seq"`
-	SubSeq int64 `json:"subseq"`
+	Order    int64 `json:"order"`
+	SubOrder int64 `json:"sub_order"`
+	ReplySeq int64 `json:"-"` // not returned, because it's a server's internal field
 
-	Type int64 `json:"type"`
-	Kind int64 `json:"kind"`
+	Type enum.PullReqActivityType `json:"type"`
+	Kind enum.PullReqActivityKind `json:"kind"`
 
-	Text    string                 `json:"title"`
-	Payload map[string]interface{} `json:"payload"`
+	Text     string                 `json:"title"`
+	Payload  map[string]interface{} `json:"payload"`
+	Metadata map[string]interface{} `json:"metadata"`
 
 	ResolvedBy *int64 `json:"-"` // not returned, because the resolver info is in the Resolver field
 	Resolved   *int64 `json:"resolved"`
 
 	Author   PrincipalInfo  `json:"author"`
 	Resolver *PrincipalInfo `json:"resolver"`
+}
+
+// PullReqActivityFilter stores pull request activity query parameters.
+type PullReqActivityFilter struct {
+	Since int64 `json:"since"`
+	Until int64 `json:"until"`
+	Limit int   `json:"limit"`
+
+	Types []enum.PullReqActivityType `json:"type"`
+	Kinds []enum.PullReqActivityKind `json:"kind"`
 }

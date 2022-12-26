@@ -208,6 +208,7 @@ func setupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqNumber), func(r chi.Router) {
 			r.Get("/", handlerpullreq.HandleFind(pullreqCtrl))
 			r.Put("/", handlerpullreq.HandleUpdate(pullreqCtrl))
+			r.Get("/activities", handlerpullreq.HandleListActivities(pullreqCtrl))
 		})
 	})
 }

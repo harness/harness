@@ -55,7 +55,7 @@ type pullReq struct {
 	TargetRepoID int64  `db:"pullreq_target_repo_id"`
 	TargetBranch string `db:"pullreq_target_branch"`
 
-	PullReqActivitySeq int64 `db:"pullreq_activity_seq"`
+	ActivitySeq int64 `db:"pullreq_activity_seq"`
 
 	MergedBy      null.Int    `db:"pullreq_merged_by"`
 	Merged        null.Int    `db:"pullreq_merged"`
@@ -238,6 +238,27 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 	return nil
 }
 
+// UpdateActivitySeq updates the pull request's activity sequence.
+func (s *PullReqStore) UpdateActivitySeq(ctx context.Context, pr *types.PullReq) (*types.PullReq, error) {
+	for {
+		dup := *pr
+
+		dup.ActivitySeq++
+		err := s.Update(ctx, &dup)
+		if err == nil {
+			return &dup, nil
+		}
+		if !errors.Is(err, store.ErrConflict) {
+			return nil, err
+		}
+
+		pr, err = s.Find(ctx, pr.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+}
+
 // Delete the pull request.
 func (s *PullReqStore) Delete(ctx context.Context, id int64) error {
 	const pullReqDelete = `DELETE FROM pullreqs WHERE pullreq_id = $1`
@@ -383,26 +404,26 @@ func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullR
 
 func mapPullReq(pr *pullReq) *types.PullReq {
 	m := &types.PullReq{
-		ID:                 pr.ID,
-		Version:            pr.Version,
-		Number:             pr.Number,
-		CreatedBy:          pr.CreatedBy,
-		Created:            pr.Created,
-		Updated:            pr.Updated,
-		Edited:             pr.Edited,
-		State:              pr.State,
-		Title:              pr.Title,
-		Description:        pr.Description,
-		SourceRepoID:       pr.SourceRepoID,
-		SourceBranch:       pr.SourceBranch,
-		TargetRepoID:       pr.TargetRepoID,
-		TargetBranch:       pr.TargetBranch,
-		PullReqActivitySeq: pr.PullReqActivitySeq,
-		MergedBy:           pr.MergedBy.Ptr(),
-		Merged:             pr.Merged.Ptr(),
-		MergeStrategy:      pr.MergeStrategy.Ptr(),
-		Author:             types.PrincipalInfo{},
-		Merger:             nil,
+		ID:            pr.ID,
+		Version:       pr.Version,
+		Number:        pr.Number,
+		CreatedBy:     pr.CreatedBy,
+		Created:       pr.Created,
+		Updated:       pr.Updated,
+		Edited:        pr.Edited,
+		State:         pr.State,
+		Title:         pr.Title,
+		Description:   pr.Description,
+		SourceRepoID:  pr.SourceRepoID,
+		SourceBranch:  pr.SourceBranch,
+		TargetRepoID:  pr.TargetRepoID,
+		TargetBranch:  pr.TargetBranch,
+		ActivitySeq:   pr.ActivitySeq,
+		MergedBy:      pr.MergedBy.Ptr(),
+		Merged:        pr.Merged.Ptr(),
+		MergeStrategy: pr.MergeStrategy.Ptr(),
+		Author:        types.PrincipalInfo{},
+		Merger:        nil,
 	}
 	m.Author = types.PrincipalInfo{
 		ID:    pr.CreatedBy,
@@ -424,24 +445,24 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 
 func mapInternalPullReq(pr *types.PullReq) *pullReq {
 	m := &pullReq{
-		ID:                 pr.ID,
-		Version:            pr.Version,
-		Number:             pr.Number,
-		CreatedBy:          pr.CreatedBy,
-		Created:            pr.Created,
-		Updated:            pr.Updated,
-		Edited:             pr.Edited,
-		State:              pr.State,
-		Title:              pr.Title,
-		Description:        pr.Description,
-		SourceRepoID:       pr.SourceRepoID,
-		SourceBranch:       pr.SourceBranch,
-		TargetRepoID:       pr.TargetRepoID,
-		TargetBranch:       pr.TargetBranch,
-		PullReqActivitySeq: pr.PullReqActivitySeq,
-		MergedBy:           null.IntFromPtr(pr.MergedBy),
-		Merged:             null.IntFromPtr(pr.Merged),
-		MergeStrategy:      null.StringFromPtr(pr.MergeStrategy),
+		ID:            pr.ID,
+		Version:       pr.Version,
+		Number:        pr.Number,
+		CreatedBy:     pr.CreatedBy,
+		Created:       pr.Created,
+		Updated:       pr.Updated,
+		Edited:        pr.Edited,
+		State:         pr.State,
+		Title:         pr.Title,
+		Description:   pr.Description,
+		SourceRepoID:  pr.SourceRepoID,
+		SourceBranch:  pr.SourceBranch,
+		TargetRepoID:  pr.TargetRepoID,
+		TargetBranch:  pr.TargetBranch,
+		ActivitySeq:   pr.ActivitySeq,
+		MergedBy:      null.IntFromPtr(pr.MergedBy),
+		Merged:        null.IntFromPtr(pr.Merged),
+		MergeStrategy: null.StringFromPtr(pr.MergeStrategy),
 	}
 
 	return m

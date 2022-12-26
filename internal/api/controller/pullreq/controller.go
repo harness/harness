@@ -19,32 +19,36 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog/log"
 )
 
 type Controller struct {
-	db           *sqlx.DB
-	authorizer   authz.Authorizer
-	pullreqStore store.PullReqStore
-	repoStore    store.RepoStore
-	saStore      store.ServiceAccountStore
-	gitRPCClient gitrpc.Interface
+	db                   *sqlx.DB
+	authorizer           authz.Authorizer
+	pullreqStore         store.PullReqStore
+	pullreqActivityStore store.PullReqActivityStore
+	repoStore            store.RepoStore
+	saStore              store.ServiceAccountStore
+	gitRPCClient         gitrpc.Interface
 }
 
 func NewController(
 	db *sqlx.DB,
 	authorizer authz.Authorizer,
 	pullreqStore store.PullReqStore,
+	pullreqActivityStore store.PullReqActivityStore,
 	repoStore store.RepoStore,
 	saStore store.ServiceAccountStore,
 	gitRPCClient gitrpc.Interface,
 ) *Controller {
 	return &Controller{
-		db:           db,
-		authorizer:   authorizer,
-		pullreqStore: pullreqStore,
-		repoStore:    repoStore,
-		saStore:      saStore,
-		gitRPCClient: gitRPCClient,
+		db:                   db,
+		authorizer:           authorizer,
+		pullreqStore:         pullreqStore,
+		pullreqActivityStore: pullreqActivityStore,
+		repoStore:            repoStore,
+		saStore:              saStore,
+		gitRPCClient:         gitRPCClient,
 	}
 }
 
@@ -84,4 +88,25 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	}
 
 	return repo, nil
+}
+
+func (c *Controller) writeActivity(ctx context.Context,
+	pr *types.PullReq, act *types.PullReqActivity) (*types.PullReq, *types.PullReqActivity) {
+	prUpd, err := c.pullreqStore.UpdateActivitySeq(ctx, pr)
+	if err != nil {
+		// non-critical error
+		log.Err(err).Msg("failed to get pull request activity number")
+		return pr, nil
+	}
+
+	act.Order = prUpd.ActivitySeq
+
+	err = c.pullreqActivityStore.Create(ctx, act)
+	if err != nil {
+		// non-critical error
+		log.Err(err).Msg("failed to create pull request activity")
+		return prUpd, nil
+	}
+
+	return prUpd, act
 }
