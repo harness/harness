@@ -27,7 +27,7 @@ CREATE TABLE pullreq_activities (
     ON UPDATE NO ACTION
     ON DELETE CASCADE
 ,CONSTRAINT fk_pullreq_activities_pullreq_id FOREIGN KEY (pullreq_activity_pullreq_id)
-    REFERENCES pullreq (pullreq_id) MATCH SIMPLE
+    REFERENCES pullreqs (pullreq_id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE
 ,CONSTRAINT fk_pullreq_activities_resolved_by FOREIGN KEY (pullreq_activity_resolved_by)
