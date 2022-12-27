@@ -37,6 +37,14 @@ func (c *Controller) ListActivities(
 		return nil, 0, fmt.Errorf("failed to list pull requests activities: %w", err)
 	}
 
+	// the function returns deleted comments, but it removes their content
+	for _, act := range list {
+		if act.Deleted != nil {
+			act.Text = ""
+			act.Payload = nil
+		}
+	}
+
 	if filter.Limit == 0 {
 		return list, int64(len(list)), nil
 	}

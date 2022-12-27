@@ -195,12 +195,12 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Co
 				r.Get("/*", handlerrepo.HandleRawDiff(repoCtrl))
 			})
 
-			setupPullReq(r, pullreqCtrl)
+			SetupPullReq(r, pullreqCtrl)
 		})
 	})
 }
 
-func setupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
+func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 	r.Route("/pullreq", func(r chi.Router) {
 		r.Post("/", handlerpullreq.HandleCreate(pullreqCtrl))
 		r.Get("/", handlerpullreq.HandleList(pullreqCtrl))
@@ -209,7 +209,13 @@ func setupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Get("/", handlerpullreq.HandleFind(pullreqCtrl))
 			r.Put("/", handlerpullreq.HandleUpdate(pullreqCtrl))
 			r.Get("/activities", handlerpullreq.HandleListActivities(pullreqCtrl))
-			r.Post("/comment", handlerpullreq.HandleCommentCreate(pullreqCtrl))
+			r.Route("/comments", func(r chi.Router) {
+				r.Post("/", handlerpullreq.HandleCommentCreate(pullreqCtrl))
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqCommentID), func(r chi.Router) {
+					r.Put("/", handlerpullreq.HandleCommentUpdate(pullreqCtrl))
+					r.Delete("/", handlerpullreq.HandleCommentDelete(pullreqCtrl))
+				})
+			})
 		})
 	})
 }

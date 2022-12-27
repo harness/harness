@@ -12,11 +12,16 @@ import (
 )
 
 const (
-	PathParamPullReqNumber = "pullreq_number"
+	PathParamPullReqNumber    = "pullreq_number"
+	PathParamPullReqCommentID = "pullreq_comment_id"
 )
 
 func GetPullReqNumberFromPath(r *http.Request) (int64, error) {
 	return PathParamAsInt64(r, PathParamPullReqNumber)
+}
+
+func GetPullReqCommentIDPath(r *http.Request) (int64, error) {
+	return PathParamAsInt64(r, PathParamPullReqCommentID)
 }
 
 // ParseSortPullReq extracts the pull request sort parameter from the url.

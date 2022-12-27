@@ -89,6 +89,32 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	return repo, nil
 }
 
+func (c *Controller) getCommentCheckEditAccess(ctx context.Context,
+	session *auth.Session, pr *types.PullReq, commentID int64) (*types.PullReqActivity, error) {
+	if commentID <= 0 {
+		return nil, usererror.BadRequest("A valid comment ID must be provided.")
+	}
+
+	comment, err := c.pullreqActivityStore.Find(ctx, commentID)
+	if err != nil || comment == nil {
+		return nil, fmt.Errorf("failed to find comment by ID: %w", err)
+	}
+
+	if comment.Deleted != nil || comment.RepoID != pr.TargetRepoID || comment.PullReqID != pr.ID {
+		return nil, store.ErrResourceNotFound
+	}
+
+	if comment.Kind == enum.PullReqActivityKindSystem {
+		return nil, usererror.BadRequest("Can't update a comment created by the system.")
+	}
+
+	if comment.CreatedBy != session.Principal.ID {
+		return nil, usererror.BadRequest("Only own comments may be updated.")
+	}
+
+	return comment, nil
+}
+
 // writeActivity updates the PR's activity sequence number (using the optimistic locking mechanism),
 // sets the correct Order value and writes the activity to the database.
 // Even if the writing fails, the updating of the sequence number can succeed.

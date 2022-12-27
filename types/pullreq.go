@@ -75,7 +75,7 @@ type PullReqActivity struct {
 	Type enum.PullReqActivityType `json:"type"`
 	Kind enum.PullReqActivityKind `json:"kind"`
 
-	Text     string                 `json:"title"`
+	Text     string                 `json:"text"`
 	Payload  map[string]interface{} `json:"payload"`
 	Metadata map[string]interface{} `json:"metadata"`
 

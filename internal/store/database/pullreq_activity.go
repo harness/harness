@@ -186,6 +186,7 @@ func (s *PullReqActivityStore) Update(ctx context.Context, act *types.PullReqAct
 	     pullreq_activity_version = :pullreq_activity_version
 		,pullreq_activity_updated = :pullreq_activity_updated
 		,pullreq_activity_edited = :pullreq_activity_edited
+		,pullreq_activity_deleted = :pullreq_activity_deleted
 		,pullreq_activity_reply_seq = :pullreq_activity_reply_seq
 		,pullreq_activity_text = :pullreq_activity_text
 		,pullreq_activity_payload = :pullreq_activity_payload
