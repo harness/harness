@@ -102,8 +102,8 @@ const (
 	pullreqActivitySelectBase = `
 	SELECT` + pullreqActivityColumns + `
 	FROM pullreq_activities
-	INNER JOIN principals author on author.principal_id = pullreq_created_by
-	LEFT JOIN principals resolver on resolver.principal_id = journal_pullreq_merged_by`
+	INNER JOIN principals author on author.principal_id = pullreq_activity_created_by
+	LEFT JOIN principals resolver on resolver.principal_id = pullreq_activity_resolved_by`
 )
 
 // Find finds the pull request activity by id.

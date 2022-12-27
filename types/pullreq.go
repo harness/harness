@@ -86,6 +86,15 @@ type PullReqActivity struct {
 	Resolver *PrincipalInfo `json:"resolver"`
 }
 
+func (a *PullReqActivity) IsReplyable() bool {
+	return (a.Type == enum.PullReqActivityTypeComment || a.Type == enum.PullReqActivityTypeCodeComment) &&
+		a.SubOrder == 0
+}
+
+func (a *PullReqActivity) IsReply() bool {
+	return a.SubOrder > 0
+}
+
 // PullReqActivityFilter stores pull request activity query parameters.
 type PullReqActivityFilter struct {
 	Since int64 `json:"since"`

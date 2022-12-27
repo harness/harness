@@ -209,6 +209,7 @@ func setupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Get("/", handlerpullreq.HandleFind(pullreqCtrl))
 			r.Put("/", handlerpullreq.HandleUpdate(pullreqCtrl))
 			r.Get("/activities", handlerpullreq.HandleListActivities(pullreqCtrl))
+			r.Post("/comment", handlerpullreq.HandleCommentCreate(pullreqCtrl))
 		})
 	})
 }

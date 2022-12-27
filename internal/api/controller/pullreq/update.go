@@ -16,6 +16,8 @@ import (
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type UpdateInput struct {
@@ -85,7 +87,11 @@ func (c *Controller) Update(ctx context.Context,
 
 	// Write a row to the pull request activity
 	if activity != nil {
-		pr, activity = c.writeActivity(ctx, pr, activity)
+		err = c.writeActivity(ctx, pr, activity)
+		if err != nil {
+			// non-critical error
+			log.Err(err).Msg("failed to write pull req activity")
+		}
 	}
 
 	return pr, nil

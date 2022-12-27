@@ -44,6 +44,11 @@ type listPullReqActivitiesRequest struct {
 	pullReqRequest
 }
 
+type commentPullReqRequest struct {
+	pullReqRequest
+	pullreq.CommentCreateInput
+}
+
 var queryParameterQueryPullRequest = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
@@ -274,4 +279,16 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&listPullReqActivities, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
 		"/repos/{repoRef}/pullreq/{pullreq_number}/activities", listPullReqActivities)
+
+	commentPullReq := openapi3.Operation{}
+	commentPullReq.WithTags("pullreq")
+	commentPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "commentPullReq"})
+	_ = reflector.SetRequest(&commentPullReq, new(commentPullReqRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&commentPullReq, new(types.PullReqActivity), http.StatusOK)
+	_ = reflector.SetJSONResponse(&commentPullReq, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&commentPullReq, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&commentPullReq, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&commentPullReq, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repoRef}/pullreq/{pullreq_number}/comment", commentPullReq)
 }
