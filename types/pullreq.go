@@ -65,8 +65,9 @@ type PullReqActivity struct {
 	Edited    int64  `json:"edited"`
 	Deleted   *int64 `json:"deleted"`
 
-	RepoID    int64 `json:"repo_id"`
-	PullReqID int64 `json:"pullreq_id"`
+	ParentID  *int64 `json:"parent_id"`
+	RepoID    int64  `json:"repo_id"`
+	PullReqID int64  `json:"pullreq_id"`
 
 	Order    int64 `json:"order"`
 	SubOrder int64 `json:"sub_order"`

@@ -46,8 +46,9 @@ type pullReqActivity struct {
 	Edited    int64    `db:"pullreq_activity_edited"`
 	Deleted   null.Int `db:"pullreq_activity_deleted"`
 
-	RepoID    int64 `db:"pullreq_activity_repo_id"`
-	PullReqID int64 `db:"pullreq_activity_pullreq_id"`
+	ParentID  null.Int `db:"pullreq_activity_parent_id"`
+	RepoID    int64    `db:"pullreq_activity_repo_id"`
+	PullReqID int64    `db:"pullreq_activity_pullreq_id"`
 
 	Order    int64 `db:"pullreq_activity_order"`
 	SubOrder int64 `db:"pullreq_activity_sub_order"`
@@ -80,6 +81,7 @@ const (
 		,pullreq_activity_updated
 		,pullreq_activity_edited
 		,pullreq_activity_deleted
+		,pullreq_activity_parent_id
 		,pullreq_activity_repo_id
 		,pullreq_activity_pullreq_id
 		,pullreq_activity_order
@@ -131,6 +133,7 @@ func (s *PullReqActivityStore) Create(ctx context.Context, act *types.PullReqAct
 		,pullreq_activity_updated
 		,pullreq_activity_edited
 		,pullreq_activity_deleted
+		,pullreq_activity_parent_id
 		,pullreq_activity_repo_id
 		,pullreq_activity_pullreq_id
 		,pullreq_activity_order
@@ -150,6 +153,7 @@ func (s *PullReqActivityStore) Create(ctx context.Context, act *types.PullReqAct
 		,:pullreq_activity_updated
 		,:pullreq_activity_edited
 		,:pullreq_activity_deleted
+		,:pullreq_activity_parent_id
 		,:pullreq_activity_repo_id
 		,:pullreq_activity_pullreq_id
 		,:pullreq_activity_order
@@ -355,6 +359,7 @@ func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
 		Updated:    act.Updated,
 		Edited:     act.Edited,
 		Deleted:    act.Deleted.Ptr(),
+		ParentID:   act.ParentID.Ptr(),
 		RepoID:     act.RepoID,
 		PullReqID:  act.PullReqID,
 		Order:      act.Order,
@@ -401,6 +406,7 @@ func mapInternalPullReqActivity(act *types.PullReqActivity) *pullReqActivity {
 		Updated:    act.Updated,
 		Edited:     act.Edited,
 		Deleted:    null.IntFromPtr(act.Deleted),
+		ParentID:   null.IntFromPtr(act.ParentID),
 		RepoID:     act.RepoID,
 		PullReqID:  act.PullReqID,
 		Order:      act.Order,

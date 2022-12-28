@@ -6,6 +6,7 @@ CREATE TABLE pullreq_activities (
 ,pullreq_activity_updated BIGINT NOT NULL
 ,pullreq_activity_edited BIGINT NOT NULL
 ,pullreq_activity_deleted BIGINT
+,pullreq_activity_parent_id INTEGER
 ,pullreq_activity_repo_id INTEGER NOT NULL
 ,pullreq_activity_pullreq_id INTEGER NOT NULL
 ,pullreq_activity_order INTEGER NOT NULL
@@ -22,6 +23,10 @@ CREATE TABLE pullreq_activities (
     REFERENCES principals (principal_id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
+,CONSTRAINT fk_pullreq_activities_parent_id FOREIGN KEY (pullreq_activity_parent_id)
+    REFERENCES pullreq_activities (pullreq_activity_id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE
 ,CONSTRAINT fk_pullreq_activities_repo_id FOREIGN KEY (pullreq_activity_repo_id)
     REFERENCES repositories (repo_id) MATCH SIMPLE
     ON UPDATE NO ACTION

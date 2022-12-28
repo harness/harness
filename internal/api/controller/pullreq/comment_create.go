@@ -48,6 +48,7 @@ func (c *Controller) CommentCreate(
 		if err != nil {
 			return nil, err
 		}
+		act.ParentID = &parentAct.ID
 		err = c.writeReplyActivity(ctx, parentAct, act)
 	} else {
 		err = c.writeActivity(ctx, pr, act)
@@ -91,6 +92,7 @@ func getCommentActivity(session *auth.Session, pr *types.PullReq, in *CommentCre
 		Updated:    now,
 		Edited:     now,
 		Deleted:    nil,
+		ParentID:   nil, // Will be filled in CommentCreate
 		RepoID:     pr.TargetRepoID,
 		PullReqID:  pr.ID,
 		Order:      0, // Will be filled in writeActivity/writeReplyActivity
