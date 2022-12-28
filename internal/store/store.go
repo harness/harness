@@ -251,6 +251,45 @@ type (
 		List(ctx context.Context, prID int64, opts *types.PullReqActivityFilter) ([]*types.PullReqActivity, error)
 	}
 
+	// WebhookStore defines the webhook data storage.
+	WebhookStore interface {
+		// Find finds the webhook by id.
+		Find(ctx context.Context, id int64) (*types.Webhook, error)
+
+		// Create creates a new webhook.
+		Create(ctx context.Context, hook *types.Webhook) error
+
+		// Update updates an existing webhook.
+		Update(ctx context.Context, hook *types.Webhook) error
+
+		// Delete deletes the webhook for the given id.
+		Delete(ctx context.Context, id int64) error
+
+		// Count counts the webhooks for a given parent type and id.
+		Count(ctx context.Context, parentType enum.WebhookParent, parentID int64,
+			opts *types.WebhookFilter) (int64, error)
+
+		// List lists the webhooks for a given parent type and id.
+		List(ctx context.Context, parentType enum.WebhookParent, parentID int64,
+			opts *types.WebhookFilter) ([]*types.Webhook, error)
+	}
+
+	// WebhookExecutionStore defines the webhook execution data storage.
+	WebhookExecutionStore interface {
+		// Find finds the webhook execution by id.
+		Find(ctx context.Context, id int64) (*types.WebhookExecution, error)
+
+		// Create creates a new webhook execution entry.
+		Create(ctx context.Context, hook *types.WebhookExecution) error
+
+		// ListForWebhook lists the webhook executions for a given webhook id.
+		ListForWebhook(ctx context.Context, webhookID int64,
+			opts *types.WebhookExecutionFilter) ([]*types.WebhookExecution, error)
+
+		// ListForTrigger lists the webhook executions for a given trigger id.
+		ListForTrigger(ctx context.Context, triggerID string) ([]*types.WebhookExecution, error)
+	}
+
 	// SystemStore defines internal system metadata storage.
 	SystemStore interface {
 		// Config returns the system configuration.

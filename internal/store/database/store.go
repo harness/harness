@@ -10,6 +10,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/harness/gitness/internal/store/database/migrate"
@@ -25,6 +26,11 @@ var builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 // Connect to a database and verify with a ping.
 func Connect(ctx context.Context, driver string, datasource string) (*sqlx.DB, error) {
+	datasource, err := prepareDatasourceForDriver(driver, datasource)
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare datasource: %w", err)
+	}
+
 	db, err := sql.Open(driver, datasource)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open the db: %w", err)
@@ -49,6 +55,32 @@ func Must(db *sqlx.DB, err error) *sqlx.DB {
 		panic(err)
 	}
 	return db
+}
+
+// prepareDatasourceForDriver ensures that required features are enabled on the
+// datasource connection string based on the driver.
+func prepareDatasourceForDriver(driver string, datasource string) (string, error) {
+	switch driver {
+	case "sqlite3":
+		url, err := url.Parse(datasource)
+		if err != nil {
+			return "", fmt.Errorf("datasource is of invalid format for driver sqlite3")
+		}
+
+		// get original query and update it with required settings
+		query := url.Query()
+
+		// ensure foreign keys are always enabled (disabled by default)
+		// See https://github.com/mattn/go-sqlite3#connection-string
+		query.Set("_foreign_keys", "on")
+
+		// update url with updated query
+		url.RawQuery = query.Encode()
+
+		return url.String(), nil
+	default:
+		return datasource, nil
+	}
 }
 
 // helper function to ping the database with backoff to ensure

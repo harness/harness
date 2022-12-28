@@ -7,6 +7,7 @@ package server
 
 import (
 	"context"
+
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	events2 "github.com/harness/gitness/gitrpc/events"
@@ -16,6 +17,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
+	webhook2 "github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/bootstrap"
@@ -60,14 +62,8 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	pullReqStore := database.ProvidePullReqStore(db)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db)
 	pullreqController := pullreq.ProvideController(db, authorizer, pullReqStore, pullReqActivityStore, repoStore, serviceAccountStore, gitrpcInterface)
-	serviceAccount := check.ProvideServiceAccountCheck()
-	serviceaccountController := serviceaccount.NewController(serviceAccount, authorizer, serviceAccountStore, spaceStore, repoStore, tokenStore)
-	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, spaceController, pullreqController, serviceaccountController, controller)
-	gitHandler := router.ProvideGitHandler(config, repoStore, authenticator, authorizer, gitrpcInterface)
-	webHandler := router.ProvideWebHandler(config)
-	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler)
-	serverServer := server.ProvideServer(config, routerRouter)
-	serverConfig := ProvideGitRPCServerConfig(config)
+	webhookStore := database.ProvideWebhookStore(db)
+	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
 	eventsConfig := ProvideEventsConfig(config)
 	cmdable, err := ProvideRedis(config)
 	if err != nil {
@@ -77,15 +73,24 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	server3, err := server2.ProvideServer(serverConfig, eventsSystem)
-	if err != nil {
-		return nil, err
-	}
 	readerFactory, err := events2.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
 	webhookServer, err := webhook.ProvideServer(ctx, config, readerFactory)
+	if err != nil {
+		return nil, err
+	}
+	webhookController := webhook2.ProvideController(config, db, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookServer)
+	serviceAccount := check.ProvideServiceAccountCheck()
+	serviceaccountController := serviceaccount.NewController(serviceAccount, authorizer, serviceAccountStore, spaceStore, repoStore, tokenStore)
+	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, spaceController, pullreqController, webhookController, serviceaccountController, controller)
+	gitHandler := router.ProvideGitHandler(config, repoStore, authenticator, authorizer, gitrpcInterface)
+	webHandler := router.ProvideWebHandler(config)
+	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler)
+	serverServer := server.ProvideServer(config, routerRouter)
+	serverConfig := ProvideGitRPCServerConfig(config)
+	server3, err := server2.ProvideServer(serverConfig, eventsSystem)
 	if err != nil {
 		return nil, err
 	}

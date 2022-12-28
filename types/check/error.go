@@ -4,20 +4,35 @@
 
 package check
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	ErrAny = &ValidationError{}
 )
 
-// ValidationError is error returned by check methods for any validation errors
+// ValidationError is error returned for any validation errors.
 // WARNING: This error will be printed to the user as is!
 type ValidationError struct {
-	Msg string
+	msg string
+}
+
+func NewValidationError(msg string) *ValidationError {
+	return &ValidationError{
+		msg: msg,
+	}
+}
+
+func NewValidationErrorf(format string, args ...interface{}) *ValidationError {
+	return &ValidationError{
+		msg: fmt.Sprintf(format, args...),
+	}
 }
 
 func (e *ValidationError) Error() string {
-	return e.Msg
+	return e.msg
 }
 
 func (e *ValidationError) Is(target error) bool {
@@ -33,5 +48,5 @@ func (e *ValidationError) Is(target error) bool {
 	}
 
 	// only the same if the message is the same
-	return e.Msg == err.Msg
+	return e.msg == err.msg
 }

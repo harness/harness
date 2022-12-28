@@ -28,6 +28,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
+	controllerwebhook "github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/cron"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
@@ -49,6 +50,7 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 		space.WireSet,
 		repo.WireSet,
 		pullreq.WireSet,
+		controllerwebhook.WireSet,
 		user.WireSet,
 		service.WireSet,
 		serviceaccount.WireSet,

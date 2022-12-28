@@ -109,6 +109,9 @@ type Config struct {
 	}
 
 	Webhook struct {
-		Concurrency int `envconfig:"GITNESS_WEBHOOK_CONCURRENCY" default:"4"`
+		MaxRetryCount       int64 `envconfig:"GITNESS_WEBHOOK_MAX_RETRY_COUNT" default:"3"`
+		Concurrency         int   `envconfig:"GITNESS_WEBHOOK_CONCURRENCY" default:"4"`
+		AllowLoopback       bool  `envconfig:"GITNESS_WEBHOOK_ALLOW_LOOPBACK" default:"false"`
+		AllowPrivateNetwork bool  `envconfig:"GITNESS_WEBHOOK_ALLOW_PRIVATE_NETWORK" default:"false"`
 	}
 }

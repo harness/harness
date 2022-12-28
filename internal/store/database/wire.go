@@ -29,6 +29,8 @@ var WireSet = wire.NewSet(
 	ProvideTokenStore,
 	ProvidePullReqStore,
 	ProvidePullReqActivityStore,
+	ProvideWebhookStore,
+	ProvideWebhookExecutionStore,
 )
 
 // ProvideDatabase provides a database connection.
@@ -121,4 +123,14 @@ func ProvidePullReqStore(db *sqlx.DB) store.PullReqStore {
 // ProvidePullReqActivityStore provides a pull request activity store.
 func ProvidePullReqActivityStore(db *sqlx.DB) store.PullReqActivityStore {
 	return NewPullReqActivityStore(db)
+}
+
+// ProvideWebhookStore provides a webhook store.
+func ProvideWebhookStore(db *sqlx.DB) store.WebhookStore {
+	return NewWebhookStore(db)
+}
+
+// ProvideWebhookExecutionStore provides a webhook execution store.
+func ProvideWebhookExecutionStore(db *sqlx.DB) store.WebhookExecutionStore {
+	return NewWebhookExecutionStore(db)
 }
