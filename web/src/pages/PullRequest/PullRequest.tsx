@@ -8,12 +8,12 @@ import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { getErrorMessage } from 'utils/Utils'
 import { CodeIcon } from 'utils/GitUtils'
+import type { TypesPullReq } from 'services/code'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { PullRequestConversation } from './PullRequestConversation/PullRequestConversation'
-import { FilesChanged } from './FilesChanged/FilesChanged'
+import { Changes } from './Changes/Changes'
 import { PullRequestCommits } from './PullRequestCommits/PullRequestCommits'
 import css from './PullRequest.module.scss'
-import type { TypesPullReq } from 'services/code'
 
 enum PullRequestSection {
   CONVERSATION = 'conversation',
@@ -97,7 +97,7 @@ export default function PullRequest() {
                     {
                       id: PullRequestSection.FILES_CHANGED,
                       title: <TabTitle icon={CodeIcon.File} title={getString('filesChanged')} count={20} />,
-                      panel: <FilesChanged repoMetadata={repoMetadata} pullRequestMetadata={prData} />
+                      panel: <Changes repoMetadata={repoMetadata} pullRequestMetadata={prData} />
                     }
                   ]}
                 />

@@ -1,0 +1,66 @@
+.main {
+  max-width: 900px;
+  box-sizing: border-box;
+  position: sticky;
+  left: 0;
+  background: var(--white) !important;
+
+  .box {
+    box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+    border-radius: 4px;
+
+    :global {
+      .cm-editor .cm-line {
+        &,
+        * {
+          font-family: var(--font-family);
+          font-size: 13px;
+        }
+      }
+    }
+
+    .boxLayout {
+      box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+    }
+  }
+
+  .viewer {
+    padding-bottom: var(--spacing-xsmall) !important;
+
+    :global {
+      .wmde-markdown .anchor {
+        display: none;
+      }
+    }
+  }
+
+  .replyPlaceHolder {
+    align-items: center;
+
+    > div:last-of-type {
+      flex-grow: 1;
+      padding: 0;
+      margin: 0;
+    }
+  }
+}
+
+.deleteMenuItem:hover {
+  background-color: var(--red-500);
+
+  * {
+    color: var(--white) !important;
+  }
+}
+
+.newCommentContainer {
+  border-top: 1px solid var(--grey-200);
+  padding-top: var(--spacing-xlarge) !important;
+  background: var(--grey-50) !important;
+}
+
+.editCommentContainer {
+  background-color: var(--grey-50) !important;
+  padding: var(--spacing-large) !important;
+  border-radius: 5px;
+}

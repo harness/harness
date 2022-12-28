@@ -7,14 +7,21 @@ export const MenuDivider = '-' as const
 
 export interface OptionsMenuButtonProps extends ButtonProps {
   items: Array<React.ComponentProps<typeof Menu.Item> | '-'>
+  isDark?: boolean
+  icon?: ButtonProps['icon']
 }
 
-export const OptionsMenuButton = ({ items, ...props }: OptionsMenuButtonProps): ReactElement => {
+export const OptionsMenuButton = ({
+  items,
+  icon = 'code-more',
+  isDark = true,
+  ...props
+}: OptionsMenuButtonProps): ReactElement => {
   return (
     <Button
       minimal
-      icon="code-more"
-      tooltipProps={{ isDark: true, interactionKind: 'click', hasBackdrop: true } as PopoverProps}
+      icon={icon}
+      tooltipProps={{ isDark, interactionKind: 'click', hasBackdrop: true } as PopoverProps}
       tooltip={
         <Menu style={{ minWidth: 'unset' }}>
           {items.map(

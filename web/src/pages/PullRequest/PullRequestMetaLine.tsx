@@ -5,10 +5,10 @@ import ReactTimeago from 'react-timeago'
 import { CodeIcon, GitInfoProps, PullRequestState } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
+import type { TypesPullReq } from 'services/code'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { GitRefLink } from 'components/GitRefLink/GitRefLink'
 import css from './PullRequestMetaLine.module.scss'
-import type { TypesPullReq } from 'services/code'
 
 export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 'repoMetadata'>> = ({
   repoMetadata,
@@ -26,13 +26,13 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
     number: <strong>5</strong>, // TODO: No data from backend now
     target: (
       <GitRefLink
-        text={target_branch!}
+        text={target_branch as string}
         url={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef: target_branch })}
       />
     ),
     source: (
       <GitRefLink
-        text={source_branch!}
+        text={source_branch as string}
         url={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef: source_branch })}
       />
     )
@@ -47,7 +47,7 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
         </Text>
         <PipeSeparator height={9} />
         <Text inline className={cx(css.metaline, css.time)}>
-          <ReactTimeago date={updated!} />
+          <ReactTimeago date={updated as number} />
         </Text>
       </Layout.Horizontal>
     </Container>

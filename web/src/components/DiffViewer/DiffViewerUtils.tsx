@@ -2,6 +2,7 @@ import type * as Diff2Html from 'diff2html'
 import HoganJsUtils from 'diff2html/lib/hoganjs-utils'
 import 'highlight.js/styles/github.css'
 import 'diff2html/bundles/css/diff2html.min.css'
+import type { CommentThreadEntry } from 'utils/types'
 
 export enum ViewStyle {
   SIDE_BY_SIDE = 'side-by-side',
@@ -17,7 +18,7 @@ export interface CommentItem {
   right: boolean
   lineNumber: number
   height: number
-  contents: string[]
+  commentsThread: CommentThreadEntry[]
 }
 
 export const DIFF2HTML_CONFIG = {

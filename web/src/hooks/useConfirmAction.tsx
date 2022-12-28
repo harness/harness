@@ -6,6 +6,7 @@
  */
 
 import { Intent } from '@blueprintjs/core'
+import { useCallback, useState } from 'react'
 import { useConfirmationDialog } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
 
@@ -15,12 +16,13 @@ export interface UseConfirmActionDialogProps {
   title?: string
   confirmText?: string
   cancelText?: string
-  action: () => void
+  action: (params?: Unknown) => void
 }
 
 export const useConfirmAction = (props: UseConfirmActionDialogProps) => {
   const { title, message, confirmText, cancelText, intent, action } = props
   const { getString } = useStrings()
+  const [params, setParams] = useState<Unknown>()
   const { openDialog } = useConfirmationDialog({
     intent,
     titleText: title || getString('confirmation'),
@@ -30,10 +32,17 @@ export const useConfirmAction = (props: UseConfirmActionDialogProps) => {
     buttonIntent: intent || Intent.DANGER,
     onCloseDialog: async (isConfirmed: boolean) => {
       if (isConfirmed) {
-        action()
+        action(params)
       }
     }
   })
+  const confirm = useCallback(
+    (_params?: Unknown) => {
+      setParams(_params)
+      openDialog()
+    },
+    [openDialog]
+  )
 
-  return openDialog
+  return confirm
 }

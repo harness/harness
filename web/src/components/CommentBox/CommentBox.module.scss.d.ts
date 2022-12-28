@@ -5,9 +5,9 @@ declare const styles: {
   readonly box: string
   readonly boxLayout: string
   readonly viewer: string
-  readonly editor: string
-  readonly markdownEditor: string
-  readonly preview: string
   readonly replyPlaceHolder: string
+  readonly deleteMenuItem: string
+  readonly newCommentContainer: string
+  readonly editCommentContainer: string
 }
 export default styles

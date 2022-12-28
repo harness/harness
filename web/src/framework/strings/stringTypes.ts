@@ -67,6 +67,7 @@ export interface StringsMap {
   delete: string
   deleteBranch: string
   deleteBranchConfirm: string
+  deleteCommentConfirm: string
   deleteFile: string
   deleteNotAllowed: string
   deployKeys: string
@@ -145,12 +146,14 @@ export interface StringsMap {
   prefixBase: string
   prefixCompare: string
   prev: string
+  preview: string
   private: string
   public: string
   pullMustBeMadeFromBranches: string
   pullRequestEmpty: string
   pullRequests: string
   pushEvent: string
+  quote: string
   rejected: string
   renameFile: string
   replyHere: string
@@ -163,6 +166,7 @@ export interface StringsMap {
   'repos.updated': string
   repositories: string
   samplePayloadUrl: string
+  save: string
   scanAlerts: string
   scrollToTop: string
   search: string
@@ -191,6 +195,7 @@ export interface StringsMap {
   webhookEventsLabel: string
   webhookListingContent: string
   webhooks: string
+  write: string
   yourBranches: string
   yours: string
 }

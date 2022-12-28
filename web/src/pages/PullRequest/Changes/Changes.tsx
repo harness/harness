@@ -17,16 +17,16 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
 import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
-import { FilesChangedDropdown } from './FilesChangedDropdown'
+import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
-import css from './FilesChanged.module.scss'
+import css from './Changes.module.scss'
 import diffExample from 'raw-loader!./example.diff'
 
 const STICKY_TOP_POSITION = 64
 const STICKY_HEADER_HEIGHT = 150
 const diffViewerId = (collection: Unknown[]) => collection.filter(Boolean).join('::::')
 
-export const FilesChanged: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>> = () => {
+export const Changes: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>> = () => {
   const { getString } = useStrings()
   const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SIDE_BY_SIDE)
   const [lineBreaks, setLineBreaks] = useUserPreference(UserPreference.DIFF_LINE_BREAKS, false)
@@ -76,7 +76,7 @@ export const FilesChanged: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
               <StringSubstitute
                 str={getString('pr.diffStatsLabel')}
                 vars={{
-                  changedFilesLink: <FilesChangedDropdown diffs={diffs} />,
+                  changedFilesLink: <ChangesDropdown diffs={diffs} />,
                   addedLines: formatNumber(diffStats.addedLines),
                   deletedLines: formatNumber(diffStats.deletedLines),
                   configuration: (

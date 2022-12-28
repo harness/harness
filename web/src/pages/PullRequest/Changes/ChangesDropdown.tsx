@@ -8,12 +8,12 @@ import { CodeIcon } from 'utils/GitUtils'
 import { waitUntil } from 'utils/Utils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
-import css from './FilesChangedDropdown.module.scss'
+import css from './ChangesDropdown.module.scss'
 // import { TreeExample } from 'pages/Repository/RepositoryTree/TreeExample'
 
 const STICKY_TOP_POSITION = 64
 
-export const FilesChangedDropdown: React.FC<{ diffs: DiffFileEntry[] }> = ({ diffs }) => {
+export const ChangesDropdown: React.FC<{ diffs: DiffFileEntry[] }> = ({ diffs }) => {
   const { getString } = useStrings()
 
   return (
