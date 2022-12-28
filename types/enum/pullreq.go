@@ -73,19 +73,23 @@ const (
 	PullReqActivityTypeTitleChange PullReqActivityType = "title-change"
 )
 
-var pullReqActivityTypes = []string{
-	string(PullReqActivityTypeComment),
-	string(PullReqActivityTypeCodeComment),
-	string(PullReqActivityTypeTitleChange),
+func GetAllPullReqActivityTypes() []PullReqActivityType {
+	return []PullReqActivityType{
+		PullReqActivityTypeComment,
+		PullReqActivityTypeCodeComment,
+		PullReqActivityTypeTitleChange,
+	}
 }
 
+var rawPullReqActivityTypes = enumToStringSlice(GetAllPullReqActivityTypes())
+
 func init() {
-	sort.Strings(pullReqActivityTypes)
+	sort.Strings(rawPullReqActivityTypes)
 }
 
 // ParsePullReqActivityType parses the pull request activity type.
 func ParsePullReqActivityType(s string) (PullReqActivityType, bool) {
-	if existsInSortedSlice(pullReqActivityTypes, s) {
+	if existsInSortedSlice(rawPullReqActivityTypes, s) {
 		return PullReqActivityType(s), true
 	}
 	return "", false
@@ -103,25 +107,24 @@ const (
 	PullReqActivityKindCodeComment PullReqActivityKind = "code"
 )
 
-var pullReqActivityKinds = []string{
-	string(PullReqActivityKindSystem),
-	string(PullReqActivityKindComment),
-	string(PullReqActivityTypeCodeComment),
+func GetAllPullReqActivityKinds() []PullReqActivityKind {
+	return []PullReqActivityKind{
+		PullReqActivityKindSystem,
+		PullReqActivityKindComment,
+		PullReqActivityKindCodeComment,
+	}
 }
 
+var rawPullReqActivityKinds = enumToStringSlice(GetAllPullReqActivityKinds())
+
 func init() {
-	sort.Strings(pullReqActivityKinds)
+	sort.Strings(rawPullReqActivityKinds)
 }
 
 // ParsePullReqActivityKind parses the pull request activity type.
 func ParsePullReqActivityKind(s string) (PullReqActivityKind, bool) {
-	if existsInSortedSlice(pullReqActivityKinds, s) {
+	if existsInSortedSlice(rawPullReqActivityKinds, s) {
 		return PullReqActivityKind(s), true
 	}
 	return "", false
-}
-
-func existsInSortedSlice(strs []string, s string) bool {
-	idx := sort.SearchStrings(strs, s)
-	return idx >= 0 && idx < len(strs) && strs[idx] == s
 }

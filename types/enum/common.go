@@ -4,6 +4,8 @@
 
 package enum
 
+import "sort"
+
 const (
 	id            = "id"
 	uid           = "uid"
@@ -23,3 +25,16 @@ const (
 	comment       = "comment"
 	code          = "code"
 )
+
+func existsInSortedSlice(strs []string, s string) bool {
+	idx := sort.SearchStrings(strs, s)
+	return idx >= 0 && idx < len(strs) && strs[idx] == s
+}
+
+func enumToStringSlice[T ~string](vals []T) []string {
+	res := make([]string, len(vals))
+	for i := range vals {
+		res[i] = string(vals[i])
+	}
+	return res
+}

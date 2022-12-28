@@ -20,6 +20,14 @@ func ptrptr(i interface{}) *interface{} {
 	return &i
 }
 
+func toInterfaceSlice[T interface{}](vals []T) []interface{} {
+	res := make([]interface{}, len(vals))
+	for i := range vals {
+		res[i] = vals[i]
+	}
+	return res
+}
+
 var queryParameterPage = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamPage,

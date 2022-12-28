@@ -1155,6 +1155,258 @@ paths:
           description: Internal Server Error
       tags:
       - pullreq
+  /repos/{repoRef}/pullreq/{pullreq_number}/activities:
+    get:
+      operationId: listPullReqActivities
+      parameters:
+      - description: The kind of the pull request activity to include in the result.
+        in: query
+        name: kind
+        required: false
+        schema:
+          items:
+            enum:
+            - system
+            - comment
+            - code
+            type: string
+          type: array
+      - description: The type of the pull request activity to include in the result.
+        in: query
+        name: type
+        required: false
+        schema:
+          items:
+            enum:
+            - comment
+            - code-comment
+            - title-change
+            type: string
+          type: array
+      - description: The result should contain only entries created at and after this
+          timestamp (unix millis).
+        in: query
+        name: since
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+      - description: The result should contain only entries created before this timestamp
+          (unix millis).
+        in: query
+        name: until
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          minimum: 1
+          type: integer
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesPullReqActivity'
+                type: array
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - pullreq
+  /repos/{repoRef}/pullreq/{pullreq_number}/comments:
+    post:
+      operationId: commentCreatePullReq
+      parameters:
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCommentCreatePullReqRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPullReqActivity'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - pullreq
+  /repos/{repoRef}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}:
+    delete:
+      operationId: commentDeletePullReq
+      parameters:
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      - in: path
+        name: pullreq_comment_id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - pullreq
+    put:
+      operationId: commentUpdatePullReq
+      parameters:
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      - in: path
+        name: pullreq_comment_id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCommentUpdatePullReqRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPullReqActivity'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - pullreq
   /repos/{repoRef}/service_accounts:
     get:
       operationId: listRepositoryServiceAccounts
@@ -1294,6 +1546,388 @@ paths:
           description: Internal Server Error
       tags:
       - repository
+  /repos/{repoRef}/webhooks:
+    get:
+      operationId: listWebhooks
+      parameters:
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The number of entries returned per page.
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 50
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/OpenapiWebhookType'
+                type: array
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - webhook
+    post:
+      operationId: createWebhook
+      parameters:
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateWebhookRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiWebhookType'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - webhook
+  /repos/{repoRef}/webhooks/{webhook_id}:
+    delete:
+      operationId: deleteWebhook
+      parameters:
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: webhook_id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - webhook
+    get:
+      operationId: getWebhook
+      parameters:
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: webhook_id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiWebhookType'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - webhook
+    put:
+      operationId: updateWebhook
+      parameters:
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: webhook_id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiUpdateWebhookRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiWebhookType'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - webhook
+  /repos/{repoRef}/webhooks/{webhook_id}/executions:
+    get:
+      operationId: listWebhookExecutions
+      parameters:
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The number of entries returned per page.
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 50
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: webhook_id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/OpenapiWebhookExecutionType'
+                type: array
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - webhook
+  /repos/{repoRef}/webhooks/{webhook_id}/executions/{webhook_execution_id}:
+    get:
+      operationId: getWebhookExecution
+      parameters:
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The number of entries returned per page.
+        in: query
+        name: per_page
+        required: false
+        schema:
+          default: 50
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repoRef
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: webhook_id
+        required: true
+        schema:
+          type: integer
+      - in: path
+        name: webhook_execution_id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenapiWebhookExecutionType'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - webhook
   /resources/gitignore:
     get:
       operationId: listGitignore
@@ -2181,9 +2815,19 @@ components:
       type: string
     EnumPathTargetType:
       type: string
+    EnumPullReqActivityKind:
+      type: string
+    EnumPullReqActivityType:
+      type: string
     EnumPullReqState:
       type: string
     EnumTokenType:
+      type: string
+    EnumWebhookExecutionResult:
+      type: string
+    EnumWebhookParent:
+      type: string
+    EnumWebhookTrigger:
       type: string
     FormDataOpenapiLoginRequest:
       properties:
@@ -2215,6 +2859,18 @@ components:
             $ref: '#/components/schemas/RepoCommitDivergenceRequest'
           nullable: true
           type: array
+      type: object
+    OpenapiCommentCreatePullReqRequest:
+      properties:
+        parent_id:
+          type: integer
+        text:
+          type: string
+      type: object
+    OpenapiCommentUpdatePullReqRequest:
+      properties:
+        text:
+          type: string
       type: object
     OpenapiCommitFilesRequest:
       properties:
@@ -2322,6 +2978,22 @@ components:
         uid:
           type: string
       type: object
+    OpenapiCreateWebhookRequest:
+      properties:
+        enabled:
+          type: boolean
+        insecure:
+          type: boolean
+        secret:
+          type: string
+        triggers:
+          items:
+            $ref: '#/components/schemas/OpenapiWebhookTrigger'
+          nullable: true
+          type: array
+        url:
+          type: string
+      type: object
     OpenapiCurrentUserResponse:
       properties:
         data:
@@ -2402,6 +3074,95 @@ components:
         isPublic:
           nullable: true
           type: boolean
+      type: object
+    OpenapiUpdateWebhookRequest:
+      properties:
+        enabled:
+          nullable: true
+          type: boolean
+        insecure:
+          nullable: true
+          type: boolean
+        secret:
+          nullable: true
+          type: string
+        triggers:
+          items:
+            $ref: '#/components/schemas/OpenapiWebhookTrigger'
+          nullable: true
+          type: array
+        url:
+          nullable: true
+          type: string
+      type: object
+    OpenapiWebhookExecutionResult:
+      enum:
+      - success
+      - retriable_error
+      - fatal_error
+      type: string
+    OpenapiWebhookExecutionType:
+      properties:
+        created:
+          type: integer
+        duration:
+          type: integer
+        error:
+          type: string
+        id:
+          type: integer
+        request:
+          $ref: '#/components/schemas/TypesWebhookExecutionRequest'
+        response:
+          $ref: '#/components/schemas/TypesWebhookExecutionResponse'
+        result:
+          $ref: '#/components/schemas/OpenapiWebhookExecutionResult'
+        retrigger_of:
+          nullable: true
+          type: integer
+        retriggerable:
+          type: boolean
+        trigger_type:
+          $ref: '#/components/schemas/OpenapiWebhookTrigger'
+        webhook_id:
+          type: integer
+      type: object
+    OpenapiWebhookParent:
+      enum:
+      - repo
+      - space
+      type: string
+    OpenapiWebhookTrigger:
+      enum:
+      - push
+      type: string
+    OpenapiWebhookType:
+      properties:
+        created:
+          type: integer
+        created_by:
+          type: integer
+        enabled:
+          type: boolean
+        id:
+          type: integer
+        insecure:
+          type: boolean
+        parent_id:
+          type: integer
+        parent_type:
+          $ref: '#/components/schemas/OpenapiWebhookParent'
+        triggers:
+          items:
+            $ref: '#/components/schemas/OpenapiWebhookTrigger'
+          nullable: true
+          type: array
+        updated:
+          type: integer
+        url:
+          type: string
+        version:
+          type: integer
       type: object
     RepoBranch:
       properties:
@@ -2600,6 +3361,54 @@ components:
         version:
           type: integer
       type: object
+    TypesPullReqActivity:
+      properties:
+        author:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        created:
+          type: integer
+        deleted:
+          nullable: true
+          type: integer
+        edited:
+          type: integer
+        id:
+          type: integer
+        kind:
+          $ref: '#/components/schemas/EnumPullReqActivityKind'
+        metadata:
+          additionalProperties: {}
+          nullable: true
+          type: object
+        order:
+          type: integer
+        parent_id:
+          nullable: true
+          type: integer
+        payload:
+          additionalProperties: {}
+          nullable: true
+          type: object
+        pullreq_id:
+          type: integer
+        repo_id:
+          type: integer
+        resolved:
+          nullable: true
+          type: integer
+        resolver:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        sub_order:
+          type: integer
+        text:
+          type: string
+        type:
+          $ref: '#/components/schemas/EnumPullReqActivityType'
+        updated:
+          type: integer
+        version:
+          type: integer
+      type: object
     TypesRepository:
       properties:
         created:
@@ -2729,6 +3538,26 @@ components:
           type: string
         password:
           nullable: true
+          type: string
+      type: object
+    TypesWebhookExecutionRequest:
+      properties:
+        body:
+          type: string
+        headers:
+          type: string
+        url:
+          type: string
+      type: object
+    TypesWebhookExecutionResponse:
+      properties:
+        body:
+          type: string
+        headers:
+          type: string
+        status:
+          type: integer
+        status_code:
           type: string
       type: object
     UserUpdateInput:

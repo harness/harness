@@ -10,26 +10,41 @@ import "sort"
 type WebhookParent string
 
 const (
-	// WebhookParentSpace describes a space as webhook owner.
-	WebhookParentSpace WebhookParent = "space"
-
 	// WebhookParentSpace describes a repo as webhook owner.
 	WebhookParentRepo WebhookParent = "repo"
+
+	// WebhookParentSpace describes a space as webhook owner.
+	WebhookParentSpace WebhookParent = "space"
 )
+
+func GetAllWebhookParents() []WebhookParent {
+	return []WebhookParent{
+		WebhookParentRepo,
+		WebhookParentSpace,
+	}
+}
 
 // WebhookExecutionResult defines the different results of a webhook execution.
 type WebhookExecutionResult string
 
 const (
-	// WebhookExecutionResultFatalError describes a webhook execution result that failed with an unrecoverable error.
-	WebhookExecutionResultFatalError WebhookExecutionResult = "fatal_error"
+	// WebhookExecutionResultSuccess describes a webhook execution result that succeeded.
+	WebhookExecutionResultSuccess WebhookExecutionResult = "success"
 
 	// WebhookExecutionResultRetriableError describes a webhook execution result that failed with a retriable error.
 	WebhookExecutionResultRetriableError WebhookExecutionResult = "retriable_error"
 
-	// WebhookExecutionResultSuccess describes a webhook execution result that succeeded.
-	WebhookExecutionResultSuccess WebhookExecutionResult = "success"
+	// WebhookExecutionResultFatalError describes a webhook execution result that failed with an unrecoverable error.
+	WebhookExecutionResultFatalError WebhookExecutionResult = "fatal_error"
 )
+
+func GetAllWebhookExecutionResults() []WebhookExecutionResult {
+	return []WebhookExecutionResult{
+		WebhookExecutionResultSuccess,
+		WebhookExecutionResultRetriableError,
+		WebhookExecutionResultFatalError,
+	}
+}
 
 // WebhookTrigger defines the different types of webhook triggers available.
 // NOTE: For now we keep a small list - will be extended later on once we decided on a final set of triggers.
@@ -40,17 +55,21 @@ const (
 	WebhookTriggerPush WebhookTrigger = "push"
 )
 
-var webhookTriggers = []string{
-	string(WebhookTriggerPush),
+func GetAllWebhookTriggers() []WebhookTrigger {
+	return []WebhookTrigger{
+		WebhookTriggerPush,
+	}
 }
 
+var rawWebhookTriggers = enumToStringSlice(GetAllWebhookTriggers())
+
 func init() {
-	sort.Strings(webhookTriggers)
+	sort.Strings(rawWebhookTriggers)
 }
 
 // ParsePullReqActivityType parses the webhook trigger type.
 func ParseWebhookTrigger(s string) (WebhookTrigger, bool) {
-	if existsInSortedSlice(webhookTriggers, s) {
+	if existsInSortedSlice(rawWebhookTriggers, s) {
 		return WebhookTrigger(s), true
 	}
 	return "", false

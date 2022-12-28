@@ -48,6 +48,7 @@ func Generate() *openapi3.Spec {
 	repoOperations(&reflector)
 	resourceOperations(&reflector)
 	pullReqOperations(&reflector)
+	webhookOperations(&reflector)
 
 	//
 	// define security scheme
