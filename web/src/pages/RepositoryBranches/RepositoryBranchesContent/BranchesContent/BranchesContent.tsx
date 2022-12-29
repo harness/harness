@@ -33,13 +33,13 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
   const { getString } = useStrings()
   const { mutate: getBranchDivergence } = useMutate({
     verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata.path}/+/commits/calculate_divergence`
+    path: `/api/v1/repos/${repoMetadata.path}/+/commits/calculate-divergence`
   })
   const [divergence, setDivergence] = useState<RepoCommitDivergence[]>([])
   const branchDivergenceRequestBody: OpenapiCalculateCommitDivergenceRequest = useMemo(() => {
     return {
       maxCount: 0,
-      requests: branches?.map(branch => ({ from: branch.name, to: repoMetadata.defaultBranch }))
+      requests: branches?.map(branch => ({ from: branch.name, to: repoMetadata.default_branch }))
     }
   }, [repoMetadata, branches])
 
@@ -60,7 +60,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         Cell: ({ row }: CellProps<RepoBranch>) => {
           return (
             <Text
-              className={cx(css.rowText, row.original?.name === repoMetadata.defaultBranch ? css.defaultBranch : '')}
+              className={cx(css.rowText, row.original?.name === repoMetadata.default_branch ? css.defaultBranch : '')}
               color={Color.BLACK}>
               <Link
                 to={routes.toCODERepository({
@@ -79,7 +79,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         Id: 'status',
         width: 'calc(70% - 230px)',
         Cell: ({ row }: CellProps<RepoBranch>) => {
-          if (row.original?.name === repoMetadata.defaultBranch) {
+          if (row.original?.name === repoMetadata.default_branch) {
             return (
               <Container flex={{ align: 'center-center' }} width={150}>
                 <Tag>{getString('defaultBranch')}</Tag>
@@ -89,7 +89,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
 
           return (
             <CommitDivergence
-              defaultBranch={repoMetadata.defaultBranch as string}
+              defaultBranch={repoMetadata.default_branch as string}
               behind={divergence?.[row.index]?.behind as number}
               ahead={divergence?.[row.index]?.ahead as number}
             />
@@ -157,7 +157,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
                     history.push(
                       routes.toCODECompare({
                         repoPath: repoMetadata.path as string,
-                        diffRefs: makeDiffRefs(repoMetadata.defaultBranch as string, row.original?.name as string)
+                        diffRefs: makeDiffRefs(repoMetadata.default_branch as string, row.original?.name as string)
                       })
                     )
                   }
@@ -174,7 +174,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         }
       }
     ],
-    [getString, repoMetadata.defaultBranch, repoMetadata.path, routes, searchTerm, history, onDeleteSuccess, divergence]
+    [getString, repoMetadata.default_branch, repoMetadata.path, routes, searchTerm, history, onDeleteSuccess, divergence]
   )
 
   return (

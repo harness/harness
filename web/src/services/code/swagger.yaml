@@ -7,24 +7,6 @@ servers:
 security:
 - bearerAuth: []
 paths:
-  /api/user/currentUser:
-    get:
-      operationId: getCurrentUser
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OpenapiCurrentUserResponse'
-          description: OK
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-      - user
   /login:
     post:
       operationId: onLogin
@@ -95,7 +77,7 @@ paths:
       parameters:
       - description: path of parent space (Not needed in standalone).
         in: query
-        name: spacePath
+        name: space_path
         required: false
         schema:
           default: false
@@ -138,12 +120,12 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}:
+  /repos/{repo_ref}:
     delete:
       operationId: deleteRepository
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -180,7 +162,7 @@ paths:
       operationId: findRepository
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -221,7 +203,7 @@ paths:
       operationId: updateRepository
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -269,7 +251,7 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/branches:
+  /repos/{repo_ref}/branches:
     get:
       operationId: listBranches
       parameters:
@@ -289,7 +271,7 @@ paths:
           type: string
       - description: The order of the output.
         in: query
-        name: direction
+        name: order
         required: false
         schema:
           default: asc
@@ -315,17 +297,17 @@ paths:
           default: 1
           minimum: 1
           type: integer
-      - description: The number of entries returned per page.
+      - description: The maximum number of results to return.
         in: query
-        name: per_page
+        name: limit
         required: false
         schema:
-          default: 50
+          default: 30
           maximum: 100
           minimum: 1
           type: integer
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -368,7 +350,7 @@ paths:
       operationId: createBranch
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -410,17 +392,17 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/branches/{branchName}:
+  /repos/{repo_ref}/branches/{branch_name}:
     delete:
       operationId: deleteBranch
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
       - in: path
-        name: branchName
+        name: branch_name
         required: true
         schema:
           type: string
@@ -453,7 +435,7 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/commits:
+  /repos/{repo_ref}/commits:
     get:
       operationId: listCommits
       parameters:
@@ -474,17 +456,17 @@ paths:
           default: 1
           minimum: 1
           type: integer
-      - description: The number of entries returned per page.
+      - description: The maximum number of results to return.
         in: query
-        name: per_page
+        name: limit
         required: false
         schema:
-          default: 50
+          default: 30
           maximum: 100
           minimum: 1
           type: integer
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -527,7 +509,7 @@ paths:
       operationId: commitFiles
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -575,12 +557,12 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/commits/calculate_divergence:
+  /repos/{repo_ref}/commits/calculate-divergence:
     post:
       operationId: calculateCommitDivergence
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -624,7 +606,7 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/content/{path}:
+  /repos/{repo_ref}/content/{path}:
     get:
       operationId: getContent
       parameters:
@@ -646,7 +628,7 @@ paths:
           default: false
           type: boolean
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -688,12 +670,12 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/move:
+  /repos/{repo_ref}/move:
     post:
       operationId: moveRepository
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -735,7 +717,7 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/paths:
+  /repos/{repo_ref}/paths:
     get:
       operationId: listRepositoryPaths
       parameters:
@@ -747,17 +729,17 @@ paths:
           default: 1
           minimum: 1
           type: integer
-      - description: The number of entries returned per page.
+      - description: The maximum number of results to return.
         in: query
-        name: per_page
+        name: limit
         required: false
         schema:
-          default: 50
+          default: 30
           maximum: 100
           minimum: 1
           type: integer
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -800,7 +782,7 @@ paths:
       operationId: createRepositoryPath
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -842,17 +824,17 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/paths/{pathID}:
+  /repos/{repo_ref}/paths/{path_id}:
     delete:
       operationId: deleteRepositoryPath
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
       - in: path
-        name: pathID
+        name: path_id
         required: true
         schema:
           type: string
@@ -885,7 +867,7 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/pullreq:
+  /repos/{repo_ref}/pullreq:
     get:
       operationId: listPullReq
       parameters:
@@ -935,7 +917,7 @@ paths:
           type: integer
       - description: The order of the output.
         in: query
-        name: direction
+        name: order
         required: false
         schema:
           default: asc
@@ -962,17 +944,17 @@ paths:
           default: 1
           minimum: 1
           type: integer
-      - description: The number of entries returned per page.
+      - description: The maximum number of results to return.
         in: query
-        name: per_page
+        name: limit
         required: false
         schema:
-          default: 50
+          default: 30
           maximum: 100
           minimum: 1
           type: integer
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1015,7 +997,7 @@ paths:
       operationId: createPullReq
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1057,12 +1039,12 @@ paths:
           description: Internal Server Error
       tags:
       - pullreq
-  /repos/{repoRef}/pullreq/{pullreq_number}:
+  /repos/{repo_ref}/pullreq/{pullreq_number}:
     get:
       operationId: getPullReq
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1104,11 +1086,11 @@ paths:
           description: Internal Server Error
       tags:
       - pullreq
-    put:
+    patch:
       operationId: updatePullReq
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1155,7 +1137,7 @@ paths:
           description: Internal Server Error
       tags:
       - pullreq
-  /repos/{repoRef}/pullreq/{pullreq_number}/activities:
+  /repos/{repo_ref}/pullreq/{pullreq_number}/activities:
     get:
       operationId: listPullReqActivities
       parameters:
@@ -1186,7 +1168,7 @@ paths:
       - description: The result should contain only entries created at and after this
           timestamp (unix millis).
         in: query
-        name: since
+        name: after
         required: false
         schema:
           minimum: 0
@@ -1194,7 +1176,7 @@ paths:
       - description: The result should contain only entries created before this timestamp
           (unix millis).
         in: query
-        name: until
+        name: before
         required: false
         schema:
           minimum: 0
@@ -1204,10 +1186,12 @@ paths:
         name: limit
         required: false
         schema:
+          default: 30
+          maximum: 100
           minimum: 1
           type: integer
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1251,12 +1235,12 @@ paths:
           description: Internal Server Error
       tags:
       - pullreq
-  /repos/{repoRef}/pullreq/{pullreq_number}/comments:
+  /repos/{repo_ref}/pullreq/{pullreq_number}/comments:
     post:
       operationId: commentCreatePullReq
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1303,12 +1287,12 @@ paths:
           description: Internal Server Error
       tags:
       - pullreq
-  /repos/{repoRef}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}:
+  /repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}:
     delete:
       operationId: commentDeletePullReq
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1351,11 +1335,11 @@ paths:
           description: Internal Server Error
       tags:
       - pullreq
-    put:
+    patch:
       operationId: commentUpdatePullReq
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1407,12 +1391,12 @@ paths:
           description: Internal Server Error
       tags:
       - pullreq
-  /repos/{repoRef}/service_accounts:
+  /repos/{repo_ref}/service-accounts:
     get:
       operationId: listRepositoryServiceAccounts
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1451,7 +1435,7 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/tags:
+  /repos/{repo_ref}/tags:
     get:
       operationId: listTags
       parameters:
@@ -1471,7 +1455,7 @@ paths:
           type: string
       - description: The order of the output.
         in: query
-        name: direction
+        name: order
         required: false
         schema:
           default: asc
@@ -1497,17 +1481,17 @@ paths:
           default: 1
           minimum: 1
           type: integer
-      - description: The number of entries returned per page.
+      - description: The maximum number of results to return.
         in: query
-        name: per_page
+        name: limit
         required: false
         schema:
-          default: 50
+          default: 30
           maximum: 100
           minimum: 1
           type: integer
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1546,7 +1530,7 @@ paths:
           description: Internal Server Error
       tags:
       - repository
-  /repos/{repoRef}/webhooks:
+  /repos/{repo_ref}/webhooks:
     get:
       operationId: listWebhooks
       parameters:
@@ -1558,17 +1542,17 @@ paths:
           default: 1
           minimum: 1
           type: integer
-      - description: The number of entries returned per page.
+      - description: The maximum number of results to return.
         in: query
-        name: per_page
+        name: limit
         required: false
         schema:
-          default: 50
+          default: 30
           maximum: 100
           minimum: 1
           type: integer
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1611,7 +1595,7 @@ paths:
       operationId: createWebhook
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1653,12 +1637,12 @@ paths:
           description: Internal Server Error
       tags:
       - webhook
-  /repos/{repoRef}/webhooks/{webhook_id}:
+  /repos/{repo_ref}/webhooks/{webhook_id}:
     delete:
       operationId: deleteWebhook
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1700,7 +1684,7 @@ paths:
       operationId: getWebhook
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1742,11 +1726,11 @@ paths:
           description: Internal Server Error
       tags:
       - webhook
-    put:
+    patch:
       operationId: updateWebhook
       parameters:
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1793,7 +1777,7 @@ paths:
           description: Internal Server Error
       tags:
       - webhook
-  /repos/{repoRef}/webhooks/{webhook_id}/executions:
+  /repos/{repo_ref}/webhooks/{webhook_id}/executions:
     get:
       operationId: listWebhookExecutions
       parameters:
@@ -1805,17 +1789,17 @@ paths:
           default: 1
           minimum: 1
           type: integer
-      - description: The number of entries returned per page.
+      - description: The maximum number of results to return.
         in: query
-        name: per_page
+        name: limit
         required: false
         schema:
-          default: 50
+          default: 30
           maximum: 100
           minimum: 1
           type: integer
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -1859,7 +1843,7 @@ paths:
           description: Internal Server Error
       tags:
       - webhook
-  /repos/{repoRef}/webhooks/{webhook_id}/executions/{webhook_execution_id}:
+  /repos/{repo_ref}/webhooks/{webhook_id}/executions/{webhook_execution_id}:
     get:
       operationId: getWebhookExecution
       parameters:
@@ -1871,17 +1855,17 @@ paths:
           default: 1
           minimum: 1
           type: integer
-      - description: The number of entries returned per page.
+      - description: The maximum number of results to return.
         in: query
-        name: per_page
+        name: limit
         required: false
         schema:
-          default: 50
+          default: 30
           maximum: 100
           minimum: 1
           type: integer
       - in: path
-        name: repoRef
+        name: repo_ref
         required: true
         schema:
           type: string
@@ -2038,12 +2022,12 @@ paths:
           description: Internal Server Error
       tags:
       - space
-  /spaces/{spaceRef}:
+  /spaces/{space_ref}:
     delete:
       operationId: deleteSpace
       parameters:
       - in: path
-        name: spaceRef
+        name: space_ref
         required: true
         schema:
           type: string
@@ -2080,7 +2064,7 @@ paths:
       operationId: getSpace
       parameters:
       - in: path
-        name: spaceRef
+        name: space_ref
         required: true
         schema:
           type: string
@@ -2121,7 +2105,7 @@ paths:
       operationId: updateSpace
       parameters:
       - in: path
-        name: spaceRef
+        name: space_ref
         required: true
         schema:
           type: string
@@ -2169,12 +2153,12 @@ paths:
           description: Internal Server Error
       tags:
       - space
-  /spaces/{spaceRef}/move:
+  /spaces/{space_ref}/move:
     post:
       operationId: moveSpace
       parameters:
       - in: path
-        name: spaceRef
+        name: space_ref
         required: true
         schema:
           type: string
@@ -2216,7 +2200,7 @@ paths:
           description: Internal Server Error
       tags:
       - space
-  /spaces/{spaceRef}/paths:
+  /spaces/{space_ref}/paths:
     get:
       operationId: listPaths
       parameters:
@@ -2228,17 +2212,17 @@ paths:
           default: 1
           minimum: 1
           type: integer
-      - description: The number of entries returned per page.
+      - description: The maximum number of results to return.
         in: query
-        name: per_page
+        name: limit
         required: false
         schema:
-          default: 50
+          default: 30
           maximum: 100
           minimum: 1
           type: integer
       - in: path
-        name: spaceRef
+        name: space_ref
         required: true
         schema:
           type: string
@@ -2281,7 +2265,7 @@ paths:
       operationId: createPath
       parameters:
       - in: path
-        name: spaceRef
+        name: space_ref
         required: true
         schema:
           type: string
@@ -2323,17 +2307,17 @@ paths:
           description: Internal Server Error
       tags:
       - space
-  /spaces/{spaceRef}/paths/{pathID}:
+  /spaces/{space_ref}/paths/{path_id}:
     delete:
       operationId: deletePath
       parameters:
       - in: path
-        name: spaceRef
+        name: space_ref
         required: true
         schema:
           type: string
       - in: path
-        name: pathID
+        name: path_id
         required: true
         schema:
           type: string
@@ -2366,7 +2350,7 @@ paths:
           description: Internal Server Error
       tags:
       - space
-  /spaces/{spaceRef}/repos:
+  /spaces/{space_ref}/repos:
     get:
       operationId: listRepos
       parameters:
@@ -2391,7 +2375,7 @@ paths:
           type: string
       - description: The order of the output.
         in: query
-        name: direction
+        name: order
         required: false
         schema:
           default: asc
@@ -2407,17 +2391,17 @@ paths:
           default: 1
           minimum: 1
           type: integer
-      - description: The number of entries returned per page.
+      - description: The maximum number of results to return.
         in: query
-        name: per_page
+        name: limit
         required: false
         schema:
-          default: 50
+          default: 30
           maximum: 100
           minimum: 1
           type: integer
       - in: path
-        name: spaceRef
+        name: space_ref
         required: true
         schema:
           type: string
@@ -2456,12 +2440,12 @@ paths:
           description: Internal Server Error
       tags:
       - space
-  /spaces/{spaceRef}/service_accounts:
+  /spaces/{space_ref}/service-accounts:
     get:
       operationId: listServiceAccounts
       parameters:
       - in: path
-        name: spaceRef
+        name: space_ref
         required: true
         schema:
           type: string
@@ -2500,7 +2484,7 @@ paths:
           description: Internal Server Error
       tags:
       - space
-  /spaces/{spaceRef}/spaces:
+  /spaces/{space_ref}/spaces:
     get:
       operationId: listSpaces
       parameters:
@@ -2525,7 +2509,7 @@ paths:
           type: string
       - description: The order of the output.
         in: query
-        name: direction
+        name: order
         required: false
         schema:
           default: asc
@@ -2541,17 +2525,17 @@ paths:
           default: 1
           minimum: 1
           type: integer
-      - description: The number of entries returned per page.
+      - description: The maximum number of results to return.
         in: query
-        name: per_page
+        name: limit
         required: false
         schema:
-          default: 50
+          default: 30
           maximum: 100
           minimum: 1
           type: integer
       - in: path
-        name: spaceRef
+        name: space_ref
         required: true
         schema:
           type: string
@@ -2667,7 +2651,7 @@ paths:
           - updated
           type: string
       - in: query
-        name: direction
+        name: order
         schema:
           enum:
           - asc
@@ -2679,9 +2663,9 @@ paths:
           default: 1
           type: integer
       - in: query
-        name: per_page
+        name: limit
         schema:
-          default: 100
+          default: 30
           type: integer
       responses:
         "200":
@@ -2852,7 +2836,7 @@ components:
       type: string
     OpenapiCalculateCommitDivergenceRequest:
       properties:
-        maxCount:
+        max_count:
           type: integer
         requests:
           items:
@@ -2883,7 +2867,7 @@ components:
           type: string
         message:
           type: string
-        newBranch:
+        new_branch:
           type: string
         title:
           type: string
@@ -2897,7 +2881,7 @@ components:
       type: object
     OpenapiContentInfo:
       properties:
-        latestCommit:
+        latest_commit:
           $ref: '#/components/schemas/RepoCommit'
         name:
           type: string
@@ -2948,19 +2932,19 @@ components:
       type: object
     OpenapiCreateRepositoryRequest:
       properties:
-        defaultBranch:
+        default_branch:
           type: string
         description:
           type: string
-        forkId:
+        fork_id:
           type: integer
-        gitIgnore:
+        git_ignore:
           type: string
-        isPublic:
+        is_public:
           type: boolean
         license:
           type: string
-        parentID:
+        parent_id:
           type: integer
         readme:
           type: boolean
@@ -2971,9 +2955,9 @@ components:
       properties:
         description:
           type: string
-        isPublic:
+        is_public:
           type: boolean
-        parentId:
+        parent_id:
           type: integer
         uid:
           type: string
@@ -2994,17 +2978,6 @@ components:
         url:
           type: string
       type: object
-    OpenapiCurrentUserResponse:
-      properties:
-        data:
-          $ref: '#/components/schemas/TypesUser'
-        status:
-          enum:
-          - SUCCESS
-          - FAILURE
-          - ERROR
-          type: string
-      type: object
     OpenapiDirContent:
       properties:
         entries:
@@ -3017,7 +2990,7 @@ components:
       properties:
         content:
           $ref: '#/components/schemas/OpenapiContent'
-        latestCommit:
+        latest_commit:
           $ref: '#/components/schemas/RepoCommit'
         name:
           type: string
@@ -3030,9 +3003,9 @@ components:
       type: object
     OpenapiMoveRepoRequest:
       properties:
-        keepAsAlias:
+        keep_as_alias:
           type: boolean
-        parentId:
+        parent_id:
           nullable: true
           type: integer
         uid:
@@ -3041,9 +3014,9 @@ components:
       type: object
     OpenapiMoveSpaceRequest:
       properties:
-        keepAsAlias:
+        keep_as_alias:
           type: boolean
-        parentId:
+        parent_id:
           nullable: true
           type: integer
         uid:
@@ -3062,7 +3035,7 @@ components:
         description:
           nullable: true
           type: string
-        isPublic:
+        is_public:
           nullable: true
           type: boolean
       type: object
@@ -3071,7 +3044,7 @@ components:
         description:
           nullable: true
           type: string
-        isPublic:
+        is_public:
           nullable: true
           type: boolean
       type: object
@@ -3215,14 +3188,14 @@ components:
       type: object
     RepoCommitFilesResponse:
       properties:
-        commitID:
+        commit_id:
           type: string
       type: object
     RepoCommitTag:
       properties:
         commit:
           $ref: '#/components/schemas/RepoCommit'
-        isAnnotated:
+        is_annotated:
           type: boolean
         message:
           type: string
@@ -3238,7 +3211,7 @@ components:
     RepoContent: {}
     RepoContentInfo:
       properties:
-        latestCommit:
+        latest_commit:
           $ref: '#/components/schemas/RepoCommit'
         name:
           type: string
@@ -3279,7 +3252,7 @@ components:
       type: object
     RepoSubmoduleContent:
       properties:
-        commitSha:
+        commit_sha:
           type: string
         url:
           type: string
@@ -3295,15 +3268,15 @@ components:
       properties:
         created:
           type: integer
-        createdBy:
+        created_by:
           type: integer
         id:
           type: integer
-        isAlias:
+        is_alias:
           type: boolean
-        targetId:
+        target_id:
           type: integer
-        targetType:
+        target_type:
           $ref: '#/components/schemas/EnumPathTargetType'
         updated:
           type: integer
@@ -3413,35 +3386,37 @@ components:
       properties:
         created:
           type: integer
-        createdBy:
+        created_by:
           type: integer
-        defaultBranch:
+        default_branch:
           type: string
         description:
           type: string
-        forkId:
+        fork_id:
           type: integer
-        gitUrl:
+        git_url:
           type: string
         id:
           type: integer
-        isPublic:
+        is_public:
           type: boolean
-        numClosedPulls:
+        num_closed_pulls:
           type: integer
-        numForks:
+        num_forks:
           type: integer
-        numOpenPulls:
+        num_open_pulls:
           type: integer
-        numPulls:
+        num_pulls:
           type: integer
-        parentId:
+        parent_id:
           type: integer
         path:
           type: string
         uid:
           type: string
         updated:
+          type: integer
+        version:
           type: integer
       type: object
     TypesServiceAccount:
@@ -3450,13 +3425,13 @@ components:
           type: boolean
         created:
           type: integer
-        displayName:
+        display_name:
           type: string
         email:
           type: string
-        parentId:
+        parent_id:
           type: integer
-        parentType:
+        parent_type:
           $ref: '#/components/schemas/EnumParentResourceType'
         uid:
           type: string
@@ -3467,15 +3442,15 @@ components:
       properties:
         created:
           type: integer
-        createdBy:
+        created_by:
           type: integer
         description:
           type: string
         id:
           type: integer
-        isPublic:
+        is_public:
           type: boolean
-        parentId:
+        parent_id:
           type: integer
         path:
           type: string
@@ -3486,15 +3461,15 @@ components:
       type: object
     TypesToken:
       properties:
-        createdBy:
+        created_by:
           type: integer
-        expiresAt:
+        expires_at:
           type: integer
         grants:
           $ref: '#/components/schemas/EnumAccessGrant'
-        issuedAt:
+        issued_at:
           type: integer
-        principalId:
+        principal_id:
           type: integer
         type:
           $ref: '#/components/schemas/EnumTokenType'
@@ -3516,7 +3491,7 @@ components:
           type: boolean
         created:
           type: integer
-        displayName:
+        display_name:
           type: string
         email:
           type: string
@@ -3562,7 +3537,7 @@ components:
       type: object
     UserUpdateInput:
       properties:
-        displayName:
+        display_name:
           nullable: true
           type: string
         email:

@@ -26,7 +26,7 @@ export function useGetRepositoryMetadata() {
   } = useGet<TypesRepository>({
     path: `/api/v1/repos/${space}/${repoName}/+/`
   })
-  const defaultBranch = repoMetadata?.defaultBranch || ''
+  const defaultBranch = repoMetadata?.default_branch || ''
 
   return {
     space,

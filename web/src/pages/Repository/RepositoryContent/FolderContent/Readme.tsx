@@ -45,7 +45,7 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
               history.push(
                 routes.toCODEFileEdit({
                   repoPath: metadata.path as string,
-                  gitRef: gitRef || (metadata.defaultBranch as string),
+                  gitRef: gitRef || (metadata.default_branch as string),
                   resourcePath: readmeInfo.path as string
                 })
               )

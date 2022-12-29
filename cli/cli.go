@@ -60,7 +60,7 @@ func Command() {
 }
 
 func initialize(ss *session.Session, httpClient *client.HTTPClient) error {
-	// todo: refactor asap, we need to get rid of literal value 'server'
+	// todo: refactor asap, we need to get rid of literal value 'server', 'login' & 'register'.
 	if len(os.Args) > 1 && os.Args[1] == "server" {
 		return nil
 	}
@@ -72,8 +72,16 @@ func initialize(ss *session.Session, httpClient *client.HTTPClient) error {
 	}
 
 	*ss, err = session.LoadFromPath(path)
-	if err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return err
+	if err != nil {
+		switch {
+		case errors.Is(err, fs.ErrNotExist):
+			break
+		case errors.Is(err, session.ErrTokenExpired) &&
+			len(os.Args) == 2 && (os.Args[1] == "login" || os.Args[1] == "register"):
+			break
+		default:
+			return err
+		}
 	}
 
 	if ss.URI == "" {

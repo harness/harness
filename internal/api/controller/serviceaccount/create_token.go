@@ -22,9 +22,7 @@ type CreateTokenInput struct {
 	Grants   enum.AccessGrant `json:"grants"`
 }
 
-/*
- * CreateToken creates a new service account access token.
- */
+// CreateToken creates a new service account access token.
 func (c *Controller) CreateToken(ctx context.Context, session *auth.Session,
 	saUID string, in *CreateTokenInput) (*types.TokenResponse, error) {
 	sa, err := findServiceAccountFromUID(ctx, c.saStore, saUID)

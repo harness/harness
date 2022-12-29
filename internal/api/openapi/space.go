@@ -22,7 +22,7 @@ type createSpaceRequest struct {
 }
 
 type spaceRequest struct {
-	Ref string `path:"spaceRef"`
+	Ref string `path:"space_ref"`
 }
 
 type updateSpaceRequest struct {
@@ -42,7 +42,7 @@ type createPathRequest struct {
 
 type deletePathRequest struct {
 	spaceRequest
-	PathID string `path:"pathID"`
+	PathID string `path:"path_id"`
 }
 
 var queryParameterSortRepo = openapi3.ParameterOrRef{
@@ -137,7 +137,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opGet, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opGet, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opGet, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{spaceRef}", opGet)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}", opGet)
 
 	opUpdate := openapi3.Operation{}
 	opUpdate.WithTags("space")
@@ -149,7 +149,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodPatch, "/spaces/{spaceRef}", opUpdate)
+	_ = reflector.Spec.AddOperation(http.MethodPatch, "/spaces/{space_ref}", opUpdate)
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("space")
@@ -160,7 +160,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodDelete, "/spaces/{spaceRef}", opDelete)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/spaces/{space_ref}", opDelete)
 
 	opMove := openapi3.Operation{}
 	opMove.WithTags("space")
@@ -171,34 +171,34 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opMove, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/{spaceRef}/move", opMove)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/{space_ref}/move", opMove)
 
 	opSpaces := openapi3.Operation{}
 	opSpaces.WithTags("space")
 	opSpaces.WithMapOfAnything(map[string]interface{}{"operationId": "listSpaces"})
-	opSpaces.WithParameters(queryParameterPage, queryParameterPerPage)
-	opSpaces.WithParameters(queryParameterQuerySpace, queryParameterSortSpace, queryParameterDirection,
-		queryParameterPage, queryParameterPerPage)
+	opSpaces.WithParameters(queryParameterPage, queryParameterLimit)
+	opSpaces.WithParameters(queryParameterQuerySpace, queryParameterSortSpace, queryParameterOrder,
+		queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opSpaces, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opSpaces, []types.Space{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opSpaces, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opSpaces, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opSpaces, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opSpaces, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{spaceRef}/spaces", opSpaces)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/spaces", opSpaces)
 
 	opRepos := openapi3.Operation{}
 	opRepos.WithTags("space")
 	opRepos.WithMapOfAnything(map[string]interface{}{"operationId": "listRepos"})
-	opRepos.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterDirection,
-		queryParameterPage, queryParameterPerPage)
+	opRepos.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterOrder,
+		queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opRepos, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opRepos, []types.Repository{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{spaceRef}/repos", opRepos)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/repos", opRepos)
 
 	opServiceAccounts := openapi3.Operation{}
 	opServiceAccounts.WithTags("space")
@@ -209,19 +209,19 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{spaceRef}/service_accounts", opServiceAccounts)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/service-accounts", opServiceAccounts)
 
 	opListPaths := openapi3.Operation{}
 	opListPaths.WithTags("space")
 	opListPaths.WithMapOfAnything(map[string]interface{}{"operationId": "listPaths"})
-	opListPaths.WithParameters(queryParameterPage, queryParameterPerPage)
+	opListPaths.WithParameters(queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opListPaths, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListPaths, []types.Path{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{spaceRef}/paths", opListPaths)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/paths", opListPaths)
 
 	opCreatePath := openapi3.Operation{}
 	opCreatePath.WithTags("space")
@@ -232,7 +232,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opCreatePath, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCreatePath, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opCreatePath, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/{spaceRef}/paths", opCreatePath)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/{space_ref}/paths", opCreatePath)
 
 	onDeletePath := openapi3.Operation{}
 	onDeletePath.WithTags("space")
@@ -243,5 +243,5 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodDelete, "/spaces/{spaceRef}/paths/{pathID}", onDeletePath)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/spaces/{space_ref}/paths/{path_id}", onDeletePath)
 }

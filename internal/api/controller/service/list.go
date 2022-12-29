@@ -14,9 +14,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
- * List lists all services of the system.
- */
+// List lists all services of the system.
 func (c *Controller) List(ctx context.Context, session *auth.Session) (int64, []*types.Service, error) {
 	// Ensure principal has required permissions (service is global, no explicit resource)
 	scope := &types.Scope{}

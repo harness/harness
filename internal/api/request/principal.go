@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	PathParamUserUID           = "userUID"
-	PathParamServiceAccountUID = "saUID"
+	PathParamUserUID           = "user_uid"
+	PathParamServiceAccountUID = "sa_uid"
 )
 
 func GetUserUIDFromPath(r *http.Request) (string, error) {

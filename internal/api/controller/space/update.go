@@ -17,12 +17,10 @@ import (
 // UpdateInput is used for updating a space.
 type UpdateInput struct {
 	Description *string `json:"description"`
-	IsPublic    *bool   `json:"isPublic"`
+	IsPublic    *bool   `json:"is_public"`
 }
 
-/*
-* Update updates a space.
- */
+// Update updates a space.
 func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	spaceRef string, in *UpdateInput) (*types.Space, error) {
 	space, err := c.spaceStore.FindSpaceFromRef(ctx, spaceRef)

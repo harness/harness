@@ -22,15 +22,15 @@ import (
 )
 
 type CreateInput struct {
-	ParentID      int64  `json:"parentID"`
+	ParentID      int64  `json:"parent_id"`
 	UID           string `json:"uid"`
-	DefaultBranch string `json:"defaultBranch"`
+	DefaultBranch string `json:"default_branch"`
 	Description   string `json:"description"`
-	IsPublic      bool   `json:"isPublic"`
-	ForkID        int64  `json:"forkId"`
+	IsPublic      bool   `json:"is_public"`
+	ForkID        int64  `json:"fork_id"`
 	Readme        bool   `json:"readme"`
 	License       string `json:"license"`
-	GitIgnore     string `json:"gitIgnore"`
+	GitIgnore     string `json:"git_ignore"`
 }
 
 // Create creates a new repository.
@@ -68,15 +68,18 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		in.DefaultBranch = c.defaultBranch
 	}
 
+	now := time.Now().UnixMilli()
+
 	// create new repo object
 	repo := &types.Repository{
+		Version:       0,
 		ParentID:      in.ParentID,
 		UID:           in.UID,
 		Description:   in.Description,
 		IsPublic:      in.IsPublic,
 		CreatedBy:     session.Principal.ID,
-		Created:       time.Now().UnixMilli(),
-		Updated:       time.Now().UnixMilli(),
+		Created:       now,
+		Updated:       now,
 		ForkID:        in.ForkID,
 		DefaultBranch: in.DefaultBranch,
 	}

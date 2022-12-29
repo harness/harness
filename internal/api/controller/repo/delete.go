@@ -12,9 +12,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
-* Delete deletes a repo.
- */
+// Delete deletes a repo.
 func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef string) error {
 	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
 	if err != nil {

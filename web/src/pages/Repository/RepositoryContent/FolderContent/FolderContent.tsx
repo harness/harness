@@ -41,7 +41,7 @@ export function FolderContent({
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
             <Text color={Color.BLACK} lineClamp={1} className={css.rowText}>
-              {row.original.latestCommit?.title}
+              {row.original.latest_commit?.title}
             </Text>
           )
         }
@@ -52,7 +52,7 @@ export function FolderContent({
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
             <Text lineClamp={1} color={Color.GREY_500} className={css.rowText}>
-              {formatDate(row.original.latestCommit?.author?.when as string)}
+              {formatDate(row.original.latest_commit?.author?.when as string)}
             </Text>
           )
         }
@@ -64,7 +64,7 @@ export function FolderContent({
 
   return (
     <Container className={css.folderContent}>
-      <LatestCommitForFolder repoMetadata={repoMetadata} latestCommit={resourceContent?.latestCommit} />
+      <LatestCommitForFolder repoMetadata={repoMetadata} latestCommit={resourceContent?.latest_commit} />
 
       <Table<OpenapiContentInfo>
         className={css.table}

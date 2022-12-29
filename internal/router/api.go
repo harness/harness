@@ -120,13 +120,13 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamSpaceRef), func(r chi.Router) {
 			// space operations
 			r.Get("/", handlerspace.HandleFind(spaceCtrl))
-			r.Put("/", handlerspace.HandleUpdate(spaceCtrl))
+			r.Patch("/", handlerspace.HandleUpdate(spaceCtrl))
 			r.Delete("/", handlerspace.HandleDelete(spaceCtrl))
 
 			r.Post("/move", handlerspace.HandleMove(spaceCtrl))
 			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))
 			r.Get("/repos", handlerspace.HandleListRepos(spaceCtrl))
-			r.Get("/service_accounts", handlerspace.HandleListServiceAccounts(spaceCtrl))
+			r.Get("/service-accounts", handlerspace.HandleListServiceAccounts(spaceCtrl))
 
 			// Child collections
 			r.Route("/paths", func(r chi.Router) {
@@ -150,11 +150,11 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Co
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 			// repo level operations
 			r.Get("/", handlerrepo.HandleFind(repoCtrl))
-			r.Put("/", handlerrepo.HandleUpdate(repoCtrl))
+			r.Patch("/", handlerrepo.HandleUpdate(repoCtrl))
 			r.Delete("/", handlerrepo.HandleDelete(repoCtrl))
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
-			r.Get("/service_accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
+			r.Get("/service-accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
 
 			// content operations
 			// NOTE: this allows /content and /content/ to both be valid (without any other tricks.)
@@ -167,7 +167,7 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Co
 			r.Route("/commits", func(r chi.Router) {
 				r.Get("/", handlerrepo.HandleListCommits(repoCtrl))
 
-				r.Post("/calculate_divergence", handlerrepo.HandleCalculateCommitDivergence(repoCtrl))
+				r.Post("/calculate-divergence", handlerrepo.HandleCalculateCommitDivergence(repoCtrl))
 				r.Post("/", handlerrepo.HandleCommitFiles(repoCtrl))
 			})
 
@@ -213,12 +213,12 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqNumber), func(r chi.Router) {
 			r.Get("/", handlerpullreq.HandleFind(pullreqCtrl))
-			r.Put("/", handlerpullreq.HandleUpdate(pullreqCtrl))
+			r.Patch("/", handlerpullreq.HandleUpdate(pullreqCtrl))
 			r.Get("/activities", handlerpullreq.HandleListActivities(pullreqCtrl))
 			r.Route("/comments", func(r chi.Router) {
 				r.Post("/", handlerpullreq.HandleCommentCreate(pullreqCtrl))
 				r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqCommentID), func(r chi.Router) {
-					r.Put("/", handlerpullreq.HandleCommentUpdate(pullreqCtrl))
+					r.Patch("/", handlerpullreq.HandleCommentUpdate(pullreqCtrl))
 					r.Delete("/", handlerpullreq.HandleCommentDelete(pullreqCtrl))
 				})
 			})
@@ -233,7 +233,7 @@ func SetupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
 
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamWebhookID), func(r chi.Router) {
 			r.Get("/", handlerwebhook.HandleFind(webhookCtrl))
-			r.Put("/", handlerwebhook.HandleUpdate(webhookCtrl))
+			r.Patch("/", handlerwebhook.HandleUpdate(webhookCtrl))
 			r.Delete("/", handlerwebhook.HandleDelete(webhookCtrl))
 
 			r.Route("/executions", func(r chi.Router) {
@@ -279,7 +279,7 @@ func setupUsers(r chi.Router, userCtrl *user.Controller) {
 }
 
 func setupServiceAccounts(r chi.Router, saCtrl *serviceaccount.Controller) {
-	r.Route("/service_accounts", func(r chi.Router) {
+	r.Route("/service-accounts", func(r chi.Router) {
 		// create takes parent information via body
 		r.Post("/", handlerserviceaccount.HandleCreate(saCtrl))
 
@@ -325,7 +325,7 @@ func setupAdmin(r chi.Router, _ *user.Controller) {
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				_, _ = w.Write([]byte(fmt.Sprintf("Get user '%s'", chi.URLParam(r, "rref"))))
 			})
-			r.Put("/", func(w http.ResponseWriter, r *http.Request) {
+			r.Patch("/", func(w http.ResponseWriter, r *http.Request) {
 				_, _ = w.Write([]byte(fmt.Sprintf("Update user '%s'", chi.URLParam(r, "rref"))))
 			})
 			r.Delete("/", func(w http.ResponseWriter, r *http.Request) {

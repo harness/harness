@@ -14,9 +14,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
-* DeletePath deletes a repo branch.
- */
+// DeleteBranch deletes a repo branch.
 func (c *Controller) DeleteBranch(ctx context.Context, session *auth.Session, repoRef string, branchName string) error {
 	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
 	if err != nil {

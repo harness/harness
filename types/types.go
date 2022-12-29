@@ -15,6 +15,6 @@ type (
 		Page  int        `json:"page"`
 		Size  int        `json:"size"`
 		Sort  string     `json:"sort"`
-		Order enum.Order `json:"direction"`
+		Order enum.Order `json:"order"`
 	}
 )

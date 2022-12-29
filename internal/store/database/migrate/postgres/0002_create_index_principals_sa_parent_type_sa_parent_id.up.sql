@@ -1,0 +1,2 @@
+CREATE INDEX index_principals_sa_parent_type_sa_parent_id
+ON principals(principal_sa_parent_type, principal_sa_parent_id);

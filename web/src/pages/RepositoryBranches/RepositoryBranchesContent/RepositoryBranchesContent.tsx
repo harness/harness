@@ -5,7 +5,7 @@ import { useHistory } from 'react-router-dom'
 import type { RepoBranch } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
-import { LIST_FETCHING_PER_PAGE } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { PrevNextPagination } from 'components/PrevNextPagination/PrevNextPagination'
@@ -25,10 +25,10 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
   } = useGet<RepoBranch[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/branches`,
     queryParams: {
-      per_page: LIST_FETCHING_PER_PAGE,
+      limit: LIST_FETCHING_LIMIT,
       page: pageIndex + 1,
       sort: 'date',
-      direction: 'desc',
+      order: 'desc',
       include_commit: true,
       query: searchTerm
     }

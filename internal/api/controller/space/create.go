@@ -19,15 +19,13 @@ import (
 )
 
 type CreateInput struct {
-	ParentID    int64  `json:"parentId"`
+	ParentID    int64  `json:"parent_id"`
 	UID         string `json:"uid"`
 	Description string `json:"description"`
-	IsPublic    bool   `json:"isPublic"`
+	IsPublic    bool   `json:"is_public"`
 }
 
-/*
- * Create creates a new space.
- */
+// Create creates a new space.
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Space, error) {
 	// Collect parent path along the way - needed for duplicate error message
 	parentPath := ""

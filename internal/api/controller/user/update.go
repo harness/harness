@@ -22,12 +22,10 @@ import (
 type UpdateInput struct {
 	Email       *string `json:"email"`
 	Password    *string `json:"password"`
-	DisplayName *string `json:"displayName"`
+	DisplayName *string `json:"display_name"`
 }
 
-/*
- * Update updates the provided user.
- */
+// Update updates the provided user.
 func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	userUID string, in *UpdateInput) (*types.User, error) {
 	user, err := findUserFromUID(ctx, c.userStore, userUID)

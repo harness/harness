@@ -20,13 +20,11 @@ import (
 // MoveInput is used for moving a space.
 type MoveInput struct {
 	UID         *string `json:"uid"`
-	ParentID    *int64  `json:"parentId"`
-	KeepAsAlias bool    `json:"keepAsAlias"`
+	ParentID    *int64  `json:"parent_id"`
+	KeepAsAlias bool    `json:"keep_as_alias"`
 }
 
-/*
-* Move moves a space to a new space and/or name.
- */
+// Move moves a space to a new space and/or name.
 func (c *Controller) Move(ctx context.Context, session *auth.Session,
 	spaceRef string, in *MoveInput) (*types.Space, error) {
 	space, err := c.spaceStore.FindSpaceFromRef(ctx, spaceRef)

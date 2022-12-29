@@ -19,7 +19,7 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { getErrorMessage, LIST_FETCHING_PER_PAGE } from 'utils/Utils'
+import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import emptyStateImage from 'images/empty-state.svg'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
@@ -41,10 +41,10 @@ export default function PullRequests() {
   } = useGet<TypesPullReq[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq`,
     queryParams: {
-      per_page: LIST_FETCHING_PER_PAGE,
+      limit: LIST_FETCHING_LIMIT,
       page: pageIndex + 1,
       sort: 'date',
-      direction: 'desc',
+      order: 'desc',
       include_commit: true,
       query: searchTerm
     },
@@ -110,7 +110,7 @@ export default function PullRequests() {
                 history.push(
                   routes.toCODECompare({
                     repoPath: repoMetadata?.path as string,
-                    diffRefs: makeDiffRefs(repoMetadata?.defaultBranch as string, '')
+                    diffRefs: makeDiffRefs(repoMetadata?.default_branch as string, '')
                   })
                 )
               }}

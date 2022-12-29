@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	PathParamTokenUID = "tokenUID"
+	PathParamTokenUID = "token_uid"
 )
 
 func GetTokenUIDFromPath(r *http.Request) (string, error) {

@@ -8,15 +8,15 @@ package types
 import "github.com/harness/gitness/types/enum"
 
 type (
-	// Represents the identity of an acting entity (User, ServiceAccount, Service).
+	// Principal represents the identity of an acting entity (User, ServiceAccount, Service).
 	Principal struct {
 		// TODO: int64 ID doesn't match DB
-		ID          int64              `db:"principal_id"          json:"-"`
-		UID         string             `db:"principal_uid"         json:"uid"`
-		Email       string             `db:"principal_email"       json:"email"`
-		Type        enum.PrincipalType `db:"principal_type"        json:"type"`
-		DisplayName string             `db:"principal_displayName" json:"displayName"`
-		Admin       bool               `db:"principal_admin"       json:"admin"`
+		ID          int64              `db:"principal_id"           json:"-"`
+		UID         string             `db:"principal_uid"          json:"uid"`
+		Email       string             `db:"principal_email"        json:"email"`
+		Type        enum.PrincipalType `db:"principal_type"         json:"type"`
+		DisplayName string             `db:"principal_display_name" json:"display_name"`
+		Admin       bool               `db:"principal_admin"        json:"admin"`
 
 		// Should be part of principal or not?
 		Blocked bool   `db:"principal_blocked"            json:"blocked"`

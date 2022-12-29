@@ -12,7 +12,7 @@ import css from './ContentHeader.module.scss'
 
 export function ContentHeader({
   repoMetadata,
-  gitRef = repoMetadata.defaultBranch as string,
+  gitRef = repoMetadata.default_branch as string,
   resourcePath,
   resourceContent
 }: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent'>) {
@@ -84,7 +84,7 @@ export function ContentHeader({
               variation={ButtonVariation.SECONDARY}
               icon={CodeIcon.Clone}
               className={css.btnColorFix}
-              tooltip={<CloneButtonTooltip httpsURL={repoMetadata.gitUrl as string} />}
+              tooltip={<CloneButtonTooltip httpsURL={repoMetadata.git_url as string} />}
               tooltipProps={{
                 interactionKind: 'click',
                 minimal: true,
@@ -103,7 +103,7 @@ export function ContentHeader({
                   routes.toCODEFileEdit({
                     repoPath: repoMetadata.path as string,
                     resourcePath,
-                    gitRef: gitRef || (repoMetadata.defaultBranch as string)
+                    gitRef: gitRef || (repoMetadata.default_branch as string)
                   })
                 )
               }}

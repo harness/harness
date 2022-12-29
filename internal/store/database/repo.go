@@ -21,7 +21,7 @@ import (
 
 var _ store.RepoStore = (*RepoStore)(nil)
 
-// Returns a new RepoStore.
+// NewRepoStore returns a new RepoStore.
 func NewRepoStore(db *sqlx.DB, pathTransformation store.PathTransformation) *RepoStore {
 	return &RepoStore{
 		db:                 db,
@@ -29,7 +29,7 @@ func NewRepoStore(db *sqlx.DB, pathTransformation store.PathTransformation) *Rep
 	}
 }
 
-// Implements a RepoStore backed by a relational database.
+// RepoStore implements a store.RepoStore backed by a relational database.
 type RepoStore struct {
 	db                 *sqlx.DB
 	pathTransformation store.PathTransformation
@@ -39,7 +39,7 @@ type RepoStore struct {
 func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, error) {
 	dst := new(types.Repository)
 	if err := s.db.GetContext(ctx, dst, repoSelectByID, id); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, processSQLErrorf(err, "Failed to find repo")
 	}
 	return dst, nil
 }
@@ -54,8 +54,9 @@ func (s *RepoStore) FindByPath(ctx context.Context, path string) (*types.Reposit
 
 	dst := new(types.Repository)
 	if err = s.db.GetContext(ctx, dst, repoSelectByPathUnique, pathUnique); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, processSQLErrorf(err, "Failed to find repo by path")
 	}
+
 	return dst, nil
 }
 
@@ -188,15 +189,43 @@ func (s *RepoStore) Move(ctx context.Context, principalID int64, repoID int64, n
 	return dst, nil
 }
 
-// Updates the repo details.
+// Update updates the repo details.
 func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
+	const repoUpdate = `
+	UPDATE repositories
+	SET
+	 repo_version           = :repo_version
+	,repo_description		= :repo_description
+	,repo_is_public			= :repo_is_public
+	,repo_updated			= :repo_updated
+	,repo_num_forks			= :repo_num_forks
+	,repo_num_pulls			= :repo_num_pulls
+	,repo_num_closed_pulls	= :repo_num_closed_pulls
+	,repo_num_open_pulls	= :repo_num_open_pulls
+	WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
+
+	updatedAt := time.Now()
+
+	repo.Version++
+	repo.Updated = updatedAt.UnixMilli()
+
 	query, arg, err := s.db.BindNamed(repoUpdate, repo)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind repo object")
 	}
 
-	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
-		return processSQLErrorf(err, "Update query failed")
+	result, err := s.db.ExecContext(ctx, query, arg...)
+	if err != nil {
+		return processSQLErrorf(err, "Failed to update repository")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return processSQLErrorf(err, "Failed to get number of updated rows")
+	}
+
+	if count == 0 {
+		return store.ErrConflict
 	}
 
 	return nil
@@ -204,6 +233,10 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 
 // Delete the repository.
 func (s *RepoStore) Delete(ctx context.Context, id int64) error {
+	const repoDelete = `
+	DELETE FROM repositories
+	WHERE repo_id = $1`
+
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return processSQLErrorf(err, "failed to start a new transaction")
@@ -234,7 +267,7 @@ func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoF
 	stmt := builder.
 		Select("count(*)").
 		From("repositories").
-		Where("repo_parentId = ?", parentID)
+		Where("repo_parent_id = ?", parentID)
 
 	if opts.Query != "" {
 		stmt = stmt.Where("repo_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
@@ -261,9 +294,9 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 	stmt := builder.
 		Select("repositories.*,paths.path_value AS repo_path").
 		From("repositories").
-		InnerJoin("paths ON repositories.repo_id=paths.path_targetId AND paths.path_targetType='repo' "+
-			"AND paths.path_isAlias=0").
-		Where("repo_parentId = ?", fmt.Sprint(parentID))
+		InnerJoin("paths ON repositories.repo_id=paths.path_target_id AND paths.path_target_type='repo' "+
+			"AND paths.path_is_alias=false").
+		Where("repo_parent_id = ?", fmt.Sprint(parentID))
 
 	if opts.Query != "" {
 		stmt = stmt.Where("repo_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
@@ -277,13 +310,17 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("repo_uid COLLATE NOCASE " + opts.Order.String())
+		stmt = stmt.OrderBy("repo_uid " + opts.Order.String())
+		//TODO: Postgres does not support COLLATE NOCASE for UTF8
+		// stmt = stmt.OrderBy("repo_uid COLLATE NOCASE " + opts.Order.String())
 	case enum.RepoAttrCreated:
 		stmt = stmt.OrderBy("repo_created " + opts.Order.String())
 	case enum.RepoAttrUpdated:
 		stmt = stmt.OrderBy("repo_updated " + opts.Order.String())
 	case enum.RepoAttrPath:
-		stmt = stmt.OrderBy("repo_path COLLATE NOCASE " + opts.Order.String())
+		stmt = stmt.OrderBy("repo_path " + opts.Order.String())
+		//TODO: Postgres does not support COLLATE NOCASE for UTF8
+		// stmt = stmt.OrderBy("repo_path COLLATE NOCASE " + opts.Order.String())
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -333,27 +370,28 @@ func (s *RepoStore) DeletePath(ctx context.Context, repoID int64, pathID int64) 
 const repoSelectBase = `
 SELECT
 repo_id
-,repo_parentId
+,repo_version
+,repo_parent_id
 ,repo_uid
 ,paths.path_value AS repo_path
 ,repo_description
-,repo_isPublic
-,repo_createdBy
+,repo_is_public
+,repo_created_by
 ,repo_created
 ,repo_updated
-,repo_gitUid
-,repo_defaultBranch
-,repo_forkId
-,repo_numForks
-,repo_numPulls
-,repo_numClosedPulls
-,repo_numOpenPulls
+,repo_git_uid
+,repo_default_branch
+,repo_fork_id
+,repo_num_forks
+,repo_num_pulls
+,repo_num_closed_pulls
+,repo_num_open_pulls
 `
 
 const repoSelectBaseWithJoin = repoSelectBase + `
 FROM repositories
 INNER JOIN paths
-ON repositories.repo_id=paths.path_targetId AND paths.path_targetType='repo' AND paths.path_isAlias=0
+ON repositories.repo_id=paths.path_target_id AND paths.path_target_type='repo' AND paths.path_is_alias=false
 `
 
 const repoSelectByID = repoSelectBaseWithJoin + `
@@ -362,68 +400,52 @@ WHERE repo_id = $1
 
 const repoSelectByPathUnique = repoSelectBase + `
 FROM paths paths1
-INNER JOIN repositories ON repositories.repo_id=paths1.path_targetId AND paths1.path_targetType='repo' 
-  AND paths1.path_valueUnique = $1
-INNER JOIN paths ON repositories.repo_id=paths.path_targetId AND paths.path_targetType='repo' AND paths.path_isAlias=0
-`
-
-const repoDelete = `
-DELETE FROM repositories
-WHERE repo_id = $1
+INNER JOIN repositories ON repositories.repo_id=paths1.path_target_id AND paths1.path_target_type='repo' 
+  AND paths1.path_value_unique = $1
+INNER JOIN paths ON repositories.repo_id=paths.path_target_id
+  AND paths.path_target_type='repo' AND paths.path_is_alias=false
 `
 
 // TODO: do we have to worry about SQL injection for description?
 const repoInsert = `
 INSERT INTO repositories (
-	repo_parentId
+    repo_version                      
+	,repo_parent_id
 	,repo_uid
 	,repo_description
-	,repo_isPublic
-	,repo_createdBy
+	,repo_is_public
+	,repo_created_by
 	,repo_created
 	,repo_updated
-	,repo_gitUid
-	,repo_defaultBranch
-	,repo_forkId
-	,repo_numForks
-	,repo_numPulls
-	,repo_numClosedPulls
-	,repo_numOpenPulls
+	,repo_git_uid
+	,repo_default_branch
+	,repo_fork_id
+	,repo_num_forks
+	,repo_num_pulls
+	,repo_num_closed_pulls
+	,repo_num_open_pulls
 ) values (
-	:repo_parentId
+    :repo_version
+	,:repo_parent_id
 	,:repo_uid
 	,:repo_description
-	,:repo_isPublic
-	,:repo_createdBy
+	,:repo_is_public
+	,:repo_created_by
 	,:repo_created
 	,:repo_updated
-	,:repo_gitUid
-	,:repo_defaultBranch
-	,:repo_forkId
-	,:repo_numForks
-	,:repo_numPulls
-	,:repo_numClosedPulls
-	,:repo_numOpenPulls
-) RETURNING repo_id
-`
-
-const repoUpdate = `
-UPDATE repositories
-SET
-repo_description		= :repo_description
-,repo_isPublic			= :repo_isPublic
-,repo_updated			= :repo_updated
-,repo_numForks			= :repo_numForks
-,repo_numPulls			= :repo_numPulls
-,repo_numClosedPulls	= :repo_numClosedPulls
-,repo_numOpenPulls		= :repo_numOpenPulls
-WHERE repo_id = :repo_id
-`
+	,:repo_git_uid
+	,:repo_default_branch
+	,:repo_fork_id
+	,:repo_num_forks
+	,:repo_num_pulls
+	,:repo_num_closed_pulls
+	,:repo_num_open_pulls
+) RETURNING repo_id`
 
 const repoUpdateUIDAndParentID = `
 UPDATE repositories
 SET
-repo_uid       = $1
-,repo_parentId = $2
-WHERE repo_id  = $3
+repo_uid        = $1
+,repo_parent_id = $2
+WHERE repo_id   = $3
 `

@@ -29,4 +29,4 @@ export function GitRefsSelect() {
   )
 }
 
-// TODO: Optimize branch fetching when first fetch return less than request PER_PAGE
+// TODO: Optimize branch fetching when first fetch return less than request LIMIT

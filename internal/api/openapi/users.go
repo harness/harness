@@ -23,7 +23,7 @@ type (
 	// request for listing users.
 	userListRequest struct {
 		Sort  string `query:"sort"      enum:"id,email,created,updated"`
-		Order string `query:"direction" enum:"asc,desc"`
+		Order string `query:"order"     enum:"asc,desc"`
 
 		// include pagination request
 		paginationRequest

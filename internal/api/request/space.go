@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	PathParamSpaceRef = "spaceRef"
+	PathParamSpaceRef = "space_ref"
 )
 
 func GetSpaceRefFromPath(r *http.Request) (string, error) {

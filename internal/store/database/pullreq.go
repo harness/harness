@@ -90,10 +90,10 @@ const (
 		,pullreq_merged
 		,pullreq_merge_strategy
 		,author.principal_uid as "author_uid"
-		,author.principal_displayName as "author_name"
+		,author.principal_display_name as "author_name"
 		,author.principal_email as "author_email"
 		,merger.principal_uid as "merger_uid"
-		,merger.principal_displayName as "merger_name"
+		,merger.principal_display_name as "merger_name"
 		,merger.principal_email as "merger_email"`
 
 	pullReqSelectBase = `
@@ -112,7 +112,7 @@ func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReq, erro
 
 	dst := &pullReq{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, processSQLErrorf(err, "Failed to find pull request")
 	}
 
 	return mapPullReq(dst), nil
@@ -127,7 +127,7 @@ func (s *PullReqStore) FindByNumber(ctx context.Context, repoID, number int64) (
 
 	dst := &pullReq{}
 	if err := db.GetContext(ctx, dst, sqlQuery, repoID, number); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, processSQLErrorf(err, "Failed to find pull request by number")
 	}
 
 	return mapPullReq(dst), nil

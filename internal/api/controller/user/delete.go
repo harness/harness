@@ -13,9 +13,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
- * Delete deletes a user.
- */
+// Delete deletes a user.
 func (c *Controller) Delete(ctx context.Context, session *auth.Session,
 	userUID string) error {
 	user, err := findUserFromUID(ctx, c.userStore, userUID)

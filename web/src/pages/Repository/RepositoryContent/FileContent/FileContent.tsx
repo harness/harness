@@ -29,7 +29,7 @@ export function FileContent({
 
   return (
     <Layout.Vertical spacing="small">
-      <LatestCommitForFile repoMetadata={repoMetadata} latestCommit={resourceContent.latestCommit} standaloneStyle />
+      <LatestCommitForFile repoMetadata={repoMetadata} latestCommit={resourceContent.latest_commit} standaloneStyle />
       <Container className={css.container} background={Color.WHITE}>
         <Layout.Horizontal padding="small" className={css.heading}>
           <Heading level={5} color={Color.BLACK}>

@@ -23,7 +23,7 @@ var _ store.ServiceStore = (*ServiceStore)(nil)
 // It is required to allow storing transformed UIDs used for uniquness constraints and searching.
 type service struct {
 	types.Service
-	UIDUnique string `db:"principal_uidUnique"`
+	UIDUnique string `db:"principal_uid_unique"`
 }
 
 // NewServiceStore returns a new ServiceStore.
@@ -187,16 +187,16 @@ func (s *ServiceStore) mapToDBservice(svc *types.Service) (*service, error) {
 const serviceCount = `
 SELECT count(*)
 FROM principals
-WHERE principal_type = "service"
+WHERE principal_type = 'service'
 `
 
 const serviceBase = `
 SELECT
 principal_id
 ,principal_uid
-,principal_uidUnique
+,principal_uid_unique
 ,principal_email
-,principal_displayName
+,principal_display_name
 ,principal_blocked
 ,principal_salt
 ,principal_created
@@ -205,41 +205,41 @@ FROM principals
 `
 
 const serviceSelect = serviceBase + `
-WHERE principal_type = "service"
+WHERE principal_type = 'service'
 ORDER BY principal_uid ASC
 `
 
 const serviceSelectID = serviceBase + `
-WHERE principal_type = "service" AND principal_id = $1
+WHERE principal_type = 'service' AND principal_id = $1
 `
 
 const serviceSelectUIDUnique = serviceBase + `
-WHERE principal_type = "service" AND principal_uidUnique = $1
+WHERE principal_type = 'service' AND principal_uid_unique = $1
 `
 
 const serviceDelete = `
 DELETE FROM principals
-WHERE principal_type = "service" AND principal_id = $1
+WHERE principal_type = 'service' AND principal_id = $1
 `
 
 const serviceInsert = `
 INSERT INTO principals (
 principal_type
 ,principal_uid
-,principal_uidUnique
+,principal_uid_unique
 ,principal_email
-,principal_displayName
+,principal_display_name
 ,principal_admin
 ,principal_blocked
 ,principal_salt
 ,principal_created
 ,principal_updated
 ) values (
- "service"
+ 'service'
 ,:principal_uid
-,:principal_uidUnique
+,:principal_uid_unique
 ,:principal_email
-,:principal_displayName
+,:principal_display_name
 ,:principal_admin
 ,:principal_blocked
 ,:principal_salt
@@ -252,9 +252,9 @@ const serviceUpdate = `
 UPDATE principals
 SET
 principal_email     	  = :principal_email
-,principal_displayName    = :principal_displayName
+,principal_display_name   = :principal_display_name
 ,principal_admin          = :principal_admin
 ,principal_blocked        = :principal_blocked
 ,principal_updated        = :principal_updated
-WHERE principal_type = "service" AND principal_id = :principal_id
+WHERE principal_type = 'service' AND principal_id = :principal_id
 `

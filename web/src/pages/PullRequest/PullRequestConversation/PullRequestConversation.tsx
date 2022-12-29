@@ -11,7 +11,7 @@ export const PullRequestConversation: React.FC<Pick<GitInfoProps, 'repoMetadata'
   return (
     <PullRequestTabContentWrapper loading={undefined} error={undefined} onRetry={() => {}}>
       <Container>
-        <MarkdownViewer source={pullRequestMetadata.description} />
+        <MarkdownViewer source={pullRequestMetadata.description ? pullRequestMetadata.description! : ""} />
       </Container>
     </PullRequestTabContentWrapper>
   )

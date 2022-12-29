@@ -11,16 +11,9 @@ import (
 )
 
 type (
-	baseRequest struct {
-		Account      string `query:"accountIdentifier"`
-		Organization string `query:"orgIdentifier"`
-		Project      string `query:"projectIdentifier"`
-		Routing      string `query:"routingId"`
-	}
-
 	paginationRequest struct {
 		Page int `query:"page"     default:"1"`
-		Size int `query:"per_page" default:"100"`
+		Size int `query:"limit"    default:"30"`
 	}
 )
 

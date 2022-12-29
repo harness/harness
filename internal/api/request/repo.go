@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	PathParamRepoRef = "repositoryRef"
+	PathParamRepoRef = "repo_ref"
 )
 
 func GetRepoRefFromPath(r *http.Request) (string, error) {

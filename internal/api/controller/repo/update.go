@@ -6,7 +6,6 @@ package repo
 
 import (
 	"context"
-	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -17,12 +16,10 @@ import (
 // UpdateInput is used for updating a repo.
 type UpdateInput struct {
 	Description *string `json:"description"`
-	IsPublic    *bool   `json:"isPublic"`
+	IsPublic    *bool   `json:"is_public"`
 }
 
-/*
-* Update updates a repository.
- */
+// Update updates a repository.
 func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	repoRef string, in *UpdateInput) (*types.Repository, error) {
 	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
@@ -42,15 +39,18 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		repo.IsPublic = *in.IsPublic
 	}
 
-	// always update time
-	repo.Updated = time.Now().UnixMilli()
-
 	// ensure provided values are valid
 	if err = c.repoCheck(repo); err != nil {
 		return nil, err
 	}
 
 	err = c.repoStore.Update(ctx, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	// populate repo url
+	repo.GitURL, err = GenerateRepoGitURL(c.gitBaseURL, repo.Path)
 	if err != nil {
 		return nil, err
 	}

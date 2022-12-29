@@ -18,7 +18,7 @@ import (
 type GetCommitDivergencesInput struct {
 	// MaxCount restricts the maximum number of diverging commits that are counted.
 	// IMPORTANT: This restricts the total commit count, so a (5, 18) restricted to 10 will return (0, 10)
-	MaxCount int32                     `json:"maxCount"`
+	MaxCount int32                     `json:"max_count"`
 	Requests []CommitDivergenceRequest `json:"requests"`
 }
 

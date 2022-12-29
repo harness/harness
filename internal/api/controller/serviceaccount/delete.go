@@ -13,9 +13,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
- * Delete deletes a sevice account.
- */
+// Delete deletes a sevice account.
 func (c *Controller) Delete(ctx context.Context, session *auth.Session,
 	saUID string) error {
 	sa, err := findServiceAccountFromUID(ctx, c.saStore, saUID)

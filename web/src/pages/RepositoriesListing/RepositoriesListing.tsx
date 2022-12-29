@@ -19,7 +19,7 @@ import cx from 'classnames'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
-import { formatDate, getErrorMessage, LIST_FETCHING_PER_PAGE } from 'utils/Utils'
+import { formatDate, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
 import type { TypesRepository } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
@@ -47,7 +47,7 @@ export default function RepositoriesListing() {
     response
   } = useGet<TypesRepository[]>({
     path: `/api/v1/spaces/${space}/+/repos`,
-    queryParams: { page: pageIndex + 1, per_page: LIST_FETCHING_PER_PAGE, query: searchTerm }
+    queryParams: { page: pageIndex + 1, limit: LIST_FETCHING_LIMIT, query: searchTerm }
   })
   const { totalItems, totalPages, pageSize } = useGetPaginationInfo(response)
 
@@ -90,7 +90,7 @@ export default function RepositoriesListing() {
               <Text color={Color.BLACK} lineClamp={1} rightIconProps={{ size: 10 }} width={120}>
                 {formatDate(row.original.updated as number)}
               </Text>
-              {row.original.isPublic === false ? <Icon name="lock" size={10} /> : undefined}
+              {row.original.is_public === false ? <Icon name="lock" size={10} /> : undefined}
             </Layout.Horizontal>
           )
         },

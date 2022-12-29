@@ -51,7 +51,7 @@ type PullReqFilter struct {
 	TargetBranch  string              `json:"target_branch"`
 	States        []enum.PullReqState `json:"state"`
 	Sort          enum.PullReqSort    `json:"sort"`
-	Order         enum.Order          `json:"direction"`
+	Order         enum.Order          `json:"order"`
 }
 
 // PullReqActivity represents a pull request activity.
@@ -98,9 +98,9 @@ func (a *PullReqActivity) IsReply() bool {
 
 // PullReqActivityFilter stores pull request activity query parameters.
 type PullReqActivityFilter struct {
-	Since int64 `json:"since"`
-	Until int64 `json:"until"`
-	Limit int   `json:"limit"`
+	After  int64 `json:"after"`
+	Before int64 `json:"before"`
+	Limit  int   `json:"limit"`
 
 	Types []enum.PullReqActivityType `json:"type"`
 	Kinds []enum.PullReqActivityKind `json:"kind"`

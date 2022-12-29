@@ -6,7 +6,7 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useAppContext } from 'AppContext'
 import { usePageIndex } from 'hooks/usePageIndex'
 import type { RepoCommit } from 'services/code'
-import { getErrorMessage, LIST_FETCHING_PER_PAGE } from 'utils/Utils'
+import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
@@ -28,9 +28,9 @@ export default function RepositoryCommits() {
   } = useGet<RepoCommit[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
-      per_page: LIST_FETCHING_PER_PAGE,
+      limit: LIST_FETCHING_LIMIT,
       page: pageIndex + 1,
-      git_ref: commitRef || repoMetadata?.defaultBranch
+      git_ref: commitRef || repoMetadata?.default_branch
     },
     lazy: !repoMetadata
   })
@@ -56,7 +56,7 @@ export default function RepositoryCommits() {
                   repoMetadata={repoMetadata}
                   disableBranchCreation
                   disableViewAllBranches
-                  gitRef={commitRef || (repoMetadata.defaultBranch as string)}
+                  gitRef={commitRef || (repoMetadata.default_branch as string)}
                   onSelect={ref => {
                     setPageIndex(0)
                     history.push(

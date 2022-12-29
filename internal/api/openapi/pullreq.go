@@ -239,7 +239,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&createPullReq, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&createPullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&createPullReq, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repoRef}/pullreq", createPullReq)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/pullreq", createPullReq)
 
 	listPullReq := openapi3.Operation{}
 	listPullReq.WithTags("pullreq")
@@ -248,15 +248,15 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 		queryParameterStatePullRequest, queryParameterSourceRepoRefPullRequest,
 		queryParameterSourceBranchPullRequest, queryParameterTargetBranchPullRequest,
 		queryParameterQueryPullRequest, queryParameterCreatedByPullRequest,
-		queryParameterDirection, queryParameterSortPullRequest,
-		queryParameterPage, queryParameterPerPage)
+		queryParameterOrder, queryParameterSortPullRequest,
+		queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&listPullReq, new(listPullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReq, new([]types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&listPullReq, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/pullreq", listPullReq)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq", listPullReq)
 
 	getPullReq := openapi3.Operation{}
 	getPullReq.WithTags("pullreq")
@@ -267,25 +267,25 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&getPullReq, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repoRef}/pullreq/{pullreq_number}", getPullReq)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq/{pullreq_number}", getPullReq)
 
 	putPullReq := openapi3.Operation{}
 	putPullReq.WithTags("pullreq")
 	putPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "updatePullReq"})
-	_ = reflector.SetRequest(&putPullReq, new(updatePullReqRequest), http.MethodPut)
+	_ = reflector.SetRequest(&putPullReq, new(updatePullReqRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&putPullReq, new(types.PullReq), http.StatusOK)
 	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodPut, "/repos/{repoRef}/pullreq/{pullreq_number}", putPullReq)
+	_ = reflector.Spec.AddOperation(http.MethodPatch, "/repos/{repo_ref}/pullreq/{pullreq_number}", putPullReq)
 
 	listPullReqActivities := openapi3.Operation{}
 	listPullReqActivities.WithTags("pullreq")
 	listPullReqActivities.WithMapOfAnything(map[string]interface{}{"operationId": "listPullReqActivities"})
 	listPullReqActivities.WithParameters(
 		queryParameterKindPullRequestActivity, queryParameterTypePullRequestActivity,
-		queryParameterSince, queryParameterUntil, queryParameterLimit)
+		queryParameterAfter, queryParameterBefore, queryParameterLimit)
 	_ = reflector.SetRequest(&listPullReqActivities, new(listPullReqActivitiesRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReqActivities, new([]types.PullReqActivity), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReqActivities, new(usererror.Error), http.StatusBadRequest)
@@ -293,7 +293,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&listPullReqActivities, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&listPullReqActivities, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
-		"/repos/{repoRef}/pullreq/{pullreq_number}/activities", listPullReqActivities)
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/activities", listPullReqActivities)
 
 	commentCreatePullReq := openapi3.Operation{}
 	commentCreatePullReq.WithTags("pullreq")
@@ -305,19 +305,19 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&commentCreatePullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&commentCreatePullReq, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost,
-		"/repos/{repoRef}/pullreq/{pullreq_number}/comments", commentCreatePullReq)
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments", commentCreatePullReq)
 
 	commentUpdatePullReq := openapi3.Operation{}
 	commentUpdatePullReq.WithTags("pullreq")
 	commentUpdatePullReq.WithMapOfAnything(map[string]interface{}{"operationId": "commentUpdatePullReq"})
-	_ = reflector.SetRequest(&commentUpdatePullReq, new(commentUpdatePullReqRequest), http.MethodPut)
+	_ = reflector.SetRequest(&commentUpdatePullReq, new(commentUpdatePullReqRequest), http.MethodPatch)
 	_ = reflector.SetJSONResponse(&commentUpdatePullReq, new(types.PullReqActivity), http.StatusOK)
 	_ = reflector.SetJSONResponse(&commentUpdatePullReq, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&commentUpdatePullReq, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&commentUpdatePullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&commentUpdatePullReq, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodPut,
-		"/repos/{repoRef}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}", commentUpdatePullReq)
+	_ = reflector.Spec.AddOperation(http.MethodPatch,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}", commentUpdatePullReq)
 
 	commentDeletePullReq := openapi3.Operation{}
 	commentDeletePullReq.WithTags("pullreq")
@@ -329,5 +329,5 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&commentDeletePullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&commentDeletePullReq, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
-		"/repos/{repoRef}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}", commentDeletePullReq)
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}", commentDeletePullReq)
 }

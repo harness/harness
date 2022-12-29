@@ -95,10 +95,10 @@ const (
 		,pullreq_activity_resolved_by
 		,pullreq_activity_resolved
 		,author.principal_uid as "author_uid"
-		,author.principal_displayName as "author_name"
+		,author.principal_display_name as "author_name"
 		,author.principal_email as "author_email"
 		,resolver.principal_uid as "resolver_uid"
-		,resolver.principal_displayName as "resolver_name"
+		,resolver.principal_display_name as "resolver_name"
 		,resolver.principal_email as "resolver_email"`
 
 	pullreqActivitySelectBase = `
@@ -117,7 +117,7 @@ func (s *PullReqActivityStore) Find(ctx context.Context, id int64) (*types.PullR
 
 	dst := &pullReqActivity{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, processSQLErrorf(err, "Failed to find pull request activity")
 	}
 
 	return mapPullReqActivity(dst), nil
@@ -274,12 +274,12 @@ func (s *PullReqActivityStore) Count(ctx context.Context, prID int64,
 		stmt = stmt.Where(squirrel.Eq{"pullreq_activity_kind": opts.Kinds})
 	}
 
-	if opts.Since != 0 {
-		stmt = stmt.Where("pullreq_created >= ?", opts.Since)
+	if opts.After != 0 {
+		stmt = stmt.Where("pullreq_created >= ?", opts.After)
 	}
 
-	if opts.Until != 0 {
-		stmt = stmt.Where("pullreq_created < ?", opts.Until)
+	if opts.Before != 0 {
+		stmt = stmt.Where("pullreq_created < ?", opts.Before)
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -320,12 +320,12 @@ func (s *PullReqActivityStore) List(ctx context.Context, prID int64,
 		stmt = stmt.Where(squirrel.Eq{"pullreq_activity_kind": opts.Kinds})
 	}
 
-	if opts.Since != 0 {
-		stmt = stmt.Where("pullreq_created >= ?", opts.Since)
+	if opts.After != 0 {
+		stmt = stmt.Where("pullreq_created >= ?", opts.After)
 	}
 
-	if opts.Until != 0 {
-		stmt = stmt.Where("pullreq_created < ?", opts.Until)
+	if opts.Before != 0 {
+		stmt = stmt.Where("pullreq_created < ?", opts.Before)
 	}
 
 	if opts.Limit > 0 {

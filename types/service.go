@@ -9,14 +9,14 @@ type (
 	// Service is a principal representing a different internal service that runs alongside gitness.
 	Service struct {
 		// Fields from Principal
-		ID          int64  `db:"principal_id"          json:"-"`
-		UID         string `db:"principal_uid"         json:"uid"`
-		Email       string `db:"principal_email"       json:"email"`
-		DisplayName string `db:"principal_displayName" json:"displayName"`
-		Admin       bool   `db:"principal_admin"       json:"admin"`
-		Blocked     bool   `db:"principal_blocked"     json:"blocked"`
-		Salt        string `db:"principal_salt"        json:"-"`
-		Created     int64  `db:"principal_created"     json:"created"`
-		Updated     int64  `db:"principal_updated"     json:"updated"`
+		ID          int64  `db:"principal_id"           json:"-"`
+		UID         string `db:"principal_uid"          json:"uid"`
+		Email       string `db:"principal_email"        json:"email"`
+		DisplayName string `db:"principal_display_name" json:"display_name"`
+		Admin       bool   `db:"principal_admin"        json:"admin"`
+		Blocked     bool   `db:"principal_blocked"      json:"blocked"`
+		Salt        string `db:"principal_salt"         json:"-"`
+		Created     int64  `db:"principal_created"      json:"created"`
+		Updated     int64  `db:"principal_updated"      json:"updated"`
 	}
 )

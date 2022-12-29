@@ -19,12 +19,10 @@ import (
 // UpdateInput store infos to update an existing service.
 type UpdateInput struct {
 	Email       *string `json:"email"`
-	DisplayName *string `json:"displayName"`
+	DisplayName *string `json:"display_name"`
 }
 
-/*
- * Update updates the provided service.
- */
+// Update updates the provided service.
 func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	serviceUID string, in *UpdateInput) (*types.Service, error) {
 	svc, err := findServiceFromUID(ctx, c.serviceStore, serviceUID)

@@ -20,9 +20,7 @@ type CreatePathInput struct {
 	Path string `json:"path"`
 }
 
-/*
-* Creates a new path for a repo.
- */
+// CreatePath creates a new path for a repo.
 func (c *Controller) CreatePath(ctx context.Context, session *auth.Session,
 	repoRef string, in *CreatePathInput) (*types.Path, error) {
 	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)

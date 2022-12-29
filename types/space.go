@@ -23,12 +23,12 @@ https://www.slideshare.net/billkarwin/models-for-hierarchical-data
 type Space struct {
 	// TODO: int64 ID doesn't match DB
 	ID          int64  `db:"space_id"              json:"id"`
-	ParentID    int64  `db:"space_parentId"        json:"parentId"`
+	ParentID    int64  `db:"space_parent_id"       json:"parent_id"`
 	Path        string `db:"space_path"            json:"path"`
 	UID         string `db:"space_uid"             json:"uid"`
 	Description string `db:"space_description"     json:"description"`
-	IsPublic    bool   `db:"space_isPublic"        json:"isPublic"`
-	CreatedBy   int64  `db:"space_createdBy"       json:"createdBy"`
+	IsPublic    bool   `db:"space_is_public"       json:"is_public"`
+	CreatedBy   int64  `db:"space_created_by"      json:"created_by"`
 	Created     int64  `db:"space_created"         json:"created"`
 	Updated     int64  `db:"space_updated"         json:"updated"`
 }
@@ -39,5 +39,5 @@ type SpaceFilter struct {
 	Size  int            `json:"size"`
 	Query string         `json:"query"`
 	Sort  enum.SpaceAttr `json:"sort"`
-	Order enum.Order     `json:"direction"`
+	Order enum.Order     `json:"order"`
 }

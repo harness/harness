@@ -20,12 +20,10 @@ import (
 type CreateInput struct {
 	UID         string `json:"uid"`
 	Email       string `json:"email"`
-	DisplayName string `json:"displayName"`
+	DisplayName string `json:"display_name"`
 }
 
-/*
- * Create creates a new service.
- */
+// Create creates a new service.
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Service, error) {
 	// Ensure principal has required permissions (service is global, no explicit resource)
 	scope := &types.Scope{}

@@ -24,7 +24,7 @@ import (
 // It is required to allow storing transformed paths used for uniquness constraints and searching.
 type path struct {
 	types.Path
-	ValueUnique string `db:"path_valueUnique"`
+	ValueUnique string `db:"path_value_unique"`
 }
 
 // CreateAliasPath a new alias path (Don't call this for new path creation!)
@@ -126,7 +126,7 @@ func listPrimaryChildPathsTx(ctx context.Context, tx *sqlx.Tx, prefix string,
 
 	if err = tx.SelectContext(ctx, &childs, pathSelectPrimaryForPrefixUnique,
 		paths.Concatinate(prefixUnique, "%")); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, processSQLErrorf(err, "Failed to list paths")
 	}
 
 	return childs, nil
@@ -276,7 +276,7 @@ func FindPathTx(ctx context.Context, tx *sqlx.Tx, targetType enum.PathTargetType
 	dst := new(path)
 	err := tx.GetContext(ctx, dst, pathSelectPrimaryForTarget, string(targetType), fmt.Sprint(targetID))
 	if err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, processSQLErrorf(err, "Failed to find path")
 	}
 
 	return mapDBPath(dst), nil
@@ -341,7 +341,7 @@ func ListPaths(ctx context.Context, db *sqlx.DB, targetType enum.PathTargetType,
 	stmt := builder.
 		Select("*").
 		From("paths").
-		Where("path_targetType = ? AND path_targetId = ?", string(targetType), fmt.Sprint(targetID))
+		Where("path_target_type = ? AND path_target_id = ?", string(targetType), fmt.Sprint(targetID))
 	stmt = stmt.Limit(uint64(limit(opts.Size)))
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
@@ -413,11 +413,11 @@ const pathBase = `
 SELECT
 path_id
 ,path_value
-,path_valueUnique
-,path_isAlias
-,path_targetType
-,path_targetId
-,path_createdBy
+,path_value_unique
+,path_is_alias
+,path_target_type
+,path_target_id
+,path_created_by
 ,path_created
 ,path_updated
 FROM paths
@@ -425,42 +425,42 @@ FROM paths
 
 // there's only one entry with a given target & targetId for isAlias -- false.
 const pathSelectPrimaryForTarget = pathBase + `
-WHERE path_targetType = $1 AND path_targetId = $2 AND path_isAlias = 0
+WHERE path_target_type = $1 AND path_target_id = $2 AND path_is_alias = false
 `
 
 const pathSelectPrimaryForPrefixUnique = pathBase + `
-WHERE path_valueUnique LIKE $1 AND path_isAlias = 0
+WHERE path_value_unique LIKE $1 AND path_is_alias = false
 `
 
 const pathCount = `
 SELECT count(*)
 FROM paths
-WHERE path_targetType = $1 AND path_targetId = $2
+WHERE path_target_type = $1 AND path_target_id = $2
 `
 
 const pathCountPrimaryForPrefixUnique = `
 SELECT count(*)
 FROM paths
-WHERE path_valueUnique LIKE $1 AND path_isAlias = 0
+WHERE path_value_unique LIKE $1 AND path_is_alias = false
 `
 
 const pathInsert = `
 INSERT INTO paths (
 	path_value
-	,path_valueUnique
-	,path_isAlias
-	,path_targetType
-	,path_targetId
-	,path_createdBy
+	,path_value_unique
+	,path_is_alias
+	,path_target_type
+	,path_target_id
+	,path_created_by
 	,path_created
 	,path_updated
 ) values (
 	:path_value
-	,:path_valueUnique
-	,:path_isAlias
-	,:path_targetType
-	,:path_targetId
-	,:path_createdBy
+	,:path_value_unique
+	,:path_is_alias
+	,:path_target_type
+	,:path_target_id
+	,:path_created_by
 	,:path_created
 	,:path_updated
 ) RETURNING path_id
@@ -477,12 +477,12 @@ WHERE path_id = $1
 
 const pathDeleteTarget = `
 DELETE FROM paths
-WHERE path_targetType = $1 AND path_targetId = $2
+WHERE path_target_type = $1 AND path_target_id = $2
 `
 
 const pathMakeAliasID = `
 UPDATE paths
 SET
-path_isAlias		= 1
+path_is_alias		= 1
 WHERE path_id = $1
 `

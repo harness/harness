@@ -91,7 +91,7 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
             }
           ],
           branch: gitRef,
-          newBranch: formData.newBranch,
+          new_branch: formData.newBranch,
           title: formData.title || commitTitlePlaceHolder,
           message: formData.message
         }

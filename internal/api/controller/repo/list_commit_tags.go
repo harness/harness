@@ -18,7 +18,7 @@ import (
 type CommitTag struct {
 	Name        string     `json:"name"`
 	SHA         string     `json:"sha"`
-	IsAnnotated bool       `json:"isAnnotated"`
+	IsAnnotated bool       `json:"is_annotated"`
 	Title       string     `json:"title,omitempty"`
 	Message     string     `json:"message,omitempty"`
 	Tagger      *Signature `json:"tagger,omitempty"`

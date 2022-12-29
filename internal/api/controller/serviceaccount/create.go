@@ -25,14 +25,12 @@ var (
 
 type CreateInput struct {
 	Email       string                  `json:"email"`
-	DisplayName string                  `json:"displayName"`
-	ParentType  enum.ParentResourceType `json:"parentType"`
-	ParentID    int64                   `json:"parentId"`
+	DisplayName string                  `json:"display_name"`
+	ParentType  enum.ParentResourceType `json:"parent_type"`
+	ParentID    int64                   `json:"parent_id"`
 }
 
-/*
- * Create creates a new service account.
- */
+// Create creates a new service account.
 func (c *Controller) Create(ctx context.Context, session *auth.Session,
 	in *CreateInput) (*types.ServiceAccount, error) {
 	// Ensure principal has required permissions on parent (ensures that parent exists)

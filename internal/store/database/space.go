@@ -39,7 +39,7 @@ type SpaceStore struct {
 func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
 	dst := new(types.Space)
 	if err := s.db.GetContext(ctx, dst, spaceSelectByID, id); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, processSQLErrorf(err, "Failed to find space")
 	}
 	return dst, nil
 }
@@ -54,7 +54,7 @@ func (s *SpaceStore) FindByPath(ctx context.Context, path string) (*types.Space,
 
 	dst := new(types.Space)
 	if err = s.db.GetContext(ctx, dst, spaceSelectByPathUnique, pathUnique); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, processSQLErrorf(err, "Failed to find space by path")
 	}
 	return dst, nil
 }
@@ -259,7 +259,7 @@ func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilte
 	stmt := builder.
 		Select("count(*)").
 		From("spaces").
-		Where("space_parentId = ?", id)
+		Where("space_parent_id = ?", id)
 
 	if opts.Query != "" {
 		stmt = stmt.Where("space_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
@@ -285,8 +285,9 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 	stmt := builder.
 		Select("spaces.*,path_value AS space_path").
 		From("spaces").
-		InnerJoin("paths ON spaces.space_id=paths.path_targetId AND paths.path_targetType='space' AND paths.path_isAlias=0").
-		Where("space_parentId = ?", fmt.Sprint(id))
+		InnerJoin(`paths ON spaces.space_id=paths.path_target_id AND paths.path_target_type='space'
+		  AND paths.path_is_alias=false`).
+		Where("space_parent_id = ?", fmt.Sprint(id))
 	stmt = stmt.Limit(uint64(limit(opts.Size)))
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
@@ -299,13 +300,17 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("space_uid COLLATE NOCASE " + opts.Order.String())
+		stmt = stmt.OrderBy("space_uid " + opts.Order.String())
+		//TODO: Postgres does not support COLLATE NOCASE for UTF8
+		// stmt = stmt.OrderBy("space_uid COLLATE NOCASE " + opts.Order.String())
 	case enum.SpaceAttrCreated:
 		stmt = stmt.OrderBy("space_created " + opts.Order.String())
 	case enum.SpaceAttrUpdated:
 		stmt = stmt.OrderBy("space_updated " + opts.Order.String())
 	case enum.SpaceAttrPath:
-		stmt = stmt.OrderBy("space_path COLLATE NOCASE " + opts.Order.String())
+		stmt = stmt.OrderBy("space_path " + opts.Order.String())
+		//TODO: Postgres does not support COLLATE NOCASE for UTF8
+		// stmt = stmt.OrderBy("space_path COLLATE NOCASE " + opts.Order.String())
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -355,12 +360,12 @@ func (s *SpaceStore) DeletePath(ctx context.Context, id int64, pathID int64) err
 const spaceSelectBase = `
 SELECT
  space_id
-,space_parentId
+,space_parent_id
 ,space_uid
 ,paths.path_value AS space_path
 ,space_description
-,space_isPublic
-,space_createdBy
+,space_is_public
+,space_created_by
 ,space_created
 ,space_updated
 `
@@ -368,7 +373,7 @@ SELECT
 const spaceSelectBaseWithJoin = spaceSelectBase + `
 FROM spaces
 INNER JOIN paths
-ON spaces.space_id=paths.path_targetId AND paths.path_targetType='space' AND paths.path_isAlias=0
+ON spaces.space_id=paths.path_target_id AND paths.path_target_type='space' AND paths.path_is_alias=false
 `
 
 const spaceSelectByID = spaceSelectBaseWithJoin + `
@@ -377,9 +382,10 @@ WHERE space_id = $1
 
 const spaceSelectByPathUnique = spaceSelectBase + `
 FROM paths paths1
-INNER JOIN spaces ON spaces.space_id=paths1.path_targetId AND paths1.path_targetType='space'
-  AND paths1.path_valueUnique = $1
-INNER JOIN paths ON spaces.space_id=paths.path_targetId AND paths.path_targetType='space' AND paths.path_isAlias=0
+INNER JOIN spaces ON spaces.space_id=paths1.path_target_id AND paths1.path_target_type='space'
+  AND paths1.path_value_unique = $1
+INNER JOIN paths ON spaces.space_id=paths.path_target_id AND paths.path_target_type='space'
+  AND paths.path_is_alias=false
 `
 
 const spaceDelete = `
@@ -390,19 +396,19 @@ WHERE space_id = $1
 // TODO: do we have to worry about SQL injection for description?
 const spaceInsert = `
 INSERT INTO spaces (
-   space_parentId
+   space_parent_id
    ,space_uid
    ,space_description
-   ,space_isPublic
-   ,space_createdBy
+   ,space_is_public
+   ,space_created_by
    ,space_created
    ,space_updated
 ) values (
-   :space_parentId
+   :space_parent_id
    ,:space_uid
    ,:space_description
-   ,:space_isPublic
-   ,:space_createdBy
+   ,:space_is_public
+   ,:space_created_by
    ,:space_created
    ,:space_updated
 ) RETURNING space_id
@@ -412,7 +418,7 @@ const spaceUpdate = `
 UPDATE spaces
 SET
 space_description = :space_description
-,space_isPublic   = :space_isPublic
+,space_is_public  = :space_is_public
 ,space_updated    = :space_updated
 WHERE space_id    = :space_id
 `
@@ -420,7 +426,7 @@ WHERE space_id    = :space_id
 const spaceUpdateUIDAndParentID = `
 UPDATE spaces
 SET
-space_uid       = $1
-,space_parentId = $2
-WHERE space_id  = $3
+space_uid        = $1
+,space_parent_id = $2
+WHERE space_id   = $3
 `

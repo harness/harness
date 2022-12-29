@@ -17,10 +17,10 @@ type Path struct {
 	// TODO: int64 ID doesn't match DB
 	ID         int64               `db:"path_id"              json:"id"`
 	Value      string              `db:"path_value"           json:"value"`
-	IsAlias    bool                `db:"path_isAlias"         json:"isAlias"`
-	TargetType enum.PathTargetType `db:"path_targetType"      json:"targetType"`
-	TargetID   int64               `db:"path_targetId"        json:"targetId"`
-	CreatedBy  int64               `db:"path_createdBy"       json:"createdBy"`
+	IsAlias    bool                `db:"path_is_alias"        json:"is_alias"`
+	TargetType enum.PathTargetType `db:"path_target_type"     json:"target_type"`
+	TargetID   int64               `db:"path_target_id"       json:"target_id"`
+	CreatedBy  int64               `db:"path_created_by"      json:"created_by"`
 	Created    int64               `db:"path_created"         json:"created"`
 	Updated    int64               `db:"path_updated"         json:"updated"`
 }
@@ -38,5 +38,5 @@ type PathFilter struct {
 	Page  int           `json:"page"`
 	Size  int           `json:"size"`
 	Sort  enum.PathAttr `json:"sort"`
-	Order enum.Order    `json:"direction"`
+	Order enum.Order    `json:"order"`
 }

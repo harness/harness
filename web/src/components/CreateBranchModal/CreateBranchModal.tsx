@@ -61,7 +61,7 @@ export function useCreateBranchModal({
   const [branchName, setBranchName] = useState(suggestedBranchName)
   const ModalComponent: React.FC = () => {
     const { getString } = useStrings()
-    const [sourceBranch, setSourceBranch] = useState(suggestedSourceBranch || (repoMetadata.defaultBranch as string))
+    const [sourceBranch, setSourceBranch] = useState(suggestedSourceBranch || (repoMetadata.default_branch as string))
     const { showError, showSuccess } = useToaster()
     const { mutate: createBranch, loading } = useMutate<RepoBranch>({
       verb: 'POST',

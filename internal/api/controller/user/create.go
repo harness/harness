@@ -24,13 +24,11 @@ import (
 type CreateInput struct {
 	UID         string `json:"uid"`
 	Email       string `json:"email"`
-	DisplayName string `json:"displayName"`
+	DisplayName string `json:"display_name"`
 	Password    string `json:"password"`
 }
 
-/*
- * Create creates a new user.
- */
+// Create creates a new user.
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.User, error) {
 	// Ensure principal has required permissions (user is global, no explicit resource)
 	scope := &types.Scope{}

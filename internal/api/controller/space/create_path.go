@@ -20,9 +20,7 @@ type CreatePathInput struct {
 	Path string `json:"path"`
 }
 
-/*
-* Creates a new path for a space.
- */
+// CreatePath creates a new path for a space.
 func (c *Controller) CreatePath(ctx context.Context, session *auth.Session,
 	spaceRef string, in *CreatePathInput) (*types.Path, error) {
 	space, err := c.spaceStore.FindSpaceFromRef(ctx, spaceRef)

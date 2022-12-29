@@ -13,9 +13,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
- * ListTokens lists all tokens of a service account.
- */
+// ListTokens lists all tokens of a service account.
 func (c *Controller) ListTokens(ctx context.Context, session *auth.Session,
 	saUID string) ([]*types.Token, error) {
 	sa, err := findServiceAccountFromUID(ctx, c.saStore, saUID)

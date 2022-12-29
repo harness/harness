@@ -44,26 +44,9 @@ var queryParameterPage = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterPerPage = openapi3.ParameterOrRef{
+var queryParameterOrder = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamPerPage,
-		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The number of entries returned per page."),
-		Required:    ptr.Bool(false),
-		Schema: &openapi3.SchemaOrRef{
-			Schema: &openapi3.Schema{
-				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
-				Default: ptrptr(request.PerPageDefault),
-				Minimum: ptr.Float64(1.0),
-				Maximum: ptr.Float64(request.PerPageMax),
-			},
-		},
-	},
-}
-
-var queryParameterDirection = openapi3.ParameterOrRef{
-	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamDirection,
+		Name:        request.QueryParamOrder,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("The order of the output."),
 		Required:    ptr.Bool(false),
@@ -89,15 +72,17 @@ var queryParameterLimit = openapi3.ParameterOrRef{
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
-				Minimum: ptr.Float64(1),
+				Default: ptrptr(request.PerPageDefault),
+				Minimum: ptr.Float64(1.0),
+				Maximum: ptr.Float64(request.PerPageMax),
 			},
 		},
 	},
 }
 
-var queryParameterSince = openapi3.ParameterOrRef{
+var queryParameterAfter = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamSince,
+		Name:        request.QueryParamAfter,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("The result should contain only entries created at and after this timestamp (unix millis)."),
 		Required:    ptr.Bool(false),
@@ -110,9 +95,9 @@ var queryParameterSince = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterUntil = openapi3.ParameterOrRef{
+var queryParameterBefore = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamUntil,
+		Name:        request.QueryParamBefore,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("The result should contain only entries created before this timestamp (unix millis)."),
 		Required:    ptr.Bool(false),

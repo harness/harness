@@ -67,7 +67,7 @@ export function PullRequestsContentHeader({
             history.push(
               routes.toCODECompare({
                 repoPath: repoMetadata?.path as string,
-                diffRefs: makeDiffRefs(repoMetadata?.defaultBranch as string, '')
+                diffRefs: makeDiffRefs(repoMetadata?.default_branch as string, '')
               })
             )
           }}

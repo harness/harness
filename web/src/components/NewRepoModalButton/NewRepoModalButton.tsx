@@ -86,7 +86,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
       verb: 'POST',
       path: `/api/v1/repos`,
       queryParams: {
-        spacePath: space
+        space_path: space
       }
     })
     const {
@@ -110,14 +110,14 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
     const handleSubmit = (formData: RepoFormData) => {
       try {
         const payload: OpenapiCreateRepositoryRequest = {
-          defaultBranch: branchName || get(formData, 'defaultBranch', DEFAULT_BRANCH_NAME),
+          default_branch: branchName || get(formData, 'defaultBranch', DEFAULT_BRANCH_NAME),
           description: get(formData, 'description', '').trim(),
-          gitIgnore: get(formData, 'gitignore', 'none'),
-          isPublic: get(formData, 'isPublic') === RepoVisibility.PUBLIC,
+          git_ignore: get(formData, 'gitignore', 'none'),
+          is_public: get(formData, 'isPublic') === RepoVisibility.PUBLIC,
           license: get(formData, 'license', 'none'),
           uid: get(formData, 'name', '').trim(),
           readme: get(formData, 'addReadme', false),
-          parentID: standalone ? (space as unknown as number) : 0 // TODO: Backend needs to fix parentID: accept string or number
+          parent_id: standalone ? (space as unknown as number) : 0 // TODO: Backend needs to fix parentID: accept string or number
         }
         createRepo(payload)
           .then(response => {

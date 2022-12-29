@@ -24,7 +24,7 @@ var _ store.UserStore = (*UserStore)(nil)
 // It is required to allow storing transformed UIDs used for uniquness constraints and searching.
 type user struct {
 	types.User
-	UIDUnique string `db:"principal_uidUnique"`
+	UIDUnique string `db:"principal_uid_unique"`
 }
 
 // NewUserStore returns a new UserStore.
@@ -164,7 +164,7 @@ func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("principal_displayName " + opts.Order.String())
+		stmt = stmt.OrderBy("principal_display_name " + opts.Order.String())
 	case enum.UserAttrCreated:
 		stmt = stmt.OrderBy("principal_created " + opts.Order.String())
 	case enum.UserAttrUpdated:
@@ -235,16 +235,16 @@ func (s *UserStore) mapToDBUser(usr *types.User) (*user, error) {
 const userCount = `
 SELECT count(*)
 FROM principals
-WHERE principal_type = "user"
+WHERE principal_type = 'user'
 `
 
 const userBase = `
 SELECT
 principal_id
 ,principal_uid
-,principal_uidUnique
+,principal_uid_unique
 ,principal_email
-,principal_displayName
+,principal_display_name
 ,principal_admin
 ,principal_blocked
 ,principal_salt
@@ -255,35 +255,35 @@ FROM principals
 `
 
 const userSelect = userBase + `
-WHERE principal_type = "user"
+WHERE principal_type = 'user'
 ORDER BY principal_uid ASC
 LIMIT $1 OFFSET $2
 `
 
 const userSelectID = userBase + `
-WHERE principal_type = "user" AND principal_id = $1
+WHERE principal_type = 'user' AND principal_id = $1
 `
 
 const userSelectUIDUnique = userBase + `
-WHERE principal_type = "user" AND principal_uidUnique = $1
+WHERE principal_type = 'user' AND principal_uid_unique = $1
 `
 
 const userSelectEmail = userBase + `
-WHERE principal_type = "user" AND principal_email = $1
+WHERE principal_type = 'user' AND principal_email = $1
 `
 
 const userDelete = `
 DELETE FROM principals
-WHERE principal_type = "user" AND principal_id = $1
+WHERE principal_type = 'user' AND principal_id = $1
 `
 
 const userInsert = `
 INSERT INTO principals (
 principal_type
 ,principal_uid
-,principal_uidUnique
+,principal_uid_unique
 ,principal_email
-,principal_displayName
+,principal_display_name
 ,principal_admin
 ,principal_blocked
 ,principal_salt
@@ -291,11 +291,11 @@ principal_type
 ,principal_updated
 ,principal_user_password
 ) values (
-"user"
+'user'
 ,:principal_uid
-,:principal_uidUnique
+,:principal_uid_unique
 ,:principal_email
-,:principal_displayName
+,:principal_display_name
 ,:principal_admin
 ,:principal_blocked
 ,:principal_salt
@@ -309,11 +309,11 @@ const userUpdate = `
 UPDATE principals
 SET
 principal_email     	  = :principal_email
-,principal_displayName    = :principal_displayName
+,principal_display_name   = :principal_display_name
 ,principal_admin          = :principal_admin
 ,principal_blocked        = :principal_blocked
 ,principal_salt           = :principal_salt
 ,principal_updated        = :principal_updated
 ,principal_user_password  = :principal_user_password
-WHERE principal_type = "user" AND principal_id = :principal_id
+WHERE principal_type = 'user' AND principal_id = :principal_id
 `

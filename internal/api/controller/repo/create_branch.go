@@ -25,9 +25,7 @@ type CreateBranchInput struct {
 	Target *string `json:"target"`
 }
 
-/*
-* Creates a new branch for a repo.
- */
+// CreateBranch creates a new branch for a repo.
 func (c *Controller) CreateBranch(ctx context.Context, session *auth.Session,
 	repoRef string, in *CreateBranchInput) (*Branch, error) {
 	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)

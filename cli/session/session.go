@@ -19,8 +19,8 @@ var (
 type Session struct {
 	path        string
 	URI         string `json:"uri"`
-	ExpiresAt   int64  `json:"expiresAt"`
-	AccessToken string `json:"accessToken"`
+	ExpiresAt   int64  `json:"expires_at"`
+	AccessToken string `json:"access_token"`
 }
 
 // LoadFromPath loads an existing session from a file.

@@ -20,13 +20,11 @@ import (
 // MoveInput is used for moving a repo.
 type MoveInput struct {
 	UID         *string `json:"uid"`
-	ParentID    *int64  `json:"parentId"`
-	KeepAsAlias bool    `json:"keepAsAlias"`
+	ParentID    *int64  `json:"parent_id"`
+	KeepAsAlias bool    `json:"keep_as_alias"`
 }
 
-/*
-* Move moves a repository to a new space and/or uid.
- */
+// Move moves a repository to a new space and/or uid.
 func (c *Controller) Move(ctx context.Context, session *auth.Session,
 	repoRef string, in *MoveInput) (*types.Repository, error) {
 	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)

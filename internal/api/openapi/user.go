@@ -14,11 +14,6 @@ import (
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
-type currentUserResponse struct {
-	Data   *types.User `json:"data"`
-	Status string      `json:"status" enum:"SUCCESS,FAILURE,ERROR"`
-}
-
 // helper function that constructs the openapi specification
 // for user account resources.
 func buildUser(reflector *openapi3.Reflector) {
@@ -45,12 +40,4 @@ func buildUser(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opToken, new(types.User), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opToken, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/user/token", opToken)
-
-	opCurrent := openapi3.Operation{}
-	opCurrent.WithTags("user")
-	opCurrent.WithMapOfAnything(map[string]interface{}{"operationId": "getCurrentUser"})
-	_ = reflector.SetRequest(&opFind, new(baseRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opCurrent, new(currentUserResponse), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opCurrent, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/api/user/currentUser", opCurrent)
 }

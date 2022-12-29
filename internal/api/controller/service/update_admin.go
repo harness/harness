@@ -14,9 +14,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
- * UpdateAdmin updates the admin state of a service.
- */
+// UpdateAdmin updates the admin state of a service.
 func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
 	serviceUID string, admin bool) (*types.Service, error) {
 	sbc, err := findServiceFromUID(ctx, c.serviceStore, serviceUID)

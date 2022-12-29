@@ -24,7 +24,7 @@ export function RepositoryContent({
         <FolderContent
           resourceContent={resourceContent}
           repoMetadata={repoMetadata}
-          gitRef={gitRef || (repoMetadata.defaultBranch as string)}
+          gitRef={gitRef || (repoMetadata.default_branch as string)}
         />
       )) || (
         <FileContent

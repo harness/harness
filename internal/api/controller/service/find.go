@@ -13,9 +13,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
- * Find tries to find the provided service.
- */
+// Find tries to find the provided service.
 func (c *Controller) Find(ctx context.Context, session *auth.Session,
 	serviceUID string) (*types.Service, error) {
 	svc, err := c.FindNoAuth(ctx, serviceUID)

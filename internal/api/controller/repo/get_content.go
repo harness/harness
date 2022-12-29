@@ -36,7 +36,7 @@ type ContentInfo struct {
 	SHA          string      `json:"sha"`
 	Name         string      `json:"name"`
 	Path         string      `json:"path"`
-	LatestCommit *Commit     `json:"latestCommit,omitempty"`
+	LatestCommit *Commit     `json:"latest_commit,omitempty"`
 }
 
 type Commit struct {
@@ -96,7 +96,7 @@ func (c *DirContent) isContent() {}
 
 type SubmoduleContent struct {
 	URL       string `json:"url"`
-	CommitSHA string `json:"commitSha"`
+	CommitSHA string `json:"commit_sha"`
 }
 
 func (c *SubmoduleContent) isContent() {}

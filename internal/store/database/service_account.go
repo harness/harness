@@ -23,7 +23,7 @@ var _ store.ServiceAccountStore = (*ServiceAccountStore)(nil)
 // It is required to allow storing transformed UIDs used for uniquness constraints and searching.
 type serviceAccount struct {
 	types.ServiceAccount
-	UIDUnique string `db:"principal_uidUnique"`
+	UIDUnique string `db:"principal_uid_unique"`
 }
 
 // NewServiceAccountStore returns a new ServiceAccountStore.
@@ -186,70 +186,70 @@ func (s *ServiceAccountStore) mapToDBserviceAccount(sa *types.ServiceAccount) (*
 const serviceAccountCountByParentTypeAndID = `
 SELECT count(*)
 FROM principals
-WHERE principal_type = "serviceaccount" and principal_sa_parentType = $1 and principal_sa_parentId = $2
+WHERE principal_type = 'serviceaccount' and principal_sa_parentType = $1 and principal_sa_parentId = $2
 `
 
 const serviceAccountBase = `
 SELECT
 principal_id
 ,principal_uid
-,principal_uidUnique
+,principal_uid_unique
 ,principal_email
-,principal_displayName
+,principal_display_name
 ,principal_blocked
 ,principal_salt
 ,principal_created
 ,principal_updated
-,principal_sa_parentType
-,principal_sa_parentId
+,principal_sa_parent_type
+,principal_sa_parent_id
 FROM principals
 `
 
 const serviceAccountSelectByParentTypeAndID = serviceAccountBase + `
-WHERE principal_type = "serviceaccount" AND principal_sa_parentType = $1 AND principal_sa_parentId = $2
+WHERE principal_type = 'serviceaccount' AND principal_sa_parent_type = $1 AND principal_sa_parent_id = $2
 ORDER BY principal_uid ASC
 `
 
 const serviceAccountSelectID = serviceAccountBase + `
-WHERE principal_type = "serviceaccount" AND principal_id = $1
+WHERE principal_type = 'serviceaccount' AND principal_id = $1
 `
 
 const serviceAccountSelectUIDUnique = serviceAccountBase + `
-WHERE principal_type = "serviceaccount" AND principal_uidUnique = $1
+WHERE principal_type = 'serviceaccount' AND principal_uid_unique = $1
 `
 
 const serviceAccountDelete = `
 DELETE FROM principals
-WHERE principal_type = "serviceaccount" AND principal_id = $1
+WHERE principal_type = 'serviceaccount' AND principal_id = $1
 `
 
 const serviceAccountInsert = `
 INSERT INTO principals (
 principal_type
 ,principal_uid
-,principal_uidUnique
+,principal_uid_unique
 ,principal_email
-,principal_displayName
+,principal_display_name
 ,principal_admin
 ,principal_blocked
 ,principal_salt
 ,principal_created
 ,principal_updated
-,principal_sa_parentType
-,principal_sa_parentId
+,principal_sa_parent_type
+,principal_sa_parent_id
 ) values (
- "serviceaccount"
+ 'serviceaccount'
 ,:principal_uid
-,:principal_uidUnique
+,:principal_uid_unique
 ,:principal_email
-,:principal_displayName
+,:principal_display_name
 ,false
 ,:principal_blocked
 ,:principal_salt
 ,:principal_created
 ,:principal_updated
-,:principal_sa_parentType
-,:principal_sa_parentId
+,:principal_sa_parent_type
+,:principal_sa_parent_id
 ) RETURNING principal_id
 `
 
@@ -257,9 +257,9 @@ const serviceAccountUpdate = `
 UPDATE principals
 SET
 principal_email     	  = :principal_email
-,principal_displayName    = :principal_displayName
+,principal_display_name   = :principal_display_name
 ,principal_blocked        = :principal_blocked
 ,principal_salt           = :principal_salt
 ,principal_updated        = :principal_updated
-WHERE principal_type = "serviceaccount" AND principal_id = :principal_id
+WHERE principal_type = 'serviceaccount' AND principal_id = :principal_id
 `

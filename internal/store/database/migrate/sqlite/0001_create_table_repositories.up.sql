@@ -1,17 +1,18 @@
-CREATE TABLE IF NOT EXISTS repositories (
+CREATE TABLE repositories (
  repo_id                INTEGER PRIMARY KEY AUTOINCREMENT
-,repo_parentId          INTEGER
+,repo_version           INTEGER NOT NULL
+,repo_parent_id         INTEGER
 ,repo_uid               TEXT
 ,repo_description       TEXT
-,repo_isPublic          BOOLEAN
-,repo_createdBy         INTEGER
-,repo_created           BIGINT
-,repo_updated           BIGINT
-,repo_gitUid            TEXT
-,repo_defaultBranch     TEXT
-,repo_forkId            INTEGER
-,repo_numForks          INTEGER
-,repo_numPulls          INTEGER
-,repo_numClosedPulls    INTEGER
-,repo_numOpenPulls      INTEGER
+,repo_is_public         BOOLEAN NOT NULL
+,repo_created_by        INTEGER NOT NULL
+,repo_created           BIGINT NOT NULL
+,repo_updated           BIGINT NOT NULL
+,repo_git_uid           TEXT NOT NULL
+,repo_default_branch    TEXT NOT NULL
+,repo_fork_id           INTEGER
+,repo_num_forks         INTEGER NOT NULL
+,repo_num_pulls         INTEGER NOT NULL
+,repo_num_closed_pulls  INTEGER NOT NULL
+,repo_num_open_pulls    INTEGER NOT NULL
 );

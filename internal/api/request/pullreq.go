@@ -78,11 +78,11 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 
 // ParsePullReqActivityFilter extracts the pull request activity query parameter from the url.
 func ParsePullReqActivityFilter(r *http.Request) (*types.PullReqActivityFilter, error) {
-	since, err := QueryParamAsPositiveInt64(r, QueryParamSince)
+	after, err := QueryParamAsPositiveInt64(r, QueryParamAfter)
 	if err != nil {
 		return nil, err
 	}
-	until, err := QueryParamAsPositiveInt64(r, QueryParamUntil)
+	before, err := QueryParamAsPositiveInt64(r, QueryParamBefore)
 	if err != nil {
 		return nil, err
 	}
@@ -91,11 +91,11 @@ func ParsePullReqActivityFilter(r *http.Request) (*types.PullReqActivityFilter, 
 		return nil, err
 	}
 	return &types.PullReqActivityFilter{
-		Since: since,
-		Until: until,
-		Limit: int(limit),
-		Types: parsePullReqActivityTypes(r),
-		Kinds: parsePullReqActivityKinds(r),
+		After:  after,
+		Before: before,
+		Limit:  int(limit),
+		Types:  parsePullReqActivityTypes(r),
+		Kinds:  parsePullReqActivityKinds(r),
 	}, nil
 }
 

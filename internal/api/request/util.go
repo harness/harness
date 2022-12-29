@@ -19,9 +19,9 @@ import (
 const (
 	PathParamRemainder = "*"
 
-	QueryParamSort      = "sort"
-	QueryParamDirection = "direction"
-	QueryParamQuery     = "query"
+	QueryParamSort  = "sort"
+	QueryParamOrder = "order"
+	QueryParamQuery = "query"
 
 	QueryParamCreatedBy = "created_by"
 
@@ -29,14 +29,13 @@ const (
 	QueryParamKind  = "kind"
 	QueryParamType  = "type"
 
-	QueryParamSince = "since"
-	QueryParamUntil = "until"
+	QueryParamAfter  = "after"
+	QueryParamBefore = "before"
 
-	QueryParamLimit   = "limit"
-	QueryParamPage    = "page"
-	QueryParamPerPage = "per_page"
-	PerPageDefault    = 50
-	PerPageMax        = 100
+	QueryParamPage  = "page"
+	QueryParamLimit = "limit"
+	PerPageDefault  = 30
+	PerPageMax      = 100
 )
 
 // PathParamOrError tries to retrieve the parameter from the request and
@@ -177,9 +176,9 @@ func ParsePage(r *http.Request) int {
 	return i
 }
 
-// ParseSize extracts the size parameter from the url.
+// ParseSize extracts the limit parameter from the url.
 func ParseSize(r *http.Request) int {
-	s := r.FormValue(QueryParamPerPage)
+	s := r.FormValue(QueryParamLimit)
 	i, _ := strconv.Atoi(s)
 	if i <= 0 {
 		i = PerPageDefault
@@ -192,7 +191,7 @@ func ParseSize(r *http.Request) int {
 // ParseOrder extracts the order parameter from the url.
 func ParseOrder(r *http.Request) enum.Order {
 	return enum.ParseOrder(
-		r.FormValue(QueryParamDirection),
+		r.FormValue(QueryParamOrder),
 	)
 }
 

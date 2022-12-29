@@ -27,13 +27,13 @@ type CommitFilesOptions struct {
 	Title     string             `json:"title"`
 	Message   string             `json:"message"`
 	Branch    string             `json:"branch"`
-	NewBranch string             `json:"newBranch"`
+	NewBranch string             `json:"new_branch"`
 	Actions   []CommitFileAction `json:"actions"`
 }
 
 // CommitFilesResponse holds commit id.
 type CommitFilesResponse struct {
-	CommitID string `json:"commitID"`
+	CommitID string `json:"commit_id"`
 }
 
 func (c *Controller) CommitFiles(ctx context.Context, session *auth.Session,
