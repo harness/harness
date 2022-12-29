@@ -6,10 +6,10 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -43,10 +43,13 @@ type ServiceStore struct {
 
 // Find finds the service by id.
 func (s *ServiceStore) Find(ctx context.Context, id int64) (*types.Service, error) {
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	dst := new(service)
-	if err := s.db.GetContext(ctx, dst, serviceSelectID, id); err != nil {
+	if err := db.GetContext(ctx, dst, serviceSelectID, id); err != nil {
 		return nil, processSQLErrorf(err, "Select by id query failed")
 	}
+
 	return s.mapDBService(dst), nil
 }
 
@@ -60,10 +63,13 @@ func (s *ServiceStore) FindUID(ctx context.Context, uid string) (*types.Service,
 		return nil, store.ErrResourceNotFound
 	}
 
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	dst := new(service)
-	if err = s.db.GetContext(ctx, dst, serviceSelectUIDUnique, uidUnique); err != nil {
+	if err = db.GetContext(ctx, dst, serviceSelectUIDUnique, uidUnique); err != nil {
 		return nil, processSQLErrorf(err, "Select by uid query failed")
 	}
+
 	return s.mapDBService(dst), nil
 }
 
@@ -74,12 +80,14 @@ func (s *ServiceStore) Create(ctx context.Context, svc *types.Service) error {
 		return fmt.Errorf("failed to map db service: %w", err)
 	}
 
-	query, arg, err := s.db.BindNamed(serviceInsert, dbSVC)
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(serviceInsert, dbSVC)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind service object")
 	}
 
-	if err = s.db.QueryRowContext(ctx, query, arg...).Scan(&svc.ID); err != nil {
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&svc.ID); err != nil {
 		return processSQLErrorf(err, "Insert query failed")
 	}
 
@@ -93,12 +101,14 @@ func (s *ServiceStore) Update(ctx context.Context, svc *types.Service) error {
 		return fmt.Errorf("failed to map db service: %w", err)
 	}
 
-	query, arg, err := s.db.BindNamed(serviceUpdate, dbSVC)
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(serviceUpdate, dbSVC)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind service object")
 	}
 
-	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
+	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
 		return processSQLErrorf(err, "Update query failed")
 	}
 
@@ -107,38 +117,40 @@ func (s *ServiceStore) Update(ctx context.Context, svc *types.Service) error {
 
 // Delete deletes the service.
 func (s *ServiceStore) Delete(ctx context.Context, id int64) error {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return processSQLErrorf(err, "Failed to start a new transaction")
-	}
-	defer func(tx *sql.Tx) {
-		_ = tx.Rollback()
-	}(tx)
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	// delete the service
-	if _, err = tx.ExecContext(ctx, serviceDelete, id); err != nil {
+	if _, err := db.ExecContext(ctx, serviceDelete, id); err != nil {
 		return processSQLErrorf(err, "The delete query failed")
 	}
-	return tx.Commit()
+
+	return nil
 }
 
 // List returns a list of service for a specific parent.
 func (s *ServiceStore) List(ctx context.Context) ([]*types.Service, error) {
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	dst := []*service{}
 
-	err := s.db.SelectContext(ctx, &dst, serviceSelect)
+	err := db.SelectContext(ctx, &dst, serviceSelect)
 	if err != nil {
 		return nil, processSQLErrorf(err, "Failed executing default list query")
 	}
+
 	return s.mapDBServices(dst), nil
 }
 
 // Count returns a count of service for a specific parent.
 func (s *ServiceStore) Count(ctx context.Context) (int64, error) {
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	var count int64
-	err := s.db.QueryRowContext(ctx, serviceCount).Scan(&count)
+	err := db.QueryRowContext(ctx, serviceCount).Scan(&count)
 	if err != nil {
 		return 0, processSQLErrorf(err, "Failed executing count query")
 	}
+
 	return count, nil
 }
 

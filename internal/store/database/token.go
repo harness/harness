@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -28,30 +29,38 @@ type TokenStore struct {
 
 // Find finds the token by id.
 func (s *TokenStore) Find(ctx context.Context, id int64) (*types.Token, error) {
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	dst := new(types.Token)
-	if err := s.db.GetContext(ctx, dst, TokenSelectByID, id); err != nil {
+	if err := db.GetContext(ctx, dst, TokenSelectByID, id); err != nil {
 		return nil, processSQLErrorf(err, "Select query failed")
 	}
+
 	return dst, nil
 }
 
 // Find finds the token by principalId and tokenUID.
 func (s *TokenStore) FindByUID(ctx context.Context, principalID int64, tokenUID string) (*types.Token, error) {
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	dst := new(types.Token)
-	if err := s.db.GetContext(ctx, dst, TokenSelectByPrincipalIDAndUID, principalID, tokenUID); err != nil {
+	if err := db.GetContext(ctx, dst, TokenSelectByPrincipalIDAndUID, principalID, tokenUID); err != nil {
 		return nil, processSQLErrorf(err, "Select query failed")
 	}
+
 	return dst, nil
 }
 
 // Create saves the token details.
 func (s *TokenStore) Create(ctx context.Context, token *types.Token) error {
-	query, arg, err := s.db.BindNamed(tokenInsert, token)
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(tokenInsert, token)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind token object")
 	}
 
-	if err = s.db.QueryRowContext(ctx, query, arg...).Scan(&token.ID); err != nil {
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&token.ID); err != nil {
 		return processSQLErrorf(err, "Insert query failed")
 	}
 
@@ -60,7 +69,9 @@ func (s *TokenStore) Create(ctx context.Context, token *types.Token) error {
 
 // Delete deletes the token with the given id.
 func (s *TokenStore) Delete(ctx context.Context, id int64) error {
-	if _, err := s.db.ExecContext(ctx, tokenDelete, id); err != nil {
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if _, err := db.ExecContext(ctx, tokenDelete, id); err != nil {
 		return processSQLErrorf(err, "The delete query failed")
 	}
 
@@ -69,7 +80,9 @@ func (s *TokenStore) Delete(ctx context.Context, id int64) error {
 
 // DeleteForPrincipal deletes all tokens for a specific principal.
 func (s *TokenStore) DeleteForPrincipal(ctx context.Context, principalID int64) error {
-	if _, err := s.db.ExecContext(ctx, tokenDeleteForPrincipal, principalID); err != nil {
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if _, err := db.ExecContext(ctx, tokenDeleteForPrincipal, principalID); err != nil {
 		return processSQLErrorf(err, "The delete query failed")
 	}
 
@@ -79,22 +92,27 @@ func (s *TokenStore) DeleteForPrincipal(ctx context.Context, principalID int64) 
 // Count returns a count of tokens of a specifc type for a specific principal.
 func (s *TokenStore) Count(ctx context.Context,
 	principalID int64, tokenType enum.TokenType) (int64, error) {
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	var count int64
-	err := s.db.QueryRowContext(ctx, tokenCountForPrincipalIDOfType, principalID, tokenType).Scan(&count)
+	err := db.QueryRowContext(ctx, tokenCountForPrincipalIDOfType, principalID, tokenType).Scan(&count)
 	if err != nil {
 		return 0, processSQLErrorf(err, "Failed executing count query")
 	}
+
 	return count, nil
 }
 
 // List returns a list of tokens of a specific type for a specific principal.
 func (s *TokenStore) List(ctx context.Context,
 	principalID int64, tokenType enum.TokenType) ([]*types.Token, error) {
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	dst := []*types.Token{}
 
 	// TODO: custom filters / sorting for tokens.
 
-	err := s.db.SelectContext(ctx, &dst, tokenSelectForPrincipalIDOfType, principalID, tokenType)
+	err := db.SelectContext(ctx, &dst, tokenSelectForPrincipalIDOfType, principalID, tokenType)
 	if err != nil {
 		return nil, processSQLErrorf(err, "Failed executing token list query")
 	}

@@ -6,10 +6,10 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -43,8 +43,10 @@ type ServiceAccountStore struct {
 
 // Find finds the service account by id.
 func (s *ServiceAccountStore) Find(ctx context.Context, id int64) (*types.ServiceAccount, error) {
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	dst := new(serviceAccount)
-	if err := s.db.GetContext(ctx, dst, serviceAccountSelectID, id); err != nil {
+	if err := db.GetContext(ctx, dst, serviceAccountSelectID, id); err != nil {
 		return nil, processSQLErrorf(err, "Select by id query failed")
 	}
 	return s.mapDBServiceAccount(dst), nil
@@ -60,10 +62,13 @@ func (s *ServiceAccountStore) FindUID(ctx context.Context, uid string) (*types.S
 		return nil, store.ErrResourceNotFound
 	}
 
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	dst := new(serviceAccount)
-	if err = s.db.GetContext(ctx, dst, serviceAccountSelectUIDUnique, uidUnique); err != nil {
+	if err = db.GetContext(ctx, dst, serviceAccountSelectUIDUnique, uidUnique); err != nil {
 		return nil, processSQLErrorf(err, "Select by uid query failed")
 	}
+
 	return s.mapDBServiceAccount(dst), nil
 }
 
@@ -74,12 +79,14 @@ func (s *ServiceAccountStore) Create(ctx context.Context, sa *types.ServiceAccou
 		return fmt.Errorf("failed to map db service account: %w", err)
 	}
 
-	query, arg, err := s.db.BindNamed(serviceAccountInsert, dbSA)
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(serviceAccountInsert, dbSA)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind service account object")
 	}
 
-	if err = s.db.QueryRowContext(ctx, query, arg...).Scan(&sa.ID); err != nil {
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&sa.ID); err != nil {
 		return processSQLErrorf(err, "Insert query failed")
 	}
 
@@ -93,12 +100,14 @@ func (s *ServiceAccountStore) Update(ctx context.Context, sa *types.ServiceAccou
 		return fmt.Errorf("failed to map db service account: %w", err)
 	}
 
-	query, arg, err := s.db.BindNamed(serviceAccountUpdate, dbSA)
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(serviceAccountUpdate, dbSA)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind service account object")
 	}
 
-	if _, err = s.db.ExecContext(ctx, query, arg...); err != nil {
+	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
 		return processSQLErrorf(err, "Update query failed")
 	}
 
@@ -107,40 +116,40 @@ func (s *ServiceAccountStore) Update(ctx context.Context, sa *types.ServiceAccou
 
 // Delete deletes the service account.
 func (s *ServiceAccountStore) Delete(ctx context.Context, id int64) error {
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return processSQLErrorf(err, "Failed to start a new transaction")
-	}
-	defer func(tx *sql.Tx) {
-		_ = tx.Rollback()
-	}(tx)
-	// delete the service account
-	if _, err = tx.ExecContext(ctx, serviceAccountDelete, id); err != nil {
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if _, err := db.ExecContext(ctx, serviceAccountDelete, id); err != nil {
 		return processSQLErrorf(err, "The delete query failed")
 	}
-	return tx.Commit()
+
+	return nil
 }
 
 // List returns a list of service accounts for a specific parent.
 func (s *ServiceAccountStore) List(ctx context.Context, parentType enum.ParentResourceType,
 	parentID int64) ([]*types.ServiceAccount, error) {
-	dst := []*serviceAccount{}
+	db := dbtx.GetAccessor(ctx, s.db)
 
-	err := s.db.SelectContext(ctx, &dst, serviceAccountSelectByParentTypeAndID, parentType, parentID)
+	dst := []*serviceAccount{}
+	err := db.SelectContext(ctx, &dst, serviceAccountSelectByParentTypeAndID, parentType, parentID)
 	if err != nil {
 		return nil, processSQLErrorf(err, "Failed executing default list query")
 	}
+
 	return s.mapDBServiceAccounts(dst), nil
 }
 
 // Count returns a count of service accounts for a specific parent.
 func (s *ServiceAccountStore) Count(ctx context.Context,
 	parentType enum.ParentResourceType, parentID int64) (int64, error) {
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	var count int64
-	err := s.db.QueryRowContext(ctx, serviceAccountCountByParentTypeAndID, parentType, parentID).Scan(&count)
+	err := db.QueryRowContext(ctx, serviceAccountCountByParentTypeAndID, parentType, parentID).Scan(&count)
 	if err != nil {
 		return 0, processSQLErrorf(err, "Failed executing count query")
 	}
+
 	return count, nil
 }
 

@@ -44,39 +44,18 @@ func ProvideDatabase(ctx context.Context, config *types.Config) (*sqlx.DB, error
 
 // ProvideUserStore provides a user store.
 func ProvideUserStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTransformation) store.UserStore {
-	switch db.DriverName() {
-	case postgres:
-		return NewUserStore(db, uidTransformation)
-	default:
-		return NewUserStoreSync(
-			NewUserStore(db, uidTransformation),
-		)
-	}
+	return NewUserStore(db, uidTransformation)
 }
 
 // ProvideServiceAccountStore provides a service account store.
 func ProvideServiceAccountStore(db *sqlx.DB,
 	uidTransformation store.PrincipalUIDTransformation) store.ServiceAccountStore {
-	switch db.DriverName() {
-	case postgres:
-		return NewServiceAccountStore(db, uidTransformation)
-	default:
-		return NewServiceAccountStoreSync(
-			NewServiceAccountStore(db, uidTransformation),
-		)
-	}
+	return NewServiceAccountStore(db, uidTransformation)
 }
 
 // ProvideServiceStore provides a service store.
 func ProvideServiceStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTransformation) store.ServiceStore {
-	switch db.DriverName() {
-	case postgres:
-		return NewServiceStore(db, uidTransformation)
-	default:
-		return NewServiceStoreSync(
-			NewServiceStore(db, uidTransformation),
-		)
-	}
+	return NewServiceStore(db, uidTransformation)
 }
 
 // ProvideSpaceStore provides a space store.
@@ -105,14 +84,7 @@ func ProvideRepoStore(db *sqlx.DB, pathTransformation store.PathTransformation) 
 
 // ProvideTokenStore provides a token store.
 func ProvideTokenStore(db *sqlx.DB) store.TokenStore {
-	switch db.DriverName() {
-	case postgres:
-		return NewTokenStore(db)
-	default:
-		return NewTokenStoreSync(
-			NewTokenStore(db),
-		)
-	}
+	return NewTokenStore(db)
 }
 
 // ProvidePullReqStore provides a pull request store.

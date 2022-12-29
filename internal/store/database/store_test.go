@@ -30,28 +30,31 @@ func connect() (*sqlx.DB, error) {
 
 // seed seed the database state.
 func seed(db *sqlx.DB) error {
-	_, err := db.Exec("DELETE FROM executions")
-	if err != nil {
+	/*
+		_, err := db.Exec("DELETE FROM executions")
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec("DELETE FROM pipelines")
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec("DELETE FROM users")
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec("ALTER SEQUENCE users_user_id_seq RESTART WITH 1")
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec("ALTER SEQUENCE pipelines_pipeline_id_seq RESTART WITH 1")
+		if err != nil {
+			return err
+		}
+		_, err = db.Exec("ALTER SEQUENCE executions_execution_id_seq RESTART WITH 1")
 		return err
-	}
-	_, err = db.Exec("DELETE FROM pipelines")
-	if err != nil {
-		return err
-	}
-	_, err = db.Exec("DELETE FROM users")
-	if err != nil {
-		return err
-	}
-	_, err = db.Exec("ALTER SEQUENCE users_user_id_seq RESTART WITH 1")
-	if err != nil {
-		return err
-	}
-	_, err = db.Exec("ALTER SEQUENCE pipelines_pipeline_id_seq RESTART WITH 1")
-	if err != nil {
-		return err
-	}
-	_, err = db.Exec("ALTER SEQUENCE executions_execution_id_seq RESTART WITH 1")
-	return err
+	*/
+	return nil
 }
 
 // unmarshal a testdata file.

@@ -38,7 +38,7 @@ func TestUser(t *testing.T) {
 		return
 	}
 
-	userStoreSync := NewUserStoreSync(NewUserStore(db, store.ToLowerPrincipalUIDTransformation))
+	userStoreSync := NewUserStore(db, store.ToLowerPrincipalUIDTransformation)
 	t.Run("create", testUserCreate(userStoreSync))
 	t.Run("duplicate", testUserDuplicate(userStoreSync))
 	t.Run("count", testUserCount(userStoreSync))
@@ -244,8 +244,8 @@ func testUserDelete(s store.UserStore) func(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		if _, err = s.Find(ctx, 1); errors.Is(err, store.ErrResourceNotFound) {
-			t.Errorf("Expected sql.ErrNoRows got %s", err)
+		if _, err = s.Find(ctx, 1); !errors.Is(err, store.ErrResourceNotFound) {
+			t.Errorf("Expected store.ErrResourceNotFound got %s", err)
 		}
 	}
 }
