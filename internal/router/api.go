@@ -104,7 +104,7 @@ func setupRoutesV1(r chi.Router,
 	saCtrl *serviceaccount.Controller, userCtrl *user.Controller) {
 	setupSpaces(r, spaceCtrl)
 	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl)
-	setupUsers(r, userCtrl)
+	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
 	setupAdmin(r, userCtrl)
 	setupAccount(r, userCtrl)
@@ -247,7 +247,7 @@ func SetupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
 	})
 }
 
-func setupUsers(r chi.Router, userCtrl *user.Controller) {
+func setupUser(r chi.Router, userCtrl *user.Controller) {
 	r.Route("/user", func(r chi.Router) {
 		// enforce principial authenticated and it's a user
 		r.Use(principal.RestrictTo(enum.PrincipalTypeUser))

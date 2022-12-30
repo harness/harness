@@ -122,7 +122,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	webhookController := webhook2.ProvideController(config, db, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookServer)
-	apiHandler := router.ProvideAPIHandler(config, authenticator, accountClient, spaceController, repoController, pullreqController, webhookController)
+	apiHandler := router.ProvideAPIHandler(config, authenticator, accountClient, controller, spaceController, repoController, pullreqController, webhookController)
 	gitHandler := router.ProvideGitHandler(config, repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router2.ProvideWebHandler(config)
 	routerRouter := router2.ProvideRouter(apiHandler, gitHandler, webHandler)
