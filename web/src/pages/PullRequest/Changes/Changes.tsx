@@ -1,10 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Container, FlexExpander, ButtonVariation, Layout, Text, StringSubstitute, Button } from '@harness/uicore'
-import { noop } from 'lodash-es'
 import * as Diff2Html from 'diff2html'
 import cx from 'classnames'
-// import { useAppContext } from 'AppContext'
-// import { useStrings } from 'framework/strings'
+import { useGet } from 'restful-react'
 import 'highlight.js/styles/github.css'
 import 'diff2html/bundles/css/diff2html.min.css'
 import { useStrings } from 'framework/strings'
@@ -20,18 +18,30 @@ import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
 import css from './Changes.module.scss'
-import diffExample from 'raw-loader!./example.diff'
 
 const STICKY_TOP_POSITION = 64
 const STICKY_HEADER_HEIGHT = 150
 const diffViewerId = (collection: Unknown[]) => collection.filter(Boolean).join('::::')
 
-export const Changes: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>> = () => {
+export const Changes: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>> = ({
+  repoMetadata,
+  pullRequestMetadata
+}) => {
   const { getString } = useStrings()
   const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SIDE_BY_SIDE)
   const [lineBreaks, setLineBreaks] = useUserPreference(UserPreference.DIFF_LINE_BREAKS, false)
   const [diffs, setDiffs] = useState<DiffFileEntry[]>([])
   const [isSticky, setSticky] = useState(false)
+  const {
+    data: rawDiff,
+    error,
+    loading,
+    refetch
+  } = useGet<string>({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/compare/${pullRequestMetadata.target_branch}...${pullRequestMetadata.source_branch}`,
+    lazy: !pullRequestMetadata
+  })
+
   const diffStats = useMemo(
     () =>
       (diffs || []).reduce(
@@ -46,20 +56,22 @@ export const Changes: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestM
   )
 
   useEffect(() => {
-    setDiffs(
-      Diff2Html.parse(diffExample, DIFF2HTML_CONFIG).map(diff => {
-        const viewerId = diffViewerId([diff.oldName, diff.newName])
-        const containerId = `container-${viewerId}`
-        const contentId = `content-${viewerId}`
+    if (rawDiff) {
+      setDiffs(
+        Diff2Html.parse(rawDiff, DIFF2HTML_CONFIG).map(diff => {
+          const viewerId = diffViewerId([diff.oldName, diff.newName])
+          const containerId = `container-${viewerId}`
+          const contentId = `content-${viewerId}`
 
-        return {
-          ...diff,
-          containerId,
-          contentId
-        }
-      })
-    )
-  }, [])
+          return {
+            ...diff,
+            containerId,
+            contentId
+          }
+        })
+      )
+    }
+  }, [rawDiff])
 
   useEventListener(
     'scroll',
@@ -67,7 +79,7 @@ export const Changes: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestM
   )
 
   return (
-    <PullRequestTabContentWrapper loading={undefined} error={undefined} onRetry={noop} className={css.wrapper}>
+    <PullRequestTabContentWrapper loading={loading} error={error} onRetry={refetch} className={css.wrapper}>
       <Container className={css.header}>
         <Layout.Horizontal>
           <Container flex={{ alignItems: 'center' }}>

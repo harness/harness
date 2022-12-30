@@ -127,6 +127,7 @@ export function useCreatePullRequestModal({
                     dataTooltipId: 'createPullRequestDescription'
                   }}
                   className={css.description}
+                  maxLength={1024 * 50}
                 />
 
                 <Layout.Horizontal

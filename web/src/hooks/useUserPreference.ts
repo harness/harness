@@ -6,7 +6,7 @@ export enum UserPreference {
 }
 
 export function useUserPreference<T = string>(key: UserPreference, defaultValue: T): [T, (val: T) => void] {
-  const prefKey = `CODE_MODULE_USER_PREFERENCE_${key}`
+  const prefKey = `CODE_MOD_USER_PREF__${key}`
   const convert = useCallback(
     val => {
       if (val === undefined || val === null) {
@@ -26,7 +26,7 @@ export function useUserPreference<T = string>(key: UserPreference, defaultValue:
           return JSON.parse(val)
         } catch (exception) {
           // eslint-disable-next-line no-console
-          console.error('Failed to parse object', val)
+          console.error('useUserPreference: Failed to parse object', val)
         }
       }
       return val
@@ -40,7 +40,7 @@ export function useUserPreference<T = string>(key: UserPreference, defaultValue:
         localStorage[prefKey] = JSON.stringify(val)
       } catch (exception) {
         // eslint-disable-next-line no-console
-        console.error('Failed to stringify object', val)
+        console.error('useUserPreference: Failed to stringify object', val)
       }
       setPreference(val)
     },

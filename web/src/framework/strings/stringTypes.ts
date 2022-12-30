@@ -124,6 +124,7 @@ export interface StringsMap {
   payloadUrl: string
   payloadUrlLabel: string
   'pr.ableToMerge': string
+  'pr.branchHasNoConflicts': string
   'pr.buttonText': string
   'pr.cantMerge': string
   'pr.descriptionPlaceHolder': string
@@ -133,9 +134,11 @@ export interface StringsMap {
   'pr.failedToCreate': string
   'pr.fileDeleted': string
   'pr.fileUnchanged': string
+  'pr.mergePR': string
   'pr.metaLine': string
   'pr.modalTitle': string
   'pr.openBy': string
+  'pr.prCanBeMerged': string
   'pr.reviewChanges': string
   'pr.showDiff': string
   'pr.showLink': string

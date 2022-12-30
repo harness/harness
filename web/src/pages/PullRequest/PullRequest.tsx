@@ -10,7 +10,7 @@ import { getErrorMessage } from 'utils/Utils'
 import { CodeIcon } from 'utils/GitUtils'
 import type { TypesPullReq } from 'services/code'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
-import { PullRequestConversation } from './PullRequestConversation/PullRequestConversation'
+import { Conversation } from './Conversation/Conversation'
 import { Changes } from './Changes/Changes'
 import { PullRequestCommits } from './PullRequestCommits/PullRequestCommits'
 import css from './PullRequest.module.scss'
@@ -87,7 +87,7 @@ export default function PullRequest() {
                     {
                       id: PullRequestSection.CONVERSATION,
                       title: <TabTitle icon={CodeIcon.Chat} title={getString('conversation')} count={100} />,
-                      panel: <PullRequestConversation repoMetadata={repoMetadata} pullRequestMetadata={prData} />
+                      panel: <Conversation repoMetadata={repoMetadata} pullRequestMetadata={prData} />
                     },
                     {
                       id: PullRequestSection.COMMITS,

@@ -1,5 +1,6 @@
 import type React from 'react'
 import type { CODERoutes } from 'RouteDefinitions'
+import type { TypesUser } from 'services/code'
 import type { LangLocale } from './framework/strings/languageLoader'
 
 /**
@@ -42,4 +43,6 @@ export interface AppProps {
   hooks: Partial<{
     useGetToken: Unknown
   }>
+
+  currentUser: Required<TypesUser>
 }

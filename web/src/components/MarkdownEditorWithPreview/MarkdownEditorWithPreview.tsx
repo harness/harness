@@ -12,27 +12,25 @@ import type { IToolBarProps } from '@uiw/react-markdown-editor/cjs/components/To
 import css from './MarkdownEditorWithPreview.module.scss'
 
 interface MarkdownEditorWithPreviewProps {
-  placeHolder: string
   value: string
-  editTabText: string
-  previewTabText: string
-  cancelButtonText: string
-  saveButtonText: string
   onChange?: (value: string, original: string) => void
   onSave: (value: string, original: string) => void
   onCancel: () => void
+  i18n: {
+    placeHolder: string
+    tabEdit: string
+    tabPreview: string
+    cancel: string
+    save: string
+  }
 }
 
 export function MarkdownEditorWithPreview({
-  placeHolder,
   value,
-  editTabText,
-  previewTabText,
-  saveButtonText,
-  cancelButtonText,
   onChange = noop,
   onSave,
-  onCancel
+  onCancel,
+  i18n
 }: MarkdownEditorWithPreviewProps) {
   const [original] = useState(value)
   const [selectedTab, setSelectedTab] = useState<MarkdownEditorTab>(MarkdownEditorTab.WRITE)
@@ -47,13 +45,13 @@ export function MarkdownEditorWithPreview({
           onChange={tabId => setSelectedTab(tabId as MarkdownEditorTab)}>
           <Tab
             id={MarkdownEditorTab.WRITE}
-            title={editTabText}
+            title={i18n.tabEdit}
             panel={
               <Container className={css.markdownEditor}>
                 <MarkdownEditor
                   value={val}
                   visible={false}
-                  placeholder={placeHolder}
+                  placeholder={i18n.placeHolder}
                   theme="light"
                   indentWithTab={false}
                   autoFocus
@@ -78,7 +76,7 @@ export function MarkdownEditorWithPreview({
           <Tab
             id={MarkdownEditorTab.PREVIEW}
             disabled={!value}
-            title={previewTabText}
+            title={i18n.tabPreview}
             panel={
               <Container padding="large" className={css.preview}>
                 <MarkdownEditor.Markdown source={val} />
@@ -92,9 +90,9 @@ export function MarkdownEditorWithPreview({
               disabled={!(val || '').trim() || val === original}
               variation={ButtonVariation.PRIMARY}
               onClick={() => onSave(val, original)}
-              text={saveButtonText}
+              text={i18n.save}
             />
-            <Button variation={ButtonVariation.TERTIARY} onClick={onCancel} text={cancelButtonText} />
+            <Button variation={ButtonVariation.TERTIARY} onClick={onCancel} text={i18n.cancel} />
           </Layout.Horizontal>
         </Container>
       </Layout.Vertical>

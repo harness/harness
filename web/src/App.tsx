@@ -5,13 +5,13 @@ import { ModalProvider } from '@harness/use-modal'
 import { FocusStyleManager } from '@blueprintjs/core'
 import { tooltipDictionary } from '@harness/ng-tooltip'
 import AppErrorBoundary from 'framework/AppErrorBoundary/AppErrorBoundary'
-import { AppContextProvider } from 'AppContext'
+import { AppContextProvider, defaultCurrentUser } from 'AppContext'
 import type { AppProps } from 'AppProps'
 import { buildResfulReactRequestOptions, handle401 } from 'AppUtils'
 import { RouteDestinations } from 'RouteDestinations'
 import { useAPIToken } from 'hooks/useAPIToken'
 import { routes as _routes } from 'RouteDefinitions'
-import { getConfigNew } from 'services/config'
+import { getConfig } from 'services/config'
 import { languageLoader } from './framework/strings/languageLoader'
 import type { LanguageRecord } from './framework/strings/languageLoader'
 import { StringsContextProvider } from './framework/strings/StringsContextProvider'
@@ -46,22 +46,23 @@ const App: React.FC<AppProps> = React.memo(function App({
   return strings ? (
     <StringsContextProvider initialStrings={strings}>
       <AppErrorBoundary>
-        <AppContextProvider value={{ standalone, space, routes, lang, on401, hooks }}>
-          <RestfulProvider
-            base={standalone ? '/' : getConfigNew('code')}
-            requestOptions={getRequestOptions}
-            queryParams={queryParams}
-            queryParamStringifyOptions={{ skipNulls: true }}
-            onResponse={response => {
-              if (!response.ok && response.status === 401) {
-                on401()
-              }
-            }}>
+        <RestfulProvider
+          base={standalone ? '/' : getConfig('code')}
+          requestOptions={getRequestOptions}
+          queryParams={queryParams}
+          queryParamStringifyOptions={{ skipNulls: true }}
+          onResponse={response => {
+            if (!response.ok && response.status === 401) {
+              on401()
+            }
+          }}>
+          <AppContextProvider
+            value={{ standalone, space, routes, lang, on401, hooks, currentUser: defaultCurrentUser }}>
             <TooltipContextProvider initialTooltipDictionary={tooltipDictionary}>
               <ModalProvider>{children ? children : <RouteDestinations />}</ModalProvider>
             </TooltipContextProvider>
-          </RestfulProvider>
-        </AppContextProvider>
+          </AppContextProvider>
+        </RestfulProvider>
       </AppErrorBoundary>
     </StringsContextProvider>
   ) : null

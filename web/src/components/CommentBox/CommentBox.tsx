@@ -5,50 +5,53 @@ import MarkdownEditor from '@uiw/react-markdown-editor'
 import ReactTimeago from 'react-timeago'
 import 'highlight.js/styles/github.css'
 import 'diff2html/bundles/css/diff2html.min.css'
+import { noop } from 'lodash-es'
 import type { UseStringsReturn } from 'framework/strings'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
-import { CodeIcon } from 'utils/GitUtils'
-import type { CommentThreadEntry, UserProfile } from 'utils/types'
 import { MenuDivider, OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import css from './CommentBox.module.scss'
 
+export interface CommentItem<T = unknown> {
+  author: string
+  created: string | number
+  updated: string | number
+  content: string
+  payload?: T // optional payload for callers to handle on callback calls
+}
+
 interface CommentBoxProps {
   getString: UseStringsReturn['getString']
-  onHeightChange: (height: number) => void
+  onHeightChange?: (height: number) => void
   onCancel: () => void
   width?: string
-  commentsThread: CommentThreadEntry[]
-  currentUser: UserProfile
-  executeDeleteComent: (params: { commentEntry: CommentThreadEntry; onSuccess: () => void }) => void
+  commentsThread: CommentItem[]
+  currentUserName: string
+  executeDeleteComent: (params: { commentEntry: CommentItem; onSuccess: () => void }) => void
 }
 
 export const CommentBox: React.FC<CommentBoxProps> = ({
   getString,
-  onHeightChange,
+  onHeightChange = noop,
   onCancel,
   width,
   commentsThread: _commentsThread = [],
-  currentUser,
+  currentUserName,
   executeDeleteComent
 }) => {
   // TODO: \r\n for Windows or based on configuration
   // @see https://www.aleksandrhovhannisyan.com/blog/crlf-vs-lf-normalizing-line-endings-in-git/
   const CRLF = '\n'
-  const [commentsThread, setCommentsThread] = useState<CommentThreadEntry[]>(_commentsThread)
+  const [commentsThread, setCommentsThread] = useState<CommentItem[]>(_commentsThread)
   const [showReplyPlaceHolder, setShowReplyPlaceHolder] = useState(!!commentsThread.length)
   const [markdown, setMarkdown] = useState('')
   const { ref } = useResizeDetector({
     refreshMode: 'debounce',
     handleWidth: false,
     refreshRate: 50,
-    observerOptions: {
-      box: 'border-box'
-    },
-    onResize: () => {
-      onHeightChange(ref.current?.offsetHeight)
-    }
+    observerOptions: { box: 'border-box' },
+    onResize: () => onHeightChange(ref.current?.offsetHeight)
   })
   const _onCancel = useCallback(() => {
     setMarkdown('')
@@ -56,16 +59,11 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
       onCancel()
     } else {
       setShowReplyPlaceHolder(true)
-      // onHeightChange('auto')
     }
   }, [commentsThread, setShowReplyPlaceHolder, onCancel])
-  const hidePlaceHolder = useCallback(() => {
-    setShowReplyPlaceHolder(false)
-    // onHeightChange('auto')
-  }, [setShowReplyPlaceHolder])
+  const hidePlaceHolder = useCallback(() => setShowReplyPlaceHolder(false), [setShowReplyPlaceHolder])
   const onQuote = useCallback((content: string) => {
     setShowReplyPlaceHolder(false)
-    // onHeightChange('auto')
     setMarkdown(
       content
         .split(CRLF)
@@ -82,7 +80,6 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
           <CommentsThread
             commentsThread={commentsThread}
             getString={getString}
-            currentUser={currentUser}
             onQuote={onQuote}
             executeDeleteComent={executeDeleteComent}
           />
@@ -90,26 +87,27 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
           {(showReplyPlaceHolder && (
             <Container>
               <Layout.Horizontal spacing="small" className={css.replyPlaceHolder} padding="medium">
-                <Avatar name={currentUser.name} size="small" hoverCard={false} />
+                <Avatar name={currentUserName} size="small" hoverCard={false} />
                 <TextInput placeholder={getString('replyHere')} onFocus={hidePlaceHolder} onClick={hidePlaceHolder} />
               </Layout.Horizontal>
             </Container>
           )) || (
             <Container padding="xlarge" className={css.newCommentContainer}>
               <MarkdownEditorWithPreview
-                placeHolder={getString(commentsThread.length ? 'replyHere' : 'leaveAComment')}
+                i18n={{
+                  placeHolder: getString(commentsThread.length ? 'replyHere' : 'leaveAComment'),
+                  tabEdit: getString('write'),
+                  tabPreview: getString('preview'),
+                  save: getString('addComment'),
+                  cancel: getString('cancel')
+                }}
                 value={markdown}
-                editTabText={getString('write')}
-                previewTabText={getString('preview')}
-                saveButtonText={getString('addComment')}
-                cancelButtonText={getString('cancel')}
                 onChange={setMarkdown}
                 onSave={value => {
                   setCommentsThread([
                     ...commentsThread,
                     {
-                      id: '0',
-                      author: currentUser.name,
+                      author: currentUserName,
                       created: Date.now().toString(),
                       updated: Date.now().toString(),
                       content: value
@@ -128,14 +126,12 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
   )
 }
 
-interface CommentsThreadProps
-  extends Pick<CommentBoxProps, 'commentsThread' | 'getString' | 'currentUser' | 'executeDeleteComent'> {
+interface CommentsThreadProps extends Pick<CommentBoxProps, 'commentsThread' | 'getString' | 'executeDeleteComent'> {
   onQuote: (content: string) => void
 }
 
 const CommentsThread: React.FC<CommentsThreadProps> = ({
   getString,
-  currentUser,
   onQuote,
   commentsThread = [],
   executeDeleteComent
@@ -144,7 +140,7 @@ const CommentsThread: React.FC<CommentsThreadProps> = ({
 
   return commentsThread.length ? (
     <Container className={css.viewer} padding="xlarge">
-      {commentsThread.map((commentEntry, index) => {
+      {commentsThread.map((commentItem, index) => {
         const isLastItem = index === commentsThread.length - 1
 
         return (
@@ -152,14 +148,14 @@ const CommentsThread: React.FC<CommentsThreadProps> = ({
             key={index}
             title={
               <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
-                <Text inline icon={CodeIcon.Chat}></Text>
-                <Avatar name={commentEntry.author} size="small" hoverCard={false} />
+                <Text inline icon="code-chat"></Text>
+                <Avatar name={commentItem.author} size="small" hoverCard={false} />
                 <Text inline>
-                  <strong>{commentEntry.author}</strong>
+                  <strong>{commentItem.author}</strong>
                 </Text>
                 <PipeSeparator height={8} />
                 <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-                  <ReactTimeago date={new Date(commentEntry.updated)} />
+                  <ReactTimeago date={new Date(commentItem.updated)} />
                 </Text>
                 <FlexExpander />
                 <OptionsMenuButton
@@ -175,7 +171,7 @@ const CommentsThread: React.FC<CommentsThreadProps> = ({
                     {
                       text: getString('quote'),
                       onClick: () => {
-                        onQuote(commentEntry.content)
+                        onQuote(commentItem.content)
                       }
                     },
                     MenuDivider,
@@ -187,7 +183,7 @@ const CommentsThread: React.FC<CommentsThreadProps> = ({
                       ),
                       onClick: () =>
                         executeDeleteComent({
-                          commentEntry,
+                          commentEntry: commentItem,
                           onSuccess: () => {
                             alert('success')
                           }
@@ -204,21 +200,25 @@ const CommentsThread: React.FC<CommentsThreadProps> = ({
               {editIndexes[index] ? (
                 <Container className={css.editCommentContainer}>
                   <MarkdownEditorWithPreview
-                    placeHolder={getString('leaveAComment')}
-                    value={commentEntry.content}
-                    editTabText={getString('write')}
-                    previewTabText={getString('preview')}
-                    saveButtonText={getString('save')}
-                    cancelButtonText={getString('cancel')}
-                    onSave={(value, original) => {}}
+                    value={commentItem.content}
+                    onSave={value => {
+                      alert('Saving modified comment...' + value)
+                    }}
                     onCancel={() => {
                       delete editIndexes[index]
                       setEditIndexes({ ...editIndexes })
                     }}
+                    i18n={{
+                      placeHolder: getString('leaveAComment'),
+                      tabEdit: getString('write'),
+                      tabPreview: getString('preview'),
+                      save: getString('save'),
+                      cancel: getString('cancel')
+                    }}
                   />
                 </Container>
               ) : (
-                <MarkdownEditor.Markdown key={index} source={commentEntry.content} />
+                <MarkdownEditor.Markdown source={commentItem.content} />
               )}
             </Container>
           </ThreadSection>

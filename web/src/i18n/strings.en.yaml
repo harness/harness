@@ -175,6 +175,9 @@ pr:
   split: Split
   unified: Unified
   reviewChanges: Review changes
+  mergePR: Merge pull request
+  branchHasNoConflicts: This branch has no conflicts with the base branch
+  prCanBeMerged: Mergeing can be performed automatically.
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'

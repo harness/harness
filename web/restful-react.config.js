@@ -8,9 +8,9 @@ module.exports = {
   code: {
     output: 'src/services/code/index.tsx',
     file: 'src/services/code/swagger.yaml',
-    customImport: `import { getConfigNew } from "../config";`,
+    customImport: `import { getConfig } from "../config";`,
     customProps: {
-      base: `{getConfigNew("code")}`
+      base: `{getConfig("code")}`
     }
   }
 }

@@ -3,7 +3,7 @@ import { Button, ButtonVariation, Color, Container, FlexExpander, Heading, Layou
 import { useHistory } from 'react-router-dom'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import type { RepoFileContent } from 'services/code'
-import { CodeIcon, findMarkdownInfo, GitCommitAction, GitInfoProps, isRefATag } from 'utils/GitUtils'
+import { CodeIcon, findMarkdownInfo, GitCommitAction, GitInfoProps, isRefATag, makeDiffRefs } from 'utils/GitUtils'
 import { filenameToLanguage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { LatestCommitForFile } from 'components/LatestCommit/LatestCommit'
@@ -72,12 +72,21 @@ export function FileContent({
               commitAction={GitCommitAction.DELETE}
               commitTitlePlaceHolder={getString('deleteFile').replace('__path__', resourcePath)}
               onSuccess={(_commitInfo, newBranch) => {
-                history.push(
-                  routes.toCODERepository({
-                    repoPath: repoMetadata.path as string,
-                    gitRef: newBranch || gitRef
-                  })
-                )
+                if (newBranch) {
+                  history.replace(
+                    routes.toCODECompare({
+                      repoPath: repoMetadata.path as string,
+                      diffRefs: makeDiffRefs(repoMetadata?.default_branch as string, newBranch)
+                    })
+                  )
+                } else {
+                  history.push(
+                    routes.toCODERepository({
+                      repoPath: repoMetadata.path as string,
+                      gitRef
+                    })
+                  )
+                }
               }}
             />
           </Layout.Horizontal>

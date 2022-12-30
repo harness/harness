@@ -2,7 +2,7 @@ import type * as Diff2Html from 'diff2html'
 import HoganJsUtils from 'diff2html/lib/hoganjs-utils'
 import 'highlight.js/styles/github.css'
 import 'diff2html/bundles/css/diff2html.min.css'
-import type { CommentThreadEntry } from 'utils/types'
+import type { CommentItem } from 'components/CommentBox/CommentBox'
 
 export enum ViewStyle {
   SIDE_BY_SIDE = 'side-by-side',
@@ -13,12 +13,12 @@ export const DIFF_VIEWER_HEADER_HEIGHT = 36
 // const DIFF_MAX_CHANGES = 100
 // const DIFF_MAX_LINE_LENGTH = 100
 
-export interface CommentItem {
+export interface DiffCommentItem {
   left: boolean
   right: boolean
   lineNumber: number
   height: number
-  commentsThread: CommentThreadEntry[]
+  commentItems: CommentItem[]
 }
 
 export const DIFF2HTML_CONFIG = {
@@ -108,7 +108,11 @@ export const DIFF2HTML_CONFIG = {
   }
 } as Readonly<Diff2Html.Diff2HtmlConfig>
 
-export function getCommentLineInfo(contentDOM: HTMLDivElement | null, commentEntry: CommentItem, viewStyle: ViewStyle) {
+export function getCommentLineInfo(
+  contentDOM: HTMLDivElement | null,
+  commentEntry: DiffCommentItem,
+  viewStyle: ViewStyle
+) {
   const isSideBySideView = viewStyle === ViewStyle.SIDE_BY_SIDE
   const { left, lineNumber } = commentEntry
   const diffBody = contentDOM?.querySelector(
@@ -142,7 +146,7 @@ export function getCommentLineInfo(contentDOM: HTMLDivElement | null, commentEnt
   }
 }
 
-export function renderCommentOppositePlaceHolder(annotation: CommentItem, oppositeRowElement: HTMLTableRowElement) {
+export function renderCommentOppositePlaceHolder(annotation: DiffCommentItem, oppositeRowElement: HTMLTableRowElement) {
   const placeHolderRow = document.createElement('tr')
 
   placeHolderRow.dataset.placeHolderForLine = String(annotation.lineNumber)

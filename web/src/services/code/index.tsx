@@ -3,7 +3,7 @@
 import React from 'react'
 import { Get, GetProps, useGet, UseGetProps, Mutate, MutateProps, useMutate, UseMutateProps } from 'restful-react'
 
-import { getConfigNew } from '../config'
+import { getConfig } from '../config'
 export const SPEC_VERSION = '1.0.0'
 export type EnumAccessGrant = number
 
@@ -452,7 +452,7 @@ export const OnLogin = (props: OnLoginProps) => (
   <Mutate<TypesTokenResponse, UsererrorError, void, void, void>
     verb="POST"
     path={`/login`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -464,7 +464,7 @@ export type UseOnLoginProps = Omit<
 
 export const useOnLogin = (props: UseOnLoginProps) =>
   useMutate<TypesTokenResponse, UsererrorError, void, void, void>('POST', `/login`, {
-    base: getConfigNew('code'),
+    base: getConfig('code'),
     ...props
   })
 
@@ -474,7 +474,7 @@ export const OnRegister = (props: OnRegisterProps) => (
   <Mutate<TypesTokenResponse, UsererrorError, void, void, void>
     verb="POST"
     path={`/register`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -486,7 +486,7 @@ export type UseOnRegisterProps = Omit<
 
 export const useOnRegister = (props: UseOnRegisterProps) =>
   useMutate<TypesTokenResponse, UsererrorError, void, void, void>('POST', `/register`, {
-    base: getConfigNew('code'),
+    base: getConfig('code'),
     ...props
   })
 
@@ -506,7 +506,7 @@ export const CreateRepository = (props: CreateRepositoryProps) => (
   <Mutate<TypesRepository, UsererrorError, CreateRepositoryQueryParams, OpenapiCreateRepositoryRequest, void>
     verb="POST"
     path={`/repos`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -520,24 +520,19 @@ export const useCreateRepository = (props: UseCreateRepositoryProps) =>
   useMutate<TypesRepository, UsererrorError, CreateRepositoryQueryParams, OpenapiCreateRepositoryRequest, void>(
     'POST',
     `/repos`,
-    { base: getConfigNew('code'), ...props }
+    { base: getConfig('code'), ...props }
   )
 
 export type DeleteRepositoryProps = Omit<MutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
 
 export const DeleteRepository = (props: DeleteRepositoryProps) => (
-  <Mutate<void, UsererrorError, void, string, void>
-    verb="DELETE"
-    path={`/repos`}
-    base={getConfigNew('code')}
-    {...props}
-  />
+  <Mutate<void, UsererrorError, void, string, void> verb="DELETE" path={`/repos`} base={getConfig('code')} {...props} />
 )
 
 export type UseDeleteRepositoryProps = Omit<UseMutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
 
 export const useDeleteRepository = (props: UseDeleteRepositoryProps) =>
-  useMutate<void, UsererrorError, void, string, void>('DELETE', `/repos`, { base: getConfigNew('code'), ...props })
+  useMutate<void, UsererrorError, void, string, void>('DELETE', `/repos`, { base: getConfig('code'), ...props })
 
 export interface FindRepositoryPathParams {
   repo_ref: string
@@ -552,7 +547,7 @@ export type FindRepositoryProps = Omit<
 export const FindRepository = ({ repo_ref, ...props }: FindRepositoryProps) => (
   <Get<TypesRepository, UsererrorError, void, FindRepositoryPathParams>
     path={`/repos/${repo_ref}`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -566,7 +561,7 @@ export type UseFindRepositoryProps = Omit<
 export const useFindRepository = ({ repo_ref, ...props }: UseFindRepositoryProps) =>
   useGet<TypesRepository, UsererrorError, void, FindRepositoryPathParams>(
     (paramsInPath: FindRepositoryPathParams) => `/repos/${paramsInPath.repo_ref}`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface UpdateRepositoryPathParams {
@@ -583,7 +578,7 @@ export const UpdateRepository = ({ repo_ref, ...props }: UpdateRepositoryProps) 
   <Mutate<TypesRepository, UsererrorError, void, OpenapiUpdateRepoRequest, UpdateRepositoryPathParams>
     verb="PATCH"
     path={`/repos/${repo_ref}`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -598,7 +593,7 @@ export const useUpdateRepository = ({ repo_ref, ...props }: UseUpdateRepositoryP
   useMutate<TypesRepository, UsererrorError, void, OpenapiUpdateRepoRequest, UpdateRepositoryPathParams>(
     'PATCH',
     (paramsInPath: UpdateRepositoryPathParams) => `/repos/${paramsInPath.repo_ref}`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface ListBranchesQueryParams {
@@ -641,7 +636,7 @@ export type ListBranchesProps = Omit<
 export const ListBranches = ({ repo_ref, ...props }: ListBranchesProps) => (
   <Get<RepoBranch[], UsererrorError, ListBranchesQueryParams, ListBranchesPathParams>
     path={`/repos/${repo_ref}/branches`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -655,7 +650,7 @@ export type UseListBranchesProps = Omit<
 export const useListBranches = ({ repo_ref, ...props }: UseListBranchesProps) =>
   useGet<RepoBranch[], UsererrorError, ListBranchesQueryParams, ListBranchesPathParams>(
     (paramsInPath: ListBranchesPathParams) => `/repos/${paramsInPath.repo_ref}/branches`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface CreateBranchPathParams {
@@ -672,7 +667,7 @@ export const CreateBranch = ({ repo_ref, ...props }: CreateBranchProps) => (
   <Mutate<RepoBranch, UsererrorError, void, OpenapiCreateBranchRequest, CreateBranchPathParams>
     verb="POST"
     path={`/repos/${repo_ref}/branches`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -687,7 +682,7 @@ export const useCreateBranch = ({ repo_ref, ...props }: UseCreateBranchProps) =>
   useMutate<RepoBranch, UsererrorError, void, OpenapiCreateBranchRequest, CreateBranchPathParams>(
     'POST',
     (paramsInPath: CreateBranchPathParams) => `/repos/${paramsInPath.repo_ref}/branches`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface DeleteBranchPathParams {
@@ -704,7 +699,7 @@ export const DeleteBranch = ({ repo_ref, ...props }: DeleteBranchProps) => (
   <Mutate<void, UsererrorError, void, string, DeleteBranchPathParams>
     verb="DELETE"
     path={`/repos/${repo_ref}/branches`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -719,7 +714,7 @@ export const useDeleteBranch = ({ repo_ref, ...props }: UseDeleteBranchProps) =>
   useMutate<void, UsererrorError, void, string, DeleteBranchPathParams>(
     'DELETE',
     (paramsInPath: DeleteBranchPathParams) => `/repos/${paramsInPath.repo_ref}/branches`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface ListCommitsQueryParams {
@@ -750,7 +745,7 @@ export type ListCommitsProps = Omit<
 export const ListCommits = ({ repo_ref, ...props }: ListCommitsProps) => (
   <Get<RepoCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>
     path={`/repos/${repo_ref}/commits`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -764,7 +759,7 @@ export type UseListCommitsProps = Omit<
 export const useListCommits = ({ repo_ref, ...props }: UseListCommitsProps) =>
   useGet<RepoCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>(
     (paramsInPath: ListCommitsPathParams) => `/repos/${paramsInPath.repo_ref}/commits`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface CommitFilesPathParams {
@@ -781,7 +776,7 @@ export const CommitFiles = ({ repo_ref, ...props }: CommitFilesProps) => (
   <Mutate<RepoCommitFilesResponse, UsererrorError, void, OpenapiCommitFilesRequest, CommitFilesPathParams>
     verb="POST"
     path={`/repos/${repo_ref}/commits`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -796,7 +791,7 @@ export const useCommitFiles = ({ repo_ref, ...props }: UseCommitFilesProps) =>
   useMutate<RepoCommitFilesResponse, UsererrorError, void, OpenapiCommitFilesRequest, CommitFilesPathParams>(
     'POST',
     (paramsInPath: CommitFilesPathParams) => `/repos/${paramsInPath.repo_ref}/commits`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface CalculateCommitDivergencePathParams {
@@ -825,7 +820,7 @@ export const CalculateCommitDivergence = ({ repo_ref, ...props }: CalculateCommi
   >
     verb="POST"
     path={`/repos/${repo_ref}/commits/calculate-divergence`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -853,7 +848,7 @@ export const useCalculateCommitDivergence = ({ repo_ref, ...props }: UseCalculat
     'POST',
     (paramsInPath: CalculateCommitDivergencePathParams) =>
       `/repos/${paramsInPath.repo_ref}/commits/calculate-divergence`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface GetContentQueryParams {
@@ -881,7 +876,7 @@ export type GetContentProps = Omit<
 export const GetContent = ({ repo_ref, path, ...props }: GetContentProps) => (
   <Get<OpenapiGetContentOutput, UsererrorError, GetContentQueryParams, GetContentPathParams>
     path={`/repos/${repo_ref}/content/${path}`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -895,7 +890,7 @@ export type UseGetContentProps = Omit<
 export const useGetContent = ({ repo_ref, path, ...props }: UseGetContentProps) =>
   useGet<OpenapiGetContentOutput, UsererrorError, GetContentQueryParams, GetContentPathParams>(
     (paramsInPath: GetContentPathParams) => `/repos/${paramsInPath.repo_ref}/content/${paramsInPath.path}`,
-    { base: getConfigNew('code'), pathParams: { repo_ref, path }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref, path }, ...props }
   )
 
 export interface MoveRepositoryPathParams {
@@ -912,7 +907,7 @@ export const MoveRepository = ({ repo_ref, ...props }: MoveRepositoryProps) => (
   <Mutate<TypesRepository, UsererrorError, void, OpenapiMoveRepoRequest, MoveRepositoryPathParams>
     verb="POST"
     path={`/repos/${repo_ref}/move`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -927,7 +922,7 @@ export const useMoveRepository = ({ repo_ref, ...props }: UseMoveRepositoryProps
   useMutate<TypesRepository, UsererrorError, void, OpenapiMoveRepoRequest, MoveRepositoryPathParams>(
     'POST',
     (paramsInPath: MoveRepositoryPathParams) => `/repos/${paramsInPath.repo_ref}/move`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface ListRepositoryPathsQueryParams {
@@ -954,7 +949,7 @@ export type ListRepositoryPathsProps = Omit<
 export const ListRepositoryPaths = ({ repo_ref, ...props }: ListRepositoryPathsProps) => (
   <Get<TypesPath[], UsererrorError, ListRepositoryPathsQueryParams, ListRepositoryPathsPathParams>
     path={`/repos/${repo_ref}/paths`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -968,7 +963,7 @@ export type UseListRepositoryPathsProps = Omit<
 export const useListRepositoryPaths = ({ repo_ref, ...props }: UseListRepositoryPathsProps) =>
   useGet<TypesPath[], UsererrorError, ListRepositoryPathsQueryParams, ListRepositoryPathsPathParams>(
     (paramsInPath: ListRepositoryPathsPathParams) => `/repos/${paramsInPath.repo_ref}/paths`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface CreateRepositoryPathPathParams {
@@ -985,7 +980,7 @@ export const CreateRepositoryPath = ({ repo_ref, ...props }: CreateRepositoryPat
   <Mutate<TypesPath, UsererrorError, void, OpenapiCreateRepoPathRequest, CreateRepositoryPathPathParams>
     verb="POST"
     path={`/repos/${repo_ref}/paths`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1000,7 +995,7 @@ export const useCreateRepositoryPath = ({ repo_ref, ...props }: UseCreateReposit
   useMutate<TypesPath, UsererrorError, void, OpenapiCreateRepoPathRequest, CreateRepositoryPathPathParams>(
     'POST',
     (paramsInPath: CreateRepositoryPathPathParams) => `/repos/${paramsInPath.repo_ref}/paths`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface DeleteRepositoryPathPathParams {
@@ -1017,7 +1012,7 @@ export const DeleteRepositoryPath = ({ repo_ref, ...props }: DeleteRepositoryPat
   <Mutate<void, UsererrorError, void, string, DeleteRepositoryPathPathParams>
     verb="DELETE"
     path={`/repos/${repo_ref}/paths`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1032,7 +1027,7 @@ export const useDeleteRepositoryPath = ({ repo_ref, ...props }: UseDeleteReposit
   useMutate<void, UsererrorError, void, string, DeleteRepositoryPathPathParams>(
     'DELETE',
     (paramsInPath: DeleteRepositoryPathPathParams) => `/repos/${paramsInPath.repo_ref}/paths`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface ListPullReqQueryParams {
@@ -1091,7 +1086,7 @@ export type ListPullReqProps = Omit<
 export const ListPullReq = ({ repo_ref, ...props }: ListPullReqProps) => (
   <Get<TypesPullReq[], UsererrorError, ListPullReqQueryParams, ListPullReqPathParams>
     path={`/repos/${repo_ref}/pullreq`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1105,7 +1100,7 @@ export type UseListPullReqProps = Omit<
 export const useListPullReq = ({ repo_ref, ...props }: UseListPullReqProps) =>
   useGet<TypesPullReq[], UsererrorError, ListPullReqQueryParams, ListPullReqPathParams>(
     (paramsInPath: ListPullReqPathParams) => `/repos/${paramsInPath.repo_ref}/pullreq`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface CreatePullReqPathParams {
@@ -1122,7 +1117,7 @@ export const CreatePullReq = ({ repo_ref, ...props }: CreatePullReqProps) => (
   <Mutate<TypesPullReq, UsererrorError, void, OpenapiCreatePullReqRequest, CreatePullReqPathParams>
     verb="POST"
     path={`/repos/${repo_ref}/pullreq`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1137,7 +1132,7 @@ export const useCreatePullReq = ({ repo_ref, ...props }: UseCreatePullReqProps) 
   useMutate<TypesPullReq, UsererrorError, void, OpenapiCreatePullReqRequest, CreatePullReqPathParams>(
     'POST',
     (paramsInPath: CreatePullReqPathParams) => `/repos/${paramsInPath.repo_ref}/pullreq`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface GetPullReqPathParams {
@@ -1151,7 +1146,7 @@ export type GetPullReqProps = Omit<GetProps<TypesPullReq, UsererrorError, void, 
 export const GetPullReq = ({ repo_ref, pullreq_number, ...props }: GetPullReqProps) => (
   <Get<TypesPullReq, UsererrorError, void, GetPullReqPathParams>
     path={`/repos/${repo_ref}/pullreq/${pullreq_number}`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1162,7 +1157,7 @@ export type UseGetPullReqProps = Omit<UseGetProps<TypesPullReq, UsererrorError, 
 export const useGetPullReq = ({ repo_ref, pullreq_number, ...props }: UseGetPullReqProps) =>
   useGet<TypesPullReq, UsererrorError, void, GetPullReqPathParams>(
     (paramsInPath: GetPullReqPathParams) => `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}`,
-    { base: getConfigNew('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
 export interface UpdatePullReqPathParams {
@@ -1180,7 +1175,7 @@ export const UpdatePullReq = ({ repo_ref, pullreq_number, ...props }: UpdatePull
   <Mutate<TypesPullReq, UsererrorError, void, OpenapiUpdatePullReqRequest, UpdatePullReqPathParams>
     verb="PATCH"
     path={`/repos/${repo_ref}/pullreq/${pullreq_number}`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1195,7 +1190,7 @@ export const useUpdatePullReq = ({ repo_ref, pullreq_number, ...props }: UseUpda
   useMutate<TypesPullReq, UsererrorError, void, OpenapiUpdatePullReqRequest, UpdatePullReqPathParams>(
     'PATCH',
     (paramsInPath: UpdatePullReqPathParams) => `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}`,
-    { base: getConfigNew('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
 export interface ListPullReqActivitiesQueryParams {
@@ -1235,7 +1230,7 @@ export type ListPullReqActivitiesProps = Omit<
 export const ListPullReqActivities = ({ repo_ref, pullreq_number, ...props }: ListPullReqActivitiesProps) => (
   <Get<TypesPullReqActivity[], UsererrorError, ListPullReqActivitiesQueryParams, ListPullReqActivitiesPathParams>
     path={`/repos/${repo_ref}/pullreq/${pullreq_number}/activities`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1255,7 +1250,7 @@ export const useListPullReqActivities = ({ repo_ref, pullreq_number, ...props }:
   useGet<TypesPullReqActivity[], UsererrorError, ListPullReqActivitiesQueryParams, ListPullReqActivitiesPathParams>(
     (paramsInPath: ListPullReqActivitiesPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/activities`,
-    { base: getConfigNew('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
 export interface CommentCreatePullReqPathParams {
@@ -1285,7 +1280,7 @@ export const CommentCreatePullReq = ({ repo_ref, pullreq_number, ...props }: Com
   >
     verb="POST"
     path={`/repos/${repo_ref}/pullreq/${pullreq_number}/comments`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1313,7 +1308,7 @@ export const useCommentCreatePullReq = ({ repo_ref, pullreq_number, ...props }: 
     'POST',
     (paramsInPath: CommentCreatePullReqPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/comments`,
-    { base: getConfigNew('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
 export interface CommentDeletePullReqPathParams {
@@ -1331,7 +1326,7 @@ export const CommentDeletePullReq = ({ repo_ref, pullreq_number, ...props }: Com
   <Mutate<void, UsererrorError, void, number, CommentDeletePullReqPathParams>
     verb="DELETE"
     path={`/repos/${repo_ref}/pullreq/${pullreq_number}/comments`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1347,7 +1342,7 @@ export const useCommentDeletePullReq = ({ repo_ref, pullreq_number, ...props }: 
     'DELETE',
     (paramsInPath: CommentDeletePullReqPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/comments`,
-    { base: getConfigNew('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
 export interface CommentUpdatePullReqPathParams {
@@ -1383,7 +1378,7 @@ export const CommentUpdatePullReq = ({
   >
     verb="PATCH"
     path={`/repos/${repo_ref}/pullreq/${pullreq_number}/comments/${pullreq_comment_id}`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1416,7 +1411,7 @@ export const useCommentUpdatePullReq = ({
     'PATCH',
     (paramsInPath: CommentUpdatePullReqPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/comments/${paramsInPath.pullreq_comment_id}`,
-    { base: getConfigNew('code'), pathParams: { repo_ref, pullreq_number, pullreq_comment_id }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number, pullreq_comment_id }, ...props }
   )
 
 export interface ListRepositoryServiceAccountsPathParams {
@@ -1432,7 +1427,7 @@ export type ListRepositoryServiceAccountsProps = Omit<
 export const ListRepositoryServiceAccounts = ({ repo_ref, ...props }: ListRepositoryServiceAccountsProps) => (
   <Get<TypesServiceAccount[], UsererrorError, void, ListRepositoryServiceAccountsPathParams>
     path={`/repos/${repo_ref}/service-accounts`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1446,7 +1441,7 @@ export type UseListRepositoryServiceAccountsProps = Omit<
 export const useListRepositoryServiceAccounts = ({ repo_ref, ...props }: UseListRepositoryServiceAccountsProps) =>
   useGet<TypesServiceAccount[], UsererrorError, void, ListRepositoryServiceAccountsPathParams>(
     (paramsInPath: ListRepositoryServiceAccountsPathParams) => `/repos/${paramsInPath.repo_ref}/service-accounts`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface ListTagsQueryParams {
@@ -1489,7 +1484,7 @@ export type ListTagsProps = Omit<
 export const ListTags = ({ repo_ref, ...props }: ListTagsProps) => (
   <Get<RepoCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>
     path={`/repos/${repo_ref}/tags`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1503,7 +1498,7 @@ export type UseListTagsProps = Omit<
 export const useListTags = ({ repo_ref, ...props }: UseListTagsProps) =>
   useGet<RepoCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>(
     (paramsInPath: ListTagsPathParams) => `/repos/${paramsInPath.repo_ref}/tags`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface ListWebhooksQueryParams {
@@ -1530,7 +1525,7 @@ export type ListWebhooksProps = Omit<
 export const ListWebhooks = ({ repo_ref, ...props }: ListWebhooksProps) => (
   <Get<OpenapiWebhookType[], UsererrorError, ListWebhooksQueryParams, ListWebhooksPathParams>
     path={`/repos/${repo_ref}/webhooks`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1544,7 +1539,7 @@ export type UseListWebhooksProps = Omit<
 export const useListWebhooks = ({ repo_ref, ...props }: UseListWebhooksProps) =>
   useGet<OpenapiWebhookType[], UsererrorError, ListWebhooksQueryParams, ListWebhooksPathParams>(
     (paramsInPath: ListWebhooksPathParams) => `/repos/${paramsInPath.repo_ref}/webhooks`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface CreateWebhookPathParams {
@@ -1561,7 +1556,7 @@ export const CreateWebhook = ({ repo_ref, ...props }: CreateWebhookProps) => (
   <Mutate<OpenapiWebhookType, UsererrorError, void, OpenapiCreateWebhookRequest, CreateWebhookPathParams>
     verb="POST"
     path={`/repos/${repo_ref}/webhooks`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1576,7 +1571,7 @@ export const useCreateWebhook = ({ repo_ref, ...props }: UseCreateWebhookProps) 
   useMutate<OpenapiWebhookType, UsererrorError, void, OpenapiCreateWebhookRequest, CreateWebhookPathParams>(
     'POST',
     (paramsInPath: CreateWebhookPathParams) => `/repos/${paramsInPath.repo_ref}/webhooks`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface DeleteWebhookPathParams {
@@ -1593,7 +1588,7 @@ export const DeleteWebhook = ({ repo_ref, ...props }: DeleteWebhookProps) => (
   <Mutate<void, UsererrorError, void, number, DeleteWebhookPathParams>
     verb="DELETE"
     path={`/repos/${repo_ref}/webhooks`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1608,7 +1603,7 @@ export const useDeleteWebhook = ({ repo_ref, ...props }: UseDeleteWebhookProps) 
   useMutate<void, UsererrorError, void, number, DeleteWebhookPathParams>(
     'DELETE',
     (paramsInPath: DeleteWebhookPathParams) => `/repos/${paramsInPath.repo_ref}/webhooks`,
-    { base: getConfigNew('code'), pathParams: { repo_ref }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
 export interface GetWebhookPathParams {
@@ -1622,7 +1617,7 @@ export type GetWebhookProps = Omit<GetProps<OpenapiWebhookType, UsererrorError, 
 export const GetWebhook = ({ repo_ref, webhook_id, ...props }: GetWebhookProps) => (
   <Get<OpenapiWebhookType, UsererrorError, void, GetWebhookPathParams>
     path={`/repos/${repo_ref}/webhooks/${webhook_id}`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1636,7 +1631,7 @@ export type UseGetWebhookProps = Omit<
 export const useGetWebhook = ({ repo_ref, webhook_id, ...props }: UseGetWebhookProps) =>
   useGet<OpenapiWebhookType, UsererrorError, void, GetWebhookPathParams>(
     (paramsInPath: GetWebhookPathParams) => `/repos/${paramsInPath.repo_ref}/webhooks/${paramsInPath.webhook_id}`,
-    { base: getConfigNew('code'), pathParams: { repo_ref, webhook_id }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref, webhook_id }, ...props }
   )
 
 export interface UpdateWebhookPathParams {
@@ -1654,7 +1649,7 @@ export const UpdateWebhook = ({ repo_ref, webhook_id, ...props }: UpdateWebhookP
   <Mutate<OpenapiWebhookType, UsererrorError, void, OpenapiUpdateWebhookRequest, UpdateWebhookPathParams>
     verb="PATCH"
     path={`/repos/${repo_ref}/webhooks/${webhook_id}`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1669,7 +1664,7 @@ export const useUpdateWebhook = ({ repo_ref, webhook_id, ...props }: UseUpdateWe
   useMutate<OpenapiWebhookType, UsererrorError, void, OpenapiUpdateWebhookRequest, UpdateWebhookPathParams>(
     'PATCH',
     (paramsInPath: UpdateWebhookPathParams) => `/repos/${paramsInPath.repo_ref}/webhooks/${paramsInPath.webhook_id}`,
-    { base: getConfigNew('code'), pathParams: { repo_ref, webhook_id }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref, webhook_id }, ...props }
   )
 
 export interface ListWebhookExecutionsQueryParams {
@@ -1702,7 +1697,7 @@ export type ListWebhookExecutionsProps = Omit<
 export const ListWebhookExecutions = ({ repo_ref, webhook_id, ...props }: ListWebhookExecutionsProps) => (
   <Get<OpenapiWebhookExecutionType[], UsererrorError, ListWebhookExecutionsQueryParams, ListWebhookExecutionsPathParams>
     path={`/repos/${repo_ref}/webhooks/${webhook_id}/executions`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1727,7 +1722,7 @@ export const useListWebhookExecutions = ({ repo_ref, webhook_id, ...props }: Use
   >(
     (paramsInPath: ListWebhookExecutionsPathParams) =>
       `/repos/${paramsInPath.repo_ref}/webhooks/${paramsInPath.webhook_id}/executions`,
-    { base: getConfigNew('code'), pathParams: { repo_ref, webhook_id }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref, webhook_id }, ...props }
   )
 
 export interface GetWebhookExecutionQueryParams {
@@ -1761,7 +1756,7 @@ export const GetWebhookExecution = ({
 }: GetWebhookExecutionProps) => (
   <Get<OpenapiWebhookExecutionType, UsererrorError, GetWebhookExecutionQueryParams, GetWebhookExecutionPathParams>
     path={`/repos/${repo_ref}/webhooks/${webhook_id}/executions/${webhook_execution_id}`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1786,19 +1781,19 @@ export const useGetWebhookExecution = ({
   useGet<OpenapiWebhookExecutionType, UsererrorError, GetWebhookExecutionQueryParams, GetWebhookExecutionPathParams>(
     (paramsInPath: GetWebhookExecutionPathParams) =>
       `/repos/${paramsInPath.repo_ref}/webhooks/${paramsInPath.webhook_id}/executions/${paramsInPath.webhook_execution_id}`,
-    { base: getConfigNew('code'), pathParams: { repo_ref, webhook_id, webhook_execution_id }, ...props }
+    { base: getConfig('code'), pathParams: { repo_ref, webhook_id, webhook_execution_id }, ...props }
   )
 
 export type ListGitignoreProps = Omit<GetProps<string[], UsererrorError, void, void>, 'path'>
 
 export const ListGitignore = (props: ListGitignoreProps) => (
-  <Get<string[], UsererrorError, void, void> path={`/resources/gitignore`} base={getConfigNew('code')} {...props} />
+  <Get<string[], UsererrorError, void, void> path={`/resources/gitignore`} base={getConfig('code')} {...props} />
 )
 
 export type UseListGitignoreProps = Omit<UseGetProps<string[], UsererrorError, void, void>, 'path'>
 
 export const useListGitignore = (props: UseListGitignoreProps) =>
-  useGet<string[], UsererrorError, void, void>(`/resources/gitignore`, { base: getConfigNew('code'), ...props })
+  useGet<string[], UsererrorError, void, void>(`/resources/gitignore`, { base: getConfig('code'), ...props })
 
 export interface ListLicensesResponse {
   label?: string
@@ -1811,7 +1806,7 @@ export type ListLicensesProps = Omit<GetProps<ListLicensesResponse, UsererrorErr
 export const ListLicenses = (props: ListLicensesProps) => (
   <Get<ListLicensesResponse, UsererrorError, void, void>
     path={`/resources/license`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1819,10 +1814,7 @@ export const ListLicenses = (props: ListLicensesProps) => (
 export type UseListLicensesProps = Omit<UseGetProps<ListLicensesResponse, UsererrorError, void, void>, 'path'>
 
 export const useListLicenses = (props: UseListLicensesProps) =>
-  useGet<ListLicensesResponse, UsererrorError, void, void>(`/resources/license`, {
-    base: getConfigNew('code'),
-    ...props
-  })
+  useGet<ListLicensesResponse, UsererrorError, void, void>(`/resources/license`, { base: getConfig('code'), ...props })
 
 export type CreateSpaceProps = Omit<
   MutateProps<TypesSpace, UsererrorError, void, OpenapiCreateSpaceRequest, void>,
@@ -1833,7 +1825,7 @@ export const CreateSpace = (props: CreateSpaceProps) => (
   <Mutate<TypesSpace, UsererrorError, void, OpenapiCreateSpaceRequest, void>
     verb="POST"
     path={`/spaces`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1845,7 +1837,7 @@ export type UseCreateSpaceProps = Omit<
 
 export const useCreateSpace = (props: UseCreateSpaceProps) =>
   useMutate<TypesSpace, UsererrorError, void, OpenapiCreateSpaceRequest, void>('POST', `/spaces`, {
-    base: getConfigNew('code'),
+    base: getConfig('code'),
     ...props
   })
 
@@ -1855,7 +1847,7 @@ export const DeleteSpace = (props: DeleteSpaceProps) => (
   <Mutate<void, UsererrorError, void, string, void>
     verb="DELETE"
     path={`/spaces`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1863,7 +1855,7 @@ export const DeleteSpace = (props: DeleteSpaceProps) => (
 export type UseDeleteSpaceProps = Omit<UseMutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
 
 export const useDeleteSpace = (props: UseDeleteSpaceProps) =>
-  useMutate<void, UsererrorError, void, string, void>('DELETE', `/spaces`, { base: getConfigNew('code'), ...props })
+  useMutate<void, UsererrorError, void, string, void>('DELETE', `/spaces`, { base: getConfig('code'), ...props })
 
 export interface GetSpacePathParams {
   space_ref: string
@@ -1875,7 +1867,7 @@ export type GetSpaceProps = Omit<GetProps<TypesSpace, UsererrorError, void, GetS
 export const GetSpace = ({ space_ref, ...props }: GetSpaceProps) => (
   <Get<TypesSpace, UsererrorError, void, GetSpacePathParams>
     path={`/spaces/${space_ref}`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1886,7 +1878,7 @@ export type UseGetSpaceProps = Omit<UseGetProps<TypesSpace, UsererrorError, void
 export const useGetSpace = ({ space_ref, ...props }: UseGetSpaceProps) =>
   useGet<TypesSpace, UsererrorError, void, GetSpacePathParams>(
     (paramsInPath: GetSpacePathParams) => `/spaces/${paramsInPath.space_ref}`,
-    { base: getConfigNew('code'), pathParams: { space_ref }, ...props }
+    { base: getConfig('code'), pathParams: { space_ref }, ...props }
   )
 
 export interface UpdateSpacePathParams {
@@ -1903,7 +1895,7 @@ export const UpdateSpace = ({ space_ref, ...props }: UpdateSpaceProps) => (
   <Mutate<TypesSpace, UsererrorError, void, OpenapiUpdateSpaceRequest, UpdateSpacePathParams>
     verb="PATCH"
     path={`/spaces/${space_ref}`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1918,7 +1910,7 @@ export const useUpdateSpace = ({ space_ref, ...props }: UseUpdateSpaceProps) =>
   useMutate<TypesSpace, UsererrorError, void, OpenapiUpdateSpaceRequest, UpdateSpacePathParams>(
     'PATCH',
     (paramsInPath: UpdateSpacePathParams) => `/spaces/${paramsInPath.space_ref}`,
-    { base: getConfigNew('code'), pathParams: { space_ref }, ...props }
+    { base: getConfig('code'), pathParams: { space_ref }, ...props }
   )
 
 export interface MoveSpacePathParams {
@@ -1935,7 +1927,7 @@ export const MoveSpace = ({ space_ref, ...props }: MoveSpaceProps) => (
   <Mutate<TypesSpace, UsererrorError, void, OpenapiMoveSpaceRequest, MoveSpacePathParams>
     verb="POST"
     path={`/spaces/${space_ref}/move`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1950,7 +1942,7 @@ export const useMoveSpace = ({ space_ref, ...props }: UseMoveSpaceProps) =>
   useMutate<TypesSpace, UsererrorError, void, OpenapiMoveSpaceRequest, MoveSpacePathParams>(
     'POST',
     (paramsInPath: MoveSpacePathParams) => `/spaces/${paramsInPath.space_ref}/move`,
-    { base: getConfigNew('code'), pathParams: { space_ref }, ...props }
+    { base: getConfig('code'), pathParams: { space_ref }, ...props }
   )
 
 export interface ListPathsQueryParams {
@@ -1977,7 +1969,7 @@ export type ListPathsProps = Omit<
 export const ListPaths = ({ space_ref, ...props }: ListPathsProps) => (
   <Get<TypesPath[], UsererrorError, ListPathsQueryParams, ListPathsPathParams>
     path={`/spaces/${space_ref}/paths`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -1991,7 +1983,7 @@ export type UseListPathsProps = Omit<
 export const useListPaths = ({ space_ref, ...props }: UseListPathsProps) =>
   useGet<TypesPath[], UsererrorError, ListPathsQueryParams, ListPathsPathParams>(
     (paramsInPath: ListPathsPathParams) => `/spaces/${paramsInPath.space_ref}/paths`,
-    { base: getConfigNew('code'), pathParams: { space_ref }, ...props }
+    { base: getConfig('code'), pathParams: { space_ref }, ...props }
   )
 
 export interface CreatePathPathParams {
@@ -2008,7 +2000,7 @@ export const CreatePath = ({ space_ref, ...props }: CreatePathProps) => (
   <Mutate<TypesPath, UsererrorError, void, OpenapiCreatePathRequest, CreatePathPathParams>
     verb="POST"
     path={`/spaces/${space_ref}/paths`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -2023,7 +2015,7 @@ export const useCreatePath = ({ space_ref, ...props }: UseCreatePathProps) =>
   useMutate<TypesPath, UsererrorError, void, OpenapiCreatePathRequest, CreatePathPathParams>(
     'POST',
     (paramsInPath: CreatePathPathParams) => `/spaces/${paramsInPath.space_ref}/paths`,
-    { base: getConfigNew('code'), pathParams: { space_ref }, ...props }
+    { base: getConfig('code'), pathParams: { space_ref }, ...props }
   )
 
 export interface DeletePathPathParams {
@@ -2040,7 +2032,7 @@ export const DeletePath = ({ space_ref, ...props }: DeletePathProps) => (
   <Mutate<void, UsererrorError, void, string, DeletePathPathParams>
     verb="DELETE"
     path={`/spaces/${space_ref}/paths`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -2055,7 +2047,7 @@ export const useDeletePath = ({ space_ref, ...props }: UseDeletePathProps) =>
   useMutate<void, UsererrorError, void, string, DeletePathPathParams>(
     'DELETE',
     (paramsInPath: DeletePathPathParams) => `/spaces/${paramsInPath.space_ref}/paths`,
-    { base: getConfigNew('code'), pathParams: { space_ref }, ...props }
+    { base: getConfig('code'), pathParams: { space_ref }, ...props }
   )
 
 export interface ListReposQueryParams {
@@ -2094,7 +2086,7 @@ export type ListReposProps = Omit<
 export const ListRepos = ({ space_ref, ...props }: ListReposProps) => (
   <Get<TypesRepository[], UsererrorError, ListReposQueryParams, ListReposPathParams>
     path={`/spaces/${space_ref}/repos`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -2108,7 +2100,7 @@ export type UseListReposProps = Omit<
 export const useListRepos = ({ space_ref, ...props }: UseListReposProps) =>
   useGet<TypesRepository[], UsererrorError, ListReposQueryParams, ListReposPathParams>(
     (paramsInPath: ListReposPathParams) => `/spaces/${paramsInPath.space_ref}/repos`,
-    { base: getConfigNew('code'), pathParams: { space_ref }, ...props }
+    { base: getConfig('code'), pathParams: { space_ref }, ...props }
   )
 
 export interface ListServiceAccountsPathParams {
@@ -2124,7 +2116,7 @@ export type ListServiceAccountsProps = Omit<
 export const ListServiceAccounts = ({ space_ref, ...props }: ListServiceAccountsProps) => (
   <Get<TypesServiceAccount[], UsererrorError, void, ListServiceAccountsPathParams>
     path={`/spaces/${space_ref}/service-accounts`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -2138,7 +2130,7 @@ export type UseListServiceAccountsProps = Omit<
 export const useListServiceAccounts = ({ space_ref, ...props }: UseListServiceAccountsProps) =>
   useGet<TypesServiceAccount[], UsererrorError, void, ListServiceAccountsPathParams>(
     (paramsInPath: ListServiceAccountsPathParams) => `/spaces/${paramsInPath.space_ref}/service-accounts`,
-    { base: getConfigNew('code'), pathParams: { space_ref }, ...props }
+    { base: getConfig('code'), pathParams: { space_ref }, ...props }
   )
 
 export interface ListSpacesQueryParams {
@@ -2177,7 +2169,7 @@ export type ListSpacesProps = Omit<
 export const ListSpaces = ({ space_ref, ...props }: ListSpacesProps) => (
   <Get<TypesSpace[], UsererrorError, ListSpacesQueryParams, ListSpacesPathParams>
     path={`/spaces/${space_ref}/spaces`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -2191,19 +2183,19 @@ export type UseListSpacesProps = Omit<
 export const useListSpaces = ({ space_ref, ...props }: UseListSpacesProps) =>
   useGet<TypesSpace[], UsererrorError, ListSpacesQueryParams, ListSpacesPathParams>(
     (paramsInPath: ListSpacesPathParams) => `/spaces/${paramsInPath.space_ref}/spaces`,
-    { base: getConfigNew('code'), pathParams: { space_ref }, ...props }
+    { base: getConfig('code'), pathParams: { space_ref }, ...props }
   )
 
 export type GetUserProps = Omit<GetProps<TypesUser, UsererrorError, void, void>, 'path'>
 
 export const GetUser = (props: GetUserProps) => (
-  <Get<TypesUser, UsererrorError, void, void> path={`/user`} base={getConfigNew('code')} {...props} />
+  <Get<TypesUser, UsererrorError, void, void> path={`/user`} base={getConfig('code')} {...props} />
 )
 
 export type UseGetUserProps = Omit<UseGetProps<TypesUser, UsererrorError, void, void>, 'path'>
 
 export const useGetUser = (props: UseGetUserProps) =>
-  useGet<TypesUser, UsererrorError, void, void>(`/user`, { base: getConfigNew('code'), ...props })
+  useGet<TypesUser, UsererrorError, void, void>(`/user`, { base: getConfig('code'), ...props })
 
 export type UpdateUserProps = Omit<MutateProps<TypesUser, UsererrorError, void, UserUpdateInput, void>, 'path' | 'verb'>
 
@@ -2211,7 +2203,7 @@ export const UpdateUser = (props: UpdateUserProps) => (
   <Mutate<TypesUser, UsererrorError, void, UserUpdateInput, void>
     verb="PATCH"
     path={`/user`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -2223,7 +2215,7 @@ export type UseUpdateUserProps = Omit<
 
 export const useUpdateUser = (props: UseUpdateUserProps) =>
   useMutate<TypesUser, UsererrorError, void, UserUpdateInput, void>('PATCH', `/user`, {
-    base: getConfigNew('code'),
+    base: getConfig('code'),
     ...props
   })
 
@@ -2236,7 +2228,7 @@ export const CreateToken = (props: CreateTokenProps) => (
   <Mutate<TypesUser, UsererrorError, void, TypesTokenResponse, void>
     verb="POST"
     path={`/user/token`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -2248,7 +2240,7 @@ export type UseCreateTokenProps = Omit<
 
 export const useCreateToken = (props: UseCreateTokenProps) =>
   useMutate<TypesUser, UsererrorError, void, TypesTokenResponse, void>('POST', `/user/token`, {
-    base: getConfigNew('code'),
+    base: getConfig('code'),
     ...props
   })
 
@@ -2262,17 +2254,13 @@ export interface ListUsersQueryParams {
 export type ListUsersProps = Omit<GetProps<TypesUser[], UsererrorError, ListUsersQueryParams, void>, 'path'>
 
 export const ListUsers = (props: ListUsersProps) => (
-  <Get<TypesUser[], UsererrorError, ListUsersQueryParams, void>
-    path={`/users`}
-    base={getConfigNew('code')}
-    {...props}
-  />
+  <Get<TypesUser[], UsererrorError, ListUsersQueryParams, void> path={`/users`} base={getConfig('code')} {...props} />
 )
 
 export type UseListUsersProps = Omit<UseGetProps<TypesUser[], UsererrorError, ListUsersQueryParams, void>, 'path'>
 
 export const useListUsers = (props: UseListUsersProps) =>
-  useGet<TypesUser[], UsererrorError, ListUsersQueryParams, void>(`/users`, { base: getConfigNew('code'), ...props })
+  useGet<TypesUser[], UsererrorError, ListUsersQueryParams, void>(`/users`, { base: getConfig('code'), ...props })
 
 export type CreateUserProps = Omit<MutateProps<TypesUser, UsererrorError, void, TypesUserInput, void>, 'path' | 'verb'>
 
@@ -2280,7 +2268,7 @@ export const CreateUser = (props: CreateUserProps) => (
   <Mutate<TypesUser, UsererrorError, void, TypesUserInput, void>
     verb="POST"
     path={`/users`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -2292,25 +2280,20 @@ export type UseCreateUserProps = Omit<
 
 export const useCreateUser = (props: UseCreateUserProps) =>
   useMutate<TypesUser, UsererrorError, void, TypesUserInput, void>('POST', `/users`, {
-    base: getConfigNew('code'),
+    base: getConfig('code'),
     ...props
   })
 
 export type DeleteUserProps = Omit<MutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
 
 export const DeleteUser = (props: DeleteUserProps) => (
-  <Mutate<void, UsererrorError, void, string, void>
-    verb="DELETE"
-    path={`/users`}
-    base={getConfigNew('code')}
-    {...props}
-  />
+  <Mutate<void, UsererrorError, void, string, void> verb="DELETE" path={`/users`} base={getConfig('code')} {...props} />
 )
 
 export type UseDeleteUserProps = Omit<UseMutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
 
 export const useDeleteUser = (props: UseDeleteUserProps) =>
-  useMutate<void, UsererrorError, void, string, void>('DELETE', `/users`, { base: getConfigNew('code'), ...props })
+  useMutate<void, UsererrorError, void, string, void>('DELETE', `/users`, { base: getConfig('code'), ...props })
 
 export interface GetUserEmailPathParams {
   email: string
@@ -2322,7 +2305,7 @@ export type GetUserEmailProps = Omit<GetProps<TypesUser, UsererrorError, void, G
 export const GetUserEmail = ({ email, ...props }: GetUserEmailProps) => (
   <Get<TypesUser, UsererrorError, void, GetUserEmailPathParams>
     path={`/users/${email}`}
-    base={getConfigNew('code')}
+    base={getConfig('code')}
     {...props}
   />
 )
@@ -2333,5 +2316,5 @@ export type UseGetUserEmailProps = Omit<UseGetProps<TypesUser, UsererrorError, v
 export const useGetUserEmail = ({ email, ...props }: UseGetUserEmailProps) =>
   useGet<TypesUser, UsererrorError, void, GetUserEmailPathParams>(
     (paramsInPath: GetUserEmailPathParams) => `/users/${paramsInPath.email}`,
-    { base: getConfigNew('code'), pathParams: { email }, ...props }
+    { base: getConfig('code'), pathParams: { email }, ...props }
   )

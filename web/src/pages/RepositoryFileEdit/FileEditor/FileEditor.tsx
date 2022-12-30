@@ -6,7 +6,7 @@ import cx from 'classnames'
 import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
 import type { RepoFileContent } from 'services/code'
 import { useAppContext } from 'AppContext'
-import { GitCommitAction, GitContentType, GitInfoProps, isDir } from 'utils/GitUtils'
+import { GitCommitAction, GitContentType, GitInfoProps, isDir, makeDiffRefs } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { filenameToLanguage, FILE_SEPERATOR } from 'utils/Utils'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
@@ -183,13 +183,22 @@ function Editor({
               payload={content}
               sha={resourceContent.sha}
               onSuccess={(_data, newBranch) => {
-                history.replace(
-                  routes.toCODERepository({
-                    repoPath: repoMetadata.path as string,
-                    resourcePath: fileResourcePath,
-                    gitRef: newBranch || gitRef
-                  })
-                )
+                if (newBranch) {
+                  history.replace(
+                    routes.toCODECompare({
+                      repoPath: repoMetadata.path as string,
+                      diffRefs: makeDiffRefs(repoMetadata?.default_branch as string, newBranch)
+                    })
+                  )
+                } else {
+                  history.push(
+                    routes.toCODERepository({
+                      repoPath: repoMetadata.path as string,
+                      resourcePath: fileResourcePath,
+                      gitRef
+                    })
+                  )
+                }
                 setOriginalContent(content)
               }}
             />

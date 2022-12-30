@@ -18,14 +18,14 @@ export default function Compare() {
   const { getString } = useStrings()
   const history = useHistory()
   const { routes } = useAppContext()
-  const { repoMetadata, error, loading, refetch, diffRefs } = useGetRepositoryMetadata()
+  const { repoMetadata, error, loading, diffRefs } = useGetRepositoryMetadata()
   const [sourceGitRef, setSourceGitRef] = useState(diffRefs.sourceGitRef)
   const [targetGitRef, setTargetGitRef] = useState(diffRefs.targetGitRef)
   const {
     data: commits,
     error: commitsError,
     loading: commitsLoading,
-    refetch: commitsRefetch
+    refetch
   } = useGet<RepoCommit[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
@@ -41,7 +41,10 @@ export default function Compare() {
         title={getString('comparingChanges')}
         dataTooltipId="comparingChanges"
       />
-      <PageBody loading={loading} error={getErrorMessage(error)} retryOnError={() => refetch()}>
+      <PageBody
+        loading={loading || commitsLoading}
+        error={getErrorMessage(error || commitsError)}
+        retryOnError={() => refetch()}>
         {repoMetadata && (
           <CompareContentHeader
             repoMetadata={repoMetadata}

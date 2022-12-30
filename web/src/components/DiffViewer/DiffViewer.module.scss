@@ -158,6 +158,6 @@
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
 
-    max-width: calc(100vw - 320px);
+    max-width: max(calc(100vw - 320px), 960px);
   }
 }

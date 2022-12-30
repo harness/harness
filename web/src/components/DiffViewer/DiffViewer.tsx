@@ -21,11 +21,11 @@ import { CodeIcon } from 'utils/GitUtils'
 import { useEventListener } from 'hooks/useEventListener'
 import type { DiffFileEntry } from 'utils/types'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
-import { useCurrentUser } from 'hooks/useCurrentUser'
 import { useConfirmAction } from 'hooks/useConfirmAction'
+import { useAppContext } from 'AppContext'
 import {
-  CommentItem,
   DIFF2HTML_CONFIG,
+  DiffCommentItem,
   DIFF_VIEWER_HEADER_HEIGHT,
   getCommentLineInfo,
   renderCommentOppositePlaceHolder,
@@ -57,19 +57,18 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
   const [diffRenderer, setDiffRenderer] = useState<Diff2HtmlUI>()
   const { ref: inViewRef, inView } = useInView({ rootMargin: '100px 0px' })
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const currentUser = useCurrentUser()
+  const { currentUser } = useAppContext()
   const executeDeleteComentConfirmation = useConfirmAction({
     title: getString('delete'),
     intent: Intent.DANGER,
     message: <Text>{getString('deleteCommentConfirm')}</Text>,
     action: async ({ commentEntry, onSuccess = noop }) => {
       // TODO: Delete comment
-      console.log('Deleting...', commentEntry)
       onSuccess('Delete ', commentEntry)
     }
   })
 
-  const [comments, setComments] = useState<CommentItem[]>(
+  const [comments, setComments] = useState<DiffCommentItem[]>(
     !index
       ? [
           {
@@ -77,14 +76,13 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
             right: true,
             height: 0,
             lineNumber: 11,
-            commentsThread: [
+            commentItems: [
               `Logs will looks similar to\n\n<img width="1494" alt="image" src="https://user-images.githubusercontent.com/98799615/207994246-19ce9eb2-604f-4226-9a3c-6f4125d3b7cc.png">\n\n\ngitrpc logs using the \`ctx\` will have the following annotations:\n- \`grpc.service=rpc.ReferenceService\`\n- \`grpc.method=CreateBranch\`\n- \`grpc.peer=127.0.0.1:49364\`\n- \`grpc.request_id=cedrl6p1eqltblt13mgg\``,
-              //    `it seems we don't actually do anything with the explicit error type other than calling .Error(), which technically we could do on the original err object too? unless I'm missing something, could we then use errors.Is instead? (would avoid the extra var definitions at the top)`,
+              `it seems we don't actually do anything with the explicit error type other than calling .Error(), which technically we could do on the original err object too? unless I'm missing something, could we then use errors.Is instead? (would avoid the extra var definitions at the top)`
               //`If error is not converted then it will be detailed error: in BranchDelete: Branch doesn't exists. What we want is human readable error: Branch 'name' doesn't exists.`,
               //  `* GitRPC isolated errors, bcoz this will be probably separate repo in future and we dont want every where to include grpc status codes in our main app\n* Errors are explicit for repsonses based on error passing by types`,
-              `> global ctx in wire will kill all routines, right? is this affect middlewares and interceptors? because requests should finish they work, right?\n\nI've changed the code now to pass the config directly instead of the systemstore and context, to avoid confusion (what we discussed yesterday - I remove systemstore itself another time).`
+              // `> global ctx in wire will kill all routines, right? is this affect middlewares and interceptors? because requests should finish they work, right?\n\nI've changed the code now to pass the config directly instead of the systemstore and context, to avoid confusion (what we discussed yesterday - I remove systemstore itself another time).`
             ].map(content => ({
-              id: '0',
               author: 'Tan Nhu',
               created: '2022-12-21',
               updated: '2022-12-21',
@@ -94,7 +92,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
         ]
       : []
   )
-  const commentsRef = useRef<CommentItem[]>(comments)
+  const commentsRef = useRef<DiffCommentItem[]>(comments)
   const setContainerRef = useCallback(
     node => {
       containerRef.current = node
@@ -192,12 +190,12 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
         const targetButton = target?.closest('[data-annotation-for-line]') as HTMLDivElement
         const annotatedLineRow = targetButton?.closest('tr') as HTMLTableRowElement
 
-        const commentItem: CommentItem = {
+        const commentItem: DiffCommentItem = {
           left: false,
           right: false,
           lineNumber: 0,
           height: 0,
-          commentsThread: []
+          commentItems: []
         }
 
         if (targetButton && annotatedLineRow) {
@@ -273,7 +271,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
             ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
             ReactDOM.render(
               <CommentBox
-                commentsThread={comment.commentsThread}
+                commentsThread={comment.commentItems}
                 getString={getString}
                 width={isSideBySide ? 'calc(100vw / 2 - 163px)' : undefined}
                 onHeightChange={boxHeight => {
@@ -293,7 +291,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
                   delete lineInfo.rowElement.dataset.annotated
                   setTimeout(() => setComments(commentsRef.current.filter(item => item !== comment)), 0)
                 }}
-                currentUser={currentUser}
+                currentUserName={currentUser.display_name}
                 executeDeleteComent={executeDeleteComentConfirmation}
               />,
               element
