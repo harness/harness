@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button, Container, ButtonVariation, Layout } from '@harness/uicore'
 import MarkdownEditor from '@uiw/react-markdown-editor'
 import { Tab, Tabs } from '@blueprintjs/core'
@@ -10,6 +10,10 @@ import 'highlight.js/styles/github.css'
 import 'diff2html/bundles/css/diff2html.min.css'
 import type { IToolBarProps } from '@uiw/react-markdown-editor/cjs/components/ToolBar'
 import css from './MarkdownEditorWithPreview.module.scss'
+
+export interface MarkdownEditorWithPreviewResetProps {
+  resetEditor: () => void
+}
 
 interface MarkdownEditorWithPreviewProps {
   value: string
@@ -23,6 +27,9 @@ interface MarkdownEditorWithPreviewProps {
     cancel: string
     save: string
   }
+  hideCancel?: boolean
+  maxEditorHeight?: string
+  editorRef?: React.MutableRefObject<MarkdownEditorWithPreviewResetProps>
 }
 
 export function MarkdownEditorWithPreview({
@@ -30,11 +37,26 @@ export function MarkdownEditorWithPreview({
   onChange = noop,
   onSave,
   onCancel,
-  i18n
+  i18n,
+  hideCancel,
+  maxEditorHeight,
+  editorRef
 }: MarkdownEditorWithPreviewProps) {
-  const [original] = useState(value)
+  const [original, setOriginal] = useState(value)
   const [selectedTab, setSelectedTab] = useState<MarkdownEditorTab>(MarkdownEditorTab.WRITE)
   const [val, setVal] = useState(value)
+
+  useEffect(() => {
+    if (editorRef) {
+      editorRef.current = {
+        resetEditor: () => {
+          setOriginal(value)
+          setVal(value)
+        }
+      }
+      editorRef.current.resetEditor()
+    }
+  }, [editorRef]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Container className={cx(css.main, selectedTab === MarkdownEditorTab.PREVIEW ? css.withPreview : '')}>
@@ -47,7 +69,9 @@ export function MarkdownEditorWithPreview({
             id={MarkdownEditorTab.WRITE}
             title={i18n.tabEdit}
             panel={
-              <Container className={css.markdownEditor}>
+              <Container
+                className={css.markdownEditor}
+                style={{ '--max-editor-height': maxEditorHeight } as React.CSSProperties}>
                 <MarkdownEditor
                   value={val}
                   visible={false}
@@ -92,7 +116,7 @@ export function MarkdownEditorWithPreview({
               onClick={() => onSave(val, original)}
               text={i18n.save}
             />
-            <Button variation={ButtonVariation.TERTIARY} onClick={onCancel} text={i18n.cancel} />
+            {!hideCancel && <Button variation={ButtonVariation.TERTIARY} onClick={onCancel} text={i18n.cancel} />}
           </Layout.Horizontal>
         </Container>
       </Layout.Vertical>

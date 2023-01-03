@@ -178,6 +178,9 @@ pr:
   mergePR: Merge pull request
   branchHasNoConflicts: This branch has no conflicts with the base branch
   prCanBeMerged: Mergeing can be performed automatically.
+  enterDesc: Enter description here
+  failedToUpdate: Failed to update Pull Request. Please try again.
+  failedToSaveComment: Failed to save comment. Please try again.
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'

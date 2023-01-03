@@ -131,7 +131,10 @@ export interface StringsMap {
   'pr.diffStatsLabel': string
   'pr.diffStatus': string
   'pr.diffView': string
+  'pr.enterDesc': string
   'pr.failedToCreate': string
+  'pr.failedToSaveComment': string
+  'pr.failedToUpdate': string
   'pr.fileDeleted': string
   'pr.fileUnchanged': string
   'pr.mergePR': string

@@ -271,7 +271,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
             ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
             ReactDOM.render(
               <CommentBox
-                commentsThread={comment.commentItems}
+                commentItems={comment.commentItems}
                 getString={getString}
                 width={isSideBySide ? 'calc(100vw / 2 - 163px)' : undefined}
                 onHeightChange={boxHeight => {

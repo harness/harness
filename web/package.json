@@ -15,7 +15,7 @@
   },
   "keywords": [],
   "scripts": {
-    "dev": "webpack serve --config config/webpack.dev.js",
+    "dev": "NODE_ENV=development webpack serve --config config/webpack.dev.js",
     "test": "jest src --silent",
     "test:watch": "jest --watch",
     "lint": "eslint  --rulesdir ./scripts/eslint-rules --ext .ts --ext .tsx src",

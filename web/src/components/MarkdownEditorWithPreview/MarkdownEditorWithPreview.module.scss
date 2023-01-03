@@ -32,7 +32,7 @@
         .bp3-tab {
           margin: 0 !important;
           padding: 6px 10px !important;
-          border-bottom: 1px solid transparent;
+          border-bottom: 1px solid transparent !important;
 
           &[aria-selected='true'] {
             background-color: var(--white) !important;
@@ -44,13 +44,17 @@
           }
 
           &:not([aria-selected='true']) {
-            border-bottom: 1px solid transparent;
+            border-bottom: 1px solid transparent !important;
           }
         }
 
         .bp3-tab-indicator-wrapper {
           display: none;
         }
+      }
+
+      .bp3-tab-panel {
+        margin-top: 0;
       }
     }
   }
@@ -90,6 +94,7 @@
       .md-editor-content {
         padding: var(--spacing-small);
         background-color: var(--white);
+        max-height: var(--max-editor-height, auto);
 
         .ͼ1.cm-editor.cm-focused {
           outline: none !important;

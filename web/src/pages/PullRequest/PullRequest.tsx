@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Container, PageBody, Text, FontVariation, Tabs, IconName } from '@harness/uicore'
+import { Container, PageBody, Text, FontVariation, Tabs, IconName, HarnessIcons } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
@@ -116,13 +116,20 @@ const PullRequestTitle: React.FC<TypesPullReq> = ({ title, number }) => (
   </Text>
 )
 
-const TabTitle: React.FC<{ icon: IconName; title: string; count?: number }> = ({ icon, title, count }) => (
-  <Text icon={icon} className={css.tabTitle}>
-    {title}
-    {!!count && (
-      <Text inline className={css.count}>
-        {count}
-      </Text>
-    )}
-  </Text>
-)
+const TabTitle: React.FC<{ icon: IconName; title: string; count?: number }> = ({ icon, title, count }) => {
+  // Icon inside a tab got overriden-looked-bad styles from UICore
+  // onn hover. Use icon directly instead
+  const TabIcon: React.ElementType = HarnessIcons[icon]
+
+  return (
+    <Text className={css.tabTitle}>
+      <TabIcon width={16} height={16} />
+      {title}
+      {!!count && (
+        <Text inline className={css.count}>
+          {count}
+        </Text>
+      )}
+    </Text>
+  )
+}

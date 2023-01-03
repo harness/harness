@@ -9,22 +9,14 @@
   .tabsContainer {
     padding-top: var(--spacing-xsmall);
 
-    // TODO: This looks bad and does not
-    // perform well. Need a way to fix
-    :global {
-      .Tabs--main .bp3-tab:not([aria-disabled='true']):hover .bp3-icon svg path {
-        fill: var(--grey-50) !important;
-      }
-    }
-
-    [role='tablist'] {
+    > div > div[role='tablist'] {
       background-color: var(--white) !important;
-      padding-left: var(--spacing-medium);
-      padding-right: var(--spacing-xlarge);
-      border-bottom: 1px solid var(--grey-200);
+      padding-left: var(--spacing-medium) !important;
+      padding-right: var(--spacing-xlarge) !important;
+      border-bottom: 1px solid var(--grey-200) !important;
     }
 
-    [role='tabpanel'] {
+    > div > div[role='tabpanel'] {
       margin-top: 0;
     }
 
@@ -39,6 +31,13 @@
     .tabTitle {
       font-weight: 500;
       color: var(--grey-700);
+      display: flex;
+      align-items: center;
+
+      > svg {
+        display: inline-block;
+        margin-right: 5px;
+      }
 
       .count {
         margin-left: var(--spacing-small);
