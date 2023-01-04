@@ -152,6 +152,10 @@ type (
 		// Update the repo details.
 		Update(ctx context.Context, repo *types.Repository) error
 
+		// UpdateOptLock the repo details using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, repo *types.Repository,
+			mutateFn func(repository *types.Repository) error) (*types.Repository, error)
+
 		// Delete the repo.
 		Delete(ctx context.Context, id int64) error
 
@@ -218,9 +222,6 @@ type (
 
 		// Delete the pull request.
 		Delete(ctx context.Context, id int64) error
-
-		// LastNumber returns the last pull request number for a repo.
-		LastNumber(ctx context.Context, repoID int64) (int64, error)
 
 		// Count of pull requests in a space.
 		Count(ctx context.Context, repoID int64, opts *types.PullReqFilter) (int64, error)

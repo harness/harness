@@ -56,30 +56,39 @@ func (s *RepoStoreSync) FindRepoFromRef(ctx context.Context, repoRef string) (*t
 
 // Create a new repository.
 func (s *RepoStoreSync) Create(ctx context.Context, repo *types.Repository) error {
-	mutex.RLock()
-	defer mutex.RUnlock()
+	mutex.Lock()
+	defer mutex.Unlock()
 	return s.base.Create(ctx, repo)
 }
 
 // Move an existing repo.
 func (s *RepoStoreSync) Move(ctx context.Context, principalID int64, id int64, newParentID int64,
 	newName string, keepAsAlias bool) (*types.Repository, error) {
-	mutex.RLock()
-	defer mutex.RUnlock()
+	mutex.Lock()
+	defer mutex.Unlock()
 	return s.base.Move(ctx, principalID, id, newParentID, newName, keepAsAlias)
 }
 
 // Update the repo details.
 func (s *RepoStoreSync) Update(ctx context.Context, repo *types.Repository) error {
-	mutex.RLock()
-	defer mutex.RUnlock()
+	mutex.Lock()
+	defer mutex.Unlock()
 	return s.base.Update(ctx, repo)
+}
+
+// UpdateOptLock updates the repository using the optimistic locking mechanism.
+func (s *RepoStoreSync) UpdateOptLock(ctx context.Context,
+	repo *types.Repository,
+	mutateFn func(repository *types.Repository) error) (*types.Repository, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	return s.base.UpdateOptLock(ctx, repo, mutateFn)
 }
 
 // Delete the repository.
 func (s *RepoStoreSync) Delete(ctx context.Context, id int64) error {
-	mutex.RLock()
-	defer mutex.RUnlock()
+	mutex.Lock()
+	defer mutex.Unlock()
 	return s.base.Delete(ctx, id)
 }
 
@@ -99,11 +108,15 @@ func (s *RepoStoreSync) List(ctx context.Context, parentID int64, opts *types.Re
 
 // CountPaths returns a count of all paths of a repo.
 func (s *RepoStoreSync) CountPaths(ctx context.Context, id int64, opts *types.PathFilter) (int64, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
 	return s.base.CountPaths(ctx, id, opts)
 }
 
 // ListPaths returns a list of all paths of a repo.
 func (s *RepoStoreSync) ListPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
 	return s.base.ListPaths(ctx, id, opts)
 }
 

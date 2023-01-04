@@ -198,6 +198,7 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 	,repo_description		= :repo_description
 	,repo_is_public			= :repo_is_public
 	,repo_updated			= :repo_updated
+	,repo_pullreq_seq		= :repo_pullreq_seq
 	,repo_num_forks			= :repo_num_forks
 	,repo_num_pulls			= :repo_num_pulls
 	,repo_num_closed_pulls	= :repo_num_closed_pulls
@@ -229,6 +230,33 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 	}
 
 	return nil
+}
+
+// UpdateOptLock updates the repository using the optimistic locking mechanism.
+func (s *RepoStore) UpdateOptLock(ctx context.Context,
+	repo *types.Repository,
+	mutateFn func(repository *types.Repository) error) (*types.Repository, error) {
+	for {
+		dup := *repo
+
+		err := mutateFn(&dup)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.Update(ctx, &dup)
+		if err == nil {
+			return &dup, nil
+		}
+		if !errors.Is(err, store.ErrConflict) {
+			return nil, err
+		}
+
+		repo, err = s.Find(ctx, repo.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
 }
 
 // Delete the repository.
@@ -420,6 +448,7 @@ INSERT INTO repositories (
 	,repo_git_uid
 	,repo_default_branch
 	,repo_fork_id
+	,repo_pullreq_seq
 	,repo_num_forks
 	,repo_num_pulls
 	,repo_num_closed_pulls
@@ -436,6 +465,7 @@ INSERT INTO repositories (
 	,:repo_git_uid
 	,:repo_default_branch
 	,:repo_fork_id
+	,:repo_pullreq_seq
 	,:repo_num_forks
 	,:repo_num_pulls
 	,:repo_num_closed_pulls

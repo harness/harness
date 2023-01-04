@@ -272,25 +272,6 @@ func (s *PullReqStore) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// LastNumber return the number of the most recent pull request.
-func (s *PullReqStore) LastNumber(ctx context.Context, repoID int64) (int64, error) {
-	const sqlQuery = `select coalesce(max(pullreq_number), 0) from pullreqs where pullreq_target_repo_id = $1 limit 1`
-
-	db := dbtx.GetAccessor(ctx, s.db)
-
-	row := db.QueryRowContext(ctx, sqlQuery, repoID)
-	if err := row.Err(); err != nil {
-		return 0, err
-	}
-
-	var lastNumber int64
-	if err := row.Scan(&lastNumber); err != nil {
-		return 0, err
-	}
-
-	return lastNumber, nil
-}
-
 // Count of pull requests for a repo.
 func (s *PullReqStore) Count(ctx context.Context, repoID int64, opts *types.PullReqFilter) (int64, error) {
 	stmt := builder.

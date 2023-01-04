@@ -11,6 +11,7 @@ CREATE TABLE repositories (
 ,repo_git_uid           TEXT NOT NULL
 ,repo_default_branch    TEXT NOT NULL
 ,repo_fork_id           INTEGER
+,repo_pullreq_seq       INTEGER NOT NULL
 ,repo_num_forks         INTEGER NOT NULL
 ,repo_num_pulls         INTEGER NOT NULL
 ,repo_num_closed_pulls  INTEGER NOT NULL

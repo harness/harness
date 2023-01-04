@@ -12,7 +12,6 @@ import (
 
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -62,35 +61,27 @@ func (c *Controller) Create(
 		return nil, errBranch
 	}
 
-	var pr *types.PullReq
-
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
-		var existing int64
-		existing, err = c.pullreqStore.Count(ctx, targetRepo.ID, &types.PullReqFilter{
-			SourceRepoID: sourceRepo.ID,
-			SourceBranch: in.SourceBranch,
-			TargetBranch: in.TargetBranch,
-			States:       []enum.PullReqState{enum.PullReqStateOpen},
-		})
-		if err != nil {
-			return fmt.Errorf("failed to count existing pull requests: %w", err)
-		}
-
-		if existing > 0 {
-			return usererror.BadRequest("a pull request for this target and source branch already exists")
-		}
-
-		var lastNumber int64
-
-		lastNumber, err = c.pullreqStore.LastNumber(ctx, targetRepo.ID)
-		if err != nil {
-			return err
-		}
-
-		pr = newPullReq(session, lastNumber+1, sourceRepo, targetRepo, in)
-
-		return c.pullreqStore.Create(ctx, pr)
+	existing, err := c.pullreqStore.Count(ctx, targetRepo.ID, &types.PullReqFilter{
+		SourceRepoID: sourceRepo.ID,
+		SourceBranch: in.SourceBranch,
+		TargetBranch: in.TargetBranch,
+		States:       []enum.PullReqState{enum.PullReqStateOpen},
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to count existing pull requests: %w", err)
+	}
+	if existing > 0 {
+		return nil, usererror.BadRequest("a pull request for this target and source branch already exists")
+	}
+
+	targetRepo, _ = c.repoStore.UpdateOptLock(ctx, targetRepo, func(repo *types.Repository) error {
+		repo.PullReqSeq++
+		return nil
+	})
+
+	pr := newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in)
+
+	err = c.pullreqStore.Create(ctx, pr)
 	if err != nil {
 		return nil, err
 	}

@@ -26,6 +26,7 @@ type Repository struct {
 	GitUID        string `db:"repo_git_uid"            json:"-"`
 	DefaultBranch string `db:"repo_default_branch"     json:"default_branch"`
 	ForkID        int64  `db:"repo_fork_id"            json:"fork_id"`
+	PullReqSeq    int64  `db:"repo_pullreq_seq"        json:"-"`
 
 	// TODO: Check if we want to keep those values here
 	NumForks       int `db:"repo_num_forks"            json:"num_forks"`

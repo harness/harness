@@ -19,6 +19,11 @@ type UpdateInput struct {
 	IsPublic    *bool   `json:"is_public"`
 }
 
+func (in *UpdateInput) hasChanges(repo *types.Repository) bool {
+	return (in.Description != nil && repo.Description == *in.Description || in.Description == nil) &&
+		(in.IsPublic != nil && repo.IsPublic == *in.IsPublic || in.IsPublic == nil)
+}
+
 // Update updates a repository.
 func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	repoRef string, in *UpdateInput) (*types.Repository, error) {
@@ -31,20 +36,27 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	// update values only if provided
-	if in.Description != nil {
-		repo.Description = *in.Description
-	}
-	if in.IsPublic != nil {
-		repo.IsPublic = *in.IsPublic
+	// check if anything needs to be changed
+	if in.hasChanges(repo) {
+		return repo, err
 	}
 
-	// ensure provided values are valid
-	if err = c.repoCheck(repo); err != nil {
-		return nil, err
-	}
+	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
+		// update values only if provided
+		if in.Description != nil {
+			repo.Description = *in.Description
+		}
+		if in.IsPublic != nil {
+			repo.IsPublic = *in.IsPublic
+		}
 
-	err = c.repoStore.Update(ctx, repo)
+		// ensure provided values are valid
+		if errValidate := c.repoCheck(repo); errValidate != nil {
+			return errValidate
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
