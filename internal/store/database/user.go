@@ -7,6 +7,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
@@ -77,8 +78,11 @@ func (s *UserStore) FindUID(ctx context.Context, uid string) (*types.User, error
 func (s *UserStore) FindEmail(ctx context.Context, email string) (*types.User, error) {
 	db := dbtx.GetAccessor(ctx, s.db)
 
+	const sqlQuery = userBase + `
+	WHERE principal_type = 'user' AND LOWER(principal_email) = $1`
+
 	dst := new(user)
-	if err := db.GetContext(ctx, dst, userSelectEmail, email); err != nil {
+	if err := db.GetContext(ctx, dst, sqlQuery, strings.ToLower(email)); err != nil {
 		return nil, processSQLErrorf(err, "Select by email query failed")
 	}
 
@@ -170,7 +174,7 @@ func (s *UserStore) List(ctx context.Context, opts *types.UserFilter) ([]*types.
 	case enum.UserAttrUpdated:
 		stmt = stmt.OrderBy("principal_updated " + opts.Order.String())
 	case enum.UserAttrEmail:
-		stmt = stmt.OrderBy("principal_email " + opts.Order.String())
+		stmt = stmt.OrderBy("LOWER(principal_email) " + opts.Order.String())
 	case enum.UserAttrUID:
 		stmt = stmt.OrderBy("principal_uid " + opts.Order.String())
 	case enum.UserAttrAdmin:
@@ -266,10 +270,6 @@ WHERE principal_type = 'user' AND principal_id = $1
 
 const userSelectUIDUnique = userBase + `
 WHERE principal_type = 'user' AND principal_uid_unique = $1
-`
-
-const userSelectEmail = userBase + `
-WHERE principal_type = 'user' AND principal_email = $1
 `
 
 const userDelete = `

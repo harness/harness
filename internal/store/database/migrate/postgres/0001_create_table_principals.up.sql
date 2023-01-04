@@ -17,6 +17,4 @@ principal_id              SERIAL PRIMARY KEY
 ,principal_sa_parent_id   INTEGER
 
 ,UNIQUE(principal_uid_unique)
-,UNIQUE(principal_email)
-,UNIQUE(principal_salt)
 );
