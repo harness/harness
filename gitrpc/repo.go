@@ -17,7 +17,11 @@ import (
 
 const (
 	// repoGitUIDLength is the length of the generated repo uid.
-	repoGitUIDLength = 21
+	repoGitUIDLength = 42
+
+	// repoGitUIDAlphabet is the alphabet used for generating repo uids
+	// NOTE: keep it lowercase and alphanumerical to avoid issues with case insensitive filesystems.
+	repoGitUIDAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
 )
 
 type CreateRepositoryParams struct {
@@ -91,5 +95,5 @@ func (c *Client) CreateRepository(ctx context.Context,
 }
 
 func newRepositoryUID() (string, error) {
-	return gonanoid.New(repoGitUIDLength)
+	return gonanoid.Generate(repoGitUIDAlphabet, repoGitUIDLength)
 }

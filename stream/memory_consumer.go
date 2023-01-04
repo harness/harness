@@ -16,17 +16,18 @@ import (
 // memoryMessage extends the message object to allow tracking retries.
 type memoryMessage struct {
 	message
-	retries int
+	retries int64
 }
 
 // MemoryConsumer consumes streams from a MemoryBroker.
 type MemoryConsumer struct {
 	broker *MemoryBroker
 	// namespace specifies the namespace of the keys - any stream key will be prefixed with it
-	namespace   string
-	concurrency int
-	groupName   string
-	streams     map[string]HandlerFunc
+	namespace     string
+	concurrency   int
+	maxRetryCount int64
+	groupName     string
+	streams       map[string]HandlerFunc
 
 	state        consumerState
 	messageQueue chan memoryMessage
@@ -84,6 +85,20 @@ func (c *MemoryConsumer) SetConcurrency(concurrency int) error {
 	}
 
 	c.concurrency = concurrency
+
+	return nil
+}
+
+func (c *MemoryConsumer) SetMaxRetryCount(retryCount int64) error {
+	if err := checkConsumerStateTransition(c.state, consumerStateSetup); err != nil {
+		return err
+	}
+
+	if retryCount < 1 || retryCount > MaxRetryCount {
+		return fmt.Errorf("max retry count has to be between 1 and %d (inclusive)", MaxRetryCount)
+	}
+
+	c.maxRetryCount = retryCount
 
 	return nil
 }
@@ -169,8 +184,6 @@ func (c *MemoryConsumer) consume(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case m := <-c.messageQueue:
-			const maxRetryCount = 6
-
 			fn, ok := c.streams[m.streamID]
 			if !ok {
 				// we only take messages from registered streams, this should never happen.
@@ -196,7 +209,7 @@ func (c *MemoryConsumer) consume(ctx context.Context) {
 				c.pushError(fmt.Errorf("failed to process message with id '%s' in stream '%s' (retries: %d): %w",
 					m.id, m.streamID, m.retries, err))
 
-				if m.retries >= maxRetryCount {
+				if m.retries >= c.maxRetryCount {
 					c.pushError(fmt.Errorf(
 						"discard message with id '%s' from stream '%s' - failed %d retries",
 						m.id, m.streamID, m.retries))

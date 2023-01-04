@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/gitrpc/server"
+	"github.com/harness/gitness/internal/webhook"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -93,6 +94,7 @@ var PackageConfigsWireSet = wire.NewSet(
 	ProvideGitRPCServerConfig,
 	ProvideGitRPCClientConfig,
 	ProvideEventsConfig,
+	ProvideWebhookConfig,
 )
 
 func ProvideGitRPCServerConfig(config *types.Config) server.Config {
@@ -114,5 +116,16 @@ func ProvideEventsConfig(config *types.Config) events.Config {
 		Mode:            events.Mode(config.Events.Mode),
 		Namespace:       config.Events.Namespace,
 		MaxStreamLength: config.Events.MaxStreamLength,
+	}
+}
+
+func ProvideWebhookConfig(config *types.Config) webhook.Config {
+	return webhook.Config{
+		// Use instanceID as readerName as every instance should be one reader
+		EventReaderName:     config.InstanceID,
+		Concurrency:         config.Webhook.Concurrency,
+		MaxRetryCount:       config.Webhook.MaxRetryCount,
+		AllowLoopback:       config.Webhook.AllowLoopback,
+		AllowPrivateNetwork: config.Webhook.AllowPrivateNetwork,
 	}
 }

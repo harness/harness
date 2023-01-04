@@ -8,9 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	types "github.com/harness/gitness/types"
-
 	gomock "github.com/golang/mock/gomock"
+	types "github.com/harness/gitness/types"
 )
 
 // MockSystemStore is a mock of SystemStore interface.
@@ -527,6 +526,21 @@ func (m *MockRepoStore) Find(arg0 context.Context, arg1 int64) (*types.Repositor
 func (mr *MockRepoStoreMockRecorder) Find(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockRepoStore)(nil).Find), arg0, arg1)
+}
+
+// FindByGitUID mocks base method.
+func (m *MockRepoStore) FindByGitUID(arg0 context.Context, arg1 string) (*types.Repository, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByGitUID", arg0, arg1)
+	ret0, _ := ret[0].(*types.Repository)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByGitUID indicates an expected call of FindByGitUID.
+func (mr *MockRepoStoreMockRecorder) FindByGitUID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByGitUID", reflect.TypeOf((*MockRepoStore)(nil).FindByGitUID), arg0, arg1)
 }
 
 // FindByPath mocks base method.

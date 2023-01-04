@@ -50,6 +50,10 @@ var (
 
 	// ErrRequestTooLarge is returned if the request it too large.
 	ErrRequestTooLarge = New(http.StatusRequestEntityTooLarge, "The request is too large")
+
+	// ErrWebhookNotRetriggerable is returned if the webhook can't be retriggered.
+	ErrWebhookNotRetriggerable = New(http.StatusMethodNotAllowed,
+		"The webhook execution is incomplete and can't be retriggered")
 )
 
 // Error represents a json-encoded API error.

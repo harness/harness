@@ -41,6 +41,13 @@ func (s *RepoStoreSync) FindByPath(ctx context.Context, path string) (*types.Rep
 	return s.base.FindByPath(ctx, path)
 }
 
+// FindByGitUID the repo by git uid.
+func (s *RepoStoreSync) FindByGitUID(ctx context.Context, gitUID string) (*types.Repository, error) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return s.base.FindByGitUID(ctx, gitUID)
+}
+
 // FindRepoFromRef finds the repo by path or ref.
 func (s *RepoStoreSync) FindRepoFromRef(ctx context.Context, repoRef string) (*types.Repository, error) {
 	mutex.RLock()

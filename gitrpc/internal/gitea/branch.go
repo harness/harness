@@ -60,17 +60,22 @@ func (g Adapter) CreateBranch(ctx context.Context, repoPath string,
 }
 
 // DeleteBranch deletes an existing branch.
-func (g Adapter) DeleteBranch(ctx context.Context, repoPath string, branchName string, force bool) error {
+func (g Adapter) DeleteBranch(ctx context.Context, repoPath string, branchName string, force bool) (string, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer giteaRepo.Close()
 
-	err = giteaRepo.DeleteBranch(branchName, gitea.DeleteBranchOptions{Force: force})
+	sha, err := giteaRepo.GetRefCommitID(branchName)
 	if err != nil {
-		return processGiteaErrorf(err, "failed to delete branch '%s'", branchName)
+		return "", processGiteaErrorf(err, "failed to read sha of branch '%s'", branchName)
 	}
 
-	return nil
+	err = giteaRepo.DeleteBranch(branchName, gitea.DeleteBranchOptions{Force: force})
+	if err != nil {
+		return "", processGiteaErrorf(err, "failed to delete branch '%s'", branchName)
+	}
+
+	return sha, nil
 }

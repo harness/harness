@@ -21,6 +21,7 @@ type StreamConsumer interface {
 	Register(streamID string, handler stream.HandlerFunc) error
 	SetConcurrency(int) error
 	SetProcessingTimeout(timeout time.Duration) error
+	SetMaxRetryCount(retryCount int64) error
 	Start(ctx context.Context) error
 	Errors() <-chan error
 	Infos() <-chan string

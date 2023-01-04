@@ -104,6 +104,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	pullreqController := pullreq.ProvideController(db, authorizer, pullReqStore, pullReqActivityStore, repoStore, serviceAccountStore, gitrpcInterface)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
+	webhookConfig := ProvideWebhookConfig(config)
 	eventsConfig := ProvideEventsConfig(config)
 	cmdable, err := ProvideRedis(config)
 	if err != nil {
@@ -117,7 +118,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	webhookServer, err := webhook.ProvideServer(ctx, config, readerFactory)
+	webhookServer, err := webhook.ProvideServer(ctx, webhookConfig, readerFactory, webhookStore, webhookExecutionStore, repoStore)
 	if err != nil {
 		return nil, err
 	}

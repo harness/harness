@@ -14,6 +14,9 @@ const (
 	// MaxConcurrency is the max number of concurrent go routines (for message handling) for a single stream consumer.
 	MaxConcurrency = 64
 
+	// MaxRetryCount is the max number of retries of an event for a single consumer group.
+	MaxRetryCount = 64
+
 	// MinProcessingTimeout is the minumum time that can be configured as processing timeout for a stream consumer.
 	MinProcessingTimeout = 1 * time.Minute
 )

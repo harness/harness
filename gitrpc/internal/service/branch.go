@@ -33,6 +33,7 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 	s.eventReporter.BranchCreated(ctx, &events.BranchCreatedPayload{
 		RepoUID:    request.RepoUid,
 		BranchName: request.BranchName,
+		FullRef:    fmt.Sprintf("refs/heads/%s", request.BranchName),
 		SHA:        gitBranch.SHA,
 	})
 
@@ -51,7 +52,7 @@ func (s ReferenceService) DeleteBranch(ctx context.Context,
 	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
 
 	// TODO: block deletion of protected branch (in the future)
-	err := s.adapter.DeleteBranch(ctx, repoPath, request.GetBranchName(), request.GetForce())
+	sha, err := s.adapter.DeleteBranch(ctx, repoPath, request.GetBranchName(), request.GetForce())
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to delete branch")
 	}
@@ -60,6 +61,8 @@ func (s ReferenceService) DeleteBranch(ctx context.Context,
 	s.eventReporter.BranchDeleted(ctx, &events.BranchDeletedPayload{
 		RepoUID:    request.RepoUid,
 		BranchName: request.BranchName,
+		FullRef:    fmt.Sprintf("refs/heads/%s", request.BranchName),
+		SHA:        sha,
 	})
 
 	return &rpc.DeleteBranchResponse{}, nil

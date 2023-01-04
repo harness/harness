@@ -60,6 +60,15 @@ func (s *RepoStore) FindByPath(ctx context.Context, path string) (*types.Reposit
 	return dst, nil
 }
 
+// FindByGitUID the repo by git uid.
+func (s *RepoStore) FindByGitUID(ctx context.Context, gitUID string) (*types.Repository, error) {
+	dst := new(types.Repository)
+	if err := s.db.GetContext(ctx, dst, repoSelectByGitUID, gitUID); err != nil {
+		return nil, processSQLErrorf(err, "Select query failed")
+	}
+	return dst, nil
+}
+
 func (s *RepoStore) FindRepoFromRef(ctx context.Context, repoRef string) (*types.Repository, error) {
 	// check if ref is repoId - ASSUMPTION: digit only is no valid repo name
 	id, err := strconv.ParseInt(repoRef, 10, 64)
@@ -424,6 +433,10 @@ ON repositories.repo_id=paths.path_target_id AND paths.path_target_type='repo' A
 
 const repoSelectByID = repoSelectBaseWithJoin + `
 WHERE repo_id = $1
+`
+
+const repoSelectByGitUID = repoSelectBaseWithJoin + `
+WHERE repo_git_uid = $1
 `
 
 const repoSelectByPathUnique = repoSelectBase + `

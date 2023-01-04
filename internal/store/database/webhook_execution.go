@@ -47,7 +47,7 @@ type webhookExecution struct {
 	RequestURL         string                      `db:"webhook_execution_request_url"`
 	RequestHeaders     string                      `db:"webhook_execution_request_headers"`
 	RequestBody        string                      `db:"webhook_execution_request_body"`
-	ResponseStatusCode int64                       `db:"webhook_execution_response_status_code"`
+	ResponseStatusCode int                         `db:"webhook_execution_response_status_code"`
 	ResponseStatus     string                      `db:"webhook_execution_response_status"`
 	ResponseHeaders    string                      `db:"webhook_execution_response_headers"`
 	ResponseBody       string                      `db:"webhook_execution_response_body"`

@@ -12,15 +12,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const branchDeletedEvent events.EventType = "branchdeleted"
+const BranchDeletedEvent events.EventType = "branchdeleted"
 
 type BranchDeletedPayload struct {
 	RepoUID    string `json:"repo_uid"`
 	BranchName string `json:"branch_name"`
+	FullRef    string `json:"full_ref"`
+	SHA        string `json:"sha"`
 }
 
 func (r *Reporter) BranchDeleted(ctx context.Context, payload *BranchDeletedPayload) {
-	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, branchDeletedEvent, payload)
+	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, BranchDeletedEvent, payload)
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msgf("failed to send branch deleted event")
 		return
@@ -30,5 +32,5 @@ func (r *Reporter) BranchDeleted(ctx context.Context, payload *BranchDeletedPayl
 }
 
 func (r *Reader) RegisterBranchDeleted(fn func(context.Context, *events.Event[*BranchDeletedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, branchDeletedEvent, fn)
+	return events.ReaderRegisterEvent(r.innerReader, BranchDeletedEvent, fn)
 }

@@ -16,4 +16,6 @@ CREATE TABLE repositories (
 ,repo_num_pulls         INTEGER NOT NULL
 ,repo_num_closed_pulls  INTEGER NOT NULL
 ,repo_num_open_pulls    INTEGER NOT NULL
+
+,UNIQUE(repo_git_uid)
 );

@@ -133,6 +133,7 @@ func (d *ReaderCanceler) Cancel() error {
 type Reader interface {
 	SetConcurrency(concurrency int) error
 	SetProcessingTimeout(timeout time.Duration) error
+	SetMaxRetryCount(retryCount int64) error
 }
 
 // GenericReader represents an event reader that supports registering type safe handlers
@@ -207,4 +208,8 @@ func (r *GenericReader) SetConcurrency(concurrency int) error {
 
 func (r *GenericReader) SetProcessingTimeout(timeout time.Duration) error {
 	return r.streamConsumer.SetProcessingTimeout(timeout)
+}
+
+func (r *GenericReader) SetMaxRetryCount(retryCount int64) error {
+	return r.streamConsumer.SetMaxRetryCount(retryCount)
 }

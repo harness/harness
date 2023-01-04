@@ -9,7 +9,7 @@ import (
 
 	"github.com/harness/gitness/events"
 	gitevents "github.com/harness/gitness/gitrpc/events"
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/internal/store"
 
 	"github.com/google/wire"
 )
@@ -19,9 +19,9 @@ var WireSet = wire.NewSet(
 	ProvideServer,
 )
 
-func ProvideServer(ctx context.Context, config *types.Config,
-	gitReaderFactory *events.ReaderFactory[*gitevents.Reader]) (*Server, error) {
-	// Use instanceID as readerName as every instance should be one reader
-	readerName := config.InstanceID
-	return NewServer(ctx, gitReaderFactory, readerName, config.Webhook.Concurrency)
+func ProvideServer(ctx context.Context, config Config,
+	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
+	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
+	repoStore store.RepoStore) (*Server, error) {
+	return NewServer(ctx, config, gitReaderFactory, webhookStore, webhookExecutionStore, repoStore)
 }

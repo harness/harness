@@ -241,6 +241,7 @@ func SetupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
 
 				r.Route(fmt.Sprintf("/{%s}", request.PathParamWebhookExecutionID), func(r chi.Router) {
 					r.Get("/", handlerwebhook.HandleFindExecution(webhookCtrl))
+					r.Post("/retrigger", handlerwebhook.HandleRetriggerExecution(webhookCtrl))
 				})
 			})
 		})

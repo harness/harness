@@ -12,16 +12,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const branchCreatedEvent events.EventType = "branchcreated"
+const BranchCreatedEvent events.EventType = "branchcreated"
 
 type BranchCreatedPayload struct {
 	RepoUID    string `json:"repo_uid"`
 	BranchName string `json:"branch_name"`
+	FullRef    string `json:"full_ref"`
 	SHA        string `json:"sha"`
 }
 
 func (r *Reporter) BranchCreated(ctx context.Context, payload *BranchCreatedPayload) {
-	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, branchCreatedEvent, payload)
+	eventID, err := events.ReporterSendEvent(r.innerReporter, ctx, BranchCreatedEvent, payload)
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msgf("failed to send branch created event")
 		return
@@ -31,5 +32,5 @@ func (r *Reporter) BranchCreated(ctx context.Context, payload *BranchCreatedPayl
 }
 
 func (r *Reader) RegisterBranchCreated(fn func(context.Context, *events.Event[*BranchCreatedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, branchCreatedEvent, fn)
+	return events.ReaderRegisterEvent(r.innerReader, BranchCreatedEvent, fn)
 }

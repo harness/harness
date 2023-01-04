@@ -50,7 +50,7 @@ type WebhookExecutionRequest struct {
 
 // WebhookExecutionResponse represents the response of a webhook execution.
 type WebhookExecutionResponse struct {
-	StatusCode int64  `json:"status"`
+	StatusCode int    `json:"status"`
 	Status     string `json:"status_code"`
 	Headers    string `json:"headers"`
 	Body       string `json:"body"`

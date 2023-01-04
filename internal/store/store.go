@@ -139,6 +139,9 @@ type (
 		// FindByPath the repo by path.
 		FindByPath(ctx context.Context, path string) (*types.Repository, error)
 
+		// FindByGitUID the repo by git uid.
+		FindByGitUID(ctx context.Context, gitUID string) (*types.Repository, error)
+
 		// FindRepoFromRef finds the repo by path or ref.
 		FindRepoFromRef(ctx context.Context, repoRef string) (*types.Repository, error)
 

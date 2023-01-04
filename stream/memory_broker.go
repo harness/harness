@@ -10,10 +10,18 @@ import (
 	"sync/atomic"
 
 	"github.com/hashicorp/go-multierror"
+	gonanoid "github.com/matoous/go-nanoid"
+)
+
+const (
+	idPrefixUIDAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
+	idPrefixUIDLength   = 8
 )
 
 // MemoryBroker is a very basic in memory broker implementation that supports multiple streams and consumer groups.
 type MemoryBroker struct {
+	// idPrefix is a random prefix the memory broker is seeded with to avoid overlaps with previous runs!
+	idPrefix string
 	// latestID is used to generate unique, sequentially increasing message IDs
 	latestID uint64
 	// queueSize is the max size of the queues before enqueing is blocking
@@ -24,13 +32,18 @@ type MemoryBroker struct {
 	messageQueues map[string]map[string]chan message
 }
 
-func NewMemoryBroker(queueSize int64) *MemoryBroker {
+func NewMemoryBroker(queueSize int64) (*MemoryBroker, error) {
+	idPrefix, err := gonanoid.Generate(idPrefixUIDAlphabet, idPrefixUIDLength)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate random prefix for in-memory event IDs: %w", err)
+	}
 	return &MemoryBroker{
+		idPrefix:      idPrefix,
 		latestID:      0,
 		queueSize:     queueSize,
 		mx:            sync.RWMutex{},
 		messageQueues: make(map[string]map[string]chan message),
-	}
+	}, err
 }
 
 // enqueue enqueues a message to a stream.
@@ -41,7 +54,7 @@ func (b *MemoryBroker) enqueue(streamID string, m message) (string, error) {
 	// similar to redis, only populate the ID if's empty or requested explicitly
 	if m.id == "" || m.id == "*" {
 		id := atomic.AddUint64(&b.latestID, 1)
-		m.id = fmt.Sprint(id)
+		m.id = fmt.Sprintf("%s-%d", b.idPrefix, id)
 	}
 
 	// the lock is for reading from the messageQueues map

@@ -39,7 +39,11 @@ func ProvideSystem(config Config, redisClient redis.Cmdable) (*System, error) {
 }
 
 func provideSystemInMemory(config Config) (*System, error) {
-	broker := stream.NewMemoryBroker(config.MaxStreamLength)
+	broker, err := stream.NewMemoryBroker(config.MaxStreamLength)
+	if err != nil {
+		return nil, err
+	}
+
 	return NewSystem(
 		newMemoryStreamConsumerFactoryMethod(broker, config.Namespace),
 		newMemoryStreamProducer(broker, config.Namespace),

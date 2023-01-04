@@ -34,6 +34,8 @@ type RedisConsumer struct {
 	streams map[string]HandlerFunc
 	// concurrency specifies the number of worker go routines
 	concurrency int
+	// maxRetryCount specifies the max number an event is retried
+	maxRetryCount int64
 
 	state        consumerState
 	messageQueue chan message
@@ -120,6 +122,20 @@ func (c *RedisConsumer) SetProcessingTimeout(timeout time.Duration) error {
 	}
 
 	c.processingTimeout = timeout
+
+	return nil
+}
+
+func (c *RedisConsumer) SetMaxRetryCount(retryCount int64) error {
+	if err := checkConsumerStateTransition(c.state, consumerStateSetup); err != nil {
+		return err
+	}
+
+	if retryCount < 1 || retryCount > MaxRetryCount {
+		return fmt.Errorf("max retry count has to be between 1 and %d (inclusive)", MaxRetryCount)
+	}
+
+	c.maxRetryCount = retryCount
 
 	return nil
 }
@@ -356,8 +372,6 @@ func (c *RedisConsumer) reclaimer(ctx context.Context, reclaimInterval time.Dura
 		case <-ctx.Done():
 			return
 		case <-reclaimTimer.C:
-			const maxRetryCount = 6
-
 			for streamID := range c.streams {
 				resPending, errPending := c.rdb.XPendingExt(ctx, &redis.XPendingExtArgs{
 					Stream: streamID,
@@ -382,7 +396,7 @@ func (c *RedisConsumer) reclaimer(ctx context.Context, reclaimInterval time.Dura
 				start = resPending[0].ID
 
 				for _, resMessage := range resPending {
-					if resMessage.RetryCount > maxRetryCount {
+					if resMessage.RetryCount > c.maxRetryCount {
 						// Retry count gets increased after every XCLAIM.
 						// Large retry count might mean there is something wrong with the message, so we'll XACK it.
 						// WARNING this will discard the message!

@@ -11,6 +11,7 @@ import (
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/webhook"
 	"github.com/harness/gitness/types/check"
 
 	"github.com/rs/zerolog/log"
@@ -33,7 +34,7 @@ func Translate(err error) *Error {
 	case errors.Is(err, check.ErrAny):
 		return New(http.StatusBadRequest, err.Error())
 
-		// store errors
+	// store errors
 	case errors.Is(err, store.ErrResourceNotFound):
 		return ErrNotFound
 	case errors.Is(err, store.ErrDuplicate):
@@ -49,13 +50,17 @@ func Translate(err error) *Error {
 	case errors.Is(err, store.ErrSpaceWithChildsCantBeDeleted):
 		return ErrSpaceWithChildsCantBeDeleted
 
-		// gitrpc errors
+	// gitrpc errors
 	case errors.Is(err, gitrpc.ErrAlreadyExists):
 		return ErrDuplicate
 	case errors.Is(err, gitrpc.ErrInvalidArgument):
 		return ErrBadRequest
 	case errors.Is(err, gitrpc.ErrNotFound):
 		return ErrNotFound
+
+	// webhook errors
+	case errors.Is(err, webhook.ErrWebhookNotRetriggerable):
+		return ErrWebhookNotRetriggerable
 
 	// unknown error
 	default:

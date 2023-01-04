@@ -34,3 +34,7 @@ func (r *Reader) SetConcurrency(concurrency int) error {
 func (r *Reader) SetProcessingTimeout(timeout time.Duration) error {
 	return r.innerReader.SetProcessingTimeout(timeout)
 }
+
+func (r *Reader) SetMaxRetryCount(retryCount int64) error {
+	return r.innerReader.SetMaxRetryCount(retryCount)
+}
