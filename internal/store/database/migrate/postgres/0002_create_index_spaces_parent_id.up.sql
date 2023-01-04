@@ -1,2 +1,2 @@
-CREATE INDEX index_spaces_parent_id
+CREATE INDEX spaces_parent_id
 ON spaces(space_parent_id);
