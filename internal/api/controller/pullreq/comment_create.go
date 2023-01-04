@@ -18,8 +18,9 @@ import (
 )
 
 type CommentCreateInput struct {
-	ParentID int64  `json:"parent_id"`
-	Text     string `json:"text"`
+	ParentID int64                  `json:"parent_id"`
+	Text     string                 `json:"text"`
+	Payload  map[string]interface{} `json:"payload"`
 }
 
 // CommentCreate creates a new pull request comment (pull request activity, type=comment).
@@ -101,7 +102,7 @@ func getCommentActivity(session *auth.Session, pr *types.PullReq, in *CommentCre
 		Type:       enum.PullReqActivityTypeComment,
 		Kind:       enum.PullReqActivityKindComment,
 		Text:       in.Text,
-		Payload:    nil,
+		Payload:    in.Payload,
 		Metadata:   nil,
 		ResolvedBy: nil,
 		Resolved:   nil,

@@ -7,6 +7,7 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/harness/gitness/internal/auth"
@@ -15,7 +16,8 @@ import (
 )
 
 type CommentUpdateInput struct {
-	Text string `json:"text"`
+	Text    string                 `json:"text"`
+	Payload map[string]interface{} `json:"payload"`
 }
 
 // CommentUpdate updates a pull request comment.
@@ -42,13 +44,14 @@ func (c *Controller) CommentUpdate(
 		return nil, fmt.Errorf("failed to get comment: %w", err)
 	}
 
-	if act.Text == in.Text {
+	if act.Text == in.Text && reflect.DeepEqual(act.Payload, in.Payload) {
 		return act, nil
 	}
 
 	now := time.Now().UnixMilli()
 	act.Edited = now
 	act.Text = in.Text
+	act.Payload = in.Payload
 
 	err = c.pullreqActivityStore.Update(ctx, act)
 	if err != nil {
