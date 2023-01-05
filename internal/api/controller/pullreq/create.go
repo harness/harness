@@ -74,16 +74,19 @@ func (c *Controller) Create(
 		return nil, usererror.BadRequest("a pull request for this target and source branch already exists")
 	}
 
-	targetRepo, _ = c.repoStore.UpdateOptLock(ctx, targetRepo, func(repo *types.Repository) error {
+	targetRepo, err = c.repoStore.UpdateOptLock(ctx, targetRepo, func(repo *types.Repository) error {
 		repo.PullReqSeq++
 		return nil
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to aquire PullReqSeq number: %w", err)
+	}
 
 	pr := newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in)
 
 	err = c.pullreqStore.Create(ctx, pr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("pullreq creation failed: %w", err)
 	}
 
 	return pr, nil

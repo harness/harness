@@ -418,6 +418,7 @@ repo_id
 ,repo_updated
 ,repo_git_uid
 ,repo_default_branch
+,repo_pullreq_seq
 ,repo_fork_id
 ,repo_num_forks
 ,repo_num_pulls
