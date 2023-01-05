@@ -16,7 +16,7 @@ import (
 // Delete deletes a user.
 func (c *Controller) Delete(ctx context.Context, session *auth.Session,
 	userUID string) error {
-	user, err := findUserFromUID(ctx, c.userStore, userUID)
+	user, err := findUserFromUID(ctx, c.principalStore, userUID)
 	if err != nil {
 		return err
 	}
@@ -33,5 +33,5 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session,
 		return fmt.Errorf("failed to delete tokens for user: %w", err)
 	}
 
-	return c.userStore.Delete(ctx, user.ID)
+	return c.principalStore.DeleteUser(ctx, user.ID)
 }

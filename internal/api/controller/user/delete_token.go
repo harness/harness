@@ -20,7 +20,7 @@ import (
  */
 func (c *Controller) DeleteToken(ctx context.Context, session *auth.Session,
 	userUID string, tokenType enum.TokenType, tokenUID string) error {
-	user, err := findUserFromUID(ctx, c.userStore, userUID)
+	user, err := findUserFromUID(ctx, c.principalStore, userUID)
 	if err != nil {
 		return err
 	}

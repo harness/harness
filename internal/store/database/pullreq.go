@@ -407,17 +407,17 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		Merger:        nil,
 	}
 	m.Author = types.PrincipalInfo{
-		ID:    pr.CreatedBy,
-		UID:   pr.AuthorUID,
-		Name:  pr.AuthorName,
-		Email: pr.AuthorEmail,
+		ID:          pr.CreatedBy,
+		UID:         pr.AuthorUID,
+		DisplayName: pr.AuthorName,
+		Email:       pr.AuthorEmail,
 	}
 	if pr.MergedBy.Valid {
 		m.Merger = &types.PrincipalInfo{
-			ID:    pr.MergedBy.Int64,
-			UID:   pr.MergerUID.String,
-			Name:  pr.MergerName.String,
-			Email: pr.MergerEmail.String,
+			ID:          pr.MergedBy.Int64,
+			UID:         pr.MergerUID.String,
+			DisplayName: pr.MergerName.String,
+			Email:       pr.MergerEmail.String,
 		}
 	}
 

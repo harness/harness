@@ -20,9 +20,9 @@ var WireSet = wire.NewSet(
 
 func ProvideController(db *sqlx.DB, authorizer authz.Authorizer,
 	pullReqStore store.PullReqStore, pullReqActivityStore store.PullReqActivityStore,
-	repoStore store.RepoStore, saStore store.ServiceAccountStore,
+	repoStore store.RepoStore, principalStore store.PrincipalStore,
 	rpcClient gitrpc.Interface) *Controller {
 	return NewController(db, authorizer,
-		pullReqStore, pullReqActivityStore, repoStore, saStore,
+		pullReqStore, pullReqActivityStore, repoStore, principalStore,
 		rpcClient)
 }

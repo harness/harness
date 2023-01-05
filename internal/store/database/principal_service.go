@@ -1,0 +1,227 @@
+// Copyright 2022 Harness Inc. All rights reserved.
+// Use of this source code is governed by the Polyform Free Trial License
+// that can be found in the LICENSE.md file for this repository.
+
+package database
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/store/database/dbtx"
+	"github.com/harness/gitness/types"
+
+	"github.com/rs/zerolog/log"
+)
+
+// service is a DB representation of a service principal.
+// It is required to allow storing transformed UIDs used for uniquness constraints and searching.
+type service struct {
+	types.Service
+	UIDUnique string `db:"principal_uid_unique"`
+}
+
+// service doesn't have any extra columns.
+const serviceColumns = principalCommonColumns
+
+const serviceSelectBase = `
+	SELECT` + serviceColumns + `
+	FROM principals`
+
+// FindService finds the service by id.
+func (s *PrincipalStore) FindService(ctx context.Context, id int64) (*types.Service, error) {
+	const sqlQuery = serviceSelectBase + `
+		WHERE principal_type = 'service' AND principal_id = $1`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := new(service)
+	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
+		return nil, processSQLErrorf(err, "Select by id query failed")
+	}
+
+	return s.mapDBService(dst), nil
+}
+
+// FindServiceByUID finds the service by uid.
+func (s *PrincipalStore) FindServiceByUID(ctx context.Context, uid string) (*types.Service, error) {
+	const sqlQuery = serviceSelectBase + `
+		WHERE principal_type = 'service' AND principal_uid_unique = $1`
+
+	// map the UID to unique UID before searching!
+	uidUnique, err := s.uidTransformation(uid)
+	if err != nil {
+		// in case we fail to transform, return a not found (as it can't exist in the first place)
+		log.Ctx(ctx).Debug().Msgf("failed to transform uid '%s': %s", uid, err.Error())
+		return nil, store.ErrResourceNotFound
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := new(service)
+	if err = db.GetContext(ctx, dst, sqlQuery, uidUnique); err != nil {
+		return nil, processSQLErrorf(err, "Select by uid query failed")
+	}
+
+	return s.mapDBService(dst), nil
+}
+
+// CreateService saves the service.
+func (s *PrincipalStore) CreateService(ctx context.Context, svc *types.Service) error {
+	const sqlQuery = `
+		INSERT INTO principals (
+			principal_type
+			,principal_uid
+			,principal_uid_unique
+			,principal_email
+			,principal_display_name
+			,principal_admin
+			,principal_blocked
+			,principal_salt
+			,principal_created
+			,principal_updated
+		) values (
+			'service'
+			,:principal_uid
+			,:principal_uid_unique
+			,:principal_email
+			,:principal_display_name
+			,:principal_admin
+			,:principal_blocked
+			,:principal_salt
+			,:principal_created
+			,:principal_updated
+		) RETURNING principal_id`
+
+	dbSVC, err := s.mapToDBservice(svc)
+	if err != nil {
+		return fmt.Errorf("failed to map db service: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(sqlQuery, dbSVC)
+	if err != nil {
+		return processSQLErrorf(err, "Failed to bind service object")
+	}
+
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&svc.ID); err != nil {
+		return processSQLErrorf(err, "Insert query failed")
+	}
+
+	return nil
+}
+
+// UpdateService updates the service.
+func (s *PrincipalStore) UpdateService(ctx context.Context, svc *types.Service) error {
+	const sqlQuery = `
+		UPDATE principals
+		SET
+			principal_email     	  = :principal_email
+			,principal_display_name   = :principal_display_name
+			,principal_admin          = :principal_admin
+			,principal_blocked        = :principal_blocked
+			,principal_updated        = :principal_updated
+		WHERE principal_type = 'service' AND principal_id = :principal_id`
+
+	dbSVC, err := s.mapToDBservice(svc)
+	if err != nil {
+		return fmt.Errorf("failed to map db service: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(sqlQuery, dbSVC)
+	if err != nil {
+		return processSQLErrorf(err, "Failed to bind service object")
+	}
+
+	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
+		return processSQLErrorf(err, "Update query failed")
+	}
+
+	return err
+}
+
+// DeleteService deletes the service.
+func (s *PrincipalStore) DeleteService(ctx context.Context, id int64) error {
+	const sqlQuery = `
+		DELETE FROM principals
+		WHERE principal_type = 'service' AND principal_id = $1`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	// delete the service
+	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
+		return processSQLErrorf(err, "The delete query failed")
+	}
+
+	return nil
+}
+
+// ListServices returns a list of service for a specific parent.
+func (s *PrincipalStore) ListServices(ctx context.Context) ([]*types.Service, error) {
+	const sqlQuery = serviceSelectBase + `
+		WHERE principal_type = 'service'
+		ORDER BY principal_uid ASC`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*service{}
+
+	err := db.SelectContext(ctx, &dst, sqlQuery)
+	if err != nil {
+		return nil, processSQLErrorf(err, "Failed executing default list query")
+	}
+
+	return s.mapDBServices(dst), nil
+}
+
+// CountServices returns a count of service for a specific parent.
+func (s *PrincipalStore) CountServices(ctx context.Context) (int64, error) {
+	const sqlQuery = `
+		SELECT count(*)
+		FROM principals
+		WHERE principal_type = 'service'`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int64
+	err := db.QueryRowContext(ctx, sqlQuery).Scan(&count)
+	if err != nil {
+		return 0, processSQLErrorf(err, "Failed executing count query")
+	}
+
+	return count, nil
+}
+
+func (s *PrincipalStore) mapDBService(dbSvc *service) *types.Service {
+	return &dbSvc.Service
+}
+
+func (s *PrincipalStore) mapDBServices(dbSVCs []*service) []*types.Service {
+	res := make([]*types.Service, len(dbSVCs))
+	for i := range dbSVCs {
+		res[i] = s.mapDBService(dbSVCs[i])
+	}
+	return res
+}
+
+func (s *PrincipalStore) mapToDBservice(svc *types.Service) (*service, error) {
+	// service comes from outside.
+	if svc == nil {
+		return nil, fmt.Errorf("service is nil")
+	}
+
+	uidUnique, err := s.uidTransformation(svc.UID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to transform service UID: %w", err)
+	}
+	dbService := &service{
+		Service:   *svc,
+		UIDUnique: uidUnique,
+	}
+
+	return dbService, nil
+}

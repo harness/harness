@@ -7,6 +7,7 @@ package server
 
 import (
 	"context"
+
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	events2 "github.com/harness/gitness/gitrpc/events"
@@ -56,12 +57,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
-	userStore := database.ProvideUserStore(db, principalUIDTransformation)
+	principalStore := database.ProvidePrincipalStore(db, principalUIDTransformation)
 	tokenStore := database.ProvideTokenStore(db)
-	controller := user.NewController(checkUser, authorizer, userStore, tokenStore)
+	controller := user.NewController(checkUser, authorizer, principalStore, tokenStore)
 	checkService := check.ProvideServiceCheck()
-	serviceStore := database.ProvideServiceStore(db, principalUIDTransformation)
-	serviceController := service.NewController(checkService, authorizer, serviceStore)
+	serviceController := service.NewController(checkService, authorizer, principalStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller, serviceController)
 	tokenClient, err := client.ProvideTokenClient(serviceJWTProvider, typesConfig)
 	if err != nil {
@@ -76,13 +76,12 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	serviceAccount := check.ProvideServiceAccountCheck()
-	serviceAccountStore := database.ProvideServiceAccountStore(db, principalUIDTransformation)
 	pathTransformation := store.ProvidePathTransformation()
 	spaceStore := database.ProvideSpaceStore(db, pathTransformation)
 	repoStore := database.ProvideRepoStore(db, pathTransformation)
-	serviceaccountController := serviceaccount.NewController(serviceAccount, authorizer, serviceAccountStore, spaceStore, repoStore, tokenStore)
+	serviceaccountController := serviceaccount.NewController(serviceAccount, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	checkSpace := check.ProvideSpaceCheck()
-	spaceController := space.ProvideController(config, checkSpace, authorizer, spaceStore, repoStore, serviceAccountStore)
+	spaceController := space.ProvideController(config, checkSpace, authorizer, spaceStore, repoStore, principalStore)
 	accountClient, err := client.ProvideAccountClient(serviceJWTProvider, typesConfig)
 	if err != nil {
 		return nil, err
@@ -97,10 +96,10 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.ProvideController(config, checkRepo, authorizer, spaceStore, repoStore, serviceAccountStore, gitrpcInterface)
+	repoController := repo.ProvideController(config, checkRepo, authorizer, spaceStore, repoStore, principalStore, gitrpcInterface)
 	pullReqStore := database.ProvidePullReqStore(db)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db)
-	pullreqController := pullreq.ProvideController(db, authorizer, pullReqStore, pullReqActivityStore, repoStore, serviceAccountStore, gitrpcInterface)
+	pullreqController := pullreq.ProvideController(db, authorizer, pullReqStore, pullReqActivityStore, repoStore, principalStore, gitrpcInterface)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
 	webhookConfig := ProvideWebhookConfig(config)

@@ -15,6 +15,7 @@ type (
 		UID         string `db:"principal_uid"          json:"uid"`
 		Email       string `db:"principal_email"        json:"email"`
 		DisplayName string `db:"principal_display_name" json:"display_name"`
+		Admin       bool   `db:"principal_admin"        json:"admin"`
 		Blocked     bool   `db:"principal_blocked"      json:"blocked"`
 		Salt        string `db:"principal_salt"         json:"-"`
 		Created     int64  `db:"principal_created"      json:"created"`
@@ -33,3 +34,27 @@ type (
 		ParentID    *int64                   `json:"parent_id"`
 	}
 )
+
+func (s *ServiceAccount) ToPrincipal() *Principal {
+	return &Principal{
+		ID:          s.ID,
+		UID:         s.UID,
+		Email:       s.Email,
+		Type:        enum.PrincipalTypeServiceAccount,
+		DisplayName: s.DisplayName,
+		Admin:       s.Admin,
+		Blocked:     s.Blocked,
+		Salt:        s.Salt,
+		Created:     s.Created,
+		Updated:     s.Updated,
+	}
+}
+
+func (s *ServiceAccount) ToPrincipalInfo() *PrincipalInfo {
+	return &PrincipalInfo{
+		ID:          s.ID,
+		UID:         s.UID,
+		DisplayName: s.DisplayName,
+		Email:       s.Email,
+	}
+}

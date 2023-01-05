@@ -19,7 +19,7 @@ import (
  */
 func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
 	userUID string, admin bool) (*types.User, error) {
-	user, err := findUserFromUID(ctx, c.userStore, userUID)
+	user, err := findUserFromUID(ctx, c.principalStore, userUID)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
 	user.Admin = admin
 	user.Updated = time.Now().UnixMilli()
 
-	err = c.userStore.Update(ctx, user)
+	err = c.principalStore.UpdateUser(ctx, user)
 	if err != nil {
 		return nil, err
 	}

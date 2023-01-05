@@ -14,14 +14,14 @@ import (
 )
 
 type Controller struct {
-	defaultBranch string
-	gitBaseURL    string
-	repoCheck     check.Repo
-	authorizer    authz.Authorizer
-	spaceStore    store.SpaceStore
-	repoStore     store.RepoStore
-	saStore       store.ServiceAccountStore
-	gitRPCClient  gitrpc.Interface
+	defaultBranch  string
+	gitBaseURL     string
+	repoCheck      check.Repo
+	authorizer     authz.Authorizer
+	spaceStore     store.SpaceStore
+	repoStore      store.RepoStore
+	principalStore store.PrincipalStore
+	gitRPCClient   gitrpc.Interface
 }
 
 func NewController(
@@ -31,18 +31,18 @@ func NewController(
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
 	repoStore store.RepoStore,
-	saStore store.ServiceAccountStore,
+	principalStore store.PrincipalStore,
 	gitRPCClient gitrpc.Interface,
 ) *Controller {
 	return &Controller{
-		defaultBranch: defaultBranch,
-		gitBaseURL:    gitBaseURL,
-		repoCheck:     repoCheck,
-		authorizer:    authorizer,
-		spaceStore:    spaceStore,
-		repoStore:     repoStore,
-		saStore:       saStore,
-		gitRPCClient:  gitRPCClient,
+		defaultBranch:  defaultBranch,
+		gitBaseURL:     gitBaseURL,
+		repoCheck:      repoCheck,
+		authorizer:     authorizer,
+		spaceStore:     spaceStore,
+		repoStore:      repoStore,
+		principalStore: principalStore,
+		gitRPCClient:   gitRPCClient,
 	}
 }
 

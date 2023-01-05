@@ -13,79 +13,100 @@ import (
 )
 
 type (
-	// UserStore defines the user data storage.
-	UserStore interface {
-		// Find finds the user by id.
-		Find(ctx context.Context, id int64) (*types.User, error)
+	// PrincipalStore defines the principal data storage.
+	PrincipalStore interface {
+		/*
+		 * PRINCIPAL RELATED OPERATIONS.
+		 */
 
-		// FindUID finds the user by uid.
-		FindUID(ctx context.Context, uid string) (*types.User, error)
+		// Find finds the principal by id.
+		Find(ctx context.Context, id int64) (*types.Principal, error)
 
-		// FindEmail finds the user by email.
-		FindEmail(ctx context.Context, email string) (*types.User, error)
+		// FindByUID finds the principal by uid.
+		FindByUID(ctx context.Context, uid string) (*types.Principal, error)
 
-		// Create saves the user details.
-		Create(ctx context.Context, user *types.User) error
+		// FindByEmail finds the principal by email.
+		FindByEmail(ctx context.Context, email string) (*types.Principal, error)
 
-		// Update updates the user details.
-		Update(ctx context.Context, user *types.User) error
+		/*
+		 * USER RELATED OPERATIONS.
+		 */
 
-		// Delete deletes the user.
-		Delete(ctx context.Context, id int64) error
+		// FindUser finds the user by id.
+		FindUser(ctx context.Context, id int64) (*types.User, error)
 
-		// List returns a list of users.
-		List(ctx context.Context, params *types.UserFilter) ([]*types.User, error)
+		// FindUserByUID finds the user by uid.
+		FindUserByUID(ctx context.Context, uid string) (*types.User, error)
 
-		// Count returns a count of users.
-		Count(ctx context.Context) (int64, error)
-	}
+		// FindUserByEmail finds the user by email.
+		FindUserByEmail(ctx context.Context, email string) (*types.User, error)
 
-	// ServiceAccountStore defines the service account data storage.
-	ServiceAccountStore interface {
-		// Find finds the service account by id.
-		Find(ctx context.Context, id int64) (*types.ServiceAccount, error)
+		// CreateUser saves the user details.
+		CreateUser(ctx context.Context, user *types.User) error
 
-		// FindUID finds the service account by uid.
-		FindUID(ctx context.Context, uid string) (*types.ServiceAccount, error)
+		// UpdateUser updates an existing user.
+		UpdateUser(ctx context.Context, user *types.User) error
 
-		// Create saves the service account.
-		Create(ctx context.Context, sa *types.ServiceAccount) error
+		// DeleteUser deletes the user.
+		DeleteUser(ctx context.Context, id int64) error
 
-		// Update updates the service account details.
-		Update(ctx context.Context, sa *types.ServiceAccount) error
+		// ListUsers returns a list of users.
+		ListUsers(ctx context.Context, params *types.UserFilter) ([]*types.User, error)
 
-		// Delete deletes the service account.
-		Delete(ctx context.Context, id int64) error
+		// CountUsers returns a count of users.
+		CountUsers(ctx context.Context) (int64, error)
 
-		// List returns a list of service accounts for a specific parent.
-		List(ctx context.Context, parentType enum.ParentResourceType, parentID int64) ([]*types.ServiceAccount, error)
+		/*
+		 * SERVICE ACCOUNT RELATED OPERATIONS.
+		 */
 
-		// Count returns a count of service accounts for a specific parent.
-		Count(ctx context.Context, parentType enum.ParentResourceType, parentID int64) (int64, error)
-	}
+		// FindServiceAccount finds the service account by id.
+		FindServiceAccount(ctx context.Context, id int64) (*types.ServiceAccount, error)
 
-	// ServiceStore defines the service data storage.
-	ServiceStore interface {
-		// Find finds the service by id.
-		Find(ctx context.Context, id int64) (*types.Service, error)
+		// FindServiceAccountByUID finds the service account by uid.
+		FindServiceAccountByUID(ctx context.Context, uid string) (*types.ServiceAccount, error)
 
-		// FindUID finds the service by uid.
-		FindUID(ctx context.Context, uid string) (*types.Service, error)
+		// CreateServiceAccount saves the service account.
+		CreateServiceAccount(ctx context.Context, sa *types.ServiceAccount) error
 
-		// Create saves the service.
-		Create(ctx context.Context, sa *types.Service) error
+		// UpdateServiceAccount updates the service account details.
+		UpdateServiceAccount(ctx context.Context, sa *types.ServiceAccount) error
 
-		// Update updates the service details.
-		Update(ctx context.Context, sa *types.Service) error
+		// DeleteServiceAccount deletes the service account.
+		DeleteServiceAccount(ctx context.Context, id int64) error
 
-		// Delete deletes the service.
-		Delete(ctx context.Context, id int64) error
+		// ListServiceAccounts returns a list of service accounts for a specific parent.
+		ListServiceAccounts(ctx context.Context,
+			parentType enum.ParentResourceType, parentID int64) ([]*types.ServiceAccount, error)
 
-		// List returns a list of all services.
-		List(ctx context.Context) ([]*types.Service, error)
+		// CountServiceAccounts returns a count of service accounts for a specific parent.
+		CountServiceAccounts(ctx context.Context,
+			parentType enum.ParentResourceType, parentID int64) (int64, error)
 
-		// Count returns a count of all services.
-		Count(ctx context.Context) (int64, error)
+		/*
+		 * SERVICE RELATED OPERATIONS.
+		 */
+
+		// FindService finds the service by id.
+		FindService(ctx context.Context, id int64) (*types.Service, error)
+
+		// FindServiceByUID finds the service by uid.
+		FindServiceByUID(ctx context.Context, uid string) (*types.Service, error)
+
+		// CreateService saves the service.
+		CreateService(ctx context.Context, sa *types.Service) error
+
+		// UpdateService updates the service.
+		UpdateService(ctx context.Context, sa *types.Service) error
+
+		// DeleteService deletes the service.
+		DeleteService(ctx context.Context, id int64) error
+
+		// ListServices returns a list of service for a specific parent.
+		ListServices(ctx context.Context) ([]*types.Service, error)
+
+		// CountServices returns a count of service for a specific parent.
+		CountServices(ctx context.Context) (int64, error)
 	}
 
 	// SpaceStore defines the space data storage.

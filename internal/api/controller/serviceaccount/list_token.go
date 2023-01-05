@@ -16,7 +16,7 @@ import (
 // ListTokens lists all tokens of a service account.
 func (c *Controller) ListTokens(ctx context.Context, session *auth.Session,
 	saUID string) ([]*types.Token, error) {
-	sa, err := findServiceAccountFromUID(ctx, c.saStore, saUID)
+	sa, err := findServiceAccountFromUID(ctx, c.principalStore, saUID)
 	if err != nil {
 		return nil, err
 	}

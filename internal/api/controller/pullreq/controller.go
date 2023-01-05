@@ -28,7 +28,7 @@ type Controller struct {
 	pullreqStore         store.PullReqStore
 	pullreqActivityStore store.PullReqActivityStore
 	repoStore            store.RepoStore
-	saStore              store.ServiceAccountStore
+	principalStore       store.PrincipalStore
 	gitRPCClient         gitrpc.Interface
 }
 
@@ -38,7 +38,7 @@ func NewController(
 	pullreqStore store.PullReqStore,
 	pullreqActivityStore store.PullReqActivityStore,
 	repoStore store.RepoStore,
-	saStore store.ServiceAccountStore,
+	principalStore store.PrincipalStore,
 	gitRPCClient gitrpc.Interface,
 ) *Controller {
 	return &Controller{
@@ -47,7 +47,7 @@ func NewController(
 		pullreqStore:         pullreqStore,
 		pullreqActivityStore: pullreqActivityStore,
 		repoStore:            repoStore,
-		saStore:              saStore,
+		principalStore:       principalStore,
 		gitRPCClient:         gitRPCClient,
 	}
 }

@@ -5,6 +5,8 @@
 // Package types defines common data structures.
 package types
 
+import "github.com/harness/gitness/types/enum"
+
 type (
 	// Service is a principal representing a different internal service that runs alongside gitness.
 	Service struct {
@@ -20,3 +22,27 @@ type (
 		Updated     int64  `db:"principal_updated"      json:"updated"`
 	}
 )
+
+func (s *Service) ToPrincipal() *Principal {
+	return &Principal{
+		ID:          s.ID,
+		UID:         s.UID,
+		Email:       s.Email,
+		Type:        enum.PrincipalTypeService,
+		DisplayName: s.DisplayName,
+		Admin:       s.Admin,
+		Blocked:     s.Blocked,
+		Salt:        s.Salt,
+		Created:     s.Created,
+		Updated:     s.Updated,
+	}
+}
+
+func (s *Service) ToPrincipalInfo() *PrincipalInfo {
+	return &PrincipalInfo{
+		ID:          s.ID,
+		UID:         s.UID,
+		DisplayName: s.DisplayName,
+		Email:       s.Email,
+	}
+}

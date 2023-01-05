@@ -11,22 +11,22 @@ import (
 )
 
 type Controller struct {
-	gitBaseURL string
-	spaceCheck check.Space
-	authorizer authz.Authorizer
-	spaceStore store.SpaceStore
-	repoStore  store.RepoStore
-	saStore    store.ServiceAccountStore
+	gitBaseURL     string
+	spaceCheck     check.Space
+	authorizer     authz.Authorizer
+	spaceStore     store.SpaceStore
+	repoStore      store.RepoStore
+	principalStore store.PrincipalStore
 }
 
 func NewController(gitBaseURL string, spaceCheck check.Space, authorizer authz.Authorizer, spaceStore store.SpaceStore,
-	repoStore store.RepoStore, saStore store.ServiceAccountStore) *Controller {
+	repoStore store.RepoStore, principalStore store.PrincipalStore) *Controller {
 	return &Controller{
-		gitBaseURL: gitBaseURL,
-		spaceCheck: spaceCheck,
-		authorizer: authorizer,
-		spaceStore: spaceStore,
-		repoStore:  repoStore,
-		saStore:    saStore,
+		gitBaseURL:     gitBaseURL,
+		spaceCheck:     spaceCheck,
+		authorizer:     authorizer,
+		spaceStore:     spaceStore,
+		repoStore:      repoStore,
+		principalStore: principalStore,
 	}
 }

@@ -28,12 +28,12 @@ func (c *Controller) List(ctx context.Context, session *auth.Session,
 		return nil, 0, err
 	}
 
-	count, err := c.userStore.Count(ctx)
+	count, err := c.principalStore.CountUsers(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count users: %w", err)
 	}
 
-	repos, err := c.userStore.List(ctx, filter)
+	repos, err := c.principalStore.ListUsers(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list users: %w", err)
 	}

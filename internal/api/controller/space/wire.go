@@ -19,6 +19,6 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(config *types.Config, spaceCheck check.Space, authorizer authz.Authorizer,
-	spaceStore store.SpaceStore, repoStore store.RepoStore, saStore store.ServiceAccountStore) *Controller {
-	return NewController(config.Git.BaseURL, spaceCheck, authorizer, spaceStore, repoStore, saStore)
+	spaceStore store.SpaceStore, repoStore store.RepoStore, principalStore store.PrincipalStore) *Controller {
+	return NewController(config.Git.BaseURL, spaceCheck, authorizer, spaceStore, repoStore, principalStore)
 }

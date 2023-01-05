@@ -29,9 +29,9 @@ func (c *Controller) Login(ctx context.Context, session *auth.Session,
 	username string, password string) (*types.TokenResponse, error) {
 	// no auth check required, password is used for it.
 
-	user, err := findUserFromUID(ctx, c.userStore, username)
+	user, err := findUserFromUID(ctx, c.principalStore, username)
 	if errors.Is(err, store.ErrResourceNotFound) {
-		user, err = findUserFromEmail(ctx, c.userStore, username)
+		user, err = findUserFromEmail(ctx, c.principalStore, username)
 	}
 
 	// always return not found for security reasons.

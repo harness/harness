@@ -19,7 +19,7 @@ import (
  */
 func (c *Controller) ListTokens(ctx context.Context, session *auth.Session,
 	userUID string, tokenType enum.TokenType) ([]*types.Token, error) {
-	user, err := findUserFromUID(ctx, c.userStore, userUID)
+	user, err := findUserFromUID(ctx, c.principalStore, userUID)
 	if err != nil {
 		return nil, err
 	}

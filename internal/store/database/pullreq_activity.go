@@ -376,10 +376,10 @@ func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
 		Resolver:   nil,
 	}
 	m.Author = types.PrincipalInfo{
-		ID:    act.CreatedBy,
-		UID:   act.AuthorUID,
-		Name:  act.AuthorName,
-		Email: act.AuthorEmail,
+		ID:          act.CreatedBy,
+		UID:         act.AuthorUID,
+		DisplayName: act.AuthorName,
+		Email:       act.AuthorEmail,
 	}
 
 	_ = json.Unmarshal(act.Payload, &m.Payload)
@@ -387,10 +387,10 @@ func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
 
 	if act.ResolvedBy.Valid {
 		m.Resolver = &types.PrincipalInfo{
-			ID:    act.ResolvedBy.Int64,
-			UID:   act.ResolverUID.String,
-			Name:  act.ResolverName.String,
-			Email: act.ResolverEmail.String,
+			ID:          act.ResolvedBy.Int64,
+			UID:         act.ResolverUID.String,
+			DisplayName: act.ResolverName.String,
+			Email:       act.ResolverEmail.String,
 		}
 	}
 

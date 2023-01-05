@@ -18,7 +18,7 @@ import (
 // DeleteToken deletes a token of a sevice account.
 func (c *Controller) DeleteToken(ctx context.Context, session *auth.Session,
 	saUID string, tokenUID string) error {
-	sa, err := findServiceAccountFromUID(ctx, c.saStore, saUID)
+	sa, err := findServiceAccountFromUID(ctx, c.principalStore, saUID)
 	if err != nil {
 		return err
 	}

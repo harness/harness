@@ -25,7 +25,7 @@ type UpdateInput struct {
 // Update updates the provided service.
 func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	serviceUID string, in *UpdateInput) (*types.Service, error) {
-	svc, err := findServiceFromUID(ctx, c.serviceStore, serviceUID)
+	svc, err := findServiceFromUID(ctx, c.principalStore, serviceUID)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	err = c.serviceStore.Update(ctx, svc)
+	err = c.principalStore.UpdateService(ctx, svc)
 	if err != nil {
 		return nil, err
 	}

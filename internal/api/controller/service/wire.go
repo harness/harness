@@ -18,6 +18,6 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(serviceCheck check.Service, authorizer authz.Authorizer,
-	serviceStore store.ServiceStore) *Controller {
-	return NewController(serviceCheck, authorizer, serviceStore)
+	principalStore store.PrincipalStore) *Controller {
+	return NewController(serviceCheck, authorizer, principalStore)
 }

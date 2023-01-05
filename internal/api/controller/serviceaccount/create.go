@@ -74,7 +74,7 @@ func (c *Controller) CreateNoAuth(ctx context.Context,
 	}
 
 	// TODO: Racing condition with parent (space/repo) being deleted!
-	err := c.saStore.Create(ctx, sa)
+	err := c.principalStore.CreateServiceAccount(ctx, sa)
 	if err != nil {
 		return nil, err
 	}

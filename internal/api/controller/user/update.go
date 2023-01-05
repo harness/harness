@@ -28,7 +28,7 @@ type UpdateInput struct {
 // Update updates the provided user.
 func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	userUID string, in *UpdateInput) (*types.User, error) {
-	user, err := findUserFromUID(ctx, c.userStore, userUID)
+	user, err := findUserFromUID(ctx, c.principalStore, userUID)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	err = c.userStore.Update(ctx, user)
+	err = c.principalStore.UpdateUser(ctx, user)
 	if err != nil {
 		return nil, err
 	}

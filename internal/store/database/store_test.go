@@ -19,7 +19,7 @@ import (
 func connect() (*sqlx.DB, error) {
 	var (
 		driver = "sqlite3"
-		config = ":memory:?_foreign_keys=1"
+		config = ":memory:"
 	)
 	if os.Getenv("DATABASE_CONFIG") != "" {
 		driver = os.Getenv("DATABASE_DRIVER")

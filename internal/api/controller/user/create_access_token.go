@@ -27,7 +27,7 @@ type CreateTokenInput struct {
  */
 func (c *Controller) CreateAccessToken(ctx context.Context, session *auth.Session,
 	userUID string, in *CreateTokenInput) (*types.TokenResponse, error) {
-	user, err := findUserFromUID(ctx, c.userStore, userUID)
+	user, err := findUserFromUID(ctx, c.principalStore, userUID)
 	if err != nil {
 		return nil, err
 	}

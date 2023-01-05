@@ -25,7 +25,7 @@ type CreateTokenInput struct {
 // CreateToken creates a new service account access token.
 func (c *Controller) CreateToken(ctx context.Context, session *auth.Session,
 	saUID string, in *CreateTokenInput) (*types.TokenResponse, error) {
-	sa, err := findServiceAccountFromUID(ctx, c.saStore, saUID)
+	sa, err := findServiceAccountFromUID(ctx, c.principalStore, saUID)
 	if err != nil {
 		return nil, err
 	}

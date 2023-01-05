@@ -17,7 +17,7 @@ import (
  */
 func (c *Controller) Delete(ctx context.Context, session *auth.Session,
 	serviceUID string) error {
-	svc, err := findServiceFromUID(ctx, c.serviceStore, serviceUID)
+	svc, err := findServiceFromUID(ctx, c.principalStore, serviceUID)
 	if err != nil {
 		return err
 	}
@@ -27,5 +27,5 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session,
 		return err
 	}
 
-	return c.serviceStore.Delete(ctx, svc.ID)
+	return c.principalStore.DeleteService(ctx, svc.ID)
 }

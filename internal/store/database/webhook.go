@@ -74,7 +74,7 @@ const (
 // Find finds the webhook by id.
 func (s *WebhookStore) Find(ctx context.Context, id int64) (*types.Webhook, error) {
 	const sqlQuery = webhookSelectBase + `
-	WHERE webhook_id = $1`
+		WHERE webhook_id = $1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -94,29 +94,29 @@ func (s *WebhookStore) Find(ctx context.Context, id int64) (*types.Webhook, erro
 // Create creates a new webhook.
 func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 	const sqlQuery = `
-	INSERT INTO webhooks (
-		 webhook_repo_id
-		,webhook_space_id
-		,webhook_created_by
-		,webhook_created
-		,webhook_updated
-		,webhook_url
-		,webhook_secret
-		,webhook_enabled
-		,webhook_insecure
-		,webhook_triggers
-	) values (
-		 :webhook_repo_id
-		,:webhook_space_id
-		,:webhook_created_by
-		,:webhook_created
-		,:webhook_updated
-		,:webhook_url
-		,:webhook_secret
-		,:webhook_enabled
-		,:webhook_insecure
-		,:webhook_triggers
-	) RETURNING webhook_id`
+		INSERT INTO webhooks (
+			webhook_repo_id
+			,webhook_space_id
+			,webhook_created_by
+			,webhook_created
+			,webhook_updated
+			,webhook_url
+			,webhook_secret
+			,webhook_enabled
+			,webhook_insecure
+			,webhook_triggers
+		) values (
+			:webhook_repo_id
+			,:webhook_space_id
+			,:webhook_created_by
+			,:webhook_created
+			,:webhook_updated
+			,:webhook_url
+			,:webhook_secret
+			,:webhook_enabled
+			,:webhook_insecure
+			,:webhook_triggers
+		) RETURNING webhook_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -140,16 +140,16 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 // Update updates an existing webhook.
 func (s *WebhookStore) Update(ctx context.Context, hook *types.Webhook) error {
 	const sqlQuery = `
-	UPDATE webhooks
-	SET
-		webhook_version = :webhook_version
-		,webhook_updated = :webhook_updated
-		,webhook_url = :webhook_url
-		,webhook_secret = :webhook_secret
-		,webhook_enabled = :webhook_enabled
-		,webhook_insecure = :webhook_insecure
-		,webhook_triggers = :webhook_triggers
-	WHERE webhook_id = :webhook_id and webhook_version = :webhook_version - 1`
+		UPDATE webhooks
+		SET
+			webhook_version = :webhook_version
+			,webhook_updated = :webhook_updated
+			,webhook_url = :webhook_url
+			,webhook_secret = :webhook_secret
+			,webhook_enabled = :webhook_enabled
+			,webhook_insecure = :webhook_insecure
+			,webhook_triggers = :webhook_triggers
+		WHERE webhook_id = :webhook_id and webhook_version = :webhook_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -190,9 +190,9 @@ func (s *WebhookStore) Update(ctx context.Context, hook *types.Webhook) error {
 // Delete deletes the webhook for the given id.
 func (s *WebhookStore) Delete(ctx context.Context, id int64) error {
 	const sqlQuery = `
-	DELETE FROM webhooks
-	WHERE webhook_id = $1
-	`
+		DELETE FROM webhooks
+		WHERE webhook_id = $1`
+
 	if _, err := s.db.ExecContext(ctx, sqlQuery, id); err != nil {
 		return processSQLErrorf(err, "The delete query failed")
 	}

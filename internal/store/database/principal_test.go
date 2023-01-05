@@ -38,19 +38,19 @@ func TestUser(t *testing.T) {
 		return
 	}
 
-	userStoreSync := NewUserStore(db, store.ToLowerPrincipalUIDTransformation)
-	t.Run("create", testUserCreate(userStoreSync))
-	t.Run("duplicate", testUserDuplicate(userStoreSync))
-	t.Run("count", testUserCount(userStoreSync))
-	t.Run("find", testUserFind(userStoreSync))
-	t.Run("list", testUserList(userStoreSync))
-	t.Run("update", testUserUpdate(userStoreSync))
-	t.Run("delete", testUserDelete(userStoreSync))
+	principalStore := NewPrincipalStore(db, store.ToLowerPrincipalUIDTransformation)
+	t.Run("create", testUserCreate(principalStore))
+	t.Run("duplicate", testUserDuplicate(principalStore))
+	t.Run("count", testUserCount(principalStore))
+	t.Run("find", testUserFind(principalStore))
+	t.Run("list", testUserList(principalStore))
+	t.Run("update", testUserUpdate(principalStore))
+	t.Run("delete", testUserDelete(principalStore))
 }
 
 // this test creates entries in the database and confirms
 // the primary keys were auto-incremented.
-func testUserCreate(store store.UserStore) func(t *testing.T) {
+func testUserCreate(store store.PrincipalStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		ctx := context.Background()
 		vv := []*types.User{}
@@ -63,7 +63,7 @@ func testUserCreate(store store.UserStore) func(t *testing.T) {
 		// generate a deterministic token for each
 		// entry based on the hash of the email.
 		v.Salt = fmt.Sprintf("%x", v.Email)
-		if err := store.Create(ctx, v); err != nil {
+		if err := store.CreateUser(ctx, v); err != nil {
 			t.Error(err)
 			return
 		}
@@ -73,7 +73,7 @@ func testUserCreate(store store.UserStore) func(t *testing.T) {
 		// create row 2
 		v = vv[1]
 		v.Salt = fmt.Sprintf("%x", v.Email)
-		if err := store.Create(ctx, v); err != nil {
+		if err := store.CreateUser(ctx, v); err != nil {
 			t.Error(err)
 			return
 		}
@@ -86,14 +86,14 @@ func testUserCreate(store store.UserStore) func(t *testing.T) {
 // this test attempts to create an entry in the database using
 // a duplicate email to verify that unique email constraints are
 // being enforced.
-func testUserDuplicate(store store.UserStore) func(t *testing.T) {
+func testUserDuplicate(store store.PrincipalStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		vv := []*types.User{}
 		if err := unmarshal("testdata/users.json", &vv); err != nil {
 			t.Error(err)
 			return
 		}
-		if err := store.Create(context.Background(), vv[0]); err == nil {
+		if err := store.CreateUser(context.Background(), vv[0]); err == nil {
 			t.Errorf("Expect unique index violation")
 		}
 	}
@@ -101,9 +101,9 @@ func testUserDuplicate(store store.UserStore) func(t *testing.T) {
 
 // this test counts the number of users in the database
 // and compares to the expected count.
-func testUserCount(store store.UserStore) func(t *testing.T) {
+func testUserCount(store store.PrincipalStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		got, err := store.Count(context.Background())
+		got, err := store.CountUsers(context.Background())
 		if err != nil {
 			t.Error(err)
 			return
@@ -119,7 +119,7 @@ func testUserCount(store store.UserStore) func(t *testing.T) {
 // to ensure all columns are correctly mapped.
 //
 //nolint:gocognit // test method, keep for now
-func testUserFind(store store.UserStore) func(t *testing.T) {
+func testUserFind(store store.PrincipalStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		ctx := context.Background()
 		vv := []*types.User{}
@@ -130,7 +130,7 @@ func testUserFind(store store.UserStore) func(t *testing.T) {
 		want := vv[0]
 
 		t.Run("id", func(t *testing.T) {
-			got, err := store.Find(ctx, 1)
+			got, err := store.FindUser(ctx, 1)
 			if err != nil {
 				t.Error(err)
 				return
@@ -142,7 +142,7 @@ func testUserFind(store store.UserStore) func(t *testing.T) {
 		})
 
 		t.Run("uid", func(t *testing.T) {
-			got, err := store.FindUID(ctx, "jane21")
+			got, err := store.FindUserByUID(ctx, "jane21")
 			if err != nil {
 				t.Error(err)
 				return
@@ -154,7 +154,7 @@ func testUserFind(store store.UserStore) func(t *testing.T) {
 		})
 
 		t.Run("email", func(t *testing.T) {
-			got, err := store.FindEmail(ctx, want.Email)
+			got, err := store.FindUserByEmail(ctx, want.Email)
 			if err != nil {
 				t.Error(err)
 				return
@@ -166,7 +166,7 @@ func testUserFind(store store.UserStore) func(t *testing.T) {
 		})
 
 		t.Run("email/nocase", func(t *testing.T) {
-			got, err := store.FindEmail(ctx, strings.ToUpper(want.Email))
+			got, err := store.FindUserByEmail(ctx, strings.ToUpper(want.Email))
 			if err != nil {
 				t.Error(err)
 				return
@@ -182,14 +182,14 @@ func testUserFind(store store.UserStore) func(t *testing.T) {
 // this test fetches a list of users from the database
 // and compares to the expected results (sourced from a json file)
 // to ensure all columns are correctly mapped.
-func testUserList(store store.UserStore) func(t *testing.T) {
+func testUserList(store store.PrincipalStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		want := []*types.User{}
 		if err := unmarshal("testdata/users.json", &want); err != nil {
 			t.Error(err)
 			return
 		}
-		got, err := store.List(context.Background(), &types.UserFilter{Page: 0, Size: 100})
+		got, err := store.ListUsers(context.Background(), &types.UserFilter{Page: 0, Size: 100})
 		if err != nil {
 			t.Error(err)
 			return
@@ -203,20 +203,20 @@ func testUserList(store store.UserStore) func(t *testing.T) {
 
 // this test updates an user in the database and then fetches
 // the user and confirms the column was updated as expected.
-func testUserUpdate(store store.UserStore) func(t *testing.T) {
+func testUserUpdate(store store.PrincipalStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		ctx := context.Background()
-		before, err := store.Find(ctx, 1)
+		before, err := store.FindUser(ctx, 1)
 		if err != nil {
 			t.Error(err)
 			return
 		}
 		before.Updated = time.Now().Unix()
-		if err = store.Update(ctx, before); err != nil {
+		if err = store.UpdateUser(ctx, before); err != nil {
 			t.Error(err)
 			return
 		}
-		after, err := store.Find(ctx, 1)
+		after, err := store.FindUser(ctx, 1)
 		if err != nil {
 			t.Error(err)
 			return
@@ -232,7 +232,7 @@ func testUserUpdate(store store.UserStore) func(t *testing.T) {
 // this test deletes an user from the database and then confirms
 // subsequent attempts to fetch the deleted user result in
 // a sql.ErrNoRows error.
-func testUserDelete(s store.UserStore) func(t *testing.T) {
+func testUserDelete(s store.PrincipalStore) func(t *testing.T) {
 	return func(t *testing.T) {
 		ctx := context.Background()
 		_, err := s.Find(ctx, 1)
@@ -240,7 +240,7 @@ func testUserDelete(s store.UserStore) func(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		if err = s.Delete(ctx, 1); err != nil {
+		if err = s.DeleteUser(ctx, 1); err != nil {
 			t.Error(err)
 			return
 		}

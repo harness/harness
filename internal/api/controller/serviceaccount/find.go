@@ -35,5 +35,5 @@ func (c *Controller) Find(ctx context.Context, session *auth.Session,
  * WARNING: Never call as part of user flow.
  */
 func (c *Controller) FindNoAuth(ctx context.Context, saUID string) (*types.ServiceAccount, error) {
-	return findServiceAccountFromUID(ctx, c.saStore, saUID)
+	return findServiceAccountFromUID(ctx, c.principalStore, saUID)
 }

@@ -5,22 +5,30 @@
 package service
 
 import (
+	"context"
+
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 )
 
 type Controller struct {
-	serviceCheck check.Service
-	authorizer   authz.Authorizer
-	serviceStore store.ServiceStore
+	serviceCheck   check.Service
+	authorizer     authz.Authorizer
+	principalStore store.PrincipalStore
 }
 
 func NewController(serviceCheck check.Service, authorizer authz.Authorizer,
-	serviceStore store.ServiceStore) *Controller {
+	principalStore store.PrincipalStore) *Controller {
 	return &Controller{
-		serviceCheck: serviceCheck,
-		authorizer:   authorizer,
-		serviceStore: serviceStore,
+		serviceCheck:   serviceCheck,
+		authorizer:     authorizer,
+		principalStore: principalStore,
 	}
+}
+
+func findServiceFromUID(ctx context.Context,
+	principalStore store.PrincipalStore, serviceUID string) (*types.Service, error) {
+	return principalStore.FindServiceByUID(ctx, serviceUID)
 }

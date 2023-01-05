@@ -106,12 +106,7 @@ func getCommentActivity(session *auth.Session, pr *types.PullReq, in *CommentCre
 		Metadata:   nil,
 		ResolvedBy: nil,
 		Resolved:   nil,
-		Author: types.PrincipalInfo{
-			ID:    session.Principal.ID,
-			UID:   session.Principal.UID,
-			Name:  session.Principal.DisplayName,
-			Email: session.Principal.Email,
-		},
+		Author:     *session.Principal.ToPrincipalInfo(),
 	}
 
 	return act

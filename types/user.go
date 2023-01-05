@@ -43,17 +43,28 @@ type (
 		Sort  enum.UserAttr `json:"sort"`
 		Order enum.Order    `json:"order"`
 	}
-
-	Identity struct {
-		ID    int64  `json:"id"`
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	}
-
-	PrincipalInfo struct {
-		ID    int64  `json:"id"`
-		UID   string `json:"uid"`
-		Name  string `json:"name"`
-		Email string `json:"email"`
-	}
 )
+
+func (u *User) ToPrincipal() *Principal {
+	return &Principal{
+		ID:          u.ID,
+		UID:         u.UID,
+		Email:       u.Email,
+		Type:        enum.PrincipalTypeUser,
+		DisplayName: u.DisplayName,
+		Admin:       u.Admin,
+		Blocked:     u.Blocked,
+		Salt:        u.Salt,
+		Created:     u.Created,
+		Updated:     u.Updated,
+	}
+}
+
+func (u *User) ToPrincipalInfo() *PrincipalInfo {
+	return &PrincipalInfo{
+		ID:          u.ID,
+		UID:         u.UID,
+		DisplayName: u.DisplayName,
+		Email:       u.Email,
+	}
+}

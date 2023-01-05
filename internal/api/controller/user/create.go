@@ -75,7 +75,7 @@ func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bo
 		return nil, err
 	}
 
-	err = c.userStore.Create(ctx, user)
+	err = c.principalStore.CreateUser(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bo
 	// TODO: move responsibility somewhere else.
 	if user.ID == 1 {
 		user.Admin = true
-		err = c.userStore.Update(ctx, user)
+		err = c.principalStore.UpdateUser(ctx, user)
 		if err != nil {
 			return nil, err
 		}

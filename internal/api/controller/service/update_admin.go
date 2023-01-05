@@ -17,7 +17,7 @@ import (
 // UpdateAdmin updates the admin state of a service.
 func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
 	serviceUID string, admin bool) (*types.Service, error) {
-	sbc, err := findServiceFromUID(ctx, c.serviceStore, serviceUID)
+	sbc, err := findServiceFromUID(ctx, c.principalStore, serviceUID)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
 	sbc.Admin = admin
 	sbc.Updated = time.Now().UnixMilli()
 
-	err = c.serviceStore.Update(ctx, sbc)
+	err = c.principalStore.UpdateService(ctx, sbc)
 	if err != nil {
 		return nil, err
 	}

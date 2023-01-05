@@ -18,7 +18,7 @@ import (
  */
 func (c *Controller) FindEmail(ctx context.Context, session *auth.Session,
 	email string) (*types.User, error) {
-	user, err := findUserFromEmail(ctx, c.userStore, email)
+	user, err := findUserFromEmail(ctx, c.principalStore, email)
 	if err != nil {
 		return nil, err
 	}

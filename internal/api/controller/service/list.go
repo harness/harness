@@ -25,12 +25,12 @@ func (c *Controller) List(ctx context.Context, session *auth.Session) (int64, []
 		return 0, nil, err
 	}
 
-	count, err := c.serviceStore.Count(ctx)
+	count, err := c.principalStore.CountServices(ctx)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to count services: %w", err)
 	}
 
-	repos, err := c.serviceStore.List(ctx)
+	repos, err := c.principalStore.ListServices(ctx)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to list services: %w", err)
 	}

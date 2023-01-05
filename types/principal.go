@@ -26,49 +26,21 @@ type (
 		Created int64 `db:"principal_created"                json:"created"`
 		Updated int64 `db:"principal_updated"                json:"updated"`
 	}
+
+	// PrincipalInfo is a compressed representation of a principal we return as part of non-principal APIs.
+	PrincipalInfo struct {
+		ID          int64  `json:"id"`
+		UID         string `json:"uid"`
+		DisplayName string `json:"display_name"`
+		Email       string `json:"email"`
+	}
 )
 
-func PrincipalFromUser(user *User) *Principal {
-	return &Principal{
-		ID:          user.ID,
-		UID:         user.UID,
-		Email:       user.Email,
-		Type:        enum.PrincipalTypeUser,
-		DisplayName: user.DisplayName,
-		Admin:       user.Admin,
-		Blocked:     user.Blocked,
-		Salt:        user.Salt,
-		Created:     user.Created,
-		Updated:     user.Updated,
-	}
-}
-
-func PrincipalFromServiceAccount(sa *ServiceAccount) *Principal {
-	return &Principal{
-		ID:          sa.ID,
-		UID:         sa.UID,
-		Email:       sa.Email,
-		Type:        enum.PrincipalTypeServiceAccount,
-		DisplayName: sa.DisplayName,
-		Admin:       false,
-		Blocked:     sa.Blocked,
-		Salt:        sa.Salt,
-		Created:     sa.Created,
-		Updated:     sa.Updated,
-	}
-}
-
-func PrincipalFromService(s *Service) *Principal {
-	return &Principal{
-		ID:          s.ID,
-		UID:         s.UID,
-		Email:       s.Email,
-		Type:        enum.PrincipalTypeService,
-		DisplayName: s.DisplayName,
-		Admin:       s.Admin,
-		Blocked:     s.Blocked,
-		Salt:        s.Salt,
-		Created:     s.Created,
-		Updated:     s.Updated,
+func (p *Principal) ToPrincipalInfo() *PrincipalInfo {
+	return &PrincipalInfo{
+		ID:          p.ID,
+		UID:         p.UID,
+		DisplayName: p.DisplayName,
+		Email:       p.Email,
 	}
 }

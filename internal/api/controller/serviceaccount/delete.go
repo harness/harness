@@ -16,7 +16,7 @@ import (
 // Delete deletes a sevice account.
 func (c *Controller) Delete(ctx context.Context, session *auth.Session,
 	saUID string) error {
-	sa, err := findServiceAccountFromUID(ctx, c.saStore, saUID)
+	sa, err := findServiceAccountFromUID(ctx, c.principalStore, saUID)
 	if err != nil {
 		return err
 	}
@@ -34,5 +34,5 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session,
 		return fmt.Errorf("failed to delete tokens for service account: %w", err)
 	}
 
-	return c.saStore.Delete(ctx, sa.ID)
+	return c.principalStore.DeleteServiceAccount(ctx, sa.ID)
 }

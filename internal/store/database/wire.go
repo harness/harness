@@ -21,9 +21,7 @@ const (
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
 	ProvideDatabase,
-	ProvideUserStore,
-	ProvideServiceAccountStore,
-	ProvideServiceStore,
+	ProvidePrincipalStore,
 	ProvideSpaceStore,
 	ProvideRepoStore,
 	ProvideTokenStore,
@@ -42,20 +40,9 @@ func ProvideDatabase(ctx context.Context, config *types.Config) (*sqlx.DB, error
 	)
 }
 
-// ProvideUserStore provides a user store.
-func ProvideUserStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTransformation) store.UserStore {
-	return NewUserStore(db, uidTransformation)
-}
-
-// ProvideServiceAccountStore provides a service account store.
-func ProvideServiceAccountStore(db *sqlx.DB,
-	uidTransformation store.PrincipalUIDTransformation) store.ServiceAccountStore {
-	return NewServiceAccountStore(db, uidTransformation)
-}
-
-// ProvideServiceStore provides a service store.
-func ProvideServiceStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTransformation) store.ServiceStore {
-	return NewServiceStore(db, uidTransformation)
+// ProvidePrincipalStore provides a principal store.
+func ProvidePrincipalStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTransformation) store.PrincipalStore {
+	return NewPrincipalStore(db, uidTransformation)
 }
 
 // ProvideSpaceStore provides a space store.

@@ -5,29 +5,37 @@
 package serviceaccount
 
 import (
+	"context"
+
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 )
 
 type Controller struct {
 	serviceAccountCheck check.ServiceAccount
 	authorizer          authz.Authorizer
-	saStore             store.ServiceAccountStore
+	principalStore      store.PrincipalStore
 	spaceStore          store.SpaceStore
 	repoStore           store.RepoStore
 	tokenStore          store.TokenStore
 }
 
 func NewController(serviceAccountCheck check.ServiceAccount, authorizer authz.Authorizer,
-	saStore store.ServiceAccountStore, spaceStore store.SpaceStore, repoStore store.RepoStore,
+	principalStore store.PrincipalStore, spaceStore store.SpaceStore, repoStore store.RepoStore,
 	tokenStore store.TokenStore) *Controller {
 	return &Controller{
 		serviceAccountCheck: serviceAccountCheck,
 		authorizer:          authorizer,
-		saStore:             saStore,
+		principalStore:      principalStore,
 		spaceStore:          spaceStore,
 		repoStore:           repoStore,
 		tokenStore:          tokenStore,
 	}
+}
+
+func findServiceAccountFromUID(ctx context.Context,
+	principalStore store.PrincipalStore, saUID string) (*types.ServiceAccount, error) {
+	return principalStore.FindServiceAccountByUID(ctx, saUID)
 }

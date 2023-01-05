@@ -27,5 +27,5 @@ func (c *Controller) ListServiceAccounts(ctx context.Context, session *auth.Sess
 		return nil, err
 	}
 
-	return c.saStore.List(ctx, enum.ParentResourceTypeRepo, repo.ID)
+	return c.principalStore.ListServiceAccounts(ctx, enum.ParentResourceTypeRepo, repo.ID)
 }

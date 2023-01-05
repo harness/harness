@@ -28,19 +28,16 @@ var _ Authenticator = (*TokenAuthenticator)(nil)
  * "Authorization" header or the "access_token" form value.
  */
 type TokenAuthenticator struct {
-	userStore  store.UserStore
-	saStore    store.ServiceAccountStore
-	tokenStore store.TokenStore
+	principalStore store.PrincipalStore
+	tokenStore     store.TokenStore
 }
 
 func NewTokenAuthenticator(
-	userStore store.UserStore,
-	saStore store.ServiceAccountStore,
+	principalStore store.PrincipalStore,
 	tokenStore store.TokenStore) *TokenAuthenticator {
 	return &TokenAuthenticator{
-		userStore:  userStore,
-		saStore:    saStore,
-		tokenStore: tokenStore,
+		principalStore: principalStore,
+		tokenStore:     tokenStore,
 	}
 }
 
@@ -98,20 +95,20 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*auth.Session, error
 func (a *TokenAuthenticator) getPrincipal(ctx context.Context, claims *token.JWTClaims) (*types.Principal, error) {
 	switch claims.TokenType {
 	case enum.TokenTypePAT, enum.TokenTypeSession, enum.TokenTypeOAuth2:
-		user, err := a.userStore.Find(ctx, claims.PrincipalID)
+		user, err := a.principalStore.FindUser(ctx, claims.PrincipalID)
 		if err != nil {
 			return nil, err
 		}
 
-		return types.PrincipalFromUser(user), nil
+		return user.ToPrincipal(), nil
 
 	case enum.TokenTypeSAT:
-		sa, err := a.saStore.Find(ctx, claims.PrincipalID)
+		sa, err := a.principalStore.FindServiceAccount(ctx, claims.PrincipalID)
 		if err != nil {
 			return nil, err
 		}
 
-		return types.PrincipalFromServiceAccount(sa), nil
+		return sa.ToPrincipal(), nil
 
 	default:
 		return nil, fmt.Errorf("unsupported token type '%s'", claims.TokenType)

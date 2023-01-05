@@ -59,7 +59,7 @@ func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bo
 		return nil, err
 	}
 
-	err := c.serviceStore.Create(ctx, svc)
+	err := c.principalStore.CreateService(ctx, svc)
 	if err != nil {
 		return nil, err
 	}

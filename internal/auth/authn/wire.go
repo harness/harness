@@ -15,7 +15,6 @@ var WireSet = wire.NewSet(
 	ProvideAuthenticator,
 )
 
-func ProvideAuthenticator(userStore store.UserStore, saStore store.ServiceAccountStore,
-	tokenStore store.TokenStore) Authenticator {
-	return NewTokenAuthenticator(userStore, saStore, tokenStore)
+func ProvideAuthenticator(principalStore store.PrincipalStore, tokenStore store.TokenStore) Authenticator {
+	return NewTokenAuthenticator(principalStore, tokenStore)
 }

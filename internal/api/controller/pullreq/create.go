@@ -115,12 +115,7 @@ func newPullReq(session *auth.Session, number int64,
 		MergedBy:      nil,
 		Merged:        nil,
 		MergeStrategy: nil,
-		Author: types.PrincipalInfo{
-			ID:    session.Principal.ID,
-			UID:   session.Principal.UID,
-			Name:  session.Principal.DisplayName,
-			Email: session.Principal.Email,
-		},
-		Merger: nil,
+		Author:        *session.Principal.ToPrincipalInfo(),
+		Merger:        nil,
 	}
 }
