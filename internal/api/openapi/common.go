@@ -94,18 +94,3 @@ var queryParameterAfter = openapi3.ParameterOrRef{
 		},
 	},
 }
-
-var queryParameterBefore = openapi3.ParameterOrRef{
-	Parameter: &openapi3.Parameter{
-		Name:        request.QueryParamBefore,
-		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The result should contain only entries created before this timestamp (unix millis)."),
-		Required:    ptr.Bool(false),
-		Schema: &openapi3.SchemaOrRef{
-			Schema: &openapi3.Schema{
-				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
-				Minimum: ptr.Float64(0),
-			},
-		},
-	},
-}

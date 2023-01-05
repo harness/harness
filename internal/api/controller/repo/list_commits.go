@@ -19,14 +19,14 @@ import (
 * ListCommits lists the commits of a repo.
  */
 func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
-	repoRef string, gitRef string, filter *types.CommitFilter) ([]Commit, int64, error) {
+	repoRef string, gitRef string, filter *types.CommitFilter) ([]Commit, error) {
 	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	// set gitRef to default branch in case an empty reference was provided
@@ -35,13 +35,14 @@ func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 	}
 
 	rpcOut, err := c.gitRPCClient.ListCommits(ctx, &gitrpc.ListCommitsParams{
-		RepoUID:  repo.GitUID,
-		GitREF:   gitRef,
-		Page:     int32(filter.Page),
-		PageSize: int32(filter.Size),
+		RepoUID: repo.GitUID,
+		GitREF:  gitRef,
+		After:   filter.After,
+		Page:    int32(filter.Page),
+		Limit:   int32(filter.Limit),
 	})
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 
 	commits := make([]Commit, len(rpcOut.Commits))
@@ -49,10 +50,10 @@ func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 		var commit *Commit
 		commit, err = mapCommit(&rpcOut.Commits[i])
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to map commit: %w", err)
+			return nil, fmt.Errorf("failed to map commit: %w", err)
 		}
 		commits[i] = *commit
 	}
 
-	return commits, rpcOut.TotalCount, nil
+	return commits, nil
 }

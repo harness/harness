@@ -27,7 +27,7 @@ func GetWebhookExecutionIDFromPath(r *http.Request) (int64, error) {
 func ParseWebhookFilter(r *http.Request) *types.WebhookFilter {
 	return &types.WebhookFilter{
 		Page: ParsePage(r),
-		Size: ParseSize(r),
+		Size: ParseLimit(r),
 	}
 }
 
@@ -35,6 +35,6 @@ func ParseWebhookFilter(r *http.Request) *types.WebhookFilter {
 func ParseWebhookExecutionFilter(r *http.Request) *types.WebhookExecutionFilter {
 	return &types.WebhookExecutionFilter{
 		Page: ParsePage(r),
-		Size: ParseSize(r),
+		Size: ParseLimit(r),
 	}
 }

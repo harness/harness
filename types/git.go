@@ -8,8 +8,9 @@ import "github.com/harness/gitness/types/enum"
 
 // CommitFilter stores commit query parameters.
 type CommitFilter struct {
-	Page int `json:"page"`
-	Size int `json:"size"`
+	After string `json:"after"`
+	Page  int    `json:"page"`
+	Limit int    `json:"limit"`
 }
 
 // BranchFilter stores branch query parameters.

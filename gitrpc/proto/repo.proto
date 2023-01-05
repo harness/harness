@@ -80,20 +80,15 @@ enum TreeNodeMode {
 message ListCommitsRequest {
   string repo_uid = 1;
   string git_ref  = 2;
-  int32 page      = 3;
-  int32 pageSize  = 4;
+  string after    = 3;
+  int32 page      = 4;
+  int32 limit     = 5;
 }
 
 message ListCommitsResponse {
-  oneof data {
-    ListCommitsResponseHeader header = 1;
-    Commit commit                    = 2;
-  }
+    Commit commit = 1;
 }
 
-message ListCommitsResponseHeader {
-  int64 total_count = 1;
-}
 
 message GetBlobRequest {
   string repo_uid = 1;

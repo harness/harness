@@ -29,13 +29,15 @@ func HandleListCommits(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		filter := request.ParseCommitFilter(r)
 
-		commits, totalCount, err := repoCtrl.ListCommits(ctx, session, repoRef, gitRef, filter)
+		commits, err := repoCtrl.ListCommits(ctx, session, repoRef, gitRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
+		// TODO: get last page indicator explicitly - current check is wrong in case len % limit == 0
+		isLastPage := len(commits) < filter.Limit
+		render.PaginationNoTotal(r, w, filter.Page, filter.Limit, isLastPage)
 		render.JSON(w, http.StatusOK, commits)
 	}
 }

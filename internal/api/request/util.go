@@ -176,8 +176,8 @@ func ParsePage(r *http.Request) int {
 	return i
 }
 
-// ParseSize extracts the limit parameter from the url.
-func ParseSize(r *http.Request) int {
+// ParseLimit extracts the limit parameter from the url.
+func ParseLimit(r *http.Request) int {
 	s := r.FormValue(QueryParamLimit)
 	i, _ := strconv.Atoi(s)
 	if i <= 0 {
@@ -248,7 +248,7 @@ func ParseUserFilter(r *http.Request) *types.UserFilter {
 		Order: ParseOrder(r),
 		Page:  ParsePage(r),
 		Sort:  ParseSortUser(r),
-		Size:  ParseSize(r),
+		Size:  ParseLimit(r),
 	}
 }
 
@@ -259,7 +259,7 @@ func ParseSpaceFilter(r *http.Request) *types.SpaceFilter {
 		Order: ParseOrder(r),
 		Page:  ParsePage(r),
 		Sort:  ParseSortSpace(r),
-		Size:  ParseSize(r),
+		Size:  ParseLimit(r),
 	}
 }
 
@@ -270,7 +270,7 @@ func ParseRepoFilter(r *http.Request) *types.RepoFilter {
 		Order: ParseOrder(r),
 		Page:  ParsePage(r),
 		Sort:  ParseSortRepo(r),
-		Size:  ParseSize(r),
+		Size:  ParseLimit(r),
 	}
 }
 
@@ -280,16 +280,16 @@ func ParsePathFilter(r *http.Request) *types.PathFilter {
 		Order: ParseOrder(r),
 		Page:  ParsePage(r),
 		Sort:  ParseSortPath(r),
-		Size:  ParseSize(r),
+		Size:  ParseLimit(r),
 	}
 }
 
 // ParseCommitFilter extracts the commit query parameter from the url.
-// TODO: do we need a separate filter?
 func ParseCommitFilter(r *http.Request) *types.CommitFilter {
 	return &types.CommitFilter{
-		Page: ParsePage(r),
-		Size: ParseSize(r),
+		After: QueryParamOrDefault(r, QueryParamAfter, ""),
+		Page:  ParsePage(r),
+		Limit: ParseLimit(r),
 	}
 }
 
@@ -301,7 +301,7 @@ func ParseBranchFilter(r *http.Request) *types.BranchFilter {
 		Sort:  ParseSortBranch(r),
 		Order: ParseOrder(r),
 		Page:  ParsePage(r),
-		Size:  ParseSize(r),
+		Size:  ParseLimit(r),
 	}
 }
 
@@ -313,6 +313,6 @@ func ParseTagFilter(r *http.Request) *types.TagFilter {
 		Sort:  ParseSortTag(r),
 		Order: ParseOrder(r),
 		Page:  ParsePage(r),
-		Size:  ParseSize(r),
+		Size:  ParseLimit(r),
 	}
 }

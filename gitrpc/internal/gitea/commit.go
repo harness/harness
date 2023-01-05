@@ -83,29 +83,57 @@ func giteaParsePrettyFormatLogToList(giteaRepo *gitea.Repository, logs []byte) (
 }
 
 // ListCommits lists the commits reachable from ref.
-// Note: ref can be Branch / Tag / CommitSHA.
+// Note: ref & afterRef can be Branch / Tag / CommitSHA.
+// Note: commits returned are [ref->...->afterRef).
 func (g Adapter) ListCommits(ctx context.Context, repoPath string,
-	ref string, page int, pageSize int) ([]types.Commit, int64, error) {
+	ref string, afterRef string, page int, limit int) ([]types.Commit, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 	defer giteaRepo.Close()
 
-	// Get the giteaTopCommit object for the ref
-	giteaTopCommit, err := giteaRepo.GetCommit(ref)
+	// Get the refCommitSHA object for the ref
+	refCommitSHA, err := giteaRepo.GetRefCommitID(ref)
 	if err != nil {
-		return nil, 0, processGiteaErrorf(err, "error getting commit top commit for ref '%s'", ref)
+		return nil, processGiteaErrorf(err, "error getting commit ID for ref '%s'", ref)
 	}
 
-	giteaCommits, err := giteaTopCommit.CommitsByRange(page, pageSize)
-	if err != nil {
-		return nil, 0, processGiteaErrorf(err, "error getting commits")
+	args := []string{"rev-list"}
+
+	// add pagination if requested
+	// TODO: we should add absolut limits to protect gitrpc (return error)
+	if limit > 0 {
+		args = append(args, "--max-count", fmt.Sprint(limit))
+
+		if page > 1 {
+			args = append(args, "--skip", fmt.Sprint((page-1)*limit))
+		}
 	}
 
-	totalCount, err := giteaTopCommit.CommitsCount()
+	// add refCommitSHA as starting point
+	args = append(args, refCommitSHA)
+
+	// return commits only up to a certain reference if requested
+	if afterRef != "" {
+		var afterRefCommitSHA string
+		afterRefCommitSHA, err = giteaRepo.GetRefCommitID(afterRef)
+		if err != nil {
+			return nil, processGiteaErrorf(err, "error getting commit ID for afterRef '%s'", afterRef)
+		}
+		// ^SHA tells the rev-list command to return only commits that aren't reachable by SHA
+		args = append(args, fmt.Sprintf("^%s", afterRefCommitSHA))
+	}
+
+	stdout, _, runErr := gitea.NewCommand(giteaRepo.Ctx, args...).RunStdBytes(&gitea.RunOpts{Dir: giteaRepo.Path})
+	if runErr != nil {
+		// TODO: handle error in case they don't have a common merge base!
+		return nil, fmt.Errorf("failed to trigger rev-list command: %w", runErr)
+	}
+
+	giteaCommits, err := giteaParsePrettyFormatLogToList(giteaRepo, bytes.TrimSpace(stdout))
 	if err != nil {
-		return nil, 0, processGiteaErrorf(err, "error getting total commit count")
+		return nil, err
 	}
 
 	commits := make([]types.Commit, len(giteaCommits))
@@ -113,13 +141,12 @@ func (g Adapter) ListCommits(ctx context.Context, repoPath string,
 		var commit *types.Commit
 		commit, err = mapGiteaCommit(giteaCommits[i])
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 		commits[i] = *commit
 	}
 
-	// TODO: save to cast to int from int64, or we expect exceeding int.MaxValue?
-	return commits, totalCount, nil
+	return commits, nil
 }
 
 // GetCommit returns the (latest) commit for a specific ref.

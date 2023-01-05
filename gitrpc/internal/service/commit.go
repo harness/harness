@@ -20,25 +20,13 @@ func (s RepositoryService) ListCommits(request *rpc.ListCommitsRequest,
 	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
 	ctx := stream.Context()
 
-	gitCommits, totalCount, err := s.adapter.ListCommits(ctx, repoPath, request.GetGitRef(),
-		int(request.GetPage()), int(request.GetPageSize()))
+	gitCommits, err := s.adapter.ListCommits(ctx, repoPath, request.GetGitRef(),
+		request.GetAfter(), int(request.GetPage()), int(request.GetLimit()))
 	if err != nil {
 		return processGitErrorf(err, "failed to get list of commits")
 	}
 
-	log.Ctx(ctx).Trace().Msgf("git adapter returned %d commits (total: %d)", len(gitCommits), totalCount)
-
-	// send info about total number of commits first
-	err = stream.Send(&rpc.ListCommitsResponse{
-		Data: &rpc.ListCommitsResponse_Header{
-			Header: &rpc.ListCommitsResponseHeader{
-				TotalCount: totalCount,
-			},
-		},
-	})
-	if err != nil {
-		return status.Errorf(codes.Internal, "failed to send response header: %v", err)
-	}
+	log.Ctx(ctx).Trace().Msgf("git adapter returned %d commits", len(gitCommits))
 
 	for i := range gitCommits {
 		var commit *rpc.Commit
@@ -48,9 +36,7 @@ func (s RepositoryService) ListCommits(request *rpc.ListCommitsRequest,
 		}
 
 		err = stream.Send(&rpc.ListCommitsResponse{
-			Data: &rpc.ListCommitsResponse_Commit{
-				Commit: commit,
-			},
+			Commit: commit,
 		})
 		if err != nil {
 			return status.Errorf(codes.Internal, "failed to send commit: %v", err)

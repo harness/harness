@@ -228,6 +228,21 @@ var queryParameterTypePullRequestActivity = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterBeforePullRequestActivity = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamBefore,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The result should contain only entries created before this timestamp (unix millis)."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Minimum: ptr.Float64(0),
+			},
+		},
+	},
+}
+
 //nolint:funlen
 func pullReqOperations(reflector *openapi3.Reflector) {
 	createPullReq := openapi3.Operation{}
@@ -285,7 +300,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	listPullReqActivities.WithMapOfAnything(map[string]interface{}{"operationId": "listPullReqActivities"})
 	listPullReqActivities.WithParameters(
 		queryParameterKindPullRequestActivity, queryParameterTypePullRequestActivity,
-		queryParameterAfter, queryParameterBefore, queryParameterLimit)
+		queryParameterAfter, queryParameterBeforePullRequestActivity, queryParameterLimit)
 	_ = reflector.SetRequest(&listPullReqActivities, new(listPullReqActivitiesRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listPullReqActivities, new([]types.PullReqActivity), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listPullReqActivities, new(usererror.Error), http.StatusBadRequest)

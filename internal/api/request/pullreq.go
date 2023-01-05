@@ -64,7 +64,7 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 	}
 	return &types.PullReqFilter{
 		Page:          ParsePage(r),
-		Size:          ParseSize(r),
+		Size:          ParseLimit(r),
 		Query:         ParseQuery(r),
 		CreatedBy:     createdBy,
 		SourceRepoRef: r.FormValue("source_repo_ref"),

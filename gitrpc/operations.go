@@ -22,14 +22,16 @@ type ListCommitsParams struct {
 	// RepoUID is the uid of the git repository
 	RepoUID string
 	// GitREF is a git reference (branch / tag / commit SHA)
-	GitREF   string
-	Page     int32
-	PageSize int32
+	GitREF string
+	// After is a git reference (branch / tag / commit SHA)
+	// If provided, commits only up to that reference will be returned (exlusive)
+	After string
+	Page  int32
+	Limit int32
 }
 
 type ListCommitsOutput struct {
-	TotalCount int64
-	Commits    []Commit
+	Commits []Commit
 }
 
 type Commit struct {
@@ -55,28 +57,18 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 		return nil, ErrNoParamsProvided
 	}
 	stream, err := c.repoService.ListCommits(ctx, &rpc.ListCommitsRequest{
-		RepoUid:  params.RepoUID,
-		GitRef:   params.GitREF,
-		Page:     params.Page,
-		PageSize: params.PageSize,
+		RepoUid: params.RepoUID,
+		GitRef:  params.GitREF,
+		After:   params.After,
+		Page:    params.Page,
+		Limit:   params.Limit,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to start stream for commits: %w", err)
 	}
-
-	// get header first
-	header, err := stream.Recv()
-	if err != nil {
-		return nil, processRPCErrorf(err, "error occured while receiving header")
-	}
-	if header.GetHeader() == nil {
-		return nil, fmt.Errorf("header missing")
-	}
-
 	// NOTE: don't use PageSize as initial slice capacity - as that theoretically could be MaxInt
 	output := &ListCommitsOutput{
-		TotalCount: header.GetHeader().TotalCount,
-		Commits:    make([]Commit, 0, 16),
+		Commits: make([]Commit, 0, 16),
 	}
 
 	for {

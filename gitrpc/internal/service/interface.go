@@ -27,8 +27,8 @@ type GitAdapter interface {
 		opts *types.WalkReferencesOptions) error
 	GetCommit(ctx context.Context, repoPath string, ref string) (*types.Commit, error)
 	GetCommits(ctx context.Context, repoPath string, refs []string) ([]types.Commit, error)
-	ListCommits(ctx context.Context, repoPath string, ref string, page int,
-		pageSize int) ([]types.Commit, int64, error)
+	ListCommits(ctx context.Context, repoPath string,
+		ref string, afterRef string, page int, limit int) ([]types.Commit, error)
 	GetLatestCommit(ctx context.Context, repoPath string, ref string, treePath string) (*types.Commit, error)
 	GetAnnotatedTag(ctx context.Context, repoPath string, sha string) (*types.Tag, error)
 	GetAnnotatedTags(ctx context.Context, repoPath string, shas []string) ([]types.Tag, error)
