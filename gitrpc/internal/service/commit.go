@@ -17,8 +17,13 @@ import (
 
 func (s RepositoryService) ListCommits(request *rpc.ListCommitsRequest,
 	stream rpc.RepositoryService_ListCommitsServer) error {
-	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
+	base := request.GetBase()
+	if base == nil {
+		return types.ErrBaseCannotBeEmpty
+	}
+
 	ctx := stream.Context()
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
 	gitCommits, err := s.adapter.ListCommits(ctx, repoPath, request.GetGitRef(),
 		request.GetAfter(), int(request.GetPage()), int(request.GetLimit()))
@@ -58,7 +63,12 @@ func (s RepositoryService) getLatestCommit(ctx context.Context, repoPath string,
 
 func (s RepositoryService) GetCommitDivergences(ctx context.Context,
 	request *rpc.GetCommitDivergencesRequest) (*rpc.GetCommitDivergencesResponse, error) {
-	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
+	base := request.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
 	// map to gitea requests
 	requests := request.GetRequests()

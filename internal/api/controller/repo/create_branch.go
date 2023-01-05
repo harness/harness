@@ -48,9 +48,9 @@ func (c *Controller) CreateBranch(ctx context.Context, session *auth.Session,
 	}
 
 	rpcOut, err := c.gitRPCClient.CreateBranch(ctx, &gitrpc.CreateBranchParams{
-		RepoUID:    repo.GitUID,
-		BranchName: in.Name,
-		Target:     *in.Target,
+		WriteParams: CreateRPCWriteParams(session, repo),
+		BranchName:  in.Name,
+		Target:      *in.Target,
 	})
 	if err != nil {
 		return nil, err

@@ -25,6 +25,9 @@ const (
 )
 
 type CreateRepositoryParams struct {
+	// Create operation is different from all (from user side), as UID doesn't exist yet.
+	// Only take actor as input and create WriteParams manually
+	Actor         Identity
 	DefaultBranch string
 	Files         []File
 }
@@ -57,10 +60,16 @@ func (c *Client) CreateRepository(ctx context.Context,
 
 	log.Info().Msgf("Send header")
 
+	writeParams := WriteParams{
+		RepoUID: uid,
+		Actor:   params.Actor,
+		EnvVars: map[string]string{}, // (no githook triggered for repo creation)
+	}
+
 	req := &rpc.CreateRepositoryRequest{
 		Data: &rpc.CreateRepositoryRequest_Header{
 			Header: &rpc.CreateRepositoryRequestHeader{
-				Uid:           uid,
+				Base:          mapToRPCWriteRequest(writeParams),
 				DefaultBranch: params.DefaultBranch,
 			},
 		},

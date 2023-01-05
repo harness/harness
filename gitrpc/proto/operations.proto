@@ -14,14 +14,12 @@ service CommitFilesService {
 // CommitFilesRequestHeader is the header of the UserCommitFiles that defines the commit details,
 // parent and other information related to the call.
 message CommitFilesRequestHeader {
-  // repository is the target repository where to apply the commit.
-  string repo_uid        = 1;
+  WriteRequest base      = 1;
   string branch_name     = 2;
   string new_branch_name = 3;
   string title           = 4;
   string message         = 5;
   Identity author        = 6;
-  Identity committer     = 7;
 }
 
 // CommitFilesActionHeader contains the details of the action to be performed.

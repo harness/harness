@@ -24,8 +24,7 @@ const (
 )
 
 type ListCommitTagsParams struct {
-	// RepoUID is the uid of the git repository
-	RepoUID       string
+	ReadParams
 	IncludeCommit bool
 	Query         string
 	Sort          TagSortOption
@@ -54,7 +53,7 @@ func (c *Client) ListCommitTags(ctx context.Context, params *ListCommitTagsParam
 	}
 
 	stream, err := c.refService.ListCommitTags(ctx, &rpc.ListCommitTagsRequest{
-		RepoUid:       params.RepoUID,
+		Base:          mapToRPCReadRequest(params.ReadParams),
 		IncludeCommit: params.IncludeCommit,
 		Query:         params.Query,
 		Sort:          mapToRPCListCommitTagsSortOption(params.Sort),

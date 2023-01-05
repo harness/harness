@@ -19,6 +19,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	RequestIDNone string = "gitrpc_none"
+)
+
+// requestIDKey is context key for storing and retrieving the request ID to and from a context.
+type requestIDKey struct{}
+
 // LogInterceptor injects a zerolog logger with common grpc related annotations and logs the completion of the call.
 // If the metadata contains a request id, the logger is annotated with the same request ID, otherwise with a new one.
 type LogInterceptor struct {
@@ -31,7 +38,7 @@ func NewLogInterceptor() LogInterceptor {
 func (i LogInterceptor) UnaryInterceptor() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
 		handler grpc.UnaryHandler) (interface{}, error) {
-		ctx = injectLogger(ctx, info.FullMethod)
+		ctx = injectLogging(ctx, info.FullMethod)
 
 		// measure execution time
 		start := time.Now()
@@ -46,7 +53,7 @@ func (i LogInterceptor) UnaryInterceptor() grpc.UnaryServerInterceptor {
 func (i LogInterceptor) StreamInterceptor() grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler) error {
-		ctx := injectLogger(stream.Context(), info.FullMethod)
+		ctx := injectLogging(stream.Context(), info.FullMethod)
 
 		// wrap stream with updated context
 		stream = &logServerStream{
@@ -64,7 +71,22 @@ func (i LogInterceptor) StreamInterceptor() grpc.StreamServerInterceptor {
 	}
 }
 
-func injectLogger(ctx context.Context, fullMethod string) context.Context {
+// WithRequestID returns a copy of parent in which the request id value is set.
+func WithRequestID(parent context.Context, v string) context.Context {
+	return context.WithValue(parent, requestIDKey{}, v)
+}
+
+// RequestIDFrom retrieves the request id from the context.
+// If no request id exists, RequestIDNone is returned.
+func RequestIDFrom(ctx context.Context) string {
+	if v, ok := ctx.Value(requestIDKey{}).(string); ok {
+		return v
+	}
+
+	return RequestIDNone
+}
+
+func injectLogging(ctx context.Context, fullMethod string) context.Context {
 	// split fullMethod into service and method (expected format: "/package.service/method...")
 	// If it doesn't match the expected format, the full string is put into method.
 	service, method := "", fullMethod
@@ -74,11 +96,15 @@ func injectLogger(ctx context.Context, fullMethod string) context.Context {
 		}
 	}
 
+	// get request id (or create a new one) and inject it for later usage (git env variables)
+	requestID := getOrCreateRequestID(ctx)
+	ctx = WithRequestID(ctx, requestID)
+
 	// create new logCtx with injected info
 	logCtx := log.Logger.With().
 		Str("grpc.service", service).
 		Str("grpc.method", method).
-		Str("grpc.request_id", getOrCreateRequestID(ctx))
+		Str("grpc.request_id", requestID)
 
 	// add peer information if available
 	if p, ok := peer.FromContext(ctx); ok && p.Addr != nil {
@@ -110,7 +136,7 @@ func getOrCreateRequestID(ctx context.Context) string {
 		}
 	}
 
-	// use same type of request IDs as used for http
+	// use same type of request IDs as used by zerolog
 	return xid.New().String()
 }
 

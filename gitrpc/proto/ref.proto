@@ -14,9 +14,9 @@ service ReferenceService {
 }
 
 message CreateBranchRequest {
-  string repo_uid     = 1;
-  string branch_name  = 2;
-  string target       = 3;
+  WriteRequest base  = 1;
+  string branch_name = 2;
+  string target      = 3;
 }
 
 message CreateBranchResponse {
@@ -24,12 +24,13 @@ message CreateBranchResponse {
 }
 
 message DeleteBranchRequest {
-  string repo_uid     = 1;
-  string branch_name  = 2;
-  bool force          = 3;
+  WriteRequest base  = 1;
+  string branch_name = 2;
+  bool force         = 3;
 }
 
 message DeleteBranchResponse {
+  string sha = 1;
 }
 
 message ListBranchesRequest {
@@ -39,7 +40,7 @@ message ListBranchesRequest {
     Date    = 2;
   }
 
-  string repo_uid     = 1;
+  ReadRequest base    = 1;
   bool include_commit = 2;
   string query        = 3;
   SortOption sort     = 4;
@@ -65,7 +66,7 @@ message ListCommitTagsRequest {
     Date    = 2;
   }
 
-  string repo_uid     = 1;
+  ReadRequest base    = 1;
   bool include_commit = 2;
   string query        = 3;
   SortOption sort     = 4;
@@ -93,8 +94,9 @@ message GetRefRequest {
     Branch = 0;
     Tag = 1;
   }
-  string repo_uid    = 1;
-  string ref_name = 2;
+  
+  ReadRequest base = 1;
+  string ref_name  = 2;
   RefType ref_type = 3;
 }
 

@@ -5,8 +5,6 @@
 package server
 
 import (
-	"github.com/harness/gitness/events"
-
 	"github.com/google/wire"
 )
 
@@ -15,6 +13,6 @@ var WireSet = wire.NewSet(
 	ProvideServer,
 )
 
-func ProvideServer(config Config, eventsSystem *events.System) (*Server, error) {
-	return NewServer(config, eventsSystem)
+func ProvideServer(config Config) (*Server, error) {
+	return NewServer(config)
 }

@@ -12,8 +12,7 @@ import (
 )
 
 type GetSubmoduleParams struct {
-	// RepoUID is the uid of the git repository
-	RepoUID string
+	ReadParams
 	// GitREF is a git reference (branch / tag / commit SHA)
 	GitREF string
 	Path   string
@@ -32,9 +31,9 @@ func (c *Client) GetSubmodule(ctx context.Context, params *GetSubmoduleParams) (
 		return nil, ErrNoParamsProvided
 	}
 	resp, err := c.repoService.GetSubmodule(ctx, &rpc.GetSubmoduleRequest{
-		RepoUid: params.RepoUID,
-		GitRef:  params.GitREF,
-		Path:    params.Path,
+		Base:   mapToRPCReadRequest(params.ReadParams),
+		GitRef: params.GitREF,
+		Path:   params.Path,
 	})
 	if err != nil {
 		return nil, processRPCErrorf(err, "failed to get submodule from server")

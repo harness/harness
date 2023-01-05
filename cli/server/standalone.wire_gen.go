@@ -90,7 +90,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
 	serverConfig := ProvideGitRPCServerConfig(config)
-	server3, err := server2.ProvideServer(serverConfig, eventsSystem)
+	server3, err := server2.ProvideServer(serverConfig)
 	if err != nil {
 		return nil, err
 	}

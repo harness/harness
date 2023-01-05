@@ -21,9 +21,9 @@ const (
 )
 
 type GetRefParams struct {
-	RepoUID string
-	Name    string
-	Type    RefType
+	ReadParams
+	Name string
+	Type RefType
 }
 
 type GetRefResponse struct {
@@ -46,7 +46,7 @@ func (c *Client) GetRef(ctx context.Context, params *GetRefParams) (*GetRefRespo
 	}
 
 	result, err := c.refService.GetRef(ctx, &rpc.GetRefRequest{
-		RepoUid: params.RepoUID,
+		Base:    mapToRPCReadRequest(params.ReadParams),
 		RefName: params.Name,
 		RefType: refType,
 	})

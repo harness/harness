@@ -11,6 +11,7 @@ import (
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
+	repoctrl "github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
@@ -51,13 +52,17 @@ func NewController(
 	}
 }
 
-func (c *Controller) verifyBranchExistence(ctx context.Context, repo *types.Repository, branch string) error {
+func (c *Controller) verifyBranchExistence(ctx context.Context,
+	repo *types.Repository, branch string) error {
 	if branch == "" {
 		return usererror.BadRequest("branch name can't be empty")
 	}
 
 	_, err := c.gitRPCClient.GetRef(ctx,
-		&gitrpc.GetRefParams{RepoUID: repo.GitUID, Name: branch, Type: gitrpc.RefTypeBranch})
+		&gitrpc.GetRefParams{
+			ReadParams: repoctrl.CreateRPCReadParams(repo),
+			Name:       branch,
+			Type:       gitrpc.RefTypeBranch})
 	if errors.Is(err, gitrpc.ErrNotFound) {
 		return usererror.BadRequest(
 			fmt.Sprintf("branch %s does not exist in the repository %s", branch, repo.UID))

@@ -48,6 +48,7 @@ func NewCommitFilesService(adapter GitAdapter, reposRoot, reposTempDir string) (
 	}, nil
 }
 
+//nolint:funlen // needs refactoring
 func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFilesServer) error {
 	ctx := stream.Context()
 	headerRequest, err := stream.Recv()
@@ -60,9 +61,21 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 		return types.ErrHeaderCannotBeEmpty
 	}
 
-	author, committer := GetAuthorAndCommitter(header.Author, header.Committer)
+	base := header.GetBase()
+	if base == nil {
+		return types.ErrBaseCannotBeEmpty
+	}
 
-	repoPath := getFullPathForRepo(s.reposRoot, header.GetRepoUid())
+	committer := base.GetActor()
+	author := header.GetAuthor()
+	// in case no explicit author is provided use actor as author.
+	if author == nil {
+		author = committer
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
+
+	// TODO: why are we using the giteat operations here?
 	repo, err := git.OpenRepository(ctx, repoPath)
 	if err != nil {
 		return err
@@ -78,7 +91,7 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 	}
 
 	// create a shared repo
-	shared, err := NewSharedRepo(s.reposTempDir, header.GetRepoUid(), repo)
+	shared, err := NewSharedRepo(s.reposTempDir, base.GetRepoUid(), repo)
 	if err != nil {
 		return err
 	}
@@ -117,7 +130,7 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 		return err
 	}
 
-	if err = shared.Push(ctx, author, commitHash, header.GetNewBranchName()); err != nil {
+	if err = shared.Push(ctx, base, commitHash, header.GetNewBranchName()); err != nil {
 		return err
 	}
 
@@ -443,21 +456,4 @@ func parsePayload(payload io.Reader, content io.Writer) (string, error) {
 	}
 	_, err := io.Copy(content, reader)
 	return newPath, err
-}
-
-// GetAuthorAndCommitter Gets the author and committer user objects from the Identity.
-func GetAuthorAndCommitter(author, committer *rpc.Identity) (authorUser, committerUser *rpc.Identity) {
-	authorUser = author
-	committerUser = committer
-	if author == nil && committer == nil {
-		authorUser = SystemIdentity
-		committer = SystemIdentity
-	}
-	if author == nil && committer != nil {
-		authorUser = committer
-	}
-	if committer == nil && author != nil {
-		committerUser = author
-	}
-	return authorUser, committerUser
 }

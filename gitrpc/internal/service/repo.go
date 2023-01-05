@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -26,14 +27,18 @@ const (
 
 	gitReferenceNamePrefixBranch = "refs/heads/"
 	gitReferenceNamePrefixTag    = "refs/tags/"
+
+	gitHooksDir = "hooks"
 )
 
 var (
-	// TODO: Should be matching the sytem identity from config.
+	// TODO: should be coming from caller ALWAYS.
 	SystemIdentity = &rpc.Identity{
 		Name:  "gitness",
 		Email: "system@gitness",
 	}
+
+	gitServerHookNames = []string{"pre-receive", "update", "post-receive"}
 )
 
 type Storage interface {
@@ -42,37 +47,45 @@ type Storage interface {
 
 type RepositoryService struct {
 	rpc.UnimplementedRepositoryServiceServer
-	adapter   GitAdapter
-	store     Storage
-	reposRoot string
+	adapter        GitAdapter
+	store          Storage
+	reposRoot      string
+	serverHookPath string
 }
 
-func NewRepositoryService(adapter GitAdapter, store Storage, reposRoot string) (*RepositoryService, error) {
+func NewRepositoryService(adapter GitAdapter, store Storage, reposRoot string,
+	serverHookPath string) (*RepositoryService, error) {
 	return &RepositoryService{
-		adapter:   adapter,
-		store:     store,
-		reposRoot: reposRoot,
+		adapter:        adapter,
+		store:          store,
+		reposRoot:      reposRoot,
+		serverHookPath: serverHookPath,
 	}, nil
 }
 
-//nolint:gocognit // need to refactor this code
+//nolint:gocognit,funlen // need to refactor this code
 func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateRepositoryServer) error {
 	ctx := stream.Context()
 	log := log.Ctx(ctx)
 
 	// first get repo params from stream
-	req, err := stream.Recv()
+	request, err := stream.Recv()
 	if err != nil {
 		return status.Errorf(codes.Internal, "cannot receive create repository data")
 	}
 
-	header := req.GetHeader()
+	header := request.GetHeader()
 	if header == nil {
 		return status.Errorf(codes.Internal, "expected header to be first message in stream")
 	}
 	log.Info().Msgf("received a create repository request %v", header)
 
-	repoPath := getFullPathForRepo(s.reposRoot, header.GetUid())
+	base := header.GetBase()
+	if base == nil {
+		return types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 	if _, err = os.Stat(repoPath); !os.IsNotExist(err) {
 		return status.Errorf(codes.AlreadyExists, "repository exists already: %v", repoPath)
 	}
@@ -92,13 +105,13 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	// update default branch (currently set to non-existent branch)
 	err = s.adapter.SetDefaultBranch(ctx, repoPath, header.GetDefaultBranch(), true)
 	if err != nil {
-		return processGitErrorf(err, "error updating default branch for repo '%s'", header.GetUid())
+		return processGitErrorf(err, "error updating default branch for repo '%s'", base.GetRepoUid())
 	}
 
 	// we need temp dir for cloning
-	tempDir, err := os.MkdirTemp("", "*-"+header.GetUid())
+	tempDir, err := os.MkdirTemp("", "*-"+base.GetRepoUid())
 	if err != nil {
-		return fmt.Errorf("error creating temp dir for repo %s: %w", header.GetUid(), err)
+		return fmt.Errorf("error creating temp dir for repo %s: %w", base.GetRepoUid(), err)
 	}
 	defer func(path string) {
 		// when repo is successfully created remove temp dir
@@ -141,6 +154,16 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 		if err = s.AddFilesAndPush(ctx, tempDir, filePaths, "HEAD:"+header.GetDefaultBranch(), SystemIdentity, SystemIdentity,
 			"origin", "initial commit"); err != nil {
 			return err
+		}
+	}
+
+	// setup server hook symlinks pointing to configured server hook binary
+	for _, hook := range gitServerHookNames {
+		hookPath := path.Join(repoPath, gitHooksDir, hook)
+		err = os.Symlink(s.serverHookPath, hookPath)
+		if err != nil {
+			return status.Errorf(codes.Internal,
+				"failed to setup symlink for hook '%s' ('%s' -> '%s'): %s", hook, hookPath, s.serverHookPath, err)
 		}
 	}
 

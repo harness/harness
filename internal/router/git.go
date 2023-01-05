@@ -10,9 +10,9 @@ import (
 
 	"github.com/harness/gitness/gitrpc"
 	handlerrepo "github.com/harness/gitness/internal/api/handler/repo"
-	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	middlewareauthn "github.com/harness/gitness/internal/api/middleware/authn"
 	"github.com/harness/gitness/internal/api/middleware/encode"
+	"github.com/harness/gitness/internal/api/middleware/logging"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
@@ -47,8 +47,8 @@ func NewGitHandler(
 	// configure logging middleware.
 	r.Use(hlog.URLHandler("http.url"))
 	r.Use(hlog.MethodHandler("http.method"))
-	r.Use(hlog.RequestIDHandler("http.request", config.Server.HTTP.RequestIDResponseHeader))
-	r.Use(accesslog.HlogHandler())
+	r.Use(logging.HLogRequestIDHandler())
+	r.Use(logging.HLogAccessLogHandler())
 
 	r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 		r.Use(middlewareauthn.Attempt(authenticator))

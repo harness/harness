@@ -26,7 +26,7 @@ type Interface interface {
 	ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error)
 	ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, error)
 	GetCommitDivergences(ctx context.Context, params *GetCommitDivergencesParams) (*GetCommitDivergencesOutput, error)
-	CommitFiles(ctx context.Context, params *CommitFilesOptions) (CommitFilesResponse, error)
+	CommitFiles(ctx context.Context, params *CommitFilesParams) (CommitFilesResponse, error)
 
 	/*
 	 * Git Cli Service
@@ -37,5 +37,5 @@ type Interface interface {
 	/*
 	 * Diff services
 	 */
-	RawDiff(ctx context.Context, in *RawDiffRequest, w io.Writer) error
+	RawDiff(ctx context.Context, in *RawDiffParams, w io.Writer) error
 }

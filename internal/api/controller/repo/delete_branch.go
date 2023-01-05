@@ -34,8 +34,8 @@ func (c *Controller) DeleteBranch(ctx context.Context, session *auth.Session, re
 	}
 
 	err = c.gitRPCClient.DeleteBranch(ctx, &gitrpc.DeleteBranchParams{
-		RepoUID:    repo.GitUID,
-		BranchName: branchName,
+		WriteParams: CreateRPCWriteParams(session, repo),
+		BranchName:  branchName,
 	})
 	if err != nil {
 		return err

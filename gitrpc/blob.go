@@ -12,7 +12,7 @@ import (
 )
 
 type GetBlobParams struct {
-	RepoUID   string
+	ReadParams
 	SHA       string
 	SizeLimit int64
 }
@@ -33,8 +33,9 @@ func (c *Client) GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobOu
 	if params == nil {
 		return nil, ErrNoParamsProvided
 	}
+
 	resp, err := c.repoService.GetBlob(ctx, &rpc.GetBlobRequest{
-		RepoUid:   params.RepoUID,
+		Base:      mapToRPCReadRequest(params.ReadParams),
 		Sha:       params.SHA,
 		SizeLimit: params.SizeLimit,
 	})

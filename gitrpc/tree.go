@@ -46,8 +46,7 @@ type TreeNode struct {
 }
 
 type ListTreeNodeParams struct {
-	// RepoUID is the uid of the git repository
-	RepoUID string
+	ReadParams
 	// GitREF is a git reference (branch / tag / commit SHA)
 	GitREF              string
 	Path                string
@@ -65,8 +64,7 @@ type TreeNodeWithCommit struct {
 }
 
 type GetTreeNodeParams struct {
-	// RepoUID is the uid of the git repository
-	RepoUID string
+	ReadParams
 	// GitREF is a git reference (branch / tag / commit SHA)
 	GitREF              string
 	Path                string
@@ -83,7 +81,7 @@ func (c *Client) GetTreeNode(ctx context.Context, params *GetTreeNodeParams) (*G
 		return nil, ErrNoParamsProvided
 	}
 	resp, err := c.repoService.GetTreeNode(ctx, &rpc.GetTreeNodeRequest{
-		RepoUid:             params.RepoUID,
+		Base:                mapToRPCReadRequest(params.ReadParams),
 		GitRef:              params.GitREF,
 		Path:                params.Path,
 		IncludeLatestCommit: params.IncludeLatestCommit,
@@ -115,7 +113,7 @@ func (c *Client) ListTreeNodes(ctx context.Context, params *ListTreeNodeParams) 
 		return nil, ErrNoParamsProvided
 	}
 	stream, err := c.repoService.ListTreeNodes(ctx, &rpc.ListTreeNodesRequest{
-		RepoUid:             params.RepoUID,
+		Base:                mapToRPCReadRequest(params.ReadParams),
 		GitRef:              params.GitREF,
 		Path:                params.Path,
 		IncludeLatestCommit: params.IncludeLatestCommit,

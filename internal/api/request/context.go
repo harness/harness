@@ -22,6 +22,7 @@ const (
 	userKey
 	spaceKey
 	repoKey
+	requestIDKey
 )
 
 // WithAuthSession returns a copy of parent in which the principal
@@ -93,4 +94,18 @@ func WithRepo(parent context.Context, v *types.Repository) context.Context {
 func RepoFrom(ctx context.Context) (*types.Repository, bool) {
 	v, ok := ctx.Value(repoKey).(*types.Repository)
 	return v, ok && v != nil
+}
+
+// WithRequestID returns a copy of parent in which the request id value is set.
+func WithRequestID(parent context.Context, v string) context.Context {
+	return context.WithValue(parent, requestIDKey, v)
+}
+
+// RequestIDFrom returns the value of the request ID key on the
+// context - ok is true iff a non-empty value existed.
+//
+//nolint:revive // need to emphasize that it's the request id we are retrieving.
+func RequestIDFrom(ctx context.Context) (string, bool) {
+	v, ok := ctx.Value(requestIDKey).(string)
+	return v, ok && v != ""
 }

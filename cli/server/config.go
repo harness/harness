@@ -41,6 +41,11 @@ func load() (*types.Config, error) {
 		return nil, fmt.Errorf("unable to ensure that git root is set in config: %w", err)
 	}
 
+	err = ensureGitServerHookIsSet(config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to ensure that server hook is set in config: %w", err)
+	}
+
 	return config, nil
 }
 
@@ -89,6 +94,19 @@ func ensureGitRootIsSet(config *types.Config) error {
 	return nil
 }
 
+func ensureGitServerHookIsSet(config *types.Config) error {
+	if config.Git.ServerHookPath == "" {
+		executablePath, err := os.Executable()
+		if err != nil {
+			return fmt.Errorf("failed to get path of current executable: %w", err)
+		}
+
+		config.Git.ServerHookPath = executablePath
+	}
+
+	return nil
+}
+
 // PackageConfigsWireSet contains providers that generate configs required for sub packages.
 var PackageConfigsWireSet = wire.NewSet(
 	ProvideGitRPCServerConfig,
@@ -99,9 +117,10 @@ var PackageConfigsWireSet = wire.NewSet(
 
 func ProvideGitRPCServerConfig(config *types.Config) server.Config {
 	return server.Config{
-		Bind:          config.Server.GRPC.Bind,
-		GitRoot:       config.Git.Root,
-		ReposTempPath: config.Git.ReposTempPath,
+		Bind:           config.Server.GRPC.Bind,
+		GitRoot:        config.Git.Root,
+		TmpDir:         config.Git.TmpDir,
+		ServerHookPath: config.Git.ServerHookPath,
 	}
 }
 

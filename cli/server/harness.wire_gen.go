@@ -7,7 +7,6 @@ package server
 
 import (
 	"context"
-
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	events2 "github.com/harness/gitness/gitrpc/events"
@@ -129,7 +128,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	routerRouter := router2.ProvideRouter(apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
 	serverConfig := ProvideGitRPCServerConfig(config)
-	server3, err := server2.ProvideServer(serverConfig, eventsSystem)
+	server3, err := server2.ProvideServer(serverConfig)
 	if err != nil {
 		return nil, err
 	}

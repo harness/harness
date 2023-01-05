@@ -15,6 +15,7 @@ var (
 	ErrContentSentBeforeAction = errors.New("content sent before action")
 	ErrActionListEmpty         = errors.New("no commit actions to perform on repository")
 	ErrHeaderCannotBeEmpty     = errors.New("header field cannot be empty")
+	ErrBaseCannotBeEmpty       = errors.New("base field cannot be empty")
 	ErrSHADoesNotMatch         = errors.New("sha does not match")
 	ErrEmptyLeftCommitID       = errors.New("empty LeftCommitId")
 	ErrEmptyRightCommitID      = errors.New("empty RightCommitId")

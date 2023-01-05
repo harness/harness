@@ -6,13 +6,10 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"os"
 	"path/filepath"
 
-	"github.com/harness/gitness/events"
-	git_events "github.com/harness/gitness/gitrpc/events"
 	"github.com/harness/gitness/gitrpc/internal/gitea"
 	"github.com/harness/gitness/gitrpc/internal/middleware"
 	"github.com/harness/gitness/gitrpc/internal/service"
@@ -34,7 +31,7 @@ type Server struct {
 	Bind string
 }
 
-func NewServer(config Config, eventsSystem *events.System) (*Server, error) {
+func NewServer(config Config) (*Server, error) {
 	// Create repos folder
 	reposRoot := filepath.Join(config.GitRoot, repoSubdirName)
 	if _, err := os.Stat(reposRoot); errors.Is(err, os.ErrNotExist) {
@@ -67,17 +64,13 @@ func NewServer(config Config, eventsSystem *events.System) (*Server, error) {
 		)),
 	)
 	store := storage.NewLocalStore()
-	eventReporter, err := git_events.NewReporter(eventsSystem)
-	if err != nil {
-		return nil, fmt.Errorf("faield to create new event reporter: %w", err)
-	}
 
 	// initialize services
-	repoService, err := service.NewRepositoryService(adapter, store, reposRoot)
+	repoService, err := service.NewRepositoryService(adapter, store, reposRoot, config.ServerHookPath)
 	if err != nil {
 		return nil, err
 	}
-	refService, err := service.NewReferenceService(adapter, eventReporter, reposRoot)
+	refService, err := service.NewReferenceService(adapter, reposRoot, config.TmpDir)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +78,7 @@ func NewServer(config Config, eventsSystem *events.System) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	commitFilesService, err := service.NewCommitFilesService(adapter, reposRoot, config.ReposTempPath)
+	commitFilesService, err := service.NewCommitFilesService(adapter, reposRoot, config.TmpDir)
 	if err != nil {
 		return nil, err
 	}

@@ -122,8 +122,11 @@ func (c *Controller) GetContent(ctx context.Context, session *auth.Session, repo
 		gitRef = repo.DefaultBranch
 	}
 
+	// create read params once
+	readParams := CreateRPCReadParams(repo)
+
 	treeNodeOutput, err := c.gitRPCClient.GetTreeNode(ctx, &gitrpc.GetTreeNodeParams{
-		RepoUID:             repo.GitUID,
+		ReadParams:          readParams,
 		GitREF:              gitRef,
 		Path:                repoPath,
 		IncludeLatestCommit: includeLatestCommit,
@@ -141,13 +144,13 @@ func (c *Controller) GetContent(ctx context.Context, session *auth.Session, repo
 	switch info.Type {
 	case ContentTypeDir:
 		// for getContent we don't want any recursiveness for dir content.
-		content, err = c.getDirContent(ctx, repo.GitUID, gitRef, repoPath, includeLatestCommit, false)
+		content, err = c.getDirContent(ctx, readParams, gitRef, repoPath, includeLatestCommit, false)
 	case ContentTypeFile:
-		content, err = c.getFileContent(ctx, repo.GitUID, info.SHA)
+		content, err = c.getFileContent(ctx, readParams, info.SHA)
 	case ContentTypeSymlink:
-		content, err = c.getSymlinkContent(ctx, repo.GitUID, info.SHA)
+		content, err = c.getSymlinkContent(ctx, readParams, info.SHA)
 	case ContentTypeSubmodule:
-		content, err = c.getSubmoduleContent(ctx, repo.GitUID, gitRef, repoPath, info.SHA)
+		content, err = c.getSubmoduleContent(ctx, readParams, gitRef, repoPath, info.SHA)
 	default:
 		err = fmt.Errorf("unknown tree node type '%s'", treeNodeOutput.Node.Type)
 	}
@@ -162,12 +165,12 @@ func (c *Controller) GetContent(ctx context.Context, session *auth.Session, repo
 	}, nil
 }
 
-func (c *Controller) getSubmoduleContent(ctx context.Context, gitRepoUID string, gitRef string,
+func (c *Controller) getSubmoduleContent(ctx context.Context, readParams gitrpc.ReadParams, gitRef string,
 	repoPath string, commitSHA string) (*SubmoduleContent, error) {
 	output, err := c.gitRPCClient.GetSubmodule(ctx, &gitrpc.GetSubmoduleParams{
-		RepoUID: gitRepoUID,
-		GitREF:  gitRef,
-		Path:    repoPath,
+		ReadParams: readParams,
+		GitREF:     gitRef,
+		Path:       repoPath,
 	})
 	if err != nil {
 		// TODO: handle not found error
@@ -181,11 +184,12 @@ func (c *Controller) getSubmoduleContent(ctx context.Context, gitRepoUID string,
 	}, nil
 }
 
-func (c *Controller) getFileContent(ctx context.Context, gitRepoUID string, blobSHA string) (*FileContent, error) {
+func (c *Controller) getFileContent(ctx context.Context, readParams gitrpc.ReadParams,
+	blobSHA string) (*FileContent, error) {
 	output, err := c.gitRPCClient.GetBlob(ctx, &gitrpc.GetBlobParams{
-		RepoUID:   gitRepoUID,
-		SHA:       blobSHA,
-		SizeLimit: maxGetContentFileSize,
+		ReadParams: readParams,
+		SHA:        blobSHA,
+		SizeLimit:  maxGetContentFileSize,
 	})
 	if err != nil {
 		// TODO: handle not found error
@@ -200,12 +204,12 @@ func (c *Controller) getFileContent(ctx context.Context, gitRepoUID string, blob
 	}, nil
 }
 
-func (c *Controller) getSymlinkContent(ctx context.Context, gitRepoUID string,
+func (c *Controller) getSymlinkContent(ctx context.Context, readParams gitrpc.ReadParams,
 	blobSHA string) (*SymlinkContent, error) {
 	output, err := c.gitRPCClient.GetBlob(ctx, &gitrpc.GetBlobParams{
-		RepoUID:   gitRepoUID,
-		SHA:       blobSHA,
-		SizeLimit: maxGetContentFileSize,
+		ReadParams: readParams,
+		SHA:        blobSHA,
+		SizeLimit:  maxGetContentFileSize,
 	})
 	if err != nil {
 		// TODO: handle not found error
@@ -219,10 +223,10 @@ func (c *Controller) getSymlinkContent(ctx context.Context, gitRepoUID string,
 	}, nil
 }
 
-func (c *Controller) getDirContent(ctx context.Context, gitRepoUID string, gitRef string,
+func (c *Controller) getDirContent(ctx context.Context, readParams gitrpc.ReadParams, gitRef string,
 	repoPath string, includeLatestCommit bool, recursive bool) (*DirContent, error) {
 	output, err := c.gitRPCClient.ListTreeNodes(ctx, &gitrpc.ListTreeNodeParams{
-		RepoUID:             gitRepoUID,
+		ReadParams:          readParams,
 		GitREF:              gitRef,
 		Path:                repoPath,
 		IncludeLatestCommit: includeLatestCommit,

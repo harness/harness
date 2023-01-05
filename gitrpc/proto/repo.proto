@@ -24,17 +24,17 @@ message CreateRepositoryRequest {
 }
 
 message CreateRepositoryRequestHeader {
-  string uid = 1;
+  WriteRequest base     = 1;
   string default_branch = 2;
 }
 
 message CreateRepositoryResponse { }
 
 message GetTreeNodeRequest {
-  string repo_uid                 = 1;
-  string git_ref                  = 2;
-  string path                     = 3;
-  bool include_latest_commit      = 4;
+  ReadRequest base           = 1;
+  string git_ref             = 2;
+  string path                = 3;
+  bool include_latest_commit = 4;
 }
 
 message GetTreeNodeResponse {
@@ -43,7 +43,7 @@ message GetTreeNodeResponse {
 }
 
 message ListTreeNodesRequest {
-  string repo_uid            = 1;
+  ReadRequest base           = 1;
   string git_ref             = 2;
   string path                = 3;
   bool include_latest_commit = 4;
@@ -78,11 +78,11 @@ enum TreeNodeMode {
 }
 
 message ListCommitsRequest {
-  string repo_uid = 1;
-  string git_ref  = 2;
-  string after    = 3;
-  int32 page      = 4;
-  int32 limit     = 5;
+  ReadRequest base = 1;
+  string git_ref   = 2;
+  string after     = 3;
+  int32 page       = 4;
+  int32 limit      = 5;
 }
 
 message ListCommitsResponse {
@@ -91,9 +91,9 @@ message ListCommitsResponse {
 
 
 message GetBlobRequest {
-  string repo_uid = 1;
-  string sha      = 2;
-  int64 sizeLimit = 3;
+  ReadRequest base = 1;
+  string sha       = 2;
+  int64 sizeLimit  = 3;
 }
 
 message GetBlobResponse {
@@ -107,9 +107,9 @@ message Blob {
 }
 
 message GetSubmoduleRequest {
-  string repo_uid = 1;
-  string git_ref  = 2;
-  string path     = 3;
+  ReadRequest base = 1;
+  string git_ref   = 2;
+  string path      = 3;
 }
 
 message GetSubmoduleResponse {
@@ -122,8 +122,8 @@ message Submodule {
 }
 
 message GetCommitDivergencesRequest {
-  string repo_uid                     = 1;
-  int32 max_count                     = 2;
+  ReadRequest base                          = 1;
+  int32 max_count                           = 2;
   repeated CommitDivergenceRequest requests = 3;
 }
 

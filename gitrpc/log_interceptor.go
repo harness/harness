@@ -9,10 +9,11 @@ import (
 
 	"github.com/harness/gitness/gitrpc/rpc"
 
-	"github.com/rs/zerolog/hlog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
+
+type requestIDKey struct{}
 
 // ClientLogInterceptor injects the zerlog request ID into the metadata.
 // That allows the gitrpc server to log with the same request ID as the client.
@@ -39,10 +40,23 @@ func (i ClientLogInterceptor) StreamClientInterceptor() grpc.StreamClientInterce
 	}
 }
 
+// WithRequestID returns a copy of parent in which the request id value is set.
+// This can be used by external entities to pass request IDs to gitrpc.
+func WithRequestID(parent context.Context, v string) context.Context {
+	return context.WithValue(parent, requestIDKey{}, v)
+}
+
+// RequestIDFrom returns the value of the request ID key on the
+// context - ok is true iff a non-empty value existed.
+func RequestIDFrom(ctx context.Context) (string, bool) {
+	v, ok := ctx.Value(requestIDKey{}).(string)
+	return v, ok && v != ""
+}
+
 // appendLoggingRequestIDToOutgoingMetadata appends the zerolog request ID to the outgoing grpc metadata, if available.
 func appendLoggingRequestIDToOutgoingMetadata(ctx context.Context) context.Context {
-	if id, ok := hlog.IDFromCtx(ctx); ok {
-		ctx = metadata.AppendToOutgoingContext(ctx, rpc.MetadataKeyRequestID, id.String())
+	if id, ok := RequestIDFrom(ctx); ok {
+		ctx = metadata.AppendToOutgoingContext(ctx, rpc.MetadataKeyRequestID, id)
 	}
 	return ctx
 }

@@ -2,12 +2,9 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package server
+package gitrpc
 
-// Config represents the configuration for the gitrpc server.
+// Config represents the config for the gitrpc client.
 type Config struct {
-	GitRoot        string
-	TmpDir         string
-	Bind           string
-	ServerHookPath string
+	Bind string
 }

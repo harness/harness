@@ -7,6 +7,7 @@ package service
 import (
 	"context"
 
+	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 
 	"github.com/rs/zerolog/log"
@@ -17,7 +18,12 @@ import (
 func (s RepositoryService) ListTreeNodes(request *rpc.ListTreeNodesRequest,
 	stream rpc.RepositoryService_ListTreeNodesServer) error {
 	ctx := stream.Context()
-	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
+	base := request.GetBase()
+	if base == nil {
+		return types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
 	gitNodes, err := s.adapter.ListTreeNodes(ctx, repoPath,
 		request.GetGitRef(), request.GetPath(), request.GetRecursive(), request.GetIncludeLatestCommit())
@@ -56,7 +62,12 @@ func (s RepositoryService) ListTreeNodes(request *rpc.ListTreeNodesRequest,
 
 func (s RepositoryService) GetTreeNode(ctx context.Context,
 	request *rpc.GetTreeNodeRequest) (*rpc.GetTreeNodeResponse, error) {
-	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
+	base := request.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 	// TODO: do we need to validate request for nil?
 	gitNode, err := s.adapter.GetTreeNode(ctx, repoPath, request.GetGitRef(), request.GetPath())
 	if err != nil {

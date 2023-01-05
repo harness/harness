@@ -6,8 +6,10 @@ package repo
 
 import (
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 )
 
@@ -41,5 +43,30 @@ func NewController(
 		repoStore:     repoStore,
 		saStore:       saStore,
 		gitRPCClient:  gitRPCClient,
+	}
+}
+
+// CreateRPCWriteParams creates base write parameters for gitrpc write operations.
+// IMPORTANT: session & repo are assumed to be not nil!
+func CreateRPCWriteParams(session *auth.Session, repo *types.Repository) gitrpc.WriteParams {
+	// generate envars (add everything githook CLI needs for execution)
+	// TODO: envVars := githook.GenerateGitHookEnvironmentVariables(repo, session.Principal)
+	envVars := map[string]string{}
+
+	return gitrpc.WriteParams{
+		Actor: gitrpc.Identity{
+			Name:  session.Principal.DisplayName,
+			Email: session.Principal.Email,
+		},
+		RepoUID: repo.GitUID,
+		EnvVars: envVars,
+	}
+}
+
+// CreateRPCReadParams creates base read parameters for gitrpc read operations.
+// IMPORTANT: repo is assumed to be not nil!
+func CreateRPCReadParams(repo *types.Repository) gitrpc.ReadParams {
+	return gitrpc.ReadParams{
+		RepoUID: repo.GitUID,
 	}
 }

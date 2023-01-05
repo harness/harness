@@ -20,7 +20,12 @@ import (
 func (s ReferenceService) ListCommitTags(request *rpc.ListCommitTagsRequest,
 	stream rpc.ReferenceService_ListCommitTagsServer) error {
 	ctx := stream.Context()
-	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
+	base := request.GetBase()
+	if base == nil {
+		return types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
 	// get all required information from git references
 	tags, err := s.listCommitTagsLoadReferenceData(ctx, repoPath, request)

@@ -5,11 +5,8 @@
 package service
 
 const (
-	EnvRepoUID     = "GITNESS_REPO_UID"
-	EnvRepoName    = "GITNESS_REPO_NAME"
-	EnvRepoID      = "GITNESS_REPO_UID"
-	EnvPusherName  = "GITNESS_PUSHER_NAME"
-	EnvPusherID    = "GITNESS_PUSHER_ID"
-	EnvAppURL      = "GITNESS_ROOT_URL" // base url for Gitness server
-	EnvPusherEmail = "GITNESS_PUSHER_EMAIL"
+	EnvPusherName  = "GITRPC_PUSHER_NAME"
+	EnvPusherEmail = "GITRPC_PUSHER_EMAIL"
+	EnvRepoUID     = "GITRPC_REPO_UID"
+	EnvRequestID   = "GITRPC_REQUEST_ID"
 )

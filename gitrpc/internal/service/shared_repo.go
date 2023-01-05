@@ -10,11 +10,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/gitrpc/internal/middleware"
 	"github.com/harness/gitness/gitrpc/internal/tempdir"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -25,23 +25,22 @@ import (
 
 // SharedRepo is a type to wrap our upload repositories as a shallow clone.
 type SharedRepo struct {
-	repoUID     string
-	repo        *git.Repository
-	remoteRepo  *git.Repository
-	TempBaseDir string
-	basePath    string
+	repoUID    string
+	repo       *git.Repository
+	remoteRepo *git.Repository
+	tmpPath    string
 }
 
 // NewSharedRepo creates a new temporary upload repository.
-func NewSharedRepo(tempDir, repoUID string, remoteRepo *git.Repository) (*SharedRepo, error) {
-	basePath, err := tempdir.CreateTemporaryPath(tempDir, repoUID)
+func NewSharedRepo(baseTmpDir, repoUID string, remoteRepo *git.Repository) (*SharedRepo, error) {
+	tmpPath, err := tempdir.CreateTemporaryPath(baseTmpDir, repoUID)
 	if err != nil {
 		return nil, err
 	}
 	t := &SharedRepo{
 		repoUID:    repoUID,
 		remoteRepo: remoteRepo,
-		basePath:   basePath,
+		tmpPath:    tmpPath,
 	}
 	return t, nil
 }
@@ -49,15 +48,15 @@ func NewSharedRepo(tempDir, repoUID string, remoteRepo *git.Repository) (*Shared
 // Close the repository cleaning up all files.
 func (r *SharedRepo) Close(ctx context.Context) {
 	defer r.repo.Close()
-	if err := tempdir.RemoveTemporaryPath(r.basePath); err != nil {
-		log.Ctx(ctx).Err(err).Msgf("Failed to remove temporary path %s", r.basePath)
+	if err := tempdir.RemoveTemporaryPath(r.tmpPath); err != nil {
+		log.Ctx(ctx).Err(err).Msgf("Failed to remove temporary path %s", r.tmpPath)
 	}
 }
 
 // Clone the base repository to our path and set branch as the HEAD.
 func (r *SharedRepo) Clone(ctx context.Context, branch string) error {
 	if _, _, err := git.NewCommand(ctx, "clone", "-s", "--bare", "-b",
-		branch, r.remoteRepo.Path, r.basePath).RunStdString(nil); err != nil {
+		branch, r.remoteRepo.Path, r.tmpPath).RunStdString(nil); err != nil {
 		stderr := err.Error()
 		if matched, _ := regexp.MatchString(".*Remote branch .* not found in upstream origin.*", stderr); matched {
 			return git.ErrBranchNotExist{
@@ -69,7 +68,7 @@ func (r *SharedRepo) Clone(ctx context.Context, branch string) error {
 			return fmt.Errorf("Clone: %w %s", err, stderr)
 		}
 	}
-	gitRepo, err := git.OpenRepository(ctx, r.basePath)
+	gitRepo, err := git.OpenRepository(ctx, r.tmpPath)
 	if err != nil {
 		return err
 	}
@@ -79,10 +78,10 @@ func (r *SharedRepo) Clone(ctx context.Context, branch string) error {
 
 // Init the repository.
 func (r *SharedRepo) Init(ctx context.Context) error {
-	if err := git.InitRepository(ctx, r.basePath, false); err != nil {
+	if err := git.InitRepository(ctx, r.tmpPath, false); err != nil {
 		return err
 	}
-	gitRepo, err := git.OpenRepository(ctx, r.basePath)
+	gitRepo, err := git.OpenRepository(ctx, r.tmpPath)
 	if err != nil {
 		return err
 	}
@@ -92,7 +91,7 @@ func (r *SharedRepo) Init(ctx context.Context) error {
 
 // SetDefaultIndex sets the git index to our HEAD.
 func (r *SharedRepo) SetDefaultIndex(ctx context.Context) error {
-	if _, _, err := git.NewCommand(ctx, "read-tree", "HEAD").RunStdString(&git.RunOpts{Dir: r.basePath}); err != nil {
+	if _, _, err := git.NewCommand(ctx, "read-tree", "HEAD").RunStdString(&git.RunOpts{Dir: r.tmpPath}); err != nil {
 		return fmt.Errorf("SetDefaultIndex: %w", err)
 	}
 	return nil
@@ -112,7 +111,7 @@ func (r *SharedRepo) LsFiles(ctx context.Context, filenames ...string) ([]string
 
 	if err := git.NewCommand(ctx, cmdArgs...).
 		Run(&git.RunOpts{
-			Dir:    r.basePath,
+			Dir:    r.tmpPath,
 			Stdout: stdOut,
 			Stderr: stdErr,
 		}); err != nil {
@@ -144,7 +143,7 @@ func (r *SharedRepo) RemoveFilesFromIndex(ctx context.Context, filenames ...stri
 
 	if err := git.NewCommand(ctx, "update-index", "--remove", "-z", "--index-info").
 		Run(&git.RunOpts{
-			Dir:    r.basePath,
+			Dir:    r.tmpPath,
 			Stdin:  stdIn,
 			Stdout: stdOut,
 			Stderr: stdErr,
@@ -162,7 +161,7 @@ func (r *SharedRepo) HashObject(ctx context.Context, content io.Reader) (string,
 
 	if err := git.NewCommand(ctx, "hash-object", "-w", "--stdin").
 		Run(&git.RunOpts{
-			Dir:    r.basePath,
+			Dir:    r.tmpPath,
 			Stdin:  content,
 			Stdout: stdOut,
 			Stderr: stdErr,
@@ -192,7 +191,7 @@ func (r *SharedRepo) ShowFile(ctx context.Context, filePath, commitHash string, 
 // AddObjectToIndex adds the provided object hash to the index with the provided mode and path.
 func (r *SharedRepo) AddObjectToIndex(ctx context.Context, mode, objectHash, objectPath string) error {
 	if _, _, err := git.NewCommand(ctx, "update-index", "--add", "--replace", "--cacheinfo", mode, objectHash,
-		objectPath).RunStdString(&git.RunOpts{Dir: r.basePath}); err != nil {
+		objectPath).RunStdString(&git.RunOpts{Dir: r.tmpPath}); err != nil {
 		if matched, _ := regexp.MatchString(".*Invalid path '.*", err.Error()); matched {
 			return types.ErrInvalidPath
 		}
@@ -204,7 +203,7 @@ func (r *SharedRepo) AddObjectToIndex(ctx context.Context, mode, objectHash, obj
 
 // WriteTree writes the current index as a tree to the object db and returns its hash.
 func (r *SharedRepo) WriteTree(ctx context.Context) (string, error) {
-	stdout, _, err := git.NewCommand(ctx, "write-tree").RunStdString(&git.RunOpts{Dir: r.basePath})
+	stdout, _, err := git.NewCommand(ctx, "write-tree").RunStdString(&git.RunOpts{Dir: r.tmpPath})
 	if err != nil {
 		return "", fmt.Errorf("unable to write-tree in temporary repo for: %s Error: %w",
 			r.repoUID, err)
@@ -222,7 +221,7 @@ func (r *SharedRepo) GetLastCommitByRef(ctx context.Context, ref string) (string
 	if ref == "" {
 		ref = "HEAD"
 	}
-	stdout, _, err := git.NewCommand(ctx, "rev-parse", ref).RunStdString(&git.RunOpts{Dir: r.basePath})
+	stdout, _, err := git.NewCommand(ctx, "rev-parse", ref).RunStdString(&git.RunOpts{Dir: r.tmpPath})
 	if err != nil {
 		return "", fmt.Errorf("unable to rev-parse %s in temporary repo for: %s Error: %w",
 			ref, r.repoUID, err)
@@ -245,20 +244,16 @@ func (r *SharedRepo) CommitTreeWithDate(
 	signoff bool,
 	authorDate, committerDate time.Time,
 ) (string, error) {
-	committerSig := &git.Signature{
-		Name:  committer.Name,
-		Email: committer.Email,
-		When:  time.Now(),
+	// setup environment variables used by git-commit-tree
+	// See https://git-scm.com/book/en/v2/Git-Internals-Environment-Variables
+	env := []string{
+		"GIT_AUTHOR_NAME=" + author.Name,
+		"GIT_AUTHOR_EMAIL=" + author.Email,
+		"GIT_AUTHOR_DATE=" + authorDate.Format(time.RFC3339),
+		"GIT_COMMITTER_NAME=" + committer.Name,
+		"GIT_COMMITTER_EMAIL=" + committer.Email,
+		"GIT_COMMITTER_DATE=" + committerDate.Format(time.RFC3339),
 	}
-
-	// Because this may call hooks we should pass in the environment
-	env := append(os.Environ(),
-		"GIT_AUTHOR_NAME="+author.Name,
-		"GIT_AUTHOR_EMAIL="+author.Email,
-		"GIT_AUTHOR_DATE="+authorDate.Format(time.RFC3339),
-		"GIT_COMMITTER_DATE="+committerDate.Format(time.RFC3339),
-	)
-
 	messageBytes := new(bytes.Buffer)
 	_, _ = messageBytes.WriteString(message)
 	_, _ = messageBytes.WriteString("\n")
@@ -274,23 +269,23 @@ func (r *SharedRepo) CommitTreeWithDate(
 	args = append(args, "--no-gpg-sign")
 
 	if signoff {
+		giteaSignature := &git.Signature{
+			Name:  committer.Name,
+			Email: committer.Email,
+			When:  committerDate,
+		}
 		// Signed-off-by
 		_, _ = messageBytes.WriteString("\n")
 		_, _ = messageBytes.WriteString("Signed-off-by: ")
-		_, _ = messageBytes.WriteString(committerSig.String())
+		_, _ = messageBytes.WriteString(giteaSignature.String())
 	}
-
-	env = append(env,
-		"GIT_COMMITTER_NAME="+committerSig.Name,
-		"GIT_COMMITTER_EMAIL="+committerSig.Email,
-	)
 
 	stdout := new(bytes.Buffer)
 	stderr := new(bytes.Buffer)
 	if err := git.NewCommand(ctx, args...).
 		Run(&git.RunOpts{
 			Env:    env,
-			Dir:    r.basePath,
+			Dir:    r.tmpPath,
 			Stdin:  messageBytes,
 			Stdout: stdout,
 			Stderr: stderr,
@@ -302,13 +297,12 @@ func (r *SharedRepo) CommitTreeWithDate(
 }
 
 // Push the provided commitHash to the repository branch by the provided user.
-func (r *SharedRepo) Push(ctx context.Context, doer *rpc.Identity, commitHash, branch string) error {
+func (r *SharedRepo) Push(ctx context.Context, writeRequest *rpc.WriteRequest, sourceRef, branch string) error {
 	// Because calls hooks we need to pass in the environment
-	author, committer := doer, doer
-	env := PushingEnvironment(author, committer, r.repoUID)
-	if err := git.Push(ctx, r.basePath, git.PushOptions{
+	env := CreateEnvironmentForPush(ctx, writeRequest)
+	if err := git.Push(ctx, r.tmpPath, git.PushOptions{
 		Remote: r.remoteRepo.Path,
-		Branch: strings.TrimSpace(commitHash) + ":" + git.BranchPrefix + strings.TrimSpace(branch),
+		Branch: strings.TrimSpace(sourceRef) + ":" + gitReferenceNamePrefixBranch + strings.TrimSpace(branch),
 		Env:    env,
 	}); err != nil {
 		if git.IsErrPushOutOfDate(err) {
@@ -318,12 +312,12 @@ func (r *SharedRepo) Push(ctx context.Context, doer *rpc.Identity, commitHash, b
 			if errors.As(err, &rejectErr) {
 				log.Ctx(ctx).Info().Msgf("Unable to push back to repo from temporary repo due to rejection:"+
 					" %s (%s)\nStdout: %s\nStderr: %s\nError: %v",
-					r.repoUID, r.basePath, rejectErr.StdOut, rejectErr.StdErr, rejectErr.Err)
+					r.repoUID, r.tmpPath, rejectErr.StdOut, rejectErr.StdErr, rejectErr.Err)
 			}
 			return err
 		}
 		return fmt.Errorf("unable to push back to repo from temporary repo: %s (%s) Error: %w",
-			r.repoUID, r.basePath, err)
+			r.repoUID, r.tmpPath, err)
 	}
 	return nil
 }
@@ -344,32 +338,24 @@ func (r *SharedRepo) GetCommit(commitID string) (*git.Commit, error) {
 	return r.repo.GetCommit(commitID)
 }
 
-// PushingEnvironment returns an os environment to allow hooks to work on push.
-func PushingEnvironment(
-	author,
-	committer *rpc.Identity,
-	repoUID string,
-) []string {
-	authorSig := &git.Signature{
-		Name:  author.Name,
-		Email: author.Email,
-	}
-	committerSig := &git.Signature{
-		Name:  committer.Name,
-		Email: committer.Email,
+// ASSUMPTION: writeRequst and writeRequst.Actor is never nil.
+func CreateEnvironmentForPush(ctx context.Context, writeRequest *rpc.WriteRequest) []string {
+	// don't send existing environment variables (os.Environ()), only send what's explicitly necessary.
+	// Otherwise we create implicit dependencies that are easy to break.
+	environ := []string{
+		// request id to use for hooks
+		EnvRequestID + "=" + middleware.RequestIDFrom(ctx),
+		// repo related info
+		EnvRepoUID + "=" + writeRequest.RepoUid,
+		// pusher related info
+		EnvPusherName + "=" + writeRequest.Actor.Name,
+		EnvPusherEmail + "=" + writeRequest.Actor.Email,
 	}
 
-	environ := append(os.Environ(),
-		"GIT_AUTHOR_NAME="+authorSig.Name,
-		"GIT_AUTHOR_EMAIL="+authorSig.Email,
-		"GIT_COMMITTER_NAME="+committerSig.Name,
-		"GIT_COMMITTER_EMAIL="+committerSig.Email,
-		// important env vars for hooks
-		EnvPusherName+"="+committer.Name,
-		// EnvPusherID+"="+fmt.Sprintf("%d", committer.ID),
-		EnvRepoID+"="+repoUID,
-		EnvAppURL+"=", // app url
-	)
+	// add all environment variables coming from client
+	for _, envVar := range writeRequest.EnvVars {
+		environ = append(environ, fmt.Sprintf("%s=%s", envVar.Name, envVar.Value))
+	}
 
 	return environ
 }

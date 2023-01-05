@@ -13,17 +13,17 @@ import (
 	"github.com/harness/gitness/gitrpc/rpc"
 )
 
-type RawDiffRequest struct {
-	RepoID        string
+type RawDiffParams struct {
+	ReadParams
 	LeftCommitID  string
 	RightCommitID string
 }
 
-func (c *Client) RawDiff(ctx context.Context, in *RawDiffRequest, w io.Writer) error {
+func (c *Client) RawDiff(ctx context.Context, params *RawDiffParams, out io.Writer) error {
 	diff, err := c.diffService.RawDiff(ctx, &rpc.RawDiffRequest{
-		RepoId:        in.RepoID,
-		LeftCommitId:  in.LeftCommitID,
-		RightCommitId: in.RightCommitID,
+		Base:          mapToRPCReadRequest(params.ReadParams),
+		LeftCommitId:  params.LeftCommitID,
+		RightCommitId: params.RightCommitID,
 	})
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func (c *Client) RawDiff(ctx context.Context, in *RawDiffRequest, w io.Writer) e
 		return resp.GetData(), err
 	})
 
-	if _, err = io.Copy(w, reader); err != nil {
+	if _, err = io.Copy(out, reader); err != nil {
 		return fmt.Errorf("copy rpc data: %w", err)
 	}
 

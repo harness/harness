@@ -11,11 +11,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// Config represents the config for the gitrpc client.
-type Config struct {
-	Bind string
-}
-
 type Client struct {
 	conn               *grpc.ClientConn
 	repoService        rpc.RepositoryServiceClient

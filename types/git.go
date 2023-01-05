@@ -6,6 +6,8 @@ package types
 
 import "github.com/harness/gitness/types/enum"
 
+const NilSHA = "0000000000000000000000000000000000000000"
+
 // CommitFilter stores commit query parameters.
 type CommitFilter struct {
 	After string `json:"after"`

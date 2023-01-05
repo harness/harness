@@ -8,11 +8,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/gitrpc/events"
 	"github.com/harness/gitness/gitrpc/internal/gitea"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 
+	"code.gitea.io/gitea/modules/git"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,20 +22,43 @@ var listBranchesRefFields = []types.GitReferenceField{types.GitReferenceFieldRef
 
 func (s ReferenceService) CreateBranch(ctx context.Context,
 	request *rpc.CreateBranchRequest) (*rpc.CreateBranchResponse, error) {
-	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
-
-	gitBranch, err := s.adapter.CreateBranch(ctx, repoPath, request.GetBranchName(), request.GetTarget())
-	if err != nil {
-		return nil, processGitErrorf(err, "failed to create branch")
+	base := request.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
 	}
 
-	// at this point the branch got created (emit event even if we'd fail to map the git branch)
-	s.eventReporter.BranchCreated(ctx, &events.BranchCreatedPayload{
-		RepoUID:    request.RepoUid,
-		BranchName: request.BranchName,
-		FullRef:    fmt.Sprintf("refs/heads/%s", request.BranchName),
-		SHA:        gitBranch.SHA,
-	})
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
+
+	// TODO: why are we using gitea operations here?!
+	repo, err := git.OpenRepository(ctx, repoPath)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to open repo")
+	}
+
+	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to create new shared repo")
+	}
+	defer sharedRepo.Close(ctx)
+
+	// clone repo
+	err = sharedRepo.Clone(ctx, request.GetTarget())
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to clone shared repo with branch '%s'", request.GetBranchName())
+	}
+
+	// push to new branch (all changes should go through push flow for hooks and other safety meassures)
+	err = sharedRepo.Push(ctx, base, request.GetTarget(), request.GetBranchName())
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to push new branch '%s'", request.GetBranchName())
+	}
+
+	// get branch
+	// TODO: get it from shared repo to avoid opening another gitea repo
+	gitBranch, err := s.adapter.GetBranch(ctx, repoPath, request.GetBranchName())
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to get gitea branch '%s'", request.GetBranchName())
+	}
 
 	branch, err := mapGitBranch(gitBranch)
 	if err != nil {
@@ -49,29 +72,59 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 
 func (s ReferenceService) DeleteBranch(ctx context.Context,
 	request *rpc.DeleteBranchRequest) (*rpc.DeleteBranchResponse, error) {
-	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
-
-	// TODO: block deletion of protected branch (in the future)
-	sha, err := s.adapter.DeleteBranch(ctx, repoPath, request.GetBranchName(), request.GetForce())
-	if err != nil {
-		return nil, processGitErrorf(err, "failed to delete branch")
+	base := request.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
 	}
 
-	// at this point the branch got created (emit event even if we'd fail to map the git branch)
-	s.eventReporter.BranchDeleted(ctx, &events.BranchDeletedPayload{
-		RepoUID:    request.RepoUid,
-		BranchName: request.BranchName,
-		FullRef:    fmt.Sprintf("refs/heads/%s", request.BranchName),
-		SHA:        sha,
-	})
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
-	return &rpc.DeleteBranchResponse{}, nil
+	// TODO: why are we using gitea operations here?!
+	repo, err := git.OpenRepository(ctx, repoPath)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to open repo")
+	}
+
+	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to create new shared repo")
+	}
+	defer sharedRepo.Close(ctx)
+
+	// clone repo (technically we don't care about which branch we clone)
+	err = sharedRepo.Clone(ctx, request.GetBranchName())
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to clone shared repo with branch '%s'", request.GetBranchName())
+	}
+
+	// get latest branch commit before we delete
+	gitCommit, err := sharedRepo.GetBranchCommit(request.GetBranchName())
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to get gitea commit for branch '%s'", request.GetBranchName())
+	}
+
+	// push to new branch (all changes should go through push flow for hooks and other safety meassures)
+	// NOTE: setting sourceRef to empty will delete the remote branch when pushing:
+	// https://git-scm.com/docs/git-push#Documentation/git-push.txt-ltrefspecgt82308203
+	err = sharedRepo.Push(ctx, base, "", request.GetBranchName())
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to delete branch '%s' from remote repo", request.GetBranchName())
+	}
+
+	return &rpc.DeleteBranchResponse{
+		Sha: gitCommit.ID.String(),
+	}, nil
 }
 
 func (s ReferenceService) ListBranches(request *rpc.ListBranchesRequest,
 	stream rpc.ReferenceService_ListBranchesServer) error {
+	base := request.GetBase()
+	if base == nil {
+		return types.ErrBaseCannotBeEmpty
+	}
+
 	ctx := stream.Context()
-	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
 	// get all required information from git refrences
 	branches, err := s.listBranchesLoadReferenceData(ctx, repoPath, request)

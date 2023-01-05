@@ -24,8 +24,7 @@ const (
 )
 
 type CreateBranchParams struct {
-	// RepoUID is the uid of the git repository
-	RepoUID string
+	WriteParams
 	// BranchName is the name of the branch
 	BranchName string
 	// Target is a git reference (branch / tag / commit SHA)
@@ -37,15 +36,13 @@ type CreateBranchOutput struct {
 }
 
 type DeleteBranchParams struct {
-	// RepoUID is the uid of the git repository
-	RepoUID string
+	WriteParams
 	// Name is the name of the branch
 	BranchName string
 }
 
 type ListBranchesParams struct {
-	// RepoUID is the uid of the git repository
-	RepoUID       string
+	ReadParams
 	IncludeCommit bool
 	Query         string
 	Sort          BranchSortOption
@@ -69,7 +66,7 @@ func (c *Client) CreateBranch(ctx context.Context, params *CreateBranchParams) (
 		return nil, ErrNoParamsProvided
 	}
 	resp, err := c.refService.CreateBranch(ctx, &rpc.CreateBranchRequest{
-		RepoUid:    params.RepoUID,
+		Base:       mapToRPCWriteRequest(params.WriteParams),
 		Target:     params.Target,
 		BranchName: params.BranchName,
 	})
@@ -93,7 +90,7 @@ func (c *Client) DeleteBranch(ctx context.Context, params *DeleteBranchParams) e
 		return ErrNoParamsProvided
 	}
 	_, err := c.refService.DeleteBranch(ctx, &rpc.DeleteBranchRequest{
-		RepoUid:    params.RepoUID,
+		Base:       mapToRPCWriteRequest(params.WriteParams),
 		BranchName: params.BranchName,
 		// TODO: what are scenarios where we wouldn't want to force delete?
 		// Branch protection is a different story, and build on top application layer.
@@ -112,7 +109,7 @@ func (c *Client) ListBranches(ctx context.Context, params *ListBranchesParams) (
 	}
 
 	stream, err := c.refService.ListBranches(ctx, &rpc.ListBranchesRequest{
-		RepoUid:       params.RepoUID,
+		Base:          mapToRPCReadRequest(params.ReadParams),
 		IncludeCommit: params.IncludeCommit,
 		Query:         params.Query,
 		Sort:          mapToRPCListBranchesSortOption(params.Sort),

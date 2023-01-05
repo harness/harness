@@ -13,6 +13,7 @@ import (
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
+	repoctrl "github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth/authz"
@@ -74,7 +75,7 @@ func GetInfoRefs(client gitrpc.Interface, repoStore store.RepoStore, authorizer 
 		w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-advertisement", service))
 
 		if err = client.GetInfoRefs(ctx, w, &gitrpc.InfoRefsParams{
-			RepoUID:     repo.GitUID,
+			ReadParams:  repoctrl.CreateRPCReadParams(repo),
 			Service:     service,
 			Options:     nil,
 			GitProtocol: r.Header.Get("Git-Protocol"),
@@ -91,7 +92,8 @@ func GetUploadPack(client gitrpc.Interface, repoStore store.RepoStore, authorize
 	return func(w http.ResponseWriter, r *http.Request) {
 		const service = "upload-pack"
 
-		if err := serviceRPC(w, r, client, repoStore, authorizer, service, enum.PermissionRepoView, true); err != nil {
+		if err := serviceRPC(w, r, client, repoStore, authorizer, service, false,
+			enum.PermissionRepoView, true); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -101,7 +103,8 @@ func GetUploadPack(client gitrpc.Interface, repoStore store.RepoStore, authorize
 func PostReceivePack(client gitrpc.Interface, repoStore store.RepoStore, authorizer authz.Authorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const service = "receive-pack"
-		if err := serviceRPC(w, r, client, repoStore, authorizer, service, enum.PermissionRepoEdit, false); err != nil {
+		if err := serviceRPC(w, r, client, repoStore, authorizer, service, true,
+			enum.PermissionRepoEdit, false); err != nil {
 			var authError *GitAuthError
 			if errors.As(err, &authError) {
 				basicAuth(w, authError.AccountID)
@@ -120,6 +123,7 @@ func serviceRPC(
 	repoStore store.RepoStore,
 	authorizer authz.Authorizer,
 	service string,
+	isWriteOperation bool,
 	permission enum.Permission,
 	orPublic bool,
 ) error {
@@ -168,15 +172,21 @@ func serviceRPC(
 		}
 	}
 	params := &gitrpc.ServicePackParams{
-		RepoUID:     repo.GitUID,
 		Service:     service,
 		Data:        reqBody,
 		Options:     nil,
 		GitProtocol: r.Header.Get("Git-Protocol"),
 	}
-	if session != nil {
-		params.PrincipalID = session.Principal.ID
+
+	// setup read/writeparams depending on whether it's a write operation
+	if isWriteOperation {
+		writeParams := repoctrl.CreateRPCWriteParams(session, repo)
+		params.WriteParams = &writeParams
+	} else {
+		readParams := repoctrl.CreateRPCReadParams(repo)
+		params.ReadParams = &readParams
 	}
+
 	return client.ServicePack(ctx, w, params)
 }
 

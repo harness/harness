@@ -18,20 +18,20 @@ type Config struct {
 
 	// Git defines the git configuration parameters
 	Git struct {
-		BaseURL       string `envconfig:"GITNESS_GIT_BASE_URL" default:"http://localhost:3000"` // clone url
-		Root          string `envconfig:"GITNESS_GIT_ROOT"`
-		ReposTempPath string `envconfig:"GITNESS_GIT_REPOS_TEMP_PATH"` // temp path where all repos will be cloned
-		DefaultBranch string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
+		BaseURL        string `envconfig:"GITNESS_GIT_BASE_URL" default:"http://localhost:3000"` // clone url
+		Root           string `envconfig:"GITNESS_GIT_ROOT"`
+		TmpDir         string `envconfig:"GITNESS_GIT_TMP_DIR"`          // directory for temporary data (repo clone)
+		ServerHookPath string `envconfig:"GITNESS_GIT_SERVER_HOOK_PATH"` // path to binary used as git server hook
+		DefaultBranch  string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
 	}
 
 	// Server defines the server configuration parameters.
 	Server struct {
 		// HTTP defines the http configuration parameters
 		HTTP struct {
-			Bind                    string `envconfig:"GITNESS_HTTP_BIND" default:":3000"`
-			Proto                   string `envconfig:"GITNESS_HTTP_PROTO"`
-			Host                    string `envconfig:"GITNESS_HTTP_HOST"`
-			RequestIDResponseHeader string `envconfig:"GITNESS_HTTP_REQUEST_ID_RESPONSE_HEADER" default:"request-id"`
+			Bind  string `envconfig:"GITNESS_HTTP_BIND" default:":3000"`
+			Proto string `envconfig:"GITNESS_HTTP_PROTO"`
+			Host  string `envconfig:"GITNESS_HTTP_HOST"`
 		}
 
 		// GRPC defines the grpc configuration parameters

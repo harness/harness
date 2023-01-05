@@ -58,12 +58,12 @@ func (c *Controller) CommitFiles(ctx context.Context, session *auth.Session,
 		}
 	}
 
-	commit, err := c.gitRPCClient.CommitFiles(ctx, &gitrpc.CommitFilesOptions{
-		RepoID:    repo.GitUID,
-		Title:     in.Title,
-		Message:   in.Message,
-		Branch:    in.Branch,
-		NewBranch: in.NewBranch,
+	commit, err := c.gitRPCClient.CommitFiles(ctx, &gitrpc.CommitFilesParams{
+		WriteParams: CreateRPCWriteParams(session, repo),
+		Title:       in.Title,
+		Message:     in.Message,
+		Branch:      in.Branch,
+		NewBranch:   in.NewBranch,
 		Author: gitrpc.Identity{
 			Name:  session.Principal.DisplayName,
 			Email: session.Principal.Email,

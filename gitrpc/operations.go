@@ -19,8 +19,7 @@ import (
 )
 
 type ListCommitsParams struct {
-	// RepoUID is the uid of the git repository
-	RepoUID string
+	ReadParams
 	// GitREF is a git reference (branch / tag / commit SHA)
 	GitREF string
 	// After is a git reference (branch / tag / commit SHA)
@@ -57,11 +56,11 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 		return nil, ErrNoParamsProvided
 	}
 	stream, err := c.repoService.ListCommits(ctx, &rpc.ListCommitsRequest{
-		RepoUid: params.RepoUID,
-		GitRef:  params.GitREF,
-		After:   params.After,
-		Page:    params.Page,
-		Limit:   params.Limit,
+		Base:   mapToRPCReadRequest(params.ReadParams),
+		GitRef: params.GitREF,
+		After:  params.After,
+		Page:   params.Page,
+		Limit:  params.Limit,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to start stream for commits: %w", err)
@@ -98,8 +97,7 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 }
 
 type GetCommitDivergencesParams struct {
-	// RepoUID is the uid of the git repository
-	RepoUID  string
+	ReadParams
 	MaxCount int32
 	Requests []CommitDivergenceRequest
 }
@@ -132,7 +130,7 @@ func (c *Client) GetCommitDivergences(ctx context.Context,
 
 	// build rpc request
 	req := &rpc.GetCommitDivergencesRequest{
-		RepoUid:  params.RepoUID,
+		Base:     mapToRPCReadRequest(params.ReadParams),
 		MaxCount: params.MaxCount,
 		Requests: make([]*rpc.CommitDivergenceRequest, len(params.Requests)),
 	}
@@ -192,9 +190,9 @@ type CommitFileAction struct {
 	SHA      string
 }
 
-// CommitFilesOptions holds the data for file operations.
-type CommitFilesOptions struct {
-	RepoID    string
+// CommitFilesParams holds the data for file operations.
+type CommitFilesParams struct {
+	WriteParams
 	Title     string
 	Message   string
 	Branch    string
@@ -208,7 +206,7 @@ type CommitFilesResponse struct {
 	CommitID string
 }
 
-func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesOptions) (CommitFilesResponse, error) {
+func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesParams) (CommitFilesResponse, error) {
 	stream, err := c.commitFilesService.CommitFiles(ctx)
 	if err != nil {
 		return CommitFilesResponse{}, err
@@ -217,7 +215,7 @@ func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesOptions) (C
 	if err = stream.Send(&rpc.CommitFilesRequest{
 		Payload: &rpc.CommitFilesRequest_Header{
 			Header: &rpc.CommitFilesRequestHeader{
-				RepoUid:       params.RepoID,
+				Base:          mapToRPCWriteRequest(params.WriteParams),
 				BranchName:    params.Branch,
 				NewBranchName: params.NewBranch,
 				Title:         params.Title,

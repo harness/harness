@@ -7,11 +7,17 @@ package service
 import (
 	"context"
 
+	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 )
 
 func (s RepositoryService) GetBlob(ctx context.Context, request *rpc.GetBlobRequest) (*rpc.GetBlobResponse, error) {
-	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
+	base := request.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 	// TODO: do we need to validate request for nil?
 	gitBlob, err := s.adapter.GetBlob(ctx, repoPath, request.GetSha(), request.GetSizeLimit())
 	if err != nil {

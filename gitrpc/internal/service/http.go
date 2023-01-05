@@ -9,22 +9,18 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/harness/gitness/gitrpc/internal/streamio"
+	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 
 	"code.gitea.io/gitea/modules/git"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-)
-
-const (
-	receivePack = "receive-pack"
 )
 
 var safeGitProtocolHeader = regexp.MustCompile(`^[0-9a-zA-Z]+=[0-9a-zA-Z]+(:[0-9a-zA-Z]+=[0-9a-zA-Z]+)*$`)
@@ -43,23 +39,29 @@ func NewHTTPService(adapter GitAdapter, reposRoot string) (*SmartHTTPService, er
 }
 
 func (s *SmartHTTPService) InfoRefs(
-	r *rpc.InfoRefsRequest,
+	request *rpc.InfoRefsRequest,
 	stream rpc.SmartHTTPService_InfoRefsServer,
 ) error {
-	environ := make([]string, 0)
-	environ = append(os.Environ(), environ...)
-	if r.GitProtocol != "" {
-		environ = append(environ, "GIT_PROTOCOL="+r.GitProtocol)
+	ctx := stream.Context()
+	base := request.GetBase()
+	if base == nil {
+		return types.ErrBaseCannotBeEmpty
 	}
 
-	repoPath := getFullPathForRepo(s.reposRoot, r.GetRepoUid())
+	// NOTE: Don't include os.Environ() as we don't have control over it - define everything explicitly
+	environ := []string{}
+	if request.GitProtocol != "" {
+		environ = append(environ, "GIT_PROTOCOL="+request.GitProtocol)
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
 	w := streamio.NewWriter(func(p []byte) error {
 		return stream.Send(&rpc.InfoRefsResponse{Data: p})
 	})
 
 	cmd := &bytes.Buffer{}
-	if err := git.NewCommand(stream.Context(), r.GetService(), "--stateless-rpc", "--advertise-refs", ".").
+	if err := git.NewCommand(ctx, request.GetService(), "--stateless-rpc", "--advertise-refs", ".").
 		Run(&git.RunOpts{
 			Env:    environ,
 			Dir:    repoPath,
@@ -67,7 +69,7 @@ func (s *SmartHTTPService) InfoRefs(
 		}); err != nil {
 		return status.Errorf(codes.Internal, "InfoRefsUploadPack: cmd: %v", err)
 	}
-	if _, err := w.Write(packetWrite("# service=git-" + r.GetService() + "\n")); err != nil {
+	if _, err := w.Write(packetWrite("# service=git-" + request.GetService() + "\n")); err != nil {
 		return status.Errorf(codes.Internal, "InfoRefsUploadPack: pktLine: %v", err)
 	}
 
@@ -84,20 +86,33 @@ func (s *SmartHTTPService) InfoRefs(
 func (s *SmartHTTPService) ServicePack(stream rpc.SmartHTTPService_ServicePackServer) error {
 	ctx := stream.Context()
 	// Get basic repo data
-	req, err := stream.Recv()
+	request, err := stream.Recv()
 	if err != nil {
 		return err
 	}
 	// if client sends data as []byte raise error, needs reader
-	if req.Data != nil {
-		return status.Errorf(codes.InvalidArgument, "PostUploadPack(): non-empty Data")
+	if request.GetData() != nil {
+		return status.Errorf(codes.InvalidArgument, "ServicePack(): non-empty Data")
 	}
 
-	if req.RepoUid == "" {
-		return status.Errorf(codes.InvalidArgument, "PostUploadPack(): repository UID is missing")
+	// ensure we have the correct base type that matches the services to be triggered
+	var repoUID string
+	switch request.GetService() {
+	case rpc.ServiceUploadPack:
+		if request.GetReadBase() == nil {
+			return status.Errorf(codes.InvalidArgument, "ServicePack(): read base is missing for upload-pack")
+		}
+		repoUID = request.GetReadBase().GetRepoUid()
+	case rpc.ServiceReceivePack:
+		if request.GetWriteBase() == nil {
+			return status.Errorf(codes.InvalidArgument, "ServicePack(): write base is missing for receive-pack")
+		}
+		repoUID = request.GetWriteBase().GetRepoUid()
+	default:
+		return status.Errorf(codes.InvalidArgument, "ServicePack(): unsupported service '%s'", request.GetService())
 	}
 
-	repoPath := getFullPathForRepo(s.reposRoot, req.GetRepoUid())
+	repoPath := getFullPathForRepo(s.reposRoot, repoUID)
 
 	stdin := streamio.NewReader(func() ([]byte, error) {
 		resp, streamErr := stream.Recv()
@@ -108,21 +123,19 @@ func (s *SmartHTTPService) ServicePack(stream rpc.SmartHTTPService_ServicePackSe
 		return stream.Send(&rpc.ServicePackResponse{Data: p})
 	})
 
-	return serviceRPC(ctx, stdin, stdout, req, repoPath)
+	return serviceRPC(ctx, stdin, stdout, request, repoPath)
 }
 
-func serviceRPC(ctx context.Context, stdin io.Reader, stdout io.Writer, req *rpc.ServicePackRequest, dir string) error {
-	protocol := req.GetGitProtocol()
-	service := req.GetService()
-	principalID := req.GetPrincipalId()
-	repoUID := req.GetRepoUid()
+func serviceRPC(ctx context.Context, stdin io.Reader, stdout io.Writer,
+	request *rpc.ServicePackRequest, dir string) error {
+	protocol := request.GetGitProtocol()
+	service := request.GetService()
 
-	environ := make([]string, 0)
-	if service == receivePack && principalID != "" {
-		environ = []string{
-			EnvRepoUID + "=" + repoUID,
-			EnvPusherID + "=" + principalID,
-		}
+	// NOTE: Don't include os.Environ() as we don't have control over it - define everything explicitly
+	environ := []string{}
+	if request.GetWriteBase() != nil {
+		// in case of a write operation inject the provided environment variables
+		environ = CreateEnvironmentForPush(ctx, request.GetWriteBase())
 	}
 	// set this for allow pre-receive and post-receive execute
 	environ = append(environ, "SSH_ORIGINAL_COMMAND="+service)
@@ -138,7 +151,7 @@ func serviceRPC(ctx context.Context, stdin io.Reader, stdout io.Writer, req *rpc
 	cmd.SetDescription(fmt.Sprintf("%s %s %s [repo_path: %s]", git.GitExecutable, service, "--stateless-rpc", dir))
 	err := cmd.Run(&git.RunOpts{
 		Dir:               dir,
-		Env:               append(os.Environ(), environ...),
+		Env:               environ,
 		Stdout:            stdout,
 		Stdin:             stdin,
 		Stderr:            &stderr,

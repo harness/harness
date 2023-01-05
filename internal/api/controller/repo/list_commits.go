@@ -35,11 +35,11 @@ func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 	}
 
 	rpcOut, err := c.gitRPCClient.ListCommits(ctx, &gitrpc.ListCommitsParams{
-		RepoUID: repo.GitUID,
-		GitREF:  gitRef,
-		After:   filter.After,
-		Page:    int32(filter.Page),
-		Limit:   int32(filter.Limit),
+		ReadParams: CreateRPCReadParams(repo),
+		GitREF:     gitRef,
+		After:      filter.After,
+		Page:       int32(filter.Page),
+		Limit:      int32(filter.Limit),
 	})
 	if err != nil {
 		return nil, err

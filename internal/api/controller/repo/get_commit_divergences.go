@@ -65,9 +65,9 @@ func (c *Controller) GetCommitDivergences(ctx context.Context, session *auth.Ses
 
 	// map to rpc params
 	options := &gitrpc.GetCommitDivergencesParams{
-		RepoUID:  repo.GitUID,
-		MaxCount: in.MaxCount,
-		Requests: make([]gitrpc.CommitDivergenceRequest, len(in.Requests)),
+		ReadParams: CreateRPCReadParams(repo),
+		MaxCount:   in.MaxCount,
+		Requests:   make([]gitrpc.CommitDivergenceRequest, len(in.Requests)),
 	}
 	for i := range in.Requests {
 		options.Requests[i].From = in.Requests[i].From

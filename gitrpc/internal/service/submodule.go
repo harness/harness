@@ -7,12 +7,18 @@ package service
 import (
 	"context"
 
+	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 )
 
 func (s RepositoryService) GetSubmodule(ctx context.Context,
 	request *rpc.GetSubmoduleRequest) (*rpc.GetSubmoduleResponse, error) {
-	repoPath := getFullPathForRepo(s.reposRoot, request.GetRepoUid())
+	base := request.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 	// TODO: do we need to validate request for nil?
 	gitSubmodule, err := s.adapter.GetSubmodule(ctx, repoPath, request.GetGitRef(), request.GetPath())
 	if err != nil {

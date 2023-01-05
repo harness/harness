@@ -3,6 +3,8 @@ package rpc;
 
 option go_package = "github.com/harness/gitness/gitrpc/rpc";
 
+import "shared.proto";
+
 // SmartHTTPService is a service that provides RPCs required for HTTP-based Git
 // clones via the smart HTTP protocol.
 service SmartHTTPService {
@@ -16,7 +18,8 @@ service SmartHTTPService {
 }
 
 message InfoRefsRequest {
-  string repo_uid = 1;
+  // Base specifies the base read parameters
+  ReadRequest base = 1;
   // Service can be: upload-pack or receive-pack
   string service = 2;
   // Parameters to use with git -c (key=value pairs)
@@ -31,21 +34,21 @@ message InfoRefsResponse {
 }
 
 message ServicePackRequest {
-  // repository should only be present only in the first message of the stream
-  string repo_uid = 1;
+  // Base specifies the base parameters.
+  // Depending on the service the matching base type has to be passed
+  oneof base {
+    ReadRequest  read_base  = 1;
+    WriteRequest write_base = 2;
+  };
+
   // Service can be: upload-pack or receive-pack
-  string service = 2;
+  string service = 3;
   // Raw data to be copied to stdin of 'git upload-pack'
-  bytes data = 3;
+  bytes data = 4;
   // Parameters to use with git -c (key=value pairs)
-  repeated string git_config_options = 4;
-
+  repeated string git_config_options = 5;
   // Git protocol version
-  string git_protocol = 5;
-
-  // user_id become env variable, used by the Git {pre,post}-receive
-  // hooks. They should only be present in the first message of the stream.
-  string principal_id = 6;
+  string git_protocol = 6;
 }
 
 message ServicePackResponse {

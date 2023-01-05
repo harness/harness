@@ -14,8 +14,6 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-const NilSHA = "0000000000000000000000000000000000000000"
-
 // BranchBody describes the body of Branch related webhook triggers.
 // TODO: move in separate package for small import?
 type BranchBody struct {
@@ -40,7 +38,7 @@ func getEventHandlerForBranchCreated(server *Server,
 						GitURL:        "", // TODO: GitURL has to be generated
 					},
 					Ref:    event.Payload.FullRef,
-					Before: NilSHA,
+					Before: types.NilSHA,
 					After:  event.Payload.SHA,
 				}
 			})
@@ -84,7 +82,7 @@ func getEventHandlerForBranchDeleted(server *Server,
 					},
 					Ref:    event.Payload.FullRef,
 					Before: event.Payload.SHA,
-					After:  NilSHA,
+					After:  types.NilSHA,
 				}
 			})
 	}

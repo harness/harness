@@ -30,21 +30,22 @@ func NewDiffService(adapter GitAdapter, reposRoot string) (*DiffService, error) 
 	}, nil
 }
 
-func (s DiffService) RawDiff(req *rpc.RawDiffRequest, stream rpc.DiffService_RawDiffServer) error {
-	err := validateDiffRequest(req)
+func (s DiffService) RawDiff(request *rpc.RawDiffRequest, stream rpc.DiffService_RawDiffServer) error {
+	err := validateDiffRequest(request)
 	if err != nil {
 		return err
 	}
 
 	ctx := stream.Context()
+	base := request.GetBase()
 
 	sw := streamio.NewWriter(func(p []byte) error {
 		return stream.Send(&rpc.RawDiffResponse{Data: p})
 	})
 
-	repoPath := getFullPathForRepo(s.reposRoot, req.GetRepoId())
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
-	cmd := git.NewCommand(ctx, "diff", "--full-index", req.LeftCommitId, req.RightCommitId)
+	cmd := git.NewCommand(ctx, "diff", "--full-index", request.LeftCommitId, request.RightCommitId)
 	cmd.SetDescription(fmt.Sprintf("GetDiffRange [repo_path: %s]", repoPath))
 	return cmd.Run(&git.RunOpts{
 		Timeout: time.Duration(setting.Git.Timeout.Default) * time.Second,
@@ -54,12 +55,10 @@ func (s DiffService) RawDiff(req *rpc.RawDiffRequest, stream rpc.DiffService_Raw
 	})
 }
 
-type requestWithLeftRightCommitIds interface {
-	GetLeftCommitId() string
-	GetRightCommitId() string
-}
-
-func validateDiffRequest(in requestWithLeftRightCommitIds) error {
+func validateDiffRequest(in *rpc.RawDiffRequest) error {
+	if in.GetBase() == nil {
+		return types.ErrBaseCannotBeEmpty
+	}
 	if in.GetLeftCommitId() == "" {
 		return types.ErrEmptyLeftCommitID
 	}

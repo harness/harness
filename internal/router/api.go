@@ -23,9 +23,9 @@ import (
 	"github.com/harness/gitness/internal/api/handler/system"
 	handleruser "github.com/harness/gitness/internal/api/handler/user"
 	handlerwebhook "github.com/harness/gitness/internal/api/handler/webhook"
-	"github.com/harness/gitness/internal/api/middleware/accesslog"
 	middlewareauthn "github.com/harness/gitness/internal/api/middleware/authn"
 	"github.com/harness/gitness/internal/api/middleware/encode"
+	"github.com/harness/gitness/internal/api/middleware/logging"
 	"github.com/harness/gitness/internal/api/middleware/principal"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
@@ -68,8 +68,8 @@ func NewAPIHandler(
 	// configure logging middleware.
 	r.Use(hlog.URLHandler("http.url"))
 	r.Use(hlog.MethodHandler("http.method"))
-	r.Use(hlog.RequestIDHandler("http.request", config.Server.HTTP.RequestIDResponseHeader))
-	r.Use(accesslog.HlogHandler())
+	r.Use(logging.HLogRequestIDHandler())
+	r.Use(logging.HLogAccessLogHandler())
 
 	// configure cors middleware
 	r.Use(corsHandler(config))
