@@ -1,8 +1,6 @@
 import React from 'react'
 import { Container, ButtonVariation, Layout, Text, StringSubstitute, Button, Icon, Color } from '@harness/uicore'
 import { Menu, MenuItem } from '@blueprintjs/core'
-import 'highlight.js/styles/github.css'
-import 'diff2html/bundles/css/diff2html.min.css'
 import { useStrings } from 'framework/strings'
 import { CodeIcon } from 'utils/GitUtils'
 import { waitUntil } from 'utils/Utils'

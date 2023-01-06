@@ -12,9 +12,8 @@ import {
   ButtonSize,
   Intent
 } from '@harness/uicore'
+import cx from 'classnames'
 import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
-import 'highlight.js/styles/github.css'
-import 'diff2html/bundles/css/diff2html.min.css'
 import { noop } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { CodeIcon } from 'utils/GitUtils'
@@ -39,6 +38,7 @@ interface DiffViewerProps {
   diff: DiffFileEntry
   viewStyle: ViewStyle
   stickyTopPosition?: number
+  readOnly?: boolean
 }
 
 //
@@ -46,7 +46,7 @@ interface DiffViewerProps {
 //       Avoid React re-rendering at all cost as it might cause unresponsive UI
 //       when diff content is big, or when a PR has a lot of changed files.
 //
-export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, stickyTopPosition = 0 }) => {
+export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, stickyTopPosition = 0, readOnly }) => {
   const { getString } = useStrings()
   const [viewed, setViewed] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -187,6 +187,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
     'click',
     useCallback(
       function clickToAddAnnotation(event: MouseEvent) {
+        if (readOnly) {
+          return
+        }
+
         const target = event.target as HTMLDivElement
         const targetButton = target?.closest('[data-annotation-for-line]') as HTMLDivElement
         const annotatedLineRow = targetButton?.closest('tr') as HTMLTableRowElement
@@ -219,13 +223,17 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
           setComments([...comments, commentItem])
         }
       },
-      [viewStyle, comments]
+      [viewStyle, comments, readOnly]
     ),
     containerRef.current as HTMLDivElement
   )
 
   useEffect(
     function renderAnnotatations() {
+      if (readOnly) {
+        return
+      }
+
       const isSideBySide = viewStyle === ViewStyle.SIDE_BY_SIDE
 
       // Update latest commentsRef to use it inside CommentBox callbacks
@@ -310,7 +318,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
         // }
       })
     },
-    [comments, viewStyle, getString, currentUser, executeDeleteComentConfirmation]
+    [comments, viewStyle, getString, currentUser, executeDeleteComentConfirmation, readOnly]
   )
 
   useEffect(function cleanUpCommentBoxRendering() {
@@ -326,7 +334,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
     <Container
       ref={setContainerRef}
       id={diff.containerId}
-      className={css.main}
+      className={cx(css.main, { [css.readOnly]: readOnly })}
       style={{ '--diff-viewer-sticky-top': `${stickyTopPosition}px` } as React.CSSProperties}>
       <Layout.Vertical>
         <Container className={css.diffHeader} height={DIFF_VIEWER_HEADER_HEIGHT}>
@@ -357,20 +365,23 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
             </Text>
             <Button variation={ButtonVariation.ICON} icon={CodeIcon.Copy} size={ButtonSize.SMALL} />
             <FlexExpander />
-            <Container>
-              <label className={css.viewLabel}>
-                <input
-                  type="checkbox"
-                  value="viewed"
-                  checked={viewed}
-                  onChange={() => {
-                    setViewed(!viewed)
-                    setCollapsed(!viewed)
-                  }}
-                />
-                {getString('viewed')}
-              </label>
-            </Container>
+
+            {!readOnly && (
+              <Container>
+                <label className={css.viewLabel}>
+                  <input
+                    type="checkbox"
+                    value="viewed"
+                    checked={viewed}
+                    onChange={() => {
+                      setViewed(!viewed)
+                      setCollapsed(!viewed)
+                    }}
+                  />
+                  {getString('viewed')}
+                </label>
+              </Container>
+            )}
           </Layout.Horizontal>
         </Container>
 

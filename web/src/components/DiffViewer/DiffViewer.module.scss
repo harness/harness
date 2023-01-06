@@ -104,6 +104,20 @@
     }
   }
 
+  &.readOnly {
+    :global {
+      .d2h-file-wrapper {
+        [data-content-for-line-number] {
+          cursor: default;
+
+          [data-annotation-for-line] {
+            display: none !important;
+          }
+        }
+      }
+    }
+  }
+
   &.collapsed {
     .diffHeader {
       border-bottom-left-radius: 5px;

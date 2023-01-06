@@ -4,8 +4,6 @@ import { Container, Layout, Avatar, TextInput, Text, Color, FontVariation, FlexE
 import cx from 'classnames'
 import MarkdownEditor from '@uiw/react-markdown-editor'
 import ReactTimeago from 'react-timeago'
-import 'highlight.js/styles/github.css'
-import 'diff2html/bundles/css/diff2html.min.css'
 import { noop } from 'lodash-es'
 import type { UseStringsReturn } from 'framework/strings'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'

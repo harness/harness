@@ -37,7 +37,7 @@ export function useUserPreference<T = string>(key: UserPreference, defaultValue:
   const savePreference = useCallback(
     (val: T) => {
       try {
-        localStorage[prefKey] = JSON.stringify(val)
+        localStorage[prefKey] = Array.isArray(val) || typeof val === 'object' ? JSON.stringify(val) : val
       } catch (exception) {
         // eslint-disable-next-line no-console
         console.error('useUserPreference: Failed to stringify object', val)

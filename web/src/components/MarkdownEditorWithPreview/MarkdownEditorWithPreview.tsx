@@ -6,8 +6,6 @@ import { indentWithTab } from '@codemirror/commands'
 import cx from 'classnames'
 import { keymap, EditorView } from '@codemirror/view'
 import { noop } from 'lodash-es'
-import 'highlight.js/styles/github.css'
-import 'diff2html/bundles/css/diff2html.min.css'
 import type { IToolBarProps } from '@uiw/react-markdown-editor/cjs/components/ToolBar'
 import css from './MarkdownEditorWithPreview.module.scss'
 

@@ -46,7 +46,8 @@ const devConfig = {
   plugins: [
     new MiniCssExtractPlugin({
       filename: '[name].css',
-      chunkFilename: '[name].[id].css'
+      chunkFilename: '[name].[id].css',
+      ignoreOrder: true
     }),
     new HTMLWebpackPlugin({
       template: 'src/index.html',

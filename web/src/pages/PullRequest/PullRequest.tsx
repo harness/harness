@@ -11,7 +11,7 @@ import { CodeIcon } from 'utils/GitUtils'
 import type { TypesPullReq } from 'services/code'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
-import { Changes } from './Changes/Changes'
+import { Changes } from '../../components/Changes/Changes'
 import { PullRequestCommits } from './PullRequestCommits/PullRequestCommits'
 import css from './PullRequest.module.scss'
 
@@ -103,7 +103,13 @@ export default function PullRequest() {
                     {
                       id: PullRequestSection.FILES_CHANGED,
                       title: <TabTitle icon={CodeIcon.File} title={getString('filesChanged')} count={0} />,
-                      panel: <Changes repoMetadata={repoMetadata} pullRequestMetadata={prData} />
+                      panel: (
+                        <Changes
+                          repoMetadata={repoMetadata}
+                          targetBranch={prData.target_branch}
+                          sourceBranch={prData.source_branch}
+                        />
+                      )
                     }
                   ]}
                 />

@@ -10,6 +10,7 @@ import { getErrorMessage } from 'utils/Utils'
 import emptyStateImage from 'images/empty-state.svg'
 import { makeDiffRefs } from 'utils/GitUtils'
 import { CommitsView } from 'components/CommitsView/CommitsView'
+import { Changes } from 'components/Changes/Changes'
 import type { RepoCommit } from 'services/code'
 import { CompareContentHeader } from './CompareContentHeader/CompareContentHeader'
 import css from './Compare.module.scss'
@@ -79,7 +80,7 @@ export default function Compare() {
           ))}
 
         {!!repoMetadata && !!targetGitRef && !!sourceGitRef && (
-          <Container className={css.tabsContainer} padding="xlarge">
+          <Container className={css.tabsContainer}>
             <Tabs
               id="branchesTags"
               defaultSelectedTabId={'commits'}
@@ -89,7 +90,7 @@ export default function Compare() {
                   id: 'commits',
                   title: getString('commits'),
                   panel: commits?.length ? (
-                    <Container padding={{ top: 'xlarge' }}>
+                    <Container padding="xlarge">
                       <CommitsView commits={commits} repoMetadata={repoMetadata} />
                     </Container>
                   ) : (
@@ -99,7 +100,16 @@ export default function Compare() {
                 {
                   id: 'diff',
                   title: getString('diff'),
-                  panel: <Container padding={{ top: 'xlarge' }}>To be defined...</Container>
+                  panel: (
+                    <Container>
+                      <Changes
+                        readOnly
+                        repoMetadata={repoMetadata}
+                        targetBranch={targetGitRef}
+                        sourceBranch={sourceGitRef}
+                      />
+                    </Container>
+                  )
                 }
               ]}
             />
