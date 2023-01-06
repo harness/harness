@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/harness/gitness/events"
-	gitevents "github.com/harness/gitness/gitrpc/events"
+	gitevents "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/url"
 )
 
 const (
@@ -32,6 +33,9 @@ type Config struct {
 type Server struct {
 	webhookStore          store.WebhookStore
 	webhookExecutionStore store.WebhookExecutionStore
+	urlProvider           *url.Provider
+	repoStore             store.RepoStore
+	principalStore        store.PrincipalStore
 
 	readerCanceler     *events.ReaderCanceler
 	secureHTTPClient   *http.Client
@@ -41,16 +45,20 @@ type Server struct {
 func NewServer(ctx context.Context, config Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
-	repoStore store.RepoStore) (*Server, error) {
+	repoStore store.RepoStore, urlProvider *url.Provider,
+	principalStore store.PrincipalStore) (*Server, error) {
 	server := &Server{
+		webhookStore:          webhookStore,
+		webhookExecutionStore: webhookExecutionStore,
+		repoStore:             repoStore,
+		urlProvider:           urlProvider,
+		principalStore:        principalStore,
+
 		// set after launching factory
 		readerCanceler: nil,
 
 		secureHTTPClient:   newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),
 		insecureHTTPClient: newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true),
-
-		webhookStore:          webhookStore,
-		webhookExecutionStore: webhookExecutionStore,
 	}
 	canceler, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
 		func(r *gitevents.Reader) error {
@@ -60,9 +68,9 @@ func NewServer(ctx context.Context, config Config,
 			_ = r.SetProcessingTimeout(processingTimeout)
 
 			// register events
-			_ = r.RegisterBranchCreated(getEventHandlerForBranchCreated(server, repoStore))
-			_ = r.RegisterBranchDeleted(getEventHandlerForBranchDeleted(server, repoStore))
-			_ = r.RegisterBranchUpdated(getEventHandlerForBranchUpdated(server, repoStore))
+			_ = r.RegisterBranchCreated(server.handleEventBranchCreated)
+			_ = r.RegisterBranchUpdated(server.handleEventBranchUpdated)
+			_ = r.RegisterBranchDeleted(server.handleEventBranchDeleted)
 
 			return nil
 		})

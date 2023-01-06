@@ -198,7 +198,16 @@ func ReaderRegisterEvent[T interface{}](reader *GenericReader,
 			ctx = log.WithContext(ctx)
 
 			// call provided handler with correctly typed payload
-			return fn(ctx, &event)
+			err = fn(ctx, &event)
+
+			// handle discardEventError
+			if errors.Is(err, errDiscardEvent) {
+				log.Warn().Err(err).Msgf("discarding event '%s'", event.ID)
+				return nil
+			}
+
+			// any other error we return as is
+			return err
 		})
 }
 

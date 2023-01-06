@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -21,32 +22,69 @@ func generateTriggerIDFromEventID(eventID string) string {
 	return fmt.Sprintf("event-%s", eventID)
 }
 
-func triggerForEventWithGitUID(ctx context.Context, server *Server, repoStore store.RepoStore, eventID string,
-	repoGitUID string, triggerType enum.WebhookTrigger, createBody func(*types.Repository) interface{}) error {
-	// TODO: can we avoid this DB call? would need the gitrpc to know the repo id though ...
-	repo, err := repoStore.FindByGitUID(ctx, repoGitUID)
-
-	// not found error is unrecoverable - most likely a racing condition of repo  being deleted by now
-	if err != nil && errors.Is(err, store.ErrResourceNotFound) {
-		log.Ctx(ctx).Warn().Err(err).
-			Msgf("discard event since repo with gitUID '%s' doesn't exist anymore", repoGitUID)
-		return nil
-	}
-
-	// all other errors we return and force the event to be reprocessed
+// triggerWebhooksForEventWithRepoAndPrincipal triggers all webhooks for the given repo and triggerType
+// using the eventID to generate a deterministic triggerID and using the output of bodyFn as payload.
+// The method tries to find the repository and principal and provides both to the bodyFn to generate the body.
+func (s *Server) triggerWebhooksForEventWithRepoAndPrincipal(ctx context.Context,
+	triggerType enum.WebhookTrigger, eventID string, repoID int64, principalID int64,
+	createBodyFn func(*types.Repository, *types.Principal) interface{}) error {
+	// NOTE: technically we could avoid this call if we send the data via the event (though then events will get big)
+	repo, err := s.findRepositoryForEvent(ctx, repoID)
 	if err != nil {
-		return fmt.Errorf("failed to get repo for gitUID '%s': %w", repoGitUID, err)
+		return err
 	}
 
-	body := createBody(repo)
-	return triggerForEvent(ctx, server, eventID, enum.WebhookParentRepo, repo.ID, triggerType, body)
+	// NOTE: technically we could avoid this call if we send the data via the event (though then events will get big)
+	principal, err := s.findPrincipalForEvent(ctx, principalID)
+	if err != nil {
+		return err
+	}
+
+	// create body
+	body := createBodyFn(repo, principal)
+
+	return s.triggerWebhooksForEvent(ctx, eventID, enum.WebhookParentRepo, repo.ID, triggerType, body)
 }
 
-func triggerForEvent(ctx context.Context, server *Server, eventID string,
+// findRepositoryForEvent finds the repository for the provided repoID.
+func (s *Server) findRepositoryForEvent(ctx context.Context, repoID int64) (*types.Repository, error) {
+	repo, err := s.repoStore.Find(ctx, repoID)
+
+	if err != nil && errors.Is(err, store.ErrResourceNotFound) {
+		// not found error is unrecoverable - most likely a racing condition of repo being deleted by now
+		return nil, events.NewDiscardEventErrorf("repo with id '%d' doesn't exist anymore", repoID)
+	}
+	if err != nil {
+		// all other errors we return and force the event to be reprocessed
+		return nil, fmt.Errorf("failed to get repo for id '%d': %w", repoID, err)
+	}
+
+	return repo, nil
+}
+
+// findPrincipalForEvent finds the principal for the provided principalID.
+func (s *Server) findPrincipalForEvent(ctx context.Context, principalID int64) (*types.Principal, error) {
+	principal, err := s.principalStore.Find(ctx, principalID)
+
+	if err != nil && errors.Is(err, store.ErrResourceNotFound) {
+		// this should never happen (as we won't delete principals) - discard event
+		return nil, events.NewDiscardEventErrorf("principal with id '%d' doesn't exist anymore", principalID)
+	}
+	if err != nil {
+		// all other errors we return and force the event to be reprocessed
+		return nil, fmt.Errorf("failed to get principal for id '%d': %w", principalID, err)
+	}
+
+	return principal, nil
+}
+
+// triggerWebhooksForEvent triggers all webhooks for the given parentType/ID and triggerType
+// using the eventID to generate a deterministic triggerID and sending the provided body as payload.
+func (s *Server) triggerWebhooksForEvent(ctx context.Context, eventID string,
 	parentType enum.WebhookParent, parentID int64, triggerType enum.WebhookTrigger, body interface{}) error {
 	triggerID := generateTriggerIDFromEventID(eventID)
 
-	results, err := server.triggerWebhooksFor(ctx, parentType, parentID, triggerID, triggerType, body)
+	results, err := s.triggerWebhooksFor(ctx, parentType, parentID, triggerID, triggerType, body)
 
 	// return all errors and force the event to be reprocessed (it's not webhook execution specific!)
 	if err != nil {

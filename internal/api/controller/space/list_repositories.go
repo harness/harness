@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
-	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -39,11 +38,9 @@ func (c *Controller) ListRepositories(ctx context.Context, session *auth.Session
 		return nil, 0, fmt.Errorf("failed to list child repos: %w", err)
 	}
 
-	for _, r := range repos {
-		r.GitURL, err = repo.GenerateRepoGitURL(c.gitBaseURL, r.Path)
-		if err != nil {
-			return nil, 0, err
-		}
+	// backfill URLs
+	for _, repo := range repos {
+		repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)
 	}
 
 	/*

@@ -15,12 +15,12 @@ import (
 const BranchUpdatedEvent events.EventType = "branchupdated"
 
 type BranchUpdatedPayload struct {
-	RepoUID    string `json:"repo_uid"`
-	BranchName string `json:"branch_name"`
-	FullRef    string `json:"full_ref"`
-	OldSHA     string `json:"old_sha"`
-	NewSHA     string `json:"new_sha"`
-	Forced     bool   `json:"forced"`
+	RepoID      int64  `json:"repo_id"`
+	PrincipalID int64  `json:"principal_id"`
+	Ref         string `json:"ref"`
+	OldSHA      string `json:"old_sha"`
+	NewSHA      string `json:"new_sha"`
+	// Forced     bool   `json:"forced"` TODO: data not available yet.
 }
 
 func (r *Reporter) BranchUpdated(ctx context.Context, payload *BranchUpdatedPayload) {

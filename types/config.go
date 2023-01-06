@@ -16,9 +16,14 @@ type Config struct {
 	Debug      bool   `envconfig:"GITNESS_DEBUG"`
 	Trace      bool   `envconfig:"GITNESS_TRACE"`
 
+	// URL defines the URLs via which the different parts of the service are reachable by.
+	URL struct {
+		Git string `envconfig:"GITNESS_URL_GIT" default:"http://localhost:3000"`
+		API string `envconfig:"GITNESS_URL_API" default:"http://localhost:3000"`
+	}
+
 	// Git defines the git configuration parameters
 	Git struct {
-		BaseURL        string `envconfig:"GITNESS_GIT_BASE_URL" default:"http://localhost:3000"` // clone url
 		Root           string `envconfig:"GITNESS_GIT_ROOT"`
 		TmpDir         string `envconfig:"GITNESS_GIT_TMP_DIR"`          // directory for temporary data (repo clone)
 		ServerHookPath string `envconfig:"GITNESS_GIT_SERVER_HOOK_PATH"` // path to binary used as git server hook

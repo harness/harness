@@ -12,7 +12,6 @@ import (
 
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
-	gitrpcevents "github.com/harness/gitness/gitrpc/events"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
@@ -30,8 +29,10 @@ import (
 	"github.com/harness/gitness/internal/api/controller/user"
 	controllerwebhook "github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/cron"
+	eventsgit "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store/database"
+	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/internal/webhook"
 	gitnesstypes "github.com/harness/gitness/types"
 
@@ -47,6 +48,7 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 		database.WireSet,
 		server.WireSet,
 		cron.WireSet,
+		url.WireSet,
 		space.WireSet,
 		repo.WireSet,
 		pullreq.WireSet,
@@ -54,7 +56,7 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 		user.WireSet,
 		service.WireSet,
 		serviceaccount.WireSet,
-		gitrpcevents.WireSet,
+		eventsgit.WireSet,
 		gitrpcserver.WireSet,
 		gitrpc.WireSet,
 		types.LoadConfig,

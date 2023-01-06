@@ -44,11 +44,16 @@ func (c *Controller) CreateBranch(ctx context.Context, session *auth.Session,
 
 	err = checkBranchName(in.Name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("branch name failed check: %w", err)
+	}
+
+	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	rpcOut, err := c.gitRPCClient.CreateBranch(ctx, &gitrpc.CreateBranchParams{
-		WriteParams: CreateRPCWriteParams(session, repo),
+		WriteParams: writeParams,
 		BranchName:  in.Name,
 		Target:      *in.Target,
 	})

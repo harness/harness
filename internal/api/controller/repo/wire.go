@@ -8,6 +8,7 @@ import (
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 
@@ -19,9 +20,10 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(config *types.Config, repoCheck check.Repo, authorizer authz.Authorizer,
-	spaceStore store.SpaceStore, repoStore store.RepoStore, principalStore store.PrincipalStore,
+func ProvideController(config *types.Config, urlProvider *url.Provider,
+	repoCheck check.Repo, authorizer authz.Authorizer, spaceStore store.SpaceStore,
+	repoStore store.RepoStore, principalStore store.PrincipalStore,
 	rpcClient gitrpc.Interface) *Controller {
-	return NewController(config.Git.DefaultBranch, config.Git.BaseURL,
+	return NewController(config.Git.DefaultBranch, urlProvider,
 		repoCheck, authorizer, spaceStore, repoStore, principalStore, rpcClient)
 }

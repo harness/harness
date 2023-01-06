@@ -6,6 +6,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
@@ -33,8 +34,13 @@ func (c *Controller) DeleteBranch(ctx context.Context, session *auth.Session, re
 		return usererror.ErrDefaultBranchCantBeDeleted
 	}
 
+	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
+	if err != nil {
+		return fmt.Errorf("failed to create RPC write params: %w", err)
+	}
+
 	err = c.gitRPCClient.DeleteBranch(ctx, &gitrpc.DeleteBranchParams{
-		WriteParams: CreateRPCWriteParams(session, repo),
+		WriteParams: writeParams,
 		BranchName:  branchName,
 	})
 	if err != nil {

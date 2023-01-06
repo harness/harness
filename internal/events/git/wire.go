@@ -13,8 +13,13 @@ import (
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
 	ProvideReaderFactory,
+	ProvideReporter,
 )
 
 func ProvideReaderFactory(eventsSystem *events.System) (*events.ReaderFactory[*Reader], error) {
 	return NewReaderFactory(eventsSystem)
+}
+
+func ProvideReporter(eventsSystem *events.System) (*Reporter, error) {
+	return NewReporter(eventsSystem)
 }

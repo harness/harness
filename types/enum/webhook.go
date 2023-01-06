@@ -51,15 +51,18 @@ func GetAllWebhookExecutionResults() []WebhookExecutionResult {
 type WebhookTrigger string
 
 const (
-	// WebhookTriggerBranchPushed gets triggered when a branch gets pushed (created or updated).
-	WebhookTriggerBranchPushed WebhookTrigger = "branch_pushed"
+	// WebhookTriggerBranchCreated gets triggered when a branch gets created.
+	WebhookTriggerBranchCreated WebhookTrigger = "branch_created"
+	// WebhookTriggerBranchUpdated gets triggered when a branch gets updated.
+	WebhookTriggerBranchUpdated WebhookTrigger = "branch_updated"
 	// WebhookTriggerBranchDeleted gets triggered when a branch gets deleted.
 	WebhookTriggerBranchDeleted WebhookTrigger = "branch_deleted"
 )
 
 func GetAllWebhookTriggers() []WebhookTrigger {
 	return []WebhookTrigger{
-		WebhookTriggerBranchPushed,
+		WebhookTriggerBranchCreated,
+		WebhookTriggerBranchUpdated,
 		WebhookTriggerBranchDeleted,
 	}
 }

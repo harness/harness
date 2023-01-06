@@ -7,11 +7,12 @@ package space
 import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types/check"
 )
 
 type Controller struct {
-	gitBaseURL     string
+	urlProvider    *url.Provider
 	spaceCheck     check.Space
 	authorizer     authz.Authorizer
 	spaceStore     store.SpaceStore
@@ -19,10 +20,11 @@ type Controller struct {
 	principalStore store.PrincipalStore
 }
 
-func NewController(gitBaseURL string, spaceCheck check.Space, authorizer authz.Authorizer, spaceStore store.SpaceStore,
-	repoStore store.RepoStore, principalStore store.PrincipalStore) *Controller {
+func NewController(urlProvider *url.Provider, spaceCheck check.Space,
+	authorizer authz.Authorizer, spaceStore store.SpaceStore, repoStore store.RepoStore,
+	principalStore store.PrincipalStore) *Controller {
 	return &Controller{
-		gitBaseURL:     gitBaseURL,
+		urlProvider:    urlProvider,
 		spaceCheck:     spaceCheck,
 		authorizer:     authorizer,
 		spaceStore:     spaceStore,

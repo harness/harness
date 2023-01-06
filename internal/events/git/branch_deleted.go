@@ -15,10 +15,10 @@ import (
 const BranchDeletedEvent events.EventType = "branchdeleted"
 
 type BranchDeletedPayload struct {
-	RepoUID    string `json:"repo_uid"`
-	BranchName string `json:"branch_name"`
-	FullRef    string `json:"full_ref"`
-	SHA        string `json:"sha"`
+	RepoID      int64  `json:"repo_id"`
+	PrincipalID int64  `json:"principal_id"`
+	Ref         string `json:"ref"`
+	SHA         string `json:"sha"`
 }
 
 func (r *Reporter) BranchDeleted(ctx context.Context, payload *BranchDeletedPayload) {

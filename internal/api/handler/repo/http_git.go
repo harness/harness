@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/hlog"
@@ -88,11 +89,12 @@ func GetInfoRefs(client gitrpc.Interface, repoStore store.RepoStore, authorizer 
 	}
 }
 
-func GetUploadPack(client gitrpc.Interface, repoStore store.RepoStore, authorizer authz.Authorizer) http.HandlerFunc {
+func GetUploadPack(client gitrpc.Interface, urlProvider *url.Provider,
+	repoStore store.RepoStore, authorizer authz.Authorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const service = "upload-pack"
 
-		if err := serviceRPC(w, r, client, repoStore, authorizer, service, false,
+		if err := serviceRPC(w, r, client, urlProvider, repoStore, authorizer, service, false,
 			enum.PermissionRepoView, true); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -100,10 +102,11 @@ func GetUploadPack(client gitrpc.Interface, repoStore store.RepoStore, authorize
 	}
 }
 
-func PostReceivePack(client gitrpc.Interface, repoStore store.RepoStore, authorizer authz.Authorizer) http.HandlerFunc {
+func PostReceivePack(client gitrpc.Interface, urlProvider *url.Provider,
+	repoStore store.RepoStore, authorizer authz.Authorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const service = "receive-pack"
-		if err := serviceRPC(w, r, client, repoStore, authorizer, service, true,
+		if err := serviceRPC(w, r, client, urlProvider, repoStore, authorizer, service, true,
 			enum.PermissionRepoEdit, false); err != nil {
 			var authError *GitAuthError
 			if errors.As(err, &authError) {
@@ -120,6 +123,7 @@ func serviceRPC(
 	w http.ResponseWriter,
 	r *http.Request,
 	client gitrpc.Interface,
+	urlProvider *url.Provider,
 	repoStore store.RepoStore,
 	authorizer authz.Authorizer,
 	service string,
@@ -180,7 +184,11 @@ func serviceRPC(
 
 	// setup read/writeparams depending on whether it's a write operation
 	if isWriteOperation {
-		writeParams := repoctrl.CreateRPCWriteParams(session, repo)
+		var writeParams gitrpc.WriteParams
+		writeParams, err = repoctrl.CreateRPCWriteParams(ctx, urlProvider, session, repo)
+		if err != nil {
+			return fmt.Errorf("failed to create RPC write params: %w", err)
+		}
 		params.WriteParams = &writeParams
 	} else {
 		readParams := repoctrl.CreateRPCReadParams(repo)

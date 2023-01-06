@@ -61,11 +61,8 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	// populate repo url
-	repo.GitURL, err = GenerateRepoGitURL(c.gitBaseURL, repo.Path)
-	if err != nil {
-		return nil, err
-	}
+	// backfill repo url
+	repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)
 
 	return repo, nil
 }

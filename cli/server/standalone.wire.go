@@ -12,7 +12,6 @@ import (
 
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
-	gitrpcevents "github.com/harness/gitness/gitrpc/events"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -24,10 +23,12 @@ import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/cron"
+	eventsgit "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database"
+	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/internal/webhook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -45,6 +46,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		router.WireSet,
 		server.WireSet,
 		cron.WireSet,
+		url.WireSet,
 		space.WireSet,
 		repo.WireSet,
 		pullreq.WireSet,
@@ -53,7 +55,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		user.WireSet,
 		authn.WireSet,
 		authz.WireSet,
-		gitrpcevents.WireSet,
+		eventsgit.WireSet,
 		gitrpcserver.WireSet,
 		gitrpc.WireSet,
 		store.WireSet,

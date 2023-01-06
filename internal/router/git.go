@@ -17,6 +17,7 @@ import (
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
 
 	"github.com/go-chi/chi"
@@ -32,6 +33,7 @@ type GitHandler interface {
 // NewGitHandler returns a new GitHandler.
 func NewGitHandler(
 	config *types.Config,
+	urlProvider *url.Provider,
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer,
@@ -54,9 +56,8 @@ func NewGitHandler(
 		r.Use(middlewareauthn.Attempt(authenticator))
 
 		// smart protocol
-		r.Handle("/git-upload-pack", handlerrepo.GetUploadPack(client, repoStore, authorizer))
-
-		r.Post("/git-receive-pack", handlerrepo.PostReceivePack(client, repoStore, authorizer))
+		r.Handle("/git-upload-pack", handlerrepo.GetUploadPack(client, urlProvider, repoStore, authorizer))
+		r.Post("/git-receive-pack", handlerrepo.PostReceivePack(client, urlProvider, repoStore, authorizer))
 		r.Get("/info/refs", handlerrepo.GetInfoRefs(client, repoStore, authorizer))
 
 		// dumb protocol

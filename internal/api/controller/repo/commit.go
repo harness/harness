@@ -6,6 +6,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
@@ -58,8 +59,13 @@ func (c *Controller) CommitFiles(ctx context.Context, session *auth.Session,
 		}
 	}
 
+	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
+	if err != nil {
+		return CommitFilesResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
+	}
+
 	commit, err := c.gitRPCClient.CommitFiles(ctx, &gitrpc.CommitFilesParams{
-		WriteParams: CreateRPCWriteParams(session, repo),
+		WriteParams: writeParams,
 		Title:       in.Title,
 		Message:     in.Message,
 		Branch:      in.Branch,

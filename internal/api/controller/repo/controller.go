@@ -5,17 +5,23 @@
 package repo
 
 import (
+	"context"
+
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
+
+	"github.com/rs/zerolog/log"
 )
 
 type Controller struct {
 	defaultBranch  string
-	gitBaseURL     string
+	urlProvider    *url.Provider
 	repoCheck      check.Repo
 	authorizer     authz.Authorizer
 	spaceStore     store.SpaceStore
@@ -26,7 +32,7 @@ type Controller struct {
 
 func NewController(
 	defaultBranch string,
-	gitBaseURL string,
+	urlProvider *url.Provider,
 	repoCheck check.Repo,
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
@@ -36,7 +42,7 @@ func NewController(
 ) *Controller {
 	return &Controller{
 		defaultBranch:  defaultBranch,
-		gitBaseURL:     gitBaseURL,
+		urlProvider:    urlProvider,
 		repoCheck:      repoCheck,
 		authorizer:     authorizer,
 		spaceStore:     spaceStore,
@@ -48,10 +54,25 @@ func NewController(
 
 // CreateRPCWriteParams creates base write parameters for gitrpc write operations.
 // IMPORTANT: session & repo are assumed to be not nil!
-func CreateRPCWriteParams(session *auth.Session, repo *types.Repository) gitrpc.WriteParams {
+func CreateRPCWriteParams(ctx context.Context, urlProvider *url.Provider,
+	session *auth.Session, repo *types.Repository) (gitrpc.WriteParams, error) {
+	requestID, ok := request.RequestIDFrom(ctx)
+	if !ok {
+		// best effort retrieving of requestID - log in case we can't find it but don't fail operation.
+		log.Ctx(ctx).Warn().Msg("operation doesn't have a requestID in the context.")
+	}
+
 	// generate envars (add everything githook CLI needs for execution)
-	// TODO: envVars := githook.GenerateGitHookEnvironmentVariables(repo, session.Principal)
-	envVars := map[string]string{}
+	envVars := map[string]string{"X-Request-Id": requestID}
+	// envVars, err := githook.GenerateEnvironmentVariables(&githook.Payload{
+	// 	BaseURL:     urlProvider.GetAPIBaseURL(),
+	// 	RepoID:      repo.ID,
+	// 	PrincipalID: session.Principal.ID,
+	// 	RequestID:   requestID,
+	// })
+	// if err != nil {
+	// 	return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
+	// }
 
 	return gitrpc.WriteParams{
 		Actor: gitrpc.Identity{
@@ -60,7 +81,7 @@ func CreateRPCWriteParams(session *auth.Session, repo *types.Repository) gitrpc.
 		},
 		RepoUID: repo.GitUID,
 		EnvVars: envVars,
-	}
+	}, nil
 }
 
 // CreateRPCReadParams creates base read parameters for gitrpc read operations.

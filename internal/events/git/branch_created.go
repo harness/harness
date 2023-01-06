@@ -15,10 +15,10 @@ import (
 const BranchCreatedEvent events.EventType = "branchcreated"
 
 type BranchCreatedPayload struct {
-	RepoUID    string `json:"repo_uid"`
-	BranchName string `json:"branch_name"`
-	FullRef    string `json:"full_ref"`
-	SHA        string `json:"sha"`
+	RepoID      int64  `json:"repo_id"`
+	PrincipalID int64  `json:"principal_id"`
+	Ref         string `json:"ref"`
+	SHA         string `json:"sha"`
 }
 
 func (r *Reporter) BranchCreated(ctx context.Context, payload *BranchCreatedPayload) {
