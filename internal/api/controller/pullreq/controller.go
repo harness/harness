@@ -23,13 +23,15 @@ import (
 )
 
 type Controller struct {
-	db                   *sqlx.DB
-	authorizer           authz.Authorizer
-	pullreqStore         store.PullReqStore
-	pullreqActivityStore store.PullReqActivityStore
-	repoStore            store.RepoStore
-	principalStore       store.PrincipalStore
-	gitRPCClient         gitrpc.Interface
+	db             *sqlx.DB
+	authorizer     authz.Authorizer
+	pullreqStore   store.PullReqStore
+	activityStore  store.PullReqActivityStore
+	reviewStore    store.PullReqReviewStore
+	reviewerStore  store.PullReqReviewerStore
+	repoStore      store.RepoStore
+	principalStore store.PrincipalStore
+	gitRPCClient   gitrpc.Interface
 }
 
 func NewController(
@@ -37,18 +39,22 @@ func NewController(
 	authorizer authz.Authorizer,
 	pullreqStore store.PullReqStore,
 	pullreqActivityStore store.PullReqActivityStore,
+	pullreqReviewStore store.PullReqReviewStore,
+	pullreqReviewerStore store.PullReqReviewerStore,
 	repoStore store.RepoStore,
 	principalStore store.PrincipalStore,
 	gitRPCClient gitrpc.Interface,
 ) *Controller {
 	return &Controller{
-		db:                   db,
-		authorizer:           authorizer,
-		pullreqStore:         pullreqStore,
-		pullreqActivityStore: pullreqActivityStore,
-		repoStore:            repoStore,
-		principalStore:       principalStore,
-		gitRPCClient:         gitRPCClient,
+		db:             db,
+		authorizer:     authorizer,
+		pullreqStore:   pullreqStore,
+		activityStore:  pullreqActivityStore,
+		reviewStore:    pullreqReviewStore,
+		reviewerStore:  pullreqReviewerStore,
+		repoStore:      repoStore,
+		principalStore: principalStore,
+		gitRPCClient:   gitRPCClient,
 	}
 }
 
@@ -100,7 +106,7 @@ func (c *Controller) getCommentCheckEditAccess(ctx context.Context,
 		return nil, usererror.BadRequest("A valid comment ID must be provided.")
 	}
 
-	comment, err := c.pullreqActivityStore.Find(ctx, commentID)
+	comment, err := c.activityStore.Find(ctx, commentID)
 	if err != nil || comment == nil {
 		return nil, fmt.Errorf("failed to find comment by ID: %w", err)
 	}
@@ -133,7 +139,7 @@ func (c *Controller) writeActivity(ctx context.Context, pr *types.PullReq, act *
 
 	act.Order = prUpd.ActivitySeq
 
-	err = c.pullreqActivityStore.Create(ctx, act)
+	err = c.activityStore.Create(ctx, act)
 	if err != nil {
 		return fmt.Errorf("failed to create pull request activity: %w", err)
 	}
@@ -145,7 +151,7 @@ func (c *Controller) writeActivity(ctx context.Context, pr *types.PullReq, act *
 // sets the correct Order and SubOrder values and writes the activity to the database.
 // Even if the writing fails, the updating of the sequence number can succeed.
 func (c *Controller) writeReplyActivity(ctx context.Context, parent, act *types.PullReqActivity) error {
-	parentUpd, err := c.pullreqActivityStore.UpdateReplySeq(ctx, parent)
+	parentUpd, err := c.activityStore.UpdateReplySeq(ctx, parent)
 	if err != nil {
 		return fmt.Errorf("failed to get pull request activity number: %w", err)
 	}
@@ -155,7 +161,7 @@ func (c *Controller) writeReplyActivity(ctx context.Context, parent, act *types.
 	act.Order = parentUpd.Order
 	act.SubOrder = parentUpd.ReplySeq
 
-	err = c.pullreqActivityStore.Create(ctx, act)
+	err = c.activityStore.Create(ctx, act)
 	if err != nil {
 		return fmt.Errorf("failed to create pull request activity: %w", err)
 	}

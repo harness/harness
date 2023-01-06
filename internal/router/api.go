@@ -222,6 +222,13 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 					r.Delete("/", handlerpullreq.HandleCommentDelete(pullreqCtrl))
 				})
 			})
+			r.Route("/reviewers", func(r chi.Router) {
+				r.Get("/", handlerpullreq.HandleReviewerList(pullreqCtrl))
+				r.Put("/", handlerpullreq.HandleReviewerAdd(pullreqCtrl))
+			})
+			r.Route("/reviews", func(r chi.Router) {
+				r.Post("/", handlerpullreq.HandleReviewSubmit(pullreqCtrl))
+			})
 		})
 	})
 }

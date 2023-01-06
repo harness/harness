@@ -105,3 +105,37 @@ type PullReqActivityFilter struct {
 	Types []enum.PullReqActivityType `json:"type"`
 	Kinds []enum.PullReqActivityKind `json:"kind"`
 }
+
+// PullReqReview holds pull request review.
+type PullReqReview struct {
+	ID int64 `json:"id"`
+
+	CreatedBy int64 `json:"created_by"`
+	Created   int64 `json:"created"`
+	Updated   int64 `json:"updated"`
+
+	PullReqID int64 `json:"pullreq_id"`
+
+	Decision enum.PullReqReviewDecision `json:"decision"`
+	SHA      string                     `json:"sha"`
+}
+
+// PullReqReviewer holds pull request reviewer.
+type PullReqReviewer struct {
+	PullReqID   int64 `json:"-"`
+	PrincipalID int64 `json:"-"`
+
+	CreatedBy int64 `json:"-"`
+	Created   int64 `json:"created"`
+	Updated   int64 `json:"updated"`
+
+	RepoID         int64                    `json:"-"`
+	Type           enum.PullReqReviewerType `json:"type"`
+	LatestReviewID *int64                   `json:"latest_review_id"`
+
+	ReviewDecision enum.PullReqReviewDecision `json:"review_decision"`
+	SHA            string                     `json:"sha"`
+
+	Reviewer PrincipalInfo `json:"reviewer"`
+	AddedBy  PrincipalInfo `json:"added_by"`
+}

@@ -31,10 +31,11 @@ func existsInSortedSlice(strs []string, s string) bool {
 	return idx >= 0 && idx < len(strs) && strs[idx] == s
 }
 
-func enumToStringSlice[T ~string](vals []T) []string {
+func toSortedStrings[T ~string](vals []T) []string {
 	res := make([]string, len(vals))
 	for i := range vals {
 		res[i] = string(vals[i])
 	}
+	sort.Strings(res)
 	return res
 }

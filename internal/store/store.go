@@ -276,6 +276,30 @@ type (
 		List(ctx context.Context, prID int64, opts *types.PullReqActivityFilter) ([]*types.PullReqActivity, error)
 	}
 
+	// PullReqReviewStore defines the pull request review storage.
+	PullReqReviewStore interface {
+		// Find returns the pull request review entity or an error if it doesn't exist.
+		Find(ctx context.Context, id int64) (*types.PullReqReview, error)
+
+		// Create creates a new pull request review.
+		Create(ctx context.Context, v *types.PullReqReview) error
+	}
+
+	// PullReqReviewerStore defines the pull request reviewer storage.
+	PullReqReviewerStore interface {
+		// Find returns the pull request reviewer or an error if it doesn't exist.
+		Find(ctx context.Context, prID, principalID int64) (*types.PullReqReviewer, error)
+
+		// Create creates the new pull request reviewer.
+		Create(ctx context.Context, v *types.PullReqReviewer) error
+
+		// Update updates the pull request reviewer.
+		Update(ctx context.Context, v *types.PullReqReviewer) error
+
+		// List returns all pull request reviewers for the pull request.
+		List(ctx context.Context, prID int64) ([]*types.PullReqReviewer, error)
+	}
+
 	// WebhookStore defines the webhook data storage.
 	WebhookStore interface {
 		// Find finds the webhook by id.

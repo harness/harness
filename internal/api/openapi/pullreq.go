@@ -64,6 +64,20 @@ type commentDeletePullReqRequest struct {
 	pullreq.CommentUpdateInput
 }
 
+type reviewerListPullReqRequest struct {
+	pullReqRequest
+}
+
+type reviewerAddPullReqRequest struct {
+	pullReqRequest
+	pullreq.ReviewerAddInput
+}
+
+type reviewSubmitPullReqRequest struct {
+	pullreq.ReviewSubmitInput
+	pullReqRequest
+}
+
 var queryParameterQueryPullRequest = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
@@ -345,4 +359,40 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&commentDeletePullReq, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}", commentDeletePullReq)
+
+	reviewerAdd := openapi3.Operation{}
+	reviewerAdd.WithTags("pullreq")
+	reviewerAdd.WithMapOfAnything(map[string]interface{}{"operationId": "reviewerAddPullReq"})
+	_ = reflector.SetRequest(&reviewerAdd, new(reviewerAddPullReqRequest), http.MethodPut)
+	_ = reflector.SetJSONResponse(&reviewerAdd, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&reviewerAdd, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&reviewerAdd, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&reviewerAdd, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&reviewerAdd, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPut,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/reviewers", reviewerAdd)
+
+	reviewerList := openapi3.Operation{}
+	reviewerList.WithTags("pullreq")
+	reviewerList.WithMapOfAnything(map[string]interface{}{"operationId": "reviewerListPullReq"})
+	_ = reflector.SetRequest(&reviewerList, new(reviewerListPullReqRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&reviewerList, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&reviewerList, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&reviewerList, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&reviewerList, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&reviewerList, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/reviewers", reviewerList)
+
+	reviewSubmit := openapi3.Operation{}
+	reviewSubmit.WithTags("pullreq")
+	reviewSubmit.WithMapOfAnything(map[string]interface{}{"operationId": "reviewSubmitPullReq"})
+	_ = reflector.SetRequest(&reviewSubmit, new(reviewSubmitPullReqRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&reviewSubmit, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&reviewSubmit, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&reviewSubmit, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&reviewSubmit, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&reviewSubmit, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/review", reviewSubmit)
 }

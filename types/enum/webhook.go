@@ -4,8 +4,6 @@
 
 package enum
 
-import "sort"
-
 // WebhookParent defines different types of parents of a webhook.
 type WebhookParent string
 
@@ -67,11 +65,7 @@ func GetAllWebhookTriggers() []WebhookTrigger {
 	}
 }
 
-var rawWebhookTriggers = enumToStringSlice(GetAllWebhookTriggers())
-
-func init() {
-	sort.Strings(rawWebhookTriggers)
-}
+var rawWebhookTriggers = toSortedStrings(GetAllWebhookTriggers())
 
 // ParsePullReqActivityType parses the webhook trigger type.
 func ParseWebhookTrigger(s string) (WebhookTrigger, bool) {

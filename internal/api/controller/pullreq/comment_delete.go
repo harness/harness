@@ -43,7 +43,7 @@ func (c *Controller) CommentDelete(
 	now := time.Now().UnixMilli()
 	act.Deleted = &now
 
-	err = c.pullreqActivityStore.Update(ctx, act)
+	err = c.activityStore.Update(ctx, act)
 	if err != nil {
 		return fmt.Errorf("failed to mark comment as deleted: %w", err)
 	}

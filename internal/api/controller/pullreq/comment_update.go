@@ -53,7 +53,7 @@ func (c *Controller) CommentUpdate(
 	act.Text = in.Text
 	act.Payload = in.Payload
 
-	err = c.pullreqActivityStore.Update(ctx, act)
+	err = c.activityStore.Update(ctx, act)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update comment: %w", err)
 	}

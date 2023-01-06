@@ -5,7 +5,6 @@
 package enum
 
 import (
-	"sort"
 	"strings"
 )
 
@@ -68,9 +67,10 @@ type PullReqActivityType string
 
 // PullReqActivityType enumeration.
 const (
-	PullReqActivityTypeComment     PullReqActivityType = "comment"
-	PullReqActivityTypeCodeComment PullReqActivityType = "code-comment"
-	PullReqActivityTypeTitleChange PullReqActivityType = "title-change"
+	PullReqActivityTypeComment      PullReqActivityType = "comment"
+	PullReqActivityTypeCodeComment  PullReqActivityType = "code-comment"
+	PullReqActivityTypeTitleChange  PullReqActivityType = "title-change"
+	PullReqActivityTypeReviewSubmit PullReqActivityType = "review-submit"
 )
 
 func GetAllPullReqActivityTypes() []PullReqActivityType {
@@ -78,14 +78,11 @@ func GetAllPullReqActivityTypes() []PullReqActivityType {
 		PullReqActivityTypeComment,
 		PullReqActivityTypeCodeComment,
 		PullReqActivityTypeTitleChange,
+		PullReqActivityTypeReviewSubmit,
 	}
 }
 
-var rawPullReqActivityTypes = enumToStringSlice(GetAllPullReqActivityTypes())
-
-func init() {
-	sort.Strings(rawPullReqActivityTypes)
-}
+var rawPullReqActivityTypes = toSortedStrings(GetAllPullReqActivityTypes())
 
 // ParsePullReqActivityType parses the pull request activity type.
 func ParsePullReqActivityType(s string) (PullReqActivityType, bool) {
@@ -115,16 +112,70 @@ func GetAllPullReqActivityKinds() []PullReqActivityKind {
 	}
 }
 
-var rawPullReqActivityKinds = enumToStringSlice(GetAllPullReqActivityKinds())
-
-func init() {
-	sort.Strings(rawPullReqActivityKinds)
-}
+var rawPullReqActivityKinds = toSortedStrings(GetAllPullReqActivityKinds())
 
 // ParsePullReqActivityKind parses the pull request activity type.
 func ParsePullReqActivityKind(s string) (PullReqActivityKind, bool) {
 	if existsInSortedSlice(rawPullReqActivityKinds, s) {
 		return PullReqActivityKind(s), true
+	}
+	return "", false
+}
+
+// PullReqReviewDecision defines state of a pull request review.
+type PullReqReviewDecision string
+
+// PullReqReviewDecision enumeration.
+const (
+	PullReqReviewDecisionPending   PullReqReviewDecision = "pending"
+	PullReqReviewDecisionReviewed  PullReqReviewDecision = "reviewed"
+	PullReqReviewDecisionApproved  PullReqReviewDecision = "approved"
+	PullReqReviewDecisionChangeReq PullReqReviewDecision = "changereq"
+)
+
+func GetAllPullReqReviewDecisions() []PullReqReviewDecision {
+	return []PullReqReviewDecision{
+		PullReqReviewDecisionPending,
+		PullReqReviewDecisionReviewed,
+		PullReqReviewDecisionApproved,
+		PullReqReviewDecisionChangeReq,
+	}
+}
+
+var rawPullReqReviewDecisions = toSortedStrings(GetAllPullReqReviewDecisions())
+
+// ParsePullReqReviewDecision parses the pull request review state type.
+func ParsePullReqReviewDecision(s string) (PullReqReviewDecision, bool) {
+	if existsInSortedSlice(rawPullReqReviewDecisions, s) {
+		return PullReqReviewDecision(s), true
+	}
+	return "", false
+}
+
+// PullReqReviewerType defines type of a pull request reviewer.
+type PullReqReviewerType string
+
+// PullReqReviewerType enumeration.
+const (
+	PullReqReviewerTypeRequested    PullReqReviewerType = "requested"
+	PullReqReviewerTypeAssigned     PullReqReviewerType = "assigned"
+	PullReqReviewerTypeSelfAssigned PullReqReviewerType = "self_assigned"
+)
+
+func GetAllPullReqReviewerTypes() []PullReqReviewerType {
+	return []PullReqReviewerType{
+		PullReqReviewerTypeRequested,
+		PullReqReviewerTypeAssigned,
+		PullReqReviewerTypeSelfAssigned,
+	}
+}
+
+var rawPullReqReviewerTypes = toSortedStrings(GetAllPullReqReviewerTypes())
+
+// ParsePullReqReviewerType parses the pull request reviewer type.
+func ParsePullReqReviewerType(s string) (PullReqReviewerType, bool) {
+	if existsInSortedSlice(rawPullReqReviewerTypes, s) {
+		return PullReqReviewerType(s), true
 	}
 	return "", false
 }

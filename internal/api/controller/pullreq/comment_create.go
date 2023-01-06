@@ -64,7 +64,7 @@ func (c *Controller) CommentCreate(
 func (c *Controller) checkIsReplyable(ctx context.Context,
 	pr *types.PullReq, parentID int64) (*types.PullReqActivity, error) {
 	// make sure the parent comment exists, belongs to the same PR and isn't itself a reply
-	parentAct, err := c.pullreqActivityStore.Find(ctx, parentID)
+	parentAct, err := c.activityStore.Find(ctx, parentID)
 	if errors.Is(err, store.ErrResourceNotFound) || parentAct == nil {
 		return nil, usererror.BadRequest("Parent pull request activity not found.")
 	}

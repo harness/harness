@@ -13,9 +13,9 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// ListActivities returns a list of pull request activities
+// ActivityList returns a list of pull request activities
 // from the provided repository and pull request number.
-func (c *Controller) ListActivities(
+func (c *Controller) ActivityList(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
@@ -32,7 +32,7 @@ func (c *Controller) ListActivities(
 		return nil, 0, fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
-	list, err := c.pullreqActivityStore.List(ctx, pr.ID, filter)
+	list, err := c.activityStore.List(ctx, pr.ID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list pull requests activities: %w", err)
 	}
@@ -49,7 +49,7 @@ func (c *Controller) ListActivities(
 		return list, int64(len(list)), nil
 	}
 
-	count, err := c.pullreqActivityStore.Count(ctx, pr.ID, filter)
+	count, err := c.activityStore.Count(ctx, pr.ID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count pull request activities: %w", err)
 	}

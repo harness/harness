@@ -12,8 +12,8 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 )
 
-// HandleListActivities returns a http.HandlerFunc that lists pull request activities for a pull request.
-func HandleListActivities(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
+// HandleReviewerList handles API that returns list of pull request reviewers.
+func HandleReviewerList(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -30,19 +30,12 @@ func HandleListActivities(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		filter, err := request.ParsePullReqActivityFilter(r)
+		list, err := pullreqCtrl.ReviewerList(ctx, session, repoRef, pullreqNumber)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		list, total, err := pullreqCtrl.ListActivities(ctx, session, repoRef, pullreqNumber, filter)
-		if err != nil {
-			render.TranslatedUserError(w, err)
-			return
-		}
-
-		render.PaginationLimit(r, w, int(total))
 		render.JSON(w, http.StatusOK, list)
 	}
 }

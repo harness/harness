@@ -7,7 +7,6 @@ package server
 
 import (
 	"context"
-
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	server2 "github.com/harness/gitness/gitrpc/server"
@@ -104,7 +103,9 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	repoController := repo.ProvideController(config, provider, checkRepo, authorizer, spaceStore, repoStore, principalStore, gitrpcInterface)
 	pullReqStore := database.ProvidePullReqStore(db)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db)
-	pullreqController := pullreq.ProvideController(db, authorizer, pullReqStore, pullReqActivityStore, repoStore, principalStore, gitrpcInterface)
+	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
+	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db)
+	pullreqController := pullreq.ProvideController(db, authorizer, pullReqStore, pullReqActivityStore, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
 	webhookConfig := ProvideWebhookConfig(config)
