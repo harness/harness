@@ -35,6 +35,7 @@ export interface StringsMap {
   cloneHTTPS: string
   closed: string
   comment: string
+  commentDeleted: string
   commit: string
   commitChanges: string
   commitDirectlyTo: string
@@ -70,12 +71,14 @@ export interface StringsMap {
   deleteCommentConfirm: string
   deleteFile: string
   deleteNotAllowed: string
+  deleted: string
   deployKeys: string
   description: string
   diff: string
   edit: string
   editFile: string
   editNotAllowed: string
+  edited: string
   email: string
   enableSSLVerification: string
   enterDescription: string
@@ -133,6 +136,7 @@ export interface StringsMap {
   'pr.diffView': string
   'pr.enterDesc': string
   'pr.failedToCreate': string
+  'pr.failedToDeleteComment': string
   'pr.failedToSaveComment': string
   'pr.failedToUpdate': string
   'pr.fileDeleted': string

@@ -21,41 +21,46 @@ export interface CommentItem<T = unknown> {
   author: string
   created: string | number
   updated: string | number
+  deleted: string | number
   content: string
   payload?: T // optional payload for callers to handle on callback calls
 }
 
-interface CommentBoxProps {
+export enum CommentAction {
+  NEW = 'new',
+  UPDATE = 'update',
+  REPLY = 'reply',
+  DELETE = 'delete'
+}
+
+interface CommentBoxProps<T> {
   getString: UseStringsReturn['getString']
   onHeightChange?: (height: number) => void
   width?: string
   fluid?: boolean
-  commentItems: CommentItem[]
-  currentUserName: string
-  executeDeleteComent: (params: { commentEntry: CommentItem; onSuccess: () => void }) => void
-  onSave: (content: string, commentItems: CommentItem[]) => Promise<boolean>
-  onCancel: () => void
   resetOnSave?: boolean
   hideCancel?: boolean
+  currentUserName: string
+  commentItems: CommentItem<T>[]
+  // executeDeleteComent?: (params: { commentEntry: CommentItem; onSuccess: () => void }) => void
+  handleAction: (action: CommentAction, content: string, atCommentItem?: CommentItem<T>) => Promise<boolean>
+  onCancel?: () => void
 }
 
-export const CommentBox: React.FC<CommentBoxProps> = ({
+export const CommentBox = <T = unknown,>({
   getString,
   onHeightChange = noop,
   width,
   fluid,
   commentItems = [],
   currentUserName,
-  executeDeleteComent,
-  onSave,
-  onCancel,
+  // executeDeleteComent = noop,
+  handleAction,
+  onCancel = noop,
   hideCancel,
   resetOnSave
-}) => {
-  // TODO: \r\n for Windows or based on configuration
-  // @see https://www.aleksandrhovhannisyan.com/blog/crlf-vs-lf-normalizing-line-endings-in-git/
-  const CRLF = '\n'
-  const [comments, setComments] = useState<CommentItem[]>(commentItems)
+}: CommentBoxProps<T>) => {
+  const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
   const [showReplyPlaceHolder, setShowReplyPlaceHolder] = useState(!!comments.length)
   const [markdown, setMarkdown] = useState('')
   const { ref } = useResizeDetector<HTMLDivElement>({
@@ -63,7 +68,7 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
     handleWidth: false,
     refreshRate: 50,
     observerOptions: { box: 'border-box' },
-    onResize: () => onHeightChange(ref.current?.offsetHeight)
+    onResize: () => onHeightChange(ref.current?.offsetHeight as number)
   })
   const _onCancel = useCallback(() => {
     setMarkdown('')
@@ -94,11 +99,20 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
       ref={ref}>
       <Container className={css.box}>
         <Layout.Vertical>
-          <CommentsThread
+          <CommentsThread<T>
             commentItems={comments}
             getString={getString}
             onQuote={onQuote}
-            executeDeleteComent={executeDeleteComent}
+            handleAction={async (action, content, atCommentItem) => {
+              const result = await handleAction(action, content, atCommentItem)
+
+              if (result && action === CommentAction.DELETE && atCommentItem) {
+                atCommentItem.updated = atCommentItem.deleted = Date.now()
+                setComments([...comments])
+              }
+
+              return result
+            }}
           />
 
           {(showReplyPlaceHolder && (
@@ -109,7 +123,7 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
               </Layout.Horizontal>
             </Container>
           )) || (
-            <Container padding="xlarge" className={cx(css.newCommentContainer, comments.length ? css.hasThread : '')}>
+            <Container padding="xlarge" className={cx(css.newCommentContainer, { [css.hasThread]: !!comments.length })}>
               <MarkdownEditorWithPreview
                 editorRef={editorRef as React.MutableRefObject<MarkdownEditorWithPreviewResetProps>}
                 i18n={{
@@ -121,13 +135,15 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
                 }}
                 value={markdown}
                 onChange={setMarkdown}
-                onSave={async value => {
-                  if (onSave) {
-                    if (await onSave(value, comments)) {
-                      editorRef.current?.resetEditor?.()
+                onSave={async (value: string) => {
+                  if (handleAction) {
+                    if (
+                      await handleAction(comments.length ? CommentAction.REPLY : CommentAction.NEW, value, comments[0])
+                    ) {
                       setMarkdown('')
 
                       if (resetOnSave) {
+                        editorRef.current?.resetEditor?.()
                         setComments(commentItems)
                       } else {
                         setComments([
@@ -136,12 +152,15 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
                             author: currentUserName,
                             created: Date.now(),
                             updated: Date.now(),
+                            deleted: 0,
                             content: value
                           }
                         ])
                         setShowReplyPlaceHolder(true)
                       }
                     }
+                  } else {
+                    alert('onSave must be implemented and passed')
                   }
                 }}
                 onCancel={_onCancel}
@@ -155,17 +174,24 @@ export const CommentBox: React.FC<CommentBoxProps> = ({
   )
 }
 
-interface CommentsThreadProps extends Pick<CommentBoxProps, 'commentItems' | 'getString' | 'executeDeleteComent'> {
+interface CommentsThreadProps<T> extends Pick<CommentBoxProps<T>, 'commentItems' | 'getString' | 'handleAction'> {
   onQuote: (content: string) => void
 }
 
-const CommentsThread: React.FC<CommentsThreadProps> = ({
+const CommentsThread = <T = unknown,>({
   getString,
   onQuote,
   commentItems = [],
-  executeDeleteComent
-}) => {
+  handleAction
+}: CommentsThreadProps<T>) => {
   const [editIndexes, setEditIndexes] = useState<Record<number, boolean>>({})
+  const resetStateAtIndex = useCallback(
+    (index: number) => {
+      delete editIndexes[index]
+      setEditIndexes({ ...editIndexes })
+    },
+    [editIndexes]
+  )
 
   return commentItems.length ? (
     <Container className={css.viewer} padding="xlarge">
@@ -186,12 +212,21 @@ const CommentsThread: React.FC<CommentsThreadProps> = ({
                 <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
                   <ReactTimeago date={new Date(commentItem.updated)} />
                 </Text>
+                {(commentItem.updated !== commentItem.created || !!commentItem.deleted) && (
+                  <>
+                    <PipeSeparator height={8} />
+                    <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
+                      {getString(!!commentItem.deleted ? 'deleted' : 'edited')}
+                    </Text>
+                  </>
+                )}
                 <FlexExpander />
                 <OptionsMenuButton
                   isDark={false}
                   icon="Options"
                   iconProps={{ size: 14 }}
                   style={{ padding: '5px' }}
+                  disabled={!!commentItem.deleted}
                   items={[
                     {
                       text: getString('edit'),
@@ -199,9 +234,7 @@ const CommentsThread: React.FC<CommentsThreadProps> = ({
                     },
                     {
                       text: getString('quote'),
-                      onClick: () => {
-                        onQuote(commentItem.content)
-                      }
+                      onClick: () => onQuote(commentItem.content)
                     },
                     MenuDivider,
                     {
@@ -210,13 +243,11 @@ const CommentsThread: React.FC<CommentsThreadProps> = ({
                           {getString('delete')}
                         </Text>
                       ),
-                      onClick: () =>
-                        executeDeleteComent({
-                          commentEntry: commentItem,
-                          onSuccess: () => {
-                            alert('success')
-                          }
-                        }),
+                      onClick: async () => {
+                        if (await handleAction(CommentAction.DELETE, '', commentItem)) {
+                          resetStateAtIndex(index)
+                        }
+                      },
                       className: css.deleteMenuItem
                     }
                   ]}
@@ -230,13 +261,12 @@ const CommentsThread: React.FC<CommentsThreadProps> = ({
                 <Container className={css.editCommentContainer}>
                   <MarkdownEditorWithPreview
                     value={commentItem.content}
-                    onSave={value => {
-                      alert('Saving modified comment...' + value)
+                    onSave={async value => {
+                      if (await handleAction(CommentAction.UPDATE, value, commentItem)) {
+                        resetStateAtIndex(index)
+                      }
                     }}
-                    onCancel={() => {
-                      delete editIndexes[index]
-                      setEditIndexes({ ...editIndexes })
-                    }}
+                    onCancel={() => resetStateAtIndex(index)}
                     i18n={{
                       placeHolder: getString('leaveAComment'),
                       tabEdit: getString('write'),
@@ -247,7 +277,9 @@ const CommentsThread: React.FC<CommentsThreadProps> = ({
                   />
                 </Container>
               ) : (
-                <MarkdownEditor.Markdown source={commentItem.content} />
+                (!commentItem.deleted && <MarkdownEditor.Markdown source={commentItem.content} />) || (
+                  <Text className={css.deleted}>{getString('commentDeleted')}</Text>
+                )
               )}
             </Container>
           </ThreadSection>
@@ -256,3 +288,5 @@ const CommentsThread: React.FC<CommentsThreadProps> = ({
     </Container>
   ) : null
 }
+
+const CRLF = '\n'

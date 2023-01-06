@@ -1,9 +1,10 @@
 .main {
   --color-border: var(--grey-200);
+  --box-radius: 5px;
 
   background-color: var(--grey-50);
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
+  border-bottom-left-radius: var(--box-radius);
+  border-bottom-right-radius: var(--box-radius);
   position: relative;
 
   &:focus-within {
@@ -39,8 +40,8 @@
             border-top: 1px solid var(--color-border);
             border-left: 1px solid var(--color-border);
             border-right: 1px solid var(--color-border);
-            border-top-left-radius: 5px;
-            border-top-right-radius: 5px;
+            border-top-left-radius: var(--box-radius);
+            border-top-right-radius: var(--box-radius);
           }
 
           &:not([aria-selected='true']) {
@@ -63,18 +64,32 @@
     background-color: var(--white);
     margin-top: 28px !important;
     border: 1px solid var(--color-border) !important;
-    border-radius: 5px;
+    border-radius: var(--box-radius);
+
+    :global {
+      .wmde-markdown .anchor {
+        display: none;
+      }
+    }
   }
 
   .markdownEditor {
     :global {
+      .cm-editor .cm-line {
+        &,
+        * {
+          font-family: var(--font-family);
+          font-size: 13px;
+        }
+      }
+
       .md-editor {
         background-color: transparent !important;
         box-shadow: none !important;
 
         .md-editor-content {
           border: 1px solid var(--color-border) !important;
-          border-radius: 5px;
+          border-radius: var(--box-radius);
         }
       }
 

@@ -5,10 +5,11 @@ declare const styles: {
   readonly fluid: string
   readonly box: string
   readonly viewer: string
+  readonly deleted: string
   readonly replyPlaceHolder: string
-  readonly deleteMenuItem: string
   readonly newCommentContainer: string
   readonly hasThread: string
   readonly editCommentContainer: string
+  readonly deleteMenuItem: string
 }
 export default styles

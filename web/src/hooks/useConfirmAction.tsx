@@ -6,7 +6,8 @@
  */
 
 import { Intent } from '@blueprintjs/core'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import { noop } from 'lodash-es'
 import { useConfirmationDialog } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
 
@@ -19,6 +20,9 @@ export interface UseConfirmActionDialogProps {
   action: (params?: Unknown) => void
 }
 
+/**
+ * @deprecated Use useConfirmAct() hook instead
+ */
 export const useConfirmAction = (props: UseConfirmActionDialogProps) => {
   const { title, message, confirmText, cancelText, intent, action } = props
   const { getString } = useStrings()
@@ -45,4 +49,42 @@ export const useConfirmAction = (props: UseConfirmActionDialogProps) => {
   )
 
   return confirm
+}
+
+interface ConfirmActArgs {
+  title?: string
+  message: React.ReactNode
+  intent?: Intent
+  confirmText?: string
+  cancelText?: string
+  action: () => Promise<void> | void
+}
+
+export const useConfirmAct = () => {
+  const { getString } = useStrings()
+  const [_args, setArgs] = useState<ConfirmActArgs>({ message: '', action: noop })
+  const resolve = useRef<() => void>(noop)
+  const { openDialog } = useConfirmationDialog({
+    titleText: _args.title || getString('confirmation'),
+    contentText: _args.message,
+    intent: _args.intent,
+    confirmButtonText: _args.confirmText || getString('confirm'),
+    cancelButtonText: _args.cancelText || getString('cancel'),
+    buttonIntent: _args.intent || Intent.DANGER,
+    onCloseDialog: async (isConfirmed: boolean) => {
+      if (isConfirmed) {
+        await _args.action()
+      }
+      resolve.current()
+    }
+  })
+
+  return useCallback(
+    async (args: ConfirmActArgs) => {
+      setArgs({ ..._args, ...args })
+      openDialog()
+      return new Promise<void>(_resolve => (resolve.current = _resolve))
+    },
+    [_args, openDialog]
+  )
 }

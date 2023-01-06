@@ -86,6 +86,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
               author: 'Tan Nhu',
               created: '2022-12-21',
               updated: '2022-12-21',
+              deleted: 0,
               content
             }))
           }

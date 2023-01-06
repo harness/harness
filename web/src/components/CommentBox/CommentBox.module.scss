@@ -1,4 +1,6 @@
 .main {
+  --box-radius: 5px;
+
   max-width: 900px;
   box-sizing: border-box;
   position: sticky;
@@ -13,17 +15,7 @@
   .box {
     box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16),
       0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
-    border-radius: 5px;
-
-    :global {
-      .cm-editor .cm-line {
-        &,
-        * {
-          font-family: var(--font-family);
-          font-size: 13px;
-        }
-      }
-    }
+    border-radius: var(--box-radius);
   }
 
   .viewer {
@@ -34,16 +26,46 @@
         display: none;
       }
     }
+
+    .deleted {
+      padding: var(--spacing-xsmall) var(--spacing-small) !important;
+      background-color: var(--grey-50) !important;
+      color: var(--grey-350) !important;
+      border: 1px solid var(--grey-100);
+      display: inline-block;
+      border-radius: var(--box-radius);
+    }
   }
 
   .replyPlaceHolder {
+    background: var(--grey-50);
+    border-top: 1px solid var(--grey-100);
     align-items: center;
+    border-bottom-left-radius: var(--box-radius);
+    border-bottom-right-radius: var(--box-radius);
 
     > div:last-of-type {
       flex-grow: 1;
       padding: 0;
       margin: 0;
     }
+  }
+
+  .newCommentContainer {
+    background: var(--grey-50) !important;
+    border-radius: 5px;
+
+    &.hasThread {
+      border-top: 1px solid var(--grey-100);
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+  }
+
+  .editCommentContainer {
+    background-color: var(--grey-50) !important;
+    padding: var(--spacing-large) !important;
+    border-radius: var(--box-radius);
   }
 }
 
@@ -53,21 +75,4 @@
   * {
     color: var(--white) !important;
   }
-}
-
-.newCommentContainer {
-  background: var(--grey-50) !important;
-  border-radius: 5px;
-
-  &.hasThread {
-    border-top: 1px solid var(--grey-100);
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-  }
-}
-
-.editCommentContainer {
-  background-color: var(--grey-50) !important;
-  padding: var(--spacing-large) !important;
-  border-radius: 5px;
 }

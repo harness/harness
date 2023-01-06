@@ -2,16 +2,16 @@ import React, { useMemo, useState } from 'react'
 import { Avatar, Color, Container, FlexExpander, FontVariation, Layout, Text, useToaster } from '@harness/uicore'
 import { useGet, useMutate } from 'restful-react'
 import ReactTimeago from 'react-timeago'
-import { noop } from 'lodash-es'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type { TypesPullReqActivity } from 'services/code'
-import { CommentBox, CommentItem } from 'components/CommentBox/CommentBox'
+import { CommentAction, CommentBox, CommentItem } from 'components/CommentBox/CommentBox'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
+import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage } from 'utils/Utils'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { PullRequestStatusInfo } from './PullRequestStatusInfo/PullRequestStatusInfo'
@@ -36,10 +36,11 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
   const commentThreads = useMemo(() => {
     const threads: Record<number, CommentItem<TypesPullReqActivity>[]> = {}
     activities?.forEach(activity => {
-      const thread = {
+      const thread: CommentItem<TypesPullReqActivity> = {
         author: activity.author?.name as string,
         created: activity.created as number,
         updated: activity.updated as number,
+        deleted: activity.deleted as number,
         content: activity.text as string,
         payload: activity
       }
@@ -57,6 +58,7 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
           author: newComment.author?.name as string,
           created: newComment.created as number,
           updated: newComment.updated as number,
+          deleted: newComment.deleted as number,
           content: newComment.text as string,
           payload: newComment
         }
@@ -64,12 +66,14 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
     })
     return threads
   }, [activities, newComments])
-  const { mutate: saveComment } = useMutate({
-    verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.id}/comments`
-  })
-
-  console.log({ activities, commentThreads, newComments })
+  const path = useMemo(
+    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.id}/comments`,
+    [repoMetadata.path, pullRequestMetadata.id]
+  )
+  const { mutate: saveComment } = useMutate({ verb: 'POST', path })
+  const { mutate: updateComment } = useMutate({ verb: 'PUT', path: ({ id }) => `${path}/${id}` })
+  const { mutate: deleteComment } = useMutate({ verb: 'DELETE', path: ({ id }) => `${path}/${id}` })
+  const confirmAct = useConfirmAct()
 
   return (
     <PullRequestTabContentWrapper loading={loading} error={error} onRetry={refetch}>
@@ -87,14 +91,36 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
                   getString={getString}
                   commentItems={commentItems}
                   currentUserName={currentUser.display_name}
-                  executeDeleteComent={noop}
-                  onCancel={noop}
-                  onSave={async value => {
+                  handleAction={async (action, value, commentItem) => {
                     let result = true
-                    await saveComment({ text: value, parent_id: Number(threadId) }).catch(exception => {
-                      result = false
-                      showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
-                    })
+                    const id = (commentItem as CommentItem<TypesPullReqActivity>)?.payload?.id
+
+                    switch (action) {
+                      case CommentAction.DELETE:
+                        await confirmAct({
+                          message: getString('deleteCommentConfirm'),
+                          action: async () => {
+                            await deleteComment({}, { pathParams: { id } }).catch(exception => {
+                              result = false
+                              showError(getErrorMessage(exception), 0, getString('pr.failedToDeleteComment'))
+                            })
+                          }
+                        })
+                        break
+                      case CommentAction.REPLY:
+                        await saveComment({ text: value, parent_id: Number(threadId) }).catch(exception => {
+                          result = false
+                          showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
+                        })
+                        break
+                      case CommentAction.UPDATE:
+                        await updateComment({ text: value }, { pathParams: { id } }).catch(exception => {
+                          result = false
+                          showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
+                        })
+                        break
+                    }
+
                     return result
                   }}
                 />
@@ -105,14 +131,12 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
                 getString={getString}
                 commentItems={[]}
                 currentUserName={currentUser.display_name}
-                executeDeleteComent={noop}
-                onCancel={noop}
                 resetOnSave
                 hideCancel
-                onSave={async value => {
+                handleAction={async (_action, value) => {
                   let result = true
                   await saveComment({ text: value })
-                    .then(newComment => setNewComments([...newComments, newComment]))
+                    .then((newComment: TypesPullReqActivity) => setNewComments([...newComments, newComment]))
                     .catch(exception => {
                       result = false
                       showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
