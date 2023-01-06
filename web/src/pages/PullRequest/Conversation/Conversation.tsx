@@ -35,15 +35,9 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
   const [newComments, setNewComments] = useState<TypesPullReqActivity[]>([])
   const commentThreads = useMemo(() => {
     const threads: Record<number, CommentItem<TypesPullReqActivity>[]> = {}
+
     activities?.forEach(activity => {
-      const thread: CommentItem<TypesPullReqActivity> = {
-        author: activity.author?.name as string,
-        created: activity.created as number,
-        updated: activity.updated as number,
-        deleted: activity.deleted as number,
-        content: activity.text as string,
-        payload: activity
-      }
+      const thread: CommentItem<TypesPullReqActivity> = toCommentItem(activity)
 
       if (activity.parent_id) {
         threads[activity.parent_id].push(thread)
@@ -52,18 +46,11 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
         threads[activity.id as number].push(thread)
       }
     })
+
     newComments.forEach(newComment => {
-      threads[newComment.id as number] = [
-        {
-          author: newComment.author?.name as string,
-          created: newComment.created as number,
-          updated: newComment.updated as number,
-          deleted: newComment.deleted as number,
-          content: newComment.text as string,
-          payload: newComment
-        }
-      ]
+      threads[newComment.id as number] = [toCommentItem(newComment)]
     })
+
     return threads
   }, [activities, newComments])
   const path = useMemo(
@@ -71,7 +58,7 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
     [repoMetadata.path, pullRequestMetadata.id]
   )
   const { mutate: saveComment } = useMutate({ verb: 'POST', path })
-  const { mutate: updateComment } = useMutate({ verb: 'PUT', path: ({ id }) => `${path}/${id}` })
+  const { mutate: updateComment } = useMutate({ verb: 'PATCH', path: ({ id }) => `${path}/${id}` })
   const { mutate: deleteComment } = useMutate({ verb: 'DELETE', path: ({ id }) => `${path}/${id}` })
   const confirmAct = useConfirmAct()
 
@@ -93,6 +80,7 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
                   currentUserName={currentUser.display_name}
                   handleAction={async (action, value, commentItem) => {
                     let result = true
+                    let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
                     const id = (commentItem as CommentItem<TypesPullReqActivity>)?.payload?.id
 
                     switch (action) {
@@ -107,21 +95,31 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
                           }
                         })
                         break
+
                       case CommentAction.REPLY:
-                        await saveComment({ text: value, parent_id: Number(threadId) }).catch(exception => {
-                          result = false
-                          showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
-                        })
+                        await saveComment({ text: value, parent_id: Number(threadId) })
+                          .then(newComment => {
+                            updatedItem = toCommentItem(newComment)
+                          })
+                          .catch(exception => {
+                            result = false
+                            showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
+                          })
                         break
+
                       case CommentAction.UPDATE:
-                        await updateComment({ text: value }, { pathParams: { id } }).catch(exception => {
-                          result = false
-                          showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
-                        })
+                        await updateComment({ text: value }, { pathParams: { id } })
+                          .then(newComment => {
+                            updatedItem = toCommentItem(newComment)
+                          })
+                          .catch(exception => {
+                            result = false
+                            showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
+                          })
                         break
                     }
 
-                    return result
+                    return [result, updatedItem]
                   }}
                 />
               ))}
@@ -135,13 +133,18 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
                 hideCancel
                 handleAction={async (_action, value) => {
                   let result = true
+                  let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
+
                   await saveComment({ text: value })
-                    .then((newComment: TypesPullReqActivity) => setNewComments([...newComments, newComment]))
+                    .then((newComment: TypesPullReqActivity) => {
+                      updatedItem = toCommentItem(newComment)
+                      setNewComments([...newComments, newComment])
+                    })
                     .catch(exception => {
                       result = false
                       showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
                     })
-                  return result
+                  return [result, updatedItem]
                 }}
               />
             </Layout.Vertical>
@@ -166,15 +169,16 @@ const DescriptionBox: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestM
     verb: 'PATCH',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.id}`
   })
+  const name = pullRequestMetadata.author?.display_name
 
   return (
     <Container className={css.descBox}>
       <Layout.Vertical spacing="medium">
         <Container>
           <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
-            <Avatar name={pullRequestMetadata.author?.name} size="small" hoverCard={false} />
+            <Avatar name={name} size="small" hoverCard={false} />
             <Text inline>
-              <strong>{pullRequestMetadata.author?.name}</strong>
+              <strong>{name}</strong>
             </Text>
             <PipeSeparator height={8} />
             <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
@@ -231,3 +235,12 @@ const DescriptionBox: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestM
     </Container>
   )
 }
+
+const toCommentItem = (activity: TypesPullReqActivity) => ({
+  author: activity.author?.display_name as string,
+  created: activity.created as number,
+  updated: activity.updated as number,
+  deleted: activity.deleted as number,
+  content: activity.text as string,
+  payload: activity
+})

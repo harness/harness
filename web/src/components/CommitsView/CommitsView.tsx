@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Container, Color, TableV2 as Table, Text, Avatar } from '@harness/uicore'
+import { Container, Color, TableV2 as Table, Text, Avatar, Layout } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { orderBy } from 'lodash-es'
 import { useStrings } from 'framework/strings'
@@ -25,11 +25,12 @@ export function CommitsView({ repoMetadata, commits }: CommitsViewProps) {
         width: '20%',
         Cell: ({ row }: CellProps<RepoCommit>) => {
           return (
-            <Text className={css.rowText} color={Color.BLACK}>
+            <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }} style={{ display: 'inline-flex' }}>
               <Avatar hoverCard={false} size="small" name={row.original.author?.identity?.name || ''} />
-              <span className={css.spacer} />
-              {row.original.author?.identity?.name}
-            </Text>
+              <Text className={css.rowText} color={Color.BLACK}>
+                {row.original.author?.identity?.name}
+              </Text>
+            </Layout.Horizontal>
           )
         }
       },

@@ -42,8 +42,11 @@ interface CommentBoxProps<T> {
   hideCancel?: boolean
   currentUserName: string
   commentItems: CommentItem<T>[]
-  // executeDeleteComent?: (params: { commentEntry: CommentItem; onSuccess: () => void }) => void
-  handleAction: (action: CommentAction, content: string, atCommentItem?: CommentItem<T>) => Promise<boolean>
+  handleAction: (
+    action: CommentAction,
+    content: string,
+    atCommentItem?: CommentItem<T>
+  ) => Promise<[boolean, CommentItem<T> | undefined]>
   onCancel?: () => void
 }
 
@@ -104,14 +107,14 @@ export const CommentBox = <T = unknown,>({
             getString={getString}
             onQuote={onQuote}
             handleAction={async (action, content, atCommentItem) => {
-              const result = await handleAction(action, content, atCommentItem)
+              const [result, updatedItem] = await handleAction(action, content, atCommentItem)
 
               if (result && action === CommentAction.DELETE && atCommentItem) {
                 atCommentItem.updated = atCommentItem.deleted = Date.now()
                 setComments([...comments])
               }
 
-              return result
+              return [result, updatedItem]
             }}
           />
 
@@ -137,30 +140,24 @@ export const CommentBox = <T = unknown,>({
                 onChange={setMarkdown}
                 onSave={async (value: string) => {
                   if (handleAction) {
-                    if (
-                      await handleAction(comments.length ? CommentAction.REPLY : CommentAction.NEW, value, comments[0])
-                    ) {
+                    const [result, updatedItem] = await handleAction(
+                      comments.length ? CommentAction.REPLY : CommentAction.NEW,
+                      value,
+                      comments[0]
+                    )
+
+                    if (result) {
                       setMarkdown('')
 
                       if (resetOnSave) {
                         editorRef.current?.resetEditor?.()
-                        setComments(commentItems)
                       } else {
-                        setComments([
-                          ...comments,
-                          {
-                            author: currentUserName,
-                            created: Date.now(),
-                            updated: Date.now(),
-                            deleted: 0,
-                            content: value
-                          }
-                        ])
+                        setComments([...comments, updatedItem as CommentItem<T>])
                         setShowReplyPlaceHolder(true)
                       }
                     }
                   } else {
-                    alert('onSave must be implemented and passed')
+                    alert('handleAction must be implemented...')
                   }
                 }}
                 onCancel={_onCancel}
@@ -216,7 +213,7 @@ const CommentsThread = <T = unknown,>({
                   <>
                     <PipeSeparator height={8} />
                     <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-                      {getString(!!commentItem.deleted ? 'deleted' : 'edited')}
+                      {getString(commentItem.deleted ? 'deleted' : 'edited')}
                     </Text>
                   </>
                 )}
@@ -263,6 +260,7 @@ const CommentsThread = <T = unknown,>({
                     value={commentItem.content}
                     onSave={async value => {
                       if (await handleAction(CommentAction.UPDATE, value, commentItem)) {
+                        commentItem.content = value
                         resetStateAtIndex(index)
                       }
                     }}

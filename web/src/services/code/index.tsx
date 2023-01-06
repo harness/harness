@@ -44,10 +44,12 @@ export interface OpenapiCalculateCommitDivergenceRequest {
 
 export interface OpenapiCommentCreatePullReqRequest {
   parent_id?: number
+  payload?: { [key: string]: any } | null
   text?: string
 }
 
 export interface OpenapiCommentUpdatePullReqRequest {
+  payload?: { [key: string]: any } | null
   text?: string
 }
 
@@ -185,7 +187,7 @@ export interface OpenapiWebhookExecutionType {
 
 export type OpenapiWebhookParent = 'repo' | 'space'
 
-export type OpenapiWebhookTrigger = 'push'
+export type OpenapiWebhookTrigger = 'branch_pushed' | 'branch_deleted'
 
 export interface OpenapiWebhookType {
   created?: number
@@ -300,9 +302,9 @@ export interface TypesPath {
 }
 
 export type TypesPrincipalInfo = {
+  display_name?: string
   email?: string
   id?: number
-  name?: string
   uid?: string
 } | null
 
@@ -369,6 +371,7 @@ export interface TypesRepository {
 }
 
 export interface TypesServiceAccount {
+  admin?: boolean
   blocked?: boolean
   created?: number
   display_name?: string
@@ -723,6 +726,10 @@ export interface ListCommitsQueryParams {
    */
   git_ref?: string
   /**
+   * The result should only contain commits that occurred after the provided reference.
+   */
+  after?: string
+  /**
    * The page to return.
    */
   page?: number
@@ -849,6 +856,30 @@ export const useCalculateCommitDivergence = ({ repo_ref, ...props }: UseCalculat
     (paramsInPath: CalculateCommitDivergencePathParams) =>
       `/repos/${paramsInPath.repo_ref}/commits/calculate-divergence`,
     { base: getConfig('code'), pathParams: { repo_ref }, ...props }
+  )
+
+export interface RawDiffPathParams {
+  repo_ref: string
+  range: string
+}
+
+export type RawDiffProps = Omit<GetProps<void, UsererrorError, void, RawDiffPathParams>, 'path'> & RawDiffPathParams
+
+export const RawDiff = ({ repo_ref, range, ...props }: RawDiffProps) => (
+  <Get<void, UsererrorError, void, RawDiffPathParams>
+    path={`/repos/${repo_ref}/compare/${range}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseRawDiffProps = Omit<UseGetProps<void, UsererrorError, void, RawDiffPathParams>, 'path'> &
+  RawDiffPathParams
+
+export const useRawDiff = ({ repo_ref, range, ...props }: UseRawDiffProps) =>
+  useGet<void, UsererrorError, void, RawDiffPathParams>(
+    (paramsInPath: RawDiffPathParams) => `/repos/${paramsInPath.repo_ref}/compare/${paramsInPath.range}`,
+    { base: getConfig('code'), pathParams: { repo_ref, range }, ...props }
   )
 
 export interface GetContentQueryParams {

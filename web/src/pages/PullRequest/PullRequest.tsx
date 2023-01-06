@@ -36,7 +36,8 @@ export default function PullRequest() {
   const {
     data: prData,
     error: prError,
-    loading: prLoading
+    loading: prLoading,
+    refetch: refetchPullRequest
   } = useGet<TypesPullReq>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestId}`,
     lazy: !repoMetadata
@@ -71,10 +72,15 @@ export default function PullRequest() {
               <PullRequestMetaLine repoMetadata={repoMetadata} {...prData} />
               <Container className={css.tabsContainer}>
                 <Tabs
-                  id="pullRequestTabs"
+                  id="prTabs"
                   defaultSelectedTabId={activeTab}
                   large={false}
                   onChange={tabId => {
+                    // PR metadata can be changed from conversation tab, refetch to get latest
+                    // when the tab is activated
+                    if (tabId === PullRequestSection.CONVERSATION) {
+                      refetchPullRequest()
+                    }
                     history.replace(
                       routes.toCODEPullRequest({
                         repoPath: repoMetadata.path as string,
@@ -86,17 +92,17 @@ export default function PullRequest() {
                   tabList={[
                     {
                       id: PullRequestSection.CONVERSATION,
-                      title: <TabTitle icon={CodeIcon.Chat} title={getString('conversation')} count={100} />,
+                      title: <TabTitle icon={CodeIcon.Chat} title={getString('conversation')} count={0} />,
                       panel: <Conversation repoMetadata={repoMetadata} pullRequestMetadata={prData} />
                     },
                     {
                       id: PullRequestSection.COMMITS,
-                      title: <TabTitle icon={CodeIcon.Commit} title={getString('commits')} count={15} />,
+                      title: <TabTitle icon={CodeIcon.Commit} title={getString('commits')} count={0} />,
                       panel: <PullRequestCommits repoMetadata={repoMetadata} pullRequestMetadata={prData} />
                     },
                     {
                       id: PullRequestSection.FILES_CHANGED,
-                      title: <TabTitle icon={CodeIcon.File} title={getString('filesChanged')} count={20} />,
+                      title: <TabTitle icon={CodeIcon.File} title={getString('filesChanged')} count={0} />,
                       panel: <Changes repoMetadata={repoMetadata} pullRequestMetadata={prData} />
                     }
                   ]}
@@ -118,7 +124,7 @@ const PullRequestTitle: React.FC<TypesPullReq> = ({ title, number }) => (
 
 const TabTitle: React.FC<{ icon: IconName; title: string; count?: number }> = ({ icon, title, count }) => {
   // Icon inside a tab got overriden-looked-bad styles from UICore
-  // onn hover. Use icon directly instead
+  // on hover. Use icon directly instead
   const TabIcon: React.ElementType = HarnessIcons[icon]
 
   return (
