@@ -187,7 +187,7 @@ export interface OpenapiWebhookExecutionType {
 
 export type OpenapiWebhookParent = 'repo' | 'space'
 
-export type OpenapiWebhookTrigger = 'branch_pushed' | 'branch_deleted'
+export type OpenapiWebhookTrigger = 'branch_created' | 'branch_updated' | 'branch_deleted'
 
 export interface OpenapiWebhookType {
   created?: number
