@@ -16,6 +16,7 @@ var WireSet = wire.NewSet(ProvideURLProvider)
 func ProvideURLProvider(config *types.Config) (*Provider, error) {
 	return NewProvider(
 		config.URL.API,
+		config.URL.APIInternal,
 		config.URL.Git,
 	)
 }

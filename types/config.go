@@ -18,8 +18,9 @@ type Config struct {
 
 	// URL defines the URLs via which the different parts of the service are reachable by.
 	URL struct {
-		Git string `envconfig:"GITNESS_URL_GIT" default:"http://localhost:3000"`
-		API string `envconfig:"GITNESS_URL_API" default:"http://localhost:3000"`
+		Git         string `envconfig:"GITNESS_URL_GIT" default:"http://localhost:3000"`
+		API         string `envconfig:"GITNESS_URL_API" default:"http://localhost:3000"`
+		APIInternal string `envconfig:"GITNESS_URL_API_INTERNAL" default:"http://localhost:3000"`
 	}
 
 	// Git defines the git configuration parameters
