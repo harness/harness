@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/harness/store"
 	"github.com/harness/gitness/harness/types"
 	"github.com/harness/gitness/harness/types/check"
+	"github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/service"
@@ -68,6 +69,7 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 		check.WireSet,
 		events.WireSet,
 		webhook.WireSet,
+		githook.WireSet,
 	)
 	return &system{}, nil
 }

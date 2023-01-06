@@ -51,7 +51,7 @@ func Command() {
 	account.RegisterRegister(app, httpClient, s)
 	account.RegisterLogout(app, s)
 
-	hooks.Register(app, httpClient)
+	hooks.Register(app)
 
 	registerSwagger(app)
 

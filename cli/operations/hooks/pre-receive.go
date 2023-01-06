@@ -5,34 +5,32 @@
 package hooks
 
 import (
-	"github.com/harness/gitness/client"
+	"context"
+	"fmt"
+	"time"
 
-	"github.com/rs/zerolog/log"
+	"github.com/harness/gitness/internal/githook"
+
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-type preReceiveCommand struct {
-	client client.Client
-}
+type preReceiveCommand struct{}
 
 func (c *preReceiveCommand) run(*kingpin.ParseContext) error {
-	// TODO: need to implement this method further to completely execute to hooks
-	updatedRefsFromGit, err := getUpdatedReferencesFromStdIn()
+	cli, err := githook.NewCLI()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create githook cli: %w", err)
 	}
-	for _, ref := range updatedRefsFromGit {
-		log.Info().Msgf("This is the pre-receive hook, ref: %s, old commit sha: %s, new commit sha: %s",
-			ref.branch, ref.oldCommit, ref.newCommit)
-	}
-	return nil
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	return cli.PreReceive(ctx)
 }
 
-func registerPreReceive(app *kingpin.CmdClause, client client.Client) {
-	c := &preReceiveCommand{
-		client: client,
-	}
+func registerPreReceive(app *kingpin.CmdClause) {
+	c := &preReceiveCommand{}
 
-	app.Command("pre-receive", "hook that is executed just before all the refs are updated").
+	app.Command("pre-receive", "hook that is executed before any reference of the push is updated").
 		Action(c.run)
 }

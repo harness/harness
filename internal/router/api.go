@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
@@ -15,6 +16,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/api/handler/account"
+	handlergithook "github.com/harness/gitness/internal/api/handler/githook"
 	handlerpullreq "github.com/harness/gitness/internal/api/handler/pullreq"
 	handlerrepo "github.com/harness/gitness/internal/api/handler/repo"
 	"github.com/harness/gitness/internal/api/handler/resource"
@@ -56,6 +58,7 @@ func NewAPIHandler(
 	spaceCtrl *space.Controller,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
+	githookCtrl *githook.Controller,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller) APIHandler {
 	// Use go-chi router for inner routing.
@@ -78,7 +81,7 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, repoCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, saCtrl, userCtrl)
+		setupRoutesV1(r, repoCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl, saCtrl, userCtrl)
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -100,12 +103,13 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 
 func setupRoutesV1(r chi.Router,
 	repoCtrl *repo.Controller, spaceCtrl *space.Controller,
-	pullreqCtrl *pullreq.Controller, webhookCtrl *webhook.Controller,
+	pullreqCtrl *pullreq.Controller, webhookCtrl *webhook.Controller, githookCtrl *githook.Controller,
 	saCtrl *serviceaccount.Controller, userCtrl *user.Controller) {
 	setupSpaces(r, spaceCtrl)
 	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
+	setupInternal(r, githookCtrl)
 	setupAdmin(r, userCtrl)
 	setupAccount(r, userCtrl)
 	setupSystem(r)
@@ -203,6 +207,20 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Co
 
 			SetupWebhook(r, webhookCtrl)
 		})
+	})
+}
+
+func setupInternal(r chi.Router, githookCtrl *githook.Controller) {
+	r.Route("/internal", func(r chi.Router) {
+		SetupGitHooks(r, githookCtrl)
+	})
+}
+
+func SetupGitHooks(r chi.Router, githookCtrl *githook.Controller) {
+	r.Route("/git-hooks", func(r chi.Router) {
+		r.Post("/pre-receive", handlergithook.HandlePreReceive(githookCtrl))
+		r.Post("/update", handlergithook.HandleUpdate(githookCtrl))
+		r.Post("/post-receive", handlergithook.HandlePostReceive(githookCtrl))
 	})
 }
 

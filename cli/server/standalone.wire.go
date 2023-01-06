@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
+	"github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
@@ -62,6 +63,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		check.WireSet,
 		events.WireSet,
 		webhook.WireSet,
+		githook.WireSet,
 	)
 	return &system{}, nil
 }

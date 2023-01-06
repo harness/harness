@@ -6,11 +6,13 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/githook"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
@@ -63,16 +65,15 @@ func CreateRPCWriteParams(ctx context.Context, urlProvider *url.Provider,
 	}
 
 	// generate envars (add everything githook CLI needs for execution)
-	envVars := map[string]string{"X-Request-Id": requestID}
-	// envVars, err := githook.GenerateEnvironmentVariables(&githook.Payload{
-	// 	BaseURL:     urlProvider.GetAPIBaseURL(),
-	// 	RepoID:      repo.ID,
-	// 	PrincipalID: session.Principal.ID,
-	// 	RequestID:   requestID,
-	// })
-	// if err != nil {
-	// 	return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
-	// }
+	envVars, err := githook.GenerateEnvironmentVariables(&githook.Payload{
+		BaseURL:     urlProvider.GetAPIBaseURL(),
+		RepoID:      repo.ID,
+		PrincipalID: session.Principal.ID,
+		RequestID:   requestID,
+	})
+	if err != nil {
+		return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
+	}
 
 	return gitrpc.WriteParams{
 		Actor: gitrpc.Identity{

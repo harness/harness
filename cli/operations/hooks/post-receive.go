@@ -5,34 +5,32 @@
 package hooks
 
 import (
-	"github.com/harness/gitness/client"
+	"context"
+	"fmt"
+	"time"
 
-	"github.com/rs/zerolog/log"
+	"github.com/harness/gitness/internal/githook"
+
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-type postReceiveCommand struct {
-	client client.Client
-}
+type postReceiveCommand struct{}
 
 func (c *postReceiveCommand) run(*kingpin.ParseContext) error {
-	// TODO: need to implement this method further to completely execute to hooks
-	updatedRefsFromGit, err := getUpdatedReferencesFromStdIn()
+	cli, err := githook.NewCLI()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create githook cli: %w", err)
 	}
-	for _, ref := range updatedRefsFromGit {
-		log.Info().Msgf("This is the post-receive hook, ref: %s, old commit sha: %s, new commit sha: %s",
-			ref.branch, ref.oldCommit, ref.newCommit)
-	}
-	return nil
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	return cli.PostReceive(ctx)
 }
 
-func registerPostReceive(app *kingpin.CmdClause, client client.Client) {
-	c := &postReceiveCommand{
-		client: client,
-	}
+func registerPostReceive(app *kingpin.CmdClause) {
+	c := &postReceiveCommand{}
 
-	app.Command("post-receive", "hook that is executed just after all the refs are updated").
+	app.Command("post-receive", "hook that is executed after all references of the push got updated").
 		Action(c.run)
 }

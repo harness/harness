@@ -5,43 +5,48 @@
 package hooks
 
 import (
-	"github.com/harness/gitness/client"
+	"context"
+	"fmt"
+	"time"
 
-	"github.com/rs/zerolog/log"
+	"github.com/harness/gitness/internal/githook"
+
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 type updateCommand struct {
-	client    client.Client
-	branch    string
-	oldCommit string
-	newCommit string
+	ref string
+	old string
+	new string
 }
 
 func (c *updateCommand) run(*kingpin.ParseContext) error {
-	// TODO: need to implement this method further to completely execute to hooks
-	log.Info().Msgf("This is the update hook, ref: %s, old commit sha: %s, new commit sha: %s",
-		c.branch, c.oldCommit, c.newCommit)
-	return nil
-}
-
-func registerUpdate(app *kingpin.CmdClause, client client.Client) {
-	c := &updateCommand{
-		client: client,
+	cli, err := githook.NewCLI()
+	if err != nil {
+		return fmt.Errorf("failed to create githook cli: %w", err)
 	}
 
-	cmd := app.Command("update", "hook that is executed just before the ref is updated").
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	return cli.Update(ctx, c.ref, c.old, c.new)
+}
+
+func registerUpdate(app *kingpin.CmdClause) {
+	c := &updateCommand{}
+
+	cmd := app.Command("update", "hook that is executed before the specific reference gets updated").
 		Action(c.run)
 
-	cmd.Arg("ref", "ref on which the hook is executed").
+	cmd.Arg("ref", "reference for which the hook is executed").
 		Required().
-		StringVar(&c.branch)
+		StringVar(&c.ref)
 
-	cmd.Arg("old-commit", "old commit sha").
+	cmd.Arg("old", "old commit sha").
 		Required().
-		StringVar(&c.oldCommit)
+		StringVar(&c.old)
 
-	cmd.Arg("new-commit", "new commit sha").
+	cmd.Arg("new", "new commit sha").
 		Required().
-		StringVar(&c.newCommit)
+		StringVar(&c.new)
 }
