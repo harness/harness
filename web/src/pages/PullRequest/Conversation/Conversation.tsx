@@ -17,9 +17,14 @@ import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { PullRequestStatusInfo } from './PullRequestStatusInfo/PullRequestStatusInfo'
 import css from './Conversation.module.scss'
 
-export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>> = ({
+interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+  refreshPullRequestMetadata: () => void
+}
+
+export const Conversation: React.FC<ConversationProps> = ({
   repoMetadata,
-  pullRequestMetadata
+  pullRequestMetadata,
+  refreshPullRequestMetadata
 }) => {
   const { getString } = useStrings()
   const { currentUser } = useAppContext()
@@ -69,7 +74,11 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
           <PullRequestStatusInfo />
           <Container>
             <Layout.Vertical spacing="xlarge">
-              <DescriptionBox repoMetadata={repoMetadata} pullRequestMetadata={pullRequestMetadata} />
+              <DescriptionBox
+                repoMetadata={repoMetadata}
+                pullRequestMetadata={pullRequestMetadata}
+                refreshPullRequestMetadata={refreshPullRequestMetadata}
+              />
 
               {Object.entries(commentThreads).map(([threadId, commentItems]) => (
                 <CommentBox
@@ -155,9 +164,10 @@ export const Conversation: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullReq
   )
 }
 
-const DescriptionBox: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>> = ({
+const DescriptionBox: React.FC<ConversationProps> = ({
   repoMetadata,
-  pullRequestMetadata
+  pullRequestMetadata,
+  refreshPullRequestMetadata
 }) => {
   const [edit, setEdit] = useState(false)
   const [updated, setUpdated] = useState(pullRequestMetadata.updated as number)
@@ -213,6 +223,7 @@ const DescriptionBox: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestM
                     setOriginalContent(value)
                     setEdit(false)
                     setUpdated(Date.now())
+                    refreshPullRequestMetadata()
                   })
                   .catch(exception => showError(getErrorMessage(exception), 0, getString('pr.failedToUpdate')))
               }}

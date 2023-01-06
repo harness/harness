@@ -76,11 +76,6 @@ export default function PullRequest() {
                   defaultSelectedTabId={activeTab}
                   large={false}
                   onChange={tabId => {
-                    // PR metadata can be changed from conversation tab, refetch to get latest
-                    // when the tab is activated
-                    if (tabId === PullRequestSection.CONVERSATION) {
-                      refetchPullRequest()
-                    }
                     history.replace(
                       routes.toCODEPullRequest({
                         repoPath: repoMetadata.path as string,
@@ -93,7 +88,13 @@ export default function PullRequest() {
                     {
                       id: PullRequestSection.CONVERSATION,
                       title: <TabTitle icon={CodeIcon.Chat} title={getString('conversation')} count={0} />,
-                      panel: <Conversation repoMetadata={repoMetadata} pullRequestMetadata={prData} />
+                      panel: (
+                        <Conversation
+                          repoMetadata={repoMetadata}
+                          pullRequestMetadata={prData}
+                          refreshPullRequestMetadata={() => refetchPullRequest()}
+                        />
+                      )
                     },
                     {
                       id: PullRequestSection.COMMITS,
