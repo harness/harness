@@ -11,12 +11,12 @@ import (
 // PullReq represents a pull request.
 type PullReq struct {
 	ID      int64 `json:"id"`
-	Version int64 `json:"version"`
+	Version int64 `json:"-"` // not returned, it's a internal field
 	Number  int64 `json:"number"`
 
 	CreatedBy int64 `json:"-"` // not returned, because the author info is in the Author field
 	Created   int64 `json:"created"`
-	Updated   int64 `json:"updated"`
+	Updated   int64 `json:"-"` // not returned, it's updated by the server internally. Clients should use EditedAt.
 	Edited    int64 `json:"edited"`
 
 	State enum.PullReqState `json:"state"`
@@ -57,11 +57,11 @@ type PullReqFilter struct {
 // PullReqActivity represents a pull request activity.
 type PullReqActivity struct {
 	ID      int64 `json:"id"`
-	Version int64 `json:"version"`
+	Version int64 `json:"-"` // not returned, it's a internal field
 
 	CreatedBy int64  `json:"-"` // not returned, because the author info is in the Author field
 	Created   int64  `json:"created"`
-	Updated   int64  `json:"updated"`
+	Updated   int64  `json:"-"` // not returned, it's updated by the server internally. Clients should use EditedAt.
 	Edited    int64  `json:"edited"`
 	Deleted   *int64 `json:"deleted"`
 
