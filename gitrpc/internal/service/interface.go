@@ -13,6 +13,7 @@ import (
 // GitAdapter for accessing git commands from gitea.
 type GitAdapter interface {
 	InitRepository(ctx context.Context, path string, bare bool) error
+	Config(ctx context.Context, repoPath, key, value string) error
 	SetDefaultBranch(ctx context.Context, repoPath string, defaultBranch string, allowEmpty bool) error
 	Clone(ctx context.Context, from, to string, opts types.CloneRepoOptions) error
 	AddFiles(repoPath string, all bool, files ...string) error
@@ -30,6 +31,7 @@ type GitAdapter interface {
 	ListCommits(ctx context.Context, repoPath string,
 		ref string, afterRef string, page int, limit int) ([]types.Commit, error)
 	GetLatestCommit(ctx context.Context, repoPath string, ref string, treePath string) (*types.Commit, error)
+	GetFullCommitID(ctx context.Context, repoPath, shortID string) (string, error)
 	GetAnnotatedTag(ctx context.Context, repoPath string, sha string) (*types.Tag, error)
 	GetAnnotatedTags(ctx context.Context, repoPath string, shas []string) ([]types.Tag, error)
 	CreateBranch(ctx context.Context, repoPath string, branchName string, target string) (*types.Branch, error)

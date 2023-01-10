@@ -166,6 +166,10 @@ func (g Adapter) GetCommit(ctx context.Context, repoPath string, ref string) (*t
 	return mapGiteaCommit(commit)
 }
 
+func (g Adapter) GetFullCommitID(ctx context.Context, repoPath, shortID string) (string, error) {
+	return gitea.GetFullCommitID(ctx, repoPath, shortID)
+}
+
 // GetCommits returns the (latest) commits for a specific list of refs.
 // Note: ref can be Branch / Tag / CommitSHA.
 func (g Adapter) GetCommits(ctx context.Context, repoPath string, refs []string) ([]types.Commit, error) {

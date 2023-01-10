@@ -81,68 +81,26 @@ func (s MergeService) MergeBranch(
 		return nil, fmt.Errorf("unable to write .git/info/sparse-checkout file in tmpBasePath: %w", err)
 	}
 
-	gitConfigCommand := func() *git.Command {
-		return git.NewCommand(ctx, "config", "--local")
-	}
-
 	// Switch off LFS process (set required, clean and smudge here also)
-	if err = gitConfigCommand().AddArguments("filter.lfs.process", "").
-		Run(&git.RunOpts{
-			Dir:    tmpBasePath,
-			Stdout: &outbuf,
-			Stderr: &errbuf,
-		}); err != nil {
-		return nil, fmt.Errorf("git config [filter.lfs.process -> <> ]: %w\n%s\n%s",
-			err, outbuf.String(), errbuf.String())
+	if err = s.adapter.Config(ctx, tmpBasePath, "filter.lfs.process", ""); err != nil {
+		return nil, err
 	}
-	outbuf.Reset()
-	errbuf.Reset()
 
-	if err = gitConfigCommand().AddArguments("filter.lfs.required", "false").
-		Run(&git.RunOpts{
-			Dir:    tmpBasePath,
-			Stdout: &outbuf,
-			Stderr: &errbuf,
-		}); err != nil {
-		return nil, fmt.Errorf("git config [filter.lfs.required -> <false> ]: %w\n%s\n%s",
-			err, outbuf.String(), errbuf.String())
+	if err = s.adapter.Config(ctx, tmpBasePath, "filter.lfs.required", "false"); err != nil {
+		return nil, err
 	}
-	outbuf.Reset()
-	errbuf.Reset()
 
-	if err = gitConfigCommand().AddArguments("filter.lfs.clean", "").
-		Run(&git.RunOpts{
-			Dir:    tmpBasePath,
-			Stdout: &outbuf,
-			Stderr: &errbuf,
-		}); err != nil {
-		return nil, fmt.Errorf("git config [filter.lfs.clean -> <> ]: %w\n%s\n%s",
-			err, outbuf.String(), errbuf.String())
+	if err = s.adapter.Config(ctx, tmpBasePath, "filter.lfs.clean", ""); err != nil {
+		return nil, err
 	}
-	outbuf.Reset()
-	errbuf.Reset()
 
-	if err = gitConfigCommand().AddArguments("filter.lfs.smudge", "").
-		Run(&git.RunOpts{
-			Dir:    tmpBasePath,
-			Stdout: &outbuf,
-			Stderr: &errbuf,
-		}); err != nil {
-		return nil, fmt.Errorf("git config [filter.lfs.smudge -> <> ]: %w\n%s\n%s", err, outbuf.String(), errbuf.String())
+	if err = s.adapter.Config(ctx, tmpBasePath, "filter.lfs.smudge", ""); err != nil {
+		return nil, err
 	}
-	outbuf.Reset()
-	errbuf.Reset()
 
-	if err = gitConfigCommand().AddArguments("core.sparseCheckout", "true").
-		Run(&git.RunOpts{
-			Dir:    tmpBasePath,
-			Stdout: &outbuf,
-			Stderr: &errbuf,
-		}); err != nil {
-		return nil, fmt.Errorf("git config [core.sparsecheckout -> true]: %w\n%s\n%s", err, outbuf.String(), errbuf.String())
+	if err = s.adapter.Config(ctx, tmpBasePath, "core.sparseCheckout", "true"); err != nil {
+		return nil, err
 	}
-	outbuf.Reset()
-	errbuf.Reset()
 
 	// Read base branch index
 	if err = git.NewCommand(ctx, "read-tree", "HEAD").
@@ -178,38 +136,19 @@ func (s MergeService) MergeBranch(
 		return nil, err
 	}
 
-	mergeCommitID, err := git.GetFullCommitID(ctx, tmpBasePath, baseBranch)
+	mergeCommitID, err := s.adapter.GetFullCommitID(ctx, tmpBasePath, baseBranch)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get full commit id for the new merge: %w", err)
 	}
 
-	pushCmd := git.NewCommand(ctx, "push", "origin", baseBranch+":"+git.BranchPrefix+pr.BaseBranch)
-
-	if err = pushCmd.Run(&git.RunOpts{
+	if err = s.adapter.Push(ctx, tmpBasePath, types.PushOptions{
+		Remote: "origin",
+		Branch: baseBranch + ":" + git.BranchPrefix + pr.BaseBranch,
+		Force:  request.Force,
 		Env:    env,
-		Dir:    tmpBasePath,
-		Stdout: &outbuf,
-		Stderr: &errbuf,
 	}); err != nil {
-		if strings.Contains(errbuf.String(), "non-fast-forward") {
-			return nil, &git.ErrPushOutOfDate{
-				StdOut: outbuf.String(),
-				StdErr: errbuf.String(),
-				Err:    err,
-			}
-		} else if strings.Contains(errbuf.String(), "! [remote rejected]") {
-			err := &git.ErrPushRejected{
-				StdOut: outbuf.String(),
-				StdErr: errbuf.String(),
-				Err:    err,
-			}
-			err.GenerateMessage()
-			return nil, err
-		}
-		return nil, fmt.Errorf("git push: %s", errbuf.String())
+		return nil, err
 	}
-	outbuf.Reset()
-	errbuf.Reset()
 
 	return &rpc.MergeBranchResponse{
 		CommitId: mergeCommitID,
