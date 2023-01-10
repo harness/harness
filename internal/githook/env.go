@@ -21,7 +21,7 @@ const (
 
 // Payload defines the Payload the githook binary is initiated with when executing the git hooks.
 type Payload struct {
-	BaseURL     string
+	APIBaseURL  string
 	RepoID      int64
 	PrincipalID int64
 	RequestID   string
@@ -83,7 +83,7 @@ func validatePayload(payload *Payload) error {
 	if payload == nil {
 		return errors.New("payload is empty")
 	}
-	if payload.BaseURL == "" {
+	if payload.APIBaseURL == "" {
 		return errors.New("payload doesn't contain a base url")
 	}
 	if payload.PrincipalID <= 0 {

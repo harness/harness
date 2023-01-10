@@ -31,11 +31,13 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideRouter(
+	config *types.Config,
 	api APIHandler,
 	git GitHandler,
 	web WebHandler,
 ) *Router {
-	return NewRouter(api, git, web)
+	return NewRouter(api, git, web,
+		config.Server.HTTP.GitHost)
 }
 
 func ProvideGitHandler(

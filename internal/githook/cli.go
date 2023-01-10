@@ -36,7 +36,7 @@ func NewCLI() (*CLI, error) {
 		payload: payload,
 		client: &client{
 			httpClient: http.DefaultClient,
-			baseURL:    payload.BaseURL,
+			baseURL:    payload.APIBaseURL,
 			requestPreparation: func(r *http.Request) *http.Request {
 				// TODO: reference single constant (together with gitness middleware)
 				r.Header.Add("X-Request-Id", payload.RequestID)

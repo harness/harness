@@ -18,9 +18,23 @@ type Config struct {
 
 	// URL defines the URLs via which the different parts of the service are reachable by.
 	URL struct {
-		Git         string `envconfig:"GITNESS_URL_GIT" default:"http://localhost:3000"`
-		API         string `envconfig:"GITNESS_URL_API" default:"http://localhost:3000"`
-		APIInternal string `envconfig:"GITNESS_URL_API_INTERNAL" default:"http://localhost:3000"`
+		// Git defines the external URL via which the GIT API is reachable.
+		// NOTE: for routing to work properly, the request path & hostname reaching gitness
+		// have to statisfy at least one of the following two conditions:
+		// - Path ends with `/git`
+		// - Hostname matches Config.Server.HTTP.GitHost
+		// (this could be after proxy path / header rewrite).
+		Git string `envconfig:"GITNESS_URL_GIT" default:"http://localhost:3000/git"`
+
+		// API defines the external URL via which the rest API is reachable.
+		// NOTE: for routing to work properly, the request path reaching gitness has to end with `/api`
+		// (this could be after proxy path rewrite).
+		API string `envconfig:"GITNESS_URL_API" default:"http://localhost:3000/api"`
+
+		// APIInternal defines the internal URL via which the rest API is reachable.
+		// NOTE: for routing to work properly, the request path reaching gitness has to end with `/api`
+		// (this could be after proxy path rewrite).
+		APIInternal string `envconfig:"GITNESS_URL_API_INTERNAL" default:"http://localhost:3000/api"`
 	}
 
 	// Git defines the git configuration parameters
@@ -38,6 +52,8 @@ type Config struct {
 			Bind  string `envconfig:"GITNESS_HTTP_BIND" default:":3000"`
 			Proto string `envconfig:"GITNESS_HTTP_PROTO"`
 			Host  string `envconfig:"GITNESS_HTTP_HOST"`
+			// GitHost is the host used to identify git traffic (OPTIONAL).
+			GitHost string `envconfig:"GITNESS_HTTP_GIT_HOST" default:"git.localhost"`
 		}
 
 		// GRPC defines the grpc configuration parameters

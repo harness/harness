@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	illegalRootSpaceNames = []string{"api"}
+	illegalRootSpaceNames = []string{"api", "git"}
 
 	ErrRootSpaceNameNotAllowed = &ValidationError{
 		fmt.Sprintf("The following names are not allowed for a root space: %v", illegalRootSpaceNames),

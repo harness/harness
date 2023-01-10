@@ -19,14 +19,18 @@ import (
 )
 
 const (
-	APIMount           = "/api"
-	gitUserAgentPrefix = "git/"
+	APIMount = "/api"
+	GitMount = "/git"
 )
 
 type Router struct {
 	api APIHandler
 	git GitHandler
 	web WebHandler
+
+	// gitHost describes the optional host via which git traffic is identified.
+	// Note: always stored as lowercase.
+	gitHost string
 }
 
 // NewRouter returns a new http.Handler that routes traffic
@@ -35,11 +39,14 @@ func NewRouter(
 	api APIHandler,
 	git GitHandler,
 	web WebHandler,
+	gitHost string,
 ) *Router {
 	return &Router{
 		api: api,
 		git: git,
 		web: web,
+
+		gitHost: strings.ToLower(gitHost),
 	}
 }
 
@@ -57,14 +64,18 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	 * 1. GIT
 	 *
 	 * All Git originating traffic starts with "/space1/space2/repo.git".
-	 * This can collide with other API endpoints and thus has to be checked first.
-	 * To avoid any false positives, we use the user-agent header to identify git agents.
 	 */
-	ua := req.Header.Get("user-agent")
-	if strings.HasPrefix(ua, gitUserAgentPrefix) {
+	if r.isGitTraffic(req) {
 		log.UpdateContext(func(c zerolog.Context) zerolog.Context {
 			return c.Str("http.handler", "git")
 		})
+
+		// remove matched prefix to simplify API handlers (only if it's there)
+		if err = stripPrefix(GitMount, req); err != nil {
+			hlog.FromRequest(req).Err(err).Msgf("Failed striping of prefix for git request.")
+			render.InternalError(w)
+			return
+		}
 
 		r.git.ServeHTTP(w, req)
 		return
@@ -75,8 +86,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	 *
 	 * All Rest API calls start with "/api/", and thus can be uniquely identified.
 	 */
-	p := req.URL.Path
-	if strings.HasPrefix(p, APIMount) {
+	if r.isAPITraffic(req) {
 		log.UpdateContext(func(c zerolog.Context) zerolog.Context {
 			return c.Str("http.handler", "api")
 		})
@@ -104,7 +114,40 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.web.ServeHTTP(w, req)
 }
 
-// stripPrefix removes the prefix from the request path (expected to be there).
-func stripPrefix(prefix string, r *http.Request) error {
-	return request.ReplacePrefix(r, r.URL.Path[:len(prefix)], "")
+// stripPrefix removes the prefix from the request path (or noop if it's not there).
+func stripPrefix(prefix string, req *http.Request) error {
+	p := req.URL.Path
+	if !strings.HasPrefix(p, prefix) {
+		return nil
+	}
+	return request.ReplacePrefix(req, req.URL.Path[:len(prefix)], "")
+}
+
+// isGitTraffic returns true iff the request is identified as part of the git http protocol.
+func (r *Router) isGitTraffic(req *http.Request) bool {
+	// git traffic is always reachable via the git mounting path.
+	p := req.URL.Path
+	if strings.HasPrefix(p, GitMount) {
+		return true
+	}
+
+	// otherwise check if the request came in via the configured git host (if enabled)
+	if len(r.gitHost) > 0 {
+		// cut (optional) port off the host
+		h, _, _ := strings.Cut(req.Host, ":")
+
+		// check if request host matches the configured git host (case insensitive)
+		if r.gitHost == strings.ToLower(h) {
+			return true
+		}
+	}
+
+	// otherwise we don't treat it as git traffic
+	return false
+}
+
+// isAPITraffic returns true iff the request is identified as part of our rest API.
+func (r *Router) isAPITraffic(req *http.Request) bool {
+	p := req.URL.Path
+	return strings.HasPrefix(p, APIMount)
 }

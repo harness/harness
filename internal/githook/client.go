@@ -53,7 +53,7 @@ func (c *client) PostReceive(ctx context.Context,
 
 // githook executes the requested githook type using the provided input.
 func (c *client) githook(ctx context.Context, githookType string, in interface{}) (*githook.ServerHookOutput, error) {
-	uri := fmt.Sprintf("%s/api/v1/internal/git-hooks/%s", c.baseURL, githookType)
+	uri := fmt.Sprintf("%s/v1/internal/git-hooks/%s", c.baseURL, githookType)
 	bodyBytes, err := json.Marshal(in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize input: %w", err)
