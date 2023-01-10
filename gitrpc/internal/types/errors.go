@@ -4,7 +4,10 @@
 
 package types
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	ErrAlreadyExists           = errors.New("already exists")
@@ -20,3 +23,27 @@ var (
 	ErrEmptyLeftCommitID       = errors.New("empty LeftCommitId")
 	ErrEmptyRightCommitID      = errors.New("empty RightCommitId")
 )
+
+// MergeConflictsError represents an error if merging fails with a conflict.
+type MergeConflictsError struct {
+	Method string
+	StdOut string
+	StdErr string
+	Err    error
+}
+
+func (err MergeConflictsError) Error() string {
+	return fmt.Sprintf("Merge Conflict Error: %v: %s\n%s", err.Err, err.StdErr, err.StdOut)
+}
+
+// MergeUnrelatedHistoriesError represents an error if merging fails due to unrelated histories.
+type MergeUnrelatedHistoriesError struct {
+	Method string
+	StdOut string
+	StdErr string
+	Err    error
+}
+
+func (err MergeUnrelatedHistoriesError) Error() string {
+	return fmt.Sprintf("Merge UnrelatedHistories Error: %v: %s\n%s", err.Err, err.StdErr, err.StdOut)
+}

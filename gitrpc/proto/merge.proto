@@ -1,0 +1,36 @@
+syntax = "proto3";
+package rpc;
+
+option go_package = "github.com/harness/gitness/gitrpc/rpc";
+
+import "shared.proto";
+
+// DiffService is a service which provides RPCs to inspect differences
+// introduced between a set of commits.
+service MergeService {
+  rpc MergeBranch(MergeBranchRequest) returns (MergeBranchResponse) {}
+}
+
+
+message MergeBranchRequest {
+  WriteRequest base = 1;
+  // head_branch is the source branch we want to merge
+  string head_branch = 2;
+  // branch is the branch into which the given commit shall be merged and whose
+  // reference is going to be updated.
+  string branch = 3;
+  // title is the title to use for the merge commit.
+  string title = 4;
+  // message is the message to use for the merge commit.
+  string message = 5;
+  // force merge
+  bool force = 6;
+  // delete branch after merge
+  bool delete = 7;
+}
+
+// This comment is left unintentionally blank.
+message MergeBranchResponse {
+  // The merge commit the branch will be updated to. The caller can still abort the merge.
+  string commit_id = 1;
+}

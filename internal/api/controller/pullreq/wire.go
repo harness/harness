@@ -8,6 +8,7 @@ import (
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/url"
 
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
@@ -18,12 +19,12 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(db *sqlx.DB, authorizer authz.Authorizer,
+func ProvideController(db *sqlx.DB, urlProvider *url.Provider, authorizer authz.Authorizer,
 	pullReqStore store.PullReqStore, pullReqActivityStore store.PullReqActivityStore,
 	pullReqReviewStore store.PullReqReviewStore, pullReqReviewerStore store.PullReqReviewerStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore,
 	rpcClient gitrpc.Interface) *Controller {
-	return NewController(db, authorizer,
+	return NewController(db, urlProvider, authorizer,
 		pullReqStore, pullReqActivityStore,
 		pullReqReviewStore, pullReqReviewerStore,
 		repoStore, principalStore,

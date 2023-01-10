@@ -44,6 +44,11 @@ type listPullReqActivitiesRequest struct {
 	pullReqRequest
 }
 
+type mergePullReq struct {
+	pullReqRequest
+	pullreq.MergeInput
+}
+
 type commentCreatePullReqRequest struct {
 	pullReqRequest
 	pullreq.CommentCreateInput
@@ -395,4 +400,18 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&reviewSubmit, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/review", reviewSubmit)
+	mergePullReqOp := openapi3.Operation{}
+	mergePullReqOp.WithTags("pullreq")
+	mergePullReqOp.WithMapOfAnything(map[string]interface{}{"operationId": "mergePullReqOp"})
+	_ = reflector.SetRequest(&mergePullReqOp, new(mergePullReq), http.MethodPost)
+	_ = reflector.SetJSONResponse(&mergePullReqOp, new(types.MergeResponse), http.StatusOK)
+	_ = reflector.SetJSONResponse(&mergePullReqOp, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&mergePullReqOp, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&mergePullReqOp, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&mergePullReqOp, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&mergePullReqOp, new(usererror.Error), http.StatusMethodNotAllowed)
+	_ = reflector.SetJSONResponse(&mergePullReqOp, new(usererror.Error), http.StatusConflict)
+	_ = reflector.SetJSONResponse(&mergePullReqOp, new(usererror.Error), http.StatusUnprocessableEntity)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}", mergePullReqOp)
 }

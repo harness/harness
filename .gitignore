@@ -1,5 +1,6 @@
 .DS_Store
 NOTES*
+__debug_bin
 _research
 .env
 *.sqlite

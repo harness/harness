@@ -245,3 +245,11 @@ type CommitDivergence struct {
 	// Behind is the count of commits the 'From' ref is behind the 'To' ref.
 	Behind int32
 }
+
+type PullRequest struct {
+	BaseRepoPath string
+	HeadRepoPath string
+
+	BaseBranch string
+	HeadBranch string
+}

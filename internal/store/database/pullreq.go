@@ -6,6 +6,7 @@ package database
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/internal/store"
@@ -119,9 +120,18 @@ func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReq, erro
 }
 
 // FindByNumber finds the pull request by repo ID and pull request number.
-func (s *PullReqStore) FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReq, error) {
-	const sqlQuery = pullReqSelectBase + `
+func (s *PullReqStore) FindByNumberWithLock(
+	ctx context.Context,
+	repoID,
+	number int64,
+	lock bool,
+) (*types.PullReq, error) {
+	sqlQuery := pullReqSelectBase + `
 	WHERE pullreq_target_repo_id = $1 AND pullreq_number = $2`
+
+	if lock && !strings.HasPrefix(s.db.DriverName(), "sqlite") {
+		sqlQuery += "\nFOR UPDATE"
+	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -131,6 +141,11 @@ func (s *PullReqStore) FindByNumber(ctx context.Context, repoID, number int64) (
 	}
 
 	return mapPullReq(dst), nil
+}
+
+// FindByNumber finds the pull request by repo ID and pull request number.
+func (s *PullReqStore) FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReq, error) {
+	return s.FindByNumberWithLock(ctx, repoID, number, false)
 }
 
 // Create creates a new pull request.
@@ -402,7 +417,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		ActivitySeq:   pr.ActivitySeq,
 		MergedBy:      pr.MergedBy.Ptr(),
 		Merged:        pr.Merged.Ptr(),
-		MergeStrategy: pr.MergeStrategy.Ptr(),
+		MergeStrategy: (*enum.MergeMethod)(pr.MergeStrategy.Ptr()),
 		Author:        types.PrincipalInfo{},
 		Merger:        nil,
 	}
@@ -443,7 +458,7 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		ActivitySeq:   pr.ActivitySeq,
 		MergedBy:      null.IntFromPtr(pr.MergedBy),
 		Merged:        null.IntFromPtr(pr.Merged),
-		MergeStrategy: null.StringFromPtr(pr.MergeStrategy),
+		MergeStrategy: null.StringFromPtr((*string)(pr.MergeStrategy)),
 	}
 
 	return m

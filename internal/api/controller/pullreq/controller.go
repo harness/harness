@@ -16,6 +16,7 @@ import (
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -24,6 +25,7 @@ import (
 
 type Controller struct {
 	db             *sqlx.DB
+	urlProvider    *url.Provider
 	authorizer     authz.Authorizer
 	pullreqStore   store.PullReqStore
 	activityStore  store.PullReqActivityStore
@@ -36,6 +38,7 @@ type Controller struct {
 
 func NewController(
 	db *sqlx.DB,
+	urlProvider *url.Provider,
 	authorizer authz.Authorizer,
 	pullreqStore store.PullReqStore,
 	pullreqActivityStore store.PullReqActivityStore,
@@ -47,6 +50,7 @@ func NewController(
 ) *Controller {
 	return &Controller{
 		db:             db,
+		urlProvider:    urlProvider,
 		authorizer:     authorizer,
 		pullreqStore:   pullreqStore,
 		activityStore:  pullreqActivityStore,

@@ -31,9 +31,9 @@ type PullReq struct {
 
 	ActivitySeq int64 `json:"-"` // not returned, because it's a server's internal field
 
-	MergedBy      *int64  `json:"-"` // not returned, because the merger info is in the Merger field
-	Merged        *int64  `json:"merged"`
-	MergeStrategy *string `json:"merge_strategy"`
+	MergedBy      *int64            `json:"-"` // not returned, because the merger info is in the Merger field
+	Merged        *int64            `json:"merged"`
+	MergeStrategy *enum.MergeMethod `json:"merge_strategy"`
 
 	Author PrincipalInfo  `json:"author"`
 	Merger *PrincipalInfo `json:"merger"`
@@ -138,4 +138,8 @@ type PullReqReviewer struct {
 
 	Reviewer PrincipalInfo `json:"reviewer"`
 	AddedBy  PrincipalInfo `json:"added_by"`
+}
+
+type MergeResponse struct {
+	SHA string
 }

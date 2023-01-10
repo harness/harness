@@ -71,6 +71,7 @@ const (
 	PullReqActivityTypeCodeComment  PullReqActivityType = "code-comment"
 	PullReqActivityTypeTitleChange  PullReqActivityType = "title-change"
 	PullReqActivityTypeReviewSubmit PullReqActivityType = "review-submit"
+	PullReqActivityTypeMerge        PullReqActivityType = "merge"
 )
 
 func GetAllPullReqActivityTypes() []PullReqActivityType {
@@ -179,3 +180,15 @@ func ParsePullReqReviewerType(s string) (PullReqReviewerType, bool) {
 	}
 	return "", false
 }
+
+// MergeMethod represents the approach to merge commits into base branch.
+type MergeMethod string
+
+const (
+	// MergeMethodMerge create merge commit.
+	MergeMethodMerge MergeMethod = "merge"
+	// MergeMethodSquash squash commits into single commit before merging.
+	MergeMethodSquash MergeMethod = "squash"
+	// MergeMethodRebase rebase before merging.
+	MergeMethodRebase MergeMethod = "rebase"
+)

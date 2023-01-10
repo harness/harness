@@ -86,6 +86,10 @@ func NewServer(config Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	mergeService, err := service.NewMergeService(adapter, reposRoot, config.TmpDir)
+	if err != nil {
+		return nil, err
+	}
 
 	// register services
 	rpc.RegisterRepositoryServiceServer(s, repoService)
@@ -93,6 +97,7 @@ func NewServer(config Config) (*Server, error) {
 	rpc.RegisterSmartHTTPServiceServer(s, httpService)
 	rpc.RegisterCommitFilesServiceServer(s, commitFilesService)
 	rpc.RegisterDiffServiceServer(s, diffService)
+	rpc.RegisterMergeServiceServer(s, mergeService)
 
 	return &Server{
 		Server: s,

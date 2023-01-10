@@ -247,6 +247,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Route("/reviews", func(r chi.Router) {
 				r.Post("/", handlerpullreq.HandleReviewSubmit(pullreqCtrl))
 			})
+			r.Post("/merge", handlerpullreq.HandleMerge(pullreqCtrl))
 		})
 	})
 }

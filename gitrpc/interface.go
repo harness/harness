@@ -38,4 +38,9 @@ type Interface interface {
 	 * Diff services
 	 */
 	RawDiff(ctx context.Context, in *RawDiffParams, w io.Writer) error
+
+	/*
+	 * Merge services
+	 */
+	MergeBranch(ctx context.Context, in *MergeBranchParams) (string, error)
 }
