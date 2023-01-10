@@ -7,6 +7,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -103,14 +104,8 @@ func (s MergeService) MergeBranch(
 	}
 
 	// Read base branch index
-	if err = git.NewCommand(ctx, "read-tree", "HEAD").
-		Run(&git.RunOpts{
-			Dir:    tmpBasePath,
-			Stdout: &outbuf,
-			Stderr: &errbuf,
-		}); err != nil {
-		return nil, fmt.Errorf("unable to read base branch in to the index: %w\n%s\n%s",
-			err, outbuf.String(), errbuf.String())
+	if err = s.adapter.ReadTree(ctx, tmpBasePath, "HEAD", io.Discard); err != nil {
+		return nil, err
 	}
 	outbuf.Reset()
 	errbuf.Reset()

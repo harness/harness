@@ -5,8 +5,10 @@
 package gitea
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"path"
 	"path/filepath"
 	"strings"
@@ -153,4 +155,18 @@ func (g Adapter) ListTreeNodes(ctx context.Context, repoPath string,
 	}
 
 	return nodes, nil
+}
+
+func (g Adapter) ReadTree(ctx context.Context, repoPath, ref string, w io.Writer, args ...string) error {
+	errbuf := bytes.Buffer{}
+	if err := gitea.NewCommand(ctx, append([]string{"read-tree", ref}, args...)...).
+		Run(&gitea.RunOpts{
+			Dir:    repoPath,
+			Stdout: w,
+			Stderr: &errbuf,
+		}); err != nil {
+		return fmt.Errorf("unable to read %s in to the index: %w\n%s",
+			ref, err, errbuf.String())
+	}
+	return nil
 }

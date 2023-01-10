@@ -6,6 +6,7 @@ package service
 
 import (
 	"context"
+	"io"
 
 	"github.com/harness/gitness/gitrpc/internal/types"
 )
@@ -19,6 +20,7 @@ type GitAdapter interface {
 	AddFiles(repoPath string, all bool, files ...string) error
 	Commit(repoPath string, opts types.CommitChangesOptions) error
 	Push(ctx context.Context, repoPath string, opts types.PushOptions) error
+	ReadTree(ctx context.Context, repoPath, ref string, w io.Writer, args ...string) error
 	GetTreeNode(ctx context.Context, repoPath string, ref string, treePath string) (*types.TreeNode, error)
 	ListTreeNodes(ctx context.Context, repoPath string, ref string, treePath string,
 		recursive bool, includeLatestCommit bool) ([]types.TreeNodeWithCommit, error)
