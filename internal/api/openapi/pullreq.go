@@ -413,5 +413,5 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&mergePullReqOp, new(usererror.Error), http.StatusConflict)
 	_ = reflector.SetJSONResponse(&mergePullReqOp, new(usererror.Error), http.StatusUnprocessableEntity)
 	_ = reflector.Spec.AddOperation(http.MethodPost,
-		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}", mergePullReqOp)
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/merge", mergePullReqOp)
 }
