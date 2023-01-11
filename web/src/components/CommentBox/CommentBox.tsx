@@ -8,7 +8,7 @@ import { noop } from 'lodash-es'
 import type { UseStringsReturn } from 'framework/strings'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
-import { MenuDivider, OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
+import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import {
   MarkdownEditorWithPreview,
   MarkdownEditorWithPreviewResetProps
@@ -222,6 +222,7 @@ const CommentsThread = <T = unknown,>({
                   iconProps={{ size: 14 }}
                   style={{ padding: '5px' }}
                   disabled={!!commentItem.deleted}
+                  width="100px"
                   items={[
                     {
                       text: getString('edit'),
@@ -231,19 +232,15 @@ const CommentsThread = <T = unknown,>({
                       text: getString('quote'),
                       onClick: () => onQuote(commentItem.content)
                     },
-                    MenuDivider,
+                    '-',
                     {
-                      text: (
-                        <Text width={100} color={Color.RED_500}>
-                          {getString('delete')}
-                        </Text>
-                      ),
+                      isDanger: true,
+                      text: getString('delete'),
                       onClick: async () => {
                         if (await handleAction(CommentAction.DELETE, '', commentItem)) {
                           resetStateAtIndex(index)
                         }
-                      },
-                      className: css.deleteMenuItem
+                      }
                     }
                   ]}
                 />

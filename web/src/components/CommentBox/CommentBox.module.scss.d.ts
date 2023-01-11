@@ -10,6 +10,5 @@ declare const styles: {
   readonly newCommentContainer: string
   readonly hasThread: string
   readonly editCommentContainer: string
-  readonly deleteMenuItem: string
 }
 export default styles

@@ -46,6 +46,7 @@ export interface StringsMap {
   compare: string
   comparingChanges: string
   confirm: string
+  confirmDeleteWebhook: string
   confirmation: string
   content: string
   conversation: string
@@ -81,13 +82,16 @@ export interface StringsMap {
   edited: string
   email: string
   enableSSLVerification: string
+  enabled: string
   enterDescription: string
   enterNewBranchName: string
   enterRepoName: string
+  enterSecret: string
   existingAccount: string
   failedToCreateBranch: string
   failedToCreateRepo: string
   failedToDeleteBranch: string
+  failedToDeleteWebhook: string
   fileDeleted: string
   files: string
   filesChanged: string
@@ -194,6 +198,7 @@ export interface StringsMap {
   tags: string
   title: string
   updateFile: string
+  updateWebhook: string
   updated: string
   'validation.gitBranchNameInvalid': string
   'validation.repoNamePatternIsNotValid': string
@@ -202,6 +207,8 @@ export interface StringsMap {
   viewCommitDetails: string
   viewed: string
   webhook: string
+  webhookDeleted: string
+  webhookDetails: string
   webhookEventsLabel: string
   webhookListingContent: string
   webhooks: string

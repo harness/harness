@@ -14,6 +14,7 @@ export function useGetRepositoryMetadata() {
     resourcePath = '',
     commitRef = '',
     pullRequestId = '',
+    webhookId = '',
     diffRefs,
     ...otherPathParams
   } = useParams<CODEProps>()
@@ -41,6 +42,7 @@ export function useGetRepositoryMetadata() {
     commitRef,
     diffRefs: diffRefsToRefs(diffRefs || makeDiffRefs(defaultBranch, defaultBranch)),
     pullRequestId,
+    webhookId,
     ...otherPathParams
   }
 }

@@ -68,11 +68,3 @@
     border-radius: var(--box-radius);
   }
 }
-
-.deleteMenuItem:hover {
-  background-color: var(--red-500);
-
-  * {
-    color: var(--white) !important;
-  }
-}

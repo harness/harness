@@ -9,6 +9,7 @@ export interface CODEProps {
   diffRefs?: string
   pullRequestId?: string
   pullRequestSection?: string
+  webhookId?: string
 }
 
 export interface CODEQueryProps {
@@ -23,7 +24,8 @@ export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch'
   commitRef: ':commitRef*',
   diffRefs: ':diffRefs*',
   pullRequestId: ':pullRequestId',
-  pullRequestSection: ':pullRequestSection*'
+  pullRequestSection: ':pullRequestSection*',
+  webhookId: ':webhookId'
 }
 
 export interface CODERoutes {
@@ -42,6 +44,9 @@ export interface CODERoutes {
   ) => string
   toCODECompare: (args: Required<Pick<CODEProps, 'repoPath' | 'diffRefs'>>) => string
   toCODEBranches: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+  toCODEWebhooks: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+  toCODEWebhookNew: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+  toCODEWebhookDetails: (args: Required<Pick<CODEProps, 'repoPath' | 'webhookId'>>) => string
   toCODESettings: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODECreateWebhook: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
 }
@@ -60,5 +65,8 @@ export const routes: CODERoutes = {
   toCODECompare: ({ repoPath, diffRefs }) => `/${repoPath}/pulls/compare/${diffRefs}`,
   toCODEBranches: ({ repoPath }) => `/${repoPath}/branches`,
   toCODESettings: ({ repoPath }) => `/${repoPath}/settings`,
+  toCODEWebhooks: ({ repoPath }) => `/${repoPath}/webhooks`,
+  toCODEWebhookNew: ({ repoPath }) => `/${repoPath}/webhooks/new`,
+  toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`,
   toCODECreateWebhook: ({ repoPath }) => `/${repoPath}/settings/webhook/new`
 }

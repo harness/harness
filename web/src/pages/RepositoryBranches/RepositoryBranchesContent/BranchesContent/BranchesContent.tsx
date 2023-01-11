@@ -15,7 +15,7 @@ import type {
 } from 'services/code'
 import { formatDate, getErrorMessage } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
-import { MenuDivider, OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
+import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { CommitDivergence } from 'components/CommitDivergence/CommitDivergence'
 import { makeDiffRefs } from 'utils/GitUtils'
 import css from './BranchesContent.module.scss'
@@ -137,9 +137,9 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
 
           return (
             <OptionsMenuButton
+              width="100px"
               items={[
                 {
-                  icon: 'folder-close',
                   text: getString('browse'),
                   onClick: () => {
                     history.push(
@@ -151,7 +151,6 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
                   }
                 },
                 {
-                  icon: 'comparison',
                   text: getString('compare'),
                   onClick: () => {
                     history.push(
@@ -162,10 +161,10 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
                     )
                   }
                 },
-                MenuDivider,
+                '-',
                 {
-                  icon: 'cross',
                   text: getString('delete'),
+                  isDanger: true,
                   onClick: confirmDeleteBranch
                 }
               ]}
@@ -174,7 +173,16 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         }
       }
     ],
-    [getString, repoMetadata.default_branch, repoMetadata.path, routes, searchTerm, history, onDeleteSuccess, divergence]
+    [
+      getString,
+      repoMetadata.default_branch,
+      repoMetadata.path,
+      routes,
+      searchTerm,
+      history,
+      onDeleteSuccess,
+      divergence
+    ]
   )
 
   return (
