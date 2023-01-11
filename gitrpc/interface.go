@@ -23,6 +23,7 @@ type Interface interface {
 	/*
 	 * Commits service
 	 */
+	GetCommit(ctx context.Context, params *GetCommitParams) (*GetCommitOutput, error)
 	ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error)
 	ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, error)
 	GetCommitDivergences(ctx context.Context, params *GetCommitDivergencesParams) (*GetCommitDivergencesOutput, error)

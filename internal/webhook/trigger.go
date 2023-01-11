@@ -57,7 +57,7 @@ func (r *TriggerResult) Skipped() bool {
 }
 
 func (s *Server) triggerWebhooksFor(ctx context.Context, parentType enum.WebhookParent, parentID int64,
-	triggerID string, triggerType enum.WebhookTrigger, body interface{}) ([]TriggerResult, error) {
+	triggerID string, triggerType enum.WebhookTrigger, body any) ([]TriggerResult, error) {
 	// get all webhooks for the given parent
 	// NOTE: there never should be even close to 1000 webhooks for a repo (that should be blocked in the future).
 	// We just use 1000 as a safe number to get all hooks
@@ -71,7 +71,7 @@ func (s *Server) triggerWebhooksFor(ctx context.Context, parentType enum.Webhook
 
 //nolint:gocognit // refactor if needed
 func (s *Server) triggerWebhooks(ctx context.Context, webhooks []*types.Webhook,
-	triggerID string, triggerType enum.WebhookTrigger, body interface{}) ([]TriggerResult, error) {
+	triggerID string, triggerType enum.WebhookTrigger, body any) ([]TriggerResult, error) {
 	// return immediately if webhooks are empty
 	if len(webhooks) == 0 {
 		return []TriggerResult{}, nil
@@ -168,7 +168,7 @@ func (s *Server) RetriggerWebhookExecution(ctx context.Context, webhookExecution
 }
 
 func (s *Server) executeWebhook(ctx context.Context, webhook *types.Webhook, triggerID string,
-	triggerType enum.WebhookTrigger, body interface{}, rerunOfID *int64) (*types.WebhookExecution, error) {
+	triggerType enum.WebhookTrigger, body any, rerunOfID *int64) (*types.WebhookExecution, error) {
 	// build execution entry on the fly (save no matter what)
 	execution := types.WebhookExecution{
 		RetriggerOf: rerunOfID,
@@ -255,7 +255,7 @@ func (s *Server) executeWebhook(ctx context.Context, webhook *types.Webhook, tri
 // All execution.Request.XXX values are set accordingly
 // NOTE: if the body is an io.Reader, the value is used as response body as is, otherwise it'll be JSON serialized.
 func prepareHTTPRequest(ctx context.Context, execution *types.WebhookExecution,
-	webhook *types.Webhook, body interface{}) (*http.Request, error) {
+	webhook *types.Webhook, body any) (*http.Request, error) {
 	// set URL as is (already has been validated, any other error will be caught in request creation)
 	execution.Request.URL = webhook.URL
 

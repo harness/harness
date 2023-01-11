@@ -15,6 +15,36 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func (s RepositoryService) GetCommit(ctx context.Context,
+	request *rpc.GetCommitRequest) (*rpc.GetCommitResponse, error) {
+	base := request.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	// ensure the provided SHA is valid (and not a reference)
+	sha := request.GetSha()
+	if !isValidGitSHA(sha) {
+		return nil, status.Errorf(codes.InvalidArgument, "the provided commit sha '%s' is of invalid format.", sha)
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
+
+	gitCommit, err := s.adapter.GetCommit(ctx, repoPath, sha)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to get commit")
+	}
+
+	commit, err := mapGitCommit(gitCommit)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to map git commit: %v", err)
+	}
+
+	return &rpc.GetCommitResponse{
+		Commit: commit,
+	}, nil
+}
+
 func (s RepositoryService) ListCommits(request *rpc.ListCommitsRequest,
 	stream rpc.RepositoryService_ListCommitsServer) error {
 	base := request.GetBase()

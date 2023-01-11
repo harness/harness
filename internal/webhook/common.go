@@ -5,6 +5,9 @@
 package webhook
 
 import (
+	"time"
+
+	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
 )
@@ -20,7 +23,7 @@ type RepositoryInfo struct {
 }
 
 // repositoryInfoFrom gets the RespositoryInfo from a types.Repository.
-func repositoryInfoFrom(repo *types.Repository, urlProvider *url.Provider) RepositoryInfo {
+func repositoryInfoFrom(repo types.Repository, urlProvider *url.Provider) RepositoryInfo {
 	return RepositoryInfo{
 		ID:            repo.ID,
 		Path:          repo.Path,
@@ -40,11 +43,60 @@ type PrincipalInfo struct {
 }
 
 // principalInfoFrom gets the PrincipalInfo from a types.Principal.
-func principalInfoFrom(principal *types.Principal) PrincipalInfo {
+func principalInfoFrom(principal types.Principal) PrincipalInfo {
 	return PrincipalInfo{
 		ID:          principal.ID,
 		UID:         principal.UID,
 		DisplayName: principal.DisplayName,
 		Email:       principal.Email,
+	}
+}
+
+// CommitInfo describes the commit related info for a webhook payload.
+// NOTE: don't use types package as we want webhook payload to be independent from API calls.
+type CommitInfo struct {
+	SHA       string        `json:"sha"`
+	Message   string        `json:"message"`
+	Author    SignatureInfo `json:"author"`
+	Committer SignatureInfo `json:"committer"`
+}
+
+// commitInfoFrom gets the CommitInfo from a gitrpc.Commit.
+func commitInfoFrom(commit gitrpc.Commit) CommitInfo {
+	return CommitInfo{
+		SHA:       commit.SHA,
+		Message:   commit.Message,
+		Author:    signatureInfoFrom(commit.Author),
+		Committer: signatureInfoFrom(commit.Committer),
+	}
+}
+
+// SignatureInfo describes the commit signature related info for a webhook payload.
+// NOTE: don't use types package as we want webhook payload to be independent from API calls.
+type SignatureInfo struct {
+	Identity IdentityInfo `json:"identity"`
+	When     time.Time    `json:"when"`
+}
+
+// signatureInfoFrom gets the SignatureInfo from a gitrpc.Signature.
+func signatureInfoFrom(signature gitrpc.Signature) SignatureInfo {
+	return SignatureInfo{
+		Identity: identityInfoFrom(signature.Identity),
+		When:     signature.When,
+	}
+}
+
+// IdentityInfo describes the signature identity related info for a webhook payload.
+// NOTE: don't use types package as we want webhook payload to be independent from API calls.
+type IdentityInfo struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+// identityInfoFrom gets the IdentityInfo from a gitrpc.Identity.
+func identityInfoFrom(identity gitrpc.Identity) IdentityInfo {
+	return IdentityInfo{
+		Name:  identity.Name,
+		Email: identity.Email,
 	}
 }

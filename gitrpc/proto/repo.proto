@@ -13,6 +13,7 @@ service RepositoryService {
   rpc GetSubmodule(GetSubmoduleRequest) returns (GetSubmoduleResponse);
   rpc GetBlob(GetBlobRequest) returns (GetBlobResponse);
   rpc ListCommits(ListCommitsRequest) returns (stream ListCommitsResponse);
+  rpc GetCommit(GetCommitRequest) returns (GetCommitResponse);
   rpc GetCommitDivergences(GetCommitDivergencesRequest) returns (GetCommitDivergencesResponse);
 }
 
@@ -75,6 +76,15 @@ enum TreeNodeMode {
   TreeNodeModeExec = 2;
   TreeNodeModeTree = 3;
   TreeNodeModeCommit = 4;
+}
+
+message GetCommitRequest {
+  ReadRequest base = 1;
+  string sha       = 2;
+}
+
+message GetCommitResponse {
+  Commit commit = 1;
 }
 
 message ListCommitsRequest {

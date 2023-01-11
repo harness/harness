@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/gitrpc"
 	gitevents "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
@@ -24,7 +25,7 @@ func ProvideServer(ctx context.Context, config Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
 	repoStore store.RepoStore, urlProvider *url.Provider,
-	principalStore store.PrincipalStore) (*Server, error) {
+	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Server, error) {
 	return NewServer(ctx, config, gitReaderFactory, webhookStore, webhookExecutionStore,
-		repoStore, urlProvider, principalStore)
+		repoStore, urlProvider, principalStore, gitRPCClient)
 }

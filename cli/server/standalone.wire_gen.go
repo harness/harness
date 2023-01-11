@@ -85,7 +85,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	webhookServer, err := webhook.ProvideServer(ctx, webhookConfig, readerFactory, webhookStore, webhookExecutionStore, repoStore, provider, principalStore)
+	webhookServer, err := webhook.ProvideServer(ctx, webhookConfig, readerFactory, webhookStore, webhookExecutionStore, repoStore, provider, principalStore, gitrpcInterface)
 	if err != nil {
 		return nil, err
 	}

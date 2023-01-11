@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/gitrpc"
 	gitevents "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
@@ -36,6 +37,7 @@ type Server struct {
 	urlProvider           *url.Provider
 	repoStore             store.RepoStore
 	principalStore        store.PrincipalStore
+	gitRPCClient          gitrpc.Interface
 
 	readerCanceler     *events.ReaderCanceler
 	secureHTTPClient   *http.Client
@@ -46,13 +48,14 @@ func NewServer(ctx context.Context, config Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
 	repoStore store.RepoStore, urlProvider *url.Provider,
-	principalStore store.PrincipalStore) (*Server, error) {
+	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Server, error) {
 	server := &Server{
 		webhookStore:          webhookStore,
 		webhookExecutionStore: webhookExecutionStore,
 		repoStore:             repoStore,
 		urlProvider:           urlProvider,
 		principalStore:        principalStore,
+		gitRPCClient:          gitRPCClient,
 
 		// set after launching factory
 		readerCanceler: nil,

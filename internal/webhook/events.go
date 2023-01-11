@@ -22,12 +22,12 @@ func generateTriggerIDFromEventID(eventID string) string {
 	return fmt.Sprintf("event-%s", eventID)
 }
 
-// triggerWebhooksForEventWithRepoAndPrincipal triggers all webhooks for the given repo and triggerType
+// triggerForEventWithRepoAndPrincipal triggers all webhooks for the given repo and triggerType
 // using the eventID to generate a deterministic triggerID and using the output of bodyFn as payload.
 // The method tries to find the repository and principal and provides both to the bodyFn to generate the body.
-func (s *Server) triggerWebhooksForEventWithRepoAndPrincipal(ctx context.Context,
+func (s *Server) triggerForEventWithRepoAndPrincipal(ctx context.Context,
 	triggerType enum.WebhookTrigger, eventID string, repoID int64, principalID int64,
-	createBodyFn func(*types.Repository, *types.Principal) interface{}) error {
+	createBodyFn func(*types.Repository, *types.Principal) (any, error)) error {
 	// NOTE: technically we could avoid this call if we send the data via the event (though then events will get big)
 	repo, err := s.findRepositoryForEvent(ctx, repoID)
 	if err != nil {
@@ -41,9 +41,12 @@ func (s *Server) triggerWebhooksForEventWithRepoAndPrincipal(ctx context.Context
 	}
 
 	// create body
-	body := createBodyFn(repo, principal)
+	body, err := createBodyFn(repo, principal)
+	if err != nil {
+		return fmt.Errorf("body creation function failed: %w", err)
+	}
 
-	return s.triggerWebhooksForEvent(ctx, eventID, enum.WebhookParentRepo, repo.ID, triggerType, body)
+	return s.triggerForEvent(ctx, eventID, enum.WebhookParentRepo, repo.ID, triggerType, body)
 }
 
 // findRepositoryForEvent finds the repository for the provided repoID.
@@ -78,10 +81,10 @@ func (s *Server) findPrincipalForEvent(ctx context.Context, principalID int64) (
 	return principal, nil
 }
 
-// triggerWebhooksForEvent triggers all webhooks for the given parentType/ID and triggerType
+// triggerForEvent triggers all webhooks for the given parentType/ID and triggerType
 // using the eventID to generate a deterministic triggerID and sending the provided body as payload.
-func (s *Server) triggerWebhooksForEvent(ctx context.Context, eventID string,
-	parentType enum.WebhookParent, parentID int64, triggerType enum.WebhookTrigger, body interface{}) error {
+func (s *Server) triggerForEvent(ctx context.Context, eventID string,
+	parentType enum.WebhookParent, parentID int64, triggerType enum.WebhookTrigger, body any) error {
 	triggerID := generateTriggerIDFromEventID(eventID)
 
 	results, err := s.triggerWebhooksFor(ctx, parentType, parentID, triggerID, triggerType, body)

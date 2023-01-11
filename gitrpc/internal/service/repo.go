@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"regexp"
 
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -39,6 +40,11 @@ var (
 	}
 
 	gitServerHookNames = []string{"pre-receive", "update", "post-receive"}
+
+	// gitSHARegex defines the valid SHA format accepted by GIT (full form and short forms).
+	// Note: as of now SHA is at most 40 characters long, but in the future it's moving to sha256
+	// which is 64 chars - keep this forward-compatible.
+	gitSHARegex = regexp.MustCompile("^[0-9a-f]{4,64}$")
 )
 
 type Storage interface {
@@ -175,4 +181,9 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 
 	log.Info().Msgf("repository created. Path: %s", repoPath)
 	return nil
+}
+
+// isValidGitSHA returns true iff the provided string is a valid git sha (short or long form).
+func isValidGitSHA(sha string) bool {
+	return gitSHARegex.MatchString(sha)
 }
