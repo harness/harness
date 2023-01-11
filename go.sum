@@ -78,8 +78,8 @@ github.com/drone/drone-go v1.7.2-0.20220308165842-f9e4fe31c2af/go.mod h1:fxCf9jA
 github.com/drone/drone-runtime v1.0.7-0.20190729202838-87c84080f4a1/go.mod h1:+osgwGADc/nyl40J0fdsf8Z09bgcBZXvXXnLOY48zYs=
 github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d h1:P5HI/Y9hARTZ3F3EKs0kYijhjXZWQRQHYn1neTi0pWM=
 github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d/go.mod h1:4/2QToW5+HGD0y1sTw7X35W1f7YINS14UfDY4isggT8=
-github.com/drone/drone-ui v2.9.0+incompatible h1:/ALkwFbz+ADqRGACUndJ7R5X8lXw6F7pop5KVGqCCOE=
-github.com/drone/drone-ui v2.9.0+incompatible/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
+github.com/drone/drone-ui v2.9.1+incompatible h1:ywEoOMAf5N2NC9TiGa2RiwQWt9WGlC2aaiiW9rlogBI=
+github.com/drone/drone-ui v2.9.1+incompatible/go.mod h1:NBtVWW7NNJpD9+huMD/5TAE1db2nrEh0i35/9Rf1MPI=
 github.com/drone/drone-yaml v1.2.4-0.20220204000225-01fb17858c9b h1:NU8JZ2Py6dLa5kktIvcsQ5sokdDbvjL8GUOYEU53Wfk=
 github.com/drone/drone-yaml v1.2.4-0.20220204000225-01fb17858c9b/go.mod h1:QsqliFK8nG04AHFN9tTn9XJomRBQHD4wcejWW1uz/10=
 github.com/drone/envsubst v1.0.3-0.20200709231038-aa43e1c1a629 h1:rIaZZalMGGPb2cU/+ypuggZ8aMlpa17RUlJUtsMv8pw=
