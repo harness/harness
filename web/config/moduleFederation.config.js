@@ -42,7 +42,9 @@ module.exports = {
     './PullRequest': './src/pages/PullRequest/PullRequest.tsx',
     './Compare': './src/pages/Compare/Compare.tsx',
     './Settings': './src/pages/RepositorySettings/RepositorySettings.tsx',
-    './CreateWebhook': './src/pages/RepositoryCreateWebhook/RepositoryCreateWebhook.tsx'
+    './Webhooks': './src/pages/Webhooks/Webhooks.tsx',
+    './WebhookNew': './src/pages/WebhookNew/WebhookNew.tsx',
+    './WebhookDetails': './src/pages/WebhookDetails/WebhookDetails.tsx'
   },
   shared: {
     formik: packageJSON.dependencies['formik'],

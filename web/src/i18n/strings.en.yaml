@@ -150,8 +150,8 @@ botAlerts: 'Dependabot alerts'
 deployKeys: 'Deploy keys'
 sslVerificationLabel: 'SSL verification'
 enableSSLVerification: 'Enable SSL verification'
-createWebhook: 'Create Webhook'
-webhook: 'Webhook'
+createWebhook: Create Webhook
+webhook: Webhook
 diff: Diff
 conversation: Conversation
 pr:
@@ -187,6 +187,7 @@ general: 'General'
 webhooks: 'Webhooks'
 open: Open
 merged: Merged
+enabled: Enabled
 closed: Closed
 rejected: Rejected
 yours: Yours
@@ -207,3 +208,14 @@ save: Save
 edited: edited
 deleted: deleted
 commentDeleted: This comment was deleted.
+enterSecret: Enter secret
+confirmDeleteWebhook: Are you sure you want to delet this webhook?
+webhookDeleted: Webhook deleted.
+failedToDeleteWebhook: Failed to delete Webhook. Please try again.
+webhookDetails: Webhook Details
+updateWebhook: Update Webhook
+webhookUpdated: Webhook updated successfully.
+oneMustBeSelected: At least one event must be selected
+webhookBranchCreated: Branch created
+webhookBranchUpdated: Branch updated
+webhookBranchDeleted: Branch deleted

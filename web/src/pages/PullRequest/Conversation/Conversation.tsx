@@ -94,13 +94,18 @@ export const Conversation: React.FC<ConversationProps> = ({
 
                     switch (action) {
                       case CommentAction.DELETE:
+                        result = false
                         await confirmAct({
                           message: getString('deleteCommentConfirm'),
                           action: async () => {
-                            await deleteComment({}, { pathParams: { id } }).catch(exception => {
-                              result = false
-                              showError(getErrorMessage(exception), 0, getString('pr.failedToDeleteComment'))
-                            })
+                            await deleteComment({}, { pathParams: { id } })
+                              .then(() => {
+                                result = true
+                              })
+                              .catch(exception => {
+                                result = false
+                                showError(getErrorMessage(exception), 0, getString('pr.failedToDeleteComment'))
+                              })
                           }
                         })
                         break

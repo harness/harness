@@ -22,10 +22,10 @@ import { RepositoryPageHeader } from 'components/RepositoryPageHeader/Repository
 import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import emptyStateImage from 'images/empty-state.svg'
 import { usePageIndex } from 'hooks/usePageIndex'
+import type { TypesPullReq } from 'services/code'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
 import prOpenImg from './pull-request-open.svg'
 import css from './PullRequests.module.scss'
-import type { TypesPullReq } from 'services/code'
 
 export default function PullRequests() {
   const { getString } = useStrings()
@@ -69,8 +69,8 @@ export default function PullRequests() {
                       str={getString('pr.openBy')}
                       vars={{
                         number: <Text inline>{row.original.number}</Text>,
-                        time: <ReactTimeago date={row.original.created!} />,
-                        user: row.original.author?.name
+                        time: <ReactTimeago date={row.original.created as number} />,
+                        user: row.original.author?.display_name
                       }}
                     />
                   </Text>

@@ -63,7 +63,7 @@ export const Changes: React.FC<ChangesProps> = ({ repoMetadata, targetBranch, so
   )
 
   useEffect(() => {
-    if (rawDiff) {
+    if (rawDiff && typeof rawDiff === 'string') {
       setDiffs(
         Diff2Html.parse(rawDiff, DIFF2HTML_CONFIG).map(diff => {
           const viewerId = diffViewerId([diff.oldName, diff.newName])
@@ -86,67 +86,76 @@ export const Changes: React.FC<ChangesProps> = ({ repoMetadata, targetBranch, so
   )
 
   return (
+    // TODO: Move PullRequestTabContentWrapper out of this file
+    // as it's a reusable component and not just used for PR
     <PullRequestTabContentWrapper loading={loading} error={error} onRetry={refetch} className={css.wrapper}>
-      <Container className={css.header}>
-        <Layout.Horizontal>
-          <Container flex={{ alignItems: 'center' }}>
-            {/* Files Changed stats */}
-            <Text flex className={css.diffStatsLabel}>
-              <StringSubstitute
-                str={getString('pr.diffStatsLabel')}
-                vars={{
-                  changedFilesLink: <ChangesDropdown diffs={diffs} />,
-                  addedLines: formatNumber(diffStats.addedLines),
-                  deletedLines: formatNumber(diffStats.deletedLines),
-                  configuration: (
-                    <DiffViewConfiguration
-                      viewStyle={viewStyle}
-                      setViewStyle={setViewStyle}
-                      lineBreaks={lineBreaks}
-                      setLineBreaks={setLineBreaks}
+      {diffs?.length ? (
+        <>
+          <Container className={css.header}>
+            <Layout.Horizontal>
+              <Container flex={{ alignItems: 'center' }}>
+                {/* Files Changed stats */}
+                <Text flex className={css.diffStatsLabel}>
+                  <StringSubstitute
+                    str={getString('pr.diffStatsLabel')}
+                    vars={{
+                      changedFilesLink: <ChangesDropdown diffs={diffs} />,
+                      addedLines: formatNumber(diffStats.addedLines),
+                      deletedLines: formatNumber(diffStats.deletedLines),
+                      configuration: (
+                        <DiffViewConfiguration
+                          viewStyle={viewStyle}
+                          setViewStyle={setViewStyle}
+                          lineBreaks={lineBreaks}
+                          setLineBreaks={setLineBreaks}
+                        />
+                      )
+                    }}
+                  />
+                </Text>
+
+                {/* Show "Scroll to top" button */}
+                {isSticky && (
+                  <Layout.Horizontal padding={{ left: 'small' }}>
+                    <PipeSeparator height={10} />
+                    <Button
+                      variation={ButtonVariation.ICON}
+                      icon="arrow-up"
+                      iconProps={{ size: 14 }}
+                      onClick={() => window.scroll({ top: 0 })}
+                      tooltip={getString('scrollToTop')}
+                      tooltipProps={{ isDark: true }}
                     />
-                  )
-                }}
-              />
-            </Text>
+                  </Layout.Horizontal>
+                )}
+              </Container>
+              <FlexExpander />
 
-            {/* Show "Scroll to top" button */}
-            {isSticky && (
-              <Layout.Horizontal padding={{ left: 'small' }}>
-                <PipeSeparator height={10} />
-                <Button
-                  variation={ButtonVariation.ICON}
-                  icon="arrow-up"
-                  iconProps={{ size: 14 }}
-                  onClick={() => window.scroll({ top: 0 })}
-                  tooltip={getString('scrollToTop')}
-                  tooltipProps={{ isDark: true }}
-                />
-              </Layout.Horizontal>
-            )}
+              {!readOnly && (
+                <Button text={getString('pr.reviewChanges')} variation={ButtonVariation.PRIMARY} intent="success" />
+              )}
+            </Layout.Horizontal>
           </Container>
-          <FlexExpander />
 
-          {!readOnly && (
-            <Button text={getString('pr.reviewChanges')} variation={ButtonVariation.PRIMARY} intent="success" />
-          )}
-        </Layout.Horizontal>
-      </Container>
-
-      <Layout.Vertical spacing="large" className={cx(css.main, lineBreaks ? css.enableDiffLineBreaks : '')}>
-        {diffs?.map((diff, index) => (
-          // Note: `key={viewStyle + index}` resets DiffView when viewStyle
-          // is changed. Making it easier to control states inside DiffView itself, as it does not have to deal with viewStyle
-          <DiffViewer
-            readOnly={readOnly}
-            index={index}
-            key={viewStyle + index}
-            diff={diff}
-            viewStyle={viewStyle}
-            stickyTopPosition={STICKY_TOP_POSITION}
-          />
-        ))}
-      </Layout.Vertical>
+          <Layout.Vertical spacing="large" className={cx(css.main, { [css.enableDiffLineBreaks]: lineBreaks })}>
+            {diffs?.map((diff, index) => (
+              // Note: `key={viewStyle + index + lineBreaks}` resets DiffView when view configuration
+              // is changed. Making it easier to control states inside DiffView itself, as it does not
+              //  have to deal with any view configuration
+              <DiffViewer
+                readOnly={readOnly}
+                index={index}
+                key={viewStyle + index + lineBreaks}
+                diff={diff}
+                viewStyle={viewStyle}
+                stickyTopPosition={STICKY_TOP_POSITION}
+              />
+            ))}
+          </Layout.Vertical>
+        </>
+      ) : (
+        <Container></Container>
+      )}
     </PullRequestTabContentWrapper>
   )
 }

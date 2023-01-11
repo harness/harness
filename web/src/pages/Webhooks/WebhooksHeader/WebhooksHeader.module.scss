@@ -1,0 +1,16 @@
+.main {
+  div[class*='TextInput'] {
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  > div {
+    align-items: center;
+  }
+
+  padding-bottom: 0 !important;
+}
+
+.branchDropdown {
+  background-color: var(--white);
+}
