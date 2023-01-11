@@ -30,7 +30,8 @@ enum WebhookEventType {
 }
 
 enum WebhookIndividualEvent {
-  BRANCH_PUSHED = 'branch_pushed',
+  BRANCH_CREATED = 'branch_created',
+  BRANCH_UPDATED = 'branch_updated',
   BRANCH_DELETED = 'branch_deleted'
 }
 
@@ -40,8 +41,9 @@ interface FormData {
   enabled: boolean
   secure: boolean
   events: WebhookEventType
-  branchPush: boolean
-  branchDeletion: boolean
+  branchCreated: boolean
+  branchUpdated: boolean
+  branchDeleted: boolean
 }
 
 interface WebHookFormProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -52,7 +54,7 @@ interface WebHookFormProps extends Pick<GitInfoProps, 'repoMetadata'> {
 export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) {
   const history = useHistory()
   const { getString } = useStrings()
-  const { showError } = useToaster()
+  const { showError, showSuccess } = useToaster()
   const { routes } = useAppContext()
   const { mutate, loading } = useMutate<OpenapiWebhookType>({
     verb: isEdit ? 'PATCH' : 'POST',
@@ -68,8 +70,9 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
             secret: isEdit ? '***' : '',
             enabled: webhook ? (webhook?.enabled as boolean) : true,
             secure: webhook?.insecure === false || false,
-            branchPush: webhook?.triggers?.includes(WebhookIndividualEvent.BRANCH_PUSHED) || false,
-            branchDeletion: webhook?.triggers?.includes(WebhookIndividualEvent.BRANCH_DELETED) || false,
+            branchCreated: webhook?.triggers?.includes(WebhookIndividualEvent.BRANCH_CREATED) || false,
+            branchUpdated: webhook?.triggers?.includes(WebhookIndividualEvent.BRANCH_UPDATED) || false,
+            branchDeleted: webhook?.triggers?.includes(WebhookIndividualEvent.BRANCH_DELETED) || false,
             events: WebhookEventType.INDIVIDUAL
           }}
           formName="create-webhook-form"
@@ -83,16 +86,20 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
           onSubmit={formData => {
             const triggers: OpenapiWebhookTrigger[] = []
 
-            if (formData.branchPush) {
-              triggers.push(WebhookIndividualEvent.BRANCH_PUSHED)
+            if (formData.branchCreated) {
+              triggers.push(WebhookIndividualEvent.BRANCH_CREATED)
             }
 
-            if (formData.branchDeletion) {
+            if (formData.branchUpdated) {
+              triggers.push(WebhookIndividualEvent.BRANCH_UPDATED)
+            }
+
+            if (formData.branchDeleted) {
               triggers.push(WebhookIndividualEvent.BRANCH_DELETED)
             }
 
             if (!triggers.length) {
-              return showError('At least one event must be selected')
+              return showError(getString('oneMustBeSelected'))
             }
 
             const data: OpenapiUpdateWebhookRequest = {
@@ -105,12 +112,21 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
 
             mutate(data)
               .then((response: OpenapiWebhookType) => {
-                history.push(
-                  routes.toCODEWebhookDetails({
-                    repoPath: repoMetadata.path as string,
-                    webhookId: String(response.id)
-                  })
-                )
+                if (isEdit) {
+                  showSuccess(getString('webhookUpdated'))
+                  history.push(
+                    routes.toCODEWebhooks({
+                      repoPath: repoMetadata.path as string
+                    })
+                  )
+                } else {
+                  history.push(
+                    routes.toCODEWebhookDetails({
+                      repoPath: repoMetadata.path as string,
+                      webhookId: String(response.id)
+                    })
+                  )
+                }
               })
               .catch(exception => {
                 showError(getErrorMessage(exception))
@@ -152,8 +168,21 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                     <article
                       style={{ display: 'flex', gap: '6rem', flexWrap: 'wrap', marginLeft: '30px', marginTop: '10px' }}>
                       <section>
-                        <FormInput.CheckBox label={'Branch push'} name="branchPush" className={css.checkbox} />
-                        <FormInput.CheckBox label={'Branch deletion'} name="branchDeletion" className={css.checkbox} />
+                        <FormInput.CheckBox
+                          label={getString('webhookBranchCreated')}
+                          name="branchCreated"
+                          className={css.checkbox}
+                        />
+                        <FormInput.CheckBox
+                          label={getString('webhookBranchUpdated')}
+                          name="branchUpdated"
+                          className={css.checkbox}
+                        />
+                        <FormInput.CheckBox
+                          label={getString('webhookBranchDeleted')}
+                          name="branchDeleted"
+                          className={css.checkbox}
+                        />
                       </section>
                     </article>
                   ) : null}

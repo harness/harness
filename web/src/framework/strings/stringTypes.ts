@@ -123,6 +123,7 @@ export interface StringsMap {
   ok: string
   on: string
   onDate: string
+  oneMustBeSelected: string
   open: string
   optional: string
   optionalExtendedDescription: string
@@ -207,10 +208,14 @@ export interface StringsMap {
   viewCommitDetails: string
   viewed: string
   webhook: string
+  webhookBranchCreated: string
+  webhookBranchDeleted: string
+  webhookBranchUpdated: string
   webhookDeleted: string
   webhookDetails: string
   webhookEventsLabel: string
   webhookListingContent: string
+  webhookUpdated: string
   webhooks: string
   write: string
   yourBranches: string

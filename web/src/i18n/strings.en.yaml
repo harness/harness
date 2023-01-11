@@ -214,3 +214,8 @@ webhookDeleted: Webhook deleted.
 failedToDeleteWebhook: Failed to delete Webhook. Please try again.
 webhookDetails: Webhook Details
 updateWebhook: Update Webhook
+webhookUpdated: Webhook updated successfully.
+oneMustBeSelected: At least one event must be selected
+webhookBranchCreated: Branch created
+webhookBranchUpdated: Branch updated
+webhookBranchDeleted: Branch deleted
