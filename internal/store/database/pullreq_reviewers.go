@@ -6,8 +6,10 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/harness/gitness/internal/cache"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -16,6 +18,7 @@ import (
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 var _ store.PullReqReviewerStore = (*PullReqReviewerStore)(nil)
@@ -23,15 +26,18 @@ var _ store.PullReqReviewerStore = (*PullReqReviewerStore)(nil)
 const maxPullRequestReviewers = 100
 
 // NewPullReqReviewerStore returns a new PullReqReviewerStore.
-func NewPullReqReviewerStore(db *sqlx.DB) *PullReqReviewerStore {
+func NewPullReqReviewerStore(db *sqlx.DB,
+	pCache *cache.Cache[int64, *types.PrincipalInfo]) *PullReqReviewerStore {
 	return &PullReqReviewerStore{
-		db: db,
+		db:     db,
+		pCache: pCache,
 	}
 }
 
 // PullReqReviewerStore implements store.PullReqReviewerStore backed by a relational database.
 type PullReqReviewerStore struct {
-	db *sqlx.DB
+	db     *sqlx.DB
+	pCache *cache.Cache[int64, *types.PrincipalInfo]
 }
 
 // pullReqReviewer is used to fetch pull request reviewer data from the database.
@@ -48,13 +54,6 @@ type pullReqReviewer struct {
 
 	ReviewDecision enum.PullReqReviewDecision `db:"pullreq_reviewer_review_decision"`
 	SHA            string                     `db:"pullreq_reviewer_sha"`
-
-	ReviewerUID   string `db:"reviewer_uid"`
-	ReviewerName  string `db:"reviewer_name"`
-	ReviewerEmail string `db:"reviewer_email"`
-	AddedByUID    string `db:"added_by_uid"`
-	AddedByName   string `db:"added_by_name"`
-	AddedByEmail  string `db:"added_by_email"`
 }
 
 const (
@@ -68,19 +67,11 @@ const (
 		,pullreq_reviewer_type
 		,pullreq_reviewer_latest_review_id
 		,pullreq_reviewer_review_decision
-		,pullreq_reviewer_sha
-		,reviewer.principal_uid as "reviewer_uid"
-		,reviewer.principal_display_name as "reviewer_name"
-		,reviewer.principal_email as "reviewer_email"
-		,added_by.principal_uid as "added_by_uid"
-		,added_by.principal_display_name as "added_by_name"
-		,added_by.principal_email as "added_by_email"`
+		,pullreq_reviewer_sha`
 
 	pullreqReviewerSelectBase = `
 	SELECT` + pullreqReviewerColumns + `
-	FROM pullreq_reviewers
-	INNER JOIN principals reviewer on reviewer.principal_id = pullreq_reviewer_principal_id
-	INNER JOIN principals added_by on added_by.principal_id = pullreq_reviewer_created_by`
+	FROM pullreq_reviewers`
 )
 
 // Find finds the pull request reviewer by pull request id and principal id.
@@ -95,7 +86,7 @@ func (s *PullReqReviewerStore) Find(ctx context.Context, prID, principalID int64
 		return nil, processSQLErrorf(err, "Failed to find pull request reviewer")
 	}
 
-	return mapPullReqReviewer(dst), nil
+	return s.mapPullReqReviewer(ctx, dst), nil
 }
 
 // Create creates a new pull request reviewer.
@@ -197,7 +188,12 @@ func (s *PullReqReviewerStore) List(ctx context.Context, prID int64) ([]*types.P
 		return nil, processSQLErrorf(err, "Failed executing pull request reviewer list query")
 	}
 
-	return mapSlicePullReqReviewer(dst), nil
+	result, err := s.mapSlicePullReqReviewer(ctx, dst)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func mapPullReqReviewer(v *pullReqReviewer) *types.PullReqReviewer {
@@ -212,18 +208,6 @@ func mapPullReqReviewer(v *pullReqReviewer) *types.PullReqReviewer {
 		LatestReviewID: v.LatestReviewID.Ptr(),
 		ReviewDecision: v.ReviewDecision,
 		SHA:            v.SHA,
-		Reviewer: types.PrincipalInfo{
-			ID:          v.PrincipalID,
-			UID:         v.ReviewerUID,
-			DisplayName: v.ReviewerName,
-			Email:       v.ReviewerEmail,
-		},
-		AddedBy: types.PrincipalInfo{
-			ID:          v.CreatedBy,
-			UID:         v.AddedByUID,
-			DisplayName: v.AddedByName,
-			Email:       v.AddedByEmail,
-		},
 	}
 	return m
 }
@@ -240,20 +224,69 @@ func mapInternalPullReqReviewer(v *types.PullReqReviewer) *pullReqReviewer {
 		LatestReviewID: null.IntFromPtr(v.LatestReviewID),
 		ReviewDecision: v.ReviewDecision,
 		SHA:            v.SHA,
-		ReviewerUID:    "",
-		ReviewerName:   "",
-		ReviewerEmail:  "",
-		AddedByUID:     "",
-		AddedByName:    "",
-		AddedByEmail:   "",
 	}
 	return m
 }
 
-func mapSlicePullReqReviewer(a []*pullReqReviewer) []*types.PullReqReviewer {
-	m := make([]*types.PullReqReviewer, len(a))
-	for i, act := range a {
-		m[i] = mapPullReqReviewer(act)
+func (s *PullReqReviewerStore) mapPullReqReviewer(ctx context.Context, v *pullReqReviewer) *types.PullReqReviewer {
+	m := &types.PullReqReviewer{
+		PullReqID:      v.PullReqID,
+		PrincipalID:    v.PrincipalID,
+		CreatedBy:      v.CreatedBy,
+		Created:        v.Created,
+		Updated:        v.Updated,
+		RepoID:         v.RepoID,
+		Type:           v.Type,
+		LatestReviewID: v.LatestReviewID.Ptr(),
+		ReviewDecision: v.ReviewDecision,
+		SHA:            v.SHA,
 	}
+
+	addedBy, err := s.pCache.Get(ctx, v.CreatedBy)
+	if err != nil {
+		log.Err(err).Msg("failed to load PR reviewer addedBy")
+	}
+	if addedBy != nil {
+		m.AddedBy = *addedBy
+	}
+
+	reviewer, err := s.pCache.Get(ctx, v.PrincipalID)
+	if err != nil {
+		log.Err(err).Msg("failed to load PR reviewer principal")
+	}
+	if reviewer != nil {
+		m.Reviewer = *reviewer
+	}
+
 	return m
+}
+
+func (s *PullReqReviewerStore) mapSlicePullReqReviewer(ctx context.Context,
+	reviewers []*pullReqReviewer) ([]*types.PullReqReviewer, error) {
+	// collect all principal IDs
+	ids := make([]int64, 0, 2*len(reviewers))
+	for _, v := range reviewers {
+		ids = append(ids, v.CreatedBy)
+		ids = append(ids, v.PrincipalID)
+	}
+
+	// pull principal infos from cache
+	infoMap, err := s.pCache.Map(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load PR principal infos: %w", err)
+	}
+
+	// attach the principal infos back to the slice items
+	m := make([]*types.PullReqReviewer, len(reviewers))
+	for i, v := range reviewers {
+		m[i] = mapPullReqReviewer(v)
+		if addedBy, ok := infoMap[v.CreatedBy]; ok {
+			m[i].AddedBy = *addedBy
+		}
+		if reviewer, ok := infoMap[v.PrincipalID]; ok {
+			m[i].Reviewer = *reviewer
+		}
+	}
+
+	return m, nil
 }

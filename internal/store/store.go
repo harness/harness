@@ -109,6 +109,13 @@ type (
 		CountServices(ctx context.Context) (int64, error)
 	}
 
+	// PrincipalInfoView defines helper utility for fetching types.PrincipalInfo objects.
+	// It uses the same underlying data storage as PrincipalStore.
+	PrincipalInfoView interface {
+		Find(ctx context.Context, id int64) (*types.PrincipalInfo, error)
+		FindMany(ctx context.Context, ids []int64) ([]*types.PrincipalInfo, error)
+	}
+
 	// SpaceStore defines the space data storage.
 	SpaceStore interface {
 		// Find the space by id.

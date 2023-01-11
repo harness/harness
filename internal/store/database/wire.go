@@ -6,7 +6,9 @@ package database
 
 import (
 	"context"
+	"time"
 
+	"github.com/harness/gitness/internal/cache"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 
@@ -22,6 +24,8 @@ const (
 var WireSet = wire.NewSet(
 	ProvideDatabase,
 	ProvidePrincipalStore,
+	ProvidePrincipalInfoView,
+	ProvidePrincipalInfoCache,
 	ProvideSpaceStore,
 	ProvideRepoStore,
 	ProvideTokenStore,
@@ -45,6 +49,16 @@ func ProvideDatabase(ctx context.Context, config *types.Config) (*sqlx.DB, error
 // ProvidePrincipalStore provides a principal store.
 func ProvidePrincipalStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTransformation) store.PrincipalStore {
 	return NewPrincipalStore(db, uidTransformation)
+}
+
+// ProvidePrincipalInfoView provides a principal info store.
+func ProvidePrincipalInfoView(db *sqlx.DB) store.PrincipalInfoView {
+	return NewPrincipalInfoStore(db)
+}
+
+// ProvidePrincipalInfoCache provides a cache for storing types.PrincipalInfo objects.
+func ProvidePrincipalInfoCache(getter store.PrincipalInfoView) *cache.Cache[int64, *types.PrincipalInfo] {
+	return cache.New[int64, *types.PrincipalInfo](getter, 30*time.Second)
 }
 
 // ProvideSpaceStore provides a space store.
@@ -77,13 +91,15 @@ func ProvideTokenStore(db *sqlx.DB) store.TokenStore {
 }
 
 // ProvidePullReqStore provides a pull request store.
-func ProvidePullReqStore(db *sqlx.DB) store.PullReqStore {
-	return NewPullReqStore(db)
+func ProvidePullReqStore(db *sqlx.DB,
+	principalInfoCache *cache.Cache[int64, *types.PrincipalInfo]) store.PullReqStore {
+	return NewPullReqStore(db, principalInfoCache)
 }
 
 // ProvidePullReqActivityStore provides a pull request activity store.
-func ProvidePullReqActivityStore(db *sqlx.DB) store.PullReqActivityStore {
-	return NewPullReqActivityStore(db)
+func ProvidePullReqActivityStore(db *sqlx.DB,
+	principalInfoCache *cache.Cache[int64, *types.PrincipalInfo]) store.PullReqActivityStore {
+	return NewPullReqActivityStore(db, principalInfoCache)
 }
 
 // ProvidePullReqReviewStore provides a pull request review store.
@@ -92,8 +108,9 @@ func ProvidePullReqReviewStore(db *sqlx.DB) store.PullReqReviewStore {
 }
 
 // ProvidePullReqReviewerStore provides a pull request reviewer store.
-func ProvidePullReqReviewerStore(db *sqlx.DB) store.PullReqReviewerStore {
-	return NewPullReqReviewerStore(db)
+func ProvidePullReqReviewerStore(db *sqlx.DB,
+	principalInfoCache *cache.Cache[int64, *types.PrincipalInfo]) store.PullReqReviewerStore {
+	return NewPullReqReviewerStore(db, principalInfoCache)
 }
 
 // ProvideWebhookStore provides a webhook store.

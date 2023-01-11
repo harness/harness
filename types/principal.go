@@ -44,3 +44,7 @@ func (p *Principal) ToPrincipalInfo() *PrincipalInfo {
 		Email:       p.Email,
 	}
 }
+
+func (p *PrincipalInfo) Identifier() int64 {
+	return p.ID
+}

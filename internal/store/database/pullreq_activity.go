@@ -7,8 +7,10 @@ package database
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
+	"github.com/harness/gitness/internal/cache"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -18,20 +20,24 @@ import (
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 var _ store.PullReqActivityStore = (*PullReqActivityStore)(nil)
 
 // NewPullReqActivityStore returns a new PullReqJournalStore.
-func NewPullReqActivityStore(db *sqlx.DB) *PullReqActivityStore {
+func NewPullReqActivityStore(db *sqlx.DB,
+	pCache *cache.Cache[int64, *types.PrincipalInfo]) *PullReqActivityStore {
 	return &PullReqActivityStore{
-		db: db,
+		db:     db,
+		pCache: pCache,
 	}
 }
 
 // PullReqActivityStore implements store.PullReqActivityStore backed by a relational database.
 type PullReqActivityStore struct {
-	db *sqlx.DB
+	db     *sqlx.DB
+	pCache *cache.Cache[int64, *types.PrincipalInfo]
 }
 
 // journal is used to fetch pull request data from the database.
@@ -63,13 +69,6 @@ type pullReqActivity struct {
 
 	ResolvedBy null.Int `db:"pullreq_activity_resolved_by"`
 	Resolved   null.Int `db:"pullreq_activity_resolved"`
-
-	AuthorUID     string      `db:"author_uid"`
-	AuthorName    string      `db:"author_name"`
-	AuthorEmail   string      `db:"author_email"`
-	ResolverUID   null.String `db:"resolver_uid"`
-	ResolverName  null.String `db:"resolver_name"`
-	ResolverEmail null.String `db:"resolver_email"`
 }
 
 const (
@@ -93,19 +92,11 @@ const (
 		,pullreq_activity_payload
 		,pullreq_activity_metadata
 		,pullreq_activity_resolved_by
-		,pullreq_activity_resolved
-		,author.principal_uid as "author_uid"
-		,author.principal_display_name as "author_name"
-		,author.principal_email as "author_email"
-		,resolver.principal_uid as "resolver_uid"
-		,resolver.principal_display_name as "resolver_name"
-		,resolver.principal_email as "resolver_email"`
+		,pullreq_activity_resolved`
 
 	pullreqActivitySelectBase = `
 	SELECT` + pullreqActivityColumns + `
-	FROM pullreq_activities
-	INNER JOIN principals author on author.principal_id = pullreq_activity_created_by
-	LEFT JOIN principals resolver on resolver.principal_id = pullreq_activity_resolved_by`
+	FROM pullreq_activities`
 )
 
 // Find finds the pull request activity by id.
@@ -120,7 +111,7 @@ func (s *PullReqActivityStore) Find(ctx context.Context, id int64) (*types.PullR
 		return nil, processSQLErrorf(err, "Failed to find pull request activity")
 	}
 
-	return mapPullReqActivity(dst), nil
+	return s.mapPullReqActivity(ctx, dst), nil
 }
 
 // Create creates a new pull request.
@@ -347,7 +338,12 @@ func (s *PullReqActivityStore) List(ctx context.Context, prID int64,
 		return nil, processSQLErrorf(err, "Failed executing pull request activity list query")
 	}
 
-	return mapSlicePullReqActivity(dst), nil
+	result, err := s.mapSlicePullReqActivity(ctx, dst)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
@@ -375,24 +371,9 @@ func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
 		Author:     types.PrincipalInfo{},
 		Resolver:   nil,
 	}
-	m.Author = types.PrincipalInfo{
-		ID:          act.CreatedBy,
-		UID:         act.AuthorUID,
-		DisplayName: act.AuthorName,
-		Email:       act.AuthorEmail,
-	}
 
 	_ = json.Unmarshal(act.Payload, &m.Payload)
 	_ = json.Unmarshal(act.Metadata, &m.Metadata)
-
-	if act.ResolvedBy.Valid {
-		m.Resolver = &types.PrincipalInfo{
-			ID:          act.ResolvedBy.Int64,
-			UID:         act.ResolverUID.String,
-			DisplayName: act.ResolverName.String,
-			Email:       act.ResolverEmail.String,
-		}
-	}
 
 	return m
 }
@@ -427,10 +408,61 @@ func mapInternalPullReqActivity(act *types.PullReqActivity) *pullReqActivity {
 	return m
 }
 
-func mapSlicePullReqActivity(a []*pullReqActivity) []*types.PullReqActivity {
-	m := make([]*types.PullReqActivity, len(a))
-	for i, act := range a {
-		m[i] = mapPullReqActivity(act)
+func (s *PullReqActivityStore) mapPullReqActivity(ctx context.Context, act *pullReqActivity) *types.PullReqActivity {
+	m := mapPullReqActivity(act)
+
+	var author, resolver *types.PrincipalInfo
+	var err error
+
+	author, err = s.pCache.Get(ctx, act.CreatedBy)
+	if err != nil {
+		log.Err(err).Msg("failed to load PR activity author")
 	}
+	if author != nil {
+		m.Author = *author
+	}
+
+	if act.ResolvedBy.Valid {
+		resolver, err = s.pCache.Get(ctx, act.ResolvedBy.Int64)
+		if err != nil {
+			log.Err(err).Msg("failed to load PR activity resolver")
+		}
+		m.Resolver = resolver
+	}
+
 	return m
+}
+
+func (s *PullReqActivityStore) mapSlicePullReqActivity(ctx context.Context,
+	activities []*pullReqActivity) ([]*types.PullReqActivity, error) {
+	// collect all principal IDs
+	ids := make([]int64, 0, 2*len(activities))
+	for _, act := range activities {
+		ids = append(ids, act.CreatedBy)
+		if act.ResolvedBy.Valid {
+			ids = append(ids, act.Resolved.Int64)
+		}
+	}
+
+	// pull principal infos from cache
+	infoMap, err := s.pCache.Map(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load PR principal infos: %w", err)
+	}
+
+	// attach the principal infos back to the slice items
+	m := make([]*types.PullReqActivity, len(activities))
+	for i, act := range activities {
+		m[i] = mapPullReqActivity(act)
+		if author, ok := infoMap[act.CreatedBy]; ok {
+			m[i].Author = *author
+		}
+		if act.ResolvedBy.Valid {
+			if merger, ok := infoMap[act.ResolvedBy.Int64]; ok {
+				m[i].Resolver = merger
+			}
+		}
+	}
+
+	return m, nil
 }

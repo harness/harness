@@ -6,9 +6,11 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/internal/cache"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -18,20 +20,24 @@ import (
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 var _ store.PullReqStore = (*PullReqStore)(nil)
 
 // NewPullReqStore returns a new PullReqStore.
-func NewPullReqStore(db *sqlx.DB) *PullReqStore {
+func NewPullReqStore(db *sqlx.DB,
+	pCache *cache.Cache[int64, *types.PrincipalInfo]) *PullReqStore {
 	return &PullReqStore{
-		db: db,
+		db:     db,
+		pCache: pCache,
 	}
 }
 
 // PullReqStore implements store.PullReqStore backed by a relational database.
 type PullReqStore struct {
-	db *sqlx.DB
+	db     *sqlx.DB
+	pCache *cache.Cache[int64, *types.PrincipalInfo]
 }
 
 // pullReq is used to fetch pull request data from the database.
@@ -61,13 +67,6 @@ type pullReq struct {
 	MergedBy      null.Int    `db:"pullreq_merged_by"`
 	Merged        null.Int    `db:"pullreq_merged"`
 	MergeStrategy null.String `db:"pullreq_merge_strategy"`
-
-	AuthorUID   string      `db:"author_uid"`
-	AuthorName  string      `db:"author_name"`
-	AuthorEmail string      `db:"author_email"`
-	MergerUID   null.String `db:"merger_uid"`
-	MergerName  null.String `db:"merger_name"`
-	MergerEmail null.String `db:"merger_email"`
 }
 
 const (
@@ -89,19 +88,11 @@ const (
 		,pullreq_activity_seq
 		,pullreq_merged_by
 		,pullreq_merged
-		,pullreq_merge_strategy
-		,author.principal_uid as "author_uid"
-		,author.principal_display_name as "author_name"
-		,author.principal_email as "author_email"
-		,merger.principal_uid as "merger_uid"
-		,merger.principal_display_name as "merger_name"
-		,merger.principal_email as "merger_email"`
+		,pullreq_merge_strategy`
 
 	pullReqSelectBase = `
 	SELECT` + pullReqColumns + `
-	FROM pullreqs
-	INNER JOIN principals author on author.principal_id = pullreq_created_by
-	LEFT  JOIN principals merger on merger.principal_id = pullreq_merged_by`
+	FROM pullreqs`
 )
 
 // Find finds the pull request by id.
@@ -116,7 +107,7 @@ func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReq, erro
 		return nil, processSQLErrorf(err, "Failed to find pull request")
 	}
 
-	return mapPullReq(dst), nil
+	return s.mapPullReq(ctx, dst), nil
 }
 
 // FindByNumber finds the pull request by repo ID and pull request number.
@@ -140,7 +131,7 @@ func (s *PullReqStore) FindByNumberWithLock(
 		return nil, processSQLErrorf(err, "Failed to find pull request by number")
 	}
 
-	return mapPullReq(dst), nil
+	return s.mapPullReq(ctx, dst), nil
 }
 
 // FindByNumber finds the pull request by repo ID and pull request number.
@@ -395,11 +386,16 @@ func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullR
 		return nil, processSQLErrorf(err, "Failed executing custom list query")
 	}
 
-	return mapSlicePullReq(dst), nil
+	result, err := s.mapSlicePullReq(ctx, dst)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func mapPullReq(pr *pullReq) *types.PullReq {
-	m := &types.PullReq{
+	return &types.PullReq{
 		ID:            pr.ID,
 		Version:       pr.Version,
 		Number:        pr.Number,
@@ -421,22 +417,6 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		Author:        types.PrincipalInfo{},
 		Merger:        nil,
 	}
-	m.Author = types.PrincipalInfo{
-		ID:          pr.CreatedBy,
-		UID:         pr.AuthorUID,
-		DisplayName: pr.AuthorName,
-		Email:       pr.AuthorEmail,
-	}
-	if pr.MergedBy.Valid {
-		m.Merger = &types.PrincipalInfo{
-			ID:          pr.MergedBy.Int64,
-			UID:         pr.MergerUID.String,
-			DisplayName: pr.MergerName.String,
-			Email:       pr.MergerEmail.String,
-		}
-	}
-
-	return m
 }
 
 func mapInternalPullReq(pr *types.PullReq) *pullReq {
@@ -464,10 +444,60 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 	return m
 }
 
-func mapSlicePullReq(prs []*pullReq) []*types.PullReq {
+func (s *PullReqStore) mapPullReq(ctx context.Context, pr *pullReq) *types.PullReq {
+	m := mapPullReq(pr)
+
+	var author, merger *types.PrincipalInfo
+	var err error
+
+	author, err = s.pCache.Get(ctx, pr.CreatedBy)
+	if err != nil {
+		log.Err(err).Msg("failed to load PR author")
+	}
+	if author != nil {
+		m.Author = *author
+	}
+
+	if pr.MergedBy.Valid {
+		merger, err = s.pCache.Get(ctx, pr.MergedBy.Int64)
+		if err != nil {
+			log.Err(err).Msg("failed to load PR merger")
+		}
+		m.Merger = merger
+	}
+
+	return m
+}
+
+func (s *PullReqStore) mapSlicePullReq(ctx context.Context, prs []*pullReq) ([]*types.PullReq, error) {
+	// collect all principal IDs
+	ids := make([]int64, 0, 2*len(prs))
+	for _, pr := range prs {
+		ids = append(ids, pr.CreatedBy)
+		if pr.MergedBy.Valid {
+			ids = append(ids, pr.MergedBy.Int64)
+		}
+	}
+
+	// pull principal infos from cache
+	infoMap, err := s.pCache.Map(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load PR principal infos: %w", err)
+	}
+
+	// attach the principal infos back to the slice items
 	m := make([]*types.PullReq, len(prs))
 	for i, pr := range prs {
 		m[i] = mapPullReq(pr)
+		if author, ok := infoMap[pr.CreatedBy]; ok {
+			m[i].Author = *author
+		}
+		if pr.MergedBy.Valid {
+			if merger, ok := infoMap[pr.MergedBy.Int64]; ok {
+				m[i].Merger = merger
+			}
+		}
 	}
-	return m
+
+	return m, nil
 }
