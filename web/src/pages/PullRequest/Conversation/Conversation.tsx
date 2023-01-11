@@ -32,9 +32,9 @@ export const Conversation: React.FC<ConversationProps> = ({
     data: activities,
     loading,
     error,
-    refetch
+    refetch: refetchActivities
   } = useGet<TypesPullReqActivity[]>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.id}/activities`
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/activities`
   })
   const { showError } = useToaster()
   const [newComments, setNewComments] = useState<TypesPullReqActivity[]>([])
@@ -68,10 +68,17 @@ export const Conversation: React.FC<ConversationProps> = ({
   const confirmAct = useConfirmAct()
 
   return (
-    <PullRequestTabContentWrapper loading={loading} error={error} onRetry={refetch}>
+    <PullRequestTabContentWrapper loading={loading} error={error} onRetry={refetchActivities}>
       <Container padding="xsmall">
         <Layout.Vertical spacing="xlarge">
-          <PullRequestStatusInfo />
+          <PullRequestStatusInfo
+            repoMetadata={repoMetadata}
+            pullRequestMetadata={pullRequestMetadata}
+            onMerge={() => {
+              refreshPullRequestMetadata()
+              refetchActivities()
+            }}
+          />
           <Container>
             <Layout.Vertical spacing="xlarge">
               <DescriptionBox
@@ -175,7 +182,7 @@ const DescriptionBox: React.FC<ConversationProps> = ({
   refreshPullRequestMetadata
 }) => {
   const [edit, setEdit] = useState(false)
-  const [updated, setUpdated] = useState(pullRequestMetadata.updated as number)
+  const [updated, setUpdated] = useState(pullRequestMetadata.edited as number)
   const [originalContent, setOriginalContent] = useState(pullRequestMetadata.description as string)
   const [content, setContent] = useState(originalContent)
   const { getString } = useStrings()
@@ -255,7 +262,7 @@ const DescriptionBox: React.FC<ConversationProps> = ({
 const toCommentItem = (activity: TypesPullReqActivity) => ({
   author: activity.author?.display_name as string,
   created: activity.created as number,
-  updated: activity.updated as number,
+  updated: activity.edited as number,
   deleted: activity.deleted as number,
   content: activity.text as string,
   payload: activity

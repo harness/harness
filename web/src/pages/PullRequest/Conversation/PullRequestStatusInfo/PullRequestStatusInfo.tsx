@@ -1,10 +1,26 @@
 import React from 'react'
-import { Button, Color, Container, FlexExpander, Icon, Layout, Text } from '@harness/uicore'
+import { Button, Color, Container, FlexExpander, Icon, Layout, Text, useToaster } from '@harness/uicore'
+import { useMutate } from 'restful-react'
 import { useStrings } from 'framework/strings'
+import type { GitInfoProps } from 'utils/GitUtils'
+import { getErrorMessage } from 'utils/Utils'
 import css from './PullRequestStatusInfo.module.scss'
 
-export const PullRequestStatusInfo: React.FC = () => {
+interface PullRequestStatusInfoProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+  onMerge: () => void
+}
+
+export const PullRequestStatusInfo: React.FC<PullRequestStatusInfoProps> = ({
+  repoMetadata,
+  pullRequestMetadata,
+  onMerge
+}) => {
   const { getString } = useStrings()
+  const { showError } = useToaster()
+  const { mutate: mergePR } = useMutate({
+    verb: 'POST',
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.id}/merge`
+  })
 
   return (
     <Container className={css.main} padding="xlarge">
@@ -20,7 +36,15 @@ export const PullRequestStatusInfo: React.FC = () => {
           </Layout.Horizontal>
         </Container>
         <Container>
-          <Button className={css.btn} text={getString('pr.mergePR')} />
+          <Button
+            className={css.btn}
+            text={getString('pr.mergePR')}
+            onClick={() => {
+              mergePR({})
+                .then(onMerge)
+                .catch(exception => showError(getErrorMessage(exception)))
+            }}
+          />
         </Container>
       </Layout.Vertical>
     </Container>
