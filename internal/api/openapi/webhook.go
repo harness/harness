@@ -38,8 +38,10 @@ func (webhookParent) Enum() []interface{} {
 // webhookType is used to overshadow fields Parent & Triggers of types.Webhook.
 type webhookType struct {
 	types.Webhook
-	ParentType webhookParent    `json:"parent_type"`
-	Triggers   []webhookTrigger `json:"triggers"`
+	ParentType            webhookParent           `json:"parent_type"`
+	Triggers              []webhookTrigger        `json:"triggers"`
+	LatestExecutionResult *webhookExecutionResult `json:"latest_execution_result,omitempty"`
+	HasSecret             bool                    `json:"has_secret"`
 }
 
 type createWebhookRequest struct {

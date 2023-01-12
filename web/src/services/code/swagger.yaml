@@ -1440,6 +1440,210 @@ paths:
           description: Internal Server Error
       tags:
       - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/merge:
+    post:
+      operationId: mergePullReqOp
+      parameters:
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiMergePullReq'
+      responses:
+        '200':
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Method Not Allowed
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Conflict
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unprocessable Entity
+      tags:
+      - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/review:
+    post:
+      operationId: reviewSubmitPullReq
+      parameters:
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiReviewSubmitPullReqRequest'
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/reviewers:
+    get:
+      operationId: reviewerListPullReq
+      parameters:
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - pullreq
+    put:
+      operationId: reviewerAddPullReq
+      parameters:
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiReviewerAddPullReqRequest'
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - pullreq
   /repos/{repo_ref}/service-accounts:
     get:
       operationId: listRepositoryServiceAccounts
@@ -2844,6 +3048,8 @@ components:
   schemas:
     EnumAccessGrant:
       type: integer
+    EnumMergeMethod:
+      type: string
     EnumParentResourceType:
       type: string
     EnumPathTargetType:
@@ -2857,6 +3063,7 @@ components:
     EnumTokenType:
       type: string
     EnumWebhookExecutionResult:
+      nullable: true
       type: string
     EnumWebhookParent:
       type: string
@@ -3021,6 +3228,10 @@ components:
       type: object
     OpenapiCreateWebhookRequest:
       properties:
+        description:
+          type: string
+        display_name:
+          type: string
         enabled:
           type: boolean
         insecure:
@@ -3058,6 +3269,15 @@ components:
         type:
           $ref: '#/components/schemas/OpenapiContentType'
       type: object
+    OpenapiMergePullReq:
+      properties:
+        delete_branch:
+          type: boolean
+        force:
+          type: boolean
+        method:
+          $ref: '#/components/schemas/EnumMergeMethod'
+      type: object
     OpenapiMoveRepoRequest:
       properties:
         keep_as_alias:
@@ -3079,6 +3299,18 @@ components:
         uid:
           nullable: true
           type: string
+      type: object
+    OpenapiReviewSubmitPullReqRequest:
+      properties:
+        decision:
+          type: string
+        message:
+          type: string
+      type: object
+    OpenapiReviewerAddPullReqRequest:
+      properties:
+        reviewer_id:
+          type: integer
       type: object
     OpenapiUpdatePullReqRequest:
       properties:
@@ -3107,6 +3339,12 @@ components:
       type: object
     OpenapiUpdateWebhookRequest:
       properties:
+        description:
+          nullable: true
+          type: string
+        display_name:
+          nullable: true
+          type: string
         enabled:
           nullable: true
           type: boolean
@@ -3130,6 +3368,7 @@ components:
       - success
       - retriable_error
       - fatal_error
+      nullable: true
       type: string
     OpenapiWebhookExecutionType:
       properties:
@@ -3174,12 +3413,20 @@ components:
           type: integer
         created_by:
           type: integer
+        description:
+          type: string
+        display_name:
+          type: string
         enabled:
+          type: boolean
+        has_secret:
           type: boolean
         id:
           type: integer
         insecure:
           type: boolean
+        latest_execution_result:
+          $ref: '#/components/schemas/OpenapiWebhookExecutionResult'
         parent_id:
           type: integer
         parent_type:
@@ -3367,8 +3614,7 @@ components:
         id:
           type: integer
         merge_strategy:
-          nullable: true
-          type: string
+          $ref: '#/components/schemas/EnumMergeMethod'
         merged:
           nullable: true
           type: integer
@@ -3388,10 +3634,6 @@ components:
           type: integer
         title:
           type: string
-        updated:
-          type: integer
-        version:
-          type: integer
       type: object
     TypesPullReqActivity:
       properties:
@@ -3436,10 +3678,6 @@ components:
           type: string
         type:
           $ref: '#/components/schemas/EnumPullReqActivityType'
-        updated:
-          type: integer
-        version:
-          type: integer
       type: object
     TypesRepository:
       properties:
@@ -3592,9 +3830,9 @@ components:
         headers:
           type: string
         status:
-          type: integer
-        status_code:
           type: string
+        status_code:
+          type: integer
       type: object
     UserUpdateInput:
       properties:

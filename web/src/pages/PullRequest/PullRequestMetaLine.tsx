@@ -15,14 +15,14 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
   target_branch,
   source_branch,
   author,
-  updated,
+  edited,
   merged,
   state
 }) => {
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const vars = {
-    user: <strong>{author?.name}</strong>,
+    user: <strong>{author?.display_name}</strong>,
     number: <strong>5</strong>, // TODO: No data from backend now
     target: (
       <GitRefLink
@@ -47,7 +47,7 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
         </Text>
         <PipeSeparator height={9} />
         <Text inline className={cx(css.metaline, css.time)}>
-          <ReactTimeago date={updated as number} />
+          <ReactTimeago date={edited as number} />
         </Text>
       </Layout.Horizontal>
     </Container>

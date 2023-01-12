@@ -7,6 +7,8 @@ import { getConfig } from '../config'
 export const SPEC_VERSION = '1.0.0'
 export type EnumAccessGrant = number
 
+export type EnumMergeMethod = string
+
 export type EnumParentResourceType = string
 
 export type EnumPathTargetType = string
@@ -19,7 +21,7 @@ export type EnumPullReqState = string
 
 export type EnumTokenType = string
 
-export type EnumWebhookExecutionResult = string
+export type EnumWebhookExecutionResult = string | null
 
 export type EnumWebhookParent = string
 
@@ -114,6 +116,8 @@ export interface OpenapiCreateSpaceRequest {
 }
 
 export interface OpenapiCreateWebhookRequest {
+  description?: string
+  display_name?: string
   enabled?: boolean
   insecure?: boolean
   secret?: string
@@ -134,6 +138,12 @@ export interface OpenapiGetContentOutput {
   type?: OpenapiContentType
 }
 
+export interface OpenapiMergePullReq {
+  delete_branch?: boolean
+  force?: boolean
+  method?: EnumMergeMethod
+}
+
 export interface OpenapiMoveRepoRequest {
   keep_as_alias?: boolean
   parent_id?: number | null
@@ -144,6 +154,15 @@ export interface OpenapiMoveSpaceRequest {
   keep_as_alias?: boolean
   parent_id?: number | null
   uid?: string | null
+}
+
+export interface OpenapiReviewSubmitPullReqRequest {
+  decision?: string
+  message?: string
+}
+
+export interface OpenapiReviewerAddPullReqRequest {
+  reviewer_id?: number
 }
 
 export interface OpenapiUpdatePullReqRequest {
@@ -162,6 +181,8 @@ export interface OpenapiUpdateSpaceRequest {
 }
 
 export interface OpenapiUpdateWebhookRequest {
+  description?: string | null
+  display_name?: string | null
   enabled?: boolean | null
   insecure?: boolean | null
   secret?: string | null
@@ -169,7 +190,7 @@ export interface OpenapiUpdateWebhookRequest {
   url?: string | null
 }
 
-export type OpenapiWebhookExecutionResult = 'success' | 'retriable_error' | 'fatal_error'
+export type OpenapiWebhookExecutionResult = 'success' | 'retriable_error' | 'fatal_error' | null
 
 export interface OpenapiWebhookExecutionType {
   created?: number
@@ -192,9 +213,13 @@ export type OpenapiWebhookTrigger = 'branch_created' | 'branch_updated' | 'branc
 export interface OpenapiWebhookType {
   created?: number
   created_by?: number
+  description?: string
+  display_name?: string
   enabled?: boolean
+  has_secret?: boolean
   id?: number
   insecure?: boolean
+  latest_execution_result?: OpenapiWebhookExecutionResult
   parent_id?: number
   parent_type?: OpenapiWebhookParent
   triggers?: OpenapiWebhookTrigger[] | null
@@ -314,7 +339,7 @@ export interface TypesPullReq {
   description?: string
   edited?: number
   id?: number
-  merge_strategy?: string | null
+  merge_strategy?: EnumMergeMethod
   merged?: number | null
   merger?: TypesPrincipalInfo
   number?: number
@@ -324,8 +349,6 @@ export interface TypesPullReq {
   target_branch?: string
   target_repo_id?: number
   title?: string
-  updated?: number
-  version?: number
 }
 
 export interface TypesPullReqActivity {
@@ -346,8 +369,6 @@ export interface TypesPullReqActivity {
   sub_order?: number
   text?: string
   type?: EnumPullReqActivityType
-  updated?: number
-  version?: number
 }
 
 export interface TypesRepository {
@@ -435,8 +456,8 @@ export interface TypesWebhookExecutionRequest {
 export interface TypesWebhookExecutionResponse {
   body?: string
   headers?: string
-  status?: number
-  status_code?: string
+  status?: string
+  status_code?: number
 }
 
 export interface UserUpdateInput {
@@ -1443,6 +1464,140 @@ export const useCommentUpdatePullReq = ({
     (paramsInPath: CommentUpdatePullReqPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/comments/${paramsInPath.pullreq_comment_id}`,
     { base: getConfig('code'), pathParams: { repo_ref, pullreq_number, pullreq_comment_id }, ...props }
+  )
+
+export interface MergePullReqOpPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type MergePullReqOpProps = Omit<
+  MutateProps<void, UsererrorError, void, OpenapiMergePullReq, MergePullReqOpPathParams>,
+  'path' | 'verb'
+> &
+  MergePullReqOpPathParams
+
+export const MergePullReqOp = ({ repo_ref, pullreq_number, ...props }: MergePullReqOpProps) => (
+  <Mutate<void, UsererrorError, void, OpenapiMergePullReq, MergePullReqOpPathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/merge`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseMergePullReqOpProps = Omit<
+  UseMutateProps<void, UsererrorError, void, OpenapiMergePullReq, MergePullReqOpPathParams>,
+  'path' | 'verb'
+> &
+  MergePullReqOpPathParams
+
+export const useMergePullReqOp = ({ repo_ref, pullreq_number, ...props }: UseMergePullReqOpProps) =>
+  useMutate<void, UsererrorError, void, OpenapiMergePullReq, MergePullReqOpPathParams>(
+    'POST',
+    (paramsInPath: MergePullReqOpPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/merge`,
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface ReviewSubmitPullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type ReviewSubmitPullReqProps = Omit<
+  MutateProps<void, UsererrorError, void, OpenapiReviewSubmitPullReqRequest, ReviewSubmitPullReqPathParams>,
+  'path' | 'verb'
+> &
+  ReviewSubmitPullReqPathParams
+
+export const ReviewSubmitPullReq = ({ repo_ref, pullreq_number, ...props }: ReviewSubmitPullReqProps) => (
+  <Mutate<void, UsererrorError, void, OpenapiReviewSubmitPullReqRequest, ReviewSubmitPullReqPathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/review`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseReviewSubmitPullReqProps = Omit<
+  UseMutateProps<void, UsererrorError, void, OpenapiReviewSubmitPullReqRequest, ReviewSubmitPullReqPathParams>,
+  'path' | 'verb'
+> &
+  ReviewSubmitPullReqPathParams
+
+export const useReviewSubmitPullReq = ({ repo_ref, pullreq_number, ...props }: UseReviewSubmitPullReqProps) =>
+  useMutate<void, UsererrorError, void, OpenapiReviewSubmitPullReqRequest, ReviewSubmitPullReqPathParams>(
+    'POST',
+    (paramsInPath: ReviewSubmitPullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/review`,
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface ReviewerListPullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type ReviewerListPullReqProps = Omit<
+  GetProps<void, UsererrorError, void, ReviewerListPullReqPathParams>,
+  'path'
+> &
+  ReviewerListPullReqPathParams
+
+export const ReviewerListPullReq = ({ repo_ref, pullreq_number, ...props }: ReviewerListPullReqProps) => (
+  <Get<void, UsererrorError, void, ReviewerListPullReqPathParams>
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/reviewers`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseReviewerListPullReqProps = Omit<
+  UseGetProps<void, UsererrorError, void, ReviewerListPullReqPathParams>,
+  'path'
+> &
+  ReviewerListPullReqPathParams
+
+export const useReviewerListPullReq = ({ repo_ref, pullreq_number, ...props }: UseReviewerListPullReqProps) =>
+  useGet<void, UsererrorError, void, ReviewerListPullReqPathParams>(
+    (paramsInPath: ReviewerListPullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/reviewers`,
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface ReviewerAddPullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type ReviewerAddPullReqProps = Omit<
+  MutateProps<void, UsererrorError, void, OpenapiReviewerAddPullReqRequest, ReviewerAddPullReqPathParams>,
+  'path' | 'verb'
+> &
+  ReviewerAddPullReqPathParams
+
+export const ReviewerAddPullReq = ({ repo_ref, pullreq_number, ...props }: ReviewerAddPullReqProps) => (
+  <Mutate<void, UsererrorError, void, OpenapiReviewerAddPullReqRequest, ReviewerAddPullReqPathParams>
+    verb="PUT"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/reviewers`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseReviewerAddPullReqProps = Omit<
+  UseMutateProps<void, UsererrorError, void, OpenapiReviewerAddPullReqRequest, ReviewerAddPullReqPathParams>,
+  'path' | 'verb'
+> &
+  ReviewerAddPullReqPathParams
+
+export const useReviewerAddPullReq = ({ repo_ref, pullreq_number, ...props }: UseReviewerAddPullReqProps) =>
+  useMutate<void, UsererrorError, void, OpenapiReviewerAddPullReqRequest, ReviewerAddPullReqPathParams>(
+    'PUT',
+    (paramsInPath: ReviewerAddPullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/reviewers`,
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
 export interface ListRepositoryServiceAccountsPathParams {
