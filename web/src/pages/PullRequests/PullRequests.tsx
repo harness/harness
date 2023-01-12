@@ -45,7 +45,6 @@ export default function PullRequests() {
       page: String(pageIndex + 1),
       sort: 'date',
       order: 'desc',
-      include_commit: String(true),
       query: searchTerm
     })
 

@@ -54,6 +54,22 @@
         }
       }
 
+      .bp3-tab {
+        font-size: var(--font-size-normal);
+        line-height: 19px;
+        color: var(--grey-700);
+      }
+
+      .bp3-tab[aria-selected='true'] {
+        color: var(--grey-900);
+        font-weight: 600;
+      }
+
+      .bp3-tab[aria-disabled='true'] {
+        opacity: 50%;
+        cursor: not-allowed;
+      }
+
       .bp3-tab-panel {
         margin-top: 0;
       }
@@ -65,6 +81,8 @@
     margin-top: 28px !important;
     border: 1px solid var(--color-border) !important;
     border-radius: var(--box-radius);
+    max-height: 400px;
+    overflow: auto;
 
     :global {
       .wmde-markdown .anchor {
@@ -109,7 +127,9 @@
       .md-editor-content {
         padding: var(--spacing-small);
         background-color: var(--white);
-        max-height: var(--max-editor-height, auto);
+        height: var(--editor-height, auto);
+        min-height: var(--editor-height, auto);
+        max-height: var(--max-editor-height, var(--editor-height, auto));
 
         .ͼ1.cm-editor.cm-focused {
           outline: none !important;

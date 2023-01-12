@@ -16,8 +16,8 @@ export interface MarkdownEditorWithPreviewResetProps {
 interface MarkdownEditorWithPreviewProps {
   value: string
   onChange?: (value: string, original: string) => void
-  onSave: (value: string, original: string) => void
-  onCancel: () => void
+  onSave?: (value: string, original: string) => void
+  onCancel?: () => void
   i18n: {
     placeHolder: string
     tabEdit: string
@@ -25,7 +25,9 @@ interface MarkdownEditorWithPreviewProps {
     cancel: string
     save: string
   }
+  hideButtons?: boolean
   hideCancel?: boolean
+  editorHeight?: string
   maxEditorHeight?: string
   editorRef?: React.MutableRefObject<MarkdownEditorWithPreviewResetProps>
 }
@@ -33,10 +35,12 @@ interface MarkdownEditorWithPreviewProps {
 export function MarkdownEditorWithPreview({
   value,
   onChange = noop,
-  onSave,
-  onCancel,
+  onSave = noop,
+  onCancel = noop,
   i18n,
+  hideButtons,
   hideCancel,
+  editorHeight,
   maxEditorHeight,
   editorRef
 }: MarkdownEditorWithPreviewProps) {
@@ -69,7 +73,12 @@ export function MarkdownEditorWithPreview({
             panel={
               <Container
                 className={css.markdownEditor}
-                style={{ '--max-editor-height': maxEditorHeight } as React.CSSProperties}>
+                style={
+                  {
+                    '--editor-height': editorHeight,
+                    '--max-editor-height': maxEditorHeight
+                  } as React.CSSProperties
+                }>
                 <MarkdownEditor
                   value={val}
                   visible={false}
@@ -97,7 +106,7 @@ export function MarkdownEditorWithPreview({
           />
           <Tab
             id={MarkdownEditorTab.PREVIEW}
-            disabled={!value}
+            disabled={!val}
             title={i18n.tabPreview}
             panel={
               <Container padding="large" className={css.preview}>
@@ -106,17 +115,19 @@ export function MarkdownEditorWithPreview({
             }
           />
         </Tabs>
-        <Container>
-          <Layout.Horizontal spacing="small">
-            <Button
-              disabled={!(val || '').trim() || val === original}
-              variation={ButtonVariation.PRIMARY}
-              onClick={() => onSave(val, original)}
-              text={i18n.save}
-            />
-            {!hideCancel && <Button variation={ButtonVariation.TERTIARY} onClick={onCancel} text={i18n.cancel} />}
-          </Layout.Horizontal>
-        </Container>
+        {!hideButtons && (
+          <Container>
+            <Layout.Horizontal spacing="small">
+              <Button
+                disabled={!(val || '').trim() || val === original}
+                variation={ButtonVariation.PRIMARY}
+                onClick={() => onSave(val, original)}
+                text={i18n.save}
+              />
+              {!hideCancel && <Button variation={ButtonVariation.TERTIARY} onClick={onCancel} text={i18n.cancel} />}
+            </Layout.Horizontal>
+          </Container>
+        )}
       </Layout.Vertical>
     </Container>
   )

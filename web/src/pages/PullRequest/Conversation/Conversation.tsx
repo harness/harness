@@ -5,6 +5,7 @@ import {
   Container,
   FlexExpander,
   FontVariation,
+  Icon,
   Layout,
   StringSubstitute,
   Text,
@@ -12,7 +13,7 @@ import {
 } from '@harness/uicore'
 import { useGet, useMutate } from 'restful-react'
 import ReactTimeago from 'react-timeago'
-import type { GitInfoProps } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -286,6 +287,7 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
   if (commentItems[0].payload?.type === 'merge') {
     return (
       <Text className={css.box}>
+        <Icon name={CodeIcon.PullRequest} color={Color.PURPLE_700} padding={{ right: 'small' }} />
         <StringSubstitute
           str={getString('pr.prMergedInfo')}
           vars={{

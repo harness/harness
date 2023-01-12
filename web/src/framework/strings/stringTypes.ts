@@ -11,6 +11,7 @@ export interface StringsMap {
   all: string
   allBranches: string
   allEvents: string
+  approve: string
   botAlerts: string
   branch: string
   branchCreated: string
@@ -183,6 +184,7 @@ export interface StringsMap {
   'repos.noDataMessage': string
   'repos.updated': string
   repositories: string
+  requestChanges: string
   samplePayloadUrl: string
   save: string
   scanAlerts: string
@@ -197,6 +199,7 @@ export interface StringsMap {
   signUp: string
   sslVerificationLabel: string
   status: string
+  submitReview: string
   switchBranchesTags: string
   tagNotFound: string
   tags: string

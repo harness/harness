@@ -17,6 +17,7 @@ import type { TypesPullReq } from 'services/code'
 import { PullRequestTabContentWrapper } from '../../pages/PullRequest/PullRequestTabContentWrapper'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
+import { ReviewDecisionButton } from './ReviewDecisionButton/ReviewDecisionButton'
 import css from './Changes.module.scss'
 
 const STICKY_TOP_POSITION = 64
@@ -138,11 +139,11 @@ export const Changes: React.FC<ChangesProps> = ({
                 )}
               </Container>
               <FlexExpander />
-              <Button
-                text={getString('pr.reviewChanges')}
-                variation={ButtonVariation.PRIMARY}
-                intent="success"
-                className={readOnly || pullRequestMetadata?.state === 'merged' ? css.hideButton : undefined}
+
+              <ReviewDecisionButton
+                repoMetadata={repoMetadata}
+                pullRequestMetadata={pullRequestMetadata}
+                disable={readOnly || pullRequestMetadata?.state === 'merged'}
               />
             </Layout.Horizontal>
           </Container>
