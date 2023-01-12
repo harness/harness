@@ -23,15 +23,11 @@ import (
 )
 
 type ReviewSubmitInput struct {
-	Decision string `json:"decision"`
-	Message  string `json:"message"`
+	Decision enum.PullReqReviewDecision `json:"decision"`
+	Message  string                     `json:"message"`
 }
 
 func (in *ReviewSubmitInput) Validate() error {
-	if in.Decision == "" {
-		return usererror.BadRequest("Decision field is mandatory.")
-	}
-
 	decision, ok := enum.ParsePullReqReviewDecision(in.Decision)
 	if !ok || decision == enum.PullReqReviewDecisionPending {
 		msg := fmt.Sprintf("Decision must be: %q, %q or %q.",
@@ -95,7 +91,7 @@ func (c *Controller) ReviewSubmit(
 			Created:   now,
 			Updated:   now,
 			PullReqID: pr.ID,
-			Decision:  enum.PullReqReviewDecision(in.Decision),
+			Decision:  in.Decision,
 			SHA:       ref.SHA,
 		}
 

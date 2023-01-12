@@ -19,7 +19,6 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
-	"golang.org/x/exp/slices"
 )
 
 type MergeInput struct {
@@ -28,7 +27,7 @@ type MergeInput struct {
 	DeleteBranch bool             `json:"delete_branch,omitempty"`
 }
 
-// Create creates a new pull request.
+// Merge merges the pull request.
 //
 //nolint:gocognit // no need to refactor
 func (c *Controller) Merge(
@@ -48,11 +47,13 @@ func (c *Controller) Merge(
 		in.Method = enum.MergeMethodMerge
 	}
 
-	validMethods := []enum.MergeMethod{enum.MergeMethodMerge, enum.MergeMethodRebase, enum.MergeMethodSquash}
-	if !slices.Contains(validMethods, in.Method) {
+	method, ok := enum.ParseMergeMethod(in.Method)
+	if !ok {
 		return types.MergeResponse{}, usererror.BadRequest(
 			fmt.Sprintf("wrong merge method type: %s", in.Method))
 	}
+
+	in.Method = method
 
 	now := time.Now().UnixMilli()
 

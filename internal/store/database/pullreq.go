@@ -110,7 +110,8 @@ func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReq, erro
 	return s.mapPullReq(ctx, dst), nil
 }
 
-// FindByNumber finds the pull request by repo ID and pull request number.
+// FindByNumberWithLock finds the pull request by repo ID and pull request number
+// with option to lock the pull request for the duration of the transaction.
 func (s *PullReqStore) FindByNumberWithLock(
 	ctx context.Context,
 	repoID,
@@ -364,14 +365,8 @@ func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullR
 	// NOTE: string concatenation is safe because the
 	// order attribute is an enum and is not user-defined,
 	// and is therefore not subject to injection attacks.
-	switch opts.Sort {
-	case enum.PullReqSortNumber, enum.PullReqSortNone:
-		stmt = stmt.OrderBy("pullreq_number " + opts.Order.String())
-	case enum.PullReqSortCreated:
-		stmt = stmt.OrderBy("pullreq_created " + opts.Order.String())
-	case enum.PullReqSortUpdated:
-		stmt = stmt.OrderBy("pullreq_updated " + opts.Order.String())
-	}
+	opts.Sort, _ = enum.ParsePullReqSort(opts.Sort)
+	stmt = stmt.OrderBy("pullreq_" + string(opts.Sort) + " " + opts.Order.String())
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {

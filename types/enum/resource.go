@@ -7,7 +7,18 @@ package enum
 // ParentResourceType defines the different types of parent resources.
 type ParentResourceType string
 
+func (ParentResourceType) Enum() []interface{} {
+	return toInterfaceSlice(GetAllParentResourceTypes())
+}
+
 var (
 	ParentResourceTypeSpace ParentResourceType = "space"
 	ParentResourceTypeRepo  ParentResourceType = "repo"
 )
+
+func GetAllParentResourceTypes() []ParentResourceType {
+	return []ParentResourceType{
+		ParentResourceTypeSpace,
+		ParentResourceTypeRepo,
+	}
+}

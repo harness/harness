@@ -166,12 +166,7 @@ var queryParameterStatePullRequest = openapi3.ParameterOrRef{
 					Schema: &openapi3.Schema{
 						Type:    ptrSchemaType(openapi3.SchemaTypeString),
 						Default: ptrptr(string(enum.PullReqStateOpen)),
-						Enum: []interface{}{
-							ptr.String(string(enum.PullReqStateOpen)),
-							ptr.String(string(enum.PullReqStateClosed)),
-							ptr.String(string(enum.PullReqStateMerged)),
-							ptr.String(string(enum.PullReqStateRejected)),
-						},
+						Enum:    enum.PullReqState("").Enum(),
 					},
 				},
 			},
@@ -188,12 +183,8 @@ var queryParameterSortPullRequest = openapi3.ParameterOrRef{
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeString),
-				Default: ptrptr(enum.PullReqSortNumber.String()),
-				Enum: []interface{}{
-					ptr.String(enum.PullReqSortNumber.String()),
-					ptr.String(enum.PullReqSortCreated.String()),
-					ptr.String(enum.PullReqSortUpdated.String()),
-				},
+				Default: ptrptr(enum.PullReqSortNumber),
+				Enum:    enum.PullReqSort("").Enum(),
 			},
 		},
 	},
@@ -211,11 +202,7 @@ var queryParameterKindPullRequestActivity = openapi3.ParameterOrRef{
 				Items: &openapi3.SchemaOrRef{
 					Schema: &openapi3.Schema{
 						Type: ptrSchemaType(openapi3.SchemaTypeString),
-						Enum: []interface{}{
-							ptr.String(string(enum.PullReqActivityKindSystem)),
-							ptr.String(string(enum.PullReqActivityKindComment)),
-							ptr.String(string(enum.PullReqActivityKindCodeComment)),
-						},
+						Enum: enum.PullReqActivityKind("").Enum(),
 					},
 				},
 			},
@@ -235,11 +222,7 @@ var queryParameterTypePullRequestActivity = openapi3.ParameterOrRef{
 				Items: &openapi3.SchemaOrRef{
 					Schema: &openapi3.Schema{
 						Type: ptrSchemaType(openapi3.SchemaTypeString),
-						Enum: []interface{}{
-							ptr.String(string(enum.PullReqActivityTypeComment)),
-							ptr.String(string(enum.PullReqActivityTypeCodeComment)),
-							ptr.String(string(enum.PullReqActivityTypeTitleChange)),
-						},
+						Enum: enum.PullReqActivityType("").Enum(),
 					},
 				},
 			},

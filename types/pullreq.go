@@ -10,8 +10,8 @@ import (
 
 // PullReq represents a pull request.
 type PullReq struct {
-	ID      int64 `json:"id"`
-	Version int64 `json:"-"` // not returned, it's a internal field
+	ID      int64 `json:"-"` // not returned, it's an internal field
+	Version int64 `json:"-"` // not returned, it's an internal field
 	Number  int64 `json:"number"`
 
 	CreatedBy int64 `json:"-"` // not returned, because the author info is in the Author field
@@ -57,7 +57,7 @@ type PullReqFilter struct {
 // PullReqActivity represents a pull request activity.
 type PullReqActivity struct {
 	ID      int64 `json:"id"`
-	Version int64 `json:"-"` // not returned, it's a internal field
+	Version int64 `json:"-"` // not returned, it's an internal field
 
 	CreatedBy int64  `json:"-"` // not returned, because the author info is in the Author field
 	Created   int64  `json:"created"`

@@ -7,8 +7,12 @@ package enum
 // WebhookParent defines different types of parents of a webhook.
 type WebhookParent string
 
+func (WebhookParent) Enum() []interface{} {
+	return toInterfaceSlice(GetAllWebhookParents())
+}
+
 const (
-	// WebhookParentSpace describes a repo as webhook owner.
+	// WebhookParentRepo describes a repo as webhook owner.
 	WebhookParentRepo WebhookParent = "repo"
 
 	// WebhookParentSpace describes a space as webhook owner.
@@ -24,6 +28,10 @@ func GetAllWebhookParents() []WebhookParent {
 
 // WebhookExecutionResult defines the different results of a webhook execution.
 type WebhookExecutionResult string
+
+func (WebhookExecutionResult) Enum() []interface{} {
+	return toInterfaceSlice(GetAllWebhookExecutionResults())
+}
 
 const (
 	// WebhookExecutionResultSuccess describes a webhook execution result that succeeded.
@@ -46,6 +54,10 @@ func GetAllWebhookExecutionResults() []WebhookExecutionResult {
 
 // WebhookTrigger defines the different types of webhook triggers available.
 type WebhookTrigger string
+
+func (WebhookTrigger) Enum() []interface{} {
+	return toInterfaceSlice(GetAllWebhookTriggers())
+}
 
 const (
 	// WebhookTriggerBranchCreated gets triggered when a branch gets created.
@@ -76,7 +88,7 @@ func GetAllWebhookTriggers() []WebhookTrigger {
 
 var rawWebhookTriggers = toSortedStrings(GetAllWebhookTriggers())
 
-// ParsePullReqActivityType parses the webhook trigger type.
+// ParseWebhookTrigger parses the webhook trigger type.
 func ParseWebhookTrigger(s string) (WebhookTrigger, bool) {
 	if existsInSortedSlice(rawWebhookTriggers, s) {
 		return WebhookTrigger(s), true

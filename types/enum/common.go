@@ -45,3 +45,11 @@ func toSortedStrings[T ~string](vals []T) []string {
 	sort.Strings(res)
 	return res
 }
+
+func toInterfaceSlice[T interface{}](vals []T) []interface{} {
+	res := make([]interface{}, len(vals))
+	for i := range vals {
+		res[i] = vals[i]
+	}
+	return res
+}

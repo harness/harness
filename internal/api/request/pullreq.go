@@ -26,9 +26,8 @@ func GetPullReqCommentIDPath(r *http.Request) (int64, error) {
 
 // ParseSortPullReq extracts the pull request sort parameter from the url.
 func ParseSortPullReq(r *http.Request) enum.PullReqSort {
-	return enum.ParsePullReqSort(
-		r.FormValue(QueryParamSort),
-	)
+	result, _ := enum.ParsePullReqSort(enum.PullReqSort(r.FormValue(QueryParamSort)))
+	return result
 }
 
 // parsePullReqStates extracts the pull request states from the url.
@@ -104,7 +103,7 @@ func parsePullReqActivityKinds(r *http.Request) []enum.PullReqActivityKind {
 	strKinds := r.Form[QueryParamKind]
 	m := make(map[enum.PullReqActivityKind]struct{}) // use map to eliminate duplicates
 	for _, s := range strKinds {
-		kind, ok := enum.ParsePullReqActivityKind(s)
+		kind, ok := enum.ParsePullReqActivityKind(enum.PullReqActivityKind(s))
 		if !ok {
 			continue
 		}
@@ -128,7 +127,7 @@ func parsePullReqActivityTypes(r *http.Request) []enum.PullReqActivityType {
 	strType := r.Form[QueryParamType]
 	m := make(map[enum.PullReqActivityType]struct{}) // use map to eliminate duplicates
 	for _, s := range strType {
-		t, ok := enum.ParsePullReqActivityType(s)
+		t, ok := enum.ParsePullReqActivityType(enum.PullReqActivityType(s))
 		if !ok {
 			continue
 		}

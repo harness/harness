@@ -10,43 +10,13 @@ import (
 	"github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
-// webhookTrigger is a plugin for enum.WebhookTrigger to allow using oneof.
-type webhookTrigger string
-
-func (webhookTrigger) Enum() []interface{} {
-	return toInterfaceSlice(enum.GetAllWebhookTriggers())
-}
-
-// webhookCreateInput is used to overshadow field Triggers of webhook.CreateInput.
-type webhookCreateInput struct {
-	webhook.CreateInput
-	Triggers []webhookTrigger `json:"triggers"`
-}
-
-// webhookParent is a plugin for enum.WebhookParent to allow using oneof.
-type webhookParent string
-
-func (webhookParent) Enum() []interface{} {
-	return toInterfaceSlice(enum.GetAllWebhookParents())
-}
-
-// webhookType is used to overshadow fields Parent & Triggers of types.Webhook.
-type webhookType struct {
-	types.Webhook
-	ParentType            webhookParent           `json:"parent_type"`
-	Triggers              []webhookTrigger        `json:"triggers"`
-	LatestExecutionResult *webhookExecutionResult `json:"latest_execution_result,omitempty"`
-	HasSecret             bool                    `json:"has_secret"`
-}
-
 type createWebhookRequest struct {
 	repoRequest
-	webhookCreateInput
+	webhook.CreateInput
 }
 
 type listWebhooksRequest struct {
@@ -66,29 +36,9 @@ type deleteWebhookRequest struct {
 	webhookRequest
 }
 
-// webhookUpdateInput is used to overshadow field Triggers of webhook.UpdateInput.
-type webhookUpdateInput struct {
-	webhook.UpdateInput
-	Triggers []webhookTrigger `json:"triggers"`
-}
-
 type updateWebhookRequest struct {
 	webhookRequest
-	webhookUpdateInput
-}
-
-// webhookExecutionResult is a plugin for enum.WebhookExecutionResult to allow using oneof.
-type webhookExecutionResult string
-
-func (webhookExecutionResult) Enum() []interface{} {
-	return toInterfaceSlice(enum.GetAllWebhookExecutionResults())
-}
-
-// webhookExecutionType is used to overshadow triggers TriggerType & Result of types.WebhookExecution.
-type webhookExecutionType struct {
-	types.WebhookExecution
-	TriggerType webhookTrigger         `json:"trigger_type"`
-	Result      webhookExecutionResult `json:"result"`
+	webhook.UpdateInput
 }
 
 type listWebhookExecutionsRequest struct {
@@ -110,7 +60,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	createWebhook.WithTags("webhook")
 	createWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "createWebhook"})
 	_ = reflector.SetRequest(&createWebhook, new(createWebhookRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&createWebhook, new(webhookType), http.StatusOK)
+	_ = reflector.SetJSONResponse(&createWebhook, new(types.Webhook), http.StatusOK)
 	_ = reflector.SetJSONResponse(&createWebhook, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&createWebhook, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&createWebhook, new(usererror.Error), http.StatusUnauthorized)
@@ -122,7 +72,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	listWebhooks.WithMapOfAnything(map[string]interface{}{"operationId": "listWebhooks"})
 	listWebhooks.WithParameters(queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&listWebhooks, new(listWebhooksRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&listWebhooks, new([]webhookType), http.StatusOK)
+	_ = reflector.SetJSONResponse(&listWebhooks, new([]types.Webhook), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listWebhooks, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&listWebhooks, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&listWebhooks, new(usererror.Error), http.StatusUnauthorized)
@@ -133,7 +83,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	getWebhook.WithTags("webhook")
 	getWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "getWebhook"})
 	_ = reflector.SetRequest(&getWebhook, new(getWebhookRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&getWebhook, new(webhookType), http.StatusOK)
+	_ = reflector.SetJSONResponse(&getWebhook, new(types.Webhook), http.StatusOK)
 	_ = reflector.SetJSONResponse(&getWebhook, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&getWebhook, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&getWebhook, new(usererror.Error), http.StatusUnauthorized)
@@ -144,7 +94,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	updateWebhook.WithTags("webhook")
 	updateWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "updateWebhook"})
 	_ = reflector.SetRequest(&updateWebhook, new(updateWebhookRequest), http.MethodPatch)
-	_ = reflector.SetJSONResponse(&updateWebhook, new(webhookType), http.StatusOK)
+	_ = reflector.SetJSONResponse(&updateWebhook, new(types.Webhook), http.StatusOK)
 	_ = reflector.SetJSONResponse(&updateWebhook, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&updateWebhook, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&updateWebhook, new(usererror.Error), http.StatusUnauthorized)
@@ -167,7 +117,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	listWebhookExecutions.WithMapOfAnything(map[string]interface{}{"operationId": "listWebhookExecutions"})
 	listWebhookExecutions.WithParameters(queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&listWebhookExecutions, new(listWebhookExecutionsRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&listWebhookExecutions, new([]webhookExecutionType), http.StatusOK)
+	_ = reflector.SetJSONResponse(&listWebhookExecutions, new([]types.WebhookExecution), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listWebhookExecutions, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&listWebhookExecutions, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&listWebhookExecutions, new(usererror.Error), http.StatusUnauthorized)
@@ -180,7 +130,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	getWebhookExecution.WithMapOfAnything(map[string]interface{}{"operationId": "getWebhookExecution"})
 	getWebhookExecution.WithParameters(queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&getWebhookExecution, new(getWebhookExecutionRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&getWebhookExecution, new(webhookExecutionType), http.StatusOK)
+	_ = reflector.SetJSONResponse(&getWebhookExecution, new(types.WebhookExecution), http.StatusOK)
 	_ = reflector.SetJSONResponse(&getWebhookExecution, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&getWebhookExecution, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&getWebhookExecution, new(usererror.Error), http.StatusUnauthorized)
