@@ -110,6 +110,7 @@ export interface StringsMap {
   name: string
   nameYourBranch: string
   nameYourFile: string
+  nameYourWebhook: string
   newFile: string
   newFileNotAllowed: string
   newFolder: string
@@ -149,13 +150,15 @@ export interface StringsMap {
   'pr.mergePR': string
   'pr.metaLine': string
   'pr.modalTitle': string
-  'pr.openBy': string
   'pr.prCanBeMerged': string
+  'pr.prMerged': string
+  'pr.prMergedInfo': string
   'pr.reviewChanges': string
   'pr.showDiff': string
   'pr.showLink': string
   'pr.split': string
   'pr.state': string
+  'pr.statusLine': string
   'pr.titlePlaceHolder': string
   'pr.unified': string
   prefixBase: string
@@ -211,6 +214,7 @@ export interface StringsMap {
   webhookBranchCreated: string
   webhookBranchDeleted: string
   webhookBranchUpdated: string
+  webhookCreated: string
   webhookDeleted: string
   webhookDetails: string
   webhookEventsLabel: string

@@ -7,12 +7,14 @@ import { useAppContext } from 'AppContext'
 import css from './PullRequestsContentHeader.module.scss'
 
 interface PullRequestsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
+  loading?: boolean
   activePullRequestFilterOption?: string
   onPullRequestFilterChanged: (filter: string) => void
   onSearchTermChanged: (searchTerm: string) => void
 }
 
 export function PullRequestsContentHeader({
+  loading,
   onPullRequestFilterChanged,
   onSearchTermChanged,
   activePullRequestFilterOption = PullRequestFilterOption.ALL,
@@ -29,11 +31,12 @@ export function PullRequestsContentHeader({
       { label: getString('merged'), value: PullRequestFilterOption.MERGED },
       { label: getString('closed'), value: PullRequestFilterOption.CLOSED },
       { label: getString('rejected'), value: PullRequestFilterOption.REJECTED },
-      { label: getString('yours'), value: PullRequestFilterOption.YOURS },
+      // { label: getString('yours'), value: PullRequestFilterOption.YOURS },
       { label: getString('all'), value: PullRequestFilterOption.ALL }
     ],
     [getString]
   )
+  const showSpinner = useMemo(() => loading, [loading])
 
   return (
     <Container className={css.main} padding="xlarge">
@@ -49,6 +52,7 @@ export function PullRequestsContentHeader({
         />
         <FlexExpander />
         <TextInput
+          className={css.input}
           placeholder={getString('search')}
           autoFocus
           onFocus={event => event.target.select()}
@@ -58,6 +62,7 @@ export function PullRequestsContentHeader({
             setSearchTerm(value)
             onSearchTermChanged(value)
           }}
+          leftIcon={showSpinner ? CodeIcon.InputSpinner : CodeIcon.InputSearch}
         />
         <Button
           variation={ButtonVariation.PRIMARY}

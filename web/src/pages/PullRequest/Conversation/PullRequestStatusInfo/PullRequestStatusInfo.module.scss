@@ -4,6 +4,11 @@
   border-radius: 5px;
   background-color: var(--white);
 
+  &.merged {
+    border-color: transparent !important;
+    background: var(--purple-50) !important;
+  }
+
   .btn {
     background-color: var(--green-800) !important;
     color: var(--white) !important;

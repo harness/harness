@@ -69,7 +69,7 @@ export const Conversation: React.FC<ConversationProps> = ({
 
   return (
     <PullRequestTabContentWrapper loading={loading} error={error} onRetry={refetchActivities}>
-      <Container padding="xsmall">
+      <Container>
         <Layout.Vertical spacing="xlarge">
           <PullRequestStatusInfo
             repoMetadata={repoMetadata}

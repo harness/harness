@@ -35,7 +35,11 @@ enum WebhookIndividualEvent {
   BRANCH_DELETED = 'branch_deleted'
 }
 
+const SECRET_MASK = '********'
+
 interface FormData {
+  name: string
+  description: string
   url: string
   secret: string
   enabled: boolean
@@ -66,8 +70,10 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
       <Layout.Vertical className={css.form}>
         <Formik<FormData>
           initialValues={{
+            name: webhook?.display_name || '',
+            description: webhook?.description || '',
             url: webhook?.url || '',
-            secret: isEdit ? '***' : '',
+            secret: isEdit ? SECRET_MASK : '',
             enabled: webhook ? (webhook?.enabled as boolean) : true,
             secure: webhook?.insecure === false || false,
             branchCreated: webhook?.triggers?.includes(WebhookIndividualEvent.BRANCH_CREATED) || false,
@@ -80,8 +86,8 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
           validateOnChange
           validateOnBlur
           validationSchema={yup.object().shape({
-            url: yup.string().required().url(),
-            secret: yup.string().required()
+            name: yup.string().trim().required(),
+            url: yup.string().required().url()
           })}
           onSubmit={formData => {
             const triggers: OpenapiWebhookTrigger[] = []
@@ -102,31 +108,26 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
               return showError(getString('oneMustBeSelected'))
             }
 
+            const secret = (formData.secret || '').trim()
+
             const data: OpenapiUpdateWebhookRequest = {
+              display_name: formData.name,
+              description: formData.description,
               url: formData.url,
-              secret: formData.secret,
+              secret: secret !== SECRET_MASK ? secret : undefined,
               enabled: formData.enabled,
               insecure: !formData.secure,
               triggers
             }
 
             mutate(data)
-              .then((response: OpenapiWebhookType) => {
-                if (isEdit) {
-                  showSuccess(getString('webhookUpdated'))
-                  history.push(
-                    routes.toCODEWebhooks({
-                      repoPath: repoMetadata.path as string
-                    })
-                  )
-                } else {
-                  history.push(
-                    routes.toCODEWebhookDetails({
-                      repoPath: repoMetadata.path as string,
-                      webhookId: String(response.id)
-                    })
-                  )
-                }
+              .then(() => {
+                showSuccess(getString(isEdit ? 'webhookUpdated' : 'webhookCreated'))
+                history.push(
+                  routes.toCODEWebhooks({
+                    repoPath: repoMetadata.path as string
+                  })
+                )
               })
               .catch(exception => {
                 showError(getErrorMessage(exception))
@@ -138,11 +139,24 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
             return (
               <FormikForm>
                 <FormInput.Text
+                  name="name"
+                  label={getString('name')}
+                  placeholder={getString('nameYourWebhook')}
+                  tooltipProps={{ dataTooltipId: 'webhookName' }}
+                  inputGroup={{ autoFocus: true }}
+                />
+
+                <FormInput.TextArea
+                  name="description"
+                  label={getString('description')}
+                  tooltipProps={{ dataTooltipId: 'webhookDescription' }}
+                />
+
+                <FormInput.Text
                   name="url"
                   label={getString('payloadUrlLabel')}
                   placeholder={getString('samplePayloadUrl')}
                   tooltipProps={{ dataTooltipId: 'payloadUrl' }}
-                  inputGroup={{ autoFocus: true }}
                 />
 
                 <FormInput.Text
@@ -212,10 +226,7 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                   </div>
                 </FormGroup>
 
-                <Layout.Horizontal
-                  spacing="small"
-                  padding={{ right: 'xxlarge', top: 'xxxlarge', bottom: 'large' }}
-                  style={{ alignItems: 'center' }}>
+                <Layout.Horizontal spacing="medium" padding={{ top: 'large' }}>
                   <Button
                     type="submit"
                     text={getString(isEdit ? 'updateWebhook' : 'createWebhook')}

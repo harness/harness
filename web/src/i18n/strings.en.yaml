@@ -164,7 +164,7 @@ pr:
   buttonText: Open pull request
   metaLine: '{user} wants to merge {number} {number|1:commit,commits} into {target} from {source}'
   state: '{state|closed:Closed,merged:Merged,rejected:Rejected,Open}'
-  openBy: '#{number} opened {time} by {user}'
+  statusLine: '#{number} {state|merged:merged,closed:closed,rejected:rejected,opened} {time} by {user}'
   diffStatus: '{status|deleted:Deleted,new:Added,renamed:Renamed,copied:Copied,Changed}'
   showDiff: Show Diff
   fileDeleted: This file was deleted.
@@ -182,6 +182,8 @@ pr:
   failedToUpdate: Failed to update Pull Request. Please try again.
   failedToSaveComment: Failed to save comment. Please try again.
   failedToDeleteComment: Failed to delete comment. Please try again.
+  prMerged: This branch was merged
+  prMergedInfo: '{user} merged branch {source} into {target} {time}'
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'
@@ -209,13 +211,15 @@ edited: edited
 deleted: deleted
 commentDeleted: This comment was deleted.
 enterSecret: Enter secret
-confirmDeleteWebhook: Are you sure you want to delet this webhook?
+confirmDeleteWebhook: Are you sure you want to delete this webhook?
 webhookDeleted: Webhook deleted.
 failedToDeleteWebhook: Failed to delete Webhook. Please try again.
 webhookDetails: Webhook Details
 updateWebhook: Update Webhook
 webhookUpdated: Webhook updated successfully.
+webhookCreated: Webhook created successfully.
 oneMustBeSelected: At least one event must be selected
 webhookBranchCreated: Branch created
 webhookBranchUpdated: Branch updated
 webhookBranchDeleted: Branch deleted
+nameYourWebhook: Name your webhook

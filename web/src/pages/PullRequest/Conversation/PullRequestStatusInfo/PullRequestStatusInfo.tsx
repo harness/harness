@@ -1,8 +1,21 @@
 import React from 'react'
-import { Button, Color, Container, FlexExpander, Icon, Layout, Text, useToaster } from '@harness/uicore'
+import {
+  Button,
+  Color,
+  Container,
+  FlexExpander,
+  Icon,
+  Layout,
+  StringSubstitute,
+  Text,
+  useToaster
+} from '@harness/uicore'
 import { useMutate } from 'restful-react'
+import cx from 'classnames'
+import ReactTimeago from 'react-timeago'
+import type { TypesPullReq } from 'services/code'
 import { useStrings } from 'framework/strings'
-import type { GitInfoProps } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps, PullRequestFilterOption } from 'utils/GitUtils'
 import { getErrorMessage } from 'utils/Utils'
 import css from './PullRequestStatusInfo.module.scss'
 
@@ -21,6 +34,10 @@ export const PullRequestStatusInfo: React.FC<PullRequestStatusInfoProps> = ({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.id}/merge`
   })
+
+  if (pullRequestMetadata.state === PullRequestFilterOption.MERGED) {
+    return <MergeInfo pullRequestMetadata={pullRequestMetadata} />
+  }
 
   return (
     <Container className={css.main} padding="xlarge">
@@ -47,6 +64,33 @@ export const PullRequestStatusInfo: React.FC<PullRequestStatusInfoProps> = ({
           />
         </Container>
       </Layout.Vertical>
+    </Container>
+  )
+}
+
+const MergeInfo: React.FC<{ pullRequestMetadata: TypesPullReq }> = ({ pullRequestMetadata }) => {
+  const { getString } = useStrings()
+
+  return (
+    <Container className={cx(css.main, css.merged)} padding="xlarge">
+      <Layout.Horizontal spacing="medium" flex={{ alignItems: 'center' }}>
+        <Icon name={CodeIcon.PullRequest} size={28} color={Color.PURPLE_700} />
+        <Container>
+          <Text className={css.heading}>{getString('pr.prMerged')}</Text>
+          <Text className={css.sub}>
+            <StringSubstitute
+              str={getString('pr.prMergedInfo')}
+              vars={{
+                user: <strong>{pullRequestMetadata.merger?.display_name}</strong>,
+                source: <strong>{pullRequestMetadata.source_branch}</strong>,
+                target: <strong>{pullRequestMetadata.target_branch} </strong>,
+                time: <ReactTimeago date={pullRequestMetadata.merged as number} />
+              }}
+            />
+          </Text>
+        </Container>
+        <FlexExpander />
+      </Layout.Horizontal>
     </Container>
   )
 }

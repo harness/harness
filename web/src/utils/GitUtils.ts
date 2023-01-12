@@ -50,8 +50,8 @@ export enum GitCommitAction {
 
 export enum PullRequestState {
   OPEN = 'open',
-  CLOSED = 'closed',
   MERGED = 'merged',
+  CLOSED = 'closed',
   REJECTED = 'rejected'
 }
 

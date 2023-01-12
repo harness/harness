@@ -10,7 +10,8 @@ import {
   Layout,
   Icon,
   Utils,
-  useToaster
+  useToaster,
+  IconName
 } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
@@ -62,8 +63,8 @@ export default function Webhooks() {
               <Icon name="code-webhook" size={32} />
               <Container padding={{ left: 'small' }} style={{ flexGrow: 1 }}>
                 <Layout.Vertical spacing="small">
-                  <Text icon="success-tick" color={Color.GREY_800} className={css.title}>
-                    {row.original.url}
+                  <Text {...generateLastExecutionStateIcon(row.original)} color={Color.GREY_800} className={css.title}>
+                    {row.original.display_name}
                   </Text>
                   {!!row.original.triggers?.length && (
                     <Text color={Color.GREY_500}>({row.original.triggers.join(', ')})</Text>
@@ -180,4 +181,27 @@ export default function Webhooks() {
       </PageBody>
     </Container>
   )
+}
+
+const generateLastExecutionStateIcon = (
+  webhook: OpenapiWebhookType
+): { icon: IconName; iconProps?: { color?: Color } } => {
+  let icon: IconName = 'dot'
+  let color: Color | undefined = undefined
+
+  switch (webhook.latest_execution_result) {
+    case 'fatal_error':
+      icon = 'danger-icon'
+      break
+    case 'retriable_error':
+      icon = 'coverage-status-error'
+      break
+    case 'success':
+      icon = 'coverage-status-success'
+      break
+    default:
+      color = Color.GREY_250
+  }
+
+  return { icon, ...(color ? { iconProps: { color } } : undefined) }
 }
