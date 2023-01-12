@@ -1,6 +1,6 @@
 /* eslint-disable */
 // this is an auto-generated file
 declare const styles: {
-  readonly descBox: string
+  readonly box: string
 }
 export default styles
