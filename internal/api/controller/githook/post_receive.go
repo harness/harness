@@ -12,8 +12,6 @@ import (
 	"github.com/harness/gitness/internal/auth"
 	events "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/types"
-
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -96,13 +94,28 @@ func (c *Controller) reportTagEvent(ctx context.Context,
 	principalID int64, repoID int64, tagUpdate ReferenceUpdate) {
 	switch {
 	case tagUpdate.Old == types.NilSHA:
-		// TODO
+		c.gitReporter.TagCreated(ctx, &events.TagCreatedPayload{
+			RepoID:      repoID,
+			PrincipalID: principalID,
+			Ref:         tagUpdate.Ref,
+			SHA:         tagUpdate.New,
+		})
 	case tagUpdate.New == types.NilSHA:
-		// TODO
+		c.gitReporter.TagDeleted(ctx, &events.TagDeletedPayload{
+			RepoID:      repoID,
+			PrincipalID: principalID,
+			Ref:         tagUpdate.Ref,
+			SHA:         tagUpdate.Old,
+		})
 	default:
-		// TODO
+		c.gitReporter.TagUpdated(ctx, &events.TagUpdatedPayload{
+			RepoID:      repoID,
+			PrincipalID: principalID,
+			Ref:         tagUpdate.Ref,
+			OldSHA:      tagUpdate.Old,
+			NewSHA:      tagUpdate.New,
+			// tags can only be force updated!
+			Forced: true,
+		})
 	}
-
-	log.Ctx(ctx).Info().Msgf("received a change for tag '%s' in repo %d by principal %d (SHA: %s -> %s)'",
-		tagUpdate.Ref, repoID, principalID, tagUpdate.Old, tagUpdate.New)
 }

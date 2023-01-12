@@ -3406,6 +3406,9 @@ components:
       - branch_created
       - branch_updated
       - branch_deleted
+      - tag_created
+      - tag_updated
+      - tag_deleted
       type: string
     OpenapiWebhookType:
       properties:

@@ -17,7 +17,7 @@ import (
 )
 
 // BranchBody describes the body of Branch related webhook triggers.
-// NOTE: Use a single payload format to make it easier for consumers!
+// NOTE: Use a single payload format (and keep it similar to TagBody) to make it easier for consumers!
 // TODO: move in separate package for small import?
 type BranchBody struct {
 	Trigger   enum.WebhookTrigger `json:"trigger"`

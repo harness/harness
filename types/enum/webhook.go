@@ -45,7 +45,6 @@ func GetAllWebhookExecutionResults() []WebhookExecutionResult {
 }
 
 // WebhookTrigger defines the different types of webhook triggers available.
-// NOTE: For now we keep a small list - will be extended later on once we decided on a final set of triggers.
 type WebhookTrigger string
 
 const (
@@ -55,6 +54,13 @@ const (
 	WebhookTriggerBranchUpdated WebhookTrigger = "branch_updated"
 	// WebhookTriggerBranchDeleted gets triggered when a branch gets deleted.
 	WebhookTriggerBranchDeleted WebhookTrigger = "branch_deleted"
+
+	// WebhookTriggerTagCreated gets triggered when a tag gets created.
+	WebhookTriggerTagCreated WebhookTrigger = "tag_created"
+	// WebhookTriggerTagUpdated gets triggered when a tag gets updated.
+	WebhookTriggerTagUpdated WebhookTrigger = "tag_updated"
+	// WebhookTriggerTagDeleted gets triggered when a tag gets deleted.
+	WebhookTriggerTagDeleted WebhookTrigger = "tag_deleted"
 )
 
 func GetAllWebhookTriggers() []WebhookTrigger {
@@ -62,6 +68,9 @@ func GetAllWebhookTriggers() []WebhookTrigger {
 		WebhookTriggerBranchCreated,
 		WebhookTriggerBranchUpdated,
 		WebhookTriggerBranchDeleted,
+		WebhookTriggerTagCreated,
+		WebhookTriggerTagUpdated,
+		WebhookTriggerTagDeleted,
 	}
 }
 

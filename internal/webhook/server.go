@@ -75,6 +75,10 @@ func NewServer(ctx context.Context, config Config,
 			_ = r.RegisterBranchUpdated(server.handleEventBranchUpdated)
 			_ = r.RegisterBranchDeleted(server.handleEventBranchDeleted)
 
+			_ = r.RegisterTagCreated(server.handleEventTagCreated)
+			_ = r.RegisterTagUpdated(server.handleEventTagUpdated)
+			_ = r.RegisterTagDeleted(server.handleEventTagDeleted)
+
 			return nil
 		})
 	if err != nil {
