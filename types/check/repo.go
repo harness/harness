@@ -35,6 +35,11 @@ func RepoNoUID(repo *types.Repository) error {
 		return ErrRepositoryRequiresParentID
 	}
 
+	// validate description
+	if err := Description(repo.Description); err != nil {
+		return err
+	}
+
 	// TODO: validate defaultBranch, ...
 
 	return nil

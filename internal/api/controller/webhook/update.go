@@ -9,15 +9,18 @@ import (
 
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
 type UpdateInput struct {
-	URL      *string               `json:"url"`
-	Secret   *string               `json:"secret"`
-	Enabled  *bool                 `json:"enabled"`
-	Insecure *bool                 `json:"insecure"`
-	Triggers []enum.WebhookTrigger `json:"triggers"`
+	DisplayName *string               `json:"display_name"`
+	Description *string               `json:"description"`
+	URL         *string               `json:"url"`
+	Secret      *string               `json:"secret"`
+	Enabled     *bool                 `json:"enabled"`
+	Insecure    *bool                 `json:"insecure"`
+	Triggers    []enum.WebhookTrigger `json:"triggers"`
 }
 
 // Update updates an existing webhook.
@@ -45,6 +48,12 @@ func (c *Controller) Update(
 	}
 
 	// update webhook struct (only for values that are provided)
+	if in.DisplayName != nil {
+		hook.DisplayName = *in.DisplayName
+	}
+	if in.Description != nil {
+		hook.Description = *in.Description
+	}
 	if in.URL != nil {
 		hook.URL = *in.URL
 	}
@@ -69,6 +78,16 @@ func (c *Controller) Update(
 }
 
 func checkUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwork bool) error {
+	if in.DisplayName != nil {
+		if err := check.DisplayName(*in.DisplayName); err != nil {
+			return err
+		}
+	}
+	if in.Description != nil {
+		if err := check.Description(*in.Description); err != nil {
+			return err
+		}
+	}
 	if in.URL != nil {
 		if err := checkURL(*in.URL, allowLoopback, allowPrivateNetwork); err != nil {
 			return err
@@ -79,7 +98,6 @@ func checkUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwork b
 			return err
 		}
 	}
-
 	if in.Triggers != nil {
 		if err := checkTriggers(in.Triggers); err != nil {
 			return err

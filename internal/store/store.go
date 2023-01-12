@@ -321,6 +321,10 @@ type (
 		// Update updates an existing webhook.
 		Update(ctx context.Context, hook *types.Webhook) error
 
+		// UpdateOptLock updates the webhook using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, hook *types.Webhook,
+			mutateFn func(hook *types.Webhook) error) (*types.Webhook, error)
+
 		// Delete deletes the webhook for the given id.
 		Delete(ctx context.Context, id int64) error
 
@@ -347,11 +351,5 @@ type (
 
 		// ListForTrigger lists the webhook executions for a given trigger id.
 		ListForTrigger(ctx context.Context, triggerID string) ([]*types.WebhookExecution, error)
-	}
-
-	// SystemStore defines internal system metadata storage.
-	SystemStore interface {
-		// Config returns the system configuration.
-		Config(ctx context.Context) *types.Config
 	}
 )

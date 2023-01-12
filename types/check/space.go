@@ -51,5 +51,10 @@ func SpaceNoUID(space *types.Space) error {
 		}
 	}
 
+	// validate description
+	if err := Description(space.Description); err != nil {
+		return err
+	}
+
 	return nil
 }

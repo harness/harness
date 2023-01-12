@@ -167,6 +167,7 @@ func (s *Server) RetriggerWebhookExecution(ctx context.Context, webhookExecution
 	}, nil
 }
 
+//nolint:gocognit // refactor into smaller chunks if necessary.
 func (s *Server) executeWebhook(ctx context.Context, webhook *types.Webhook, triggerID string,
 	triggerType enum.WebhookTrigger, body any, rerunOfID *int64) (*types.WebhookExecution, error) {
 	// build execution entry on the fly (save no matter what)
@@ -188,8 +189,21 @@ func (s *Server) executeWebhook(ctx context.Context, webhook *types.Webhook, tri
 		err := s.webhookExecutionStore.Create(oCtx, &execution)
 		if err != nil {
 			log.Ctx(ctx).Warn().Err(err).Msgf(
-				"failed to store webhook execution that ended with Result: %d, Response.Status: '%s', Error: '%s'",
+				"failed to store webhook execution that ended with Result: %s, Response.Status: '%s', Error: '%s'",
 				execution.Result, execution.Response.Status, execution.Error)
+		}
+
+		// update latest execution result of webhook IFF it's different from before (best effort)
+		if webhook.LatestExecutionResult == nil || *webhook.LatestExecutionResult != execution.Result {
+			_, err = s.webhookStore.UpdateOptLock(oCtx, webhook, func(hook *types.Webhook) error {
+				hook.LatestExecutionResult = &execution.Result
+				return nil
+			})
+			if err != nil {
+				log.Ctx(ctx).Warn().Err(err).Msgf(
+					"failed to update latest execution result to %s for webhook %d",
+					execution.Result, webhook.ID)
+			}
 		}
 	}(ctx, time.Now())
 
@@ -293,12 +307,6 @@ func prepareHTTPRequest(ctx context.Context, execution *types.WebhookExecution,
 	execution.Request.Body = bBuff.String()
 	execution.Retriggerable = true
 
-	// generate HMAC
-	hmac, err := generateHMACSHA256(bBuff.Bytes(), []byte(webhook.Secret))
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate SHA256 based HMAC: %w", err)
-	}
-
 	// create request (url + body)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, webhook.URL, bBuff)
 	if err != nil {
@@ -310,10 +318,20 @@ func prepareHTTPRequest(ctx context.Context, execution *types.WebhookExecution,
 	}
 
 	// setup headers
-	// TODO: Take 'Gitness' as config input?
-	req.Header.Add("X-Gitness-Signature", hmac)
 	req.Header.Add("User-Agent", fmt.Sprintf("Gitness/%s", version.Version))
 	req.Header.Add("Content-Type", "application/json")
+
+	// add HMAC only if a secret was provided
+	if webhook.Secret != "" {
+		var hmac string
+		hmac, err = generateHMACSHA256(bBuff.Bytes(), []byte(webhook.Secret))
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate SHA256 based HMAC: %w", err)
+		}
+		// TODO: Take 'Gitness' as config input?
+		req.Header.Add("X-Gitness-Signature", hmac)
+	}
+
 	hBuffer := &bytes.Buffer{}
 	err = req.Header.Write(hBuffer)
 	if err != nil {

@@ -19,11 +19,17 @@ const (
 
 	minEmailLength = 1
 	maxEmailLength = 250
+
+	maxDescriptionLength = 1024
 )
 
 var (
 	ErrDisplayNameLength = &ValidationError{
 		fmt.Sprintf("DisplayName has to be between %d and %d in length.", minDisplayNameLength, maxDisplayNameLength),
+	}
+
+	ErrDescriptionTooLong = &ValidationError{
+		fmt.Sprintf("Description can be at most %d in length.", maxDescriptionLength),
 	}
 
 	ErrUIDLength = &ValidationError{
@@ -49,6 +55,16 @@ func DisplayName(displayName string) error {
 	}
 
 	return ForControlCharacters(displayName)
+}
+
+// Description checks the provided description and returns an error if it isn't valid.
+func Description(description string) error {
+	l := len(description)
+	if l > maxDescriptionLength {
+		return ErrDescriptionTooLong
+	}
+
+	return ForControlCharacters(description)
 }
 
 // ForControlCharacters ensures that there are no control characters in the provided string.

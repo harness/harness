@@ -10,15 +10,18 @@ import (
 
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
 type CreateInput struct {
-	URL      string                `json:"url"`
-	Secret   string                `json:"secret"`
-	Enabled  bool                  `json:"enabled"`
-	Insecure bool                  `json:"insecure"`
-	Triggers []enum.WebhookTrigger `json:"triggers"`
+	DisplayName string                `json:"display_name"`
+	Description string                `json:"description"`
+	URL         string                `json:"url"`
+	Secret      string                `json:"secret"`
+	Enabled     bool                  `json:"enabled"`
+	Insecure    bool                  `json:"insecure"`
+	Triggers    []enum.WebhookTrigger `json:"triggers"`
 }
 
 // Create creates a new webhook.
@@ -52,11 +55,14 @@ func (c *Controller) Create(
 		ParentType: enum.WebhookParentRepo,
 
 		// user input
-		URL:      in.URL,
-		Secret:   in.Secret,
-		Enabled:  in.Enabled,
-		Insecure: in.Insecure,
-		Triggers: deduplicateTriggers(in.Triggers),
+		DisplayName:           in.DisplayName,
+		Description:           in.Description,
+		URL:                   in.URL,
+		Secret:                in.Secret,
+		Enabled:               in.Enabled,
+		Insecure:              in.Insecure,
+		Triggers:              deduplicateTriggers(in.Triggers),
+		LatestExecutionResult: nil,
 	}
 
 	err = c.webhookStore.Create(ctx, hook)
@@ -68,6 +74,12 @@ func (c *Controller) Create(
 }
 
 func checkCreateInput(in *CreateInput, allowLoopback bool, allowPrivateNetwork bool) error {
+	if err := check.DisplayName(in.DisplayName); err != nil {
+		return err
+	}
+	if err := check.Description(in.Description); err != nil {
+		return err
+	}
 	if err := checkURL(in.URL, allowLoopback, allowPrivateNetwork); err != nil {
 		return err
 	}

@@ -17,6 +17,7 @@ import (
 
 	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 var _ store.WebhookStore = (*WebhookStore)(nil)
@@ -44,11 +45,14 @@ type webhook struct {
 	Created   int64    `db:"webhook_created"`
 	Updated   int64    `db:"webhook_updated"`
 
-	URL      string `db:"webhook_url"`
-	Secret   string `db:"webhook_secret"`
-	Enabled  bool   `db:"webhook_enabled"`
-	Insecure bool   `db:"webhook_insecure"`
-	Triggers string `db:"webhook_triggers"`
+	DisplayName           string      `db:"webhook_display_name"`
+	Description           string      `db:"webhook_description"`
+	URL                   string      `db:"webhook_url"`
+	Secret                string      `db:"webhook_secret"`
+	Enabled               bool        `db:"webhook_enabled"`
+	Insecure              bool        `db:"webhook_insecure"`
+	Triggers              string      `db:"webhook_triggers"`
+	LatestExecutionResult null.String `db:"webhook_latest_execution_result"`
 }
 
 const (
@@ -60,11 +64,14 @@ const (
 		,webhook_created_by
 		,webhook_created
 		,webhook_updated
+		,webhook_display_name
+		,webhook_description
 		,webhook_url
 		,webhook_secret
 		,webhook_enabled
 		,webhook_insecure
-		,webhook_triggers`
+		,webhook_triggers
+		,webhook_latest_execution_result`
 
 	webhookSelectBase = `
 	SELECT` + webhookColumns + `
@@ -100,22 +107,28 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 			,webhook_created_by
 			,webhook_created
 			,webhook_updated
+			,webhook_display_name
+			,webhook_description
 			,webhook_url
 			,webhook_secret
 			,webhook_enabled
 			,webhook_insecure
 			,webhook_triggers
+			,webhook_latest_execution_result
 		) values (
 			:webhook_repo_id
 			,:webhook_space_id
 			,:webhook_created_by
 			,:webhook_created
 			,:webhook_updated
+			,:webhook_display_name
+			,:webhook_description
 			,:webhook_url
 			,:webhook_secret
 			,:webhook_enabled
 			,:webhook_insecure
 			,:webhook_triggers
+			,:webhook_latest_execution_result
 		) RETURNING webhook_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -142,13 +155,16 @@ func (s *WebhookStore) Update(ctx context.Context, hook *types.Webhook) error {
 	const sqlQuery = `
 		UPDATE webhooks
 		SET
-			webhook_version = :webhook_version
+			 webhook_version = :webhook_version
 			,webhook_updated = :webhook_updated
+			,webhook_display_name = :webhook_display_name
+			,webhook_description = :webhook_description
 			,webhook_url = :webhook_url
 			,webhook_secret = :webhook_secret
 			,webhook_enabled = :webhook_enabled
 			,webhook_insecure = :webhook_insecure
 			,webhook_triggers = :webhook_triggers
+			,webhook_latest_execution_result = :webhook_latest_execution_result
 		WHERE webhook_id = :webhook_id and webhook_version = :webhook_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -185,6 +201,32 @@ func (s *WebhookStore) Update(ctx context.Context, hook *types.Webhook) error {
 	hook.Updated = dbHook.Updated
 
 	return nil
+}
+
+// UpdateOptLock updates the webhook using the optimistic locking mechanism.
+func (s *WebhookStore) UpdateOptLock(ctx context.Context, hook *types.Webhook,
+	mutateFn func(hook *types.Webhook) error) (*types.Webhook, error) {
+	for {
+		dup := *hook
+
+		err := mutateFn(&dup)
+		if err != nil {
+			return nil, fmt.Errorf("failed to mutate the webhook: %w", err)
+		}
+
+		err = s.Update(ctx, &dup)
+		if err == nil {
+			return &dup, nil
+		}
+		if !errors.Is(err, store.ErrConflict) {
+			return nil, fmt.Errorf("failed to update the webhook: %w", err)
+		}
+
+		hook, err = s.Find(ctx, hook.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find the latst version of the webhook: %w", err)
+		}
+	}
 }
 
 // Delete deletes the webhook for the given id.
@@ -276,16 +318,19 @@ func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, 
 
 func mapToWebhook(hook *webhook) (*types.Webhook, error) {
 	res := &types.Webhook{
-		ID:        hook.ID,
-		Version:   hook.Version,
-		CreatedBy: hook.CreatedBy,
-		Created:   hook.Created,
-		Updated:   hook.Updated,
-		URL:       hook.URL,
-		Secret:    hook.Secret,
-		Enabled:   hook.Enabled,
-		Insecure:  hook.Insecure,
-		Triggers:  triggersFromString(hook.Triggers),
+		ID:                    hook.ID,
+		Version:               hook.Version,
+		CreatedBy:             hook.CreatedBy,
+		Created:               hook.Created,
+		Updated:               hook.Updated,
+		DisplayName:           hook.DisplayName,
+		Description:           hook.Description,
+		URL:                   hook.URL,
+		Secret:                hook.Secret,
+		Enabled:               hook.Enabled,
+		Insecure:              hook.Insecure,
+		Triggers:              triggersFromString(hook.Triggers),
+		LatestExecutionResult: (*enum.WebhookExecutionResult)(hook.LatestExecutionResult.Ptr()),
 	}
 
 	switch {
@@ -306,16 +351,19 @@ func mapToWebhook(hook *webhook) (*types.Webhook, error) {
 
 func mapToInternalWebhook(hook *types.Webhook) (*webhook, error) {
 	res := &webhook{
-		ID:        hook.ID,
-		Version:   hook.Version,
-		CreatedBy: hook.CreatedBy,
-		Created:   hook.Created,
-		Updated:   hook.Updated,
-		URL:       hook.URL,
-		Secret:    hook.Secret,
-		Enabled:   hook.Enabled,
-		Insecure:  hook.Insecure,
-		Triggers:  triggersToString(hook.Triggers),
+		ID:                    hook.ID,
+		Version:               hook.Version,
+		CreatedBy:             hook.CreatedBy,
+		Created:               hook.Created,
+		Updated:               hook.Updated,
+		DisplayName:           hook.DisplayName,
+		Description:           hook.Description,
+		URL:                   hook.URL,
+		Secret:                hook.Secret,
+		Enabled:               hook.Enabled,
+		Insecure:              hook.Insecure,
+		Triggers:              triggersToString(hook.Triggers),
+		LatestExecutionResult: null.StringFromPtr((*string)(hook.LatestExecutionResult)),
 	}
 
 	switch hook.ParentType {
