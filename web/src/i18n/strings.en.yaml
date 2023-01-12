@@ -182,7 +182,7 @@ pr:
   failedToUpdate: Failed to update Pull Request. Please try again.
   failedToSaveComment: Failed to save comment. Please try again.
   failedToDeleteComment: Failed to delete comment. Please try again.
-  prMerged: This branch was merged
+  prMerged: This Pull Request was merged
   prMergedInfo: '{user} merged branch {source} into {target} {time}'
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
