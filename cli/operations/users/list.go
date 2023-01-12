@@ -35,7 +35,7 @@ type listCommand struct {
 func (c *listCommand) run(*kingpin.ParseContext) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	list, err := c.client.UserList(ctx, types.Params{
+	list, err := c.client.UserList(ctx, types.UserFilter{
 		Size: c.size,
 		Page: c.page,
 	})

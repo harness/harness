@@ -22,13 +22,13 @@ const (
 func (e Order) String() string {
 	switch e {
 	case OrderDesc:
-		return "desc"
+		return desc
 	case OrderAsc:
-		return "asc"
+		return asc
 	case OrderDefault:
-		return "default"
+		return defaultString
 	default:
-		return "unknown"
+		return undefined
 	}
 }
 
@@ -36,9 +36,9 @@ func (e Order) String() string {
 // an order enumeration.
 func ParseOrder(s string) Order {
 	switch strings.ToLower(s) {
-	case "asc", "ascending":
+	case asc, ascending:
 		return OrderAsc
-	case "desc", "descending":
+	case desc, descending:
 		return OrderDesc
 	default:
 		return OrderDefault

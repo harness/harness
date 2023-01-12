@@ -11,6 +11,8 @@ const (
 	uid           = "uid"
 	path          = "path"
 	name          = "name"
+	email         = "email"
+	admin         = "admin"
 	number        = "number"
 	created       = "created"
 	createdAt     = "created_at"
@@ -24,6 +26,10 @@ const (
 	system        = "system"
 	comment       = "comment"
 	code          = "code"
+	asc           = "asc"
+	ascending     = "ascending"
+	desc          = "desc"
+	descending    = "descending"
 )
 
 func existsInSortedSlice(strs []string, s string) bool {

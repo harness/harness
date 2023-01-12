@@ -25,17 +25,17 @@ const (
 // and returns the equivalent enumeration.
 func ParseUserAttr(s string) UserAttr {
 	switch strings.ToLower(s) {
-	case "id":
+	case uid:
 		return UserAttrUID
-	case "name":
+	case name:
 		return UserAttrName
-	case "email":
+	case email:
 		return UserAttrEmail
-	case "admin":
+	case admin:
 		return UserAttrAdmin
-	case "created", "created_at":
+	case created, createdAt:
 		return UserAttrCreated
-	case "updated", "updated_at":
+	case updated, updatedAt:
 		return UserAttrUpdated
 	default:
 		return UserAttrNone

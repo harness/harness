@@ -26,7 +26,7 @@ type Client interface {
 	User(ctx context.Context, key string) (*types.User, error)
 
 	// UserList returns a list of all registered users.
-	UserList(ctx context.Context, params types.Params) ([]types.User, error)
+	UserList(ctx context.Context, params types.UserFilter) ([]types.User, error)
 
 	// UserCreate creates a new user account.
 	UserCreate(ctx context.Context, user *types.User) (*types.User, error)

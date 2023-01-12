@@ -142,7 +142,7 @@ func (mr *MockClientMockRecorder) UserDelete(arg0, arg1 interface{}) *gomock.Cal
 }
 
 // UserList mocks base method.
-func (m *MockClient) UserList(arg0 context.Context, arg1 types.Params) ([]types.User, error) {
+func (m *MockClient) UserList(arg0 context.Context, arg1 types.UserFilter) ([]types.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UserList", arg0, arg1)
 	ret0, _ := ret[0].([]types.User)

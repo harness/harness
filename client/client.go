@@ -112,7 +112,7 @@ func (c *HTTPClient) User(ctx context.Context, key string) (*types.User, error) 
 }
 
 // UserList returns a list of all registered users.
-func (c *HTTPClient) UserList(ctx context.Context, params types.Params) ([]types.User, error) {
+func (c *HTTPClient) UserList(ctx context.Context, params types.UserFilter) ([]types.User, error) {
 	out := []types.User{}
 	uri := fmt.Sprintf("%s/api/v1/users?page=%d&limit=%d", c.base, params.Page, params.Size)
 	err := c.get(ctx, uri, &out)
