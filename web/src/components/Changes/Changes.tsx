@@ -13,6 +13,7 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
 // import { useRawDiff } from 'services/code'
 import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
+import type { TypesPullReq } from 'services/code'
 import { PullRequestTabContentWrapper } from '../../pages/PullRequest/PullRequestTabContentWrapper'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
@@ -26,9 +27,16 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   targetBranch?: string
   sourceBranch?: string
   readOnly?: boolean
+  pullRequestMetadata?: TypesPullReq
 }
 
-export const Changes: React.FC<ChangesProps> = ({ repoMetadata, targetBranch, sourceBranch, readOnly }) => {
+export const Changes: React.FC<ChangesProps> = ({
+  repoMetadata,
+  targetBranch,
+  sourceBranch,
+  readOnly,
+  pullRequestMetadata
+}) => {
   const { getString } = useStrings()
   const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SIDE_BY_SIDE)
   const [lineBreaks, setLineBreaks] = useUserPreference(UserPreference.DIFF_LINE_BREAKS, false)
@@ -130,10 +138,12 @@ export const Changes: React.FC<ChangesProps> = ({ repoMetadata, targetBranch, so
                 )}
               </Container>
               <FlexExpander />
-
-              {!readOnly && (
-                <Button text={getString('pr.reviewChanges')} variation={ButtonVariation.PRIMARY} intent="success" />
-              )}
+              <Button
+                text={getString('pr.reviewChanges')}
+                variation={ButtonVariation.PRIMARY}
+                intent="success"
+                className={readOnly || pullRequestMetadata?.state === 'merged' ? css.hideButton : undefined}
+              />
             </Layout.Horizontal>
           </Container>
 

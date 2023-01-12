@@ -107,6 +107,7 @@ export default function PullRequest() {
                       panel: (
                         <Changes
                           repoMetadata={repoMetadata}
+                          pullRequestMetadata={prData}
                           targetBranch={prData.target_branch}
                           sourceBranch={prData.source_branch}
                         />
