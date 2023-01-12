@@ -39,7 +39,11 @@ var (
 		Email: "system@gitness",
 	}
 
-	gitServerHookNames = []string{"pre-receive", "update", "post-receive"}
+	gitServerHookNames = []string{
+		"pre-receive",
+		// "update", // update is disabled for performance reasons (called once for every ref)
+		"post-receive",
+	}
 
 	// gitSHARegex defines the valid SHA format accepted by GIT (full form and short forms).
 	// Note: as of now SHA is at most 40 characters long, but in the future it's moving to sha256

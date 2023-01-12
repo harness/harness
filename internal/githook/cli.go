@@ -68,8 +68,21 @@ func (c *CLI) PreReceive(ctx context.Context) error {
 
 // Update executes the update git hook.
 func (c *CLI) Update(ctx context.Context, ref string, oldSHA string, newSHA string) error {
-	// Skip update hook as we don't have any per branch operations, and pre-receive is more performant!
-	return nil
+	in := &githook.UpdateInput{
+		BaseInput: githook.BaseInput{
+			RepoID:      c.payload.RepoID,
+			PrincipalID: c.payload.PrincipalID,
+		},
+		RefUpdate: githook.ReferenceUpdate{
+			Ref: ref,
+			Old: oldSHA,
+			New: newSHA,
+		},
+	}
+
+	out, err := c.client.Update(ctx, in)
+
+	return handleServerHookOutput(out, err)
 }
 
 // PostReceive executes the post-receive git hook.
