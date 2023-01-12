@@ -32,7 +32,7 @@ export const PullRequestStatusInfo: React.FC<PullRequestStatusInfoProps> = ({
   const { showError } = useToaster()
   const { mutate: mergePR } = useMutate({
     verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.id}/merge`
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/merge`
   })
 
   if (pullRequestMetadata.state === PullRequestFilterOption.MERGED) {

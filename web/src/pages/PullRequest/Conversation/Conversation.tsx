@@ -69,8 +69,8 @@ export const Conversation: React.FC<ConversationProps> = ({
     return threads
   }, [activities, newComments])
   const path = useMemo(
-    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.id}/comments`,
-    [repoMetadata.path, pullRequestMetadata.id]
+    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/comments`,
+    [repoMetadata.path, pullRequestMetadata.number]
   )
   const { mutate: saveComment } = useMutate({ verb: 'POST', path })
   const { mutate: updateComment } = useMutate({ verb: 'PATCH', path: ({ id }) => `${path}/${id}` })
@@ -207,7 +207,7 @@ const DescriptionBox: React.FC<ConversationProps> = ({
   const { showError } = useToaster()
   const { mutate } = useMutate({
     verb: 'PATCH',
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.id}`
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}`
   })
   const name = pullRequestMetadata.author?.display_name
 
