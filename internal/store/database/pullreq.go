@@ -67,6 +67,8 @@ type pullReq struct {
 	MergedBy      null.Int    `db:"pullreq_merged_by"`
 	Merged        null.Int    `db:"pullreq_merged"`
 	MergeStrategy null.String `db:"pullreq_merge_strategy"`
+	MergeHeadSHA  null.String `db:"pullreq_merge_head_sha"`
+	MergeBaseSHA  null.String `db:"pullreq_merge_base_sha"`
 }
 
 const (
@@ -88,7 +90,9 @@ const (
 		,pullreq_activity_seq
 		,pullreq_merged_by
 		,pullreq_merged
-		,pullreq_merge_strategy`
+		,pullreq_merge_strategy
+		,pullreq_merge_head_sha
+		,pullreq_merge_base_sha`
 
 	pullReqSelectBase = `
 	SELECT` + pullReqColumns + `
@@ -407,6 +411,8 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		MergedBy:      pr.MergedBy.Ptr(),
 		Merged:        pr.Merged.Ptr(),
 		MergeStrategy: (*enum.MergeMethod)(pr.MergeStrategy.Ptr()),
+		MergeHeadSHA:  pr.MergeHeadSHA.Ptr(),
+		MergeBaseSHA:  pr.MergeBaseSHA.Ptr(),
 		Author:        types.PrincipalInfo{},
 		Merger:        nil,
 	}
@@ -432,6 +438,8 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		MergedBy:      null.IntFromPtr(pr.MergedBy),
 		Merged:        null.IntFromPtr(pr.Merged),
 		MergeStrategy: null.StringFromPtr((*string)(pr.MergeStrategy)),
+		MergeHeadSHA:  null.StringFromPtr(pr.MergeHeadSHA),
+		MergeBaseSHA:  null.StringFromPtr(pr.MergeBaseSHA),
 	}
 
 	return m

@@ -34,6 +34,8 @@ type PullReq struct {
 	MergedBy      *int64            `json:"-"` // not returned, because the merger info is in the Merger field
 	Merged        *int64            `json:"merged"`
 	MergeStrategy *enum.MergeMethod `json:"merge_strategy"`
+	MergeHeadSHA  *string           `json:"merge_head_sha"`
+	MergeBaseSHA  *string           `json:"merge_base_sha"`
 
 	Author PrincipalInfo  `json:"author"`
 	Merger *PrincipalInfo `json:"merger"`

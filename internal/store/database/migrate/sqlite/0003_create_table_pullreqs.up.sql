@@ -17,6 +17,8 @@ pullreq_id INTEGER PRIMARY KEY AUTOINCREMENT
 ,pullreq_merged_by INTEGER
 ,pullreq_merged BIGINT
 ,pullreq_merge_strategy TEXT
+,pullreq_merge_head_sha TEXT
+,pullreq_merge_base_sha TEXT
 ,CONSTRAINT fk_pullreq_created_by FOREIGN KEY (pullreq_created_by)
     REFERENCES principals (principal_id) MATCH SIMPLE
     ON UPDATE NO ACTION
