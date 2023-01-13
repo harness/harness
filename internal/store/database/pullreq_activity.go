@@ -295,8 +295,6 @@ func (s *PullReqActivityStore) List(ctx context.Context, prID int64,
 	stmt := builder.
 		Select(pullreqActivityColumns).
 		From("pullreq_activities").
-		InnerJoin("principals author on author.principal_id = pullreq_activity_created_by").
-		LeftJoin("principals resolver on resolver.principal_id = pullreq_activity_resolved_by").
 		Where("pullreq_activity_pullreq_id = ?", prID)
 
 	if len(opts.Types) == 1 {

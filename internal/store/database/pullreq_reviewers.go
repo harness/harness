@@ -169,8 +169,6 @@ func (s *PullReqReviewerStore) List(ctx context.Context, prID int64) ([]*types.P
 	stmt := builder.
 		Select(pullreqReviewerColumns).
 		From("pullreq_reviewers").
-		InnerJoin("principals reviewer on reviewer.principal_id = pullreq_reviewer_principal_id").
-		LeftJoin("principals added_by on added_by.principal_id = pullreq_reviewer_created_by").
 		Where("pullreq_reviewer_pullreq_id = ?", prID).
 		OrderBy("pullreq_reviewer_created asc").
 		Limit(maxPullRequestReviewers) // memory safety limit

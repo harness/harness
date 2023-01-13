@@ -329,8 +329,6 @@ func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullR
 	stmt := builder.
 		Select(pullReqColumns).
 		From("pullreqs").
-		InnerJoin("principals author on author.principal_id = pullreq_created_by").
-		LeftJoin("principals merger on merger.principal_id = pullreq_merged_by").
 		Where("pullreq_target_repo_id = ?", repoID)
 
 	if len(opts.States) == 1 {
