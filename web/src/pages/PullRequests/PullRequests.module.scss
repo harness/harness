@@ -12,9 +12,41 @@
         font-weight: 600;
       }
     }
+
+    .titleRow {
+      padding-left: var(--spacing-medium);
+      align-items: center;
+    }
   }
 
   .noData > div {
     height: calc(100vh - var(--page-header-height, 64px) - 120px) !important;
+  }
+}
+
+.rowImg {
+  padding: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+
+  &.open {
+    background-color: var(--green-50);
+  }
+
+  &.merged {
+    background-color: var(--blue-50);
+  }
+
+  &.closed {
+    background-color: var(--grey-50);
+  }
+
+  &.rejected {
+    background-color: var(--red-50);
+  }
+
+  &.draft {
+    background-color: var(--orange-100);
   }
 }

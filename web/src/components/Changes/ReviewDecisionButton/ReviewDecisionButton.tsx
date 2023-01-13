@@ -99,7 +99,7 @@ export const ReviewDecisionButton: React.FC<ReviewDecisionButtonProps> = ({
                 text={getString('submitReview')}
                 size={ButtonSize.SMALL}
                 onClick={submitReview}
-                disabled={!(comment || '').trim().length}
+                disabled={!(comment || '').trim().length && decision === PullReqReviewDecision.PENDING}
                 loading={loading}
               />
             </Container>

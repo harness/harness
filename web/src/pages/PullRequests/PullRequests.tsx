@@ -11,6 +11,7 @@ import {
   StringSubstitute,
   NoDataCard
 } from '@harness/uicore'
+import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
@@ -29,6 +30,7 @@ import prImgOpen from './pull-request-open.svg'
 import prImgMerged from './pull-request-merged.svg'
 import prImgClosed from './pull-request-closed.svg'
 import prImgRejected from './pull-request-rejected.svg'
+import prImgDraft from './pull-request-draft.svg'
 import css from './PullRequests.module.scss'
 
 export default function PullRequests() {
@@ -80,8 +82,8 @@ export default function PullRequests() {
         width: '100%',
         Cell: ({ row }: CellProps<TypesPullReq>) => {
           return (
-            <Layout.Horizontal spacing="medium" padding={{ left: 'medium' }}>
-              <img src={stateToImage(row.original)} title={row.original.state} />
+            <Layout.Horizontal className={css.titleRow} spacing="medium">
+              <img {...stateToImageProps(row.original)} />
               <Container padding={{ left: 'small' }}>
                 <Layout.Vertical spacing="small">
                   <Text icon="success-tick" color={Color.GREY_800} className={css.title}>
@@ -179,17 +181,32 @@ export default function PullRequests() {
   )
 }
 
-const stateToImage = (pr: TypesPullReq) => {
+const stateToImageProps = (pr: TypesPullReq) => {
+  let src = prImgClosed
+  let clazz = css.open
+
   switch (pr.state) {
     case PullRequestFilterOption.OPEN:
-      return prImgOpen
+      src = prImgOpen
+      clazz = css.open
+      break
     case PullRequestFilterOption.MERGED:
-      return prImgMerged
+      src = prImgMerged
+      clazz = css.merged
+      break
     case PullRequestFilterOption.CLOSED:
-      return prImgClosed
+      src = prImgClosed
+      clazz = css.closed
+      break
     case PullRequestFilterOption.REJECTED:
-      return prImgRejected
+      src = prImgRejected
+      clazz = css.rejected
+      break
+    case PullRequestFilterOption.DRAFT:
+      src = prImgDraft
+      clazz = css.draft
+      break
   }
 
-  return prImgClosed
+  return { src, title: pr.state, className: cx(css.rowImg, clazz) }
 }

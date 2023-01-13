@@ -6,7 +6,7 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { getErrorMessage } from 'utils/Utils'
+import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import emptyStateImage from 'images/empty-state.svg'
 import { makeDiffRefs } from 'utils/GitUtils'
 import { CommitsView } from 'components/CommitsView/CommitsView'
@@ -22,6 +22,7 @@ export default function Compare() {
   const { repoMetadata, error, loading, diffRefs } = useGetRepositoryMetadata()
   const [sourceGitRef, setSourceGitRef] = useState(diffRefs.sourceGitRef)
   const [targetGitRef, setTargetGitRef] = useState(diffRefs.targetGitRef)
+  const [after] = useState('')
   const {
     data: commits,
     error: commitsError,
@@ -30,7 +31,10 @@ export default function Compare() {
   } = useGet<RepoCommit[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
-      git_ref: sourceGitRef
+      limit: LIST_FETCHING_LIMIT,
+      page: 1,
+      git_ref: sourceGitRef,
+      after
     },
     lazy: !repoMetadata
   })

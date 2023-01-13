@@ -39,6 +39,7 @@ export function CompareContentHeader({
           onSelect={onTargetGitRefChanged}
           labelPrefix={getString('prefixBase')}
           placeHolder={getString('selectBranchPlaceHolder')}
+          style={{ '--background-color': 'var(--white)' } as React.CSSProperties}
         />
         <Icon name="arrow-left" size={14} />
         <BranchTagSelect
@@ -49,6 +50,7 @@ export function CompareContentHeader({
           onSelect={onSourceGitRefChanged}
           labelPrefix={getString('prefixCompare')}
           placeHolder={getString('selectBranchPlaceHolder')}
+          style={{ '--background-color': 'var(--white)' } as React.CSSProperties}
         />
         <MergeableLabel mergeable />
         <FlexExpander />
