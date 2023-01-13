@@ -29,7 +29,7 @@ type MergeInput struct {
 
 // Merge merges the pull request.
 //
-//nolint:gocognit // no need to refactor
+//nolint:gocognit,funlen // no need to refactor
 func (c *Controller) Merge(
 	ctx context.Context,
 	session *auth.Session,
@@ -92,13 +92,19 @@ func (c *Controller) Merge(
 			return fmt.Errorf("failed to create RPC write params: %w", err)
 		}
 
+		// TODO: for forking merge title might be different?
+		mergeTitle := fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
+
+		// TODO: do we really want to do this in the DB transaction?
 		sha, err = c.gitRPCClient.MergeBranch(ctx, &gitrpc.MergeBranchParams{
-			WriteParams:  writeParams,
-			BaseBranch:   pr.TargetBranch,
-			HeadRepoUID:  sourceRepo.GitUID,
-			HeadBranch:   pr.SourceBranch,
-			Force:        in.Force,
-			DeleteBranch: in.DeleteBranch,
+			WriteParams:      writeParams,
+			BaseBranch:       pr.TargetBranch,
+			HeadRepoUID:      sourceRepo.GitUID,
+			HeadBranch:       pr.SourceBranch,
+			Title:            mergeTitle,
+			Message:          "",
+			Force:            in.Force,
+			DeleteHeadBranch: in.DeleteBranch,
 		})
 		if err != nil {
 			return err

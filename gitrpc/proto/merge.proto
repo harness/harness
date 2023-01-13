@@ -16,9 +16,9 @@ message MergeBranchRequest {
   WriteRequest base = 1;
   // head_branch is the source branch we want to merge
   string head_branch = 2;
-  // branch is the branch into which the given commit shall be merged and whose
+  // base_branch is the branch into which the given commit shall be merged and whose
   // reference is going to be updated.
-  string branch = 3;
+  string base_branch = 3;
   // title is the title to use for the merge commit.
   string title = 4;
   // message is the message to use for the merge commit.
@@ -26,7 +26,7 @@ message MergeBranchRequest {
   // force merge
   bool force = 6;
   // delete branch after merge
-  bool delete = 7;
+  bool delete_head_branch = 7;
 }
 
 // This comment is left unintentionally blank.

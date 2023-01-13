@@ -176,10 +176,26 @@ func (g Adapter) Merge(
 	mergeMethod string,
 	trackingBranch string,
 	tmpBasePath string,
+	mergeMsg string,
 	env []string,
 ) error {
+	// TODO: mergeMethod should be an enum.
+	if mergeMethod != "merge" {
+		return fmt.Errorf("merge method '%s' is not supported", mergeMethod)
+	}
 	var outbuf, errbuf strings.Builder
-	cmd := git.NewCommand(ctx, "merge", "--no-ff", trackingBranch)
+	args := []string{
+		mergeMethod,
+		"--no-ff",
+		trackingBranch,
+	}
+
+	// override message for merging iff mergeMsg was provided (only for merge for now)
+	if mergeMethod == "merge" && mergeMsg != "" {
+		args = append(args, "-m", mergeMsg)
+	}
+
+	cmd := git.NewCommand(ctx, args...)
 	if err := cmd.Run(&git.RunOpts{
 		Env:    env,
 		Dir:    tmpBasePath,

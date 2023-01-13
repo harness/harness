@@ -122,7 +122,7 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 
 	message := strings.TrimSpace(header.GetTitle())
 	if len(header.GetMessage()) > 0 {
-		message += "\n\n" + header.GetMessage()
+		message += "\n\n" + strings.TrimSpace(header.GetMessage())
 	}
 	// Now commit the tree
 	commitHash, err := shared.CommitTree(ctx, commit.ID.String(), author, committer, treeHash, message, false)

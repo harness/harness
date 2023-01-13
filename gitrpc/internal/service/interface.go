@@ -44,6 +44,6 @@ type GitAdapter interface {
 	GetRef(ctx context.Context, repoPath string, name string, refType types.RefType) (string, error)
 	CreateTemporaryRepoForPR(ctx context.Context, reposTempPath string, pr *types.PullRequest) (string, error)
 	Merge(ctx context.Context, pr *types.PullRequest, mergeMethod string, trackingBranch string,
-		tmpBasePath string, env []string) error
+		tmpBasePath string, mergeMsg string, env []string) error
 	GetDiffTree(ctx context.Context, repoPath, baseBranch, headBranch string) (string, error)
 }

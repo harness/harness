@@ -22,7 +22,6 @@ export default function Compare() {
   const { repoMetadata, error, loading, diffRefs } = useGetRepositoryMetadata()
   const [sourceGitRef, setSourceGitRef] = useState(diffRefs.sourceGitRef)
   const [targetGitRef, setTargetGitRef] = useState(diffRefs.targetGitRef)
-  const [after] = useState('')
   const {
     data: commits,
     error: commitsError,
@@ -34,7 +33,7 @@ export default function Compare() {
       limit: LIST_FETCHING_LIMIT,
       page: 1,
       git_ref: sourceGitRef,
-      after
+      after: targetGitRef
     },
     lazy: !repoMetadata
   })

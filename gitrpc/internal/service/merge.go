@@ -49,7 +49,7 @@ func (s MergeService) MergeBranch(
 	repoPath := getFullPathForRepo(s.reposRoot, request.GetBase().GetRepoUid())
 	pr := &types.PullRequest{
 		BaseRepoPath: repoPath,
-		BaseBranch:   request.GetBranch(),
+		BaseBranch:   request.GetBaseBranch(),
 		HeadBranch:   request.GetHeadBranch(),
 	}
 	// Clone base repo.
@@ -127,7 +127,12 @@ func (s MergeService) MergeBranch(
 		"GIT_COMMITTER_DATE="+commitTimeStr,
 	)
 
-	if err = s.adapter.Merge(ctx, pr, "merge", trackingBranch, tmpBasePath, env); err != nil {
+	mergeMsg := strings.TrimSpace(request.GetTitle())
+	if len(request.GetMessage()) > 0 {
+		mergeMsg += "\n\n" + strings.TrimSpace(request.GetMessage())
+	}
+
+	if err = s.adapter.Merge(ctx, pr, "merge", trackingBranch, tmpBasePath, mergeMsg, env); err != nil {
 		return nil, err
 	}
 
@@ -169,7 +174,7 @@ func validateMergeBranchRequest(request *rpc.MergeBranchRequest) error {
 		return fmt.Errorf("empty user name")
 	}
 
-	if len(request.Branch) == 0 {
+	if len(request.BaseBranch) == 0 {
 		return fmt.Errorf("empty branch name")
 	}
 

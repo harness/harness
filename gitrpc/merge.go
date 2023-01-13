@@ -12,11 +12,13 @@ import (
 
 type MergeBranchParams struct {
 	WriteParams
-	BaseBranch   string
-	HeadRepoUID  string
-	HeadBranch   string
-	Force        bool
-	DeleteBranch bool
+	BaseBranch       string
+	HeadRepoUID      string
+	HeadBranch       string
+	Title            string
+	Message          string
+	Force            bool
+	DeleteHeadBranch bool
 }
 
 func (c *Client) MergeBranch(ctx context.Context, params *MergeBranchParams) (string, error) {
@@ -25,11 +27,13 @@ func (c *Client) MergeBranch(ctx context.Context, params *MergeBranchParams) (st
 	}
 
 	resp, err := c.mergeService.MergeBranch(ctx, &rpc.MergeBranchRequest{
-		Base:       mapToRPCWriteRequest(params.WriteParams),
-		Branch:     params.BaseBranch,
-		HeadBranch: params.HeadBranch,
-		Force:      params.Force,
-		Delete:     params.DeleteBranch,
+		Base:             mapToRPCWriteRequest(params.WriteParams),
+		BaseBranch:       params.BaseBranch,
+		HeadBranch:       params.HeadBranch,
+		Title:            params.Title,
+		Message:          params.Message,
+		Force:            params.Force,
+		DeleteHeadBranch: params.DeleteHeadBranch,
 	})
 	if err != nil {
 		return "", err
