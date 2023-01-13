@@ -75,7 +75,7 @@ func checkSecret(secret string) error {
 func checkTriggers(triggers []enum.WebhookTrigger) error {
 	// ignore duplicates here, should be deduplicated later
 	for _, trigger := range triggers {
-		if _, ok := enum.ParseWebhookTrigger(string(trigger)); !ok {
+		if _, ok := trigger.Sanitize(); !ok {
 			return check.NewValidationErrorf("The provided webhook trigger '%s' is invalid.", trigger)
 		}
 	}

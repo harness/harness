@@ -26,7 +26,7 @@ func GetPullReqCommentIDPath(r *http.Request) (int64, error) {
 
 // ParseSortPullReq extracts the pull request sort parameter from the url.
 func ParseSortPullReq(r *http.Request) enum.PullReqSort {
-	result, _ := enum.ParsePullReqSort(enum.PullReqSort(r.FormValue(QueryParamSort)))
+	result, _ := enum.PullReqSort(r.FormValue(QueryParamSort)).Sanitize()
 	return result
 }
 
@@ -35,13 +35,14 @@ func parsePullReqStates(r *http.Request) []enum.PullReqState {
 	strStates := r.Form[QueryParamState]
 	m := make(map[enum.PullReqState]struct{}) // use map to eliminate duplicates
 	for _, s := range strStates {
-		if state, ok := enum.ParsePullReqState(enum.PullReqState(s)); ok {
+		if state, ok := enum.PullReqState(s).Sanitize(); ok {
 			m[state] = struct{}{}
 		}
 	}
 
 	if len(m) == 0 {
-		return enum.GetAllPullReqStates() // the default is all PRs
+		all, _ := enum.GetAllPullReqStates()
+		return all // the default is all PRs
 	}
 
 	states := make([]enum.PullReqState, 0, len(m))
@@ -100,11 +101,9 @@ func parsePullReqActivityKinds(r *http.Request) []enum.PullReqActivityKind {
 	strKinds := r.Form[QueryParamKind]
 	m := make(map[enum.PullReqActivityKind]struct{}) // use map to eliminate duplicates
 	for _, s := range strKinds {
-		kind, ok := enum.ParsePullReqActivityKind(enum.PullReqActivityKind(s))
-		if !ok {
-			continue
+		if kind, ok := enum.PullReqActivityKind(s).Sanitize(); ok {
+			m[kind] = struct{}{}
 		}
-		m[kind] = struct{}{}
 	}
 
 	if len(m) == 0 {
@@ -124,11 +123,9 @@ func parsePullReqActivityTypes(r *http.Request) []enum.PullReqActivityType {
 	strType := r.Form[QueryParamType]
 	m := make(map[enum.PullReqActivityType]struct{}) // use map to eliminate duplicates
 	for _, s := range strType {
-		t, ok := enum.ParsePullReqActivityType(enum.PullReqActivityType(s))
-		if !ok {
-			continue
+		if t, ok := enum.PullReqActivityType(s).Sanitize(); ok {
+			m[t] = struct{}{}
 		}
-		m[t] = struct{}{}
 	}
 
 	if len(m) == 0 {

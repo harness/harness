@@ -363,7 +363,7 @@ func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullR
 	// NOTE: string concatenation is safe because the
 	// order attribute is an enum and is not user-defined,
 	// and is therefore not subject to injection attacks.
-	opts.Sort, _ = enum.ParsePullReqSort(opts.Sort)
+	opts.Sort, _ = opts.Sort.Sanitize()
 	stmt = stmt.OrderBy("pullreq_" + string(opts.Sort) + " " + opts.Order.String())
 
 	sql, args, err := stmt.ToSql()

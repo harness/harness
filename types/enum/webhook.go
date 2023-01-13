@@ -7,9 +7,7 @@ package enum
 // WebhookParent defines different types of parents of a webhook.
 type WebhookParent string
 
-func (WebhookParent) Enum() []interface{} {
-	return toInterfaceSlice(GetAllWebhookParents())
-}
+func (WebhookParent) Enum() []interface{} { return toInterfaceSlice(webhookParents) }
 
 const (
 	// WebhookParentRepo describes a repo as webhook owner.
@@ -19,19 +17,15 @@ const (
 	WebhookParentSpace WebhookParent = "space"
 )
 
-func GetAllWebhookParents() []WebhookParent {
-	return []WebhookParent{
-		WebhookParentRepo,
-		WebhookParentSpace,
-	}
-}
+var webhookParents = sortEnum([]WebhookParent{
+	WebhookParentRepo,
+	WebhookParentSpace,
+})
 
 // WebhookExecutionResult defines the different results of a webhook execution.
 type WebhookExecutionResult string
 
-func (WebhookExecutionResult) Enum() []interface{} {
-	return toInterfaceSlice(GetAllWebhookExecutionResults())
-}
+func (WebhookExecutionResult) Enum() []interface{} { return toInterfaceSlice(webhookExecutionResults) }
 
 const (
 	// WebhookExecutionResultSuccess describes a webhook execution result that succeeded.
@@ -44,19 +38,20 @@ const (
 	WebhookExecutionResultFatalError WebhookExecutionResult = "fatal_error"
 )
 
-func GetAllWebhookExecutionResults() []WebhookExecutionResult {
-	return []WebhookExecutionResult{
-		WebhookExecutionResultSuccess,
-		WebhookExecutionResultRetriableError,
-		WebhookExecutionResultFatalError,
-	}
-}
+var webhookExecutionResults = sortEnum([]WebhookExecutionResult{
+	WebhookExecutionResultSuccess,
+	WebhookExecutionResultRetriableError,
+	WebhookExecutionResultFatalError,
+})
 
 // WebhookTrigger defines the different types of webhook triggers available.
 type WebhookTrigger string
 
-func (WebhookTrigger) Enum() []interface{} {
-	return toInterfaceSlice(GetAllWebhookTriggers())
+func (WebhookTrigger) Enum() []interface{}                { return toInterfaceSlice(webhookTriggers) }
+func (s WebhookTrigger) Sanitize() (WebhookTrigger, bool) { return Sanitize(s, GetAllWebhookTriggers) }
+
+func GetAllWebhookTriggers() ([]WebhookTrigger, WebhookTrigger) {
+	return webhookTriggers, "" // No default value
 }
 
 const (
@@ -75,23 +70,11 @@ const (
 	WebhookTriggerTagDeleted WebhookTrigger = "tag_deleted"
 )
 
-func GetAllWebhookTriggers() []WebhookTrigger {
-	return []WebhookTrigger{
-		WebhookTriggerBranchCreated,
-		WebhookTriggerBranchUpdated,
-		WebhookTriggerBranchDeleted,
-		WebhookTriggerTagCreated,
-		WebhookTriggerTagUpdated,
-		WebhookTriggerTagDeleted,
-	}
-}
-
-var rawWebhookTriggers = toSortedStrings(GetAllWebhookTriggers())
-
-// ParseWebhookTrigger parses the webhook trigger type.
-func ParseWebhookTrigger(s string) (WebhookTrigger, bool) {
-	if existsInSortedSlice(rawWebhookTriggers, s) {
-		return WebhookTrigger(s), true
-	}
-	return "", false
-}
+var webhookTriggers = sortEnum([]WebhookTrigger{
+	WebhookTriggerBranchCreated,
+	WebhookTriggerBranchUpdated,
+	WebhookTriggerBranchDeleted,
+	WebhookTriggerTagCreated,
+	WebhookTriggerTagUpdated,
+	WebhookTriggerTagDeleted,
+})

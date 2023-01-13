@@ -28,7 +28,7 @@ type ReviewSubmitInput struct {
 }
 
 func (in *ReviewSubmitInput) Validate() error {
-	decision, ok := enum.ParsePullReqReviewDecision(in.Decision)
+	decision, ok := in.Decision.Sanitize()
 	if !ok || decision == enum.PullReqReviewDecisionPending {
 		msg := fmt.Sprintf("Decision must be: %q, %q or %q.",
 			enum.PullReqReviewDecisionApproved,
@@ -37,6 +37,7 @@ func (in *ReviewSubmitInput) Validate() error {
 		return usererror.BadRequest(msg)
 	}
 
+	in.Decision = decision
 	in.Message = strings.TrimSpace(in.Message)
 
 	return nil

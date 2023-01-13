@@ -4,7 +4,19 @@
 
 package enum
 
-import "sort"
+import (
+	"golang.org/x/exp/constraints"
+	"golang.org/x/exp/slices"
+)
+
+func Sanitize[E constraints.Ordered](element E, all func() ([]E, E)) (E, bool) {
+	allValues, defValue := all()
+	idx, exists := slices.BinarySearch(allValues, element)
+	if exists {
+		return allValues[idx], true
+	}
+	return defValue, false
+}
 
 const (
 	id            = "id"
@@ -32,24 +44,15 @@ const (
 	descending    = "descending"
 )
 
-func existsInSortedSlice(strs []string, s string) bool {
-	idx := sort.SearchStrings(strs, s)
-	return idx >= 0 && idx < len(strs) && strs[idx] == s
-}
-
-func toSortedStrings[T ~string](vals []T) []string {
-	res := make([]string, len(vals))
-	for i := range vals {
-		res[i] = string(vals[i])
-	}
-	sort.Strings(res)
-	return res
-}
-
 func toInterfaceSlice[T interface{}](vals []T) []interface{} {
 	res := make([]interface{}, len(vals))
 	for i := range vals {
 		res[i] = vals[i]
 	}
 	return res
+}
+
+func sortEnum[T constraints.Ordered](slice []T) []T {
+	slices.Sort(slice)
+	return slice
 }

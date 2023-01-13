@@ -43,16 +43,11 @@ func (c *Controller) Merge(
 		activity *types.PullReqActivity
 	)
 
-	if in.Method == "" {
-		in.Method = enum.MergeMethodMerge
-	}
-
-	method, ok := enum.ParseMergeMethod(in.Method)
+	method, ok := in.Method.Sanitize()
 	if !ok {
 		return types.MergeResponse{}, usererror.BadRequest(
 			fmt.Sprintf("wrong merge method type: %s", in.Method))
 	}
-
 	in.Method = method
 
 	now := time.Now().UnixMilli()
