@@ -6,6 +6,9 @@ package request
 
 import (
 	"net/http"
+
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 const (
@@ -19,4 +22,21 @@ func GetUserUIDFromPath(r *http.Request) (string, error) {
 
 func GetServiceAccountUIDFromPath(r *http.Request) (string, error) {
 	return PathParamOrError(r, PathParamServiceAccountUID)
+}
+
+// ParseSortUser extracts the user sort parameter from the url.
+func ParseSortUser(r *http.Request) enum.UserAttr {
+	return enum.ParseUserAttr(
+		r.FormValue(QueryParamSort),
+	)
+}
+
+// ParseUserFilter extracts the user filter from the url.
+func ParseUserFilter(r *http.Request) *types.UserFilter {
+	return &types.UserFilter{
+		Order: ParseOrder(r),
+		Page:  ParsePage(r),
+		Sort:  ParseSortUser(r),
+		Size:  ParseLimit(r),
+	}
 }
