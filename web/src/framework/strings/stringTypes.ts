@@ -10,7 +10,6 @@ export interface StringsMap {
   addReadMe: string
   all: string
   allBranches: string
-  allEvents: string
   approve: string
   botAlerts: string
   branch: string
@@ -103,7 +102,6 @@ export interface StringsMap {
   history: string
   in: string
   inactiveBranches: string
-  individualEvents: string
   leaveAComment: string
   lineBreaks: string
   loading: string
@@ -171,7 +169,6 @@ export interface StringsMap {
   pullMustBeMadeFromBranches: string
   pullRequestEmpty: string
   pullRequests: string
-  pushEvent: string
   quote: string
   rejected: string
   renameFile: string
@@ -214,6 +211,7 @@ export interface StringsMap {
   viewCommitDetails: string
   viewed: string
   webhook: string
+  webhookAllEventsSelected: string
   webhookBranchCreated: string
   webhookBranchDeleted: string
   webhookBranchUpdated: string
@@ -222,6 +220,12 @@ export interface StringsMap {
   webhookDetails: string
   webhookEventsLabel: string
   webhookListingContent: string
+  webhookSelectAllEvents: string
+  webhookSelectIndividualEvents: string
+  webhookSelectPushEvents: string
+  webhookTagCreated: string
+  webhookTagDeleted: string
+  webhookTagUpdated: string
   webhookUpdated: string
   webhooks: string
   write: string

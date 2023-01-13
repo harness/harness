@@ -32,7 +32,10 @@ enum WebhookEventType {
 enum WebhookIndividualEvent {
   BRANCH_CREATED = 'branch_created',
   BRANCH_UPDATED = 'branch_updated',
-  BRANCH_DELETED = 'branch_deleted'
+  BRANCH_DELETED = 'branch_deleted',
+  TAG_CREATED = 'tag_created',
+  TAG_UPDATED = 'tag_updated',
+  TAG_DELETED = 'tag_deleted'
 }
 
 const SECRET_MASK = '********'
@@ -48,6 +51,9 @@ interface FormData {
   branchCreated: boolean
   branchUpdated: boolean
   branchDeleted: boolean
+  tagCreated: boolean
+  tagUpdated: boolean
+  tagDeleted: boolean
 }
 
 interface WebHookFormProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -73,13 +79,16 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
             name: webhook?.display_name || '',
             description: webhook?.description || '',
             url: webhook?.url || '',
-            secret: isEdit ? SECRET_MASK : '',
+            secret: isEdit && webhook?.has_secret ? SECRET_MASK : '',
             enabled: webhook ? (webhook?.enabled as boolean) : true,
             secure: webhook?.insecure === false || false,
             branchCreated: webhook?.triggers?.includes(WebhookIndividualEvent.BRANCH_CREATED) || false,
             branchUpdated: webhook?.triggers?.includes(WebhookIndividualEvent.BRANCH_UPDATED) || false,
             branchDeleted: webhook?.triggers?.includes(WebhookIndividualEvent.BRANCH_DELETED) || false,
-            events: WebhookEventType.INDIVIDUAL
+            tagCreated: webhook?.triggers?.includes(WebhookIndividualEvent.TAG_CREATED) || false,
+            tagUpdated: webhook?.triggers?.includes(WebhookIndividualEvent.TAG_UPDATED) || false,
+            tagDeleted: webhook?.triggers?.includes(WebhookIndividualEvent.TAG_DELETED) || false,
+            events: (webhook?.triggers?.length || 0) > 0 ? WebhookEventType.INDIVIDUAL : WebhookEventType.ALL
           }}
           formName="create-webhook-form"
           enableReinitialize={true}
@@ -92,20 +101,30 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
           onSubmit={formData => {
             const triggers: OpenapiWebhookTrigger[] = []
 
-            if (formData.branchCreated) {
-              triggers.push(WebhookIndividualEvent.BRANCH_CREATED)
-            }
+            if (formData.events == WebhookEventType.INDIVIDUAL) {
+              if (formData.branchCreated) {
+                triggers.push(WebhookIndividualEvent.BRANCH_CREATED)
+              }
+              if (formData.branchUpdated) {
+                triggers.push(WebhookIndividualEvent.BRANCH_UPDATED)
+              }
+              if (formData.branchDeleted) {
+                triggers.push(WebhookIndividualEvent.BRANCH_DELETED)
+              }
 
-            if (formData.branchUpdated) {
-              triggers.push(WebhookIndividualEvent.BRANCH_UPDATED)
-            }
+              if (formData.tagCreated) {
+                triggers.push(WebhookIndividualEvent.TAG_CREATED)
+              }
+              if (formData.tagUpdated) {
+                triggers.push(WebhookIndividualEvent.TAG_UPDATED)
+              }
+              if (formData.tagDeleted) {
+                triggers.push(WebhookIndividualEvent.TAG_DELETED)
+              }
 
-            if (formData.branchDeleted) {
-              triggers.push(WebhookIndividualEvent.BRANCH_DELETED)
-            }
-
-            if (!triggers.length) {
-              return showError(getString('oneMustBeSelected'))
+              if (!triggers.length) {
+                return showError(getString('oneMustBeSelected'))
+              }
             }
 
             const secret = (formData.secret || '').trim()
@@ -173,9 +192,9 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                     className={css.eventRadioGroup}
                     label={getString('webhookEventsLabel')}
                     items={[
-                      { label: getString('pushEvent'), value: WebhookEventType.PUSH, disabled: true },
-                      { label: getString('allEvents'), value: WebhookEventType.ALL, disabled: true },
-                      { label: getString('individualEvents'), value: WebhookEventType.INDIVIDUAL }
+                      // { label: getString('webhookSelectPushEvents'), value: WebhookEventType.PUSH, disabled: true }, // Better to hide than disable for now
+                      { label: getString('webhookSelectAllEvents'), value: WebhookEventType.ALL },
+                      { label: getString('webhookSelectIndividualEvents'), value: WebhookEventType.INDIVIDUAL }
                     ]}
                   />
                   {values.events === WebhookEventType.INDIVIDUAL ? (
@@ -195,6 +214,23 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                         <FormInput.CheckBox
                           label={getString('webhookBranchDeleted')}
                           name="branchDeleted"
+                          className={css.checkbox}
+                        />
+                      </section>
+                      <section>
+                        <FormInput.CheckBox
+                          label={getString('webhookTagCreated')}
+                          name="tagCreated"
+                          className={css.checkbox}
+                        />
+                        <FormInput.CheckBox
+                          label={getString('webhookTagUpdated')}
+                          name="tagUpdated"
+                          className={css.checkbox}
+                        />
+                        <FormInput.CheckBox
+                          label={getString('webhookTagDeleted')}
+                          name="tagDeleted"
                           className={css.checkbox}
                         />
                       </section>

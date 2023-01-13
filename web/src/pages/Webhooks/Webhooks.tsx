@@ -69,6 +69,9 @@ export default function Webhooks() {
                   {!!row.original.triggers?.length && (
                     <Text color={Color.GREY_500}>({row.original.triggers.join(', ')})</Text>
                   )}
+                  {!!!row.original.triggers?.length && (
+                    <Text color={Color.GREY_500} >{getString('webhookAllEventsSelected')}</Text>
+                  )}
                 </Layout.Vertical>
               </Container>
             </Layout.Horizontal>

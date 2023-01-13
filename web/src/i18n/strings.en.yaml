@@ -137,9 +137,10 @@ samplePayloadUrl: 'https://examples.com/harness'
 payloadUrlLabel: 'Payload URL'
 secret: 'Secret'
 webhookEventsLabel: 'Which events do you like to trigger this webhook'
-pushEvent: 'Just the push event'
-allEvents: 'Send me everything'
-individualEvents: 'Let me select individual events'
+webhookSelectPushEvents: 'Just the push event'
+webhookSelectAllEvents: 'Send me everything'
+webhookSelectIndividualEvents: 'Let me select individual events'
+webhookAllEventsSelected: 'All Events'
 branchTagCreation: 'Branch or tag creation'
 branchTagDeletion: 'Branch or tag deletion'
 branchProtectionRules: 'Branch protection rules'
@@ -222,6 +223,9 @@ oneMustBeSelected: At least one event must be selected
 webhookBranchCreated: Branch created
 webhookBranchUpdated: Branch updated
 webhookBranchDeleted: Branch deleted
+webhookTagCreated: Tag created
+webhookTagUpdated: Tag updated
+webhookTagDeleted: Tag deleted
 nameYourWebhook: Name your webhook
 submitReview: Submit Review
 approve: Approve
