@@ -64,3 +64,25 @@
   min-height: calc(100vh - 147px) !important;
   background-color: var(--primary-bg) !important;
 }
+
+.prTitle {
+  align-items: center;
+
+  .btn > span {
+    background: var(--grey-100);
+    border: 1px solid var(--grey-200);
+    border-radius: 4px;
+  }
+
+  .input {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+
+    input {
+      width: 400px;
+      font-weight: 600;
+      padding: 0 var(--spacing-small) !important;
+      line-height: 22px !important;
+    }
+  }
+}

@@ -1,13 +1,27 @@
-import React, { useMemo } from 'react'
-import { Container, PageBody, Text, FontVariation, Tabs, IconName, HarnessIcons } from '@harness/uicore'
-import { useGet } from 'restful-react'
+import React, { useMemo, useState } from 'react'
+import {
+  Container,
+  PageBody,
+  Text,
+  FontVariation,
+  Tabs,
+  IconName,
+  HarnessIcons,
+  Layout,
+  Button,
+  ButtonVariation,
+  ButtonSize,
+  TextInput,
+  useToaster
+} from '@harness/uicore'
+import { useGet, useMutate } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { getErrorMessage } from 'utils/Utils'
-import { CodeIcon } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { TypesPullReq } from 'services/code'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
@@ -54,7 +68,7 @@ export default function PullRequest() {
     <Container className={css.main}>
       <RepositoryPageHeader
         repoMetadata={repoMetadata}
-        title={prData ? <PullRequestTitle {...prData} /> : ''}
+        title={repoMetadata && prData ? <PullRequestTitle repoMetadata={repoMetadata} {...prData} /> : ''}
         dataTooltipId="repositoryPullRequests"
         extraBreadcrumbLinks={
           repoMetadata && [
@@ -124,14 +138,79 @@ export default function PullRequest() {
   )
 }
 
-const PullRequestTitle: React.FC<TypesPullReq> = ({ title, number }) => (
-  <Text tag="h1" font={{ variation: FontVariation.H4 }}>
-    {title} <span className={css.prNumber}>#{number}</span>
-  </Text>
-)
+interface PullRequestTitleProps extends TypesPullReq, Pick<GitInfoProps, 'repoMetadata'> {
+  onSaveDone?: (newTitle: string) => Promise<boolean>
+}
+
+const PullRequestTitle: React.FC<PullRequestTitleProps> = ({ repoMetadata, title, number, description }) => {
+  const [original, setOriginal] = useState(title)
+  const [val, setVal] = useState(title)
+  const [edit, setEdit] = useState(false)
+  const { getString } = useStrings()
+  const { showError } = useToaster()
+  const { mutate } = useMutate({
+    verb: 'PATCH',
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${number}`
+  })
+
+  return (
+    <Layout.Horizontal spacing="xsmall" className={css.prTitle}>
+      {(edit && (
+        <Container>
+          <Layout.Horizontal spacing="small">
+            <TextInput
+              wrapperClassName={css.input}
+              value={val}
+              onInput={event => setVal(event.currentTarget.value)}
+              autoFocus
+            />
+            <Button
+              variation={ButtonVariation.PRIMARY}
+              text={getString('save')}
+              size={ButtonSize.MEDIUM}
+              disabled={(val || '').trim().length === 0 || title === val}
+              onClick={() => {
+                mutate({
+                  title: val,
+                  description
+                })
+                  .then(() => {
+                    setEdit(false)
+                    setOriginal(val)
+                  })
+                  .catch(exception => showError(getErrorMessage(exception), 0, getString('pr.failedToUpdateTitle')))
+              }}
+            />
+            <Button
+              variation={ButtonVariation.TERTIARY}
+              text={getString('cancel')}
+              size={ButtonSize.MEDIUM}
+              onClick={() => setEdit(false)}
+            />
+          </Layout.Horizontal>
+        </Container>
+      )) || (
+        <>
+          <Text tag="h1" font={{ variation: FontVariation.H4 }}>
+            {original} <span className={css.prNumber}>#{number}</span>
+          </Text>
+          <Button
+            variation={ButtonVariation.ICON}
+            tooltip={getString('edit')}
+            tooltipProps={{ isDark: true, position: 'right' }}
+            size={ButtonSize.SMALL}
+            icon="code-edit"
+            className={css.btn}
+            onClick={() => setEdit(true)}
+          />
+        </>
+      )}
+    </Layout.Horizontal>
+  )
+}
 
 const TabTitle: React.FC<{ icon: IconName; title: string; count?: number }> = ({ icon, title, count }) => {
-  // Icon inside a tab got overriden-looked-bad styles from UICore
+  // Icon inside a tab got overriden-and-looked-bad styles from UICore
   // on hover. Use icon directly instead
   const TabIcon: React.ElementType = HarnessIcons[icon]
 

@@ -52,7 +52,7 @@ export function CompareContentHeader({
           placeHolder={getString('selectBranchPlaceHolder')}
           style={{ '--background-color': 'var(--white)' } as React.CSSProperties}
         />
-        <MergeableLabel mergeable />
+        {!!targetGitRef && !!sourceGitRef && <MergeableLabel mergeable />}
         <FlexExpander />
         <CreatePullRequestModalButton
           repoMetadata={repoMetadata}

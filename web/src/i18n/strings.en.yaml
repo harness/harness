@@ -181,6 +181,7 @@ pr:
   prCanBeMerged: Mergeing can be performed automatically.
   enterDesc: Enter description here
   failedToUpdate: Failed to update Pull Request. Please try again.
+  failedToUpdateTitle: Failed to update Pull Request title. Please try again.
   failedToSaveComment: Failed to save comment. Please try again.
   failedToDeleteComment: Failed to delete comment. Please try again.
   prMerged: This Pull Request was merged

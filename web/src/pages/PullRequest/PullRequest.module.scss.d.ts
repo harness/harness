@@ -7,5 +7,8 @@ declare const styles: {
   readonly count: string
   readonly prNumber: string
   readonly tabContentContainer: string
+  readonly prTitle: string
+  readonly btn: string
+  readonly input: string
 }
 export default styles

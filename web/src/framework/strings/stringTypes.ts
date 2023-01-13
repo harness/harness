@@ -144,6 +144,7 @@ export interface StringsMap {
   'pr.failedToDeleteComment': string
   'pr.failedToSaveComment': string
   'pr.failedToUpdate': string
+  'pr.failedToUpdateTitle': string
   'pr.fileDeleted': string
   'pr.fileUnchanged': string
   'pr.mergePR': string
