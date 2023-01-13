@@ -154,6 +154,7 @@ export interface StringsMap {
   'pr.prMerged': string
   'pr.prMergedInfo': string
   'pr.reviewChanges': string
+  'pr.reviewSubmitted': string
   'pr.showDiff': string
   'pr.showLink': string
   'pr.split': string

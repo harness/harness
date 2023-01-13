@@ -186,6 +186,7 @@ pr:
   failedToDeleteComment: Failed to delete comment. Please try again.
   prMerged: This Pull Request was merged
   prMergedInfo: '{user} merged branch {source} into {target} {time}.'
+  reviewSubmitted: Review submitted.
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'

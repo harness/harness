@@ -99,7 +99,7 @@ export const Conversation: React.FC<ConversationProps> = ({
               />
 
               {Object.entries(commentThreads).map(([threadId, commentItems]) => {
-                if (commentItems.length === 1 && commentItems[0].payload?.kind === 'system') {
+                if (isSystemComment(commentItems)) {
                   return (
                     <SystemBox key={threadId} pullRequestMetadata={pullRequestMetadata} commentItems={commentItems} />
                   )
@@ -278,9 +278,24 @@ const DescriptionBox: React.FC<ConversationProps> = ({
   )
 }
 
+// function isReviewComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
+//   return (
+//     commentItems.length === 1 &&
+//     commentItems[0].payload?.kind === 'system' &&
+//     commentItems[0].payload?.payload?.Decision === 'reviewed'
+//   )
+// }
+
+function isSystemComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
+  return (
+    commentItems.length === 1 && commentItems[0].payload?.kind === 'system' && commentItems[0].payload?.type === 'merge'
+  )
+}
+
 interface SystemBoxProps extends Pick<GitInfoProps, 'pullRequestMetadata'> {
   commentItems: CommentItem<TypesPullReqActivity>[]
 }
+
 const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems }) => {
   const { getString } = useStrings()
 
@@ -311,6 +326,6 @@ const toCommentItem = (activity: TypesPullReqActivity) => ({
   created: activity.created as number,
   updated: activity.edited as number,
   deleted: activity.deleted as number,
-  content: activity.text as string,
+  content: (activity.text || activity.payload?.Message) as string,
   payload: activity
 })
