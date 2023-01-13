@@ -1,11 +1,12 @@
 import React from 'react'
-import { Container, Text, Layout, Color, StringSubstitute, IconName } from '@harness/uicore'
+import { Container, Text, Layout, StringSubstitute } from '@harness/uicore'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
-import { CodeIcon, GitInfoProps, PullRequestState } from 'utils/GitUtils'
+import { GitInfoProps, PullRequestState } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReq } from 'services/code'
+import { PRStateLabel } from 'components/PRStateLabel/PRStateLabel'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { GitRefLink } from 'components/GitRefLink/GitRefLink'
 import css from './PullRequestMetaLine.module.scss'
@@ -40,8 +41,8 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
 
   return (
     <Container padding={{ left: 'xlarge' }} className={css.main}>
-      <Layout.Horizontal spacing="small">
-        <PullRequestStateLabel state={merged ? PullRequestState.MERGED : (state as PullRequestState)} />
+      <Layout.Horizontal spacing="small" className={css.layout}>
+        <PRStateLabel state={merged ? PullRequestState.MERGED : (state as PullRequestState)} />
         <Text className={css.metaline}>
           <StringSubstitute str={getString('pr.metaLine')} vars={vars} />
         </Text>
@@ -51,37 +52,5 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
         </Text>
       </Layout.Horizontal>
     </Container>
-  )
-}
-
-const PullRequestStateLabel: React.FC<{ state: PullRequestState }> = ({ state }) => {
-  const { getString } = useStrings()
-
-  let color = Color.GREEN_700
-  let icon: IconName = CodeIcon.PullRequest
-  let clazz: typeof css | string = ''
-
-  switch (state) {
-    case PullRequestState.MERGED:
-      color = Color.PURPLE_700
-      icon = CodeIcon.PullRequest
-      clazz = css.merged
-      break
-    case PullRequestState.CLOSED:
-      color = Color.GREY_600
-      icon = CodeIcon.PullRequest
-      clazz = css.closed
-      break
-    case PullRequestState.REJECTED:
-      color = Color.RED_600
-      icon = CodeIcon.PullRequestRejected
-      clazz = css.rejected
-      break
-  }
-
-  return (
-    <Text className={cx(css.state, clazz)} icon={icon} iconProps={{ color, size: 9 }}>
-      <StringSubstitute str={getString('pr.state')} vars={{ state }} />
-    </Text>
   )
 }

@@ -1,6 +1,6 @@
 .container {
   .label {
-    font-size: 12px !important;
+    font-size: var(--font-size-small) !important;
     color: var(--black) !important;
   }
 
@@ -15,7 +15,7 @@
     padding-left: var(--spacing-small) !important;
 
     .url {
-      font-size: 12px !important;
+      font-size: var(--font-size-small) !important;
     }
 
     button#cloneCopyButton {

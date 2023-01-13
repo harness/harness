@@ -12,6 +12,8 @@ import { makeDiffRefs } from 'utils/GitUtils'
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { Changes } from 'components/Changes/Changes'
 import type { RepoCommit } from 'services/code'
+import { PrevNextPagination } from 'components/PrevNextPagination/PrevNextPagination'
+import { usePageIndex } from 'hooks/usePageIndex'
 import { CompareContentHeader } from './CompareContentHeader/CompareContentHeader'
 import css from './Compare.module.scss'
 
@@ -22,16 +24,17 @@ export default function Compare() {
   const { repoMetadata, error, loading, diffRefs } = useGetRepositoryMetadata()
   const [sourceGitRef, setSourceGitRef] = useState(diffRefs.sourceGitRef)
   const [targetGitRef, setTargetGitRef] = useState(diffRefs.targetGitRef)
+  const [pageIndex, setPageIndex] = usePageIndex()
+  const limit = LIST_FETCHING_LIMIT
   const {
     data: commits,
     error: commitsError,
-    loading: commitsLoading,
     refetch
   } = useGet<RepoCommit[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
-      limit: LIST_FETCHING_LIMIT,
-      page: 1,
+      limit,
+      page: pageIndex + 1,
       git_ref: sourceGitRef,
       after: targetGitRef
     },
@@ -45,10 +48,7 @@ export default function Compare() {
         title={getString('comparingChanges')}
         dataTooltipId="comparingChanges"
       />
-      <PageBody
-        loading={loading || commitsLoading}
-        error={getErrorMessage(error || commitsError)}
-        retryOnError={() => refetch()}>
+      <PageBody loading={loading} error={getErrorMessage(error || commitsError)} retryOnError={() => refetch()}>
         {repoMetadata && (
           <CompareContentHeader
             repoMetadata={repoMetadata}
@@ -75,12 +75,11 @@ export default function Compare() {
           />
         )}
 
-        {!targetGitRef ||
-          (!sourceGitRef && (
-            <Container className={css.noDataContainer}>
-              <NoDataCard image={emptyStateImage} message={getString('selectToViewMore')} />
-            </Container>
-          ))}
+        {(!targetGitRef || !sourceGitRef) && (
+          <Container className={css.noDataContainer}>
+            <NoDataCard image={emptyStateImage} message={getString('selectToViewMore')} />
+          </Container>
+        )}
 
         {!!repoMetadata && !!targetGitRef && !!sourceGitRef && (
           <Container className={css.tabsContainer}>
@@ -88,21 +87,26 @@ export default function Compare() {
               id="branchesTags"
               defaultSelectedTabId={'commits'}
               large={false}
+              onChange={() => {
+                setPageIndex(0)
+              }}
               tabList={[
                 {
                   id: 'commits',
                   title: getString('commits'),
-                  panel: commits?.length ? (
+                  panel: (
                     <Container padding="xlarge">
-                      <CommitsView commits={commits} repoMetadata={repoMetadata} />
+                      {!!commits?.length && <CommitsView commits={commits} repoMetadata={repoMetadata} />}
+                      <PrevNextPagination
+                        onPrev={pageIndex > 0 && (() => setPageIndex(pageIndex - 1))}
+                        onNext={commits?.length === limit && (() => setPageIndex(pageIndex + 1))}
+                      />
                     </Container>
-                  ) : (
-                    <></>
                   )
                 },
                 {
                   id: 'diff',
-                  title: getString('diff'),
+                  title: getString('filesChanged'),
                   panel: (
                     <Container>
                       <Changes

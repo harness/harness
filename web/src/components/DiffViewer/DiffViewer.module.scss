@@ -151,7 +151,7 @@
 
   .viewLabel {
     display: flex;
-    font-size: 12px;
+    font-size: var(--font-size-small);
     color: var(--grey-600);
     border: 1px solid var(--grey-200);
     padding: 3px 6px;

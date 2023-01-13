@@ -30,7 +30,7 @@ import prImgOpen from './pull-request-open.svg'
 import prImgMerged from './pull-request-merged.svg'
 import prImgClosed from './pull-request-closed.svg'
 import prImgRejected from './pull-request-rejected.svg'
-import prImgDraft from './pull-request-draft.svg'
+// import prImgDraft from './pull-request-draft.svg'
 import css from './PullRequests.module.scss'
 
 export default function PullRequests() {
@@ -38,7 +38,7 @@ export default function PullRequests() {
   const history = useHistory()
   const { routes } = useAppContext()
   const [searchTerm, setSearchTerm] = useState('')
-  const [filter, setFilter] = useState(PullRequestFilterOption.OPEN)
+  const [filter, setFilter] = useState<string>(PullRequestFilterOption.OPEN)
   const [pageIndex, setPageIndex] = usePageIndex()
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const {
@@ -77,7 +77,13 @@ export default function PullRequests() {
                       vars={{
                         state: row.original.state,
                         number: <Text inline>{row.original.number}</Text>,
-                        time: <ReactTimeago date={(row.original.state == 'merged' ? row.original.merged : row.original.created) as number} />,
+                        time: (
+                          <ReactTimeago
+                            date={
+                              (row.original.state == 'merged' ? row.original.merged : row.original.created) as number
+                            }
+                          />
+                        ),
                         user: row.original.author?.display_name
                       }}
                     />
@@ -184,10 +190,11 @@ const stateToImageProps = (pr: TypesPullReq) => {
       src = prImgRejected
       clazz = css.rejected
       break
-    case PullRequestFilterOption.DRAFT:
-      src = prImgDraft
-      clazz = css.draft
-      break
+    // TODO: Not supported yet from backend
+    // case PullRequestFilterOption.DRAFT:
+    // src = prImgDraft
+    // clazz = css.draft
+    // break
   }
 
   return { src, title: pr.state, className: cx(css.rowImg, clazz) }

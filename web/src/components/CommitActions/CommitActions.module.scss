@@ -14,7 +14,7 @@
     }
 
     a span {
-      font-size: 12px !important;
+      font-size: var(--font-size-small) !important;
       color: var(--primary-7);
       font-family: var(--font-family-mono) !important;
     }

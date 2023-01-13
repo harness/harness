@@ -1,3 +1,10 @@
+.main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: var(--spacing-large) !important;
+}
+
 .roundedButton {
   height: 32px !important;
   background-color: var(--white) !important;

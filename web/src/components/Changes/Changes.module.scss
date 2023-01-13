@@ -11,7 +11,7 @@
 }
 
 .diffStatsLabel {
-  font-size: 12px !important;
+  font-size: var(--font-size-small) !important;
   font-weight: 600 !important;
   color: var(--grey-700) !important;
 }

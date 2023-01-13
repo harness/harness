@@ -301,7 +301,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
                   setTimeout(() => setComments(commentsRef.current.filter(item => item !== comment)), 0)
                 }}
                 currentUserName={currentUser.display_name}
-                executeDeleteComent={executeDeleteComentConfirmation}
+                handleAction={async () => [true, undefined]} // TODO: Integrate with API
               />,
               element
             )

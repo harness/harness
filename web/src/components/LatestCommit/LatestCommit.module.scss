@@ -23,12 +23,12 @@
   }
 
   .shaBtn span {
-    font-size: 12px !important;
+    font-size: var(--font-size-small) !important;
   }
 
   .commitLink {
     font-weight: 500;
-    font-size: 12px;
+    font-size: var(--font-size-small);
     color: var(--primary-8);
   }
 }

@@ -64,12 +64,10 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
         />
       )}
 
-      <Container padding={{ top: 'large' }} flex={{ align: 'center-center' }}>
-        <PrevNextPagination
-          onPrev={X_PREV_PAGE ? () => setPageIndex(pageIndex - 1) : undefined}
-          onNext={X_NEXT_PAGE ? () => setPageIndex(pageIndex + 1) : undefined}
-        />
-      </Container>
+      <PrevNextPagination
+        onPrev={!!X_PREV_PAGE && (() => setPageIndex(pageIndex - 1))}
+        onNext={!!X_NEXT_PAGE && (() => setPageIndex(pageIndex + 1))}
+      />
     </Container>
   )
 }
