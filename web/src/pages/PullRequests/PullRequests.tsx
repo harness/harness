@@ -50,7 +50,7 @@ export default function PullRequests() {
     queryParams: {
       limit: String(LIST_FETCHING_LIMIT),
       page: String(pageIndex + 1),
-      sort: 'number',
+      sort: filter == PullRequestFilterOption.MERGED ? 'merged' : 'number',
       order: 'desc',
       query: searchTerm,
       state: filter == PullRequestFilterOption.ALL ? '' : filter
@@ -77,7 +77,7 @@ export default function PullRequests() {
                       vars={{
                         state: row.original.state,
                         number: <Text inline>{row.original.number}</Text>,
-                        time: <ReactTimeago date={row.original.created as number} />,
+                        time: <ReactTimeago date={(row.original.state == 'merged' ? row.original.merged : row.original.created) as number} />,
                         user: row.original.author?.display_name
                       }}
                     />

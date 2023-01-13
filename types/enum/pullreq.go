@@ -50,6 +50,7 @@ const (
 	PullReqSortNumber  = "number"
 	PullReqSortCreated = "created"
 	PullReqSortEdited  = "edited"
+	PullReqSortMerged  = "merged"
 )
 
 func GetAllPullReqSorts() []PullReqSort {
@@ -57,10 +58,11 @@ func GetAllPullReqSorts() []PullReqSort {
 		PullReqSortNumber,
 		PullReqSortCreated,
 		PullReqSortEdited,
+		PullReqSortMerged,
 	}
 }
 
-var rawPullReqSorts = toSortedStrings(GetAllPullReqActivityTypes())
+var rawPullReqSorts = toSortedStrings(GetAllPullReqSorts())
 
 // ParsePullReqSort parses the PullReqSort.
 func ParsePullReqSort(s PullReqSort) (PullReqSort, bool) {
