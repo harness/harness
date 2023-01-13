@@ -28,6 +28,16 @@ func GetAllPullReqStates() []PullReqState {
 	}
 }
 
+var rawPullReqStates = toSortedStrings(GetAllPullReqStates())
+
+// ParsePullReqState parses the PullReqState.
+func ParsePullReqState(s PullReqState) (PullReqState, bool) {
+	if existsInSortedSlice(rawPullReqStates, string(s)) {
+		return s, true
+	}
+	return PullReqStateOpen, false // PullReqStateOpen is default in case we can't parse it
+}
+
 // PullReqSort defines pull request attribute that can be used for sorting.
 type PullReqSort string
 
@@ -83,6 +93,7 @@ func GetAllPullReqActivityTypes() []PullReqActivityType {
 		PullReqActivityTypeCodeComment,
 		PullReqActivityTypeTitleChange,
 		PullReqActivityTypeReviewSubmit,
+		PullReqActivityTypeMerge,
 	}
 }
 

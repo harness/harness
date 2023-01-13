@@ -38,41 +38,23 @@ export default function PullRequests() {
   const history = useHistory()
   const { routes } = useAppContext()
   const [searchTerm, setSearchTerm] = useState('')
-  const [filter, setFilter] = useState(PullRequestFilterOption.ALL)
+  const [filter, setFilter] = useState(PullRequestFilterOption.OPEN)
   const [pageIndex, setPageIndex] = usePageIndex()
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
-  const queryParams = useMemo(() => {
-    const searchParams = new URLSearchParams({
-      limit: String(LIST_FETCHING_LIMIT),
-      page: String(pageIndex + 1),
-      sort: 'date',
-      order: 'desc',
-      query: searchTerm
-    })
-
-    switch (filter) {
-      case PullRequestFilterOption.OPEN:
-      case PullRequestFilterOption.MERGED:
-      case PullRequestFilterOption.CLOSED:
-      case PullRequestFilterOption.REJECTED:
-        searchParams.append('state', filter)
-        break
-      default:
-        searchParams.append('state', PullRequestFilterOption.OPEN)
-        searchParams.append('state', PullRequestFilterOption.MERGED)
-        searchParams.append('state', PullRequestFilterOption.CLOSED)
-        searchParams.append('state', PullRequestFilterOption.REJECTED)
-        break
-    }
-
-    return searchParams.toString()
-  }, [searchTerm, pageIndex, filter])
   const {
     data,
     error: prError,
     loading: prLoading
   } = useGet<TypesPullReq[]>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq?${queryParams}`,
+    path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq`,
+    queryParams: {
+      limit: String(LIST_FETCHING_LIMIT),
+      page: String(pageIndex + 1),
+      sort: 'number',
+      order: 'desc',
+      query: searchTerm,
+      state: filter == PullRequestFilterOption.ALL ? '' : filter
+    },
     lazy: !repoMetadata
   })
   const columns: Column<TypesPullReq>[] = useMemo(

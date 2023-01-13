@@ -69,7 +69,7 @@ func (c *Controller) ReviewSubmit(
 	}
 
 	ref, err := c.gitRPCClient.GetRef(ctx, &gitrpc.GetRefParams{
-		ReadParams: gitrpc.ReadParams{RepoUID: repo.UID},
+		ReadParams: gitrpc.ReadParams{RepoUID: repo.GitUID},
 		Name:       pr.TargetBranch,
 		Type:       gitrpc.RefTypeBranch,
 	})

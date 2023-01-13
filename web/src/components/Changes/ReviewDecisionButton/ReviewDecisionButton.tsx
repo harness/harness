@@ -10,7 +10,6 @@ import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/
 import css from './ReviewDecisionButton.module.scss'
 
 enum PullReqReviewDecision {
-  PENDING = 'pending',
   REVIEWED = 'reviewed',
   APPROVED = 'approved',
   CHANGEREQ = 'changereq'
@@ -29,15 +28,15 @@ export const ReviewDecisionButton: React.FC<ReviewDecisionButtonProps> = ({
   const { getString } = useStrings()
   const { showError } = useToaster()
   const [comment, setComment] = useState('')
-  const [decision, setDecision] = useState<PullReqReviewDecision>(PullReqReviewDecision.PENDING)
+  const [decision, setDecision] = useState<PullReqReviewDecision>(PullReqReviewDecision.REVIEWED)
   const { mutate, loading } = useMutate({
     verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/review`
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/reviews`
   })
   const submitReview = useCallback(() => {
     mutate({ decision, message: comment })
       .then(() => {
-        alert('ok')
+        alert('Review Submitted')
       })
       .catch(exception => showError(getErrorMessage(exception)))
   }, [comment, decision, mutate, showError])
@@ -72,10 +71,10 @@ export const ReviewDecisionButton: React.FC<ReviewDecisionButtonProps> = ({
               <RadioGroup>
                 <Radio
                   name="decision"
-                  defaultChecked={decision === PullReqReviewDecision.PENDING}
+                  defaultChecked={decision === PullReqReviewDecision.REVIEWED}
                   label={getString('comment')}
-                  value={PullReqReviewDecision.PENDING}
-                  onChange={() => setDecision(PullReqReviewDecision.PENDING)}
+                  value={PullReqReviewDecision.REVIEWED}
+                  onChange={() => setDecision(PullReqReviewDecision.REVIEWED)}
                 />
                 <Radio
                   name="decision"
@@ -97,9 +96,9 @@ export const ReviewDecisionButton: React.FC<ReviewDecisionButtonProps> = ({
               <Button
                 variation={ButtonVariation.PRIMARY}
                 text={getString('submitReview')}
-                size={ButtonSize.SMALL}
+                size={ButtonSize.MEDIUM}
                 onClick={submitReview}
-                disabled={!(comment || '').trim().length && decision === PullReqReviewDecision.PENDING}
+                disabled={!(comment || '').trim().length && decision != PullReqReviewDecision.APPROVED}
                 loading={loading}
               />
             </Container>

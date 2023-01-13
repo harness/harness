@@ -3,9 +3,9 @@ info:
   title: API Specification
   version: 1.0.0
 servers:
-  - url: /api/v1/
+- url: /api/v1/
 security:
-  - bearerAuth: []
+- bearerAuth: []
 paths:
   /login:
     post:
@@ -41,7 +41,7 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - account
+      - account
   /register:
     post:
       operationId: onRegister
@@ -70,18 +70,18 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - account
+      - account
   /repos:
     post:
       operationId: createRepository
       parameters:
-        - description: path of parent space (Not needed in standalone).
-          in: query
-          name: space_path
-          required: false
-          schema:
-            default: false
-            type: string
+      - description: path of parent space (Not needed in standalone).
+        in: query
+        name: space_path
+        required: false
+        schema:
+          default: false
+          type: string
       requestBody:
         content:
           application/json:
@@ -119,16 +119,16 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}:
     delete:
       operationId: deleteRepository
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       responses:
         '204':
           description: No Content
@@ -157,15 +157,15 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
     get:
       operationId: findRepository
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -198,15 +198,15 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
     patch:
       operationId: updateRepository
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -250,67 +250,67 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}/branches:
     get:
       operationId: listBranches
       parameters:
-        - description: Indicates whether optional commit information should be included
-            in the response.
-          in: query
-          name: include_commit
-          required: false
-          schema:
-            default: false
-            type: boolean
-        - description: The substring by which the branches are filtered.
-          in: query
-          name: query
-          required: false
-          schema:
-            type: string
-        - description: The order of the output.
-          in: query
-          name: order
-          required: false
-          schema:
-            default: asc
-            enum:
-              - asc
-              - desc
-            type: string
-        - description: The data by which the branches are sorted.
-          in: query
-          name: sort
-          required: false
-          schema:
-            default: name
-            enum:
-              - name
-              - date
-            type: string
-        - description: The page to return.
-          in: query
-          name: page
-          required: false
-          schema:
-            default: 1
-            minimum: 1
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - description: Indicates whether optional commit information should be included
+          in the response.
+        in: query
+        name: include_commit
+        required: false
+        schema:
+          default: false
+          type: boolean
+      - description: The substring by which the branches are filtered.
+        in: query
+        name: query
+        required: false
+        schema:
+          type: string
+      - description: The order of the output.
+        in: query
+        name: order
+        required: false
+        schema:
+          default: asc
+          enum:
+          - asc
+          - desc
+          type: string
+      - description: The data by which the branches are sorted.
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: name
+          enum:
+          - name
+          - date
+          type: string
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -345,15 +345,15 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
     post:
       operationId: createBranch
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -391,21 +391,21 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}/branches/{branch_name}:
     delete:
       operationId: deleteBranch
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: branch_name
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: branch_name
+        required: true
+        schema:
+          type: string
       responses:
         '204':
           description: No Content
@@ -434,49 +434,49 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}/commits:
     get:
       operationId: listCommits
       parameters:
-        - description: The git reference (branch / tag / commitID) that will be used
-            to retrieve the data. If no value is provided the default branch of the
-            repository is used.
-          in: query
-          name: git_ref
-          required: false
-          schema:
-            default: '{Repository Default Branch}'
-            type: string
-        - description: The result should only contain commits that occurred after the
-            provided reference.
-          in: query
-          name: after
-          required: false
-          schema:
-            type: string
-        - description: The page to return.
-          in: query
-          name: page
-          required: false
-          schema:
-            default: 1
-            minimum: 1
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - description: The git reference (branch / tag / commitID) that will be used
+          to retrieve the data. If no value is provided the default branch of the
+          repository is used.
+        in: query
+        name: git_ref
+        required: false
+        schema:
+          default: '{Repository Default Branch}'
+          type: string
+      - description: The result should only contain commits that occurred after the
+          provided reference.
+        in: query
+        name: after
+        required: false
+        schema:
+          type: string
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -511,15 +511,15 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
     post:
       operationId: commitFiles
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -563,16 +563,16 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}/commits/calculate-divergence:
     post:
       operationId: calculateCommitDivergence
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -612,22 +612,22 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}/compare/{range}:
     get:
       operationId: rawDiff
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: range
-          required: true
-          schema:
-            example: main..dev
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: range
+        required: true
+        schema:
+          example: main..dev
+          type: string
       responses:
         '200':
           content:
@@ -654,38 +654,38 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}/content/{path}:
     get:
       operationId: getContent
       parameters:
-        - description: The git reference (branch / tag / commitID) that will be used
-            to retrieve the data. If no value is provided the default branch of the
-            repository is used.
-          in: query
-          name: git_ref
-          required: false
-          schema:
-            default: '{Repository Default Branch}'
-            type: string
-        - description: Indicates whether optional commit information should be included
-            in the response.
-          in: query
-          name: include_commit
-          required: false
-          schema:
-            default: false
-            type: boolean
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: path
-          required: true
-          schema:
-            type: string
+      - description: The git reference (branch / tag / commitID) that will be used
+          to retrieve the data. If no value is provided the default branch of the
+          repository is used.
+        in: query
+        name: git_ref
+        required: false
+        schema:
+          default: '{Repository Default Branch}'
+          type: string
+      - description: Indicates whether optional commit information should be included
+          in the response.
+        in: query
+        name: include_commit
+        required: false
+        schema:
+          default: false
+          type: boolean
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: path
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -718,16 +718,16 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}/move:
     post:
       operationId: moveRepository
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -765,33 +765,33 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}/paths:
     get:
       operationId: listRepositoryPaths
       parameters:
-        - description: The page to return.
-          in: query
-          name: page
-          required: false
-          schema:
-            default: 1
-            minimum: 1
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -826,15 +826,15 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
     post:
       operationId: createRepositoryPath
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -872,21 +872,21 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}/paths/{path_id}:
     delete:
       operationId: deleteRepositoryPath
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: path_id
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: path_id
+        required: true
+        schema:
+          type: string
       responses:
         '204':
           description: No Content
@@ -915,98 +915,98 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}/pullreq:
     get:
       operationId: listPullReq
       parameters:
-        - description: The state of the pull requests to include in the result.
-          in: query
-          name: state
-          required: false
-          schema:
-            items:
-              default: open
-              enum:
-                - open
-                - closed
-                - merged
-                - rejected
-              type: string
-            type: array
-        - description: Source repository ref of the pull requests.
-          in: query
-          name: source_repo_ref
-          required: false
-          schema:
-            type: string
-        - description: Source branch of the pull requests.
-          in: query
-          name: source_branch
-          required: false
-          schema:
-            type: string
-        - description: Target branch of the pull requests.
-          in: query
-          name: target_branch
-          required: false
-          schema:
-            type: string
-        - description: The substring by which the pull requests are filtered.
-          in: query
-          name: query
-          required: false
-          schema:
-            type: string
-        - description: The principal ID who created pull requests.
-          in: query
-          name: created_by
-          required: false
-          schema:
-            type: integer
-        - description: The order of the output.
-          in: query
-          name: order
-          required: false
-          schema:
-            default: asc
+      - description: The state of the pull requests to include in the result.
+        in: query
+        name: state
+        required: false
+        schema:
+          items:
+            default: open
             enum:
-              - asc
-              - desc
+            - open
+            - merged
+            - closed
+            - rejected
             type: string
-        - description: The data by which the pull requests are sorted.
-          in: query
-          name: sort
-          required: false
-          schema:
-            default: number
-            enum:
-              - number
-              - created
-              - updated
-            type: string
-        - description: The page to return.
-          in: query
-          name: page
-          required: false
-          schema:
-            default: 1
-            minimum: 1
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+          type: array
+      - description: Source repository ref of the pull requests.
+        in: query
+        name: source_repo_ref
+        required: false
+        schema:
+          type: string
+      - description: Source branch of the pull requests.
+        in: query
+        name: source_branch
+        required: false
+        schema:
+          type: string
+      - description: Target branch of the pull requests.
+        in: query
+        name: target_branch
+        required: false
+        schema:
+          type: string
+      - description: The substring by which the pull requests are filtered.
+        in: query
+        name: query
+        required: false
+        schema:
+          type: string
+      - description: The principal ID who created pull requests.
+        in: query
+        name: created_by
+        required: false
+        schema:
+          type: integer
+      - description: The order of the output.
+        in: query
+        name: order
+        required: false
+        schema:
+          default: asc
+          enum:
+          - asc
+          - desc
+          type: string
+      - description: The data by which the pull requests are sorted.
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: number
+          enum:
+          - number
+          - created
+          - edited
+          type: string
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -1041,15 +1041,15 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - pullreq
+      - pullreq
     post:
       operationId: createPullReq
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -1087,21 +1087,21 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - pullreq
+      - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}:
     get:
       operationId: getPullReq
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: pullreq_number
-          required: true
-          schema:
-            type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
       responses:
         '200':
           content:
@@ -1134,20 +1134,20 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - pullreq
+      - pullreq
     patch:
       operationId: updatePullReq
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: pullreq_number
-          required: true
-          schema:
-            type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
       requestBody:
         content:
           application/json:
@@ -1185,70 +1185,72 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - pullreq
+      - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}/activities:
     get:
       operationId: listPullReqActivities
       parameters:
-        - description: The kind of the pull request activity to include in the result.
-          in: query
-          name: kind
-          required: false
-          schema:
-            items:
-              enum:
-                - system
-                - comment
-                - code
-              type: string
-            type: array
-        - description: The type of the pull request activity to include in the result.
-          in: query
-          name: type
-          required: false
-          schema:
-            items:
-              enum:
-                - comment
-                - code-comment
-                - title-change
-              type: string
-            type: array
-        - description: The result should contain only entries created at and after this
-            timestamp (unix millis).
-          in: query
-          name: after
-          required: false
-          schema:
-            minimum: 0
-            type: integer
-        - description: The result should contain only entries created before this timestamp
-            (unix millis).
-          in: query
-          name: before
-          required: false
-          schema:
-            minimum: 0
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
+      - description: The kind of the pull request activity to include in the result.
+        in: query
+        name: kind
+        required: false
+        schema:
+          items:
+            enum:
+            - system
+            - comment
+            - code
             type: string
-        - in: path
-          name: pullreq_number
-          required: true
-          schema:
-            type: integer
+          type: array
+      - description: The type of the pull request activity to include in the result.
+        in: query
+        name: type
+        required: false
+        schema:
+          items:
+            enum:
+            - comment
+            - code-comment
+            - title-change
+            - review-submit
+            - merge
+            type: string
+          type: array
+      - description: The result should contain only entries created at and after this
+          timestamp (unix millis).
+        in: query
+        name: after
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+      - description: The result should contain only entries created before this timestamp
+          (unix millis).
+        in: query
+        name: before
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
       responses:
         '200':
           content:
@@ -1283,21 +1285,21 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - pullreq
+      - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}/comments:
     post:
       operationId: commentCreatePullReq
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: pullreq_number
-          required: true
-          schema:
-            type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
       requestBody:
         content:
           application/json:
@@ -1335,26 +1337,26 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - pullreq
+      - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}:
     delete:
       operationId: commentDeletePullReq
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: pullreq_number
-          required: true
-          schema:
-            type: integer
-        - in: path
-          name: pullreq_comment_id
-          required: true
-          schema:
-            type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      - in: path
+        name: pullreq_comment_id
+        required: true
+        schema:
+          type: integer
       responses:
         '204':
           description: No Content
@@ -1383,25 +1385,25 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - pullreq
+      - pullreq
     patch:
       operationId: commentUpdatePullReq
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: pullreq_number
-          required: true
-          schema:
-            type: integer
-        - in: path
-          name: pullreq_comment_id
-          required: true
-          schema:
-            type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      - in: path
+        name: pullreq_comment_id
+        required: true
+        schema:
+          type: integer
       requestBody:
         content:
           application/json:
@@ -1439,21 +1441,21 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - pullreq
+      - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}/merge:
     post:
       operationId: mergePullReqOp
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: pullreq_number
-          required: true
-          schema:
-            type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
       requestBody:
         content:
           application/json:
@@ -1505,69 +1507,21 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Unprocessable Entity
       tags:
-        - pullreq
-  /repos/{repo_ref}/pullreq/{pullreq_number}/review:
-    post:
-      operationId: reviewSubmitPullReq
-      parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: pullreq_number
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpenapiReviewSubmitPullReqRequest'
-      responses:
-        '204':
-          description: No Content
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Bad Request
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - pullreq
+      - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}/reviewers:
     get:
       operationId: reviewerListPullReq
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: pullreq_number
-          required: true
-          schema:
-            type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
       responses:
         '204':
           description: No Content
@@ -1596,20 +1550,20 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - pullreq
+      - pullreq
     put:
       operationId: reviewerAddPullReq
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: pullreq_number
-          required: true
-          schema:
-            type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
       requestBody:
         content:
           application/json:
@@ -1643,16 +1597,64 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - pullreq
+      - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/reviews:
+    post:
+      operationId: reviewSubmitPullReq
+      parameters:
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiReviewSubmitPullReqRequest'
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - pullreq
   /repos/{repo_ref}/service-accounts:
     get:
       operationId: listRepositoryServiceAccounts
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -1687,67 +1689,67 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}/tags:
     get:
       operationId: listTags
       parameters:
-        - description: Indicates whether optional commit information should be included
-            in the response.
-          in: query
-          name: include_commit
-          required: false
-          schema:
-            default: false
-            type: boolean
-        - description: The substring by which the tags are filtered.
-          in: query
-          name: query
-          required: false
-          schema:
-            type: string
-        - description: The order of the output.
-          in: query
-          name: order
-          required: false
-          schema:
-            default: asc
-            enum:
-              - asc
-              - desc
-            type: string
-        - description: The data by which the tags are sorted.
-          in: query
-          name: sort
-          required: false
-          schema:
-            default: name
-            enum:
-              - name
-              - date
-            type: string
-        - description: The page to return.
-          in: query
-          name: page
-          required: false
-          schema:
-            default: 1
-            minimum: 1
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - description: Indicates whether optional commit information should be included
+          in the response.
+        in: query
+        name: include_commit
+        required: false
+        schema:
+          default: false
+          type: boolean
+      - description: The substring by which the tags are filtered.
+        in: query
+        name: query
+        required: false
+        schema:
+          type: string
+      - description: The order of the output.
+        in: query
+        name: order
+        required: false
+        schema:
+          default: asc
+          enum:
+          - asc
+          - desc
+          type: string
+      - description: The data by which the tags are sorted.
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: name
+          enum:
+          - name
+          - date
+          type: string
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -1782,33 +1784,33 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repository
+      - repository
   /repos/{repo_ref}/webhooks:
     get:
       operationId: listWebhooks
       parameters:
-        - description: The page to return.
-          in: query
-          name: page
-          required: false
-          schema:
-            default: 1
-            minimum: 1
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -1843,15 +1845,15 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - webhook
+      - webhook
     post:
       operationId: createWebhook
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -1889,21 +1891,21 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - webhook
+      - webhook
   /repos/{repo_ref}/webhooks/{webhook_id}:
     delete:
       operationId: deleteWebhook
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: webhook_id
-          required: true
-          schema:
-            type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: webhook_id
+        required: true
+        schema:
+          type: integer
       responses:
         '204':
           description: No Content
@@ -1932,20 +1934,20 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - webhook
+      - webhook
     get:
       operationId: getWebhook
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: webhook_id
-          required: true
-          schema:
-            type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: webhook_id
+        required: true
+        schema:
+          type: integer
       responses:
         '200':
           content:
@@ -1978,20 +1980,20 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - webhook
+      - webhook
     patch:
       operationId: updateWebhook
       parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: webhook_id
-          required: true
-          schema:
-            type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: webhook_id
+        required: true
+        schema:
+          type: integer
       requestBody:
         content:
           application/json:
@@ -2029,45 +2031,45 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - webhook
+      - webhook
   /repos/{repo_ref}/webhooks/{webhook_id}/executions:
     get:
       operationId: listWebhookExecutions
       parameters:
-        - description: The page to return.
-          in: query
-          name: page
-          required: false
-          schema:
-            default: 1
-            minimum: 1
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: webhook_id
-          required: true
-          schema:
-            type: integer
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: webhook_id
+        required: true
+        schema:
+          type: integer
       responses:
         '200':
           content:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/OpenapiWebhookExecutionType'
+                  $ref: '#/components/schemas/TypesWebhookExecution'
                 type: array
           description: OK
         '400':
@@ -2095,49 +2097,49 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - webhook
+      - webhook
   /repos/{repo_ref}/webhooks/{webhook_id}/executions/{webhook_execution_id}:
     get:
       operationId: getWebhookExecution
       parameters:
-        - description: The page to return.
-          in: query
-          name: page
-          required: false
-          schema:
-            default: 1
-            minimum: 1
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: webhook_id
-          required: true
-          schema:
-            type: integer
-        - in: path
-          name: webhook_execution_id
-          required: true
-          schema:
-            type: integer
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: webhook_id
+        required: true
+        schema:
+          type: integer
+      - in: path
+        name: webhook_execution_id
+        required: true
+        schema:
+          type: integer
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OpenapiWebhookExecutionType'
+                $ref: '#/components/schemas/TypesWebhookExecution'
           description: OK
         '400':
           content:
@@ -2164,7 +2166,7 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - webhook
+      - webhook
   /resources/gitignore:
     get:
       operationId: listGitignore
@@ -2196,7 +2198,7 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - resource
+      - resource
   /resources/license:
     get:
       operationId: listLicenses
@@ -2233,7 +2235,7 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - resource
+      - resource
   /spaces:
     post:
       operationId: createSpace
@@ -2274,16 +2276,16 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - space
+      - space
   /spaces/{space_ref}:
     delete:
       operationId: deleteSpace
       parameters:
-        - in: path
-          name: space_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: space_ref
+        required: true
+        schema:
+          type: string
       responses:
         '204':
           description: No Content
@@ -2312,15 +2314,15 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - space
+      - space
     get:
       operationId: getSpace
       parameters:
-        - in: path
-          name: space_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: space_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -2353,15 +2355,15 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - space
+      - space
     patch:
       operationId: updateSpace
       parameters:
-        - in: path
-          name: space_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: space_ref
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -2405,16 +2407,16 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - space
+      - space
   /spaces/{space_ref}/move:
     post:
       operationId: moveSpace
       parameters:
-        - in: path
-          name: space_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: space_ref
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -2452,33 +2454,33 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - space
+      - space
   /spaces/{space_ref}/paths:
     get:
       operationId: listPaths
       parameters:
-        - description: The page to return.
-          in: query
-          name: page
-          required: false
-          schema:
-            default: 1
-            minimum: 1
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: space_ref
-          required: true
-          schema:
-            type: string
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: space_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -2513,15 +2515,15 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - space
+      - space
     post:
       operationId: createPath
       parameters:
-        - in: path
-          name: space_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: space_ref
+        required: true
+        schema:
+          type: string
       requestBody:
         content:
           application/json:
@@ -2559,21 +2561,21 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - space
+      - space
   /spaces/{space_ref}/paths/{path_id}:
     delete:
       operationId: deletePath
       parameters:
-        - in: path
-          name: space_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: path_id
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: space_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: path_id
+        required: true
+        schema:
+          type: string
       responses:
         '204':
           description: No Content
@@ -2602,62 +2604,62 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - space
+      - space
   /spaces/{space_ref}/repos:
     get:
       operationId: listRepos
       parameters:
-        - description: The substring which is used to filter the repositories by their
-            path name.
-          in: query
-          name: query
-          required: false
-          schema:
-            type: string
-        - description: The data by which the repositories are sorted.
-          in: query
-          name: sort
-          required: false
-          schema:
-            default: uid
-            enum:
-              - uid
-              - path
-              - created
-              - updated
-            type: string
-        - description: The order of the output.
-          in: query
-          name: order
-          required: false
-          schema:
-            default: asc
-            enum:
-              - asc
-              - desc
-            type: string
-        - description: The page to return.
-          in: query
-          name: page
-          required: false
-          schema:
-            default: 1
-            minimum: 1
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: space_ref
-          required: true
-          schema:
-            type: string
+      - description: The substring which is used to filter the repositories by their
+          path name.
+        in: query
+        name: query
+        required: false
+        schema:
+          type: string
+      - description: The data by which the repositories are sorted.
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: uid
+          enum:
+          - uid
+          - path
+          - created
+          - updated
+          type: string
+      - description: The order of the output.
+        in: query
+        name: order
+        required: false
+        schema:
+          default: asc
+          enum:
+          - asc
+          - desc
+          type: string
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: space_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -2692,16 +2694,16 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - space
+      - space
   /spaces/{space_ref}/service-accounts:
     get:
       operationId: listServiceAccounts
       parameters:
-        - in: path
-          name: space_ref
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: space_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -2736,62 +2738,62 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - space
+      - space
   /spaces/{space_ref}/spaces:
     get:
       operationId: listSpaces
       parameters:
-        - description: The substring which is used to filter the spaces by their path
-            name.
-          in: query
-          name: query
-          required: false
-          schema:
-            type: string
-        - description: The data by which the spaces are sorted.
-          in: query
-          name: sort
-          required: false
-          schema:
-            default: uid
-            enum:
-              - uid
-              - path
-              - created
-              - updated
-            type: string
-        - description: The order of the output.
-          in: query
-          name: order
-          required: false
-          schema:
-            default: asc
-            enum:
-              - asc
-              - desc
-            type: string
-        - description: The page to return.
-          in: query
-          name: page
-          required: false
-          schema:
-            default: 1
-            minimum: 1
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: space_ref
-          required: true
-          schema:
-            type: string
+      - description: The substring which is used to filter the spaces by their path
+          name.
+        in: query
+        name: query
+        required: false
+        schema:
+          type: string
+      - description: The data by which the spaces are sorted.
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: uid
+          enum:
+          - uid
+          - path
+          - created
+          - updated
+          type: string
+      - description: The order of the output.
+        in: query
+        name: order
+        required: false
+        schema:
+          default: asc
+          enum:
+          - asc
+          - desc
+          type: string
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: space_ref
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -2826,7 +2828,7 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - space
+      - space
   /user:
     get:
       operationId: getUser
@@ -2844,7 +2846,7 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - user
+      - user
     patch:
       operationId: updateUser
       requestBody:
@@ -2866,7 +2868,7 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - user
+      - user
   /user/token:
     post:
       operationId: createToken
@@ -2889,37 +2891,37 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - user
+      - user
   /users:
     get:
       operationId: listUsers
       parameters:
-        - in: query
-          name: sort
-          schema:
-            enum:
-              - id
-              - email
-              - created
-              - updated
-            type: string
-        - in: query
-          name: order
-          schema:
-            enum:
-              - asc
-              - desc
-            type: string
-        - in: query
-          name: page
-          schema:
-            default: 1
-            type: integer
-        - in: query
-          name: limit
-          schema:
-            default: 30
-            type: integer
+      - in: query
+        name: sort
+        schema:
+          enum:
+          - id
+          - email
+          - created
+          - updated
+          type: string
+      - in: query
+        name: order
+        schema:
+          enum:
+          - asc
+          - desc
+          type: string
+      - in: query
+        name: page
+        schema:
+          default: 1
+          type: integer
+      - in: query
+        name: limit
+        schema:
+          default: 30
+          type: integer
       responses:
         '200':
           content:
@@ -2948,7 +2950,7 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - users
+      - users
     post:
       operationId: createUser
       requestBody:
@@ -2982,16 +2984,16 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - users
+      - users
   /users/{email}:
     delete:
       operationId: deleteUser
       parameters:
-        - in: path
-          name: email
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: email
+        required: true
+        schema:
+          type: string
       responses:
         '204':
           description: No Content
@@ -3008,15 +3010,15 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - users
+      - users
     get:
       operationId: getUserEmail
       parameters:
-        - in: path
-          name: email
-          required: true
-          schema:
-            type: string
+      - in: path
+        name: email
+        required: true
+        schema:
+          type: string
       responses:
         '200':
           content:
@@ -3043,31 +3045,74 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - users
+      - users
 components:
   schemas:
     EnumAccessGrant:
       type: integer
     EnumMergeMethod:
+      enum:
+      - merge
+      - squash
+      - rebase
       type: string
     EnumParentResourceType:
+      enum:
+      - space
+      - repo
       type: string
     EnumPathTargetType:
       type: string
     EnumPullReqActivityKind:
+      enum:
+      - system
+      - comment
+      - code
       type: string
     EnumPullReqActivityType:
+      enum:
+      - comment
+      - code-comment
+      - title-change
+      - review-submit
+      - merge
+      type: string
+    EnumPullReqReviewDecision:
+      enum:
+      - pending
+      - reviewed
+      - approved
+      - changereq
       type: string
     EnumPullReqState:
+      enum:
+      - open
+      - merged
+      - closed
+      - rejected
       type: string
     EnumTokenType:
       type: string
     EnumWebhookExecutionResult:
+      enum:
+      - success
+      - retriable_error
+      - fatal_error
       nullable: true
       type: string
     EnumWebhookParent:
+      enum:
+      - repo
+      - space
       type: string
     EnumWebhookTrigger:
+      enum:
+      - branch_created
+      - branch_updated
+      - branch_deleted
+      - tag_created
+      - tag_updated
+      - tag_deleted
       type: string
     FormDataOpenapiLoginRequest:
       properties:
@@ -3085,10 +3130,10 @@ components:
       type: object
     GitrpcFileAction:
       enum:
-        - CREATE
-        - UPDATE
-        - DELETE
-        - MOVE
+      - CREATE
+      - UPDATE
+      - DELETE
+      - MOVE
       type: string
     OpenapiCalculateCommitDivergenceRequest:
       properties:
@@ -3138,10 +3183,10 @@ components:
       type: object
     OpenapiContent:
       oneOf:
-        - $ref: '#/components/schemas/RepoFileContent'
-        - $ref: '#/components/schemas/OpenapiDirContent'
-        - $ref: '#/components/schemas/RepoSymlinkContent'
-        - $ref: '#/components/schemas/RepoSubmoduleContent'
+      - $ref: '#/components/schemas/RepoFileContent'
+      - $ref: '#/components/schemas/OpenapiDirContent'
+      - $ref: '#/components/schemas/RepoSymlinkContent'
+      - $ref: '#/components/schemas/RepoSubmoduleContent'
       type: object
     OpenapiContentInfo:
       properties:
@@ -3158,10 +3203,10 @@ components:
       type: object
     OpenapiContentType:
       enum:
-        - file
-        - dir
-        - symlink
-        - submodule
+      - file
+      - dir
+      - symlink
+      - submodule
       type: string
     OpenapiCreateBranchRequest:
       properties:
@@ -3240,7 +3285,7 @@ components:
           type: string
         triggers:
           items:
-            $ref: '#/components/schemas/OpenapiWebhookTrigger'
+            $ref: '#/components/schemas/EnumWebhookTrigger'
           nullable: true
           type: array
         url:
@@ -3303,7 +3348,7 @@ components:
     OpenapiReviewSubmitPullReqRequest:
       properties:
         decision:
-          type: string
+          $ref: '#/components/schemas/EnumPullReqReviewDecision'
         message:
           type: string
       type: object
@@ -3356,60 +3401,13 @@ components:
           type: string
         triggers:
           items:
-            $ref: '#/components/schemas/OpenapiWebhookTrigger'
+            $ref: '#/components/schemas/EnumWebhookTrigger'
           nullable: true
           type: array
         url:
           nullable: true
           type: string
       type: object
-    OpenapiWebhookExecutionResult:
-      enum:
-        - success
-        - retriable_error
-        - fatal_error
-      nullable: true
-      type: string
-    OpenapiWebhookExecutionType:
-      properties:
-        created:
-          type: integer
-        duration:
-          type: integer
-        error:
-          type: string
-        id:
-          type: integer
-        request:
-          $ref: '#/components/schemas/TypesWebhookExecutionRequest'
-        response:
-          $ref: '#/components/schemas/TypesWebhookExecutionResponse'
-        result:
-          $ref: '#/components/schemas/OpenapiWebhookExecutionResult'
-        retrigger_of:
-          nullable: true
-          type: integer
-        retriggerable:
-          type: boolean
-        trigger_type:
-          $ref: '#/components/schemas/OpenapiWebhookTrigger'
-        webhook_id:
-          type: integer
-      type: object
-    OpenapiWebhookParent:
-      enum:
-        - repo
-        - space
-      type: string
-    OpenapiWebhookTrigger:
-      enum:
-        - branch_created
-        - branch_updated
-        - branch_deleted
-        - tag_created
-        - tag_updated
-        - tag_deleted
-      type: string
     OpenapiWebhookType:
       properties:
         created:
@@ -3429,14 +3427,14 @@ components:
         insecure:
           type: boolean
         latest_execution_result:
-          $ref: '#/components/schemas/OpenapiWebhookExecutionResult'
+          $ref: '#/components/schemas/EnumWebhookExecutionResult'
         parent_id:
           type: integer
         parent_type:
-          $ref: '#/components/schemas/OpenapiWebhookParent'
+          $ref: '#/components/schemas/EnumWebhookParent'
         triggers:
           items:
-            $ref: '#/components/schemas/OpenapiWebhookTrigger'
+            $ref: '#/components/schemas/EnumWebhookTrigger'
           nullable: true
           type: array
         updated:
@@ -3613,8 +3611,6 @@ components:
         description:
           type: string
         edited:
-          type: integer
-        id:
           type: integer
         merge_strategy:
           $ref: '#/components/schemas/EnumMergeMethod'
@@ -3816,6 +3812,32 @@ components:
         password:
           nullable: true
           type: string
+      type: object
+    TypesWebhookExecution:
+      properties:
+        created:
+          type: integer
+        duration:
+          type: integer
+        error:
+          type: string
+        id:
+          type: integer
+        request:
+          $ref: '#/components/schemas/TypesWebhookExecutionRequest'
+        response:
+          $ref: '#/components/schemas/TypesWebhookExecutionResponse'
+        result:
+          $ref: '#/components/schemas/EnumWebhookExecutionResult'
+        retrigger_of:
+          nullable: true
+          type: integer
+        retriggerable:
+          type: boolean
+        trigger_type:
+          $ref: '#/components/schemas/EnumWebhookTrigger'
+        webhook_id:
+          type: integer
       type: object
     TypesWebhookExecutionRequest:
       properties:

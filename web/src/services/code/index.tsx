@@ -7,25 +7,33 @@ import { getConfig } from '../config'
 export const SPEC_VERSION = '1.0.0'
 export type EnumAccessGrant = number
 
-export type EnumMergeMethod = string
+export type EnumMergeMethod = 'merge' | 'squash' | 'rebase'
 
-export type EnumParentResourceType = string
+export type EnumParentResourceType = 'space' | 'repo'
 
 export type EnumPathTargetType = string
 
-export type EnumPullReqActivityKind = string
+export type EnumPullReqActivityKind = 'system' | 'comment' | 'code'
 
-export type EnumPullReqActivityType = string
+export type EnumPullReqActivityType = 'comment' | 'code-comment' | 'title-change' | 'review-submit' | 'merge'
 
-export type EnumPullReqState = string
+export type EnumPullReqReviewDecision = 'pending' | 'reviewed' | 'approved' | 'changereq'
+
+export type EnumPullReqState = 'open' | 'merged' | 'closed' | 'rejected'
 
 export type EnumTokenType = string
 
-export type EnumWebhookExecutionResult = string | null
+export type EnumWebhookExecutionResult = 'success' | 'retriable_error' | 'fatal_error' | null
 
-export type EnumWebhookParent = string
+export type EnumWebhookParent = 'repo' | 'space'
 
-export type EnumWebhookTrigger = string
+export type EnumWebhookTrigger =
+  | 'branch_created'
+  | 'branch_updated'
+  | 'branch_deleted'
+  | 'tag_created'
+  | 'tag_updated'
+  | 'tag_deleted'
 
 export interface FormDataOpenapiLoginRequest {
   password?: string
@@ -121,7 +129,7 @@ export interface OpenapiCreateWebhookRequest {
   enabled?: boolean
   insecure?: boolean
   secret?: string
-  triggers?: OpenapiWebhookTrigger[] | null
+  triggers?: EnumWebhookTrigger[] | null
   url?: string
 }
 
@@ -157,7 +165,7 @@ export interface OpenapiMoveSpaceRequest {
 }
 
 export interface OpenapiReviewSubmitPullReqRequest {
-  decision?: string
+  decision?: EnumPullReqReviewDecision
   message?: string
 }
 
@@ -186,35 +194,9 @@ export interface OpenapiUpdateWebhookRequest {
   enabled?: boolean | null
   insecure?: boolean | null
   secret?: string | null
-  triggers?: OpenapiWebhookTrigger[] | null
+  triggers?: EnumWebhookTrigger[] | null
   url?: string | null
 }
-
-export type OpenapiWebhookExecutionResult = 'success' | 'retriable_error' | 'fatal_error' | null
-
-export interface OpenapiWebhookExecutionType {
-  created?: number
-  duration?: number
-  error?: string
-  id?: number
-  request?: TypesWebhookExecutionRequest
-  response?: TypesWebhookExecutionResponse
-  result?: OpenapiWebhookExecutionResult
-  retrigger_of?: number | null
-  retriggerable?: boolean
-  trigger_type?: OpenapiWebhookTrigger
-  webhook_id?: number
-}
-
-export type OpenapiWebhookParent = 'repo' | 'space'
-
-export type OpenapiWebhookTrigger =
-  | 'branch_created'
-  | 'branch_updated'
-  | 'branch_deleted'
-  | 'tag_created'
-  | 'tag_updated'
-  | 'tag_deleted'
 
 export interface OpenapiWebhookType {
   created?: number
@@ -225,10 +207,10 @@ export interface OpenapiWebhookType {
   has_secret?: boolean
   id?: number
   insecure?: boolean
-  latest_execution_result?: OpenapiWebhookExecutionResult
+  latest_execution_result?: EnumWebhookExecutionResult
   parent_id?: number
-  parent_type?: OpenapiWebhookParent
-  triggers?: OpenapiWebhookTrigger[] | null
+  parent_type?: EnumWebhookParent
+  triggers?: EnumWebhookTrigger[] | null
   updated?: number
   url?: string
   version?: number
@@ -344,7 +326,6 @@ export interface TypesPullReq {
   created?: number
   description?: string
   edited?: number
-  id?: number
   merge_strategy?: EnumMergeMethod
   merged?: number | null
   merger?: TypesPrincipalInfo
@@ -451,6 +432,20 @@ export interface TypesUserInput {
   email?: string | null
   name?: string | null
   password?: string | null
+}
+
+export interface TypesWebhookExecution {
+  created?: number
+  duration?: number
+  error?: string
+  id?: number
+  request?: TypesWebhookExecutionRequest
+  response?: TypesWebhookExecutionResponse
+  result?: EnumWebhookExecutionResult
+  retrigger_of?: number | null
+  retriggerable?: boolean
+  trigger_type?: EnumWebhookTrigger
+  webhook_id?: number
 }
 
 export interface TypesWebhookExecutionRequest {
@@ -1092,7 +1087,7 @@ export interface ListPullReqQueryParams {
   /**
    * The state of the pull requests to include in the result.
    */
-  state?: ('open' | 'closed' | 'merged' | 'rejected')[]
+  state?: ('open' | 'merged' | 'closed' | 'rejected')[]
   /**
    * Source repository ref of the pull requests.
    */
@@ -1120,7 +1115,7 @@ export interface ListPullReqQueryParams {
   /**
    * The data by which the pull requests are sorted.
    */
-  sort?: 'number' | 'created' | 'updated'
+  sort?: 'number' | 'created' | 'edited'
   /**
    * The page to return.
    */
@@ -1259,7 +1254,7 @@ export interface ListPullReqActivitiesQueryParams {
   /**
    * The type of the pull request activity to include in the result.
    */
-  type?: ('comment' | 'code-comment' | 'title-change')[]
+  type?: ('comment' | 'code-comment' | 'title-change' | 'review-submit' | 'merge')[]
   /**
    * The result should contain only entries created at and after this timestamp (unix millis).
    */
@@ -1506,40 +1501,6 @@ export const useMergePullReqOp = ({ repo_ref, pullreq_number, ...props }: UseMer
     { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
-export interface ReviewSubmitPullReqPathParams {
-  repo_ref: string
-  pullreq_number: number
-}
-
-export type ReviewSubmitPullReqProps = Omit<
-  MutateProps<void, UsererrorError, void, OpenapiReviewSubmitPullReqRequest, ReviewSubmitPullReqPathParams>,
-  'path' | 'verb'
-> &
-  ReviewSubmitPullReqPathParams
-
-export const ReviewSubmitPullReq = ({ repo_ref, pullreq_number, ...props }: ReviewSubmitPullReqProps) => (
-  <Mutate<void, UsererrorError, void, OpenapiReviewSubmitPullReqRequest, ReviewSubmitPullReqPathParams>
-    verb="POST"
-    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/review`}
-    base={getConfig('code')}
-    {...props}
-  />
-)
-
-export type UseReviewSubmitPullReqProps = Omit<
-  UseMutateProps<void, UsererrorError, void, OpenapiReviewSubmitPullReqRequest, ReviewSubmitPullReqPathParams>,
-  'path' | 'verb'
-> &
-  ReviewSubmitPullReqPathParams
-
-export const useReviewSubmitPullReq = ({ repo_ref, pullreq_number, ...props }: UseReviewSubmitPullReqProps) =>
-  useMutate<void, UsererrorError, void, OpenapiReviewSubmitPullReqRequest, ReviewSubmitPullReqPathParams>(
-    'POST',
-    (paramsInPath: ReviewSubmitPullReqPathParams) =>
-      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/review`,
-    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
-  )
-
 export interface ReviewerListPullReqPathParams {
   repo_ref: string
   pullreq_number: number
@@ -1603,6 +1564,40 @@ export const useReviewerAddPullReq = ({ repo_ref, pullreq_number, ...props }: Us
     'PUT',
     (paramsInPath: ReviewerAddPullReqPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/reviewers`,
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface ReviewSubmitPullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type ReviewSubmitPullReqProps = Omit<
+  MutateProps<void, UsererrorError, void, OpenapiReviewSubmitPullReqRequest, ReviewSubmitPullReqPathParams>,
+  'path' | 'verb'
+> &
+  ReviewSubmitPullReqPathParams
+
+export const ReviewSubmitPullReq = ({ repo_ref, pullreq_number, ...props }: ReviewSubmitPullReqProps) => (
+  <Mutate<void, UsererrorError, void, OpenapiReviewSubmitPullReqRequest, ReviewSubmitPullReqPathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/reviews`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseReviewSubmitPullReqProps = Omit<
+  UseMutateProps<void, UsererrorError, void, OpenapiReviewSubmitPullReqRequest, ReviewSubmitPullReqPathParams>,
+  'path' | 'verb'
+> &
+  ReviewSubmitPullReqPathParams
+
+export const useReviewSubmitPullReq = ({ repo_ref, pullreq_number, ...props }: UseReviewSubmitPullReqProps) =>
+  useMutate<void, UsererrorError, void, OpenapiReviewSubmitPullReqRequest, ReviewSubmitPullReqPathParams>(
+    'POST',
+    (paramsInPath: ReviewSubmitPullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/reviews`,
     { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
@@ -1876,18 +1871,13 @@ export interface ListWebhookExecutionsPathParams {
 }
 
 export type ListWebhookExecutionsProps = Omit<
-  GetProps<
-    OpenapiWebhookExecutionType[],
-    UsererrorError,
-    ListWebhookExecutionsQueryParams,
-    ListWebhookExecutionsPathParams
-  >,
+  GetProps<TypesWebhookExecution[], UsererrorError, ListWebhookExecutionsQueryParams, ListWebhookExecutionsPathParams>,
   'path'
 > &
   ListWebhookExecutionsPathParams
 
 export const ListWebhookExecutions = ({ repo_ref, webhook_id, ...props }: ListWebhookExecutionsProps) => (
-  <Get<OpenapiWebhookExecutionType[], UsererrorError, ListWebhookExecutionsQueryParams, ListWebhookExecutionsPathParams>
+  <Get<TypesWebhookExecution[], UsererrorError, ListWebhookExecutionsQueryParams, ListWebhookExecutionsPathParams>
     path={`/repos/${repo_ref}/webhooks/${webhook_id}/executions`}
     base={getConfig('code')}
     {...props}
@@ -1896,7 +1886,7 @@ export const ListWebhookExecutions = ({ repo_ref, webhook_id, ...props }: ListWe
 
 export type UseListWebhookExecutionsProps = Omit<
   UseGetProps<
-    OpenapiWebhookExecutionType[],
+    TypesWebhookExecution[],
     UsererrorError,
     ListWebhookExecutionsQueryParams,
     ListWebhookExecutionsPathParams
@@ -1906,12 +1896,7 @@ export type UseListWebhookExecutionsProps = Omit<
   ListWebhookExecutionsPathParams
 
 export const useListWebhookExecutions = ({ repo_ref, webhook_id, ...props }: UseListWebhookExecutionsProps) =>
-  useGet<
-    OpenapiWebhookExecutionType[],
-    UsererrorError,
-    ListWebhookExecutionsQueryParams,
-    ListWebhookExecutionsPathParams
-  >(
+  useGet<TypesWebhookExecution[], UsererrorError, ListWebhookExecutionsQueryParams, ListWebhookExecutionsPathParams>(
     (paramsInPath: ListWebhookExecutionsPathParams) =>
       `/repos/${paramsInPath.repo_ref}/webhooks/${paramsInPath.webhook_id}/executions`,
     { base: getConfig('code'), pathParams: { repo_ref, webhook_id }, ...props }
@@ -1935,7 +1920,7 @@ export interface GetWebhookExecutionPathParams {
 }
 
 export type GetWebhookExecutionProps = Omit<
-  GetProps<OpenapiWebhookExecutionType, UsererrorError, GetWebhookExecutionQueryParams, GetWebhookExecutionPathParams>,
+  GetProps<TypesWebhookExecution, UsererrorError, GetWebhookExecutionQueryParams, GetWebhookExecutionPathParams>,
   'path'
 > &
   GetWebhookExecutionPathParams
@@ -1946,7 +1931,7 @@ export const GetWebhookExecution = ({
   webhook_execution_id,
   ...props
 }: GetWebhookExecutionProps) => (
-  <Get<OpenapiWebhookExecutionType, UsererrorError, GetWebhookExecutionQueryParams, GetWebhookExecutionPathParams>
+  <Get<TypesWebhookExecution, UsererrorError, GetWebhookExecutionQueryParams, GetWebhookExecutionPathParams>
     path={`/repos/${repo_ref}/webhooks/${webhook_id}/executions/${webhook_execution_id}`}
     base={getConfig('code')}
     {...props}
@@ -1954,12 +1939,7 @@ export const GetWebhookExecution = ({
 )
 
 export type UseGetWebhookExecutionProps = Omit<
-  UseGetProps<
-    OpenapiWebhookExecutionType,
-    UsererrorError,
-    GetWebhookExecutionQueryParams,
-    GetWebhookExecutionPathParams
-  >,
+  UseGetProps<TypesWebhookExecution, UsererrorError, GetWebhookExecutionQueryParams, GetWebhookExecutionPathParams>,
   'path'
 > &
   GetWebhookExecutionPathParams
@@ -1970,7 +1950,7 @@ export const useGetWebhookExecution = ({
   webhook_execution_id,
   ...props
 }: UseGetWebhookExecutionProps) =>
-  useGet<OpenapiWebhookExecutionType, UsererrorError, GetWebhookExecutionQueryParams, GetWebhookExecutionPathParams>(
+  useGet<TypesWebhookExecution, UsererrorError, GetWebhookExecutionQueryParams, GetWebhookExecutionPathParams>(
     (paramsInPath: GetWebhookExecutionPathParams) =>
       `/repos/${paramsInPath.repo_ref}/webhooks/${paramsInPath.webhook_id}/executions/${paramsInPath.webhook_execution_id}`,
     { base: getConfig('code'), pathParams: { repo_ref, webhook_id, webhook_execution_id }, ...props }

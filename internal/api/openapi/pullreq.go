@@ -382,7 +382,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&reviewSubmit, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&reviewSubmit, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost,
-		"/repos/{repo_ref}/pullreq/{pullreq_number}/review", reviewSubmit)
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/reviews", reviewSubmit)
 	mergePullReqOp := openapi3.Operation{}
 	mergePullReqOp.WithTags("pullreq")
 	mergePullReqOp.WithMapOfAnything(map[string]interface{}{"operationId": "mergePullReqOp"})

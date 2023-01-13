@@ -14,6 +14,12 @@ import (
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
+// webhookType is used to add has_secret field.
+type webhookType struct {
+	types.Webhook
+	HasSecret bool `json:"has_secret"`
+}
+
 type createWebhookRequest struct {
 	repoRequest
 	webhook.CreateInput
@@ -60,7 +66,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	createWebhook.WithTags("webhook")
 	createWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "createWebhook"})
 	_ = reflector.SetRequest(&createWebhook, new(createWebhookRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&createWebhook, new(types.Webhook), http.StatusOK)
+	_ = reflector.SetJSONResponse(&createWebhook, new(webhookType), http.StatusOK)
 	_ = reflector.SetJSONResponse(&createWebhook, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&createWebhook, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&createWebhook, new(usererror.Error), http.StatusUnauthorized)
@@ -72,7 +78,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	listWebhooks.WithMapOfAnything(map[string]interface{}{"operationId": "listWebhooks"})
 	listWebhooks.WithParameters(queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&listWebhooks, new(listWebhooksRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&listWebhooks, new([]types.Webhook), http.StatusOK)
+	_ = reflector.SetJSONResponse(&listWebhooks, new([]webhookType), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listWebhooks, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&listWebhooks, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&listWebhooks, new(usererror.Error), http.StatusUnauthorized)
@@ -83,7 +89,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	getWebhook.WithTags("webhook")
 	getWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "getWebhook"})
 	_ = reflector.SetRequest(&getWebhook, new(getWebhookRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&getWebhook, new(types.Webhook), http.StatusOK)
+	_ = reflector.SetJSONResponse(&getWebhook, new(webhookType), http.StatusOK)
 	_ = reflector.SetJSONResponse(&getWebhook, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&getWebhook, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&getWebhook, new(usererror.Error), http.StatusUnauthorized)
@@ -94,7 +100,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	updateWebhook.WithTags("webhook")
 	updateWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "updateWebhook"})
 	_ = reflector.SetRequest(&updateWebhook, new(updateWebhookRequest), http.MethodPatch)
-	_ = reflector.SetJSONResponse(&updateWebhook, new(types.Webhook), http.StatusOK)
+	_ = reflector.SetJSONResponse(&updateWebhook, new(webhookType), http.StatusOK)
 	_ = reflector.SetJSONResponse(&updateWebhook, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&updateWebhook, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&updateWebhook, new(usererror.Error), http.StatusUnauthorized)

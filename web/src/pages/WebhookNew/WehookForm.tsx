@@ -16,7 +16,7 @@ import { FormGroup } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
 import * as yup from 'yup'
 import React from 'react'
-import type { OpenapiUpdateWebhookRequest, OpenapiWebhookTrigger, OpenapiWebhookType } from 'services/code'
+import type { OpenapiUpdateWebhookRequest, EnumWebhookTrigger, OpenapiWebhookType } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import type { GitInfoProps } from 'utils/GitUtils'
@@ -99,7 +99,7 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
             url: yup.string().required().url()
           })}
           onSubmit={formData => {
-            const triggers: OpenapiWebhookTrigger[] = []
+            const triggers: EnumWebhookTrigger[] = []
 
             if (formData.events == WebhookEventType.INDIVIDUAL) {
               if (formData.branchCreated) {

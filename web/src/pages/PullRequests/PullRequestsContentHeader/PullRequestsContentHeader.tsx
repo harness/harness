@@ -17,7 +17,7 @@ export function PullRequestsContentHeader({
   loading,
   onPullRequestFilterChanged,
   onSearchTermChanged,
-  activePullRequestFilterOption = PullRequestFilterOption.ALL,
+  activePullRequestFilterOption = PullRequestFilterOption.OPEN,
   repoMetadata
 }: PullRequestsContentHeaderProps) {
   const history = useHistory()

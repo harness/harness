@@ -57,7 +57,10 @@ export enum PullRequestState {
 }
 
 export const PullRequestFilterOption = {
-  ...PullRequestState,
+  OPEN: 'open',
+  MERGED: 'merged',
+  CLOSED: 'closed',
+  REJECTED: 'rejected',
   YOURS: 'yours',
   ALL: 'all'
 }
