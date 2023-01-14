@@ -35,14 +35,12 @@ func parsePullReqStates(r *http.Request) []enum.PullReqState {
 	strStates := r.Form[QueryParamState]
 	m := make(map[enum.PullReqState]struct{}) // use map to eliminate duplicates
 	for _, s := range strStates {
+		if s == "" {
+			continue
+		}
 		if state, ok := enum.PullReqState(s).Sanitize(); ok {
 			m[state] = struct{}{}
 		}
-	}
-
-	if len(m) == 0 {
-		all, _ := enum.GetAllPullReqStates()
-		return all // the default is all PRs
 	}
 
 	states := make([]enum.PullReqState, 0, len(m))

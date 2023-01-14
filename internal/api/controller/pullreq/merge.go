@@ -29,7 +29,7 @@ type MergeInput struct {
 
 // Merge merges the pull request.
 //
-//nolint:gocognit,funlen // no need to refactor
+//nolint:gocognit // no need to refactor
 func (c *Controller) Merge(
 	ctx context.Context,
 	session *auth.Session,
