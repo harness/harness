@@ -25,8 +25,8 @@ export function useGetResourceContent({
     lazy: !repoMetadata || lazy
   })
   const isRepositoryEmpty = useMemo(
-    () => repoMetadata && error && !data && response?.status === 404,
-    [repoMetadata, error, data, response]
+    () => (repoMetadata && resourcePath === '' && error && response?.status === 404) || false,
+    [repoMetadata, resourcePath, error, response]
   )
 
   return { data, error: isRepositoryEmpty ? undefined : error, loading, refetch, response, isRepositoryEmpty }

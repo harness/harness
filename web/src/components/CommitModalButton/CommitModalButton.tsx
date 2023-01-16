@@ -50,6 +50,7 @@ interface CommitModalButtonProps extends Omit<ButtonProps, 'onClick' | 'onSubmit
   gitRef: string
   resourcePath: string
   commitTitlePlaceHolder: string
+  disableBranchCreation?: boolean
   oldResourcePath?: string
   payload?: string
   sha?: string
@@ -63,6 +64,7 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
   resourcePath,
   commitTitlePlaceHolder,
   oldResourcePath,
+  disableBranchCreation = false,
   payload = '',
   sha,
   onSuccess,
@@ -172,6 +174,7 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
                   )}>
                   <FormInput.RadioGroup
                     name="branch"
+                    disabled={disableBranchCreation}
                     label=""
                     onChange={e => {
                       setTargetBranchOption(get(e.target, 'defaultValue'))

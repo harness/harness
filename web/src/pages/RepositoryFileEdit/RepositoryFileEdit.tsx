@@ -35,6 +35,7 @@ export default function RepositoryFileEdit() {
                   gitRef={gitRef}
                   resourcePath={resourcePath}
                   resourceContent={resourceContent}
+                  isRepositoryEmpty={isRepositoryEmpty}
                 />
               )}
             </Container>

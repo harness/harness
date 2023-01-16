@@ -15,9 +15,10 @@ import css from './FileEditor.module.scss'
 
 interface EditorProps extends Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath'> {
   resourceContent: GitInfoProps['resourceContent'] | null
+  isRepositoryEmpty: boolean
 }
 
-function Editor({ resourceContent, repoMetadata, gitRef, resourcePath }: EditorProps) {
+function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isRepositoryEmpty }: EditorProps) {
   const history = useHistory()
   const inputRef = useRef<HTMLInputElement | null>()
   const isNew = useMemo(() => !resourceContent || isDir(resourceContent), [resourceContent])
@@ -200,6 +201,7 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath }: EditorP
                 }
                 setOriginalContent(content)
               }}
+              disableBranchCreation={isRepositoryEmpty}
             />
             <Button
               text={getString('cancel')}
