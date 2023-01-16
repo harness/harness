@@ -7,10 +7,14 @@ import { GitInfoProps, isFile } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import css from './RepositoryFileEditHeader.module.scss'
 
-export function RepositoryFileEditHeader({
+interface RepositoryFileEditHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
+  resourceContent: GitInfoProps['resourceContent'] | null
+}
+
+export const RepositoryFileEditHeader: React.FC<RepositoryFileEditHeaderProps> = ({
   repoMetadata,
   resourceContent
-}: Pick<GitInfoProps, 'repoMetadata' | 'resourceContent'>) {
+}) => {
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { routes } = useAppContext()

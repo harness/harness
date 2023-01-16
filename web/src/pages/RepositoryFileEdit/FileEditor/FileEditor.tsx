@@ -13,16 +13,15 @@ import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { CommitModalButton } from 'components/CommitModalButton/CommitModalButton'
 import css from './FileEditor.module.scss'
 
-function Editor({
-  resourceContent,
-  repoMetadata,
-  gitRef,
-  resourcePath
-}: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent'>) {
+interface EditorProps extends Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath'> {
+  resourceContent: GitInfoProps['resourceContent'] | null
+}
+
+function Editor({ resourceContent, repoMetadata, gitRef, resourcePath }: EditorProps) {
   const history = useHistory()
   const inputRef = useRef<HTMLInputElement | null>()
-  const isNew = useMemo(() => isDir(resourceContent), [resourceContent])
-  const [fileName, setFileName] = useState(isNew ? '' : (resourceContent.name as string))
+  const isNew = useMemo(() => !resourceContent || isDir(resourceContent), [resourceContent])
+  const [fileName, setFileName] = useState(isNew ? '' : resourceContent?.name || '')
   const [parentPath, setParentPath] = useState(
     isNew ? resourcePath : resourcePath.split(FILE_SEPERATOR).slice(0, -1).join(FILE_SEPERATOR)
   )
@@ -181,7 +180,7 @@ function Editor({
               oldResourcePath={commitAction === GitCommitAction.MOVE ? resourcePath : undefined}
               resourcePath={fileResourcePath}
               payload={content}
-              sha={resourceContent.sha}
+              sha={resourceContent?.sha}
               onSuccess={(_data, newBranch) => {
                 if (newBranch) {
                   history.replace(

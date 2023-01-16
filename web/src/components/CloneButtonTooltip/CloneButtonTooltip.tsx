@@ -3,11 +3,11 @@ import { Container, Layout, Button, ButtonVariation, Utils, Text, Color } from '
 import { useStrings } from 'framework/strings'
 import css from './CloneButtonTooltip.module.scss'
 
-interface CommitActionButtonProps {
+interface CloneButtonTooltipProps {
   httpsURL: string
 }
 
-export function CloneButtonTooltip({ httpsURL }: CommitActionButtonProps) {
+export function CloneButtonTooltip({ httpsURL }: CloneButtonTooltipProps) {
   const { getString } = useStrings()
   const [copied, setCopied] = useState(false)
 

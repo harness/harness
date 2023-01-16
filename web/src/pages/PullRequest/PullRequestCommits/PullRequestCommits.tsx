@@ -2,7 +2,7 @@ import React from 'react'
 import { useGet } from 'restful-react'
 import type { RepoCommit } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
-import { LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { voidFn, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { PrevNextPagination } from 'components/PrevNextPagination/PrevNextPagination'
@@ -31,7 +31,7 @@ export const PullRequestCommits: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'p
   })
 
   return (
-    <PullRequestTabContentWrapper loading={loading} error={error} onRetry={() => refetch()}>
+    <PullRequestTabContentWrapper loading={loading} error={error} onRetry={voidFn(refetch)}>
       {!!commits?.length && <CommitsView commits={commits} repoMetadata={repoMetadata} />}
 
       <PrevNextPagination

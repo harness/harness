@@ -21,7 +21,7 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import emptyStateImage from 'images/empty-state.svg'
 import { usePageIndex } from 'hooks/usePageIndex'
 import type { TypesPullReq } from 'services/code'
@@ -105,7 +105,7 @@ export default function PullRequests() {
         title={getString('pullRequests')}
         dataTooltipId="repositoryPullRequests"
       />
-      <PageBody loading={loading} error={getErrorMessage(error || prError)} retryOnError={() => refetch()}>
+      <PageBody loading={loading} error={getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
         {repoMetadata && (
           <Layout.Vertical>
             <PullRequestsContentHeader

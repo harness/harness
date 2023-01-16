@@ -21,7 +21,7 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import emptyStateImage from 'images/empty-state.svg'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useConfirmAct } from 'hooks/useConfirmAction'
@@ -69,8 +69,8 @@ export default function Webhooks() {
                   {!!row.original.triggers?.length && (
                     <Text color={Color.GREY_500}>({row.original.triggers.join(', ')})</Text>
                   )}
-                  {!!!row.original.triggers?.length && (
-                    <Text color={Color.GREY_500} >{getString('webhookAllEventsSelected')}</Text>
+                  {!row.original.triggers?.length && (
+                    <Text color={Color.GREY_500}>{getString('webhookAllEventsSelected')}</Text>
                   )}
                 </Layout.Vertical>
               </Container>
@@ -141,7 +141,7 @@ export default function Webhooks() {
       <PageBody
         loading={loading || webhooksLoading}
         error={getErrorMessage(error || webhooksError)}
-        retryOnError={() => refetch()}
+        retryOnError={voidFn(refetch)}
         noData={{
           // TODO: Use NoDataCard, this won't render toolbar
           // when search returns empty response

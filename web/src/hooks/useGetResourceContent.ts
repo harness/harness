@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useGet } from 'restful-react'
 import type { OpenapiGetContentOutput } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
@@ -23,6 +24,10 @@ export function useGetResourceContent({
     },
     lazy: !repoMetadata || lazy
   })
+  const isRepositoryEmpty = useMemo(
+    () => repoMetadata && error && !data && response?.status === 404,
+    [repoMetadata, error, data, response]
+  )
 
-  return { data, error, loading, refetch, response }
+  return { data, error: isRepositoryEmpty ? undefined : error, loading, refetch, response, isRepositoryEmpty }
 }

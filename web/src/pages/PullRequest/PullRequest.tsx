@@ -20,7 +20,7 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { getErrorMessage } from 'utils/Utils'
+import { voidFn, getErrorMessage } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { TypesPullReq } from 'services/code'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
@@ -79,7 +79,7 @@ export default function PullRequest() {
           ]
         }
       />
-      <PageBody loading={loading || prLoading} error={getErrorMessage(error || prError)} retryOnError={() => refetch()}>
+      <PageBody loading={loading || prLoading} error={getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
         {repoMetadata ? (
           prData ? (
             <>

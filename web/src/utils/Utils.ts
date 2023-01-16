@@ -194,3 +194,13 @@ export function waitUntil(condition: () => boolean, callback: () => void, maxCou
     }
   }
 }
+
+/**
+ * Make a callback function that will be executed with no arg and return nothing.
+ * @param f Any function.
+ * @returns A callback function that accept no arguments and return nothing.
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const voidFn = (f: Function) => () => {
+  f()
+}

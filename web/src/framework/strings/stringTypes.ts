@@ -175,6 +175,7 @@ export interface StringsMap {
   rejected: string
   renameFile: string
   replyHere: string
+  repoEmptyMarkdown: string
   'repos.activities': string
   'repos.data': string
   'repos.enterBranchName': string

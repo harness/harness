@@ -6,7 +6,7 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useAppContext } from 'AppContext'
 import { usePageIndex } from 'hooks/usePageIndex'
 import type { RepoCommit } from 'services/code'
-import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
@@ -47,7 +47,7 @@ export default function RepositoryCommits() {
       <PageBody
         loading={loading || loadingCommits}
         error={getErrorMessage(error || errorCommits)}
-        retryOnError={() => refetch()}>
+        retryOnError={voidFn(refetch)}>
         {(repoMetadata && !!commits?.length && (
           <Container padding="xlarge" className={css.resourceContent}>
             <Container className={css.contentHeader}>

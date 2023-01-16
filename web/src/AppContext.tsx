@@ -24,7 +24,8 @@ const AppContext = React.createContext<AppContextProps>({
   setAppContext: noop,
   routes,
   hooks: {},
-  currentUser: defaultCurrentUser
+  currentUser: defaultCurrentUser,
+  currentUserProfileURL: ''
 })
 
 export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(function AppContextProvider({

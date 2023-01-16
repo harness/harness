@@ -232,3 +232,35 @@ nameYourWebhook: Name your webhook
 submitReview: Submit Review
 approve: Approve
 requestChanges: Request changes
+repoEmptyMarkdown: |
+  ## This repository is empty
+
+  ### Get started by
+
+  Creating [a new file](NEW_FILE_URL).
+
+  ### Or you can clone this repository
+
+  ```sh
+  git clone REPO_URL
+  ```
+
+  Then push some content into it.
+
+  ```sh
+  cd REPO_NAME
+  echo "# Hello World" >> README.md
+  git add README.md
+  git commit -m"Initial commit"
+  git push -u origin main
+  ```
+
+  ### Or you can push an existing repository
+
+  ```sh
+  git remote add origin REPO_URL.git
+  git branch -M main
+  git push -u origin main
+  ```
+
+  You might need [to create an API token](CREATE_API_TOKEN_URL) in order to pull from or push into this repository.

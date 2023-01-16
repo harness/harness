@@ -45,4 +45,6 @@ export interface AppProps {
   }>
 
   currentUser: Required<TypesUser>
+
+  currentUserProfileURL: string
 }

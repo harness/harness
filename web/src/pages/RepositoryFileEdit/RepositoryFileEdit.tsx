@@ -2,6 +2,8 @@ import React from 'react'
 import { Container, PageBody } from '@harness/uicore'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
+import { useDisableCodeMainLinks } from 'hooks/useDisableCodeMainLinks'
+import { voidFn, getErrorMessage } from 'utils/Utils'
 import { RepositoryFileEditHeader } from './RepositoryFileEditHeader/RepositoryFileEditHeader'
 import { FileEditor } from './FileEditor/FileEditor'
 import css from './RepositoryFileEdit.module.scss'
@@ -11,22 +13,30 @@ export default function RepositoryFileEdit() {
   const {
     data: resourceContent,
     error: resourceError,
-    loading: resourceLoading
+    loading: resourceLoading,
+    isRepositoryEmpty
   } = useGetResourceContent({ repoMetadata, gitRef, resourcePath })
+
+  useDisableCodeMainLinks(!!isRepositoryEmpty)
 
   return (
     <Container className={css.main}>
-      <PageBody loading={loading || resourceLoading} error={error || resourceError} retryOnError={() => refetch()}>
-        {repoMetadata && resourceContent ? (
+      <PageBody
+        loading={loading || resourceLoading}
+        error={getErrorMessage(error || resourceError)}
+        retryOnError={voidFn(refetch)}>
+        {repoMetadata ? (
           <>
             <RepositoryFileEditHeader repoMetadata={repoMetadata} resourceContent={resourceContent} />
             <Container className={css.resourceContent}>
-              <FileEditor
-                repoMetadata={repoMetadata}
-                gitRef={gitRef}
-                resourcePath={resourcePath}
-                resourceContent={resourceContent}
-              />
+              {(resourceContent || isRepositoryEmpty) && (
+                <FileEditor
+                  repoMetadata={repoMetadata}
+                  gitRef={gitRef}
+                  resourcePath={resourcePath}
+                  resourceContent={resourceContent}
+                />
+              )}
             </Container>
           </>
         ) : null}

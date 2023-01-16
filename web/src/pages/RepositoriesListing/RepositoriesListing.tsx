@@ -19,7 +19,7 @@ import cx from 'classnames'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
-import { formatDate, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { voidFn, formatDate, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
 import type { TypesRepository } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
@@ -130,7 +130,7 @@ export default function RepositoriesListing() {
         loading={loading && searchTerm === undefined}
         className={cx({ [css.withError]: !!error })}
         error={error ? getErrorMessage(error) : null}
-        retryOnError={() => refetch()}
+        retryOnError={voidFn(refetch)}
         noData={{
           when: () => repositories?.length === 0 && searchTerm === undefined,
           image: emptyStateImage,

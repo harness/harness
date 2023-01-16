@@ -6,7 +6,7 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import emptyStateImage from 'images/empty-state.svg'
 import { makeDiffRefs } from 'utils/GitUtils'
 import { CommitsView } from 'components/CommitsView/CommitsView'
@@ -48,7 +48,7 @@ export default function Compare() {
         title={getString('comparingChanges')}
         dataTooltipId="comparingChanges"
       />
-      <PageBody loading={loading} error={getErrorMessage(error || commitsError)} retryOnError={() => refetch()}>
+      <PageBody loading={loading} error={getErrorMessage(error || commitsError)} retryOnError={voidFn(refetch)}>
         {repoMetadata && (
           <CompareContentHeader
             repoMetadata={repoMetadata}
@@ -85,11 +85,9 @@ export default function Compare() {
           <Container className={css.tabsContainer}>
             <Tabs
               id="branchesTags"
-              defaultSelectedTabId={'commits'}
+              defaultSelectedTabId="diff"
               large={false}
-              onChange={() => {
-                setPageIndex(0)
-              }}
+              onChange={() => setPageIndex(0)}
               tabList={[
                 {
                   id: 'commits',

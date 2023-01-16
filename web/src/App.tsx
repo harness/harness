@@ -28,7 +28,8 @@ const App: React.FC<AppProps> = React.memo(function App({
   lang = 'en',
   on401 = handle401,
   children,
-  hooks
+  hooks,
+  currentUserProfileURL = ''
 }: AppProps) {
   const [strings, setStrings] = useState<LanguageRecord>()
   const token = useAPIToken()
@@ -59,7 +60,16 @@ const App: React.FC<AppProps> = React.memo(function App({
             }
           }}>
           <AppContextProvider
-            value={{ standalone, space, routes, lang, on401, hooks, currentUser: defaultCurrentUser }}>
+            value={{
+              standalone,
+              space,
+              routes,
+              lang,
+              on401,
+              hooks,
+              currentUser: defaultCurrentUser,
+              currentUserProfileURL
+            }}>
             <TooltipContextProvider initialTooltipDictionary={tooltipDictionary}>
               <ModalProvider>{children ? children : <RouteDestinations />}</ModalProvider>
             </TooltipContextProvider>
