@@ -7,6 +7,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/harness/gitness/gitrpc/internal/gitea"
 	"github.com/harness/gitness/gitrpc/internal/types"
@@ -48,14 +49,15 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 	}
 
 	// push to new branch (all changes should go through push flow for hooks and other safety meassures)
-	err = sharedRepo.Push(ctx, base, request.GetTarget(), request.GetBranchName())
+	err = sharedRepo.PushBranch(ctx, base, request.GetTarget(), request.GetBranchName())
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to push new branch '%s'", request.GetBranchName())
 	}
 
 	// get branch
-	// TODO: get it from shared repo to avoid opening another gitea repo
-	gitBranch, err := s.adapter.GetBranch(ctx, repoPath, request.GetBranchName())
+	// TODO: get it from shared repo to avoid opening another gitea repo and having to strip here.
+	gitBranch, err := s.adapter.GetBranch(ctx, repoPath,
+		strings.TrimPrefix(request.GetBranchName(), gitReferenceNamePrefixBranch))
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to get gitea branch '%s'", request.GetBranchName())
 	}
@@ -106,7 +108,7 @@ func (s ReferenceService) DeleteBranch(ctx context.Context,
 	// push to new branch (all changes should go through push flow for hooks and other safety meassures)
 	// NOTE: setting sourceRef to empty will delete the remote branch when pushing:
 	// https://git-scm.com/docs/git-push#Documentation/git-push.txt-ltrefspecgt82308203
-	err = sharedRepo.Push(ctx, base, "", request.GetBranchName())
+	err = sharedRepo.PushDeleteBranch(ctx, base, request.GetBranchName())
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to delete branch '%s' from remote repo", request.GetBranchName())
 	}

@@ -54,13 +54,14 @@ func (r *SharedRepo) Close(ctx context.Context) {
 }
 
 // Clone the base repository to our path and set branch as the HEAD.
-func (r *SharedRepo) Clone(ctx context.Context, branch string) error {
+func (r *SharedRepo) Clone(ctx context.Context, branchName string) error {
 	if _, _, err := git.NewCommand(ctx, "clone", "-s", "--bare", "-b",
-		branch, r.remoteRepo.Path, r.tmpPath).RunStdString(nil); err != nil {
+		strings.TrimPrefix(branchName, gitReferenceNamePrefixBranch),
+		r.remoteRepo.Path, r.tmpPath).RunStdString(nil); err != nil {
 		stderr := err.Error()
 		if matched, _ := regexp.MatchString(".*Remote branch .* not found in upstream origin.*", stderr); matched {
 			return git.ErrBranchNotExist{
-				Name: branch,
+				Name: branchName,
 			}
 		} else if matched, _ = regexp.MatchString(".* repository .* does not exist.*", stderr); matched {
 			return fmt.Errorf("%s %w", r.repoUID, types.ErrNotFound)
@@ -154,8 +155,8 @@ func (r *SharedRepo) RemoveFilesFromIndex(ctx context.Context, filenames ...stri
 	return nil
 }
 
-// HashObject writes the provided content to the object db and returns its hash.
-func (r *SharedRepo) HashObject(ctx context.Context, content io.Reader) (string, error) {
+// WriteGitObject writes the provided content to the object db and returns its hash.
+func (r *SharedRepo) WriteGitObject(ctx context.Context, content io.Reader) (string, error) {
 	stdOut := new(bytes.Buffer)
 	stdErr := new(bytes.Buffer)
 
@@ -296,13 +297,29 @@ func (r *SharedRepo) CommitTreeWithDate(
 	return strings.TrimSpace(stdout.String()), nil
 }
 
-// Push the provided commitHash to the repository branch by the provided user.
-func (r *SharedRepo) Push(ctx context.Context, writeRequest *rpc.WriteRequest, sourceRef, branch string) error {
+func (r *SharedRepo) PushDeleteBranch(ctx context.Context, writeRequest *rpc.WriteRequest,
+	branch string) error {
+	return r.push(ctx, writeRequest, "", branch)
+}
+
+func (r *SharedRepo) PushCommit(ctx context.Context, writeRequest *rpc.WriteRequest,
+	commitSHA string, branch string) error {
+	return r.push(ctx, writeRequest, commitSHA, branch)
+}
+
+func (r *SharedRepo) PushBranch(ctx context.Context, writeRequest *rpc.WriteRequest,
+	sourceBranch string, branch string) error {
+	return r.push(ctx, writeRequest, GetReferenceFromBranchName(sourceBranch), branch)
+}
+
+// push the provided commitHash to the repository branch by the provided user.
+func (r *SharedRepo) push(ctx context.Context, writeRequest *rpc.WriteRequest,
+	sourceRef, branch string) error {
 	// Because calls hooks we need to pass in the environment
 	env := CreateEnvironmentForPush(ctx, writeRequest)
 	if err := git.Push(ctx, r.tmpPath, git.PushOptions{
 		Remote: r.remoteRepo.Path,
-		Branch: strings.TrimSpace(sourceRef) + ":" + gitReferenceNamePrefixBranch + strings.TrimSpace(branch),
+		Branch: sourceRef + ":" + GetReferenceFromBranchName(branch),
 		Env:    env,
 	}); err != nil {
 		if git.IsErrPushOutOfDate(err) {
@@ -327,7 +344,8 @@ func (r *SharedRepo) GetBranchCommit(branch string) (*git.Commit, error) {
 	if r.repo == nil {
 		return nil, fmt.Errorf("repository has not been cloned")
 	}
-	return r.repo.GetBranchCommit(branch)
+
+	return r.repo.GetBranchCommit(strings.TrimPrefix(branch, gitReferenceNamePrefixBranch))
 }
 
 // GetCommit Gets the commit object of the given commit ID.
@@ -358,4 +376,19 @@ func CreateEnvironmentForPush(ctx context.Context, writeRequest *rpc.WriteReques
 	}
 
 	return environ
+}
+
+// GetReferenceFromBranchName assumes the provided value is the branch name (not the ref!)
+// and first sanitizes the branch name (remove any spaces or 'refs/heads/' prefix)
+// It then returns the full form of the branch reference.
+func GetReferenceFromBranchName(branchName string) string {
+	// remove spaces
+	branchName = strings.TrimSpace(branchName)
+	// remove `refs/heads/` prefix (shouldn't be there, but if it is remove it to try to avoid complications)
+	// NOTE: This is used to reduce missconfigurations via api
+	// TODO: block via CLI, too
+	branchName = strings.TrimPrefix(branchName, gitReferenceNamePrefixBranch)
+
+	// return reference
+	return gitReferenceNamePrefixBranch + branchName
 }

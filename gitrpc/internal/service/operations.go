@@ -23,7 +23,8 @@ import (
 )
 
 const (
-	filePrefix = "file://"
+	filePrefix            = "file://"
+	defaultFilePermission = "100644" // 0o644 default file permission
 )
 
 type CommitFilesService struct {
@@ -81,35 +82,44 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 		return err
 	}
 
-	if err = s.validateHeader(repo, header); err != nil {
+	// check if repo is empty
+	// IMPORTANT: we don't use gitea's repo.IsEmpty() as that only checks whether the default branch exists (in HEAD).
+	// This can be an issue in case someone created a branch already in the repo (just default branch is missing).
+	// In that case the user can accidentaly create separate git histories (which most likely is unintended).
+	// If the user wants to actually build a disconnected commit graph they can use the cli.
+	isEmpty, err := repoHasBranches(ctx, repo)
+	if err != nil {
+		return fmt.Errorf("failed to determine if repo is empty: %w", err)
+	}
+
+	// ensure input data is valid
+	if err = s.validateAndPrepareHeader(repo, isEmpty, header); err != nil {
 		return err
 	}
 
+	// collect all file actions from grpc stream
 	actions := make([]fileAction, 0, 16)
 	if err = s.collectActions(stream, &actions); err != nil {
 		return err
 	}
 
-	// create a shared repo
+	// create a new shared repo
 	shared, err := NewSharedRepo(s.reposTempDir, base.GetRepoUid(), repo)
 	if err != nil {
 		return err
 	}
 	defer shared.Close(ctx)
 
-	if err = s.clone(ctx, repo, shared, header.GetBranchName()); err != nil {
-		return err
-	}
-
-	// Get the commit of the original branch
-	commit, err := shared.GetBranchCommit(header.GetBranchName())
-	if err != nil {
-		return err
-	}
-
-	for _, action := range actions {
-		action := action
-		if err = s.processAction(ctx, shared, &action, commit); err != nil {
+	// handle empty repo separately (as branch doesn't exist, no commit exists, ...)
+	var parentCommitSHA string
+	if isEmpty {
+		err = s.prepareTreeEmptyRepo(ctx, shared, actions)
+		if err != nil {
+			return err
+		}
+	} else {
+		parentCommitSHA, err = s.prepareTree(ctx, shared, header.GetBranchName(), actions)
+		if err != nil {
 			return err
 		}
 	}
@@ -125,16 +135,16 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 		message += "\n\n" + strings.TrimSpace(header.GetMessage())
 	}
 	// Now commit the tree
-	commitHash, err := shared.CommitTree(ctx, commit.ID.String(), author, committer, treeHash, message, false)
+	commitSHA, err := shared.CommitTree(ctx, parentCommitSHA, author, committer, treeHash, message, false)
 	if err != nil {
 		return err
 	}
 
-	if err = shared.Push(ctx, base, commitHash, header.GetNewBranchName()); err != nil {
+	if err = shared.PushCommit(ctx, base, commitSHA, header.GetNewBranchName()); err != nil {
 		return err
 	}
 
-	commit, err = shared.GetCommit(commitHash)
+	commit, err := shared.GetCommit(commitSHA)
 	if err != nil {
 		return err
 	}
@@ -144,23 +154,86 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 	})
 }
 
-func (s *CommitFilesService) validateHeader(repo *git.Repository, header *rpc.CommitFilesRequestHeader) error {
+func (s *CommitFilesService) prepareTree(ctx context.Context, shared *SharedRepo,
+	branchName string, actions []fileAction) (string, error) {
+	// clone original branch from repo
+	if err := s.clone(ctx, shared, branchName); err != nil {
+		return "", err
+	}
+
+	// Get the latest commit of the original branch
+	commit, err := shared.GetBranchCommit(branchName)
+	if err != nil {
+		return "", err
+	}
+
+	// execute all actions
+	for _, action := range actions {
+		action := action
+		if err = s.processAction(ctx, shared, &action, commit); err != nil {
+			return "", err
+		}
+	}
+
+	return commit.ID.String(), nil
+}
+
+func (s *CommitFilesService) prepareTreeEmptyRepo(ctx context.Context, shared *SharedRepo,
+	actions []fileAction) error {
+	// init a new repo (full clone would cause risk that by time of push someone wrote to the remote repo!)
+	err := shared.Init(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to init shared tmp repo: %w", err)
+	}
+
+	for _, action := range actions {
+		if action.header.Action != rpc.CommitFilesActionHeader_CREATE {
+			return types.ErrActionNotAllowedOnEmptyRepo
+		}
+
+		filePath := files.CleanUploadFileName(action.header.GetPath())
+		if filePath == "" {
+			return types.ErrInvalidPath
+		}
+
+		reader := bytes.NewReader(action.content)
+		if err = createFile(ctx, shared, nil, filePath, defaultFilePermission, reader); err != nil {
+			return fmt.Errorf("failed to create file '%s': %w", action.header.Path, err)
+		}
+	}
+
+	return nil
+}
+
+func (s *CommitFilesService) validateAndPrepareHeader(repo *git.Repository, isEmpty bool,
+	header *rpc.CommitFilesRequestHeader) error {
 	if header.GetBranchName() == "" {
-		branch, err := repo.GetDefaultBranch()
+		defaultBranchRef, err := repo.GetDefaultBranch()
 		if err != nil {
 			return err
 		}
-		header.BranchName = branch
+		header.BranchName = defaultBranchRef
 	}
 
 	if header.GetNewBranchName() == "" {
 		header.NewBranchName = header.GetBranchName()
 	}
 
+	// trim refs/heads/ prefixes to avoid issues when calling gitea API
+	header.BranchName = strings.TrimPrefix(strings.TrimSpace(header.GetBranchName()), gitReferenceNamePrefixBranch)
+	header.NewBranchName = strings.TrimPrefix(strings.TrimSpace(header.GetNewBranchName()), gitReferenceNamePrefixBranch)
+
+	// if the repo is empty then we can skip branch existance checks
+	if isEmpty {
+		return nil
+	}
+
+	// ensure source branch exists
 	if _, err := repo.GetBranch(header.GetBranchName()); err != nil {
 		return err
 	}
 
+	// ensure new branch doesn't exist yet (if new branch creation was requested)
 	if header.GetBranchName() != header.GetNewBranchName() {
 		existingBranch, err := repo.GetBranch(header.GetNewBranchName())
 		if existingBranch != nil {
@@ -175,21 +248,18 @@ func (s *CommitFilesService) validateHeader(repo *git.Repository, header *rpc.Co
 
 func (s *CommitFilesService) clone(
 	ctx context.Context,
-	repo *git.Repository,
 	shared *SharedRepo,
 	branch string,
 ) error {
 	if err := shared.Clone(ctx, branch); err != nil {
-		empty, _ := repo.IsEmpty()
-		if !git.IsErrBranchNotExist(err) || !empty {
-			return err
-		}
-		if errInit := shared.Init(ctx); errInit != nil {
-			return errInit
-		}
-		return err
+		return fmt.Errorf("failed to clone branch '%s': %w", branch, err)
 	}
-	return shared.SetDefaultIndex(ctx)
+
+	if err := shared.SetDefaultIndex(ctx); err != nil {
+		return fmt.Errorf("failed to set default index: %w", err)
+	}
+
+	return nil
 }
 
 func (s *CommitFilesService) collectActions(
@@ -254,16 +324,15 @@ func (s *CommitFilesService) processAction(
 		return types.ErrInvalidPath
 	}
 
-	mode := "100644" // 0o644 default file permission
 	reader := bytes.NewReader(action.content)
 
 	switch header.Action {
 	case rpc.CommitFilesActionHeader_CREATE:
-		err = createFile(ctx, shared, commit, filePath, mode, reader)
+		err = createFile(ctx, shared, commit, filePath, defaultFilePermission, reader)
 	case rpc.CommitFilesActionHeader_UPDATE:
-		err = updateFile(ctx, shared, commit, filePath, header.GetSha(), mode, reader)
+		err = updateFile(ctx, shared, commit, filePath, header.GetSha(), defaultFilePermission, reader)
 	case rpc.CommitFilesActionHeader_MOVE:
-		err = moveFile(ctx, shared, commit, filePath, mode, reader)
+		err = moveFile(ctx, shared, commit, filePath, defaultFilePermission, reader)
 	case rpc.CommitFilesActionHeader_DELETE:
 		err = deleteFile(ctx, shared, filePath)
 	}
@@ -271,22 +340,20 @@ func (s *CommitFilesService) processAction(
 	return err
 }
 
-func createFile(ctx context.Context, repo *SharedRepo, commit *git.Commit, filePath,
-	mode string, reader io.Reader) error {
-	if err := checkPath(commit, filePath, true); err != nil {
-		return err
+func createFile(ctx context.Context, repo *SharedRepo, commit *git.Commit,
+	filePath, mode string, reader io.Reader) error {
+	// only check path availability if a source commit is available (empty repo won't have such a commit)
+	if commit != nil {
+		if err := checkPathAvailability(commit, filePath, true); err != nil {
+			return err
+		}
 	}
-	filesInIndex, err := repo.LsFiles(ctx, filePath)
-	if err != nil {
-		return fmt.Errorf("listing files error %w", err)
-	}
-	if slices.Contains(filesInIndex, filePath) {
-		return fmt.Errorf("%s %w", filePath, types.ErrAlreadyExists)
-	}
-	hash, err := repo.HashObject(ctx, reader)
+
+	hash, err := repo.WriteGitObject(ctx, reader)
 	if err != nil {
 		return fmt.Errorf("error hashing object %w", err)
 	}
+
 	// Add the object to the index
 	if err = repo.AddObjectToIndex(ctx, mode, hash, filePath); err != nil {
 		return fmt.Errorf("error creating object: %w", err)
@@ -296,27 +363,20 @@ func createFile(ctx context.Context, repo *SharedRepo, commit *git.Commit, fileP
 
 func updateFile(ctx context.Context, repo *SharedRepo, commit *git.Commit, filePath, sha,
 	mode string, reader io.Reader) error {
-	filesInIndex, err := repo.LsFiles(ctx, filePath)
+	// get file mode from existing file (default unless executable)
+	entry, err := getFileEntry(commit, sha, filePath)
 	if err != nil {
-		return fmt.Errorf("listing files error %w", err)
+		return fmt.Errorf("failed to get file entry: %w", err)
 	}
-	if !slices.Contains(filesInIndex, filePath) {
-		return fmt.Errorf("%s %w", filePath, types.ErrNotFound)
+	if entry.IsExecutable() {
+		mode = "100755"
 	}
-	if commit != nil {
-		var entry *git.TreeEntry
-		entry, err = getFileEntry(commit, sha, filePath)
-		if err != nil {
-			return err
-		}
-		if entry.IsExecutable() {
-			mode = "100755"
-		}
-	}
-	hash, err := repo.HashObject(ctx, reader)
+
+	hash, err := repo.WriteGitObject(ctx, reader)
 	if err != nil {
 		return fmt.Errorf("error hashing object %w", err)
 	}
+
 	if err = repo.AddObjectToIndex(ctx, mode, hash, filePath); err != nil {
 		return fmt.Errorf("error updating object: %w", err)
 	}
@@ -338,9 +398,10 @@ func moveFile(ctx context.Context, repo *SharedRepo, commit *git.Commit,
 		}
 	}
 
-	if err = checkPath(commit, newPath, false); err != nil {
+	if err = checkPathAvailability(commit, newPath, false); err != nil {
 		return err
 	}
+
 	filesInIndex, err := repo.LsFiles(ctx, filePath)
 	if err != nil {
 		return fmt.Errorf("listing files error %w", err)
@@ -348,16 +409,16 @@ func moveFile(ctx context.Context, repo *SharedRepo, commit *git.Commit,
 	if !slices.Contains(filesInIndex, filePath) {
 		return fmt.Errorf("%s %w", filePath, types.ErrNotFound)
 	}
-	if slices.Contains(filesInIndex, newPath) {
-		return fmt.Errorf("%s %w", filePath, types.ErrAlreadyExists)
-	}
-	hash, err := repo.HashObject(ctx, buffer)
+
+	hash, err := repo.WriteGitObject(ctx, buffer)
 	if err != nil {
 		return fmt.Errorf("error hashing object %w", err)
 	}
+
 	if err = repo.AddObjectToIndex(ctx, mode, hash, newPath); err != nil {
-		return fmt.Errorf("created object: %w", err)
+		return fmt.Errorf("add object: %w", err)
 	}
+
 	if err = repo.RemoveFilesFromIndex(ctx, filePath); err != nil {
 		return fmt.Errorf("remove object: %w", err)
 	}
@@ -372,6 +433,7 @@ func deleteFile(ctx context.Context, repo *SharedRepo, filePath string) error {
 	if !slices.Contains(filesInIndex, filePath) {
 		return fmt.Errorf("%s %w", filePath, types.ErrNotFound)
 	}
+
 	if err = repo.RemoveFilesFromIndex(ctx, filePath); err != nil {
 		return fmt.Errorf("remove object: %w", err)
 	}
@@ -384,22 +446,28 @@ func getFileEntry(
 	path string,
 ) (*git.TreeEntry, error) {
 	entry, err := commit.GetTreeEntryByPath(path)
+	if git.IsErrNotExist(err) {
+		return nil, fmt.Errorf("%s %w", path, types.ErrNotFound)
+	}
 	if err != nil {
 		return nil, err
 	}
+
 	// If a SHA was given and the SHA given doesn't match the SHA of the fromTreePath, throw error
 	if sha == "" || sha != entry.ID.String() {
 		return nil, fmt.Errorf("%w for path %s [given: %s, expected: %s]",
 			types.ErrSHADoesNotMatch, path, sha, entry.ID.String())
 	}
+
 	return entry, nil
 }
 
-func checkPath(commit *git.Commit, filePath string, isNewFile bool) error {
-	// For the path where this file will be created/updated, we need to make
-	// sure no parts of the path are existing files or links except for the last
-	// item in the path which is the file name, and that shouldn't exist IF it is
-	// a new file OR is being moved to a new path.
+// checkPathAvailability ensures that the path is available for the requested operation.
+// For the path where this file will be created/updated, we need to make
+// sure no parts of the path are existing files or links except for the last
+// item in the path which is the file name, and that shouldn't exist IF it is
+// a new file OR is being moved to a new path.
+func checkPathAvailability(commit *git.Commit, filePath string, isNewFile bool) error {
 	parts := strings.Split(filePath, "/")
 	subTreePath := ""
 	for index, part := range parts {
@@ -429,6 +497,21 @@ func checkPath(commit *git.Commit, filePath string, isNewFile bool) error {
 		}
 	}
 	return nil
+}
+
+// repoHasBranches returns true iff there's at least one branch in the repo (any branch)
+// NOTE: This is different from repo.Empty(),
+// as it doesn't care whether the existing branch is the default branch or not.
+func repoHasBranches(ctx context.Context, repo *git.Repository) (bool, error) {
+	// repo has branches IFF there's at least one commit that is reachable via a branch
+	// (every existing branch points to a commit)
+	stdout, _, runErr := git.NewCommand(ctx, "rev-list", "--max-count", "1", "--branches").
+		RunStdBytes(&git.RunOpts{Dir: repo.Path})
+	if runErr != nil {
+		return false, fmt.Errorf("failed to trigger rev-list command: %w", runErr)
+	}
+
+	return strings.TrimSpace(string(stdout)) == "", nil
 }
 
 func parsePayload(payload io.Reader, content io.Writer) (string, error) {

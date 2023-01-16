@@ -93,12 +93,6 @@ func (g Adapter) ListCommits(ctx context.Context, repoPath string,
 	}
 	defer giteaRepo.Close()
 
-	// Get the refCommitSHA object for the ref
-	refCommitSHA, err := giteaRepo.GetRefCommitID(ref)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "error getting commit ID for ref '%s'", ref)
-	}
-
 	args := []string{"rev-list"}
 
 	// add pagination if requested
@@ -112,17 +106,12 @@ func (g Adapter) ListCommits(ctx context.Context, repoPath string,
 	}
 
 	// add refCommitSHA as starting point
-	args = append(args, refCommitSHA)
+	args = append(args, ref)
 
 	// return commits only up to a certain reference if requested
 	if afterRef != "" {
-		var afterRefCommitSHA string
-		afterRefCommitSHA, err = giteaRepo.GetRefCommitID(afterRef)
-		if err != nil {
-			return nil, processGiteaErrorf(err, "error getting commit ID for afterRef '%s'", afterRef)
-		}
-		// ^SHA tells the rev-list command to return only commits that aren't reachable by SHA
-		args = append(args, fmt.Sprintf("^%s", afterRefCommitSHA))
+		// ^REF tells the rev-list command to return only commits that aren't reachable by SHA
+		args = append(args, fmt.Sprintf("^%s", afterRef))
 	}
 
 	stdout, _, runErr := gitea.NewCommand(giteaRepo.Ctx, args...).RunStdBytes(&gitea.RunOpts{Dir: giteaRepo.Path})
