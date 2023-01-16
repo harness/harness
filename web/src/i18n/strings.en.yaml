@@ -258,7 +258,7 @@ repoEmptyMarkdown: |
   ### Or you can push an existing repository
 
   ```sh
-  git remote add origin REPO_URL.git
+  git remote add origin REPO_URL
   git branch -M main
   git push -u origin main
   ```
