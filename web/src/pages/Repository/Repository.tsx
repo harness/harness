@@ -61,16 +61,14 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> = ({ rep
   useDisableCodeMainLinks(true)
 
   return (
-    <Container className={css.repoEmpty}>
-      <Container className={css.layout}>
-        <MarkdownViewer
-          source={getString('repoEmptyMarkdown')
-            .replace(/NEW_FILE_URL/g, newFileURL)
-            .replace(/REPO_URL/g, repoMetadata.git_url || '')
-            .replace(/REPO_NAME/g, repoMetadata.uid || '')
-            .replace(/CREATE_API_TOKEN_URL/g, currentUserProfileURL || '')}
-        />
-      </Container>
+    <Container className={css.emptyRepo}>
+      <MarkdownViewer
+        source={getString('repoEmptyMarkdown')
+          .replace(/NEW_FILE_URL/g, newFileURL)
+          .replace(/REPO_URL/g, repoMetadata.git_url || '')
+          .replace(/REPO_NAME/g, repoMetadata.uid || '')
+          .replace(/CREATE_API_TOKEN_URL/g, currentUserProfileURL || '')}
+      />
     </Container>
   )
 }
