@@ -1,5 +1,4 @@
 [![CI Linter pipeline](https://github.com/harness/gitness/actions/workflows/ci-lint.yml/badge.svg)](https://github.com/harness/gitness/actions/workflows/ci-lint.yml)
-[![CodeQL](https://github.com/harness/gitness/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/harness/gitness/actions/workflows/codeql-analysis.yml)
 [![](https://img.shields.io/badge/go-%3E%3D%201.19-green)](#)
 # Pre-Requisites
 
