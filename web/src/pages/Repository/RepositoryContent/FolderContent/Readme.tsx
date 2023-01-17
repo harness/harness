@@ -1,11 +1,12 @@
 import React from 'react'
-import { Container, Color, Layout, Button, FlexExpander, ButtonVariation, Heading } from '@harness/uicore'
+import { Container, Color, Layout, Button, FlexExpander, ButtonVariation, Heading, Icon } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import cx from 'classnames'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/code'
+import { useShowRequestError } from 'hooks/useShowRequestError'
 import { CodeIcon } from 'utils/GitUtils'
 import css from './Readme.module.scss'
 
@@ -21,13 +22,15 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
   const history = useHistory()
   const { routes } = useAppContext()
 
-  const { data /*error, loading, refetch, response */ } = useGet<OpenapiGetContentOutput>({
+  const { data, error, loading } = useGet<OpenapiGetContentOutput>({
     path: `/api/v1/repos/${metadata.path}/+/content/${readmeInfo.path}`,
     queryParams: {
       include_commit: false,
       git_ref: gitRef
     }
   })
+
+  useShowRequestError(error)
 
   return (
     <Container
@@ -38,6 +41,7 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
         <Layout.Horizontal padding="small" className={css.heading}>
           <Heading level={5}>{readmeInfo.name}</Heading>
           <FlexExpander />
+          {loading && <Icon name="spinner" color={Color.PRIMARY_7} />}
           <Button
             variation={ButtonVariation.ICON}
             icon={CodeIcon.Edit}

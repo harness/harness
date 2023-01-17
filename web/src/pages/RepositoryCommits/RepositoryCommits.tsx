@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, FlexExpander, Layout, PageBody, Pagination } from '@harness/uicore'
+import { Container, FlexExpander, Layout, PageBody } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -7,11 +7,11 @@ import { useAppContext } from 'AppContext'
 import { usePageIndex } from 'hooks/usePageIndex'
 import type { RepoCommit } from 'services/code'
 import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
-import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
-import { CommitsView } from '../../components/CommitsView/CommitsView'
+import { CommitsView } from 'components/CommitsView/CommitsView'
 import css from './RepositoryCommits.module.scss'
 
 export default function RepositoryCommits() {
@@ -19,7 +19,7 @@ export default function RepositoryCommits() {
   const { routes } = useAppContext()
   const history = useHistory()
   const { getString } = useStrings()
-  const [pageIndex, setPageIndex] = usePageIndex()
+  const [page, setPage] = usePageIndex()
   const {
     data: commits,
     response,
@@ -29,12 +29,11 @@ export default function RepositoryCommits() {
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
-      page: pageIndex + 1,
+      page,
       git_ref: commitRef || repoMetadata?.default_branch
     },
     lazy: !repoMetadata
   })
-  const { totalItems, totalPages, pageSize } = useGetPaginationInfo(response)
 
   return (
     <Container className={css.main}>
@@ -58,7 +57,7 @@ export default function RepositoryCommits() {
                   disableViewAllBranches
                   gitRef={commitRef || (repoMetadata.default_branch as string)}
                   onSelect={ref => {
-                    setPageIndex(0)
+                    setPage(1)
                     history.push(
                       routes.toCODECommits({
                         repoPath: repoMetadata.path as string,
@@ -73,17 +72,7 @@ export default function RepositoryCommits() {
 
             <CommitsView commits={commits} repoMetadata={repoMetadata} />
 
-            <Container margin={{ left: 'large', right: 'large' }}>
-              <Pagination
-                className={css.pagination}
-                hidePageNumbers
-                gotoPage={index => setPageIndex(index)}
-                itemCount={totalItems}
-                pageCount={totalPages}
-                pageIndex={pageIndex}
-                pageSize={pageSize}
-              />
-            </Container>
+            <ResourceListingPagination response={response} page={page} setPage={setPage} />
           </Container>
         )) ||
           null}

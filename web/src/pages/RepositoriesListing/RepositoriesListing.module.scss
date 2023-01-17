@@ -13,6 +13,10 @@
     }
   }
 
+  .layout {
+    align-items: center;
+  }
+
   .input {
     span[data-icon],
     span[icon] {
@@ -97,8 +101,4 @@
     font-size: var(--font-size-small);
     padding-top: var(--spacing-xsmall) !important;
   }
-}
-
-.pagination {
-  padding-top: 0;
 }

@@ -1,9 +1,10 @@
 import { useHistory } from 'react-router-dom'
 import React, { useMemo, useState } from 'react'
-import { Container, Layout, FlexExpander, DropDown, ButtonVariation, TextInput, Button } from '@harness/uicore'
+import { Container, Layout, FlexExpander, DropDown, ButtonVariation, Button } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
+import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import css from './PullRequestsContentHeader.module.scss'
 
 interface PullRequestsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -36,7 +37,6 @@ export function PullRequestsContentHeader({
     ],
     [getString]
   )
-  const showSpinner = useMemo(() => loading, [loading])
 
   return (
     <Container className={css.main} padding="xlarge">
@@ -51,18 +51,13 @@ export function PullRequestsContentHeader({
           popoverClassName={css.branchDropdown}
         />
         <FlexExpander />
-        <TextInput
-          className={css.input}
-          placeholder={getString('search')}
-          autoFocus
-          onFocus={event => event.target.select()}
-          value={searchTerm}
-          onInput={event => {
-            const value = event.currentTarget.value
+        <SearchInputWithSpinner
+          loading={loading}
+          query={searchTerm}
+          setQuery={value => {
             setSearchTerm(value)
             onSearchTermChanged(value)
           }}
-          leftIcon={showSpinner ? CodeIcon.InputSpinner : CodeIcon.InputSearch}
         />
         <Button
           variation={ButtonVariation.PRIMARY}

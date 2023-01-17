@@ -4,8 +4,8 @@ import type { RepoCommit } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { voidFn, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { usePageIndex } from 'hooks/usePageIndex'
+import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { CommitsView } from 'components/CommitsView/CommitsView'
-import { PrevNextPagination } from 'components/PrevNextPagination/PrevNextPagination'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 
 export const PullRequestCommits: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>> = ({
@@ -13,17 +13,18 @@ export const PullRequestCommits: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'p
   pullRequestMetadata
 }) => {
   const limit = LIST_FETCHING_LIMIT
-  const [pageIndex, setPageIndex] = usePageIndex()
+  const [page, setPage] = usePageIndex()
   const {
     data: commits,
     error,
     loading,
-    refetch
+    refetch,
+    response
   } = useGet<RepoCommit[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
       limit,
-      page: pageIndex + 1,
+      page,
       git_ref: pullRequestMetadata.source_branch,
       after: pullRequestMetadata.target_branch
     },
@@ -34,10 +35,7 @@ export const PullRequestCommits: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'p
     <PullRequestTabContentWrapper loading={loading} error={error} onRetry={voidFn(refetch)}>
       {!!commits?.length && <CommitsView commits={commits} repoMetadata={repoMetadata} />}
 
-      <PrevNextPagination
-        onPrev={pageIndex > 0 && (() => setPageIndex(pageIndex - 1))}
-        onNext={commits?.length === limit && (() => setPageIndex(pageIndex + 1))}
-      />
+      <ResourceListingPagination response={response} page={page} setPage={setPage} />
     </PullRequestTabContentWrapper>
   )
 }

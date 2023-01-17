@@ -12,8 +12,8 @@ import { makeDiffRefs } from 'utils/GitUtils'
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { Changes } from 'components/Changes/Changes'
 import type { RepoCommit } from 'services/code'
-import { PrevNextPagination } from 'components/PrevNextPagination/PrevNextPagination'
 import { usePageIndex } from 'hooks/usePageIndex'
+import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { CompareContentHeader } from './CompareContentHeader/CompareContentHeader'
 import css from './Compare.module.scss'
 
@@ -24,17 +24,18 @@ export default function Compare() {
   const { repoMetadata, error, loading, diffRefs } = useGetRepositoryMetadata()
   const [sourceGitRef, setSourceGitRef] = useState(diffRefs.sourceGitRef)
   const [targetGitRef, setTargetGitRef] = useState(diffRefs.targetGitRef)
-  const [pageIndex, setPageIndex] = usePageIndex()
+  const [page, setPage] = usePageIndex()
   const limit = LIST_FETCHING_LIMIT
   const {
     data: commits,
     error: commitsError,
-    refetch
+    refetch,
+    response
   } = useGet<RepoCommit[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
       limit,
-      page: pageIndex + 1,
+      page,
       git_ref: sourceGitRef,
       after: targetGitRef
     },
@@ -87,7 +88,7 @@ export default function Compare() {
               id="branchesTags"
               defaultSelectedTabId="diff"
               large={false}
-              onChange={() => setPageIndex(0)}
+              onChange={() => setPage(1)}
               tabList={[
                 {
                   id: 'commits',
@@ -95,10 +96,7 @@ export default function Compare() {
                   panel: (
                     <Container padding="xlarge">
                       {!!commits?.length && <CommitsView commits={commits} repoMetadata={repoMetadata} />}
-                      <PrevNextPagination
-                        onPrev={pageIndex > 0 && (() => setPageIndex(pageIndex - 1))}
-                        onNext={commits?.length === limit && (() => setPageIndex(pageIndex + 1))}
-                      />
+                      <ResourceListingPagination response={response} page={page} setPage={setPage} />
                     </Container>
                   )
                 },

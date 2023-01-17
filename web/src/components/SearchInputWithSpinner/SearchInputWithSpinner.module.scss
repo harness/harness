@@ -1,0 +1,20 @@
+.main {
+  &,
+  .layout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wrapper {
+    padding: 0 0 0 var(--spacing-small) !important;
+    margin-bottom: 0 !important;
+
+    .input {
+      span[data-icon],
+      span[icon] {
+        margin-top: 10px !important;
+      }
+    }
+  }
+}

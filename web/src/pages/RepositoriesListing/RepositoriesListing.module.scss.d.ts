@@ -2,6 +2,7 @@
 // this is an auto-generated file
 declare const styles: {
   readonly main: string
+  readonly layout: string
   readonly input: string
   readonly withError: string
   readonly table: string
@@ -13,6 +14,5 @@ declare const styles: {
   readonly repoName: string
   readonly repoScope: string
   readonly desc: string
-  readonly pagination: string
 }
 export default styles

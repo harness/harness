@@ -1,4 +1,6 @@
 .main {
+  padding-bottom: 0 !important;
+
   div[class*='TextInput'] {
     margin-bottom: 0 !important;
     margin-left: 0 !important;
@@ -8,7 +10,14 @@
     align-items: center;
   }
 
-  padding-bottom: 0 !important;
+  .input {
+    margin-bottom: 0 !important;
+
+    span[data-icon],
+    span[icon] {
+      margin-top: 10px !important;
+    }
+  }
 }
 
 .branchDropdown {

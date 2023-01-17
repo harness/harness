@@ -86,7 +86,7 @@ export const CodeIcon = {
   Repo: 'code-repo' as IconName,
   Settings: 'code-settings' as IconName,
   Webhook: 'code-webhook' as IconName,
-  InputSpinner: 'steps-spinner' as IconName,
+  InputSpinner: 'spinner' as IconName,
   InputSearch: 'search' as IconName,
   Chat: 'code-chat' as IconName
 }

@@ -25,6 +25,7 @@ import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import emptyStateImage from 'images/empty-state.svg'
 import { usePageIndex } from 'hooks/usePageIndex'
 import type { TypesPullReq } from 'services/code'
+import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
 import prImgOpen from './pull-request-open.svg'
 import prImgMerged from './pull-request-merged.svg'
@@ -39,17 +40,18 @@ export default function PullRequests() {
   const { routes } = useAppContext()
   const [searchTerm, setSearchTerm] = useState('')
   const [filter, setFilter] = useState<string>(PullRequestFilterOption.OPEN)
-  const [pageIndex, setPageIndex] = usePageIndex()
+  const [page, setPage] = usePageIndex()
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const {
     data,
     error: prError,
-    loading: prLoading
+    loading: prLoading,
+    response
   } = useGet<TypesPullReq[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq`,
     queryParams: {
       limit: String(LIST_FETCHING_LIMIT),
-      page: String(pageIndex + 1),
+      page,
       sort: filter == PullRequestFilterOption.MERGED ? 'merged' : 'number',
       order: 'desc',
       query: searchTerm,
@@ -113,30 +115,33 @@ export default function PullRequests() {
               repoMetadata={repoMetadata}
               onPullRequestFilterChanged={_filter => {
                 setFilter(_filter)
-                setPageIndex(0)
+                setPage(1)
               }}
               onSearchTermChanged={value => {
                 setSearchTerm(value)
-                setPageIndex(0)
+                setPage(1)
               }}
             />
             <Container padding="xlarge">
               {!!data?.length && (
-                <TableV2<TypesPullReq>
-                  className={css.table}
-                  hideHeaders
-                  columns={columns}
-                  data={data}
-                  getRowClassName={() => css.row}
-                  onRowClick={row => {
-                    history.push(
-                      routes.toCODEPullRequest({
-                        repoPath: repoMetadata.path as string,
-                        pullRequestId: String(row.number)
-                      })
-                    )
-                  }}
-                />
+                <>
+                  <TableV2<TypesPullReq>
+                    className={css.table}
+                    hideHeaders
+                    columns={columns}
+                    data={data}
+                    getRowClassName={() => css.row}
+                    onRowClick={row => {
+                      history.push(
+                        routes.toCODEPullRequest({
+                          repoPath: repoMetadata.path as string,
+                          pullRequestId: String(row.number)
+                        })
+                      )
+                    }}
+                  />
+                  <ResourceListingPagination response={response} page={page} setPage={setPage} />
+                </>
               )}
               {data?.length === 0 && (
                 <Container className={css.noData}>

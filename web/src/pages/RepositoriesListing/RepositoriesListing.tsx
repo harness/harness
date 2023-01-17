@@ -9,9 +9,7 @@ import {
   TableV2 as Table,
   Text,
   Color,
-  Pagination,
-  Icon,
-  TextInput
+  Icon
 } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
@@ -23,10 +21,10 @@ import { voidFn, formatDate, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
 import type { TypesRepository } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
-import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useAppContext } from 'AppContext'
-import { CodeIcon } from 'utils/GitUtils'
+import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import emptyStateImage from './empty-state.svg'
 import css from './RepositoriesListing.module.scss'
 
@@ -38,7 +36,7 @@ export default function RepositoriesListing() {
   const space = useGetSpaceParam()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const { routes } = useAppContext()
-  const [pageIndex, setPageIndex] = usePageIndex()
+  const [page, setPage] = usePageIndex()
   const {
     data: repositories,
     error,
@@ -47,14 +45,13 @@ export default function RepositoriesListing() {
     response
   } = useGet<TypesRepository[]>({
     path: `/api/v1/spaces/${space}/+/repos`,
-    queryParams: { page: pageIndex + 1, limit: LIST_FETCHING_LIMIT, query: searchTerm }
+    queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm }
   })
-  const { totalItems, totalPages, pageSize } = useGetPaginationInfo(response)
 
   useEffect(() => {
     setSearchTerm(undefined)
-    setPageIndex(0)
-  }, [space, setPageIndex])
+    setPage(1)
+  }, [space, setPage])
 
   const columns: Column<TypesRepository>[] = useMemo(
     () => [
@@ -138,20 +135,10 @@ export default function RepositoriesListing() {
           button: NewRepoButton
         }}>
         <Container padding="xlarge">
-          <Layout.Horizontal spacing="large">
+          <Layout.Horizontal spacing="large" className={css.layout}>
             {NewRepoButton}
             <FlexExpander />
-            <TextInput
-              className={css.input}
-              placeholder={getString('search')}
-              leftIcon={loading && searchTerm !== undefined ? CodeIcon.InputSpinner : CodeIcon.InputSearch}
-              style={{ width: 250 }}
-              autoFocus
-              onInput={event => {
-                setSearchTerm(event.currentTarget.value || '')
-                setPageIndex(0)
-              }}
-            />
+            <SearchInputWithSpinner loading={loading} query={searchTerm} setQuery={setSearchTerm} />
           </Layout.Horizontal>
           <Container margin={{ top: 'medium' }}>
             <Table<TypesRepository>
@@ -164,19 +151,7 @@ export default function RepositoriesListing() {
               getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
             />
           </Container>
-          {!!repositories?.length && (
-            <Container margin={{ left: 'medium', right: 'medium' }}>
-              <Pagination
-                className={css.pagination}
-                hidePageNumbers
-                gotoPage={index => setPageIndex(index)}
-                itemCount={totalItems}
-                pageCount={totalPages}
-                pageIndex={pageIndex}
-                pageSize={pageSize}
-              />
-            </Container>
-          )}
+          <ResourceListingPagination response={response} page={page} setPage={setPage} />
         </Container>
       </PageBody>
     </Container>

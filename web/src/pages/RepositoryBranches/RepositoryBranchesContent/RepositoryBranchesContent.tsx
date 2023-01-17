@@ -4,11 +4,11 @@ import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import type { RepoBranch } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
-import { useGetPaginationInfo } from 'hooks/useGetPaginationInfo'
 import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import type { GitInfoProps } from 'utils/GitUtils'
-import { PrevNextPagination } from 'components/PrevNextPagination/PrevNextPagination'
+import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
+import { useShowRequestError } from 'hooks/useShowRequestError'
 import { BranchesContentHeader } from './BranchesContentHeader/BranchesContentHeader'
 import { BranchesContent } from './BranchesContent/BranchesContent'
 import css from './RepositoryBranchesContent.module.scss'
@@ -17,30 +17,34 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
   const { routes } = useAppContext()
   const history = useHistory()
   const [searchTerm, setSearchTerm] = useState('')
-  const [pageIndex, setPageIndex] = usePageIndex()
+  const [page, setPage] = usePageIndex()
   const {
     data: branches,
-    response /*error, loading,*/,
+    response,
+    error,
+    loading,
     refetch
   } = useGet<RepoBranch[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/branches`,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
-      page: pageIndex + 1,
+      page,
       sort: 'date',
       order: 'desc',
       include_commit: true,
       query: searchTerm
     }
   })
-  const { X_NEXT_PAGE, X_PREV_PAGE } = useGetPaginationInfo(response)
+
+  useShowRequestError(error)
 
   return (
     <Container padding="xlarge" className={css.resourceContent}>
       <BranchesContentHeader
+        loading={loading}
         repoMetadata={repoMetadata}
         onBranchTypeSwitched={gitRef => {
-          setPageIndex(0)
+          setPage(1)
           history.push(
             routes.toCODECommits({
               repoPath: repoMetadata.path as string,
@@ -50,7 +54,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
         }}
         onSearchTermChanged={value => {
           setSearchTerm(value)
-          setPageIndex(0)
+          setPage(1)
         }}
         onNewBranchCreated={refetch}
       />
@@ -64,12 +68,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
         />
       )}
 
-      <PrevNextPagination
-        onPrev={!!X_PREV_PAGE && (() => setPageIndex(pageIndex - 1))}
-        onNext={!!X_NEXT_PAGE && (() => setPageIndex(pageIndex + 1))}
-      />
+      <ResourceListingPagination response={response} page={page} setPage={setPage} />
     </Container>
   )
 }
-
-// TODO: Handle loading and error

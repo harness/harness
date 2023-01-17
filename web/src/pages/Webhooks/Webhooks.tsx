@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Button,
   Container,
@@ -11,7 +11,8 @@ import {
   Icon,
   Utils,
   useToaster,
-  IconName
+  IconName,
+  NoDataCard
 } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
@@ -26,6 +27,7 @@ import emptyStateImage from 'images/empty-state.svg'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { usePageIndex } from 'hooks/usePageIndex'
+import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import type { OpenapiWebhookType } from 'services/code'
 import { WebhooksHeader } from './WebhooksHeader/WebhooksHeader'
 import css from './Webhooks.module.scss'
@@ -34,20 +36,23 @@ export default function Webhooks() {
   const { getString } = useStrings()
   const history = useHistory()
   const { routes } = useAppContext()
-  const [pageIndex, setPageIndex] = usePageIndex()
+  const [page, setPage] = usePageIndex()
+  const [searchTerm, setSearchTerm] = useState('')
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const {
     data: webhooks,
     loading: webhooksLoading,
     error: webhooksError,
-    refetch: refetchWebhooks
+    refetch: refetchWebhooks,
+    response
   } = useGet<OpenapiWebhookType[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/webhooks`,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
-      page: pageIndex + 1,
+      page,
       sort: 'date',
-      order: 'asc'
+      order: 'desc',
+      query: searchTerm
     },
     lazy: !repoMetadata
   })
@@ -115,7 +120,7 @@ export default function Webhooks() {
                           deleteWebhook({})
                             .then(() => {
                               showSuccess(getString('webhookDeleted'), 5000)
-                              setPageIndex(0)
+                              setPage(1)
                               refetchWebhooks()
                             })
                             .catch(exception => {
@@ -132,53 +137,68 @@ export default function Webhooks() {
         }
       }
     ],
-    [history, getString, refetchWebhooks, repoMetadata?.path, routes, setPageIndex]
+    [history, getString, refetchWebhooks, repoMetadata?.path, routes, setPage]
   )
 
   return (
     <Container className={css.main}>
       <RepositoryPageHeader repoMetadata={repoMetadata} title={getString('webhooks')} dataTooltipId="webhooks" />
-      <PageBody
-        loading={loading || webhooksLoading}
-        error={getErrorMessage(error || webhooksError)}
-        retryOnError={voidFn(refetch)}
-        noData={{
-          // TODO: Use NoDataCard, this won't render toolbar
-          // when search returns empty response
-          when: () => webhooks?.length === 0,
-          message: getString('noWebHooks'),
-          image: emptyStateImage,
-          button: (
-            <Button
-              variation={ButtonVariation.PRIMARY}
-              text={getString('createWebhook')}
-              icon={CodeIcon.Add}
-              onClick={() => history.push(routes.toCODEWebhookNew({ repoPath: repoMetadata?.path as string }))}
-            />
-          )
-        }}>
+      <PageBody loading={loading} error={getErrorMessage(error || webhooksError)} retryOnError={voidFn(refetch)}>
         {repoMetadata && (
           <Layout.Vertical>
-            <WebhooksHeader repoMetadata={repoMetadata} />
-            {!!webhooks?.length && (
-              <Container padding="xlarge">
-                <TableV2<OpenapiWebhookType>
-                  className={css.table}
-                  hideHeaders
-                  columns={columns}
-                  data={webhooks}
-                  getRowClassName={() => css.row}
-                  onRowClick={row => {
-                    history.push(
-                      routes.toCODEWebhookDetails({
-                        repoPath: repoMetadata.path as string,
-                        webhookId: String(row.id)
-                      })
-                    )
-                  }}
-                />
-              </Container>
-            )}
+            <WebhooksHeader
+              repoMetadata={repoMetadata}
+              loading={webhooksLoading}
+              onSearchTermChanged={value => {
+                setSearchTerm(value)
+                setPage(1)
+              }}
+            />
+            <Container padding="xlarge">
+              {!!webhooks?.length && (
+                <>
+                  <TableV2<OpenapiWebhookType>
+                    className={css.table}
+                    hideHeaders
+                    columns={columns}
+                    data={webhooks}
+                    getRowClassName={() => css.row}
+                    onRowClick={row => {
+                      history.push(
+                        routes.toCODEWebhookDetails({
+                          repoPath: repoMetadata.path as string,
+                          webhookId: String(row.id)
+                        })
+                      )
+                    }}
+                  />
+
+                  <ResourceListingPagination response={response} page={page} setPage={setPage} />
+                </>
+              )}
+              {webhooks?.length === 0 && (
+                <Container className={css.noData}>
+                  <NoDataCard
+                    image={emptyStateImage}
+                    message={getString('webhookEmpty')}
+                    button={
+                      <Button
+                        variation={ButtonVariation.PRIMARY}
+                        text={getString('createWebhook')}
+                        icon={CodeIcon.Add}
+                        onClick={() => {
+                          history.push(
+                            routes.toCODEWebhookNew({
+                              repoPath: repoMetadata?.path as string
+                            })
+                          )
+                        }}
+                      />
+                    }
+                  />
+                </Container>
+              )}
+            </Container>
           </Layout.Vertical>
         )}
       </PageBody>

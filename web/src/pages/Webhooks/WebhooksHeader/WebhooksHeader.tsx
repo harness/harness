@@ -1,13 +1,20 @@
 import { useHistory } from 'react-router-dom'
-import React from 'react'
+import React, { useState } from 'react'
 import { Container, Layout, FlexExpander, ButtonVariation, Button } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
+import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import css from './WebhooksHeader.module.scss'
 
-export function WebhooksHeader({ repoMetadata }: Pick<GitInfoProps, 'repoMetadata'>) {
+interface WebhooksHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
+  loading?: boolean
+  onSearchTermChanged: (searchTerm: string) => void
+}
+
+export function WebhooksHeader({ repoMetadata, loading, onSearchTermChanged }: WebhooksHeaderProps) {
   const history = useHistory()
+  const [searchTerm, setSearchTerm] = useState('')
   const { routes } = useAppContext()
   const { getString } = useStrings()
 
@@ -15,6 +22,14 @@ export function WebhooksHeader({ repoMetadata }: Pick<GitInfoProps, 'repoMetadat
     <Container className={css.main} padding="xlarge">
       <Layout.Horizontal spacing="medium">
         <FlexExpander />
+        <SearchInputWithSpinner
+          loading={loading}
+          query={searchTerm}
+          setQuery={value => {
+            setSearchTerm(value)
+            onSearchTermChanged(value)
+          }}
+        />
         <Button
           variation={ButtonVariation.PRIMARY}
           text={getString('createWebhook')}

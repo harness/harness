@@ -221,6 +221,7 @@ export interface StringsMap {
   webhookCreated: string
   webhookDeleted: string
   webhookDetails: string
+  webhookEmpty: string
   webhookEventsLabel: string
   webhookListingContent: string
   webhookSelectAllEvents: string

@@ -1,11 +1,13 @@
 import React, { useMemo, useState } from 'react'
-import { Container, Layout, FlexExpander, DropDown, ButtonVariation, TextInput } from '@harness/uicore'
+import { Container, Layout, FlexExpander, DropDown, ButtonVariation } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
 import { GitBranchType, CodeIcon, GitInfoProps } from 'utils/GitUtils'
+import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { CreateBranchModalButton } from 'components/CreateBranchModal/CreateBranchModal'
 import css from './BranchesContentHeader.module.scss'
 
 interface BranchesContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
+  loading?: boolean
   activeBranchType?: GitBranchType
   onBranchTypeSwitched: (branchType: GitBranchType) => void
   onSearchTermChanged: (searchTerm: string) => void
@@ -17,7 +19,8 @@ export function BranchesContentHeader({
   onSearchTermChanged,
   activeBranchType = GitBranchType.ALL,
   repoMetadata,
-  onNewBranchCreated
+  onNewBranchCreated,
+  loading
 }: BranchesContentHeaderProps) {
   const { getString } = useStrings()
   const [branchType, setBranchType] = useState(activeBranchType)
@@ -45,13 +48,10 @@ export function BranchesContentHeader({
           popoverClassName={css.branchDropdown}
         />
         <FlexExpander />
-        <TextInput
-          placeholder={getString('searchBranches')}
-          autoFocus
-          onFocus={event => event.target.select()}
-          value={searchTerm}
-          onInput={event => {
-            const value = event.currentTarget.value
+        <SearchInputWithSpinner
+          loading={loading}
+          query={searchTerm}
+          setQuery={value => {
             setSearchTerm(value)
             onSearchTermChanged(value)
           }}
