@@ -232,6 +232,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqNumber), func(r chi.Router) {
 			r.Get("/", handlerpullreq.HandleFind(pullreqCtrl))
 			r.Patch("/", handlerpullreq.HandleUpdate(pullreqCtrl))
+			r.Post("/state", handlerpullreq.HandleState(pullreqCtrl))
 			r.Get("/activities", handlerpullreq.HandleListActivities(pullreqCtrl))
 			r.Route("/comments", func(r chi.Router) {
 				r.Post("/", handlerpullreq.HandleCommentCreate(pullreqCtrl))

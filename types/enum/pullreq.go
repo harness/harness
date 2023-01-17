@@ -9,21 +9,19 @@ type PullReqState string
 
 func (PullReqState) Enum() []interface{}                  { return toInterfaceSlice(pullReqStates) }
 func (s PullReqState) Sanitize() (PullReqState, bool)     { return Sanitize(s, GetAllPullReqStates) }
-func GetAllPullReqStates() ([]PullReqState, PullReqState) { return pullReqStates, PullReqStateOpen }
+func GetAllPullReqStates() ([]PullReqState, PullReqState) { return pullReqStates, "" }
 
 // PullReqState enumeration.
 const (
-	PullReqStateOpen     PullReqState = "open"
-	PullReqStateMerged   PullReqState = "merged"
-	PullReqStateClosed   PullReqState = "closed"
-	PullReqStateRejected PullReqState = "rejected"
+	PullReqStateOpen   PullReqState = "open"
+	PullReqStateMerged PullReqState = "merged"
+	PullReqStateClosed PullReqState = "closed"
 )
 
 var pullReqStates = sortEnum([]PullReqState{
 	PullReqStateOpen,
 	PullReqStateMerged,
 	PullReqStateClosed,
-	PullReqStateRejected,
 })
 
 // PullReqSort defines pull request attribute that can be used for sorting.
@@ -67,6 +65,7 @@ const (
 	PullReqActivityTypeComment      PullReqActivityType = "comment"
 	PullReqActivityTypeCodeComment  PullReqActivityType = "code-comment"
 	PullReqActivityTypeTitleChange  PullReqActivityType = "title-change"
+	PullReqActivityTypeStateChange  PullReqActivityType = "state-change"
 	PullReqActivityTypeReviewSubmit PullReqActivityType = "review-submit"
 	PullReqActivityTypeMerge        PullReqActivityType = "merge"
 )
@@ -75,6 +74,7 @@ var pullReqActivityTypes = sortEnum([]PullReqActivityType{
 	PullReqActivityTypeComment,
 	PullReqActivityTypeCodeComment,
 	PullReqActivityTypeTitleChange,
+	PullReqActivityTypeStateChange,
 	PullReqActivityTypeReviewSubmit,
 	PullReqActivityTypeMerge,
 })

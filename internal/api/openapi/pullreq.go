@@ -40,6 +40,11 @@ type updatePullReqRequest struct {
 	pullreq.UpdateInput
 }
 
+type statePullReqRequest struct {
+	pullReqRequest
+	pullreq.StateInput
+}
+
 type listPullReqActivitiesRequest struct {
 	pullReqRequest
 }
@@ -296,6 +301,17 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&putPullReq, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPatch, "/repos/{repo_ref}/pullreq/{pullreq_number}", putPullReq)
+
+	statePullReq := openapi3.Operation{}
+	statePullReq.WithTags("pullreq")
+	statePullReq.WithMapOfAnything(map[string]interface{}{"operationId": "statePullReq"})
+	_ = reflector.SetRequest(&statePullReq, new(statePullReqRequest), http.MethodPatch)
+	_ = reflector.SetJSONResponse(&statePullReq, new(types.PullReq), http.StatusOK)
+	_ = reflector.SetJSONResponse(&statePullReq, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&statePullReq, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&statePullReq, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&statePullReq, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/pullreq/{pullreq_number}/state", statePullReq)
 
 	listPullReqActivities := openapi3.Operation{}
 	listPullReqActivities.WithTags("pullreq")

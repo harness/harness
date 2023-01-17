@@ -52,7 +52,8 @@ type pullReq struct {
 	Updated   int64 `db:"pullreq_updated"`
 	Edited    int64 `db:"pullreq_edited"`
 
-	State enum.PullReqState `db:"pullreq_state"`
+	State   enum.PullReqState `db:"pullreq_state"`
+	IsDraft bool              `db:"pullreq_is_draft"`
 
 	Title       string `db:"pullreq_title"`
 	Description string `db:"pullreq_description"`
@@ -81,6 +82,7 @@ const (
 		,pullreq_updated
 		,pullreq_edited
 		,pullreq_state
+		,pullreq_is_draft
 		,pullreq_title
 		,pullreq_description
 		,pullreq_source_repo_id
@@ -155,6 +157,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_updated
 		,pullreq_edited
 		,pullreq_state
+		,pullreq_is_draft
 		,pullreq_title
 		,pullreq_description
 		,pullreq_source_repo_id
@@ -173,6 +176,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,:pullreq_updated
 		,:pullreq_edited
 		,:pullreq_state
+		,:pullreq_is_draft
 		,:pullreq_title
 		,:pullreq_description
 		,:pullreq_source_repo_id
@@ -208,6 +212,7 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_updated = :pullreq_updated
 		,pullreq_edited = :pullreq_edited
 		,pullreq_state = :pullreq_state
+		,pullreq_is_draft = :pullreq_is_draft
 		,pullreq_title = :pullreq_title
 		,pullreq_description = :pullreq_description
 		,pullreq_activity_seq = :pullreq_activity_seq
@@ -401,6 +406,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		Updated:       pr.Updated,
 		Edited:        pr.Edited,
 		State:         pr.State,
+		IsDraft:       pr.IsDraft,
 		Title:         pr.Title,
 		Description:   pr.Description,
 		SourceRepoID:  pr.SourceRepoID,
@@ -428,6 +434,7 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		Updated:       pr.Updated,
 		Edited:        pr.Edited,
 		State:         pr.State,
+		IsDraft:       pr.IsDraft,
 		Title:         pr.Title,
 		Description:   pr.Description,
 		SourceRepoID:  pr.SourceRepoID,

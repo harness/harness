@@ -63,7 +63,8 @@ func NewController(
 }
 
 func (c *Controller) verifyBranchExistence(ctx context.Context,
-	repo *types.Repository, branch string) error {
+	repo *types.Repository, branch string,
+) error {
 	if branch == "" {
 		return usererror.BadRequest("branch name can't be empty")
 	}
@@ -87,7 +88,8 @@ func (c *Controller) verifyBranchExistence(ctx context.Context,
 }
 
 func (c *Controller) getRepoCheckAccess(ctx context.Context,
-	session *auth.Session, repoRef string, reqPermission enum.Permission) (*types.Repository, error) {
+	session *auth.Session, repoRef string, reqPermission enum.Permission,
+) (*types.Repository, error) {
 	if repoRef == "" {
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
@@ -105,7 +107,8 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 }
 
 func (c *Controller) getCommentCheckEditAccess(ctx context.Context,
-	session *auth.Session, pr *types.PullReq, commentID int64) (*types.PullReqActivity, error) {
+	session *auth.Session, pr *types.PullReq, commentID int64,
+) (*types.PullReqActivity, error) {
 	if commentID <= 0 {
 		return nil, usererror.BadRequest("A valid comment ID must be provided.")
 	}
@@ -168,6 +171,35 @@ func (c *Controller) writeReplyActivity(ctx context.Context, parent, act *types.
 	err = c.activityStore.Create(ctx, act)
 	if err != nil {
 		return fmt.Errorf("failed to create pull request activity: %w", err)
+	}
+
+	return nil
+}
+
+func (c *Controller) checkIfAlreadyExists(ctx context.Context,
+	targetRepoID, sourceRepoID int64, targetBranch, sourceBranch string,
+) error {
+	existing, err := c.pullreqStore.List(ctx,
+		targetRepoID, &types.PullReqFilter{
+			SourceRepoID: sourceRepoID,
+			SourceBranch: sourceBranch,
+			TargetBranch: targetBranch,
+			States:       []enum.PullReqState{enum.PullReqStateOpen},
+			Size:         1,
+			Sort:         enum.PullReqSortNumber,
+			Order:        enum.OrderAsc,
+		})
+	if err != nil {
+		return fmt.Errorf("failed to get existing pull requests: %w", err)
+	}
+	if len(existing) > 0 {
+		return usererror.BadRequest(
+			"a pull request for this target and source branch already exists",
+			map[string]any{
+				"type":   "pr already exists",
+				"number": existing[0].Number,
+			},
+		)
 	}
 
 	return nil

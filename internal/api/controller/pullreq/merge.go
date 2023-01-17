@@ -6,7 +6,6 @@ package pullreq
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -29,7 +28,7 @@ type MergeInput struct {
 
 // Merge merges the pull request.
 //
-//nolint:gocognit // no need to refactor
+//nolint:gocognit,funlen // no need to refactor
 func (c *Controller) Merge(
 	ctx context.Context,
 	session *auth.Session,
@@ -66,11 +65,15 @@ func (c *Controller) Merge(
 		}
 
 		if pr.Merged != nil {
-			return errors.New("pull request already merged")
+			return usererror.BadRequest("Pull request already merged")
 		}
 
 		if pr.State != enum.PullReqStateOpen {
-			return fmt.Errorf("pull request state cannot be %v", pr.State)
+			return usererror.BadRequest("Pull request must be open")
+		}
+
+		if pr.IsDraft {
+			return usererror.BadRequest("Draft pull requests can't be merged. Clear the draft flag first.")
 		}
 
 		sourceRepo := targetRepo
