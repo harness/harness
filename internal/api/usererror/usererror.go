@@ -7,7 +7,7 @@ package usererror
 import "net/http"
 
 var (
-	// ErrInternal is returned when an internal error occured.
+	// ErrInternal is returned when an internal error occurred.
 	ErrInternal = New(http.StatusInternalServerError, "Internal error occured")
 
 	// ErrInvalidToken is returned when the api request token is invalid.
@@ -58,8 +58,9 @@ var (
 
 // Error represents a json-encoded API error.
 type Error struct {
-	Status  int    `json:"-"`
-	Message string `json:"message"`
+	Status  int            `json:"-"`
+	Message string         `json:"message"`
+	Values  map[string]any `json:"values,omitempty"`
 }
 
 func (e *Error) Error() string {
@@ -67,11 +68,21 @@ func (e *Error) Error() string {
 }
 
 // New returns a new error message.
-func New(status int, message string) *Error {
-	return &Error{Status: status, Message: message}
+func New(status int, message string, valueMaps ...map[string]any) *Error {
+	var values map[string]any
+	for _, valueMap := range valueMaps {
+		if values == nil {
+			values = valueMap
+			continue
+		}
+		for k, v := range valueMap {
+			values[k] = v
+		}
+	}
+	return &Error{Status: status, Message: message, Values: values}
 }
 
-// New returns a new error message.
-func BadRequest(message string) *Error {
-	return New(http.StatusBadRequest, message)
+// BadRequest gives an error that will be returned as HTTP status=400 with the provided message.
+func BadRequest(message string, values ...map[string]any) *Error {
+	return New(http.StatusBadRequest, message, values...)
 }

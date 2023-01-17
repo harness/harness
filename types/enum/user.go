@@ -6,7 +6,7 @@ package enum
 
 import "strings"
 
-// UserField defines user attributes that can be
+// UserAttr defines user attributes that can be
 // used for sorting and filtering.
 type UserAttr int
 

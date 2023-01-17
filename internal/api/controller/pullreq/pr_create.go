@@ -61,17 +61,23 @@ func (c *Controller) Create(
 		return nil, errBranch
 	}
 
-	existing, err := c.pullreqStore.Count(ctx, targetRepo.ID, &types.PullReqFilter{
+	existing, err := c.pullreqStore.List(ctx, targetRepo.ID, &types.PullReqFilter{
 		SourceRepoID: sourceRepo.ID,
 		SourceBranch: in.SourceBranch,
 		TargetBranch: in.TargetBranch,
 		States:       []enum.PullReqState{enum.PullReqStateOpen},
+		Size:         1,
+		Sort:         enum.PullReqSortNumber,
+		Order:        enum.OrderAsc,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to count existing pull requests: %w", err)
 	}
-	if existing > 0 {
-		return nil, usererror.BadRequest("a pull request for this target and source branch already exists")
+	if len(existing) > 0 {
+		return nil, usererror.BadRequest(
+			"a pull request for this target and source branch already exists",
+			map[string]any{"number": existing[0].Number},
+		)
 	}
 
 	targetRepo, err = c.repoStore.UpdateOptLock(ctx, targetRepo, func(repo *types.Repository) error {
