@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -36,18 +37,29 @@ func (c *Controller) List(
 		filter.SourceRepoID = sourceRepo.ID
 	}
 
-	list, err := c.pullreqStore.List(ctx, repo.ID, filter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to list pull requests: %w", err)
-	}
+	var list []*types.PullReq
+	var count int64
 
-	if filter.Page == 1 && len(list) < filter.Size {
-		return list, int64(len(list)), nil
-	}
+	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+		list, err = c.pullreqStore.List(ctx, repo.ID, filter)
+		if err != nil {
+			return fmt.Errorf("failed to list pull requests: %w", err)
+		}
 
-	count, err := c.pullreqStore.Count(ctx, repo.ID, filter)
+		if filter.Page == 1 && len(list) < filter.Size {
+			count = int64(len(list))
+			return nil
+		}
+
+		count, err = c.pullreqStore.Count(ctx, repo.ID, filter)
+		if err != nil {
+			return fmt.Errorf("failed to count pull requests: %w", err)
+		}
+
+		return nil
+	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count pull requests: %w", err)
+		return nil, 0, err
 	}
 
 	return list, count, nil
