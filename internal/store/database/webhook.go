@@ -290,11 +290,27 @@ func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, 
 		return nil, fmt.Errorf("webhook parent type '%s' is not supported", parentType)
 	}
 
+	if opts.Query != "" {
+		stmt = stmt.Where("webhook_display_name LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+	}
+
 	stmt = stmt.Limit(uint64(limit(opts.Size)))
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
-	// fixed ordering by id (old ones first) - add customized ordering if deemed necessary
-	stmt = stmt.OrderBy("webhook_id ASC")
+	switch opts.Sort {
+	case enum.WebhookAttrID, enum.WebhookAttrNone:
+		// NOTE: string concatenation is safe because the
+		// order attribute is an enum and is not user-defined,
+		// and is therefore not subject to injection attacks.
+		stmt = stmt.OrderBy("webhook_id " + opts.Order.String())
+	case enum.WebhookAttrDisplayName:
+		stmt = stmt.OrderBy("webhook_display_name " + opts.Order.String())
+		//TODO: Postgres does not support COLLATE NOCASE for UTF8
+	case enum.WebhookAttrCreated:
+		stmt = stmt.OrderBy("webhook_created " + opts.Order.String())
+	case enum.WebhookAttrUpdated:
+		stmt = stmt.OrderBy("webhook_updated " + opts.Order.String())
+	}
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {

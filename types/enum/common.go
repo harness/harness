@@ -36,6 +36,7 @@ const (
 	updated       = "updated"
 	updatedAt     = "updated_at"
 	updatedBy     = "updated_by"
+	displayName   = "display_name"
 	date          = "date"
 	defaultString = "default"
 	undefined     = "undefined"

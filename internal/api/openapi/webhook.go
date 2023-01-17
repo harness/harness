@@ -8,9 +8,12 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/webhook"
+	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
@@ -60,6 +63,27 @@ type getWebhookExecutionRequest struct {
 	webhookExecutionRequest
 }
 
+var queryParameterSortWebhook = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSort,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The data by which the webhooks are sorted."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(enum.WebhookAttrID.String()),
+				Enum: []interface{}{
+					ptr.String(enum.WebhookAttrID.String()),
+					ptr.String(enum.WebhookAttrDisplayName.String()),
+					ptr.String(enum.WebhookAttrCreated.String()),
+					ptr.String(enum.WebhookAttrUpdated.String()),
+				},
+			},
+		},
+	},
+}
+
 //nolint:funlen
 func webhookOperations(reflector *openapi3.Reflector) {
 	createWebhook := openapi3.Operation{}
@@ -76,7 +100,8 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	listWebhooks := openapi3.Operation{}
 	listWebhooks.WithTags("webhook")
 	listWebhooks.WithMapOfAnything(map[string]interface{}{"operationId": "listWebhooks"})
-	listWebhooks.WithParameters(queryParameterPage, queryParameterLimit)
+	listWebhooks.WithParameters(queryParameterQuerySpace, queryParameterSortWebhook, queryParameterOrder,
+		queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&listWebhooks, new(listWebhooksRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&listWebhooks, new([]webhookType), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listWebhooks, new(usererror.Error), http.StatusBadRequest)

@@ -81,8 +81,11 @@ type WebhookExecutionResponse struct {
 
 // WebhookFilter stores Webhook query parameters for listing.
 type WebhookFilter struct {
-	Page int `json:"page"`
-	Size int `json:"size"`
+	Query string           `json:"query"`
+	Page  int              `json:"page"`
+	Size  int              `json:"size"`
+	Sort  enum.WebhookAttr `json:"sort"`
+	Order enum.Order       `json:"order"`
 }
 
 // WebhookExecutionFilter stores WebhookExecution query parameters for listing.

@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 const (
@@ -26,8 +27,11 @@ func GetWebhookExecutionIDFromPath(r *http.Request) (int64, error) {
 // ParseWebhookFilter extracts the Webhook query parameters for listing from the url.
 func ParseWebhookFilter(r *http.Request) *types.WebhookFilter {
 	return &types.WebhookFilter{
-		Page: ParsePage(r),
-		Size: ParseLimit(r),
+		Query: ParseQuery(r),
+		Page:  ParsePage(r),
+		Size:  ParseLimit(r),
+		Sort:  ParseSortWebhook(r),
+		Order: ParseOrder(r),
 	}
 }
 
@@ -37,4 +41,11 @@ func ParseWebhookExecutionFilter(r *http.Request) *types.WebhookExecutionFilter 
 		Page: ParsePage(r),
 		Size: ParseLimit(r),
 	}
+}
+
+// ParseSortWebhook extracts the webhook sort parameter from the url.
+func ParseSortWebhook(r *http.Request) enum.WebhookAttr {
+	return enum.ParseWebhookAttr(
+		r.FormValue(QueryParamSort),
+	)
 }

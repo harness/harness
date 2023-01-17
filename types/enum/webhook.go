@@ -4,6 +4,54 @@
 
 package enum
 
+import "strings"
+
+// WebhookAttr defines webhook attributes that can be used for sorting and filtering.
+type WebhookAttr int
+
+const (
+	WebhookAttrNone WebhookAttr = iota
+	WebhookAttrID
+	WebhookAttrDisplayName
+	WebhookAttrCreated
+	WebhookAttrUpdated
+)
+
+// ParseWebhookAttr parses the webhook attribute string
+// and returns the equivalent enumeration.
+func ParseWebhookAttr(s string) WebhookAttr {
+	switch strings.ToLower(s) {
+	case id:
+		return WebhookAttrID
+	case displayName:
+		return WebhookAttrDisplayName
+	case created, createdAt:
+		return WebhookAttrCreated
+	case updated, updatedAt:
+		return WebhookAttrUpdated
+	default:
+		return WebhookAttrNone
+	}
+}
+
+// String returns the string representation of the attribute.
+func (a WebhookAttr) String() string {
+	switch a {
+	case WebhookAttrID:
+		return id
+	case WebhookAttrDisplayName:
+		return displayName
+	case WebhookAttrCreated:
+		return created
+	case WebhookAttrUpdated:
+		return updated
+	case WebhookAttrNone:
+		return ""
+	default:
+		return undefined
+	}
+}
+
 // WebhookParent defines different types of parents of a webhook.
 type WebhookParent string
 

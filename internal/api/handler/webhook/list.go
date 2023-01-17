@@ -10,6 +10,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/types/enum"
 )
 
 // HandleList returns a http.HandlerFunc that lists webhooks.
@@ -25,6 +26,9 @@ func HandleList(webhookCtrl *webhook.Controller) http.HandlerFunc {
 		}
 
 		filter := request.ParseWebhookFilter(r)
+		if filter.Order == enum.OrderDefault {
+			filter.Order = enum.OrderAsc
+		}
 
 		webhooks, totalCount, err := webhookCtrl.List(ctx, session, repoRef, filter)
 		if err != nil {
