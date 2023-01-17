@@ -15,15 +15,17 @@ import (
 
 type RawDiffParams struct {
 	ReadParams
-	LeftCommitID  string
-	RightCommitID string
+	BaseRef   string
+	HeadRef   string
+	MergeBase bool
 }
 
 func (c *Client) RawDiff(ctx context.Context, params *RawDiffParams, out io.Writer) error {
 	diff, err := c.diffService.RawDiff(ctx, &rpc.RawDiffRequest{
-		Base:          mapToRPCReadRequest(params.ReadParams),
-		LeftCommitId:  params.LeftCommitID,
-		RightCommitId: params.RightCommitID,
+		Base:      mapToRPCReadRequest(params.ReadParams),
+		BaseRef:   params.BaseRef,
+		HeadRef:   params.HeadRef,
+		MergeBase: params.MergeBase,
 	})
 	if err != nil {
 		return err

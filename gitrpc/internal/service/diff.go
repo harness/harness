@@ -5,16 +5,9 @@
 package service
 
 import (
-	"fmt"
-	"os"
-	"time"
-
 	"github.com/harness/gitness/gitrpc/internal/streamio"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
-
-	"code.gitea.io/gitea/modules/git"
-	"code.gitea.io/gitea/modules/setting"
 )
 
 type DiffService struct {
@@ -45,25 +38,25 @@ func (s DiffService) RawDiff(request *rpc.RawDiffRequest, stream rpc.DiffService
 
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
-	cmd := git.NewCommand(ctx, "diff", "--full-index", request.LeftCommitId, request.RightCommitId)
-	cmd.SetDescription(fmt.Sprintf("GetDiffRange [repo_path: %s]", repoPath))
-	return cmd.Run(&git.RunOpts{
-		Timeout: time.Duration(setting.Git.Timeout.Default) * time.Second,
-		Dir:     repoPath,
-		Stderr:  os.Stderr,
-		Stdout:  sw,
-	})
+	args := []string{}
+	if request.GetMergeBase() {
+		args = []string{
+			"--merge-base",
+		}
+	}
+
+	return s.adapter.RawDiff(ctx, repoPath, request.GetBaseRef(), request.GetHeadRef(), sw, args...)
 }
 
 func validateDiffRequest(in *rpc.RawDiffRequest) error {
 	if in.GetBase() == nil {
 		return types.ErrBaseCannotBeEmpty
 	}
-	if in.GetLeftCommitId() == "" {
-		return types.ErrEmptyLeftCommitID
+	if in.GetBaseRef() == "" {
+		return types.ErrEmptyBaseRef
 	}
-	if in.GetRightCommitId() == "" {
-		return types.ErrEmptyRightCommitID
+	if in.GetHeadRef() == "" {
+		return types.ErrEmptyHeadRef
 	}
 
 	return nil

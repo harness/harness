@@ -12,9 +12,14 @@ service DiffService {
 }
 
 message RawDiffRequest {
-  ReadRequest base        = 1;
-  string left_commit_id   = 2;
-  string right_commit_id  = 3;
+  ReadRequest base = 1;
+  // base_ref is left side of compare and can be branch, commit and tag
+  string base_ref   = 2;
+  // head_ref is right side of compare and can be branch, commit and tag
+  string head_ref  = 3;
+  // merge_base used only in branch comparison, if merge_base is true
+  // it will show diff from the commit where branch is created and head branch
+  bool merge_base = 4;
 }
 
 message RawDiffResponse {

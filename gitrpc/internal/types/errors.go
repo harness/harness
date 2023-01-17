@@ -21,8 +21,8 @@ var (
 	ErrHeaderCannotBeEmpty         = errors.New("header field cannot be empty")
 	ErrBaseCannotBeEmpty           = errors.New("base field cannot be empty")
 	ErrSHADoesNotMatch             = errors.New("sha does not match")
-	ErrEmptyLeftCommitID           = errors.New("empty LeftCommitId")
-	ErrEmptyRightCommitID          = errors.New("empty RightCommitId")
+	ErrEmptyBaseRef                = errors.New("empty base reference")
+	ErrEmptyHeadRef                = errors.New("empty head reference")
 )
 
 // MergeConflictsError represents an error if merging fails with a conflict.

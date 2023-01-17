@@ -44,4 +44,5 @@ type GitAdapter interface {
 	Merge(ctx context.Context, pr *types.PullRequest, mergeMethod string, trackingBranch string,
 		tmpBasePath string, mergeMsg string, env []string) error
 	GetDiffTree(ctx context.Context, repoPath, baseBranch, headBranch string) (string, error)
+	RawDiff(ctx context.Context, repoPath, base, head string, w io.Writer, args ...string) error
 }

@@ -229,7 +229,6 @@ func (g Adapter) Merge(
 func (g Adapter) GetDiffTree(ctx context.Context, repoPath, baseBranch, headBranch string) (string, error) {
 	getDiffTreeFromBranch := func(repoPath, baseBranch, headBranch string) (string, error) {
 		var outbuf, errbuf strings.Builder
-		// Compute the diff-tree for sparse-checkout
 		if err := git.NewCommand(ctx, "diff-tree", "--no-commit-id",
 			"--name-only", "-r", "-z", "--root", baseBranch, headBranch, "--").
 			Run(&git.RunOpts{

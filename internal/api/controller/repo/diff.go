@@ -34,15 +34,17 @@ func (c *Controller) RawDiff(
 	info := parseDiffPath(path)
 
 	return c.gitRPCClient.RawDiff(ctx, &gitrpc.RawDiffParams{
-		ReadParams:    CreateRPCReadParams(repo),
-		LeftCommitID:  info.Left,
-		RightCommitID: info.Right,
+		ReadParams: CreateRPCReadParams(repo),
+		BaseRef:    info.BaseRef,
+		HeadRef:    info.HeadRef,
+		MergeBase:  info.MergeBase,
 	}, w)
 }
 
 type CompareInfo struct {
-	Left  string
-	Right string
+	BaseRef   string
+	HeadRef   string
+	MergeBase bool
 }
 
 func parseDiffPath(path string) CompareInfo {
@@ -51,10 +53,13 @@ func parseDiffPath(path string) CompareInfo {
 		infos = strings.SplitN(path, "..", 2)
 	}
 	if len(infos) != 2 {
-		return CompareInfo{}
+		return CompareInfo{
+			HeadRef: path,
+		}
 	}
 	return CompareInfo{
-		Left:  infos[0],
-		Right: infos[1],
+		BaseRef:   infos[0],
+		HeadRef:   infos[1],
+		MergeBase: strings.Contains(path, "..."),
 	}
 }
