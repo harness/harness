@@ -120,6 +120,7 @@ export interface StringsMap {
   next: string
   noAccount: string
   noChanges: string
+  noChangesCompare: string
   noChangesPR: string
   noCommits: string
   noCommitsMessage: string

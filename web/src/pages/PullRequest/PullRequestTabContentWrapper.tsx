@@ -1,9 +1,7 @@
 import React from 'react'
 import { Container, PageError } from '@harness/uicore'
-import cx from 'classnames'
 import { ContainerSpinner } from 'components/ContainerSpinner/ContainerSpinner'
 import { getErrorMessage } from 'utils/Utils'
-import css from './PullRequest.module.scss'
 
 interface PullRequestTabContentWrapperProps {
   className?: string
@@ -19,10 +17,7 @@ export const PullRequestTabContentWrapper: React.FC<PullRequestTabContentWrapper
   onRetry,
   children
 }) => (
-  <Container
-    className={cx(css.tabContentContainer, className)}
-    padding="xlarge"
-    {...(!!loading || !!error ? { flex: true } : {})}>
+  <Container className={className} padding="xlarge" {...(!!loading || !!error ? { flex: true } : {})}>
     {loading && <ContainerSpinner />}
     {error && <PageError message={getErrorMessage(error)} onClick={onRetry} />}
     {!loading && !error && children}

@@ -6,5 +6,6 @@ declare const styles: {
   readonly diffStatsLabel: string
   readonly main: string
   readonly enableDiffLineBreaks: string
+  readonly container: string
 }
 export default styles

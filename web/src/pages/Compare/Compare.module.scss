@@ -7,6 +7,9 @@
   }
 
   .tabsContainer {
+    min-height: calc(100vh - 153px);
+    background-color: var(--primary-bg) !important;
+
     [role='tablist'] {
       background-color: var(--white) !important;
       padding-left: var(--spacing-medium);
@@ -16,6 +19,11 @@
 
     [role='tabpanel'] {
       margin-top: 0;
+      background-color: var(--primary-bg) !important;
     }
   }
+}
+
+.changesContainer {
+  padding: 0 var(--spacing-xlarge) var(--spacing-xlarge) !important;
 }

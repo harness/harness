@@ -8,6 +8,8 @@
 
   .tabsContainer {
     padding-top: var(--spacing-xsmall);
+    min-height: calc(100vh - 97px);
+    background-color: var(--primary-bg) !important;
 
     > div > div[role='tablist'] {
       background-color: var(--white) !important;
@@ -60,11 +62,6 @@
   padding-left: var(--spacing-small);
 }
 
-.tabContentContainer {
-  min-height: calc(100vh - 147px) !important;
-  background-color: var(--primary-bg) !important;
-}
-
 .prTitle {
   align-items: center;
 
@@ -85,4 +82,8 @@
       line-height: 22px !important;
     }
   }
+}
+
+.changes {
+  padding: 0 var(--spacing-xlarge) var(--spacing-xlarge) !important;
 }

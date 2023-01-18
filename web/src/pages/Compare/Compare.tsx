@@ -109,12 +109,14 @@ export default function Compare() {
                   id: 'diff',
                   title: getString('filesChanged'),
                   panel: (
-                    <Container>
+                    <Container className={css.changesContainer}>
                       <Changes
                         readOnly
                         repoMetadata={repoMetadata}
                         targetBranch={targetGitRef}
                         sourceBranch={sourceGitRef}
+                        emptyTitle={getString('noChanges')}
+                        emptyMessage={getString('noChangesCompare')}
                       />
                     </Container>
                   )

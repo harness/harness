@@ -6,9 +6,9 @@ declare const styles: {
   readonly tabTitle: string
   readonly count: string
   readonly prNumber: string
-  readonly tabContentContainer: string
   readonly prTitle: string
   readonly btn: string
   readonly input: string
+  readonly changes: string
 }
 export default styles

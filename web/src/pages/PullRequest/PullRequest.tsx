@@ -119,12 +119,16 @@ export default function PullRequest() {
                       id: PullRequestSection.FILES_CHANGED,
                       title: <TabTitle icon={CodeIcon.File} title={getString('filesChanged')} count={0} />,
                       panel: (
-                        <Changes
-                          repoMetadata={repoMetadata}
-                          pullRequestMetadata={prData}
-                          targetBranch={prData.target_branch}
-                          sourceBranch={prData.source_branch}
-                        />
+                        <Container className={css.changes}>
+                          <Changes
+                            repoMetadata={repoMetadata}
+                            pullRequestMetadata={prData}
+                            targetBranch={prData.target_branch}
+                            sourceBranch={prData.source_branch}
+                            emptyTitle={getString('noChanges')}
+                            emptyMessage={getString('noChangesPR')}
+                          />
+                        </Container>
                       )
                     }
                   ]}
