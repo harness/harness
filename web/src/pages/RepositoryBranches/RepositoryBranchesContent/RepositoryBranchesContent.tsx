@@ -9,6 +9,7 @@ import { useAppContext } from 'AppContext'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { useShowRequestError } from 'hooks/useShowRequestError'
+import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { BranchesContentHeader } from './BranchesContentHeader/BranchesContentHeader'
 import { BranchesContent } from './BranchesContent/BranchesContent'
 import css from './RepositoryBranchesContent.module.scss'
@@ -67,6 +68,8 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
           onDeleteSuccess={refetch}
         />
       )}
+
+      <NoResultCard showWhen={() => !!branches && branches.length === 0 && !!searchTerm?.length} forSearch={true} />
 
       <ResourceListingPagination response={response} page={page} setPage={setPage} />
     </Container>

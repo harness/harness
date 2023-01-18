@@ -6,7 +6,6 @@ declare const styles: {
   readonly row: string
   readonly title: string
   readonly titleRow: string
-  readonly noData: string
   readonly rowImg: string
   readonly open: string
   readonly merged: string

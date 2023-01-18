@@ -117,6 +117,8 @@ export interface StringsMap {
   newRepo: string
   next: string
   noAccount: string
+  noResultMessage: string
+  noResultTitle: string
   noWebHooks: string
   none: string
   off: string

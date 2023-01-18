@@ -1,33 +1,18 @@
 import React, { useMemo, useState } from 'react'
-import {
-  Button,
-  Container,
-  ButtonVariation,
-  PageBody,
-  Text,
-  Color,
-  TableV2,
-  Layout,
-  Icon,
-  Utils,
-  useToaster,
-  IconName,
-  NoDataCard
-} from '@harness/uicore'
+import { Container, PageBody, Text, Color, TableV2, Layout, Icon, Utils, useToaster, IconName } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
-import { CodeIcon } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
-import emptyStateImage from 'images/empty-state.svg'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
+import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import type { OpenapiWebhookType } from 'services/code'
 import { WebhooksHeader } from './WebhooksHeader/WebhooksHeader'
 import css from './Webhooks.module.scss'
@@ -176,28 +161,20 @@ export default function Webhooks() {
                   <ResourceListingPagination response={response} page={page} setPage={setPage} />
                 </>
               )}
-              {webhooks?.length === 0 && (
-                <Container className={css.noData}>
-                  <NoDataCard
-                    image={emptyStateImage}
-                    message={getString('webhookEmpty')}
-                    button={
-                      <Button
-                        variation={ButtonVariation.PRIMARY}
-                        text={getString('createWebhook')}
-                        icon={CodeIcon.Add}
-                        onClick={() => {
-                          history.push(
-                            routes.toCODEWebhookNew({
-                              repoPath: repoMetadata?.path as string
-                            })
-                          )
-                        }}
-                      />
-                    }
-                  />
-                </Container>
-              )}
+
+              <NoResultCard
+                showWhen={() => webhooks?.length === 0}
+                forSearch={!!searchTerm}
+                message={getString('webhookEmpty')}
+                buttonText={getString('createWebhook')}
+                onButtonClick={() =>
+                  history.push(
+                    routes.toCODEWebhookNew({
+                      repoPath: repoMetadata?.path as string
+                    })
+                  )
+                }
+              />
             </Container>
           </Layout.Vertical>
         )}

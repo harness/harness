@@ -1,31 +1,20 @@
 import React, { useMemo, useState } from 'react'
-import {
-  Button,
-  Container,
-  ButtonVariation,
-  PageBody,
-  Text,
-  Color,
-  TableV2,
-  Layout,
-  StringSubstitute,
-  NoDataCard
-} from '@harness/uicore'
+import { Container, PageBody, Text, Color, TableV2, Layout, StringSubstitute } from '@harness/uicore'
 import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import ReactTimeago from 'react-timeago'
-import { CodeIcon, makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
+import { makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
-import emptyStateImage from 'images/empty-state.svg'
 import { usePageIndex } from 'hooks/usePageIndex'
 import type { TypesPullReq } from 'services/code'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
+import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
 import prImgOpen from './pull-request-open.svg'
 import prImgMerged from './pull-request-merged.svg'
@@ -143,29 +132,20 @@ export default function PullRequests() {
                   <ResourceListingPagination response={response} page={page} setPage={setPage} />
                 </>
               )}
-              {data?.length === 0 && (
-                <Container className={css.noData}>
-                  <NoDataCard
-                    image={emptyStateImage}
-                    message={getString('pullRequestEmpty')}
-                    button={
-                      <Button
-                        variation={ButtonVariation.PRIMARY}
-                        text={getString('newPullRequest')}
-                        icon={CodeIcon.Add}
-                        onClick={() => {
-                          history.push(
-                            routes.toCODECompare({
-                              repoPath: repoMetadata?.path as string,
-                              diffRefs: makeDiffRefs(repoMetadata?.default_branch as string, '')
-                            })
-                          )
-                        }}
-                      />
-                    }
-                  />
-                </Container>
-              )}
+              <NoResultCard
+                showWhen={() => data?.length === 0}
+                forSearch={!!searchTerm}
+                message={getString('pullRequestEmpty')}
+                buttonText={getString('newPullRequest')}
+                onButtonClick={() =>
+                  history.push(
+                    routes.toCODECompare({
+                      repoPath: repoMetadata?.path as string,
+                      diffRefs: makeDiffRefs(repoMetadata?.default_branch as string, '')
+                    })
+                  )
+                }
+              />
             </Container>
           </Layout.Vertical>
         )}

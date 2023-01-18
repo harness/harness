@@ -60,6 +60,8 @@ searchBranches: Search branches
 updated: Updated
 cloneHTTPS: Clone with HTTPS
 nameYourFile: Name your file...
+noResultTitle: Sorry, no result found
+noResultMessage: What you searched was unfortunately not found or doesn’t exist
 repos:
   name: Repo Name
   data: Repo Data

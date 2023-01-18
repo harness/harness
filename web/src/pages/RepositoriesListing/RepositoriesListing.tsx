@@ -24,6 +24,7 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useAppContext } from 'AppContext'
+import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import emptyStateImage from './empty-state.svg'
 import css from './RepositoriesListing.module.scss'
@@ -141,14 +142,19 @@ export default function RepositoriesListing() {
             <SearchInputWithSpinner loading={loading} query={searchTerm} setQuery={setSearchTerm} />
           </Layout.Horizontal>
           <Container margin={{ top: 'medium' }}>
-            <Table<TypesRepository>
-              className={css.table}
-              columns={columns}
-              data={repositories || []}
-              onRowClick={repoInfo => {
-                history.push(routes.toCODERepository({ repoPath: repoInfo.path as string }))
-              }}
-              getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
+            {!!repositories?.length && (
+              <Table<TypesRepository>
+                className={css.table}
+                columns={columns}
+                data={repositories || []}
+                onRowClick={repoInfo => history.push(routes.toCODERepository({ repoPath: repoInfo.path as string }))}
+                getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
+              />
+            )}
+
+            <NoResultCard
+              showWhen={() => !!repositories && repositories.length === 0 && !!searchTerm?.length}
+              forSearch={true}
             />
           </Container>
           <ResourceListingPagination response={response} page={page} setPage={setPage} />

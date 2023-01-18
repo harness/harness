@@ -18,10 +18,6 @@
       align-items: center;
     }
   }
-
-  .noData > div {
-    height: calc(100vh - var(--page-header-height, 64px) - 120px) !important;
-  }
 }
 
 .rowImg {
