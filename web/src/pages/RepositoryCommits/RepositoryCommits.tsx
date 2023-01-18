@@ -70,7 +70,12 @@ export default function RepositoryCommits() {
               </Layout.Horizontal>
             </Container>
 
-            <CommitsView commits={commits} repoMetadata={repoMetadata} />
+            <CommitsView
+              commits={commits}
+              repoMetadata={repoMetadata}
+              emptyTitle={getString('noCommits')}
+              emptyMessage={getString('noCommitsMessage')}
+            />
 
             <ResourceListingPagination response={response} page={page} setPage={setPage} />
           </Container>

@@ -95,7 +95,12 @@ export default function Compare() {
                   title: getString('commits'),
                   panel: (
                     <Container padding="xlarge">
-                      {!!commits?.length && <CommitsView commits={commits} repoMetadata={repoMetadata} />}
+                      <CommitsView
+                        commits={commits || []}
+                        repoMetadata={repoMetadata}
+                        emptyTitle={getString('compareEmptyDiffTitle')}
+                        emptyMessage={getString('compareEmptyDiffMessage')}
+                      />
                       <ResourceListingPagination response={response} page={page} setPage={setPage} />
                     </Container>
                   )

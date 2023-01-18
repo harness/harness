@@ -9,7 +9,9 @@ import css from './NoResultCard.module.scss'
 interface NoResultCardProps {
   showWhen: () => boolean
   forSearch: boolean
+  title?: string
   message?: string
+  emptySearchMessage?: string
   buttonText?: string
   buttonIcon?: IconName
   onButtonClick?: () => void
@@ -18,7 +20,9 @@ interface NoResultCardProps {
 export const NoResultCard: React.FC<NoResultCardProps> = ({
   showWhen,
   forSearch,
+  title,
   message,
+  emptySearchMessage,
   buttonText = '',
   buttonIcon = CodeIcon.Add,
   onButtonClick = noop
@@ -33,8 +37,10 @@ export const NoResultCard: React.FC<NoResultCardProps> = ({
     <Container className={css.main}>
       <NoDataCard
         image={emptyStateImage}
-        messageTitle={forSearch ? getString('noResultTitle') : undefined}
-        message={forSearch ? getString('noResultMessage') : message || getString('noResultMessage')}
+        messageTitle={forSearch ? title || getString('noResultTitle') : undefined}
+        message={
+          forSearch ? emptySearchMessage || getString('noResultMessage') : message || getString('noResultMessage')
+        }
         button={
           forSearch ? undefined : (
             <Button

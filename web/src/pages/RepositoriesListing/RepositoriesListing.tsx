@@ -26,7 +26,7 @@ import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/Search
 import { useAppContext } from 'AppContext'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
-import emptyStateImage from './empty-state.svg'
+import noRepoImage from './no-repo.svg'
 import css from './RepositoriesListing.module.scss'
 
 export default function RepositoriesListing() {
@@ -131,7 +131,7 @@ export default function RepositoriesListing() {
         retryOnError={voidFn(refetch)}
         noData={{
           when: () => repositories?.length === 0 && searchTerm === undefined,
-          image: emptyStateImage,
+          image: noRepoImage,
           message: getString('repos.noDataMessage'),
           button: NewRepoButton
         }}>
@@ -141,6 +141,7 @@ export default function RepositoriesListing() {
             <FlexExpander />
             <SearchInputWithSpinner loading={loading} query={searchTerm} setQuery={setSearchTerm} />
           </Layout.Horizontal>
+
           <Container margin={{ top: 'medium' }}>
             {!!repositories?.length && (
               <Table<TypesRepository>

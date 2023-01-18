@@ -6,6 +6,7 @@ import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type { RepoCommit } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
+import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { formatDate } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
@@ -13,9 +14,11 @@ import css from './CommitsView.module.scss'
 
 interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
   commits: RepoCommit[]
+  emptyTitle: string
+  emptyMessage: string
 }
 
-export function CommitsView({ repoMetadata, commits }: CommitsViewProps) {
+export function CommitsView({ repoMetadata, commits, emptyTitle, emptyMessage }: CommitsViewProps) {
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const columns: Column<RepoCommit>[] = useMemo(
@@ -76,25 +79,32 @@ export function CommitsView({ repoMetadata, commits }: CommitsViewProps) {
 
   return (
     <Container className={css.container}>
-      {Object.entries(commitsGroupedByDate).map(([date, commitsByDate]) => {
-        return (
-          <ThreadSection
-            key={date}
-            title={
-              <Text icon={CodeIcon.Commit} iconProps={{ size: 20 }} color={Color.GREY_500} className={css.label}>
-                {getString('commitsOn', { date })}
-              </Text>
-            }>
-            <Table<RepoCommit>
-              className={css.table}
-              hideHeaders
-              columns={columns}
-              data={orderBy(commitsByDate || [], ['author.when'], ['desc'])}
-              getRowClassName={() => css.row}
-            />
-          </ThreadSection>
-        )
-      })}
+      {!!commits.length &&
+        Object.entries(commitsGroupedByDate).map(([date, commitsByDate]) => {
+          return (
+            <ThreadSection
+              key={date}
+              title={
+                <Text icon={CodeIcon.Commit} iconProps={{ size: 20 }} color={Color.GREY_500} className={css.label}>
+                  {getString('commitsOn', { date })}
+                </Text>
+              }>
+              <Table<RepoCommit>
+                className={css.table}
+                hideHeaders
+                columns={columns}
+                data={orderBy(commitsByDate || [], ['author.when'], ['desc'])}
+                getRowClassName={() => css.row}
+              />
+            </ThreadSection>
+          )
+        })}
+      <NoResultCard
+        showWhen={() => commits?.length === 0}
+        forSearch={true}
+        title={emptyTitle}
+        emptySearchMessage={emptyMessage}
+      />
     </Container>
   )
 }

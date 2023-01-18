@@ -44,6 +44,8 @@ export interface StringsMap {
   commits: string
   commitsOn: string
   compare: string
+  compareEmptyDiffMessage: string
+  compareEmptyDiffTitle: string
   comparingChanges: string
   confirm: string
   confirmDeleteWebhook: string
@@ -117,6 +119,11 @@ export interface StringsMap {
   newRepo: string
   next: string
   noAccount: string
+  noChanges: string
+  noChangesPR: string
+  noCommits: string
+  noCommitsMessage: string
+  noCommitsPR: string
   noResultMessage: string
   noResultTitle: string
   noWebHooks: string

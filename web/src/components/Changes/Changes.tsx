@@ -13,6 +13,7 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
 // import { useRawDiff } from 'services/code'
 import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
+import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import type { TypesPullReq } from 'services/code'
 import { PullRequestTabContentWrapper } from '../../pages/PullRequest/PullRequestTabContentWrapper'
 import { ChangesDropdown } from './ChangesDropdown'
@@ -95,8 +96,6 @@ export const Changes: React.FC<ChangesProps> = ({
   )
 
   return (
-    // TODO: Move PullRequestTabContentWrapper out of this file
-    // as it's a reusable component and not just used for PR
     <PullRequestTabContentWrapper loading={loading} error={error} onRetry={refetch} className={css.wrapper}>
       {diffs?.length ? (
         <>
@@ -165,7 +164,14 @@ export const Changes: React.FC<ChangesProps> = ({
           </Layout.Vertical>
         </>
       ) : (
-        <Container></Container>
+        <Container>
+          <NoResultCard
+            showWhen={() => diffs?.length === 0}
+            forSearch={true}
+            title={getString('noChanges')}
+            emptySearchMessage={getString('noChangesPR')}
+          />
+        </Container>
       )}
     </PullRequestTabContentWrapper>
   )
