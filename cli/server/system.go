@@ -9,6 +9,7 @@ import (
 	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/cron"
 	"github.com/harness/gitness/internal/server"
+	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/webhook"
 )
 
@@ -19,16 +20,18 @@ type system struct {
 	gitRPCServer  *gitrpcserver.Server
 	webhookServer *webhook.Server
 	nightly       *cron.Nightly
+	services      services.Services
 }
 
 // newSystem returns a new system structure.
 func newSystem(bootstrap bootstrap.Bootstrap, server *server.Server, gitRPCServer *gitrpcserver.Server,
-	webhookServer *webhook.Server, nightly *cron.Nightly) *system {
+	webhookServer *webhook.Server, nightly *cron.Nightly, services services.Services) *system {
 	return &system{
 		bootstrap:     bootstrap,
 		server:        server,
 		gitRPCServer:  gitRPCServer,
 		webhookServer: webhookServer,
 		nightly:       nightly,
+		services:      services,
 	}
 }

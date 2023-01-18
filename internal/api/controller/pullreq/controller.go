@@ -179,16 +179,16 @@ func (c *Controller) writeReplyActivity(ctx context.Context, parent, act *types.
 func (c *Controller) checkIfAlreadyExists(ctx context.Context,
 	targetRepoID, sourceRepoID int64, targetBranch, sourceBranch string,
 ) error {
-	existing, err := c.pullreqStore.List(ctx,
-		targetRepoID, &types.PullReqFilter{
-			SourceRepoID: sourceRepoID,
-			SourceBranch: sourceBranch,
-			TargetBranch: targetBranch,
-			States:       []enum.PullReqState{enum.PullReqStateOpen},
-			Size:         1,
-			Sort:         enum.PullReqSortNumber,
-			Order:        enum.OrderAsc,
-		})
+	existing, err := c.pullreqStore.List(ctx, &types.PullReqFilter{
+		SourceRepoID: sourceRepoID,
+		SourceBranch: sourceBranch,
+		TargetRepoID: targetRepoID,
+		TargetBranch: targetBranch,
+		States:       []enum.PullReqState{enum.PullReqStateOpen},
+		Size:         1,
+		Sort:         enum.PullReqSortNumber,
+		Order:        enum.OrderAsc,
+	})
 	if err != nil {
 		return fmt.Errorf("failed to get existing pull requests: %w", err)
 	}

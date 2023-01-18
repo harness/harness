@@ -40,8 +40,10 @@ func (c *Controller) List(
 	var list []*types.PullReq
 	var count int64
 
+	filter.TargetRepoID = repo.ID
+
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
-		list, err = c.pullreqStore.List(ctx, repo.ID, filter)
+		list, err = c.pullreqStore.List(ctx, filter)
 		if err != nil {
 			return fmt.Errorf("failed to list pull requests: %w", err)
 		}
@@ -51,7 +53,7 @@ func (c *Controller) List(
 			return nil
 		}
 
-		count, err = c.pullreqStore.Count(ctx, repo.ID, filter)
+		count, err = c.pullreqStore.Count(ctx, filter)
 		if err != nil {
 			return fmt.Errorf("failed to count pull requests: %w", err)
 		}

@@ -27,6 +27,8 @@ import (
 	eventsgit "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
+	"github.com/harness/gitness/internal/services"
+	"github.com/harness/gitness/internal/services/branchmonitor"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/url"
@@ -45,6 +47,8 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		bootstrap.WireSet,
 		database.WireSet,
 		router.WireSet,
+		branchmonitor.WireSet,
+		services.WireSet,
 		server.WireSet,
 		cron.WireSet,
 		url.WireSet,

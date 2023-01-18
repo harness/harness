@@ -254,13 +254,19 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 	return nil
 }
 
-// UpdateActivitySeq updates the pull request's activity sequence.
-func (s *PullReqStore) UpdateActivitySeq(ctx context.Context, pr *types.PullReq) (*types.PullReq, error) {
+// UpdateOptLock the pull request details using the optimistic locking mechanism.
+func (s *PullReqStore) UpdateOptLock(ctx context.Context, pr *types.PullReq,
+	mutateFn func(pr *types.PullReq) error,
+) (*types.PullReq, error) {
 	for {
 		dup := *pr
 
-		dup.ActivitySeq++
-		err := s.Update(ctx, &dup)
+		err := mutateFn(&dup)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.Update(ctx, &dup)
 		if err == nil {
 			return &dup, nil
 		}
@@ -273,6 +279,14 @@ func (s *PullReqStore) UpdateActivitySeq(ctx context.Context, pr *types.PullReq)
 			return nil, err
 		}
 	}
+}
+
+// UpdateActivitySeq updates the pull request's activity sequence.
+func (s *PullReqStore) UpdateActivitySeq(ctx context.Context, pr *types.PullReq) (*types.PullReq, error) {
+	return s.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+		pr.ActivitySeq++
+		return nil
+	})
 }
 
 // Delete the pull request.
@@ -289,11 +303,10 @@ func (s *PullReqStore) Delete(ctx context.Context, id int64) error {
 }
 
 // Count of pull requests for a repo.
-func (s *PullReqStore) Count(ctx context.Context, repoID int64, opts *types.PullReqFilter) (int64, error) {
+func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (int64, error) {
 	stmt := builder.
 		Select("count(*)").
-		From("pullreqs").
-		Where("pullreq_target_repo_id = ?", repoID)
+		From("pullreqs")
 
 	if len(opts.States) == 1 {
 		stmt = stmt.Where("pullreq_state = ?", opts.States[0])
@@ -307,6 +320,10 @@ func (s *PullReqStore) Count(ctx context.Context, repoID int64, opts *types.Pull
 
 	if opts.SourceBranch != "" {
 		stmt = stmt.Where("pullreq_source_branch = ?", opts.SourceBranch)
+	}
+
+	if opts.TargetRepoID != 0 {
+		stmt = stmt.Where("pullreq_target_repo_id = ?", opts.TargetRepoID)
 	}
 
 	if opts.TargetBranch != "" {
@@ -334,11 +351,10 @@ func (s *PullReqStore) Count(ctx context.Context, repoID int64, opts *types.Pull
 }
 
 // List returns a list of pull requests for a repo.
-func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullReqFilter) ([]*types.PullReq, error) {
+func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*types.PullReq, error) {
 	stmt := builder.
 		Select(pullReqColumns).
-		From("pullreqs").
-		Where("pullreq_target_repo_id = ?", repoID)
+		From("pullreqs")
 
 	if len(opts.States) == 1 {
 		stmt = stmt.Where("pullreq_state = ?", opts.States[0])
@@ -352,6 +368,10 @@ func (s *PullReqStore) List(ctx context.Context, repoID int64, opts *types.PullR
 
 	if opts.SourceBranch != "" {
 		stmt = stmt.Where("pullreq_source_branch = ?", opts.SourceBranch)
+	}
+
+	if opts.TargetRepoID != 0 {
+		stmt = stmt.Where("pullreq_target_repo_id = ?", opts.TargetRepoID)
 	}
 
 	if opts.TargetBranch != "" {

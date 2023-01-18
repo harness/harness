@@ -51,6 +51,7 @@ type PullReqFilter struct {
 	SourceRepoID  int64               `json:"-"` // caller should use source_repo_ref
 	SourceRepoRef string              `json:"source_repo_ref"`
 	SourceBranch  string              `json:"source_branch"`
+	TargetRepoID  int64               `json:"-"`
 	TargetBranch  string              `json:"target_branch"`
 	States        []enum.PullReqState `json:"state"`
 	Sort          enum.PullReqSort    `json:"sort"`

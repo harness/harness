@@ -67,6 +67,8 @@ const (
 	PullReqActivityTypeTitleChange  PullReqActivityType = "title-change"
 	PullReqActivityTypeStateChange  PullReqActivityType = "state-change"
 	PullReqActivityTypeReviewSubmit PullReqActivityType = "review-submit"
+	PullReqActivityTypeBranchUpdate PullReqActivityType = "branch-update"
+	PullReqActivityTypeBranchDelete PullReqActivityType = "branch-delete"
 	PullReqActivityTypeMerge        PullReqActivityType = "merge"
 )
 
@@ -76,6 +78,8 @@ var pullReqActivityTypes = sortEnum([]PullReqActivityType{
 	PullReqActivityTypeTitleChange,
 	PullReqActivityTypeStateChange,
 	PullReqActivityTypeReviewSubmit,
+	PullReqActivityTypeBranchUpdate,
+	PullReqActivityTypeBranchDelete,
 	PullReqActivityTypeMerge,
 })
 

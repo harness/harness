@@ -250,6 +250,10 @@ type (
 		// Update the pull request. It will set new values to the Version and Updated fields.
 		Update(ctx context.Context, repo *types.PullReq) error
 
+		// UpdateOptLock the pull request details using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, pr *types.PullReq,
+			mutateFn func(pr *types.PullReq) error) (*types.PullReq, error)
+
 		// UpdateActivitySeq the pull request's activity sequence number.
 		// It will set new values to the ActivitySeq, Version and Updated fields.
 		UpdateActivitySeq(ctx context.Context, pr *types.PullReq) (*types.PullReq, error)
@@ -258,10 +262,10 @@ type (
 		Delete(ctx context.Context, id int64) error
 
 		// Count of pull requests in a space.
-		Count(ctx context.Context, repoID int64, opts *types.PullReqFilter) (int64, error)
+		Count(ctx context.Context, opts *types.PullReqFilter) (int64, error)
 
 		// List returns a list of pull requests in a space.
-		List(ctx context.Context, repoID int64, opts *types.PullReqFilter) ([]*types.PullReq, error)
+		List(ctx context.Context, opts *types.PullReqFilter) ([]*types.PullReq, error)
 	}
 
 	PullReqActivityStore interface {

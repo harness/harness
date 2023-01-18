@@ -32,6 +32,8 @@ import (
 	"github.com/harness/gitness/internal/cron"
 	eventsgit "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/server"
+	"github.com/harness/gitness/internal/services"
+	"github.com/harness/gitness/internal/services/branchmonitor"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/internal/webhook"
@@ -47,6 +49,8 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 		ProvideRedis,
 		bootstrap.WireSet,
 		database.WireSet,
+		branchmonitor.WireSet,
+		services.WireSet,
 		server.WireSet,
 		cron.WireSet,
 		url.WireSet,

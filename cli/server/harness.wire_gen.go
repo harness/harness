@@ -30,6 +30,8 @@ import (
 	events2 "github.com/harness/gitness/internal/events/git"
 	router2 "github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
+	"github.com/harness/gitness/internal/services"
+	"github.com/harness/gitness/internal/services/branchmonitor"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/internal/webhook"
@@ -146,6 +148,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	nightly := cron.NewNightly()
-	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, webhookServer, nightly)
+	branchmonitorService, err := branchmonitor.ProvideBranchMonitorService(ctx, config, readerFactory, db, pullReqStore, pullReqActivityStore)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(branchmonitorService)
+	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, webhookServer, nightly, servicesServices)
 	return serverSystem, nil
 }
