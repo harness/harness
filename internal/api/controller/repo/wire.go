@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
+	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
@@ -20,10 +21,9 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(config *types.Config, urlProvider *url.Provider,
-	repoCheck check.Repo, authorizer authz.Authorizer, spaceStore store.SpaceStore,
-	repoStore store.RepoStore, principalStore store.PrincipalStore,
-	rpcClient gitrpc.Interface) *Controller {
-	return NewController(config.Git.DefaultBranch, urlProvider,
-		repoCheck, authorizer, spaceStore, repoStore, principalStore, rpcClient)
+func ProvideController(config *types.Config, db *sqlx.DB, urlProvider *url.Provider,
+	uidCheck check.PathUID, authorizer authz.Authorizer, pathStore store.PathStore, repoStore store.RepoStore,
+	spaceStore store.SpaceStore, principalStore store.PrincipalStore, rpcClient gitrpc.Interface) *Controller {
+	return NewController(config.Git.DefaultBranch, db, urlProvider, uidCheck,
+		authorizer, pathStore, repoStore, spaceStore, principalStore, rpcClient)
 }

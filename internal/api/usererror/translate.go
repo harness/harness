@@ -19,6 +19,7 @@ import (
 
 func Translate(err error) *Error {
 	var rError *Error
+	var checkError *check.ValidationError
 	switch {
 	// api errors
 	case errors.As(err, &rError):
@@ -31,8 +32,8 @@ func Translate(err error) *Error {
 		return ErrForbidden
 
 	// validation errors
-	case errors.Is(err, check.ErrAny):
-		return New(http.StatusBadRequest, err.Error())
+	case errors.As(err, &checkError):
+		return New(http.StatusBadRequest, checkError.Error())
 
 	// store errors
 	case errors.Is(err, store.ErrResourceNotFound):

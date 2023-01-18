@@ -9,8 +9,6 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/types"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -32,17 +30,10 @@ var (
 	ErrPathCantBeginOrEndWithSeparator = &ValidationError{
 		fmt.Sprintf("Path can't start or end with the separator ('%s').", types.PathSeparator),
 	}
-	ErrPathDifferentTopLevelSpace = &ValidationError{
-		"Alias paths have to stay within the same top level space.",
-	}
-	ErrTopLevelPathNotAllowed = &ValidationError{
-		"Top level alias paths are not allowed.",
-	}
 )
 
-// Path checks the provided path and returns an error in it isn't valid
-// NOTE: A repository path can be one deeper than a space path (as otherwise the space would be useless).
-func Path(path string, isSpace bool) error {
+// Path checks the provided path and returns an error in it isn't valid.
+func Path(path string, isSpace bool, uidCheck PathUID) error {
 	if path == "" {
 		return ErrPathEmpty
 	}
@@ -59,42 +50,12 @@ func Path(path string, isSpace bool) error {
 
 	// ensure all segments of the path are valid uids
 	segments := strings.Split(path, types.PathSeparator)
-	for _, s := range segments {
+	for i, s := range segments {
 		if s == "" {
 			return ErrEmptyPathSegment
-		} else if err := UID(s); err != nil {
-			return errors.Wrapf(err, "Invalid segment '%s'", s)
+		} else if err := uidCheck(s, i == 0); err != nil {
+			return fmt.Errorf("invalid segment '%s': %w", s, err)
 		}
-	}
-
-	return nil
-}
-
-// PathParams validates a PathParams object that is used to create a new path.
-// NOTES:
-//   - We don't allow top level alias paths
-//   - An alias path has to stay within the same top level space
-//
-// IMPORTANT:
-//   - Technically there can be a racing condition when a space is being moved in between the validation and
-//     path creation.
-//   - But that is fine, as the path could've also been created a second earlier when it was still valid and would
-//     then still exist.
-func PathParams(path *types.PathParams, currentPath string, isSpace bool) error {
-	// ensure the path is valid
-	if err := Path(path.Path, isSpace); err != nil {
-		return err
-	}
-
-	// ensure the path is at least 1 level deep (at least one '/')
-	i := strings.Index(path.Path, types.PathSeparator)
-	if i < 0 {
-		return ErrTopLevelPathNotAllowed
-	}
-
-	// ensure the top level space doesn't change (add path separator to avoid abcd -> abc matching)
-	if !strings.HasPrefix(currentPath+types.PathSeparator, path.Path[:i]+types.PathSeparator) {
-		return ErrPathDifferentTopLevelSpace
 	}
 
 	return nil

@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/branchmonitor"
+	"github.com/harness/gitness/internal/store/cache"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/internal/webhook"
@@ -51,6 +52,7 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 		database.WireSet,
 		branchmonitor.WireSet,
 		services.WireSet,
+		cache.WireSet,
 		server.WireSet,
 		cron.WireSet,
 		url.WireSet,

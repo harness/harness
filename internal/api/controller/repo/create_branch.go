@@ -28,7 +28,7 @@ type CreateBranchInput struct {
 // CreateBranch creates a new branch for a repo.
 func (c *Controller) CreateBranch(ctx context.Context, session *auth.Session,
 	repoRef string, in *CreateBranchInput) (*Branch, error) {
-	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}

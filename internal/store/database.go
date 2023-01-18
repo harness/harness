@@ -116,26 +116,62 @@ type (
 		FindMany(ctx context.Context, ids []int64) ([]*types.PrincipalInfo, error)
 	}
 
+	// PathStore defines the path data storage.
+	// It is used to store routing paths for repos & spaces.
+	PathStore interface {
+		// Create creates a new path.
+		Create(ctx context.Context, path *types.Path) error
+
+		// Find finds the path for the given id.
+		Find(ctx context.Context, id int64) (*types.Path, error)
+
+		// FindWithLock finds the path for the given id and locks the entry.
+		FindWithLock(ctx context.Context, id int64) (*types.Path, error)
+
+		// FindValue finds the path for the given value.
+		FindValue(ctx context.Context, value string) (*types.Path, error)
+
+		// FindPrimary finds the primary path for a target.
+		FindPrimary(ctx context.Context, targetType enum.PathTargetType, targetID int64) (*types.Path, error)
+
+		// FindPrimaryWithLock finds the primary path for a target and locks the db entry.
+		FindPrimaryWithLock(ctx context.Context, targetType enum.PathTargetType, targetID int64) (*types.Path, error)
+
+		// Update updates an existing path.
+		Update(ctx context.Context, path *types.Path) error
+
+		// Delete deletes a specific path.
+		Delete(ctx context.Context, id int64) error
+
+		// Count returns the count of paths for a target.
+		Count(ctx context.Context, targetType enum.PathTargetType, targetID int64,
+			opts *types.PathFilter) (int64, error)
+
+		// List lists all paths for a target.
+		List(ctx context.Context, targetType enum.PathTargetType, targetID int64,
+			opts *types.PathFilter) ([]*types.Path, error)
+
+		// ListPrimaryDescendantsWithLock lists all primary paths that are descendants of the given path and locks them.
+		ListPrimaryDescendantsWithLock(ctx context.Context, value string) ([]*types.Path, error)
+	}
+
 	// SpaceStore defines the space data storage.
 	SpaceStore interface {
 		// Find the space by id.
 		Find(ctx context.Context, id int64) (*types.Space, error)
 
-		// FindByPath the space by its path.
-		FindByPath(ctx context.Context, path string) (*types.Space, error)
-
-		// FindSpaceFromRef finds space by path or ref
-		FindSpaceFromRef(ctx context.Context, spaceRef string) (*types.Space, error)
+		// FindByRef finds the space using the spaceRef as either the id or the space path.
+		FindByRef(ctx context.Context, spaceRef string) (*types.Space, error)
 
 		// Create creates a new space
 		Create(ctx context.Context, space *types.Space) error
 
-		// Move moves an existing space.
-		Move(ctx context.Context, principalID int64, id int64, newParentID int64, newName string,
-			keepAsAlias bool) (*types.Space, error)
-
 		// Update updates the space details.
 		Update(ctx context.Context, space *types.Space) error
+
+		// UpdateOptLock updates the space using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, space *types.Space,
+			mutateFn func(space *types.Space) error) (*types.Space, error)
 
 		// Delete deletes the space.
 		Delete(ctx context.Context, id int64) error
@@ -145,18 +181,6 @@ type (
 
 		// List returns a list of child spaces in a space.
 		List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error)
-
-		// CountPaths returns a count of all paths of a space.
-		CountPaths(ctx context.Context, id int64, opts *types.PathFilter) (int64, error)
-
-		// ListPaths returns a list of all paths of a space.
-		ListPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error)
-
-		// CreatePath create an alias for a space
-		CreatePath(ctx context.Context, id int64, params *types.PathParams) (*types.Path, error)
-
-		// DeletePath delete an alias of a space
-		DeletePath(ctx context.Context, id int64, pathID int64) error
 	}
 
 	// RepoStore defines the repository data storage.
@@ -164,21 +188,11 @@ type (
 		// Find the repo by id.
 		Find(ctx context.Context, id int64) (*types.Repository, error)
 
-		// FindByPath the repo by path.
-		FindByPath(ctx context.Context, path string) (*types.Repository, error)
-
-		// FindByGitUID the repo by git uid.
-		FindByGitUID(ctx context.Context, gitUID string) (*types.Repository, error)
-
-		// FindRepoFromRef finds the repo by path or ref.
-		FindRepoFromRef(ctx context.Context, repoRef string) (*types.Repository, error)
+		// FindByRef finds the repo using the repoRef as either the id or the repo path.
+		FindByRef(ctx context.Context, repoRef string) (*types.Repository, error)
 
 		// Create a new repo.
 		Create(ctx context.Context, repo *types.Repository) error
-
-		// Move moves an existing repo.
-		Move(ctx context.Context, principalID int64, repoID int64, newParentID int64, newName string,
-			keepAsAlias bool) (*types.Repository, error)
 
 		// Update the repo details.
 		Update(ctx context.Context, repo *types.Repository) error
@@ -195,18 +209,6 @@ type (
 
 		// List returns a list of repos in a space.
 		List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error)
-
-		// CountPaths returns a count of all paths of a repo.
-		CountPaths(ctx context.Context, id int64, opts *types.PathFilter) (int64, error)
-
-		// ListPaths returns a list of all paths of a repo.
-		ListPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error)
-
-		// CreatePath an alias for a repo
-		CreatePath(ctx context.Context, repoID int64, params *types.PathParams) (*types.Path, error)
-
-		// DeletePath delete an alias of a repo
-		DeletePath(ctx context.Context, repoID int64, pathID int64) error
 	}
 
 	// TokenStore defines the token data storage.
@@ -239,7 +241,7 @@ type (
 		Find(ctx context.Context, id int64) (*types.PullReq, error)
 
 		// FindByNumber finds the pull request by repo ID and the pull request number.
-		FindByNumberWithLock(ctx context.Context, repoID, number int64, lock bool) (*types.PullReq, error)
+		FindByNumberWithLock(ctx context.Context, repoID, number int64) (*types.PullReq, error)
 
 		// FindByNumber finds the pull request by repo ID and the pull request number.
 		FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReq, error)

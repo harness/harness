@@ -59,7 +59,7 @@ func (c *Controller) Merge(
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
 		// pesimistic lock for no other user can merge the same pr
-		pr, err = c.pullreqStore.FindByNumberWithLock(ctx, targetRepo.ID, pullreqNum, true)
+		pr, err = c.pullreqStore.FindByNumberWithLock(ctx, targetRepo.ID, pullreqNum)
 		if err != nil {
 			return fmt.Errorf("failed to get pull request by number: %w", err)
 		}

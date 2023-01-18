@@ -16,7 +16,7 @@ import (
 * Delete deletes a space.
  */
 func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef string) error {
-	space, err := c.spaceStore.FindSpaceFromRef(ctx, spaceRef)
+	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return err
 	}

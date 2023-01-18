@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/internal/cache"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -27,7 +26,7 @@ var _ store.PullReqStore = (*PullReqStore)(nil)
 
 // NewPullReqStore returns a new PullReqStore.
 func NewPullReqStore(db *sqlx.DB,
-	pCache *cache.Cache[int64, *types.PrincipalInfo]) *PullReqStore {
+	pCache store.PrincipalInfoCache) *PullReqStore {
 	return &PullReqStore{
 		db:     db,
 		pCache: pCache,
@@ -37,7 +36,7 @@ func NewPullReqStore(db *sqlx.DB,
 // PullReqStore implements store.PullReqStore backed by a relational database.
 type PullReqStore struct {
 	db     *sqlx.DB
-	pCache *cache.Cache[int64, *types.PrincipalInfo]
+	pCache store.PrincipalInfoCache
 }
 
 // pullReq is used to fetch pull request data from the database.
@@ -116,9 +115,7 @@ func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReq, erro
 	return s.mapPullReq(ctx, dst), nil
 }
 
-// FindByNumberWithLock finds the pull request by repo ID and pull request number
-// with option to lock the pull request for the duration of the transaction.
-func (s *PullReqStore) FindByNumberWithLock(
+func (s *PullReqStore) findByNumberInternal(
 	ctx context.Context,
 	repoID,
 	number int64,
@@ -128,7 +125,7 @@ func (s *PullReqStore) FindByNumberWithLock(
 	WHERE pullreq_target_repo_id = $1 AND pullreq_number = $2`
 
 	if lock && !strings.HasPrefix(s.db.DriverName(), "sqlite") {
-		sqlQuery += "\nFOR UPDATE"
+		sqlQuery += "\n" + sqlForUpdate
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -141,9 +138,19 @@ func (s *PullReqStore) FindByNumberWithLock(
 	return s.mapPullReq(ctx, dst), nil
 }
 
+// FindByNumberWithLock finds the pull request by repo ID and pull request number
+// and locks the pull request for the duration of the transaction.
+func (s *PullReqStore) FindByNumberWithLock(
+	ctx context.Context,
+	repoID,
+	number int64,
+) (*types.PullReq, error) {
+	return s.findByNumberInternal(ctx, repoID, number, true)
+}
+
 // FindByNumber finds the pull request by repo ID and pull request number.
 func (s *PullReqStore) FindByNumber(ctx context.Context, repoID, number int64) (*types.PullReq, error) {
-	return s.FindByNumberWithLock(ctx, repoID, number, false)
+	return s.findByNumberInternal(ctx, repoID, number, false)
 }
 
 // Create creates a new pull request.
@@ -245,7 +252,7 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 	}
 
 	if count == 0 {
-		return store.ErrConflict
+		return store.ErrVersionConflict
 	}
 
 	pr.Version = dbPR.Version
@@ -270,7 +277,7 @@ func (s *PullReqStore) UpdateOptLock(ctx context.Context, pr *types.PullReq,
 		if err == nil {
 			return &dup, nil
 		}
-		if !errors.Is(err, store.ErrConflict) {
+		if !errors.Is(err, store.ErrVersionConflict) {
 			return nil, err
 		}
 

@@ -22,7 +22,7 @@ func (c *Controller) RawDiff(
 	path string,
 	w io.Writer,
 ) error {
-	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return err
 	}

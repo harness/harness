@@ -6,11 +6,13 @@ package space
 
 import (
 	"context"
-	"time"
+	"fmt"
+	"strings"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -20,10 +22,15 @@ type UpdateInput struct {
 	IsPublic    *bool   `json:"is_public"`
 }
 
+func (in *UpdateInput) hasChanges(space *types.Space) bool {
+	return (in.Description != nil && *in.Description != space.Description) ||
+		(in.IsPublic != nil && *in.IsPublic != space.IsPublic)
+}
+
 // Update updates a space.
 func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	spaceRef string, in *UpdateInput) (*types.Space, error) {
-	space, err := c.spaceStore.FindSpaceFromRef(ctx, spaceRef)
+	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err
 	}
@@ -32,26 +39,39 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	// update values only if provided
-	if in.Description != nil {
-		space.Description = *in.Description
-	}
-	if in.IsPublic != nil {
-		space.IsPublic = *in.IsPublic
+	if !in.hasChanges(space) {
+		return space, nil
 	}
 
-	// always update time
-	space.Updated = time.Now().UnixMilli()
-
-	// ensure provided values are valid
-	if err = c.spaceCheck(space); err != nil {
-		return nil, err
+	if err = sanitizeUpdateInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	err = c.spaceStore.Update(ctx, space)
+	space, err = c.spaceStore.UpdateOptLock(ctx, space, func(space *types.Space) error {
+		// update values only if provided
+		if in.Description != nil {
+			space.Description = *in.Description
+		}
+		if in.IsPublic != nil {
+			space.IsPublic = *in.IsPublic
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	return space, nil
+}
+
+func sanitizeUpdateInput(in *UpdateInput) error {
+	if in.Description != nil {
+		*in.Description = strings.TrimSpace(*in.Description)
+		if err := check.Description(*in.Description); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

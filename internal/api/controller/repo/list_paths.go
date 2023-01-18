@@ -10,6 +10,7 @@ import (
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -19,7 +20,7 @@ import (
  */
 func (c *Controller) ListPaths(ctx context.Context, session *auth.Session,
 	repoRef string, filter *types.PathFilter) ([]*types.Path, int64, error) {
-	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -28,14 +29,30 @@ func (c *Controller) ListPaths(ctx context.Context, session *auth.Session,
 		return nil, 0, err
 	}
 
-	count, err := c.repoStore.CountPaths(ctx, repo.ID, filter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count paths: %w", err)
-	}
+	var (
+		paths []*types.Path
+		count int64
+	)
+	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+		paths, err = c.pathStore.List(ctx, enum.PathTargetTypeRepo, repo.ID, filter)
+		if err != nil {
+			return fmt.Errorf("failed to list paths: %w", err)
+		}
 
-	paths, err := c.repoStore.ListPaths(ctx, repo.ID, filter)
+		if filter.Page == 1 && len(paths) < filter.Size {
+			count = int64(len(paths))
+			return nil
+		}
+
+		count, err = c.pathStore.Count(ctx, enum.PathTargetTypeRepo, repo.ID, filter)
+		if err != nil {
+			return fmt.Errorf("failed to count paths: %w", err)
+		}
+
+		return nil
+	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to list paths: %w", err)
+		return nil, 0, err
 	}
 
 	return paths, count, nil

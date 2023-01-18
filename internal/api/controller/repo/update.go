@@ -6,10 +6,13 @@ package repo
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -20,14 +23,14 @@ type UpdateInput struct {
 }
 
 func (in *UpdateInput) hasChanges(repo *types.Repository) bool {
-	return (in.Description != nil && repo.Description == *in.Description || in.Description == nil) &&
-		(in.IsPublic != nil && repo.IsPublic == *in.IsPublic || in.IsPublic == nil)
+	return (in.Description != nil && *in.Description != repo.Description) ||
+		(in.IsPublic != nil && *in.IsPublic != repo.IsPublic)
 }
 
 // Update updates a repository.
 func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	repoRef string, in *UpdateInput) (*types.Repository, error) {
-	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +39,12 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	// check if anything needs to be changed
-	if in.hasChanges(repo) {
-		return repo, err
+	if !in.hasChanges(repo) {
+		return repo, nil
+	}
+
+	if err = sanitizeUpdateInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
 	repo, err = c.repoStore.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
@@ -48,11 +54,6 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		}
 		if in.IsPublic != nil {
 			repo.IsPublic = *in.IsPublic
-		}
-
-		// ensure provided values are valid
-		if errValidate := c.repoCheck(repo); errValidate != nil {
-			return errValidate
 		}
 
 		return nil
@@ -65,4 +66,15 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)
 
 	return repo, nil
+}
+
+func sanitizeUpdateInput(in *UpdateInput) error {
+	if in.Description != nil {
+		*in.Description = strings.TrimSpace(*in.Description)
+		if err := check.Description(*in.Description); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

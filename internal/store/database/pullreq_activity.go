@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/harness/gitness/internal/cache"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -27,7 +26,7 @@ var _ store.PullReqActivityStore = (*PullReqActivityStore)(nil)
 
 // NewPullReqActivityStore returns a new PullReqJournalStore.
 func NewPullReqActivityStore(db *sqlx.DB,
-	pCache *cache.Cache[int64, *types.PrincipalInfo]) *PullReqActivityStore {
+	pCache store.PrincipalInfoCache) *PullReqActivityStore {
 	return &PullReqActivityStore{
 		db:     db,
 		pCache: pCache,
@@ -37,7 +36,7 @@ func NewPullReqActivityStore(db *sqlx.DB,
 // PullReqActivityStore implements store.PullReqActivityStore backed by a relational database.
 type PullReqActivityStore struct {
 	db     *sqlx.DB
-	pCache *cache.Cache[int64, *types.PrincipalInfo]
+	pCache store.PrincipalInfoCache
 }
 
 // journal is used to fetch pull request data from the database.
@@ -214,7 +213,7 @@ func (s *PullReqActivityStore) Update(ctx context.Context, act *types.PullReqAct
 	}
 
 	if count == 0 {
-		return store.ErrConflict
+		return store.ErrVersionConflict
 	}
 
 	act.Version = dbAct.Version
@@ -234,7 +233,7 @@ func (s *PullReqActivityStore) UpdateReplySeq(ctx context.Context,
 		if err == nil {
 			return &dup, nil
 		}
-		if !errors.Is(err, store.ErrConflict) {
+		if !errors.Is(err, store.ErrVersionConflict) {
 			return nil, err
 		}
 

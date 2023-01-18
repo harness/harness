@@ -14,25 +14,14 @@ const (
 	PathTargetTypeSpace PathTargetType = "space"
 )
 
-// TODO: Should we replace Path.IsAlias with a Path.Type property? Unless needed, bool would be more efficient
-// // Defines the type of a path
-// type PathType string
-
-// const (
-// 	// Path is only an alias - it doesn't dictate where the target is actually residing.
-// 	PathTypeAlias PathTargetType = "alias"
-
-// 	// Path is representing the residency of a resource (e.g. chain of parent spaces)
-// 	PathTypePrimary PathTargetType = "primary"
-// )
-
 // PathAttr defines path attributes that can be used for sorting and filtering.
 type PathAttr int
 
 // Order enumeration.
 const (
 	PathAttrNone PathAttr = iota
-	PathAttrPath
+	PathAttrID
+	PathAttrValue
 	PathAttrCreated
 	PathAttrUpdated
 )
@@ -41,8 +30,10 @@ const (
 // and returns the equivalent enumeration.
 func ParsePathAttr(s string) PathAttr {
 	switch strings.ToLower(s) {
-	case path:
-		return PathAttrPath
+	case id:
+		return PathAttrID
+	case value:
+		return PathAttrValue
 	case created, createdAt:
 		return PathAttrCreated
 	case updated, updatedAt:
@@ -55,8 +46,10 @@ func ParsePathAttr(s string) PathAttr {
 // String returns the string representation of the attribute.
 func (a PathAttr) String() string {
 	switch a {
-	case PathAttrPath:
-		return path
+	case PathAttrID:
+		return id
+	case PathAttrValue:
+		return value
 	case PathAttrCreated:
 		return created
 	case PathAttrUpdated:

@@ -4,7 +4,10 @@
 
 package usererror
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 var (
 	// ErrInternal is returned when an internal error occurred.
@@ -67,8 +70,18 @@ func (e *Error) Error() string {
 	return e.Message
 }
 
-// New returns a new error message.
-func New(status int, message string, valueMaps ...map[string]any) *Error {
+// New returns a new user facing error.
+func New(status int, message string) *Error {
+	return &Error{Status: status, Message: message}
+}
+
+// Newf returns a new user facing error.
+func Newf(status int, format string, args ...any) *Error {
+	return &Error{Status: status, Message: fmt.Sprintf(format, args...)}
+}
+
+// NewWithPayload returns a new user facing error with payload.
+func NewWithPayload(status int, message string, valueMaps ...map[string]any) *Error {
 	var values map[string]any
 	for _, valueMap := range valueMaps {
 		if values == nil {
@@ -82,7 +95,17 @@ func New(status int, message string, valueMaps ...map[string]any) *Error {
 	return &Error{Status: status, Message: message, Values: values}
 }
 
-// BadRequest gives an error that will be returned as HTTP status=400 with the provided message.
-func BadRequest(message string, values ...map[string]any) *Error {
-	return New(http.StatusBadRequest, message, values...)
+// BadRequest returns a new user facing bad request error.
+func BadRequest(message string) *Error {
+	return New(http.StatusBadRequest, message)
+}
+
+// BadRequestf returns a new user facing bad request error.
+func BadRequestf(format string, args ...any) *Error {
+	return Newf(http.StatusBadRequest, format, args...)
+}
+
+// BadRequestWithPayload returns a new user facing bad request error with payload.
+func BadRequestWithPayload(message string, values ...map[string]any) *Error {
+	return NewWithPayload(http.StatusBadRequest, message, values...)
 }

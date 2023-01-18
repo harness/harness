@@ -9,7 +9,7 @@ import "errors"
 var (
 	ErrResourceNotFound           = errors.New("resource not found")
 	ErrDuplicate                  = errors.New("resource is a duplicate")
-	ErrConflict                   = errors.New("resource version conflict")
+	ErrVersionConflict            = errors.New("resource version conflict")
 	ErrPathTooLong                = errors.New("the path is too long")
 	ErrPrimaryPathAlreadyExists   = errors.New("primary path already exists for resource")
 	ErrPrimaryPathRequired        = errors.New("path has to be primary")

@@ -17,9 +17,9 @@ import (
 
 var _ store.PrincipalInfoView = (*PrincipalInfoView)(nil)
 
-// NewPrincipalInfoStore returns a new PrincipalInfoView.
+// NewPrincipalInfoView returns a new PrincipalInfoView.
 // It's used by the principal info cache.
-func NewPrincipalInfoStore(db *sqlx.DB) *PrincipalInfoView {
+func NewPrincipalInfoView(db *sqlx.DB) *PrincipalInfoView {
 	return &PrincipalInfoView{
 		db: db,
 	}

@@ -18,37 +18,44 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
 
 type Controller struct {
 	defaultBranch  string
+	db             *sqlx.DB
 	urlProvider    *url.Provider
-	repoCheck      check.Repo
+	uidCheck       check.PathUID
 	authorizer     authz.Authorizer
-	spaceStore     store.SpaceStore
+	pathStore      store.PathStore
 	repoStore      store.RepoStore
+	spaceStore     store.SpaceStore
 	principalStore store.PrincipalStore
 	gitRPCClient   gitrpc.Interface
 }
 
 func NewController(
 	defaultBranch string,
+	db *sqlx.DB,
 	urlProvider *url.Provider,
-	repoCheck check.Repo,
+	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
-	spaceStore store.SpaceStore,
+	pathStore store.PathStore,
 	repoStore store.RepoStore,
+	spaceStore store.SpaceStore,
 	principalStore store.PrincipalStore,
 	gitRPCClient gitrpc.Interface,
 ) *Controller {
 	return &Controller{
 		defaultBranch:  defaultBranch,
+		db:             db,
 		urlProvider:    urlProvider,
-		repoCheck:      repoCheck,
+		uidCheck:       uidCheck,
 		authorizer:     authorizer,
-		spaceStore:     spaceStore,
+		pathStore:      pathStore,
 		repoStore:      repoStore,
+		spaceStore:     spaceStore,
 		principalStore: principalStore,
 		gitRPCClient:   gitRPCClient,
 	}

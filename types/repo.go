@@ -12,7 +12,7 @@ import (
 type Repository struct {
 	// TODO: int64 ID doesn't match DB
 	ID          int64  `db:"repo_id"              json:"id"`
-	Version     int64  `db:"repo_version"         json:"version"`
+	Version     int64  `db:"repo_version"         json:"-"`
 	ParentID    int64  `db:"repo_parent_id"       json:"parent_id"`
 	UID         string `db:"repo_uid"             json:"uid"`
 	Path        string `db:"repo_path"            json:"path"`

@@ -15,14 +15,19 @@ const (
 // Represents a path to a resource (e.g. space) that can be used to address the resource.
 type Path struct {
 	// TODO: int64 ID doesn't match DB
-	ID         int64               `db:"path_id"              json:"id"`
-	Value      string              `db:"path_value"           json:"value"`
-	IsAlias    bool                `db:"path_is_alias"        json:"is_alias"`
-	TargetType enum.PathTargetType `db:"path_target_type"     json:"target_type"`
-	TargetID   int64               `db:"path_target_id"       json:"target_id"`
-	CreatedBy  int64               `db:"path_created_by"      json:"created_by"`
-	Created    int64               `db:"path_created"         json:"created"`
-	Updated    int64               `db:"path_updated"         json:"updated"`
+	ID         int64               `json:"id"`
+	Version    int64               `json:"-"`
+	Value      string              `json:"value"`
+	IsPrimary  bool                `json:"is_primary"`
+	TargetType enum.PathTargetType `json:"target_type"`
+	TargetID   int64               `json:"target_id"`
+	CreatedBy  int64               `json:"created_by"`
+	Created    int64               `json:"created"`
+	Updated    int64               `json:"updated"`
+}
+
+func (p *Path) Identifier() string {
+	return p.Value
 }
 
 // PathParams used for creating paths (alias or rename).

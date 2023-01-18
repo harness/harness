@@ -34,8 +34,7 @@ type WebhookStore struct {
 	db *sqlx.DB
 }
 
-// webhook is used to fetch webhook data from the database.
-// The object should be later re-packed into a different struct to return it as an API response.
+// webhook is an internal representation used to store webhook data in the database.
 type webhook struct {
 	ID        int64    `db:"webhook_id"`
 	Version   int64    `db:"webhook_version"`
@@ -194,7 +193,7 @@ func (s *WebhookStore) Update(ctx context.Context, hook *types.Webhook) error {
 	}
 
 	if count == 0 {
-		return store.ErrConflict
+		return store.ErrVersionConflict
 	}
 
 	hook.Version = dbHook.Version
@@ -218,7 +217,7 @@ func (s *WebhookStore) UpdateOptLock(ctx context.Context, hook *types.Webhook,
 		if err == nil {
 			return &dup, nil
 		}
-		if !errors.Is(err, store.ErrConflict) {
+		if !errors.Is(err, store.ErrVersionConflict) {
 			return nil, fmt.Errorf("failed to update the webhook: %w", err)
 		}
 

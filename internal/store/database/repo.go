@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -22,209 +22,168 @@ import (
 var _ store.RepoStore = (*RepoStore)(nil)
 
 // NewRepoStore returns a new RepoStore.
-func NewRepoStore(db *sqlx.DB, pathTransformation store.PathTransformation) *RepoStore {
+func NewRepoStore(db *sqlx.DB, pathCache store.PathCache) *RepoStore {
 	return &RepoStore{
-		db:                 db,
-		pathTransformation: pathTransformation,
+		db:        db,
+		pathCache: pathCache,
 	}
 }
 
 // RepoStore implements a store.RepoStore backed by a relational database.
 type RepoStore struct {
-	db                 *sqlx.DB
-	pathTransformation store.PathTransformation
+	db        *sqlx.DB
+	pathCache store.PathCache
 }
+
+const (
+	repoColumnsForJoin = `
+		repo_id
+		,repo_version
+		,repo_parent_id
+		,repo_uid
+		,paths.path_value AS repo_path
+		,repo_description
+		,repo_is_public
+		,repo_created_by
+		,repo_created
+		,repo_updated
+		,repo_git_uid
+		,repo_default_branch
+		,repo_pullreq_seq
+		,repo_fork_id
+		,repo_num_forks
+		,repo_num_pulls
+		,repo_num_closed_pulls
+		,repo_num_open_pulls`
+
+	repoSelectBaseWithJoin = `
+		SELECT` + repoColumnsForJoin + `
+		FROM repositories
+		INNER JOIN paths
+		ON repositories.repo_id=paths.path_repo_id AND paths.path_is_primary=true`
+)
 
 // Find finds the repo by id.
 func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, error) {
+	const sqlQuery = repoSelectBaseWithJoin + `
+		WHERE repo_id = $1`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	dst := new(types.Repository)
-	if err := s.db.GetContext(ctx, dst, repoSelectByID, id); err != nil {
+	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
 		return nil, processSQLErrorf(err, "Failed to find repo")
 	}
 	return dst, nil
 }
 
-// FindByPath finds the repo by path.
-func (s *RepoStore) FindByPath(ctx context.Context, path string) (*types.Repository, error) {
-	// ensure we transform path before searching (otherwise casing might be wrong)
-	pathUnique, err := s.pathTransformation(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to transform path '%s': %w", path, err)
-	}
-
-	dst := new(types.Repository)
-	if err = s.db.GetContext(ctx, dst, repoSelectByPathUnique, pathUnique); err != nil {
-		return nil, processSQLErrorf(err, "Failed to find repo by path")
-	}
-
-	return dst, nil
-}
-
-// FindByGitUID the repo by git uid.
-func (s *RepoStore) FindByGitUID(ctx context.Context, gitUID string) (*types.Repository, error) {
-	dst := new(types.Repository)
-	if err := s.db.GetContext(ctx, dst, repoSelectByGitUID, gitUID); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
-	}
-	return dst, nil
-}
-
-func (s *RepoStore) FindRepoFromRef(ctx context.Context, repoRef string) (*types.Repository, error) {
-	// check if ref is repoId - ASSUMPTION: digit only is no valid repo name
+// FindByRef finds the repo using the repoRef as either the id or the repo path.
+func (s *RepoStore) FindByRef(ctx context.Context, repoRef string) (*types.Repository, error) {
+	// ASSUMPTION: digits only is not a valid repo path
 	id, err := strconv.ParseInt(repoRef, 10, 64)
-	if err == nil {
-		return s.Find(ctx, id)
+	if err != nil {
+		var path *types.Path
+		path, err = s.pathCache.Get(ctx, repoRef)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get path: %w", err)
+		}
+
+		if path.TargetType != enum.PathTargetTypeRepo {
+			// IMPORTANT: expose as not found error as we didn't find the repo!
+			return nil, fmt.Errorf("path is not targeting a repo - %w", store.ErrResourceNotFound)
+		}
+
+		id = path.TargetID
 	}
 
-	return s.FindByPath(ctx, repoRef)
+	return s.Find(ctx, id)
 }
 
 // Create creates a new repository.
 func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
-	tx, err := s.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return processSQLErrorf(err, "Failed to start a new transaction")
-	}
-	defer func(tx *sqlx.Tx) {
-		_ = tx.Rollback()
-	}(tx)
+	const sqlQuery = `
+		INSERT INTO repositories (
+			repo_version                      
+			,repo_parent_id
+			,repo_uid
+			,repo_description
+			,repo_is_public
+			,repo_created_by
+			,repo_created
+			,repo_updated
+			,repo_git_uid
+			,repo_default_branch
+			,repo_fork_id
+			,repo_pullreq_seq
+			,repo_num_forks
+			,repo_num_pulls
+			,repo_num_closed_pulls
+			,repo_num_open_pulls
+		) values (
+			:repo_version
+			,:repo_parent_id
+			,:repo_uid
+			,:repo_description
+			,:repo_is_public
+			,:repo_created_by
+			,:repo_created
+			,:repo_updated
+			,:repo_git_uid
+			,:repo_default_branch
+			,:repo_fork_id
+			,:repo_pullreq_seq
+			,:repo_num_forks
+			,:repo_num_pulls
+			,:repo_num_closed_pulls
+			,:repo_num_open_pulls
+		) RETURNING repo_id`
+
+	db := dbtx.GetAccessor(ctx, s.db)
 
 	// insert repo first so we get id
-	query, arg, err := s.db.BindNamed(repoInsert, repo)
+	query, arg, err := db.BindNamed(sqlQuery, repo)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind repo object")
 	}
 
-	if err = tx.QueryRow(query, arg...).Scan(&repo.ID); err != nil {
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&repo.ID); err != nil {
 		return processSQLErrorf(err, "Insert query failed")
 	}
-
-	// Get parent path (repo always has a parent)
-	parentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, repo.ParentID)
-	if err != nil {
-		return errors.Wrap(err, "Failed to find path of parent space")
-	}
-
-	// All existing paths are valid, repo uid is assumed to be valid => new path is valid
-	path := paths.Concatinate(parentPath.Value, repo.UID)
-
-	// create path only once we know the id of the repo
-	p := &types.Path{
-		TargetType: enum.PathTargetTypeRepo,
-		TargetID:   repo.ID,
-		IsAlias:    false,
-		Value:      path,
-		CreatedBy:  repo.CreatedBy,
-		Created:    repo.Created,
-		Updated:    repo.Updated,
-	}
-
-	if err = CreatePathTx(ctx, s.db, tx, p, s.pathTransformation); err != nil {
-		return errors.Wrap(err, "Failed to create primary path of repo")
-	}
-
-	// commit
-	if err = tx.Commit(); err != nil {
-		return processSQLErrorf(err, "Failed to commit transaction")
-	}
-
-	// update path in repo object
-	repo.Path = p.Value
 
 	return nil
 }
 
-// Move moves an existing space.
-func (s *RepoStore) Move(ctx context.Context, principalID int64, repoID int64, newParentID int64, newName string,
-	keepAsAlias bool) (*types.Repository, error) {
-	tx, err := s.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return nil, processSQLErrorf(err, "Failed to start a new transaction")
-	}
-	defer func(tx *sqlx.Tx) {
-		_ = tx.Rollback() // should we take care about rollbacks errors?
-	}(tx)
-
-	// get current path of repo
-	currentPath, err := FindPathTx(ctx, tx, enum.PathTargetTypeRepo, repoID)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to find the primary path of the repo")
-	}
-
-	// get path of new parent space
-	spacePath, err := FindPathTx(ctx, tx, enum.PathTargetTypeSpace, newParentID)
-	if err != nil {
-		return nil, errors.Wrap(err, "Failed to find the primary path of the new space")
-	}
-
-	newPath := paths.Concatinate(spacePath.Value, newName)
-
-	// path is exactly the same => nothing to do
-	if newPath == currentPath.Value {
-		return nil, store.ErrNoChangeInRequestedMove
-	}
-
-	p := &types.Path{
-		TargetType: enum.PathTargetTypeRepo,
-		TargetID:   repoID,
-		IsAlias:    false,
-		Value:      newPath,
-		CreatedBy:  principalID,
-		Created:    time.Now().UnixMilli(),
-		Updated:    time.Now().UnixMilli(),
-	}
-
-	// replace the primary path (also updates all child primary paths)
-	if err = ReplacePathTx(ctx, s.db, tx, p, keepAsAlias, s.pathTransformation); err != nil {
-		return nil, errors.Wrap(err, "Failed to update the primary path of the repo")
-	}
-
-	// Rename the repo itself
-	if _, err = tx.ExecContext(ctx, repoUpdateUIDAndParentID, newName, newParentID, repoID); err != nil {
-		return nil, processSQLErrorf(err, "Query for renaming and updating the space id failed")
-	}
-
-	// TODO: return repo as part of rename db operation?
-	dst := new(types.Repository)
-	if err = tx.GetContext(ctx, dst, repoSelectByID, repoID); err != nil {
-		return nil, processSQLErrorf(err, "Select query to get the repo's latest state failed")
-	}
-
-	// commit
-	if err = tx.Commit(); err != nil {
-		return nil, processSQLErrorf(err, "Failed to commit transaction")
-	}
-
-	return dst, nil
-}
-
 // Update updates the repo details.
 func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
-	const repoUpdate = `
-	UPDATE repositories
-	SET
-	 repo_version           = :repo_version
-	,repo_description		= :repo_description
-	,repo_is_public			= :repo_is_public
-	,repo_updated			= :repo_updated
-	,repo_pullreq_seq		= :repo_pullreq_seq
-	,repo_num_forks			= :repo_num_forks
-	,repo_num_pulls			= :repo_num_pulls
-	,repo_num_closed_pulls	= :repo_num_closed_pulls
-	,repo_num_open_pulls	= :repo_num_open_pulls
-	WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
+	const sqlQuery = `
+		UPDATE repositories
+		SET
+			repo_version			= :repo_version
+			,repo_updated			= :repo_updated
+			,repo_parent_id			= :repo_parent_id
+			,repo_uid				= :repo_uid
+			,repo_description		= :repo_description
+			,repo_is_public			= :repo_is_public
+			,repo_pullreq_seq		= :repo_pullreq_seq
+			,repo_num_forks			= :repo_num_forks
+			,repo_num_pulls			= :repo_num_pulls
+			,repo_num_closed_pulls	= :repo_num_closed_pulls
+			,repo_num_open_pulls	= :repo_num_open_pulls
+		WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
 
 	updatedAt := time.Now()
 
 	repo.Version++
 	repo.Updated = updatedAt.UnixMilli()
 
-	query, arg, err := s.db.BindNamed(repoUpdate, repo)
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(sqlQuery, repo)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind repo object")
 	}
 
-	result, err := s.db.ExecContext(ctx, query, arg...)
+	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to update repository")
 	}
@@ -235,7 +194,7 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 	}
 
 	if count == 0 {
-		return store.ErrConflict
+		return store.ErrVersionConflict
 	}
 
 	return nil
@@ -257,7 +216,7 @@ func (s *RepoStore) UpdateOptLock(ctx context.Context,
 		if err == nil {
 			return &dup, nil
 		}
-		if !errors.Is(err, store.ErrConflict) {
+		if !errors.Is(err, store.ErrVersionConflict) {
 			return nil, err
 		}
 
@@ -271,29 +230,13 @@ func (s *RepoStore) UpdateOptLock(ctx context.Context,
 // Delete the repository.
 func (s *RepoStore) Delete(ctx context.Context, id int64) error {
 	const repoDelete = `
-	DELETE FROM repositories
-	WHERE repo_id = $1`
+		DELETE FROM repositories
+		WHERE repo_id = $1`
 
-	tx, err := s.db.BeginTxx(ctx, nil)
-	if err != nil {
-		return processSQLErrorf(err, "failed to start a new transaction")
-	}
-	defer func(tx *sqlx.Tx) {
-		_ = tx.Rollback()
-	}(tx)
+	db := dbtx.GetAccessor(ctx, s.db)
 
-	// delete all paths
-	if err = DeleteAllPaths(ctx, tx, enum.PathTargetTypeRepo, id); err != nil {
-		return fmt.Errorf("failed to delete all paths of the repo: %w", err)
-	}
-
-	// delete the repo
-	if _, err = tx.ExecContext(ctx, repoDelete, id); err != nil {
+	if _, err := db.ExecContext(ctx, repoDelete, id); err != nil {
 		return processSQLErrorf(err, "the delete query failed")
-	}
-
-	if err = tx.Commit(); err != nil {
-		return processSQLErrorf(err, "failed to commit transaction")
 	}
 
 	return nil
@@ -315,8 +258,10 @@ func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoF
 		return 0, errors.Wrap(err, "Failed to convert query to sql")
 	}
 
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	var count int64
-	err = s.db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
 		return 0, processSQLErrorf(err, "Failed executing count query")
 	}
@@ -325,14 +270,10 @@ func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoF
 
 // List returns a list of repos in a space.
 func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error) {
-	dst := []*types.Repository{}
-
-	// construct the sql statement.
 	stmt := builder.
-		Select("repositories.*,paths.path_value AS repo_path").
+		Select(repoColumnsForJoin).
 		From("repositories").
-		InnerJoin("paths ON repositories.repo_id=paths.path_target_id AND paths.path_target_type='repo' "+
-			"AND paths.path_is_alias=false").
+		InnerJoin("paths ON repositories.repo_id=paths.path_repo_id AND paths.path_is_primary=true").
 		Where("repo_parent_id = ?", fmt.Sprint(parentID))
 
 	if opts.Query != "" {
@@ -365,131 +306,12 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
 
-	if err = s.db.SelectContext(ctx, &dst, sql, args...); err != nil {
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*types.Repository{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, processSQLErrorf(err, "Failed executing custom list query")
 	}
 
 	return dst, nil
 }
-
-// CountPaths returns a count of all paths of a repo.
-func (s *RepoStore) CountPaths(ctx context.Context, id int64, opts *types.PathFilter) (int64, error) {
-	return CountPaths(ctx, s.db, enum.PathTargetTypeRepo, id, opts)
-}
-
-// ListPaths returns a list of all paths of a repo.
-func (s *RepoStore) ListPaths(ctx context.Context, id int64, opts *types.PathFilter) ([]*types.Path, error) {
-	return ListPaths(ctx, s.db, enum.PathTargetTypeRepo, id, opts)
-}
-
-// CreatePath creates an alias for a repository.
-func (s *RepoStore) CreatePath(ctx context.Context, repoID int64, params *types.PathParams) (*types.Path, error) {
-	p := &types.Path{
-		TargetType: enum.PathTargetTypeRepo,
-		TargetID:   repoID,
-		IsAlias:    true,
-
-		// get remaining info from params
-		Value:     params.Path,
-		CreatedBy: params.CreatedBy,
-		Created:   params.Created,
-		Updated:   params.Updated,
-	}
-
-	return p, CreateAliasPath(ctx, s.db, p, s.pathTransformation)
-}
-
-// DeletePath an alias of a repository.
-func (s *RepoStore) DeletePath(ctx context.Context, repoID int64, pathID int64) error {
-	return DeletePath(ctx, s.db, pathID)
-}
-
-const repoSelectBase = `
-SELECT
-repo_id
-,repo_version
-,repo_parent_id
-,repo_uid
-,paths.path_value AS repo_path
-,repo_description
-,repo_is_public
-,repo_created_by
-,repo_created
-,repo_updated
-,repo_git_uid
-,repo_default_branch
-,repo_pullreq_seq
-,repo_fork_id
-,repo_num_forks
-,repo_num_pulls
-,repo_num_closed_pulls
-,repo_num_open_pulls
-`
-
-const repoSelectBaseWithJoin = repoSelectBase + `
-FROM repositories
-INNER JOIN paths
-ON repositories.repo_id=paths.path_target_id AND paths.path_target_type='repo' AND paths.path_is_alias=false
-`
-
-const repoSelectByID = repoSelectBaseWithJoin + `
-WHERE repo_id = $1
-`
-
-const repoSelectByGitUID = repoSelectBaseWithJoin + `
-WHERE repo_git_uid = $1
-`
-
-const repoSelectByPathUnique = repoSelectBase + `
-FROM paths paths1
-INNER JOIN repositories ON repositories.repo_id=paths1.path_target_id AND paths1.path_target_type='repo' 
-  AND paths1.path_value_unique = $1
-INNER JOIN paths ON repositories.repo_id=paths.path_target_id
-  AND paths.path_target_type='repo' AND paths.path_is_alias=false
-`
-
-// TODO: do we have to worry about SQL injection for description?
-const repoInsert = `
-INSERT INTO repositories (
-    repo_version                      
-	,repo_parent_id
-	,repo_uid
-	,repo_description
-	,repo_is_public
-	,repo_created_by
-	,repo_created
-	,repo_updated
-	,repo_git_uid
-	,repo_default_branch
-	,repo_fork_id
-	,repo_pullreq_seq
-	,repo_num_forks
-	,repo_num_pulls
-	,repo_num_closed_pulls
-	,repo_num_open_pulls
-) values (
-    :repo_version
-	,:repo_parent_id
-	,:repo_uid
-	,:repo_description
-	,:repo_is_public
-	,:repo_created_by
-	,:repo_created
-	,:repo_updated
-	,:repo_git_uid
-	,:repo_default_branch
-	,:repo_fork_id
-	,:repo_pullreq_seq
-	,:repo_num_forks
-	,:repo_num_pulls
-	,:repo_num_closed_pulls
-	,:repo_num_open_pulls
-) RETURNING repo_id`
-
-const repoUpdateUIDAndParentID = `
-UPDATE repositories
-SET
-repo_uid        = $1
-,repo_parent_id = $2
-WHERE repo_id   = $3
-`

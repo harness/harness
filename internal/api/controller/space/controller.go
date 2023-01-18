@@ -9,24 +9,31 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types/check"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Controller struct {
+	db             *sqlx.DB
 	urlProvider    *url.Provider
-	spaceCheck     check.Space
+	uidCheck       check.PathUID
 	authorizer     authz.Authorizer
+	pathStore      store.PathStore
 	spaceStore     store.SpaceStore
 	repoStore      store.RepoStore
 	principalStore store.PrincipalStore
 }
 
-func NewController(urlProvider *url.Provider, spaceCheck check.Space,
-	authorizer authz.Authorizer, spaceStore store.SpaceStore, repoStore store.RepoStore,
-	principalStore store.PrincipalStore) *Controller {
+func NewController(db *sqlx.DB, urlProvider *url.Provider,
+	uidCheck check.PathUID, authorizer authz.Authorizer,
+	pathStore store.PathStore, spaceStore store.SpaceStore,
+	repoStore store.RepoStore, principalStore store.PrincipalStore) *Controller {
 	return &Controller{
+		db:             db,
 		urlProvider:    urlProvider,
-		spaceCheck:     spaceCheck,
+		uidCheck:       uidCheck,
 		authorizer:     authorizer,
+		pathStore:      pathStore,
 		spaceStore:     spaceStore,
 		repoStore:      repoStore,
 		principalStore: principalStore,

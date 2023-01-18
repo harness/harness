@@ -8,45 +8,108 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
+	"github.com/guregu/null"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
-// path is a DB representation of a Path.
-// It is required to allow storing transformed paths used for uniquness constraints and searching.
-type path struct {
-	types.Path
-	ValueUnique string `db:"path_value_unique"`
+var _ store.PathStore = (*PathStore)(nil)
+
+// NewSpaceStore returns a new PathStore.
+func NewPathStore(db *sqlx.DB, pathTransformation store.PathTransformation) *PathStore {
+	return &PathStore{
+		db:                 db,
+		pathTransformation: pathTransformation,
+	}
 }
 
-// CreateAliasPath a new alias path (Don't call this for new path creation!)
-func CreateAliasPath(ctx context.Context, db *sqlx.DB, path *types.Path,
-	transformation store.PathTransformation) error {
-	if !path.IsAlias {
-		return store.ErrAliasPathRequired
-	}
+// PathStore implements a store.PathStore backed by a relational database.
+type PathStore struct {
+	db                 *sqlx.DB
+	pathTransformation store.PathTransformation
+}
 
-	// ensure path length is okay
-	if check.IsPathTooDeep(path.Value, path.TargetType == enum.PathTargetTypeSpace) {
-		log.Warn().Msgf("Path '%s' is too long.", path.Value)
-		return store.ErrPathTooLong
-	}
+// path is an internal representation used to store path data in DB.
+type path struct {
+	ID      int64 `db:"path_id"`
+	Version int64 `db:"path_version"`
+	// Value is the original path that was provided
+	Value string `db:"path_value"`
+	// ValueUnique is a transformed version of Value which is used to ensure uniqueness guarantees
+	ValueUnique string `db:"path_value_unique"`
+	// IsPrimary indicates whether the path is the primary path of the repo/space
+	// IMPORTANT: to allow DB enforcement of at most one primary path per repo/space
+	// we have a unique index on repoID|spaceID + IsPrimary and set IsPrimary to true
+	// for primary paths and to nil for non-primary paths.
+	IsPrimary null.Bool `db:"path_is_primary"`
+	SpaceID   null.Int  `db:"path_space_id"`
+	RepoID    null.Int  `db:"path_repo_id"`
+	CreatedBy int64     `db:"path_created_by"`
+	Created   int64     `db:"path_created"`
+	Updated   int64     `db:"path_updated"`
+}
 
-	// map to db path to ensure we store valueUnique.
-	dbPath, err := mapToDBPath(path, transformation)
+const (
+	pathColumns = `
+		path_id
+		,path_version
+		,path_value
+		,path_value_unique
+		,path_is_primary
+		,path_space_id
+		,path_repo_id
+		,path_created_by
+		,path_created
+		,path_updated`
+
+	pathSelectBase = `
+		SELECT` + pathColumns + `
+		FROM paths`
+)
+
+// Create creates a new path.
+func (s *PathStore) Create(ctx context.Context, path *types.Path) error {
+	const sqlQuery = `
+		INSERT INTO paths (
+			path_version
+			,path_value
+			,path_value_unique
+			,path_is_primary
+			,path_space_id
+			,path_repo_id
+			,path_created_by
+			,path_created
+			,path_updated
+		) values (
+			:path_version
+			,:path_value
+			,:path_value_unique
+			,:path_is_primary
+			,:path_space_id
+			,:path_repo_id
+			,:path_created_by
+			,:path_created
+			,:path_updated
+		) RETURNING path_id`
+
+	// map to internal path
+	dbPath, err := s.mapToInternalPath(path)
 	if err != nil {
-		return fmt.Errorf("failed to map db path: %w", err)
+		return fmt.Errorf("failed to map path: %w", err)
 	}
 
-	query, arg, err := db.BindNamed(pathInsert, dbPath)
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(sqlQuery, dbPath)
 	if err != nil {
 		return processSQLErrorf(err, "Failed to bind path object")
 	}
@@ -58,298 +121,231 @@ func CreateAliasPath(ctx context.Context, db *sqlx.DB, path *types.Path,
 	return nil
 }
 
-// CreatePathTx creates a new path as part of a transaction.
-func CreatePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, path *types.Path,
-	transformation store.PathTransformation) error {
-	// ensure path length is okay
-	if check.IsPathTooDeep(path.Value, path.TargetType == enum.PathTargetTypeSpace) {
-		log.Warn().Msgf("Path '%s' is too long.", path.Value)
-		return store.ErrPathTooLong
+// findInner finds the path for the given id and locks the record if requested.
+func (s *PathStore) findInner(ctx context.Context, id int64, lock bool) (*types.Path, error) {
+	sqlQuery := pathSelectBase + `
+		WHERE path_id = $1`
+
+	if lock && !strings.HasPrefix(s.db.DriverName(), "sqlite") {
+		sqlQuery += "\n" + sqlForUpdate
 	}
 
-	// In case it's not an alias, ensure there are no duplicates
-	if !path.IsAlias {
-		if cnt, err := CountPathsTx(ctx, tx, path.TargetType, path.TargetID); err != nil {
-			return err
-		} else if cnt > 0 {
-			return store.ErrPrimaryPathAlreadyExists
-		}
-	}
+	db := dbtx.GetAccessor(ctx, s.db)
 
-	// map to db path to ensure we store valueUnique.
-	dbPath, err := mapToDBPath(path, transformation)
-	if err != nil {
-		return fmt.Errorf("failed to map db path: %w", err)
-	}
-
-	query, arg, err := db.BindNamed(pathInsert, dbPath)
-	if err != nil {
-		return processSQLErrorf(err, "Failed to bind path object")
-	}
-
-	if err = tx.QueryRowContext(ctx, query, arg...).Scan(&path.ID); err != nil {
-		return processSQLErrorf(err, "Insert query failed")
-	}
-
-	return nil
-}
-
-func CountPrimaryChildPathsTx(ctx context.Context, tx *sqlx.Tx, prefix string,
-	transformation store.PathTransformation) (int64, error) {
-	// map the Value to unique Value before searching!
-	prefixUnique, err := transformation(prefix)
-	if err != nil {
-		// in case we fail to transform, return a not found (as it can't exist in the first place)
-		log.Ctx(ctx).Debug().Msgf("failed to transform path prefix '%s': %s", prefix, err.Error())
-		return 0, store.ErrResourceNotFound
-	}
-
-	var count int64
-	err = tx.QueryRowContext(ctx, pathCountPrimaryForPrefixUnique, paths.Concatinate(prefixUnique, "%")).Scan(&count)
-	if err != nil {
-		return 0, processSQLErrorf(err, "Count query failed")
-	}
-	return count, nil
-}
-
-func listPrimaryChildPathsTx(ctx context.Context, tx *sqlx.Tx, prefix string,
-	transformation store.PathTransformation) ([]*path, error) {
-	// map the Value to unique Value before searching!
-	prefixUnique, err := transformation(prefix)
-	if err != nil {
-		// in case we fail to transform, return a not found (as it can't exist in the first place)
-		log.Ctx(ctx).Debug().Msgf("failed to transform path prefix '%s': %s", prefix, err.Error())
-		return nil, store.ErrResourceNotFound
-	}
-
-	childs := []*path{}
-
-	if err = tx.SelectContext(ctx, &childs, pathSelectPrimaryForPrefixUnique,
-		paths.Concatinate(prefixUnique, "%")); err != nil {
-		return nil, processSQLErrorf(err, "Failed to list paths")
-	}
-
-	return childs, nil
-}
-
-// ReplacePathTx replaces the path for a target as part of a transaction - keeps the existing as alias if requested.
-func ReplacePathTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx, newPath *types.Path, keepAsAlias bool,
-	transformation store.PathTransformation) error {
-	if newPath.IsAlias {
-		return store.ErrPrimaryPathRequired
-	}
-
-	// ensure new path length is okay
-	if check.IsPathTooDeep(newPath.Value, newPath.TargetType == enum.PathTargetTypeSpace) {
-		log.Warn().Msgf("Path '%s' is too long.", newPath.Value)
-		return store.ErrPathTooLong
-	}
-
-	// dbExisting is always non-alias (as query filters for IsAlias=0)
-	dbExisting := new(path)
-	err := tx.GetContext(ctx, dbExisting, pathSelectPrimaryForTarget,
-		string(newPath.TargetType), fmt.Sprint(newPath.TargetID))
-	if err != nil {
-		return processSQLErrorf(err, "Failed to get the existing primary path")
-	}
-
-	// map to db path to ensure we store valueUnique.
-	dbNew, err := mapToDBPath(newPath, transformation)
-	if err != nil {
-		return fmt.Errorf("failed to map db path: %w", err)
-	}
-
-	// ValueUnique is the same => routing is the same, ensure we don't keep the old as alias (duplicate error)
-	if dbNew.ValueUnique == dbExisting.ValueUnique {
-		keepAsAlias = false
-	}
-
-	// Space specific checks.
-	if newPath.TargetType == enum.PathTargetTypeSpace {
-		/*
-		 * IMPORTANT
-		 *   To avoid cycles in the primary graph, we have to ensure that the old path isn't a parent of the new path.
-		 *	 We have to look at the unique path here, as that is used for routing and duplicate detection.
-		 */
-		if strings.HasPrefix(dbNew.ValueUnique, dbExisting.ValueUnique+types.PathSeparator) {
-			return store.ErrIllegalMoveCyclicHierarchy
-		}
-	}
-
-	// Only look for children if the type can have children
-	if newPath.TargetType == enum.PathTargetTypeSpace {
-		err = replaceChildrenPathsTx(ctx, db, tx, &dbExisting.Path, newPath, keepAsAlias, transformation)
-		if err != nil {
-			return err
-		}
-	}
-
-	// make existing an alias (or delete)
-	// IMPORTANT: delete before insert as a casing only change in the path is a valid input.
-	// It's part of a db transaction so it should be okay.
-	query := pathDeleteID
-	if keepAsAlias {
-		query = pathMakeAliasID
-	}
-	if _, err = tx.ExecContext(ctx, query, dbExisting.ID); err != nil {
-		return processSQLErrorf(err, "Failed to mark existing path '%s' as alias (or delete)", dbExisting.Value)
-	}
-
-	// insert the new Path
-	query, arg, err := db.BindNamed(pathInsert, dbNew)
-	if err != nil {
-		return processSQLErrorf(err, "Failed to bind path object")
-	}
-
-	_, err = tx.ExecContext(ctx, query, arg...)
-	if err != nil {
-		return processSQLErrorf(err, "Failed to create new primary path '%s'", newPath.Value)
-	}
-
-	return nil
-}
-
-func replaceChildrenPathsTx(ctx context.Context, db *sqlx.DB, tx *sqlx.Tx,
-	existing *types.Path, updated *types.Path, keepAsAlias bool, transformation store.PathTransformation) error {
-	var childPaths []*path
-	// get all primary paths that start with the current path before updating (or we can run into recursion)
-	childPaths, err := listPrimaryChildPathsTx(ctx, tx, existing.Value, transformation)
-	if err != nil {
-		return errors.Wrapf(err, "Failed to get primary child paths for '%s'", existing.Value)
-	}
-
-	for _, child := range childPaths {
-		// create path with updated path (child already is primary)
-		updatedChild := new(types.Path)
-		*updatedChild = child.Path
-		updatedChild.ID = 0 // will be regenerated
-		updatedChild.Created = updated.Created
-		updatedChild.Updated = updated.Updated
-		updatedChild.CreatedBy = updated.CreatedBy
-		updatedChild.Value = updated.Value + updatedChild.Value[len(existing.Value):]
-
-		// ensure new child path length is okay
-		if check.IsPathTooDeep(updatedChild.Value, updated.TargetType == enum.PathTargetTypeSpace) {
-			log.Warn().Msgf("Path '%s' is too long.", updated.Value)
-			return store.ErrPathTooLong
-		}
-
-		var (
-			query string
-			args  []interface{}
-		)
-
-		// make existing child path an alias (or delete)
-		// IMPORTANT: delete before insert as a casing only change in the original path is a valid input.
-		// It's part of a db transaction so it should be okay.
-		query = pathDeleteID
-		if keepAsAlias {
-			query = pathMakeAliasID
-		}
-		if _, err = tx.ExecContext(ctx, query, child.ID); err != nil {
-			return processSQLErrorf(err, "Failed to mark existing child path '%s' as alias (or delete)",
-				updatedChild.Value)
-		}
-
-		// map to db path to ensure we store valueUnique.
-		var dbUpdatedChild *path
-		dbUpdatedChild, err = mapToDBPath(updatedChild, transformation)
-		if err != nil {
-			return fmt.Errorf("failed to map db path: %w", err)
-		}
-
-		query, args, err = db.BindNamed(pathInsert, dbUpdatedChild)
-		if err != nil {
-			return processSQLErrorf(err, "Failed to bind path object")
-		}
-
-		if _, err = tx.ExecContext(ctx, query, args...); err != nil {
-			return processSQLErrorf(err, "Failed to create new primary child path '%s'", updatedChild.Value)
-		}
-	}
-
-	return nil
-}
-
-// FindPathTx finds the primary path for a target.
-func FindPathTx(ctx context.Context, tx *sqlx.Tx, targetType enum.PathTargetType, targetID int64) (*types.Path, error) {
 	dst := new(path)
-	err := tx.GetContext(ctx, dst, pathSelectPrimaryForTarget, string(targetType), fmt.Sprint(targetID))
+	err := db.GetContext(ctx, dst, sqlQuery, id)
 	if err != nil {
 		return nil, processSQLErrorf(err, "Failed to find path")
 	}
 
-	return mapDBPath(dst), nil
+	res, err := mapToPath(dst)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map path to external type: %w", err)
+	}
+
+	return res, nil
 }
 
-// DeletePath deletes a specific path alias (primary can't be deleted, only with delete all).
-func DeletePath(ctx context.Context, db *sqlx.DB, id int64) error {
-	tx, err := db.BeginTxx(ctx, nil)
+// Find finds the path for the given id.
+func (s *PathStore) Find(ctx context.Context, id int64) (*types.Path, error) {
+	return s.findInner(ctx, id, false)
+}
+
+// FindWithLock finds the path for the given id and locks the entry.
+func (s *PathStore) FindWithLock(ctx context.Context, id int64) (*types.Path, error) {
+	return s.findInner(ctx, id, true)
+}
+
+// FindValue finds the path for the given value.
+func (s *PathStore) FindValue(ctx context.Context, value string) (*types.Path, error) {
+	const sqlQuery = pathSelectBase + `
+		WHERE path_value_unique = $1`
+
+	// map the Value to unique Value before searching!
+	valueUnique, err := s.pathTransformation(value)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to start a new transaction")
+		return nil, fmt.Errorf("failed to transform path '%s': %w", value, err)
 	}
-	defer func(tx *sqlx.Tx) {
-		_ = tx.Rollback()
-	}(tx)
 
-	// ensure path is an alias
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	dst := new(path)
-	if err = tx.GetContext(ctx, dst, pathSelectID, id); err != nil {
-		return processSQLErrorf(err, "Failed to find path with id %d", id)
-	}
-	if !dst.IsAlias {
-		return store.ErrPrimaryPathCantBeDeleted
+	err = db.GetContext(ctx, dst, sqlQuery, valueUnique)
+	if err != nil {
+		return nil, processSQLErrorf(err, "Failed to find path")
 	}
 
-	// delete the path
-	if _, err = tx.ExecContext(ctx, pathDeleteID, id); err != nil {
+	res, err := mapToPath(dst)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map path to external type: %w", err)
+	}
+
+	return res, nil
+}
+
+// findPrimaryInternal finds the  primary path for the given target and locks the record if requested.
+func (s *PathStore) findPrimaryInternal(ctx context.Context,
+	targetType enum.PathTargetType, targetID int64, lock bool) (*types.Path, error) {
+	stmt := builder.
+		Select(pathColumns).
+		From("paths").
+		Where("path_is_primary = ?", true)
+
+	stmt, err := wherePathTarget(stmt, targetType, targetID)
+	if err != nil {
+		return nil, err
+	}
+
+	if lock && !strings.HasPrefix(s.db.DriverName(), "sqlite") {
+		stmt.Suffix(sqlForUpdate)
+	}
+
+	sqlQuery, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	// NOTE: there is at most one primary path (so no list needed)
+	dst := new(path)
+	err = db.GetContext(ctx, dst, sqlQuery, args...)
+	if err != nil {
+		return nil, processSQLErrorf(err, "Failed to find path")
+	}
+
+	res, err := mapToPath(dst)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map path to external type: %w", err)
+	}
+
+	return res, nil
+}
+
+// FindPrimary finds the primary path for a target.
+func (s *PathStore) FindPrimary(ctx context.Context,
+	targetType enum.PathTargetType, targetID int64) (*types.Path, error) {
+	return s.findPrimaryInternal(ctx, targetType, targetID, false)
+}
+
+// FindPrimaryWithLock finds the primary path for a target and locks the db entry.
+func (s *PathStore) FindPrimaryWithLock(ctx context.Context,
+	targetType enum.PathTargetType, targetID int64) (*types.Path, error) {
+	return s.findPrimaryInternal(ctx, targetType, targetID, true)
+}
+
+// Update updates an existing path.
+func (s *PathStore) Update(ctx context.Context, path *types.Path) error {
+	const sqlQuery = `
+		UPDATE paths
+		SET
+			path_version 		= :path_version
+			,path_updated 		= :path_updated
+			,path_value 		= :path_value
+			,path_value_unique 	= :path_value_unique
+			,path_is_primary 	= :path_is_primary
+		WHERE path_id = :path_id and path_version = :path_version - 1`
+
+	dbPath, err := s.mapToInternalPath(path)
+	if err != nil {
+		return fmt.Errorf("failed to map path: %w", err)
+	}
+
+	dbPath.Version++
+	dbPath.Updated = time.Now().UnixMilli()
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, args, err := db.BindNamed(sqlQuery, dbPath)
+	if err != nil {
+		return processSQLErrorf(err, "Failed to bind path object")
+	}
+
+	result, err := db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return processSQLErrorf(err, "failed to update path")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return processSQLErrorf(err, "Failed to get number of updated rows")
+	}
+
+	if count == 0 {
+		return store.ErrVersionConflict
+	}
+
+	path.Version = dbPath.Version
+	path.Updated = dbPath.Updated
+
+	return nil
+}
+
+// Delete deletes a specific path.
+func (s *PathStore) Delete(ctx context.Context, id int64) error {
+	const sqlQuery = `
+		DELETE FROM paths
+		WHERE path_id = $1`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
 		return processSQLErrorf(err, "Delete query failed")
 	}
 
-	if err = tx.Commit(); err != nil {
-		return processSQLErrorf(err, "Failed to commit transaction")
-	}
-
 	return nil
 }
 
-// DeleteAllPaths deletes all paths for a target as part of a transaction.
-func DeleteAllPaths(ctx context.Context, tx *sqlx.Tx, targetType enum.PathTargetType, targetID int64) error {
-	// delete all entries for the target
-	if _, err := tx.ExecContext(ctx, pathDeleteTarget, string(targetType), fmt.Sprint(targetID)); err != nil {
-		return processSQLErrorf(err, "Query for deleting all pahts failed")
-	}
-	return nil
-}
-
-// CountPaths returns the count of paths for a specified target.
-func CountPaths(ctx context.Context, db *sqlx.DB, targetType enum.PathTargetType, targetID int64,
+// Count returns the count of paths for a target.
+func (s *PathStore) Count(ctx context.Context, targetType enum.PathTargetType, targetID int64,
 	opts *types.PathFilter) (int64, error) {
+	stmt := builder.
+		Select("count(*)").
+		From("paths")
+
+	stmt, err := wherePathTarget(stmt, targetType, targetID)
+	if err != nil {
+		return 0, err
+	}
+
+	sqlQuery, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
 	var count int64
-	err := db.QueryRowContext(ctx, pathCount, string(targetType), fmt.Sprint(targetID)).Scan(&count)
+	err = db.QueryRowContext(ctx, sqlQuery, args...).Scan(&count)
 	if err != nil {
 		return 0, processSQLErrorf(err, "Failed executing count query")
 	}
 	return count, nil
 }
 
-// ListPaths lists all paths for a target.
-func ListPaths(ctx context.Context, db *sqlx.DB, targetType enum.PathTargetType, targetID int64,
+// List lists all paths for a target.
+func (s *PathStore) List(ctx context.Context, targetType enum.PathTargetType, targetID int64,
 	opts *types.PathFilter) ([]*types.Path, error) {
-	dst := []*path{}
 	// else we construct the sql statement.
 	stmt := builder.
 		Select("*").
-		From("paths").
-		Where("path_target_type = ? AND path_target_id = ?", string(targetType), fmt.Sprint(targetID))
+		From("paths")
+
+	stmt, err := wherePathTarget(stmt, targetType, targetID)
+	if err != nil {
+		return nil, err
+	}
+
 	stmt = stmt.Limit(uint64(limit(opts.Size)))
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
 	switch opts.Sort {
-	case enum.PathAttrPath, enum.PathAttrNone:
+	case enum.PathAttrID, enum.PathAttrNone:
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
+		stmt = stmt.OrderBy("path_id " + opts.Order.String())
+	case enum.PathAttrValue:
 		stmt = stmt.OrderBy("path_value " + opts.Order.String())
 	case enum.PathAttrCreated:
 		stmt = stmt.OrderBy("path_created " + opts.Order.String())
@@ -357,132 +353,146 @@ func ListPaths(ctx context.Context, db *sqlx.DB, targetType enum.PathTargetType,
 		stmt = stmt.OrderBy("path_updated " + opts.Order.String())
 	}
 
-	sql, args, err := stmt.ToSql()
+	sqlQuery, args, err := stmt.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to convert query to sql")
 	}
 
-	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Customer select query failed")
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*path{}
+	if err = db.SelectContext(ctx, &dst, sqlQuery, args...); err != nil {
+		return nil, processSQLErrorf(err, "Path select query failed")
 	}
 
-	return mapDBPaths(dst), nil
-}
-
-// CountPathsTx counts paths for a target as part of a transaction.
-func CountPathsTx(ctx context.Context, tx *sqlx.Tx, targetType enum.PathTargetType, targetID int64) (int64, error) {
-	var count int64
-	err := tx.QueryRowContext(ctx, pathCount, string(targetType), fmt.Sprint(targetID)).Scan(&count)
+	res, err := mapToPaths(dst)
 	if err != nil {
-		return 0, processSQLErrorf(err, "Query failed")
+		return nil, fmt.Errorf("failed to map paths to external type: %w", err)
 	}
-	return count, nil
+
+	return res, nil
 }
 
-func mapDBPath(dbPath *path) *types.Path {
-	return &dbPath.Path
-}
+// ListPrimaryDescendantsWithLock lists all primary paths that are descendants of the given path and locks them.
+func (s *PathStore) ListPrimaryDescendantsWithLock(ctx context.Context, value string) ([]*types.Path, error) {
+	var sqlQuery = pathSelectBase + `
+		WHERE path_value_unique LIKE $1 AND path_is_primary = true`
 
-func mapDBPaths(dbPaths []*path) []*types.Path {
-	res := make([]*types.Path, len(dbPaths))
-	for i := range dbPaths {
-		res[i] = mapDBPath(dbPaths[i])
+	if !strings.HasPrefix(s.db.DriverName(), "sqlite") {
+		sqlQuery += "\n" + sqlForUpdate
 	}
-	return res
+
+	// map the Value to unique Value before searching!
+	valueUnique, err := s.pathTransformation(value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to transform path '%s': %w", value, err)
+	}
+	// prepare input for LIKE query (space1/space2 -> space1/space2/%)
+	valueUniquePattern := paths.Concatinate(valueUnique, "%")
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*path{}
+	if err = db.SelectContext(ctx, &dst, sqlQuery, valueUniquePattern); err != nil {
+		return nil, processSQLErrorf(err, "Failed to list paths")
+	}
+
+	res, err := mapToPaths(dst)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map paths to external type: %w", err)
+	}
+
+	return res, nil
 }
 
-func mapToDBPath(p *types.Path, transformation store.PathTransformation) (*path, error) {
+// wherePathTarget adds a where statement for a path select statement filtering for the provided target.
+func wherePathTarget(stmt squirrel.SelectBuilder,
+	targetType enum.PathTargetType, targetID int64) (squirrel.SelectBuilder, error) {
+	switch targetType {
+	case enum.PathTargetTypeRepo:
+		return stmt.Where("path_repo_id = ?", targetID), nil
+	case enum.PathTargetTypeSpace:
+		return stmt.Where("path_space_id = ?", targetID), nil
+	default:
+		return squirrel.SelectBuilder{}, fmt.Errorf("path target type '%s' is not supported", targetType)
+	}
+}
+
+func mapToPath(p *path) (*types.Path, error) {
+	res := &types.Path{
+		ID:        p.ID,
+		Version:   p.Version,
+		Value:     p.Value,
+		Created:   p.Created,
+		CreatedBy: p.CreatedBy,
+		Updated:   p.Updated,
+	}
+
+	if p.IsPrimary.Valid {
+		res.IsPrimary = p.IsPrimary.Bool
+	}
+
+	switch {
+	case p.RepoID.Valid && p.SpaceID.Valid:
+		return nil, fmt.Errorf("both repoID and spaceID are set for path %d", p.ID)
+	case p.RepoID.Valid:
+		res.TargetType = enum.PathTargetTypeRepo
+		res.TargetID = p.RepoID.Int64
+	case p.SpaceID.Valid:
+		res.TargetType = enum.PathTargetTypeSpace
+		res.TargetID = p.SpaceID.Int64
+	default:
+		return nil, fmt.Errorf("neither repoID nor spaceID are set for path %d", p.ID)
+	}
+
+	return res, nil
+}
+
+func mapToPaths(paths []*path) ([]*types.Path, error) {
+	var err error
+	res := make([]*types.Path, len(paths))
+	for i := range paths {
+		res[i], err = mapToPath(paths[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (s *PathStore) mapToInternalPath(p *types.Path) (*path, error) {
 	// path comes from outside.
 	if p == nil {
 		return nil, fmt.Errorf("path is nil")
 	}
 
-	valueUnique, err := transformation(p.Value)
-	if err != nil {
+	res := &path{
+		ID:        p.ID,
+		Version:   p.Version,
+		Value:     p.Value,
+		Created:   p.Created,
+		CreatedBy: p.CreatedBy,
+		Updated:   p.Updated,
+	}
+
+	var err error
+	if res.ValueUnique, err = s.pathTransformation(p.Value); err != nil {
 		return nil, fmt.Errorf("failed to transform path: %w", err)
 	}
-	dbPath := &path{
-		Path:        *p,
-		ValueUnique: valueUnique,
+
+	// only set IsPrimary to a value if it's true (Unique Index doesn't allow multiple false, hence keep it nil)
+	if p.IsPrimary {
+		res.IsPrimary = null.BoolFrom(true)
 	}
 
-	return dbPath, nil
+	switch p.TargetType {
+	case enum.PathTargetTypeRepo:
+		res.RepoID = null.IntFrom(p.TargetID)
+	case enum.PathTargetTypeSpace:
+		res.SpaceID = null.IntFrom(p.TargetID)
+	default:
+		return nil, fmt.Errorf("path target type '%s' is not supported", p.TargetType)
+	}
+
+	return res, nil
 }
-
-const pathBase = `
-SELECT
-path_id
-,path_value
-,path_value_unique
-,path_is_alias
-,path_target_type
-,path_target_id
-,path_created_by
-,path_created
-,path_updated
-FROM paths
-`
-
-// there's only one entry with a given target & targetId for isAlias -- false.
-const pathSelectPrimaryForTarget = pathBase + `
-WHERE path_target_type = $1 AND path_target_id = $2 AND path_is_alias = false
-`
-
-const pathSelectPrimaryForPrefixUnique = pathBase + `
-WHERE path_value_unique LIKE $1 AND path_is_alias = false
-`
-
-const pathCount = `
-SELECT count(*)
-FROM paths
-WHERE path_target_type = $1 AND path_target_id = $2
-`
-
-const pathCountPrimaryForPrefixUnique = `
-SELECT count(*)
-FROM paths
-WHERE path_value_unique LIKE $1 AND path_is_alias = false
-`
-
-const pathInsert = `
-INSERT INTO paths (
-	path_value
-	,path_value_unique
-	,path_is_alias
-	,path_target_type
-	,path_target_id
-	,path_created_by
-	,path_created
-	,path_updated
-) values (
-	:path_value
-	,:path_value_unique
-	,:path_is_alias
-	,:path_target_type
-	,:path_target_id
-	,:path_created_by
-	,:path_created
-	,:path_updated
-) RETURNING path_id
-`
-
-const pathSelectID = pathBase + `
-WHERE path_id = $1
-`
-
-const pathDeleteID = `
-DELETE FROM paths
-WHERE path_id = $1
-`
-
-const pathDeleteTarget = `
-DELETE FROM paths
-WHERE path_target_type = $1 AND path_target_id = $2
-`
-
-const pathMakeAliasID = `
-UPDATE paths
-SET
-path_is_alias		= 1
-WHERE path_id = $1
-`

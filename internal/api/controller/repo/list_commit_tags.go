@@ -30,7 +30,7 @@ type CommitTag struct {
  */
 func (c *Controller) ListCommitTags(ctx context.Context, session *auth.Session,
 	repoRef string, includeCommit bool, filter *types.TagFilter) ([]CommitTag, error) {
-	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}

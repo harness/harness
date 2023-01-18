@@ -94,7 +94,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
 
-	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func (c *Controller) checkIfAlreadyExists(ctx context.Context,
 		return fmt.Errorf("failed to get existing pull requests: %w", err)
 	}
 	if len(existing) > 0 {
-		return usererror.BadRequest(
+		return usererror.BadRequestWithPayload(
 			"a pull request for this target and source branch already exists",
 			map[string]any{
 				"type":   "pr already exists",

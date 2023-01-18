@@ -7,6 +7,7 @@ package check
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -21,6 +22,12 @@ const (
 	maxEmailLength = 250
 
 	maxDescriptionLength = 1024
+)
+
+var (
+	// illegalRootSpaceUIDs is the list of space UIDs we are blocking for root spaces
+	// as they might cause issues with routing.
+	illegalRootSpaceUIDs = []string{"api", "git"}
 )
 
 var (
@@ -45,6 +52,10 @@ var (
 	}
 
 	ErrInvalidCharacters = &ValidationError{"Input contains invalid characters."}
+
+	ErrIllegalRootSpaceUID = &ValidationError{
+		fmt.Sprintf("The following names are not allowed for a root space: %v", illegalRootSpaceUIDs),
+	}
 )
 
 // DisplayName checks the provided display name and returns an error if it isn't valid.
@@ -87,6 +98,29 @@ func UID(uid string) error {
 
 	if ok, _ := regexp.Match(uidRegex, []byte(uid)); !ok {
 		return ErrUIDRegex
+	}
+
+	return nil
+}
+
+// PathUID is an abstraction of a validation method that returns true
+// iff the UID is valid to be used in a resource path for repo/space.
+// NOTE: Enables support for different path formats.
+type PathUID func(uid string, isRoot bool) error
+
+// PathUIDDefault performs the default UID check and also blocks illegal root space UIDs.
+func PathUIDDefault(uid string, isRoot bool) error {
+	if err := UID(uid); err != nil {
+		return err
+	}
+
+	if isRoot {
+		uidLower := strings.ToLower(uid)
+		for _, p := range illegalRootSpaceUIDs {
+			if p == uidLower {
+				return ErrIllegalRootSpaceUID
+			}
+		}
 	}
 
 	return nil

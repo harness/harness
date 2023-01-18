@@ -10,19 +10,14 @@ import (
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideRepoCheck,
-	ProvideSpaceCheck,
+	ProvidePathUIDCheck,
 	ProvideUserCheck,
 	ProvideServiceAccountCheck,
 	ProvideServiceCheck,
 )
 
-func ProvideRepoCheck() Repo {
-	return RepoDefault
-}
-
-func ProvideSpaceCheck() Space {
-	return SpaceDefault
+func ProvidePathUIDCheck() PathUID {
+	return PathUIDDefault
 }
 
 func ProvideUserCheck() User {

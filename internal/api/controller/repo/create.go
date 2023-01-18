@@ -8,17 +8,25 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/paths"
+	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/resources"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+)
 
-	zerolog "github.com/rs/zerolog/log"
+var (
+	// errRepositoryRequiresParent if the user tries to create a repo without a parent space.
+	errRepositoryRequiresParent = usererror.BadRequest(
+		"Parent space required - standalone repositories are not supported.")
 )
 
 type CreateInput struct {
@@ -34,25 +42,85 @@ type CreateInput struct {
 }
 
 // Create creates a new repository.
-//
-//nolint:funlen // needs refactor
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Repository, error) {
-	log := zerolog.Ctx(ctx)
-	// ensure we reference a space
-	if in.ParentID <= 0 {
-		return nil, usererror.BadRequest("A repository can't exist by itself.")
+	if err := c.checkAuthRepoCreation(ctx, session, in.ParentID); err != nil {
+		return nil, err
 	}
 
-	parentSpace, err := c.spaceStore.Find(ctx, in.ParentID)
-	if err != nil {
-		log.Err(err).Msgf("Failed to get space with id '%d'.", in.ParentID)
-		return nil, usererror.BadRequest("Parent not found'")
+	if err := c.sanitizeCreateInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
-	/*
-	 * AUTHORIZATION
-	 * Create is a special case - check permission without specific resource
-	 */
-	scope := &types.Scope{SpacePath: parentSpace.Path}
+
+	gitRPCResp, err := c.createGitRPCRepository(ctx, in)
+	if err != nil {
+		return nil, fmt.Errorf("error creating repository on GitRPC: %w", err)
+	}
+
+	var repo *types.Repository
+	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+		// lock parent space path to ensure it doesn't get updated while we setup new repo
+		var spacePath *types.Path
+		spacePath, err = c.pathStore.FindPrimaryWithLock(ctx, enum.PathTargetTypeSpace, in.ParentID)
+		if err != nil {
+			return usererror.BadRequest("Parent not found'")
+		}
+
+		now := time.Now().UnixMilli()
+		repo = &types.Repository{
+			Version:       0,
+			ParentID:      in.ParentID,
+			UID:           in.UID,
+			GitUID:        gitRPCResp.UID,
+			Path:          paths.Concatinate(spacePath.Value, in.UID),
+			Description:   in.Description,
+			IsPublic:      in.IsPublic,
+			CreatedBy:     session.Principal.ID,
+			Created:       now,
+			Updated:       now,
+			ForkID:        in.ForkID,
+			DefaultBranch: in.DefaultBranch,
+		}
+		err = c.repoStore.Create(ctx, repo)
+		if err != nil {
+			// TODO: cleanup git repo!
+			return fmt.Errorf("faild to create repository in storage: %w", err)
+		}
+
+		path := &types.Path{
+			Version:    0,
+			Value:      repo.Path,
+			IsPrimary:  true,
+			TargetType: enum.PathTargetTypeRepo,
+			TargetID:   repo.ID,
+			CreatedBy:  repo.CreatedBy,
+			Created:    repo.Created,
+			Updated:    repo.Updated,
+		}
+		err = c.pathStore.Create(ctx, path)
+		if err != nil {
+			return fmt.Errorf("failed to create path: %w", err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// backfil GitURL
+	repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)
+
+	return repo, nil
+}
+
+func (c *Controller) checkAuthRepoCreation(ctx context.Context, session *auth.Session, parentID int64) error {
+	space, err := c.spaceStore.Find(ctx, parentID)
+	if err != nil {
+		return fmt.Errorf("parent space not found: %w", err)
+	}
+
+	// create is a special case - check permission without specific resource
+	scope := &types.Scope{SpacePath: space.Path}
 	resource := &types.Resource{
 		Type: enum.ResourceTypeRepo,
 		Name: "",
@@ -60,35 +128,39 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 
 	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionRepoCreate)
 	if err != nil {
-		return nil, fmt.Errorf("auth check failed: %w", err)
+		return fmt.Errorf("auth check failed: %w", err)
 	}
 
-	// set default branch in case it wasn't passed
+	return nil
+}
+
+func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
+	if in.ParentID <= 0 {
+		return errRepositoryRequiresParent
+	}
+
+	if err := c.uidCheck(in.UID, false); err != nil {
+		return err
+	}
+
+	in.Description = strings.TrimSpace(in.Description)
+	if err := check.Description(in.Description); err != nil {
+		return err
+	}
+
 	if in.DefaultBranch == "" {
 		in.DefaultBranch = c.defaultBranch
 	}
 
-	now := time.Now().UnixMilli()
+	return nil
+}
 
-	// create new repo object
-	repo := &types.Repository{
-		Version:       0,
-		ParentID:      in.ParentID,
-		UID:           in.UID,
-		Description:   in.Description,
-		IsPublic:      in.IsPublic,
-		CreatedBy:     session.Principal.ID,
-		Created:       now,
-		Updated:       now,
-		ForkID:        in.ForkID,
-		DefaultBranch: in.DefaultBranch,
-	}
-
-	// validate repo
-	if err = c.repoCheck(repo); err != nil {
-		return nil, err
-	}
-	var content []byte
+func (c *Controller) createGitRPCRepository(ctx context.Context,
+	in *CreateInput) (*gitrpc.CreateRepositoryOutput, error) {
+	var (
+		err     error
+		content []byte
+	)
 	files := make([]gitrpc.File, 0, 3) // readme, gitignore, licence
 	if in.Readme {
 		content = createReadme(in.UID, in.Description)
@@ -97,22 +169,20 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			Content: content,
 		})
 	}
-
 	if in.License != "" && in.License != "none" {
 		content, err = resources.ReadLicense(in.License)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to read license '%s': %w", in.License, err)
 		}
 		files = append(files, gitrpc.File{
 			Path:    "LICENSE",
 			Content: content,
 		})
 	}
-
 	if in.GitIgnore != "" {
 		content, err = resources.ReadGitIgnore(in.GitIgnore)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to read git ignore '%s': %w", in.GitIgnore, err)
 		}
 		files = append(files, gitrpc.File{
 			Path:    ".gitignore",
@@ -121,35 +191,19 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	resp, err := c.gitRPCClient.CreateRepository(ctx, &gitrpc.CreateRepositoryParams{
-		DefaultBranch: repo.DefaultBranch,
+		DefaultBranch: in.DefaultBranch,
 		Files:         files,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error creating repository: %w", err)
+		return nil, fmt.Errorf("failed to create repo on gitrpc: %w", err)
 	}
 
-	repo.GitUID = resp.UID
-
-	// create in store
-	err = c.repoStore.Create(ctx, repo)
-	if err != nil {
-		log.Error().Err(err).
-			Msg("Repository creation failed.")
-
-		// TODO: cleanup git repo!
-
-		return nil, err
-	}
-
-	// populate repo url
-	repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)
-
-	return repo, nil
+	return resp, nil
 }
 
 func createReadme(name, description string) []byte {
 	content := bytes.Buffer{}
-	content.WriteString("#" + name + "\n")
+	content.WriteString("# " + name + "\n")
 	if description != "" {
 		content.WriteString(description)
 	}

@@ -7,6 +7,7 @@ package server
 
 import (
 	"context"
+
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	server2 "github.com/harness/gitness/gitrpc/server"
@@ -27,6 +28,7 @@ import (
 	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/branchmonitor"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/store/cache"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/internal/webhook"
@@ -53,24 +55,25 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	checkRepo := check.ProvideRepoCheck()
+	pathUID := check.ProvidePathUIDCheck()
 	pathTransformation := store.ProvidePathTransformation()
-	spaceStore := database.ProvideSpaceStore(db, pathTransformation)
-	repoStore := database.ProvideRepoStore(db, pathTransformation)
+	pathStore := database.ProvidePathStore(db, pathTransformation)
+	pathCache := cache.ProvidePathCache(pathStore, pathTransformation)
+	repoStore := database.ProvideRepoStore(db, pathCache)
+	spaceStore := database.ProvideSpaceStore(db, pathCache)
 	gitrpcConfig := ProvideGitRPCClientConfig(config)
 	gitrpcInterface, err := gitrpc.ProvideClient(gitrpcConfig)
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.ProvideController(config, provider, checkRepo, authorizer, spaceStore, repoStore, principalStore, gitrpcInterface)
-	checkSpace := check.ProvideSpaceCheck()
-	spaceController := space.ProvideController(provider, checkSpace, authorizer, spaceStore, repoStore, principalStore)
+	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, principalStore, gitrpcInterface)
+	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, spaceStore, repoStore, principalStore)
 	principalInfoView := database.ProvidePrincipalInfoView(db)
-	cache := database.ProvidePrincipalInfoCache(principalInfoView)
-	pullReqStore := database.ProvidePullReqStore(db, cache)
-	pullReqActivityStore := database.ProvidePullReqActivityStore(db, cache)
+	principalInfoCache := cache.ProvidePrincipalInfoCache(principalInfoView)
+	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
+	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
 	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
-	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db, cache)
+	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db, principalInfoCache)
 	pullreqController := pullreq.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)

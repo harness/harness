@@ -46,7 +46,7 @@ func GetInfoRefs(client gitrpc.Interface, repoStore store.RepoStore, authorizer 
 			return
 		}
 
-		repo, err := repoStore.FindRepoFromRef(ctx, repoRef)
+		repo, err := repoStore.FindByRef(ctx, repoRef)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
@@ -145,7 +145,7 @@ func serviceRPC(
 		return err
 	}
 
-	repo, err := repoStore.FindRepoFromRef(ctx, repoRef)
+	repo, err := repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return err
 	}

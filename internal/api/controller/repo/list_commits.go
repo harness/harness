@@ -20,7 +20,7 @@ import (
  */
 func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 	repoRef string, gitRef string, filter *types.CommitFilter) ([]Commit, error) {
-	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}

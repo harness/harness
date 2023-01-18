@@ -130,7 +130,7 @@ cli/server/harness.wire_gen.go: cli/server/harness.wire.go	## Update the wire de
 cli/server/standalone.wire_gen.go: cli/server/standalone.wire.go	## Update the wire dependency injection if standalone.wire.go has changed.
 	@sh ./scripts/wire/standalone.sh
 
-mocks/mock_client.go: internal/store/store.go client/client.go
+mocks/mock_client.go: internal/store/database.go client/client.go
 	go generate mocks/mock.go
 
 proto:

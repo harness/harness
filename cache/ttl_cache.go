@@ -14,11 +14,11 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-// Cache is a generic cache that stores objects for the specified period.
-// The Cache has no maximum capacity, so the idea is to store objects for short period.
-// The goal of the Cache is to reduce database load.
-// Every instance of Cache has a background routine that purges stale items.
-type Cache[K constraints.Ordered, V Identifiable[K]] struct {
+// TTLCache is a generic TTL based cache that stores objects for the specified period.
+// The TTLCache has no maximum capacity, so the idea is to store objects for short period.
+// The goal of the TTLCache is to reduce database load.
+// Every instance of TTLCache has a background routine that purges stale items.
+type TTLCache[K constraints.Ordered, V Identifiable[K]] struct {
 	mx        sync.RWMutex
 	cache     map[K]cacheEntry[K, V]
 	purgeStop chan struct{}
@@ -28,13 +28,10 @@ type Cache[K constraints.Ordered, V Identifiable[K]] struct {
 	countMiss int64
 }
 
-type Identifiable[K constraints.Ordered] interface {
-	Identifier() K
-}
-
-type Getter[K constraints.Ordered, V Identifiable[K]] interface {
-	Find(ctx context.Context, id K) (V, error)
-	FindMany(ctx context.Context, ids []K) ([]V, error)
+// ExtendedTTLCache is an extended version of the TTLCache.
+type ExtendedTTLCache[K constraints.Ordered, V Identifiable[K]] struct {
+	TTLCache[K, V]
+	getter ExtendedGetter[K, V]
 }
 
 type cacheEntry[K constraints.Ordered, V Identifiable[K]] struct {
@@ -42,10 +39,10 @@ type cacheEntry[K constraints.Ordered, V Identifiable[K]] struct {
 	data  V
 }
 
-// New creates a new Cache instance and a background routine
+// New creates a new TTLCache instance and a background routine
 // that periodically purges stale items.
-func New[K constraints.Ordered, V Identifiable[K]](getter Getter[K, V], maxAge time.Duration) *Cache[K, V] {
-	c := &Cache[K, V]{
+func New[K constraints.Ordered, V Identifiable[K]](getter Getter[K, V], maxAge time.Duration) *TTLCache[K, V] {
+	c := &TTLCache[K, V]{
 		cache:     make(map[K]cacheEntry[K, V]),
 		purgeStop: make(chan struct{}),
 		getter:    getter,
@@ -57,8 +54,27 @@ func New[K constraints.Ordered, V Identifiable[K]](getter Getter[K, V], maxAge t
 	return c
 }
 
+// NewExtended creates a new TTLCacheExtended instance and a background routine
+// that periodically purges stale items.
+func NewExtended[K constraints.Ordered, V Identifiable[K]](getter ExtendedGetter[K, V],
+	maxAge time.Duration) *ExtendedTTLCache[K, V] {
+	c := &ExtendedTTLCache[K, V]{
+		TTLCache: TTLCache[K, V]{
+			cache:     make(map[K]cacheEntry[K, V]),
+			purgeStop: make(chan struct{}),
+			getter:    getter,
+			maxAge:    maxAge,
+		},
+		getter: getter,
+	}
+
+	go c.purger()
+
+	return c
+}
+
 // purger periodically evicts stale items from the Cache.
-func (c *Cache[K, V]) purger() {
+func (c *TTLCache[K, V]) purger() {
 	purgeTick := time.NewTicker(time.Minute)
 	defer purgeTick.Stop()
 
@@ -79,20 +95,20 @@ func (c *Cache[K, V]) purger() {
 }
 
 // Stop stops the internal purger of stale elements.
-func (c *Cache[K, V]) Stop() {
+func (c *TTLCache[K, V]) Stop() {
 	close(c.purgeStop)
 }
 
 // Stats returns number of cache hits and misses and can be used to monitor the cache efficiency.
-func (c *Cache[K, V]) Stats() (int64, int64) {
+func (c *TTLCache[K, V]) Stats() (int64, int64) {
 	return c.countHit, c.countMiss
 }
 
-func (c *Cache[K, V]) fetch(id K, now time.Time) (V, bool) {
+func (c *TTLCache[K, V]) fetch(key K, now time.Time) (V, bool) {
 	c.mx.RLock()
 	defer c.mx.RUnlock()
 
-	item, ok := c.cache[id]
+	item, ok := c.cache[key]
 	if !ok || now.Sub(item.added) > c.maxAge {
 		c.countMiss++
 		var nothing V
@@ -108,37 +124,37 @@ func (c *Cache[K, V]) fetch(id K, now time.Time) (V, bool) {
 }
 
 // Map returns map with all objects requested through the slice of IDs.
-func (c *Cache[K, V]) Map(ctx context.Context, ids []K) (map[K]V, error) {
+func (c *ExtendedTTLCache[K, V]) Map(ctx context.Context, keys []K) (map[K]V, error) {
 	m := make(map[K]V)
 	now := time.Now()
 
-	ids = deduplicate(ids)
+	keys = deduplicate(keys)
 
 	// Check what's already available in the cache.
 
 	var idx int
-	for idx < len(ids) {
-		id := ids[idx]
+	for idx < len(keys) {
+		key := keys[idx]
 
-		item, ok := c.fetch(id, now)
+		item, ok := c.fetch(key, now)
 		if !ok {
 			idx++
 			continue
 		}
 
 		// found in cache: Add to the result map and remove the ID from the list.
-		m[id] = item
-		ids[idx] = ids[len(ids)-1]
-		ids = ids[:len(ids)-1]
+		m[key] = item
+		keys[idx] = keys[len(keys)-1]
+		keys = keys[:len(keys)-1]
 	}
 
-	if len(ids) == 0 {
+	if len(keys) == 0 {
 		return m, nil
 	}
 
 	// Pull entries from the getter that are not in the cache.
 
-	items, err := c.getter.FindMany(ctx, ids)
+	items, err := c.getter.FindMany(ctx, keys)
 	if err != nil {
 		return nil, fmt.Errorf("cache: failed to find many: %w", err)
 	}
@@ -159,22 +175,22 @@ func (c *Cache[K, V]) Map(ctx context.Context, ids []K) (map[K]V, error) {
 }
 
 // Get returns one object by its ID.
-func (c *Cache[K, V]) Get(ctx context.Context, id K) (V, error) {
+func (c *TTLCache[K, V]) Get(ctx context.Context, key K) (V, error) {
 	now := time.Now()
 	var nothing V
 
-	item, ok := c.fetch(id, now)
+	item, ok := c.fetch(key, now)
 	if ok {
 		return item, nil
 	}
 
-	item, err := c.getter.Find(ctx, id)
+	item, err := c.getter.Find(ctx, key)
 	if err != nil {
 		return nothing, fmt.Errorf("cache: failed to find one: %w", err)
 	}
 
 	c.mx.Lock()
-	c.cache[id] = cacheEntry[K, V]{
+	c.cache[key] = cacheEntry[K, V]{
 		added: now,
 		data:  item,
 	}

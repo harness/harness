@@ -1,8 +1,8 @@
 CREATE TABLE repositories (
  repo_id                INTEGER PRIMARY KEY AUTOINCREMENT
-,repo_version           INTEGER NOT NULL
-,repo_parent_id         INTEGER
-,repo_uid               TEXT
+,repo_version           INTEGER NOT NULL DEFAULT 0
+,repo_parent_id         INTEGER NOT NULL
+,repo_uid               TEXT NOT NULL
 ,repo_description       TEXT
 ,repo_is_public         BOOLEAN NOT NULL
 ,repo_created_by        INTEGER NOT NULL
@@ -18,4 +18,9 @@ CREATE TABLE repositories (
 ,repo_num_open_pulls    INTEGER NOT NULL
 
 ,UNIQUE(repo_git_uid)
+
+,CONSTRAINT fk_repo_parent_id FOREIGN KEY (repo_parent_id)
+    REFERENCES spaces (space_id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE
 );

@@ -6,9 +6,7 @@ package database
 
 import (
 	"context"
-	"time"
 
-	"github.com/harness/gitness/internal/cache"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 
@@ -16,16 +14,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const (
-	postgres = "postgres"
-)
-
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
 	ProvideDatabase,
 	ProvidePrincipalStore,
 	ProvidePrincipalInfoView,
-	ProvidePrincipalInfoCache,
+	ProvidePathStore,
 	ProvideSpaceStore,
 	ProvideRepoStore,
 	ProvideTokenStore,
@@ -53,36 +47,22 @@ func ProvidePrincipalStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTran
 
 // ProvidePrincipalInfoView provides a principal info store.
 func ProvidePrincipalInfoView(db *sqlx.DB) store.PrincipalInfoView {
-	return NewPrincipalInfoStore(db)
+	return NewPrincipalInfoView(db)
 }
 
-// ProvidePrincipalInfoCache provides a cache for storing types.PrincipalInfo objects.
-func ProvidePrincipalInfoCache(getter store.PrincipalInfoView) *cache.Cache[int64, *types.PrincipalInfo] {
-	return cache.New[int64, *types.PrincipalInfo](getter, 30*time.Second)
+// ProvidePathStore provides a path store.
+func ProvidePathStore(db *sqlx.DB, pathTransformation store.PathTransformation) store.PathStore {
+	return NewPathStore(db, pathTransformation)
 }
 
 // ProvideSpaceStore provides a space store.
-func ProvideSpaceStore(db *sqlx.DB, pathTransformation store.PathTransformation) store.SpaceStore {
-	switch db.DriverName() {
-	case postgres:
-		return NewSpaceStore(db, pathTransformation)
-	default:
-		return NewSpaceStoreSync(
-			NewSpaceStore(db, pathTransformation),
-		)
-	}
+func ProvideSpaceStore(db *sqlx.DB, pathCache store.PathCache) store.SpaceStore {
+	return NewSpaceStore(db, pathCache)
 }
 
 // ProvideRepoStore provides a repo store.
-func ProvideRepoStore(db *sqlx.DB, pathTransformation store.PathTransformation) store.RepoStore {
-	switch db.DriverName() {
-	case postgres:
-		return NewRepoStore(db, pathTransformation)
-	default:
-		return NewRepoStoreSync(
-			NewRepoStore(db, pathTransformation),
-		)
-	}
+func ProvideRepoStore(db *sqlx.DB, pathCache store.PathCache) store.RepoStore {
+	return NewRepoStore(db, pathCache)
 }
 
 // ProvideTokenStore provides a token store.
@@ -92,13 +72,13 @@ func ProvideTokenStore(db *sqlx.DB) store.TokenStore {
 
 // ProvidePullReqStore provides a pull request store.
 func ProvidePullReqStore(db *sqlx.DB,
-	principalInfoCache *cache.Cache[int64, *types.PrincipalInfo]) store.PullReqStore {
+	principalInfoCache store.PrincipalInfoCache) store.PullReqStore {
 	return NewPullReqStore(db, principalInfoCache)
 }
 
 // ProvidePullReqActivityStore provides a pull request activity store.
 func ProvidePullReqActivityStore(db *sqlx.DB,
-	principalInfoCache *cache.Cache[int64, *types.PrincipalInfo]) store.PullReqActivityStore {
+	principalInfoCache store.PrincipalInfoCache) store.PullReqActivityStore {
 	return NewPullReqActivityStore(db, principalInfoCache)
 }
 
@@ -109,7 +89,7 @@ func ProvidePullReqReviewStore(db *sqlx.DB) store.PullReqReviewStore {
 
 // ProvidePullReqReviewerStore provides a pull request reviewer store.
 func ProvidePullReqReviewerStore(db *sqlx.DB,
-	principalInfoCache *cache.Cache[int64, *types.PrincipalInfo]) store.PullReqReviewerStore {
+	principalInfoCache store.PrincipalInfoCache) store.PullReqReviewerStore {
 	return NewPullReqReviewerStore(db, principalInfoCache)
 }
 

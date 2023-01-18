@@ -7,34 +7,24 @@ package types
 
 import "github.com/harness/gitness/types/enum"
 
-type (
-	// Principal represents the identity of an acting entity (User, ServiceAccount, Service).
-	Principal struct {
-		// TODO: int64 ID doesn't match DB
-		ID          int64              `db:"principal_id"           json:"-"`
-		UID         string             `db:"principal_uid"          json:"uid"`
-		Email       string             `db:"principal_email"        json:"email"`
-		Type        enum.PrincipalType `db:"principal_type"         json:"type"`
-		DisplayName string             `db:"principal_display_name" json:"display_name"`
-		Admin       bool               `db:"principal_admin"        json:"admin"`
+// Principal represents the identity of an acting entity (User, ServiceAccount, Service).
+type Principal struct {
+	// TODO: int64 ID doesn't match DB
+	ID          int64              `db:"principal_id"           json:"-"`
+	UID         string             `db:"principal_uid"          json:"uid"`
+	Email       string             `db:"principal_email"        json:"email"`
+	Type        enum.PrincipalType `db:"principal_type"         json:"type"`
+	DisplayName string             `db:"principal_display_name" json:"display_name"`
+	Admin       bool               `db:"principal_admin"        json:"admin"`
 
-		// Should be part of principal or not?
-		Blocked bool   `db:"principal_blocked"            json:"blocked"`
-		Salt    string `db:"principal_salt"               json:"-"`
+	// Should be part of principal or not?
+	Blocked bool   `db:"principal_blocked"            json:"blocked"`
+	Salt    string `db:"principal_salt"               json:"-"`
 
-		// Other info
-		Created int64 `db:"principal_created"                json:"created"`
-		Updated int64 `db:"principal_updated"                json:"updated"`
-	}
-
-	// PrincipalInfo is a compressed representation of a principal we return as part of non-principal APIs.
-	PrincipalInfo struct {
-		ID          int64  `json:"id"`
-		UID         string `json:"uid"`
-		DisplayName string `json:"display_name"`
-		Email       string `json:"email"`
-	}
-)
+	// Other info
+	Created int64 `db:"principal_created"                json:"created"`
+	Updated int64 `db:"principal_updated"                json:"updated"`
+}
 
 func (p *Principal) ToPrincipalInfo() *PrincipalInfo {
 	return &PrincipalInfo{
@@ -43,6 +33,14 @@ func (p *Principal) ToPrincipalInfo() *PrincipalInfo {
 		DisplayName: p.DisplayName,
 		Email:       p.Email,
 	}
+}
+
+// PrincipalInfo is a compressed representation of a principal we return as part of non-principal APIs.
+type PrincipalInfo struct {
+	ID          int64  `json:"id"`
+	UID         string `json:"uid"`
+	DisplayName string `json:"display_name"`
+	Email       string `json:"email"`
 }
 
 func (p *PrincipalInfo) Identifier() int64 {

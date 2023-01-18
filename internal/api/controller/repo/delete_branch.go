@@ -17,7 +17,7 @@ import (
 
 // DeleteBranch deletes a repo branch.
 func (c *Controller) DeleteBranch(ctx context.Context, session *auth.Session, repoRef string, branchName string) error {
-	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return err
 	}

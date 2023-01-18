@@ -47,6 +47,7 @@ const (
 	ascending     = "ascending"
 	desc          = "desc"
 	descending    = "descending"
+	value         = "value"
 )
 
 func toInterfaceSlice[T interface{}](vals []T) []interface{} {

@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/harness/gitness/internal/cache"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -27,7 +26,7 @@ const maxPullRequestReviewers = 100
 
 // NewPullReqReviewerStore returns a new PullReqReviewerStore.
 func NewPullReqReviewerStore(db *sqlx.DB,
-	pCache *cache.Cache[int64, *types.PrincipalInfo]) *PullReqReviewerStore {
+	pCache store.PrincipalInfoCache) *PullReqReviewerStore {
 	return &PullReqReviewerStore{
 		db:     db,
 		pCache: pCache,
@@ -37,7 +36,7 @@ func NewPullReqReviewerStore(db *sqlx.DB,
 // PullReqReviewerStore implements store.PullReqReviewerStore backed by a relational database.
 type PullReqReviewerStore struct {
 	db     *sqlx.DB
-	pCache *cache.Cache[int64, *types.PrincipalInfo]
+	pCache store.PrincipalInfoCache
 }
 
 // pullReqReviewer is used to fetch pull request reviewer data from the database.

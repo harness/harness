@@ -61,7 +61,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, usererror.BadRequest("A valid repository reference must be provided.")
 	}
 
-	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo: %w", err)
 	}

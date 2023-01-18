@@ -108,7 +108,7 @@ func (c *SubmoduleContent) isContent() {}
  */
 func (c *Controller) GetContent(ctx context.Context, session *auth.Session, repoRef string,
 	gitRef string, repoPath string, includeLatestCommit bool) (*GetContentOutput, error) {
-	repo, err := c.repoStore.FindRepoFromRef(ctx, repoRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
 	}

@@ -20,6 +20,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	// sqlForUpdate is the sql statement used for locking rows returned by select queries.
+	sqlForUpdate = "FOR UPDATE"
+)
+
 // build is a global instance of the sql builder. we are able to
 // hardcode to postgres since sqlite3 is compatible with postgres.
 var builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
