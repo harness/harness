@@ -96,11 +96,11 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, false); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("access check failed: %w", err)
 	}
 
 	return repo, nil

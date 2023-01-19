@@ -53,8 +53,7 @@ func (c *Controller) Merge(
 
 	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
-		return types.MergeResponse{}, usererror.BadRequest(
-			fmt.Sprintf("failed to acquire access to target repo: %s", err))
+		return types.MergeResponse{}, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
