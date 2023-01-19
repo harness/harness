@@ -33,7 +33,7 @@ import (
 	eventsgit "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
-	"github.com/harness/gitness/internal/services/branchmonitor"
+	pullreqservice "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store/cache"
 	"github.com/harness/gitness/internal/store/database"
@@ -50,7 +50,7 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 		ProvideRedis,
 		bootstrap.WireSet,
 		database.WireSet,
-		branchmonitor.WireSet,
+		pullreqservice.WireSet,
 		services.WireSet,
 		cache.WireSet,
 		server.WireSet,

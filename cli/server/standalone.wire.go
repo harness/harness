@@ -28,7 +28,7 @@ import (
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
-	"github.com/harness/gitness/internal/services/branchmonitor"
+	pullreqservice "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/cache"
@@ -49,7 +49,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		database.WireSet,
 		cache.WireSet,
 		router.WireSet,
-		branchmonitor.WireSet,
+		pullreqservice.WireSet,
 		services.WireSet,
 		server.WireSet,
 		cron.WireSet,
