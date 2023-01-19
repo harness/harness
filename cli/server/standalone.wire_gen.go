@@ -27,11 +27,11 @@ import (
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/branchmonitor"
+	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/cache"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/url"
-	"github.com/harness/gitness/internal/webhook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 )
@@ -91,11 +91,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	webhookServer, err := webhook.ProvideServer(ctx, webhookConfig, readerFactory, webhookStore, webhookExecutionStore, repoStore, provider, principalStore, gitrpcInterface)
+	service, err := webhook.ProvideService(ctx, webhookConfig, readerFactory, webhookStore, webhookExecutionStore, repoStore, provider, principalStore, gitrpcInterface)
 	if err != nil {
 		return nil, err
 	}
-	webhookController := webhook2.ProvideController(config, db, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookServer)
+	webhookController := webhook2.ProvideController(config, db, authorizer, webhookStore, webhookExecutionStore, repoStore, service)
 	reporter, err := events2.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
@@ -114,11 +114,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	nightly := cron.NewNightly()
-	service, err := branchmonitor.ProvideBranchMonitorService(ctx, config, readerFactory, db, pullReqStore, pullReqActivityStore)
+	branchmonitorService, err := branchmonitor.ProvideService(ctx, config, readerFactory, db, pullReqStore, pullReqActivityStore)
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(service)
-	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, webhookServer, nightly, servicesServices)
+	servicesServices := services.ProvideServices(service, branchmonitorService)
+	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, nightly, servicesServices)
 	return serverSystem, nil
 }

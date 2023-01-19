@@ -30,8 +30,8 @@ type Config struct {
 	AllowLoopback       bool   `json:"allow_loopback"`
 }
 
-// Server is responsible for processing webhook events.
-type Server struct {
+// Service is responsible for processing webhook events.
+type Service struct {
 	webhookStore          store.WebhookStore
 	webhookExecutionStore store.WebhookExecutionStore
 	urlProvider           *url.Provider
@@ -44,12 +44,12 @@ type Server struct {
 	insecureHTTPClient *http.Client
 }
 
-func NewServer(ctx context.Context, config Config,
+func NewService(ctx context.Context, config Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
 	repoStore store.RepoStore, urlProvider *url.Provider,
-	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Server, error) {
-	server := &Server{
+	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Service, error) {
+	service := &Service{
 		webhookStore:          webhookStore,
 		webhookExecutionStore: webhookExecutionStore,
 		repoStore:             repoStore,
@@ -71,24 +71,24 @@ func NewServer(ctx context.Context, config Config,
 			_ = r.SetProcessingTimeout(processingTimeout)
 
 			// register events
-			_ = r.RegisterBranchCreated(server.handleEventBranchCreated)
-			_ = r.RegisterBranchUpdated(server.handleEventBranchUpdated)
-			_ = r.RegisterBranchDeleted(server.handleEventBranchDeleted)
+			_ = r.RegisterBranchCreated(service.handleEventBranchCreated)
+			_ = r.RegisterBranchUpdated(service.handleEventBranchUpdated)
+			_ = r.RegisterBranchDeleted(service.handleEventBranchDeleted)
 
-			_ = r.RegisterTagCreated(server.handleEventTagCreated)
-			_ = r.RegisterTagUpdated(server.handleEventTagUpdated)
-			_ = r.RegisterTagDeleted(server.handleEventTagDeleted)
+			_ = r.RegisterTagCreated(service.handleEventTagCreated)
+			_ = r.RegisterTagUpdated(service.handleEventTagUpdated)
+			_ = r.RegisterTagDeleted(service.handleEventTagDeleted)
 
 			return nil
 		})
 	if err != nil {
 		return nil, fmt.Errorf("failed to launch event reader for webhooks: %w", err)
 	}
-	server.readerCanceler = canceler
+	service.readerCanceler = canceler
 
-	return server, nil
+	return service, nil
 }
 
-func (s *Server) Cancel() error {
+func (s *Service) Cancel() error {
 	return s.readerCanceler.Cancel()
 }

@@ -6,8 +6,8 @@ package webhook
 
 import (
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/webhook"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -21,7 +21,7 @@ var WireSet = wire.NewSet(
 
 func ProvideController(config *types.Config, db *sqlx.DB, authorizer authz.Authorizer,
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
-	repoStore store.RepoStore, webhookServer *webhook.Server) *Controller {
+	repoStore store.RepoStore, webhookService *webhook.Service) *Controller {
 	return NewController(config.Webhook.AllowLoopback, config.Webhook.AllowPrivateNetwork,
-		db, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookServer)
+		db, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService)
 }

@@ -41,7 +41,7 @@ func (c *Controller) RetriggerExecution(
 	}
 
 	// retrigger the execution ...
-	executionResult, err := c.webhookServer.RetriggerWebhookExecution(ctx, webhookExecution.ID)
+	executionResult, err := c.webhookService.RetriggerWebhookExecution(ctx, webhookExecution.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrigger webhook execution: %w", err)
 	}

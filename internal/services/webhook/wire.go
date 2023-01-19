@@ -18,14 +18,14 @@ import (
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideServer,
+	ProvideService,
 )
 
-func ProvideServer(ctx context.Context, config Config,
+func ProvideService(ctx context.Context, config Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
 	repoStore store.RepoStore, urlProvider *url.Provider,
-	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Server, error) {
-	return NewServer(ctx, config, gitReaderFactory, webhookStore, webhookExecutionStore,
+	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Service, error) {
+	return NewService(ctx, config, gitReaderFactory, webhookStore, webhookExecutionStore,
 		repoStore, urlProvider, principalStore, gitRPCClient)
 }

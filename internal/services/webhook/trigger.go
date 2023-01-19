@@ -56,12 +56,12 @@ func (r *TriggerResult) Skipped() bool {
 	return r.Execution == nil
 }
 
-func (s *Server) triggerWebhooksFor(ctx context.Context, parentType enum.WebhookParent, parentID int64,
+func (s *Service) triggerWebhooksFor(ctx context.Context, parentType enum.WebhookParent, parentID int64,
 	triggerID string, triggerType enum.WebhookTrigger, body any) ([]TriggerResult, error) {
 	// get all webhooks for the given parent
 	// NOTE: there never should be even close to 1000 webhooks for a repo (that should be blocked in the future).
 	// We just use 1000 as a safe number to get all hooks
-	webhooks, err := s.webhookStore.List(ctx, parentType, parentID, &types.WebhookFilter{Size: 1000})
+	webhooks, err := s.webhookStore.List(ctx, parentType, parentID, &types.WebhookFilter{Size: 1000, Order: enum.OrderAsc})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list webhooks for %s %d: %w", parentType, parentID, err)
 	}
@@ -70,7 +70,7 @@ func (s *Server) triggerWebhooksFor(ctx context.Context, parentType enum.Webhook
 }
 
 //nolint:gocognit // refactor if needed
-func (s *Server) triggerWebhooks(ctx context.Context, webhooks []*types.Webhook,
+func (s *Service) triggerWebhooks(ctx context.Context, webhooks []*types.Webhook,
 	triggerID string, triggerType enum.WebhookTrigger, body any) ([]TriggerResult, error) {
 	// return immediately if webhooks are empty
 	if len(webhooks) == 0 {
@@ -130,7 +130,7 @@ func (s *Server) triggerWebhooks(ctx context.Context, webhooks []*types.Webhook,
 	return results, nil
 }
 
-func (s *Server) RetriggerWebhookExecution(ctx context.Context, webhookExecutionID int64) (*TriggerResult, error) {
+func (s *Service) RetriggerWebhookExecution(ctx context.Context, webhookExecutionID int64) (*TriggerResult, error) {
 	// find execution
 	webhookExecution, err := s.webhookExecutionStore.Find(ctx, webhookExecutionID)
 	if err != nil {
@@ -168,7 +168,7 @@ func (s *Server) RetriggerWebhookExecution(ctx context.Context, webhookExecution
 }
 
 //nolint:gocognit // refactor into smaller chunks if necessary.
-func (s *Server) executeWebhook(ctx context.Context, webhook *types.Webhook, triggerID string,
+func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, triggerID string,
 	triggerType enum.WebhookTrigger, body any, rerunOfID *int64) (*types.WebhookExecution, error) {
 	// build execution entry on the fly (save no matter what)
 	execution := types.WebhookExecution{

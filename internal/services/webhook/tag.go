@@ -28,7 +28,7 @@ type TagBody struct {
 
 // handleEventTagCreated handles tag created events
 // and triggers tag created webhooks for the source repo.
-func (s *Server) handleEventTagCreated(ctx context.Context,
+func (s *Service) handleEventTagCreated(ctx context.Context,
 	event *events.Event[*gitevents.TagCreatedPayload]) error {
 	return s.triggerForEventWithRepoAndPrincipal(ctx, enum.WebhookTriggerTagCreated,
 		event.ID, event.Payload.RepoID, event.Payload.PrincipalID,
@@ -46,7 +46,7 @@ func (s *Server) handleEventTagCreated(ctx context.Context,
 
 // handleEventTagUpdated handles tag updated events
 // and triggers tag updated webhooks for the source repo.
-func (s *Server) handleEventTagUpdated(ctx context.Context,
+func (s *Service) handleEventTagUpdated(ctx context.Context,
 	event *events.Event[*gitevents.TagUpdatedPayload]) error {
 	return s.triggerForEventWithRepoAndPrincipal(ctx, enum.WebhookTriggerTagUpdated,
 		event.ID, event.Payload.RepoID, event.Payload.PrincipalID,
@@ -65,7 +65,7 @@ func (s *Server) handleEventTagUpdated(ctx context.Context,
 
 // handleEventTagDeleted handles tag deleted events
 // and triggers tag deleted webhooks for the source repo.
-func (s *Server) handleEventTagDeleted(ctx context.Context,
+func (s *Service) handleEventTagDeleted(ctx context.Context,
 	event *events.Event[*gitevents.TagDeletedPayload]) error {
 	return s.triggerForEventWithRepoAndPrincipal(ctx, enum.WebhookTriggerTagDeleted,
 		event.ID, event.Payload.RepoID, event.Payload.PrincipalID,

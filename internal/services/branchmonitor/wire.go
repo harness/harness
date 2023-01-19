@@ -17,10 +17,10 @@ import (
 )
 
 var WireSet = wire.NewSet(
-	ProvideBranchMonitorService,
+	ProvideService,
 )
 
-func ProvideBranchMonitorService(ctx context.Context,
+func ProvideService(ctx context.Context,
 	config *types.Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	db *sqlx.DB,

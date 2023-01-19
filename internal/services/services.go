@@ -6,6 +6,7 @@ package services
 
 import (
 	"github.com/harness/gitness/internal/services/branchmonitor"
+	"github.com/harness/gitness/internal/services/webhook"
 
 	"github.com/google/wire"
 )
@@ -15,11 +16,13 @@ var WireSet = wire.NewSet(
 )
 
 type Services struct {
+	ws  *webhook.Service
 	bms *branchmonitor.Service
 }
 
-func ProvideServices(bms *branchmonitor.Service) Services {
+func ProvideServices(ws *webhook.Service, bms *branchmonitor.Service) Services {
 	return Services{
+		ws:  ws,
 		bms: bms,
 	}
 }

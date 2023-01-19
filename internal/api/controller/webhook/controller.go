@@ -12,8 +12,8 @@ import (
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/webhook"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -29,7 +29,7 @@ type Controller struct {
 	webhookStore          store.WebhookStore
 	webhookExecutionStore store.WebhookExecutionStore
 	repoStore             store.RepoStore
-	webhookServer         *webhook.Server
+	webhookService        *webhook.Service
 }
 
 func NewController(
@@ -40,7 +40,7 @@ func NewController(
 	webhookStore store.WebhookStore,
 	webhookExecutionStore store.WebhookExecutionStore,
 	repoStore store.RepoStore,
-	webhookServer *webhook.Server,
+	webhookService *webhook.Service,
 ) *Controller {
 	return &Controller{
 		allowLoopback:       allowLoopback,
@@ -51,7 +51,7 @@ func NewController(
 		webhookStore:          webhookStore,
 		webhookExecutionStore: webhookExecutionStore,
 		repoStore:             repoStore,
-		webhookServer:         webhookServer,
+		webhookService:        webhookService,
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/gitrpc/server"
-	"github.com/harness/gitness/internal/webhook"
+	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"

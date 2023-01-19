@@ -32,7 +32,7 @@ type BranchBody struct {
 
 // handleEventBranchCreated handles branch created events
 // and triggers branch created webhooks for the source repo.
-func (s *Server) handleEventBranchCreated(ctx context.Context,
+func (s *Service) handleEventBranchCreated(ctx context.Context,
 	event *events.Event[*gitevents.BranchCreatedPayload]) error {
 	return s.triggerForEventWithRepoAndPrincipal(ctx, enum.WebhookTriggerBranchCreated,
 		event.ID, event.Payload.RepoID, event.Payload.PrincipalID,
@@ -55,7 +55,7 @@ func (s *Server) handleEventBranchCreated(ctx context.Context,
 
 // handleEventBranchUpdated handles branch updated events
 // and triggers branch updated webhooks for the source repo.
-func (s *Server) handleEventBranchUpdated(ctx context.Context,
+func (s *Service) handleEventBranchUpdated(ctx context.Context,
 	event *events.Event[*gitevents.BranchUpdatedPayload]) error {
 	return s.triggerForEventWithRepoAndPrincipal(ctx, enum.WebhookTriggerBranchUpdated,
 		event.ID, event.Payload.RepoID, event.Payload.PrincipalID,
@@ -80,7 +80,7 @@ func (s *Server) handleEventBranchUpdated(ctx context.Context,
 
 // handleEventBranchDeleted handles branch deleted events
 // and triggers branch deleted webhooks for the source repo.
-func (s *Server) handleEventBranchDeleted(ctx context.Context,
+func (s *Service) handleEventBranchDeleted(ctx context.Context,
 	event *events.Event[*gitevents.BranchDeletedPayload]) error {
 	return s.triggerForEventWithRepoAndPrincipal(ctx, enum.WebhookTriggerBranchDeleted,
 		event.ID, event.Payload.RepoID, event.Payload.PrincipalID,
@@ -96,7 +96,7 @@ func (s *Server) handleEventBranchDeleted(ctx context.Context,
 		})
 }
 
-func (s *Server) fetchCommitInfoForEvent(ctx context.Context, repoUID string, sha string) (CommitInfo, error) {
+func (s *Service) fetchCommitInfoForEvent(ctx context.Context, repoUID string, sha string) (CommitInfo, error) {
 	out, err := s.gitRPCClient.GetCommit(ctx, &gitrpc.GetCommitParams{
 		ReadParams: gitrpc.ReadParams{
 			RepoUID: repoUID,

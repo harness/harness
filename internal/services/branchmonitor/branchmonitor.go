@@ -151,13 +151,13 @@ func (s *Service) forEveryOpenPR(ctx context.Context,
 ) {
 	const refPrefix = "refs/heads/"
 	if !strings.HasPrefix(ref, refPrefix) {
-		log.Error().Msg("failed to get branch name from branch ref")
+		log.Ctx(ctx).Error().Msg("failed to get branch name from branch ref")
 		return
 	}
 
 	branch := ref[len(refPrefix):]
 	if len(branch) == 0 {
-		log.Error().Msg("got an empty branch name from branch ref")
+		log.Ctx(ctx).Error().Msg("got an empty branch name from branch ref")
 		return
 	}
 
@@ -171,13 +171,13 @@ func (s *Service) forEveryOpenPR(ctx context.Context,
 		Order:        enum.OrderAsc,
 	})
 	if err != nil {
-		log.Err(err).Msg("failed to get list of open pull requests")
+		log.Ctx(ctx).Err(err).Msg("failed to get list of open pull requests")
 		return
 	}
 
 	for _, pr := range pullreqList {
 		if err = fn(pr); err != nil {
-			log.Err(err).Msg("failed to process pull req")
+			log.Ctx(ctx).Err(err).Msg("failed to process pull req")
 		}
 	}
 }

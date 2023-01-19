@@ -34,10 +34,10 @@ import (
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/branchmonitor"
+	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store/cache"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/url"
-	"github.com/harness/gitness/internal/webhook"
 	gitnesstypes "github.com/harness/gitness/types"
 
 	"github.com/google/wire"
