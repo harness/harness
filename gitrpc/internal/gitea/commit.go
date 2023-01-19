@@ -117,7 +117,7 @@ func (g Adapter) ListCommits(ctx context.Context, repoPath string,
 	stdout, _, runErr := gitea.NewCommand(giteaRepo.Ctx, args...).RunStdBytes(&gitea.RunOpts{Dir: giteaRepo.Path})
 	if runErr != nil {
 		// TODO: handle error in case they don't have a common merge base!
-		return nil, fmt.Errorf("failed to trigger rev-list command: %w", runErr)
+		return nil, processGiteaErrorf(runErr, "failed to trigger rev-list command")
 	}
 
 	giteaCommits, err := giteaParsePrettyFormatLogToList(giteaRepo, bytes.TrimSpace(stdout))
