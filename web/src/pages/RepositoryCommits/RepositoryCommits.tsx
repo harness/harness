@@ -9,6 +9,7 @@ import type { RepoCommit } from 'services/code'
 import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { CommitsView } from 'components/CommitsView/CommitsView'
@@ -43,10 +44,9 @@ export default function RepositoryCommits() {
         dataTooltipId="repositoryCommits"
       />
 
-      <PageBody
-        loading={loading || loadingCommits}
-        error={getErrorMessage(error || errorCommits)}
-        retryOnError={voidFn(refetch)}>
+      <PageBody error={getErrorMessage(error || errorCommits)} retryOnError={voidFn(refetch)}>
+        <LoadingSpinner visible={loading || loadingCommits} withBorder={!!commits && loadingCommits} />
+
         {(repoMetadata && !!commits?.length && (
           <Container padding="xlarge" className={css.resourceContent}>
             <Container className={css.contentHeader}>

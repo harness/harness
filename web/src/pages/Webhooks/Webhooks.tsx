@@ -12,6 +12,7 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import type { OpenapiWebhookType } from 'services/code'
 import { WebhooksHeader } from './WebhooksHeader/WebhooksHeader'
@@ -128,7 +129,9 @@ export default function Webhooks() {
   return (
     <Container className={css.main}>
       <RepositoryPageHeader repoMetadata={repoMetadata} title={getString('webhooks')} dataTooltipId="webhooks" />
-      <PageBody loading={loading} error={getErrorMessage(error || webhooksError)} retryOnError={voidFn(refetch)}>
+      <PageBody error={getErrorMessage(error || webhooksError)} retryOnError={voidFn(refetch)}>
+        <LoadingSpinner visible={loading} />
+
         {repoMetadata && (
           <Layout.Vertical>
             <WebhooksHeader

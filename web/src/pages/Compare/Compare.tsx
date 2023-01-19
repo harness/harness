@@ -12,6 +12,7 @@ import { makeDiffRefs } from 'utils/GitUtils'
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { Changes } from 'components/Changes/Changes'
 import type { RepoCommit } from 'services/code'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { CompareContentHeader } from './CompareContentHeader/CompareContentHeader'
@@ -49,7 +50,9 @@ export default function Compare() {
         title={getString('comparingChanges')}
         dataTooltipId="comparingChanges"
       />
-      <PageBody loading={loading} error={getErrorMessage(error || commitsError)} retryOnError={voidFn(refetch)}>
+      <PageBody error={getErrorMessage(error || commitsError)} retryOnError={voidFn(refetch)}>
+        <LoadingSpinner visible={loading} />
+
         {repoMetadata && (
           <CompareContentHeader
             repoMetadata={repoMetadata}

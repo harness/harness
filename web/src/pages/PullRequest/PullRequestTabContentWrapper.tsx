@@ -1,7 +1,7 @@
 import React from 'react'
 import { Container, PageError } from '@harness/uicore'
-import { ContainerSpinner } from 'components/ContainerSpinner/ContainerSpinner'
 import { getErrorMessage } from 'utils/Utils'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 
 interface PullRequestTabContentWrapperProps {
   className?: string
@@ -18,7 +18,7 @@ export const PullRequestTabContentWrapper: React.FC<PullRequestTabContentWrapper
   children
 }) => (
   <Container className={className} padding="xlarge" {...(!!loading || !!error ? { flex: true } : {})}>
-    {loading && <ContainerSpinner />}
+    <LoadingSpinner visible={loading} />
     {error && <PageError message={getErrorMessage(error)} onClick={onRetry} />}
     {!loading && !error && children}
   </Container>

@@ -7,6 +7,7 @@ import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { WehookForm } from 'pages/WebhookNew/WehookForm'
 import { useAppContext } from 'AppContext'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 
 export default function WebhookDetails() {
   const { getString } = useStrings()
@@ -38,9 +39,10 @@ export default function WebhookDetails() {
         }
       />
       <PageBody
-        loading={loading || webhookLoading}
         error={error || webhookError}
         retryOnError={() => (repoMetadata ? refetchWebhook() : refreshMetadata())}>
+        <LoadingSpinner visible={loading || webhookLoading} withBorder={!!data && webhookLoading} />
+
         {repoMetadata && data && <WehookForm isEdit webhook={data} repoMetadata={repoMetadata} />}
       </PageBody>
     </Container>

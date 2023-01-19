@@ -3,6 +3,7 @@ import { Container, PageBody } from '@harness/uicore'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { useDisableCodeMainLinks } from 'hooks/useDisableCodeMainLinks'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { voidFn, getErrorMessage } from 'utils/Utils'
 import { RepositoryFileEditHeader } from './RepositoryFileEditHeader/RepositoryFileEditHeader'
 import { FileEditor } from './FileEditor/FileEditor'
@@ -21,10 +22,9 @@ export default function RepositoryFileEdit() {
 
   return (
     <Container className={css.main}>
-      <PageBody
-        loading={loading || resourceLoading}
-        error={getErrorMessage(error || resourceError)}
-        retryOnError={voidFn(refetch)}>
+      <PageBody error={getErrorMessage(error || resourceError)} retryOnError={voidFn(refetch)}>
+        <LoadingSpinner visible={loading && resourceLoading} withBorder={!!resourceContent && resourceLoading} />
+
         {repoMetadata ? (
           <>
             <RepositoryFileEditHeader repoMetadata={repoMetadata} resourceContent={resourceContent} />

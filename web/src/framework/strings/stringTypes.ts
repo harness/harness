@@ -137,6 +137,7 @@ export interface StringsMap {
   open: string
   optional: string
   optionalExtendedDescription: string
+  pageLoading: string
   pageNotFound: string
   password: string
   payloadUrl: string

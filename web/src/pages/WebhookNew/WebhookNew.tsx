@@ -2,6 +2,7 @@ import React from 'react'
 import { Container, PageBody } from '@harness/uicore'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { useAppContext } from 'AppContext'
 import { WehookForm } from './WehookForm'
@@ -26,7 +27,8 @@ export default function WebhookNew() {
           ]
         }
       />
-      <PageBody loading={loading} error={error}>
+      <PageBody error={error}>
+        <LoadingSpinner visible={loading} />
         {repoMetadata && <WehookForm repoMetadata={repoMetadata} />}
       </PageBody>
     </Container>

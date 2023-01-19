@@ -23,6 +23,7 @@ import { RepositoryPageHeader } from 'components/RepositoryPageHeader/Repository
 import { voidFn, getErrorMessage } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { TypesPullReq } from 'services/code'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
 import { Changes } from '../../components/Changes/Changes'
@@ -79,7 +80,9 @@ export default function PullRequest() {
           ]
         }
       />
-      <PageBody loading={loading || prLoading} error={getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
+      <PageBody error={getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
+        <LoadingSpinner visible={loading || prLoading} withBorder={!!prData && prLoading} />
+
         {repoMetadata ? (
           prData ? (
             <>

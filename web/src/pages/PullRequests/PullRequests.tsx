@@ -15,6 +15,7 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import type { TypesPullReq } from 'services/code'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
 import prImgOpen from './pull-request-open.svg'
 import prImgMerged from './pull-request-merged.svg'
@@ -96,7 +97,9 @@ export default function PullRequests() {
         title={getString('pullRequests')}
         dataTooltipId="repositoryPullRequests"
       />
-      <PageBody loading={loading} error={getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
+      <PageBody error={getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
+        <LoadingSpinner visible={loading} />
+
         {repoMetadata && (
           <Layout.Vertical>
             <PullRequestsContentHeader

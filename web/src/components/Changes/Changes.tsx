@@ -22,8 +22,8 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
 import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
-import { ContainerSpinner } from 'components/ContainerSpinner/ContainerSpinner'
 import type { TypesPullReq } from 'services/code'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
 import { ReviewDecisionButton } from './ReviewDecisionButton/ReviewDecisionButton'
@@ -104,7 +104,7 @@ export const Changes: React.FC<ChangesProps> = ({
 
   return (
     <Container className={cx(css.container, className)} {...(!!loading || !!error ? { flex: true } : {})}>
-      {loading && <ContainerSpinner />}
+      <LoadingSpinner visible={loading} />
       {error && <PageError message={getErrorMessage(error)} onClick={voidFn(refetch)} />}
       {!loading &&
         !error &&

@@ -24,6 +24,7 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useAppContext } from 'AppContext'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import noRepoImage from './no-repo.svg'
@@ -125,7 +126,6 @@ export default function RepositoriesListing() {
     <Container className={css.main}>
       <PageHeader title={getString('repositories')} />
       <PageBody
-        loading={loading && searchTerm === undefined}
         className={cx({ [css.withError]: !!error })}
         error={error ? getErrorMessage(error) : null}
         retryOnError={voidFn(refetch)}
@@ -135,6 +135,8 @@ export default function RepositoriesListing() {
           message: getString('repos.noDataMessage'),
           button: NewRepoButton
         }}>
+        <LoadingSpinner visible={loading && searchTerm === undefined} />
+
         <Container padding="xlarge">
           <Layout.Horizontal spacing="large" className={css.layout}>
             {NewRepoButton}

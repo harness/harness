@@ -4,6 +4,7 @@ import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { voidFn, getErrorMessage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useStrings } from 'framework/strings'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import type { GitInfoProps } from 'utils/GitUtils'
@@ -23,10 +24,9 @@ export default function Repository() {
 
   return (
     <Container className={css.main}>
-      <PageBody
-        loading={loading || resourceLoading}
-        error={getErrorMessage(error || resourceError)}
-        retryOnError={voidFn(refetch)}>
+      <PageBody error={getErrorMessage(error || resourceError)} retryOnError={voidFn(refetch)}>
+        <LoadingSpinner visible={loading || resourceLoading} withBorder={!!resourceContent && resourceLoading} />
+
         {!!repoMetadata && (
           <>
             <RepositoryHeader repoMetadata={repoMetadata} />

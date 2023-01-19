@@ -275,3 +275,4 @@ noCommitsPR: This Pull Request does not have commit history.
 noChanges: There is no changes
 noChangesPR: This Pull Request does not have any changes.
 noChangesCompare: Source and target are identical.
+pageLoading: Loading, please wait...
