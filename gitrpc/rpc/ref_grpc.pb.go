@@ -27,6 +27,7 @@ type ReferenceServiceClient interface {
 	ListBranches(ctx context.Context, in *ListBranchesRequest, opts ...grpc.CallOption) (ReferenceService_ListBranchesClient, error)
 	ListCommitTags(ctx context.Context, in *ListCommitTagsRequest, opts ...grpc.CallOption) (ReferenceService_ListCommitTagsClient, error)
 	GetRef(ctx context.Context, in *GetRefRequest, opts ...grpc.CallOption) (*GetRefResponse, error)
+	UpdateRef(ctx context.Context, in *UpdateRefRequest, opts ...grpc.CallOption) (*UpdateRefResponse, error)
 }
 
 type referenceServiceClient struct {
@@ -128,6 +129,15 @@ func (c *referenceServiceClient) GetRef(ctx context.Context, in *GetRefRequest, 
 	return out, nil
 }
 
+func (c *referenceServiceClient) UpdateRef(ctx context.Context, in *UpdateRefRequest, opts ...grpc.CallOption) (*UpdateRefResponse, error) {
+	out := new(UpdateRefResponse)
+	err := c.cc.Invoke(ctx, "/rpc.ReferenceService/UpdateRef", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ReferenceServiceServer is the server API for ReferenceService service.
 // All implementations must embed UnimplementedReferenceServiceServer
 // for forward compatibility
@@ -137,6 +147,7 @@ type ReferenceServiceServer interface {
 	ListBranches(*ListBranchesRequest, ReferenceService_ListBranchesServer) error
 	ListCommitTags(*ListCommitTagsRequest, ReferenceService_ListCommitTagsServer) error
 	GetRef(context.Context, *GetRefRequest) (*GetRefResponse, error)
+	UpdateRef(context.Context, *UpdateRefRequest) (*UpdateRefResponse, error)
 	mustEmbedUnimplementedReferenceServiceServer()
 }
 
@@ -158,6 +169,9 @@ func (UnimplementedReferenceServiceServer) ListCommitTags(*ListCommitTagsRequest
 }
 func (UnimplementedReferenceServiceServer) GetRef(context.Context, *GetRefRequest) (*GetRefResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRef not implemented")
+}
+func (UnimplementedReferenceServiceServer) UpdateRef(context.Context, *UpdateRefRequest) (*UpdateRefResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateRef not implemented")
 }
 func (UnimplementedReferenceServiceServer) mustEmbedUnimplementedReferenceServiceServer() {}
 
@@ -268,6 +282,24 @@ func _ReferenceService_GetRef_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ReferenceService_UpdateRef_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateRefRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReferenceServiceServer).UpdateRef(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.ReferenceService/UpdateRef",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReferenceServiceServer).UpdateRef(ctx, req.(*UpdateRefRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ReferenceService_ServiceDesc is the grpc.ServiceDesc for ReferenceService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -286,6 +318,10 @@ var ReferenceService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRef",
 			Handler:    _ReferenceService_GetRef_Handler,
+		},
+		{
+			MethodName: "UpdateRef",
+			Handler:    _ReferenceService_UpdateRef_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

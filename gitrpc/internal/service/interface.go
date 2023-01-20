@@ -8,6 +8,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/internal/types"
 )
 
@@ -39,7 +40,8 @@ type GitAdapter interface {
 	GetBranch(ctx context.Context, repoPath string, branchName string) (*types.Branch, error)
 	GetCommitDivergences(ctx context.Context, repoPath string,
 		requests []types.CommitDivergenceRequest, max int32) ([]types.CommitDivergence, error)
-	GetRef(ctx context.Context, repoPath string, name string, refType types.RefType) (string, error)
+	GetRef(ctx context.Context, repoPath string, name string, refType enum.RefType) (string, error)
+	UpdateRef(ctx context.Context, repoPath, refName string, refType enum.RefType, newValue, oldValue string) error
 	CreateTemporaryRepoForPR(ctx context.Context, reposTempPath string, pr *types.PullRequest) (string, error)
 	Merge(ctx context.Context, pr *types.PullRequest, mergeMethod string, trackingBranch string,
 		tmpBasePath string, mergeMsg string, env []string) error

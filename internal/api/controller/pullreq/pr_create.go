@@ -54,11 +54,14 @@ func (c *Controller) Create(
 		return nil, usererror.BadRequest("target and source branch can't be the same")
 	}
 
-	if errBranch := c.verifyBranchExistence(ctx, sourceRepo, in.SourceBranch); errBranch != nil {
-		return nil, errBranch
+	var sourceSHA string
+
+	if sourceSHA, err = c.verifyBranchExistence(ctx, sourceRepo, in.SourceBranch); err != nil {
+		return nil, err
 	}
-	if errBranch := c.verifyBranchExistence(ctx, targetRepo, in.TargetBranch); errBranch != nil {
-		return nil, errBranch
+
+	if _, err = c.verifyBranchExistence(ctx, targetRepo, in.TargetBranch); err != nil {
+		return nil, err
 	}
 
 	if err = c.checkIfAlreadyExists(ctx, targetRepo.ID, sourceRepo.ID, in.SourceBranch, in.TargetBranch); err != nil {
@@ -72,6 +75,8 @@ func (c *Controller) Create(
 	if err != nil {
 		return nil, fmt.Errorf("failed to aquire PullReqSeq number: %w", err)
 	}
+
+	_ = fmt.Sprintf("TODO: %s", sourceSHA) // TODO: Use sourceSHA to create git PR head ref
 
 	pr := newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in)
 

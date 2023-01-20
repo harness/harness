@@ -7,42 +7,27 @@ package gitrpc
 import (
 	"context"
 
+	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/rpc"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type RefType int
-
-const (
-	RefTypeBranch RefType = iota
-	RefTypeTag
-)
-
 type GetRefParams struct {
 	ReadParams
 	Name string
-	Type RefType
+	Type enum.RefType
 }
 
 type GetRefResponse struct {
 	SHA string
 }
 
-func (c *Client) GetRef(ctx context.Context, params *GetRefParams) (*GetRefResponse, error) {
-	if params == nil {
-		return nil, ErrNoParamsProvided
-	}
-
-	var refType rpc.GetRefRequest_RefType
-	switch params.Type {
-	case RefTypeBranch:
-		refType = rpc.GetRefRequest_Branch
-	case RefTypeTag:
-		refType = rpc.GetRefRequest_Tag
-	default:
-		return nil, ErrInvalidArgument
+func (c *Client) GetRef(ctx context.Context, params GetRefParams) (GetRefResponse, error) {
+	refType, isOk := enum.RefToRPC(params.Type)
+	if !isOk {
+		return GetRefResponse{}, ErrInvalidArgument
 	}
 
 	result, err := c.refService.GetRef(ctx, &rpc.GetRefRequest{
@@ -51,13 +36,36 @@ func (c *Client) GetRef(ctx context.Context, params *GetRefParams) (*GetRefRespo
 		RefType: refType,
 	})
 	if s, ok := status.FromError(err); err != nil && ok && s.Code() == codes.NotFound {
-		return nil, ErrNotFound
-	}
-	if err != nil {
-		return nil, err
+		return GetRefResponse{}, ErrNotFound
 	}
 
-	return &GetRefResponse{
-		SHA: result.Sha,
-	}, nil
+	return GetRefResponse{SHA: result.Sha}, nil
+}
+
+type UpdateRefParams struct {
+	WriteParams
+	Name     string
+	Type     enum.RefType
+	NewValue string
+	OldValue string
+}
+
+func (c *Client) UpdateRef(ctx context.Context, params UpdateRefParams) error {
+	refType, isOk := enum.RefToRPC(params.Type)
+	if !isOk {
+		return ErrInvalidArgument
+	}
+
+	_, err := c.refService.UpdateRef(ctx, &rpc.UpdateRefRequest{
+		Base:     mapToRPCWriteRequest(params.WriteParams),
+		RefName:  params.Name,
+		RefType:  refType,
+		NewValue: params.NewValue,
+		OldValue: params.OldValue,
+	})
+	if s, ok := status.FromError(err); err != nil && ok && s.Code() == codes.NotFound {
+		return ErrNotFound
+	}
+
+	return err
 }

@@ -11,6 +11,7 @@ service ReferenceService {
   rpc ListBranches(ListBranchesRequest) returns (stream ListBranchesResponse);
   rpc ListCommitTags(ListCommitTagsRequest) returns (stream ListCommitTagsResponse);
   rpc GetRef(GetRefRequest) returns (GetRefResponse);
+  rpc UpdateRef(UpdateRefRequest) returns (UpdateRefResponse);
 }
 
 message CreateBranchRequest {
@@ -89,12 +90,15 @@ message CommitTag {
   Commit commit     = 7;
 }
 
+enum RefType {
+  RefRaw = 0;
+  RefBranch = 1;
+  RefTag = 2;
+  RefPullReqHead = 3;
+  RefPullReqMerge = 4;
+}
+
 message GetRefRequest {
-  enum RefType {
-    Branch = 0;
-    Tag = 1;
-  }
-  
   ReadRequest base = 1;
   string ref_name  = 2;
   RefType ref_type = 3;
@@ -103,3 +107,13 @@ message GetRefRequest {
 message GetRefResponse {
   string sha = 1;
 }
+
+message UpdateRefRequest {
+  WriteRequest base = 1;
+  string ref_name  = 2;
+  RefType ref_type = 3;
+  string new_value = 4;
+  string old_value = 5;
+}
+
+message UpdateRefResponse {}

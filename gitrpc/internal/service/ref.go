@@ -10,6 +10,7 @@ import (
 	"math"
 	"strings"
 
+	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 
@@ -178,23 +179,18 @@ func wrapInstructorWithOptionalPagination(inner types.WalkReferencesInstructor,
 }
 
 func (s ReferenceService) GetRef(ctx context.Context,
-	request *rpc.GetRefRequest) (*rpc.GetRefResponse, error) {
-	base := request.GetBase()
-	if base == nil {
+	request *rpc.GetRefRequest,
+) (*rpc.GetRefResponse, error) {
+	if request.Base == nil {
 		return nil, types.ErrBaseCannotBeEmpty
 	}
 
-	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
-
-	var refType types.RefType
-	switch request.RefType {
-	case rpc.GetRefRequest_Branch:
-		refType = types.RefTypeBranch
-	case rpc.GetRefRequest_Tag:
-		refType = types.RefTypeTag
-	default:
-		return nil, status.Error(codes.InvalidArgument, "invalid value of refType argument")
+	refType, ok := enum.RefFromRPC(request.GetRefType())
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, "invalid value of RefType argument")
 	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, request.Base.GetRepoUid())
 
 	sha, err := s.adapter.GetRef(ctx, repoPath, request.RefName, refType)
 	if err != nil {
@@ -202,4 +198,26 @@ func (s ReferenceService) GetRef(ctx context.Context,
 	}
 
 	return &rpc.GetRefResponse{Sha: sha}, nil
+}
+
+func (s ReferenceService) UpdateRef(ctx context.Context,
+	request *rpc.UpdateRefRequest,
+) (*rpc.UpdateRefResponse, error) {
+	if request.Base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	refType, ok := enum.RefFromRPC(request.GetRefType())
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, "invalid value of RefType argument")
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, request.Base.GetRepoUid())
+
+	err := s.adapter.UpdateRef(ctx, repoPath, request.RefName, refType, request.NewValue, request.OldValue)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.UpdateRefResponse{}, nil
 }

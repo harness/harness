@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/gitrpc"
+	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/store"
@@ -69,16 +70,16 @@ func (c *Controller) ReviewSubmit(
 		return nil, usererror.BadRequest("Can't submit review to own pull requests.")
 	}
 
-	ref, err := c.gitRPCClient.GetRef(ctx, &gitrpc.GetRefParams{
+	ref, err := c.gitRPCClient.GetRef(ctx, gitrpc.GetRefParams{
 		ReadParams: gitrpc.ReadParams{RepoUID: repo.GitUID},
 		Name:       pr.TargetBranch,
-		Type:       gitrpc.RefTypeBranch,
+		Type:       gitrpcenum.RefTypeBranch,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get git branch sha: %w", err)
 	}
 
-	if ref == nil || ref.SHA == "" {
+	if ref.SHA == "" {
 		return nil, usererror.BadRequest("Failed to get branch SHA. Does the branch still exist?")
 	}
 

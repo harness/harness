@@ -18,7 +18,13 @@ type Interface interface {
 	CreateBranch(ctx context.Context, params *CreateBranchParams) (*CreateBranchOutput, error)
 	DeleteBranch(ctx context.Context, params *DeleteBranchParams) error
 	ListBranches(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error)
-	GetRef(ctx context.Context, params *GetRefParams) (*GetRefResponse, error)
+
+	GetRef(ctx context.Context, params GetRefParams) (GetRefResponse, error)
+
+	// UpdateRef creates, updates or deletes a git ref. If the OldValue is defined it must match the reference value
+	// prior to the call. To remove a ref use the zero ref as the NewValue. To require the creation of a new one and
+	// not update of an exiting one, set the zero ref as the OldValue.
+	UpdateRef(ctx context.Context, params UpdateRefParams) error
 
 	/*
 	 * Commits service

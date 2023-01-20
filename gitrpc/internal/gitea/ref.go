@@ -11,6 +11,7 @@ import (
 	"math"
 	"strings"
 
+	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/internal/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
@@ -126,14 +127,10 @@ func walkGiteaReferenceParser(parser *gitearef.Parser, handler types.WalkReferen
 	return nil
 }
 
-func (g Adapter) GetRef(ctx context.Context, repoPath, refName string, refType types.RefType) (string, error) {
-	switch refType {
-	case types.RefTypeBranch:
-		refName = gitea.BranchPrefix + refName
-	case types.RefTypeTag:
-		refName = gitea.TagPrefix + refName
-	default:
-		return "", types.ErrInvalidArgument
+func (g Adapter) GetRef(ctx context.Context, repoPath, refName string, refType enum.RefType) (string, error) {
+	refName, errRef := getRef(refName, refType)
+	if errRef != nil {
+		return "", errRef
 	}
 
 	cmd := gitea.NewCommand(ctx, "show-ref", "--verify", "-s", "--", refName)
@@ -148,4 +145,56 @@ func (g Adapter) GetRef(ctx context.Context, repoPath, refName string, refType t
 	}
 
 	return strings.TrimSpace(stdout), nil
+}
+
+func (g Adapter) UpdateRef(ctx context.Context,
+	repoPath, refName string, refType enum.RefType,
+	newValue, oldValue string,
+) error {
+	refName, errRef := getRef(refName, refType)
+	if errRef != nil {
+		return errRef
+	}
+
+	args := make([]string, 0, 4)
+	args = append(args, "update-ref", refName, newValue)
+	if oldValue != "" {
+		args = append(args, oldValue)
+	}
+
+	cmd := gitea.NewCommand(ctx, args...)
+	_, _, err := cmd.RunStdString(&gitea.RunOpts{
+		Dir: repoPath,
+	})
+	if err != nil {
+		if err.IsExitCode(128) {
+			return types.ErrNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
+func getRef(refName string, refType enum.RefType) (string, error) {
+	const (
+		refPullReqPrefix      = "refs/pullreq/"
+		refPullReqHeadSuffix  = "/head"
+		refPullReqMergeSuffix = "/merge"
+	)
+
+	switch refType {
+	case enum.RefTypeRaw:
+		return refName, nil
+	case enum.RefTypeBranch:
+		return gitea.BranchPrefix + refName, nil
+	case enum.RefTypeTag:
+		return gitea.TagPrefix + refName, nil
+	case enum.RefTypePullReqHead:
+		return refPullReqPrefix + refName + refPullReqHeadSuffix, nil
+	case enum.RefTypePullReqMerge:
+		return refPullReqPrefix + refName + refPullReqMergeSuffix, nil
+	default:
+		return "", types.ErrInvalidArgument
+	}
 }

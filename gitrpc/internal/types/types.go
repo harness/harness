@@ -80,13 +80,6 @@ func ParseGitReferenceField(f string) (GitReferenceField, error) {
 	}
 }
 
-type RefType int
-
-const (
-	RefTypeBranch RefType = iota
-	RefTypeTag
-)
-
 type WalkInstruction int
 
 const (
