@@ -1,5 +1,6 @@
 import React, { ReactElement } from 'react'
 import cx from 'classnames'
+import { omit } from 'lodash-es'
 import { Classes, IMenuItemProps, Menu } from '@blueprintjs/core'
 import { Button, ButtonProps } from '@harness/uicore'
 import type { PopoverProps } from '@harness/uicore/dist/components/Popover/Popover'
@@ -38,7 +39,7 @@ export const OptionsMenuButton = ({
                 <Menu.Item
                   key={(item as React.ComponentProps<typeof Menu.Item>)?.text as string}
                   className={cx(Classes.POPOVER_DISMISS, { [css.danger]: (item as OptionsMenuItem).isDanger })}
-                  {...(item as IMenuItemProps & React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+                  {...omit(item as IMenuItemProps & React.AnchorHTMLAttributes<HTMLAnchorElement>, 'isDanger')}
                 />
               )
           )}

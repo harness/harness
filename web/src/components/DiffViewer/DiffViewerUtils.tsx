@@ -1,22 +1,43 @@
 import type * as Diff2Html from 'diff2html'
 import HoganJsUtils from 'diff2html/lib/hoganjs-utils'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
+import type { TypesPullReqActivity } from 'services/code'
+import type { DiffFileEntry } from 'utils/types'
 
 export enum ViewStyle {
   SIDE_BY_SIDE = 'side-by-side',
   LINE_BY_LINE = 'line-by-line'
 }
 
+export enum CommentType {
+  PR_CODE_COMMENT = 'pr_code_comment'
+}
+
+export const PR_CODE_COMMENT_PAYLOAD_VERSION = '0.1'
+
+export interface PullRequestCodeCommentPayload {
+  type: CommentType
+  version: string // used to avoid rendering old payload structure
+  file_id: string // unique id of the changed file
+  file_title: string
+  language: string
+  is_on_left: boolean // comment made on the left side pane
+  at_line_number: number
+  line_number_range: number[]
+  range_text_content: string // raw text content where the comment is made
+  diff_html_snapshot: string // snapshot used to render diff in comment (PR Conversation). Could be used to send email notification too (with more work on capturing CSS styles and put them inline)
+}
+
 export const DIFF_VIEWER_HEADER_HEIGHT = 36
 // const DIFF_MAX_CHANGES = 100
 // const DIFF_MAX_LINE_LENGTH = 100
 
-export interface DiffCommentItem {
+export interface DiffCommentItem<T = Unknown> {
   left: boolean
   right: boolean
   lineNumber: number
   height: number
-  commentItems: CommentItem[]
+  commentItems: CommentItem<T>[]
 }
 
 export const DIFF2HTML_CONFIG = {
@@ -158,4 +179,61 @@ export function renderCommentOppositePlaceHolder(annotation: DiffCommentItem, op
     </td>
   `
   oppositeRowElement.after(placeHolderRow)
+}
+
+export const activityToCommentItem = (activity: TypesPullReqActivity): CommentItem<TypesPullReqActivity> => ({
+  author: activity.author?.display_name as string,
+  created: activity.created as number,
+  updated: activity.edited as number,
+  deleted: activity.deleted as number,
+  content: (activity.text || activity.payload?.Message) as string,
+  payload: activity
+})
+
+/**
+ * Take a small HTML snapshot of a diff in order to render code comment.
+ * @param atRow Row element where the comment is placed.
+ * @param maxNumberOfLines Maximum number of lines to take.
+ * @returns HTML content of the diff.
+ */
+export function getDiffHTMLSnapshot(atRow: HTMLTableRowElement, maxNumberOfLines = 3) {
+  const diffSnapshot = [atRow.outerHTML.trim()]
+
+  let prev = atRow.previousElementSibling
+
+  while (prev && diffSnapshot.length < maxNumberOfLines) {
+    diffSnapshot.unshift((prev.outerHTML || '').trim())
+    prev = prev.previousElementSibling
+  }
+
+  return diffSnapshot.join('')
+}
+
+export function getRawTextInRange(diff: DiffFileEntry, lineNumberRange: number[]) {
+  return (
+    (diff?.blocks[0]?.lines || [])
+      .filter(line => lineNumberRange.includes(line.newNumber as number))
+      .map(line => line.content)
+      .join('\n') || ''
+  )
+}
+
+export function activitiesToDiffCommentItems(diff: DiffFileEntry): DiffCommentItem<TypesPullReqActivity>[] {
+  return (
+    diff.fileActivities?.map(activity => {
+      const payload = activity.payload as PullRequestCodeCommentPayload
+      const replyComments =
+        diff.activities
+          ?.filter(replyActivity => replyActivity.parent_id === activity.id)
+          .map(_activity => activityToCommentItem(_activity)) || []
+
+      return {
+        left: payload.is_on_left,
+        right: !payload.is_on_left,
+        height: 0,
+        lineNumber: payload.at_line_number,
+        commentItems: [activityToCommentItem(activity)].concat(replyComments)
+      }
+    }) || []
+  )
 }

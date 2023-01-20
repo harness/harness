@@ -24,6 +24,7 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage } from 'utils/Utils'
+import { activityToCommentItem } from 'components/DiffViewer/DiffViewerUtils'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { PullRequestStatusInfo } from './PullRequestStatusInfo/PullRequestStatusInfo'
 import css from './Conversation.module.scss'
@@ -53,7 +54,7 @@ export const Conversation: React.FC<ConversationProps> = ({
     const threads: Record<number, CommentItem<TypesPullReqActivity>[]> = {}
 
     activities?.forEach(activity => {
-      const thread: CommentItem<TypesPullReqActivity> = toCommentItem(activity)
+      const thread: CommentItem<TypesPullReqActivity> = activityToCommentItem(activity)
 
       if (activity.parent_id) {
         threads[activity.parent_id].push(thread)
@@ -64,7 +65,7 @@ export const Conversation: React.FC<ConversationProps> = ({
     })
 
     newComments.forEach(newComment => {
-      threads[newComment.id as number] = [toCommentItem(newComment)]
+      threads[newComment.id as number] = [activityToCommentItem(newComment)]
     })
 
     return threads
@@ -138,7 +139,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                         case CommentAction.REPLY:
                           await saveComment({ text: value, parent_id: Number(threadId) })
                             .then(newComment => {
-                              updatedItem = toCommentItem(newComment)
+                              updatedItem = activityToCommentItem(newComment)
                             })
                             .catch(exception => {
                               result = false
@@ -149,7 +150,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                         case CommentAction.UPDATE:
                           await updateComment({ text: value }, { pathParams: { id } })
                             .then(newComment => {
-                              updatedItem = toCommentItem(newComment)
+                              updatedItem = activityToCommentItem(newComment)
                             })
                             .catch(exception => {
                               result = false
@@ -177,7 +178,7 @@ export const Conversation: React.FC<ConversationProps> = ({
 
                   await saveComment({ text: value })
                     .then((newComment: TypesPullReqActivity) => {
-                      updatedItem = toCommentItem(newComment)
+                      updatedItem = activityToCommentItem(newComment)
                       setNewComments([...newComments, newComment])
                     })
                     .catch(exception => {
@@ -320,12 +321,3 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
   console.warn('Unable to render system type activity', commentItems)
   return null
 }
-
-const toCommentItem = (activity: TypesPullReqActivity) => ({
-  author: activity.author?.display_name as string,
-  created: activity.created as number,
-  updated: activity.edited as number,
-  deleted: activity.deleted as number,
-  content: (activity.text || activity.payload?.Message) as string,
-  payload: activity
-})

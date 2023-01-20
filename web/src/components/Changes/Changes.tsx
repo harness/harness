@@ -20,9 +20,15 @@ import { useEventListener } from 'hooks/useEventListener'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
-import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
+import {
+  DIFF2HTML_CONFIG,
+  PR_CODE_COMMENT_PAYLOAD_VERSION,
+  PullRequestCodeCommentPayload,
+  ViewStyle
+} from 'components/DiffViewer/DiffViewerUtils'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
-import type { TypesPullReq } from 'services/code'
+import type { TypesPullReq, TypesPullReqActivity } from 'services/code'
+import { useShowRequestError } from 'hooks/useShowRequestError'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
@@ -31,15 +37,15 @@ import css from './Changes.module.scss'
 
 const STICKY_TOP_POSITION = 64
 const STICKY_HEADER_HEIGHT = 150
-const diffViewerId = (collection: Unknown[]) => collection.filter(Boolean).join('::::')
+const changedFileId = (collection: Unknown[]) => collection.filter(Boolean).join('::::')
 
 interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   targetBranch?: string
   sourceBranch?: string
   readOnly?: boolean
-  pullRequestMetadata?: TypesPullReq
   emptyTitle: string
   emptyMessage: string
+  pullRequestMetadata?: TypesPullReq
   className?: string
 }
 
@@ -48,9 +54,9 @@ export const Changes: React.FC<ChangesProps> = ({
   targetBranch,
   sourceBranch,
   readOnly,
-  pullRequestMetadata,
   emptyTitle,
   emptyMessage,
+  pullRequestMetadata,
   className
 }) => {
   const { getString } = useStrings()
@@ -66,6 +72,15 @@ export const Changes: React.FC<ChangesProps> = ({
   } = useGet<string>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/compare/${targetBranch}...${sourceBranch}`,
     lazy: !targetBranch || !sourceBranch
+  })
+  const {
+    data: activities,
+    loading: loadingActivities,
+    error: errorActivities
+    // refetch: refetchActivities
+  } = useGet<TypesPullReqActivity[]>({
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/activities`,
+    lazy: !pullRequestMetadata?.number
   })
 
   const diffStats = useMemo(
@@ -87,25 +102,44 @@ export const Changes: React.FC<ChangesProps> = ({
     if (rawDiff) {
       setDiffs(
         Diff2Html.parse(_raw, DIFF2HTML_CONFIG).map(diff => {
-          const viewerId = diffViewerId([diff.oldName, diff.newName])
-          const containerId = `container-${viewerId}`
-          const contentId = `content-${viewerId}`
+          const fileId = changedFileId([diff.oldName, diff.newName])
+          const containerId = `container-${fileId}`
+          const contentId = `content-${fileId}`
+          const fileTitle = diff.isDeleted
+            ? diff.oldName
+            : diff.isRename
+            ? `${diff.oldName} -> ${diff.newName}`
+            : diff.newName
+          const fileActivities: TypesPullReqActivity[] | undefined = activities?.filter(activity => {
+            const payload = activity.payload as PullRequestCodeCommentPayload
+            return payload?.file_id === fileId && payload?.version === PR_CODE_COMMENT_PAYLOAD_VERSION
+          })
 
-          return { ...diff, containerId, contentId }
+          return {
+            ...diff,
+            containerId,
+            contentId,
+            fileId,
+            fileTitle,
+            fileActivities: fileActivities || [],
+            activities: activities || []
+          }
         })
       )
     }
-  }, [rawDiff])
+  }, [rawDiff, activities])
 
   useEventListener(
     'scroll',
     useCallback(() => setSticky(window.scrollY >= STICKY_HEADER_HEIGHT), [])
   )
 
+  useShowRequestError(errorActivities)
+
   return (
     <Container className={cx(css.container, className)} {...(!!loading || !!error ? { flex: true } : {})}>
-      <LoadingSpinner visible={loading} />
-      {error && <PageError message={getErrorMessage(error)} onClick={voidFn(refetch)} />}
+      <LoadingSpinner visible={loading || loadingActivities} />
+      {error && <PageError message={getErrorMessage(error || errorActivities)} onClick={voidFn(refetch)} />}
       {!loading &&
         !error &&
         (diffs?.length ? (
@@ -158,18 +192,24 @@ export const Changes: React.FC<ChangesProps> = ({
               </Layout.Horizontal>
             </Container>
 
-            <Layout.Vertical spacing="large" className={cx(css.main, { [css.enableDiffLineBreaks]: lineBreaks })}>
+            {/* TODO: lineBreaks is broken in line-by-line view, enable it for side-by-side only now */}
+            <Layout.Vertical
+              spacing="large"
+              className={cx(css.main, {
+                [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
+              })}>
               {diffs?.map((diff, index) => (
                 // Note: `key={viewStyle + index + lineBreaks}` resets DiffView when view configuration
                 // is changed. Making it easier to control states inside DiffView itself, as it does not
                 //  have to deal with any view configuration
                 <DiffViewer
                   readOnly={readOnly}
-                  index={index}
                   key={viewStyle + index + lineBreaks}
                   diff={diff}
                   viewStyle={viewStyle}
                   stickyTopPosition={STICKY_TOP_POSITION}
+                  repoMetadata={repoMetadata}
+                  pullRequestMetadata={pullRequestMetadata}
                 />
               ))}
             </Layout.Vertical>

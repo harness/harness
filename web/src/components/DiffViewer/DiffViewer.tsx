@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useMutate } from 'restful-react'
 import ReactDOM from 'react-dom'
 import { useInView } from 'react-intersection-observer'
 import {
@@ -10,35 +11,43 @@ import {
   Layout,
   Text,
   ButtonSize,
-  Intent
+  useToaster
 } from '@harness/uicore'
 import cx from 'classnames'
 import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
-import { noop } from 'lodash-es'
 import { useStrings } from 'framework/strings'
-import { CodeIcon } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { useEventListener } from 'hooks/useEventListener'
 import type { DiffFileEntry } from 'utils/types'
+import { useConfirmAct } from 'hooks/useConfirmAction'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
-import { useConfirmAction } from 'hooks/useConfirmAction'
 import { useAppContext } from 'AppContext'
+import type { TypesPullReq, TypesPullReqActivity } from 'services/code'
+import { getErrorMessage } from 'utils/Utils'
 import {
+  activitiesToDiffCommentItems,
+  activityToCommentItem,
+  CommentType,
   DIFF2HTML_CONFIG,
   DiffCommentItem,
   DIFF_VIEWER_HEADER_HEIGHT,
   getCommentLineInfo,
+  getDiffHTMLSnapshot,
+  getRawTextInRange,
+  PR_CODE_COMMENT_PAYLOAD_VERSION,
+  PullRequestCodeCommentPayload,
   renderCommentOppositePlaceHolder,
   ViewStyle
 } from './DiffViewerUtils'
-import { CommentBox } from '../CommentBox/CommentBox'
+import { CommentAction, CommentBox, CommentItem } from '../CommentBox/CommentBox'
 import css from './DiffViewer.module.scss'
 
-interface DiffViewerProps {
-  index: number
+interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
   diff: DiffFileEntry
   viewStyle: ViewStyle
   stickyTopPosition?: number
   readOnly?: boolean
+  pullRequestMetadata?: TypesPullReq
 }
 
 //
@@ -46,7 +55,14 @@ interface DiffViewerProps {
 //       Avoid React re-rendering at all cost as it might cause unresponsive UI
 //       when diff content is big, or when a PR has a lot of changed files.
 //
-export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, stickyTopPosition = 0, readOnly }) => {
+export const DiffViewer: React.FC<DiffViewerProps> = ({
+  diff,
+  viewStyle,
+  stickyTopPosition = 0,
+  readOnly,
+  repoMetadata,
+  pullRequestMetadata
+}) => {
   const { getString } = useStrings()
   const [viewed, setViewed] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -58,42 +74,17 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
   const { ref: inViewRef, inView } = useInView({ rootMargin: '100px 0px' })
   const containerRef = useRef<HTMLDivElement | null>(null)
   const { currentUser } = useAppContext()
-  const executeDeleteComentConfirmation = useConfirmAction({
-    title: getString('delete'),
-    intent: Intent.DANGER,
-    message: <Text>{getString('deleteCommentConfirm')}</Text>,
-    action: async ({ commentEntry, onSuccess = noop }) => {
-      // TODO: Delete comment
-      onSuccess('Delete ', commentEntry)
-    }
-  })
-
-  const [comments, setComments] = useState<DiffCommentItem[]>(
-    !index
-      ? [
-          {
-            left: false,
-            right: true,
-            height: 0,
-            lineNumber: 11,
-            commentItems: [
-              `Logs will looks similar to\n\n<img width="1494" alt="image" src="https://user-images.githubusercontent.com/98799615/207994246-19ce9eb2-604f-4226-9a3c-6f4125d3b7cc.png">\n\n\ngitrpc logs using the \`ctx\` will have the following annotations:\n- \`grpc.service=rpc.ReferenceService\`\n- \`grpc.method=CreateBranch\`\n- \`grpc.peer=127.0.0.1:49364\`\n- \`grpc.request_id=cedrl6p1eqltblt13mgg\``,
-              `it seems we don't actually do anything with the explicit error type other than calling .Error(), which technically we could do on the original err object too? unless I'm missing something, could we then use errors.Is instead? (would avoid the extra var definitions at the top)`
-              //`If error is not converted then it will be detailed error: in BranchDelete: Branch doesn't exists. What we want is human readable error: Branch 'name' doesn't exists.`,
-              //  `* GitRPC isolated errors, bcoz this will be probably separate repo in future and we dont want every where to include grpc status codes in our main app\n* Errors are explicit for repsonses based on error passing by types`,
-              // `> global ctx in wire will kill all routines, right? is this affect middlewares and interceptors? because requests should finish they work, right?\n\nI've changed the code now to pass the config directly instead of the systemstore and context, to avoid confusion (what we discussed yesterday - I remove systemstore itself another time).`
-            ].map(content => ({
-              author: 'Tan Nhu',
-              created: '2022-12-21',
-              updated: '2022-12-21',
-              deleted: 0,
-              content
-            }))
-          }
-        ]
-      : []
+  const { showError } = useToaster()
+  const confirmAct = useConfirmAct()
+  const path = useMemo(
+    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/comments`,
+    [repoMetadata.path, pullRequestMetadata?.number]
   )
-  const commentsRef = useRef<DiffCommentItem[]>(comments)
+  const { mutate: saveComment } = useMutate({ verb: 'POST', path })
+  const { mutate: updateComment } = useMutate({ verb: 'PATCH', path: ({ id }) => `${path}/${id}` })
+  const { mutate: deleteComment } = useMutate({ verb: 'DELETE', path: ({ id }) => `${path}/${id}` })
+  const [comments, setComments] = useState<DiffCommentItem<TypesPullReqActivity>[]>(activitiesToDiffCommentItems(diff))
+  const commentsRef = useRef<DiffCommentItem<TypesPullReqActivity>[]>(comments)
   const setContainerRef = useCallback(
     node => {
       containerRef.current = node
@@ -282,11 +273,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
               <CommentBox
                 commentItems={comment.commentItems}
                 getString={getString}
-                width={isSideBySide ? 'calc(100vw / 2 - 163px)' : undefined}
+                width={isSideBySide ? 'calc(100vw / 2 - 163px)' : undefined} // TODO: Re-calcualte for standalone version
                 onHeightChange={boxHeight => {
                   if (comment.height !== boxHeight) {
                     comment.height = boxHeight
-                    // element.style.height = `${boxHeight}px`
                     setTimeout(() => setComments([...commentsRef.current]), 0)
                   }
                 }}
@@ -301,7 +291,90 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
                   setTimeout(() => setComments(commentsRef.current.filter(item => item !== comment)), 0)
                 }}
                 currentUserName={currentUser.display_name}
-                handleAction={async () => [true, undefined]} // TODO: Integrate with API
+                handleAction={async (action, value, commentItem) => {
+                  let result = true
+                  let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
+                  const id = (commentItem as CommentItem<TypesPullReqActivity>)?.payload?.id
+
+                  switch (action) {
+                    case CommentAction.NEW: {
+                      // This can be used to allow multiple-line selection when commenting
+                      const lineNumberRange = [comment.lineNumber]
+                      const payload: PullRequestCodeCommentPayload = {
+                        type: CommentType.PR_CODE_COMMENT,
+                        version: PR_CODE_COMMENT_PAYLOAD_VERSION,
+                        file_id: diff.fileId,
+                        file_title: diff.fileTitle,
+                        language: diff.language || '',
+                        is_on_left: comment.left,
+                        at_line_number: comment.lineNumber,
+                        line_number_range: lineNumberRange,
+                        range_text_content: getRawTextInRange(diff, lineNumberRange),
+                        diff_html_snapshot: getDiffHTMLSnapshot(rowElement)
+                      }
+
+                      await saveComment({ text: value, payload })
+                        .then((newComment: TypesPullReqActivity) => {
+                          updatedItem = activityToCommentItem(newComment)
+                        })
+                        .catch(exception => {
+                          result = false
+                          showError(getErrorMessage(exception), 0)
+                        })
+                      break
+                    }
+
+                    case CommentAction.REPLY: {
+                      const rootComment = diff.fileActivities?.find(
+                        activity => (activity.payload as PullRequestCodeCommentPayload).file_id === diff.fileId
+                      )
+
+                      if (rootComment) {
+                        await saveComment({ text: value, parent_id: Number(rootComment.id as number) })
+                          .then(newComment => {
+                            updatedItem = activityToCommentItem(newComment)
+                          })
+                          .catch(exception => {
+                            result = false
+                            showError(getErrorMessage(exception), 0)
+                          })
+                      }
+                      break
+                    }
+
+                    case CommentAction.DELETE: {
+                      result = false
+                      await confirmAct({
+                        message: getString('deleteCommentConfirm'),
+                        action: async () => {
+                          await deleteComment({}, { pathParams: { id } })
+                            .then(() => {
+                              result = true
+                            })
+                            .catch(exception => {
+                              result = false
+                              showError(getErrorMessage(exception), 0, getString('pr.failedToDeleteComment'))
+                            })
+                        }
+                      })
+                      break
+                    }
+
+                    case CommentAction.UPDATE: {
+                      await updateComment({ text: value }, { pathParams: { id } })
+                        .then(newComment => {
+                          updatedItem = activityToCommentItem(newComment)
+                        })
+                        .catch(exception => {
+                          result = false
+                          showError(getErrorMessage(exception), 0)
+                        })
+                      break
+                    }
+                  }
+
+                  return [result, updatedItem]
+                }}
               />,
               element
             )
@@ -318,7 +391,19 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
         // }
       })
     },
-    [comments, viewStyle, getString, currentUser, executeDeleteComentConfirmation, readOnly]
+    [
+      comments,
+      viewStyle,
+      getString,
+      currentUser,
+      readOnly,
+      diff,
+      saveComment,
+      showError,
+      updateComment,
+      deleteComment,
+      confirmAct
+    ]
   )
 
   useEffect(function cleanUpCommentBoxRendering() {
@@ -361,7 +446,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, index, viewStyle, 
               </Layout.Horizontal>
             </Container>
             <Text inline className={css.fname}>
-              {diff.isDeleted ? diff.oldName : diff.isRename ? `${diff.oldName} -> ${diff.newName}` : diff.newName}
+              {diff.fileTitle}
             </Text>
             <Button variation={ButtonVariation.ICON} icon={CodeIcon.Copy} size={ButtonSize.SMALL} />
             <FlexExpander />
