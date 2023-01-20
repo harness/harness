@@ -7,3 +7,17 @@
   border-radius: 5px;
   padding: var(--spacing-xlarge) !important;
 }
+
+.snapshot {
+  overflow: auto;
+  max-width: calc(100vw - 320px);
+  padding-bottom: 0 !important;
+
+  &.standalone {
+    max-width: calc(100vw - 120px); // TODO: Adjust this for standlone version
+  }
+
+  div[data-annotation-for-line] {
+    display: none !important;
+  }
+}

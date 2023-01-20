@@ -32,7 +32,7 @@ import {
   DiffCommentItem,
   DIFF_VIEWER_HEADER_HEIGHT,
   getCommentLineInfo,
-  getDiffHTMLSnapshot,
+  getDiffHTMLSnapshotFromRow,
   getRawTextInRange,
   PR_CODE_COMMENT_PAYLOAD_VERSION,
   PullRequestCodeCommentPayload,
@@ -298,10 +298,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
                   switch (action) {
                     case CommentAction.NEW: {
-                      // This can be used to allow multiple-line selection when commenting
+                      // lineNumberRange can be used to allow multiple-line selection when commenting in the future
                       const lineNumberRange = [comment.lineNumber]
                       const payload: PullRequestCodeCommentPayload = {
-                        type: CommentType.PR_CODE_COMMENT,
+                        type: CommentType.CODE_COMMENT,
                         version: PR_CODE_COMMENT_PAYLOAD_VERSION,
                         file_id: diff.fileId,
                         file_title: diff.fileTitle,
@@ -310,10 +310,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                         at_line_number: comment.lineNumber,
                         line_number_range: lineNumberRange,
                         range_text_content: getRawTextInRange(diff, lineNumberRange),
-                        diff_html_snapshot: getDiffHTMLSnapshot(rowElement)
+                        diff_html_snapshot: getDiffHTMLSnapshotFromRow(rowElement)
                       }
 
-                      await saveComment({ text: value, payload })
+                      await saveComment({ type: CommentType.CODE_COMMENT, text: value, payload })
                         .then((newComment: TypesPullReqActivity) => {
                           updatedItem = activityToCommentItem(newComment)
                         })
@@ -325,12 +325,16 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                     }
 
                     case CommentAction.REPLY: {
-                      const rootComment = diff.fileActivities?.find(
+                      const parentComment = diff.fileActivities?.find(
                         activity => (activity.payload as PullRequestCodeCommentPayload).file_id === diff.fileId
                       )
 
-                      if (rootComment) {
-                        await saveComment({ text: value, parent_id: Number(rootComment.id as number) })
+                      if (parentComment) {
+                        await saveComment({
+                          type: CommentType.CODE_COMMENT,
+                          text: value,
+                          parent_id: Number(parentComment.id as number)
+                        })
                           .then(newComment => {
                             updatedItem = activityToCommentItem(newComment)
                           })
@@ -473,11 +477,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         <Container id={diff.contentId} className={css.diffContent} ref={contentRef}>
           {renderCustomContent && (
             <Container>
-              <Layout.Vertical
-                padding="xlarge"
-                style={{
-                  alignItems: 'center'
-                }}>
+              <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>
                 {fileDeleted && (
                   <Button
                     variation={ButtonVariation.LINK}

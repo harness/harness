@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { ReactNode, useCallback, useRef, useState } from 'react'
 import { useResizeDetector } from 'react-resize-detector'
 import { Container, Layout, Avatar, TextInput, Text, Color, FontVariation, FlexExpander } from '@harness/uicore'
 import cx from 'classnames'
@@ -32,6 +32,7 @@ export enum CommentAction {
 }
 
 interface CommentBoxProps<T> {
+  header?: ReactNode
   getString: UseStringsReturn['getString']
   onHeightChange?: (height: number) => void
   width?: string
@@ -49,6 +50,7 @@ interface CommentBoxProps<T> {
 }
 
 export const CommentBox = <T = unknown,>({
+  header,
   getString,
   onHeightChange = noop,
   width,
@@ -99,6 +101,7 @@ export const CommentBox = <T = unknown,>({
       width={width}
       ref={ref}>
       <Container className={css.box}>
+        {header}
         <Layout.Vertical>
           <CommentsThread<T>
             commentItems={comments}

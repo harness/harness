@@ -13,6 +13,7 @@ import {
 } from '@harness/uicore'
 import { useGet, useMutate } from 'restful-react'
 import ReactTimeago from 'react-timeago'
+import cx from 'classnames'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import { useStrings } from 'framework/strings'
@@ -24,7 +25,11 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage } from 'utils/Utils'
-import { activityToCommentItem } from 'components/DiffViewer/DiffViewerUtils'
+import {
+  activityToCommentItem,
+  CommentType,
+  PullRequestCodeCommentPayload
+} from 'components/DiffViewer/DiffViewerUtils'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { PullRequestStatusInfo } from './PullRequestStatusInfo/PullRequestStatusInfo'
 import css from './Conversation.module.scss'
@@ -110,6 +115,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                   <CommentBox
                     key={threadId}
                     fluid
+                    header={<CodeCommentHeader commentItems={commentItems} />}
                     getString={getString}
                     commentItems={commentItems}
                     currentUserName={currentUser.display_name}
@@ -279,18 +285,48 @@ const DescriptionBox: React.FC<ConversationProps> = ({
   )
 }
 
-// function isReviewComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
-//   return (
-//     commentItems.length === 1 &&
-//     commentItems[0].payload?.kind === 'system' &&
-//     commentItems[0].payload?.payload?.Decision === 'reviewed'
-//   )
-// }
+function isCodeComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
+  return commentItems[0]?.payload?.payload?.type === CommentType.CODE_COMMENT
+}
+
+interface CodeCommentHeaderProps {
+  commentItems: CommentItem<TypesPullReqActivity>[]
+}
+
+const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({ commentItems }) => {
+  const { standalone } = useAppContext()
+
+  if (isCodeComment(commentItems)) {
+    const payload = commentItems[0]?.payload?.payload as PullRequestCodeCommentPayload
+
+    return (
+      <Container padding="large" className={cx(css.snapshot, { [css.standalone]: standalone })}>
+        <Layout.Vertical>
+          <Container>{payload?.file_title || ''}</Container>
+          <Container className="d2h-wrapper">
+            <Container className="d2h-file-wrapper line-by-line-file-diff">
+              <Container className="d2h-file-diff">
+                <Container className="d2h-code-wrapper">
+                  <table className="d2h-diff-table" cellPadding="0px" cellSpacing="0px">
+                    <tbody
+                      className="d2h-diff-tbody"
+                      dangerouslySetInnerHTML={{
+                        __html: payload?.diff_html_snapshot || ''
+                      }}></tbody>
+                  </table>
+                </Container>
+              </Container>
+            </Container>
+          </Container>
+        </Layout.Vertical>
+      </Container>
+    )
+  }
+  return null
+}
 
 function isSystemComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
-  return (
-    commentItems.length === 1 && commentItems[0].payload?.kind === 'system' && commentItems[0].payload?.type === 'merge'
-  )
+  return commentItems.length === 1 && commentItems[0].payload?.kind === 'system'
 }
 
 interface SystemBoxProps extends Pick<GitInfoProps, 'pullRequestMetadata'> {
@@ -299,25 +335,34 @@ interface SystemBoxProps extends Pick<GitInfoProps, 'pullRequestMetadata'> {
 
 const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems }) => {
   const { getString } = useStrings()
+  const type = commentItems[0].payload?.type
 
-  if (commentItems[0].payload?.type === 'merge') {
-    return (
-      <Text className={css.box}>
-        <Icon name={CodeIcon.PullRequest} color={Color.PURPLE_700} padding={{ right: 'small' }} />
-        <StringSubstitute
-          str={getString('pr.prMergedInfo')}
-          vars={{
-            user: <strong>{pullRequestMetadata.merger?.display_name}</strong>,
-            source: <strong>{pullRequestMetadata.source_branch}</strong>,
-            target: <strong>{pullRequestMetadata.target_branch} </strong>,
-            time: <ReactTimeago date={pullRequestMetadata.merged as number} />
-          }}
-        />
-      </Text>
-    )
+  switch (type) {
+    case 'merge': {
+      return (
+        <Text className={css.box}>
+          <Icon name={CodeIcon.PullRequest} color={Color.PURPLE_700} padding={{ right: 'small' }} />
+          <StringSubstitute
+            str={getString('pr.prMergedInfo')}
+            vars={{
+              user: <strong>{pullRequestMetadata.merger?.display_name}</strong>,
+              source: <strong>{pullRequestMetadata.source_branch}</strong>,
+              target: <strong>{pullRequestMetadata.target_branch} </strong>,
+              time: <ReactTimeago date={pullRequestMetadata.merged as number} />
+            }}
+          />
+        </Text>
+      )
+    }
+    default: {
+      // eslint-disable-next-line no-console
+      console.warn('Unable to render system type activity', commentItems)
+      return (
+        <Text className={css.box}>
+          <Icon name={CodeIcon.Commit} padding={{ right: 'small' }} />
+          {type}
+        </Text>
+      )
+    }
   }
-
-  // eslint-disable-next-line no-console
-  console.warn('Unable to render system type activity', commentItems)
-  return null
 }

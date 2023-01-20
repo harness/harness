@@ -1,5 +1,7 @@
 import type * as Diff2Html from 'diff2html'
+// import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
 import HoganJsUtils from 'diff2html/lib/hoganjs-utils'
+// import type { DiffLine } from 'diff2html/lib/types'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
 import type { TypesPullReqActivity } from 'services/code'
 import type { DiffFileEntry } from 'utils/types'
@@ -10,7 +12,11 @@ export enum ViewStyle {
 }
 
 export enum CommentType {
-  PR_CODE_COMMENT = 'pr_code_comment'
+  COMMENT = 'comment',
+  CODE_COMMENT = 'code-comment',
+  TITLE_CHANGE = 'title-change',
+  REVIEW_SUBMIT = 'review-submit',
+  MERGE = 'merge'
 }
 
 export const PR_CODE_COMMENT_PAYLOAD_VERSION = '0.1'
@@ -139,7 +145,9 @@ export function getCommentLineInfo(
   )
   const rowElement = (
     diffBody?.querySelector(`[data-content-for-line-number="${lineNumber}"]`) ||
-    diffBody?.querySelector(`[data-line-number="${lineNumber}"]`)
+    diffBody?.querySelector(
+      `${!isSideBySideView ? (left ? '.line-num1' : '.line-num2') : ''}[data-line-number="${lineNumber}"]`
+    )
   )?.closest('tr') as HTMLTableRowElement
 
   let node = rowElement as Element
@@ -196,21 +204,65 @@ export const activityToCommentItem = (activity: TypesPullReqActivity): CommentIt
  * @param maxNumberOfLines Maximum number of lines to take.
  * @returns HTML content of the diff.
  */
-export function getDiffHTMLSnapshot(atRow: HTMLTableRowElement, maxNumberOfLines = 3) {
+export function getDiffHTMLSnapshotFromRow(atRow: HTMLTableRowElement, maxNumberOfLines = 5) {
+  let linesCapturedCount = 0
   const diffSnapshot = [atRow.outerHTML.trim()]
 
   let prev = atRow.previousElementSibling
 
-  while (prev && diffSnapshot.length < maxNumberOfLines) {
-    diffSnapshot.unshift((prev.outerHTML || '').trim())
+  while (prev && linesCapturedCount < maxNumberOfLines) {
+    if (!prev.hasAttribute('data-annotated-line') && !prev.hasAttribute('data-place-holder-for-line')) {
+      // Don't count empty lines
+      const textContent = prev.textContent?.replace(/\s/g, '')
+      if (textContent?.length && textContent !== '+') {
+        linesCapturedCount++
+      }
+
+      if (textContent !== '+') {
+        diffSnapshot.unshift((prev.outerHTML || '').trim())
+      }
+    }
     prev = prev.previousElementSibling
   }
 
   return diffSnapshot.join('')
 }
 
+// export function getDiffHTMLSnapshotFromDiff(diff: DiffFileEntry, lineNumberRange: number[], isOnLeft: boolean) {
+//   const lines = diff?.blocks.reduce((group, item) => {
+//     group = group.concat(item.lines)
+//     return group
+//   }, [] as DiffLine[])
+
+//   const lastIndex = lines.findIndex(line =>
+//     lineNumberRange.includes((isOnLeft ? line.oldNumber : line.newNumber) as number)
+//   )
+//   const startIndex = Math.max(0, lastIndex - 5)
+
+//   const copiedLines = lines.slice(startIndex, lastIndex)
+//   const copiedDiff: DiffFileEntry = {
+//     ...diff,
+//     blocks: [
+//       {
+//         header: '',
+//         lines: copiedLines,
+//         newStartLine: copiedLines[0].newNumber as number,
+//         oldStartLine: copiedLines[0].oldNumber as number
+//       }
+//     ]
+//   }
+
+//   // console.log({ isOnLeft, startIndex, lastIndex, copiedLines, lines, lineNumberRange })
+
+//   const div = document.createElement('div')
+//   new Diff2HtmlUI(div, [copiedDiff], Object.assign({}, DIFF2HTML_CONFIG, { outputFormat: 'line-by-line' })).draw()
+
+//   return div.querySelector('table')?.outerHTML || ''
+// }
+
 export function getRawTextInRange(diff: DiffFileEntry, lineNumberRange: number[]) {
   return (
+    // TODO: This is wrong, blocks can have multiple items, not one
     (diff?.blocks[0]?.lines || [])
       .filter(line => lineNumberRange.includes(line.newNumber as number))
       .map(line => line.content)
