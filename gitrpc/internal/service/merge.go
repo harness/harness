@@ -132,11 +132,16 @@ func (s MergeService) MergeBranch(
 		mergeMsg += "\n\n" + strings.TrimSpace(request.GetMessage())
 	}
 
+	// no error check needed, all branches are created on fly as ref to remote ones
+	baseCommitSHA, _, _ := s.adapter.GetMergeBase(ctx, tmpBasePath, "origin", baseBranch, trackingBranch)
+	headCommit, _ := s.adapter.GetCommit(ctx, tmpBasePath, trackingBranch)
+	headCommitSHA := headCommit.SHA
+
 	if err = s.adapter.Merge(ctx, pr, "merge", trackingBranch, tmpBasePath, mergeMsg, env); err != nil {
 		return nil, err
 	}
 
-	mergeCommitID, err := s.adapter.GetFullCommitID(ctx, tmpBasePath, baseBranch)
+	mergeCommitSHA, err := s.adapter.GetFullCommitID(ctx, tmpBasePath, baseBranch)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get full commit id for the new merge: %w", err)
 	}
@@ -151,7 +156,9 @@ func (s MergeService) MergeBranch(
 	}
 
 	return &rpc.MergeBranchResponse{
-		CommitId: mergeCommitID,
+		MergeSha: mergeCommitSHA,
+		BaseSha:  baseCommitSHA,
+		HeadSha:  headCommitSHA,
 	}, nil
 }
 

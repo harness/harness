@@ -10,15 +10,16 @@ import (
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
+	"github.com/harness/gitness/internal/api/controller"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 type Branch struct {
-	Name   string  `json:"name"`
-	SHA    string  `json:"sha"`
-	Commit *Commit `json:"commit,omitempty"`
+	Name   string        `json:"name"`
+	SHA    string        `json:"sha"`
+	Commit *types.Commit `json:"commit,omitempty"`
 }
 
 /*
@@ -88,10 +89,10 @@ func mapToRPCSortOrder(o enum.Order) gitrpc.SortOrder {
 }
 
 func mapBranch(b gitrpc.Branch) (Branch, error) {
-	var commit *Commit
+	var commit *types.Commit
 	if b.Commit != nil {
 		var err error
-		commit, err = mapCommit(b.Commit)
+		commit, err = controller.MapCommit(b.Commit)
 		if err != nil {
 			return Branch{}, err
 		}

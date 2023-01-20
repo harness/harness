@@ -273,3 +273,23 @@ func (g Adapter) GetDiffTree(ctx context.Context, repoPath, baseBranch, headBran
 
 	return out.String(), nil
 }
+
+// GetMergeBase checks and returns merge base of two branches and the reference used as base.
+func (g Adapter) GetMergeBase(ctx context.Context, repoPath, remote, base, head string) (string, string, error) {
+	if remote == "" {
+		remote = "origin"
+	}
+
+	if remote != "origin" {
+		tmpBaseName := git.RemotePrefix + remote + "/tmp_" + base
+		// Fetch commit into a temporary branch in order to be able to handle commits and tags
+		_, _, err := git.NewCommand(ctx, "fetch", "--no-tags", remote, "--",
+			base+":"+tmpBaseName).RunStdString(&git.RunOpts{Dir: repoPath})
+		if err == nil {
+			base = tmpBaseName
+		}
+	}
+
+	stdout, _, err := git.NewCommand(ctx, "merge-base", "--", base, head).RunStdString(&git.RunOpts{Dir: repoPath})
+	return strings.TrimSpace(stdout), base, err
+}

@@ -8,11 +8,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"time"
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
+	"github.com/harness/gitness/internal/api/controller"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -32,29 +33,11 @@ const (
 )
 
 type ContentInfo struct {
-	Type         ContentType `json:"type"`
-	SHA          string      `json:"sha"`
-	Name         string      `json:"name"`
-	Path         string      `json:"path"`
-	LatestCommit *Commit     `json:"latest_commit,omitempty"`
-}
-
-type Commit struct {
-	SHA       string    `json:"sha"`
-	Title     string    `json:"title"`
-	Message   string    `json:"message"`
-	Author    Signature `json:"author"`
-	Committer Signature `json:"committer"`
-}
-
-type Signature struct {
-	Identity Identity  `json:"identity"`
-	When     time.Time `json:"when"`
-}
-
-type Identity struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	Type         ContentType   `json:"type"`
+	SHA          string        `json:"sha"`
+	Name         string        `json:"name"`
+	Path         string        `json:"path"`
+	LatestCommit *types.Commit `json:"latest_commit,omitempty"`
 }
 
 type GetContentOutput struct {
@@ -274,51 +257,13 @@ func mapToContentInfo(node *gitrpc.TreeNode, commit *gitrpc.Commit) (*ContentInf
 
 	// parse commit only if available
 	if commit != nil {
-		res.LatestCommit, err = mapCommit(commit)
+		res.LatestCommit, err = controller.MapCommit(commit)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	return res, nil
-}
-
-func mapCommit(c *gitrpc.Commit) (*Commit, error) {
-	if c == nil {
-		return nil, fmt.Errorf("commit is nil")
-	}
-
-	author, err := mapSignature(&c.Author)
-	if err != nil {
-		return nil, fmt.Errorf("failed to map author: %w", err)
-	}
-
-	committer, err := mapSignature(&c.Committer)
-	if err != nil {
-		return nil, fmt.Errorf("failed to map committer: %w", err)
-	}
-
-	return &Commit{
-		SHA:       c.SHA,
-		Title:     c.Title,
-		Message:   c.Message,
-		Author:    *author,
-		Committer: *committer,
-	}, nil
-}
-
-func mapSignature(s *gitrpc.Signature) (*Signature, error) {
-	if s == nil {
-		return nil, fmt.Errorf("signature is nil")
-	}
-
-	return &Signature{
-		Identity: Identity{
-			Name:  s.Identity.Name,
-			Email: s.Identity.Email,
-		},
-		When: s.When,
-	}, nil
 }
 
 func mapNodeModeToContentType(m gitrpc.TreeNodeMode) (ContentType, error) {

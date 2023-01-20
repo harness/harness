@@ -2,43 +2,48 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package repo
+package pullreq
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/controller"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
-* ListCommits lists the commits of a repo.
- */
-func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
-	repoRef string, gitRef string, filter *types.CommitFilter) ([]types.Commit, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+// Commits lists all commits from pr head branch.
+func (c *Controller) Commits(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	pullreqNum int64,
+	filter *types.PaginationFilter,
+) ([]types.Commit, error) {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
-		return nil, err
+	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, pullreqNum)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
-	// set gitRef to default branch in case an empty reference was provided
-	if gitRef == "" {
-		gitRef = repo.DefaultBranch
+	gitRef := pr.SourceBranch
+	afterRef := pr.TargetBranch
+	if pr.State == enum.PullReqStateMerged {
+		gitRef = *pr.MergeHeadSHA
+		afterRef = *pr.MergeBaseSHA
 	}
 
 	rpcOut, err := c.gitRPCClient.ListCommits(ctx, &gitrpc.ListCommitsParams{
-		ReadParams: CreateRPCReadParams(repo),
+		ReadParams: gitrpc.CreateRPCReadParams(repo),
 		GitREF:     gitRef,
-		After:      filter.After,
+		After:      afterRef,
 		Page:       int32(filter.Page),
 		Limit:      int32(filter.Limit),
 	})

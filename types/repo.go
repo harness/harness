@@ -38,6 +38,10 @@ type Repository struct {
 	GitURL string `db:"-" json:"git_url"`
 }
 
+func (r Repository) GetGitUID() string {
+	return r.GitUID
+}
+
 // RepoFilter stores repo query parameters.
 type RepoFilter struct {
 	Page  int           `json:"page"`

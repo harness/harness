@@ -374,7 +374,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListCommits.WithParameters(queryParameterGitRef, queryParameterAfterCommits,
 		queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opListCommits, new(listCommitsRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opListCommits, []repo.Commit{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListCommits, []types.Commit{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusForbidden)

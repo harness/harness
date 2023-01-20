@@ -92,8 +92,8 @@ func (c *Controller) Merge(
 		// TODO: for forking merge title might be different?
 		mergeTitle := fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
 
-		// TODO: do we really want to do this in the DB transaction?
-		sha, err = c.gitRPCClient.MergeBranch(ctx, &gitrpc.MergeBranchParams{
+		var mergeOutput gitrpc.MergeBranchOutput
+		mergeOutput, err = c.gitRPCClient.MergeBranch(ctx, &gitrpc.MergeBranchParams{
 			WriteParams:      writeParams,
 			BaseBranch:       pr.TargetBranch,
 			HeadRepoUID:      sourceRepo.GitUID,
@@ -113,6 +113,9 @@ func (c *Controller) Merge(
 		pr.Merged = &now
 		pr.MergedBy = &session.Principal.ID
 		pr.State = enum.PullReqStateMerged
+
+		pr.MergeBaseSHA = &mergeOutput.BaseSHA
+		pr.MergeHeadSHA = &mergeOutput.HeadSHA
 
 		err = c.pullreqStore.Update(ctx, pr)
 		if err != nil {

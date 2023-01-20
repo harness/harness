@@ -29,8 +29,9 @@ message MergeBranchRequest {
   bool delete_head_branch = 7;
 }
 
-// This comment is left unintentionally blank.
 message MergeBranchResponse {
-  // The merge commit the branch will be updated to. The caller can still abort the merge.
-  string commit_id = 1;
+  // The merge_sha is merge commit between head_sha and base_sha
+  string merge_sha = 1;
+  string base_sha  = 2;
+  string head_sha  = 3;
 }

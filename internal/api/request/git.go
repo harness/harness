@@ -64,7 +64,9 @@ func ParseTagFilter(r *http.Request) *types.TagFilter {
 func ParseCommitFilter(r *http.Request) *types.CommitFilter {
 	return &types.CommitFilter{
 		After: QueryParamOrDefault(r, QueryParamAfter, ""),
-		Page:  ParsePage(r),
-		Limit: ParseLimit(r),
+		PaginationFilter: types.PaginationFilter{
+			Page:  ParsePage(r),
+			Limit: ParseLimit(r),
+		},
 	}
 }

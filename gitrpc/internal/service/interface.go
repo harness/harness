@@ -43,6 +43,7 @@ type GitAdapter interface {
 	CreateTemporaryRepoForPR(ctx context.Context, reposTempPath string, pr *types.PullRequest) (string, error)
 	Merge(ctx context.Context, pr *types.PullRequest, mergeMethod string, trackingBranch string,
 		tmpBasePath string, mergeMsg string, env []string) error
+	GetMergeBase(ctx context.Context, repoPath, remote, base, head string) (string, string, error)
 	GetDiffTree(ctx context.Context, repoPath, baseBranch, headBranch string) (string, error)
 	RawDiff(ctx context.Context, repoPath, base, head string, w io.Writer, args ...string) error
 }

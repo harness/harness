@@ -18,6 +18,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// TODO: this file should be in gitrpc package and should accept
+// params as interface (contract)
+
 // CreateRPCWriteParams creates base write parameters for gitrpc write operations.
 // IMPORTANT: session & repo are assumed to be not nil!
 // TODO: this is duplicate function from repo controller, we need to see where this
@@ -48,5 +51,43 @@ func CreateRPCWriteParams(ctx context.Context, urlProvider *url.Provider,
 		},
 		RepoUID: repo.GitUID,
 		EnvVars: envVars,
+	}, nil
+}
+
+func MapCommit(c *gitrpc.Commit) (*types.Commit, error) {
+	if c == nil {
+		return nil, fmt.Errorf("commit is nil")
+	}
+
+	author, err := MapSignature(&c.Author)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map author: %w", err)
+	}
+
+	committer, err := MapSignature(&c.Committer)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map committer: %w", err)
+	}
+
+	return &types.Commit{
+		SHA:       c.SHA,
+		Title:     c.Title,
+		Message:   c.Message,
+		Author:    *author,
+		Committer: *committer,
+	}, nil
+}
+
+func MapSignature(s *gitrpc.Signature) (*types.Signature, error) {
+	if s == nil {
+		return nil, fmt.Errorf("signature is nil")
+	}
+
+	return &types.Signature{
+		Identity: types.Identity{
+			Name:  s.Identity.Name,
+			Email: s.Identity.Email,
+		},
+		When: s.When,
 	}, nil
 }

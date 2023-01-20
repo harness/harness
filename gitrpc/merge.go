@@ -10,6 +10,7 @@ import (
 	"github.com/harness/gitness/gitrpc/rpc"
 )
 
+// MergeBranchParams is input structure object for merging operation.
 type MergeBranchParams struct {
 	WriteParams
 	BaseBranch       string
@@ -21,9 +22,18 @@ type MergeBranchParams struct {
 	DeleteHeadBranch bool
 }
 
-func (c *Client) MergeBranch(ctx context.Context, params *MergeBranchParams) (string, error) {
+// MergeBranchResult is result object from merging and returns
+// base, head and commit sha.
+type MergeBranchOutput struct {
+	MergedSHA string
+	BaseSHA   string
+	HeadSHA   string
+}
+
+// MergeBranch merge head branch to base branch.
+func (c *Client) MergeBranch(ctx context.Context, params *MergeBranchParams) (MergeBranchOutput, error) {
 	if params == nil {
-		return "", ErrNoParamsProvided
+		return MergeBranchOutput{}, ErrNoParamsProvided
 	}
 
 	resp, err := c.mergeService.MergeBranch(ctx, &rpc.MergeBranchRequest{
@@ -36,7 +46,11 @@ func (c *Client) MergeBranch(ctx context.Context, params *MergeBranchParams) (st
 		DeleteHeadBranch: params.DeleteHeadBranch,
 	})
 	if err != nil {
-		return "", err
+		return MergeBranchOutput{}, err
 	}
-	return resp.CommitId, nil
+	return MergeBranchOutput{
+		MergedSHA: resp.GetMergeSha(),
+		BaseSHA:   resp.GetBaseSha(),
+		HeadSHA:   resp.GetHeadSha(),
+	}, nil
 }

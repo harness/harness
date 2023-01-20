@@ -4,15 +4,24 @@
 
 package types
 
-import "github.com/harness/gitness/types/enum"
+import (
+	"time"
+
+	"github.com/harness/gitness/types/enum"
+)
 
 const NilSHA = "0000000000000000000000000000000000000000"
 
+// PaginationFilter stores pagination query parameters.
+type PaginationFilter struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
+}
+
 // CommitFilter stores commit query parameters.
 type CommitFilter struct {
+	PaginationFilter
 	After string `json:"after"`
-	Page  int    `json:"page"`
-	Limit int    `json:"limit"`
 }
 
 // BranchFilter stores branch query parameters.
@@ -31,4 +40,22 @@ type TagFilter struct {
 	Order enum.Order         `json:"order"`
 	Page  int                `json:"page"`
 	Size  int                `json:"size"`
+}
+
+type Commit struct {
+	SHA       string    `json:"sha"`
+	Title     string    `json:"title"`
+	Message   string    `json:"message"`
+	Author    Signature `json:"author"`
+	Committer Signature `json:"committer"`
+}
+
+type Signature struct {
+	Identity Identity  `json:"identity"`
+	When     time.Time `json:"when"`
+}
+
+type Identity struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }

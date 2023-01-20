@@ -10,19 +10,20 @@ import (
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
+	"github.com/harness/gitness/internal/api/controller"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
 type CommitTag struct {
-	Name        string     `json:"name"`
-	SHA         string     `json:"sha"`
-	IsAnnotated bool       `json:"is_annotated"`
-	Title       string     `json:"title,omitempty"`
-	Message     string     `json:"message,omitempty"`
-	Tagger      *Signature `json:"tagger,omitempty"`
-	Commit      *Commit    `json:"commit,omitempty"`
+	Name        string           `json:"name"`
+	SHA         string           `json:"sha"`
+	IsAnnotated bool             `json:"is_annotated"`
+	Title       string           `json:"title,omitempty"`
+	Message     string           `json:"message,omitempty"`
+	Tagger      *types.Signature `json:"tagger,omitempty"`
+	Commit      *types.Commit    `json:"commit,omitempty"`
 }
 
 /*
@@ -78,19 +79,19 @@ func mapToRPCTagSortOption(o enum.TagSortOption) gitrpc.TagSortOption {
 }
 
 func mapCommitTag(t gitrpc.CommitTag) (CommitTag, error) {
-	var commit *Commit
+	var commit *types.Commit
 	if t.Commit != nil {
 		var err error
-		commit, err = mapCommit(t.Commit)
+		commit, err = controller.MapCommit(t.Commit)
 		if err != nil {
 			return CommitTag{}, err
 		}
 	}
 
-	var tagger *Signature
+	var tagger *types.Signature
 	if t.Tagger != nil {
 		var err error
-		tagger, err = mapSignature(t.Tagger)
+		tagger, err = controller.MapSignature(t.Tagger)
 		if err != nil {
 			return CommitTag{}, err
 		}

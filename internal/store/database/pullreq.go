@@ -226,6 +226,8 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_merged_by = :pullreq_merged_by
 		,pullreq_merged = :pullreq_merged
 		,pullreq_merge_strategy = :pullreq_merge_strategy
+		,pullreq_merge_head_sha = :pullreq_merge_head_sha
+		,pullreq_merge_base_sha = :pullreq_merge_base_sha
 	WHERE pullreq_id = :pullreq_id AND pullreq_version = :pullreq_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
