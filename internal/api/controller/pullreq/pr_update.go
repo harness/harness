@@ -105,29 +105,30 @@ func getUpdateActivity(session *auth.Session, pr *types.PullReq, in *UpdateInput
 	now := time.Now().UnixMilli()
 
 	act := &types.PullReqActivity{
-		ID:        0, // Will be populated in the data layer
-		Version:   0,
-		CreatedBy: session.Principal.ID,
-		Created:   now,
-		Updated:   now,
-		Edited:    now,
-		Deleted:   nil,
-		RepoID:    pr.TargetRepoID,
-		PullReqID: pr.ID,
-		Order:     0, // Will be filled in writeActivity
-		SubOrder:  0,
-		ReplySeq:  0,
-		Type:      enum.PullReqActivityTypeTitleChange,
-		Kind:      enum.PullReqActivityKindSystem,
-		Text:      "",
-		Payload: map[string]interface{}{
-			"old": pr.Title,
-			"new": in.Title,
-		},
+		ID:         0, // Will be populated in the data layer
+		Version:    0,
+		CreatedBy:  session.Principal.ID,
+		Created:    now,
+		Updated:    now,
+		Edited:     now,
+		Deleted:    nil,
+		RepoID:     pr.TargetRepoID,
+		PullReqID:  pr.ID,
+		Order:      0, // Will be filled in writeActivity
+		SubOrder:   0,
+		ReplySeq:   0,
+		Type:       enum.PullReqActivityTypeTitleChange,
+		Kind:       enum.PullReqActivityKindSystem,
+		Text:       "",
 		Metadata:   nil,
 		ResolvedBy: nil,
 		Resolved:   nil,
 	}
+
+	_ = act.SetPayload(&types.PullRequestActivityPayloadTitleChange{
+		Old: pr.Title,
+		New: in.Title,
+	})
 
 	return act
 }

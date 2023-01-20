@@ -361,7 +361,7 @@ func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
 		Type:       act.Type,
 		Kind:       act.Kind,
 		Text:       act.Text,
-		Payload:    make(map[string]interface{}),
+		PayloadRaw: act.Payload,
 		Metadata:   make(map[string]interface{}),
 		ResolvedBy: act.ResolvedBy.Ptr(),
 		Resolved:   act.Resolved.Ptr(),
@@ -369,7 +369,6 @@ func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
 		Resolver:   nil,
 	}
 
-	_ = json.Unmarshal(act.Payload, &m.Payload)
 	_ = json.Unmarshal(act.Metadata, &m.Metadata)
 
 	return m
@@ -393,13 +392,12 @@ func mapInternalPullReqActivity(act *types.PullReqActivity) *pullReqActivity {
 		Type:       act.Type,
 		Kind:       act.Kind,
 		Text:       act.Text,
-		Payload:    nil,
+		Payload:    act.PayloadRaw,
 		Metadata:   nil,
 		ResolvedBy: null.IntFromPtr(act.ResolvedBy),
 		Resolved:   null.IntFromPtr(act.Resolved),
 	}
 
-	m.Payload, _ = json.Marshal(act.Payload)
 	m.Metadata, _ = json.Marshal(act.Metadata)
 
 	return m

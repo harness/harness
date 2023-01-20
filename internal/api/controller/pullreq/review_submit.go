@@ -160,31 +160,32 @@ func (c *Controller) updateReviewer(ctx context.Context, session *auth.Session,
 func getReviewSubmitActivity(session *auth.Session, pr *types.PullReq, in *ReviewSubmitInput) *types.PullReqActivity {
 	now := time.Now().UnixMilli()
 	act := &types.PullReqActivity{
-		ID:        0, // Will be populated in the data layer
-		Version:   0,
-		CreatedBy: session.Principal.ID,
-		Created:   now,
-		Updated:   now,
-		Edited:    now,
-		Deleted:   nil,
-		ParentID:  nil, // Will be filled in CommentCreate
-		RepoID:    pr.TargetRepoID,
-		PullReqID: pr.ID,
-		Order:     0, // Will be filled in writeActivity/writeReplyActivity
-		SubOrder:  0, // Will be filled in writeReplyActivity
-		ReplySeq:  0,
-		Type:      enum.PullReqActivityTypeTitleChange,
-		Kind:      enum.PullReqActivityKindSystem,
-		Text:      "",
-		Payload: map[string]interface{}{
-			"Message":  in.Message,
-			"Decision": in.Decision,
-		},
+		ID:         0, // Will be populated in the data layer
+		Version:    0,
+		CreatedBy:  session.Principal.ID,
+		Created:    now,
+		Updated:    now,
+		Edited:     now,
+		Deleted:    nil,
+		ParentID:   nil, // Will be filled in CommentCreate
+		RepoID:     pr.TargetRepoID,
+		PullReqID:  pr.ID,
+		Order:      0, // Will be filled in writeActivity/writeReplyActivity
+		SubOrder:   0, // Will be filled in writeReplyActivity
+		ReplySeq:   0,
+		Type:       enum.PullReqActivityTypeTitleChange,
+		Kind:       enum.PullReqActivityKindSystem,
+		Text:       "",
 		Metadata:   nil,
 		ResolvedBy: nil,
 		Resolved:   nil,
 		Author:     *session.Principal.ToPrincipalInfo(),
 	}
+
+	_ = act.SetPayload(&types.PullRequestActivityPayloadReviewSubmit{
+		Message:  in.Message,
+		Decision: in.Decision,
+	})
 
 	return act
 }

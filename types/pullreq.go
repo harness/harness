@@ -58,58 +58,6 @@ type PullReqFilter struct {
 	Order         enum.Order          `json:"order"`
 }
 
-// PullReqActivity represents a pull request activity.
-type PullReqActivity struct {
-	ID      int64 `json:"id"`
-	Version int64 `json:"-"` // not returned, it's an internal field
-
-	CreatedBy int64  `json:"-"` // not returned, because the author info is in the Author field
-	Created   int64  `json:"created"`
-	Updated   int64  `json:"-"` // not returned, it's updated by the server internally. Clients should use EditedAt.
-	Edited    int64  `json:"edited"`
-	Deleted   *int64 `json:"deleted"`
-
-	ParentID  *int64 `json:"parent_id"`
-	RepoID    int64  `json:"repo_id"`
-	PullReqID int64  `json:"pullreq_id"`
-
-	Order    int64 `json:"order"`
-	SubOrder int64 `json:"sub_order"`
-	ReplySeq int64 `json:"-"` // not returned, because it's a server's internal field
-
-	Type enum.PullReqActivityType `json:"type"`
-	Kind enum.PullReqActivityKind `json:"kind"`
-
-	Text     string                 `json:"text"`
-	Payload  map[string]interface{} `json:"payload"`
-	Metadata map[string]interface{} `json:"metadata"`
-
-	ResolvedBy *int64 `json:"-"` // not returned, because the resolver info is in the Resolver field
-	Resolved   *int64 `json:"resolved"`
-
-	Author   PrincipalInfo  `json:"author"`
-	Resolver *PrincipalInfo `json:"resolver"`
-}
-
-func (a *PullReqActivity) IsReplyable() bool {
-	return (a.Type == enum.PullReqActivityTypeComment || a.Type == enum.PullReqActivityTypeCodeComment) &&
-		a.SubOrder == 0
-}
-
-func (a *PullReqActivity) IsReply() bool {
-	return a.SubOrder > 0
-}
-
-// PullReqActivityFilter stores pull request activity query parameters.
-type PullReqActivityFilter struct {
-	After  int64 `json:"after"`
-	Before int64 `json:"before"`
-	Limit  int   `json:"limit"`
-
-	Types []enum.PullReqActivityType `json:"type"`
-	Kinds []enum.PullReqActivityKind `json:"kind"`
-}
-
 // PullReqReview holds pull request review.
 type PullReqReview struct {
 	ID int64 `json:"id"`

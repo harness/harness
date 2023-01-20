@@ -41,7 +41,7 @@ func (c *Controller) ActivityList(
 	for _, act := range list {
 		if act.Deleted != nil {
 			act.Text = ""
-			act.Payload = nil
+			_ = act.SetPayload(nil)
 		}
 	}
 

@@ -87,11 +87,12 @@ func (s *Service) handleEventBranchUpdated(ctx context.Context,
 			Type:      enum.PullReqActivityTypeBranchUpdate,
 			Kind:      enum.PullReqActivityKindSystem,
 			Text:      "",
-			Payload: map[string]interface{}{
-				"old": event.Payload.OldSHA,
-				"new": event.Payload.NewSHA,
-			},
 		}
+
+		_ = act.SetPayload(&types.PullRequestActivityPayloadBranchUpdate{
+			Old: event.Payload.OldSHA,
+			New: event.Payload.NewSHA,
+		})
 
 		err = s.activityStore.Create(ctx, act)
 		if err != nil {
@@ -130,10 +131,11 @@ func (s *Service) handleEventBranchDeleted(ctx context.Context,
 			Type:      enum.PullReqActivityTypeBranchDelete,
 			Kind:      enum.PullReqActivityKindSystem,
 			Text:      "",
-			Payload: map[string]interface{}{
-				"sha": event.Payload.SHA,
-			},
 		}
+
+		_ = act.SetPayload(&types.PullRequestActivityPayloadBranchDelete{
+			SHA: event.Payload.SHA,
+		})
 
 		err = s.activityStore.Create(ctx, act)
 		if err != nil {

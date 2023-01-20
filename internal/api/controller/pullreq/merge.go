@@ -142,29 +142,30 @@ func getMergeActivity(session *auth.Session, pr *types.PullReq, in *MergeInput, 
 	now := time.Now().UnixMilli()
 
 	act := &types.PullReqActivity{
-		ID:        0, // Will be populated in the data layer
-		Version:   0,
-		CreatedBy: session.Principal.ID,
-		Created:   now,
-		Updated:   now,
-		Edited:    now,
-		Deleted:   nil,
-		RepoID:    pr.TargetRepoID,
-		PullReqID: pr.ID,
-		Order:     0, // Will be filled in writeActivity
-		SubOrder:  0,
-		ReplySeq:  0,
-		Type:      enum.PullReqActivityTypeMerge,
-		Kind:      enum.PullReqActivityKindSystem,
-		Text:      "",
-		Payload: map[string]interface{}{
-			"merge_method": in.Method,
-			"sha":          sha,
-		},
+		ID:         0, // Will be populated in the data layer
+		Version:    0,
+		CreatedBy:  session.Principal.ID,
+		Created:    now,
+		Updated:    now,
+		Edited:     now,
+		Deleted:    nil,
+		RepoID:     pr.TargetRepoID,
+		PullReqID:  pr.ID,
+		Order:      0, // Will be filled in writeActivity
+		SubOrder:   0,
+		ReplySeq:   0,
+		Type:       enum.PullReqActivityTypeMerge,
+		Kind:       enum.PullReqActivityKindSystem,
+		Text:       "",
 		Metadata:   nil,
 		ResolvedBy: nil,
 		Resolved:   nil,
 	}
+
+	_ = act.SetPayload(&types.PullRequestActivityPayloadMerge{
+		MergeMethod: in.Method,
+		SHA:         sha,
+	})
 
 	return act
 }

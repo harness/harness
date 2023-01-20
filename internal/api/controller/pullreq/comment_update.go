@@ -6,6 +6,7 @@ package pullreq
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -16,8 +17,30 @@ import (
 )
 
 type CommentUpdateInput struct {
-	Text    string                 `json:"text"`
-	Payload map[string]interface{} `json:"payload"`
+	Text    *string                                  `json:"text"`
+	Payload *types.PullRequestActivityPayloadComment `json:"payload"`
+}
+
+func (in *CommentUpdateInput) hasChanges(act *types.PullReqActivity) (bool, error) {
+	if in.Text != nil && *in.Text != act.Text {
+		return true, nil
+	}
+
+	if in.Payload != nil {
+		oldPayload, err := act.GetPayload()
+		if errors.Is(err, types.ErrNoPayload) {
+			return true, nil
+		}
+		if err != nil {
+			return false, fmt.Errorf("failed to get old payload: %w", err)
+		}
+
+		if !reflect.DeepEqual(oldPayload, in.Payload) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 // CommentUpdate updates a pull request comment.
@@ -44,14 +67,23 @@ func (c *Controller) CommentUpdate(
 		return nil, fmt.Errorf("failed to get comment: %w", err)
 	}
 
-	if act.Text == in.Text && reflect.DeepEqual(act.Payload, in.Payload) {
+	hasChanges, err := in.hasChanges(act)
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify if input has changes: %w", err)
+	}
+	if !hasChanges {
 		return act, nil
 	}
 
 	now := time.Now().UnixMilli()
 	act.Edited = now
-	act.Text = in.Text
-	act.Payload = in.Payload
+
+	if in.Text != nil {
+		act.Text = *in.Text
+	}
+	if in.Payload != nil {
+		_ = act.SetPayload(in.Payload)
+	}
 
 	err = c.activityStore.Update(ctx, act)
 	if err != nil {

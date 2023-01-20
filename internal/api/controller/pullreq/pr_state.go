@@ -119,15 +119,6 @@ func (c *Controller) State(ctx context.Context,
 
 func getStateActivity(session *auth.Session, pr *types.PullReq, in *StateInput) *types.PullReqActivity {
 	now := time.Now().UnixMilli()
-	payload := map[string]interface{}{
-		"old":      pr.State,
-		"new":      in.State,
-		"is_draft": in.IsDraft,
-	}
-	if len(in.Message) != 0 {
-		payload["message"] = in.Message
-	}
-
 	act := &types.PullReqActivity{
 		ID:         0, // Will be populated in the data layer
 		Version:    0,
@@ -144,11 +135,17 @@ func getStateActivity(session *auth.Session, pr *types.PullReq, in *StateInput) 
 		Type:       enum.PullReqActivityTypeStateChange,
 		Kind:       enum.PullReqActivityKindSystem,
 		Text:       "",
-		Payload:    payload,
 		Metadata:   nil,
 		ResolvedBy: nil,
 		Resolved:   nil,
 	}
+
+	_ = act.SetPayload(&types.PullRequestActivityPayloadStateChange{
+		Old:     pr.State,
+		New:     in.State,
+		IsDraft: in.IsDraft,
+		Message: in.Message,
+	})
 
 	return act
 }

@@ -115,12 +115,16 @@ func (c *Controller) getCommentCheckEditAccess(ctx context.Context,
 	}
 
 	comment, err := c.activityStore.Find(ctx, commentID)
-	if err != nil || comment == nil {
+	if err != nil {
 		return nil, fmt.Errorf("failed to find comment by ID: %w", err)
 	}
 
+	if comment == nil || comment.Type != enum.PullReqActivityTypeComment {
+		return nil, usererror.ErrNotFound
+	}
+
 	if comment.Deleted != nil || comment.RepoID != pr.TargetRepoID || comment.PullReqID != pr.ID {
-		return nil, store.ErrResourceNotFound
+		return nil, usererror.ErrNotFound
 	}
 
 	if comment.Kind == enum.PullReqActivityKindSystem {
