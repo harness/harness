@@ -14,6 +14,7 @@ import {
   useToaster
 } from '@harness/uicore'
 import cx from 'classnames'
+import { Render } from 'react-jsx-match'
 import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
@@ -186,7 +187,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         const targetButton = target?.closest('[data-annotation-for-line]') as HTMLDivElement
         const annotatedLineRow = targetButton?.closest('tr') as HTMLTableRowElement
 
-        const commentItem: DiffCommentItem = {
+        const commentItem: DiffCommentItem<TypesPullReqActivity> = {
           left: false,
           right: false,
           lineNumber: 0,
@@ -272,6 +273,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             ReactDOM.render(
               <CommentBox
                 commentItems={comment.commentItems}
+                initialContent={getInitialCommentContentFromSelection(diff)}
                 getString={getString}
                 width={isSideBySide ? 'calc(100vw / 2 - 163px)' : undefined} // TODO: Re-calcualte for standalone version
                 onHeightChange={boxHeight => {
@@ -436,17 +438,19 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             />
             <Container style={{ alignSelf: 'center' }} padding={{ right: 'small' }}>
               <Layout.Horizontal spacing="xsmall">
-                {!!diff.addedLines && (
+                <Render when={diff.addedLines}>
                   <Text color={Color.GREEN_600} style={{ fontSize: '12px' }}>
                     +{diff.addedLines}
                   </Text>
-                )}
-                {!!diff.addedLines && !!diff.deletedLines && <PipeSeparator height={8} />}
-                {!!diff.deletedLines && (
+                </Render>
+                <Render when={diff.addedLines && diff.deletedLines}>
+                  <PipeSeparator height={8} />
+                </Render>
+                <Render when={diff.deletedLines}>
                   <Text color={Color.RED_500} style={{ fontSize: '12px' }}>
                     -{diff.deletedLines}
                   </Text>
-                )}
+                </Render>
               </Layout.Horizontal>
             </Container>
             <Text inline className={css.fname}>
@@ -455,7 +459,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             <Button variation={ButtonVariation.ICON} icon={CodeIcon.Copy} size={ButtonSize.SMALL} />
             <FlexExpander />
 
-            {!readOnly && (
+            <Render when={!readOnly}>
               <Container>
                 <label className={css.viewLabel}>
                   <input
@@ -470,15 +474,15 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                   {getString('viewed')}
                 </label>
               </Container>
-            )}
+            </Render>
           </Layout.Horizontal>
         </Container>
 
         <Container id={diff.contentId} className={css.diffContent} ref={contentRef}>
-          {renderCustomContent && (
+          <Render when={renderCustomContent}>
             <Container>
               <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>
-                {fileDeleted && (
+                <Render when={fileDeleted}>
                   <Button
                     variation={ButtonVariation.LINK}
                     onClick={() => {
@@ -487,13 +491,17 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                     }}>
                     {getString('pr.showDiff')}
                   </Button>
-                )}
+                </Render>
                 <Text>{getString(fileDeleted ? 'pr.fileDeleted' : 'pr.fileUnchanged')}</Text>
               </Layout.Vertical>
             </Container>
-          )}
+          </Render>
         </Container>
       </Layout.Vertical>
     </Container>
   )
+}
+
+function getInitialCommentContentFromSelection(_diff: DiffFileEntry) {
+  return ''
 }

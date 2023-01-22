@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { Container, Color, TableV2 as Table, Text } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
+import { Render } from 'react-jsx-match'
 import { sortBy } from 'lodash-es'
 import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
@@ -83,7 +84,9 @@ export function FolderContent({
         getRowClassName={() => css.row}
       />
 
-      {!!readmeInfo && <Readme metadata={repoMetadata} readmeInfo={readmeInfo} />}
+      <Render when={readmeInfo}>
+        <Readme metadata={repoMetadata} readmeInfo={readmeInfo as OpenapiContentInfo} gitRef={gitRef} />
+      </Render>
     </Container>
   )
 }

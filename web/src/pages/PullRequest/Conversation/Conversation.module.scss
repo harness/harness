@@ -9,12 +9,57 @@
 }
 
 .snapshot {
-  overflow: auto;
-  max-width: calc(100vw - 320px);
-  padding-bottom: 0 !important;
+  --border-color: var(--grey-200);
+  --radius: 4px;
 
-  &.standalone {
-    max-width: calc(100vw - 120px); // TODO: Adjust this for standlone version
+  .title {
+    display: grid;
+    align-items: center;
+    background-color: var(--grey-100);
+    padding: 5px 10px 5px 10px;
+    border: 1px solid var(--border-color);
+    border-top-left-radius: var(--radius);
+    border-top-right-radius: var(--radius);
+
+    .fname {
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      color: var(--grey-900) !important;
+      align-self: center;
+    }
+  }
+
+  .snapshotContent {
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+
+    border-bottom-left-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
+
+    :global {
+      .d2h-wrapper > div {
+        margin-bottom: 0;
+      }
+
+      .d2h-file-wrapper {
+        border: 0;
+      }
+
+      .d2h-diff-tbody,
+      .d2h-diff-tbody tr:last-of-type td:last-of-type {
+        border-bottom-left-radius: var(--radius);
+        border-bottom-right-radius: var(--radius);
+      }
+
+      .d2h-code-side-linenumber {
+        border-left: 0;
+      }
+
+      .d2h-code-side-linenumber {
+        width: 56px;
+      }
+    }
   }
 
   div[data-annotation-for-line] {

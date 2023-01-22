@@ -9,6 +9,7 @@ import {
   Button,
   PageError
 } from '@harness/uicore'
+import { Match, Case, Render } from 'react-jsx-match'
 import * as Diff2Html from 'diff2html'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
@@ -29,6 +30,7 @@ import {
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import type { TypesPullReq, TypesPullReqActivity } from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
+// import { Render } from 'components/Render/Render'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
@@ -139,83 +141,85 @@ export const Changes: React.FC<ChangesProps> = ({
   return (
     <Container className={cx(css.container, className)} {...(!!loading || !!error ? { flex: true } : {})}>
       <LoadingSpinner visible={loading || loadingActivities} />
-      {error && <PageError message={getErrorMessage(error || errorActivities)} onClick={voidFn(refetch)} />}
-      {!loading &&
-        !error &&
-        (diffs?.length ? (
-          <>
-            <Container className={css.header}>
-              <Layout.Horizontal>
-                <Container flex={{ alignItems: 'center' }}>
-                  {/* Files Changed stats */}
-                  <Text flex className={css.diffStatsLabel}>
-                    <StringSubstitute
-                      str={getString('pr.diffStatsLabel')}
-                      vars={{
-                        changedFilesLink: <ChangesDropdown diffs={diffs} />,
-                        addedLines: formatNumber(diffStats.addedLines),
-                        deletedLines: formatNumber(diffStats.deletedLines),
-                        configuration: (
-                          <DiffViewConfiguration
-                            viewStyle={viewStyle}
-                            setViewStyle={setViewStyle}
-                            lineBreaks={lineBreaks}
-                            setLineBreaks={setLineBreaks}
-                          />
-                        )
-                      }}
-                    />
-                  </Text>
-
-                  {/* Show "Scroll to top" button */}
-                  {isSticky && (
-                    <Layout.Horizontal padding={{ left: 'small' }}>
-                      <PipeSeparator height={10} />
-                      <Button
-                        variation={ButtonVariation.ICON}
-                        icon="arrow-up"
-                        iconProps={{ size: 14 }}
-                        onClick={() => window.scroll({ top: 0 })}
-                        tooltip={getString('scrollToTop')}
-                        tooltipProps={{ isDark: true }}
+      <Render when={error}>
+        <PageError message={getErrorMessage(error || errorActivities)} onClick={voidFn(refetch)} />
+      </Render>
+      <Render when={!loading && !error}>
+        <Match expr={diffs?.length}>
+          <Case val={(len: number) => len > 0}>
+            <>
+              <Container className={css.header}>
+                <Layout.Horizontal>
+                  <Container flex={{ alignItems: 'center' }}>
+                    {/* Files Changed stats */}
+                    <Text flex className={css.diffStatsLabel}>
+                      <StringSubstitute
+                        str={getString('pr.diffStatsLabel')}
+                        vars={{
+                          changedFilesLink: <ChangesDropdown diffs={diffs} />,
+                          addedLines: formatNumber(diffStats.addedLines),
+                          deletedLines: formatNumber(diffStats.deletedLines),
+                          configuration: (
+                            <DiffViewConfiguration
+                              viewStyle={viewStyle}
+                              setViewStyle={setViewStyle}
+                              lineBreaks={lineBreaks}
+                              setLineBreaks={setLineBreaks}
+                            />
+                          )
+                        }}
                       />
-                    </Layout.Horizontal>
-                  )}
-                </Container>
-                <FlexExpander />
+                    </Text>
 
-                <ReviewDecisionButton
-                  repoMetadata={repoMetadata}
-                  pullRequestMetadata={pullRequestMetadata}
-                  shouldHide={readOnly || pullRequestMetadata?.state === 'merged'}
-                />
-              </Layout.Horizontal>
-            </Container>
+                    {/* Show "Scroll to top" button */}
+                    <Render when={isSticky}>
+                      <Layout.Horizontal padding={{ left: 'small' }}>
+                        <PipeSeparator height={10} />
+                        <Button
+                          variation={ButtonVariation.ICON}
+                          icon="arrow-up"
+                          iconProps={{ size: 14 }}
+                          onClick={() => window.scroll({ top: 0 })}
+                          tooltip={getString('scrollToTop')}
+                          tooltipProps={{ isDark: true }}
+                        />
+                      </Layout.Horizontal>
+                    </Render>
+                  </Container>
+                  <FlexExpander />
 
-            {/* TODO: lineBreaks is broken in line-by-line view, enable it for side-by-side only now */}
-            <Layout.Vertical
-              spacing="large"
-              className={cx(css.main, {
-                [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
-              })}>
-              {diffs?.map((diff, index) => (
-                // Note: `key={viewStyle + index + lineBreaks}` resets DiffView when view configuration
-                // is changed. Making it easier to control states inside DiffView itself, as it does not
-                //  have to deal with any view configuration
-                <DiffViewer
-                  readOnly={readOnly}
-                  key={viewStyle + index + lineBreaks}
-                  diff={diff}
-                  viewStyle={viewStyle}
-                  stickyTopPosition={STICKY_TOP_POSITION}
-                  repoMetadata={repoMetadata}
-                  pullRequestMetadata={pullRequestMetadata}
-                />
-              ))}
-            </Layout.Vertical>
-          </>
-        ) : (
-          diffs?.length === 0 && (
+                  <ReviewDecisionButton
+                    repoMetadata={repoMetadata}
+                    pullRequestMetadata={pullRequestMetadata}
+                    shouldHide={readOnly || pullRequestMetadata?.state === 'merged'}
+                  />
+                </Layout.Horizontal>
+              </Container>
+
+              {/* TODO: lineBreaks is broken in line-by-line view, enable it for side-by-side only now */}
+              <Layout.Vertical
+                spacing="large"
+                className={cx(css.main, {
+                  [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
+                })}>
+                {diffs?.map((diff, index) => (
+                  // Note: `key={viewStyle + index + lineBreaks}` resets DiffView when view configuration
+                  // is changed. Making it easier to control states inside DiffView itself, as it does not
+                  //  have to deal with any view configuration
+                  <DiffViewer
+                    readOnly={readOnly}
+                    key={viewStyle + index + lineBreaks}
+                    diff={diff}
+                    viewStyle={viewStyle}
+                    stickyTopPosition={STICKY_TOP_POSITION}
+                    repoMetadata={repoMetadata}
+                    pullRequestMetadata={pullRequestMetadata}
+                  />
+                ))}
+              </Layout.Vertical>
+            </>
+          </Case>
+          <Case val={0}>
             <Container padding="xlarge">
               <NoResultCard
                 showWhen={() => diffs?.length === 0}
@@ -224,8 +228,9 @@ export const Changes: React.FC<ChangesProps> = ({
                 emptySearchMessage={emptyMessage}
               />
             </Container>
-          )
-        ))}
+          </Case>
+        </Match>
+      </Render>
     </Container>
   )
 }

@@ -13,13 +13,12 @@ import {
 } from '@harness/uicore'
 import { useGet, useMutate } from 'restful-react'
 import ReactTimeago from 'react-timeago'
-import cx from 'classnames'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type { TypesPullReqActivity } from 'services/code'
-import { CommentAction, CommentBox, CommentItem } from 'components/CommentBox/CommentBox'
+import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
@@ -115,7 +114,6 @@ export const Conversation: React.FC<ConversationProps> = ({
                   <CommentBox
                     key={threadId}
                     fluid
-                    header={<CodeCommentHeader commentItems={commentItems} />}
                     getString={getString}
                     commentItems={commentItems}
                     currentUserName={currentUser.display_name}
@@ -166,6 +164,9 @@ export const Conversation: React.FC<ConversationProps> = ({
                       }
 
                       return [result, updatedItem]
+                    }}
+                    outlets={{
+                      [CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]: <CodeCommentHeader commentItems={commentItems} />
                     }}
                   />
                 )
@@ -294,26 +295,30 @@ interface CodeCommentHeaderProps {
 }
 
 const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({ commentItems }) => {
-  const { standalone } = useAppContext()
-
   if (isCodeComment(commentItems)) {
     const payload = commentItems[0]?.payload?.payload as PullRequestCodeCommentPayload
 
     return (
-      <Container padding="large" className={cx(css.snapshot, { [css.standalone]: standalone })}>
+      <Container className={css.snapshot}>
         <Layout.Vertical>
-          <Container>{payload?.file_title || ''}</Container>
-          <Container className="d2h-wrapper">
-            <Container className="d2h-file-wrapper line-by-line-file-diff">
-              <Container className="d2h-file-diff">
-                <Container className="d2h-code-wrapper">
-                  <table className="d2h-diff-table" cellPadding="0px" cellSpacing="0px">
-                    <tbody
-                      className="d2h-diff-tbody"
-                      dangerouslySetInnerHTML={{
-                        __html: payload?.diff_html_snapshot || ''
-                      }}></tbody>
-                  </table>
+          <Container className={css.title}>
+            <Text inline className={css.fname}>
+              {payload?.file_title || ''}
+            </Text>
+          </Container>
+          <Container className={css.snapshotContent}>
+            <Container className="d2h-wrapper">
+              <Container className="d2h-file-wrapper line-by-line-file-diff">
+                <Container className="d2h-file-diff">
+                  <Container className="d2h-code-wrapper">
+                    <table className="d2h-diff-table" cellPadding="0px" cellSpacing="0px">
+                      <tbody
+                        className="d2h-diff-tbody"
+                        dangerouslySetInnerHTML={{
+                          __html: payload?.diff_html_snapshot || ''
+                        }}></tbody>
+                    </table>
+                  </Container>
                 </Container>
               </Container>
             </Container>
@@ -338,7 +343,7 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
   const type = commentItems[0].payload?.type
 
   switch (type) {
-    case 'merge': {
+    case CommentType.MERGE: {
       return (
         <Text className={css.box}>
           <Icon name={CodeIcon.PullRequest} color={Color.PURPLE_700} padding={{ right: 'small' }} />

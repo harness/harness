@@ -3,6 +3,8 @@
 declare const styles: {
   readonly box: string
   readonly snapshot: string
-  readonly standalone: string
+  readonly title: string
+  readonly fname: string
+  readonly snapshotContent: string
 }
 export default styles

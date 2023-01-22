@@ -10551,6 +10551,11 @@ react-join@^1.1.4:
   resolved "https://registry.yarnpkg.com/react-join/-/react-join-1.1.4.tgz#77c9c69b75ea596c1782a5e61426a104fda556a2"
   integrity sha512-u0WPv3VtIm1QjHnO+tSaRXb4gAsE+IRuhluyqgjz1+Vyv+A/eP4bKQHPj0Wnq5eQj7LxbHCWfJTa/tUhV/qoUQ==
 
+react-jsx-match@^1.1.5:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/react-jsx-match/-/react-jsx-match-1.1.5.tgz#d25511f698e5ad43fa3ef94017bf28b78ee254b0"
+  integrity sha512-0GAYq1Gm8apDS35dq6pTueKV2K+6pVNywQ9fCRNjAaiDrV7jcHUkWHeEybQWWjOPZ3rv5d9k+cEKyL+pfc6stg==
+
 react-keywords@^0.0.5:
   version "0.0.5"
   resolved "https://registry.yarnpkg.com/react-keywords/-/react-keywords-0.0.5.tgz#4ea20805c7aad22dfa09804ca5a40904ea7043bb"

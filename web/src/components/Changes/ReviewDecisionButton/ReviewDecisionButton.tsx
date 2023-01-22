@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Radio, RadioGroup, ButtonVariation, Button, Container, Layout, ButtonSize, useToaster } from '@harness/uicore'
+import { Render } from 'react-jsx-match'
 import { useMutate } from 'restful-react'
 import cx from 'classnames'
 import { useStrings } from 'framework/strings'
@@ -60,7 +61,7 @@ export const ReviewDecisionButton: React.FC<ReviewDecisionButtonProps> = ({
       className={cx(css.btn, { [css.hide]: shouldHide })}
       style={{ '--background-color': 'var(--green-800)' } as React.CSSProperties}
       tooltip={
-        reset ? undefined : (
+        <Render when={!reset}>
           <Container padding="large" className={css.popup}>
             <Layout.Vertical spacing="medium">
               <Container className={css.markdown} padding="medium">
@@ -115,7 +116,7 @@ export const ReviewDecisionButton: React.FC<ReviewDecisionButtonProps> = ({
               </Container>
             </Layout.Vertical>
           </Container>
-        )
+        </Render>
       }
       tooltipProps={{ interactionKind: 'click', position: 'bottom-right', hasBackdrop: true }}
     />

@@ -71,6 +71,7 @@
     "react-dom": "^17.0.2",
     "react-intersection-observer": "^9.4.1",
     "react-join": "^1.1.4",
+    "react-jsx-match": "^1.1.5",
     "react-keywords": "^0.0.5",
     "react-markdown": "^8.0.3",
     "react-monaco-editor": "^0.34.0",

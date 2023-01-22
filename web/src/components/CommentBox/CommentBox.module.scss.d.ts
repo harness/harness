@@ -10,5 +10,7 @@ declare const styles: {
   readonly newCommentContainer: string
   readonly hasThread: string
   readonly editCommentContainer: string
+  readonly outletTopOfFirstOfComment: string
+  readonly standalone: string
 }
 export default styles

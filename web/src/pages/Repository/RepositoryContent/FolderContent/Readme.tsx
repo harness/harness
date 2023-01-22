@@ -1,5 +1,6 @@
 import React from 'react'
 import { Container, Color, Layout, Button, FlexExpander, ButtonVariation, Heading, Icon } from '@harness/uicore'
+import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import cx from 'classnames'
@@ -23,7 +24,7 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
   const { routes } = useAppContext()
 
   const { data, error, loading } = useGet<OpenapiGetContentOutput>({
-    path: `/api/v1/repos/${metadata.path}/+/content/${readmeInfo.path}`,
+    path: `/api/v1/repos/${metadata.path}/+/content/${readmeInfo?.path}`,
     queryParams: {
       include_commit: false,
       git_ref: gitRef
@@ -34,10 +35,10 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
 
   return (
     <Container
-      className={cx(css.readmeContainer, contentOnly ? css.contentOnly : '')}
+      className={cx(css.readmeContainer, { [css.contentOnly]: contentOnly })}
       background={Color.WHITE}
       style={{ '--max-width': maxWidth } as React.CSSProperties}>
-      {!contentOnly && (
+      <Render when={!contentOnly}>
         <Layout.Horizontal padding="small" className={css.heading}>
           <Heading level={5}>{readmeInfo.name}</Heading>
           <FlexExpander />
@@ -56,14 +57,13 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
             }}
           />
         </Layout.Horizontal>
-      )}
+      </Render>
 
-      {/* TODO: Loading and Error handling */}
-      {(data?.content as RepoFileContent)?.data && (
+      <Render when={(data?.content as RepoFileContent)?.data}>
         <Container className={css.readmeContent}>
           <MarkdownViewer source={window.atob((data?.content as RepoFileContent)?.data || '')} />
         </Container>
-      )}
+      </Render>
     </Container>
   )
 }

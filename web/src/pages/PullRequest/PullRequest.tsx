@@ -15,6 +15,7 @@ import {
   useToaster
 } from '@harness/uicore'
 import { useGet, useMutate } from 'restful-react'
+import { Render, Match, Truthy, Else } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -22,7 +23,7 @@ import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { voidFn, getErrorMessage } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
-import type { TypesPullReq } from 'services/code'
+import type { TypesPullReq, TypesRepository } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
@@ -83,63 +84,66 @@ export default function PullRequest() {
       <PageBody error={getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
         <LoadingSpinner visible={loading || prLoading} withBorder={!!prData && prLoading} />
 
-        {repoMetadata ? (
-          prData ? (
-            <>
-              <PullRequestMetaLine repoMetadata={repoMetadata} {...prData} />
-              <Container className={css.tabsContainer}>
-                <Tabs
-                  id="prTabs"
-                  defaultSelectedTabId={activeTab}
-                  large={false}
-                  onChange={tabId => {
-                    history.replace(
-                      routes.toCODEPullRequest({
-                        repoPath: repoMetadata.path as string,
-                        pullRequestId,
-                        pullRequestSection: tabId !== PullRequestSection.CONVERSATION ? (tabId as string) : undefined
-                      })
+        <Render when={repoMetadata && prData}>
+          <>
+            <PullRequestMetaLine repoMetadata={repoMetadata as TypesRepository} {...prData} />
+            <Container className={css.tabsContainer}>
+              <Tabs
+                id="prTabs"
+                defaultSelectedTabId={activeTab}
+                large={false}
+                onChange={tabId => {
+                  history.replace(
+                    routes.toCODEPullRequest({
+                      repoPath: repoMetadata?.path as string,
+                      pullRequestId,
+                      pullRequestSection: tabId !== PullRequestSection.CONVERSATION ? (tabId as string) : undefined
+                    })
+                  )
+                }}
+                tabList={[
+                  {
+                    id: PullRequestSection.CONVERSATION,
+                    title: <TabTitle icon={CodeIcon.Chat} title={getString('conversation')} count={0} />,
+                    panel: (
+                      <Conversation
+                        repoMetadata={repoMetadata as TypesRepository}
+                        pullRequestMetadata={prData as TypesPullReq}
+                        refreshPullRequestMetadata={voidFn(refetchPullRequest)}
+                      />
                     )
-                  }}
-                  tabList={[
-                    {
-                      id: PullRequestSection.CONVERSATION,
-                      title: <TabTitle icon={CodeIcon.Chat} title={getString('conversation')} count={0} />,
-                      panel: (
-                        <Conversation
-                          repoMetadata={repoMetadata}
-                          pullRequestMetadata={prData}
-                          refreshPullRequestMetadata={() => refetchPullRequest()}
+                  },
+                  {
+                    id: PullRequestSection.COMMITS,
+                    title: <TabTitle icon={CodeIcon.Commit} title={getString('commits')} count={0} />,
+                    panel: (
+                      <PullRequestCommits
+                        repoMetadata={repoMetadata as TypesRepository}
+                        pullRequestMetadata={prData as TypesPullReq}
+                      />
+                    )
+                  },
+                  {
+                    id: PullRequestSection.FILES_CHANGED,
+                    title: <TabTitle icon={CodeIcon.File} title={getString('filesChanged')} count={0} />,
+                    panel: (
+                      <Container className={css.changes}>
+                        <Changes
+                          repoMetadata={repoMetadata as TypesRepository}
+                          pullRequestMetadata={prData as TypesPullReq}
+                          targetBranch={prData?.target_branch}
+                          sourceBranch={prData?.source_branch}
+                          emptyTitle={getString('noChanges')}
+                          emptyMessage={getString('noChangesPR')}
                         />
-                      )
-                    },
-                    {
-                      id: PullRequestSection.COMMITS,
-                      title: <TabTitle icon={CodeIcon.Commit} title={getString('commits')} count={0} />,
-                      panel: <PullRequestCommits repoMetadata={repoMetadata} pullRequestMetadata={prData} />
-                    },
-                    {
-                      id: PullRequestSection.FILES_CHANGED,
-                      title: <TabTitle icon={CodeIcon.File} title={getString('filesChanged')} count={0} />,
-                      panel: (
-                        <Container className={css.changes}>
-                          <Changes
-                            repoMetadata={repoMetadata}
-                            pullRequestMetadata={prData}
-                            targetBranch={prData.target_branch}
-                            sourceBranch={prData.source_branch}
-                            emptyTitle={getString('noChanges')}
-                            emptyMessage={getString('noChangesPR')}
-                          />
-                        </Container>
-                      )
-                    }
-                  ]}
-                />
-              </Container>
-            </>
-          ) : null
-        ) : null}
+                      </Container>
+                    )
+                  }
+                ]}
+              />
+            </Container>
+          </>
+        </Render>
       </PageBody>
     </Container>
   )
@@ -162,56 +166,59 @@ const PullRequestTitle: React.FC<PullRequestTitleProps> = ({ repoMetadata, title
 
   return (
     <Layout.Horizontal spacing="xsmall" className={css.prTitle}>
-      {(edit && (
-        <Container>
-          <Layout.Horizontal spacing="small">
-            <TextInput
-              wrapperClassName={css.input}
-              value={val}
-              onInput={event => setVal(event.currentTarget.value)}
-              autoFocus
-            />
-            <Button
-              variation={ButtonVariation.PRIMARY}
-              text={getString('save')}
-              size={ButtonSize.MEDIUM}
-              disabled={(val || '').trim().length === 0 || title === val}
-              onClick={() => {
-                mutate({
-                  title: val,
-                  description
-                })
-                  .then(() => {
-                    setEdit(false)
-                    setOriginal(val)
+      <Match expr={edit}>
+        <Truthy>
+          <Container>
+            <Layout.Horizontal spacing="small">
+              <TextInput
+                wrapperClassName={css.input}
+                value={val}
+                onInput={event => setVal(event.currentTarget.value)}
+                autoFocus
+              />
+              <Button
+                variation={ButtonVariation.PRIMARY}
+                text={getString('save')}
+                size={ButtonSize.MEDIUM}
+                disabled={(val || '').trim().length === 0 || title === val}
+                onClick={() => {
+                  mutate({
+                    title: val,
+                    description
                   })
-                  .catch(exception => showError(getErrorMessage(exception), 0, getString('pr.failedToUpdateTitle')))
-              }}
-            />
+                    .then(() => {
+                      setEdit(false)
+                      setOriginal(val)
+                    })
+                    .catch(exception => showError(getErrorMessage(exception), 0))
+                }}
+              />
+              <Button
+                variation={ButtonVariation.TERTIARY}
+                text={getString('cancel')}
+                size={ButtonSize.MEDIUM}
+                onClick={() => setEdit(false)}
+              />
+            </Layout.Horizontal>
+          </Container>
+        </Truthy>
+        <Else>
+          <>
+            <Text tag="h1" font={{ variation: FontVariation.H4 }}>
+              {original} <span className={css.prNumber}>#{number}</span>
+            </Text>
             <Button
-              variation={ButtonVariation.TERTIARY}
-              text={getString('cancel')}
-              size={ButtonSize.MEDIUM}
-              onClick={() => setEdit(false)}
+              variation={ButtonVariation.ICON}
+              tooltip={getString('edit')}
+              tooltipProps={{ isDark: true, position: 'right' }}
+              size={ButtonSize.SMALL}
+              icon="code-edit"
+              className={css.btn}
+              onClick={() => setEdit(true)}
             />
-          </Layout.Horizontal>
-        </Container>
-      )) || (
-        <>
-          <Text tag="h1" font={{ variation: FontVariation.H4 }}>
-            {original} <span className={css.prNumber}>#{number}</span>
-          </Text>
-          <Button
-            variation={ButtonVariation.ICON}
-            tooltip={getString('edit')}
-            tooltipProps={{ isDark: true, position: 'right' }}
-            size={ButtonSize.SMALL}
-            icon="code-edit"
-            className={css.btn}
-            onClick={() => setEdit(true)}
-          />
-        </>
-      )}
+          </>
+        </Else>
+      </Match>
     </Layout.Horizontal>
   )
 }
@@ -225,11 +232,11 @@ const TabTitle: React.FC<{ icon: IconName; title: string; count?: number }> = ({
     <Text className={css.tabTitle}>
       <TabIcon width={16} height={16} />
       {title}
-      {!!count && (
+      <Render when={count}>
         <Text inline className={css.count}>
           {count}
         </Text>
-      )}
+      </Render>
     </Text>
   )
 }

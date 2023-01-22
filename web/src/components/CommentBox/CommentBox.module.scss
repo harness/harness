@@ -67,4 +67,14 @@
     padding: var(--spacing-large) !important;
     border-radius: var(--box-radius);
   }
+
+  .outletTopOfFirstOfComment {
+    padding-bottom: var(--spacing-large) !important;
+    overflow: auto;
+    max-width: calc(100vw - 410px);
+
+    &.standalone {
+      max-width: calc(100vw - 200px); // TODO: Recalculate this value in standalone version
+    }
+  }
 }

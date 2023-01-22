@@ -1,5 +1,6 @@
-import React, { ReactNode, useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { useResizeDetector } from 'react-resize-detector'
+import { Render, Match, Truthy, Falsy, Else } from 'react-jsx-match'
 import { Container, Layout, Avatar, TextInput, Text, Color, FontVariation, FlexExpander } from '@harness/uicore'
 import cx from 'classnames'
 import MarkdownEditor from '@uiw/react-markdown-editor'
@@ -8,6 +9,7 @@ import { noop } from 'lodash-es'
 import type { UseStringsReturn } from 'framework/strings'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
+import { useAppContext } from 'AppContext'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import {
   MarkdownEditorWithPreview,
@@ -31,10 +33,18 @@ export enum CommentAction {
   DELETE = 'delete'
 }
 
+// Outlets are used to insert additional components into CommentBox
+export enum CommentBoxOutletPosition {
+  TOP = 'top',
+  BOTTOM = 'bottom',
+  TOP_OF_FIRST_COMMENT = 'top_of_first_comment',
+  BOTTOM_OF_COMMENT_EDITOR = 'bottom_of_comment_editor'
+}
+
 interface CommentBoxProps<T> {
-  header?: ReactNode
   getString: UseStringsReturn['getString']
   onHeightChange?: (height: number) => void
+  initialContent?: string
   width?: string
   fluid?: boolean
   resetOnSave?: boolean
@@ -47,25 +57,26 @@ interface CommentBoxProps<T> {
     atCommentItem?: CommentItem<T>
   ) => Promise<[boolean, CommentItem<T> | undefined]>
   onCancel?: () => void
+  outlets?: Partial<Record<CommentBoxOutletPosition, React.ReactNode>>
 }
 
 export const CommentBox = <T = unknown,>({
-  header,
   getString,
   onHeightChange = noop,
+  initialContent = '',
   width,
   fluid,
   commentItems = [],
   currentUserName,
-  // executeDeleteComent = noop,
   handleAction,
   onCancel = noop,
   hideCancel,
-  resetOnSave
+  resetOnSave,
+  outlets = {}
 }: CommentBoxProps<T>) => {
   const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
   const [showReplyPlaceHolder, setShowReplyPlaceHolder] = useState(!!comments.length)
-  const [markdown, setMarkdown] = useState('')
+  const [markdown, setMarkdown] = useState(initialContent)
   const { ref } = useResizeDetector<HTMLDivElement>({
     refreshMode: 'debounce',
     handleWidth: false,
@@ -101,7 +112,8 @@ export const CommentBox = <T = unknown,>({
       width={width}
       ref={ref}>
       <Container className={css.box}>
-        {header}
+        {outlets[CommentBoxOutletPosition.TOP]}
+
         <Layout.Vertical>
           <CommentsThread<T>
             commentItems={comments}
@@ -117,62 +129,69 @@ export const CommentBox = <T = unknown,>({
 
               return [result, updatedItem]
             }}
+            outlets={outlets}
           />
 
-          {(showReplyPlaceHolder && (
-            <Container>
-              <Layout.Horizontal spacing="small" className={css.replyPlaceHolder} padding="medium">
-                <Avatar name={currentUserName} size="small" hoverCard={false} />
-                <TextInput placeholder={getString('replyHere')} onFocus={hidePlaceHolder} onClick={hidePlaceHolder} />
-              </Layout.Horizontal>
-            </Container>
-          )) || (
-            <Container padding="xlarge" className={cx(css.newCommentContainer, { [css.hasThread]: !!comments.length })}>
-              <MarkdownEditorWithPreview
-                editorRef={editorRef as React.MutableRefObject<MarkdownEditorWithPreviewResetProps>}
-                i18n={{
-                  placeHolder: getString(comments.length ? 'replyHere' : 'leaveAComment'),
-                  tabEdit: getString('write'),
-                  tabPreview: getString('preview'),
-                  save: getString('addComment'),
-                  cancel: getString('cancel')
-                }}
-                value={markdown}
-                onChange={setMarkdown}
-                onSave={async (value: string) => {
-                  if (handleAction) {
-                    const [result, updatedItem] = await handleAction(
-                      comments.length ? CommentAction.REPLY : CommentAction.NEW,
-                      value,
-                      comments[0]
-                    )
+          <Match expr={showReplyPlaceHolder}>
+            <Truthy>
+              <Container>
+                <Layout.Horizontal spacing="small" className={css.replyPlaceHolder} padding="medium">
+                  <Avatar name={currentUserName} size="small" hoverCard={false} />
+                  <TextInput placeholder={getString('replyHere')} onFocus={hidePlaceHolder} onClick={hidePlaceHolder} />
+                </Layout.Horizontal>
+              </Container>
+            </Truthy>
+            <Falsy>
+              <Container
+                padding="xlarge"
+                className={cx(css.newCommentContainer, { [css.hasThread]: !!comments.length })}>
+                <MarkdownEditorWithPreview
+                  editorRef={editorRef as React.MutableRefObject<MarkdownEditorWithPreviewResetProps>}
+                  i18n={{
+                    placeHolder: getString(comments.length ? 'replyHere' : 'leaveAComment'),
+                    tabEdit: getString('write'),
+                    tabPreview: getString('preview'),
+                    save: getString('addComment'),
+                    cancel: getString('cancel')
+                  }}
+                  value={markdown}
+                  onChange={setMarkdown}
+                  onSave={async (value: string) => {
+                    if (handleAction) {
+                      const [result, updatedItem] = await handleAction(
+                        comments.length ? CommentAction.REPLY : CommentAction.NEW,
+                        value,
+                        comments[0]
+                      )
 
-                    if (result) {
-                      setMarkdown('')
+                      if (result) {
+                        setMarkdown('')
 
-                      if (resetOnSave) {
-                        editorRef.current?.resetEditor?.()
-                      } else {
-                        setComments([...comments, updatedItem as CommentItem<T>])
-                        setShowReplyPlaceHolder(true)
+                        if (resetOnSave) {
+                          editorRef.current?.resetEditor?.()
+                        } else {
+                          setComments([...comments, updatedItem as CommentItem<T>])
+                          setShowReplyPlaceHolder(true)
+                        }
                       }
+                    } else {
+                      alert('handleAction must be implemented...')
                     }
-                  } else {
-                    alert('handleAction must be implemented...')
-                  }
-                }}
-                onCancel={_onCancel}
-                hideCancel={hideCancel}
-              />
-            </Container>
-          )}
+                  }}
+                  onCancel={_onCancel}
+                  hideCancel={hideCancel}
+                />
+              </Container>
+            </Falsy>
+          </Match>
         </Layout.Vertical>
       </Container>
     </Container>
   )
 }
 
-interface CommentsThreadProps<T> extends Pick<CommentBoxProps<T>, 'commentItems' | 'getString' | 'handleAction'> {
+interface CommentsThreadProps<T>
+  extends Pick<CommentBoxProps<T>, 'commentItems' | 'getString' | 'handleAction' | 'outlets'> {
   onQuote: (content: string) => void
 }
 
@@ -180,8 +199,10 @@ const CommentsThread = <T = unknown,>({
   getString,
   onQuote,
   commentItems = [],
-  handleAction
+  handleAction,
+  outlets = {}
 }: CommentsThreadProps<T>) => {
+  const { standalone } = useAppContext()
   const [editIndexes, setEditIndexes] = useState<Record<number, boolean>>({})
   const resetStateAtIndex = useCallback(
     (index: number) => {
@@ -191,98 +212,119 @@ const CommentsThread = <T = unknown,>({
     [editIndexes]
   )
 
-  return commentItems.length ? (
-    <Container className={css.viewer} padding="xlarge">
-      {commentItems.map((commentItem, index) => {
-        const isLastItem = index === commentItems.length - 1
+  return (
+    <Render when={commentItems.length}>
+      <Container className={css.viewer} padding="xlarge">
+        {commentItems.map((commentItem, index) => {
+          const isLastItem = index === commentItems.length - 1
 
-        return (
-          <ThreadSection
-            key={index}
-            title={
-              <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
-                <Text inline icon="code-chat"></Text>
-                <Avatar name={commentItem.author} size="small" hoverCard={false} />
-                <Text inline>
-                  <strong>{commentItem.author}</strong>
-                </Text>
-                <PipeSeparator height={8} />
-                <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-                  <ReactTimeago date={new Date(commentItem.updated)} />
-                </Text>
-                {(commentItem.updated !== commentItem.created || !!commentItem.deleted) && (
-                  <>
-                    <PipeSeparator height={8} />
-                    <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-                      {getString(commentItem.deleted ? 'deleted' : 'edited')}
-                    </Text>
-                  </>
-                )}
-                <FlexExpander />
-                <OptionsMenuButton
-                  isDark={false}
-                  icon="Options"
-                  iconProps={{ size: 14 }}
-                  style={{ padding: '5px' }}
-                  disabled={!!commentItem.deleted}
-                  width="100px"
-                  items={[
-                    {
-                      text: getString('edit'),
-                      onClick: () => setEditIndexes({ ...editIndexes, ...{ [index]: true } })
-                    },
-                    {
-                      text: getString('quote'),
-                      onClick: () => onQuote(commentItem.content)
-                    },
-                    '-',
-                    {
-                      isDanger: true,
-                      text: getString('delete'),
-                      onClick: async () => {
-                        if (await handleAction(CommentAction.DELETE, '', commentItem)) {
-                          resetStateAtIndex(index)
+          return (
+            <ThreadSection
+              key={index}
+              title={
+                <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
+                  <Text inline icon="code-chat"></Text>
+                  <Avatar name={commentItem.author} size="small" hoverCard={false} />
+                  <Text inline>
+                    <strong>{commentItem.author}</strong>
+                  </Text>
+                  <PipeSeparator height={8} />
+                  <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
+                    <ReactTimeago date={new Date(commentItem.updated)} />
+                  </Text>
+
+                  <Render when={commentItem.updated !== commentItem.created || !!commentItem.deleted}>
+                    <>
+                      <PipeSeparator height={8} />
+                      <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
+                        {getString(commentItem.deleted ? 'deleted' : 'edited')}
+                      </Text>
+                    </>
+                  </Render>
+
+                  <FlexExpander />
+                  <OptionsMenuButton
+                    isDark={false}
+                    icon="Options"
+                    iconProps={{ size: 14 }}
+                    style={{ padding: '5px' }}
+                    disabled={!!commentItem.deleted}
+                    width="100px"
+                    items={[
+                      {
+                        text: getString('edit'),
+                        onClick: () => setEditIndexes({ ...editIndexes, ...{ [index]: true } })
+                      },
+                      {
+                        text: getString('quote'),
+                        onClick: () => onQuote(commentItem.content)
+                      },
+                      '-',
+                      {
+                        isDanger: true,
+                        text: getString('delete'),
+                        onClick: async () => {
+                          if (await handleAction(CommentAction.DELETE, '', commentItem)) {
+                            resetStateAtIndex(index)
+                          }
                         }
                       }
-                    }
-                  ]}
-                />
-              </Layout.Horizontal>
-            }
-            hideGutter={isLastItem}>
-            <Container
-              padding={{ left: editIndexes[index] ? undefined : 'medium', bottom: isLastItem ? undefined : 'xsmall' }}>
-              {editIndexes[index] ? (
-                <Container className={css.editCommentContainer}>
-                  <MarkdownEditorWithPreview
-                    value={commentItem.content}
-                    onSave={async value => {
-                      if (await handleAction(CommentAction.UPDATE, value, commentItem)) {
-                        commentItem.content = value
-                        resetStateAtIndex(index)
-                      }
-                    }}
-                    onCancel={() => resetStateAtIndex(index)}
-                    i18n={{
-                      placeHolder: getString('leaveAComment'),
-                      tabEdit: getString('write'),
-                      tabPreview: getString('preview'),
-                      save: getString('save'),
-                      cancel: getString('cancel')
-                    }}
+                    ]}
                   />
-                </Container>
-              ) : (
-                (!commentItem.deleted && <MarkdownEditor.Markdown source={commentItem.content} />) || (
-                  <Text className={css.deleted}>{getString('commentDeleted')}</Text>
-                )
-              )}
-            </Container>
-          </ThreadSection>
-        )
-      })}
-    </Container>
-  ) : null
+                </Layout.Horizontal>
+              }
+              hideGutter={isLastItem}>
+              <Container
+                padding={{
+                  left: editIndexes[index] ? undefined : 'medium',
+                  bottom: isLastItem ? undefined : 'xsmall'
+                }}>
+                <Render when={index === 0 && outlets[CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]}>
+                  <Container className={cx(css.outletTopOfFirstOfComment, { [css.standalone]: standalone })}>
+                    {outlets[CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]}
+                  </Container>
+                </Render>
+
+                <Match expr={editIndexes[index]}>
+                  <Truthy>
+                    <Container className={css.editCommentContainer}>
+                      <MarkdownEditorWithPreview
+                        value={commentItem.content}
+                        onSave={async value => {
+                          if (await handleAction(CommentAction.UPDATE, value, commentItem)) {
+                            commentItem.content = value
+                            resetStateAtIndex(index)
+                          }
+                        }}
+                        onCancel={() => resetStateAtIndex(index)}
+                        i18n={{
+                          placeHolder: getString('leaveAComment'),
+                          tabEdit: getString('write'),
+                          tabPreview: getString('preview'),
+                          save: getString('save'),
+                          cancel: getString('cancel')
+                        }}
+                      />
+                    </Container>
+                  </Truthy>
+                  <Else>
+                    <Match expr={commentItem.deleted}>
+                      <Truthy>
+                        <Text className={css.deleted}>{getString('commentDeleted')}</Text>
+                      </Truthy>
+                      <Else>
+                        <MarkdownEditor.Markdown source={commentItem.content} />
+                      </Else>
+                    </Match>
+                  </Else>
+                </Match>
+              </Container>
+            </ThreadSection>
+          )
+        })}
+      </Container>
+    </Render>
+  )
 }
 
 const CRLF = '\n'

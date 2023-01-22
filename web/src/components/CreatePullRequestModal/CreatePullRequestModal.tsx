@@ -28,9 +28,9 @@ import { get } from 'lodash-es'
 import { useModalHook } from '@harness/use-modal'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
+import type { OpenapiCreatePullReqRequest, TypesPullReq } from 'services/code'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import css from './CreatePullRequestModal.module.scss'
-import type { OpenapiCreatePullReqRequest, TypesPullReq } from 'services/code'
 
 interface FormData {
   title: string

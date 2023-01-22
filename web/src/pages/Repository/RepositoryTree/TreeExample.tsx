@@ -33,8 +33,8 @@ export const TreeExample = (): JSX.Element => (
         }
       }}
       onRenameItem={(item, name) => alert(`${item.data} renamed to ${name}`)}
-      onFocusItem={(data, _treeId) => console.log('Focus' + data)}
-      onSelectItems={(data, _treeId) => console.log('Selected' + data)}
+      onFocusItem={(data, _treeId) => alert('Focus' + data)}
+      onSelectItems={(data, _treeId) => alert('Selected' + data)}
       {...renderers}>
       <Tree treeId={TREE_ID} rootItem="root" />
     </UncontrolledTreeEnvironment>

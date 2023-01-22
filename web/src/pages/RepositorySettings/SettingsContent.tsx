@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react'
+import { orderBy } from 'lodash-es'
 import { Container, Color, TableV2 as Table, Text, Layout, Icon, Button, ButtonVariation } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { useStrings } from 'framework/strings'
-
-import { orderBy } from 'lodash-es'
 import { useAppContext } from 'AppContext'
 import type { GitInfoProps } from 'utils/GitUtils'
 import css from './RepositorySettings.module.scss'
@@ -38,7 +37,7 @@ export function SettingsContent({ repoMetadata, hooks }: SettingsContentProps) {
       {
         id: 'actions',
         width: '15%',
-        Cell: ({}: CellProps<Hook>) => {
+        Cell: () => {
           return (
             <Layout.Horizontal flex>
               <Button variation={ButtonVariation.SECONDARY} intent="primary">

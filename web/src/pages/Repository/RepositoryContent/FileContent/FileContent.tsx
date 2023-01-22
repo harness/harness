@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react'
 import { Button, ButtonVariation, Color, Container, FlexExpander, Heading, Layout, Utils } from '@harness/uicore'
+import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
-import type { RepoFileContent } from 'services/code'
+import type { OpenapiContentInfo, RepoFileContent } from 'services/code'
 import { CodeIcon, findMarkdownInfo, GitCommitAction, GitInfoProps, isRefATag, makeDiffRefs } from 'utils/GitUtils'
 import { filenameToLanguage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
@@ -92,15 +93,22 @@ export function FileContent({
           </Layout.Horizontal>
         </Layout.Horizontal>
 
-        {(resourceContent?.content as RepoFileContent)?.data && (
+        <Render when={(resourceContent?.content as RepoFileContent)?.data}>
           <Container className={css.content}>
-            {!markdownInfo ? (
+            <Render when={!markdownInfo}>
               <SourceCodeViewer language={filenameToLanguage(resourceContent?.name)} source={content} />
-            ) : (
-              <Readme metadata={repoMetadata} readmeInfo={markdownInfo} contentOnly maxWidth="calc(100vw - 346px)" />
-            )}
+            </Render>
+            <Render when={markdownInfo}>
+              <Readme
+                metadata={repoMetadata}
+                readmeInfo={markdownInfo as OpenapiContentInfo}
+                contentOnly
+                maxWidth="calc(100vw - 346px)"
+                gitRef={gitRef}
+              />
+            </Render>
           </Container>
-        )}
+        </Render>
       </Container>
     </Layout.Vertical>
   )
