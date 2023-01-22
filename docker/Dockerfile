@@ -1,9 +1,8 @@
 ### Build operator
-FROM golang:1.19 as builder
+FROM golang:1.19-alpine as builder
 
-RUN dpkg --add-architecture amd64 \
-    && apt update \
-    && apt install -y --no-install-recommends protobuf-compiler
+RUN apk update \
+    && apk add --no-cache protoc build-base
 
 # Setup workig dir
 WORKDIR /app
@@ -32,12 +31,9 @@ FROM alpine:latest as cert-image
 RUN apk --update add ca-certificates
 
 ### Create final image
-FROM debian:buster-slim as final
+FROM alpine/git:2.36.3 as final
 
-RUN useradd -u 1001 -m -d /app iamuser
-
-RUN apt update \
-    && apt install -y --no-install-recommends git
+RUN adduser -u 1001 -D -h /app iamuser
 
 WORKDIR /app
 

@@ -13,9 +13,17 @@ import (
 	"code.gitea.io/gitea/modules/git"
 )
 
-func (g Adapter) RawDiff(ctx context.Context, repoPath, left, right string, w io.Writer, args ...string) error {
-	cmd := git.NewCommand(ctx, append([]string{"diff", "--src-prefix=\\a/",
-		"--dst-prefix=\\b/", "-M", left, right}, args...)...)
+func (g Adapter) RawDiff(ctx context.Context, repoPath, left, right string, w io.Writer, customArgs ...string) error {
+	args := []string{
+		"diff",
+		"--src-prefix=\\a/",
+		"--dst-prefix=\\b/",
+		"-M",
+	}
+	args = append(args, customArgs...)
+	args = append(args, left, right)
+
+	cmd := git.NewCommand(ctx, args...)
 	cmd.SetDescription(fmt.Sprintf("GetDiffRange [repo_path: %s]", repoPath))
 	errbuf := bytes.Buffer{}
 	if err := cmd.Run(&git.RunOpts{

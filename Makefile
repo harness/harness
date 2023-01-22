@@ -89,9 +89,11 @@ test-env: stop ## Run test environment - this runs all services and the gitness 
 
 image: ## Build the gitness docker image
 	@echo "Building Gitness Image"
-	@docker build --build-arg GITNESS_VERSION=latest \
+	@docker build \
+			--build-arg GITNESS_VERSION=latest \
 			--build-arg GIT_COMMIT=${GIT_COMMIT} \
 			--build-arg GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN} \
+			--platform linux/amd64 \
 			 -t gitness:latest \
 			 -f ./docker/Dockerfile .
 
