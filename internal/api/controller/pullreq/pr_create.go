@@ -17,6 +17,8 @@ import (
 )
 
 type CreateInput struct {
+	IsDraft bool `json:"is_draft"`
+
 	Title       string `json:"title"`
 	Description string `json:"description"`
 
@@ -101,7 +103,7 @@ func newPullReq(session *auth.Session, number int64,
 		Updated:       now,
 		Edited:        now,
 		State:         enum.PullReqStateOpen,
-		IsDraft:       false,
+		IsDraft:       in.IsDraft,
 		Title:         in.Title,
 		Description:   in.Description,
 		SourceRepoID:  sourceRepo.ID,
