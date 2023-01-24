@@ -7,33 +7,41 @@ import { getConfig } from '../config'
 export const SPEC_VERSION = '1.0.0'
 export type EnumAccessGrant = number
 
-export type EnumMergeMethod = 'merge' | 'squash' | 'rebase'
+export type EnumMergeMethod = 'merge' | 'rebase' | 'squash'
 
 export type EnumParentResourceType = 'space' | 'repo'
 
 export type EnumPathTargetType = string
 
-export type EnumPullReqActivityKind = 'system' | 'comment' | 'code'
+export type EnumPullReqActivityKind = 'code' | 'comment' | 'system'
 
-export type EnumPullReqActivityType = 'comment' | 'code-comment' | 'title-change' | 'review-submit' | 'merge'
+export type EnumPullReqActivityType =
+  | 'branch-delete'
+  | 'branch-update'
+  | 'code-comment'
+  | 'comment'
+  | 'merge'
+  | 'review-submit'
+  | 'state-change'
+  | 'title-change'
 
-export type EnumPullReqReviewDecision = 'pending' | 'reviewed' | 'approved' | 'changereq'
+export type EnumPullReqReviewDecision = 'approved' | 'changereq' | 'pending' | 'reviewed'
 
-export type EnumPullReqState = 'open' | 'merged' | 'closed' | 'rejected'
+export type EnumPullReqState = 'closed' | 'merged' | 'open'
 
 export type EnumTokenType = string
 
-export type EnumWebhookExecutionResult = 'success' | 'retriable_error' | 'fatal_error' | null
+export type EnumWebhookExecutionResult = 'fatal_error' | 'retriable_error' | 'success' | null
 
 export type EnumWebhookParent = 'repo' | 'space'
 
 export type EnumWebhookTrigger =
   | 'branch_created'
-  | 'branch_updated'
   | 'branch_deleted'
+  | 'branch_updated'
   | 'tag_created'
-  | 'tag_updated'
   | 'tag_deleted'
+  | 'tag_updated'
 
 export interface FormDataOpenapiLoginRequest {
   password?: string
@@ -54,13 +62,13 @@ export interface OpenapiCalculateCommitDivergenceRequest {
 
 export interface OpenapiCommentCreatePullReqRequest {
   parent_id?: number
-  payload?: { [key: string]: any } | null
+  payload?: TypesPullRequestActivityPayloadComment
   text?: string
 }
 
 export interface OpenapiCommentUpdatePullReqRequest {
-  payload?: { [key: string]: any } | null
-  text?: string
+  payload?: TypesPullRequestActivityPayloadComment
+  text?: string | null
 }
 
 export interface OpenapiCommitFilesRequest {
@@ -74,7 +82,7 @@ export interface OpenapiCommitFilesRequest {
 export type OpenapiContent = RepoFileContent | OpenapiDirContent | RepoSymlinkContent | RepoSubmoduleContent
 
 export interface OpenapiContentInfo {
-  latest_commit?: RepoCommit
+  latest_commit?: TypesCommit
   name?: string
   path?: string
   sha?: string
@@ -94,6 +102,7 @@ export interface OpenapiCreatePathRequest {
 
 export interface OpenapiCreatePullReqRequest {
   description?: string
+  is_draft?: boolean
   source_branch?: string
   source_repo_ref?: string
   target_branch?: string
@@ -139,7 +148,7 @@ export interface OpenapiDirContent {
 
 export interface OpenapiGetContentOutput {
   content?: OpenapiContent
-  latest_commit?: RepoCommit
+  latest_commit?: TypesCommit
   name?: string
   path?: string
   sha?: string
@@ -171,6 +180,12 @@ export interface OpenapiReviewSubmitPullReqRequest {
 
 export interface OpenapiReviewerAddPullReqRequest {
   reviewer_id?: number
+}
+
+export interface OpenapiStatePullReqRequest {
+  is_draft?: boolean
+  message?: string
+  state?: EnumPullReqState
 }
 
 export interface OpenapiUpdatePullReqRequest {
@@ -217,17 +232,9 @@ export interface OpenapiWebhookType {
 }
 
 export interface RepoBranch {
-  commit?: RepoCommit
+  commit?: TypesCommit
   name?: string
   sha?: string
-}
-
-export interface RepoCommit {
-  author?: RepoSignature
-  committer?: RepoSignature
-  message?: string
-  sha?: string
-  title?: string
 }
 
 export interface RepoCommitDivergence {
@@ -253,12 +260,12 @@ export interface RepoCommitFilesResponse {
 }
 
 export interface RepoCommitTag {
-  commit?: RepoCommit
+  commit?: TypesCommit
   is_annotated?: boolean
   message?: string
   name?: string
   sha?: string
-  tagger?: RepoSignature
+  tagger?: TypesSignature
   title?: string
 }
 
@@ -266,7 +273,7 @@ export interface RepoCommitTag {
 export interface RepoContent {}
 
 export interface RepoContentInfo {
-  latest_commit?: RepoCommit
+  latest_commit?: TypesCommit
   name?: string
   path?: string
   sha?: string
@@ -283,16 +290,6 @@ export interface RepoFileContent {
 
 export type RepoFileEncodingType = string
 
-export interface RepoIdentity {
-  email?: string
-  name?: string
-}
-
-export interface RepoSignature {
-  identity?: RepoIdentity
-  when?: string
-}
-
 export interface RepoSubmoduleContent {
   commit_sha?: string
   url?: string
@@ -303,11 +300,24 @@ export interface RepoSymlinkContent {
   target?: string
 }
 
+export interface TypesCommit {
+  author?: TypesSignature
+  committer?: TypesSignature
+  message?: string
+  sha?: string
+  title?: string
+}
+
+export interface TypesIdentity {
+  email?: string
+  name?: string
+}
+
 export interface TypesPath {
   created?: number
   created_by?: number
   id?: number
-  is_alias?: boolean
+  is_primary?: boolean
   target_id?: number
   target_type?: EnumPathTargetType
   updated?: number
@@ -326,6 +336,9 @@ export interface TypesPullReq {
   created?: number
   description?: string
   edited?: number
+  is_draft?: boolean
+  merge_base_sha?: string | null
+  merge_head_sha?: string | null
   merge_strategy?: EnumMergeMethod
   merged?: number | null
   merger?: TypesPrincipalInfo
@@ -348,7 +361,7 @@ export interface TypesPullReqActivity {
   metadata?: { [key: string]: any } | null
   order?: number
   parent_id?: number | null
-  payload?: { [key: string]: any } | null
+  payload?: {}
   pullreq_id?: number
   repo_id?: number
   resolved?: number | null
@@ -357,6 +370,8 @@ export interface TypesPullReqActivity {
   text?: string
   type?: EnumPullReqActivityType
 }
+
+export type TypesPullRequestActivityPayloadComment = { [key: string]: any } | null
 
 export interface TypesRepository {
   created?: number
@@ -375,7 +390,6 @@ export interface TypesRepository {
   path?: string
   uid?: string
   updated?: number
-  version?: number
 }
 
 export interface TypesServiceAccount {
@@ -388,6 +402,11 @@ export interface TypesServiceAccount {
   parent_type?: EnumParentResourceType
   uid?: string
   updated?: number
+}
+
+export interface TypesSignature {
+  identity?: TypesIdentity
+  when?: string
 }
 
 export interface TypesSpace {
@@ -469,6 +488,7 @@ export interface UserUpdateInput {
 
 export interface UsererrorError {
   message?: string
+  values?: { [key: string]: any }
 }
 
 export type OnLoginProps = Omit<MutateProps<TypesTokenResponse, UsererrorError, void, void, void>, 'path' | 'verb'>
@@ -766,13 +786,13 @@ export interface ListCommitsPathParams {
 }
 
 export type ListCommitsProps = Omit<
-  GetProps<RepoCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>,
+  GetProps<TypesCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>,
   'path'
 > &
   ListCommitsPathParams
 
 export const ListCommits = ({ repo_ref, ...props }: ListCommitsProps) => (
-  <Get<RepoCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>
+  <Get<TypesCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>
     path={`/repos/${repo_ref}/commits`}
     base={getConfig('code')}
     {...props}
@@ -780,13 +800,13 @@ export const ListCommits = ({ repo_ref, ...props }: ListCommitsProps) => (
 )
 
 export type UseListCommitsProps = Omit<
-  UseGetProps<RepoCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>,
+  UseGetProps<TypesCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>,
   'path'
 > &
   ListCommitsPathParams
 
 export const useListCommits = ({ repo_ref, ...props }: UseListCommitsProps) =>
-  useGet<RepoCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>(
+  useGet<TypesCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>(
     (paramsInPath: ListCommitsPathParams) => `/repos/${paramsInPath.repo_ref}/commits`,
     { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
@@ -1087,7 +1107,7 @@ export interface ListPullReqQueryParams {
   /**
    * The state of the pull requests to include in the result.
    */
-  state?: ('open' | 'merged' | 'closed' | 'rejected')[]
+  state?: ('closed' | 'merged' | 'open')[]
   /**
    * Source repository ref of the pull requests.
    */
@@ -1115,7 +1135,7 @@ export interface ListPullReqQueryParams {
   /**
    * The data by which the pull requests are sorted.
    */
-  sort?: 'number' | 'created' | 'edited'
+  sort?: 'created' | 'edited' | 'merged' | 'number'
   /**
    * The page to return.
    */
@@ -1250,11 +1270,20 @@ export interface ListPullReqActivitiesQueryParams {
   /**
    * The kind of the pull request activity to include in the result.
    */
-  kind?: ('system' | 'comment' | 'code')[]
+  kind?: ('code' | 'comment' | 'system')[]
   /**
    * The type of the pull request activity to include in the result.
    */
-  type?: ('comment' | 'code-comment' | 'title-change' | 'review-submit' | 'merge')[]
+  type?: (
+    | 'branch-delete'
+    | 'branch-update'
+    | 'code-comment'
+    | 'comment'
+    | 'merge'
+    | 'review-submit'
+    | 'state-change'
+    | 'title-change'
+  )[]
   /**
    * The result should contain only entries created at and after this timestamp (unix millis).
    */
@@ -1467,6 +1496,75 @@ export const useCommentUpdatePullReq = ({
     { base: getConfig('code'), pathParams: { repo_ref, pullreq_number, pullreq_comment_id }, ...props }
   )
 
+export interface ListPullReqCommitsQueryParams {
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+}
+
+export interface ListPullReqCommitsPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type ListPullReqCommitsProps = Omit<
+  GetProps<TypesCommit[], UsererrorError, ListPullReqCommitsQueryParams, ListPullReqCommitsPathParams>,
+  'path'
+> &
+  ListPullReqCommitsPathParams
+
+export const ListPullReqCommits = ({ repo_ref, pullreq_number, ...props }: ListPullReqCommitsProps) => (
+  <Get<TypesCommit[], UsererrorError, ListPullReqCommitsQueryParams, ListPullReqCommitsPathParams>
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/commits`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseListPullReqCommitsProps = Omit<
+  UseGetProps<TypesCommit[], UsererrorError, ListPullReqCommitsQueryParams, ListPullReqCommitsPathParams>,
+  'path'
+> &
+  ListPullReqCommitsPathParams
+
+export const useListPullReqCommits = ({ repo_ref, pullreq_number, ...props }: UseListPullReqCommitsProps) =>
+  useGet<TypesCommit[], UsererrorError, ListPullReqCommitsQueryParams, ListPullReqCommitsPathParams>(
+    (paramsInPath: ListPullReqCommitsPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/commits`,
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface RawPullReqDiffPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type RawPullReqDiffProps = Omit<GetProps<void, UsererrorError, void, RawPullReqDiffPathParams>, 'path'> &
+  RawPullReqDiffPathParams
+
+export const RawPullReqDiff = ({ repo_ref, pullreq_number, ...props }: RawPullReqDiffProps) => (
+  <Get<void, UsererrorError, void, RawPullReqDiffPathParams>
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/diff`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseRawPullReqDiffProps = Omit<UseGetProps<void, UsererrorError, void, RawPullReqDiffPathParams>, 'path'> &
+  RawPullReqDiffPathParams
+
+export const useRawPullReqDiff = ({ repo_ref, pullreq_number, ...props }: UseRawPullReqDiffProps) =>
+  useGet<void, UsererrorError, void, RawPullReqDiffPathParams>(
+    (paramsInPath: RawPullReqDiffPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/diff`,
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
 export interface MergePullReqOpPathParams {
   repo_ref: string
   pullreq_number: number
@@ -1601,6 +1699,40 @@ export const useReviewSubmitPullReq = ({ repo_ref, pullreq_number, ...props }: U
     { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
+export interface StatePullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type StatePullReqProps = Omit<
+  MutateProps<TypesPullReq, UsererrorError, void, OpenapiStatePullReqRequest, StatePullReqPathParams>,
+  'path' | 'verb'
+> &
+  StatePullReqPathParams
+
+export const StatePullReq = ({ repo_ref, pullreq_number, ...props }: StatePullReqProps) => (
+  <Mutate<TypesPullReq, UsererrorError, void, OpenapiStatePullReqRequest, StatePullReqPathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/state`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseStatePullReqProps = Omit<
+  UseMutateProps<TypesPullReq, UsererrorError, void, OpenapiStatePullReqRequest, StatePullReqPathParams>,
+  'path' | 'verb'
+> &
+  StatePullReqPathParams
+
+export const useStatePullReq = ({ repo_ref, pullreq_number, ...props }: UseStatePullReqProps) =>
+  useMutate<TypesPullReq, UsererrorError, void, OpenapiStatePullReqRequest, StatePullReqPathParams>(
+    'POST',
+    (paramsInPath: StatePullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/state`,
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
 export interface ListRepositoryServiceAccountsPathParams {
   repo_ref: string
 }
@@ -1689,6 +1821,18 @@ export const useListTags = ({ repo_ref, ...props }: UseListTagsProps) =>
   )
 
 export interface ListWebhooksQueryParams {
+  /**
+   * The substring which is used to filter the spaces by their path name.
+   */
+  query?: string
+  /**
+   * The data by which the webhooks are sorted.
+   */
+  sort?: 'id' | 'display_name' | 'created' | 'updated'
+  /**
+   * The order of the output.
+   */
+  order?: 'asc' | 'desc'
   /**
    * The page to return.
    */

@@ -4,7 +4,7 @@ import type { CellProps, Column } from 'react-table'
 import { orderBy } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { RepoCommit } from 'services/code'
+import type { TypesCommit } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
@@ -13,7 +13,7 @@ import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import css from './CommitsView.module.scss'
 
 interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
-  commits: RepoCommit[]
+  commits: TypesCommit[]
   emptyTitle: string
   emptyMessage: string
 }
@@ -21,12 +21,12 @@ interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
 export function CommitsView({ repoMetadata, commits, emptyTitle, emptyMessage }: CommitsViewProps) {
   const { getString } = useStrings()
   const { routes } = useAppContext()
-  const columns: Column<RepoCommit>[] = useMemo(
+  const columns: Column<TypesCommit>[] = useMemo(
     () => [
       {
         id: 'author',
         width: '20%',
-        Cell: ({ row }: CellProps<RepoCommit>) => {
+        Cell: ({ row }: CellProps<TypesCommit>) => {
           return (
             <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }} style={{ display: 'inline-flex' }}>
               <Avatar hoverCard={false} size="small" name={row.original.author?.identity?.name || ''} />
@@ -40,7 +40,7 @@ export function CommitsView({ repoMetadata, commits, emptyTitle, emptyMessage }:
       {
         id: 'commit',
         width: 'calc(80% - 100px)',
-        Cell: ({ row }: CellProps<RepoCommit>) => {
+        Cell: ({ row }: CellProps<TypesCommit>) => {
           return (
             <Text color={Color.BLACK} lineClamp={1} className={css.rowText}>
               {row.original.message}
@@ -51,7 +51,7 @@ export function CommitsView({ repoMetadata, commits, emptyTitle, emptyMessage }:
       {
         id: 'sha',
         width: '100px',
-        Cell: ({ row }: CellProps<RepoCommit>) => {
+        Cell: ({ row }: CellProps<TypesCommit>) => {
           return (
             <CommitActions
               sha={row.original.sha as string}
@@ -67,13 +67,13 @@ export function CommitsView({ repoMetadata, commits, emptyTitle, emptyMessage }:
     ],
     [repoMetadata.path, routes]
   )
-  const commitsGroupedByDate: Record<string, RepoCommit[]> = useMemo(
+  const commitsGroupedByDate: Record<string, TypesCommit[]> = useMemo(
     () =>
       commits?.reduce((group, commit) => {
         const date = formatDate(commit.author?.when as string)
         group[date] = (group[date] || []).concat(commit)
         return group
-      }, {} as Record<string, RepoCommit[]>) || {},
+      }, {} as Record<string, TypesCommit[]>) || {},
     [commits]
   )
 
@@ -89,7 +89,7 @@ export function CommitsView({ repoMetadata, commits, emptyTitle, emptyMessage }:
                   {getString('commitsOn', { date })}
                 </Text>
               }>
-              <Table<RepoCommit>
+              <Table<TypesCommit>
                 className={css.table}
                 hideHeaders
                 columns={columns}

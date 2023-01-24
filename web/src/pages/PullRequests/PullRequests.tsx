@@ -20,7 +20,6 @@ import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullReque
 import prImgOpen from './pull-request-open.svg'
 import prImgMerged from './pull-request-merged.svg'
 import prImgClosed from './pull-request-closed.svg'
-import prImgRejected from './pull-request-rejected.svg'
 // import prImgDraft from './pull-request-draft.svg'
 import css from './PullRequests.module.scss'
 
@@ -173,10 +172,6 @@ const stateToImageProps = (pr: TypesPullReq) => {
     case PullRequestFilterOption.CLOSED:
       src = prImgClosed
       clazz = css.closed
-      break
-    case PullRequestFilterOption.REJECTED:
-      src = prImgRejected
-      clazz = css.rejected
       break
     // TODO: Not supported yet from backend
     // case PullRequestFilterOption.DRAFT:

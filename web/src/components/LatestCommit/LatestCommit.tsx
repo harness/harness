@@ -15,7 +15,7 @@ import { Link } from 'react-router-dom'
 import { Render } from 'react-jsx-match'
 import ReactTimeago from 'react-timeago'
 import cx from 'classnames'
-import type { RepoCommit } from 'services/code'
+import type { TypesCommit } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useAppContext } from 'AppContext'
 import { formatDate } from 'utils/Utils'
@@ -25,7 +25,7 @@ import { useStrings } from 'framework/strings'
 import css from './LatestCommit.module.scss'
 
 interface LatestCommitProps extends Pick<GitInfoProps, 'repoMetadata'> {
-  latestCommit?: RepoCommit
+  latestCommit?: TypesCommit
   standaloneStyle?: boolean
 }
 

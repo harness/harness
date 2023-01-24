@@ -483,7 +483,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/RepoCommit'
+                  $ref: '#/components/schemas/TypesCommit'
                 type: array
           description: OK
         '401':
@@ -928,10 +928,9 @@ paths:
           items:
             default: open
             enum:
-            - open
-            - merged
             - closed
-            - rejected
+            - merged
+            - open
             type: string
           type: array
       - description: Source repository ref of the pull requests.
@@ -981,9 +980,10 @@ paths:
         schema:
           default: number
           enum:
-          - number
           - created
           - edited
+          - merged
+          - number
           type: string
       - description: The page to return.
         in: query
@@ -1197,9 +1197,9 @@ paths:
         schema:
           items:
             enum:
-            - system
-            - comment
             - code
+            - comment
+            - system
             type: string
           type: array
       - description: The type of the pull request activity to include in the result.
@@ -1209,11 +1209,14 @@ paths:
         schema:
           items:
             enum:
-            - comment
+            - branch-delete
+            - branch-update
             - code-comment
-            - title-change
-            - review-submit
+            - comment
             - merge
+            - review-submit
+            - state-change
+            - title-change
             type: string
           type: array
       - description: The result should contain only entries created at and after this
@@ -1442,6 +1445,119 @@ paths:
           description: Internal Server Error
       tags:
       - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/commits:
+    get:
+      operationId: listPullReqCommits
+      parameters:
+      - description: The page to return.
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+      - description: The maximum number of results to return.
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 30
+          maximum: 100
+          minimum: 1
+          type: integer
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesCommit'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/diff:
+    get:
+      operationId: rawPullReqDiff
+      parameters:
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}/merge:
     post:
       operationId: mergePullReqOp
@@ -1646,6 +1762,58 @@ paths:
           description: Internal Server Error
       tags:
       - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/state:
+    post:
+      operationId: statePullReq
+      parameters:
+      - in: path
+        name: repo_ref
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: pullreq_number
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiStatePullReqRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPullReq'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+      - pullreq
   /repos/{repo_ref}/service-accounts:
     get:
       operationId: listRepositoryServiceAccounts
@@ -1789,6 +1957,35 @@ paths:
     get:
       operationId: listWebhooks
       parameters:
+      - description: The substring which is used to filter the spaces by their path
+          name.
+        in: query
+        name: query
+        required: false
+        schema:
+          type: string
+      - description: The data by which the webhooks are sorted.
+        in: query
+        name: sort
+        required: false
+        schema:
+          default: id
+          enum:
+          - id
+          - display_name
+          - created
+          - updated
+          type: string
+      - description: The order of the output.
+        in: query
+        name: order
+        required: false
+        schema:
+          default: asc
+          enum:
+          - asc
+          - desc
+          type: string
       - description: The page to return.
         in: query
         name: page
@@ -3053,8 +3250,8 @@ components:
     EnumMergeMethod:
       enum:
       - merge
-      - squash
       - rebase
+      - squash
       type: string
     EnumParentResourceType:
       enum:
@@ -3065,39 +3262,41 @@ components:
       type: string
     EnumPullReqActivityKind:
       enum:
-      - system
-      - comment
       - code
+      - comment
+      - system
       type: string
     EnumPullReqActivityType:
       enum:
-      - comment
+      - branch-delete
+      - branch-update
       - code-comment
-      - title-change
-      - review-submit
+      - comment
       - merge
+      - review-submit
+      - state-change
+      - title-change
       type: string
     EnumPullReqReviewDecision:
       enum:
-      - pending
-      - reviewed
       - approved
       - changereq
+      - pending
+      - reviewed
       type: string
     EnumPullReqState:
       enum:
-      - open
-      - merged
       - closed
-      - rejected
+      - merged
+      - open
       type: string
     EnumTokenType:
       type: string
     EnumWebhookExecutionResult:
       enum:
-      - success
-      - retriable_error
       - fatal_error
+      - retriable_error
+      - success
       nullable: true
       type: string
     EnumWebhookParent:
@@ -3108,11 +3307,11 @@ components:
     EnumWebhookTrigger:
       enum:
       - branch_created
-      - branch_updated
       - branch_deleted
+      - branch_updated
       - tag_created
-      - tag_updated
       - tag_deleted
+      - tag_updated
       type: string
     FormDataOpenapiLoginRequest:
       properties:
@@ -3150,19 +3349,16 @@ components:
         parent_id:
           type: integer
         payload:
-          additionalProperties: {}
-          nullable: true
-          type: object
+          $ref: '#/components/schemas/TypesPullRequestActivityPayloadComment'
         text:
           type: string
       type: object
     OpenapiCommentUpdatePullReqRequest:
       properties:
         payload:
-          additionalProperties: {}
-          nullable: true
-          type: object
+          $ref: '#/components/schemas/TypesPullRequestActivityPayloadComment'
         text:
+          nullable: true
           type: string
       type: object
     OpenapiCommitFilesRequest:
@@ -3191,7 +3387,7 @@ components:
     OpenapiContentInfo:
       properties:
         latest_commit:
-          $ref: '#/components/schemas/RepoCommit'
+          $ref: '#/components/schemas/TypesCommit'
         name:
           type: string
         path:
@@ -3225,6 +3421,8 @@ components:
       properties:
         description:
           type: string
+        is_draft:
+          type: boolean
         source_branch:
           type: string
         source_repo_ref:
@@ -3304,7 +3502,7 @@ components:
         content:
           $ref: '#/components/schemas/OpenapiContent'
         latest_commit:
-          $ref: '#/components/schemas/RepoCommit'
+          $ref: '#/components/schemas/TypesCommit'
         name:
           type: string
         path:
@@ -3356,6 +3554,15 @@ components:
       properties:
         reviewer_id:
           type: integer
+      type: object
+    OpenapiStatePullReqRequest:
+      properties:
+        is_draft:
+          type: boolean
+        message:
+          type: string
+        state:
+          $ref: '#/components/schemas/EnumPullReqState'
       type: object
     OpenapiUpdatePullReqRequest:
       properties:
@@ -3447,23 +3654,10 @@ components:
     RepoBranch:
       properties:
         commit:
-          $ref: '#/components/schemas/RepoCommit'
+          $ref: '#/components/schemas/TypesCommit'
         name:
           type: string
         sha:
-          type: string
-      type: object
-    RepoCommit:
-      properties:
-        author:
-          $ref: '#/components/schemas/RepoSignature'
-        committer:
-          $ref: '#/components/schemas/RepoSignature'
-        message:
-          type: string
-        sha:
-          type: string
-        title:
           type: string
       type: object
     RepoCommitDivergence:
@@ -3501,7 +3695,7 @@ components:
     RepoCommitTag:
       properties:
         commit:
-          $ref: '#/components/schemas/RepoCommit'
+          $ref: '#/components/schemas/TypesCommit'
         is_annotated:
           type: boolean
         message:
@@ -3511,7 +3705,7 @@ components:
         sha:
           type: string
         tagger:
-          $ref: '#/components/schemas/RepoSignature'
+          $ref: '#/components/schemas/TypesSignature'
         title:
           type: string
       type: object
@@ -3519,7 +3713,7 @@ components:
     RepoContentInfo:
       properties:
         latest_commit:
-          $ref: '#/components/schemas/RepoCommit'
+          $ref: '#/components/schemas/TypesCommit'
         name:
           type: string
         path:
@@ -3542,21 +3736,6 @@ components:
       type: object
     RepoFileEncodingType:
       type: string
-    RepoIdentity:
-      properties:
-        email:
-          type: string
-        name:
-          type: string
-      type: object
-    RepoSignature:
-      properties:
-        identity:
-          $ref: '#/components/schemas/RepoIdentity'
-        when:
-          format: date-time
-          type: string
-      type: object
     RepoSubmoduleContent:
       properties:
         commit_sha:
@@ -3571,6 +3750,26 @@ components:
         target:
           type: string
       type: object
+    TypesCommit:
+      properties:
+        author:
+          $ref: '#/components/schemas/TypesSignature'
+        committer:
+          $ref: '#/components/schemas/TypesSignature'
+        message:
+          type: string
+        sha:
+          type: string
+        title:
+          type: string
+      type: object
+    TypesIdentity:
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+      type: object
     TypesPath:
       properties:
         created:
@@ -3579,7 +3778,7 @@ components:
           type: integer
         id:
           type: integer
-        is_alias:
+        is_primary:
           type: boolean
         target_id:
           type: integer
@@ -3612,6 +3811,14 @@ components:
           type: string
         edited:
           type: integer
+        is_draft:
+          type: boolean
+        merge_base_sha:
+          nullable: true
+          type: string
+        merge_head_sha:
+          nullable: true
+          type: string
         merge_strategy:
           $ref: '#/components/schemas/EnumMergeMethod'
         merged:
@@ -3658,10 +3865,7 @@ components:
         parent_id:
           nullable: true
           type: integer
-        payload:
-          additionalProperties: {}
-          nullable: true
-          type: object
+        payload: {}
         pullreq_id:
           type: integer
         repo_id:
@@ -3677,6 +3881,10 @@ components:
           type: string
         type:
           $ref: '#/components/schemas/EnumPullReqActivityType'
+      type: object
+    TypesPullRequestActivityPayloadComment:
+      additionalProperties: {}
+      nullable: true
       type: object
     TypesRepository:
       properties:
@@ -3712,8 +3920,6 @@ components:
           type: string
         updated:
           type: integer
-        version:
-          type: integer
       type: object
     TypesServiceAccount:
       properties:
@@ -3735,6 +3941,14 @@ components:
           type: string
         updated:
           type: integer
+      type: object
+    TypesSignature:
+      properties:
+        identity:
+          $ref: '#/components/schemas/TypesIdentity'
+        when:
+          format: date-time
+          type: string
       type: object
     TypesSpace:
       properties:
@@ -3875,6 +4089,9 @@ components:
       properties:
         message:
           type: string
+        values:
+          additionalProperties: {}
+          type: object
       type: object
   securitySchemes:
     bearerAuth:

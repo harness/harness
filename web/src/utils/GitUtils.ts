@@ -7,7 +7,7 @@ import type {
   OpenapiContentInfo,
   OpenapiDirContent,
   OpenapiGetContentOutput,
-  RepoCommit,
+  TypesCommit,
   TypesPullReq,
   TypesRepository
 } from 'services/code'
@@ -18,7 +18,7 @@ export interface GitInfoProps {
   resourcePath: string
   resourceContent: OpenapiGetContentOutput
   commitRef: string
-  commits: RepoCommit[]
+  commits: TypesCommit[]
   pullRequestMetadata: TypesPullReq
 }
 

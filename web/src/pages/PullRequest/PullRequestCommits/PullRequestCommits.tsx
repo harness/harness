@@ -1,6 +1,6 @@
 import React from 'react'
 import { useGet } from 'restful-react'
-import type { RepoCommit } from 'services/code'
+import type { TypesCommit } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { voidFn, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { usePageIndex } from 'hooks/usePageIndex'
@@ -22,7 +22,7 @@ export const PullRequestCommits: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'p
     loading,
     refetch,
     response
-  } = useGet<RepoCommit[]>({
+  } = useGet<TypesCommit[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
       limit,

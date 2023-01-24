@@ -11,7 +11,7 @@ import emptyStateImage from 'images/empty-state.svg'
 import { makeDiffRefs } from 'utils/GitUtils'
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { Changes } from 'components/Changes/Changes'
-import type { RepoCommit } from 'services/code'
+import type { TypesCommit } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
@@ -32,7 +32,7 @@ export default function Compare() {
     error: commitsError,
     refetch,
     response
-  } = useGet<RepoCommit[]>({
+  } = useGet<TypesCommit[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
       limit,

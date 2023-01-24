@@ -10,7 +10,6 @@ declare const styles: {
   readonly open: string
   readonly merged: string
   readonly closed: string
-  readonly rejected: string
   readonly draft: string
 }
 export default styles

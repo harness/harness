@@ -416,7 +416,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opListCommits := openapi3.Operation{}
 	opListCommits.WithTags("pullreq")
-	opListCommits.WithMapOfAnything(map[string]interface{}{"operationId": "listCommits"})
+	opListCommits.WithMapOfAnything(map[string]interface{}{"operationId": "listPullReqCommits"})
 	opListCommits.WithParameters(queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opListCommits, new(pullReqRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListCommits, []types.Commit{}, http.StatusOK)
@@ -428,7 +428,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 
 	opRawDiff := openapi3.Operation{}
 	opRawDiff.WithTags("pullreq")
-	opRawDiff.WithMapOfAnything(map[string]interface{}{"operationId": "rawDiff"})
+	opRawDiff.WithMapOfAnything(map[string]interface{}{"operationId": "rawPullReqDiff"})
 	_ = reflector.SetRequest(&opRawDiff, new(pullReqRequest), http.MethodGet)
 	_ = reflector.SetStringResponse(&opRawDiff, http.StatusOK, "text/plain")
 	_ = reflector.SetJSONResponse(&opRawDiff, new(usererror.Error), http.StatusInternalServerError)
