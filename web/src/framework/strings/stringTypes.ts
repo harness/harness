@@ -171,6 +171,8 @@ export interface StringsMap {
   'pr.split': string
   'pr.state': string
   'pr.statusLine': string
+  'pr.titleChanged': string
+  'pr.titleChangedTable': string
   'pr.titlePlaceHolder': string
   'pr.unified': string
   prefixBase: string

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Avatar,
   Color,
@@ -11,8 +11,11 @@ import {
   Text,
   useToaster
 } from '@harness/uicore'
+import cx from 'classnames'
 import { useGet, useMutate } from 'restful-react'
 import ReactTimeago from 'react-timeago'
+import { orderBy } from 'lodash-es'
+import { Render } from 'react-jsx-match'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import { useStrings } from 'framework/strings'
@@ -23,7 +26,7 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import { getErrorMessage } from 'utils/Utils'
+import { formatDate, formatTime, getErrorMessage } from 'utils/Utils'
 import {
   activityToCommentItem,
   CommentType,
@@ -54,25 +57,47 @@ export const Conversation: React.FC<ConversationProps> = ({
   })
   const { showError } = useToaster()
   const [newComments, setNewComments] = useState<TypesPullReqActivity[]>([])
-  const commentThreads = useMemo(() => {
-    const threads: Record<number, CommentItem<TypesPullReqActivity>[]> = {}
+  const activityBlocks = useMemo(() => {
+    // Each block may have one or more activities which are grouped into it. For example, one comment block
+    // contains a parent comment and multiple replied comments
+    const blocks: CommentItem<TypesPullReqActivity>[][] = []
 
-    activities?.forEach(activity => {
-      const thread: CommentItem<TypesPullReqActivity> = activityToCommentItem(activity)
+    if (newComments.length) {
+      blocks.push(orderBy(newComments, 'edited', 'desc').map(activityToCommentItem))
+    }
 
-      if (activity.parent_id) {
-        threads[activity.parent_id].push(thread)
-      } else {
-        threads[activity.id as number] = threads[activity.id as number] || []
-        threads[activity.id as number].push(thread)
+    // Determine all parent activities
+    const parentActivities = orderBy(activities?.filter(activity => !activity.parent_id) || [], 'edited', 'desc').map(
+      _comment => [_comment]
+    )
+
+    // Then add their children as follow-up elements (same array)
+    parentActivities?.forEach(parentActivity => {
+      const childActivities = activities?.filter(activity => activity.parent_id === parentActivity[0].id)
+
+      childActivities?.forEach(childComment => {
+        parentActivity.push(childComment)
+      })
+    })
+
+    parentActivities?.forEach(parentActivity => {
+      blocks.push(parentActivity.map(activityToCommentItem))
+    })
+
+    // Group title-change events into one single block
+    const titleChangeItems =
+      blocks.filter(
+        _activities => isSystemComment(_activities) && _activities[0].payload?.type === CommentType.TITLE_CHANGE
+      ) || []
+
+    titleChangeItems.forEach((value, index) => {
+      if (index > 0) {
+        titleChangeItems[0].push(...value)
       }
     })
+    titleChangeItems.shift()
 
-    newComments.forEach(newComment => {
-      threads[newComment.id as number] = [activityToCommentItem(newComment)]
-    })
-
-    return threads
+    return blocks.filter(_activities => !titleChangeItems.includes(_activities))
   }, [activities, newComments])
   const path = useMemo(
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/comments`,
@@ -82,6 +107,9 @@ export const Conversation: React.FC<ConversationProps> = ({
   const { mutate: updateComment } = useMutate({ verb: 'PATCH', path: ({ id }) => `${path}/${id}` })
   const { mutate: deleteComment } = useMutate({ verb: 'DELETE', path: ({ id }) => `${path}/${id}` })
   const confirmAct = useConfirmAct()
+  const [commentCreated, setCommentCreated] = useState(false)
+
+  useAnimateNewCommentBox(commentCreated, setCommentCreated)
 
   return (
     <PullRequestTabContentWrapper loading={loading} error={error} onRetry={refetchActivities}>
@@ -103,7 +131,10 @@ export const Conversation: React.FC<ConversationProps> = ({
                 refreshPullRequestMetadata={refreshPullRequestMetadata}
               />
 
-              {Object.entries(commentThreads).map(([threadId, commentItems]) => {
+              {activityBlocks?.map((blocks, index) => {
+                const threadId = blocks[0].payload?.id
+                const commentItems = blocks
+
                 if (isSystemComment(commentItems)) {
                   return (
                     <SystemBox key={threadId} pullRequestMetadata={pullRequestMetadata} commentItems={commentItems} />
@@ -114,6 +145,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                   <CommentBox
                     key={threadId}
                     fluid
+                    className={cx({ [css.newCommentCreated]: commentCreated && !index })}
                     getString={getString}
                     commentItems={commentItems}
                     currentUserName={currentUser.display_name}
@@ -166,7 +198,9 @@ export const Conversation: React.FC<ConversationProps> = ({
                       return [result, updatedItem]
                     }}
                     outlets={{
-                      [CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]: <CodeCommentHeader commentItems={commentItems} />
+                      [CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]: isCodeComment(commentItems) && (
+                        <CodeCommentHeader commentItems={commentItems} />
+                      )
                     }}
                   />
                 )
@@ -187,10 +221,11 @@ export const Conversation: React.FC<ConversationProps> = ({
                     .then((newComment: TypesPullReqActivity) => {
                       updatedItem = activityToCommentItem(newComment)
                       setNewComments([...newComments, newComment])
+                      setCommentCreated(true)
                     })
                     .catch(exception => {
                       result = false
-                      showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
+                      showError(getErrorMessage(exception), 0)
                     })
                   return [result, updatedItem]
                 }}
@@ -303,7 +338,7 @@ const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({ commentItems }) =
         <Layout.Vertical>
           <Container className={css.title}>
             <Text inline className={css.fname}>
-              {payload?.file_title || ''}
+              {payload?.file_title}
             </Text>
           </Container>
           <Container className={css.snapshotContent}>
@@ -331,7 +366,7 @@ const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({ commentItems }) =
 }
 
 function isSystemComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
-  return commentItems.length === 1 && commentItems[0].payload?.kind === 'system'
+  return commentItems[0].payload?.kind === 'system'
 }
 
 interface SystemBoxProps extends Pick<GitInfoProps, 'pullRequestMetadata'> {
@@ -340,25 +375,79 @@ interface SystemBoxProps extends Pick<GitInfoProps, 'pullRequestMetadata'> {
 
 const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems }) => {
   const { getString } = useStrings()
-  const type = commentItems[0].payload?.type
+  const payload = commentItems[0].payload
+  const type = payload?.type
 
   switch (type) {
     case CommentType.MERGE: {
       return (
-        <Text className={css.box}>
-          <Icon name={CodeIcon.PullRequest} color={Color.PURPLE_700} padding={{ right: 'small' }} />
-          <StringSubstitute
-            str={getString('pr.prMergedInfo')}
-            vars={{
-              user: <strong>{pullRequestMetadata.merger?.display_name}</strong>,
-              source: <strong>{pullRequestMetadata.source_branch}</strong>,
-              target: <strong>{pullRequestMetadata.target_branch} </strong>,
-              time: <ReactTimeago date={pullRequestMetadata.merged as number} />
-            }}
-          />
-        </Text>
+        <Container>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.box}>
+            <Avatar name={pullRequestMetadata.merger?.display_name} size="small" hoverCard={false} />
+            <Text>
+              <StringSubstitute
+                str={getString('pr.prMergedInfo')}
+                vars={{
+                  user: <strong>{pullRequestMetadata.merger?.display_name}</strong>,
+                  source: <strong>{pullRequestMetadata.source_branch}</strong>,
+                  target: <strong>{pullRequestMetadata.target_branch} </strong>,
+                  time: <ReactTimeago date={pullRequestMetadata.merged as number} />
+                }}
+              />
+            </Text>
+          </Layout.Horizontal>
+        </Container>
       )
     }
+
+    case CommentType.TITLE_CHANGE: {
+      return (
+        <Container className={css.box}>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
+            <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
+            <Text tag="div">
+              <StringSubstitute
+                str={getString('pr.titleChanged')}
+                vars={{
+                  user: <strong>{payload?.author?.display_name}</strong>,
+                  old: (
+                    <strong>
+                      <s>{payload?.payload?.old}</s>
+                    </strong>
+                  ),
+                  new: <strong>{payload?.payload?.new}</strong>
+                }}
+              />
+            </Text>
+            <FlexExpander />
+            <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
+              <ReactTimeago date={payload?.created as number} />
+            </Text>
+          </Layout.Horizontal>
+          <Render when={commentItems.length > 1}>
+            <Container
+              margin={{ top: 'medium', left: 'xxxlarge' }}
+              style={{ maxWidth: 'calc(100vw - 450px)', overflow: 'auto' }}>
+              <MarkdownViewer
+                source={[getString('pr.titleChangedTable').replace(/\n$/, '')]
+                  .concat(
+                    commentItems
+                      .filter((_, index) => index > 0)
+                      .map(
+                        item =>
+                          `|${item.author}|<s>${item.payload?.payload?.old}</s>|${
+                            item.payload?.payload?.new
+                          }|${formatDate(item.updated)} ${formatTime(item.updated)}|`
+                      )
+                  )
+                  .join('\n')}
+              />
+            </Container>
+          </Render>
+        </Container>
+      )
+    }
+
     default: {
       // eslint-disable-next-line no-console
       console.warn('Unable to render system type activity', commentItems)
@@ -370,4 +459,30 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
       )
     }
   }
+}
+
+function useAnimateNewCommentBox(
+  commentCreated: boolean,
+  setCommentCreated: React.Dispatch<React.SetStateAction<boolean>>
+) {
+  useEffect(() => {
+    let timeoutId = 0
+
+    if (commentCreated) {
+      timeoutId = window.setTimeout(() => {
+        const box = document.querySelector(`.${css.newCommentCreated}`)
+
+        box?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+        timeoutId = window.setTimeout(() => {
+          box?.classList.add(css.clear)
+          timeoutId = window.setTimeout(() => setCommentCreated(false), 2000)
+        }, 5000)
+      }, 300)
+    }
+
+    return () => {
+      clearTimeout(timeoutId)
+    }
+  }, [commentCreated, setCommentCreated])
 }

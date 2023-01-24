@@ -6,5 +6,7 @@ declare const styles: {
   readonly title: string
   readonly fname: string
   readonly snapshotContent: string
+  readonly newCommentCreated: string
+  readonly clear: string
 }
 export default styles

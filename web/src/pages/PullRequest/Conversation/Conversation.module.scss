@@ -66,3 +66,13 @@
     display: none !important;
   }
 }
+
+.newCommentCreated {
+  box-shadow: 0px 0px 5px rgb(37 41 192);
+  border-radius: 4px;
+  transition: box-shadow 1s ease-in-out;
+
+  &.clear {
+    box-shadow: none;
+  }
+}

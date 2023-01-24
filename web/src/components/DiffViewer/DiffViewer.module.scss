@@ -25,6 +25,21 @@
             // border-top: 1px solid var(--grey-200);
             // border-bottom: 1px solid var(--grey-200);
           }
+
+          &.selected {
+            // TODO: Talk to design about these selection colors
+            &.first {
+              border-top: 1px solid var(--border-color);
+            }
+
+            &.last {
+              border-bottom: 1px solid var(--border-color);
+            }
+
+            td {
+              background-color: #e7ffab91 !important;
+            }
+          }
         }
       }
 

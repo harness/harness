@@ -63,6 +63,7 @@ export const PullRequestFilterOption = {
 }
 
 export const CodeIcon = {
+  Logo: 'code' as IconName,
   PullRequest: 'git-pull' as IconName,
   PullRequestRejected: 'main-close' as IconName,
   Add: 'plus' as IconName,

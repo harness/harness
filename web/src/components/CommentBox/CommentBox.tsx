@@ -42,6 +42,7 @@ export enum CommentBoxOutletPosition {
 }
 
 interface CommentBoxProps<T> {
+  className?: string
   getString: UseStringsReturn['getString']
   onHeightChange?: (height: number) => void
   initialContent?: string
@@ -61,6 +62,7 @@ interface CommentBoxProps<T> {
 }
 
 export const CommentBox = <T = unknown,>({
+  className,
   getString,
   onHeightChange = noop,
   initialContent = '',
@@ -107,7 +109,7 @@ export const CommentBox = <T = unknown,>({
 
   return (
     <Container
-      className={cx(css.main, fluid ? css.fluid : '')}
+      className={cx(css.main, { [css.fluid]: fluid }, className)}
       padding={!fluid ? 'medium' : undefined}
       width={width}
       ref={ref}>
@@ -131,7 +133,6 @@ export const CommentBox = <T = unknown,>({
             }}
             outlets={outlets}
           />
-
           <Match expr={showReplyPlaceHolder}>
             <Truthy>
               <Container>

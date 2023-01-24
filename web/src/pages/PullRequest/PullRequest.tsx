@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import {
   Container,
   PageBody,
@@ -163,6 +163,17 @@ const PullRequestTitle: React.FC<PullRequestTitleProps> = ({ repoMetadata, title
     verb: 'PATCH',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${number}`
   })
+  const submitChange = useCallback(() => {
+    mutate({
+      title: val,
+      description
+    })
+      .then(() => {
+        setEdit(false)
+        setOriginal(val)
+      })
+      .catch(exception => showError(getErrorMessage(exception), 0))
+  }, [description, val, mutate, showError])
 
   return (
     <Layout.Horizontal spacing="xsmall" className={css.prTitle}>
@@ -173,25 +184,26 @@ const PullRequestTitle: React.FC<PullRequestTitleProps> = ({ repoMetadata, title
               <TextInput
                 wrapperClassName={css.input}
                 value={val}
+                onFocus={event => event.target.select()}
                 onInput={event => setVal(event.currentTarget.value)}
                 autoFocus
+                onKeyDown={event => {
+                  switch (event.key) {
+                    case 'Enter':
+                      submitChange()
+                      break
+                    case 'Escape': // does not work, maybe TextInput cancels ESC?
+                      setEdit(false)
+                      break
+                  }
+                }}
               />
               <Button
                 variation={ButtonVariation.PRIMARY}
                 text={getString('save')}
                 size={ButtonSize.MEDIUM}
                 disabled={(val || '').trim().length === 0 || title === val}
-                onClick={() => {
-                  mutate({
-                    title: val,
-                    description
-                  })
-                    .then(() => {
-                      setEdit(false)
-                      setOriginal(val)
-                    })
-                    .catch(exception => showError(getErrorMessage(exception), 0))
-                }}
+                onClick={submitChange}
               />
               <Button
                 variation={ButtonVariation.TERTIARY}

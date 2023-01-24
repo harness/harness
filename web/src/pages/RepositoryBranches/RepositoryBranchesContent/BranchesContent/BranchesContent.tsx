@@ -101,7 +101,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         width: '200px',
         Cell: ({ row }: CellProps<RepoBranch>) => {
           return (
-            <Text className={css.rowText} color={Color.BLACK}>
+            <Text className={css.rowText} color={Color.BLACK} tag="div">
               <Avatar hoverCard={false} size="small" name={row.original.commit?.author?.identity?.name || ''} />
               <span className={css.spacer} />
               {formatDate(row.original.commit?.author?.when as string)}
