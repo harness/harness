@@ -54,7 +54,8 @@ const (
 		,repo_num_forks
 		,repo_num_pulls
 		,repo_num_closed_pulls
-		,repo_num_open_pulls`
+		,repo_num_open_pulls
+		,repo_num_merged_pulls`
 
 	repoSelectBaseWithJoin = `
 		SELECT` + repoColumnsForJoin + `
@@ -119,6 +120,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_num_pulls
 			,repo_num_closed_pulls
 			,repo_num_open_pulls
+			,repo_num_merged_pulls
 		) values (
 			:repo_version
 			,:repo_parent_id
@@ -136,6 +138,7 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_num_pulls
 			,:repo_num_closed_pulls
 			,:repo_num_open_pulls
+			,:repo_num_merged_pulls
 		) RETURNING repo_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -169,6 +172,7 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			,repo_num_pulls			= :repo_num_pulls
 			,repo_num_closed_pulls	= :repo_num_closed_pulls
 			,repo_num_open_pulls	= :repo_num_open_pulls
+			,repo_num_merged_pulls	= :repo_num_merged_pulls
 		WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
 
 	updatedAt := time.Now()
@@ -225,6 +229,31 @@ func (s *RepoStore) UpdateOptLock(ctx context.Context,
 			return nil, err
 		}
 	}
+}
+
+func (s *RepoStore) UpdatePRNumbers(ctx context.Context,
+	repo *types.Repository,
+	deltaNew, deltaForks, deltaOpen, deltaClosed, deltaMerged int,
+) error {
+	if deltaNew == 0 && deltaForks == 0 && deltaOpen == 0 && deltaClosed == 0 && deltaMerged == 0 {
+		return nil
+	}
+
+	dup, err := s.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
+		repo.NumPulls += deltaNew
+		repo.NumForks += deltaForks
+		repo.NumOpenPulls += deltaOpen
+		repo.NumClosedPulls += deltaClosed
+		repo.NumMergedPulls += deltaMerged
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	*repo = *dup
+
+	return nil
 }
 
 // Delete the repository.

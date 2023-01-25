@@ -33,6 +33,7 @@ type Repository struct {
 	NumPulls       int `db:"repo_num_pulls"            json:"num_pulls"`
 	NumClosedPulls int `db:"repo_num_closed_pulls"     json:"num_closed_pulls"`
 	NumOpenPulls   int `db:"repo_num_open_pulls"       json:"num_open_pulls"`
+	NumMergedPulls int `db:"repo_num_merged_pulls"     json:"num_merged_pulls"`
 
 	// git urls
 	GitURL string `db:"-" json:"git_url"`
