@@ -56,7 +56,7 @@ This project includes a simple user interface for interacting with the system. W
 
 # Swagger
 
-This project includes a swagger specification.When you run the application, you can access the swagger specification by navigating to `http://localhost:3000/swagger` in your browser (for raw yaml see `http://localhost:3000/openapi.yaml`).
+This project includes a swagger specification. When you run the application, you can access the swagger specification by navigating to `http://localhost:3000/swagger` in your browser (for raw yaml see `http://localhost:3000/openapi.yaml`).
 
 
 ## Auto-Generate Gitness API Client used by UI using Swagger
