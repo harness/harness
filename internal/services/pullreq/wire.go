@@ -8,7 +8,9 @@ import (
 	"context"
 
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/gitrpc"
 	gitevents "github.com/harness/gitness/internal/events/git"
+	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 
@@ -23,9 +25,13 @@ var WireSet = wire.NewSet(
 func ProvideService(ctx context.Context,
 	config *types.Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
+	pullReqEventFactory *events.ReaderFactory[*pullreqevents.Reader],
+	gitRPCClient gitrpc.Interface,
 	db *sqlx.DB,
+	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
 	activityStore store.PullReqActivityStore,
 ) (*Service, error) {
-	return New(ctx, config, gitReaderFactory, db, pullreqStore, activityStore)
+	return New(ctx, config, gitReaderFactory, pullReqEventFactory, gitRPCClient,
+		db, repoStore, pullreqStore, activityStore)
 }

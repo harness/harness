@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -132,6 +133,10 @@ func (c *Controller) Merge(
 	if err != nil {
 		log.Err(err).Msg("failed to write pull req activity")
 	}
+
+	c.eventReporter.Merged(ctx, &pullreqevents.MergedPayload{
+		Base: eventBase(pr, targetRepo, &session.Principal),
+	})
 
 	return types.MergeResponse{
 		SHA: sha,

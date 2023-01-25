@@ -24,7 +24,8 @@ import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/cron"
-	eventsgit "github.com/harness/gitness/internal/events/git"
+	gitevents "github.com/harness/gitness/internal/events/git"
+	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
@@ -62,7 +63,8 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		user.WireSet,
 		authn.WireSet,
 		authz.WireSet,
-		eventsgit.WireSet,
+		gitevents.WireSet,
+		pullreqevents.WireSet,
 		gitrpcserver.WireSet,
 		gitrpc.WireSet,
 		store.WireSet,

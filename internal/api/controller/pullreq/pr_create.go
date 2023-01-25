@@ -12,6 +12,7 @@ import (
 
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -78,14 +79,19 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to aquire PullReqSeq number: %w", err)
 	}
 
-	_ = fmt.Sprintf("TODO: %s", sourceSHA) // TODO: Use sourceSHA to create git PR head ref
-
 	pr := newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in)
 
 	err = c.pullreqStore.Create(ctx, pr)
 	if err != nil {
 		return nil, fmt.Errorf("pullreq creation failed: %w", err)
 	}
+
+	c.eventReporter.Created(ctx, &pullreqevents.CreatedPayload{
+		Base:         eventBase(pr, targetRepo, &session.Principal),
+		SourceBranch: in.SourceBranch,
+		TargetBranch: in.TargetBranch,
+		SourceSHA:    sourceSHA,
+	})
 
 	return pr, nil
 }

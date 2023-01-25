@@ -13,7 +13,7 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -26,21 +26,10 @@ type StateInput struct {
 	Message string            `json:"message"`
 }
 
-// State updates the pull request's current state.
-//
-//nolint:gocognit
-func (c *Controller) State(ctx context.Context,
-	session *auth.Session, repoRef string, pullreqNum int64, in *StateInput) (*types.PullReq, error) {
-	var pr *types.PullReq
-
-	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
-	if err != nil {
-		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
-	}
-
-	state, ok := in.State.Sanitize()
+func (in *StateInput) Check() error {
+	state, ok := in.State.Sanitize() // Sanitize will pass through also merged state, so we must check later for it.
 	if !ok {
-		return nil, usererror.BadRequest(fmt.Sprintf("Allowed states are: %s and %s",
+		return usererror.BadRequest(fmt.Sprintf("Allowed states are: %s and %s",
 			enum.PullReqStateOpen, enum.PullReqStateClosed))
 	}
 
@@ -48,71 +37,97 @@ func (c *Controller) State(ctx context.Context,
 	in.Message = strings.TrimSpace(in.Message)
 
 	if in.State == enum.PullReqStateMerged {
-		return nil, usererror.BadRequest("Pull requests can't be merged with this API")
+		return usererror.BadRequest("Pull requests can't be merged with this API")
 	}
 
-	var activity *types.PullReqActivity
+	return nil
+}
 
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
-		pr, err = c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
-		if err != nil {
-			return fmt.Errorf("failed to get pull request by number: %w", err)
-		}
-
-		if pr.SourceRepoID != pr.TargetRepoID {
-			var sourceRepo *types.Repository
-
-			sourceRepo, err = c.repoStore.Find(ctx, pr.SourceRepoID)
-			if err != nil {
-				return fmt.Errorf("failed to get source repo by id: %w", err)
-			}
-
-			if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo,
-				enum.PermissionRepoView, false); err != nil {
-				return fmt.Errorf("failed to acquire access to source repo: %w", err)
-			}
-		}
-
-		if pr.State == enum.PullReqStateMerged {
-			return usererror.BadRequest("Merged pull requests can't be modified.")
-		}
-
-		if pr.State == in.State && in.IsDraft == pr.IsDraft {
-			return nil // no changes are necessary: state is the same and is_draft hasn't change
-		}
-
-		if pr.State != enum.PullReqStateOpen && in.State == enum.PullReqStateOpen {
-			err = c.checkIfAlreadyExists(ctx, pr.TargetRepoID, pr.SourceRepoID, pr.TargetBranch, pr.SourceBranch)
-			if err != nil {
-				return err
-			}
-		}
-
-		activity = getStateActivity(session, pr, in)
-
-		pr.State = in.State
-		pr.IsDraft = in.IsDraft
-		pr.Edited = time.Now().UnixMilli()
-
-		err = c.pullreqStore.Update(ctx, pr)
-		if err != nil {
-			return fmt.Errorf("failed to update pull request: %w", err)
-		}
-
-		return nil
-	})
-	if err != nil {
+// State updates the pull request's current state.
+//
+//nolint:gocognit
+func (c *Controller) State(ctx context.Context,
+	session *auth.Session, repoRef string, pullreqNum int64, in *StateInput,
+) (*types.PullReq, error) {
+	if err := in.Check(); err != nil {
 		return nil, err
 	}
 
-	// Write a row to the pull request activity
-	if activity != nil {
-		err = c.writeActivity(ctx, pr, activity)
+	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
+	}
+
+	pr, err := c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pull request by number: %w", err)
+	}
+
+	sourceRepo := targetRepo
+	if pr.SourceRepoID != pr.TargetRepoID {
+		sourceRepo, err = c.repoStore.Find(ctx, pr.SourceRepoID)
 		if err != nil {
-			// non-critical error
-			log.Err(err).Msg("failed to write pull req activity")
+			return nil, fmt.Errorf("failed to get source repo by id: %w", err)
+		}
+
+		if err = apiauth.CheckRepo(ctx, c.authorizer, session, sourceRepo,
+			enum.PermissionRepoView, false); err != nil {
+			return nil, fmt.Errorf("failed to acquire access to source repo: %w", err)
 		}
 	}
+
+	if pr.State == enum.PullReqStateMerged {
+		return nil, usererror.BadRequest("Merged pull requests can't be modified.")
+	}
+
+	if pr.State == in.State && in.IsDraft == pr.IsDraft {
+		return pr, nil // no changes are necessary: state is the same and is_draft hasn't change
+	}
+
+	event := &pullreqevents.StateChangePayload{
+		Base:     eventBase(pr, targetRepo, &session.Principal),
+		OldDraft: pr.IsDraft,
+		OldState: pr.State,
+		NewDraft: in.IsDraft,
+		NewState: in.State,
+	}
+
+	if pr.State != enum.PullReqStateOpen && in.State == enum.PullReqStateOpen {
+		var sourceSHA string
+
+		if sourceSHA, err = c.verifyBranchExistence(ctx, sourceRepo, pr.SourceBranch); err != nil {
+			return nil, err
+		}
+
+		if _, err = c.verifyBranchExistence(ctx, targetRepo, pr.TargetBranch); err != nil {
+			return nil, err
+		}
+
+		err = c.checkIfAlreadyExists(ctx, pr.TargetRepoID, pr.SourceRepoID, pr.TargetBranch, pr.SourceBranch)
+		if err != nil {
+			return nil, err
+		}
+
+		event.SourceSHA = sourceSHA
+	}
+
+	pr.State = in.State
+	pr.IsDraft = in.IsDraft
+	pr.Edited = time.Now().UnixMilli()
+
+	err = c.pullreqStore.Update(ctx, pr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update pull request: %w", err)
+	}
+
+	// Write a row to the pull request activity
+	err = c.writeActivity(ctx, pr, getStateActivity(session, pr, in))
+	if err != nil {
+		// non-critical error
+		log.Err(err).Msg("failed to write pull req activity")
+	}
+
+	c.eventReporter.StateChange(ctx, event)
 
 	return pr, nil
 }

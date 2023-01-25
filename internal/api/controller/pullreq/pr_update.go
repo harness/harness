@@ -13,6 +13,7 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -42,7 +43,10 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
-	var activity *types.PullReqActivity
+	var (
+		activity *types.PullReqActivity
+		event    *pullreqevents.UpdatedPayload
+	)
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
 		pr, err = c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
@@ -70,6 +74,14 @@ func (c *Controller) Update(ctx context.Context,
 
 		activity = getUpdateActivity(session, pr, in)
 
+		event = &pullreqevents.UpdatedPayload{
+			Base:           eventBase(pr, targetRepo, &session.Principal),
+			OldTitle:       pr.Title,
+			OldDescription: pr.Description,
+			NewTitle:       in.Title,
+			NewDescription: in.Description,
+		}
+
 		pr.Title = in.Title
 		pr.Description = in.Description
 		pr.Edited = time.Now().UnixMilli()
@@ -93,6 +105,8 @@ func (c *Controller) Update(ctx context.Context,
 			log.Err(err).Msg("failed to write pull req activity")
 		}
 	}
+
+	c.eventReporter.Updated(ctx, event)
 
 	return pr, nil
 }

@@ -240,7 +240,8 @@ type (
 		// Find the pull request by id.
 		Find(ctx context.Context, id int64) (*types.PullReq, error)
 
-		// FindByNumber finds the pull request by repo ID and the pull request number.
+		// FindByNumberWithLock finds the pull request by repo ID and the pull request number
+		// and acquires an exclusive lock of the pull request database row for the duration of the transaction.
 		FindByNumberWithLock(ctx context.Context, repoID, number int64) (*types.PullReq, error)
 
 		// FindByNumber finds the pull request by repo ID and the pull request number.

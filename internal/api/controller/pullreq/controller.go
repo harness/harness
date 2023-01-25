@@ -15,6 +15,7 @@ import (
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
+	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
@@ -34,6 +35,7 @@ type Controller struct {
 	repoStore      store.RepoStore
 	principalStore store.PrincipalStore
 	gitRPCClient   gitrpc.Interface
+	eventReporter  *pullreqevents.Reporter
 }
 
 func NewController(
@@ -47,6 +49,7 @@ func NewController(
 	repoStore store.RepoStore,
 	principalStore store.PrincipalStore,
 	gitRPCClient gitrpc.Interface,
+	eventReporter *pullreqevents.Reporter,
 ) *Controller {
 	return &Controller{
 		db:             db,
@@ -59,6 +62,7 @@ func NewController(
 		repoStore:      repoStore,
 		principalStore: principalStore,
 		gitRPCClient:   gitRPCClient,
+		eventReporter:  eventReporter,
 	}
 }
 
@@ -208,4 +212,15 @@ func (c *Controller) checkIfAlreadyExists(ctx context.Context,
 	}
 
 	return nil
+}
+
+func eventBase(pr *types.PullReq, targetRepo *types.Repository, principal *types.Principal) pullreqevents.Base {
+	return pullreqevents.Base{
+		PullReqID:        pr.ID,
+		SourceRepoID:     pr.SourceRepoID,
+		TargetRepoID:     pr.TargetRepoID,
+		TargetRepoGitUID: targetRepo.GitUID,
+		Number:           pr.Number,
+		PrincipalID:      principal.ID,
+	}
 }

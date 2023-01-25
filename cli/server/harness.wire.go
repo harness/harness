@@ -9,6 +9,7 @@ package server
 
 import (
 	"context"
+	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
@@ -30,7 +31,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/user"
 	controllerwebhook "github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/cron"
-	eventsgit "github.com/harness/gitness/internal/events/git"
+	gitevents "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 	pullreqservice "github.com/harness/gitness/internal/services/pullreq"
@@ -63,7 +64,8 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 		user.WireSet,
 		service.WireSet,
 		serviceaccount.WireSet,
-		eventsgit.WireSet,
+		gitevents.WireSet,
+		pullreqevents.WireSet,
 		gitrpcserver.WireSet,
 		gitrpc.WireSet,
 		types.LoadConfig,

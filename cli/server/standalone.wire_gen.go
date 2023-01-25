@@ -21,7 +21,8 @@ import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/cron"
-	events2 "github.com/harness/gitness/internal/events/git"
+	events3 "github.com/harness/gitness/internal/events/git"
+	events2 "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
@@ -73,10 +74,6 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
 	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
 	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db, principalInfoCache)
-	pullreqController := pullreq.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface)
-	webhookStore := database.ProvideWebhookStore(db)
-	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
-	webhookConfig := ProvideWebhookConfig(config)
 	eventsConfig := ProvideEventsConfig(config)
 	cmdable, err := ProvideRedis(config)
 	if err != nil {
@@ -86,7 +83,15 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	readerFactory, err := events2.ProvideReaderFactory(eventsSystem)
+	reporter, err := events2.ProvideReporter(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	pullreqController := pullreq.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface, reporter)
+	webhookStore := database.ProvideWebhookStore(db)
+	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
+	webhookConfig := ProvideWebhookConfig(config)
+	readerFactory, err := events3.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -95,11 +100,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	webhookController := webhook2.ProvideController(config, db, authorizer, webhookStore, webhookExecutionStore, repoStore, service)
-	reporter, err := events2.ProvideReporter(eventsSystem)
+	eventsReporter, err := events3.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
-	githookController := githook.ProvideController(db, authorizer, principalStore, repoStore, reporter)
+	githookController := githook.ProvideController(db, authorizer, principalStore, repoStore, eventsReporter)
 	serviceAccount := check.ProvideServiceAccountCheck()
 	serviceaccountController := serviceaccount.NewController(serviceAccount, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, spaceController, pullreqController, webhookController, githookController, serviceaccountController, controller)
@@ -113,7 +118,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	nightly := cron.NewNightly()
-	pullreqService, err := pullreq2.ProvideService(ctx, config, readerFactory, db, pullReqStore, pullReqActivityStore)
+	eventsReaderFactory, err := events2.ProvideReaderFactory(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	pullreqService, err := pullreq2.ProvideService(ctx, config, readerFactory, eventsReaderFactory, gitrpcInterface, db, repoStore, pullReqStore, pullReqActivityStore)
 	if err != nil {
 		return nil, err
 	}
