@@ -489,7 +489,7 @@ func (s *PullReqStore) mapPullReq(ctx context.Context, pr *pullReq) *types.PullR
 
 	author, err = s.pCache.Get(ctx, pr.CreatedBy)
 	if err != nil {
-		log.Err(err).Msg("failed to load PR author")
+		log.Ctx(ctx).Err(err).Msg("failed to load PR author")
 	}
 	if author != nil {
 		m.Author = *author
@@ -498,7 +498,7 @@ func (s *PullReqStore) mapPullReq(ctx context.Context, pr *pullReq) *types.PullR
 	if pr.MergedBy.Valid {
 		merger, err = s.pCache.Get(ctx, pr.MergedBy.Int64)
 		if err != nil {
-			log.Err(err).Msg("failed to load PR merger")
+			log.Ctx(ctx).Err(err).Msg("failed to load PR merger")
 		}
 		m.Merger = merger
 	}

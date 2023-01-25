@@ -113,7 +113,7 @@ func (c *Controller) ReviewSubmit(
 	err = c.writeActivity(ctx, pr, act)
 	if err != nil {
 		// non-critical error
-		log.Err(err).Msg("failed to generate pull request activity entry for submitting review")
+		log.Ctx(ctx).Err(err).Msg("failed to generate pull request activity entry for submitting review")
 	}
 
 	return review, err

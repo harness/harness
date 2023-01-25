@@ -124,7 +124,7 @@ func (c *Controller) State(ctx context.Context,
 	err = c.writeActivity(ctx, pr, getStateActivity(session, pr, in))
 	if err != nil {
 		// non-critical error
-		log.Err(err).Msg("failed to write pull req activity")
+		log.Ctx(ctx).Err(err).Msg("failed to write pull req activity")
 	}
 
 	c.eventReporter.StateChange(ctx, event)

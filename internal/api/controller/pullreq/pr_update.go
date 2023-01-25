@@ -102,7 +102,7 @@ func (c *Controller) Update(ctx context.Context,
 		err = c.writeActivity(ctx, pr, activity)
 		if err != nil {
 			// non-critical error
-			log.Err(err).Msg("failed to write pull req activity")
+			log.Ctx(ctx).Err(err).Msg("failed to write pull req activity")
 		}
 	}
 

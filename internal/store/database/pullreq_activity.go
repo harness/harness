@@ -411,7 +411,7 @@ func (s *PullReqActivityStore) mapPullReqActivity(ctx context.Context, act *pull
 
 	author, err = s.pCache.Get(ctx, act.CreatedBy)
 	if err != nil {
-		log.Err(err).Msg("failed to load PR activity author")
+		log.Ctx(ctx).Err(err).Msg("failed to load PR activity author")
 	}
 	if author != nil {
 		m.Author = *author
@@ -420,7 +420,7 @@ func (s *PullReqActivityStore) mapPullReqActivity(ctx context.Context, act *pull
 	if act.ResolvedBy.Valid {
 		resolver, err = s.pCache.Get(ctx, act.ResolvedBy.Int64)
 		if err != nil {
-			log.Err(err).Msg("failed to load PR activity resolver")
+			log.Ctx(ctx).Err(err).Msg("failed to load PR activity resolver")
 		}
 		m.Resolver = resolver
 	}

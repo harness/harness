@@ -241,7 +241,7 @@ func (s *PullReqReviewerStore) mapPullReqReviewer(ctx context.Context, v *pullRe
 
 	addedBy, err := s.pCache.Get(ctx, v.CreatedBy)
 	if err != nil {
-		log.Err(err).Msg("failed to load PR reviewer addedBy")
+		log.Ctx(ctx).Err(err).Msg("failed to load PR reviewer addedBy")
 	}
 	if addedBy != nil {
 		m.AddedBy = *addedBy
@@ -249,7 +249,7 @@ func (s *PullReqReviewerStore) mapPullReqReviewer(ctx context.Context, v *pullRe
 
 	reviewer, err := s.pCache.Get(ctx, v.PrincipalID)
 	if err != nil {
-		log.Err(err).Msg("failed to load PR reviewer principal")
+		log.Ctx(ctx).Err(err).Msg("failed to load PR reviewer principal")
 	}
 	if reviewer != nil {
 		m.Reviewer = *reviewer

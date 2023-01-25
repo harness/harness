@@ -131,7 +131,7 @@ func (c *Controller) Merge(
 
 	err = c.writeActivity(ctx, pr, activity)
 	if err != nil {
-		log.Err(err).Msg("failed to write pull req activity")
+		log.Ctx(ctx).Err(err).Msg("failed to write pull req activity")
 	}
 
 	c.eventReporter.Merged(ctx, &pullreqevents.MergedPayload{
