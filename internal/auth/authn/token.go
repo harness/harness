@@ -5,7 +5,6 @@
 package authn
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,10 +14,8 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/rs/zerolog/hlog"
 )
 
 var _ Authenticator = (*TokenAuthenticator)(nil)
@@ -53,33 +50,34 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*auth.Session, error
 	var err error
 	claims := &token.JWTClaims{}
 	parsed, err := jwt.ParseWithClaims(str, claims, func(token_ *jwt.Token) (interface{}, error) {
-		principal, err = a.getPrincipal(ctx, claims)
+		principal, err = a.principalStore.Find(ctx, claims.PrincipalID)
 		if err != nil {
-			hlog.FromRequest(r).
-				Error().Err(err).
-				Str("token_type", string(claims.TokenType)).
-				Int64("principal_id", claims.PrincipalID).
-				Msg("cannot find principal")
 			return nil, fmt.Errorf("failed to get principal for token: %w", err)
 		}
 		return []byte(principal.Salt), nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing of JWT claims failed: %w", err)
 	}
 
 	if !parsed.Valid {
-		return nil, errors.New("invalid token")
+		return nil, errors.New("parsed JWT token is invalid")
 	}
 
 	if _, ok := parsed.Method.(*jwt.SigningMethodHMAC); !ok {
-		return nil, errors.New("invalid token")
+		return nil, errors.New("invalid HMAC signature for JWT")
 	}
 
 	// ensure tkn exists
 	tkn, err := a.tokenStore.Find(ctx, claims.TokenID)
 	if err != nil {
-		return nil, fmt.Errorf("token wasn't found: %w", err)
+		return nil, fmt.Errorf("failed to find token in db: %w", err)
+	}
+
+	// protect against faked JWTs for other principals in case of single salt leak
+	if principal.ID != tkn.PrincipalID {
+		return nil, fmt.Errorf("JWT was for principal %d while db token was for principal %d",
+			principal.ID, tkn.PrincipalID)
 	}
 
 	return &auth.Session{
@@ -90,29 +88,6 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request) (*auth.Session, error
 			Grants:    tkn.Grants,
 		},
 	}, nil
-}
-
-func (a *TokenAuthenticator) getPrincipal(ctx context.Context, claims *token.JWTClaims) (*types.Principal, error) {
-	switch claims.TokenType {
-	case enum.TokenTypePAT, enum.TokenTypeSession, enum.TokenTypeOAuth2:
-		user, err := a.principalStore.FindUser(ctx, claims.PrincipalID)
-		if err != nil {
-			return nil, err
-		}
-
-		return user.ToPrincipal(), nil
-
-	case enum.TokenTypeSAT:
-		sa, err := a.principalStore.FindServiceAccount(ctx, claims.PrincipalID)
-		if err != nil {
-			return nil, err
-		}
-
-		return sa.ToPrincipal(), nil
-
-	default:
-		return nil, fmt.Errorf("unsupported token type '%s'", claims.TokenType)
-	}
 }
 
 func extractToken(r *http.Request) string {
@@ -129,7 +104,7 @@ func extractToken(r *http.Request) string {
 		}
 		return tkn
 	}
+
 	bearer = strings.TrimPrefix(bearer, "Bearer ")
-	bearer = strings.TrimPrefix(bearer, "IdentityService ")
 	return bearer
 }
