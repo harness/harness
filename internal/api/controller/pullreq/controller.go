@@ -18,6 +18,7 @@ import (
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
+	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -36,6 +37,7 @@ type Controller struct {
 	principalStore store.PrincipalStore
 	gitRPCClient   gitrpc.Interface
 	eventReporter  *pullreqevents.Reporter
+	mtxManager     lock.MutexManager
 }
 
 func NewController(
@@ -50,6 +52,7 @@ func NewController(
 	principalStore store.PrincipalStore,
 	gitRPCClient gitrpc.Interface,
 	eventReporter *pullreqevents.Reporter,
+	mtxManager lock.MutexManager,
 ) *Controller {
 	return &Controller{
 		db:             db,
@@ -63,6 +66,7 @@ func NewController(
 		principalStore: principalStore,
 		gitRPCClient:   gitRPCClient,
 		eventReporter:  eventReporter,
+		mtxManager:     mtxManager,
 	}
 }
 

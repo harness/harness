@@ -14,7 +14,6 @@ import (
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
-	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -29,7 +28,7 @@ type MergeInput struct {
 
 // Merge merges the pull request.
 //
-//nolint:gocognit,funlen // no need to refactor
+//nolint:funlen // no need to refactor
 func (c *Controller) Merge(
 	ctx context.Context,
 	session *auth.Session,
@@ -50,66 +49,80 @@ func (c *Controller) Merge(
 	}
 	in.Method = method
 
-	now := time.Now().UnixMilli()
-
 	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return types.MergeResponse{}, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
-		// pesimistic lock for no other user can merge the same pr
-		pr, err = c.pullreqStore.FindByNumberWithLock(ctx, targetRepo.ID, pullreqNum)
+	// if two requests for merging comes at the same time then mutex will lock
+	// first one and second one will wait, when first one is done then second one
+	// continue with latest data from db with state merged and return error that
+	// pr is already merged.
+	mutex, err := c.newMutexForPR(targetRepo.GitUID, 0) // 0 means locks all PRs for this repo
+	if err != nil {
+		return types.MergeResponse{}, err
+	}
+	err = mutex.Lock(ctx)
+	if err != nil {
+		return types.MergeResponse{}, err
+	}
+	defer func() {
+		_ = mutex.Unlock(ctx)
+	}()
+
+	pr, err = c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
+	if err != nil {
+		return types.MergeResponse{}, fmt.Errorf("failed to get pull request by number: %w", err)
+	}
+
+	if pr.Merged != nil {
+		return types.MergeResponse{}, usererror.BadRequest("Pull request already merged")
+	}
+
+	if pr.State != enum.PullReqStateOpen {
+		return types.MergeResponse{}, usererror.BadRequest("Pull request must be open")
+	}
+
+	if pr.IsDraft {
+		return types.MergeResponse{}, usererror.BadRequest("Draft pull requests can't be merged. Clear the draft flag first.")
+	}
+
+	sourceRepo := targetRepo
+	if pr.SourceRepoID != pr.TargetRepoID {
+		sourceRepo, err = c.repoStore.Find(ctx, pr.SourceRepoID)
 		if err != nil {
-			return fmt.Errorf("failed to get pull request by number: %w", err)
+			return types.MergeResponse{}, fmt.Errorf("failed to get source repository: %w", err)
 		}
+	}
 
-		if pr.Merged != nil {
-			return usererror.BadRequest("Pull request already merged")
-		}
+	var writeParams gitrpc.WriteParams
+	writeParams, err = controller.CreateRPCWriteParams(ctx, c.urlProvider, session, targetRepo)
+	if err != nil {
+		return types.MergeResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
+	}
 
-		if pr.State != enum.PullReqStateOpen {
-			return usererror.BadRequest("Pull request must be open")
-		}
+	// TODO: for forking merge title might be different?
+	mergeTitle := fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
 
-		if pr.IsDraft {
-			return usererror.BadRequest("Draft pull requests can't be merged. Clear the draft flag first.")
-		}
+	var mergeOutput gitrpc.MergeBranchOutput
+	mergeOutput, err = c.gitRPCClient.MergeBranch(ctx, &gitrpc.MergeBranchParams{
+		WriteParams:      writeParams,
+		BaseBranch:       pr.TargetBranch,
+		HeadRepoUID:      sourceRepo.GitUID,
+		HeadBranch:       pr.SourceBranch,
+		Title:            mergeTitle,
+		Message:          "",
+		Force:            in.Force,
+		DeleteHeadBranch: in.DeleteBranch,
+	})
+	if err != nil {
+		return types.MergeResponse{}, err
+	}
 
-		sourceRepo := targetRepo
-		if pr.SourceRepoID != pr.TargetRepoID {
-			sourceRepo, err = c.repoStore.Find(ctx, pr.SourceRepoID)
-			if err != nil {
-				return fmt.Errorf("failed to get source repository: %w", err)
-			}
-		}
+	activity = getMergeActivity(session, pr, in, sha)
 
-		var writeParams gitrpc.WriteParams
-		writeParams, err = controller.CreateRPCWriteParams(ctx, c.urlProvider, session, targetRepo)
-		if err != nil {
-			return fmt.Errorf("failed to create RPC write params: %w", err)
-		}
-
-		// TODO: for forking merge title might be different?
-		mergeTitle := fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
-
-		var mergeOutput gitrpc.MergeBranchOutput
-		mergeOutput, err = c.gitRPCClient.MergeBranch(ctx, &gitrpc.MergeBranchParams{
-			WriteParams:      writeParams,
-			BaseBranch:       pr.TargetBranch,
-			HeadRepoUID:      sourceRepo.GitUID,
-			HeadBranch:       pr.SourceBranch,
-			Title:            mergeTitle,
-			Message:          "",
-			Force:            in.Force,
-			DeleteHeadBranch: in.DeleteBranch,
-		})
-		if err != nil {
-			return err
-		}
-
-		activity = getMergeActivity(session, pr, in, sha)
-
+	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+		now := time.Now().UnixMilli()
 		pr.MergeStrategy = &in.Method
 		pr.Merged = &now
 		pr.MergedBy = &session.Principal.ID
@@ -117,16 +130,10 @@ func (c *Controller) Merge(
 
 		pr.MergeBaseSHA = &mergeOutput.BaseSHA
 		pr.MergeHeadSHA = &mergeOutput.HeadSHA
-
-		err = c.pullreqStore.Update(ctx, pr)
-		if err != nil {
-			return fmt.Errorf("failed to update pull request: %w", err)
-		}
-
 		return nil
 	})
 	if err != nil {
-		return types.MergeResponse{}, err
+		return types.MergeResponse{}, fmt.Errorf("failed to update pull request: %w", err)
 	}
 
 	err = c.writeActivity(ctx, pr, activity)

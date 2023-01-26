@@ -13,7 +13,7 @@ import (
 // ProvideRedis provides a redis client based on the configuration.
 // TODO: add support for sentinal / cluster
 // TODO: add support for TLS
-func ProvideRedis(config *types.Config) (redis.Cmdable, error) {
+func ProvideRedis(config *types.Config) (redis.UniversalClient, error) {
 	options := &redis.Options{
 		Addr:         config.Redis.Endpoint,
 		MaxRetries:   config.Redis.MaxRetries,

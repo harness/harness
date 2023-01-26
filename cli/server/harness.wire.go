@@ -39,6 +39,7 @@ import (
 	"github.com/harness/gitness/internal/store/cache"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/url"
+	"github.com/harness/gitness/lock"
 	gitnesstypes "github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -78,6 +79,7 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 		events.WireSet,
 		webhook.WireSet,
 		githook.WireSet,
+		lock.WireSet,
 	)
 	return &system{}, nil
 }

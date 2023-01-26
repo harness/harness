@@ -37,6 +37,7 @@ import (
 	"github.com/harness/gitness/internal/store/cache"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/url"
+	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/types"
 )
 
@@ -114,11 +115,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
 	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db, principalInfoCache)
 	eventsConfig := ProvideEventsConfig(config)
-	cmdable, err := ProvideRedis(config)
+	universalClient, err := ProvideRedis(config)
 	if err != nil {
 		return nil, err
 	}
-	eventsSystem, err := events.ProvideSystem(eventsConfig, cmdable)
+	eventsSystem, err := events.ProvideSystem(eventsConfig, universalClient)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +127,9 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	pullreqController := pullreq.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface, reporter)
+	lockConfig := lock.ProvideConfig(config)
+	mutexManager := lock.ProvideMutexManager(lockConfig, universalClient)
+	pullreqController := pullreq.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface, reporter, mutexManager)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
 	webhookConfig := ProvideWebhookConfig(config)

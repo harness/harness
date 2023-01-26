@@ -12,7 +12,7 @@ import (
 )
 
 type RedisProducer struct {
-	rdb redis.Cmdable
+	rdb redis.UniversalClient
 	// namespace defines the namespace of the stream keys - any stream key will be prefixed with it.
 	namespace string
 	// maxStreamLength defines the maximum number of entries in each stream (ring buffer).
@@ -22,7 +22,7 @@ type RedisProducer struct {
 	approxMaxStreamLength bool
 }
 
-func NewRedisProducer(rdb redis.Cmdable, namespace string,
+func NewRedisProducer(rdb redis.UniversalClient, namespace string,
 	maxStreamLength int64, approxMaxStreamLength bool) *RedisProducer {
 	return &RedisProducer{
 		rdb:                   rdb,

@@ -19,7 +19,7 @@ import (
 
 // RedisConsumer provides functionality to process Redis streams as part of a consumer group.
 type RedisConsumer struct {
-	rdb redis.Cmdable
+	rdb redis.UniversalClient
 	// namespace specifies the namespace of the keys - any stream key will be prefixed with it
 	namespace string
 	// groupName specifies the name of the consumer group
@@ -46,7 +46,7 @@ type RedisConsumer struct {
 // NewRedisConsumer creates new Redis stream consumer. Streams are read with XREADGROUP.
 // It returns channels of info messages and errors. The caller should not block on these channels for too long.
 // These channels are provided mainly for logging.
-func NewRedisConsumer(rdb redis.Cmdable, namespace string,
+func NewRedisConsumer(rdb redis.UniversalClient, namespace string,
 	groupName string, consumerName string) (*RedisConsumer, error) {
 	if groupName == "" {
 		return nil, errors.New("groupName can't be empty")
@@ -586,7 +586,7 @@ func (c *RedisConsumer) createGroupForAllStreams(ctx context.Context) error {
 	return nil
 }
 
-func createGroup(ctx context.Context, rdb redis.Cmdable, streamID string, groupName string) error {
+func createGroup(ctx context.Context, rdb redis.UniversalClient, streamID string, groupName string) error {
 	// Creates a new consumer group that starts receiving messages from now on.
 	// Existing messges in the queue are ignored (we don't want to overload a group with old messages)
 	// For more details of the XGROUPCREATE api see https://redis.io/commands/xgroup-create/

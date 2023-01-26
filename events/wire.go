@@ -19,7 +19,7 @@ var WireSet = wire.NewSet(
 	ProvideSystem,
 )
 
-func ProvideSystem(config Config, redisClient redis.Cmdable) (*System, error) {
+func ProvideSystem(config Config, redisClient redis.UniversalClient) (*System, error) {
 	var system *System
 	var err error
 	switch config.Mode {
@@ -50,7 +50,7 @@ func provideSystemInMemory(config Config) (*System, error) {
 	)
 }
 
-func provideSystemRedis(config Config, redisClient redis.Cmdable) (*System, error) {
+func provideSystemRedis(config Config, redisClient redis.UniversalClient) (*System, error) {
 	if redisClient == nil {
 		return nil, errors.New("redis client required")
 	}
@@ -72,13 +72,16 @@ func newMemoryStreamProducer(broker *stream.MemoryBroker, namespace string) Stre
 	return stream.NewMemoryProducer(broker, namespace)
 }
 
-func newRedisStreamConsumerFactoryMethod(redisClient redis.Cmdable, namespace string) StreamConsumerFactoryFunc {
+func newRedisStreamConsumerFactoryMethod(
+	redisClient redis.UniversalClient,
+	namespace string,
+) StreamConsumerFactoryFunc {
 	return func(groupName string, consumerName string) (StreamConsumer, error) {
 		return stream.NewRedisConsumer(redisClient, namespace, groupName, consumerName)
 	}
 }
 
-func newRedisStreamProducer(redisClient redis.Cmdable, namespace string,
+func newRedisStreamProducer(redisClient redis.UniversalClient, namespace string,
 	maxStreamLength int64, approxMaxStreamLength bool) StreamProducer {
 	return stream.NewRedisProducer(redisClient, namespace, maxStreamLength, approxMaxStreamLength)
 }
