@@ -100,6 +100,16 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
     }
   }, [startVerifyFolder, folderContent, fileResourcePath])
 
+  useEffect(() => {
+    if (isNew) {
+      // setName from click on empty repo page so either readme, license or gitignore
+      const nameExists = window.location.href.includes('?name=')
+      if (nameExists) {
+        const fileName = window.location.href.split('?name=')[1]
+        setFileName(fileName)
+      }
+    }
+  }, [isNew])
   return (
     <Container className={css.container}>
       <Layout.Horizontal className={css.heading}>

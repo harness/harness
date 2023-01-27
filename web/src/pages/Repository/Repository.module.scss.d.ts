@@ -3,5 +3,6 @@
 declare const styles: {
   readonly main: string
   readonly emptyRepo: string
+  readonly divContainer: string
 }
 export default styles

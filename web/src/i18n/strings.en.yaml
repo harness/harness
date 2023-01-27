@@ -245,27 +245,26 @@ repoEmptyMarkdown: |
   ### Get started by
 
   Creating [a new file](NEW_FILE_URL).
-
+repoEmptyMarkdownClone: |
   ### Or you can clone this repository
 
+  Clone with HTTPS
   ```sh
   git clone REPO_URL
   ```
-
   Then push some content into it.
 
   ```sh
   cd REPO_NAME
-  echo "# Hello World" >> README.md
   git add README.md
-  git commit -m"Initial commit"
+  git commit -m "Initial commit"
   git push -u origin main
   ```
-
+repoEmptyMarkdownExisting: |
   ### Or you can push an existing repository
 
   ```sh
-  git remote add origin REPO_URL
+  git remote add REPO_URL
   git branch -M main
   git push -u origin main
   ```
@@ -281,3 +280,8 @@ noChanges: There is no changes
 noChangesPR: This Pull Request does not have any changes.
 noChangesCompare: Source and target are identical.
 pageLoading: Loading, please wait...
+repoCloneHeader: Or you can clone this repository
+repoCloneLabel: Clone with HTTPS
+emptyRepoHeader: This repository is empty. Let's get started...
+addNewFile: + New File
+emptyRepoInclude: We recommend every repository include a [README](README_URL), [LICENSE](LICENSE_URL), and [.gitignore](GITIGNORE_URL).

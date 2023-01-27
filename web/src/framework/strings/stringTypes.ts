@@ -7,6 +7,7 @@ export interface StringsMap {
   addComment: string
   addGitIgnore: string
   addLicense: string
+  addNewFile: string
   addReadMe: string
   all: string
   allBranches: string
@@ -83,6 +84,8 @@ export interface StringsMap {
   editNotAllowed: string
   edited: string
   email: string
+  emptyRepoHeader: string
+  emptyRepoInclude: string
   enableSSLVerification: string
   enabled: string
   enterDescription: string
@@ -188,7 +191,11 @@ export interface StringsMap {
   rejected: string
   renameFile: string
   replyHere: string
+  repoCloneHeader: string
+  repoCloneLabel: string
   repoEmptyMarkdown: string
+  repoEmptyMarkdownClone: string
+  repoEmptyMarkdownExisting: string
   'repos.activities': string
   'repos.data': string
   'repos.enterBranchName': string
