@@ -5,6 +5,8 @@
 package gitrpc
 
 import (
+	"fmt"
+
 	"github.com/harness/gitness/gitrpc/rpc"
 
 	"google.golang.org/grpc"
@@ -21,7 +23,11 @@ type Client struct {
 	mergeService       rpc.MergeServiceClient
 }
 
-func New(remoteAddr string) (*Client, error) {
+func New(config Config) (*Client, error) {
+	if err := config.Validate(); err != nil {
+		return nil, fmt.Errorf("provided config is invalid: %w", err)
+	}
+
 	// create interceptors
 	logIntc := NewClientLogInterceptor()
 
@@ -36,7 +42,7 @@ func New(remoteAddr string) (*Client, error) {
 		),
 	}
 
-	conn, err := grpc.Dial(remoteAddr, grpcOpts...)
+	conn, err := grpc.Dial(config.Addr, grpcOpts...)
 	if err != nil {
 		return nil, err
 	}

@@ -20,6 +20,10 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideSystem(config Config, redisClient redis.UniversalClient) (*System, error) {
+	if err := config.Validate(); err != nil {
+		return nil, fmt.Errorf("provided config is invalid: %w", err)
+	}
+
 	var system *System
 	var err error
 	switch config.Mode {

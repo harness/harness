@@ -44,7 +44,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 
 	// create the system configuration store by loading
 	// data from the environment.
-	config, err := load()
+	config, err := LoadConfig()
 	if err != nil {
 		return fmt.Errorf("encountered an error while loading configuration: %w", err)
 	}

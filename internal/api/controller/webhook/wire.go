@@ -8,7 +8,6 @@ import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
@@ -19,9 +18,9 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(config *types.Config, db *sqlx.DB, authorizer authz.Authorizer,
+func ProvideController(config webhook.Config, db *sqlx.DB, authorizer authz.Authorizer,
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
 	repoStore store.RepoStore, webhookService *webhook.Service) *Controller {
-	return NewController(config.Webhook.AllowLoopback, config.Webhook.AllowPrivateNetwork,
+	return NewController(config.AllowLoopback, config.AllowPrivateNetwork,
 		db, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService)
 }

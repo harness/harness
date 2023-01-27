@@ -7,6 +7,7 @@ package server
 
 import (
 	"context"
+
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	server2 "github.com/harness/gitness/gitrpc/server"
@@ -62,7 +63,10 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	pathCache := cache.ProvidePathCache(pathStore, pathTransformation)
 	repoStore := database.ProvideRepoStore(db, pathCache)
 	spaceStore := database.ProvideSpaceStore(db, pathCache)
-	gitrpcConfig := ProvideGitRPCClientConfig(config)
+	gitrpcConfig, err := ProvideGitRPCClientConfig()
+	if err != nil {
+		return nil, err
+	}
 	gitrpcInterface, err := gitrpc.ProvideClient(gitrpcConfig)
 	if err != nil {
 		return nil, err
@@ -75,7 +79,10 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
 	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
 	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db, principalInfoCache)
-	eventsConfig := ProvideEventsConfig(config)
+	eventsConfig, err := ProvideEventsConfig()
+	if err != nil {
+		return nil, err
+	}
 	universalClient, err := ProvideRedis(config)
 	if err != nil {
 		return nil, err
@@ -91,9 +98,12 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	lockConfig := lock.ProvideConfig(config)
 	mutexManager := lock.ProvideMutexManager(lockConfig, universalClient)
 	pullreqController := pullreq.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface, reporter, mutexManager)
+	webhookConfig, err := ProvideWebhookConfig()
+	if err != nil {
+		return nil, err
+	}
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
-	webhookConfig := ProvideWebhookConfig(config)
 	readerFactory, err := events3.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
@@ -102,7 +112,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	webhookController := webhook2.ProvideController(config, db, authorizer, webhookStore, webhookExecutionStore, repoStore, service)
+	webhookController := webhook2.ProvideController(webhookConfig, db, authorizer, webhookStore, webhookExecutionStore, repoStore, service)
 	eventsReporter, err := events3.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
@@ -115,7 +125,10 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(config, apiHandler, gitHandler, webHandler)
 	serverServer := server.ProvideServer(config, routerRouter)
-	serverConfig := ProvideGitRPCServerConfig(config)
+	serverConfig, err := ProvideGitRPCServerConfig()
+	if err != nil {
+		return nil, err
+	}
 	server3, err := server2.ProvideServer(serverConfig)
 	if err != nil {
 		return nil, err

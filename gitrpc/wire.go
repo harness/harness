@@ -12,5 +12,5 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideClient(config Config) (Interface, error) {
-	return New(config.Bind)
+	return New(config)
 }

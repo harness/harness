@@ -16,135 +16,122 @@ import (
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/types"
 
-	"github.com/google/wire"
 	"github.com/kelseyhightower/envconfig"
 )
 
-// load returns the system configuration from the
+// LoadConfig returns the system configuration from the
 // host environment.
-func load() (*types.Config, error) {
+func LoadConfig() (*types.Config, error) {
 	config := new(types.Config)
-	// read the configuration from the environment and
-	// populate the configuration structure.
 	err := envconfig.Process("", config)
 	if err != nil {
 		return nil, err
 	}
 
-	err = ensureInstanceIDIsSet(config)
+	config.InstanceID, err = getSanitizedMachineName()
 	if err != nil {
 		return nil, fmt.Errorf("unable to ensure that instance ID is set in config: %w", err)
-	}
-
-	err = ensureGitRootIsSet(config)
-	if err != nil {
-		return nil, fmt.Errorf("unable to ensure that git root is set in config: %w", err)
-	}
-
-	err = ensureGitServerHookIsSet(config)
-	if err != nil {
-		return nil, fmt.Errorf("unable to ensure that server hook is set in config: %w", err)
 	}
 
 	return config, nil
 }
 
-func ensureInstanceIDIsSet(config *types.Config) error {
-	if config.InstanceID == "" {
-		// use the hostname as default id of the instance
-		hostName, err := os.Hostname()
+// getSanitizedMachineName gets the name of the machine and returns it in sanitized format.
+func getSanitizedMachineName() (string, error) {
+	// use the hostname as default id of the instance
+	hostName, err := os.Hostname()
+	if err != nil {
+		return "", err
+	}
+
+	// Always cast to lower and remove all unwanted chars
+	// NOTE: this could theoretically lead to overlaps, then it should be passed explicitly
+	// NOTE: for k8s names/ids below modifications are all noops
+	// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
+	hostName = strings.ToLower(hostName)
+	hostName = strings.Map(func(r rune) rune {
+		switch {
+		case 'a' <= r && r <= 'z':
+			return r
+		case '0' <= r && r <= '9':
+			return r
+		case r == '-', r == '.':
+			return r
+		default:
+			return '_'
+		}
+	}, hostName)
+
+	return hostName, nil
+}
+
+// ProvideGitRPCServerConfig loads the gitrpc server config from the environment.
+// It backfills certain config elements to work with cmdone.
+func ProvideGitRPCServerConfig() (server.Config, error) {
+	config := server.Config{}
+	err := envconfig.Process("", &config)
+	if err != nil {
+		return server.Config{}, fmt.Errorf("failed to load gitrpc server config: %w", err)
+	}
+	if config.GitHookPath == "" {
+		var executablePath string
+		executablePath, err = os.Executable()
 		if err != nil {
-			return err
+			return server.Config{}, fmt.Errorf("failed to get path of current executable: %w", err)
 		}
 
-		// Always cast to lower and remove all unwanted chars
-		// NOTE: this could theoretically lead to overlaps, then it should be passed explicitly
-		// NOTE: for k8s names/ids below modifications are all noops
-		// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
-		hostName = strings.ToLower(hostName)
-		hostName = strings.Map(func(r rune) rune {
-			switch {
-			case 'a' <= r && r <= 'z':
-				return r
-			case '0' <= r && r <= '9':
-				return r
-			case r == '-', r == '.':
-				return r
-			default:
-				return '_'
-			}
-		}, hostName)
-
-		config.InstanceID = hostName
+		config.GitHookPath = executablePath
 	}
-
-	return nil
-}
-
-func ensureGitRootIsSet(config *types.Config) error {
-	if config.Git.Root == "" {
-		homedir, err := os.UserHomeDir()
+	if config.GitRoot == "" {
+		var homedir string
+		homedir, err = os.UserHomeDir()
 		if err != nil {
-			return err
+			return server.Config{}, err
 		}
 
-		config.Git.Root = filepath.Join(homedir, ".gitness")
+		config.GitRoot = filepath.Join(homedir, ".gitness")
 	}
 
-	return nil
+	return config, nil
 }
 
-func ensureGitServerHookIsSet(config *types.Config) error {
-	if config.Git.ServerHookPath == "" {
-		executablePath, err := os.Executable()
+// ProvideGitRPCClientConfig loads the gitrpc client config from the environment.
+func ProvideGitRPCClientConfig() (gitrpc.Config, error) {
+	config := gitrpc.Config{}
+	err := envconfig.Process("", &config)
+	if err != nil {
+		return gitrpc.Config{}, fmt.Errorf("failed to load gitrpc client config: %w", err)
+	}
+
+	return config, nil
+}
+
+// ProvideEventsConfig loads the events config from the environment.
+func ProvideEventsConfig() (events.Config, error) {
+	config := events.Config{}
+	err := envconfig.Process("", &config)
+	if err != nil {
+		return events.Config{}, fmt.Errorf("failed to load events config: %w", err)
+	}
+
+	return config, nil
+}
+
+// ProvideWebhookConfig loads the webhook config from the environment.
+// It backfills certain config elements if required.
+func ProvideWebhookConfig() (webhook.Config, error) {
+	config := webhook.Config{}
+	err := envconfig.Process("", &config)
+	if err != nil {
+		return webhook.Config{}, fmt.Errorf("failed to load events config: %w", err)
+	}
+
+	if config.EventReaderName == "" {
+		config.EventReaderName, err = getSanitizedMachineName()
 		if err != nil {
-			return fmt.Errorf("failed to get path of current executable: %w", err)
+			return webhook.Config{}, fmt.Errorf("failed to get sanitized machine name: %w", err)
 		}
-
-		config.Git.ServerHookPath = executablePath
 	}
 
-	return nil
-}
-
-// PackageConfigsWireSet contains providers that generate configs required for sub packages.
-var PackageConfigsWireSet = wire.NewSet(
-	ProvideGitRPCServerConfig,
-	ProvideGitRPCClientConfig,
-	ProvideEventsConfig,
-	ProvideWebhookConfig,
-)
-
-func ProvideGitRPCServerConfig(config *types.Config) server.Config {
-	return server.Config{
-		Bind:           config.Server.GRPC.Bind,
-		GitRoot:        config.Git.Root,
-		TmpDir:         config.Git.TmpDir,
-		ServerHookPath: config.Git.ServerHookPath,
-	}
-}
-
-func ProvideGitRPCClientConfig(config *types.Config) gitrpc.Config {
-	return gitrpc.Config{
-		Bind: config.Server.GRPC.Bind,
-	}
-}
-
-func ProvideEventsConfig(config *types.Config) events.Config {
-	return events.Config{
-		Mode:            events.Mode(config.Events.Mode),
-		Namespace:       config.Events.Namespace,
-		MaxStreamLength: config.Events.MaxStreamLength,
-	}
-}
-
-func ProvideWebhookConfig(config *types.Config) webhook.Config {
-	return webhook.Config{
-		// Use instanceID as readerName as every instance should be one reader
-		EventReaderName:     config.InstanceID,
-		Concurrency:         config.Webhook.Concurrency,
-		MaxRetryCount:       config.Webhook.MaxRetryCount,
-		AllowLoopback:       config.Webhook.AllowLoopback,
-		AllowPrivateNetwork: config.Webhook.AllowPrivateNetwork,
-	}
+	return config, nil
 }

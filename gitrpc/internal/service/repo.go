@@ -57,19 +57,19 @@ type Storage interface {
 
 type RepositoryService struct {
 	rpc.UnimplementedRepositoryServiceServer
-	adapter        GitAdapter
-	store          Storage
-	reposRoot      string
-	serverHookPath string
+	adapter     GitAdapter
+	store       Storage
+	reposRoot   string
+	gitHookPath string
 }
 
 func NewRepositoryService(adapter GitAdapter, store Storage, reposRoot string,
-	serverHookPath string) (*RepositoryService, error) {
+	gitHookPath string) (*RepositoryService, error) {
 	return &RepositoryService{
-		adapter:        adapter,
-		store:          store,
-		reposRoot:      reposRoot,
-		serverHookPath: serverHookPath,
+		adapter:     adapter,
+		store:       store,
+		reposRoot:   reposRoot,
+		gitHookPath: gitHookPath,
 	}, nil
 }
 
@@ -170,10 +170,10 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	// setup server hook symlinks pointing to configured server hook binary
 	for _, hook := range gitServerHookNames {
 		hookPath := path.Join(repoPath, gitHooksDir, hook)
-		err = os.Symlink(s.serverHookPath, hookPath)
+		err = os.Symlink(s.gitHookPath, hookPath)
 		if err != nil {
 			return status.Errorf(codes.Internal,
-				"failed to setup symlink for hook '%s' ('%s' -> '%s'): %s", hook, hookPath, s.serverHookPath, err)
+				"failed to setup symlink for hook '%s' ('%s' -> '%s'): %s", hook, hookPath, s.gitHookPath, err)
 		}
 	}
 

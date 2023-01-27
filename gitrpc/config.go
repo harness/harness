@@ -4,7 +4,22 @@
 
 package gitrpc
 
+import (
+	"errors"
+)
+
 // Config represents the config for the gitrpc client.
 type Config struct {
-	Bind string
+	Addr string `envconfig:"GITRPC_CLIENT_ADDR" default:"127.0.0.1:3001"`
+}
+
+func (c *Config) Validate() error {
+	if c == nil {
+		return errors.New("config is required")
+	}
+	if c.Addr == "" {
+		return errors.New("config.Addr is required")
+	}
+
+	return nil
 }

@@ -39,10 +39,7 @@ type Config struct {
 
 	// Git defines the git configuration parameters
 	Git struct {
-		Root           string `envconfig:"GITNESS_GIT_ROOT"`
-		TmpDir         string `envconfig:"GITNESS_GIT_TMP_DIR"`          // directory for temporary data (repo clone)
-		ServerHookPath string `envconfig:"GITNESS_GIT_SERVER_HOOK_PATH"` // path to binary used as git server hook
-		DefaultBranch  string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
+		DefaultBranch string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
 	}
 
 	// Server defines the server configuration parameters.
@@ -54,11 +51,6 @@ type Config struct {
 			Host  string `envconfig:"GITNESS_HTTP_HOST"`
 			// GitHost is the host used to identify git traffic (OPTIONAL).
 			GitHost string `envconfig:"GITNESS_HTTP_GIT_HOST" default:"git.localhost"`
-		}
-
-		// GRPC defines the grpc configuration parameters
-		GRPC struct {
-			Bind string `envconfig:"GITNESS_GRPC_BIND" default:":3001"`
 		}
 
 		// Acme defines Acme configuration parameters.
@@ -123,13 +115,6 @@ type Config struct {
 		Password           string `envconfig:"GITNESS_REDIS_PASSWORD"`
 	}
 
-	Events struct {
-		Mode                  string `envconfig:"GITNESS_EVENTS_MODE"                     default:"inmemory"`
-		Namespace             string `envconfig:"GITNESS_EVENTS_NAMESPACE"                default:"gitness"`
-		MaxStreamLength       int64  `envconfig:"GITNESS_EVENTS_MAX_STREAM_LENGTH"        default:"1000"`
-		ApproxMaxStreamLength bool   `envconfig:"GITNESS_EVENTS_APPROX_MAX_STREAM_LENGTH" default:"true"`
-	}
-
 	Lock struct {
 		// Provider is a name of distributed lock service like redis, memory, file etc...
 		Provider      string        `envconfig:"GITNESS_LOCK_PROVIDER"          default:"inmemory"`
@@ -142,12 +127,5 @@ type Config struct {
 		AppNamespace string `envconfig:"GITNESS_LOCK_APP_NAMESPACE"     default:"gitness"`
 		// DefaultNamespace is when mutex doesn't specify custom namespace for their keys
 		DefaultNamespace string `envconfig:"GITNESS_LOCK_DEFAULT_NAMESPACE" default:"default"`
-	}
-
-	Webhook struct {
-		MaxRetryCount       int64 `envconfig:"GITNESS_WEBHOOK_MAX_RETRY_COUNT" default:"3"`
-		Concurrency         int   `envconfig:"GITNESS_WEBHOOK_CONCURRENCY" default:"4"`
-		AllowLoopback       bool  `envconfig:"GITNESS_WEBHOOK_ALLOW_LOOPBACK" default:"false"`
-		AllowPrivateNetwork bool  `envconfig:"GITNESS_WEBHOOK_ALLOW_PRIVATE_NETWORK" default:"false"`
 	}
 }

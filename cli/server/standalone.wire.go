@@ -45,7 +45,6 @@ import (
 func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	wire.Build(
 		newSystem,
-		PackageConfigsWireSet,
 		ProvideRedis,
 		bootstrap.WireSet,
 		database.WireSet,
@@ -66,11 +65,15 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		authz.WireSet,
 		gitevents.WireSet,
 		pullreqevents.WireSet,
+		ProvideGitRPCServerConfig,
 		gitrpcserver.WireSet,
+		ProvideGitRPCClientConfig,
 		gitrpc.WireSet,
 		store.WireSet,
 		check.WireSet,
+		ProvideEventsConfig,
 		events.WireSet,
+		ProvideWebhookConfig,
 		webhook.WireSet,
 		githook.WireSet,
 		lock.WireSet,

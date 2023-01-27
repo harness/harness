@@ -6,6 +6,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -32,6 +33,9 @@ type Server struct {
 }
 
 func NewServer(config Config) (*Server, error) {
+	if err := config.Validate(); err != nil {
+		return nil, fmt.Errorf("configuration is invalid: %w", err)
+	}
 	// Create repos folder
 	reposRoot := filepath.Join(config.GitRoot, repoSubdirName)
 	if _, err := os.Stat(reposRoot); errors.Is(err, os.ErrNotExist) {
@@ -66,7 +70,7 @@ func NewServer(config Config) (*Server, error) {
 	store := storage.NewLocalStore()
 
 	// initialize services
-	repoService, err := service.NewRepositoryService(adapter, store, reposRoot, config.ServerHookPath)
+	repoService, err := service.NewRepositoryService(adapter, store, reposRoot, config.GitHookPath)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ package webhook
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -23,11 +24,28 @@ const (
 )
 
 type Config struct {
-	EventReaderName     string `json:"event_reader_name"`
-	Concurrency         int    `json:"concurrency"`
-	MaxRetryCount       int64  `json:"max_retry_count"`
-	AllowPrivateNetwork bool   `json:"allow_private_network"`
-	AllowLoopback       bool   `json:"allow_loopback"`
+	EventReaderName     string `envconfig:"GITNESS_WEBHOOK_EVENT_READER_NAME"`
+	Concurrency         int    `envconfig:"GITNESS_WEBHOOK_CONCURRENCY" default:"4"`
+	MaxRetryCount       int64  `envconfig:"GITNESS_WEBHOOK_MAX_RETRY_COUNT" default:"3"`
+	AllowPrivateNetwork bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_PRIVATE_NETWORK" default:"false"`
+	AllowLoopback       bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_LOOPBACK" default:"false"`
+}
+
+func (c *Config) Validate() error {
+	if c == nil {
+		return errors.New("config is required")
+	}
+	if c.EventReaderName == "" {
+		return errors.New("config.EventReaderName is required")
+	}
+	if c.Concurrency < 1 {
+		return errors.New("config.Concurrency has to be a positive number")
+	}
+	if c.MaxRetryCount < 0 {
+		return errors.New("config.MaxRetryCount can't be negative")
+	}
+
+	return nil
 }
 
 // Service is responsible for processing webhook events.
@@ -49,6 +67,9 @@ func NewService(ctx context.Context, config Config,
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
 	repoStore store.RepoStore, urlProvider *url.Provider,
 	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Service, error) {
+	if err := config.Validate(); err != nil {
+		return nil, fmt.Errorf("provided config is invalid: %w", err)
+	}
 	service := &Service{
 		webhookStore:          webhookStore,
 		webhookExecutionStore: webhookExecutionStore,
