@@ -8,8 +8,11 @@ _research
 web/node_modules
 web/dist/files
 release
-/gitness
-/gitrpcserver
 .idea
 coverage.out
 gitness.session.sql
+
+# ignore any executables we build
+/gitness
+/gitrpcserver
+/githook

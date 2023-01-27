@@ -22,19 +22,12 @@ const (
 	gitReferenceNamePrefixTag = "refs/tags/"
 )
 
-// PostReceiveInput represents the input of the post-receive git hook.
-type PostReceiveInput struct {
-	BaseInput
-	// RefUpdates contains all references that got updated as part of the git operation.
-	RefUpdates []ReferenceUpdate `json:"ref_updates"`
-}
-
 // PostReceive executes the post-receive hook for a git repository.
 func (c *Controller) PostReceive(
 	ctx context.Context,
 	session *auth.Session,
-	in *PostReceiveInput,
-) (*ServerHookOutput, error) {
+	in *types.PostReceiveInput,
+) (*types.ServerHookOutput, error) {
 	if in == nil {
 		return nil, fmt.Errorf("input is nil")
 	}
@@ -42,13 +35,13 @@ func (c *Controller) PostReceive(
 	// report ref events (best effort)
 	c.reportReferenceEvents(ctx, in)
 
-	return &ServerHookOutput{}, nil
+	return &types.ServerHookOutput{}, nil
 }
 
 // reportReferenceEvents is reporting reference events to the event system.
 // NOTE: keep best effort for now as it doesn't change the outcome of the git operation.
 // TODO: in the future we might want to think about propagating errors so user is aware of events not being triggered.
-func (c *Controller) reportReferenceEvents(ctx context.Context, in *PostReceiveInput) {
+func (c *Controller) reportReferenceEvents(ctx context.Context, in *types.PostReceiveInput) {
 	for _, refUpdate := range in.RefUpdates {
 		switch {
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch):
@@ -62,7 +55,7 @@ func (c *Controller) reportReferenceEvents(ctx context.Context, in *PostReceiveI
 }
 
 func (c *Controller) reportBranchEvent(ctx context.Context,
-	principalID int64, repoID int64, branchUpdate ReferenceUpdate) {
+	principalID int64, repoID int64, branchUpdate types.ReferenceUpdate) {
 	switch {
 	case branchUpdate.Old == types.NilSHA:
 		c.gitReporter.BranchCreated(ctx, &events.BranchCreatedPayload{
@@ -91,7 +84,7 @@ func (c *Controller) reportBranchEvent(ctx context.Context,
 }
 
 func (c *Controller) reportTagEvent(ctx context.Context,
-	principalID int64, repoID int64, tagUpdate ReferenceUpdate) {
+	principalID int64, repoID int64, tagUpdate types.ReferenceUpdate) {
 	switch {
 	case tagUpdate.Old == types.NilSHA:
 		c.gitReporter.TagCreated(ctx, &events.TagCreatedPayload{

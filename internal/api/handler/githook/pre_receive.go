@@ -11,6 +11,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/types"
 )
 
 // HandlePreReceive returns a handler function that handles pre-receive git hooks.
@@ -19,7 +20,7 @@ func HandlePreReceive(githookCtrl *githook.Controller) http.HandlerFunc {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		in := new(githook.PreReceiveInput)
+		in := new(types.PreReceiveInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid Request Body: %s.", err)

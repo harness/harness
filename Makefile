@@ -57,6 +57,10 @@ build-gitrpc: generate ## Build the gitrpc binary
 	@echo "Building GitRPC Server"
 	go build -ldflags="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.Version.Major=${GITNESS_VERSION}" -o ./gitrpcserver ./cmd/gitrpcserver
 
+build-githook: generate ## Build the githook binary
+	@echo "Building GitHook Binary"
+	go build -ldflags="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.Version.Major=${GITNESS_VERSION}" -o ./githook ./cmd/githook
+
 test: generate  ## Run the go tests
 	@echo "Running tests"
 	go test -v -coverprofile=coverage.out ./internal/...

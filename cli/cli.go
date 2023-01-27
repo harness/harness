@@ -8,7 +8,6 @@ import (
 	"errors"
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/harness/gitness/cli/operations/account"
@@ -18,6 +17,7 @@ import (
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/cli/session"
 	"github.com/harness/gitness/client"
+	"github.com/harness/gitness/internal/githook"
 	"github.com/harness/gitness/version"
 
 	"github.com/adrg/xdg"
@@ -98,9 +98,13 @@ func initialize(ss *session.Session, httpClient *client.HTTPClient) error {
 }
 
 func getArguments() []string {
-	// for git operations, the first argument is "hooks", followed by other relevant arguments
-	if os.Args[0] == "hooks/update" || os.Args[0] == "hooks/pre-receive" || os.Args[0] == "hooks/post-receive" {
-		return append([]string{"hooks", path.Base(os.Args[0])}, os.Args[1:]...)
+	command := os.Args[0]
+	args := os.Args[1:]
+
+	// in case of githooks, translate the arguments comming from git to work with gitness.
+	if gitArgs, fromGit := githook.SanitizeArgsForGit(command, args); fromGit {
+		return append([]string{hooks.ParamHooks}, gitArgs...)
 	}
-	return os.Args[1:]
+
+	return args
 }

@@ -16,19 +16,12 @@ import (
 	"github.com/gotidy/ptr"
 )
 
-// PreReceiveInput represents the input of the pre-receive git hook.
-type PreReceiveInput struct {
-	BaseInput
-	// RefUpdates contains all references that are being updated as part of the git operation.
-	RefUpdates []ReferenceUpdate `json:"ref_updates"`
-}
-
 // PreReceive executes the pre-receive hook for a git repository.
 func (c *Controller) PreReceive(
 	ctx context.Context,
 	session *auth.Session,
-	in *PreReceiveInput,
-) (*ServerHookOutput, error) {
+	in *types.PreReceiveInput,
+) (*types.ServerHookOutput, error) {
 	if in == nil {
 		return nil, fmt.Errorf("input is nil")
 	}
@@ -45,15 +38,16 @@ func (c *Controller) PreReceive(
 
 	// TODO: Branch Protection, Block non-brach/tag refs (?), ...
 
-	return &ServerHookOutput{}, nil
+	return &types.ServerHookOutput{}, nil
 }
 
-func (c *Controller) blockDefaultBranchDeletion(repo *types.Repository, in *PreReceiveInput) *ServerHookOutput {
+func (c *Controller) blockDefaultBranchDeletion(repo *types.Repository,
+	in *types.PreReceiveInput) *types.ServerHookOutput {
 	repoDefaultBranchRef := gitReferenceNamePrefixBranch + repo.DefaultBranch
 
 	for _, refUpdate := range in.RefUpdates {
 		if refUpdate.New == types.NilSHA && refUpdate.Ref == repoDefaultBranchRef {
-			return &ServerHookOutput{
+			return &types.ServerHookOutput{
 				Error: ptr.String(usererror.ErrDefaultBranchCantBeDeleted.Error()),
 			}
 		}

@@ -5,12 +5,17 @@
 package hooks
 
 import (
+	"github.com/harness/gitness/internal/githook"
+
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
+const (
+	// ParamHooks defines the parameter for the git hooks sub-commands.
+	ParamHooks = "hooks"
+)
+
 func Register(app *kingpin.Application) {
-	cmd := app.Command("hooks", "manage git server hooks")
-	registerUpdate(cmd)
-	registerPostReceive(cmd)
-	registerPreReceive(cmd)
+	subCmd := app.Command(ParamHooks, "manage git server hooks")
+	githook.RegisterAll(subCmd)
 }

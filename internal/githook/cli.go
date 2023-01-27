@@ -5,156 +5,142 @@
 package githook
 
 import (
-	"bufio"
 	"context"
-	"errors"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"strings"
+	"os/signal"
+	"syscall"
+	"time"
 
-	"github.com/harness/gitness/internal/api/controller/githook"
-
-	"github.com/rs/zerolog/log"
+	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-// CLI represents the githook cli implementation.
-type CLI struct {
-	payload *Payload
-	client  *client
+const (
+	// ParamPreReceive is the parameter under which the pre-receive operation is registered.
+	ParamPreReceive = "pre-receive"
+	// ParamUpdate is the parameter under which the update operation is registered.
+	ParamUpdate = "update"
+	// ParamPostReceive is the parameter under which the post-receive operation is registered.
+	ParamPostReceive = "post-receive"
+
+	// CommandNamePreReceive is the command used by git for the pre-receive hook
+	// (os.args[0] == "hooks/pre-receive").
+	CommandNamePreReceive = "hooks/pre-receive"
+	// CommandNameUpdate is the command used by git for the update hook
+	// (os.args[0] == "hooks/update").
+	CommandNameUpdate = "hooks/update"
+	// CommandNamePostReceive is the command used by git for the post-receive hook
+	// (os.args[0] == "hooks/post-receive").
+	CommandNamePostReceive = "hooks/post-receive"
+)
+
+var (
+	// ExecutionTimeout is the timeout used for githook CLI runs.
+	ExecutionTimeout = 3 * time.Minute
+)
+
+// SanitizeArgsForGit sanitizes the command line arguments (os.Args) if the command indicates they are comming from git.
+// Returns the santized args and true if the call comes from git, otherwise the original args are returned with false.
+func SanitizeArgsForGit(command string, args []string) ([]string, bool) {
+	switch command {
+	case CommandNamePreReceive:
+		return append([]string{ParamPreReceive}, args...), true
+	case CommandNameUpdate:
+		return append([]string{ParamUpdate}, args...), true
+	case CommandNamePostReceive:
+		return append([]string{ParamPostReceive}, args...), true
+	default:
+		return args, false
+	}
 }
 
-// NewCLI creates a new CLI instance from environment variables for githook execution.
-func NewCLI() (*CLI, error) {
-	payload, err := loadPayloadFromEnvironment()
+// KingpinRegister is an abstraction of an entity that allows to register commands.
+// This is required to allow registering hook commands both on application and sub command level.
+type KingpinRegister interface {
+	Command(name, help string) *kingpin.CmdClause
+}
+
+// RegisterAll registers all githook commands.
+func RegisterAll(cmd KingpinRegister) {
+	RegisterPreReceive(cmd)
+	RegisterUpdate(cmd)
+	RegisterPostReceive(cmd)
+}
+
+// RegisterPreReceive registers the pre-receive githook command.
+func RegisterPreReceive(cmd KingpinRegister) {
+	c := &preReceiveCommand{}
+
+	cmd.Command(ParamPreReceive, "hook that is executed before any reference of the push is updated").
+		Action(c.run)
+}
+
+// RegisterUpdate registers the update githook command.
+func RegisterUpdate(cmd KingpinRegister) {
+	c := &updateCommand{}
+
+	subCmd := cmd.Command(ParamUpdate, "hook that is executed before the specific reference gets updated").
+		Action(c.run)
+
+	subCmd.Arg("ref", "reference for which the hook is executed").
+		Required().
+		StringVar(&c.ref)
+
+	subCmd.Arg("old", "old commit sha").
+		Required().
+		StringVar(&c.oldSHA)
+
+	subCmd.Arg("new", "new commit sha").
+		Required().
+		StringVar(&c.newSHA)
+}
+
+// RegisterPostReceive registers the post-receive githook command.
+func RegisterPostReceive(cmd KingpinRegister) {
+	c := &postReceiveCommand{}
+
+	cmd.Command(ParamPostReceive, "hook that is executed after all references of the push got updated").
+		Action(c.run)
+}
+
+type preReceiveCommand struct{}
+
+func (c *preReceiveCommand) run(*kingpin.ParseContext) error {
+	return run(func(ctx context.Context, hook *GitHook) error {
+		return hook.PreReceive(ctx)
+	})
+}
+
+type updateCommand struct {
+	ref    string
+	oldSHA string
+	newSHA string
+}
+
+func (c *updateCommand) run(*kingpin.ParseContext) error {
+	return run(func(ctx context.Context, hook *GitHook) error {
+		return hook.Update(ctx, c.ref, c.oldSHA, c.newSHA)
+	})
+}
+
+type postReceiveCommand struct{}
+
+func (c *postReceiveCommand) run(*kingpin.ParseContext) error {
+	return run(func(ctx context.Context, hook *GitHook) error {
+		return hook.PostReceive(ctx)
+	})
+}
+
+func run(fn func(ctx context.Context, hook *GitHook) error) error {
+	// load hook here (as it loads environment variables, has to be done at time of execution, not register)
+	hook, err := NewFromEnvironment()
 	if err != nil {
-		return nil, fmt.Errorf("failed to load payload: %w", err)
+		return err
 	}
 
-	return &CLI{
-		payload: payload,
-		client: &client{
-			httpClient: http.DefaultClient,
-			baseURL:    payload.APIBaseURL,
-			requestPreparation: func(r *http.Request) *http.Request {
-				// TODO: reference single constant (together with gitness middleware)
-				r.Header.Add("X-Request-Id", payload.RequestID)
-				return r
-			},
-		},
-	}, nil
-}
+	// Create context that listens for the interrupt signal from the OS and has a timeout.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	ctx, cancel := context.WithTimeout(ctx, ExecutionTimeout)
+	defer cancel()
 
-// PreReceive executes the pre-receive git hook.
-func (c *CLI) PreReceive(ctx context.Context) error {
-	refUpdates, err := getUpdatedReferencesFromStdIn()
-	if err != nil {
-		return fmt.Errorf("failed to read updated references from std in: %w", err)
-	}
-
-	in := &githook.PreReceiveInput{
-		BaseInput: githook.BaseInput{
-			RepoID:      c.payload.RepoID,
-			PrincipalID: c.payload.PrincipalID,
-		},
-		RefUpdates: refUpdates,
-	}
-
-	out, err := c.client.PreReceive(ctx, in)
-
-	return handleServerHookOutput(out, err)
-}
-
-// Update executes the update git hook.
-func (c *CLI) Update(ctx context.Context, ref string, oldSHA string, newSHA string) error {
-	in := &githook.UpdateInput{
-		BaseInput: githook.BaseInput{
-			RepoID:      c.payload.RepoID,
-			PrincipalID: c.payload.PrincipalID,
-		},
-		RefUpdate: githook.ReferenceUpdate{
-			Ref: ref,
-			Old: oldSHA,
-			New: newSHA,
-		},
-	}
-
-	out, err := c.client.Update(ctx, in)
-
-	return handleServerHookOutput(out, err)
-}
-
-// PostReceive executes the post-receive git hook.
-func (c *CLI) PostReceive(ctx context.Context) error {
-	refUpdates, err := getUpdatedReferencesFromStdIn()
-	if err != nil {
-		return fmt.Errorf("failed to read updated references from std in: %w", err)
-	}
-
-	in := &githook.PostReceiveInput{
-		BaseInput: githook.BaseInput{
-			RepoID:      c.payload.RepoID,
-			PrincipalID: c.payload.PrincipalID,
-		},
-		RefUpdates: refUpdates,
-	}
-
-	out, err := c.client.PostReceive(ctx, in)
-
-	return handleServerHookOutput(out, err)
-}
-
-func handleServerHookOutput(out *githook.ServerHookOutput, err error) error {
-	if err != nil {
-		return fmt.Errorf("an error occured when calling the server: %w", err)
-	}
-
-	if out == nil {
-		return errors.New("the server returned an empty output")
-	}
-
-	if out.Error != nil {
-		return errors.New(*out.Error)
-	}
-
-	return nil
-}
-
-// getUpdatedReferencesFromStdIn reads the updated references provided by git from stdin.
-// The expected format is "<old-value> SP <new-value> SP <ref-name> LF"
-// For more details see https://git-scm.com/docs/githooks#pre-receive
-func getUpdatedReferencesFromStdIn() ([]githook.ReferenceUpdate, error) {
-	reader := bufio.NewReader(os.Stdin)
-	updatedRefs := []githook.ReferenceUpdate{}
-	for {
-		line, err := reader.ReadString('\n')
-		// if end of file is reached, break the loop
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Error().Msgf("Error when reading from standard input - %v", err)
-			return nil, err
-		}
-
-		if len(line) == 0 {
-			return nil, errors.New("ref data from stdin contains empty line - not expected")
-		}
-
-		// splitting line of expected form "<old-value> SP <new-value> SP <ref-name> LF"
-		splitGitHookData := strings.Split(line[:len(line)-1], " ")
-		if len(splitGitHookData) != 3 {
-			return nil, fmt.Errorf("received invalid data format or didn't receive enough parameters - %v",
-				splitGitHookData)
-		}
-
-		updatedRefs = append(updatedRefs, githook.ReferenceUpdate{
-			Old: splitGitHookData[0],
-			New: splitGitHookData[1],
-			Ref: splitGitHookData[2],
-		})
-	}
-
-	return updatedRefs, nil
+	return fn(ctx, hook)
 }

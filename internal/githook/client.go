@@ -13,7 +13,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/controller/githook"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
 )
 
@@ -35,24 +35,24 @@ type client struct {
 
 // PreReceive calls the pre-receive githook api of the gitness api server.
 func (c *client) PreReceive(ctx context.Context,
-	in *githook.PreReceiveInput) (*githook.ServerHookOutput, error) {
+	in *types.PreReceiveInput) (*types.ServerHookOutput, error) {
 	return c.githook(ctx, "pre-receive", in)
 }
 
 // Update calls the update githook api of the gitness api server.
 func (c *client) Update(ctx context.Context,
-	in *githook.UpdateInput) (*githook.ServerHookOutput, error) {
+	in *types.UpdateInput) (*types.ServerHookOutput, error) {
 	return c.githook(ctx, "update", in)
 }
 
 // PostReceive calls the post-receive githook api of the gitness api server.
 func (c *client) PostReceive(ctx context.Context,
-	in *githook.PostReceiveInput) (*githook.ServerHookOutput, error) {
+	in *types.PostReceiveInput) (*types.ServerHookOutput, error) {
 	return c.githook(ctx, "post-receive", in)
 }
 
 // githook executes the requested githook type using the provided input.
-func (c *client) githook(ctx context.Context, githookType string, in interface{}) (*githook.ServerHookOutput, error) {
+func (c *client) githook(ctx context.Context, githookType string, in interface{}) (*types.ServerHookOutput, error) {
 	uri := fmt.Sprintf("%s/v1/internal/git-hooks/%s", c.baseURL, githookType)
 	bodyBytes, err := json.Marshal(in)
 	if err != nil {
@@ -84,7 +84,7 @@ func (c *client) githook(ctx context.Context, githookType string, in interface{}
 		return nil, fmt.Errorf("request execution failed: %w", err)
 	}
 
-	return unmarshalResponse[githook.ServerHookOutput](resp)
+	return unmarshalResponse[types.ServerHookOutput](resp)
 }
 
 // unmarshalResponse reads the response body and if there are no errors marshall's it into
