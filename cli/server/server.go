@@ -68,7 +68,9 @@ func (c *command) run(*kingpin.ParseContext) error {
 		return fmt.Errorf("encountered an error while bootstrapping the system: %w", err)
 	}
 
-	// collects all go routines - gCTX cancels if any go routine encounters an error
+	// gCtx is canceled if any of the following occurs:
+	// - any go routine launched with g encounters an error
+	// - ctx is canceled
 	g, gCtx := errgroup.WithContext(ctx)
 
 	// start server
@@ -90,6 +92,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 
 	// start grpc server
 	g.Go(system.gitRPCServer.Start)
+	log.Info().Msg("gitrpc server started")
 
 	// wait until the error group context is done
 	<-gCtx.Done()

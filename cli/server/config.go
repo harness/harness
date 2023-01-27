@@ -89,7 +89,7 @@ func ProvideGitRPCServerConfig() (server.Config, error) {
 			return server.Config{}, err
 		}
 
-		config.GitRoot = filepath.Join(homedir, ".gitness")
+		config.GitRoot = filepath.Join(homedir, ".gitrpc")
 	}
 
 	return config, nil
