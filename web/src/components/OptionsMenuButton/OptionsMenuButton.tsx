@@ -1,8 +1,8 @@
 import React, { ReactElement } from 'react'
 import cx from 'classnames'
 import { omit } from 'lodash-es'
-import { Classes, IMenuItemProps, Menu } from '@blueprintjs/core'
-import { Button, ButtonProps } from '@harness/uicore'
+import { Classes, IconName, IMenuItemProps, Menu } from '@blueprintjs/core'
+import { Button, ButtonProps, Icon } from '@harness/uicore'
 import type { PopoverProps } from '@harness/uicore/dist/components/Popover/Popover'
 import css from './OptionsMenuButton.module.scss'
 
@@ -10,6 +10,9 @@ export const MenuDivider = '-' as const
 
 type OptionsMenuItem = React.ComponentProps<typeof Menu.Item> & {
   isDanger?: boolean
+  text?: string
+  hasIcon?: boolean
+  iconName?: string
 }
 
 export interface OptionsMenuButtonProps extends ButtonProps {
@@ -37,6 +40,11 @@ export const OptionsMenuButton = ({
             (item, index) =>
               ((item as string) === MenuDivider && <Menu.Divider key={index} />) || (
                 <Menu.Item
+                  icon={
+                    (item as OptionsMenuItem).hasIcon ? (
+                      <Icon size={12} className={css.icon} name={(item as OptionsMenuItem).iconName as IconName} />
+                    ) : null
+                  }
                   key={(item as React.ComponentProps<typeof Menu.Item>)?.text as string}
                   className={cx(Classes.POPOVER_DISMISS, { [css.danger]: (item as OptionsMenuItem).isDanger })}
                   {...omit(item as IMenuItemProps & React.AnchorHTMLAttributes<HTMLAnchorElement>, 'isDanger')}

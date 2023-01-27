@@ -21,6 +21,12 @@ export function WebhooksHeader({ repoMetadata, loading, onSearchTermChanged }: W
   return (
     <Container className={css.main} padding="xlarge">
       <Layout.Horizontal spacing="medium">
+        <Button
+          variation={ButtonVariation.PRIMARY}
+          text={getString('createWebhook')}
+          icon={CodeIcon.Add}
+          onClick={() => history.push(routes.toCODEWebhookNew({ repoPath: repoMetadata?.path as string }))}
+        />
         <FlexExpander />
         <SearchInputWithSpinner
           loading={loading}
@@ -29,12 +35,6 @@ export function WebhooksHeader({ repoMetadata, loading, onSearchTermChanged }: W
             setSearchTerm(value)
             onSearchTermChanged(value)
           }}
-        />
-        <Button
-          variation={ButtonVariation.PRIMARY}
-          text={getString('createWebhook')}
-          icon={CodeIcon.Add}
-          onClick={() => history.push(routes.toCODEWebhookNew({ repoPath: repoMetadata?.path as string }))}
         />
       </Layout.Horizontal>
     </Container>

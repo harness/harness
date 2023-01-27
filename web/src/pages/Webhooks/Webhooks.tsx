@@ -1,5 +1,16 @@
 import React, { useMemo, useState } from 'react'
-import { Container, PageBody, Text, Color, TableV2, Layout, Icon, Utils, useToaster, IconName } from '@harness/uicore'
+import {
+  Container,
+  PageBody,
+  Text,
+  Color,
+  TableV2,
+  Layout,
+  Utils,
+  useToaster,
+  IconName,
+  Toggle
+} from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
@@ -47,14 +58,23 @@ export default function Webhooks() {
     () => [
       {
         id: 'title',
-        width: 'calc(100% - 40px)',
+        width: 'calc(100% - 45px)',
         Cell: ({ row }: CellProps<OpenapiWebhookType>) => {
+          const [checked, setChecked] = useState<boolean>(row.original.enabled || false)
+
           return (
             <Layout.Horizontal spacing="medium" padding={{ left: 'medium' }} flex={{ alignItems: 'center' }}>
-              <Icon name="code-webhook" size={32} />
+              <Container onClick={Utils.stopEvent}>
+                <Toggle
+                  checked={checked}
+                  onToggle={() => {
+                    // TODO: add updateWebhook api call and also fix toggle
+                    setChecked(!checked)
+                  }}></Toggle>
+              </Container>
               <Container padding={{ left: 'small' }} style={{ flexGrow: 1 }}>
-                <Layout.Vertical spacing="small">
-                  <Text {...generateLastExecutionStateIcon(row.original)} color={Color.GREY_800} className={css.title}>
+                <Layout.Horizontal spacing="small">
+                  <Text color={Color.PRIMARY_7} className={css.title}>
                     {row.original.display_name}
                   </Text>
                   {!!row.original.triggers?.length && (
@@ -63,15 +83,22 @@ export default function Webhooks() {
                   {!row.original.triggers?.length && (
                     <Text color={Color.GREY_500}>{getString('webhookAllEventsSelected')}</Text>
                   )}
-                </Layout.Vertical>
+                </Layout.Horizontal>
               </Container>
             </Layout.Horizontal>
           )
         }
       },
       {
+        id: 'executionStatus',
+        width: '15px',
+        Cell: ({ row }: CellProps<OpenapiWebhookType>) => {
+          return <Text margin={{ right: 'medium' }} {...generateLastExecutionStateIcon(row.original)}></Text>
+        }
+      },
+      {
         id: 'action',
-        width: '40px',
+        width: '35px',
         Cell: ({ row }: CellProps<OpenapiWebhookType>) => {
           const { mutate: deleteWebhook } = useMutate({
             verb: 'DELETE',
@@ -81,11 +108,14 @@ export default function Webhooks() {
           const confirmDelete = useConfirmAct()
 
           return (
-            <Container onClick={Utils.stopEvent}>
+            <Container margin={{ left: 'medium' }} onClick={Utils.stopEvent}>
               <OptionsMenuButton
                 width="100px"
+                isDark
                 items={[
                   {
+                    hasIcon: true,
+                    iconName: 'Edit',
                     text: getString('edit'),
                     onClick: () => {
                       history.push(
@@ -97,7 +127,8 @@ export default function Webhooks() {
                     }
                   },
                   {
-                    isDanger: true,
+                    hasIcon: true,
+                    iconName: 'main-trash',
                     text: getString('delete'),
                     onClick: async () => {
                       confirmDelete({
