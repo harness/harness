@@ -11,6 +11,7 @@ export interface StringsMap {
   addReadMe: string
   all: string
   allBranches: string
+  and: string
   approve: string
   botAlerts: string
   branch: string
@@ -104,10 +105,12 @@ export interface StringsMap {
   findBranch: string
   findOrCreateBranch: string
   general: string
+  gitIgnore: string
   history: string
   in: string
   inactiveBranches: string
   leaveAComment: string
+  license: string
   lineBreaks: string
   loading: string
   merged: string
@@ -188,6 +191,7 @@ export interface StringsMap {
   pullRequestEmpty: string
   pullRequests: string
   quote: string
+  readMe: string
   rejected: string
   renameFile: string
   replyHere: string

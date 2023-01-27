@@ -1,5 +1,6 @@
 import React from 'react'
-import { Button, ButtonVariation, Container, FontVariation, Layout, PageBody, Text } from '@harness/uicore'
+import { useHistory } from 'react-router-dom'
+import { Button, ButtonVariation, Color, Container, FontVariation, Layout, PageBody, Text } from '@harness/uicore'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { voidFn, getErrorMessage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
@@ -59,6 +60,8 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
   { repoMetadata },
   resourceContent
 ) => {
+  const history = useHistory()
+
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const { currentUserProfileURL } = useAppContext()
@@ -67,7 +70,6 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
     gitRef: repoMetadata.default_branch as string,
     resourcePath: ''
   })
-
   useDisableCodeMainLinks(true)
   return (
     <Container className={css.emptyRepo}>
@@ -83,15 +85,44 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
         className={css.divContainer}>
         <Text font={{ variation: FontVariation.H5 }}>{getString('emptyRepoHeader')}</Text>
         <Layout.Horizontal padding={{ top: 'large' }}>
-          <Button variation={ButtonVariation.PRIMARY} text={getString('addNewFile')} href={newFileURL}></Button>
+          <Button
+            variation={ButtonVariation.PRIMARY}
+            text={getString('addNewFile')}
+            onClick={() => {
+              history.push(newFileURL)
+            }}></Button>
 
           <Container padding={{ left: 'medium', top: 'xsmall' }}>
-            <MarkdownViewer
-              source={getString('emptyRepoInclude')
-                .replace(/README_URL/g, newFileURL + `?name=README.md` || '')
-                .replace(/LICENSE_URL/g, newFileURL + `?name=LICENSE.md` || '')
-                .replace(/GITIGNORE_URL/g, newFileURL + `?name=.gitignore` || '')}
-            />
+            <Text className={css.textContainer}>
+              {getString('emptyRepoInclude')}
+              <Text
+                onClick={() => {
+                  history.push(newFileURL + `?name=README.md`)
+                }}
+                className={css.clickableText}
+                padding={{ left: 'small' }}
+                color={Color.PRIMARY_7}>
+                {getString('readMe')}
+              </Text>
+              <Text
+                onClick={() => {
+                  history.push(newFileURL + `?name=LICENSE.md`)
+                }}
+                className={css.clickableText}
+                padding={{ left: 'small', right: 'small' }}
+                color={Color.PRIMARY_7}>
+                {getString('license')}
+              </Text>
+              <Text padding={{ right: 'small' }}>{getString('and')}</Text>
+              <Text
+                onClick={() => {
+                  history.push(newFileURL + `?name=.gitignore`)
+                }}
+                className={css.clickableText}
+                color={Color.PRIMARY_7}>
+                {getString('gitIgnore')}
+              </Text>
+            </Text>
           </Container>
         </Layout.Horizontal>
       </Container>

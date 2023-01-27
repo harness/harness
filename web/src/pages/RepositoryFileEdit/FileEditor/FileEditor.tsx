@@ -9,6 +9,7 @@ import { useAppContext } from 'AppContext'
 import { GitCommitAction, GitContentType, GitInfoProps, isDir, makeDiffRefs } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { filenameToLanguage, FILE_SEPERATOR } from 'utils/Utils'
+import { useQueryParams } from 'hooks/useQueryParams'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { CommitModalButton } from 'components/CommitModalButton/CommitModalButton'
 import css from './FileEditor.module.scss'
@@ -20,6 +21,7 @@ interface EditorProps extends Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 're
 
 function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isRepositoryEmpty }: EditorProps) {
   const history = useHistory()
+  const { name } = useQueryParams<{ name?: string }>()
   const inputRef = useRef<HTMLInputElement | null>()
   const isNew = useMemo(() => !resourceContent || isDir(resourceContent), [resourceContent])
   const [fileName, setFileName] = useState(isNew ? '' : resourceContent?.name || '')
@@ -101,12 +103,12 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
   }, [startVerifyFolder, folderContent, fileResourcePath])
 
   useEffect(() => {
-    if (isNew) {
+    if (isNew && name !== undefined) {
       // setName from click on empty repo page so either readme, license or gitignore
-      const nameExists = window.location.href.includes('?name=')
-      if (nameExists) {
-        const fileName = window.location.href.split('?name=')[1]
-        setFileName(fileName)
+      const nameExists = name
+      if (nameExists !== '') {
+        const newFilename = name
+        setFileName(newFilename)
       }
     }
   }, [isNew])
