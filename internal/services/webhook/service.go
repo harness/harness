@@ -16,17 +16,17 @@ import (
 	gitevents "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
+	"github.com/harness/gitness/stream"
 )
 
 const (
 	eventsReaderGroupName = "gitness:webhook"
-	processingTimeout     = 2 * time.Minute
 )
 
 type Config struct {
 	EventReaderName     string `envconfig:"GITNESS_WEBHOOK_EVENT_READER_NAME"`
 	Concurrency         int    `envconfig:"GITNESS_WEBHOOK_CONCURRENCY" default:"4"`
-	MaxRetryCount       int64  `envconfig:"GITNESS_WEBHOOK_MAX_RETRY_COUNT" default:"3"`
+	MaxRetries          int    `envconfig:"GITNESS_WEBHOOK_MAX_RETRIES" default:"3"`
 	AllowPrivateNetwork bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_PRIVATE_NETWORK" default:"false"`
 	AllowLoopback       bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_LOOPBACK" default:"false"`
 }
@@ -41,8 +41,8 @@ func (c *Config) Validate() error {
 	if c.Concurrency < 1 {
 		return errors.New("config.Concurrency has to be a positive number")
 	}
-	if c.MaxRetryCount < 0 {
-		return errors.New("config.MaxRetryCount can't be negative")
+	if c.MaxRetries < 0 {
+		return errors.New("config.MaxRetries can't be negative")
 	}
 
 	return nil
@@ -86,10 +86,13 @@ func NewService(ctx context.Context, config Config,
 	}
 	canceler, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
 		func(r *gitevents.Reader) error {
-			// configure reader
-			_ = r.SetConcurrency(config.Concurrency)
-			_ = r.SetMaxRetryCount(config.MaxRetryCount)
-			_ = r.SetProcessingTimeout(processingTimeout)
+			const idleTimeout = 1 * time.Minute
+			r.Configure(
+				stream.WithConcurrency(config.Concurrency),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(config.MaxRetries),
+				))
 
 			// register events
 			_ = r.RegisterBranchCreated(service.handleEventBranchCreated)

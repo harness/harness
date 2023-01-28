@@ -31,8 +31,9 @@ func (r *Reporter) BranchCreated(ctx context.Context, payload *BranchCreatedPayl
 	log.Ctx(ctx).Debug().Msgf("reported branch created event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterBranchCreated(fn func(context.Context, *events.Event[*BranchCreatedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, BranchCreatedEvent, fn)
+func (r *Reader) RegisterBranchCreated(fn events.HandlerFunc[*BranchCreatedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, BranchCreatedEvent, fn, opts...)
 }
 
 const BranchUpdatedEvent events.EventType = "branch-updated"
@@ -56,8 +57,9 @@ func (r *Reporter) BranchUpdated(ctx context.Context, payload *BranchUpdatedPayl
 	log.Ctx(ctx).Debug().Msgf("reported branch updated event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterBranchUpdated(fn func(context.Context, *events.Event[*BranchUpdatedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, BranchUpdatedEvent, fn)
+func (r *Reader) RegisterBranchUpdated(fn events.HandlerFunc[*BranchUpdatedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, BranchUpdatedEvent, fn, opts...)
 }
 
 const BranchDeletedEvent events.EventType = "branch-deleted"
@@ -79,6 +81,7 @@ func (r *Reporter) BranchDeleted(ctx context.Context, payload *BranchDeletedPayl
 	log.Ctx(ctx).Debug().Msgf("reported branch deleted event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterBranchDeleted(fn func(context.Context, *events.Event[*BranchDeletedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, BranchDeletedEvent, fn)
+func (r *Reader) RegisterBranchDeleted(fn events.HandlerFunc[*BranchDeletedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, BranchDeletedEvent, fn, opts...)
 }

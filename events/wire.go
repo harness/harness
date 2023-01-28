@@ -68,7 +68,7 @@ func provideSystemRedis(config Config, redisClient redis.UniversalClient) (*Syst
 
 func newMemoryStreamConsumerFactoryMethod(broker *stream.MemoryBroker, namespace string) StreamConsumerFactoryFunc {
 	return func(groupName string, consumerName string) (StreamConsumer, error) {
-		return stream.NewMemoryConsumer(broker, namespace, groupName), nil
+		return stream.NewMemoryConsumer(broker, namespace, groupName)
 	}
 }
 

@@ -44,8 +44,9 @@ func (r *Reporter) Created(ctx context.Context, payload *CreatedPayload) {
 	log.Ctx(ctx).Debug().Msgf("reported pull request created event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterCreated(fn func(context.Context, *events.Event[*CreatedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, CreatedEvent, fn)
+func (r *Reader) RegisterCreated(fn events.HandlerFunc[*CreatedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, CreatedEvent, fn, opts...)
 }
 
 const TitleChangedEvent events.EventType = "title-changed"
@@ -70,8 +71,9 @@ func (r *Reporter) TitleChanged(ctx context.Context, payload *TitleChangedPayloa
 	log.Ctx(ctx).Debug().Msgf("reported pull request title changed event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterTitleChanged(fn func(context.Context, *events.Event[*TitleChangedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, TitleChangedEvent, fn)
+func (r *Reader) RegisterTitleChanged(fn events.HandlerFunc[*TitleChangedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, TitleChangedEvent, fn, opts...)
 }
 
 const BranchUpdatedEvent events.EventType = "branch-updated"
@@ -96,8 +98,9 @@ func (r *Reporter) BranchUpdated(ctx context.Context, payload *BranchUpdatedPayl
 	log.Ctx(ctx).Debug().Msgf("reported pull request branch updated event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterBranchUpdated(fn func(context.Context, *events.Event[*BranchUpdatedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, BranchUpdatedEvent, fn)
+func (r *Reader) RegisterBranchUpdated(fn events.HandlerFunc[*BranchUpdatedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, BranchUpdatedEvent, fn, opts...)
 }
 
 const StateChangedEvent events.EventType = "state-changed"
@@ -126,8 +129,9 @@ func (r *Reporter) StateChanged(ctx context.Context, payload *StateChangedPayloa
 	log.Ctx(ctx).Debug().Msgf("reported pull request state changed event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterStateChanged(fn func(context.Context, *events.Event[*StateChangedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, StateChangedEvent, fn)
+func (r *Reader) RegisterStateChanged(fn events.HandlerFunc[*StateChangedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, StateChangedEvent, fn, opts...)
 }
 
 const BranchDeletedEvent events.EventType = "branch-deleted"
@@ -151,8 +155,9 @@ func (r *Reporter) BranchDeleted(ctx context.Context, payload *BranchDeletedPayl
 	log.Ctx(ctx).Debug().Msgf("reported pull request branch deleted event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterBranchDeleted(fn func(context.Context, *events.Event[*BranchDeletedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, BranchDeletedEvent, fn)
+func (r *Reader) RegisterBranchDeleted(fn events.HandlerFunc[*BranchDeletedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, BranchDeletedEvent, fn, opts...)
 }
 
 const ReviewSubmittedEvent events.EventType = "review-submitted"
@@ -177,8 +182,9 @@ func (r *Reporter) ReviewSubmitted(ctx context.Context, payload *ReviewSubmitted
 	log.Ctx(ctx).Debug().Msgf("reported pull request review submitted with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterReviewSubmitted(fn func(context.Context, *events.Event[*ReviewSubmittedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, ReviewSubmittedEvent, fn)
+func (r *Reader) RegisterReviewSubmitted(fn events.HandlerFunc[*ReviewSubmittedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, ReviewSubmittedEvent, fn, opts...)
 }
 
 const MergedEvent events.EventType = "merged"
@@ -203,6 +209,7 @@ func (r *Reporter) Merged(ctx context.Context, payload *MergedPayload) {
 	log.Ctx(ctx).Debug().Msgf("reported pull request merged event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterMerged(fn func(context.Context, *events.Event[*MergedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, MergedEvent, fn)
+func (r *Reader) RegisterMerged(fn events.HandlerFunc[*MergedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, MergedEvent, fn, opts...)
 }

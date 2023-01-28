@@ -10,7 +10,6 @@ import (
 	"encoding/gob"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -131,10 +130,10 @@ func (d *ReaderCanceler) Cancel() error {
 // Reader specifies the minimum functionality a reader should expose.
 // NOTE: we don't want to enforce any event registration methods here, allowing full control for customized readers.
 type Reader interface {
-	SetConcurrency(concurrency int) error
-	SetProcessingTimeout(timeout time.Duration) error
-	SetMaxRetryCount(retryCount int64) error
+	Configure(opts ...ReaderOption)
 }
+
+type HandlerFunc[T interface{}] func(context.Context, *Event[T]) error
 
 // GenericReader represents an event reader that supports registering type safe handlers
 // for an arbitrary set of custom events within a given event category using the ReaderRegisterEvent method.
@@ -149,7 +148,7 @@ type GenericReader struct {
 // This method allows to register type safe handlers without the need of handling the raw stream payload.
 // NOTE: Generic arguments are not allowed for struct methods, hence pass the reader as input parameter.
 func ReaderRegisterEvent[T interface{}](reader *GenericReader,
-	eventType EventType, fn func(context.Context, *Event[T]) error) error {
+	eventType EventType, fn HandlerFunc[T], opts ...HandlerOption) error {
 	streamID := getStreamID(reader.category, eventType)
 
 	// register handler for event specific stream.
@@ -208,17 +207,9 @@ func ReaderRegisterEvent[T interface{}](reader *GenericReader,
 
 			// any other error we return as is
 			return err
-		})
+		}, toStreamHandlerOptions(opts)...)
 }
 
-func (r *GenericReader) SetConcurrency(concurrency int) error {
-	return r.streamConsumer.SetConcurrency(concurrency)
-}
-
-func (r *GenericReader) SetProcessingTimeout(timeout time.Duration) error {
-	return r.streamConsumer.SetProcessingTimeout(timeout)
-}
-
-func (r *GenericReader) SetMaxRetryCount(retryCount int64) error {
-	return r.streamConsumer.SetMaxRetryCount(retryCount)
+func (r *GenericReader) Configure(opts ...ReaderOption) {
+	r.streamConsumer.Configure(toStreamConsumerOptions(opts)...)
 }

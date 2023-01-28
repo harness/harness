@@ -6,7 +6,6 @@ package events
 
 import (
 	"context"
-	"time"
 
 	"github.com/harness/gitness/stream"
 )
@@ -18,10 +17,8 @@ type StreamProducer interface {
 
 // StreamConsumer is an abstraction of a consumer from the streams package.
 type StreamConsumer interface {
-	Register(streamID string, handler stream.HandlerFunc) error
-	SetConcurrency(int) error
-	SetProcessingTimeout(timeout time.Duration) error
-	SetMaxRetryCount(retryCount int64) error
+	Register(streamID string, handler stream.HandlerFunc, opts ...stream.HandlerOption) error
+	Configure(opts ...stream.ConsumerOption)
 	Start(ctx context.Context) error
 	Errors() <-chan error
 	Infos() <-chan string

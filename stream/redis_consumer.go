@@ -22,22 +22,18 @@ type RedisConsumer struct {
 	rdb redis.UniversalClient
 	// namespace specifies the namespace of the keys - any stream key will be prefixed with it
 	namespace string
-	// groupName specifies the name of the consumer group
+	// groupName specifies the name of the consumer group.
 	groupName string
-	// consumerName specifies the name of the consumer
+	// consumerName specifies the name of the consumer.
 	consumerName string
-	// processingTimeout specifies the maximum duration a message stays read but unacknowleged
-	// before it can be claimed by others.
-	processingTimeout time.Duration
 
-	// streams is a map of all streams to consum and their handler function
-	streams map[string]HandlerFunc
-	// concurrency specifies the number of worker go routines
-	concurrency int
-	// maxRetryCount specifies the max number an event is retried
-	maxRetryCount int64
+	// Config is the generic consumer configuration.
+	Config ConsumerConfig
 
-	state        consumerState
+	// streams is a map of all registered streams and their handlers.
+	streams map[string]handler
+
+	isStarted    bool
 	messageQueue chan message
 	errorCh      chan error
 	infoCh       chan string
@@ -58,34 +54,40 @@ func NewRedisConsumer(rdb redis.UniversalClient, namespace string,
 	const queueCapacity = 500
 	const errorChCapacity = 64
 	const infoChCapacity = 64
-	const concurrency = 2
-	const processingTimeout = 5 * time.Minute
 
 	return &RedisConsumer{
-		rdb:               rdb,
-		namespace:         namespace,
-		groupName:         groupName,
-		consumerName:      consumerName,
-		streams:           map[string]HandlerFunc{},
-		processingTimeout: processingTimeout,
-		concurrency:       concurrency,
-		state:             consumerStateSetup,
-		messageQueue:      make(chan message, queueCapacity),
-		errorCh:           make(chan error, errorChCapacity),
-		infoCh:            make(chan string, infoChCapacity),
+		rdb:          rdb,
+		namespace:    namespace,
+		groupName:    groupName,
+		consumerName: consumerName,
+		streams:      map[string]handler{},
+		Config:       defaultConfig,
+		isStarted:    false,
+		messageQueue: make(chan message, queueCapacity),
+		errorCh:      make(chan error, errorChCapacity),
+		infoCh:       make(chan string, infoChCapacity),
 	}, nil
 }
 
-func (c *RedisConsumer) Register(streamID string, handler HandlerFunc) error {
-	if err := checkConsumerStateTransition(c.state, consumerStateSetup); err != nil {
-		return err
+func (c *RedisConsumer) Configure(opts ...ConsumerOption) {
+	if c.isStarted {
+		return
 	}
 
+	for _, opt := range opts {
+		opt.apply(&c.Config)
+	}
+}
+
+func (c *RedisConsumer) Register(streamID string, fn HandlerFunc, opts ...HandlerOption) error {
+	if c.isStarted {
+		return ErrAlreadyStarted
+	}
 	if streamID == "" {
 		return errors.New("streamID can't be empty")
 	}
-	if handler == nil {
-		return errors.New("handler can't be empty")
+	if fn == nil {
+		return errors.New("fn can't be empty")
 	}
 
 	// transpose streamID to key namespace - no need to keep inner streamID
@@ -94,55 +96,23 @@ func (c *RedisConsumer) Register(streamID string, handler HandlerFunc) error {
 		return fmt.Errorf("consumer is already registered for '%s' (redis stream '%s')", streamID, transposedStreamID)
 	}
 
-	c.streams[transposedStreamID] = handler
-	return nil
-}
-
-func (c *RedisConsumer) SetConcurrency(concurrency int) error {
-	if err := checkConsumerStateTransition(c.state, consumerStateSetup); err != nil {
-		return err
+	// create final config for handler
+	config := c.Config.DefaultHandlerConfig
+	for _, opt := range opts {
+		opt.apply(&config)
 	}
 
-	if concurrency < 1 || concurrency > MaxConcurrency {
-		return fmt.Errorf("concurrency has to be between 1 and %d (inclusive)", MaxConcurrency)
+	c.streams[transposedStreamID] = handler{
+		handle: fn,
+		config: config,
 	}
-
-	c.concurrency = concurrency
-
-	return nil
-}
-
-func (c *RedisConsumer) SetProcessingTimeout(timeout time.Duration) error {
-	if err := checkConsumerStateTransition(c.state, consumerStateSetup); err != nil {
-		return err
-	}
-
-	if timeout < MinProcessingTimeout {
-		return fmt.Errorf("processing timeout %v is too short, it has to be at least %v", timeout, MinProcessingTimeout)
-	}
-
-	c.processingTimeout = timeout
-
-	return nil
-}
-
-func (c *RedisConsumer) SetMaxRetryCount(retryCount int64) error {
-	if err := checkConsumerStateTransition(c.state, consumerStateSetup); err != nil {
-		return err
-	}
-
-	if retryCount < 1 || retryCount > MaxRetryCount {
-		return fmt.Errorf("max retry count has to be between 1 and %d (inclusive)", MaxRetryCount)
-	}
-
-	c.maxRetryCount = retryCount
 
 	return nil
 }
 
 func (c *RedisConsumer) Start(ctx context.Context) error {
-	if err := checkConsumerStateTransition(c.state, consumerStateStarted); err != nil {
-		return err
+	if c.isStarted {
+		return ErrAlreadyStarted
 	}
 
 	if len(c.streams) == 0 {
@@ -163,8 +133,8 @@ func (c *RedisConsumer) Start(ctx context.Context) error {
 		return err
 	}
 
-	// update state to started before starting go routines (can't error out from here)
-	c.state = consumerStateStarted
+	// mark as started before starting go routines (can't error out from here)
+	c.isStarted = true
 
 	wg := &sync.WaitGroup{}
 
@@ -179,11 +149,15 @@ func (c *RedisConsumer) Start(ctx context.Context) error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		// launch redis message reclaimer, it will finish when the ctx is done
-		c.reclaimer(ctx, time.Minute)
+		// launch redis message reclaimer, it will finish when the ctx is done.
+		// IMPORTANT: Keep reclaim interval small for now to support faster retries => higher load on redis!
+		// TODO: Make retries local by default with opt-in cross-instance retries.
+		// https://harness.atlassian.net/browse/SCM-83
+		const reclaimInterval = 10 * time.Second
+		c.reclaimer(ctx, reclaimInterval)
 	}()
 
-	for i := 0; i < c.concurrency; i++ {
+	for i := 0; i < c.Config.Concurrency; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -195,9 +169,6 @@ func (c *RedisConsumer) Start(ctx context.Context) error {
 	go func() {
 		// wait for all go routines to complete
 		wg.Wait()
-
-		// update state to finished
-		c.state = consumerStateFinished
 
 		// close all channels
 		close(c.messageQueue)
@@ -372,31 +343,29 @@ func (c *RedisConsumer) reclaimer(ctx context.Context, reclaimInterval time.Dura
 		case <-ctx.Done():
 			return
 		case <-reclaimTimer.C:
-			for streamID := range c.streams {
+			for streamID, handler := range c.streams {
 				resPending, errPending := c.rdb.XPendingExt(ctx, &redis.XPendingExtArgs{
 					Stream: streamID,
 					Group:  c.groupName,
 					Start:  start,
 					End:    end,
-					Idle:   c.processingTimeout,
+					Idle:   handler.config.idleTimeout,
 					Count:  int64(count),
 				}).Result()
 				if errPending != nil && !errors.Is(errPending, redis.Nil) {
 					c.pushError(fmt.Errorf("failed to fetch pending messages: %w", errPending))
-					reclaimTimer.Reset(reclaimInterval)
-					break
+					continue
 				}
 
 				if len(resPending) == 0 {
-					reclaimTimer.Reset(reclaimInterval)
-					break
+					continue
 				}
 
 				// It's safe to change start of the requested range for the next iteration to oldest message.
 				start = resPending[0].ID
 
 				for _, resMessage := range resPending {
-					if resMessage.RetryCount > c.maxRetryCount {
+					if resMessage.RetryCount > int64(handler.config.maxRetries) {
 						// Retry count gets increased after every XCLAIM.
 						// Large retry count might mean there is something wrong with the message, so we'll XACK it.
 						// WARNING this will discard the message!
@@ -406,9 +375,10 @@ func (c *RedisConsumer) reclaimer(ctx context.Context, reclaimInterval time.Dura
 								"failed to force acknowledge (discard) message '%s' (Retries: %d) in stream '%s': %w",
 								resMessage.ID, resMessage.RetryCount, streamID, errAck))
 						} else {
+							retryCount := resMessage.RetryCount - 1 // redis is counting this execution as retry
 							c.pushError(fmt.Errorf(
 								"force acknowledged (discarded) message '%s' (Retries: %d) in stream '%s'",
-								resMessage.ID, resMessage.RetryCount, streamID))
+								resMessage.ID, retryCount, streamID))
 						}
 						continue
 					}
@@ -418,7 +388,7 @@ func (c *RedisConsumer) reclaimer(ctx context.Context, reclaimInterval time.Dura
 						Stream:   streamID,
 						Group:    c.groupName,
 						Consumer: c.consumerName,
-						MinIdle:  c.processingTimeout,
+						MinIdle:  handler.config.idleTimeout,
 						Messages: []string{resMessage.ID},
 					}).Result()
 
@@ -475,9 +445,9 @@ func (c *RedisConsumer) reclaimer(ctx context.Context, reclaimInterval time.Dura
 				} else {
 					count = baseCount
 				}
-
-				reclaimTimer.Reset(reclaimInterval)
 			}
+
+			reclaimTimer.Reset(reclaimInterval)
 		}
 	}
 }
@@ -494,7 +464,7 @@ func (c *RedisConsumer) consumer(ctx context.Context) {
 				return
 			}
 
-			fn, ok := c.streams[m.streamID]
+			handler, ok := c.streams[m.streamID]
 			if !ok {
 				// we don't want to ack the message
 				// maybe someone else can claim and process it (worst case it expires)
@@ -512,7 +482,7 @@ func (c *RedisConsumer) consumer(ctx context.Context) {
 					}
 				}()
 
-				return fn(ctx, m.id, m.values)
+				return handler.handle(ctx, m.id, m.values)
 			}()
 			if err != nil {
 				c.pushError(fmt.Errorf("failed to process message '%s' in stream '%s': %w", m.id, m.streamID, err))

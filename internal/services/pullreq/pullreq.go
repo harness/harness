@@ -13,6 +13,7 @@ import (
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/stream"
 	"github.com/harness/gitness/types"
 
 	"github.com/jmoiron/sqlx"
@@ -57,10 +58,13 @@ func New(ctx context.Context,
 	const groupGit = "gitness:pullreq:git"
 	_, err = gitReaderFactory.Launch(ctx, groupGit, config.InstanceID,
 		func(r *gitevents.Reader) error {
-			const processingTimeout = 15 * time.Second
-			_ = r.SetConcurrency(1)
-			_ = r.SetMaxRetryCount(3)
-			_ = r.SetProcessingTimeout(processingTimeout)
+			const idleTimeout = 15 * time.Second
+			r.Configure(
+				stream.WithConcurrency(1),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(3),
+				))
 
 			_ = r.RegisterBranchUpdated(service.triggerPullReqBranchUpdate)
 			_ = r.RegisterBranchDeleted(service.closePullReqBranchDelete)
@@ -76,11 +80,13 @@ func New(ctx context.Context,
 	const groupActivity = "gitness:pullreq:activity"
 	_, err = pullreqEvReaderFactory.Launch(ctx, groupActivity, config.InstanceID,
 		func(r *pullreqevents.Reader) error {
-			const processingTimeout = 10 * time.Second
-			_ = r.SetConcurrency(1)
-			_ = r.SetMaxRetryCount(3)
-			_ = r.SetProcessingTimeout(processingTimeout)
-
+			const idleTimeout = 10 * time.Second
+			r.Configure(
+				stream.WithConcurrency(1),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(3),
+				))
 			_ = r.RegisterBranchUpdated(service.addActivityBranchUpdate)
 			_ = r.RegisterBranchDeleted(service.addActivityBranchDelete)
 			_ = r.RegisterStateChanged(service.addActivityStateChange)
@@ -99,10 +105,13 @@ func New(ctx context.Context,
 	const groupPullReqHeadRef = "gitness:pullreq:headref"
 	_, err = pullreqEvReaderFactory.Launch(ctx, groupPullReqHeadRef, config.InstanceID,
 		func(r *pullreqevents.Reader) error {
-			const processingTimeout = 10 * time.Second
-			_ = r.SetConcurrency(1)
-			_ = r.SetMaxRetryCount(3)
-			_ = r.SetProcessingTimeout(processingTimeout)
+			const idleTimeout = 10 * time.Second
+			r.Configure(
+				stream.WithConcurrency(1),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(3),
+				))
 
 			_ = r.RegisterCreated(service.createHeadRefCreated)
 			_ = r.RegisterBranchUpdated(service.updateHeadRefBranchUpdate)

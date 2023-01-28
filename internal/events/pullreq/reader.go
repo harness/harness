@@ -5,8 +5,6 @@
 package events
 
 import (
-	"time"
-
 	"github.com/harness/gitness/events"
 )
 
@@ -25,14 +23,6 @@ type Reader struct {
 	innerReader *events.GenericReader
 }
 
-func (r *Reader) SetConcurrency(concurrency int) error {
-	return r.innerReader.SetConcurrency(concurrency)
-}
-
-func (r *Reader) SetProcessingTimeout(timeout time.Duration) error {
-	return r.innerReader.SetProcessingTimeout(timeout)
-}
-
-func (r *Reader) SetMaxRetryCount(retryCount int64) error {
-	return r.innerReader.SetMaxRetryCount(retryCount)
+func (r *Reader) Configure(opts ...events.ReaderOption) {
+	r.innerReader.Configure(opts...)
 }

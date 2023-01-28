@@ -31,8 +31,9 @@ func (r *Reporter) TagCreated(ctx context.Context, payload *TagCreatedPayload) {
 	log.Ctx(ctx).Debug().Msgf("reported tag created event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterTagCreated(fn func(context.Context, *events.Event[*TagCreatedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, TagCreatedEvent, fn)
+func (r *Reader) RegisterTagCreated(fn events.HandlerFunc[*TagCreatedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, TagCreatedEvent, fn, opts...)
 }
 
 const TagUpdatedEvent events.EventType = "tag-updated"
@@ -56,8 +57,9 @@ func (r *Reporter) TagUpdated(ctx context.Context, payload *TagUpdatedPayload) {
 	log.Ctx(ctx).Debug().Msgf("reported tag updated event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterTagUpdated(fn func(context.Context, *events.Event[*TagUpdatedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, TagUpdatedEvent, fn)
+func (r *Reader) RegisterTagUpdated(fn events.HandlerFunc[*TagUpdatedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, TagUpdatedEvent, fn, opts...)
 }
 
 const TagDeletedEvent events.EventType = "tag-deleted"
@@ -79,6 +81,7 @@ func (r *Reporter) TagDeleted(ctx context.Context, payload *TagDeletedPayload) {
 	log.Ctx(ctx).Debug().Msgf("reported tag deleted event with id '%s'", eventID)
 }
 
-func (r *Reader) RegisterTagDeleted(fn func(context.Context, *events.Event[*TagDeletedPayload]) error) error {
-	return events.ReaderRegisterEvent(r.innerReader, TagDeletedEvent, fn)
+func (r *Reader) RegisterTagDeleted(fn events.HandlerFunc[*TagDeletedPayload],
+	opts ...events.HandlerOption) error {
+	return events.ReaderRegisterEvent(r.innerReader, TagDeletedEvent, fn, opts...)
 }

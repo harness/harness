@@ -23,46 +23,63 @@ type memoryMessage struct {
 type MemoryConsumer struct {
 	broker *MemoryBroker
 	// namespace specifies the namespace of the keys - any stream key will be prefixed with it
-	namespace     string
-	concurrency   int
-	maxRetryCount int64
-	groupName     string
-	streams       map[string]HandlerFunc
+	namespace string
+	// groupName specifies the name of the consumer group.
+	groupName string
 
-	state        consumerState
+	// Config is the generic consumer configuration.
+	Config ConsumerConfig
+
+	// streams is a map of all registered streams and their handlers.
+	streams map[string]handler
+
+	isStarted    bool
 	messageQueue chan memoryMessage
 	errorCh      chan error
 	infoCh       chan string
 }
 
-func NewMemoryConsumer(broker *MemoryBroker, namespace string, groupName string) *MemoryConsumer {
+func NewMemoryConsumer(broker *MemoryBroker, namespace string, groupName string) (*MemoryConsumer, error) {
+	if groupName == "" {
+		return nil, errors.New("groupName can't be empty")
+	}
+
 	const queueCapacity = 500
 	const errorChCapacity = 64
 	const infoChCapacity = 64
-	const concurrency = 1
+
 	return &MemoryConsumer{
 		broker:       broker,
 		namespace:    namespace,
-		concurrency:  concurrency,
 		groupName:    groupName,
-		streams:      make(map[string]HandlerFunc),
-		state:        consumerStateSetup,
+		streams:      map[string]handler{},
+		Config:       defaultConfig,
+		isStarted:    false,
 		messageQueue: make(chan memoryMessage, queueCapacity),
 		errorCh:      make(chan error, errorChCapacity),
 		infoCh:       make(chan string, infoChCapacity),
+	}, nil
+}
+
+func (c *MemoryConsumer) Configure(opts ...ConsumerOption) {
+	if c.isStarted {
+		return
+	}
+
+	for _, opt := range opts {
+		opt.apply(&c.Config)
 	}
 }
 
-func (c *MemoryConsumer) Register(streamID string, handler HandlerFunc) error {
-	if err := checkConsumerStateTransition(c.state, consumerStateSetup); err != nil {
-		return err
+func (c *MemoryConsumer) Register(streamID string, fn HandlerFunc, opts ...HandlerOption) error {
+	if c.isStarted {
+		return ErrAlreadyStarted
 	}
-
 	if streamID == "" {
 		return errors.New("streamID can't be empty")
 	}
-	if handler == nil {
-		return errors.New("handler can't be empty")
+	if fn == nil {
+		return errors.New("fn can't be empty")
 	}
 
 	// transpose streamID to key namespace - no need to keep inner streamID
@@ -71,59 +88,29 @@ func (c *MemoryConsumer) Register(streamID string, handler HandlerFunc) error {
 		return fmt.Errorf("consumer is already registered for '%s' (full stream '%s')", streamID, transposedStreamID)
 	}
 
-	c.streams[transposedStreamID] = handler
-	return nil
-}
-
-func (c *MemoryConsumer) SetConcurrency(concurrency int) error {
-	if err := checkConsumerStateTransition(c.state, consumerStateSetup); err != nil {
-		return err
+	config := c.Config.DefaultHandlerConfig
+	for _, opt := range opts {
+		opt.apply(&config)
 	}
 
-	if concurrency < 1 || concurrency > MaxConcurrency {
-		return fmt.Errorf("concurrency has to be between 1 and %d (inclusive)", MaxConcurrency)
+	c.streams[transposedStreamID] = handler{
+		handle: fn,
+		config: config,
 	}
-
-	c.concurrency = concurrency
-
-	return nil
-}
-
-func (c *MemoryConsumer) SetMaxRetryCount(retryCount int64) error {
-	if err := checkConsumerStateTransition(c.state, consumerStateSetup); err != nil {
-		return err
-	}
-
-	if retryCount < 1 || retryCount > MaxRetryCount {
-		return fmt.Errorf("max retry count has to be between 1 and %d (inclusive)", MaxRetryCount)
-	}
-
-	c.maxRetryCount = retryCount
-
-	return nil
-}
-
-func (c *MemoryConsumer) SetProcessingTimeout(timeout time.Duration) error {
-	if err := checkConsumerStateTransition(c.state, consumerStateSetup); err != nil {
-		return err
-	}
-
-	// we don't have an idle timeout for this implementation
-
 	return nil
 }
 
 func (c *MemoryConsumer) Start(ctx context.Context) error {
-	if err := checkConsumerStateTransition(c.state, consumerStateStarted); err != nil {
-		return err
+	if c.isStarted {
+		return ErrAlreadyStarted
 	}
 
 	if len(c.streams) == 0 {
 		return errors.New("no streams registered")
 	}
 
-	// update state to started before starting go routines (can't error out from here)
-	c.state = consumerStateStarted
+	// mark as started before starting go routines (can't error out from here)
+	c.isStarted = true
 
 	wg := &sync.WaitGroup{}
 
@@ -137,7 +124,7 @@ func (c *MemoryConsumer) Start(ctx context.Context) error {
 	}
 
 	// start workers
-	for i := 0; i < c.concurrency; i++ {
+	for i := 0; i < c.Config.Concurrency; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -149,9 +136,6 @@ func (c *MemoryConsumer) Start(ctx context.Context) error {
 	go func() {
 		// wait for all go routines to complete
 		wg.Wait()
-
-		// update state to finished
-		c.state = consumerStateFinished
 
 		close(c.messageQueue)
 		close(c.infoCh)
@@ -184,7 +168,7 @@ func (c *MemoryConsumer) consume(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case m := <-c.messageQueue:
-			fn, ok := c.streams[m.streamID]
+			handler, ok := c.streams[m.streamID]
 			if !ok {
 				// we only take messages from registered streams, this should never happen.
 				// WARNING this will discard the message
@@ -202,14 +186,14 @@ func (c *MemoryConsumer) consume(ctx context.Context) {
 					}
 				}()
 
-				return fn(ctx, m.id, m.values)
+				return handler.handle(ctx, m.id, m.values)
 			}()
 
 			if err != nil {
 				c.pushError(fmt.Errorf("failed to process message with id '%s' in stream '%s' (retries: %d): %w",
 					m.id, m.streamID, m.retries, err))
 
-				if m.retries >= c.maxRetryCount {
+				if m.retries >= int64(handler.config.maxRetries) {
 					c.pushError(fmt.Errorf(
 						"discard message with id '%s' from stream '%s' - failed %d retries",
 						m.id, m.streamID, m.retries))
@@ -223,7 +207,7 @@ func (c *MemoryConsumer) consume(ctx context.Context) {
 				// IMPORTANT: this won't requeue to broker, only in this consumer's queue!
 				go func() {
 					// TODO: linear/exponential backoff relative to retry count might be good
-					time.Sleep(5 * time.Second)
+					time.Sleep(handler.config.idleTimeout)
 					c.messageQueue <- m
 				}()
 			}
