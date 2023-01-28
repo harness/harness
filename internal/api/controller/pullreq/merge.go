@@ -16,8 +16,6 @@ import (
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
 type MergeInput struct {
@@ -37,9 +35,8 @@ func (c *Controller) Merge(
 	in *MergeInput,
 ) (types.MergeResponse, error) {
 	var (
-		sha      string
-		pr       *types.PullReq
-		activity *types.PullReqActivity
+		sha string
+		pr  *types.PullReq
 	)
 
 	method, ok := in.Method.Sanitize()
@@ -119,8 +116,6 @@ func (c *Controller) Merge(
 		return types.MergeResponse{}, err
 	}
 
-	activity = getMergeActivity(session, pr, in, sha)
-
 	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 		now := time.Now().UnixMilli()
 		pr.MergeStrategy = &in.Method
@@ -136,48 +131,13 @@ func (c *Controller) Merge(
 		return types.MergeResponse{}, fmt.Errorf("failed to update pull request: %w", err)
 	}
 
-	err = c.writeActivity(ctx, pr, activity)
-	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to write pull req activity")
-	}
-
 	c.eventReporter.Merged(ctx, &pullreqevents.MergedPayload{
-		Base: eventBase(pr, targetRepo, &session.Principal),
+		Base:        eventBase(pr, &session.Principal),
+		MergeMethod: in.Method,
+		SHA:         sha,
 	})
 
 	return types.MergeResponse{
 		SHA: sha,
 	}, nil
-}
-
-func getMergeActivity(session *auth.Session, pr *types.PullReq, in *MergeInput, sha string) *types.PullReqActivity {
-	now := time.Now().UnixMilli()
-
-	act := &types.PullReqActivity{
-		ID:         0, // Will be populated in the data layer
-		Version:    0,
-		CreatedBy:  session.Principal.ID,
-		Created:    now,
-		Updated:    now,
-		Edited:     now,
-		Deleted:    nil,
-		RepoID:     pr.TargetRepoID,
-		PullReqID:  pr.ID,
-		Order:      0, // Will be filled in writeActivity
-		SubOrder:   0,
-		ReplySeq:   0,
-		Type:       enum.PullReqActivityTypeMerge,
-		Kind:       enum.PullReqActivityKindSystem,
-		Text:       "",
-		Metadata:   nil,
-		ResolvedBy: nil,
-		Resolved:   nil,
-	}
-
-	_ = act.SetPayload(&types.PullRequestActivityPayloadMerge{
-		MergeMethod: in.Method,
-		SHA:         sha,
-	})
-
-	return act
 }

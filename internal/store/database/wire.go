@@ -22,6 +22,7 @@ var WireSet = wire.NewSet(
 	ProvidePathStore,
 	ProvideSpaceStore,
 	ProvideRepoStore,
+	ProvideRepoGitInfoView,
 	ProvideTokenStore,
 	ProvidePullReqStore,
 	ProvidePullReqActivityStore,
@@ -63,6 +64,11 @@ func ProvideSpaceStore(db *sqlx.DB, pathCache store.PathCache) store.SpaceStore 
 // ProvideRepoStore provides a repo store.
 func ProvideRepoStore(db *sqlx.DB, pathCache store.PathCache) store.RepoStore {
 	return NewRepoStore(db, pathCache)
+}
+
+// ProvideRepoGitInfoView provides a repo git UID view.
+func ProvideRepoGitInfoView(db *sqlx.DB) store.RepoGitInfoView {
+	return NewRepoGitInfoView(db)
 }
 
 // ProvideTokenStore provides a token store.

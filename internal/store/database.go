@@ -211,12 +211,17 @@ type (
 		List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error)
 	}
 
+	// RepoGitInfoView defines the repository GitUID view.
+	RepoGitInfoView interface {
+		Find(ctx context.Context, id int64) (*types.RepositoryGitInfo, error)
+	}
+
 	// TokenStore defines the token data storage.
 	TokenStore interface {
 		// Find finds the token by id
 		Find(ctx context.Context, id int64) (*types.Token, error)
 
-		// Find finds the token by principalId and tokenUID
+		// FindByUID finds the token by principalId and tokenUID
 		FindByUID(ctx context.Context, principalID int64, tokenUID string) (*types.Token, error)
 
 		// Create saves the token details.

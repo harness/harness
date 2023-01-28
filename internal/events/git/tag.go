@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const TagCreatedEvent events.EventType = "tagcreated"
+const TagCreatedEvent events.EventType = "tag-created"
 
 type TagCreatedPayload struct {
 	RepoID      int64  `json:"repo_id"`
@@ -35,7 +35,7 @@ func (r *Reader) RegisterTagCreated(fn func(context.Context, *events.Event[*TagC
 	return events.ReaderRegisterEvent(r.innerReader, TagCreatedEvent, fn)
 }
 
-const TagUpdatedEvent events.EventType = "tagupdated"
+const TagUpdatedEvent events.EventType = "tag-updated"
 
 type TagUpdatedPayload struct {
 	RepoID      int64  `json:"repo_id"`
@@ -60,7 +60,7 @@ func (r *Reader) RegisterTagUpdated(fn func(context.Context, *events.Event[*TagU
 	return events.ReaderRegisterEvent(r.innerReader, TagUpdatedEvent, fn)
 }
 
-const TagDeletedEvent events.EventType = "tagdeleted"
+const TagDeletedEvent events.EventType = "tag-deleted"
 
 type TagDeletedPayload struct {
 	RepoID      int64  `json:"repo_id"`

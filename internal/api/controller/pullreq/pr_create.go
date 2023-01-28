@@ -87,7 +87,7 @@ func (c *Controller) Create(
 	}
 
 	c.eventReporter.Created(ctx, &pullreqevents.CreatedPayload{
-		Base:         eventBase(pr, targetRepo, &session.Principal),
+		Base:         eventBase(pr, &session.Principal),
 		SourceBranch: in.SourceBranch,
 		TargetBranch: in.TargetBranch,
 		SourceSHA:    sourceSHA,

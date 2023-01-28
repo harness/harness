@@ -25,13 +25,15 @@ var WireSet = wire.NewSet(
 func ProvideService(ctx context.Context,
 	config *types.Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
-	pullReqEventFactory *events.ReaderFactory[*pullreqevents.Reader],
+	pullReqEvFactory *events.ReaderFactory[*pullreqevents.Reader],
+	pullReqEvReporter *pullreqevents.Reporter,
 	gitRPCClient gitrpc.Interface,
 	db *sqlx.DB,
+	repoGitInfoCache store.RepoGitInfoCache,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
 	activityStore store.PullReqActivityStore,
 ) (*Service, error) {
-	return New(ctx, config, gitReaderFactory, pullReqEventFactory, gitRPCClient,
-		db, repoStore, pullreqStore, activityStore)
+	return New(ctx, config, gitReaderFactory, pullReqEvFactory, pullReqEvReporter, gitRPCClient,
+		db, repoGitInfoCache, repoStore, pullreqStore, activityStore)
 }

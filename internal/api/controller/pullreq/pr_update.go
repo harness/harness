@@ -17,8 +17,6 @@ import (
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
 type UpdateInput struct {
@@ -43,10 +41,7 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}
 
-	var (
-		activity *types.PullReqActivity
-		event    *pullreqevents.UpdatedPayload
-	)
+	var event *pullreqevents.TitleChangedPayload
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
 		pr, err = c.pullreqStore.FindByNumber(ctx, targetRepo.ID, pullreqNum)
@@ -72,14 +67,12 @@ func (c *Controller) Update(ctx context.Context,
 			return nil
 		}
 
-		activity = getUpdateActivity(session, pr, in)
-
-		event = &pullreqevents.UpdatedPayload{
-			Base:           eventBase(pr, targetRepo, &session.Principal),
-			OldTitle:       pr.Title,
-			OldDescription: pr.Description,
-			NewTitle:       in.Title,
-			NewDescription: in.Description,
+		if pr.Title != in.Title {
+			event = &pullreqevents.TitleChangedPayload{
+				Base:     eventBase(pr, &session.Principal),
+				OldTitle: pr.Title,
+				NewTitle: in.Title,
+			}
 		}
 
 		pr.Title = in.Title
@@ -97,52 +90,7 @@ func (c *Controller) Update(ctx context.Context,
 		return nil, err
 	}
 
-	// Write a row to the pull request activity
-	if activity != nil {
-		err = c.writeActivity(ctx, pr, activity)
-		if err != nil {
-			// non-critical error
-			log.Ctx(ctx).Err(err).Msg("failed to write pull req activity")
-		}
-	}
-
-	c.eventReporter.Updated(ctx, event)
+	c.eventReporter.TitleChanged(ctx, event)
 
 	return pr, nil
-}
-
-func getUpdateActivity(session *auth.Session, pr *types.PullReq, in *UpdateInput) *types.PullReqActivity {
-	if pr.Title == in.Title {
-		return nil
-	}
-
-	now := time.Now().UnixMilli()
-
-	act := &types.PullReqActivity{
-		ID:         0, // Will be populated in the data layer
-		Version:    0,
-		CreatedBy:  session.Principal.ID,
-		Created:    now,
-		Updated:    now,
-		Edited:     now,
-		Deleted:    nil,
-		RepoID:     pr.TargetRepoID,
-		PullReqID:  pr.ID,
-		Order:      0, // Will be filled in writeActivity
-		SubOrder:   0,
-		ReplySeq:   0,
-		Type:       enum.PullReqActivityTypeTitleChange,
-		Kind:       enum.PullReqActivityKindSystem,
-		Text:       "",
-		Metadata:   nil,
-		ResolvedBy: nil,
-		Resolved:   nil,
-	}
-
-	_ = act.SetPayload(&types.PullRequestActivityPayloadTitleChange{
-		Old: pr.Title,
-		New: in.Title,
-	})
-
-	return act
 }

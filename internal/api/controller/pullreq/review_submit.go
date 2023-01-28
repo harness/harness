@@ -15,12 +15,11 @@ import (
 	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
 type ReviewSubmitInput struct {
@@ -109,12 +108,11 @@ func (c *Controller) ReviewSubmit(
 		return nil, err
 	}
 
-	act := getReviewSubmitActivity(session, pr, in)
-	err = c.writeActivity(ctx, pr, act)
-	if err != nil {
-		// non-critical error
-		log.Ctx(ctx).Err(err).Msg("failed to generate pull request activity entry for submitting review")
-	}
+	c.eventReporter.ReviewSubmitted(ctx, &pullreqevents.ReviewSubmittedPayload{
+		Base:     eventBase(pr, &session.Principal),
+		Message:  in.Message,
+		Decision: in.Decision,
+	})
 
 	return review, err
 }
@@ -155,37 +153,4 @@ func (c *Controller) updateReviewer(ctx context.Context, session *auth.Session,
 	}
 
 	return reviewer, nil
-}
-
-func getReviewSubmitActivity(session *auth.Session, pr *types.PullReq, in *ReviewSubmitInput) *types.PullReqActivity {
-	now := time.Now().UnixMilli()
-	act := &types.PullReqActivity{
-		ID:         0, // Will be populated in the data layer
-		Version:    0,
-		CreatedBy:  session.Principal.ID,
-		Created:    now,
-		Updated:    now,
-		Edited:     now,
-		Deleted:    nil,
-		ParentID:   nil, // Will be filled in CommentCreate
-		RepoID:     pr.TargetRepoID,
-		PullReqID:  pr.ID,
-		Order:      0, // Will be filled in writeActivity/writeReplyActivity
-		SubOrder:   0, // Will be filled in writeReplyActivity
-		ReplySeq:   0,
-		Type:       enum.PullReqActivityTypeTitleChange,
-		Kind:       enum.PullReqActivityKindSystem,
-		Text:       "",
-		Metadata:   nil,
-		ResolvedBy: nil,
-		Resolved:   nil,
-		Author:     *session.Principal.ToPrincipalInfo(),
-	}
-
-	_ = act.SetPayload(&types.PullRequestActivityPayloadReviewSubmit{
-		Message:  in.Message,
-		Decision: in.Decision,
-	})
-
-	return act
 }

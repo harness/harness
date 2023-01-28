@@ -15,4 +15,7 @@ type (
 
 	// PathCache caches path values to path.
 	PathCache cache.Cache[string, *types.Path]
+
+	// RepoGitInfoCache caches repository IDs to values GitUID.
+	RepoGitInfoCache cache.Cache[int64, *types.RepositoryGitInfo]
 )

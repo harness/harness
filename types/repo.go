@@ -51,3 +51,13 @@ type RepoFilter struct {
 	Sort  enum.RepoAttr `json:"sort"`
 	Order enum.Order    `json:"order"`
 }
+
+// RepositoryGitInfo holds git info for a repository.
+type RepositoryGitInfo struct {
+	ID     int64
+	GitUID string
+}
+
+func (p *RepositoryGitInfo) Identifier() int64 {
+	return p.ID
+}

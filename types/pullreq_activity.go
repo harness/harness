@@ -64,15 +64,15 @@ func (a *PullReqActivity) IsReply() bool {
 }
 
 // SetPayload sets the payload and verifies it's of correct type for the activity.
-func (a *PullReqActivity) SetPayload(payload pullReqActivityPayload) error {
+func (a *PullReqActivity) SetPayload(payload PullReqActivityPayload) error {
 	if payload == nil {
 		a.PayloadRaw = json.RawMessage(nil)
 		return nil
 	}
 
-	if payload.activityType() != a.Type {
+	if payload.ActivityType() != a.Type {
 		return fmt.Errorf("wrong payload type %T for activity %s, payload is for %s",
-			payload, a.Type, payload.activityType())
+			payload, a.Type, payload.ActivityType())
 	}
 
 	var err error
@@ -86,7 +86,7 @@ func (a *PullReqActivity) SetPayload(payload pullReqActivityPayload) error {
 // GetPayload returns the payload of the activity.
 // An error is returned in case there's an issue retrieving the payload from its raw value.
 // NOTE: To ensure rawValue gets changed always use SetPayload() with the updated payload.
-func (a *PullReqActivity) GetPayload() (pullReqActivityPayload, error) {
+func (a *PullReqActivity) GetPayload() (PullReqActivityPayload, error) {
 	// jsonMessage could also contain "null" - we still want to return ErrNoPayload in that case
 	if a.PayloadRaw == nil ||
 		bytes.Equal(a.PayloadRaw, jsonRawMessageNullBytes) {
@@ -115,39 +115,39 @@ type PullReqActivityFilter struct {
 	Kinds []enum.PullReqActivityKind `json:"kind"`
 }
 
-// pullReqActivityPayload is an interface used to identify PR activity payload types.
+// PullReqActivityPayload is an interface used to identify PR activity payload types.
 // The approach is inspired by what protobuf is doing for oneof.
-type pullReqActivityPayload interface {
-	// pullReqActivityType returns the pr activity type the payload is meant for.
+type PullReqActivityPayload interface {
+	// ActivityType returns the pr activity type the payload is meant for.
 	// NOTE: this allows us to do easy payload type verification without any kind of reflection.
-	activityType() enum.PullReqActivityType
+	ActivityType() enum.PullReqActivityType
 }
 
-// activityPayloadFactoryMethod is an alias for a function that creates a new pullReqActivityPayload.
+// activityPayloadFactoryMethod is an alias for a function that creates a new PullReqActivityPayload.
 // NOTE: this is used to create new instances for activities on the fly (to avoid reflection)
-// NOTE: we could add new() to pullReqActivityPayload interface, but it shouldn't be the payloads' responsibility.
-type activityPayloadFactoryMethod func() pullReqActivityPayload
+// NOTE: we could add new() to PullReqActivityPayload interface, but it shouldn't be the payloads' responsibility.
+type activityPayloadFactoryMethod func() PullReqActivityPayload
 
 // allPullReqActivityPayloads is a map that contains the payload factory methods for all activity types with payload.
 var allPullReqActivityPayloads = func(
 	factoryMethods []activityPayloadFactoryMethod) map[enum.PullReqActivityType]activityPayloadFactoryMethod {
 	payloadMap := make(map[enum.PullReqActivityType]activityPayloadFactoryMethod)
 	for _, factoryMethod := range factoryMethods {
-		payloadMap[factoryMethod().activityType()] = factoryMethod
+		payloadMap[factoryMethod().ActivityType()] = factoryMethod
 	}
 	return payloadMap
 }([]activityPayloadFactoryMethod{
-	func() pullReqActivityPayload { return &PullRequestActivityPayloadComment{} },
-	func() pullReqActivityPayload { return &PullRequestActivityPayloadMerge{} },
-	func() pullReqActivityPayload { return &PullRequestActivityPayloadStateChange{} },
-	func() pullReqActivityPayload { return &PullRequestActivityPayloadTitleChange{} },
-	func() pullReqActivityPayload { return &PullRequestActivityPayloadReviewSubmit{} },
-	func() pullReqActivityPayload { return &PullRequestActivityPayloadBranchUpdate{} },
-	func() pullReqActivityPayload { return &PullRequestActivityPayloadBranchDelete{} },
+	func() PullReqActivityPayload { return &PullRequestActivityPayloadComment{} },
+	func() PullReqActivityPayload { return &PullRequestActivityPayloadMerge{} },
+	func() PullReqActivityPayload { return &PullRequestActivityPayloadStateChange{} },
+	func() PullReqActivityPayload { return &PullRequestActivityPayloadTitleChange{} },
+	func() PullReqActivityPayload { return &PullRequestActivityPayloadReviewSubmit{} },
+	func() PullReqActivityPayload { return &PullRequestActivityPayloadBranchUpdate{} },
+	func() PullReqActivityPayload { return &PullRequestActivityPayloadBranchDelete{} },
 })
 
 // newPayloadForActivity returns a new payload instance for the requested activity type.
-func newPayloadForActivity(t enum.PullReqActivityType) (pullReqActivityPayload, error) {
+func newPayloadForActivity(t enum.PullReqActivityType) (PullReqActivityPayload, error) {
 	payloadFactoryMethod, ok := allPullReqActivityPayloads[t]
 	if !ok {
 		return nil, fmt.Errorf("pr activity type '%s' doesn't have a payload", t)
@@ -160,7 +160,7 @@ func newPayloadForActivity(t enum.PullReqActivityType) (pullReqActivityPayload, 
 // NOTE: Allow UI to store whatever needed for code comments until we have a proper solution.
 type PullRequestActivityPayloadComment map[string]interface{}
 
-func (a *PullRequestActivityPayloadComment) activityType() enum.PullReqActivityType {
+func (a *PullRequestActivityPayloadComment) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeComment
 }
 
@@ -169,7 +169,7 @@ type PullRequestActivityPayloadMerge struct {
 	SHA         string           `json:"sha"`
 }
 
-func (a *PullRequestActivityPayloadMerge) activityType() enum.PullReqActivityType {
+func (a *PullRequestActivityPayloadMerge) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeMerge
 }
 
@@ -180,7 +180,7 @@ type PullRequestActivityPayloadStateChange struct {
 	Message string            `json:"message,omitempty"`
 }
 
-func (a *PullRequestActivityPayloadStateChange) activityType() enum.PullReqActivityType {
+func (a *PullRequestActivityPayloadStateChange) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeStateChange
 }
 
@@ -189,7 +189,7 @@ type PullRequestActivityPayloadTitleChange struct {
 	New string `json:"new"`
 }
 
-func (a *PullRequestActivityPayloadTitleChange) activityType() enum.PullReqActivityType {
+func (a *PullRequestActivityPayloadTitleChange) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeTitleChange
 }
 
@@ -198,7 +198,7 @@ type PullRequestActivityPayloadReviewSubmit struct {
 	Decision enum.PullReqReviewDecision `json:"decision"`
 }
 
-func (a *PullRequestActivityPayloadReviewSubmit) activityType() enum.PullReqActivityType {
+func (a *PullRequestActivityPayloadReviewSubmit) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeReviewSubmit
 }
 
@@ -207,7 +207,7 @@ type PullRequestActivityPayloadBranchUpdate struct {
 	New string `json:"new"`
 }
 
-func (a *PullRequestActivityPayloadBranchUpdate) activityType() enum.PullReqActivityType {
+func (a *PullRequestActivityPayloadBranchUpdate) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeBranchUpdate
 }
 
@@ -215,6 +215,6 @@ type PullRequestActivityPayloadBranchDelete struct {
 	SHA string `json:"sha"`
 }
 
-func (a *PullRequestActivityPayloadBranchDelete) activityType() enum.PullReqActivityType {
+func (a *PullRequestActivityPayloadBranchDelete) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeBranchDelete
 }

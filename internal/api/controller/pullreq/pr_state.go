@@ -16,8 +16,6 @@ import (
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
 type StateInput struct {
@@ -84,12 +82,13 @@ func (c *Controller) State(ctx context.Context,
 		return pr, nil // no changes are necessary: state is the same and is_draft hasn't change
 	}
 
-	event := &pullreqevents.StateChangePayload{
-		Base:     eventBase(pr, targetRepo, &session.Principal),
+	event := &pullreqevents.StateChangedPayload{
+		Base:     eventBase(pr, &session.Principal),
 		OldDraft: pr.IsDraft,
 		OldState: pr.State,
 		NewDraft: in.IsDraft,
 		NewState: in.State,
+		Message:  in.Message,
 	}
 
 	if pr.State != enum.PullReqStateOpen && in.State == enum.PullReqStateOpen {
@@ -120,47 +119,7 @@ func (c *Controller) State(ctx context.Context,
 		return nil, fmt.Errorf("failed to update pull request: %w", err)
 	}
 
-	// Write a row to the pull request activity
-	err = c.writeActivity(ctx, pr, getStateActivity(session, pr, in))
-	if err != nil {
-		// non-critical error
-		log.Ctx(ctx).Err(err).Msg("failed to write pull req activity")
-	}
-
-	c.eventReporter.StateChange(ctx, event)
+	c.eventReporter.StateChanged(ctx, event)
 
 	return pr, nil
-}
-
-func getStateActivity(session *auth.Session, pr *types.PullReq, in *StateInput) *types.PullReqActivity {
-	now := time.Now().UnixMilli()
-	act := &types.PullReqActivity{
-		ID:         0, // Will be populated in the data layer
-		Version:    0,
-		CreatedBy:  session.Principal.ID,
-		Created:    now,
-		Updated:    now,
-		Edited:     now,
-		Deleted:    nil,
-		RepoID:     pr.TargetRepoID,
-		PullReqID:  pr.ID,
-		Order:      0, // Will be filled in writeActivity
-		SubOrder:   0,
-		ReplySeq:   0,
-		Type:       enum.PullReqActivityTypeStateChange,
-		Kind:       enum.PullReqActivityKindSystem,
-		Text:       "",
-		Metadata:   nil,
-		ResolvedBy: nil,
-		Resolved:   nil,
-	}
-
-	_ = act.SetPayload(&types.PullRequestActivityPayloadStateChange{
-		Old:     pr.State,
-		New:     in.State,
-		IsDraft: in.IsDraft,
-		Message: in.Message,
-	})
-
-	return act
 }

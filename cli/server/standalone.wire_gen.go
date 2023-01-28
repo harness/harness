@@ -138,7 +138,9 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	pullreqService, err := pullreq2.ProvideService(ctx, config, readerFactory, eventsReaderFactory, gitrpcInterface, db, repoStore, pullReqStore, pullReqActivityStore)
+	repoGitInfoView := database.ProvideRepoGitInfoView(db)
+	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
+	pullreqService, err := pullreq2.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter, gitrpcInterface, db, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore)
 	if err != nil {
 		return nil, err
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const BranchCreatedEvent events.EventType = "branchcreated"
+const BranchCreatedEvent events.EventType = "branch-created"
 
 type BranchCreatedPayload struct {
 	RepoID      int64  `json:"repo_id"`
@@ -35,7 +35,7 @@ func (r *Reader) RegisterBranchCreated(fn func(context.Context, *events.Event[*B
 	return events.ReaderRegisterEvent(r.innerReader, BranchCreatedEvent, fn)
 }
 
-const BranchUpdatedEvent events.EventType = "branchupdated"
+const BranchUpdatedEvent events.EventType = "branch-updated"
 
 type BranchUpdatedPayload struct {
 	RepoID      int64  `json:"repo_id"`
@@ -60,7 +60,7 @@ func (r *Reader) RegisterBranchUpdated(fn func(context.Context, *events.Event[*B
 	return events.ReaderRegisterEvent(r.innerReader, BranchUpdatedEvent, fn)
 }
 
-const BranchDeletedEvent events.EventType = "branchdeleted"
+const BranchDeletedEvent events.EventType = "branch-deleted"
 
 type BranchDeletedPayload struct {
 	RepoID      int64  `json:"repo_id"`

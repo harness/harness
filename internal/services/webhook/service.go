@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	eventsReaderGroupName = "webhook"
+	eventsReaderGroupName = "gitness:webhook"
 	processingTimeout     = 2 * time.Minute
 )
 

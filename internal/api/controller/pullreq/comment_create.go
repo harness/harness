@@ -83,6 +83,49 @@ func (c *Controller) checkIsReplyable(ctx context.Context,
 	return parentAct, nil
 }
 
+// writeActivity updates the PR's activity sequence number (using the optimistic locking mechanism),
+// sets the correct Order value and writes the activity to the database.
+// Even if the writing fails, the updating of the sequence number can succeed.
+func (c *Controller) writeActivity(ctx context.Context, pr *types.PullReq, act *types.PullReqActivity) error {
+	prUpd, err := c.pullreqStore.UpdateActivitySeq(ctx, pr)
+	if err != nil {
+		return fmt.Errorf("failed to get pull request activity number: %w", err)
+	}
+
+	*pr = *prUpd // update the pull request object
+
+	act.Order = prUpd.ActivitySeq
+
+	err = c.activityStore.Create(ctx, act)
+	if err != nil {
+		return fmt.Errorf("failed to create pull request activity: %w", err)
+	}
+
+	return nil
+}
+
+// writeReplyActivity updates the parent activity's reply sequence number (using the optimistic locking mechanism),
+// sets the correct Order and SubOrder values and writes the activity to the database.
+// Even if the writing fails, the updating of the sequence number can succeed.
+func (c *Controller) writeReplyActivity(ctx context.Context, parent, act *types.PullReqActivity) error {
+	parentUpd, err := c.activityStore.UpdateReplySeq(ctx, parent)
+	if err != nil {
+		return fmt.Errorf("failed to get pull request activity number: %w", err)
+	}
+
+	*parent = *parentUpd // update the parent pull request activity object
+
+	act.Order = parentUpd.Order
+	act.SubOrder = parentUpd.ReplySeq
+
+	err = c.activityStore.Create(ctx, act)
+	if err != nil {
+		return fmt.Errorf("failed to create pull request activity: %w", err)
+	}
+
+	return nil
+}
+
 func getCommentActivity(session *auth.Session, pr *types.PullReq, in *CommentCreateInput) *types.PullReqActivity {
 	now := time.Now().UnixMilli()
 	act := &types.PullReqActivity{
