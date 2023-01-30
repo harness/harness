@@ -6,5 +6,6 @@ declare const styles: {
   readonly row: string
   readonly title: string
   readonly noData: string
+  readonly toggle: string
 }
 export default styles

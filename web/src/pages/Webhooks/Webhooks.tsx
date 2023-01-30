@@ -36,6 +36,8 @@ export default function Webhooks() {
   const [page, setPage] = usePageIndex()
   const [searchTerm, setSearchTerm] = useState('')
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
+  const { showError, showSuccess } = useToaster()
+
   const {
     data: webhooks,
     loading: webhooksLoading,
@@ -58,17 +60,31 @@ export default function Webhooks() {
     () => [
       {
         id: 'title',
-        width: 'calc(100% - 45px)',
+        width: 'calc(100% - 75px)',
         Cell: ({ row }: CellProps<OpenapiWebhookType>) => {
           const [checked, setChecked] = useState<boolean>(row.original.enabled || false)
 
+          const { mutate } = useMutate<OpenapiWebhookType>({
+            verb: 'PATCH',
+            path: `/api/v1/repos/${repoMetadata?.path}/+/webhooks/${row.original?.id}`
+          })
           return (
             <Layout.Horizontal spacing="medium" padding={{ left: 'medium' }} flex={{ alignItems: 'center' }}>
               <Container onClick={Utils.stopEvent}>
                 <Toggle
+                  key={row.original.id}
+                  className={css.toggle}
                   checked={checked}
-                  onToggle={() => {
-                    // TODO: add updateWebhook api call and also fix toggle
+                  onChange={() => {
+                    const data = { enabled: !checked }
+                    mutate(data)
+                      .then(() => {
+                        showSuccess(getString('webhookUpdated'))
+                        refetchWebhooks()
+                      })
+                      .catch(e => {
+                        showError(e)
+                      })
                     setChecked(!checked)
                   }}></Toggle>
               </Container>
@@ -98,13 +114,12 @@ export default function Webhooks() {
       },
       {
         id: 'action',
-        width: '35px',
+        width: '60px',
         Cell: ({ row }: CellProps<OpenapiWebhookType>) => {
           const { mutate: deleteWebhook } = useMutate({
             verb: 'DELETE',
             path: `/api/v1/repos/${repoMetadata?.path}/+/webhooks/${row.original.id}`
           })
-          const { showSuccess, showError } = useToaster()
           const confirmDelete = useConfirmAct()
 
           return (

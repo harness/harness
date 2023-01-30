@@ -18,3 +18,13 @@
     height: calc(100vh - var(--page-header-height, 64px) - 120px) !important;
   }
 }
+
+.toggle {
+  > input {
+    opacity: 0;
+    left: 4.25%;
+    position: absolute;
+    top: 40%;
+    z-index: 999;
+  }
+}
