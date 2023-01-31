@@ -2,11 +2,11 @@ import React from 'react'
 import { Container, Text, Layout, StringSubstitute } from '@harness/uicore'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
-import { GitInfoProps, PullRequestState } from 'utils/GitUtils'
+import type { GitInfoProps } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReq } from 'services/code'
-import { PRStateLabel } from 'components/PRStateLabel/PRStateLabel'
+import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequestStateLabel'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { GitRefLink } from 'components/GitRefLink/GitRefLink'
 import css from './PullRequestMetaLine.module.scss'
@@ -17,14 +17,16 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
   source_branch,
   author,
   edited,
-  merged,
-  state
+  state,
+  is_draft,
+  stats
 }) => {
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const vars = {
     user: <strong>{author?.display_name}</strong>,
-    number: <strong>5</strong>, // TODO: No data from backend now
+    commits: <strong>{stats?.commits}</strong>,
+    commitsCount: stats?.commits,
     target: (
       <GitRefLink
         text={target_branch as string}
@@ -42,7 +44,7 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
   return (
     <Container padding={{ left: 'xlarge' }} className={css.main}>
       <Layout.Horizontal spacing="small" className={css.layout}>
-        <PRStateLabel state={merged ? PullRequestState.MERGED : (state as PullRequestState)} />
+        <PullRequestStateLabel data={{ is_draft, state }} />
         <Text className={css.metaline}>
           <StringSubstitute str={getString('pr.metaLine')} vars={vars} />
         </Text>

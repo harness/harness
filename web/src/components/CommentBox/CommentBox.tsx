@@ -225,20 +225,20 @@ const CommentsThread = <T = unknown,>({
               title={
                 <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
                   <Text inline icon="code-chat"></Text>
-                  <Avatar name={commentItem.author} size="small" hoverCard={false} />
+                  <Avatar name={commentItem?.author} size="small" hoverCard={false} />
                   <Text inline>
-                    <strong>{commentItem.author}</strong>
+                    <strong>{commentItem?.author}</strong>
                   </Text>
                   <PipeSeparator height={8} />
                   <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-                    <ReactTimeago date={new Date(commentItem.updated)} />
+                    <ReactTimeago date={new Date(commentItem?.updated)} />
                   </Text>
 
-                  <Render when={commentItem.updated !== commentItem.created || !!commentItem.deleted}>
+                  <Render when={commentItem?.updated !== commentItem?.created || !!commentItem?.deleted}>
                     <>
                       <PipeSeparator height={8} />
                       <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-                        {getString(commentItem.deleted ? 'deleted' : 'edited')}
+                        {getString(commentItem?.deleted ? 'deleted' : 'edited')}
                       </Text>
                     </>
                   </Render>
@@ -249,7 +249,7 @@ const CommentsThread = <T = unknown,>({
                     icon="Options"
                     iconProps={{ size: 14 }}
                     style={{ padding: '5px' }}
-                    disabled={!!commentItem.deleted}
+                    disabled={!!commentItem?.deleted}
                     width="100px"
                     items={[
                       {
@@ -258,7 +258,7 @@ const CommentsThread = <T = unknown,>({
                       },
                       {
                         text: getString('quote'),
-                        onClick: () => onQuote(commentItem.content)
+                        onClick: () => onQuote(commentItem?.content)
                       },
                       '-',
                       {
@@ -309,12 +309,12 @@ const CommentsThread = <T = unknown,>({
                     </Container>
                   </Truthy>
                   <Else>
-                    <Match expr={commentItem.deleted}>
+                    <Match expr={commentItem?.deleted}>
                       <Truthy>
                         <Text className={css.deleted}>{getString('commentDeleted')}</Text>
                       </Truthy>
                       <Else>
-                        <MarkdownEditor.Markdown source={commentItem.content} />
+                        <MarkdownEditor.Markdown source={commentItem?.content} />
                       </Else>
                     </Match>
                   </Else>

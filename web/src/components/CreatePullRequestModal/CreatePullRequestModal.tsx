@@ -8,6 +8,7 @@
 import React from 'react'
 import { Dialog, Intent } from '@blueprintjs/core'
 import * as yup from 'yup'
+import { Render } from 'react-jsx-match'
 import {
   Button,
   ButtonProps,
@@ -35,6 +36,7 @@ import css from './CreatePullRequestModal.module.scss'
 interface FormData {
   title: string
   description: string
+  draft: boolean
 }
 
 interface CreatePullRequestModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -65,7 +67,8 @@ export function useCreatePullRequestModal({
         target_branch: targetGitRef,
         source_branch: sourceGitRef,
         title: title,
-        description: description
+        description: description,
+        is_draft: formData.draft
       }
 
       try {
@@ -97,7 +100,8 @@ export function useCreatePullRequestModal({
             <Formik<FormData>
               initialValues={{
                 title: '',
-                description: ''
+                description: '',
+                draft: false
               }}
               formName="createPullRequest"
               enableReinitialize={true}
@@ -129,6 +133,7 @@ export function useCreatePullRequestModal({
                   className={css.description}
                   maxLength={1024 * 50}
                 />
+                <FormInput.CheckBox label={getString('pr.createDraftPR')} name="draft" className={css.checkbox} />
 
                 <Layout.Horizontal
                   spacing="small"
@@ -143,7 +148,9 @@ export function useCreatePullRequestModal({
                   <Button text={getString('cancel')} variation={ButtonVariation.LINK} onClick={hideModal} />
                   <FlexExpander />
 
-                  {loading && <Icon intent={Intent.PRIMARY} name="spinner" size={16} />}
+                  <Render when={loading}>
+                    <Icon intent={Intent.PRIMARY} name="spinner" size={16} />
+                  </Render>
                 </Layout.Horizontal>
               </FormikForm>
             </Formik>

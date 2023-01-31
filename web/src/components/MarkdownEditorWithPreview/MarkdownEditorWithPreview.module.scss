@@ -85,8 +85,14 @@
     overflow: auto;
 
     :global {
-      .wmde-markdown .anchor {
-        display: none;
+      .wmde-markdown {
+        .anchor {
+          display: none;
+        }
+
+        pre {
+          position: relative;
+        }
       }
     }
   }

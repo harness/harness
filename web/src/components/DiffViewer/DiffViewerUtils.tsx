@@ -16,7 +16,9 @@ export enum CommentType {
   CODE_COMMENT = 'code-comment',
   TITLE_CHANGE = 'title-change',
   REVIEW_SUBMIT = 'review-submit',
-  MERGE = 'merge'
+  MERGE = 'merge',
+  BRANCH_UPDATE = 'branch-update',
+  STATE_CHANGE = 'state-change'
 }
 
 export const PR_CODE_COMMENT_PAYLOAD_VERSION = '0.1'
@@ -194,7 +196,7 @@ export const activityToCommentItem = (activity: TypesPullReqActivity): CommentIt
   created: activity.created as number,
   updated: activity.edited as number,
   deleted: activity.deleted as number,
-  content: (activity.text || activity.payload?.Message) as string,
+  content: (activity.text || (activity.payload as Unknown)?.Message) as string,
   payload: activity
 })
 

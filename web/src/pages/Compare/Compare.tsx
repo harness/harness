@@ -1,3 +1,4 @@
+import { noop } from 'lodash-es'
 import React, { useState } from 'react'
 import { Container, PageBody, NoDataCard, Tabs } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
@@ -7,7 +8,7 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
-import emptyStateImage from 'images/empty-state.svg'
+import { Images } from 'images'
 import { makeDiffRefs } from 'utils/GitUtils'
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { Changes } from 'components/Changes/Changes'
@@ -81,7 +82,7 @@ export default function Compare() {
 
         {(!targetGitRef || !sourceGitRef) && (
           <Container className={css.noDataContainer}>
-            <NoDataCard image={emptyStateImage} message={getString('selectToViewMore')} />
+            <NoDataCard image={Images.EmptyState} message={getString('selectToViewMore')} />
           </Container>
         )}
 
@@ -120,6 +121,7 @@ export default function Compare() {
                         sourceBranch={sourceGitRef}
                         emptyTitle={getString('noChanges')}
                         emptyMessage={getString('noChangesCompare')}
+                        onCommentUpdate={noop} // TODO: Update tab stats
                       />
                     </Container>
                   )

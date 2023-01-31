@@ -8,7 +8,7 @@ import { useAppContext } from 'AppContext'
 import { CodeIcon } from 'utils/GitUtils'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { getErrorMessage } from 'utils/Utils'
-import emptyStateImage from 'images/empty-state.svg'
+import { Images } from 'images'
 import hooks from './mockWebhooks.json'
 import { SettingsContent } from './SettingsContent'
 import css from './RepositorySettings.module.scss'
@@ -74,7 +74,7 @@ export default function RepositorySettings() {
                   noData={{
                     when: () => repoMetadata !== null,
                     message: getString('noWebHooks'),
-                    image: emptyStateImage,
+                    image: Images.EmptyState,
                     button: NewWebHookButton
                   }}>
                   <Container className={css.contentContainer}>

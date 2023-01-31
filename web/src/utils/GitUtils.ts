@@ -51,13 +51,13 @@ export enum GitCommitAction {
 export enum PullRequestState {
   OPEN = 'open',
   MERGED = 'merged',
-  CLOSED = 'closed',
-  REJECTED = 'rejected',
-  DRAFT = 'draft'
+  CLOSED = 'closed'
 }
 
 export const PullRequestFilterOption = {
   ...PullRequestState,
+  // REJECTED: 'rejected',
+  DRAFT: 'draft',
   YOURS: 'yours',
   ALL: 'all'
 }
@@ -65,6 +65,8 @@ export const PullRequestFilterOption = {
 export const CodeIcon = {
   Logo: 'code' as IconName,
   PullRequest: 'git-pull' as IconName,
+  Merged: 'code-merged' as IconName,
+  Draft: 'code-draft' as IconName,
   PullRequestRejected: 'main-close' as IconName,
   Add: 'plus' as IconName,
   BranchSmall: 'code-branch-small' as IconName,

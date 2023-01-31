@@ -1,0 +1,70 @@
+.main {
+  --bar-height: 60px;
+
+  background-color: var(--green-50) !important; // #f6fff2
+  margin: -24px -24px 0 !important;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+
+  &.merged {
+    border-color: transparent !important;
+    background: var(--purple-50) !important;
+  }
+
+  .layout {
+    height: var(--bar-height);
+    padding: 0 var(--spacing-xlarge) !important;
+
+    .secondaryButton,
+    [class*='Button--variation-tertiary'] {
+      --box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.04), 0px 2px 4px rgba(96, 97, 112, 0.16) !important;
+    }
+  }
+
+  .btn {
+    background-color: var(--green-800) !important;
+    color: var(--white) !important;
+  }
+
+  .heading {
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    line-height: 24px !important;
+    color: var(--grey-700) !important;
+  }
+
+  .sub {
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    line-height: 20px !important;
+    color: var(--grey-500) !important;
+  }
+}
+
+.popover {
+  transform: translateY(5px) !important;
+
+  .menuItem {
+    strong {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    p {
+      font-size: 12px;
+      padding-left: 27px;
+      line-height: 16px;
+      margin: 5px 0;
+      max-width: 320px;
+    }
+  }
+}
+
+.btnWrapper {
+  button {
+    --background-color: var(--green-800) !important;
+    --background-color-hover: var(--green-900) !important;
+    --background-color-active: var(--green-900) !important;
+  }
+}

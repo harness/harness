@@ -4,6 +4,7 @@ import MarkdownEditor from '@uiw/react-markdown-editor'
 import { useStrings } from 'framework/strings'
 import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
 import type { SourceCodeEditorProps } from 'utils/Utils'
+import css from './SourceCodeViewer.module.scss'
 
 interface MarkdownViewerProps {
   source: string
@@ -13,7 +14,7 @@ export function MarkdownViewer({ source }: MarkdownViewerProps) {
   const { getString } = useStrings()
 
   return (
-    <Container>
+    <Container className={css.main}>
       <Suspense fallback={<Text>{getString('loading')}</Text>}>
         <MarkdownEditor.Markdown
           source={source}

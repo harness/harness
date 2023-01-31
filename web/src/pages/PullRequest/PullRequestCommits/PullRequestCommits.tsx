@@ -23,7 +23,7 @@ export const PullRequestCommits: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'p
     refetch,
     response
   } = useGet<TypesCommit[]>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
+    path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestMetadata.number}/commits`,
     queryParams: {
       limit,
       page,

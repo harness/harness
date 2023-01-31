@@ -6,4 +6,11 @@
   .description textarea {
     height: 300px !important;
   }
+
+  .checkbox {
+    color: var(--grey-600);
+    font-size: var(--form-input-font-size) !important;
+    font-weight: 500 !important;
+    display: inline-flex !important;
+  }
 }

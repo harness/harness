@@ -104,18 +104,30 @@ export default function PullRequest() {
                 tabList={[
                   {
                     id: PullRequestSection.CONVERSATION,
-                    title: <TabTitle icon={CodeIcon.Chat} title={getString('conversation')} count={0} />,
+                    title: (
+                      <TabTitle
+                        icon={CodeIcon.Chat}
+                        title={getString('conversation')}
+                        count={prData?.stats?.conversations || 0}
+                      />
+                    ),
                     panel: (
                       <Conversation
                         repoMetadata={repoMetadata as TypesRepository}
                         pullRequestMetadata={prData as TypesPullReq}
-                        refreshPullRequestMetadata={voidFn(refetchPullRequest)}
+                        onCommentUpdate={voidFn(refetchPullRequest)}
                       />
                     )
                   },
                   {
                     id: PullRequestSection.COMMITS,
-                    title: <TabTitle icon={CodeIcon.Commit} title={getString('commits')} count={0} />,
+                    title: (
+                      <TabTitle
+                        icon={CodeIcon.Commit}
+                        title={getString('commits')}
+                        count={prData?.stats?.commits || 0}
+                      />
+                    ),
                     panel: (
                       <PullRequestCommits
                         repoMetadata={repoMetadata as TypesRepository}
@@ -125,7 +137,13 @@ export default function PullRequest() {
                   },
                   {
                     id: PullRequestSection.FILES_CHANGED,
-                    title: <TabTitle icon={CodeIcon.File} title={getString('filesChanged')} count={0} />,
+                    title: (
+                      <TabTitle
+                        icon={CodeIcon.File}
+                        title={getString('filesChanged')}
+                        count={prData?.stats?.files_changed || 0}
+                      />
+                    ),
                     panel: (
                       <Container className={css.changes}>
                         <Changes
@@ -135,6 +153,7 @@ export default function PullRequest() {
                           sourceBranch={prData?.source_branch}
                           emptyTitle={getString('noChanges')}
                           emptyMessage={getString('noChangesPR')}
+                          onCommentUpdate={voidFn(refetchPullRequest)}
                         />
                       </Container>
                     )

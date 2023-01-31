@@ -16,7 +16,7 @@ const ExactSharedPackages = [
   '@harness/monaco-yaml',
   'monaco-editor',
   'monaco-editor-core',
-  'monaco-languages',
+  // 'monaco-languages',
   'monaco-plugin-helpers',
   'react-monaco-editor'
 ]

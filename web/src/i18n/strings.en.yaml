@@ -156,6 +156,7 @@ enableSSLVerification: 'Enable SSL verification'
 createWebhook: Create Webhook
 webhook: Webhook
 diff: Diff
+draft: Draft
 conversation: Conversation
 pr:
   ableToMerge: Able to merge.
@@ -164,8 +165,9 @@ pr:
   titlePlaceHolder: Enter the pull request title
   descriptionPlaceHolder: Leave pull request comment here
   modalTitle: Open a pull request
-  buttonText: Open pull request
-  metaLine: '{user} wants to merge {number} {number|1:commit,commits} into {target} from {source}'
+  buttonText: Create pull request
+  createDraftPR: Create draft pull request
+  metaLine: '{user} wants to merge {commits} {commitsCount|1:commit,commits} into {target} from {source}'
   state: '{state|closed:Closed,merged:Merged,rejected:Rejected,draft:Draft,Open}'
   statusLine: '#{number} {state|merged:merged,closed:closed,rejected:rejected,opened} {time} by {user}'
   diffStatus: '{status|deleted:Deleted,new:Added,renamed:Renamed,copied:Copied,Changed}'
@@ -189,11 +191,29 @@ pr:
   prMerged: This Pull Request was merged
   reviewSubmitted: Review submitted.
   prMergedInfo: '{user} merged branch {source} into {target} {time}.'
+  prBranchPushInfo: '{user} pushed a new commit {commit}.'
+  prStateChanged: '{user} changed pull request state from {old} to {new}.'
+  prStateChangedDraft: '{user} opened pull request for review.'
   titleChanged: '{user} changed title from {old} to {new}.'
   titleChangedTable: |
     ### Other title changes in history
     | Author      | Old Name | New Name | Date |
     | ----------- | -------- | -------- | ---- |
+  readyForReview: Ready for review
+  openForReview: Open for review
+  authorCommentedPR: '{author} submitted this pull request {time}'
+  mergeOptions:
+    squashAndMerge: Squash and merge
+    squashAndMergeDesc: All commits from this branch will be combined into one commit in the base branch.
+    createMergeCommit: Create a merge commit
+    createMergeCommitDesc: All commits from this branch will be added to the base branch via a merge commit.
+    rebaseAndMerge: Rebase and merge
+    rebaseAndMergeDesc: All commits from this branch will be rebased and added to the base branch.
+    close: Close pull request
+    closeDesc: Close this pull request. You can still re-open the request after closing.
+prState:
+  draftHeading: This pull request is still a work in progress
+  draftDesc: Draft pull requests cannot be merged.
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'
@@ -287,8 +307,8 @@ repoCloneLabel: Clone with HTTPS
 emptyRepoHeader: This repository is empty. Let's get started...
 addNewFile: + New File
 # emptyRepoInclude: We recommend every repository include a [README](README_URL), [LICENSE](LICENSE_URL), and [.gitignore](GITIGNORE_URL).
-emptyRepoInclude: We recommend every repository include a 
-readMe: README, 
-license: LICENSE 
-gitIgnore:  .gitignore
-and: and 
+emptyRepoInclude: We recommend every repository include a
+readMe: README,
+license: LICENSE
+gitIgnore: .gitignore
+and: and

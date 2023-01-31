@@ -67,9 +67,9 @@ export default function MonacoSourceCodeEditor({
   const scrollbar = autoHeight ? 'hidden' : 'auto'
 
   useEffect(() => {
-    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions?.(diagnosticsOptions)
-    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions?.(diagnosticsOptions)
-    monaco.languages.typescript.typescriptDefaults.setCompilerOptions(compilerOptions)
+    monaco.languages.typescript?.typescriptDefaults?.setDiagnosticsOptions?.(diagnosticsOptions)
+    monaco.languages.typescript?.javascriptDefaults?.setDiagnosticsOptions?.(diagnosticsOptions)
+    monaco.languages.typescript?.typescriptDefaults?.setCompilerOptions?.(compilerOptions)
   }, [])
 
   return (

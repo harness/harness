@@ -49,6 +49,7 @@ interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
   stickyTopPosition?: number
   readOnly?: boolean
   pullRequestMetadata?: TypesPullReq
+  onCommentUpdate: () => void
 }
 
 //
@@ -62,7 +63,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   stickyTopPosition = 0,
   readOnly,
   repoMetadata,
-  pullRequestMetadata
+  pullRequestMetadata,
+  onCommentUpdate
 }) => {
   const { getString } = useStrings()
   const [viewed, setViewed] = useState(false)
@@ -377,6 +379,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                         })
                       break
                     }
+                  }
+
+                  if (result) {
+                    onCommentUpdate()
                   }
 
                   return [result, updatedItem]

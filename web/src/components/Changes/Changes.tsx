@@ -49,6 +49,7 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   emptyMessage: string
   pullRequestMetadata?: TypesPullReq
   className?: string
+  onCommentUpdate: () => void
 }
 
 export const Changes: React.FC<ChangesProps> = ({
@@ -59,6 +60,7 @@ export const Changes: React.FC<ChangesProps> = ({
   emptyTitle,
   emptyMessage,
   pullRequestMetadata,
+  onCommentUpdate,
   className
 }) => {
   const { getString } = useStrings()
@@ -72,7 +74,9 @@ export const Changes: React.FC<ChangesProps> = ({
     loading,
     refetch
   } = useGet<string>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/compare/${targetBranch}...${sourceBranch}`,
+    path: `/api/v1/repos/${repoMetadata?.path}/+/${
+      pullRequestMetadata ? `pullreq/${pullRequestMetadata.number}/diff` : `compare/${targetBranch}...${sourceBranch}`
+    }`,
     lazy: !targetBranch || !sourceBranch
   })
   const {
@@ -214,6 +218,7 @@ export const Changes: React.FC<ChangesProps> = ({
                     stickyTopPosition={STICKY_TOP_POSITION}
                     repoMetadata={repoMetadata}
                     pullRequestMetadata={pullRequestMetadata}
+                    onCommentUpdate={onCommentUpdate}
                   />
                 ))}
               </Layout.Vertical>

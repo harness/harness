@@ -3,11 +3,11 @@ import { Button, Container, ButtonVariation, NoDataCard, IconName } from '@harne
 import { noop } from 'lodash-es'
 import { CodeIcon } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
-import emptyStateImage from 'images/empty-state.svg'
+import { Images } from 'images'
 import css from './NoResultCard.module.scss'
 
 interface NoResultCardProps {
-  showWhen: () => boolean
+  showWhen?: () => boolean
   forSearch: boolean
   title?: string
   message?: string
@@ -18,7 +18,7 @@ interface NoResultCardProps {
 }
 
 export const NoResultCard: React.FC<NoResultCardProps> = ({
-  showWhen,
+  showWhen = () => true,
   forSearch,
   title,
   message,
@@ -36,7 +36,7 @@ export const NoResultCard: React.FC<NoResultCardProps> = ({
   return (
     <Container className={css.main}>
       <NoDataCard
-        image={emptyStateImage}
+        image={Images.EmptyState}
         messageTitle={forSearch ? title || getString('noResultTitle') : undefined}
         message={
           forSearch ? emptySearchMessage || getString('noResultMessage') : message || getString('noResultMessage')

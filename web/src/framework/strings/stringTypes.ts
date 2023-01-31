@@ -80,6 +80,7 @@ export interface StringsMap {
   deployKeys: string
   description: string
   diff: string
+  draft: string
   edit: string
   editFile: string
   editNotAllowed: string
@@ -149,9 +150,11 @@ export interface StringsMap {
   payloadUrl: string
   payloadUrlLabel: string
   'pr.ableToMerge': string
+  'pr.authorCommentedPR': string
   'pr.branchHasNoConflicts': string
   'pr.buttonText': string
   'pr.cantMerge': string
+  'pr.createDraftPR': string
   'pr.descriptionPlaceHolder': string
   'pr.diffStatsLabel': string
   'pr.diffStatus': string
@@ -164,12 +167,25 @@ export interface StringsMap {
   'pr.failedToUpdateTitle': string
   'pr.fileDeleted': string
   'pr.fileUnchanged': string
+  'pr.mergeOptions.close': string
+  'pr.mergeOptions.closeDesc': string
+  'pr.mergeOptions.createMergeCommit': string
+  'pr.mergeOptions.createMergeCommitDesc': string
+  'pr.mergeOptions.rebaseAndMerge': string
+  'pr.mergeOptions.rebaseAndMergeDesc': string
+  'pr.mergeOptions.squashAndMerge': string
+  'pr.mergeOptions.squashAndMergeDesc': string
   'pr.mergePR': string
   'pr.metaLine': string
   'pr.modalTitle': string
+  'pr.openForReview': string
+  'pr.prBranchPushInfo': string
   'pr.prCanBeMerged': string
   'pr.prMerged': string
   'pr.prMergedInfo': string
+  'pr.prStateChanged': string
+  'pr.prStateChangedDraft': string
+  'pr.readyForReview': string
   'pr.reviewChanges': string
   'pr.reviewSubmitted': string
   'pr.showDiff': string
@@ -181,6 +197,8 @@ export interface StringsMap {
   'pr.titleChangedTable': string
   'pr.titlePlaceHolder': string
   'pr.unified': string
+  'prState.draftDesc': string
+  'prState.draftHeading': string
   prefixBase: string
   prefixCompare: string
   prev: string

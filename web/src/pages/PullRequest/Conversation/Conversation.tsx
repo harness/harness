@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Avatar,
   Color,
@@ -20,9 +20,8 @@ import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { TypesPullReqActivity } from 'services/code'
+import type { OpenapiUpdatePullReqRequest, TypesPullReqActivity } from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
-import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { useConfirmAct } from 'hooks/useConfirmAction'
@@ -33,18 +32,14 @@ import {
   PullRequestCodeCommentPayload
 } from 'components/DiffViewer/DiffViewerUtils'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
-import { PullRequestStatusInfo } from './PullRequestStatusInfo/PullRequestStatusInfo'
+import { PullRequestActionsBox } from './PullRequestActionsBox/PullRequestActionsBox'
 import css from './Conversation.module.scss'
 
 interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
-  refreshPullRequestMetadata: () => void
+  onCommentUpdate: () => void
 }
 
-export const Conversation: React.FC<ConversationProps> = ({
-  repoMetadata,
-  pullRequestMetadata,
-  refreshPullRequestMetadata
-}) => {
+export const Conversation: React.FC<ConversationProps> = ({ repoMetadata, pullRequestMetadata, onCommentUpdate }) => {
   const { getString } = useStrings()
   const { currentUser } = useAppContext()
   const {
@@ -62,12 +57,8 @@ export const Conversation: React.FC<ConversationProps> = ({
     // contains a parent comment and multiple replied comments
     const blocks: CommentItem<TypesPullReqActivity>[][] = []
 
-    if (newComments.length) {
-      blocks.push(orderBy(newComments, 'edited', 'desc').map(activityToCommentItem))
-    }
-
     // Determine all parent activities
-    const parentActivities = orderBy(activities?.filter(activity => !activity.parent_id) || [], 'edited', 'desc').map(
+    const parentActivities = orderBy(activities?.filter(activity => !activity.parent_id) || [], 'edited', 'asc').map(
       _comment => [_comment]
     )
 
@@ -84,20 +75,26 @@ export const Conversation: React.FC<ConversationProps> = ({
       blocks.push(parentActivity.map(activityToCommentItem))
     })
 
+    if (newComments.length) {
+      blocks.push(orderBy(newComments, 'edited', 'asc').map(activityToCommentItem))
+    }
+
     // Group title-change events into one single block
-    const titleChangeItems =
-      blocks.filter(
-        _activities => isSystemComment(_activities) && _activities[0].payload?.type === CommentType.TITLE_CHANGE
-      ) || []
+    // Disabled for now, @see https://harness.atlassian.net/browse/SCM-79
+    // const titleChangeItems =
+    //   blocks.filter(
+    //     _activities => isSystemComment(_activities) && _activities[0].payload?.type === CommentType.TITLE_CHANGE
+    //   ) || []
 
-    titleChangeItems.forEach((value, index) => {
-      if (index > 0) {
-        titleChangeItems[0].push(...value)
-      }
-    })
-    titleChangeItems.shift()
+    // titleChangeItems.forEach((value, index) => {
+    //   if (index > 0) {
+    //     titleChangeItems[0].push(...value)
+    //   }
+    // })
+    // titleChangeItems.shift()
+    // return blocks.filter(_activities => !titleChangeItems.includes(_activities))
 
-    return blocks.filter(_activities => !titleChangeItems.includes(_activities))
+    return blocks
   }, [activities, newComments])
   const path = useMemo(
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/comments`,
@@ -108,6 +105,10 @@ export const Conversation: React.FC<ConversationProps> = ({
   const { mutate: deleteComment } = useMutate({ verb: 'DELETE', path: ({ id }) => `${path}/${id}` })
   const confirmAct = useConfirmAct()
   const [commentCreated, setCommentCreated] = useState(false)
+  const refreshPR = useCallback(() => {
+    onCommentUpdate()
+    refetchActivities()
+  }, [onCommentUpdate, refetchActivities])
 
   useAnimateNewCommentBox(commentCreated, setCommentCreated)
 
@@ -115,20 +116,17 @@ export const Conversation: React.FC<ConversationProps> = ({
     <PullRequestTabContentWrapper loading={loading} error={error} onRetry={refetchActivities}>
       <Container>
         <Layout.Vertical spacing="xlarge">
-          <PullRequestStatusInfo
+          <PullRequestActionsBox
             repoMetadata={repoMetadata}
             pullRequestMetadata={pullRequestMetadata}
-            onMerge={() => {
-              refreshPullRequestMetadata()
-              refetchActivities()
-            }}
+            onPRStateChanged={refreshPR}
           />
           <Container>
             <Layout.Vertical spacing="xlarge">
               <DescriptionBox
                 repoMetadata={repoMetadata}
                 pullRequestMetadata={pullRequestMetadata}
-                refreshPullRequestMetadata={refreshPullRequestMetadata}
+                onCommentUpdate={onCommentUpdate}
               />
 
               {activityBlocks?.map((blocks, index) => {
@@ -145,7 +143,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                   <CommentBox
                     key={threadId}
                     fluid
-                    className={cx({ [css.newCommentCreated]: commentCreated && !index })}
+                    className={cx({ [css.newCommentCreated]: commentCreated && index === activityBlocks.length - 1 })}
                     getString={getString}
                     commentItems={commentItems}
                     currentUserName={currentUser.display_name}
@@ -195,6 +193,10 @@ export const Conversation: React.FC<ConversationProps> = ({
                           break
                       }
 
+                      if (result) {
+                        onCommentUpdate()
+                      }
+
                       return [result, updatedItem]
                     }}
                     outlets={{
@@ -227,6 +229,11 @@ export const Conversation: React.FC<ConversationProps> = ({
                       result = false
                       showError(getErrorMessage(exception), 0)
                     })
+
+                  if (result) {
+                    onCommentUpdate()
+                  }
+
                   return [result, updatedItem]
                 }}
               />
@@ -241,10 +248,10 @@ export const Conversation: React.FC<ConversationProps> = ({
 const DescriptionBox: React.FC<ConversationProps> = ({
   repoMetadata,
   pullRequestMetadata,
-  refreshPullRequestMetadata
+  onCommentUpdate: refreshPullRequestMetadata
 }) => {
   const [edit, setEdit] = useState(false)
-  const [updated, setUpdated] = useState(pullRequestMetadata.edited as number)
+  // const [updated, setUpdated] = useState(pullRequestMetadata.edited as number)
   const [originalContent, setOriginalContent] = useState(pullRequestMetadata.description as string)
   const [content, setContent] = useState(originalContent)
   const { getString } = useStrings()
@@ -259,15 +266,29 @@ const DescriptionBox: React.FC<ConversationProps> = ({
     <Container className={css.box}>
       <Layout.Vertical spacing="medium">
         <Container>
-          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
-            <Avatar name={name} size="small" hoverCard={false} />
-            <Text inline>
-              <strong>{name}</strong>
-            </Text>
-            <PipeSeparator height={8} />
+          <Layout.Horizontal spacing="xsmall" style={{ alignItems: 'center' }}>
+            <StringSubstitute
+              str={getString('pr.authorCommentedPR')}
+              vars={{
+                author: (
+                  <>
+                    <Avatar name={name} size="small" hoverCard={false} />
+                    <Text inline margin={{ right: 'xsmall' }}>
+                      <strong>{name}</strong>
+                    </Text>
+                  </>
+                ),
+                time: (
+                  <Text inline>
+                    <ReactTimeago date={pullRequestMetadata.created as number} />
+                  </Text>
+                )
+              }}
+            />
+
+            {/* <PipeSeparator height={8} />
             <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-              <ReactTimeago date={updated} />
-            </Text>
+            </Text> */}
             <FlexExpander />
             <OptionsMenuButton
               isDark={false}
@@ -288,15 +309,16 @@ const DescriptionBox: React.FC<ConversationProps> = ({
             <MarkdownEditorWithPreview
               value={content}
               onSave={value => {
-                mutate({
+                const payload: OpenapiUpdatePullReqRequest = {
                   title: pullRequestMetadata.title,
                   description: value
-                })
+                }
+                mutate(payload)
                   .then(() => {
                     setContent(value)
                     setOriginalContent(value)
                     setEdit(false)
-                    setUpdated(Date.now())
+                    // setUpdated(Date.now())
                     refreshPullRequestMetadata()
                   })
                   .catch(exception => showError(getErrorMessage(exception), 0, getString('pr.failedToUpdate')))
@@ -322,7 +344,7 @@ const DescriptionBox: React.FC<ConversationProps> = ({
 }
 
 function isCodeComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
-  return commentItems[0]?.payload?.payload?.type === CommentType.CODE_COMMENT
+  return (commentItems[0]?.payload?.payload as Unknown)?.type === CommentType.CODE_COMMENT
 }
 
 interface CodeCommentHeaderProps {
@@ -400,6 +422,68 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
       )
     }
 
+    case CommentType.BRANCH_UPDATE: {
+      return (
+        <Container>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.box}>
+            <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
+            <Text>
+              <StringSubstitute
+                str={getString('pr.prBranchPushInfo')}
+                vars={{
+                  user: <strong>{payload?.author?.display_name}</strong>,
+                  commit: <strong>{(payload?.payload as Unknown)?.new}</strong>
+                }}
+              />
+            </Text>
+            <FlexExpander />
+            <Text
+              inline
+              font={{ variation: FontVariation.SMALL }}
+              color={Color.GREY_400}
+              width={100}
+              style={{ textAlign: 'right' }}>
+              <ReactTimeago date={payload?.created as number} />
+            </Text>
+          </Layout.Horizontal>
+        </Container>
+      )
+    }
+
+    case CommentType.STATE_CHANGE: {
+      const openFromDraft =
+        (payload?.payload as Unknown)?.old === (payload?.payload as Unknown)?.new &&
+        (payload?.payload as Unknown)?.new === 'open' &&
+        (payload?.payload as Unknown)?.is_draft === false
+
+      return (
+        <Container>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.box}>
+            <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
+            <Text>
+              <StringSubstitute
+                str={getString(openFromDraft ? 'pr.prStateChangedDraft' : 'pr.prStateChanged')}
+                vars={{
+                  user: <strong>{payload?.author?.display_name}</strong>,
+                  old: <strong>{(payload?.payload as Unknown)?.old}</strong>,
+                  new: <strong>{(payload?.payload as Unknown)?.new}</strong>
+                }}
+              />
+            </Text>
+            <FlexExpander />
+            <Text
+              inline
+              font={{ variation: FontVariation.SMALL }}
+              color={Color.GREY_400}
+              width={100}
+              style={{ textAlign: 'right' }}>
+              <ReactTimeago date={payload?.created as number} />
+            </Text>
+          </Layout.Horizontal>
+        </Container>
+      )
+    }
+
     case CommentType.TITLE_CHANGE: {
       return (
         <Container className={css.box}>
@@ -412,15 +496,20 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
                   user: <strong>{payload?.author?.display_name}</strong>,
                   old: (
                     <strong>
-                      <s>{payload?.payload?.old}</s>
+                      <s>{(payload?.payload as Unknown)?.old}</s>
                     </strong>
                   ),
-                  new: <strong>{payload?.payload?.new}</strong>
+                  new: <strong>{(payload?.payload as Unknown)?.new}</strong>
                 }}
               />
             </Text>
             <FlexExpander />
-            <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
+            <Text
+              inline
+              font={{ variation: FontVariation.SMALL }}
+              color={Color.GREY_400}
+              width={100}
+              style={{ textAlign: 'right' }}>
               <ReactTimeago date={payload?.created as number} />
             </Text>
           </Layout.Horizontal>
@@ -435,8 +524,8 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
                       .filter((_, index) => index > 0)
                       .map(
                         item =>
-                          `|${item.author}|<s>${item.payload?.payload?.old}</s>|${
-                            item.payload?.payload?.new
+                          `|${item.author}|<s>${(item.payload?.payload as Unknown)?.old}</s>|${
+                            (item.payload?.payload as Unknown)?.new
                           }|${formatDate(item.updated)} ${formatTime(item.updated)}|`
                       )
                   )

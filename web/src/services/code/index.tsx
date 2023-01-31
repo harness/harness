@@ -346,6 +346,7 @@ export interface TypesPullReq {
   source_branch?: string
   source_repo_id?: number
   state?: EnumPullReqState
+  stats?: TypesPullReqStats
   target_branch?: string
   target_repo_id?: number
   title?: string
@@ -371,6 +372,12 @@ export interface TypesPullReqActivity {
   type?: EnumPullReqActivityType
 }
 
+export interface TypesPullReqStats {
+  commits?: number
+  conversations?: number
+  files_changed?: number
+}
+
 export type TypesPullRequestActivityPayloadComment = { [key: string]: any } | null
 
 export interface TypesRepository {
@@ -384,6 +391,7 @@ export interface TypesRepository {
   is_public?: boolean
   num_closed_pulls?: number
   num_forks?: number
+  num_merged_pulls?: number
   num_open_pulls?: number
   num_pulls?: number
   parent_id?: number
@@ -1596,6 +1604,32 @@ export const useMergePullReqOp = ({ repo_ref, pullreq_number, ...props }: UseMer
     'POST',
     (paramsInPath: MergePullReqOpPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/merge`,
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface PullReqMetaDataPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type PullReqMetaDataProps = Omit<GetProps<void, UsererrorError, void, PullReqMetaDataPathParams>, 'path'> &
+  PullReqMetaDataPathParams
+
+export const PullReqMetaData = ({ repo_ref, pullreq_number, ...props }: PullReqMetaDataProps) => (
+  <Get<void, UsererrorError, void, PullReqMetaDataPathParams>
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/metadata`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UsePullReqMetaDataProps = Omit<UseGetProps<void, UsererrorError, void, PullReqMetaDataPathParams>, 'path'> &
+  PullReqMetaDataPathParams
+
+export const usePullReqMetaData = ({ repo_ref, pullreq_number, ...props }: UsePullReqMetaDataProps) =>
+  useGet<void, UsererrorError, void, PullReqMetaDataPathParams>(
+    (paramsInPath: PullReqMetaDataPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/metadata`,
     { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 

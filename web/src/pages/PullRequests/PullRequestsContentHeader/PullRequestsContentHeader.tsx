@@ -31,7 +31,7 @@ export function PullRequestsContentHeader({
       { label: getString('open'), value: PullRequestFilterOption.OPEN },
       { label: getString('merged'), value: PullRequestFilterOption.MERGED },
       { label: getString('closed'), value: PullRequestFilterOption.CLOSED },
-      { label: getString('rejected'), value: PullRequestFilterOption.REJECTED },
+      { label: getString('draft'), value: PullRequestFilterOption.DRAFT },
       // { label: getString('yours'), value: PullRequestFilterOption.YOURS },
       { label: getString('all'), value: PullRequestFilterOption.ALL }
     ],
