@@ -231,31 +231,6 @@ func (s *RepoStore) UpdateOptLock(ctx context.Context,
 	}
 }
 
-func (s *RepoStore) UpdatePRNumbers(ctx context.Context,
-	repo *types.Repository,
-	deltaNew, deltaForks, deltaOpen, deltaClosed, deltaMerged int,
-) error {
-	if deltaNew == 0 && deltaForks == 0 && deltaOpen == 0 && deltaClosed == 0 && deltaMerged == 0 {
-		return nil
-	}
-
-	dup, err := s.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
-		repo.NumPulls += deltaNew
-		repo.NumForks += deltaForks
-		repo.NumOpenPulls += deltaOpen
-		repo.NumClosedPulls += deltaClosed
-		repo.NumMergedPulls += deltaMerged
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	*repo = *dup
-
-	return nil
-}
-
 // Delete the repository.
 func (s *RepoStore) Delete(ctx context.Context, id int64) error {
 	const repoDelete = `

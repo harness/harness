@@ -98,5 +98,27 @@ func New(ctx context.Context,
 		return nil, err
 	}
 
+	const groupPullReqCounters = "gitness:pullreq:counters"
+	_, err = pullreqEvReaderFactory.Launch(ctx, groupPullReqCounters, config.InstanceID,
+		func(r *pullreqevents.Reader) error {
+			const idleTimeout = 10 * time.Second
+			r.Configure(
+				stream.WithConcurrency(1),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(2),
+				))
+
+			_ = r.RegisterCreated(service.updatePRCountersOnCreated)
+			_ = r.RegisterReopened(service.updatePRCountersOnReopened)
+			_ = r.RegisterClosed(service.updatePRCountersOnClosed)
+			_ = r.RegisterMerged(service.updatePRCountersOnMerged)
+
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
+
 	return service, nil
 }
