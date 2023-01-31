@@ -166,7 +166,9 @@ func (a *PullRequestActivityPayloadComment) ActivityType() enum.PullReqActivityT
 
 type PullRequestActivityPayloadMerge struct {
 	MergeMethod enum.MergeMethod `json:"merge_method"`
-	SHA         string           `json:"sha"`
+	MergedSHA   string           `json:"merged_sha"`
+	BaseSHA     string           `json:"base_sha"`
+	HeadSHA     string           `json:"head_sha"`
 }
 
 func (a *PullRequestActivityPayloadMerge) ActivityType() enum.PullReqActivityType {
@@ -174,10 +176,11 @@ func (a *PullRequestActivityPayloadMerge) ActivityType() enum.PullReqActivityTyp
 }
 
 type PullRequestActivityPayloadStateChange struct {
-	Old     enum.PullReqState `json:"old"`
-	New     enum.PullReqState `json:"new"`
-	IsDraft bool              `json:"is_draft"`
-	Message string            `json:"message,omitempty"`
+	Old      enum.PullReqState `json:"old"`
+	New      enum.PullReqState `json:"new"`
+	OldDraft bool              `json:"old_draft"`
+	NewDraft bool              `json:"new_draft"`
+	Message  string            `json:"message,omitempty"`
 }
 
 func (a *PullRequestActivityPayloadStateChange) ActivityType() enum.PullReqActivityType {

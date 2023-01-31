@@ -172,6 +172,36 @@ func (s *PullReqActivityStore) Create(ctx context.Context, act *types.PullReqAct
 	return nil
 }
 
+func (s *PullReqActivityStore) CreateWithPayload(ctx context.Context,
+	pr *types.PullReq, principalID int64, payload types.PullReqActivityPayload,
+) (*types.PullReqActivity, error) {
+	now := time.Now().UnixMilli()
+	act := &types.PullReqActivity{
+		CreatedBy: principalID,
+		Created:   now,
+		Updated:   now,
+		Edited:    now,
+		RepoID:    pr.TargetRepoID,
+		PullReqID: pr.ID,
+		Order:     pr.ActivitySeq,
+		SubOrder:  0,
+		ReplySeq:  0,
+		Type:      payload.ActivityType(),
+		Kind:      enum.PullReqActivityKindSystem,
+		Text:      "",
+	}
+
+	_ = act.SetPayload(payload)
+
+	err := s.Create(ctx, act)
+	if err != nil {
+		err = fmt.Errorf("failed to write pull request system '%s' activity: %w", payload.ActivityType(), err)
+		return nil, err
+	}
+
+	return act, nil
+}
+
 // Update updates the pull request.
 func (s *PullReqActivityStore) Update(ctx context.Context, act *types.PullReqActivity) error {
 	const sqlQuery = `

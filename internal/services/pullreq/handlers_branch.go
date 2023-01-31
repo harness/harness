@@ -18,12 +18,30 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// triggerPullReqBranchUpdate handles branch update events
-// and for every open pull request triggers the pull request Branch Updated event.
-func (s *Service) triggerPullReqBranchUpdate(ctx context.Context,
+// triggerPREventOnBranchUpdate handles branch update events. For every open pull request
+// it writes an activity entry and triggers the pull request Branch Updated event.
+func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 	event *events.Event[*gitevents.BranchUpdatedPayload],
 ) error {
 	s.forEveryOpenPR(ctx, event.Payload.RepoID, event.Payload.Ref, func(pr *types.PullReq) error {
+		err := func() (err error) {
+			pr, err = s.pullreqStore.UpdateActivitySeq(ctx, pr)
+			if err != nil {
+				return fmt.Errorf("failed to increment activity sequence: %w", err)
+			}
+
+			payload := &types.PullRequestActivityPayloadBranchUpdate{
+				Old: event.Payload.OldSHA,
+				New: event.Payload.NewSHA,
+			}
+			_, err = s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID, payload)
+			return
+		}()
+		if err != nil {
+			// non-critical error
+			log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity after branch update")
+		}
+
 		s.pullreqEvReporter.BranchUpdated(ctx, &pullreqevents.BranchUpdatedPayload{
 			Base: pullreqevents.Base{
 				PullReqID:    pr.ID,
@@ -40,21 +58,29 @@ func (s *Service) triggerPullReqBranchUpdate(ctx context.Context,
 	return nil
 }
 
-// closePullReqBranchDelete handles branch delete events.
+// closePullReqOnBranchDelete handles branch delete events.
 // It closes every open pull request for the branch and triggers the pull request BranchDeleted event.
-func (s *Service) closePullReqBranchDelete(ctx context.Context,
+func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 	event *events.Event[*gitevents.BranchDeletedPayload],
 ) error {
 	s.forEveryOpenPR(ctx, event.Payload.RepoID, event.Payload.Ref, func(pr *types.PullReq) error {
 		pr, err := s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 			pr.State = enum.PullReqStateClosed
+			pr.ActivitySeq++ // because we need to write the activity
 			return nil
 		})
 		if err != nil {
 			return fmt.Errorf("failed to close pull request after branch delete: %w", err)
 		}
 
-		s.pullreqEvReporter.BranchDeleted(ctx, &pullreqevents.BranchDeletedPayload{
+		_, errAct := s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID,
+			&types.PullRequestActivityPayloadBranchDelete{SHA: event.Payload.SHA})
+		if errAct != nil {
+			// non-critical error
+			log.Ctx(ctx).Err(errAct).Msgf("failed to write pull request activity after branch delete")
+		}
+
+		s.pullreqEvReporter.Closed(ctx, &pullreqevents.ClosedPayload{
 			Base: pullreqevents.Base{
 				PullReqID:    pr.ID,
 				SourceRepoID: pr.SourceRepoID,
@@ -62,7 +88,6 @@ func (s *Service) closePullReqBranchDelete(ctx context.Context,
 				PrincipalID:  event.Payload.PrincipalID,
 				Number:       pr.Number,
 			},
-			SHA: event.Payload.SHA,
 		})
 		return nil
 	})

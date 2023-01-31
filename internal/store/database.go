@@ -284,6 +284,10 @@ type (
 		// Value of the SubOrder field (for replies) should be fetched with UpdateReplySeq (non-replies have 0).
 		Create(ctx context.Context, act *types.PullReqActivity) error
 
+		// CreateWithPayload create a new system activity from the provided payload.
+		CreateWithPayload(ctx context.Context,
+			pr *types.PullReq, principalID int64, payload types.PullReqActivityPayload) (*types.PullReqActivity, error)
+
 		// Update the pull request activity. It will set new values to the Version and Updated fields.
 		Update(ctx context.Context, act *types.PullReqActivity) error
 

@@ -13,12 +13,11 @@ import (
 	"github.com/harness/gitness/gitrpc"
 	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
-	"github.com/harness/gitness/types/enum"
 )
 
-// createHeadRefCreated handles pull request Created events.
+// createHeadRefOnCreated handles pull request Created events.
 // It creates the PR head git ref.
-func (s *Service) createHeadRefCreated(ctx context.Context,
+func (s *Service) createHeadRefOnCreated(ctx context.Context,
 	event *events.Event[*pullreqevents.CreatedPayload],
 ) error {
 	repoGit, err := s.repoGitInfoCache.Get(ctx, event.Payload.TargetRepoID)
@@ -42,9 +41,9 @@ func (s *Service) createHeadRefCreated(ctx context.Context,
 	return nil
 }
 
-// updateHeadRefBranchUpdate handles pull request Branch Updated events.
+// updateHeadRefOnBranchUpdate handles pull request Branch Updated events.
 // It updates the PR head git ref to point to the latest commit.
-func (s *Service) updateHeadRefBranchUpdate(ctx context.Context,
+func (s *Service) updateHeadRefOnBranchUpdate(ctx context.Context,
 	event *events.Event[*pullreqevents.BranchUpdatedPayload],
 ) error {
 	repoGit, err := s.repoGitInfoCache.Get(ctx, event.Payload.TargetRepoID)
@@ -68,16 +67,11 @@ func (s *Service) updateHeadRefBranchUpdate(ctx context.Context,
 	return nil
 }
 
-// updateHeadRefStateChange handles pull request StateChanged events.
+// updateHeadRefOnReopen handles pull request StateChanged events.
 // It updates the PR head git ref to point to the source branch commit SHA.
-func (s *Service) updateHeadRefStateChange(ctx context.Context,
-	event *events.Event[*pullreqevents.StateChangedPayload],
+func (s *Service) updateHeadRefOnReopen(ctx context.Context,
+	event *events.Event[*pullreqevents.ReopenedPayload],
 ) error {
-	// this handler need to execute only if the PR is being reopened (closed->open)
-	if event.Payload.OldState != enum.PullReqStateClosed || event.Payload.NewState != enum.PullReqStateOpen {
-		return nil
-	}
-
 	repoGit, err := s.repoGitInfoCache.Get(ctx, event.Payload.TargetRepoID)
 	if err != nil {
 		return fmt.Errorf("failed to get repo git info: %w", err)
@@ -93,7 +87,7 @@ func (s *Service) updateHeadRefStateChange(ctx context.Context,
 		OldValue:    "", // the request is re-opened, so anything can be the old value
 	})
 	if err != nil {
-		return fmt.Errorf("failed to update PR head ref after PR state change: %w", err)
+		return fmt.Errorf("failed to update PR head ref after pull request reopen: %w", err)
 	}
 
 	return nil

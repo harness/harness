@@ -16,6 +16,8 @@ import (
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type StateInput struct {
@@ -38,12 +40,14 @@ func (in *StateInput) Check() error {
 		return usererror.BadRequest("Pull requests can't be merged with this API")
 	}
 
+	// TODO: Need to check the length of the message string
+
 	return nil
 }
 
 // State updates the pull request's current state.
 //
-//nolint:gocognit
+//nolint:gocognit,funlen
 func (c *Controller) State(ctx context.Context,
 	session *auth.Session, repoRef string, pullreqNum int64, in *StateInput,
 ) (*types.PullReq, error) {
@@ -82,18 +86,19 @@ func (c *Controller) State(ctx context.Context,
 		return pr, nil // no changes are necessary: state is the same and is_draft hasn't change
 	}
 
-	event := &pullreqevents.StateChangedPayload{
-		Base:     eventBase(pr, &session.Principal),
-		OldDraft: pr.IsDraft,
-		OldState: pr.State,
-		NewDraft: in.IsDraft,
-		NewState: in.State,
-		Message:  in.Message,
-	}
+	oldState := pr.State
+	oldDraft := pr.IsDraft
+
+	type change int
+	const (
+		changeReopen change = iota + 1
+		changeClose
+	)
+
+	var sourceSHA string
+	var stateChange change
 
 	if pr.State != enum.PullReqStateOpen && in.State == enum.PullReqStateOpen {
-		var sourceSHA string
-
 		if sourceSHA, err = c.verifyBranchExistence(ctx, sourceRepo, pr.SourceBranch); err != nil {
 			return nil, err
 		}
@@ -107,19 +112,45 @@ func (c *Controller) State(ctx context.Context,
 			return nil, err
 		}
 
-		event.SourceSHA = sourceSHA
+		stateChange = changeReopen
+	} else if pr.State == enum.PullReqStateOpen && in.State != enum.PullReqStateOpen {
+		stateChange = changeClose
 	}
 
-	pr.State = in.State
-	pr.IsDraft = in.IsDraft
-	pr.Edited = time.Now().UnixMilli()
-
-	err = c.pullreqStore.Update(ctx, pr)
+	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+		pr.State = in.State
+		pr.IsDraft = in.IsDraft
+		pr.Edited = time.Now().UnixMilli()
+		pr.ActivitySeq++ // because we need to add the activity entry
+		return nil
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to update pull request: %w", err)
 	}
 
-	c.eventReporter.StateChanged(ctx, event)
+	payload := &types.PullRequestActivityPayloadStateChange{
+		Old:      oldState,
+		New:      pr.State,
+		OldDraft: oldDraft,
+		NewDraft: pr.IsDraft,
+		Message:  in.Message,
+	}
+	if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload); errAct != nil {
+		// non-critical error
+		log.Ctx(ctx).Err(errAct).Msgf("failed to write pull request activity after state change")
+	}
+
+	switch stateChange {
+	case changeReopen:
+		c.eventReporter.Reopened(ctx, &pullreqevents.ReopenedPayload{
+			Base:      eventBase(pr, &session.Principal),
+			SourceSHA: sourceSHA,
+		})
+	case changeClose:
+		c.eventReporter.Closed(ctx, &pullreqevents.ClosedPayload{
+			Base: eventBase(pr, &session.Principal),
+		})
+	}
 
 	return pr, nil
 }

@@ -16,6 +16,8 @@ import (
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type MergeInput struct {
@@ -125,16 +127,31 @@ func (c *Controller) Merge(
 
 		pr.MergeBaseSHA = &mergeOutput.BaseSHA
 		pr.MergeHeadSHA = &mergeOutput.HeadSHA
+
+		pr.ActivitySeq++ // because we need to write the activity entry
 		return nil
 	})
 	if err != nil {
 		return types.MergeResponse{}, fmt.Errorf("failed to update pull request: %w", err)
 	}
 
+	activityPayload := &types.PullRequestActivityPayloadMerge{
+		MergeMethod: in.Method,
+		MergedSHA:   mergeOutput.MergedSHA,
+		BaseSHA:     mergeOutput.BaseSHA,
+		HeadSHA:     mergeOutput.HeadSHA,
+	}
+	if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, activityPayload); errAct != nil {
+		// non-critical error
+		log.Ctx(ctx).Err(errAct).Msgf("failed to write pull req merge activity")
+	}
+
 	c.eventReporter.Merged(ctx, &pullreqevents.MergedPayload{
 		Base:        eventBase(pr, &session.Principal),
 		MergeMethod: in.Method,
-		SHA:         sha,
+		MergedSHA:   mergeOutput.MergedSHA,
+		BaseSHA:     mergeOutput.BaseSHA,
+		HeadSHA:     mergeOutput.HeadSHA,
 	})
 
 	return types.MergeResponse{

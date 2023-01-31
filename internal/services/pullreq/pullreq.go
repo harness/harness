@@ -66,33 +66,8 @@ func New(ctx context.Context,
 					stream.WithMaxRetries(3),
 				))
 
-			_ = r.RegisterBranchUpdated(service.triggerPullReqBranchUpdate)
-			_ = r.RegisterBranchDeleted(service.closePullReqBranchDelete)
-
-			return nil
-		})
-	if err != nil {
-		return nil, err
-	}
-
-	// pull request timeline activity generation
-
-	const groupActivity = "gitness:pullreq:activity"
-	_, err = pullreqEvReaderFactory.Launch(ctx, groupActivity, config.InstanceID,
-		func(r *pullreqevents.Reader) error {
-			const idleTimeout = 10 * time.Second
-			r.Configure(
-				stream.WithConcurrency(1),
-				stream.WithHandlerOptions(
-					stream.WithIdleTimeout(idleTimeout),
-					stream.WithMaxRetries(3),
-				))
-			_ = r.RegisterBranchUpdated(service.addActivityBranchUpdate)
-			_ = r.RegisterBranchDeleted(service.addActivityBranchDelete)
-			_ = r.RegisterStateChanged(service.addActivityStateChange)
-			_ = r.RegisterTitleChanged(service.addActivityTitleChange)
-			_ = r.RegisterReviewSubmitted(service.addActivityReviewSubmit)
-			_ = r.RegisterMerged(service.addActivityMerge)
+			_ = r.RegisterBranchUpdated(service.triggerPREventOnBranchUpdate)
+			_ = r.RegisterBranchDeleted(service.closePullReqOnBranchDelete)
 
 			return nil
 		})
@@ -113,9 +88,9 @@ func New(ctx context.Context,
 					stream.WithMaxRetries(3),
 				))
 
-			_ = r.RegisterCreated(service.createHeadRefCreated)
-			_ = r.RegisterBranchUpdated(service.updateHeadRefBranchUpdate)
-			_ = r.RegisterStateChanged(service.updateHeadRefStateChange)
+			_ = r.RegisterCreated(service.createHeadRefOnCreated)
+			_ = r.RegisterBranchUpdated(service.updateHeadRefOnBranchUpdate)
+			_ = r.RegisterReopened(service.updateHeadRefOnReopen)
 
 			return nil
 		})

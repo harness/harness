@@ -15,11 +15,12 @@ import (
 	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
-	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type ReviewSubmitInput struct {
@@ -39,6 +40,8 @@ func (in *ReviewSubmitInput) Validate() error {
 
 	in.Decision = decision
 	in.Message = strings.TrimSpace(in.Message)
+
+	// TODO: Check the length of the message string
 
 	return nil
 }
@@ -108,13 +111,24 @@ func (c *Controller) ReviewSubmit(
 		return nil, err
 	}
 
-	c.eventReporter.ReviewSubmitted(ctx, &pullreqevents.ReviewSubmittedPayload{
-		Base:     eventBase(pr, &session.Principal),
-		Message:  in.Message,
-		Decision: in.Decision,
-	})
+	err = func() error {
+		if pr, err = c.pullreqStore.UpdateActivitySeq(ctx, pr); err != nil {
+			return fmt.Errorf("failed to increment pull request activity sequence: %w", err)
+		}
 
-	return review, err
+		payload := &types.PullRequestActivityPayloadReviewSubmit{
+			Message:  in.Message,
+			Decision: in.Decision,
+		}
+		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload)
+		return err
+	}()
+	if err != nil {
+		// non-critical error
+		log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity after review submit")
+	}
+
+	return review, nil
 }
 
 // updateReviewer updates pull request reviewer object.
