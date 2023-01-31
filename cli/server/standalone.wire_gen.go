@@ -108,7 +108,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	service, err := webhook.ProvideService(ctx, webhookConfig, readerFactory, webhookStore, webhookExecutionStore, repoStore, provider, principalStore, gitrpcInterface)
+	eventsReaderFactory, err := events2.ProvideReaderFactory(eventsSystem)
+	if err != nil {
+		return nil, err
+	}
+	service, err := webhook.ProvideService(ctx, webhookConfig, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, repoStore, pullReqStore, provider, principalStore, gitrpcInterface)
 	if err != nil {
 		return nil, err
 	}
@@ -134,10 +138,6 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	nightly := cron.NewNightly()
-	eventsReaderFactory, err := events2.ProvideReaderFactory(eventsSystem)
-	if err != nil {
-		return nil, err
-	}
 	repoGitInfoView := database.ProvideRepoGitInfoView(db)
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
 	pullreqService, err := pullreq2.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter, gitrpcInterface, db, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore)

@@ -35,7 +35,8 @@ enum WebhookIndividualEvent {
   BRANCH_DELETED = 'branch_deleted',
   TAG_CREATED = 'tag_created',
   TAG_UPDATED = 'tag_updated',
-  TAG_DELETED = 'tag_deleted'
+  TAG_DELETED = 'tag_deleted',
+  PR_BRANCH_UPDATED = 'pullreq_branch_updated'
 }
 
 const SECRET_MASK = '********'
@@ -54,6 +55,7 @@ interface FormData {
   tagCreated: boolean
   tagUpdated: boolean
   tagDeleted: boolean
+  prBranchUpdated: boolean
 }
 
 interface WebHookFormProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -88,6 +90,7 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
             tagCreated: webhook?.triggers?.includes(WebhookIndividualEvent.TAG_CREATED) || false,
             tagUpdated: webhook?.triggers?.includes(WebhookIndividualEvent.TAG_UPDATED) || false,
             tagDeleted: webhook?.triggers?.includes(WebhookIndividualEvent.TAG_DELETED) || false,
+            prBranchUpdated: webhook?.triggers?.includes(WebhookIndividualEvent.PR_BRANCH_UPDATED) || false,
             events: (webhook?.triggers?.length || 0) > 0 ? WebhookEventType.INDIVIDUAL : WebhookEventType.ALL
           }}
           formName="create-webhook-form"
@@ -120,6 +123,10 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
               }
               if (formData.tagDeleted) {
                 triggers.push(WebhookIndividualEvent.TAG_DELETED)
+              }
+
+              if (formData.prBranchUpdated) {
+                triggers.push(WebhookIndividualEvent.PR_BRANCH_UPDATED)
               }
 
               if (!triggers.length) {
@@ -231,6 +238,13 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                         <FormInput.CheckBox
                           label={getString('webhookTagDeleted')}
                           name="tagDeleted"
+                          className={css.checkbox}
+                        />
+                      </section>
+                      <section>
+                        <FormInput.CheckBox
+                          label={getString('webhookPRBranchUpdated')}
+                          name="prBranchUpdated"
                           className={css.checkbox}
                         />
                       </section>

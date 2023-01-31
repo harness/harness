@@ -39,6 +39,7 @@ export type EnumWebhookTrigger =
   | 'branch_created'
   | 'branch_deleted'
   | 'branch_updated'
+  | 'pullreq_branch_updated'
   | 'tag_created'
   | 'tag_deleted'
   | 'tag_updated'

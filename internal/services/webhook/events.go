@@ -22,31 +22,71 @@ func generateTriggerIDFromEventID(eventID string) string {
 	return fmt.Sprintf("event-%s", eventID)
 }
 
-// triggerForEventWithRepoAndPrincipal triggers all webhooks for the given repo and triggerType
+// triggerForEventWithRepo triggers all webhooks for the given repo and triggerType
 // using the eventID to generate a deterministic triggerID and using the output of bodyFn as payload.
 // The method tries to find the repository and principal and provides both to the bodyFn to generate the body.
-func (s *Service) triggerForEventWithRepoAndPrincipal(ctx context.Context,
-	triggerType enum.WebhookTrigger, eventID string, repoID int64, principalID int64,
-	createBodyFn func(*types.Repository, *types.Principal) (any, error)) error {
-	// NOTE: technically we could avoid this call if we send the data via the event (though then events will get big)
-	repo, err := s.findRepositoryForEvent(ctx, repoID)
-	if err != nil {
-		return err
-	}
-
-	// NOTE: technically we could avoid this call if we send the data via the event (though then events will get big)
+// NOTE: technically we could avoid this call if we send the data via the event (though then events will get big).
+func (s *Service) triggerForEventWithRepo(ctx context.Context,
+	triggerType enum.WebhookTrigger, eventID string, principalID int64, repoID int64,
+	createBodyFn func(*types.Principal, *types.Repository) (any, error)) error {
 	principal, err := s.findPrincipalForEvent(ctx, principalID)
 	if err != nil {
 		return err
 	}
 
+	repo, err := s.findRepositoryForEvent(ctx, repoID)
+	if err != nil {
+		return err
+	}
+
 	// create body
-	body, err := createBodyFn(repo, principal)
+	body, err := createBodyFn(principal, repo)
 	if err != nil {
 		return fmt.Errorf("body creation function failed: %w", err)
 	}
 
 	return s.triggerForEvent(ctx, eventID, enum.WebhookParentRepo, repo.ID, triggerType, body)
+}
+
+// triggerForEventWithPullReq triggers all webhooks for the given repo and triggerType
+// using the eventID to generate a deterministic triggerID and using the output of bodyFn as payload.
+// The method tries to find the pullreq, principal, target repo, and source repo
+// and provides all to the bodyFn to generate the body.
+// NOTE: technically we could avoid this call if we send the data via the event (though then events will get big).
+func (s *Service) triggerForEventWithPullReq(ctx context.Context,
+	triggerType enum.WebhookTrigger, eventID string, principalID int64, prID int64,
+	createBodyFn func(principal *types.Principal, pr *types.PullReq,
+		targetRepo *types.Repository, sourceRepo *types.Repository) (any, error)) error {
+	principal, err := s.findPrincipalForEvent(ctx, principalID)
+	if err != nil {
+		return err
+	}
+
+	pr, err := s.findPullReqForEvent(ctx, prID)
+	if err != nil {
+		return err
+	}
+
+	targetRepo, err := s.findRepositoryForEvent(ctx, pr.TargetRepoID)
+	if err != nil {
+		return fmt.Errorf("failed to get pr target repo: %w", err)
+	}
+
+	sourceRepo := targetRepo
+	if pr.SourceRepoID != pr.TargetRepoID {
+		sourceRepo, err = s.findRepositoryForEvent(ctx, pr.SourceRepoID)
+		if err != nil {
+			return fmt.Errorf("failed to get pr source repo: %w", err)
+		}
+	}
+
+	// create body
+	body, err := createBodyFn(principal, pr, targetRepo, sourceRepo)
+	if err != nil {
+		return fmt.Errorf("body creation function failed: %w", err)
+	}
+
+	return s.triggerForEvent(ctx, eventID, enum.WebhookParentRepo, targetRepo.ID, triggerType, body)
 }
 
 // findRepositoryForEvent finds the repository for the provided repoID.
@@ -63,6 +103,22 @@ func (s *Service) findRepositoryForEvent(ctx context.Context, repoID int64) (*ty
 	}
 
 	return repo, nil
+}
+
+// findPullReqForEvent finds the pullrequest for the provided prID.
+func (s *Service) findPullReqForEvent(ctx context.Context, prID int64) (*types.PullReq, error) {
+	pr, err := s.pullreqStore.Find(ctx, prID)
+
+	if err != nil && errors.Is(err, store.ErrResourceNotFound) {
+		// not found error is unrecoverable - most likely a racing condition of repo being deleted by now
+		return nil, events.NewDiscardEventErrorf("PR with id '%d' doesn't exist anymore", prID)
+	}
+	if err != nil {
+		// all other errors we return and force the event to be reprocessed
+		return nil, fmt.Errorf("failed to get PR for id '%d': %w", prID, err)
+	}
+
+	return pr, nil
 }
 
 // findPrincipalForEvent finds the principal for the provided principalID.

@@ -14,6 +14,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	gitevents "github.com/harness/gitness/internal/events/git"
+	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/stream"
@@ -54,18 +55,19 @@ type Service struct {
 	webhookExecutionStore store.WebhookExecutionStore
 	urlProvider           *url.Provider
 	repoStore             store.RepoStore
+	pullreqStore          store.PullReqStore
 	principalStore        store.PrincipalStore
 	gitRPCClient          gitrpc.Interface
 
-	readerCanceler     *events.ReaderCanceler
 	secureHTTPClient   *http.Client
 	insecureHTTPClient *http.Client
 }
 
 func NewService(ctx context.Context, config Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
+	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
-	repoStore store.RepoStore, urlProvider *url.Provider,
+	repoStore store.RepoStore, pullreqStore store.PullReqStore, urlProvider *url.Provider,
 	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Service, error) {
 	if err := config.Validate(); err != nil {
 		return nil, fmt.Errorf("provided config is invalid: %w", err)
@@ -74,17 +76,16 @@ func NewService(ctx context.Context, config Config,
 		webhookStore:          webhookStore,
 		webhookExecutionStore: webhookExecutionStore,
 		repoStore:             repoStore,
+		pullreqStore:          pullreqStore,
 		urlProvider:           urlProvider,
 		principalStore:        principalStore,
 		gitRPCClient:          gitRPCClient,
 
-		// set after launching factory
-		readerCanceler: nil,
-
 		secureHTTPClient:   newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),
 		insecureHTTPClient: newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true),
 	}
-	canceler, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
+
+	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
 		func(r *gitevents.Reader) error {
 			const idleTimeout = 1 * time.Minute
 			r.Configure(
@@ -106,13 +107,27 @@ func NewService(ctx context.Context, config Config,
 			return nil
 		})
 	if err != nil {
-		return nil, fmt.Errorf("failed to launch event reader for webhooks: %w", err)
+		return nil, fmt.Errorf("failed to launch git event reader for webhooks: %w", err)
 	}
-	service.readerCanceler = canceler
+
+	_, err = prReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
+		func(r *pullreqevents.Reader) error {
+			const idleTimeout = 1 * time.Minute
+			r.Configure(
+				stream.WithConcurrency(config.Concurrency),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(config.MaxRetries),
+				))
+
+			// register events
+			_ = r.RegisterBranchUpdated(service.handleEventPullReqBranchUpdated)
+
+			return nil
+		})
+	if err != nil {
+		return nil, fmt.Errorf("failed to launch pr event reader for webhooks: %w", err)
+	}
 
 	return service, nil
-}
-
-func (s *Service) Cancel() error {
-	return s.readerCanceler.Cancel()
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 // RepositoryInfo describes the repo related info for a webhook payload.
@@ -23,13 +24,42 @@ type RepositoryInfo struct {
 }
 
 // repositoryInfoFrom gets the RespositoryInfo from a types.Repository.
-func repositoryInfoFrom(repo types.Repository, urlProvider *url.Provider) RepositoryInfo {
+func repositoryInfoFrom(repo *types.Repository, urlProvider *url.Provider) RepositoryInfo {
 	return RepositoryInfo{
 		ID:            repo.ID,
 		Path:          repo.Path,
 		UID:           repo.UID,
 		DefaultBranch: repo.DefaultBranch,
 		GitURL:        urlProvider.GenerateRepoCloneURL(repo.Path),
+	}
+}
+
+// PullReqInfo describes the pullreq related info for a webhook payload.
+// NOTE: don't use types package as we want pullreq payload to be independent from API calls.
+type PullReqInfo struct {
+	Number        int64             `json:"number"`
+	State         enum.PullReqState `json:"state"`
+	IsDraft       bool              `json:"is_draft"`
+	Title         string            `json:"title"`
+	SourceRepoID  int64             `json:"source_repo_id"`
+	SourceBranch  string            `json:"source_branch"`
+	TargetRepoID  int64             `json:"target_repo_id"`
+	TargetBranch  string            `json:"target_branch"`
+	MergeStrategy *enum.MergeMethod `json:"merge_strategy"`
+}
+
+// pullReqInfoFrom gets the PullReqInfo from a types.PullReq.
+func pullReqInfoFrom(pr *types.PullReq) PullReqInfo {
+	return PullReqInfo{
+		Number:        pr.Number,
+		State:         pr.State,
+		IsDraft:       pr.IsDraft,
+		Title:         pr.Title,
+		SourceRepoID:  pr.SourceRepoID,
+		SourceBranch:  pr.SourceBranch,
+		TargetRepoID:  pr.TargetRepoID,
+		TargetBranch:  pr.TargetBranch,
+		MergeStrategy: pr.MergeStrategy,
 	}
 }
 
@@ -43,7 +73,7 @@ type PrincipalInfo struct {
 }
 
 // principalInfoFrom gets the PrincipalInfo from a types.Principal.
-func principalInfoFrom(principal types.Principal) PrincipalInfo {
+func principalInfoFrom(principal *types.Principal) PrincipalInfo {
 	return PrincipalInfo{
 		ID:          principal.ID,
 		UID:         principal.UID,
@@ -99,4 +129,11 @@ func identityInfoFrom(identity gitrpc.Identity) IdentityInfo {
 		Name:  identity.Name,
 		Email: identity.Email,
 	}
+}
+
+// ReferenceInfo describes a unique reference in gitness.
+// It contains both the reference name as well as the repo the reference belongs to.
+type ReferenceInfo struct {
+	Name string         `json:"name"`
+	Repo RepositoryInfo `json:"repo"`
 }

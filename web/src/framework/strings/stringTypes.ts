@@ -266,6 +266,7 @@ export interface StringsMap {
   webhookEmpty: string
   webhookEventsLabel: string
   webhookListingContent: string
+  webhookPRBranchUpdated: string
   webhookSelectAllEvents: string
   webhookSelectIndividualEvents: string
   webhookSelectPushEvents: string

@@ -10,6 +10,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	gitevents "github.com/harness/gitness/internal/events/git"
+	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 
@@ -23,9 +24,11 @@ var WireSet = wire.NewSet(
 
 func ProvideService(ctx context.Context, config Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
+	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
-	repoStore store.RepoStore, urlProvider *url.Provider,
+	repoStore store.RepoStore, pullreqStore store.PullReqStore, urlProvider *url.Provider,
 	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Service, error) {
-	return NewService(ctx, config, gitReaderFactory, webhookStore, webhookExecutionStore,
-		repoStore, urlProvider, principalStore, gitRPCClient)
+	return NewService(ctx, config, gitReaderFactory, prReaderFactory,
+		webhookStore, webhookExecutionStore, repoStore, pullreqStore,
+		urlProvider, principalStore, gitRPCClient)
 }

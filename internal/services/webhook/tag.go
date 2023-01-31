@@ -13,33 +13,30 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// TagBody describes the body of Tag related webhook triggers.
-// NOTE: Use a single payload format (and keep it similar to BranchBody) to make it easier for consumers!
-// TODO: move in separate package for small import?
-type TagBody struct {
-	Trigger   enum.WebhookTrigger `json:"trigger"`
-	Repo      RepositoryInfo      `json:"repo"`
-	Principal PrincipalInfo       `json:"principal"`
-	Ref       string              `json:"ref"`
-	Before    string              `json:"before"`
-	After     string              `json:"after"`
-	Forced    bool                `json:"forced"` // tags can only be force-updated, include to be explicit.
-}
-
 // handleEventTagCreated handles tag created events
 // and triggers tag created webhooks for the source repo.
 func (s *Service) handleEventTagCreated(ctx context.Context,
 	event *events.Event[*gitevents.TagCreatedPayload]) error {
-	return s.triggerForEventWithRepoAndPrincipal(ctx, enum.WebhookTriggerTagCreated,
-		event.ID, event.Payload.RepoID, event.Payload.PrincipalID,
-		func(repo *types.Repository, principal *types.Principal) (any, error) {
-			return &TagBody{
+	return s.triggerForEventWithRepo(ctx, enum.WebhookTriggerTagCreated,
+		event.ID, event.Payload.PrincipalID, event.Payload.RepoID,
+		func(principal *types.Principal, repo *types.Repository) (any, error) {
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, repo.GitUID, event.Payload.SHA)
+			if err != nil {
+				return nil, err
+			}
+			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
+
+			return &ReferenceBody{
 				Trigger:   enum.WebhookTriggerTagCreated,
-				Repo:      repositoryInfoFrom(*repo, s.urlProvider),
-				Principal: principalInfoFrom(*principal),
-				Ref:       event.Payload.Ref,
-				Before:    types.NilSHA,
-				After:     event.Payload.SHA,
+				Repo:      repoInfo,
+				Principal: principalInfoFrom(principal),
+				Ref: ReferenceInfo{
+					Name: event.Payload.Ref,
+					Repo: repoInfo,
+				},
+				Before: types.NilSHA,
+				After:  event.Payload.SHA,
+				Commit: &commitInfo,
 			}, nil
 		})
 }
@@ -48,17 +45,27 @@ func (s *Service) handleEventTagCreated(ctx context.Context,
 // and triggers tag updated webhooks for the source repo.
 func (s *Service) handleEventTagUpdated(ctx context.Context,
 	event *events.Event[*gitevents.TagUpdatedPayload]) error {
-	return s.triggerForEventWithRepoAndPrincipal(ctx, enum.WebhookTriggerTagUpdated,
-		event.ID, event.Payload.RepoID, event.Payload.PrincipalID,
-		func(repo *types.Repository, principal *types.Principal) (any, error) {
-			return &TagBody{
+	return s.triggerForEventWithRepo(ctx, enum.WebhookTriggerTagUpdated,
+		event.ID, event.Payload.PrincipalID, event.Payload.RepoID,
+		func(principal *types.Principal, repo *types.Repository) (any, error) {
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, repo.GitUID, event.Payload.NewSHA)
+			if err != nil {
+				return nil, err
+			}
+			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
+
+			return &ReferenceBody{
 				Trigger:   enum.WebhookTriggerTagUpdated,
-				Repo:      repositoryInfoFrom(*repo, s.urlProvider),
-				Principal: principalInfoFrom(*principal),
-				Ref:       event.Payload.Ref,
-				Before:    event.Payload.OldSHA,
-				After:     event.Payload.NewSHA,
-				Forced:    event.Payload.Forced,
+				Repo:      repoInfo,
+				Principal: principalInfoFrom(principal),
+				Ref: ReferenceInfo{
+					Name: event.Payload.Ref,
+					Repo: repoInfo,
+				},
+				Before: event.Payload.OldSHA,
+				After:  event.Payload.NewSHA,
+				Forced: event.Payload.Forced,
+				Commit: &commitInfo,
 			}, nil
 		})
 }
@@ -67,16 +74,21 @@ func (s *Service) handleEventTagUpdated(ctx context.Context,
 // and triggers tag deleted webhooks for the source repo.
 func (s *Service) handleEventTagDeleted(ctx context.Context,
 	event *events.Event[*gitevents.TagDeletedPayload]) error {
-	return s.triggerForEventWithRepoAndPrincipal(ctx, enum.WebhookTriggerTagDeleted,
-		event.ID, event.Payload.RepoID, event.Payload.PrincipalID,
-		func(repo *types.Repository, principal *types.Principal) (any, error) {
-			return &TagBody{
+	return s.triggerForEventWithRepo(ctx, enum.WebhookTriggerTagDeleted,
+		event.ID, event.Payload.PrincipalID, event.Payload.RepoID,
+		func(principal *types.Principal, repo *types.Repository) (any, error) {
+			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
+
+			return &ReferenceBody{
 				Trigger:   enum.WebhookTriggerTagDeleted,
-				Repo:      repositoryInfoFrom(*repo, s.urlProvider),
-				Principal: principalInfoFrom(*principal),
-				Ref:       event.Payload.Ref,
-				Before:    event.Payload.SHA,
-				After:     types.NilSHA,
+				Repo:      repoInfo,
+				Principal: principalInfoFrom(principal),
+				Ref: ReferenceInfo{
+					Name: event.Payload.Ref,
+					Repo: repoInfo,
+				},
+				Before: event.Payload.SHA,
+				After:  types.NilSHA,
 			}, nil
 		})
 }

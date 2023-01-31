@@ -53,7 +53,7 @@ func (c *Client) GetCommit(ctx context.Context, params *GetCommitParams) (*GetCo
 		Sha:  params.SHA,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get commit: %w", err)
+		return nil, processRPCErrorf(err, "failed to get commit")
 	}
 
 	commit, err := mapRPCCommit(result.GetCommit())
