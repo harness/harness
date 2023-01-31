@@ -62,6 +62,9 @@ func (c cardStore) Create(ctx context.Context, step int64, r io.Reader) error {
 			Data: data,
 		}
 		params, err := toParams(in)
+		if err != nil {
+			return err
+		}
 		stmt, args, err := binder.BindNamed(stmtInsert, params)
 		if err != nil {
 			return err
