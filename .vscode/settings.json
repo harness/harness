@@ -6,7 +6,7 @@
             "previewLimit": 50,
             "driver": "SQLite",
             "name": "gitness",
-            "database": "${workspaceFolder:gitness}/database.sqlite3"
+            "database": "${workspaceFolder:gitness}/cmd/gitness/database.sqlite3"
         }
     ]
 }

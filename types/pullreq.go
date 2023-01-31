@@ -40,6 +40,15 @@ type PullReq struct {
 
 	Author PrincipalInfo  `json:"author"`
 	Merger *PrincipalInfo `json:"merger"`
+	Stats  PullReqStats   `json:"stats"`
+}
+
+// PullReqStats shows total number of conversations,
+// commits and how many files modified.
+type PullReqStats struct {
+	Conversations int64 `json:"conversations"`
+	Commits       int   `json:"commits"`
+	FilesChanged  int   `json:"files_changed"`
 }
 
 // PullReqFilter stores pull request query parameters.
@@ -94,12 +103,4 @@ type PullReqReviewer struct {
 
 type MergeResponse struct {
 	SHA string
-}
-
-// PullReqMetaData shows total number of conversations,
-// commits and how many files modified.
-type PullReqMetaData struct {
-	Conversations int64 `json:"conversations"`
-	Commits       int   `json:"commits"`
-	FilesChanged  int   `json:"files_changed"`
 }
