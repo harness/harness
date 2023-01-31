@@ -414,7 +414,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       showError,
       updateComment,
       deleteComment,
-      confirmAct
+      confirmAct,
+      onCommentUpdate
     ]
   )
 
