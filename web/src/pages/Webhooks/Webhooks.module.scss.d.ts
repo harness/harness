@@ -7,5 +7,7 @@ declare const styles: {
   readonly title: string
   readonly noData: string
   readonly toggle: string
+  readonly toggleEnable: string
+  readonly toggleDisable: string
 }
 export default styles

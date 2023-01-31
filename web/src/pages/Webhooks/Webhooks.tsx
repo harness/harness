@@ -1,17 +1,7 @@
 import React, { useMemo, useState } from 'react'
-import {
-  Container,
-  PageBody,
-  Text,
-  Color,
-  TableV2,
-  Layout,
-  Utils,
-  useToaster,
-  IconName,
-  Toggle
-} from '@harness/uicore'
+import { Container, PageBody, Text, Color, TableV2, Layout, Utils, useToaster, IconName, Toggle } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
+import cx from 'classnames'
 import { useGet, useMutate } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import { useAppContext } from 'AppContext'
@@ -73,7 +63,7 @@ export default function Webhooks() {
               <Container onClick={Utils.stopEvent}>
                 <Toggle
                   key={row.original.id}
-                  className={css.toggle}
+                  className={cx(css.toggle, checked ? css.toggleEnable : css.toggleDisable)}
                   checked={checked}
                   onChange={() => {
                     const data = { enabled: !checked }

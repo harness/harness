@@ -22,9 +22,20 @@
 .toggle {
   > input {
     opacity: 0;
-    left: 4.25%;
-    position: absolute;
+    position: relative;
     top: 40%;
     z-index: 999;
+  }
+}
+
+.toggleEnable {
+  > input {
+    left: 52%;
+  }
+}
+
+.toggleDisable {
+  > input {
+    left: 32%;
   }
 }
