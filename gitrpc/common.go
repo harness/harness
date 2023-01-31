@@ -4,13 +4,24 @@
 
 package gitrpc
 
-import "github.com/harness/gitness/gitrpc/rpc"
+import (
+	"errors"
+
+	"github.com/harness/gitness/gitrpc/rpc"
+)
 
 const NilSHA = "0000000000000000000000000000000000000000"
 
 // ReadParams contains the base parameters for read operations.
 type ReadParams struct {
 	RepoUID string
+}
+
+func (p ReadParams) Validate() error {
+	if p.RepoUID == "" {
+		return errors.New("repository id cannot be empty")
+	}
+	return nil
 }
 
 // WriteParams contains the base parameters for write operations.

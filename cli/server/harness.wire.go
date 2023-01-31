@@ -10,8 +10,6 @@ package server
 import (
 	"context"
 
-	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
-
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
@@ -32,6 +30,7 @@ import (
 	controllerwebhook "github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/cron"
 	gitevents "github.com/harness/gitness/internal/events/git"
+	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 	pullreqservice "github.com/harness/gitness/internal/services/pullreq"

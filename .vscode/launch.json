@@ -10,8 +10,8 @@
             "request": "launch",
             "mode": "auto",
             "buildFlags": "-tags=harness",
-            "program": "${workspaceFolder}",
-            "args": ["server", "./.harness.env"]
+            "program": "cmd/gitness",
+            "args": ["server", "../../.harness.env"]
         },
         {
             "name": "Standalone",
@@ -19,7 +19,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
-            "args": ["server", "./.local.env"]
+            "args": ["server", "../../.local.env"]
         }
     ]
 }

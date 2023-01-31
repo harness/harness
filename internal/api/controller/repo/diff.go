@@ -33,7 +33,7 @@ func (c *Controller) RawDiff(
 
 	info := parseDiffPath(path)
 
-	return c.gitRPCClient.RawDiff(ctx, &gitrpc.RawDiffParams{
+	return c.gitRPCClient.RawDiff(ctx, &gitrpc.DiffParams{
 		ReadParams: CreateRPCReadParams(repo),
 		BaseRef:    info.BaseRef,
 		HeadRef:    info.HeadRef,

@@ -8,10 +8,11 @@ import "shared.proto";
 // DiffService is a service which provides RPCs to inspect differences
 // introduced between a set of commits.
 service DiffService {
-  rpc RawDiff(RawDiffRequest) returns (stream RawDiffResponse) {}
+  rpc RawDiff(DiffRequest) returns (stream RawDiffResponse) {}
+  rpc DiffShortStat(DiffRequest) returns (DiffShortStatResponse) {}
 }
 
-message RawDiffRequest {
+message DiffRequest {
   ReadRequest base = 1;
   // base_ref is left side of compare and can be branch, commit and tag
   string base_ref   = 2;
@@ -24,4 +25,10 @@ message RawDiffRequest {
 
 message RawDiffResponse {
   bytes data = 1;
+}
+
+message DiffShortStatResponse {
+  int32 files     = 1;
+  int32 additions = 2;
+  int32 deletions = 3;
 }

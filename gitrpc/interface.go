@@ -44,7 +44,8 @@ type Interface interface {
 	/*
 	 * Diff services
 	 */
-	RawDiff(ctx context.Context, in *RawDiffParams, w io.Writer) error
+	RawDiff(ctx context.Context, in *DiffParams, w io.Writer) error
+	DiffShortStat(ctx context.Context, params *DiffParams) (DiffShortStatOutput, error)
 
 	/*
 	 * Merge services

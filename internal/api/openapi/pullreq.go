@@ -436,4 +436,15 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opRawDiff, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opRawDiff, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq/{pullreq_number}/diff", opRawDiff)
+
+	opMetaData := openapi3.Operation{}
+	opMetaData.WithTags("pullreq")
+	opMetaData.WithMapOfAnything(map[string]interface{}{"operationId": "pullReqMetaData"})
+	_ = reflector.SetRequest(&opMetaData, new(pullReqRequest), http.MethodGet)
+	_ = reflector.SetStringResponse(&opMetaData, http.StatusOK, "text/plain")
+	_ = reflector.SetJSONResponse(&opMetaData, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opMetaData, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opMetaData, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opMetaData, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq/{pullreq_number}/metadata", opMetaData)
 }

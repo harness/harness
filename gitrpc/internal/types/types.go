@@ -246,3 +246,9 @@ type PullRequest struct {
 	BaseBranch string
 	HeadBranch string
 }
+
+type DiffShortStat struct {
+	Files     int
+	Additions int
+	Deletions int
+}

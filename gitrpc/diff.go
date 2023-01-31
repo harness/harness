@@ -6,6 +6,7 @@ package gitrpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -13,15 +14,29 @@ import (
 	"github.com/harness/gitness/gitrpc/rpc"
 )
 
-type RawDiffParams struct {
+type DiffParams struct {
 	ReadParams
 	BaseRef   string
 	HeadRef   string
 	MergeBase bool
 }
 
-func (c *Client) RawDiff(ctx context.Context, params *RawDiffParams, out io.Writer) error {
-	diff, err := c.diffService.RawDiff(ctx, &rpc.RawDiffRequest{
+func (p DiffParams) Validate() error {
+	if err := p.ReadParams.Validate(); err != nil {
+		return err
+	}
+
+	if p.HeadRef == "" {
+		return errors.New("head ref cannot be empty")
+	}
+	return nil
+}
+
+func (c *Client) RawDiff(ctx context.Context, params *DiffParams, out io.Writer) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
+	diff, err := c.diffService.RawDiff(ctx, &rpc.DiffRequest{
 		Base:      mapToRPCReadRequest(params.ReadParams),
 		BaseRef:   params.BaseRef,
 		HeadRef:   params.HeadRef,
@@ -42,4 +57,31 @@ func (c *Client) RawDiff(ctx context.Context, params *RawDiffParams, out io.Writ
 	}
 
 	return nil
+}
+
+type DiffShortStatOutput struct {
+	Files     int
+	Additions int
+	Deletions int
+}
+
+// DiffShortStat returns files changed, additions and deletions metadata.
+func (c *Client) DiffShortStat(ctx context.Context, params *DiffParams) (DiffShortStatOutput, error) {
+	if err := params.Validate(); err != nil {
+		return DiffShortStatOutput{}, err
+	}
+	stat, err := c.diffService.DiffShortStat(ctx, &rpc.DiffRequest{
+		Base:      mapToRPCReadRequest(params.ReadParams),
+		BaseRef:   params.BaseRef,
+		HeadRef:   params.HeadRef,
+		MergeBase: params.MergeBase,
+	})
+	if err != nil {
+		return DiffShortStatOutput{}, err
+	}
+	return DiffShortStatOutput{
+		Files:     int(stat.GetFiles()),
+		Additions: int(stat.GetAdditions()),
+		Deletions: int(stat.GetDeletions()),
+	}, nil
 }

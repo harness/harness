@@ -95,3 +95,11 @@ type PullReqReviewer struct {
 type MergeResponse struct {
 	SHA string
 }
+
+// PullReqMetaData shows total number of conversations,
+// commits and how many files modified.
+type PullReqMetaData struct {
+	Conversations int64 `json:"conversations"`
+	Commits       int   `json:"commits"`
+	FilesChanged  int   `json:"files_changed"`
+}

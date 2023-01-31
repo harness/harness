@@ -22,7 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DiffServiceClient interface {
-	RawDiff(ctx context.Context, in *RawDiffRequest, opts ...grpc.CallOption) (DiffService_RawDiffClient, error)
+	RawDiff(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (DiffService_RawDiffClient, error)
+	DiffShortStat(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (*DiffShortStatResponse, error)
 }
 
 type diffServiceClient struct {
@@ -33,7 +34,7 @@ func NewDiffServiceClient(cc grpc.ClientConnInterface) DiffServiceClient {
 	return &diffServiceClient{cc}
 }
 
-func (c *diffServiceClient) RawDiff(ctx context.Context, in *RawDiffRequest, opts ...grpc.CallOption) (DiffService_RawDiffClient, error) {
+func (c *diffServiceClient) RawDiff(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (DiffService_RawDiffClient, error) {
 	stream, err := c.cc.NewStream(ctx, &DiffService_ServiceDesc.Streams[0], "/rpc.DiffService/RawDiff", opts...)
 	if err != nil {
 		return nil, err
@@ -65,11 +66,21 @@ func (x *diffServiceRawDiffClient) Recv() (*RawDiffResponse, error) {
 	return m, nil
 }
 
+func (c *diffServiceClient) DiffShortStat(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (*DiffShortStatResponse, error) {
+	out := new(DiffShortStatResponse)
+	err := c.cc.Invoke(ctx, "/rpc.DiffService/DiffShortStat", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DiffServiceServer is the server API for DiffService service.
 // All implementations must embed UnimplementedDiffServiceServer
 // for forward compatibility
 type DiffServiceServer interface {
-	RawDiff(*RawDiffRequest, DiffService_RawDiffServer) error
+	RawDiff(*DiffRequest, DiffService_RawDiffServer) error
+	DiffShortStat(context.Context, *DiffRequest) (*DiffShortStatResponse, error)
 	mustEmbedUnimplementedDiffServiceServer()
 }
 
@@ -77,8 +88,11 @@ type DiffServiceServer interface {
 type UnimplementedDiffServiceServer struct {
 }
 
-func (UnimplementedDiffServiceServer) RawDiff(*RawDiffRequest, DiffService_RawDiffServer) error {
+func (UnimplementedDiffServiceServer) RawDiff(*DiffRequest, DiffService_RawDiffServer) error {
 	return status.Errorf(codes.Unimplemented, "method RawDiff not implemented")
+}
+func (UnimplementedDiffServiceServer) DiffShortStat(context.Context, *DiffRequest) (*DiffShortStatResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DiffShortStat not implemented")
 }
 func (UnimplementedDiffServiceServer) mustEmbedUnimplementedDiffServiceServer() {}
 
@@ -94,7 +108,7 @@ func RegisterDiffServiceServer(s grpc.ServiceRegistrar, srv DiffServiceServer) {
 }
 
 func _DiffService_RawDiff_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(RawDiffRequest)
+	m := new(DiffRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
@@ -114,13 +128,36 @@ func (x *diffServiceRawDiffServer) Send(m *RawDiffResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _DiffService_DiffShortStat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DiffRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiffServiceServer).DiffShortStat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.DiffService/DiffShortStat",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiffServiceServer).DiffShortStat(ctx, req.(*DiffRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DiffService_ServiceDesc is the grpc.ServiceDesc for DiffService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var DiffService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "rpc.DiffService",
 	HandlerType: (*DiffServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "DiffShortStat",
+			Handler:    _DiffService_DiffShortStat_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "RawDiff",
