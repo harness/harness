@@ -14,6 +14,7 @@ import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { usePageIndex } from 'hooks/usePageIndex'
 import type { TypesPullReq, TypesRepository } from 'services/code'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
+import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequestStateLabel'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -25,7 +26,10 @@ export default function PullRequests() {
   const history = useHistory()
   const { routes } = useAppContext()
   const [searchTerm, setSearchTerm] = useState('')
-  const [filter, setFilter] = useState<string>(PullRequestFilterOption.OPEN)
+  const [filter, setFilter] = useUserPreference<string>(
+    UserPreference.PULL_REQUESTS_FILTER_SELECTED_OPTIONS,
+    PullRequestFilterOption.OPEN
+  )
   const [page, setPage] = usePageIndex()
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const {
@@ -45,6 +49,7 @@ export default function PullRequests() {
     },
     lazy: !repoMetadata
   })
+
   const columns: Column<TypesPullReq>[] = useMemo(
     () => [
       {
@@ -101,6 +106,7 @@ export default function PullRequests() {
             <PullRequestsContentHeader
               loading={prLoading}
               repoMetadata={repoMetadata as TypesRepository}
+              activePullRequestFilterOption={filter}
               onPullRequestFilterChanged={_filter => {
                 setFilter(_filter)
                 setPage(1)
