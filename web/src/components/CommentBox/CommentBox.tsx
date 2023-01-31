@@ -290,7 +290,7 @@ const CommentsThread = <T = unknown,>({
                   <Truthy>
                     <Container className={css.editCommentContainer}>
                       <MarkdownEditorWithPreview
-                        value={commentItem.content}
+                        value={commentItem?.content}
                         onSave={async value => {
                           if (await handleAction(CommentAction.UPDATE, value, commentItem)) {
                             commentItem.content = value
