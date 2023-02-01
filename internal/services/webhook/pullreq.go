@@ -18,13 +18,115 @@ const (
 	gitReferenceNamePrefixBranch = "refs/heads/"
 )
 
-// PullReqBranchBody describes the body of the pullreq branch related webhook trigger.
-// NOTE: Embed ReferenceBody to make it easier for consumers!
+// PullReqCreatedPayload describes the body of the pullreq created trigger.
 // TODO: move in separate package for small import?
-type PullReqBranchBody struct {
-	ReferenceBody
-	TargetRef ReferenceInfo `json:"target_ref"`
-	PullReq   PullReqInfo   `json:"pull_req"`
+type PullReqCreatedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	ReferenceDetailsSegment
+}
+
+// handleEventPullReqCreated handles created events for pull requests
+// and triggers pullreq created webhooks for the source repo.
+func (s *Service) handleEventPullReqCreated(ctx context.Context,
+	event *events.Event[*pullreqevents.CreatedPayload]) error {
+	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqCreated,
+		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
+		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.SourceSHA)
+			if err != nil {
+				return nil, err
+			}
+			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
+
+			return &PullReqCreatedPayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerPullReqCreated,
+					Repo:      targetRepoInfo,
+					Principal: principalInfoFrom(principal),
+				},
+				PullReqSegment: PullReqSegment{
+					PullReq: pullReqInfoFrom(pr),
+				},
+				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
+					TargetRef: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+						Repo: targetRepoInfo,
+					},
+				},
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
+						Repo: sourceRepoInfo,
+					},
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:    event.Payload.SourceSHA,
+					Commit: &commitInfo,
+				},
+			}, nil
+		})
+}
+
+// PullReqReopenedPayload describes the body of the pullreq reopened trigger.
+// Note: same as payload for created.
+type PullReqReopenedPayload PullReqCreatedPayload
+
+// handleEventPullReqReopened handles reopened events for pull requests
+// and triggers pullreq reopened webhooks for the source repo.
+func (s *Service) handleEventPullReqReopened(ctx context.Context,
+	event *events.Event[*pullreqevents.ReopenedPayload]) error {
+	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqReopened,
+		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
+		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.SourceSHA)
+			if err != nil {
+				return nil, err
+			}
+			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
+
+			return &PullReqReopenedPayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerPullReqReopened,
+					Repo:      targetRepoInfo,
+					Principal: principalInfoFrom(principal),
+				},
+				PullReqSegment: PullReqSegment{
+					PullReq: pullReqInfoFrom(pr),
+				},
+				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
+					TargetRef: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+						Repo: targetRepoInfo,
+					},
+				},
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
+						Repo: sourceRepoInfo,
+					},
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:    event.Payload.SourceSHA,
+					Commit: &commitInfo,
+				},
+			}, nil
+		})
+}
+
+// PullReqBranchUpdatedPayload describes the body of the pullreq branch updated trigger.
+// TODO: move in separate package for small import?
+type PullReqBranchUpdatedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	ReferenceDetailsSegment
+	ReferenceUpdateSegment
 }
 
 // handleEventPullReqBranchUpdated handles branch updated events for pull requests
@@ -41,25 +143,35 @@ func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
 			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
 			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
 
-			return &PullReqBranchBody{
-				ReferenceBody: ReferenceBody{
+			return &PullReqBranchUpdatedPayload{
+				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerPullReqBranchUpdated,
 					Repo:      targetRepoInfo,
 					Principal: principalInfoFrom(principal),
+				},
+				PullReqSegment: PullReqSegment{
+					PullReq: pullReqInfoFrom(pr),
+				},
+				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
+					TargetRef: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+						Repo: targetRepoInfo,
+					},
+				},
+				ReferenceSegment: ReferenceSegment{
 					Ref: ReferenceInfo{
 						Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
 						Repo: sourceRepoInfo,
 					},
-					Before: event.Payload.OldSHA,
-					After:  event.Payload.NewSHA,
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:    event.Payload.NewSHA,
 					Commit: &commitInfo,
-					// Forced: true/false, // TODO: data not available yet
 				},
-				TargetRef: ReferenceInfo{
-					Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
-					Repo: targetRepoInfo,
+				ReferenceUpdateSegment: ReferenceUpdateSegment{
+					OldSHA: event.Payload.OldSHA,
+					Forced: event.Payload.Forced,
 				},
-				PullReq: pullReqInfoFrom(pr),
 			}, nil
 		})
 }

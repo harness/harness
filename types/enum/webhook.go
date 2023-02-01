@@ -117,7 +117,11 @@ const (
 	// WebhookTriggerTagDeleted gets triggered when a tag gets deleted.
 	WebhookTriggerTagDeleted WebhookTrigger = "tag_deleted"
 
-	// WebhookTriggerPullReqBranchUpdated gets triggered when a pull req source branch gets updated.
+	// WebhookTriggerPullReqCreated gets triggered when a pull request gets created.
+	WebhookTriggerPullReqCreated WebhookTrigger = "pullreq_created"
+	// WebhookTriggerPullReqReopened gets triggered when a pull request gets reopened.
+	WebhookTriggerPullReqReopened WebhookTrigger = "pullreq_reopened"
+	// WebhookTriggerPullReqBranchUpdated gets triggered when a pull request source branch gets updated.
 	WebhookTriggerPullReqBranchUpdated WebhookTrigger = "pullreq_branch_updated"
 )
 
@@ -128,5 +132,7 @@ var webhookTriggers = sortEnum([]WebhookTrigger{
 	WebhookTriggerTagCreated,
 	WebhookTriggerTagUpdated,
 	WebhookTriggerTagDeleted,
+	WebhookTriggerPullReqCreated,
+	WebhookTriggerPullReqReopened,
 	WebhookTriggerPullReqBranchUpdated,
 })

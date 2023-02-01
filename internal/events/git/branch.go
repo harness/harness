@@ -44,7 +44,7 @@ type BranchUpdatedPayload struct {
 	Ref         string `json:"ref"`
 	OldSHA      string `json:"old_sha"`
 	NewSHA      string `json:"new_sha"`
-	// Forced     bool   `json:"forced"` TODO: data not available yet.
+	Forced      bool   `json:"forced"`
 }
 
 func (r *Reporter) BranchUpdated(ctx context.Context, payload *BranchUpdatedPayload) {

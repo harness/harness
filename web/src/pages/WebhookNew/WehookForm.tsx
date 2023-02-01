@@ -36,6 +36,8 @@ enum WebhookIndividualEvent {
   TAG_CREATED = 'tag_created',
   TAG_UPDATED = 'tag_updated',
   TAG_DELETED = 'tag_deleted',
+  PR_CREATED = 'pullreq_created',
+  PR_REOPENED = 'pullreq_reopened',
   PR_BRANCH_UPDATED = 'pullreq_branch_updated'
 }
 
@@ -55,6 +57,8 @@ interface FormData {
   tagCreated: boolean
   tagUpdated: boolean
   tagDeleted: boolean
+  prCreated: boolean
+  prReopened: boolean
   prBranchUpdated: boolean
 }
 
@@ -90,6 +94,8 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
             tagCreated: webhook?.triggers?.includes(WebhookIndividualEvent.TAG_CREATED) || false,
             tagUpdated: webhook?.triggers?.includes(WebhookIndividualEvent.TAG_UPDATED) || false,
             tagDeleted: webhook?.triggers?.includes(WebhookIndividualEvent.TAG_DELETED) || false,
+            prCreated: webhook?.triggers?.includes(WebhookIndividualEvent.PR_CREATED) || false,
+            prReopened: webhook?.triggers?.includes(WebhookIndividualEvent.PR_REOPENED) || false,
             prBranchUpdated: webhook?.triggers?.includes(WebhookIndividualEvent.PR_BRANCH_UPDATED) || false,
             events: (webhook?.triggers?.length || 0) > 0 ? WebhookEventType.INDIVIDUAL : WebhookEventType.ALL
           }}
@@ -125,6 +131,12 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                 triggers.push(WebhookIndividualEvent.TAG_DELETED)
               }
 
+              if (formData.prCreated) {
+                triggers.push(WebhookIndividualEvent.PR_CREATED)
+              }
+              if (formData.prReopened) {
+                triggers.push(WebhookIndividualEvent.PR_REOPENED)
+              }
               if (formData.prBranchUpdated) {
                 triggers.push(WebhookIndividualEvent.PR_BRANCH_UPDATED)
               }
@@ -242,6 +254,16 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                         />
                       </section>
                       <section>
+                        <FormInput.CheckBox
+                          label={getString('webhookPRCreated')}
+                          name="prCreated"
+                          className={css.checkbox}
+                        />
+                        <FormInput.CheckBox
+                          label={getString('webhookPRReopened')}
+                          name="prReopened"
+                          className={css.checkbox}
+                        />
                         <FormInput.CheckBox
                           label={getString('webhookPRBranchUpdated')}
                           name="prBranchUpdated"

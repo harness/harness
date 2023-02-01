@@ -18,6 +18,7 @@ type BranchUpdatedPayload struct {
 	Base
 	OldSHA string `json:"old_sha"`
 	NewSHA string `json:"new_sha"`
+	Forced bool   `json:"forced"`
 }
 
 func (r *Reporter) BranchUpdated(ctx context.Context, payload *BranchUpdatedPayload) {

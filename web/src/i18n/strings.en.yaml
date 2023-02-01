@@ -256,6 +256,8 @@ webhookTagCreated: Tag created
 webhookTagUpdated: Tag updated
 webhookTagDeleted: Tag deleted
 webhookPRBranchUpdated: PR branch updated
+webhookPRCreated: PR created
+webhookPRReopened: PR reopened
 nameYourWebhook: Name your webhook
 submitReview: Submit Review
 approve: Approve

@@ -26,17 +26,26 @@ func (s *Service) handleEventTagCreated(ctx context.Context,
 			}
 			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
 
-			return &ReferenceBody{
-				Trigger:   enum.WebhookTriggerTagCreated,
-				Repo:      repoInfo,
-				Principal: principalInfoFrom(principal),
-				Ref: ReferenceInfo{
-					Name: event.Payload.Ref,
-					Repo: repoInfo,
+			return &ReferencePayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerTagCreated,
+					Repo:      repoInfo,
+					Principal: principalInfoFrom(principal),
 				},
-				Before: types.NilSHA,
-				After:  event.Payload.SHA,
-				Commit: &commitInfo,
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: event.Payload.Ref,
+						Repo: repoInfo,
+					},
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:    event.Payload.SHA,
+					Commit: &commitInfo,
+				},
+				ReferenceUpdateSegment: ReferenceUpdateSegment{
+					OldSHA: types.NilSHA,
+					Forced: false,
+				},
 			}, nil
 		})
 }
@@ -54,18 +63,26 @@ func (s *Service) handleEventTagUpdated(ctx context.Context,
 			}
 			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
 
-			return &ReferenceBody{
-				Trigger:   enum.WebhookTriggerTagUpdated,
-				Repo:      repoInfo,
-				Principal: principalInfoFrom(principal),
-				Ref: ReferenceInfo{
-					Name: event.Payload.Ref,
-					Repo: repoInfo,
+			return &ReferencePayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerTagUpdated,
+					Repo:      repoInfo,
+					Principal: principalInfoFrom(principal),
 				},
-				Before: event.Payload.OldSHA,
-				After:  event.Payload.NewSHA,
-				Forced: event.Payload.Forced,
-				Commit: &commitInfo,
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: event.Payload.Ref,
+						Repo: repoInfo,
+					},
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:    event.Payload.NewSHA,
+					Commit: &commitInfo,
+				},
+				ReferenceUpdateSegment: ReferenceUpdateSegment{
+					OldSHA: event.Payload.OldSHA,
+					Forced: event.Payload.Forced,
+				},
 			}, nil
 		})
 }
@@ -79,16 +96,26 @@ func (s *Service) handleEventTagDeleted(ctx context.Context,
 		func(principal *types.Principal, repo *types.Repository) (any, error) {
 			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
 
-			return &ReferenceBody{
-				Trigger:   enum.WebhookTriggerTagDeleted,
-				Repo:      repoInfo,
-				Principal: principalInfoFrom(principal),
-				Ref: ReferenceInfo{
-					Name: event.Payload.Ref,
-					Repo: repoInfo,
+			return &ReferencePayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerTagDeleted,
+					Repo:      repoInfo,
+					Principal: principalInfoFrom(principal),
 				},
-				Before: event.Payload.SHA,
-				After:  types.NilSHA,
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: event.Payload.Ref,
+						Repo: repoInfo,
+					},
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:    types.NilSHA,
+					Commit: nil,
+				},
+				ReferenceUpdateSegment: ReferenceUpdateSegment{
+					OldSHA: event.Payload.SHA,
+					Forced: false,
+				},
 			}, nil
 		})
 }

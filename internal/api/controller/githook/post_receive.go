@@ -78,7 +78,7 @@ func (c *Controller) reportBranchEvent(ctx context.Context,
 			Ref:         branchUpdate.Ref,
 			OldSHA:      branchUpdate.Old,
 			NewSHA:      branchUpdate.New,
-			// Forced:  false, // TODO: data not available yet
+			Forced:      false, // TODO: data not available yet
 		})
 	}
 }

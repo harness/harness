@@ -13,6 +13,46 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+/*
+ * The idea of segments is to expose similar fields using the same structure.
+ * This makes consumption on webhook payloads easier as we ensure related webhooks have similar payload formats.
+ * Segments are meant to be embedded, while Infos are meant to be used as fields.
+ */
+
+// BaseSegment contains base info of all payloads for webhooks.
+type BaseSegment struct {
+	Trigger   enum.WebhookTrigger `json:"trigger"`
+	Repo      RepositoryInfo      `json:"repo"`
+	Principal PrincipalInfo       `json:"principal"`
+}
+
+// ReferenceSegment contains the reference info for webhooks.
+type ReferenceSegment struct {
+	Ref ReferenceInfo `json:"ref"`
+}
+
+// ReferenceDetailsSegment contains extra defails for reference related payloads for webhooks.
+type ReferenceDetailsSegment struct {
+	SHA    string      `json:"sha"`
+	Commit *CommitInfo `json:"commit,omitempty"`
+}
+
+// ReferenceUpdateSegment contains extra details for reference update related payloads for webhooks.
+type ReferenceUpdateSegment struct {
+	OldSHA string `json:"old_sha"`
+	Forced bool   `json:"forced"`
+}
+
+// PullReqTargetReferenceSegment contains details for the pull req target reference for webhooks.
+type PullReqTargetReferenceSegment struct {
+	TargetRef ReferenceInfo `json:"target_ref"`
+}
+
+// PullReqSegment contains details for all pull req related payloads for webhooks.
+type PullReqSegment struct {
+	PullReq PullReqInfo `json:"pull_req"`
+}
+
 // RepositoryInfo describes the repo related info for a webhook payload.
 // NOTE: don't use types package as we want webhook payload to be independent from API calls.
 type RepositoryInfo struct {

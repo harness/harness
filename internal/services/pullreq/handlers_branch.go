@@ -52,6 +52,7 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 			},
 			OldSHA: event.Payload.OldSHA,
 			NewSHA: event.Payload.NewSHA,
+			Forced: event.Payload.Forced,
 		})
 		return nil
 	})

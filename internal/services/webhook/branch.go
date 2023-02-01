@@ -16,18 +16,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// ReferenceBody describes the body of Reference related webhook triggers.
-// NOTE: Use a single payload format to make it easier for consumers!
-// TODO: move in separate package for small import?
-type ReferenceBody struct {
-	Trigger   enum.WebhookTrigger `json:"trigger"`
-	Repo      RepositoryInfo      `json:"repo"`
-	Principal PrincipalInfo       `json:"principal"`
-	Ref       ReferenceInfo       `json:"ref"`
-	Before    string              `json:"before"`
-	After     string              `json:"after"`
-	Commit    *CommitInfo         `json:"commit,omitempty"`
-	Forced    bool                `json:"forced"`
+// ReferencePayload describes the payload of Reference related webhook triggers.
+// Note: Use same payload for all reference operations to make it easier for consumers.
+type ReferencePayload struct {
+	BaseSegment
+	ReferenceSegment
+	ReferenceDetailsSegment
+	ReferenceUpdateSegment
 }
 
 // handleEventBranchCreated handles branch created events
@@ -43,17 +38,26 @@ func (s *Service) handleEventBranchCreated(ctx context.Context,
 			}
 			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
 
-			return &ReferenceBody{
-				Trigger:   enum.WebhookTriggerBranchCreated,
-				Repo:      repoInfo,
-				Principal: principalInfoFrom(principal),
-				Ref: ReferenceInfo{
-					Name: event.Payload.Ref,
-					Repo: repoInfo,
+			return &ReferencePayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerBranchCreated,
+					Repo:      repoInfo,
+					Principal: principalInfoFrom(principal),
 				},
-				Before: types.NilSHA,
-				After:  event.Payload.SHA,
-				Commit: &commitInfo,
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: event.Payload.Ref,
+						Repo: repoInfo,
+					},
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:    event.Payload.SHA,
+					Commit: &commitInfo,
+				},
+				ReferenceUpdateSegment: ReferenceUpdateSegment{
+					OldSHA: types.NilSHA,
+					Forced: false,
+				},
 			}, nil
 		})
 }
@@ -71,18 +75,26 @@ func (s *Service) handleEventBranchUpdated(ctx context.Context,
 			}
 			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
 
-			return &ReferenceBody{
-				Trigger:   enum.WebhookTriggerBranchUpdated,
-				Repo:      repoInfo,
-				Principal: principalInfoFrom(principal),
-				Ref: ReferenceInfo{
-					Name: event.Payload.Ref,
-					Repo: repoInfo,
+			return &ReferencePayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerBranchUpdated,
+					Repo:      repoInfo,
+					Principal: principalInfoFrom(principal),
 				},
-				Before: event.Payload.OldSHA,
-				After:  event.Payload.NewSHA,
-				Commit: &commitInfo,
-				// Forced: true/false, // TODO: data not available yet
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: event.Payload.Ref,
+						Repo: repoInfo,
+					},
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:    event.Payload.NewSHA,
+					Commit: &commitInfo,
+				},
+				ReferenceUpdateSegment: ReferenceUpdateSegment{
+					OldSHA: event.Payload.OldSHA,
+					Forced: event.Payload.Forced,
+				},
 			}, nil
 		})
 }
@@ -96,16 +108,26 @@ func (s *Service) handleEventBranchDeleted(ctx context.Context,
 		func(principal *types.Principal, repo *types.Repository) (any, error) {
 			repoInfo := repositoryInfoFrom(repo, s.urlProvider)
 
-			return &ReferenceBody{
-				Trigger:   enum.WebhookTriggerBranchDeleted,
-				Repo:      repoInfo,
-				Principal: principalInfoFrom(principal),
-				Ref: ReferenceInfo{
-					Name: event.Payload.Ref,
-					Repo: repoInfo,
+			return &ReferencePayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerBranchDeleted,
+					Repo:      repoInfo,
+					Principal: principalInfoFrom(principal),
 				},
-				Before: event.Payload.SHA,
-				After:  types.NilSHA,
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: event.Payload.Ref,
+						Repo: repoInfo,
+					},
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:    types.NilSHA,
+					Commit: nil,
+				},
+				ReferenceUpdateSegment: ReferenceUpdateSegment{
+					OldSHA: event.Payload.SHA,
+					Forced: false,
+				},
 			}, nil
 		})
 }
