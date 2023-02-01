@@ -1,17 +1,9 @@
-import React, { lazy, Suspense } from 'react'
-import { Text } from '@harness/uicore'
+import React from 'react'
 import type { SourceCodeEditorProps } from 'utils/Utils'
-import { useStrings } from 'framework/strings'
+import MonacoSourceCodeEditor from './MonacoSourceCodeEditor'
 
 function Editor(props: SourceCodeEditorProps) {
-  const { getString } = useStrings()
-  const MonacoSourceCodeEditor = lazy(() => import('./MonacoSourceCodeEditor'))
-
-  return (
-    <Suspense fallback={<Text>{getString('loading')}</Text>}>
-      <MonacoSourceCodeEditor {...props} />
-    </Suspense>
-  )
+  return <MonacoSourceCodeEditor {...props} />
 }
 
 export const SourceCodeEditor = React.memo(Editor)

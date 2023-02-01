@@ -452,9 +452,7 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
 
     case CommentType.STATE_CHANGE: {
       const openFromDraft =
-        (payload?.payload as Unknown)?.old === (payload?.payload as Unknown)?.new &&
-        (payload?.payload as Unknown)?.new === 'open' &&
-        (payload?.payload as Unknown)?.is_draft === false
+        (payload?.payload as Unknown)?.old_draft === true && (payload?.payload as Unknown)?.new_draft === false
 
       return (
         <Container>

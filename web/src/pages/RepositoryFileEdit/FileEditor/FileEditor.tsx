@@ -111,7 +111,7 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
         setFileName(newFilename)
       }
     }
-  }, [isNew])
+  }, [isNew, name])
   return (
     <Container className={css.container}>
       <Layout.Horizontal className={css.heading}>

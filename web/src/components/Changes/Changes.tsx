@@ -195,7 +195,7 @@ export const Changes: React.FC<ChangesProps> = ({
                   <ReviewDecisionButton
                     repoMetadata={repoMetadata}
                     pullRequestMetadata={pullRequestMetadata}
-                    shouldHide={readOnly || pullRequestMetadata?.state === 'merged' || !!pullRequestMetadata?.is_draft}
+                    shouldHide={readOnly || pullRequestMetadata?.state === 'merged'}
                   />
                 </Layout.Horizontal>
               </Container>
