@@ -32,8 +32,8 @@ func (c *Controller) RawDiff(
 		return fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
-	headRef := pr.TargetBranch
-	baseRef := pr.SourceBranch
+	headRef := pr.SourceBranch
+	baseRef := pr.TargetBranch
 	if pr.State == enum.PullReqStateMerged {
 		if pr.MergeBaseSHA != nil {
 			baseRef = *pr.MergeBaseSHA
