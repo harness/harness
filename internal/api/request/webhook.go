@@ -17,11 +17,11 @@ const (
 )
 
 func GetWebhookIDFromPath(r *http.Request) (int64, error) {
-	return PathParamAsInt64(r, PathParamWebhookID)
+	return PathParamAsPositiveInt64(r, PathParamWebhookID)
 }
 
 func GetWebhookExecutionIDFromPath(r *http.Request) (int64, error) {
-	return PathParamAsInt64(r, PathParamWebhookExecutionID)
+	return PathParamAsPositiveInt64(r, PathParamWebhookExecutionID)
 }
 
 // ParseWebhookFilter extracts the Webhook query parameters for listing from the url.

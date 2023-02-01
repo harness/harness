@@ -16,7 +16,7 @@ const (
 )
 
 func GetPathIDFromPath(r *http.Request) (int64, error) {
-	return PathParamAsInt64(r, PathParamPathID)
+	return PathParamAsPositiveInt64(r, PathParamPathID)
 }
 
 // ParseSortPath extracts the path sort parameter from the url.

@@ -5,7 +5,6 @@
 package request
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -42,7 +41,7 @@ const (
 func PathParamOrError(r *http.Request, paramName string) (string, error) {
 	value := chi.URLParam(r, paramName)
 	if value == "" {
-		return "", usererror.BadRequest(fmt.Sprintf("Parameter '%s' not found in request path.", paramName))
+		return "", usererror.BadRequestf("Parameter '%s' not found in request path.", paramName)
 	}
 
 	return value, nil
@@ -79,7 +78,7 @@ func QueryParamOrDefault(r *http.Request, paramName string, deflt string) string
 func QueryParamOrError(r *http.Request, paramName string) (string, error) {
 	val, ok := QueryParam(r, paramName)
 	if !ok {
-		return "", usererror.BadRequest(fmt.Sprintf("Parameter '%s' not found in query.", paramName))
+		return "", usererror.BadRequestf("Parameter '%s' not found in query.", paramName)
 	}
 
 	return val, nil
@@ -90,22 +89,7 @@ func QueryParamAsID(r *http.Request, paramName string) (int64, error) {
 	return QueryParamAsPositiveInt64(r, paramName)
 }
 
-// QueryParamAsInt64 extracts an integer parameter from the url.
-func QueryParamAsInt64(r *http.Request, paramName string) (int64, error) {
-	value, ok := QueryParam(r, paramName)
-	if !ok {
-		return 0, nil
-	}
-
-	valueInt, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		return 0, usererror.BadRequest(fmt.Sprintf("Parameter '%s' must be an integer.", paramName))
-	}
-
-	return valueInt, nil
-}
-
-// QueryParamAsPositiveInt64 extracts an integer parameter from the url.
+// QueryParamAsPositiveInt64 extracts an integer parameter from the request query.
 func QueryParamAsPositiveInt64(r *http.Request, paramName string) (int64, error) {
 	value, ok := QueryParam(r, paramName)
 	if !ok {
@@ -114,25 +98,25 @@ func QueryParamAsPositiveInt64(r *http.Request, paramName string) (int64, error)
 
 	valueInt, err := strconv.ParseInt(value, 10, 64)
 	if err != nil || valueInt <= 0 {
-		return 0, usererror.BadRequest(fmt.Sprintf("Parameter '%s' must be a positive integer.", paramName))
+		return 0, usererror.BadRequestf("Parameter '%s' must be a positive integer.", paramName)
 	}
 
 	return valueInt, nil
 }
 
-// PathParamAsInt64 tries to retrieve the parameter from the request and parse it to int64.
-func PathParamAsInt64(r *http.Request, paramName string) (int64, error) {
+// PathParamAsPositiveInt64 extracts an integer parameter from the request path.
+func PathParamAsPositiveInt64(r *http.Request, paramName string) (int64, error) {
 	rawValue, err := PathParamOrError(r, paramName)
 	if err != nil {
 		return 0, err
 	}
 
-	valueAsInt64, err := strconv.ParseInt(rawValue, 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("failed to parse value '%s' of parameter '%s' to int64: %w", rawValue, paramName, err)
+	valueInt, err := strconv.ParseInt(rawValue, 10, 64)
+	if err != nil || valueInt <= 0 {
+		return 0, usererror.BadRequestf("Parameter '%s' must be a positive integer.", paramName)
 	}
 
-	return valueAsInt64, nil
+	return valueInt, nil
 }
 
 // QueryParamAsBoolOrDefault tries to retrieve the parameter from the query and parse it to bool.
@@ -144,7 +128,7 @@ func QueryParamAsBoolOrDefault(r *http.Request, paramName string, deflt bool) (b
 
 	boolValue, err := strconv.ParseBool(rawValue)
 	if err != nil {
-		return false, fmt.Errorf("failed to parse value '%s' of parameter '%s' to bool: %w", rawValue, paramName, err)
+		return false, usererror.BadRequestf("Parameter '%s' must be a boolean.", paramName)
 	}
 
 	return boolValue, nil
