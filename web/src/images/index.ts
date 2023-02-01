@@ -4,13 +4,13 @@ import PrClosed from 'images/pull-request-closed.svg'
 import PrRejected from 'images/pull-request-rejected.svg'
 import PrDraft from 'images/pull-request-draft.svg'
 import EmptyState from 'images/empty-state.svg'
-
+import error404 from 'images/404-error.svg'
 export const Images = {
   PrOpen,
   PrMerged,
   PrClosed,
   PrRejected,
   PrDraft,
-
+  error404,
   EmptyState
 }

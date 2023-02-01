@@ -20,6 +20,7 @@ export interface StringsMap {
   branchDivergenceAhead: string
   branchDivergenceAheadBehind: string
   branchDivergenceBehind: string
+  branchDoesNotHaveFile: string
   branchName: string
   branchNotFound: string
   branchProtectionRules: string
@@ -94,6 +95,7 @@ export interface StringsMap {
   enterNewBranchName: string
   enterRepoName: string
   enterSecret: string
+  error404Text: string
   existingAccount: string
   failedToCreateBranch: string
   failedToCreateRepo: string

@@ -313,3 +313,5 @@ readMe: README,
 license: LICENSE
 gitIgnore: .gitignore
 and: and
+error404Text: This is not the web page that you are looking for
+branchDoesNotHaveFile: The "{repoName}" repository doesn't contain the "{fileName}" path in the "{branchName}" branch
