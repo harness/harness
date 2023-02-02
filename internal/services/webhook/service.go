@@ -25,6 +25,14 @@ const (
 )
 
 type Config struct {
+	// UserAgentIdentity specifies the identity used for the user agent header
+	// IMPORTANT: do not include version.
+	UserAgentIdentity string `envconfig:"GITNESS_WEBHOOK_USER_AGENT_IDENTITY" default:"Gitness"`
+	// HeaderIdentity specifies the identity used for headers in webhook calls (e.g. X-Gitness-Trigger, ...).
+	// NOTE: If no value is provided, the UserAgentIdentity will be used.
+	HeaderIdentity string `envconfig:"GITNESS_WEBHOOK_HEADER_IDENTITY"`
+	// EventReaderName is the name used to read events from stream.
+	// Note: this should be different for every running instance.
 	EventReaderName     string `envconfig:"GITNESS_WEBHOOK_EVENT_READER_NAME"`
 	Concurrency         int    `envconfig:"GITNESS_WEBHOOK_CONCURRENCY" default:"4"`
 	MaxRetries          int    `envconfig:"GITNESS_WEBHOOK_MAX_RETRIES" default:"3"`
@@ -32,18 +40,26 @@ type Config struct {
 	AllowLoopback       bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_LOOPBACK" default:"false"`
 }
 
-func (c *Config) Validate() error {
+func (c *Config) Prepare() error {
 	if c == nil {
 		return errors.New("config is required")
 	}
 	if c.EventReaderName == "" {
 		return errors.New("config.EventReaderName is required")
 	}
+	if c.UserAgentIdentity == "" {
+		return errors.New("config.UserAgentIdentity is required")
+	}
 	if c.Concurrency < 1 {
 		return errors.New("config.Concurrency has to be a positive number")
 	}
 	if c.MaxRetries < 0 {
 		return errors.New("config.MaxRetries can't be negative")
+	}
+
+	// Backfill data
+	if c.HeaderIdentity == "" {
+		c.HeaderIdentity = c.UserAgentIdentity
 	}
 
 	return nil
@@ -61,6 +77,8 @@ type Service struct {
 
 	secureHTTPClient   *http.Client
 	insecureHTTPClient *http.Client
+
+	config Config
 }
 
 func NewService(ctx context.Context, config Config,
@@ -69,7 +87,7 @@ func NewService(ctx context.Context, config Config,
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
 	repoStore store.RepoStore, pullreqStore store.PullReqStore, urlProvider *url.Provider,
 	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Service, error) {
-	if err := config.Validate(); err != nil {
+	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided config is invalid: %w", err)
 	}
 	service := &Service{
@@ -83,6 +101,8 @@ func NewService(ctx context.Context, config Config,
 
 		secureHTTPClient:   newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),
 		insecureHTTPClient: newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true),
+
+		config: config,
 	}
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,

@@ -212,7 +212,7 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 	defer cancel()
 
 	// create request from webhook and body
-	req, err := prepareHTTPRequest(ctx, &execution, webhook, body)
+	req, err := s.prepareHTTPRequest(ctx, &execution, triggerType, webhook, body)
 	if err != nil {
 		return &execution, err
 	}
@@ -266,10 +266,10 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 }
 
 // prepareHTTPRequest prepares a new http.Request object for the webhook using the provided body as request body.
-// All execution.Request.XXX values are set accordingly
+// All execution.Request.XXX values are set accordingly.
 // NOTE: if the body is an io.Reader, the value is used as response body as is, otherwise it'll be JSON serialized.
-func prepareHTTPRequest(ctx context.Context, execution *types.WebhookExecution,
-	webhook *types.Webhook, body any) (*http.Request, error) {
+func (s *Service) prepareHTTPRequest(ctx context.Context, execution *types.WebhookExecution,
+	triggerType enum.WebhookTrigger, webhook *types.Webhook, body any) (*http.Request, error) {
 	// set URL as is (already has been validated, any other error will be caught in request creation)
 	execution.Request.URL = webhook.URL
 
@@ -318,8 +318,12 @@ func prepareHTTPRequest(ctx context.Context, execution *types.WebhookExecution,
 	}
 
 	// setup headers
-	req.Header.Add("User-Agent", fmt.Sprintf("Gitness/%s", version.Version))
+	req.Header.Add("User-Agent", fmt.Sprintf("%s/%s", s.config.UserAgentIdentity, version.Version))
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add(s.toXHeader("Trigger"), string(triggerType))
+	req.Header.Add(s.toXHeader("Webhook-Id"), fmt.Sprint(webhook.ID))
+	req.Header.Add(s.toXHeader("Webhook-Parent-Type"), string(webhook.ParentType))
+	req.Header.Add(s.toXHeader("Webhook-Parent-Id"), fmt.Sprint(webhook.ParentID))
 
 	// add HMAC only if a secret was provided
 	if webhook.Secret != "" {
@@ -328,8 +332,7 @@ func prepareHTTPRequest(ctx context.Context, execution *types.WebhookExecution,
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate SHA256 based HMAC: %w", err)
 		}
-		// TODO: Take 'Gitness' as config input?
-		req.Header.Add("X-Gitness-Signature", hmac)
+		req.Header.Add(s.toXHeader("Signature"), hmac)
 	}
 
 	hBuffer := &bytes.Buffer{}
@@ -343,6 +346,10 @@ func prepareHTTPRequest(ctx context.Context, execution *types.WebhookExecution,
 	execution.Request.Headers = hBuffer.String()
 
 	return req, nil
+}
+
+func (s *Service) toXHeader(name string) string {
+	return fmt.Sprintf("X-%s-%s", s.config.HeaderIdentity, name)
 }
 
 //nolint:funlen // refactor if needed
