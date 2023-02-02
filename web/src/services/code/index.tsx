@@ -879,6 +879,31 @@ export const useCommitFiles = ({ repo_ref, ...props }: UseCommitFilesProps) =>
     { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
+export interface GetCommitPathParams {
+  repo_ref: string
+  commit_sha: string
+}
+
+export type GetCommitProps = Omit<GetProps<TypesCommit, UsererrorError, void, GetCommitPathParams>, 'path'> &
+  GetCommitPathParams
+
+export const GetCommit = ({ repo_ref, commit_sha, ...props }: GetCommitProps) => (
+  <Get<TypesCommit, UsererrorError, void, GetCommitPathParams>
+    path={`/repos/${repo_ref}/commits/${commit_sha}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseGetCommitProps = Omit<UseGetProps<TypesCommit, UsererrorError, void, GetCommitPathParams>, 'path'> &
+  GetCommitPathParams
+
+export const useGetCommit = ({ repo_ref, commit_sha, ...props }: UseGetCommitProps) =>
+  useGet<TypesCommit, UsererrorError, void, GetCommitPathParams>(
+    (paramsInPath: GetCommitPathParams) => `/repos/${paramsInPath.repo_ref}/commits/${paramsInPath.commit_sha}`,
+    { base: getConfig('code'), pathParams: { repo_ref, commit_sha }, ...props }
+  )
+
 export interface CalculateCommitDivergencePathParams {
   repo_ref: string
 }

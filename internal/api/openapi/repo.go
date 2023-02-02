@@ -98,6 +98,11 @@ type listCommitsRequest struct {
 	repoRequest
 }
 
+type GetCommitRequest struct {
+	repoRequest
+	CommitSHA string `path:"commit_sha"`
+}
+
 type calculateCommitDivergenceRequest struct {
 	repoRequest
 	repo.GetCommitDivergencesInput
@@ -385,6 +390,17 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/commits", opListCommits)
+
+	opGetCommit := openapi3.Operation{}
+	opGetCommit.WithTags("repository")
+	opGetCommit.WithMapOfAnything(map[string]interface{}{"operationId": "getCommit"})
+	_ = reflector.SetRequest(&opGetCommit, new(GetCommitRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opGetCommit, types.Commit{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opGetCommit, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opGetCommit, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opGetCommit, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opGetCommit, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/commits/{commit_sha}", opGetCommit)
 
 	opCalulateCommitDivergence := openapi3.Operation{}
 	opCalulateCommitDivergence.WithTags("repository")

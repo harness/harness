@@ -14,6 +14,7 @@ import (
 const (
 	QueryParamGitRef        = "git_ref"
 	QueryParamIncludeCommit = "include_commit"
+	PathParamCommitSHA      = "commit_sha"
 )
 
 func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
@@ -22,6 +23,10 @@ func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
 
 func GetIncludeCommitFromQueryOrDefault(r *http.Request, deflt bool) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamIncludeCommit, deflt)
+}
+
+func GetCommitSHAFromPath(r *http.Request) (string, error) {
+	return PathParamOrError(r, PathParamCommitSHA)
 }
 
 // ParseSortBranch extracts the branch sort parameter from the url.

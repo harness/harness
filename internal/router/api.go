@@ -173,6 +173,11 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Co
 
 				r.Post("/calculate-divergence", handlerrepo.HandleCalculateCommitDivergence(repoCtrl))
 				r.Post("/", handlerrepo.HandleCommitFiles(repoCtrl))
+
+				// per commit operations
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamCommitSHA), func(r chi.Router) {
+					r.Get("/", handlerrepo.HandleGetCommit(repoCtrl))
+				})
 			})
 
 			// branch operations

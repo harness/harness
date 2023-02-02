@@ -13,9 +13,9 @@ import (
 )
 
 /*
- * Gets a given branch.
+ * Gets a given commit.
  */
-func HandleGetBranch(repoCtrl *repo.Controller) http.HandlerFunc {
+func HandleGetCommit(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -24,18 +24,18 @@ func HandleGetBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		branchName, err := request.GetRemainderFromPath(r)
+		commitSHA, err := request.GetCommitSHAFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		branch, err := repoCtrl.GetBranch(ctx, session, repoRef, branchName)
+		commit, err := repoCtrl.GetCommit(ctx, session, repoRef, commitSHA)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, branch)
+		render.JSON(w, http.StatusOK, commit)
 	}
 }

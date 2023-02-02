@@ -33,6 +33,8 @@ func processGiteaErrorf(err error, format string, args ...interface{}) error {
 	switch {
 	case gitea.IsErrNotExist(err):
 		return types.ErrNotFound
+	case gitea.IsErrBranchNotExist(err):
+		return types.ErrNotFound
 	default:
 		return fallbackErr
 	}
