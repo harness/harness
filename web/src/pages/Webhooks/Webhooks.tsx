@@ -1,7 +1,24 @@
 import React, { useMemo, useState } from 'react'
-import { Container, PageBody, Text, Color, TableV2, Layout, Utils, useToaster, IconName, Toggle } from '@harness/uicore'
+import {
+  Container,
+  PageBody,
+  Text,
+  Color,
+  TableV2,
+  Layout,
+  Utils,
+  useToaster,
+  IconName,
+  Toggle,
+  Popover,
+  Button,
+  ButtonVariation,
+  FontVariation,
+  Icon
+} from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import cx from 'classnames'
+import { Position } from '@blueprintjs/core'
 import { useGet, useMutate } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import { useAppContext } from 'AppContext'
@@ -58,36 +75,81 @@ export default function Webhooks() {
             verb: 'PATCH',
             path: `/api/v1/repos/${repoMetadata?.path}/+/webhooks/${row.original?.id}`
           })
+          const [popoverDialogOpen, setPopoverDialogOpen] = useState(false)
+
           return (
             <Layout.Horizontal spacing="medium" padding={{ left: 'medium' }} flex={{ alignItems: 'center' }}>
+              <Icon name="code-webhook" size={24} />
+
               <Container onClick={Utils.stopEvent}>
-                <Toggle
-                  key={row.original.id}
-                  className={cx(css.toggle, checked ? css.toggleEnable : css.toggleDisable)}
-                  checked={checked}
-                  onChange={() => {
-                    const data = { enabled: !checked }
-                    mutate(data)
-                      .then(() => {
-                        showSuccess(getString('webhookUpdated'))
-                        refetchWebhooks()
-                      })
-                      .catch(e => {
-                        showError(e)
-                      })
-                    setChecked(!checked)
-                  }}></Toggle>
+                <Popover
+                  isOpen={popoverDialogOpen}
+                  onInteraction={nextOpenState => {
+                    setPopoverDialogOpen(nextOpenState)
+                  }}
+                  content={
+                    <Container padding={'medium'} width={250}>
+                      <Layout.Vertical>
+                        <Text font={{ variation: FontVariation.H5, size: 'medium' }}>
+                          {getString('webhookDialogTitle')}
+                        </Text>
+                        <Text
+                          padding={{ top: 'medium', bottom: 'medium', left: 'xsmall' }}
+                          font={{ variation: FontVariation.BODY2_SEMI }}>
+                          {getString('webhookDialogContent')}
+                        </Text>
+                        <Layout.Horizontal>
+                          <Button
+                            variation={ButtonVariation.PRIMARY}
+                            text={getString('confirm')}
+                            onClick={() => {
+                              const data = { enabled: !checked }
+                              mutate(data)
+                                .then(() => {
+                                  showSuccess(getString('webhookUpdated'))
+                                })
+                                .catch(e => {
+                                  showError(e)
+                                })
+                              setChecked(!checked)
+                              setPopoverDialogOpen(false)
+                            }}></Button>
+                          <Button
+                            text={getString('cancel')}
+                            onClick={() => {
+                              setPopoverDialogOpen(false)
+                            }}></Button>
+                        </Layout.Horizontal>
+                      </Layout.Vertical>
+                    </Container>
+                  }
+                  position={Position.RIGHT}
+                  interactionKind="click">
+                  <Toggle
+                    key={row.original.id}
+                    className={cx(css.toggle, checked ? css.toggleEnable : css.toggleDisable)}
+                    checked={checked}></Toggle>
+                </Popover>
               </Container>
               <Container padding={{ left: 'small' }} style={{ flexGrow: 1 }}>
                 <Layout.Horizontal spacing="small">
-                  <Text color={Color.PRIMARY_7} className={css.title}>
+                  <Text
+                    color={Color.PRIMARY_7}
+                    padding={{ right: 'small' }}
+                    lineClamp={1}
+                    width={300}
+                    className={css.title}>
                     {row.original.display_name}
                   </Text>
                   {!!row.original.triggers?.length && (
-                    <Text color={Color.GREY_500}>({row.original.triggers.join(', ')})</Text>
+                    <Text padding={{ left: 'small', right: 'small' }} color={Color.GREY_500}>
+                      ({row.original.triggers.join(', ')})
+                    </Text>
                   )}
                   {!row.original.triggers?.length && (
-                    <Text color={Color.GREY_500}>{getString('webhookAllEventsSelected')}</Text>
+                    <Text padding={{ left: 'small', right: 'small' }} color={Color.GREY_500}>
+                      {getString('webhookAllEventsSelected')}
+                    </Text>
                   )}
                 </Layout.Horizontal>
               </Container>
@@ -99,7 +161,12 @@ export default function Webhooks() {
         id: 'executionStatus',
         width: '15px',
         Cell: ({ row }: CellProps<OpenapiWebhookType>) => {
-          return <Text margin={{ right: 'medium' }} {...generateLastExecutionStateIcon(row.original)}></Text>
+          return (
+            <Text
+              iconProps={{ size: 24 }}
+              margin={{ right: 'medium' }}
+              {...generateLastExecutionStateIcon(row.original)}></Text>
+          )
         }
       },
       {
@@ -233,10 +300,10 @@ const generateLastExecutionStateIcon = (
       icon = 'danger-icon'
       break
     case 'retriable_error':
-      icon = 'coverage-status-error'
+      icon = 'solid-error'
       break
     case 'success':
-      icon = 'coverage-status-success'
+      icon = 'success-tick'
       break
     default:
       color = Color.GREY_250
