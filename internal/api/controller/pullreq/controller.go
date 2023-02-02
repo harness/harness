@@ -168,6 +168,7 @@ func (c *Controller) checkIfAlreadyExists(ctx context.Context,
 			map[string]any{
 				"type":   "pr already exists",
 				"number": existing[0].Number,
+				"title":  existing[0].Title,
 			},
 		)
 	}

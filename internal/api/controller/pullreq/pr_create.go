@@ -67,7 +67,7 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
-	if err = c.checkIfAlreadyExists(ctx, targetRepo.ID, sourceRepo.ID, in.SourceBranch, in.TargetBranch); err != nil {
+	if err = c.checkIfAlreadyExists(ctx, targetRepo.ID, sourceRepo.ID, in.TargetBranch, in.SourceBranch); err != nil {
 		return nil, err
 	}
 
