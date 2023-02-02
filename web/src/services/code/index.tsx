@@ -773,6 +773,31 @@ export const useDeleteBranch = ({ repo_ref, ...props }: UseDeleteBranchProps) =>
     { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
+export interface GetBranchPathParams {
+  repo_ref: string
+  branch_name: string
+}
+
+export type GetBranchProps = Omit<GetProps<RepoBranch, UsererrorError, void, GetBranchPathParams>, 'path'> &
+  GetBranchPathParams
+
+export const GetBranch = ({ repo_ref, branch_name, ...props }: GetBranchProps) => (
+  <Get<RepoBranch, UsererrorError, void, GetBranchPathParams>
+    path={`/repos/${repo_ref}/branches/${branch_name}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseGetBranchProps = Omit<UseGetProps<RepoBranch, UsererrorError, void, GetBranchPathParams>, 'path'> &
+  GetBranchPathParams
+
+export const useGetBranch = ({ repo_ref, branch_name, ...props }: UseGetBranchProps) =>
+  useGet<RepoBranch, UsererrorError, void, GetBranchPathParams>(
+    (paramsInPath: GetBranchPathParams) => `/repos/${paramsInPath.repo_ref}/branches/${paramsInPath.branch_name}`,
+    { base: getConfig('code'), pathParams: { repo_ref, branch_name }, ...props }
+  )
+
 export interface ListCommitsQueryParams {
   /**
    * The git reference (branch / tag / commitID) that will be used to retrieve the data. If no value is provided the default branch of the repository is used.

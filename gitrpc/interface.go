@@ -16,6 +16,7 @@ type Interface interface {
 	GetSubmodule(ctx context.Context, params *GetSubmoduleParams) (*GetSubmoduleOutput, error)
 	GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobOutput, error)
 	CreateBranch(ctx context.Context, params *CreateBranchParams) (*CreateBranchOutput, error)
+	GetBranch(ctx context.Context, params *GetBranchParams) (*GetBranchOutput, error)
 	DeleteBranch(ctx context.Context, params *DeleteBranchParams) error
 	ListBranches(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error)
 

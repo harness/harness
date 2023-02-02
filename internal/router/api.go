@@ -179,6 +179,9 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Co
 			r.Route("/branches", func(r chi.Router) {
 				r.Get("/", handlerrepo.HandleListBranches(repoCtrl))
 				r.Post("/", handlerrepo.HandleCreateBranch(repoCtrl))
+
+				// per branch operations (can't be grouped in single route)
+				r.Get("/*", handlerrepo.HandleGetBranch(repoCtrl))
 				r.Delete("/*", handlerrepo.HandleDeleteBranch(repoCtrl))
 			})
 

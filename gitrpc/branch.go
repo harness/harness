@@ -35,6 +35,16 @@ type CreateBranchOutput struct {
 	Branch Branch
 }
 
+type GetBranchParams struct {
+	ReadParams
+	// BranchName is the name of the branch
+	BranchName string
+}
+
+type GetBranchOutput struct {
+	Branch Branch
+}
+
 type DeleteBranchParams struct {
 	WriteParams
 	// Name is the name of the branch
@@ -81,6 +91,29 @@ func (c *Client) CreateBranch(ctx context.Context, params *CreateBranchParams) (
 	}
 
 	return &CreateBranchOutput{
+		Branch: *branch,
+	}, nil
+}
+
+func (c *Client) GetBranch(ctx context.Context, params *GetBranchParams) (*GetBranchOutput, error) {
+	if params == nil {
+		return nil, ErrNoParamsProvided
+	}
+	resp, err := c.refService.GetBranch(ctx, &rpc.GetBranchRequest{
+		Base:       mapToRPCReadRequest(params.ReadParams),
+		BranchName: params.BranchName,
+	})
+	if err != nil {
+		return nil, processRPCErrorf(err, "failed to get branch from server")
+	}
+
+	var branch *Branch
+	branch, err = mapRPCBranch(resp.GetBranch())
+	if err != nil {
+		return nil, fmt.Errorf("failed to map rpc branch: %w", err)
+	}
+
+	return &GetBranchOutput{
 		Branch: *branch,
 	}, nil
 }

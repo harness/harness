@@ -72,6 +72,31 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 	}, nil
 }
 
+func (s ReferenceService) GetBranch(ctx context.Context,
+	request *rpc.GetBranchRequest) (*rpc.GetBranchResponse, error) {
+	base := request.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
+
+	gitBranch, err := s.adapter.GetBranch(ctx, repoPath,
+		strings.TrimPrefix(request.GetBranchName(), gitReferenceNamePrefixBranch))
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to get gitea branch '%s'", request.GetBranchName())
+	}
+
+	branch, err := mapGitBranch(gitBranch)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.GetBranchResponse{
+		Branch: branch,
+	}, nil
+}
+
 func (s ReferenceService) DeleteBranch(ctx context.Context,
 	request *rpc.DeleteBranchRequest) (*rpc.DeleteBranchResponse, error) {
 	base := request.GetBase()
