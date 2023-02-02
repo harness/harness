@@ -38,7 +38,7 @@ func (c *Controller) Find(
 		return nil, err
 	}
 
-	pr.Stats, err = c.getStats(ctx, repo, pr)
+	pr.Stats.Commits, pr.Stats.FilesChanged, err = c.getStats(ctx, repo, pr)
 	if err != nil {
 		return nil, err
 	}
@@ -50,12 +50,11 @@ func (c *Controller) getStats(
 	ctx context.Context,
 	repo *types.Repository,
 	pr *types.PullReq,
-) (types.PullReqStats, error) {
+) (int, int, error) {
 	// declare variables which will be used in go routines,
 	// no need for atomic operations because writing and reading variable
 	// doesn't happen at the same time
 	var (
-		totalConvs   int64
 		totalCommits int
 		totalFiles   int
 	)
@@ -68,22 +67,6 @@ func (c *Controller) getStats(
 	}
 
 	errGroup, groupCtx := errgroup.WithContext(ctx)
-
-	errGroup.Go(func() error {
-		// return conversations
-		var err error
-		filter := &types.PullReqActivityFilter{
-			Types: []enum.PullReqActivityType{
-				enum.PullReqActivityTypeComment,
-				enum.PullReqActivityTypeCodeComment,
-			},
-		}
-		totalConvs, err = c.activityStore.Count(groupCtx, pr.ID, filter)
-		if err != nil {
-			return fmt.Errorf("failed to count pull request comments: %w", err)
-		}
-		return nil
-	})
 
 	errGroup.Go(func() error {
 		// read total commits
@@ -124,12 +107,8 @@ func (c *Controller) getStats(
 
 	err := errGroup.Wait()
 	if err != nil {
-		return types.PullReqStats{}, err
+		return 0, 0, err
 	}
 
-	return types.PullReqStats{
-		Conversations: totalConvs,
-		Commits:       totalCommits,
-		FilesChanged:  totalFiles,
-	}, nil
+	return totalCommits, totalFiles, nil
 }

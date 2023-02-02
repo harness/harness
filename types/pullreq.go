@@ -22,6 +22,8 @@ type PullReq struct {
 	State   enum.PullReqState `json:"state"`
 	IsDraft bool              `json:"is_draft"`
 
+	CommentCount int `json:"-"` // returned as "conversations" in the Stats
+
 	Title       string `json:"title"`
 	Description string `json:"description"`
 
@@ -43,12 +45,11 @@ type PullReq struct {
 	Stats  PullReqStats   `json:"stats"`
 }
 
-// PullReqStats shows total number of conversations,
-// commits and how many files modified.
+// PullReqStats shows total number of conversations, commits and modified files.
 type PullReqStats struct {
-	Conversations int64 `json:"conversations"`
-	Commits       int   `json:"commits"`
-	FilesChanged  int   `json:"files_changed"`
+	Conversations int `json:"conversations"`
+	Commits       int `json:"commits"`
+	FilesChanged  int `json:"files_changed"`
 }
 
 // PullReqFilter stores pull request query parameters.

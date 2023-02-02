@@ -8,6 +8,7 @@ pullreq_id SERIAL PRIMARY KEY
 ,pullreq_number INTEGER NOT NULL
 ,pullreq_state TEXT NOT NULL
 ,pullreq_is_draft TEXT NOT NULL DEFAULT FALSE
+,pullreq_comment_count INTEGER NOT NULL DEFAULT 0
 ,pullreq_title TEXT NOT NULL
 ,pullreq_description TEXT NOT NULL
 ,pullreq_source_repo_id INTEGER NOT NULL

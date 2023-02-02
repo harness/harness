@@ -15,6 +15,8 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type CommentCreateInput struct {
@@ -56,6 +58,15 @@ func (c *Controller) CommentCreate(
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to create comment: %w", err)
+	}
+
+	_, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+		pr.CommentCount++
+		return nil
+	})
+	if err != nil {
+		// non-critical error
+		log.Ctx(ctx).Err(err).Msgf("failed to increment pull request comment counter")
 	}
 
 	return act, nil

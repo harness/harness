@@ -54,6 +54,8 @@ type pullReq struct {
 	State   enum.PullReqState `db:"pullreq_state"`
 	IsDraft bool              `db:"pullreq_is_draft"`
 
+	CommentCount int `db:"pullreq_comment_count"`
+
 	Title       string `db:"pullreq_title"`
 	Description string `db:"pullreq_description"`
 
@@ -82,6 +84,7 @@ const (
 		,pullreq_edited
 		,pullreq_state
 		,pullreq_is_draft
+		,pullreq_comment_count
 		,pullreq_title
 		,pullreq_description
 		,pullreq_source_repo_id
@@ -165,6 +168,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_edited
 		,pullreq_state
 		,pullreq_is_draft
+		,pullreq_comment_count
 		,pullreq_title
 		,pullreq_description
 		,pullreq_source_repo_id
@@ -184,6 +188,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,:pullreq_edited
 		,:pullreq_state
 		,:pullreq_is_draft
+		,:pullreq_comment_count
 		,:pullreq_title
 		,:pullreq_description
 		,:pullreq_source_repo_id
@@ -220,6 +225,7 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_edited = :pullreq_edited
 		,pullreq_state = :pullreq_state
 		,pullreq_is_draft = :pullreq_is_draft
+		,pullreq_comment_count = :pullreq_comment_count
 		,pullreq_title = :pullreq_title
 		,pullreq_description = :pullreq_description
 		,pullreq_activity_seq = :pullreq_activity_seq
@@ -436,6 +442,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		Edited:        pr.Edited,
 		State:         pr.State,
 		IsDraft:       pr.IsDraft,
+		CommentCount:  pr.CommentCount,
 		Title:         pr.Title,
 		Description:   pr.Description,
 		SourceRepoID:  pr.SourceRepoID,
@@ -450,6 +457,11 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		MergeBaseSHA:  pr.MergeBaseSHA.Ptr(),
 		Author:        types.PrincipalInfo{},
 		Merger:        nil,
+		Stats: types.PullReqStats{
+			Conversations: pr.CommentCount,
+			Commits:       0,
+			FilesChanged:  0,
+		},
 	}
 }
 
@@ -464,6 +476,7 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		Edited:        pr.Edited,
 		State:         pr.State,
 		IsDraft:       pr.IsDraft,
+		CommentCount:  pr.CommentCount,
 		Title:         pr.Title,
 		Description:   pr.Description,
 		SourceRepoID:  pr.SourceRepoID,
