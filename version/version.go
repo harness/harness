@@ -25,18 +25,18 @@ var (
 	minor string
 	// patch is for backwards-compatible bug fixes.
 	patch string
-	// Pre indicates prerelease.
-	Pre = ""
-	// Dev indicates development branch. Releases will be empty string.
-	Dev string
+	// pre indicates prerelease.
+	pre = ""
+	// dev indicates development branch. Releases will be empty string.
+	dev string
 
 	// Version is the specification version that the package types support.
 	Version = semver.Version{
 		Major:      parseVersionNumber(major),
 		Minor:      parseVersionNumber(minor),
 		Patch:      parseVersionNumber(patch),
-		PreRelease: semver.PreRelease(Pre),
-		Metadata:   Dev,
+		PreRelease: semver.PreRelease(pre),
+		Metadata:   dev,
 	}
 )
 

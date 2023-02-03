@@ -69,7 +69,7 @@ test: generate  ## Run the go tests
 	go tool cover -html=coverage.out
 
 run: dep ## Run the gitness binary from source
-	@go run -race -ldflags="-X github.com/harness/gitness/version.Version=1.0.0" .
+	@go run -race -ldflags=${LDFLAGS} .
 
 clean-db: ## delete all data from local database
 	psql postgresql://gitness:gitness@localhost:5432/gitness -f scripts/db/cleanup.sql
