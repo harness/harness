@@ -5,30 +5,48 @@
 // Package version provides the version number.
 package version
 
-import "github.com/coreos/go-semver/semver"
+import (
+	"strconv"
+
+	"github.com/coreos/go-semver/semver"
+)
 
 var (
 	// GitRepository is the git repository that was compiled.
 	GitRepository string
 	// GitCommit is the git commit that was compiled.
 	GitCommit string
-	// Major is for an API incompatible changes.
-	Major int64 = 1
-	// Minor is for functionality in a backwards-compatible manner.
-	Minor int64
-	// Patch is for backwards-compatible bug fixes.
-	Patch int64
+)
+
+var (
+	// major is for an API incompatible changes.
+	major string
+	// minor is for functionality in a backwards-compatible manner.
+	minor string
+	// patch is for backwards-compatible bug fixes.
+	patch string
 	// Pre indicates prerelease.
 	Pre = ""
 	// Dev indicates development branch. Releases will be empty string.
 	Dev string
+
+	// Version is the specification version that the package types support.
+	Version = semver.Version{
+		Major:      parseVersionNumber(major),
+		Minor:      parseVersionNumber(minor),
+		Patch:      parseVersionNumber(patch),
+		PreRelease: semver.PreRelease(Pre),
+		Metadata:   Dev,
+	}
 )
 
-// Version is the specification version that the package types support.
-var Version = semver.Version{
-	Major:      Major,
-	Minor:      Minor,
-	Patch:      Patch,
-	PreRelease: semver.PreRelease(Pre),
-	Metadata:   Dev,
+func parseVersionNumber(versionNum string) int64 {
+	if versionNum == "" {
+		return 0
+	}
+	i, err := strconv.ParseInt(versionNum, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	return i
 }

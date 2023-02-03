@@ -11,6 +11,8 @@ endif
 tools = $(addprefix $(GOBIN)/, golangci-lint goimports govulncheck protoc-gen-go protoc-gen-go-grpc gci)
 deps = $(addprefix $(GOBIN)/, wire dbmate mockgen)
 
+LDFLAGS = "-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.major=${GITNESS_VERSION_MAJOR} -X github.com/harness/gitness/version.minor=${GITNESS_VERSION_MINOR} -X github.com/harness/gitness/version.patch=${GITNESS_VERSION_PATCH}"
+
 ifneq (,$(wildcard ./.local.env))
     include ./.local.env
     export
@@ -47,19 +49,19 @@ generate: $(mocks) wire mocks/mock_client.go proto
 
 build: generate ## Build the all-in-one gitness binary
 	@echo "Building Gitness Server"
-	go build -ldflags="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.Version.Major=${GITNESS_VERSION}" -o ./gitness ./cmd/gitness
+	go build -ldflags=${LDFLAGS} -o ./gitness ./cmd/gitness
 
 harness-build: generate ## Build the all-in-one gitness binary for harness embedded mode
 	@echo "Building Gitness Server for Harness"
-	go build -tags=harness -ldflags="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.Version.Major=${GITNESS_VERSION}" -o ./gitness ./cmd/gitness
+	go build -tags=harness -ldflags=${LDFLAGS} -o ./gitness ./cmd/gitness
 
 build-gitrpc: generate ## Build the gitrpc binary
 	@echo "Building GitRPC Server"
-	go build -ldflags="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.Version.Major=${GITNESS_VERSION}" -o ./gitrpcserver ./cmd/gitrpcserver
+	go build -ldflags=${LDFLAGS} -o ./gitrpcserver ./cmd/gitrpcserver
 
 build-githook: generate ## Build the githook binary
 	@echo "Building GitHook Binary"
-	go build -ldflags="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.Version.Major=${GITNESS_VERSION}" -o ./githook ./cmd/githook
+	go build -ldflags=${LDFLAGS} -o ./githook ./cmd/githook
 
 test: generate  ## Run the go tests
 	@echo "Running tests"
