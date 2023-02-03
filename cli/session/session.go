@@ -23,6 +23,13 @@ type Session struct {
 	AccessToken string `json:"access_token"`
 }
 
+// New creates a new session to be stores to the provided path.
+func New(path string) Session {
+	return Session{
+		path: path,
+	}
+}
+
 // LoadFromPath loads an existing session from a file.
 func LoadFromPath(path string) (Session, error) {
 	session := Session{

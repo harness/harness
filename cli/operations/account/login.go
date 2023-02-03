@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/harness/gitness/cli/provide"
-	"github.com/harness/gitness/cli/session"
 	"github.com/harness/gitness/cli/textui"
 
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -20,6 +19,8 @@ type loginCommand struct {
 }
 
 func (c *loginCommand) run(*kingpin.ParseContext) error {
+	ss := provide.NewSession()
+
 	username, password := textui.Credentials()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -30,7 +31,7 @@ func (c *loginCommand) run(*kingpin.ParseContext) error {
 		return err
 	}
 
-	return session.Session{}.
+	return ss.
 		SetURI(c.server).
 		SetExpiresAt(ts.Token.ExpiresAt).
 		SetAccessToken(ts.AccessToken).

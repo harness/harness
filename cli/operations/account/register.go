@@ -28,6 +28,8 @@ type registerCommand struct {
 }
 
 func (c *registerCommand) run(*kingpin.ParseContext) error {
+	ss := provide.NewSession()
+
 	username, name, email, password := textui.Registration()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -37,7 +39,7 @@ func (c *registerCommand) run(*kingpin.ParseContext) error {
 		return err
 	}
 
-	return session.Session{}.
+	return ss.
 		SetURI(c.server).
 		SetExpiresAt(ts.Token.ExpiresAt).
 		SetAccessToken(ts.AccessToken).

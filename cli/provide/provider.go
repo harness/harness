@@ -19,8 +19,18 @@ import (
 
 const DefaultServerURI = "http://localhost:3000"
 
-func Session() session.Session {
+func NewSession() session.Session {
 	ss, err := newSession()
+	if err != nil {
+		log.Err(err).Msg("failed to get active session")
+		os.Exit(1)
+	}
+
+	return ss
+}
+
+func Session() session.Session {
+	ss, err := loadSession()
 	if err != nil {
 		log.Err(err).Msg("failed to get active session")
 		os.Exit(1)
@@ -37,10 +47,21 @@ func OpenClient(uri string) client.Client {
 	return newClient(session.Session{URI: uri})
 }
 
+func sessionPath() (string, error) {
+	return xdg.ConfigFile(filepath.Join("app", "config.json"))
+}
+
 func newSession() (session.Session, error) {
-	path, err := xdg.ConfigFile(
-		filepath.Join("app", "config.json"),
-	)
+	path, err := sessionPath()
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return session.Session{}, err
+	}
+
+	return session.New(path).SetURI(DefaultServerURI), nil
+}
+
+func loadSession() (session.Session, error) {
+	path, err := sessionPath()
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			return session.Session{URI: DefaultServerURI}, nil
