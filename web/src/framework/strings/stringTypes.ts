@@ -11,6 +11,7 @@ export interface StringsMap {
   addReadMe: string
   all: string
   allBranches: string
+  alreadyExists: string
   and: string
   approve: string
   botAlerts: string
@@ -199,6 +200,7 @@ export interface StringsMap {
   'pr.titleChangedTable': string
   'pr.titlePlaceHolder': string
   'pr.unified': string
+  prExists: string
   'prState.draftDesc': string
   'prState.draftHeading': string
   prefixBase: string
@@ -208,6 +210,7 @@ export interface StringsMap {
   private: string
   public: string
   pullMustBeMadeFromBranches: string
+  pullRequest: string
   pullRequestEmpty: string
   pullRequests: string
   quote: string

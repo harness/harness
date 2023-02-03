@@ -5,5 +5,6 @@ declare const styles: {
   readonly title: string
   readonly description: string
   readonly checkbox: string
+  readonly hyperlink: string
 }
 export default styles

@@ -319,3 +319,6 @@ error404Text: This is not the web page that you are looking for
 branchDoesNotHaveFile: The "{repoName}" repository doesn't contain the "{fileName}" path in the "{branchName}" branch
 webhookDialogTitle: Turn ON/OFF Webhook
 webhookDialogContent: Please confirm you want to on/off this webhook
+prExists: Pull request [#prNumber prTitle](prUrl) already exists
+pullRequest: Pull request 
+alreadyExists: already exists

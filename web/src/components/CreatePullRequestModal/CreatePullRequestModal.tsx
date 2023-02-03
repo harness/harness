@@ -23,7 +23,7 @@ import {
   FormInput,
   ButtonVariation
 } from '@harness/uicore'
-import { FontVariation } from '@harness/design-system'
+import { Color, FontVariation } from '@harness/design-system'
 import { useMutate } from 'restful-react'
 import { get } from 'lodash-es'
 import { useModalHook } from '@harness/use-modal'
@@ -63,6 +63,8 @@ export function useCreatePullRequestModal({
     const handleSubmit = (formData: FormData) => {
       const title = get(formData, 'title', '').trim()
       const description = get(formData, 'description', '').trim()
+
+      const pullReqUrl = window.location.href.split('compare')?.[0]
       const payload: OpenapiCreatePullReqRequest = {
         target_branch: targetGitRef,
         source_branch: sourceGitRef,
@@ -78,7 +80,24 @@ export function useCreatePullRequestModal({
             onSuccess(response)
           })
           .catch(_error => {
-            showError(getErrorMessage(_error), 0, 'pr.failedToCreate')
+            if (_error.status === 409) {
+              showError(
+                <>
+                  {getString('pullRequest')}
+                  <strong>
+                    <a
+                      className={css.hyperlink}
+                      color={Color.PRIMARY_7}
+                      href={`${pullReqUrl}${_error.data.values.number}`}>
+                      {` #${_error.data.values.number} ${_error.data.values.title} `}
+                    </a>
+                  </strong>
+                  {getString('alreadyExists')}
+                </>
+              )
+            } else {
+              showError(getErrorMessage(_error), 0, 'pr.failedToCreate')
+            }
           })
       } catch (exception) {
         showError(getErrorMessage(exception), 0, 'pr.failedToCreate')
