@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
+	"unicode"
 
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
@@ -17,6 +17,9 @@ import (
 	"github.com/harness/gitness/types"
 
 	"github.com/kelseyhightower/envconfig"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 // LoadConfig returns the system configuration from the
@@ -48,19 +51,36 @@ func getSanitizedMachineName() (string, error) {
 	// NOTE: this could theoretically lead to overlaps, then it should be passed explicitly
 	// NOTE: for k8s names/ids below modifications are all noops
 	// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
-	hostName = strings.ToLower(hostName)
-	hostName = strings.Map(func(r rune) rune {
-		switch {
-		case 'a' <= r && r <= 'z':
-			return r
-		case '0' <= r && r <= '9':
-			return r
-		case r == '-', r == '.':
-			return r
-		default:
-			return '_'
-		}
-	}, hostName)
+
+	// The following code will:
+	// * remove invalid runes
+	// * remove diacritical marks (ie "smörgåsbord" to "smorgasbord")
+	// * lowercase A-Z to a-z
+	// * leave only a-z, 0-9, '-', '.' and replace everything else with '_'
+	hostName, _, err = transform.String(
+		transform.Chain(
+			norm.NFD,
+			runes.ReplaceIllFormed(),
+			runes.Remove(runes.In(unicode.Mn)),
+			runes.Map(func(r rune) rune {
+				switch {
+				case 'A' <= r && r <= 'Z':
+					return r + 32
+				case 'a' <= r && r <= 'z':
+					return r
+				case '0' <= r && r <= '9':
+					return r
+				case r == '-', r == '.':
+					return r
+				default:
+					return '_'
+				}
+			}),
+			norm.NFC),
+		hostName)
+	if err != nil {
+		return "", err
+	}
 
 	return hostName, nil
 }
