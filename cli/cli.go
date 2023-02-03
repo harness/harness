@@ -5,22 +5,16 @@
 package cli
 
 import (
-	"errors"
-	"io/fs"
 	"os"
-	"path/filepath"
 
 	"github.com/harness/gitness/cli/operations/account"
 	"github.com/harness/gitness/cli/operations/hooks"
 	"github.com/harness/gitness/cli/operations/user"
 	"github.com/harness/gitness/cli/operations/users"
 	"github.com/harness/gitness/cli/server"
-	"github.com/harness/gitness/cli/session"
-	"github.com/harness/gitness/client"
 	"github.com/harness/gitness/internal/githook"
 	"github.com/harness/gitness/version"
 
-	"github.com/adrg/xdg"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -33,23 +27,16 @@ const (
 // subcommand program.
 func Command() {
 	args := getArguments()
-	s := &session.Session{}
-	httpClient := &client.HTTPClient{}
-
-	err := initialize(s, httpClient)
-	if err != nil {
-		panic(err)
-	}
 
 	app := kingpin.New(application, description)
 	server.Register(app)
 
-	user.Register(app, httpClient)
-	users.Register(app, httpClient)
+	user.Register(app)
+	users.Register(app)
 
-	account.RegisterLogin(app, httpClient, s)
-	account.RegisterRegister(app, httpClient, s)
-	account.RegisterLogout(app, s)
+	account.RegisterLogin(app)
+	account.RegisterRegister(app)
+	account.RegisterLogout(app)
 
 	hooks.Register(app)
 
@@ -57,44 +44,6 @@ func Command() {
 
 	kingpin.Version(version.Version.String())
 	kingpin.MustParse(app.Parse(args))
-}
-
-func initialize(ss *session.Session, httpClient *client.HTTPClient) error {
-	// todo: refactor asap, we need to get rid of literal value 'server', 'login' & 'register'.
-	if len(os.Args) > 1 && os.Args[1] == "server" {
-		return nil
-	}
-	path, err := xdg.ConfigFile(
-		filepath.Join("app", "config.json"),
-	)
-	if err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return err
-	}
-
-	*ss, err = session.LoadFromPath(path)
-	if err != nil {
-		switch {
-		case errors.Is(err, fs.ErrNotExist):
-			break
-		case errors.Is(err, session.ErrTokenExpired) &&
-			len(os.Args) == 2 && (os.Args[1] == "login" || os.Args[1] == "register"):
-			break
-		default:
-			return err
-		}
-	}
-
-	if ss.URI == "" {
-		// session is immutable
-		*ss = ss.SetURI("http://localhost:3000")
-	}
-
-	*httpClient = *client.NewToken(ss.URI, ss.AccessToken)
-	if os.Getenv("DEBUG") == "true" {
-		httpClient.SetDebug(true)
-	}
-
-	return nil
 }
 
 func getArguments() []string {

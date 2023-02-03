@@ -11,7 +11,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/harness/gitness/client"
+	"github.com/harness/gitness/cli/provide"
 	"github.com/harness/gitness/types"
 
 	"github.com/drone/funcmap"
@@ -25,17 +25,17 @@ admin: {{ .Admin }}
 `
 
 type listCommand struct {
-	client client.Client
-	tmpl   string
-	page   int
-	size   int
-	json   bool
+	tmpl string
+	page int
+	size int
+	json bool
 }
 
 func (c *listCommand) run(*kingpin.ParseContext) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	list, err := c.client.UserList(ctx, types.UserFilter{
+
+	list, err := provide.Client().UserList(ctx, types.UserFilter{
 		Size: c.size,
 		Page: c.page,
 	})
@@ -60,10 +60,8 @@ func (c *listCommand) run(*kingpin.ParseContext) error {
 }
 
 // helper function registers the user list command.
-func registerList(app *kingpin.CmdClause, client client.Client) {
-	c := &listCommand{
-		client: client,
-	}
+func registerList(app *kingpin.CmdClause) {
+	c := &listCommand{}
 
 	cmd := app.Command("ls", "display a list of users").
 		Action(c.run)

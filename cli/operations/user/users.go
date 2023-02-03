@@ -5,14 +5,12 @@
 package user
 
 import (
-	"github.com/harness/gitness/client"
-
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 // Register the command.
-func Register(app *kingpin.Application, client client.Client) {
+func Register(app *kingpin.Application) {
 	cmd := app.Command("user", "manage currently logged-in user")
-	registerSelf(cmd, client)
-	registerCreatePAT(cmd, client)
+	registerSelf(cmd)
+	registerCreatePAT(cmd)
 }

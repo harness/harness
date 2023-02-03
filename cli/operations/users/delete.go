@@ -8,27 +8,25 @@ import (
 	"context"
 	"time"
 
-	"github.com/harness/gitness/client"
+	"github.com/harness/gitness/cli/provide"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
 type deleteCommand struct {
-	client client.Client
-	email  string
+	email string
 }
 
 func (c *deleteCommand) run(*kingpin.ParseContext) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	return c.client.UserDelete(ctx, c.email)
+
+	return provide.Client().UserDelete(ctx, c.email)
 }
 
 // helper function registers the user delete command.
-func registerDelete(app *kingpin.CmdClause, client client.Client) {
-	c := &deleteCommand{
-		client: client,
-	}
+func registerDelete(app *kingpin.CmdClause) {
+	c := &deleteCommand{}
 
 	cmd := app.Command("delete", "delete a user").
 		Action(c.run)

@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/harness/gitness/cli/provide"
 	"github.com/harness/gitness/cli/session"
 	"github.com/harness/gitness/cli/textui"
-	"github.com/harness/gitness/client"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -24,34 +24,34 @@ type Session interface {
 }
 
 type registerCommand struct {
-	client  client.Client
-	session Session
-	server  string
+	server string
 }
 
 func (c *registerCommand) run(*kingpin.ParseContext) error {
 	username, name, email, password := textui.Registration()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	ts, err := c.client.Register(ctx, username, name, email, password)
+
+	ts, err := provide.OpenClient(c.server).Register(ctx, username, name, email, password)
 	if err != nil {
 		return err
 	}
 
-	return c.session.SetURI(c.server).SetExpiresAt(ts.Token.ExpiresAt).SetAccessToken(ts.AccessToken).Store()
+	return session.Session{}.
+		SetURI(c.server).
+		SetExpiresAt(ts.Token.ExpiresAt).
+		SetAccessToken(ts.AccessToken).
+		Store()
 }
 
 // RegisterRegister helper function to register the register command.
-func RegisterRegister(app *kingpin.Application, client client.Client, session *session.Session) {
-	c := &registerCommand{
-		client:  client,
-		session: session,
-	}
+func RegisterRegister(app *kingpin.Application) {
+	c := &registerCommand{}
 
 	cmd := app.Command("register", "register a user").
 		Action(c.run)
 
 	cmd.Arg("server", "server address").
-		Default(session.URI).
+		Default(provide.DefaultServerURI).
 		StringVar(&c.server)
 }
