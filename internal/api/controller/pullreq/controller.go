@@ -163,7 +163,7 @@ func (c *Controller) checkIfAlreadyExists(ctx context.Context,
 		return fmt.Errorf("failed to get existing pull requests: %w", err)
 	}
 	if len(existing) > 0 {
-		return usererror.BadRequestWithPayload(
+		return usererror.ConflictWithPayload(
 			"a pull request for this target and source branch already exists",
 			map[string]any{
 				"type":   "pr already exists",

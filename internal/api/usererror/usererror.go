@@ -109,3 +109,8 @@ func BadRequestf(format string, args ...any) *Error {
 func BadRequestWithPayload(message string, values ...map[string]any) *Error {
 	return NewWithPayload(http.StatusBadRequest, message, values...)
 }
+
+// ConflictWithPayload returns a new user facing conflict error with payload.
+func ConflictWithPayload(message string, values ...map[string]any) *Error {
+	return NewWithPayload(http.StatusConflict, message, values...)
+}
