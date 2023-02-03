@@ -114,11 +114,14 @@ export default function Webhooks() {
                               setChecked(!checked)
                               setPopoverDialogOpen(false)
                             }}></Button>
-                          <Button
-                            text={getString('cancel')}
-                            onClick={() => {
-                              setPopoverDialogOpen(false)
-                            }}></Button>
+                          <Container>
+                            <Button
+                              className={css.cancelButton}
+                              text={getString('cancel')}
+                              onClick={() => {
+                                setPopoverDialogOpen(false)
+                              }}></Button>
+                          </Container>
                         </Layout.Horizontal>
                       </Layout.Vertical>
                     </Container>

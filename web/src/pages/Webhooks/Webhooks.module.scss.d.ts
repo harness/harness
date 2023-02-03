@@ -9,5 +9,6 @@ declare const styles: {
   readonly toggle: string
   readonly toggleEnable: string
   readonly toggleDisable: string
+  readonly cancelButton: string
 }
 export default styles
