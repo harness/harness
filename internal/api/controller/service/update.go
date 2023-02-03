@@ -6,11 +6,14 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/gotidy/ptr"
@@ -35,6 +38,10 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
+	if err = c.sanitizeUpdateInput(in); err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
+	}
+
 	if in.Email != nil {
 		svc.DisplayName = ptr.ToString(in.Email)
 	}
@@ -43,15 +50,28 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	}
 	svc.Updated = time.Now().UnixMilli()
 
-	// validate service
-	if err = c.serviceCheck(svc); err != nil {
-		return nil, err
-	}
-
 	err = c.principalStore.UpdateService(ctx, svc)
 	if err != nil {
 		return nil, err
 	}
 
 	return svc, nil
+}
+
+func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
+	if in.Email != nil {
+		*in.Email = strings.TrimSpace(*in.Email)
+		if err := check.Email(*in.Email); err != nil {
+			return err
+		}
+	}
+
+	if in.DisplayName != nil {
+		*in.DisplayName = strings.TrimSpace(*in.DisplayName)
+		if err := check.DisplayName(*in.DisplayName); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

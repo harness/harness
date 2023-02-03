@@ -4,14 +4,22 @@
 
 package enum
 
-// Represents the type of the entity requesting permission.
+// PrincipalType defines the supported types of principals.
 type PrincipalType string
 
+func (PrincipalType) Enum() []interface{} { return toInterfaceSlice(principalTypes) }
+
 const (
-	// Represents a user.
+	// PrincipalTypeUser represents a user.
 	PrincipalTypeUser PrincipalType = "user"
-	// Represents a service account.
+	// PrincipalTypeServiceAccount represents a service account.
 	PrincipalTypeServiceAccount PrincipalType = "serviceaccount"
-	// Represents a service.
+	// PrincipalTypeService represents a service.
 	PrincipalTypeService PrincipalType = "service"
 )
+
+var principalTypes = sortEnum([]PrincipalType{
+	PrincipalTypeUser,
+	PrincipalTypeServiceAccount,
+	PrincipalTypeService,
+})

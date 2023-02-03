@@ -32,15 +32,21 @@ func (p *Principal) ToPrincipalInfo() *PrincipalInfo {
 		UID:         p.UID,
 		DisplayName: p.DisplayName,
 		Email:       p.Email,
+		Type:        p.Type,
+		Created:     p.Created,
+		Updated:     p.Updated,
 	}
 }
 
 // PrincipalInfo is a compressed representation of a principal we return as part of non-principal APIs.
 type PrincipalInfo struct {
-	ID          int64  `json:"id"`
-	UID         string `json:"uid"`
-	DisplayName string `json:"display_name"`
-	Email       string `json:"email"`
+	ID          int64              `json:"id"`
+	UID         string             `json:"uid"`
+	DisplayName string             `json:"display_name"`
+	Email       string             `json:"email"`
+	Type        enum.PrincipalType `json:"type"`
+	Created     int64              `json:"created"`
+	Updated     int64              `json:"updated"`
 }
 
 func (p *PrincipalInfo) Identifier() int64 {

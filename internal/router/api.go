@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/githook"
+	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
@@ -17,6 +18,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/api/handler/account"
 	handlergithook "github.com/harness/gitness/internal/api/handler/githook"
+	handlerprincipal "github.com/harness/gitness/internal/api/handler/principal"
 	handlerpullreq "github.com/harness/gitness/internal/api/handler/pullreq"
 	handlerrepo "github.com/harness/gitness/internal/api/handler/repo"
 	"github.com/harness/gitness/internal/api/handler/resource"
@@ -24,11 +26,12 @@ import (
 	handlerspace "github.com/harness/gitness/internal/api/handler/space"
 	"github.com/harness/gitness/internal/api/handler/system"
 	handleruser "github.com/harness/gitness/internal/api/handler/user"
+	"github.com/harness/gitness/internal/api/handler/users"
 	handlerwebhook "github.com/harness/gitness/internal/api/handler/webhook"
 	middlewareauthn "github.com/harness/gitness/internal/api/middleware/authn"
 	"github.com/harness/gitness/internal/api/middleware/encode"
 	"github.com/harness/gitness/internal/api/middleware/logging"
-	"github.com/harness/gitness/internal/api/middleware/principal"
+	middlewareprincipal "github.com/harness/gitness/internal/api/middleware/principal"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/types"
@@ -60,7 +63,8 @@ func NewAPIHandler(
 	webhookCtrl *webhook.Controller,
 	githookCtrl *githook.Controller,
 	saCtrl *serviceaccount.Controller,
-	userCtrl *user.Controller) APIHandler {
+	userCtrl *user.Controller,
+	principalCtrl *principal.Controller) APIHandler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
 
@@ -81,7 +85,7 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, repoCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl, saCtrl, userCtrl)
+		setupRoutesV1(r, repoCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl)
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -104,11 +108,12 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 func setupRoutesV1(r chi.Router,
 	repoCtrl *repo.Controller, spaceCtrl *space.Controller,
 	pullreqCtrl *pullreq.Controller, webhookCtrl *webhook.Controller, githookCtrl *githook.Controller,
-	saCtrl *serviceaccount.Controller, userCtrl *user.Controller) {
+	saCtrl *serviceaccount.Controller, userCtrl *user.Controller, principalCtrl *principal.Controller) {
 	setupSpaces(r, spaceCtrl)
 	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
+	setupPrincipals(r, principalCtrl)
 	setupInternal(r, githookCtrl)
 	setupAdmin(r, userCtrl)
 	setupAccount(r, userCtrl)
@@ -288,7 +293,7 @@ func SetupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
 func setupUser(r chi.Router, userCtrl *user.Controller) {
 	r.Route("/user", func(r chi.Router) {
 		// enforce principial authenticated and it's a user
-		r.Use(principal.RestrictTo(enum.PrincipalTypeUser))
+		r.Use(middlewareprincipal.RestrictTo(enum.PrincipalTypeUser))
 
 		r.Get("/", handleruser.HandleFind(userCtrl))
 		r.Patch("/", handleruser.HandleUpdate(userCtrl))
@@ -353,21 +358,25 @@ func setupResources(r chi.Router) {
 	})
 }
 
-func setupAdmin(r chi.Router, _ *user.Controller) {
-	r.Route("/users", func(r chi.Router) {
-		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write([]byte(fmt.Sprintf("Create user '%s'", chi.URLParam(r, "rref"))))
+func setupPrincipals(r chi.Router, principalCtrl *principal.Controller) {
+	r.Route("/principals", func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamPrincipalUID), func(r chi.Router) {
+			r.Get("/", handlerprincipal.HandleFind(principalCtrl))
 		})
+	})
+}
 
-		r.Route(fmt.Sprintf("/{%s}", request.PathParamUserUID), func(r chi.Router) {
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				_, _ = w.Write([]byte(fmt.Sprintf("Get user '%s'", chi.URLParam(r, "rref"))))
-			})
-			r.Patch("/", func(w http.ResponseWriter, r *http.Request) {
-				_, _ = w.Write([]byte(fmt.Sprintf("Update user '%s'", chi.URLParam(r, "rref"))))
-			})
-			r.Delete("/", func(w http.ResponseWriter, r *http.Request) {
-				_, _ = w.Write([]byte(fmt.Sprintf("Delete user '%s'", chi.URLParam(r, "rref"))))
+func setupAdmin(r chi.Router, userCtrl *user.Controller) {
+	r.Route("/admin", func(r chi.Router) {
+		r.Use(middlewareprincipal.RestrictToAdmin())
+		r.Route("/users", func(r chi.Router) {
+			r.Get("/", users.HandleList(userCtrl))
+			r.Post("/", users.HandleCreate(userCtrl))
+
+			r.Route(fmt.Sprintf("/{%s}", request.PathParamUserUID), func(r chi.Router) {
+				r.Get("/", users.HandleFind(userCtrl))
+				r.Patch("/", users.HandleUpdate(userCtrl))
+				r.Delete("/", users.HandleDelete(userCtrl))
 			})
 		})
 	})

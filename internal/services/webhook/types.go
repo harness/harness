@@ -106,10 +106,13 @@ func pullReqInfoFrom(pr *types.PullReq) PullReqInfo {
 // PrincipalInfo describes the principal related info for a webhook payload.
 // NOTE: don't use types package as we want webhook payload to be independent from API calls.
 type PrincipalInfo struct {
-	ID          int64  `json:"id"`
-	UID         string `json:"uid"`
-	DisplayName string `json:"display_name"`
-	Email       string `json:"email"`
+	ID          int64              `json:"id"`
+	UID         string             `json:"uid"`
+	DisplayName string             `json:"display_name"`
+	Email       string             `json:"email"`
+	Type        enum.PrincipalType `json:"type"`
+	Created     int64              `json:"created"`
+	Updated     int64              `json:"updated"`
 }
 
 // principalInfoFrom gets the PrincipalInfo from a types.Principal.
@@ -119,6 +122,9 @@ func principalInfoFrom(principal *types.Principal) PrincipalInfo {
 		UID:         principal.UID,
 		DisplayName: principal.DisplayName,
 		Email:       principal.Email,
+		Type:        principal.Type,
+		Created:     principal.Created,
+		Updated:     principal.Updated,
 	}
 }
 

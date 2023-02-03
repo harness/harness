@@ -15,7 +15,7 @@ import (
 
 // HandleCreate returns an http.HandlerFunc that processes an http.Request
 // to create the named user account in the system.
-func HandleCreate(userCtrl user.Controller) http.HandlerFunc {
+func HandleCreate(userCtrl *user.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)

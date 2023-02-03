@@ -17,19 +17,19 @@ import (
 )
 
 type Controller struct {
-	userCheck      check.User
-	authorizer     authz.Authorizer
-	principalStore store.PrincipalStore
-	tokenStore     store.TokenStore
+	principalUIDCheck check.PrincipalUID
+	authorizer        authz.Authorizer
+	principalStore    store.PrincipalStore
+	tokenStore        store.TokenStore
 }
 
-func NewController(userCheck check.User, authorizer authz.Authorizer, principalStore store.PrincipalStore,
-	tokenStore store.TokenStore) *Controller {
+func NewController(principalUIDCheck check.PrincipalUID, authorizer authz.Authorizer,
+	principalStore store.PrincipalStore, tokenStore store.TokenStore) *Controller {
 	return &Controller{
-		userCheck:      userCheck,
-		authorizer:     authorizer,
-		principalStore: principalStore,
-		tokenStore:     tokenStore,
+		principalUIDCheck: principalUIDCheck,
+		authorizer:        authorizer,
+		principalStore:    principalStore,
+		tokenStore:        tokenStore,
 	}
 }
 

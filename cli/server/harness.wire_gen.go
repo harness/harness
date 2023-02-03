@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/harness/store"
 	"github.com/harness/gitness/harness/types/check"
 	"github.com/harness/gitness/internal/api/controller/githook"
+	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/service"
@@ -44,7 +45,7 @@ import (
 // Injectors from harness.wire.go:
 
 func initSystem(ctx context.Context, config *types.Config) (*system, error) {
-	checkUser := check.ProvideUserCheck()
+	principalUID := check.ProvidePrincipalUIDCheck()
 	typesConfig, err := ProvideHarnessConfig()
 	if err != nil {
 		return nil, err
@@ -65,9 +66,8 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
 	principalStore := database.ProvidePrincipalStore(db, principalUIDTransformation)
 	tokenStore := database.ProvideTokenStore(db)
-	controller := user.NewController(checkUser, authorizer, principalStore, tokenStore)
-	checkService := check.ProvideServiceCheck()
-	serviceController := service.NewController(checkService, authorizer, principalStore)
+	controller := user.NewController(principalUID, authorizer, principalStore, tokenStore)
+	serviceController := service.NewController(principalUID, authorizer, principalStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller, serviceController)
 	tokenClient, err := client.ProvideTokenClient(serviceJWTProvider, typesConfig)
 	if err != nil {
@@ -81,13 +81,12 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	serviceAccount := check.ProvideServiceAccountCheck()
 	pathTransformation := store.ProvidePathTransformation()
 	pathStore := database.ProvidePathStore(db, pathTransformation)
 	pathCache := cache.ProvidePathCache(pathStore, pathTransformation)
 	spaceStore := database.ProvideSpaceStore(db, pathCache)
 	repoStore := database.ProvideRepoStore(db, pathCache)
-	serviceaccountController := serviceaccount.NewController(serviceAccount, authorizer, principalStore, spaceStore, repoStore, tokenStore)
+	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	provider, err := url.ProvideURLProvider(config)
 	if err != nil {
 		return nil, err
@@ -102,6 +101,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
+	principalController := principal.NewController(principalStore)
 	gitrpcConfig, err := ProvideGitRPCClientConfig()
 	if err != nil {
 		return nil, err
@@ -160,7 +160,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	githookController := githook.ProvideController(db, authorizer, principalStore, repoStore, eventsReporter)
-	apiHandler := router.ProvideAPIHandler(config, authenticator, accountClient, controller, spaceController, repoController, pullreqController, webhookController, githookController)
+	apiHandler := router.ProvideAPIHandler(config, authenticator, accountClient, controller, principalController, spaceController, repoController, pullreqController, webhookController, githookController)
 	gitHandler := router.ProvideGitHandler(config, provider, repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router2.ProvideWebHandler(config)
 	routerRouter := router2.ProvideRouter(config, apiHandler, gitHandler, webHandler)

@@ -7,14 +7,15 @@ package user
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 
-	"github.com/gotidy/ptr"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -38,15 +39,19 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
+	if err = c.sanitizeUpdateInput(in); err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
+	}
+
 	if in.DisplayName != nil {
-		user.DisplayName = ptr.ToString(in.DisplayName)
+		user.DisplayName = *in.DisplayName
 	}
 	if in.Email != nil {
-		user.Email = ptr.ToString(in.Email)
+		user.Email = *in.Email
 	}
 	if in.Password != nil {
 		var hash []byte
-		hash, err = hashPassword([]byte(ptr.ToString(in.Password)), bcrypt.DefaultCost)
+		hash, err = hashPassword([]byte(*in.Password), bcrypt.DefaultCost)
 		if err != nil {
 			return nil, fmt.Errorf("failed to hash password: %w", err)
 		}
@@ -54,15 +59,34 @@ func (c *Controller) Update(ctx context.Context, session *auth.Session,
 	}
 	user.Updated = time.Now().UnixMilli()
 
-	// validate user
-	if err = c.userCheck(user); err != nil {
-		return nil, err
-	}
-
 	err = c.principalStore.UpdateUser(ctx, user)
 	if err != nil {
 		return nil, err
 	}
 
 	return user, nil
+}
+
+func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
+	if in.Email != nil {
+		*in.Email = strings.TrimSpace(*in.Email)
+		if err := check.Email(*in.Email); err != nil {
+			return err
+		}
+	}
+
+	if in.DisplayName != nil {
+		*in.DisplayName = strings.TrimSpace(*in.DisplayName)
+		if err := check.DisplayName(*in.DisplayName); err != nil {
+			return err
+		}
+	}
+
+	if in.Password != nil {
+		if err := check.Password(*in.Password); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

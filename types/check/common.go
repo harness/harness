@@ -103,6 +103,15 @@ func UID(uid string) error {
 	return nil
 }
 
+// PrincipalUID is an abstraction of a validation method that verifies principal UIDs.
+// NOTE: Enables support for different principal UID formats.
+type PrincipalUID func(uid string) error
+
+// PrincipalUIDDefault performs the default Principal UID check.
+func PrincipalUIDDefault(uid string) error {
+	return UID(uid)
+}
+
 // PathUID is an abstraction of a validation method that returns true
 // iff the UID is valid to be used in a resource path for repo/space.
 // NOTE: Enables support for different path formats.

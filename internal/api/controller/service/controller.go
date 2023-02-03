@@ -14,17 +14,17 @@ import (
 )
 
 type Controller struct {
-	serviceCheck   check.Service
-	authorizer     authz.Authorizer
-	principalStore store.PrincipalStore
+	principalUIDCheck check.PrincipalUID
+	authorizer        authz.Authorizer
+	principalStore    store.PrincipalStore
 }
 
-func NewController(serviceCheck check.Service, authorizer authz.Authorizer,
+func NewController(principalUIDCheck check.PrincipalUID, authorizer authz.Authorizer,
 	principalStore store.PrincipalStore) *Controller {
 	return &Controller{
-		serviceCheck:   serviceCheck,
-		authorizer:     authorizer,
-		principalStore: principalStore,
+		principalUIDCheck: principalUIDCheck,
+		authorizer:        authorizer,
+		principalStore:    principalStore,
 	}
 }
 

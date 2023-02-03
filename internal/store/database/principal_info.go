@@ -29,10 +29,21 @@ type PrincipalInfoView struct {
 	db *sqlx.DB
 }
 
+const (
+	principalInfoCommonColumns = `
+		principal_id,
+		principal_uid,
+		principal_email,
+		principal_display_name,
+		principal_type,
+		principal_created,
+		principal_updated`
+)
+
 // Find returns a single principal info object by id from the `principals` database table.
 func (s *PrincipalInfoView) Find(ctx context.Context, id int64) (*types.PrincipalInfo, error) {
 	const sqlQuery = `
-		SELECT principal_uid, principal_email, principal_display_name
+		SELECT ` + principalInfoCommonColumns + `
 		FROM principals
 		WHERE principal_id = $1`
 
@@ -43,11 +54,10 @@ func (s *PrincipalInfoView) Find(ctx context.Context, id int64) (*types.Principa
 		return nil, processSQLErrorf(err, "failed to find principal info")
 	}
 
-	info := &types.PrincipalInfo{
-		ID: id,
-	}
+	info := &types.PrincipalInfo{}
 
-	if err := v.Scan(&info.UID, &info.Email, &info.DisplayName); err != nil {
+	if err := v.Scan(&info.ID, &info.UID, &info.Email, &info.DisplayName,
+		&info.Type, &info.Created, &info.Updated); err != nil {
 		return nil, processSQLErrorf(err, "failed to scan principal info")
 	}
 
@@ -59,7 +69,7 @@ func (s *PrincipalInfoView) FindMany(ctx context.Context, ids []int64) ([]*types
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	stmt := builder.
-		Select("principal_id, principal_uid, principal_email, principal_display_name").
+		Select(principalInfoCommonColumns).
 		From("principals").
 		Where(squirrel.Eq{"principal_id": ids})
 
@@ -80,7 +90,8 @@ func (s *PrincipalInfoView) FindMany(ctx context.Context, ids []int64) ([]*types
 
 	for rows.Next() {
 		info := &types.PrincipalInfo{}
-		err = rows.Scan(&info.ID, &info.UID, &info.Email, &info.DisplayName)
+		err = rows.Scan(&info.ID, &info.UID, &info.Email, &info.DisplayName,
+			&info.Type, &info.Created, &info.Updated)
 		if err != nil {
 			return nil, processSQLErrorf(err, "failed to scan principal info")
 		}

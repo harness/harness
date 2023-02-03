@@ -7,11 +7,13 @@ package serviceaccount
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/dchest/uniuri"
@@ -57,6 +59,10 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session,
  */
 func (c *Controller) CreateNoAuth(ctx context.Context,
 	in *CreateInput, uid string) (*types.ServiceAccount, error) {
+	if err := c.sanitizeCreateInput(in, uid); err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
+	}
+
 	sa := &types.ServiceAccount{
 		UID:         uid,
 		Email:       in.Email,
@@ -68,18 +74,34 @@ func (c *Controller) CreateNoAuth(ctx context.Context,
 		ParentID:    in.ParentID,
 	}
 
-	// validate service account
-	if err := c.serviceAccountCheck(sa); err != nil {
-		return nil, err
-	}
-
-	// TODO: Racing condition with parent (space/repo) being deleted!
 	err := c.principalStore.CreateServiceAccount(ctx, sa)
 	if err != nil {
 		return nil, err
 	}
 
 	return sa, nil
+}
+
+func (c *Controller) sanitizeCreateInput(in *CreateInput, uid string) error {
+	if err := c.principalUIDCheck(uid); err != nil {
+		return err
+	}
+
+	in.Email = strings.TrimSpace(in.Email)
+	if err := check.Email(in.Email); err != nil {
+		return err
+	}
+
+	in.DisplayName = strings.TrimSpace(in.DisplayName)
+	if err := check.DisplayName(in.DisplayName); err != nil {
+		return err
+	}
+
+	if err := check.ServiceAccountParent(in.ParentType, in.ParentID); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // generateServiceAccountUID generates a new unique UID for a service account

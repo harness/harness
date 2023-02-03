@@ -12,9 +12,14 @@ import (
 )
 
 const (
+	PathParamPrincipalUID      = "principal_uid"
 	PathParamUserUID           = "user_uid"
 	PathParamServiceAccountUID = "sa_uid"
 )
+
+func GetPrincipalUIDFromPath(r *http.Request) (string, error) {
+	return PathParamOrError(r, PathParamPrincipalUID)
+}
 
 func GetUserUIDFromPath(r *http.Request) (string, error) {
 	return PathParamOrError(r, PathParamUserUID)

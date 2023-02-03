@@ -36,7 +36,8 @@ func Generate() *openapi3.Spec {
 
 	buildAccount(&reflector)
 	buildUser(&reflector)
-	buildUsers(&reflector)
+	buildAdmin(&reflector)
+	buildPrincipals(&reflector)
 	spaceOperations(&reflector)
 	repoOperations(&reflector)
 	resourceOperations(&reflector)

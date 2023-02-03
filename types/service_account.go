@@ -51,10 +51,5 @@ func (s *ServiceAccount) ToPrincipal() *Principal {
 }
 
 func (s *ServiceAccount) ToPrincipalInfo() *PrincipalInfo {
-	return &PrincipalInfo{
-		ID:          s.ID,
-		UID:         s.UID,
-		DisplayName: s.DisplayName,
-		Email:       s.Email,
-	}
+	return s.ToPrincipal().ToPrincipalInfo()
 }

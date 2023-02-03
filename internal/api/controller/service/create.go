@@ -6,11 +6,14 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/dchest/uniuri"
@@ -44,6 +47,10 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
  * Note: take admin separately to avoid potential vulnerabilities for user calls.
  */
 func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bool) (*types.Service, error) {
+	if err := c.sanitizeCreateInput(in); err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
+	}
+
 	svc := &types.Service{
 		UID:         in.UID,
 		Email:       in.Email,
@@ -54,15 +61,28 @@ func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bo
 		Updated:     time.Now().UnixMilli(),
 	}
 
-	// validate service
-	if err := c.serviceCheck(svc); err != nil {
-		return nil, err
-	}
-
 	err := c.principalStore.CreateService(ctx, svc)
 	if err != nil {
 		return nil, err
 	}
 
 	return svc, nil
+}
+
+func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
+	if err := c.principalUIDCheck(in.UID); err != nil {
+		return err
+	}
+
+	in.Email = strings.TrimSpace(in.Email)
+	if err := check.Email(in.Email); err != nil {
+		return err
+	}
+
+	in.DisplayName = strings.TrimSpace(in.DisplayName)
+	if err := check.DisplayName(in.DisplayName); err != nil {
+		return err
+	}
+
+	return nil
 }

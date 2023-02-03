@@ -17,8 +17,8 @@ var WireSet = wire.NewSet(
 	NewController,
 )
 
-func ProvideController(serviceAccountCheck check.ServiceAccount, authorizer authz.Authorizer,
+func ProvideController(principalUIDCheck check.PrincipalUID, authorizer authz.Authorizer,
 	principalStore store.PrincipalStore, spaceStore store.SpaceStore, repoStore store.RepoStore,
 	tokenStore store.TokenStore) *Controller {
-	return NewController(serviceAccountCheck, authorizer, principalStore, spaceStore, repoStore, tokenStore)
+	return NewController(principalUIDCheck, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 }

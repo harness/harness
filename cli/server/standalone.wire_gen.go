@@ -12,6 +12,7 @@ import (
 	"github.com/harness/gitness/gitrpc"
 	server2 "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/internal/api/controller/githook"
+	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
@@ -41,7 +42,7 @@ import (
 // Injectors from standalone.wire.go:
 
 func initSystem(ctx context.Context, config *types.Config) (*system, error) {
-	checkUser := check.ProvideUserCheck()
+	principalUID := check.ProvidePrincipalUIDCheck()
 	authorizer := authz.ProvideAuthorizer()
 	db, err := database.ProvideDatabase(ctx, config)
 	if err != nil {
@@ -50,7 +51,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
 	principalStore := database.ProvidePrincipalStore(db, principalUIDTransformation)
 	tokenStore := database.ProvideTokenStore(db)
-	controller := user.NewController(checkUser, authorizer, principalStore, tokenStore)
+	controller := user.NewController(principalUID, authorizer, principalStore, tokenStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller)
 	authenticator := authn.ProvideAuthenticator(principalStore, tokenStore)
 	provider, err := url.ProvideURLProvider(config)
@@ -122,9 +123,9 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	githookController := githook.ProvideController(db, authorizer, principalStore, repoStore, eventsReporter)
-	serviceAccount := check.ProvideServiceAccountCheck()
-	serviceaccountController := serviceaccount.NewController(serviceAccount, authorizer, principalStore, spaceStore, repoStore, tokenStore)
-	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, spaceController, pullreqController, webhookController, githookController, serviceaccountController, controller)
+	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
+	principalController := principal.NewController(principalStore)
+	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, spaceController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController)
 	gitHandler := router.ProvideGitHandler(config, provider, repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(config, apiHandler, gitHandler, webHandler)

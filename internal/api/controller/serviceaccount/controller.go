@@ -14,24 +14,24 @@ import (
 )
 
 type Controller struct {
-	serviceAccountCheck check.ServiceAccount
-	authorizer          authz.Authorizer
-	principalStore      store.PrincipalStore
-	spaceStore          store.SpaceStore
-	repoStore           store.RepoStore
-	tokenStore          store.TokenStore
+	principalUIDCheck check.PrincipalUID
+	authorizer        authz.Authorizer
+	principalStore    store.PrincipalStore
+	spaceStore        store.SpaceStore
+	repoStore         store.RepoStore
+	tokenStore        store.TokenStore
 }
 
-func NewController(serviceAccountCheck check.ServiceAccount, authorizer authz.Authorizer,
+func NewController(principalUIDCheck check.PrincipalUID, authorizer authz.Authorizer,
 	principalStore store.PrincipalStore, spaceStore store.SpaceStore, repoStore store.RepoStore,
 	tokenStore store.TokenStore) *Controller {
 	return &Controller{
-		serviceAccountCheck: serviceAccountCheck,
-		authorizer:          authorizer,
-		principalStore:      principalStore,
-		spaceStore:          spaceStore,
-		repoStore:           repoStore,
-		tokenStore:          tokenStore,
+		principalUIDCheck: principalUIDCheck,
+		authorizer:        authorizer,
+		principalStore:    principalStore,
+		spaceStore:        spaceStore,
+		repoStore:         repoStore,
+		tokenStore:        tokenStore,
 	}
 }
 

@@ -5,7 +5,6 @@
 package check
 
 import (
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -18,40 +17,15 @@ var (
 	}
 )
 
-// ServiceAccount returns true if the ServiceAccount is valid.
-type ServiceAccount func(*types.ServiceAccount) error
-
-// ServiceAccountDefault is the default ServiceAccount validation.
-func ServiceAccountDefault(sa *types.ServiceAccount) error {
-	// validate UID
-	if err := UID(sa.UID); err != nil {
-		return err
-	}
-
-	// Validate Email
-	if err := Email(sa.Email); err != nil {
-		return err
-	}
-
-	// validate DisplayName
-	if err := DisplayName(sa.DisplayName); err != nil {
-		return err
-	}
-
-	// validate remaining
-	return ServiceAccountNoPrincipal(sa)
-}
-
-// ServiceAccountNoPrincipal verifies the remaining fields of a service account
+// ServiceAccountParent verifies the remaining fields of a service account
 // that aren't inhereted from principal.
-func ServiceAccountNoPrincipal(sa *types.ServiceAccount) error {
-	// validate parentType
-	if sa.ParentType != enum.ParentResourceTypeRepo && sa.ParentType != enum.ParentResourceTypeSpace {
+func ServiceAccountParent(parentType enum.ParentResourceType, parentID int64) error {
+	if parentType != enum.ParentResourceTypeRepo && parentType != enum.ParentResourceTypeSpace {
 		return ErrServiceAccountParentTypeIsInvalid
 	}
 
-	// validate service account belongs to a space
-	if sa.ParentID <= 0 {
+	// validate service account belongs to sth
+	if parentID <= 0 {
 		return ErrServiceAccountParentIDInvalid
 	}
 

@@ -61,10 +61,5 @@ func (u *User) ToPrincipal() *Principal {
 }
 
 func (u *User) ToPrincipalInfo() *PrincipalInfo {
-	return &PrincipalInfo{
-		ID:          u.ID,
-		UID:         u.UID,
-		DisplayName: u.DisplayName,
-		Email:       u.Email,
-	}
+	return u.ToPrincipal().ToPrincipalInfo()
 }

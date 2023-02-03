@@ -7,6 +7,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
@@ -49,9 +50,8 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
  * Note: take admin separately to avoid potential vulnerabilities for user calls.
  */
 func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bool) (*types.User, error) {
-	// validate password before hashing
-	if err := check.Password(in.Password); err != nil {
-		return nil, err
+	if err := c.sanitizeCreateInput(in); err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 
 	hash, err := hashPassword([]byte(in.Password), bcrypt.DefaultCost)
@@ -70,11 +70,6 @@ func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bo
 		Admin:       admin,
 	}
 
-	// validate user
-	if err = c.userCheck(user); err != nil {
-		return nil, err
-	}
-
 	err = c.principalStore.CreateUser(ctx, user)
 	if err != nil {
 		return nil, err
@@ -91,4 +86,26 @@ func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bo
 	}
 
 	return user, nil
+}
+
+func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
+	if err := c.principalUIDCheck(in.UID); err != nil {
+		return err
+	}
+
+	in.Email = strings.TrimSpace(in.Email)
+	if err := check.Email(in.Email); err != nil {
+		return err
+	}
+
+	in.DisplayName = strings.TrimSpace(in.DisplayName)
+	if err := check.DisplayName(in.DisplayName); err != nil {
+		return err
+	}
+
+	if err := check.Password(in.Password); err != nil {
+		return err
+	}
+
+	return nil
 }
