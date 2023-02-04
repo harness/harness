@@ -5,6 +5,7 @@
 package bootstrap
 
 import (
+	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/types"
 
@@ -14,6 +15,7 @@ import (
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(ProvideBootstrap)
 
-func ProvideBootstrap(config *types.Config, userCtrl *user.Controller) Bootstrap {
-	return System(config, userCtrl)
+func ProvideBootstrap(config *types.Config, userCtrl *user.Controller,
+	serviceCtrl *service.Controller) Bootstrap {
+	return System(config, userCtrl, serviceCtrl)
 }

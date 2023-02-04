@@ -15,6 +15,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
@@ -52,7 +53,8 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	principalStore := database.ProvidePrincipalStore(db, principalUIDTransformation)
 	tokenStore := database.ProvideTokenStore(db)
 	controller := user.NewController(principalUID, authorizer, principalStore, tokenStore)
-	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller)
+	serviceController := service.NewController(principalUID, authorizer, principalStore)
+	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller, serviceController)
 	authenticator := authn.ProvideAuthenticator(principalStore, tokenStore)
 	provider, err := url.ProvideURLProvider(config)
 	if err != nil {
@@ -113,11 +115,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	service, err := webhook.ProvideService(ctx, webhookConfig, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, repoStore, pullReqStore, provider, principalStore, gitrpcInterface)
+	webhookService, err := webhook.ProvideService(ctx, webhookConfig, readerFactory, eventsReaderFactory, webhookStore, webhookExecutionStore, repoStore, pullReqStore, provider, principalStore, gitrpcInterface)
 	if err != nil {
 		return nil, err
 	}
-	webhookController := webhook2.ProvideController(webhookConfig, db, authorizer, webhookStore, webhookExecutionStore, repoStore, service)
+	webhookController := webhook2.ProvideController(webhookConfig, db, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService)
 	eventsReporter, err := events3.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
@@ -145,7 +147,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(service, pullreqService)
+	servicesServices := services.ProvideServices(webhookService, pullreqService)
 	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, nightly, servicesServices)
 	return serverSystem, nil
 }

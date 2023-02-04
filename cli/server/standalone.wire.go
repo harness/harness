@@ -17,6 +17,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
@@ -62,6 +63,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		controllerwebhook.WireSet,
 		serviceaccount.WireSet,
 		user.WireSet,
+		service.WireSet,
 		principal.WireSet,
 		authn.WireSet,
 		authz.WireSet,

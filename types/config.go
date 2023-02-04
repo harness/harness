@@ -101,11 +101,20 @@ type Config struct {
 		ReferrerPolicy        string            `envconfig:"GITNESS_HTTP_REFERRER_POLICY"`
 	}
 
-	// Admin defines admin user params (no admin setup if either is empty)
-	Admin struct {
-		DisplayName string `envconfig:"GITNESS_ADMIN_DISPLAY_NAME"`
-		Email       string `envconfig:"GITNESS_ADMIN_EMAIL"`
-		Password    string `envconfig:"GITNESS_ADMIN_PASSWORD"`
+	Principal struct {
+		// System defines the principal information used to create the system service.
+		System struct {
+			UID         string `envconfig:"GITNESS_PRINCIPAL_SYSTEM_UID"          default:"gitness"`
+			DisplayName string `envconfig:"GITNESS_PRINCIPAL_SYSTEM_DISPLAY_NAME" default:"Gitness"`
+			Email       string `envconfig:"GITNESS_PRINCIPAL_SYSTEM_EMAIL"        default:"system@gitness.io"`
+		}
+		// Admin defines the principal information used to create the admin user.
+		Admin struct {
+			UID         string `envconfig:"GITNESS_PRINCIPAL_ADMIN_UID"           default:"admin"`
+			DisplayName string `envconfig:"GITNESS_PRINCIPAL_ADMIN_DISPLAY_NAME"  default:"Administrator"`
+			Email       string `envconfig:"GITNESS_PRINCIPAL_ADMIN_EMAIL"         default:"admin@gitness.io"`
+			Password    string `envconfig:"GITNESS_PRINCIPAL_ADMIN_PASSWORD"` // No default password
+		}
 	}
 
 	Redis struct {
