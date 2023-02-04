@@ -245,3 +245,14 @@ func mapRPCTreeNodeMode(m rpc.TreeNodeMode) (TreeNodeMode, error) {
 		return TreeNodeModeFile, fmt.Errorf("unkown rpc tree node mode: %d", m)
 	}
 }
+
+func mapToRPCIdentityOptional(identity *Identity) *rpc.Identity {
+	if identity == nil {
+		return nil
+	}
+
+	return &rpc.Identity{
+		Name:  identity.Name,
+		Email: identity.Email,
+	}
+}

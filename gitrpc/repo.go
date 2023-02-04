@@ -30,6 +30,11 @@ type CreateRepositoryParams struct {
 	Actor         Identity
 	DefaultBranch string
 	Files         []File
+
+	// Committer overwrites the git committer used for committing the files (optional, default: actor)
+	Committer *Identity
+	// Author overwrites the git author used for committing the files (optional, default: committer)
+	Author *Identity
 }
 
 type CreateRepositoryOutput struct {
@@ -71,6 +76,8 @@ func (c *Client) CreateRepository(ctx context.Context,
 			Header: &rpc.CreateRepositoryRequestHeader{
 				Base:          mapToRPCWriteRequest(writeParams),
 				DefaultBranch: params.DefaultBranch,
+				Author:        mapToRPCIdentityOptional(params.Author),
+				Committer:     mapToRPCIdentityOptional(params.Committer),
 			},
 		},
 	}

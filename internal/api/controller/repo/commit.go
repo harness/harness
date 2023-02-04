@@ -11,6 +11,7 @@ import (
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -70,11 +71,9 @@ func (c *Controller) CommitFiles(ctx context.Context, session *auth.Session,
 		Message:     in.Message,
 		Branch:      in.Branch,
 		NewBranch:   in.NewBranch,
-		Author: gitrpc.Identity{
-			Name:  session.Principal.DisplayName,
-			Email: session.Principal.Email,
-		},
-		Actions: actions,
+		Actions:     actions,
+		Committer:   rpcIdentityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
+		Author:      rpcIdentityFromPrincipal(session.Principal),
 	})
 	if err != nil {
 		return CommitFilesResponse{}, err

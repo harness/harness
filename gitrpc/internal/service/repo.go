@@ -159,9 +159,17 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	}
 
 	if len(filePaths) > 0 {
+		committer := base.GetActor()
+		if header.GetCommitter() != nil {
+			committer = header.GetCommitter()
+		}
+		author := committer
+		if header.GetAuthor() != nil {
+			author = header.GetAuthor()
+		}
 		// NOTE: This creates the branch in origin repo (as it doesn't exist as of now)
 		// TODO: this should at least be a constant and not hardcoded?
-		if err = s.AddFilesAndPush(ctx, tempDir, filePaths, "HEAD:"+header.GetDefaultBranch(), SystemIdentity, SystemIdentity,
+		if err = s.AddFilesAndPush(ctx, tempDir, filePaths, "HEAD:"+header.GetDefaultBranch(), author, committer,
 			"origin", "initial commit"); err != nil {
 			return err
 		}

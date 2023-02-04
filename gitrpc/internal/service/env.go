@@ -5,8 +5,8 @@
 package service
 
 const (
-	EnvPusherName  = "GITRPC_PUSHER_NAME"
-	EnvPusherEmail = "GITRPC_PUSHER_EMAIL"
-	EnvRepoUID     = "GITRPC_REPO_UID"
-	EnvRequestID   = "GITRPC_REQUEST_ID"
+	EnvActorName  = "GITRPC_ACTOR_NAME"
+	EnvActorEmail = "GITRPC_ACTOR_EMAIL"
+	EnvRepoUID    = "GITRPC_REPO_UID"
+	EnvRequestID  = "GITRPC_REQUEST_ID"
 )

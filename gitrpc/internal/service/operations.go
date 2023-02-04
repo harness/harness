@@ -68,10 +68,12 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 	}
 
 	committer := base.GetActor()
-	author := header.GetAuthor()
-	// in case no explicit author is provided use actor as author.
-	if author == nil {
-		author = committer
+	if header.GetCommitter() != nil {
+		committer = header.GetCommitter()
+	}
+	author := committer
+	if header.GetAuthor() != nil {
+		author = header.GetAuthor()
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())

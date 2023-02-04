@@ -15,6 +15,7 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/resources"
@@ -51,7 +52,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	gitRPCResp, err := c.createGitRPCRepository(ctx, in)
+	gitRPCResp, err := c.createGitRPCRepository(ctx, session, in)
 	if err != nil {
 		return nil, fmt.Errorf("error creating repository on GitRPC: %w", err)
 	}
@@ -155,7 +156,7 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	return nil
 }
 
-func (c *Controller) createGitRPCRepository(ctx context.Context,
+func (c *Controller) createGitRPCRepository(ctx context.Context, session *auth.Session,
 	in *CreateInput) (*gitrpc.CreateRepositoryOutput, error) {
 	var (
 		err     error
@@ -190,9 +191,13 @@ func (c *Controller) createGitRPCRepository(ctx context.Context,
 		})
 	}
 
+	actor := rpcIdentityFromPrincipal(session.Principal)
 	resp, err := c.gitRPCClient.CreateRepository(ctx, &gitrpc.CreateRepositoryParams{
 		DefaultBranch: in.DefaultBranch,
 		Files:         files,
+		Actor:         *actor,
+		Author:        actor,
+		Committer:     rpcIdentityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create repo on gitrpc: %w", err)
@@ -208,4 +213,11 @@ func createReadme(name, description string) []byte {
 		content.WriteString(description)
 	}
 	return content.Bytes()
+}
+
+func rpcIdentityFromPrincipal(p types.Principal) *gitrpc.Identity {
+	return &gitrpc.Identity{
+		Name:  p.DisplayName,
+		Email: p.Email,
+	}
 }

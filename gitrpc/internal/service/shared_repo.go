@@ -365,9 +365,9 @@ func CreateEnvironmentForPush(ctx context.Context, writeRequest *rpc.WriteReques
 		EnvRequestID + "=" + middleware.RequestIDFrom(ctx),
 		// repo related info
 		EnvRepoUID + "=" + writeRequest.RepoUid,
-		// pusher related info
-		EnvPusherName + "=" + writeRequest.Actor.Name,
-		EnvPusherEmail + "=" + writeRequest.Actor.Email,
+		// actor related info
+		EnvActorName + "=" + writeRequest.Actor.Name,
+		EnvActorEmail + "=" + writeRequest.Actor.Email,
 	}
 
 	// add all environment variables coming from client

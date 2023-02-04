@@ -20,6 +20,7 @@ message CommitFilesRequestHeader {
   string title           = 4;
   string message         = 5;
   Identity author        = 6;
+  Identity committer     = 7;
 }
 
 // CommitFilesActionHeader contains the details of the action to be performed.

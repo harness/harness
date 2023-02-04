@@ -44,9 +44,12 @@ type CommitFilesParams struct {
 	Message   string
 	Branch    string
 	NewBranch string
-	Author    Identity
-	Committer Identity
 	Actions   []CommitFileAction
+
+	// Committer overwrites the git committer used for committing the files (optional, default: actor)
+	Committer *Identity
+	// Author overwrites the git author used for committing the files (optional, default: committer)
+	Author *Identity
 }
 
 type CommitFilesResponse struct {
@@ -67,10 +70,8 @@ func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesParams) (Co
 				NewBranchName: params.NewBranch,
 				Title:         params.Title,
 				Message:       params.Message,
-				Author: &rpc.Identity{
-					Name:  params.Author.Name,
-					Email: params.Author.Email,
-				},
+				Author:        mapToRPCIdentityOptional(params.Author),
+				Committer:     mapToRPCIdentityOptional(params.Committer),
 			},
 		},
 	}); err != nil {

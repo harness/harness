@@ -27,6 +27,8 @@ message CreateRepositoryRequest {
 message CreateRepositoryRequestHeader {
   WriteRequest base     = 1;
   string default_branch = 2;
+  Identity author       = 3;
+  Identity committer    = 4;
 }
 
 message CreateRepositoryResponse { }
