@@ -11,14 +11,18 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-// FindInfoByUIDNoAuth tries to find the provided principal by UID.
+// FindInfoByUIDPublic tries to find the provided principal by UID.
 // Note: No authorization is required for this API.
-func (c *Controller) FindInfoByUIDNoAuth(ctx context.Context,
+func (c *Controller) FindInfoByUIDPublic(ctx context.Context,
 	uid string) (*types.PrincipalInfo, error) {
 	principal, err := c.principalStore.FindByUID(ctx, uid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get principal info from cache: %w", err)
 	}
 
-	return principal.ToPrincipalInfo(), nil
+	// TODO: allow configuration for email being publicly exposed.
+	p := principal.ToPrincipalInfo()
+	p.Email = ""
+
+	return p, nil
 }

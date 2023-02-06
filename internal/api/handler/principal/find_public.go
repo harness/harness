@@ -12,9 +12,9 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 )
 
-// HandleFind returns an http.HandlerFunc that writes json-encoded
+// HandleFindPublic returns an http.HandlerFunc that writes json-encoded
 // principal information to the http response body.
-func HandleFind(principalCtrl *principal.Controller) http.HandlerFunc {
+func HandleFindPublic(principalCtrl *principal.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		pUID, err := request.GetPrincipalUIDFromPath(r)
@@ -23,7 +23,7 @@ func HandleFind(principalCtrl *principal.Controller) http.HandlerFunc {
 			return
 		}
 
-		pInfo, err := principalCtrl.FindInfoByUIDNoAuth(ctx, pUID)
+		pInfo, err := principalCtrl.FindInfoByUIDPublic(ctx, pUID)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
