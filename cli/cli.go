@@ -9,6 +9,7 @@ import (
 
 	"github.com/harness/gitness/cli/operations/account"
 	"github.com/harness/gitness/cli/operations/hooks"
+	"github.com/harness/gitness/cli/operations/migrate"
 	"github.com/harness/gitness/cli/operations/user"
 	"github.com/harness/gitness/cli/operations/users"
 	"github.com/harness/gitness/cli/server"
@@ -29,6 +30,8 @@ func Command() {
 	args := getArguments()
 
 	app := kingpin.New(application, description)
+
+	migrate.Register(app)
 	server.Register(app)
 
 	user.Register(app)

@@ -34,7 +34,7 @@ var WireSet = wire.NewSet(
 
 // ProvideDatabase provides a database connection.
 func ProvideDatabase(ctx context.Context, config *types.Config) (*sqlx.DB, error) {
-	return Connect(
+	return ConnectAndMigrate(
 		ctx,
 		config.Database.Driver,
 		config.Database.Datasource,

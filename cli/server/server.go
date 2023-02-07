@@ -50,7 +50,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	}
 
 	// configure the log level
-	setupLogger(config)
+	SetupLogger(config)
 
 	// add logger to context
 	log := log.Logger.With().Logger()
@@ -119,9 +119,8 @@ func (c *command) run(*kingpin.ParseContext) error {
 	return err
 }
 
-// helper function configures the global logger from
-// the loaded configuration.
-func setupLogger(config *types.Config) {
+// SetupLogger configures the global logger from the loaded configuration.
+func SetupLogger(config *types.Config) {
 	// configure the log level
 	switch {
 	case config.Trace:
