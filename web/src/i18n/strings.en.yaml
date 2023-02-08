@@ -322,3 +322,11 @@ webhookDialogContent: Please confirm you want to on/off this webhook
 prExists: Pull request [#prNumber prTitle](prUrl) already exists
 pullRequest: Pull request 
 alreadyExists: already exists
+makeRequired: Make Required
+makeOptional: Make Optional
+remove: Remove
+required: Required
+noneYet: None Yet
+noOptionalReviewers: No Optional Reviewers
+noRequiredReviewers: No Required Reviewers
+reviewers: Reviewers

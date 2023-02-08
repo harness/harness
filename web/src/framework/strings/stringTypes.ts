@@ -117,6 +117,8 @@ export interface StringsMap {
   license: string
   lineBreaks: string
   loading: string
+  makeOptional: string
+  makeRequired: string
   merged: string
   name: string
   nameYourBranch: string
@@ -135,10 +137,13 @@ export interface StringsMap {
   noCommits: string
   noCommitsMessage: string
   noCommitsPR: string
+  noOptionalReviewers: string
+  noRequiredReviewers: string
   noResultMessage: string
   noResultTitle: string
   noWebHooks: string
   none: string
+  noneYet: string
   off: string
   ok: string
   on: string
@@ -216,6 +221,7 @@ export interface StringsMap {
   quote: string
   readMe: string
   rejected: string
+  remove: string
   renameFile: string
   replyHere: string
   repoCloneHeader: string
@@ -232,6 +238,8 @@ export interface StringsMap {
   'repos.updated': string
   repositories: string
   requestChanges: string
+  required: string
+  reviewers: string
   samplePayloadUrl: string
   save: string
   scanAlerts: string
