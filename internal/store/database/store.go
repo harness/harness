@@ -9,6 +9,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/url"
 	"time"
@@ -105,6 +106,11 @@ func pingDatabase(ctx context.Context, db *sqlx.DB) error {
 	var err error
 	for i := 1; i <= 30; i++ {
 		err = db.PingContext(ctx)
+
+		// No point in continuing if context was cancelled
+		if errors.Is(err, context.Canceled) {
+			return err
+		}
 
 		// We can complete on first successful ping
 		if err == nil {

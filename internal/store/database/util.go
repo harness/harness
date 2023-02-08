@@ -10,6 +10,7 @@ import (
 
 	"github.com/harness/gitness/internal/store"
 
+	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -61,7 +62,15 @@ func processSQLErrorf(err error, format string, args ...interface{}) error {
 }
 
 func isSQLUniqueConstraintError(original error) bool {
-	err := sqlite3.Error{}
-	ok := errors.As(original, &err)
-	return ok && errors.Is(err.ExtendedCode, sqlite3.ErrConstraintUnique)
+	var sqliteErr sqlite3.Error
+	if errors.As(original, &sqliteErr) {
+		return errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique)
+	}
+
+	var pqErr *pq.Error
+	if errors.As(original, &pqErr) {
+		return pqErr.Code == "23505" // unique_violation
+	}
+
+	return false
 }
