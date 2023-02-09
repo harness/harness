@@ -7,7 +7,8 @@ import {
   Text,
   StringSubstitute,
   Button,
-  PageError
+  PageError,
+  ButtonSize
 } from '@harness/uicore'
 import { Match, Case, Render } from 'react-jsx-match'
 import * as Diff2Html from 'diff2html'
@@ -50,6 +51,8 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   pullRequestMetadata?: TypesPullReq
   className?: string
   onCommentUpdate: () => void
+  prHasChanged?: boolean
+  handleRefresh?: () => void
 }
 
 export const Changes: React.FC<ChangesProps> = ({
@@ -61,7 +64,9 @@ export const Changes: React.FC<ChangesProps> = ({
   emptyMessage,
   pullRequestMetadata,
   onCommentUpdate,
-  className
+  className,
+  prHasChanged,
+  handleRefresh
 }) => {
   const { getString } = useStrings()
   const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SIDE_BY_SIDE)
@@ -174,6 +179,18 @@ export const Changes: React.FC<ChangesProps> = ({
                         }}
                       />
                     </Text>
+                    {!prHasChanged ? null : (
+                      <Button
+                        onClick={handleRefresh}
+                        iconProps={{ className: css.refreshIcon, size: 12 }}
+                        icon="repeat"
+                        text={getString('refresh')}
+                        variation={ButtonVariation.SECONDARY}
+                        size={ButtonSize.SMALL}
+                        padding={{ left: 'small' }}
+                        className={css.repeatBtn}
+                      />
+                    )}
 
                     {/* Show "Scroll to top" button */}
                     <Render when={isSticky}>

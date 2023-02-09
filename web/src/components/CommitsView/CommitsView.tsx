@@ -1,5 +1,16 @@
 import React, { useMemo } from 'react'
-import { Container, Color, TableV2 as Table, Text, Avatar, Layout } from '@harness/uicore'
+import {
+  Container,
+  Color,
+  TableV2 as Table,
+  Text,
+  Avatar,
+  Layout,
+  ButtonVariation,
+  ButtonSize,
+  Button,
+  FlexExpander
+} from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { orderBy } from 'lodash-es'
 import { useStrings } from 'framework/strings'
@@ -16,9 +27,18 @@ interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
   commits: TypesCommit[]
   emptyTitle: string
   emptyMessage: string
+  prHasChanged: boolean
+  handleRefresh: () => void
 }
 
-export function CommitsView({ repoMetadata, commits, emptyTitle, emptyMessage }: CommitsViewProps) {
+export function CommitsView({
+  repoMetadata,
+  commits,
+  emptyTitle,
+  emptyMessage,
+  handleRefresh,
+  prHasChanged
+}: CommitsViewProps) {
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const columns: Column<TypesCommit>[] = useMemo(
@@ -79,6 +99,20 @@ export function CommitsView({ repoMetadata, commits, emptyTitle, emptyMessage }:
 
   return (
     <Container className={css.container}>
+      <Layout.Horizontal>
+        <FlexExpander />
+        {!prHasChanged ? null : (
+          <Button
+            onClick={handleRefresh}
+            iconProps={{ className: css.refreshIcon, size: 12 }}
+            icon="repeat"
+            text={getString('refresh')}
+            variation={ButtonVariation.SECONDARY}
+            size={ButtonSize.SMALL}
+            margin={{ bottom: 'small' }}
+          />
+        )}
+      </Layout.Horizontal>
       {!!commits.length &&
         Object.entries(commitsGroupedByDate).map(([date, commitsByDate]) => {
           return (

@@ -10,6 +10,7 @@ export const DEFAULT_BRANCH_NAME = 'main'
 export const REGEX_VALID_REPO_NAME = /^[a-zA-Z_][0-9a-zA-Z-_.$]*$/
 export const SUGGESTED_BRANCH_NAMES = [DEFAULT_BRANCH_NAME, 'master']
 export const FILE_SEPERATOR = '/'
+export const PR_POLLING_LIMIT = 15000
 
 /** This utility shows a toaster without being bound to any component.
  * It's useful to show cross-page/component messages */

@@ -7,5 +7,8 @@ declare const styles: {
   readonly main: string
   readonly enableDiffLineBreaks: string
   readonly container: string
+  readonly hideBtn: string
+  readonly refreshIcon: string
+  readonly repeatBtn: string
 }
 export default styles

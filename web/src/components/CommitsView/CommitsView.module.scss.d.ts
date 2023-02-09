@@ -6,5 +6,6 @@ declare const styles: {
   readonly row: string
   readonly rowText: string
   readonly label: string
+  readonly refreshIcon: string
 }
 export default styles

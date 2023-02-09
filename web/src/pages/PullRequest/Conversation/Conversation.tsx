@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Avatar,
+  Button,
+  ButtonSize,
+  ButtonVariation,
   Color,
   Container,
   FlexExpander,
@@ -38,9 +41,17 @@ import css from './Conversation.module.scss'
 
 interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   onCommentUpdate: () => void
+  prHasChanged?: boolean
+  handleRefresh?: () => void
 }
 
-export const Conversation: React.FC<ConversationProps> = ({ repoMetadata, pullRequestMetadata, onCommentUpdate }) => {
+export const Conversation: React.FC<ConversationProps> = ({
+  repoMetadata,
+  pullRequestMetadata,
+  onCommentUpdate,
+  prHasChanged,
+  handleRefresh
+}) => {
   const { getString } = useStrings()
   const { currentUser } = useAppContext()
   const {
@@ -126,6 +137,21 @@ export const Conversation: React.FC<ConversationProps> = ({ repoMetadata, pullRe
             onPRStateChanged={refreshPR}
           />
           <Container>
+            <Layout.Horizontal width={`70%`}>
+              <FlexExpander />
+              {!prHasChanged ? null : (
+                <Button
+                  onClick={handleRefresh}
+                  iconProps={{ className: css.refreshIcon, size: 12 }}
+                  icon="repeat"
+                  text={getString('refresh')}
+                  variation={ButtonVariation.SECONDARY}
+                  size={ButtonSize.SMALL}
+                  margin={{ bottom: 'small' }}
+                />
+              )}
+            </Layout.Horizontal>
+
             <Layout.Horizontal>
               <Container width={`70%`}>
                 <Layout.Vertical spacing="xlarge">

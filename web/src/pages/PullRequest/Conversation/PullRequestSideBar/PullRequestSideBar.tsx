@@ -74,9 +74,9 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               {getString('required')}
             </Text>
             {reviewers && reviewers?.length !== 0 ? (
-              reviewers.map((reviewer: { reviewer: { display_name: string }; review_decision: string }): any => {
+              reviewers.map((reviewer: { reviewer: { display_name: string, id:number }; review_decision: string }): any => {
                 return (
-                  <Layout.Horizontal>
+                  <Layout.Horizontal key={reviewer.reviewer.id}>
                     <Icon className={css.reviewerPadding} {...generateReviewDecisionIcon(reviewer.review_decision)} />
                     <Avatar
                       className={css.reviewerAvatar}
@@ -129,9 +129,9 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               {getString('optional')}
             </Text>
             {reviewers && reviewers?.length !== 0 ? (
-              reviewers.map((reviewer: { reviewer: { display_name: string }; review_decision: string }) => {
+              reviewers.map((reviewer: { reviewer: { display_name: string, id: number }; review_decision: string }) => {
                 return (
-                  <Layout.Horizontal>
+                  <Layout.Horizontal key={reviewer.reviewer.id}>
                     <Icon className={css.reviewerPadding} name="dot" />
                     <Avatar
                       className={css.reviewerAvatar}

@@ -40,3 +40,16 @@
 .container {
   background-color: var(--primary-bg) !important;
 }
+
+.hideBtn {
+  display: none;
+}
+
+.refreshIcon {
+  padding-left: var(--spacing-xsmall) !important;
+  padding-right: var(--spacing-xsmall);
+}
+
+.repeatBtn {
+  margin-left: var(--spacing-xsmall) !important;
+}

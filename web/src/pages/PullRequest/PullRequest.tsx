@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Container,
   PageBody,
@@ -21,7 +21,7 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { voidFn, getErrorMessage } from 'utils/Utils'
+import { voidFn, getErrorMessage, PR_POLLING_LIMIT } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { TypesPullReq, TypesRepository } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -41,6 +41,7 @@ export default function PullRequest() {
   const history = useHistory()
   const { getString } = useStrings()
   const { routes } = useAppContext()
+  const [prHasChanged, setPrHasChanged] = useState(false)
   const {
     repoMetadata,
     error,
@@ -49,6 +50,7 @@ export default function PullRequest() {
     pullRequestId,
     pullRequestSection = PullRequestSection.CONVERSATION
   } = useGetRepositoryMetadata()
+
   const {
     data: prData,
     error: prError,
@@ -58,6 +60,40 @@ export default function PullRequest() {
     path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestId}`,
     lazy: !repoMetadata
   })
+  const {
+    data: pollPrData,
+    error: pollPrError,
+    refetch: refetchPollPullRequest
+  } = useGet<TypesPullReq>({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestId}`,
+    lazy: !repoMetadata
+  })
+  const [newPrData, setNewPrData] = useState<TypesPullReq>()
+
+  const handleRefresh = () => {
+    refetchPullRequest()
+    setNewPrData(prData as TypesPullReq)
+    setPrHasChanged(false)
+  }
+
+  useEffect(() => {
+    const interval = window.setTimeout(() => {
+      refetchPollPullRequest()
+      setNewPrData(pollPrData as TypesPullReq)
+    }, PR_POLLING_LIMIT)
+    return () => window.clearTimeout(interval)
+  }, [pollPrData])
+  
+  useEffect(() => {
+    if (prData?.stats && newPrData?.stats) {
+      const prStatsChanged =
+        prData.stats.commits !== newPrData.stats.commits || prData.stats.files_changed !== newPrData.stats.files_changed
+      if (prStatsChanged) {
+        setPrHasChanged(prStatsChanged)
+      }
+    }
+  }, [newPrData])
+
   const activeTab = useMemo(
     () =>
       Object.values(PullRequestSection).find(value => value === pullRequestSection)
@@ -65,6 +101,7 @@ export default function PullRequest() {
         : PullRequestSection.CONVERSATION,
     [pullRequestSection]
   )
+  // /repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/metadata
 
   return (
     <Container className={css.main}>
@@ -81,7 +118,7 @@ export default function PullRequest() {
           ]
         }
       />
-      <PageBody error={getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
+      <PageBody error={getErrorMessage(error || prError || pollPrError)} retryOnError={voidFn(refetch)}>
         <LoadingSpinner visible={loading || prLoading} withBorder={!!prData && prLoading} />
 
         <Render when={repoMetadata && prData}>
@@ -116,6 +153,8 @@ export default function PullRequest() {
                         repoMetadata={repoMetadata as TypesRepository}
                         pullRequestMetadata={prData as TypesPullReq}
                         onCommentUpdate={voidFn(refetchPullRequest)}
+                        prHasChanged={prHasChanged}
+                        handleRefresh={voidFn(handleRefresh)}
                       />
                     )
                   },
@@ -132,6 +171,8 @@ export default function PullRequest() {
                       <PullRequestCommits
                         repoMetadata={repoMetadata as TypesRepository}
                         pullRequestMetadata={prData as TypesPullReq}
+                        prHasChanged={prHasChanged}
+                        handleRefresh={voidFn(handleRefresh)}
                       />
                     )
                   },
@@ -154,6 +195,8 @@ export default function PullRequest() {
                           emptyTitle={getString('noChanges')}
                           emptyMessage={getString('noChangesPR')}
                           onCommentUpdate={voidFn(refetchPullRequest)}
+                          prHasChanged={prHasChanged}
+                          handleRefresh={voidFn(handleRefresh)}
                         />
                       </Container>
                     )

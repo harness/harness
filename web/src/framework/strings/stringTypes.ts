@@ -220,6 +220,7 @@ export interface StringsMap {
   pullRequests: string
   quote: string
   readMe: string
+  refresh: string
   rejected: string
   remove: string
   renameFile: string

@@ -9,5 +9,8 @@ declare const styles: {
   readonly snapshotContent: string
   readonly newCommentCreated: string
   readonly clear: string
+  readonly refreshIcon: string
+  readonly repeatBtn: string
+  readonly bp3ButtonText: string
 }
 export default styles
