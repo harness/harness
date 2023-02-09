@@ -129,7 +129,7 @@ newPullRequest: New Pull Request
 pullRequestEmpty: Here is no Pull Request. Try to
 comparingChanges: Comparing Changes
 selectToViewMore: Select branch to view more here.
-createPullRequest: Create Pull Request
+createPullRequest: Create pull request
 prefixBase: 'base: '
 prefixCompare: 'compare: '
 selectBranchPlaceHolder: select a branch here
@@ -165,7 +165,6 @@ pr:
   titlePlaceHolder: Enter the pull request title
   descriptionPlaceHolder: Leave pull request comment here
   modalTitle: Open a pull request
-  buttonText: Create pull request
   createDraftPR: Create draft pull request
   metaLine: '{user} wants to merge {commits} {commitsCount|1:commit,commits} into {target} from {source}'
   state: '{state|closed:Closed,merged:Merged,rejected:Rejected,draft:Draft,Open}'
@@ -320,7 +319,7 @@ branchDoesNotHaveFile: The "{repoName}" repository doesn't contain the "{fileNam
 webhookDialogTitle: Turn ON/OFF Webhook
 webhookDialogContent: Please confirm you want to on/off this webhook
 prExists: Pull request [#prNumber prTitle](prUrl) already exists
-pullRequest: Pull request 
+pullRequest: Pull request
 alreadyExists: already exists
 makeRequired: Make Required
 makeOptional: Make Optional

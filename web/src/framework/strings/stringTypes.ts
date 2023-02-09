@@ -160,7 +160,6 @@ export interface StringsMap {
   'pr.ableToMerge': string
   'pr.authorCommentedPR': string
   'pr.branchHasNoConflicts': string
-  'pr.buttonText': string
   'pr.cantMerge': string
   'pr.createDraftPR': string
   'pr.descriptionPlaceHolder': string

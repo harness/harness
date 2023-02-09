@@ -160,7 +160,7 @@ export function useCreatePullRequestModal({
                   style={{ alignItems: 'center' }}>
                   <Button
                     type="submit"
-                    text={getString('pr.buttonText')}
+                    text={getString('createPullRequest')}
                     variation={ButtonVariation.PRIMARY}
                     disabled={loading}
                   />
