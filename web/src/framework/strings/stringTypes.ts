@@ -82,6 +82,8 @@ export interface StringsMap {
   deployKeys: string
   description: string
   diff: string
+  disableWebhookContent: string
+  disableWebhookTitle: string
   draft: string
   edit: string
   editFile: string
@@ -91,6 +93,8 @@ export interface StringsMap {
   emptyRepoHeader: string
   emptyRepoInclude: string
   enableSSLVerification: string
+  enableWebhookContent: string
+  enableWebhookTitle: string
   enabled: string
   enterDescription: string
   enterNewBranchName: string

@@ -330,3 +330,7 @@ noOptionalReviewers: No Optional Reviewers
 noRequiredReviewers: No Required Reviewers
 reviewers: Reviewers
 refresh: Refresh
+enableWebhookTitle: Enable the Webhook
+disableWebhookTitle: Disable the Webhook
+enableWebhookContent: Please confirm that you wanted to turn on 
+disableWebhookContent: Please confirm that you wanted to turn off

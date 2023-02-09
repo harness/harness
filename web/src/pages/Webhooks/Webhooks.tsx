@@ -91,12 +91,13 @@ export default function Webhooks() {
                     <Container padding={'medium'} width={250}>
                       <Layout.Vertical>
                         <Text font={{ variation: FontVariation.H5, size: 'medium' }}>
-                          {getString('webhookDialogTitle')}
+                          {checked ? getString('disableWebhookTitle') : getString('enableWebhookTitle')}
                         </Text>
                         <Text
-                          padding={{ top: 'medium', bottom: 'medium', left: 'xsmall' }}
+                          padding={{ top: 'medium', bottom: 'medium' }}
                           font={{ variation: FontVariation.BODY2_SEMI }}>
-                          {getString('webhookDialogContent')}
+                          {checked ? getString('disableWebhookContent') : getString('enableWebhookContent')}
+                          <strong>{` "${row.original.display_name}"`}</strong>
                         </Text>
                         <Layout.Horizontal>
                           <Button
