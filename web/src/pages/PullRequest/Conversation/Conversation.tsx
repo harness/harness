@@ -445,7 +445,11 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
     case CommentType.MERGE: {
       return (
         <Container>
-          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.box}>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
+            <Container width={24} height={24} className={css.mergeContainer}>
+              <Icon name={CodeIcon.Merged} size={16} color={Color.PURPLE_700} />
+            </Container>
+
             <Avatar name={pullRequestMetadata.merger?.display_name} size="small" hoverCard={false} />
             <Text>
               <StringSubstitute

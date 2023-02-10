@@ -9,7 +9,7 @@
 
   &.merged {
     border-color: transparent !important;
-    background: var(--purple-50) !important;
+    background: #e8e8ff !important;
   }
 
   .layout {
@@ -38,7 +38,7 @@
     font-weight: 500 !important;
     font-size: 13px !important;
     line-height: 20px !important;
-    color: var(--grey-500) !important;
+    color: var(--grey-700) !important;
   }
 }
 
@@ -67,4 +67,10 @@
     --background-color-hover: var(--green-900) !important;
     --background-color-active: var(--green-900) !important;
   }
+}
+
+.mergeContainer {
+  border-radius: 4px;
+  background: #e8e8ff !important;
+  padding: 2px 5px !important;
 }

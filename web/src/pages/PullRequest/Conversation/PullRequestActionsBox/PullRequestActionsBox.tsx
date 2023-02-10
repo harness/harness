@@ -222,7 +222,9 @@ const MergeInfo: React.FC<{ pullRequestMetadata: TypesPullReq }> = ({ pullReques
   return (
     <Container className={cx(css.main, css.merged)}>
       <Layout.Horizontal spacing="medium" flex={{ alignItems: 'center' }} className={css.layout}>
-        <Icon name={CodeIcon.PullRequest} size={20} color={Color.PURPLE_700} />
+        <Container width={24} height={24} className={css.mergeContainer}>
+          <Icon name={CodeIcon.Merged} size={20} color={Color.PURPLE_700} />
+        </Container>
         <Container>
           {/* <Text className={css.heading}>{getString('pr.prMerged')}</Text> */}
           <Text className={css.sub}>

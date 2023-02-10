@@ -11,5 +11,6 @@ declare const styles: {
   readonly popover: string
   readonly menuItem: string
   readonly btnWrapper: string
+  readonly mergeContainer: string
 }
 export default styles

@@ -152,7 +152,7 @@ export const CommentBox = <T = unknown,>({
                     placeHolder: getString(comments.length ? 'replyHere' : 'leaveAComment'),
                     tabEdit: getString('write'),
                     tabPreview: getString('preview'),
-                    save: getString('addComment'),
+                    save: getString('comment'),
                     cancel: getString('cancel')
                   }}
                   value={markdown}

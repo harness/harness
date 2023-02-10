@@ -26,7 +26,7 @@
         background-color: transparent !important;
         position: absolute;
         top: -4px;
-        right: 25px;
+        left: 0px;
         z-index: 2;
         padding: 0;
 
@@ -113,7 +113,9 @@
 
         .md-editor-content {
           border: 1px solid var(--color-border) !important;
-          border-radius: var(--box-radius);
+          border-bottom-left-radius: var(--box-radius);
+          border-bottom-right-radius: var(--box-radius);
+          border-top-right-radius: var(--box-radius);
         }
       }
 
@@ -127,7 +129,9 @@
       }
 
       .md-editor-toolbar {
-        transform: translateY(-5px);
+        margin-left: auto;
+        margin-right: 0;
+        position: relative;
       }
 
       .md-editor-content {

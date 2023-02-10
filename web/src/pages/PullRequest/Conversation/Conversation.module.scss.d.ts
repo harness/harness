@@ -2,6 +2,8 @@
 // this is an auto-generated file
 declare const styles: {
   readonly box: string
+  readonly mergedBox: string
+  readonly mergeContainer: string
   readonly descBox: string
   readonly snapshot: string
   readonly title: string
