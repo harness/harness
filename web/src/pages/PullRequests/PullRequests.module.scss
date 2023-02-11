@@ -10,12 +10,20 @@
 
       .title {
         font-weight: 600;
+        display: flex;
+        .convoIcon {
+          padding-top: 1px !important;
+        }
       }
     }
-
-    .titleRow {
-      padding-left: var(--spacing-small);
-      align-items: center;
-    }
   }
+
+  .titleRow {
+    padding-left: var(--spacing-small);
+    align-items: center;
+  }
+}
+
+.state{
+  font-weight: 600;
 }

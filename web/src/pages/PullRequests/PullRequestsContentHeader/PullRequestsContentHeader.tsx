@@ -54,7 +54,6 @@ export function PullRequestsContentHeader({
           }}
           popoverClassName={css.branchDropdown}
         />
-        <FlexExpander />
         <SearchInputWithSpinner
           loading={loading}
           query={searchTerm}
@@ -63,6 +62,7 @@ export function PullRequestsContentHeader({
             onSearchTermChanged(value)
           }}
         />
+        <FlexExpander />
         <Button
           variation={ButtonVariation.PRIMARY}
           text={getString('newPullRequest')}

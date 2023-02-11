@@ -167,6 +167,7 @@ pr:
   modalTitle: Open a pull request
   createDraftPR: Create draft pull request
   metaLine: '{user} wants to merge {commits} {commitsCount|1:commit,commits} into {target} from {source}'
+  executionState: '{state|success:Success,failed:Failed}'
   state: '{state|closed:Closed,merged:Merged,rejected:Rejected,draft:Draft,Open}'
   statusLine: '#{number} {state|merged:merged,closed:closed,rejected:rejected,opened} {time} by {user}'
   diffStatus: '{status|deleted:Deleted,new:Added,renamed:Renamed,copied:Copied,Changed}'

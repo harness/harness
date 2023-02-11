@@ -5,6 +5,8 @@ declare const styles: {
   readonly table: string
   readonly row: string
   readonly title: string
+  readonly convoIcon: string
   readonly titleRow: string
+  readonly state: string
 }
 export default styles

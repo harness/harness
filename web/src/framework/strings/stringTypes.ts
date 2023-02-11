@@ -171,6 +171,7 @@ export interface StringsMap {
   'pr.diffStatus': string
   'pr.diffView': string
   'pr.enterDesc': string
+  'pr.executionState': string
   'pr.failedToCreate': string
   'pr.failedToDeleteComment': string
   'pr.failedToSaveComment': string

@@ -1,5 +1,16 @@
 import React, { useMemo, useState } from 'react'
-import { Container, PageBody, Text, Color, TableV2, Layout, StringSubstitute } from '@harness/uicore'
+import {
+  Container,
+  PageBody,
+  Text,
+  Color,
+  TableV2,
+  Layout,
+  StringSubstitute,
+  Icon,
+  FontVariation,
+  FlexExpander
+} from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
@@ -20,6 +31,7 @@ import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequ
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
 import css from './PullRequests.module.scss'
+import { ExecutionStatusLabel } from 'components/ExecutionStatusLabel/ExecutionStatusLabel'
 
 export default function PullRequests() {
   const { getString } = useStrings()
@@ -61,28 +73,42 @@ export default function PullRequests() {
               <PullRequestStateLabel data={row.original} iconOnly />
               <Container padding={{ left: 'small' }}>
                 <Layout.Vertical spacing="small">
-                  <Text icon="success-tick" color={Color.GREY_800} className={css.title}>
+                  <Text color={Color.GREY_800} className={css.title}>
                     {row.original.title}
+                    <Icon
+                      className={css.convoIcon}
+                      padding={{ left: 'medium', right: 'xsmall' }}
+                      name="code-chat"
+                      size={15}
+                    />
+                    <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
+                      {row.original.stats?.conversations}
+                    </Text>
                   </Text>
                   <Text color={Color.GREY_500}>
                     <StringSubstitute
                       str={getString('pr.statusLine')}
                       vars={{
-                        state: row.original.state,
+                        state: <strong className={css.state}>{row.original.state}</strong>,
                         number: <Text inline>{row.original.number}</Text>,
                         time: (
-                          <ReactTimeago
-                            date={
-                              (row.original.state == 'merged' ? row.original.merged : row.original.created) as number
-                            }
-                          />
+                          <strong>
+                            <ReactTimeago
+                              date={
+                                (row.original.state == 'merged' ? row.original.merged : row.original.created) as number
+                              }
+                            />
+                          </strong>
                         ),
-                        user: row.original.author?.display_name
+                        user: <strong>{row.original.author?.display_name}</strong>
                       }}
                     />
                   </Text>
                 </Layout.Vertical>
               </Container>
+              <FlexExpander />
+              {/* fix state when api is fully implemented */}
+              <ExecutionStatusLabel data={{ state: 'success' }} />
             </Layout.Horizontal>
           )
         }
