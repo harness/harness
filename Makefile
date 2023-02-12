@@ -1,8 +1,8 @@
 ifndef GOPATH
 	GOPATH := $(shell go env GOPATH)
 endif
-ifndef GOBIN
-	GOBIN := $(shell go env GOPATH)/bin
+ifndef GOBIN # derive value from gopath (default to first entry, similar to 'go get')
+	GOBIN := $(shell go env GOPATH | sed 's/:.*//')/bin
 endif
 ifndef DOCKER_BUILD_OPTS
 	DOCKER_BUILD_OPTS :=
@@ -168,7 +168,7 @@ proto:
 # Install golangci-lint
 $(GOBIN)/golangci-lint:
 	@echo "🔘 Installing golangci-lint... (`date '+%H:%M:%S'`)"
-	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin
+	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOBIN)
 
 # Install goimports to format code
 $(GOBIN)/goimports:
