@@ -12,6 +12,8 @@ import (
 
 	"github.com/harness/gitness/gitrpc/internal/streamio"
 	"github.com/harness/gitness/gitrpc/rpc"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type DiffParams struct {
@@ -83,5 +85,70 @@ func (c *Client) DiffShortStat(ctx context.Context, params *DiffParams) (DiffSho
 		Files:     int(stat.GetFiles()),
 		Additions: int(stat.GetAdditions()),
 		Deletions: int(stat.GetDeletions()),
+	}, nil
+}
+
+type DiffStatsOutput struct {
+	Commits      int
+	FilesChanged int
+}
+
+func (c *Client) DiffStats(ctx context.Context, params *DiffParams) (DiffStatsOutput, error) {
+	// declare variables which will be used in go routines,
+	// no need for atomic operations because writing and reading variable
+	// doesn't happen at the same time
+	var (
+		totalCommits int
+		totalFiles   int
+	)
+
+	errGroup, groupCtx := errgroup.WithContext(ctx)
+
+	errGroup.Go(func() error {
+		// read total commits
+
+		options := &GetCommitDivergencesParams{
+			ReadParams: params.ReadParams,
+			Requests: []CommitDivergenceRequest{
+				{
+					From: params.HeadRef,
+					To:   params.BaseRef,
+				},
+			},
+		}
+
+		rpcOutput, err := c.GetCommitDivergences(groupCtx, options)
+		if err != nil {
+			return fmt.Errorf("failed to count pull request commits: %w", err)
+		}
+		if len(rpcOutput.Divergences) > 0 {
+			totalCommits = int(rpcOutput.Divergences[0].Ahead)
+		}
+		return nil
+	})
+
+	errGroup.Go(func() error {
+		// read short stat
+		stat, err := c.DiffShortStat(groupCtx, &DiffParams{
+			ReadParams: params.ReadParams,
+			BaseRef:    params.BaseRef,
+			HeadRef:    params.HeadRef,
+			MergeBase:  true, // must be true, because commitDivergences use tripple dot notation
+		})
+		if err != nil {
+			return fmt.Errorf("failed to count pull request file changes: %w", err)
+		}
+		totalFiles = stat.Files
+		return nil
+	})
+
+	err := errGroup.Wait()
+	if err != nil {
+		return DiffStatsOutput{}, err
+	}
+
+	return DiffStatsOutput{
+		Commits:      totalCommits,
+		FilesChanged: totalFiles,
 	}, nil
 }

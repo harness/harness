@@ -477,8 +477,10 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		Merger:         nil,
 		Stats: types.PullReqStats{
 			Conversations: pr.CommentCount,
-			Commits:       0,
-			FilesChanged:  0,
+			DiffStats: types.DiffStats{
+				Commits:      0,
+				FilesChanged: 0,
+			},
 		},
 	}
 }

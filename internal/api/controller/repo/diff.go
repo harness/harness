@@ -13,6 +13,7 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -63,5 +64,40 @@ func parseDiffPath(path string) (CompareInfo, error) {
 		BaseRef:   infos[0],
 		HeadRef:   infos[1],
 		MergeBase: strings.Contains(path, "..."),
+	}, nil
+}
+
+func (c *Controller) DiffStats(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	path string,
+) (types.DiffStats, error) {
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	if err != nil {
+		return types.DiffStats{}, err
+	}
+
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
+		return types.DiffStats{}, err
+	}
+
+	info, err := parseDiffPath(path)
+	if err != nil {
+		return types.DiffStats{}, err
+	}
+
+	output, err := c.gitRPCClient.DiffStats(ctx, &gitrpc.DiffParams{
+		ReadParams: gitrpc.CreateRPCReadParams(repo),
+		BaseRef:    info.BaseRef,
+		HeadRef:    info.HeadRef,
+	})
+	if err != nil {
+		return types.DiffStats{}, err
+	}
+
+	return types.DiffStats{
+		Commits:      output.Commits,
+		FilesChanged: output.FilesChanged,
 	}, nil
 }

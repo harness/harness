@@ -50,11 +50,16 @@ type PullReq struct {
 	Stats  PullReqStats   `json:"stats"`
 }
 
-// PullReqStats shows total number of conversations, commits and modified files.
+// DiffStats shows total number of commits and modified files.
+type DiffStats struct {
+	Commits      int `json:"commits"`
+	FilesChanged int `json:"files_changed"`
+}
+
+// PullReqStats shows Diff statistics and number of conversations.
 type PullReqStats struct {
-	Conversations int `json:"conversations"`
-	Commits       int `json:"commits"`
-	FilesChanged  int `json:"files_changed"`
+	DiffStats
+	Conversations int `json:"conversations,omitempty"`
 }
 
 // PullReqFilter stores pull request query parameters.
