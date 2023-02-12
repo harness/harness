@@ -496,4 +496,14 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opRawDiff, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRawDiff, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/compare/{range}", opRawDiff)
+
+	opMergeCheck := openapi3.Operation{}
+	opMergeCheck.WithTags("repository")
+	opMergeCheck.WithMapOfAnything(map[string]interface{}{"operationId": "mergeCheck"})
+	_ = reflector.SetRequest(&opMergeCheck, new(getRawDiffRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opMergeCheck, new(repo.MergeCheck), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/merge-check/{range}", opMergeCheck)
 }

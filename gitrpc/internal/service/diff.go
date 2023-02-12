@@ -15,14 +15,16 @@ import (
 
 type DiffService struct {
 	rpc.UnimplementedDiffServiceServer
-	adapter   GitAdapter
-	reposRoot string
+	adapter      GitAdapter
+	reposRoot    string
+	reposTempDir string
 }
 
-func NewDiffService(adapter GitAdapter, reposRoot string) (*DiffService, error) {
+func NewDiffService(adapter GitAdapter, reposRoot string, reposTempDir string) (*DiffService, error) {
 	return &DiffService{
-		adapter:   adapter,
-		reposRoot: reposRoot,
+		adapter:      adapter,
+		reposRoot:    reposRoot,
+		reposTempDir: reposTempDir,
 	}, nil
 }
 

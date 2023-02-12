@@ -24,19 +24,29 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 	event *events.Event[*gitevents.BranchUpdatedPayload],
 ) error {
 	s.forEveryOpenPR(ctx, event.Payload.RepoID, event.Payload.Ref, func(pr *types.PullReq) error {
-		err := func() (err error) {
-			pr, err = s.pullreqStore.UpdateActivitySeq(ctx, pr)
-			if err != nil {
-				return fmt.Errorf("failed to increment activity sequence: %w", err)
+		pr, err := s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+			pr.ActivitySeq++
+			if pr.SourceSHA != event.Payload.OldSHA {
+				return fmt.Errorf(
+					"failed to set SourceSHA for PR %d to value '%s', expected SHA '%s' but current pr has '%s'",
+					pr.Number, event.Payload.NewSHA, event.Payload.OldSHA, pr.SourceSHA)
 			}
+			pr.SourceSHA = event.Payload.NewSHA
+			pr.MergeRefSHA = nil
+			pr.MergeBaseSHA = nil
+			pr.MergeHeadSHA = nil
+			return nil
+		})
+		if err != nil {
+			return err
+		}
 
-			payload := &types.PullRequestActivityPayloadBranchUpdate{
-				Old: event.Payload.OldSHA,
-				New: event.Payload.NewSHA,
-			}
-			_, err = s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID, payload)
-			return
-		}()
+		payload := &types.PullRequestActivityPayloadBranchUpdate{
+			Old: event.Payload.OldSHA,
+			New: event.Payload.NewSHA,
+		}
+
+		_, err = s.activityStore.CreateWithPayload(ctx, pr, event.Payload.PrincipalID, payload)
 		if err != nil {
 			// non-critical error
 			log.Ctx(ctx).Err(err).Msgf("failed to write pull request activity after branch update")
@@ -67,6 +77,9 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 	s.forEveryOpenPR(ctx, event.Payload.RepoID, event.Payload.Ref, func(pr *types.PullReq) error {
 		pr, err := s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 			pr.State = enum.PullReqStateClosed
+			pr.MergeRefSHA = nil
+			pr.MergeBaseSHA = nil
+			pr.MergeHeadSHA = nil
 			pr.ActivitySeq++ // because we need to write the activity
 			return nil
 		})

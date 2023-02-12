@@ -6,6 +6,7 @@ package githook
 
 import (
 	"context"
+	"errors"
 	"os/signal"
 	"syscall"
 	"time"
@@ -133,6 +134,9 @@ func run(fn func(ctx context.Context, hook *GitHook) error) error {
 	// load hook here (as it loads environment variables, has to be done at time of execution, not register)
 	hook, err := NewFromEnvironment()
 	if err != nil {
+		if errors.Is(err, ErrHookDisabled) {
+			return nil
+		}
 		return err
 	}
 

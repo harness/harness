@@ -100,14 +100,6 @@ message CommitTag {
   Commit commit     = 7;
 }
 
-enum RefType {
-  RefRaw = 0;
-  RefBranch = 1;
-  RefTag = 2;
-  RefPullReqHead = 3;
-  RefPullReqMerge = 4;
-}
-
 message GetRefRequest {
   ReadRequest base = 1;
   string ref_name  = 2;
@@ -120,10 +112,10 @@ message GetRefResponse {
 
 message UpdateRefRequest {
   WriteRequest base = 1;
-  string ref_name  = 2;
-  RefType ref_type = 3;
-  string new_value = 4;
-  string old_value = 5;
+  string ref_name   = 2;
+  RefType ref_type  = 3;
+  string new_value  = 4;
+  string old_value  = 5;
 }
 
 message UpdateRefResponse {}

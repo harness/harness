@@ -7,6 +7,7 @@ package pullreq
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/api/usererror"
@@ -42,6 +43,8 @@ func (c *Controller) Find(
 	if err != nil {
 		return nil, err
 	}
+
+	updateMergeStatus(pr)
 
 	return pr, nil
 }
@@ -111,4 +114,24 @@ func (c *Controller) getStats(
 	}
 
 	return totalCommits, totalFiles, nil
+}
+
+func updateMergeStatus(pr *types.PullReq) {
+	mc := ""
+	if pr.MergeConflicts != nil {
+		mc = strings.TrimSpace(*pr.MergeConflicts)
+	}
+
+	switch {
+	case pr.State == enum.PullReqStateClosed:
+		pr.MergeStatus = enum.MergeStatusClosed
+	case pr.IsDraft:
+		pr.MergeStatus = enum.MergeStatusDraft
+	case mc != "":
+		pr.MergeStatus = enum.MergeStatusConflict
+	case pr.MergeRefSHA != nil:
+		pr.MergeStatus = enum.MergeStatusMergeable
+	default:
+		pr.MergeStatus = enum.MergeStatusUnchecked
+	}
 }

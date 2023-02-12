@@ -19,12 +19,17 @@ const (
 	envPayload = "GIT_HOOK_GITNESS_PAYLOAD"
 )
 
+var (
+	ErrHookDisabled = errors.New("hook disabled")
+)
+
 // Payload defines the Payload the githook binary is initiated with when executing the git hooks.
 type Payload struct {
 	APIBaseURL  string
 	RepoID      int64
 	PrincipalID int64
 	RequestID   string
+	Disabled    bool // this will stop processing server hooks
 }
 
 // GenerateEnvironmentVariables generates the environment variables that are sent to the githook binary.
@@ -82,6 +87,9 @@ func loadPayloadFromEnvironment() (*Payload, error) {
 func validatePayload(payload *Payload) error {
 	if payload == nil {
 		return errors.New("payload is empty")
+	}
+	if payload.Disabled {
+		return ErrHookDisabled
 	}
 	if payload.APIBaseURL == "" {
 		return errors.New("payload doesn't contain a base url")

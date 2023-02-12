@@ -11,6 +11,7 @@ import (
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types/enum"
 )
@@ -31,7 +32,10 @@ func (c *Controller) RawDiff(
 		return err
 	}
 
-	info := parseDiffPath(path)
+	info, err := parseDiffPath(path)
+	if err != nil {
+		return err
+	}
 
 	return c.gitRPCClient.RawDiff(ctx, &gitrpc.DiffParams{
 		ReadParams: CreateRPCReadParams(repo),
@@ -47,19 +51,17 @@ type CompareInfo struct {
 	MergeBase bool
 }
 
-func parseDiffPath(path string) CompareInfo {
+func parseDiffPath(path string) (CompareInfo, error) {
 	infos := strings.SplitN(path, "...", 2)
 	if len(infos) != 2 {
 		infos = strings.SplitN(path, "..", 2)
 	}
 	if len(infos) != 2 {
-		return CompareInfo{
-			HeadRef: path,
-		}
+		return CompareInfo{}, usererror.BadRequestf("invalid format \"%s\"", path)
 	}
 	return CompareInfo{
 		BaseRef:   infos[0],
 		HeadRef:   infos[1],
 		MergeBase: strings.Contains(path, "..."),
-	}
+	}, nil
 }

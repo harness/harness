@@ -36,6 +36,7 @@ import (
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/lock"
+	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 )
@@ -143,7 +144,9 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	nightly := cron.NewNightly()
 	repoGitInfoView := database.ProvideRepoGitInfoView(db)
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
-	pullreqService, err := pullreq2.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter, gitrpcInterface, db, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore)
+	pubsubConfig := pubsub.ProvideConfig(config)
+	pubSub := pubsub.ProvidePubSub(pubsubConfig, universalClient)
+	pullreqService, err := pullreq2.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter, gitrpcInterface, db, repoGitInfoCache, principalInfoCache, repoStore, pullReqStore, pullReqActivityStore, pubSub)
 	if err != nil {
 		return nil, err
 	}

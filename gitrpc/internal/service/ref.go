@@ -185,8 +185,8 @@ func (s ReferenceService) GetRef(ctx context.Context,
 		return nil, types.ErrBaseCannotBeEmpty
 	}
 
-	refType, ok := enum.RefFromRPC(request.GetRefType())
-	if !ok {
+	refType := enum.RefFromRPC(request.GetRefType())
+	if refType == enum.RefTypeUndefined {
 		return nil, status.Error(codes.InvalidArgument, "invalid value of RefType argument")
 	}
 
@@ -207,8 +207,8 @@ func (s ReferenceService) UpdateRef(ctx context.Context,
 		return nil, types.ErrBaseCannotBeEmpty
 	}
 
-	refType, ok := enum.RefFromRPC(request.GetRefType())
-	if !ok {
+	refType := enum.RefFromRPC(request.GetRefType())
+	if refType == enum.RefTypeUndefined {
 		return nil, status.Error(codes.InvalidArgument, "invalid value of RefType argument")
 	}
 

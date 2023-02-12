@@ -12,8 +12,8 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 )
 
-// HandleRawDiff returns the diff between two commits, branches or tags.
-func HandleRawDiff(repoCtrl *repo.Controller) http.HandlerFunc {
+// HandleMergeCheck checks if two branches are mergeable.
+func HandleMergeCheck(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -25,9 +25,12 @@ func HandleRawDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		path := request.GetOptionalRemainderFromPath(r)
 
-		if err = repoCtrl.RawDiff(ctx, session, repoRef, path, w); err != nil {
+		output, err := repoCtrl.MergeCheck(ctx, session, repoRef, path)
+		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
+
+		render.JSON(w, http.StatusOK, output)
 	}
 }

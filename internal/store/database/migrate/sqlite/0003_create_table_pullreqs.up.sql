@@ -13,6 +13,7 @@ pullreq_id INTEGER PRIMARY KEY AUTOINCREMENT
 ,pullreq_description TEXT NOT NULL
 ,pullreq_source_repo_id INTEGER NOT NULL
 ,pullreq_source_branch TEXT NOT NULL
+,pullreq_source_sha TEXT NOT NULL
 ,pullreq_target_repo_id INTEGER NOT NULL
 ,pullreq_target_branch TEXT NOT NULL
 ,pullreq_activity_seq INTEGER DEFAULT 0
@@ -21,6 +22,8 @@ pullreq_id INTEGER PRIMARY KEY AUTOINCREMENT
 ,pullreq_merge_strategy TEXT
 ,pullreq_merge_head_sha TEXT
 ,pullreq_merge_base_sha TEXT
+,pullreq_merge_ref_sha TEXT
+,pullreq_merge_conflicts TEXT
 ,CONSTRAINT fk_pullreq_created_by FOREIGN KEY (pullreq_created_by)
     REFERENCES principals (principal_id) MATCH SIMPLE
     ON UPDATE NO ACTION

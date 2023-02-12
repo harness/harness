@@ -64,5 +64,9 @@ func (c *Controller) List(
 		return nil, 0, err
 	}
 
+	for i := range list {
+		updateMergeStatus(list[i])
+	}
+
 	return list, count, nil
 }

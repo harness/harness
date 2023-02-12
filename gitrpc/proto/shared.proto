@@ -57,3 +57,12 @@ message Identity {
   string name  = 1;
   string email = 2;
 }
+
+enum RefType {
+  Undefined = 0;
+  RefRaw = 1;
+  RefBranch = 2;
+  RefTag = 3;
+  RefPullReqHead = 4;
+  RefPullReqMerge = 5;
+}

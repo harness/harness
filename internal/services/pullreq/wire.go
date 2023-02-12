@@ -12,6 +12,7 @@ import (
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -30,10 +31,12 @@ func ProvideService(ctx context.Context,
 	gitRPCClient gitrpc.Interface,
 	db *sqlx.DB,
 	repoGitInfoCache store.RepoGitInfoCache,
+	principalCache store.PrincipalInfoCache,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
 	activityStore store.PullReqActivityStore,
+	pubsub pubsub.PubSub,
 ) (*Service, error) {
 	return New(ctx, config, gitReaderFactory, pullReqEvFactory, pullReqEvReporter, gitRPCClient,
-		db, repoGitInfoCache, repoStore, pullreqStore, activityStore)
+		db, repoGitInfoCache, principalCache, repoStore, pullreqStore, activityStore, pubsub)
 }

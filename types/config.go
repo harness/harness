@@ -137,4 +137,16 @@ type Config struct {
 		// DefaultNamespace is when mutex doesn't specify custom namespace for their keys
 		DefaultNamespace string `envconfig:"GITNESS_LOCK_DEFAULT_NAMESPACE" default:"default"`
 	}
+
+	PubSub struct {
+		// Provider is a name of distributed lock service like redis, memory, file etc...
+		Provider string `envconfig:"GITNESS_PUBSUB_PROVIDER"                         default:"inmemory"`
+		// AppNamespace is just service app prefix to avoid conflicts on channel definition
+		AppNamespace string `envconfig:"GITNESS_PUBSUB_APP_NAMESPACE"                default:"gitness"`
+		// DefaultNamespace is custom namespace for their channels
+		DefaultNamespace string        `envconfig:"GITNESS_PUBSUB_DEFAULT_NAMESPACE" default:"default"`
+		HealthInterval   time.Duration `envconfig:"GITNESS_PUBSUB_HEALTH_INTERVAL"   default:"3s"`
+		SendTimeout      time.Duration `envconfig:"GITNESS_PUBSUB_SEND_TIMEOUT"      default:"60s"`
+		ChannelSize      int           `envconfig:"GITNESS_PUBSUB_CHANNEL_SIZE"      default:"100"`
+	}
 }

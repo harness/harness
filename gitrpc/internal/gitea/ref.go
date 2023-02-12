@@ -128,7 +128,7 @@ func walkGiteaReferenceParser(parser *gitearef.Parser, handler types.WalkReferen
 }
 
 func (g Adapter) GetRef(ctx context.Context, repoPath, refName string, refType enum.RefType) (string, error) {
-	refName, errRef := getRef(refName, refType)
+	refName, errRef := g.GetRefPath(refName, refType)
 	if errRef != nil {
 		return "", errRef
 	}
@@ -151,13 +151,21 @@ func (g Adapter) UpdateRef(ctx context.Context,
 	repoPath, refName string, refType enum.RefType,
 	newValue, oldValue string,
 ) error {
-	refName, errRef := getRef(refName, refType)
+	refName, errRef := g.GetRefPath(refName, refType)
 	if errRef != nil {
 		return errRef
 	}
 
 	args := make([]string, 0, 4)
-	args = append(args, "update-ref", refName, newValue)
+	args = append(args, "update-ref")
+	if newValue == "" {
+		// if newvalue is empty, delete ref
+		args = append(args, "-d", refName)
+	} else {
+		args = append(args, refName, newValue)
+	}
+
+	// if an old value was provided, verify it matches.
 	if oldValue != "" {
 		args = append(args, oldValue)
 	}
@@ -167,16 +175,16 @@ func (g Adapter) UpdateRef(ctx context.Context,
 		Dir: repoPath,
 	})
 	if err != nil {
-		if err.IsExitCode(128) {
-			return types.ErrNotFound
-		}
-		return err
+		return processGiteaErrorf(err, "update-ref failed")
 	}
 
 	return nil
 }
 
-func getRef(refName string, refType enum.RefType) (string, error) {
+// TBD: IMHO all helper functions like this one should be on caller side
+// of Git adapter interface, so if we develop our own adapter package in future
+// we dont need to repeat helper like this again.
+func (g Adapter) GetRefPath(refName string, refType enum.RefType) (string, error) {
 	const (
 		refPullReqPrefix      = "refs/pullreq/"
 		refPullReqHeadSuffix  = "/head"
@@ -194,6 +202,8 @@ func getRef(refName string, refType enum.RefType) (string, error) {
 		return refPullReqPrefix + refName + refPullReqHeadSuffix, nil
 	case enum.RefTypePullReqMerge:
 		return refPullReqPrefix + refName + refPullReqMergeSuffix, nil
+	case enum.RefTypeUndefined:
+		fallthrough
 	default:
 		return "", types.ErrInvalidArgument
 	}

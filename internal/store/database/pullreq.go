@@ -61,16 +61,19 @@ type pullReq struct {
 
 	SourceRepoID int64  `db:"pullreq_source_repo_id"`
 	SourceBranch string `db:"pullreq_source_branch"`
+	SourceSHA    string `db:"pullreq_source_sha"`
 	TargetRepoID int64  `db:"pullreq_target_repo_id"`
 	TargetBranch string `db:"pullreq_target_branch"`
 
 	ActivitySeq int64 `db:"pullreq_activity_seq"`
 
-	MergedBy      null.Int    `db:"pullreq_merged_by"`
-	Merged        null.Int    `db:"pullreq_merged"`
-	MergeStrategy null.String `db:"pullreq_merge_strategy"`
-	MergeHeadSHA  null.String `db:"pullreq_merge_head_sha"`
-	MergeBaseSHA  null.String `db:"pullreq_merge_base_sha"`
+	MergedBy       null.Int    `db:"pullreq_merged_by"`
+	Merged         null.Int    `db:"pullreq_merged"`
+	MergeStrategy  null.String `db:"pullreq_merge_strategy"`
+	MergeHeadSHA   null.String `db:"pullreq_merge_head_sha"`
+	MergeBaseSHA   null.String `db:"pullreq_merge_base_sha"`
+	MergeRefSHA    null.String `db:"pullreq_merge_ref_sha"`
+	MergeConflicts null.String `db:"pullreq_merge_conflicts"`
 }
 
 const (
@@ -89,6 +92,7 @@ const (
 		,pullreq_description
 		,pullreq_source_repo_id
 		,pullreq_source_branch
+		,pullreq_source_sha
 		,pullreq_target_repo_id
 		,pullreq_target_branch
 		,pullreq_activity_seq
@@ -96,7 +100,9 @@ const (
 		,pullreq_merged
 		,pullreq_merge_strategy
 		,pullreq_merge_head_sha
-		,pullreq_merge_base_sha`
+		,pullreq_merge_base_sha
+		,pullreq_merge_ref_sha
+		,pullreq_merge_conflicts`
 
 	pullReqSelectBase = `
 	SELECT` + pullReqColumns + `
@@ -173,12 +179,15 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_description
 		,pullreq_source_repo_id
 		,pullreq_source_branch
+		,pullreq_source_sha
 		,pullreq_target_repo_id
 		,pullreq_target_branch
 		,pullreq_activity_seq
 		,pullreq_merged_by
 		,pullreq_merged
 		,pullreq_merge_strategy
+		,pullreq_merge_ref_sha
+		,pullreq_merge_conflicts
 	) values (
 		 :pullreq_version
 		,:pullreq_number
@@ -193,12 +202,15 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,:pullreq_description
 		,:pullreq_source_repo_id
 		,:pullreq_source_branch
+		,:pullreq_source_sha
 		,:pullreq_target_repo_id
 		,:pullreq_target_branch
 		,:pullreq_activity_seq
 		,:pullreq_merged_by
 		,:pullreq_merged
 		,:pullreq_merge_strategy
+		,:pullreq_merge_ref_sha
+		,:pullreq_merge_conflicts
 	) RETURNING pullreq_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -229,11 +241,14 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_title = :pullreq_title
 		,pullreq_description = :pullreq_description
 		,pullreq_activity_seq = :pullreq_activity_seq
+		,pullreq_source_sha = :pullreq_source_sha
 		,pullreq_merged_by = :pullreq_merged_by
 		,pullreq_merged = :pullreq_merged
 		,pullreq_merge_strategy = :pullreq_merge_strategy
 		,pullreq_merge_head_sha = :pullreq_merge_head_sha
 		,pullreq_merge_base_sha = :pullreq_merge_base_sha
+		,pullreq_merge_ref_sha = :pullreq_merge_ref_sha
+		,pullreq_merge_conflicts = :pullreq_merge_conflicts
 	WHERE pullreq_id = :pullreq_id AND pullreq_version = :pullreq_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -433,30 +448,33 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 
 func mapPullReq(pr *pullReq) *types.PullReq {
 	return &types.PullReq{
-		ID:            pr.ID,
-		Version:       pr.Version,
-		Number:        pr.Number,
-		CreatedBy:     pr.CreatedBy,
-		Created:       pr.Created,
-		Updated:       pr.Updated,
-		Edited:        pr.Edited,
-		State:         pr.State,
-		IsDraft:       pr.IsDraft,
-		CommentCount:  pr.CommentCount,
-		Title:         pr.Title,
-		Description:   pr.Description,
-		SourceRepoID:  pr.SourceRepoID,
-		SourceBranch:  pr.SourceBranch,
-		TargetRepoID:  pr.TargetRepoID,
-		TargetBranch:  pr.TargetBranch,
-		ActivitySeq:   pr.ActivitySeq,
-		MergedBy:      pr.MergedBy.Ptr(),
-		Merged:        pr.Merged.Ptr(),
-		MergeStrategy: (*enum.MergeMethod)(pr.MergeStrategy.Ptr()),
-		MergeHeadSHA:  pr.MergeHeadSHA.Ptr(),
-		MergeBaseSHA:  pr.MergeBaseSHA.Ptr(),
-		Author:        types.PrincipalInfo{},
-		Merger:        nil,
+		ID:             pr.ID,
+		Version:        pr.Version,
+		Number:         pr.Number,
+		CreatedBy:      pr.CreatedBy,
+		Created:        pr.Created,
+		Updated:        pr.Updated,
+		Edited:         pr.Edited,
+		State:          pr.State,
+		IsDraft:        pr.IsDraft,
+		CommentCount:   pr.CommentCount,
+		Title:          pr.Title,
+		Description:    pr.Description,
+		SourceRepoID:   pr.SourceRepoID,
+		SourceBranch:   pr.SourceBranch,
+		SourceSHA:      pr.SourceSHA,
+		TargetRepoID:   pr.TargetRepoID,
+		TargetBranch:   pr.TargetBranch,
+		ActivitySeq:    pr.ActivitySeq,
+		MergedBy:       pr.MergedBy.Ptr(),
+		Merged:         pr.Merged.Ptr(),
+		MergeStrategy:  (*enum.MergeMethod)(pr.MergeStrategy.Ptr()),
+		MergeHeadSHA:   pr.MergeHeadSHA.Ptr(),
+		MergeBaseSHA:   pr.MergeBaseSHA.Ptr(),
+		MergeRefSHA:    pr.MergeRefSHA.Ptr(),
+		MergeConflicts: pr.MergeConflicts.Ptr(),
+		Author:         types.PrincipalInfo{},
+		Merger:         nil,
 		Stats: types.PullReqStats{
 			Conversations: pr.CommentCount,
 			Commits:       0,
@@ -467,28 +485,31 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 
 func mapInternalPullReq(pr *types.PullReq) *pullReq {
 	m := &pullReq{
-		ID:            pr.ID,
-		Version:       pr.Version,
-		Number:        pr.Number,
-		CreatedBy:     pr.CreatedBy,
-		Created:       pr.Created,
-		Updated:       pr.Updated,
-		Edited:        pr.Edited,
-		State:         pr.State,
-		IsDraft:       pr.IsDraft,
-		CommentCount:  pr.CommentCount,
-		Title:         pr.Title,
-		Description:   pr.Description,
-		SourceRepoID:  pr.SourceRepoID,
-		SourceBranch:  pr.SourceBranch,
-		TargetRepoID:  pr.TargetRepoID,
-		TargetBranch:  pr.TargetBranch,
-		ActivitySeq:   pr.ActivitySeq,
-		MergedBy:      null.IntFromPtr(pr.MergedBy),
-		Merged:        null.IntFromPtr(pr.Merged),
-		MergeStrategy: null.StringFromPtr((*string)(pr.MergeStrategy)),
-		MergeHeadSHA:  null.StringFromPtr(pr.MergeHeadSHA),
-		MergeBaseSHA:  null.StringFromPtr(pr.MergeBaseSHA),
+		ID:             pr.ID,
+		Version:        pr.Version,
+		Number:         pr.Number,
+		CreatedBy:      pr.CreatedBy,
+		Created:        pr.Created,
+		Updated:        pr.Updated,
+		Edited:         pr.Edited,
+		State:          pr.State,
+		IsDraft:        pr.IsDraft,
+		CommentCount:   pr.CommentCount,
+		Title:          pr.Title,
+		Description:    pr.Description,
+		SourceRepoID:   pr.SourceRepoID,
+		SourceBranch:   pr.SourceBranch,
+		SourceSHA:      pr.SourceSHA,
+		TargetRepoID:   pr.TargetRepoID,
+		TargetBranch:   pr.TargetBranch,
+		ActivitySeq:    pr.ActivitySeq,
+		MergedBy:       null.IntFromPtr(pr.MergedBy),
+		Merged:         null.IntFromPtr(pr.Merged),
+		MergeStrategy:  null.StringFromPtr((*string)(pr.MergeStrategy)),
+		MergeHeadSHA:   null.StringFromPtr(pr.MergeHeadSHA),
+		MergeBaseSHA:   null.StringFromPtr(pr.MergeBaseSHA),
+		MergeRefSHA:    null.StringFromPtr(pr.MergeRefSHA),
+		MergeConflicts: null.StringFromPtr(pr.MergeConflicts),
 	}
 
 	return m

@@ -10,9 +10,11 @@ import (
 	"time"
 
 	"github.com/harness/gitness/gitrpc"
+	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/internal/api/controller"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/bootstrap"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -21,9 +23,8 @@ import (
 )
 
 type MergeInput struct {
-	Method       enum.MergeMethod `json:"method"`
-	Force        bool             `json:"force,omitempty"`
-	DeleteBranch bool             `json:"delete_branch,omitempty"`
+	Method  enum.MergeMethod `json:"method"`
+	HeadSHA string           `json:"head_sha"`
 }
 
 // Merge merges the pull request.
@@ -103,16 +104,19 @@ func (c *Controller) Merge(
 	// TODO: for forking merge title might be different?
 	mergeTitle := fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
 
-	var mergeOutput gitrpc.MergeBranchOutput
-	mergeOutput, err = c.gitRPCClient.MergeBranch(ctx, &gitrpc.MergeBranchParams{
-		WriteParams:      writeParams,
-		BaseBranch:       pr.TargetBranch,
-		HeadRepoUID:      sourceRepo.GitUID,
-		HeadBranch:       pr.SourceBranch,
-		Title:            mergeTitle,
-		Message:          "",
-		Force:            in.Force,
-		DeleteHeadBranch: in.DeleteBranch,
+	var mergeOutput gitrpc.MergeOutput
+	mergeOutput, err = c.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
+		WriteParams:     writeParams,
+		BaseBranch:      pr.TargetBranch,
+		HeadRepoUID:     sourceRepo.GitUID,
+		HeadBranch:      pr.SourceBranch,
+		Title:           mergeTitle,
+		Message:         "",
+		Committer:       rpcIdentityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
+		Author:          rpcIdentityFromPrincipal(session.Principal),
+		RefType:         gitrpcenum.RefTypeBranch,
+		RefName:         pr.TargetBranch,
+		HeadExpectedSHA: in.HeadSHA,
 	})
 	if err != nil {
 		return types.MergeResponse{}, err
@@ -125,6 +129,8 @@ func (c *Controller) Merge(
 		pr.MergedBy = &session.Principal.ID
 		pr.State = enum.PullReqStateMerged
 
+		// update all SHAs (might be empty if previous merge check failed)
+		pr.MergeRefSHA = &mergeOutput.MergedSHA
 		pr.MergeBaseSHA = &mergeOutput.BaseSHA
 		pr.MergeHeadSHA = &mergeOutput.HeadSHA
 

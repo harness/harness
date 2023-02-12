@@ -25,8 +25,8 @@ type GetRefResponse struct {
 }
 
 func (c *Client) GetRef(ctx context.Context, params GetRefParams) (GetRefResponse, error) {
-	refType, isOk := enum.RefToRPC(params.Type)
-	if !isOk {
+	refType := enum.RefToRPC(params.Type)
+	if refType == rpc.RefType_Undefined {
 		return GetRefResponse{}, ErrInvalidArgument
 	}
 
@@ -44,15 +44,19 @@ func (c *Client) GetRef(ctx context.Context, params GetRefParams) (GetRefRespons
 
 type UpdateRefParams struct {
 	WriteParams
-	Name     string
-	Type     enum.RefType
+	Type enum.RefType
+	Name string
+	// NewValue specified the new value the reference should point at.
+	// An empty value will lead to the deletion of the branch.
 	NewValue string
+	// OldValue is an optional value that can be used to ensure that the reference
+	// is updated iff its current value is matching the provided value.
 	OldValue string
 }
 
 func (c *Client) UpdateRef(ctx context.Context, params UpdateRefParams) error {
-	refType, isOk := enum.RefToRPC(params.Type)
-	if !isOk {
+	refType := enum.RefToRPC(params.Type)
+	if refType == rpc.RefType_Undefined {
 		return ErrInvalidArgument
 	}
 

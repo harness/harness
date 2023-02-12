@@ -32,6 +32,10 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 		return status.Errorf(codes.AlreadyExists, message)
 	case errors.Is(err, types.ErrInvalidArgument):
 		return status.Errorf(codes.InvalidArgument, message)
+	case types.IsMergeConflictsError(err):
+		return status.Errorf(codes.FailedPrecondition, message)
+	case types.IsMergeUnrelatedHistoriesError(err):
+		return status.Errorf(codes.FailedPrecondition, message)
 	default:
 		return status.Errorf(codes.Unknown, message)
 	}

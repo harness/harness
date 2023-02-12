@@ -58,6 +58,8 @@ func Translate(err error) *Error {
 		return ErrBadRequest
 	case errors.Is(err, gitrpc.ErrNotFound):
 		return ErrNotFound
+	case errors.Is(err, gitrpc.ErrPreconditionFailed):
+		return ErrPreconditionFailed
 
 	// webhook errors
 	case errors.Is(err, webhook.ErrWebhookNotRetriggerable):

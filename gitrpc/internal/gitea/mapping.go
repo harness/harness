@@ -61,6 +61,10 @@ func mapGiteaRunStdError(err gitea.RunStdError, fallback error) error {
 	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "unknown revision"):
 		return types.ErrNotFound
 
+	// exit status 128 - fatal: couldn't find remote ref v1.
+	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "couldn't find"):
+		return types.ErrNotFound
+
 	default:
 		return fallback
 	}

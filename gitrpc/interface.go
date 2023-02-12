@@ -51,5 +51,5 @@ type Interface interface {
 	/*
 	 * Merge services
 	 */
-	MergeBranch(ctx context.Context, in *MergeBranchParams) (MergeBranchOutput, error)
+	Merge(ctx context.Context, in *MergeParams) (MergeOutput, error)
 }

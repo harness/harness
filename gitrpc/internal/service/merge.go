@@ -13,11 +13,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/internal/tempdir"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 
-	"code.gitea.io/gitea/modules/git"
+	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type MergeService struct {
@@ -37,39 +40,57 @@ func NewMergeService(adapter GitAdapter, reposRoot, reposTempDir string) (*Merge
 	}, nil
 }
 
-//nolint:funlen // needs refactor when all merge methods are implemented
-func (s MergeService) MergeBranch(
+//nolint:funlen,gocognit // maybe some refactoring when we add fast forward merging
+func (s MergeService) Merge(
 	ctx context.Context,
-	request *rpc.MergeBranchRequest,
-) (*rpc.MergeBranchResponse, error) {
-	if err := validateMergeBranchRequest(request); err != nil {
+	request *rpc.MergeRequest,
+) (*rpc.MergeResponse, error) {
+	if err := validateMergeRequest(request); err != nil {
 		return nil, err
 	}
 
-	repoPath := getFullPathForRepo(s.reposRoot, request.GetBase().GetRepoUid())
+	base := request.Base
+	repoPath := getFullPathForRepo(s.reposRoot, base.RepoUid)
+
 	pr := &types.PullRequest{
 		BaseRepoPath: repoPath,
-		BaseBranch:   request.GetBaseBranch(),
-		HeadBranch:   request.GetHeadBranch(),
+		BaseBranch:   request.BaseBranch,
+		HeadBranch:   request.HeadBranch,
 	}
+
 	// Clone base repo.
 	tmpBasePath, err := s.adapter.CreateTemporaryRepoForPR(ctx, s.reposTempDir, pr)
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
-		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
+		rmErr := tempdir.RemoveTemporaryPath(tmpBasePath)
+		if rmErr != nil {
+			log.Ctx(ctx).Warn().Msgf("Removing temporary location %s for merge operation was not successfull", tmpBasePath)
+		}
 	}()
 
-	var outbuf, errbuf strings.Builder
-
+	// no error check needed, all branches were created when creating the temporary repo
 	baseBranch := "base"
 	trackingBranch := "tracking"
+	baseCommitSHA, _, _ := s.adapter.GetMergeBase(ctx, tmpBasePath, "origin", baseBranch, trackingBranch)
+	headCommit, _ := s.adapter.GetCommit(ctx, tmpBasePath, trackingBranch)
+	headCommitSHA := headCommit.SHA
 
+	if request.HeadExpectedSha != "" && request.HeadExpectedSha != headCommitSHA {
+		return nil, status.Errorf(
+			codes.FailedPrecondition,
+			"head branch '%s' is on SHA '%s' which doesn't match expected SHA '%s'.",
+			request.HeadBranch,
+			headCommitSHA,
+			request.HeadExpectedSha)
+	}
+
+	var outbuf, errbuf strings.Builder
 	// Enable sparse-checkout
 	sparseCheckoutList, err := s.adapter.GetDiffTree(ctx, tmpBasePath, baseBranch, trackingBranch)
 	if err != nil {
-		return nil, fmt.Errorf("getDiffTree: %w", err)
+		return nil, fmt.Errorf("execution of GetDiffTree failed: %w", err)
 	}
 
 	infoPath := filepath.Join(tmpBasePath, ".git", "info")
@@ -79,7 +100,8 @@ func (s MergeService) MergeBranch(
 
 	sparseCheckoutListPath := filepath.Join(infoPath, "sparse-checkout")
 	if err = os.WriteFile(sparseCheckoutListPath, []byte(sparseCheckoutList), 0o600); err != nil {
-		return nil, fmt.Errorf("unable to write .git/info/sparse-checkout file in tmpBasePath: %w", err)
+		return nil,
+			fmt.Errorf("unable to write .git/info/sparse-checkout file in tmpBasePath: %w", err)
 	}
 
 	// Switch off LFS process (set required, clean and smudge here also)
@@ -105,40 +127,39 @@ func (s MergeService) MergeBranch(
 
 	// Read base branch index
 	if err = s.adapter.ReadTree(ctx, tmpBasePath, "HEAD", io.Discard); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read tree: %w", err)
 	}
 	outbuf.Reset()
 	errbuf.Reset()
 
-	sig := &git.Signature{
-		Name:  request.GetBase().GetActor().GetName(),
-		Email: request.GetBase().GetActor().GetEmail(),
+	committer := base.Actor
+	if request.Committer != nil {
+		committer = request.Committer
 	}
-	committer := sig
-	commitTimeStr := time.Now().Format(time.RFC3339)
+	author := committer
+	if request.Author != nil {
+		author = request.Author
+	}
+
+	timeStr := time.Now().Format(time.RFC3339)
 
 	// Because this may call hooks we should pass in the environment
-	env := append(CreateEnvironmentForPush(ctx, request.GetBase()),
-		"GIT_AUTHOR_NAME="+sig.Name,
-		"GIT_AUTHOR_EMAIL="+sig.Email,
-		"GIT_AUTHOR_DATE="+commitTimeStr,
+	env := append(CreateEnvironmentForPush(ctx, base),
+		"GIT_AUTHOR_NAME="+author.Name,
+		"GIT_AUTHOR_EMAIL="+author.Email,
+		"GIT_AUTHOR_DATE="+timeStr,
 		"GIT_COMMITTER_NAME="+committer.Name,
 		"GIT_COMMITTER_EMAIL="+committer.Email,
-		"GIT_COMMITTER_DATE="+commitTimeStr,
+		"GIT_COMMITTER_DATE="+timeStr,
 	)
 
-	mergeMsg := strings.TrimSpace(request.GetTitle())
-	if len(request.GetMessage()) > 0 {
-		mergeMsg += "\n\n" + strings.TrimSpace(request.GetMessage())
+	mergeMsg := strings.TrimSpace(request.Title)
+	if len(request.Message) > 0 {
+		mergeMsg += "\n\n" + strings.TrimSpace(request.Message)
 	}
 
-	// no error check needed, all branches are created on fly as ref to remote ones
-	baseCommitSHA, _, _ := s.adapter.GetMergeBase(ctx, tmpBasePath, "origin", baseBranch, trackingBranch)
-	headCommit, _ := s.adapter.GetCommit(ctx, tmpBasePath, trackingBranch)
-	headCommitSHA := headCommit.SHA
-
 	if err = s.adapter.Merge(ctx, pr, "merge", trackingBranch, tmpBasePath, mergeMsg, env); err != nil {
-		return nil, err
+		return nil, processGitErrorf(err, "merge failed")
 	}
 
 	mergeCommitSHA, err := s.adapter.GetFullCommitID(ctx, tmpBasePath, baseBranch)
@@ -146,31 +167,47 @@ func (s MergeService) MergeBranch(
 		return nil, fmt.Errorf("failed to get full commit id for the new merge: %w", err)
 	}
 
+	refType := enum.RefFromRPC(request.RefType)
+	if refType == enum.RefTypeUndefined {
+		return &rpc.MergeResponse{
+			MergeSha: mergeCommitSHA,
+			BaseSha:  baseCommitSHA,
+			HeadSha:  headCommitSHA,
+		}, nil
+	}
+
+	refPath, err := s.adapter.GetRefPath(request.RefName, refType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate full reference for type '%s' and name '%s' for merge operation: %w",
+			request.RefType, request.RefName, err)
+	}
+	pushRef := baseBranch + ":" + refPath
+
 	if err = s.adapter.Push(ctx, tmpBasePath, types.PushOptions{
 		Remote: "origin",
-		Branch: baseBranch + ":" + git.BranchPrefix + pr.BaseBranch,
+		Branch: pushRef,
 		Force:  request.Force,
 		Env:    env,
 	}); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to push merge commit to ref '%s': %w", refPath, err)
 	}
 
-	return &rpc.MergeBranchResponse{
+	return &rpc.MergeResponse{
 		MergeSha: mergeCommitSHA,
 		BaseSha:  baseCommitSHA,
 		HeadSha:  headCommitSHA,
 	}, nil
 }
 
-func validateMergeBranchRequest(request *rpc.MergeBranchRequest) error {
-	base := request.GetBase()
+func validateMergeRequest(request *rpc.MergeRequest) error {
+	base := request.Base
 	if base == nil {
 		return types.ErrBaseCannotBeEmpty
 	}
 
-	author := base.GetActor()
+	author := base.Actor
 	if author == nil {
-		return fmt.Errorf("empty user")
+		return fmt.Errorf("empty actor")
 	}
 
 	if len(author.Email) == 0 {
@@ -185,8 +222,12 @@ func validateMergeBranchRequest(request *rpc.MergeBranchRequest) error {
 		return fmt.Errorf("empty branch name")
 	}
 
-	if request.HeadBranch == "" {
+	if len(request.HeadBranch) == 0 {
 		return fmt.Errorf("empty head branch name")
+	}
+
+	if request.RefType != rpc.RefType_Undefined && len(request.RefName) == 0 {
+		return fmt.Errorf("ref name has to be provided if type is defined")
 	}
 
 	return nil

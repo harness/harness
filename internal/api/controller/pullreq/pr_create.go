@@ -79,7 +79,7 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to aquire PullReqSeq number: %w", err)
 	}
 
-	pr := newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in)
+	pr := newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in, sourceSHA)
 
 	err = c.pullreqStore.Create(ctx, pr)
 	if err != nil {
@@ -97,8 +97,14 @@ func (c *Controller) Create(
 }
 
 // newPullReq creates new pull request object.
-func newPullReq(session *auth.Session, number int64,
-	sourceRepo, targetRepo *types.Repository, in *CreateInput) *types.PullReq {
+func newPullReq(
+	session *auth.Session,
+	number int64,
+	sourceRepo *types.Repository,
+	targetRepo *types.Repository,
+	in *CreateInput,
+	sourceSHA string,
+) *types.PullReq {
 	now := time.Now().UnixMilli()
 	return &types.PullReq{
 		ID:            0, // the ID will be populated in the data layer
@@ -114,6 +120,7 @@ func newPullReq(session *auth.Session, number int64,
 		Description:   in.Description,
 		SourceRepoID:  sourceRepo.ID,
 		SourceBranch:  in.SourceBranch,
+		SourceSHA:     sourceSHA,
 		TargetRepoID:  targetRepo.ID,
 		TargetBranch:  in.TargetBranch,
 		ActivitySeq:   0,

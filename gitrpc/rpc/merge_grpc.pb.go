@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MergeServiceClient interface {
-	MergeBranch(ctx context.Context, in *MergeBranchRequest, opts ...grpc.CallOption) (*MergeBranchResponse, error)
+	Merge(ctx context.Context, in *MergeRequest, opts ...grpc.CallOption) (*MergeResponse, error)
 }
 
 type mergeServiceClient struct {
@@ -33,9 +33,9 @@ func NewMergeServiceClient(cc grpc.ClientConnInterface) MergeServiceClient {
 	return &mergeServiceClient{cc}
 }
 
-func (c *mergeServiceClient) MergeBranch(ctx context.Context, in *MergeBranchRequest, opts ...grpc.CallOption) (*MergeBranchResponse, error) {
-	out := new(MergeBranchResponse)
-	err := c.cc.Invoke(ctx, "/rpc.MergeService/MergeBranch", in, out, opts...)
+func (c *mergeServiceClient) Merge(ctx context.Context, in *MergeRequest, opts ...grpc.CallOption) (*MergeResponse, error) {
+	out := new(MergeResponse)
+	err := c.cc.Invoke(ctx, "/rpc.MergeService/Merge", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (c *mergeServiceClient) MergeBranch(ctx context.Context, in *MergeBranchReq
 // All implementations must embed UnimplementedMergeServiceServer
 // for forward compatibility
 type MergeServiceServer interface {
-	MergeBranch(context.Context, *MergeBranchRequest) (*MergeBranchResponse, error)
+	Merge(context.Context, *MergeRequest) (*MergeResponse, error)
 	mustEmbedUnimplementedMergeServiceServer()
 }
 
@@ -54,8 +54,8 @@ type MergeServiceServer interface {
 type UnimplementedMergeServiceServer struct {
 }
 
-func (UnimplementedMergeServiceServer) MergeBranch(context.Context, *MergeBranchRequest) (*MergeBranchResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MergeBranch not implemented")
+func (UnimplementedMergeServiceServer) Merge(context.Context, *MergeRequest) (*MergeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Merge not implemented")
 }
 func (UnimplementedMergeServiceServer) mustEmbedUnimplementedMergeServiceServer() {}
 
@@ -70,20 +70,20 @@ func RegisterMergeServiceServer(s grpc.ServiceRegistrar, srv MergeServiceServer)
 	s.RegisterService(&MergeService_ServiceDesc, srv)
 }
 
-func _MergeService_MergeBranch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MergeBranchRequest)
+func _MergeService_Merge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MergeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MergeServiceServer).MergeBranch(ctx, in)
+		return srv.(MergeServiceServer).Merge(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/rpc.MergeService/MergeBranch",
+		FullMethod: "/rpc.MergeService/Merge",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MergeServiceServer).MergeBranch(ctx, req.(*MergeBranchRequest))
+		return srv.(MergeServiceServer).Merge(ctx, req.(*MergeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -96,8 +96,8 @@ var MergeService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*MergeServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "MergeBranch",
-			Handler:    _MergeService_MergeBranch_Handler,
+			MethodName: "Merge",
+			Handler:    _MergeService_Merge_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

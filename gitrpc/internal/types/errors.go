@@ -33,8 +33,22 @@ type MergeConflictsError struct {
 	Err    error
 }
 
-func (err MergeConflictsError) Error() string {
-	return fmt.Sprintf("Merge Conflict Error: %v: %s\n%s", err.Err, err.StdErr, err.StdOut)
+func IsMergeConflictsError(err error) bool {
+	return errors.Is(err, &MergeConflictsError{})
+}
+
+func (e *MergeConflictsError) Error() string {
+	return fmt.Sprintf("Merge Conflict Error: %v: %s\n%s", e.Err, e.StdErr, e.StdOut)
+}
+
+func (e *MergeConflictsError) Unwrap() error {
+	return e.Err
+}
+
+//nolint:errorlint // the purpose of this method is to check whether the target itself if of this type.
+func (e *MergeConflictsError) Is(target error) bool {
+	_, ok := target.(*MergeConflictsError)
+	return ok
 }
 
 // MergeUnrelatedHistoriesError represents an error if merging fails due to unrelated histories.
@@ -45,6 +59,20 @@ type MergeUnrelatedHistoriesError struct {
 	Err    error
 }
 
-func (err MergeUnrelatedHistoriesError) Error() string {
-	return fmt.Sprintf("Merge UnrelatedHistories Error: %v: %s\n%s", err.Err, err.StdErr, err.StdOut)
+func IsMergeUnrelatedHistoriesError(err error) bool {
+	return errors.Is(err, &MergeUnrelatedHistoriesError{})
+}
+
+func (e *MergeUnrelatedHistoriesError) Error() string {
+	return fmt.Sprintf("Merge UnrelatedHistories Error: %v: %s\n%s", e.Err, e.StdErr, e.StdOut)
+}
+
+func (e *MergeUnrelatedHistoriesError) Unwrap() error {
+	return e.Err
+}
+
+//nolint:errorlint // the purpose of this method is to check whether the target itself if of this type.
+func (e *MergeUnrelatedHistoriesError) Is(target error) bool {
+	_, ok := target.(*MergeUnrelatedHistoriesError)
+	return ok
 }

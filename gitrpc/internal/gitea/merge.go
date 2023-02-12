@@ -11,13 +11,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/harness/gitness/gitrpc/internal/tempdir"
 	"github.com/harness/gitness/gitrpc/internal/types"
 
-	"code.gitea.io/gitea/models"
 	"code.gitea.io/gitea/modules/git"
 )
 
@@ -70,12 +70,12 @@ func (g Adapter) CreateTemporaryRepoForPR(
 		alternates := filepath.Join(staging, ".git", "objects", "info", "alternates")
 		f, err = os.OpenFile(alternates, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o600)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to open alternates file '%s': %w", alternates, err)
 		}
 		defer f.Close()
 		data := filepath.Join(cache, "objects")
 		if _, err = fmt.Fprintln(f, data); err != nil {
-			return err
+			return fmt.Errorf("failed to write alternates file '%s': %w", alternates, err)
 		}
 		return nil
 	}
@@ -93,8 +93,9 @@ func (g Adapter) CreateTemporaryRepoForPR(
 			Stderr: &errbuf,
 		}); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
-		return "", fmt.Errorf("unable to add base repository as origin "+
-			"[%s -> tmpBasePath]: %w\n%s\n%s", pr.BaseRepoPath, err, outbuf.String(), errbuf.String())
+		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
+		return "", processGiteaErrorf(giteaErr, "unable to add base repository as origin "+
+			"[%s -> tmpBasePath]:\n%s\n%s", pr.BaseRepoPath, outbuf.String(), errbuf.String())
 	}
 	outbuf.Reset()
 	errbuf.Reset()
@@ -107,9 +108,10 @@ func (g Adapter) CreateTemporaryRepoForPR(
 			Stderr: &errbuf,
 		}); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
-		return "", fmt.Errorf("unable to fetch origin base branch "+
-			"[%s:%s -> base, original_base in tmpBasePath]: %w\n%s\n%s",
-			pr.BaseRepoPath, pr.BaseBranch, err, outbuf.String(), errbuf.String())
+		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
+		return "", processGiteaErrorf(giteaErr, "unable to fetch origin base branch "+
+			"[%s:%s -> base, original_base in tmpBasePath].\n%s\n%s",
+			pr.BaseRepoPath, pr.BaseBranch, outbuf.String(), errbuf.String())
 	}
 	outbuf.Reset()
 	errbuf.Reset()
@@ -121,16 +123,18 @@ func (g Adapter) CreateTemporaryRepoForPR(
 			Stderr: &errbuf,
 		}); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
-		return "", fmt.Errorf("unable to set HEAD as base "+
-			"branch [tmpBasePath]: %w\n%s\n%s", err, outbuf.String(), errbuf.String())
+		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
+		return "", processGiteaErrorf(giteaErr, "unable to set HEAD as base "+
+			"branch [tmpBasePath]:\n%s\n%s", outbuf.String(), errbuf.String())
 	}
 	outbuf.Reset()
 	errbuf.Reset()
 
 	if err = addCacheRepo(tmpBasePath, headRepoPath); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
-		return "", fmt.Errorf("unable to head base repository "+
-			"to temporary repo [%s -> tmpBasePath]: %w", pr.HeadRepoPath, err)
+		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
+		return "", processGiteaErrorf(giteaErr, "unable to head base repository "+
+			"to temporary repo [%s -> tmpBasePath]", pr.HeadRepoPath)
 	}
 
 	if err = git.NewCommand(ctx, "remote", "add", remoteRepoName, headRepoPath).
@@ -140,8 +144,9 @@ func (g Adapter) CreateTemporaryRepoForPR(
 			Stderr: &errbuf,
 		}); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
-		return "", fmt.Errorf("unable to add head repository as head_repo "+
-			"[%s -> tmpBasePath]: %w\n%s\n%s", pr.HeadRepoPath, err, outbuf.String(), errbuf.String())
+		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
+		return "", processGiteaErrorf(giteaErr, "unable to add head repository as head_repo "+
+			"[%s -> tmpBasePath]:\n%s\n%s", pr.HeadRepoPath, outbuf.String(), errbuf.String())
 	}
 	outbuf.Reset()
 	errbuf.Reset()
@@ -155,14 +160,10 @@ func (g Adapter) CreateTemporaryRepoForPR(
 			Stderr: &errbuf,
 		}); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
-		if !git.IsBranchExist(ctx, pr.HeadRepoPath, headBranch) {
-			return "", models.ErrBranchDoesNotExist{
-				BranchName: headBranch,
-			}
-		}
-		return "", fmt.Errorf("unable to fetch head_repo head branch "+
-			"[%s:%s -> tracking in tmpBasePath]: %w\n%s\n%s",
-			pr.HeadRepoPath, headBranch, err, outbuf.String(), errbuf.String())
+		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
+		return "", processGiteaErrorf(giteaErr, "unable to fetch head_repo head branch "+
+			"[%s:%s -> tracking in tmpBasePath]:\n%s\n%s",
+			pr.HeadRepoPath, headBranch, outbuf.String(), errbuf.String())
 	}
 	outbuf.Reset()
 	errbuf.Reset()
@@ -205,22 +206,23 @@ func (g Adapter) Merge(
 		// Merge will leave a MERGE_HEAD file in the .git folder if there is a conflict
 		if _, statErr := os.Stat(filepath.Join(tmpBasePath, ".git", "MERGE_HEAD")); statErr == nil {
 			// We have a merge conflict error
-			return types.MergeConflictsError{
+			return &types.MergeConflictsError{
 				Method: mergeMethod,
 				StdOut: outbuf.String(),
 				StdErr: errbuf.String(),
 				Err:    err,
 			}
 		} else if strings.Contains(errbuf.String(), "refusing to merge unrelated histories") {
-			return types.MergeUnrelatedHistoriesError{
+			return &types.MergeUnrelatedHistoriesError{
 				Method: mergeMethod,
 				StdOut: outbuf.String(),
 				StdErr: errbuf.String(),
 				Err:    err,
 			}
 		}
-		return fmt.Errorf("git merge [%s -> %s]: %w\n%s\n%s",
-			pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String())
+		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
+		return processGiteaErrorf(giteaErr, "git merge [%s -> %s]\n%s\n%s",
+			pr.HeadBranch, pr.BaseBranch, outbuf.String(), errbuf.String())
 	}
 
 	return nil
@@ -236,7 +238,9 @@ func (g Adapter) GetDiffTree(ctx context.Context, repoPath, baseBranch, headBran
 				Stdout: &outbuf,
 				Stderr: &errbuf,
 			}); err != nil {
-			return "", fmt.Errorf("git diff-tree [%s base:%s head:%s]: %s", repoPath, baseBranch, headBranch, errbuf.String())
+			giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
+			return "", processGiteaErrorf(giteaErr, "git diff-tree [%s base:%s head:%s]: %s",
+				repoPath, baseBranch, headBranch, errbuf.String())
 		}
 		return outbuf.String(), nil
 	}
@@ -292,4 +296,32 @@ func (g Adapter) GetMergeBase(ctx context.Context, repoPath, remote, base, head 
 
 	stdout, _, err := git.NewCommand(ctx, "merge-base", "--", base, head).RunStdString(&git.RunOpts{Dir: repoPath})
 	return strings.TrimSpace(stdout), base, err
+}
+
+// giteaRunStdError is an implementation of the RunStdError interface in the gitea codebase.
+// It allows us to process gitea errors even when using cmd.Run() instead of cmd.RunStdString() or run.StdBytes().
+// TODO: solve this nicer once we have proper gitrpc error handling.
+type giteaRunStdError struct {
+	err    error
+	stderr string
+}
+
+func (e *giteaRunStdError) Error() string {
+	return fmt.Sprintf("failed with %s, error output: %s", e.err, e.stderr)
+}
+
+func (e *giteaRunStdError) Unwrap() error {
+	return e.err
+}
+
+func (e *giteaRunStdError) Stderr() string {
+	return e.stderr
+}
+
+func (e *giteaRunStdError) IsExitCode(code int) bool {
+	var exitError *exec.ExitError
+	if errors.As(e.err, &exitError) {
+		return exitError.ExitCode() == code
+	}
+	return false
 }

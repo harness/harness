@@ -38,6 +38,7 @@ import (
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/lock"
+	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 
@@ -81,6 +82,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		webhook.WireSet,
 		githook.WireSet,
 		lock.WireSet,
+		pubsub.WireSet,
 	)
 	return &system{}, nil
 }

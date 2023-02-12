@@ -215,6 +215,9 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Co
 			r.Route("/compare", func(r chi.Router) {
 				r.Get("/*", handlerrepo.HandleRawDiff(repoCtrl))
 			})
+			r.Route("/merge-check", func(r chi.Router) {
+				r.Post("/*", handlerrepo.HandleMergeCheck(repoCtrl))
+			})
 
 			SetupPullReq(r, pullreqCtrl)
 

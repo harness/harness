@@ -29,6 +29,7 @@ type PullReq struct {
 
 	SourceRepoID int64  `json:"source_repo_id"`
 	SourceBranch string `json:"source_branch"`
+	SourceSHA    string `json:"source_sha"`
 	TargetRepoID int64  `json:"target_repo_id"`
 	TargetBranch string `json:"target_branch"`
 
@@ -37,8 +38,12 @@ type PullReq struct {
 	MergedBy      *int64            `json:"-"` // not returned, because the merger info is in the Merger field
 	Merged        *int64            `json:"merged"`
 	MergeStrategy *enum.MergeMethod `json:"merge_strategy"`
-	MergeHeadSHA  *string           `json:"merge_head_sha"`
-	MergeBaseSHA  *string           `json:"merge_base_sha"`
+
+	MergeHeadSHA   *string          `json:"merge_head_sha"`
+	MergeBaseSHA   *string          `json:"merge_base_sha"`
+	MergeRefSHA    *string          `json:"merge_ref_sha"`
+	MergeStatus    enum.MergeStatus `json:"merge_status"`
+	MergeConflicts *string          `json:"merge_conflicts,omitempty"`
 
 	Author PrincipalInfo  `json:"author"`
 	Merger *PrincipalInfo `json:"merger"`

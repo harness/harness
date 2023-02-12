@@ -86,7 +86,7 @@ func NewServer(config Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	diffService, err := service.NewDiffService(adapter, reposRoot)
+	diffService, err := service.NewDiffService(adapter, reposRoot, config.TmpDir)
 	if err != nil {
 		return nil, err
 	}

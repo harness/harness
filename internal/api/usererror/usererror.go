@@ -28,6 +28,9 @@ var (
 	// ErrNotFound is returned when a resource is not found.
 	ErrNotFound = New(http.StatusNotFound, "Not Found")
 
+	// ErrPreconditionFailed is returned when a precondition failed.
+	ErrPreconditionFailed = New(http.StatusPreconditionFailed, "Precondition failed")
+
 	// ErrNoChange is returned when no change was found based on the request.
 	ErrNoChange = New(http.StatusBadRequest, "No Change")
 
