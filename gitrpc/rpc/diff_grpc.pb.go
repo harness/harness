@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DiffServiceClient interface {
 	RawDiff(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (DiffService_RawDiffClient, error)
+	Diff(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (DiffService_DiffClient, error)
 	DiffShortStat(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (*DiffShortStatResponse, error)
 	GetDiffHunkHeaders(ctx context.Context, in *GetDiffHunkHeadersRequest, opts ...grpc.CallOption) (*GetDiffHunkHeadersResponse, error)
 	DiffCut(ctx context.Context, in *DiffCutRequest, opts ...grpc.CallOption) (*DiffCutResponse, error)
@@ -68,6 +69,38 @@ func (x *diffServiceRawDiffClient) Recv() (*RawDiffResponse, error) {
 	return m, nil
 }
 
+func (c *diffServiceClient) Diff(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (DiffService_DiffClient, error) {
+	stream, err := c.cc.NewStream(ctx, &DiffService_ServiceDesc.Streams[1], "/rpc.DiffService/Diff", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &diffServiceDiffClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type DiffService_DiffClient interface {
+	Recv() (*DiffResponse, error)
+	grpc.ClientStream
+}
+
+type diffServiceDiffClient struct {
+	grpc.ClientStream
+}
+
+func (x *diffServiceDiffClient) Recv() (*DiffResponse, error) {
+	m := new(DiffResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *diffServiceClient) DiffShortStat(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (*DiffShortStatResponse, error) {
 	out := new(DiffShortStatResponse)
 	err := c.cc.Invoke(ctx, "/rpc.DiffService/DiffShortStat", in, out, opts...)
@@ -100,6 +133,7 @@ func (c *diffServiceClient) DiffCut(ctx context.Context, in *DiffCutRequest, opt
 // for forward compatibility
 type DiffServiceServer interface {
 	RawDiff(*DiffRequest, DiffService_RawDiffServer) error
+	Diff(*DiffRequest, DiffService_DiffServer) error
 	DiffShortStat(context.Context, *DiffRequest) (*DiffShortStatResponse, error)
 	GetDiffHunkHeaders(context.Context, *GetDiffHunkHeadersRequest) (*GetDiffHunkHeadersResponse, error)
 	DiffCut(context.Context, *DiffCutRequest) (*DiffCutResponse, error)
@@ -112,6 +146,9 @@ type UnimplementedDiffServiceServer struct {
 
 func (UnimplementedDiffServiceServer) RawDiff(*DiffRequest, DiffService_RawDiffServer) error {
 	return status.Errorf(codes.Unimplemented, "method RawDiff not implemented")
+}
+func (UnimplementedDiffServiceServer) Diff(*DiffRequest, DiffService_DiffServer) error {
+	return status.Errorf(codes.Unimplemented, "method Diff not implemented")
 }
 func (UnimplementedDiffServiceServer) DiffShortStat(context.Context, *DiffRequest) (*DiffShortStatResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DiffShortStat not implemented")
@@ -153,6 +190,27 @@ type diffServiceRawDiffServer struct {
 }
 
 func (x *diffServiceRawDiffServer) Send(m *RawDiffResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _DiffService_Diff_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(DiffRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(DiffServiceServer).Diff(m, &diffServiceDiffServer{stream})
+}
+
+type DiffService_DiffServer interface {
+	Send(*DiffResponse) error
+	grpc.ServerStream
+}
+
+type diffServiceDiffServer struct {
+	grpc.ServerStream
+}
+
+func (x *diffServiceDiffServer) Send(m *DiffResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -234,6 +292,11 @@ var DiffService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "RawDiff",
 			Handler:       _DiffService_RawDiff_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "Diff",
+			Handler:       _DiffService_Diff_Handler,
 			ServerStreams: true,
 		},
 	},

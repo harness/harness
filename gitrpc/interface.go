@@ -49,6 +49,7 @@ type Interface interface {
 	 * Diff services
 	 */
 	RawDiff(ctx context.Context, in *DiffParams, w io.Writer) error
+	Diff(ctx context.Context, in *DiffParams, baseURL string) (<-chan *FileDiff, <-chan error)
 	DiffShortStat(ctx context.Context, params *DiffParams) (DiffShortStatOutput, error)
 	DiffStats(ctx context.Context, params *DiffParams) (DiffStatsOutput, error)
 

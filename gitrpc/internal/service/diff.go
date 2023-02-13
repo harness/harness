@@ -5,9 +5,13 @@
 package service
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 
+	"github.com/harness/gitness/gitrpc/diff"
 	"github.com/harness/gitness/gitrpc/internal/streamio"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -29,28 +33,31 @@ func NewDiffService(adapter GitAdapter, reposRoot string, reposTempDir string) (
 }
 
 func (s DiffService) RawDiff(request *rpc.DiffRequest, stream rpc.DiffService_RawDiffServer) error {
-	err := validateDiffRequest(request)
-	if err != nil {
-		return err
-	}
-
-	ctx := stream.Context()
-	base := request.GetBase()
 
 	sw := streamio.NewWriter(func(p []byte) error {
 		return stream.Send(&rpc.RawDiffResponse{Data: p})
 	})
 
-	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
+	return s.rawDiff(stream.Context(), request, sw)
+}
 
-	args := []string{}
-	if request.GetMergeBase() {
-		args = []string{
-			"--merge-base",
-		}
+func (s DiffService) rawDiff(ctx context.Context, request *rpc.DiffRequest, w io.Writer) error {
+	err := validateDiffRequest(request)
+	if err != nil {
+		return err
 	}
 
-	return s.adapter.RawDiff(ctx, repoPath, request.GetBaseRef(), request.GetHeadRef(), sw, args...)
+	base := request.GetBase()
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
+
+	args := make([]string, 0, 4)
+	args = append(args, "--full-index")
+	if request.GetMergeBase() {
+		args = append(args, "--merge-base")
+	}
+
+	return s.adapter.RawDiff(ctx, repoPath, request.GetBaseRef(), request.GetHeadRef(), w, args...)
 }
 
 func validateDiffRequest(in *rpc.DiffRequest) error {
@@ -154,4 +161,67 @@ func (s DiffService) DiffCut(
 		MergeBaseSha:    mergeBase,
 		LatestSourceSha: sourceCommits[0],
 	}, nil
+}
+
+func (s DiffService) Diff(request *rpc.DiffRequest, stream rpc.DiffService_DiffServer) error {
+	done := make(chan bool)
+	defer close(done)
+
+	pr, pw := io.Pipe()
+	defer pr.Close()
+
+	parser := diff.Parser{
+		Reader: bufio.NewReader(pr),
+	}
+
+	go func() {
+		defer pw.Close()
+		err := s.rawDiff(stream.Context(), request, pw)
+		if err != nil {
+			return
+		}
+	}()
+
+	return parser.Parse(func(f *diff.File) {
+		streamDiffFile(f, request.IncludePatch, stream)
+	})
+}
+
+func streamDiffFile(f *diff.File, includePatch bool, stream rpc.DiffService_DiffServer) {
+	var status rpc.DiffResponse_FileStatus
+	switch f.Type {
+	case diff.FileAdd:
+		status = rpc.DiffResponse_ADDED
+	case diff.FileChange:
+		status = rpc.DiffResponse_MODIFIED
+	case diff.FileDelete:
+		status = rpc.DiffResponse_DELETED
+	case diff.FileRename:
+		status = rpc.DiffResponse_RENAMED
+	default:
+		status = rpc.DiffResponse_UNDEFINED
+	}
+
+	patch := bytes.Buffer{}
+	if includePatch {
+		for _, sec := range f.Sections {
+			for _, line := range sec.Lines {
+				if line.Type != diff.DiffLinePlain {
+					patch.WriteString(line.Content)
+				}
+			}
+		}
+	}
+
+	stream.Send(&rpc.DiffResponse{
+		Path:      f.Path,
+		OldPath:   f.OldPath,
+		Sha:       f.SHA,
+		OldSha:    f.OldSHA,
+		Status:    status,
+		Additions: int32(f.NumAdditions()),
+		Deletions: int32(f.NumDeletions()),
+		Changes:   int32(f.NumChanges()),
+		Patch:     patch.Bytes(),
+	})
 }
