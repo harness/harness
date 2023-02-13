@@ -332,13 +332,16 @@ const DescriptionBox: React.FC<ConversationProps> = ({
             </Text> */}
             <FlexExpander />
             <OptionsMenuButton
-              isDark={false}
+              isDark={true}
               icon="Options"
               iconProps={{ size: 14 }}
               style={{ padding: '5px' }}
               items={[
                 {
                   text: getString('edit'),
+                  className: css.optionMenuIcon,
+                  hasIcon: true,
+                  iconName: 'Edit',
                   onClick: () => setEdit(true)
                 }
               ]}

@@ -78,3 +78,25 @@
     }
   }
 }
+
+.optionMenuIcon {
+  > .bp3-icon {
+    padding-right: var(--spacing-xlarge);
+  }
+}
+
+.deleteIcon {
+  > .bp3-icon {
+    padding-right: var(--spacing-xlarge);
+  }
+  span[data-icon='main-trash'] {
+    > svg {
+      height: 14px;
+      width: 13px;
+    }
+  }
+
+  :global(.bp3-text-overflow-ellipsis) {
+    padding-top: 2px !important;
+  }
+}

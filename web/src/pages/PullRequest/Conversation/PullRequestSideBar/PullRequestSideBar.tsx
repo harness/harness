@@ -74,47 +74,49 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               {getString('required')}
             </Text>
             {reviewers && reviewers?.length !== 0 ? (
-              reviewers.map((reviewer: { reviewer: { display_name: string, id:number }; review_decision: string }): any => {
-                return (
-                  <Layout.Horizontal key={reviewer.reviewer.id}>
-                    <Icon className={css.reviewerPadding} {...generateReviewDecisionIcon(reviewer.review_decision)} />
-                    <Avatar
-                      className={css.reviewerAvatar}
-                      name={reviewer.reviewer.display_name}
-                      size="small"
-                      hoverCard={false}
-                    />
+              reviewers.map(
+                (reviewer: { reviewer: { display_name: string; id: number }; review_decision: string }): any => {
+                  return (
+                    <Layout.Horizontal key={reviewer.reviewer.id}>
+                      <Icon className={css.reviewerPadding} {...generateReviewDecisionIcon(reviewer.review_decision)} />
+                      <Avatar
+                        className={css.reviewerAvatar}
+                        name={reviewer.reviewer.display_name}
+                        size="small"
+                        hoverCard={false}
+                      />
 
-                    <Text className={css.reviewerName}>{reviewer.reviewer.display_name}</Text>
-                    <FlexExpander />
-                    <OptionsMenuButton
-                      isDark={false}
-                      icon="Options"
-                      iconProps={{ size: 14 }}
-                      style={{ paddingBottom: '9px' }}
-                      // disabled={!!commentItem?.deleted}
-                      width="100px"
-                      height="24px"
-                      items={[
-                        {
-                          text: getString('makeOptional'),
-                          onClick: () => {}
-                        },
-                        {
-                          text: getString('makeRequired'),
-                          onClick: () => {}
-                        },
-                        '-',
-                        {
-                          isDanger: true,
-                          text: getString('remove'),
-                          onClick: () => {}
-                        }
-                      ]}
-                    />
-                  </Layout.Horizontal>
-                )
-              })
+                      <Text className={css.reviewerName}>{reviewer.reviewer.display_name}</Text>
+                      <FlexExpander />
+                      <OptionsMenuButton
+                        isDark={true}
+                        icon="Options"
+                        iconProps={{ size: 14 }}
+                        style={{ paddingBottom: '9px' }}
+                        // disabled={!!commentItem?.deleted}
+                        width="100px"
+                        height="24px"
+                        items={[
+                          {
+                            text: getString('makeOptional'),
+                            onClick: () => {}
+                          },
+                          {
+                            text: getString('makeRequired'),
+                            onClick: () => {}
+                          },
+                          '-',
+                          {
+                            isDanger: true,
+                            text: getString('remove'),
+                            onClick: () => {}
+                          }
+                        ]}
+                      />
+                    </Layout.Horizontal>
+                  )
+                }
+              )
             ) : (
               <Text
                 className={css.noReviewerText}
@@ -129,7 +131,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               {getString('optional')}
             </Text>
             {reviewers && reviewers?.length !== 0 ? (
-              reviewers.map((reviewer: { reviewer: { display_name: string, id: number }; review_decision: string }) => {
+              reviewers.map((reviewer: { reviewer: { display_name: string; id: number }; review_decision: string }) => {
                 return (
                   <Layout.Horizontal key={reviewer.reviewer.id}>
                     <Icon className={css.reviewerPadding} name="dot" />
@@ -143,7 +145,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                     <Text className={css.reviewerName}>{reviewer.reviewer.display_name}</Text>
                     <FlexExpander />
                     <OptionsMenuButton
-                      isDark={false}
+                      isDark={true}
                       icon="Options"
                       iconProps={{ size: 14 }}
                       style={{ paddingBottom: '9px' }}

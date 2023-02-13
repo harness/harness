@@ -12,6 +12,8 @@ declare const styles: {
   readonly newCommentCreated: string
   readonly clear: string
   readonly refreshIcon: string
+  readonly optionMenuIcon: string
+  readonly bp3Icon: string
   readonly repeatBtn: string
   readonly bp3ButtonText: string
 }

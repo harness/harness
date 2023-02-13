@@ -12,5 +12,8 @@ declare const styles: {
   readonly editCommentContainer: string
   readonly outletTopOfFirstOfComment: string
   readonly standalone: string
+  readonly optionMenuIcon: string
+  readonly bp3Icon: string
+  readonly deleteIcon: string
 }
 export default styles

@@ -98,6 +98,12 @@
   padding-right: var(--spacing-xsmall);
 }
 
+.optionMenuIcon {
+  > .bp3-icon {
+    padding-right: var(--spacing-xlarge);
+  }
+}
+
 .repeatBtn:hover {
   box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.04), 0px 2px 4px rgba(96, 97, 112, 0.16) !important;
 }

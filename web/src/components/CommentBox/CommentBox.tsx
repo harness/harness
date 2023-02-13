@@ -245,7 +245,7 @@ const CommentsThread = <T = unknown,>({
 
                   <FlexExpander />
                   <OptionsMenuButton
-                    isDark={false}
+                    isDark={true}
                     icon="Options"
                     iconProps={{ size: 14 }}
                     style={{ padding: '5px' }}
@@ -253,15 +253,24 @@ const CommentsThread = <T = unknown,>({
                     width="100px"
                     items={[
                       {
+                        hasIcon: true,
+                        className: css.optionMenuIcon,
+                        iconName: 'Edit',
                         text: getString('edit'),
                         onClick: () => setEditIndexes({ ...editIndexes, ...{ [index]: true } })
                       },
                       {
+                        hasIcon: true,
+                        className: css.optionMenuIcon,
+                        iconName: 'code-quote',
                         text: getString('quote'),
                         onClick: () => onQuote(commentItem?.content)
                       },
                       '-',
                       {
+                        className: css.deleteIcon,
+                        hasIcon: true,
+                        iconName: 'main-trash',
                         isDanger: true,
                         text: getString('delete'),
                         onClick: async () => {
