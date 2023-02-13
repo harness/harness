@@ -441,7 +441,7 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	opMetaData.WithTags("pullreq")
 	opMetaData.WithMapOfAnything(map[string]interface{}{"operationId": "pullReqMetaData"})
 	_ = reflector.SetRequest(&opMetaData, new(pullReqRequest), http.MethodGet)
-	_ = reflector.SetStringResponse(&opMetaData, http.StatusOK, "text/plain")
+	_ = reflector.SetJSONResponse(&opMetaData, new(types.PullReqStats), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opMetaData, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opMetaData, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opMetaData, new(usererror.Error), http.StatusForbidden)

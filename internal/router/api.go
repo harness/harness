@@ -270,6 +270,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Post("/merge", handlerpullreq.HandleMerge(pullreqCtrl))
 			r.Get("/diff", handlerpullreq.HandleRawDiff(pullreqCtrl))
 			r.Get("/commits", handlerpullreq.HandleCommits(pullreqCtrl))
+			r.Get("/metadata", handlerpullreq.HandleMetadata(pullreqCtrl))
 		})
 	})
 }
