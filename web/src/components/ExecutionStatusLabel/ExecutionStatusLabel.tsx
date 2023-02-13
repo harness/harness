@@ -18,7 +18,7 @@ export const ExecutionStatusLabel: React.FC<{
       css: css.open
     },
     success: {
-      icon: 'success-tick',
+      icon: 'execution-success',
       css: css.success
     },
     failed: {
