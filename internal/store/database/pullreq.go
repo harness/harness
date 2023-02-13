@@ -409,7 +409,7 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 	}
 
 	if opts.Query != "" {
-		stmt = stmt.Where("pullreq_title LIKE ?", "%"+opts.Query+"%")
+		stmt = stmt.Where("LOWER(pullreq_title) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
 	if opts.CreatedBy > 0 {

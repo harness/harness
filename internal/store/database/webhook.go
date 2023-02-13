@@ -290,7 +290,7 @@ func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, 
 	}
 
 	if opts.Query != "" {
-		stmt = stmt.Where("webhook_display_name LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+		stmt = stmt.Where("LOWER(webhook_display_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
 	stmt = stmt.Limit(uint64(limit(opts.Size)))

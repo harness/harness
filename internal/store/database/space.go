@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/internal/store"
@@ -278,7 +279,7 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
 
 	if opts.Query != "" {
-		stmt = stmt.Where("space_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+		stmt = stmt.Where("LOWER(space_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
 	switch opts.Sort {

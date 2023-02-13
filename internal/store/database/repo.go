@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/internal/store"
@@ -281,7 +282,7 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 		Where("repo_parent_id = ?", fmt.Sprint(parentID))
 
 	if opts.Query != "" {
-		stmt = stmt.Where("repo_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+		stmt = stmt.Where("LOWER(repo_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
 	stmt = stmt.Limit(uint64(limit(opts.Size)))
