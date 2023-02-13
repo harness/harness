@@ -42,14 +42,32 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 	}
 	defer sharedRepo.Close(ctx)
 
-	// clone repo
-	err = sharedRepo.Clone(ctx, request.GetTarget())
+	// clone repo (with HEAD branch - target might be anything)
+	err = sharedRepo.Clone(ctx, "")
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to clone shared repo with branch '%s'", request.GetBranchName())
 	}
 
+	_, err = sharedRepo.GetBranchCommit(request.GetBranchName())
+	// return an error if branch alredy exists (push doesn't fail if it's a noop or fast forward push)
+	if err == nil {
+		return nil, fmt.Errorf("branch creation of '%s' failed: %w", request.GetBranchName(), types.ErrAlreadyExists)
+	}
+	if !git.IsErrNotExist(err) {
+		return nil, fmt.Errorf("branch creation of '%s' failed: %w", request.GetBranchName(), err)
+	}
+
+	// get target commit (as target could be branch/tag/commit, and tag can't be pushed using source:destination syntax)
+	targetCommit, err := sharedRepo.GetCommit(strings.TrimSpace(request.GetTarget()))
+	if git.IsErrNotExist(err) {
+		return nil, fmt.Errorf("failed to get commit id for target '%s': %w", request.GetTarget(), types.ErrNotFound)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get commit id for target '%s': %w", request.GetTarget(), err)
+	}
+
 	// push to new branch (all changes should go through push flow for hooks and other safety meassures)
-	err = sharedRepo.PushBranch(ctx, base, request.GetTarget(), request.GetBranchName())
+	err = sharedRepo.PushCommit(ctx, base, targetCommit.ID.String(), request.GetBranchName())
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to push new branch '%s'", request.GetBranchName())
 	}

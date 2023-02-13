@@ -55,9 +55,13 @@ func (r *SharedRepo) Close(ctx context.Context) {
 
 // Clone the base repository to our path and set branch as the HEAD.
 func (r *SharedRepo) Clone(ctx context.Context, branchName string) error {
-	if _, _, err := git.NewCommand(ctx, "clone", "-s", "--bare", "-b",
-		strings.TrimPrefix(branchName, gitReferenceNamePrefixBranch),
-		r.remoteRepo.Path, r.tmpPath).RunStdString(nil); err != nil {
+	args := []string{"clone", "-s", "--bare"}
+	if branchName != "" {
+		args = append(args, "-b", strings.TrimPrefix(branchName, gitReferenceNamePrefixBranch))
+	}
+	args = append(args, r.remoteRepo.Path, r.tmpPath)
+
+	if _, _, err := git.NewCommand(ctx, args...).RunStdString(nil); err != nil {
 		stderr := err.Error()
 		if matched, _ := regexp.MatchString(".*Remote branch .* not found in upstream origin.*", stderr); matched {
 			return git.ErrBranchNotExist{
@@ -312,7 +316,7 @@ func (r *SharedRepo) PushBranch(ctx context.Context, writeRequest *rpc.WriteRequ
 	return r.push(ctx, writeRequest, GetReferenceFromBranchName(sourceBranch), branch)
 }
 
-// push the provided commitHash to the repository branch by the provided user.
+// push pushes the provided references to the provided branch in the original repository.
 func (r *SharedRepo) push(ctx context.Context, writeRequest *rpc.WriteRequest,
 	sourceRef, branch string) error {
 	// Because calls hooks we need to pass in the environment
