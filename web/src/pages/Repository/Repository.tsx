@@ -137,10 +137,10 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
       />
       <Container
         margin={{ bottom: 'xxlarge' }}
-        padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'medium', right: 'medium' }}
+        padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
         className={css.divContainer}>
         <Text font={{ variation: FontVariation.H5 }}>{getString('emptyRepoHeader')}</Text>
-        <Layout.Horizontal padding={{ top: 'large' }}>
+        <Layout.Horizontal padding={{ top: 'large',  }}>
           <Button
             variation={ButtonVariation.PRIMARY}
             text={getString('addNewFile')}
@@ -148,7 +148,7 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
               history.push(newFileURL)
             }}></Button>
 
-          <Container padding={{ left: 'medium', top: 'xsmall' }}>
+          <Container padding={{ left: 'medium', top: 'small' }}>
             <Text className={css.textContainer}>
               {getString('emptyRepoInclude')}
               <Text
@@ -184,7 +184,7 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
       </Container>
       <Container
         margin={{ bottom: 'xxlarge' }}
-        padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'medium', right: 'medium' }}
+        padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
         className={css.divContainer}>
         <MarkdownViewer
           source={getString('repoEmptyMarkdownClone')
@@ -194,7 +194,7 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
       </Container>
       <Container
         margin={{ bottom: 'xxlarge' }}
-        padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'medium', right: 'medium' }}
+        padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
         className={css.divContainer}>
         <MarkdownViewer
           source={getString('repoEmptyMarkdownExisting')
