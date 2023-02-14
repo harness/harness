@@ -16,6 +16,10 @@
     background-color: var(--red-50) !important;
   }
 
+  &.hide {
+    visibility: hidden !important;
+  }
+
   .layout {
     height: var(--bar-height);
     padding: 0 var(--spacing-xlarge) !important;

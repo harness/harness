@@ -104,7 +104,7 @@ const MergeableLabel: React.FC<Pick<CompareContentHeaderProps, 'repoMetadata' | 
     path: `/api/v1/repos/${repoMetadata.path}/+/merge-check/${targetGitRef}..${sourceGitRef}`
   })
   const [mergeable, setMergable] = useState<boolean | undefined>()
-  const color = mergeable ? Color.GREEN_700 : Color.RED_500
+  const color = mergeable ? Color.GREEN_700 : mergeable === false ? Color.RED_500 : undefined
   const { getString } = useStrings()
 
   useEffect(() => {

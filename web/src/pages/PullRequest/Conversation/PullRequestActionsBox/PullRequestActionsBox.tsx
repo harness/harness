@@ -91,44 +91,53 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     }
   ]
   const [mergeOption, setMergeOption] = useState<PRMergeOption>(mergeOptions[1])
+  const [shouldCallMergeCheck, setShouldCallMergeCheck] = useState(
+    !isDraft && pullRequestMetadata.state === PullRequestState.OPEN
+  )
 
   useShowRequestError(errorMergeCheck)
 
   useEffect(() => {
-    if (!isDraft && pullRequestMetadata.state === PullRequestState.OPEN) {
-      mergeCheck({}).then(response => {
-        setMergable(response.mergeable)
-      })
+    if (shouldCallMergeCheck) {
+      mergeCheck({})
+        .then(response => {
+          setMergable(response.mergeable)
+        })
+        .finally(() => setShouldCallMergeCheck(false))
     }
-  }, [isDraft, mergeCheck, pullRequestMetadata])
+  }, [isDraft, mergeCheck, pullRequestMetadata, shouldCallMergeCheck])
 
   if (pullRequestMetadata.state === PullRequestFilterOption.MERGED) {
     return <MergeInfo pullRequestMetadata={pullRequestMetadata} />
   }
 
+  console.log(
+    'variation',
+    mergeOption.method === 'close' || mergeable === false || loadingMergeCheck || shouldCallMergeCheck
+      ? ButtonVariation.TERTIARY
+      : ButtonVariation.PRIMARY
+  )
+
   return (
-    <Container className={cx(css.main, { [css.error]: mergeable === false })}>
+    <Container
+      className={cx(css.main, {
+        [css.error]: mergeable === false,
+        [css.hide]: loadingMergeCheck || shouldCallMergeCheck
+      })}>
       <Layout.Vertical spacing="xlarge">
         <Container>
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }} className={css.layout}>
-            {!loadingMergeCheck && (
-              <>
-                <Icon
-                  name={isDraft ? CodeIcon.Draft : mergeable === false ? 'warning-sign' : 'tick-circle'}
-                  size={20}
-                  color={isDraft ? Color.ORANGE_900 : mergeable === false ? Color.RED_500 : Color.GREEN_700}
-                />
-                <Text className={css.sub}>
-                  {getString(
-                    isDraft
-                      ? 'prState.draftHeading'
-                      : mergeable === false
-                      ? 'pr.cantBeMerged'
-                      : 'pr.branchHasNoConflicts'
-                  )}
-                </Text>
-              </>
-            )}
+            <Icon
+              name={isDraft ? CodeIcon.Draft : mergeable === false ? 'warning-sign' : 'tick-circle'}
+              size={20}
+              color={isDraft ? Color.ORANGE_900 : mergeable === false ? Color.RED_500 : Color.GREEN_700}
+            />
+            <Text className={css.sub}>
+              {getString(
+                isDraft ? 'prState.draftHeading' : mergeable === false ? 'pr.cantBeMerged' : 'pr.branchHasNoConflicts'
+              )}
+            </Text>
+
             <FlexExpander />
             <Render when={loading || loadingState || loadingMergeCheck}>
               <Icon name={CodeIcon.InputSpinner} size={16} margin={{ right: 'xsmall' }} />
@@ -158,7 +167,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                         variation={ButtonVariation.TERTIARY}
                         onClick={() => {
                           const payload: OpenapiStatePullReqRequest = { state: 'open' }
-
                           updatePRState(payload)
                             .then(onPRStateChanged)
                             .catch(exception => showError(getErrorMessage(exception)))
@@ -166,20 +174,24 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                       />
                     </Case>
                     <Case val={PullRequestState.OPEN}>
-                      <Layout.Horizontal
+                      <Container
                         inline
-                        spacing="huge"
                         className={cx({
                           [css.btnWrapper]: mergeOption.method !== 'close',
-                          [css.hasError]: mergeable === false
+                          [css.hasError]: mergeable === false,
+                          [css.hide]: loadingMergeCheck || shouldCallMergeCheck
                         })}>
                         <SplitButton
                           text={mergeOption.title}
-                          disabled={loading || loadingMergeCheck}
-                          // dropdownDisabled={mergeButtonDisabled}
-                          className={cx({ [css.secondaryButton]: mergeOption.method === 'close' })}
+                          disabled={loading}
+                          className={cx({
+                            [css.secondaryButton]: mergeOption.method === 'close' || mergeable === false
+                          })}
                           variation={
-                            mergeOption.method === 'close' || mergeable === false
+                            mergeOption.method === 'close' ||
+                            mergeable === false ||
+                            loadingMergeCheck ||
+                            shouldCallMergeCheck
                               ? ButtonVariation.TERTIARY
                               : ButtonVariation.PRIMARY
                           }
@@ -246,7 +258,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                             )
                           })}
                         </SplitButton>
-                      </Layout.Horizontal>
+                      </Container>
                     </Case>
                   </Match>
                 </Container>

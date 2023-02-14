@@ -1,13 +1,11 @@
 .box {
   background: var(--white) !important;
-
   box-shadow: var(--elevation-2);
-
   border-radius: 4px;
   padding: var(--spacing-xlarge) var(--spacing-large) !important;
 
   &.desc {
-    padding: var(--spacing-xxlarge) !important;
+    padding: var(--spacing-xlarge) !important;
 
     .mdWrapper {
       position: relative;
