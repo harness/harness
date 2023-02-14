@@ -4,14 +4,18 @@ import React from 'react'
 import { Get, GetProps, useGet, UseGetProps, Mutate, MutateProps, useMutate, UseMutateProps } from 'restful-react'
 
 import { getConfig } from '../config'
-export const SPEC_VERSION = '1.0.0'
+export const SPEC_VERSION = '0.0.0'
 export type EnumAccessGrant = number
 
 export type EnumMergeMethod = 'merge' | 'rebase' | 'squash'
 
+export type EnumMergeStatus = string
+
 export type EnumParentResourceType = 'space' | 'repo'
 
 export type EnumPathTargetType = string
+
+export type EnumPrincipalType = 'service' | 'serviceaccount' | 'user'
 
 export type EnumPullReqActivityKind = 'code' | 'comment' | 'system'
 
@@ -57,6 +61,19 @@ export interface FormDataOpenapiRegisterRequest {
 }
 
 export type GitrpcFileAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE'
+
+export interface OpenapiAdminUsersCreateRequest {
+  display_name?: string
+  email?: string
+  password?: string
+  uid?: string
+}
+
+export interface OpenapiAdminUsersUpdateRequest {
+  display_name?: string | null
+  email?: string | null
+  password?: string | null
+}
 
 export interface OpenapiCalculateCommitDivergenceRequest {
   max_count?: number
@@ -159,8 +176,7 @@ export interface OpenapiGetContentOutput {
 }
 
 export interface OpenapiMergePullReq {
-  delete_branch?: boolean
-  force?: boolean
+  head_sha?: string
   method?: EnumMergeMethod
 }
 
@@ -293,6 +309,10 @@ export interface RepoFileContent {
 
 export type RepoFileEncodingType = string
 
+export interface RepoMergeCheck {
+  mergeable?: boolean
+}
+
 export interface RepoSubmoduleContent {
   commit_sha?: string
   url?: string
@@ -311,6 +331,11 @@ export interface TypesCommit {
   title?: string
 }
 
+export interface TypesDiffStats {
+  commits?: number
+  files_changed?: number
+}
+
 export interface TypesIdentity {
   email?: string
   name?: string
@@ -327,12 +352,15 @@ export interface TypesPath {
   value?: string
 }
 
-export type TypesPrincipalInfo = {
+export interface TypesPrincipalInfo {
+  created?: number
   display_name?: string
   email?: string
   id?: number
+  type?: EnumPrincipalType
   uid?: string
-} | null
+  updated?: number
+}
 
 export interface TypesPullReq {
   author?: TypesPrincipalInfo
@@ -341,13 +369,17 @@ export interface TypesPullReq {
   edited?: number
   is_draft?: boolean
   merge_base_sha?: string | null
+  merge_conflicts?: string | null
   merge_head_sha?: string | null
+  merge_ref_sha?: string | null
+  merge_status?: EnumMergeStatus
   merge_strategy?: EnumMergeMethod
   merged?: number | null
   merger?: TypesPrincipalInfo
   number?: number
   source_branch?: string
   source_repo_id?: number
+  source_sha?: string
   state?: EnumPullReqState
   stats?: TypesPullReqStats
   target_branch?: string
@@ -457,13 +489,6 @@ export interface TypesUser {
   updated?: number
 }
 
-export interface TypesUserInput {
-  admin?: boolean | null
-  email?: string | null
-  name?: string | null
-  password?: string | null
-}
-
 export interface TypesWebhookExecution {
   created?: number
   duration?: number
@@ -502,6 +527,131 @@ export interface UsererrorError {
   values?: { [key: string]: any }
 }
 
+export interface AdminListUsersQueryParams {
+  sort?: 'id' | 'email' | 'created' | 'updated'
+  order?: 'asc' | 'desc'
+  page?: number
+  limit?: number
+}
+
+export type AdminListUsersProps = Omit<GetProps<TypesUser[], UsererrorError, AdminListUsersQueryParams, void>, 'path'>
+
+export const AdminListUsers = (props: AdminListUsersProps) => (
+  <Get<TypesUser[], UsererrorError, AdminListUsersQueryParams, void>
+    path={`/admin/users`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseAdminListUsersProps = Omit<
+  UseGetProps<TypesUser[], UsererrorError, AdminListUsersQueryParams, void>,
+  'path'
+>
+
+export const useAdminListUsers = (props: UseAdminListUsersProps) =>
+  useGet<TypesUser[], UsererrorError, AdminListUsersQueryParams, void>(`/admin/users`, {
+    base: getConfig('code'),
+    ...props
+  })
+
+export type AdminCreateUserProps = Omit<
+  MutateProps<TypesUser, UsererrorError, void, OpenapiAdminUsersCreateRequest, void>,
+  'path' | 'verb'
+>
+
+export const AdminCreateUser = (props: AdminCreateUserProps) => (
+  <Mutate<TypesUser, UsererrorError, void, OpenapiAdminUsersCreateRequest, void>
+    verb="POST"
+    path={`/admin/users`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseAdminCreateUserProps = Omit<
+  UseMutateProps<TypesUser, UsererrorError, void, OpenapiAdminUsersCreateRequest, void>,
+  'path' | 'verb'
+>
+
+export const useAdminCreateUser = (props: UseAdminCreateUserProps) =>
+  useMutate<TypesUser, UsererrorError, void, OpenapiAdminUsersCreateRequest, void>('POST', `/admin/users`, {
+    base: getConfig('code'),
+    ...props
+  })
+
+export type AdminDeleteUserProps = Omit<MutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
+
+export const AdminDeleteUser = (props: AdminDeleteUserProps) => (
+  <Mutate<void, UsererrorError, void, string, void>
+    verb="DELETE"
+    path={`/admin/users`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseAdminDeleteUserProps = Omit<UseMutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
+
+export const useAdminDeleteUser = (props: UseAdminDeleteUserProps) =>
+  useMutate<void, UsererrorError, void, string, void>('DELETE', `/admin/users`, { base: getConfig('code'), ...props })
+
+export interface AdminGetUserPathParams {
+  user_uid: string
+}
+
+export type AdminGetUserProps = Omit<GetProps<TypesUser, UsererrorError, void, AdminGetUserPathParams>, 'path'> &
+  AdminGetUserPathParams
+
+export const AdminGetUser = ({ user_uid, ...props }: AdminGetUserProps) => (
+  <Get<TypesUser, UsererrorError, void, AdminGetUserPathParams>
+    path={`/admin/users/${user_uid}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseAdminGetUserProps = Omit<UseGetProps<TypesUser, UsererrorError, void, AdminGetUserPathParams>, 'path'> &
+  AdminGetUserPathParams
+
+export const useAdminGetUser = ({ user_uid, ...props }: UseAdminGetUserProps) =>
+  useGet<TypesUser, UsererrorError, void, AdminGetUserPathParams>(
+    (paramsInPath: AdminGetUserPathParams) => `/admin/users/${paramsInPath.user_uid}`,
+    { base: getConfig('code'), pathParams: { user_uid }, ...props }
+  )
+
+export interface AdminUpdateUserPathParams {
+  user_uid: string
+}
+
+export type AdminUpdateUserProps = Omit<
+  MutateProps<TypesUser, UsererrorError, void, OpenapiAdminUsersUpdateRequest, AdminUpdateUserPathParams>,
+  'path' | 'verb'
+> &
+  AdminUpdateUserPathParams
+
+export const AdminUpdateUser = ({ user_uid, ...props }: AdminUpdateUserProps) => (
+  <Mutate<TypesUser, UsererrorError, void, OpenapiAdminUsersUpdateRequest, AdminUpdateUserPathParams>
+    verb="PATCH"
+    path={`/admin/users/${user_uid}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseAdminUpdateUserProps = Omit<
+  UseMutateProps<TypesUser, UsererrorError, void, OpenapiAdminUsersUpdateRequest, AdminUpdateUserPathParams>,
+  'path' | 'verb'
+> &
+  AdminUpdateUserPathParams
+
+export const useAdminUpdateUser = ({ user_uid, ...props }: UseAdminUpdateUserProps) =>
+  useMutate<TypesUser, UsererrorError, void, OpenapiAdminUsersUpdateRequest, AdminUpdateUserPathParams>(
+    'PATCH',
+    (paramsInPath: AdminUpdateUserPathParams) => `/admin/users/${paramsInPath.user_uid}`,
+    { base: getConfig('code'), pathParams: { user_uid }, ...props }
+  )
+
 export type OnLoginProps = Omit<MutateProps<TypesTokenResponse, UsererrorError, void, void, void>, 'path' | 'verb'>
 
 export const OnLogin = (props: OnLoginProps) => (
@@ -523,6 +673,36 @@ export const useOnLogin = (props: UseOnLoginProps) =>
     base: getConfig('code'),
     ...props
   })
+
+export interface GetPrincipalPathParams {
+  principal_uid: string
+}
+
+export type GetPrincipalProps = Omit<
+  GetProps<TypesPrincipalInfo, UsererrorError, void, GetPrincipalPathParams>,
+  'path'
+> &
+  GetPrincipalPathParams
+
+export const GetPrincipal = ({ principal_uid, ...props }: GetPrincipalProps) => (
+  <Get<TypesPrincipalInfo, UsererrorError, void, GetPrincipalPathParams>
+    path={`/principals/${principal_uid}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseGetPrincipalProps = Omit<
+  UseGetProps<TypesPrincipalInfo, UsererrorError, void, GetPrincipalPathParams>,
+  'path'
+> &
+  GetPrincipalPathParams
+
+export const useGetPrincipal = ({ principal_uid, ...props }: UseGetPrincipalProps) =>
+  useGet<TypesPrincipalInfo, UsererrorError, void, GetPrincipalPathParams>(
+    (paramsInPath: GetPrincipalPathParams) => `/principals/${paramsInPath.principal_uid}`,
+    { base: getConfig('code'), pathParams: { principal_uid }, ...props }
+  )
 
 export type OnRegisterProps = Omit<MutateProps<TypesTokenResponse, UsererrorError, void, void, void>, 'path' | 'verb'>
 
@@ -1025,6 +1205,64 @@ export const useGetContent = ({ repo_ref, path, ...props }: UseGetContentProps) 
   useGet<OpenapiGetContentOutput, UsererrorError, GetContentQueryParams, GetContentPathParams>(
     (paramsInPath: GetContentPathParams) => `/repos/${paramsInPath.repo_ref}/content/${paramsInPath.path}`,
     { base: getConfig('code'), pathParams: { repo_ref, path }, ...props }
+  )
+
+export interface DiffStatsPathParams {
+  repo_ref: string
+  range: string
+}
+
+export type DiffStatsProps = Omit<GetProps<TypesDiffStats, UsererrorError, void, DiffStatsPathParams>, 'path'> &
+  DiffStatsPathParams
+
+export const DiffStats = ({ repo_ref, range, ...props }: DiffStatsProps) => (
+  <Get<TypesDiffStats, UsererrorError, void, DiffStatsPathParams>
+    path={`/repos/${repo_ref}/diff-stats/${range}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseDiffStatsProps = Omit<UseGetProps<TypesDiffStats, UsererrorError, void, DiffStatsPathParams>, 'path'> &
+  DiffStatsPathParams
+
+export const useDiffStats = ({ repo_ref, range, ...props }: UseDiffStatsProps) =>
+  useGet<TypesDiffStats, UsererrorError, void, DiffStatsPathParams>(
+    (paramsInPath: DiffStatsPathParams) => `/repos/${paramsInPath.repo_ref}/diff-stats/${paramsInPath.range}`,
+    { base: getConfig('code'), pathParams: { repo_ref, range }, ...props }
+  )
+
+export interface MergeCheckPathParams {
+  repo_ref: string
+  range: string
+}
+
+export type MergeCheckProps = Omit<
+  MutateProps<RepoMergeCheck, UsererrorError, void, void, MergeCheckPathParams>,
+  'path' | 'verb'
+> &
+  MergeCheckPathParams
+
+export const MergeCheck = ({ repo_ref, range, ...props }: MergeCheckProps) => (
+  <Mutate<RepoMergeCheck, UsererrorError, void, void, MergeCheckPathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/merge-check/${range}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseMergeCheckProps = Omit<
+  UseMutateProps<RepoMergeCheck, UsererrorError, void, void, MergeCheckPathParams>,
+  'path' | 'verb'
+> &
+  MergeCheckPathParams
+
+export const useMergeCheck = ({ repo_ref, range, ...props }: UseMergeCheckProps) =>
+  useMutate<RepoMergeCheck, UsererrorError, void, void, MergeCheckPathParams>(
+    'POST',
+    (paramsInPath: MergeCheckPathParams) => `/repos/${paramsInPath.repo_ref}/merge-check/${paramsInPath.range}`,
+    { base: getConfig('code'), pathParams: { repo_ref, range }, ...props }
   )
 
 export interface MoveRepositoryPathParams {
@@ -1665,22 +1903,28 @@ export interface PullReqMetaDataPathParams {
   pullreq_number: number
 }
 
-export type PullReqMetaDataProps = Omit<GetProps<void, UsererrorError, void, PullReqMetaDataPathParams>, 'path'> &
+export type PullReqMetaDataProps = Omit<
+  GetProps<TypesPullReqStats, UsererrorError, void, PullReqMetaDataPathParams>,
+  'path'
+> &
   PullReqMetaDataPathParams
 
 export const PullReqMetaData = ({ repo_ref, pullreq_number, ...props }: PullReqMetaDataProps) => (
-  <Get<void, UsererrorError, void, PullReqMetaDataPathParams>
+  <Get<TypesPullReqStats, UsererrorError, void, PullReqMetaDataPathParams>
     path={`/repos/${repo_ref}/pullreq/${pullreq_number}/metadata`}
     base={getConfig('code')}
     {...props}
   />
 )
 
-export type UsePullReqMetaDataProps = Omit<UseGetProps<void, UsererrorError, void, PullReqMetaDataPathParams>, 'path'> &
+export type UsePullReqMetaDataProps = Omit<
+  UseGetProps<TypesPullReqStats, UsererrorError, void, PullReqMetaDataPathParams>,
+  'path'
+> &
   PullReqMetaDataPathParams
 
 export const usePullReqMetaData = ({ repo_ref, pullreq_number, ...props }: UsePullReqMetaDataProps) =>
-  useGet<void, UsererrorError, void, PullReqMetaDataPathParams>(
+  useGet<TypesPullReqStats, UsererrorError, void, PullReqMetaDataPathParams>(
     (paramsInPath: PullReqMetaDataPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/metadata`,
     { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
@@ -2646,78 +2890,3 @@ export const useCreateToken = (props: UseCreateTokenProps) =>
     base: getConfig('code'),
     ...props
   })
-
-export interface ListUsersQueryParams {
-  sort?: 'id' | 'email' | 'created' | 'updated'
-  order?: 'asc' | 'desc'
-  page?: number
-  limit?: number
-}
-
-export type ListUsersProps = Omit<GetProps<TypesUser[], UsererrorError, ListUsersQueryParams, void>, 'path'>
-
-export const ListUsers = (props: ListUsersProps) => (
-  <Get<TypesUser[], UsererrorError, ListUsersQueryParams, void> path={`/users`} base={getConfig('code')} {...props} />
-)
-
-export type UseListUsersProps = Omit<UseGetProps<TypesUser[], UsererrorError, ListUsersQueryParams, void>, 'path'>
-
-export const useListUsers = (props: UseListUsersProps) =>
-  useGet<TypesUser[], UsererrorError, ListUsersQueryParams, void>(`/users`, { base: getConfig('code'), ...props })
-
-export type CreateUserProps = Omit<MutateProps<TypesUser, UsererrorError, void, TypesUserInput, void>, 'path' | 'verb'>
-
-export const CreateUser = (props: CreateUserProps) => (
-  <Mutate<TypesUser, UsererrorError, void, TypesUserInput, void>
-    verb="POST"
-    path={`/users`}
-    base={getConfig('code')}
-    {...props}
-  />
-)
-
-export type UseCreateUserProps = Omit<
-  UseMutateProps<TypesUser, UsererrorError, void, TypesUserInput, void>,
-  'path' | 'verb'
->
-
-export const useCreateUser = (props: UseCreateUserProps) =>
-  useMutate<TypesUser, UsererrorError, void, TypesUserInput, void>('POST', `/users`, {
-    base: getConfig('code'),
-    ...props
-  })
-
-export type DeleteUserProps = Omit<MutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
-
-export const DeleteUser = (props: DeleteUserProps) => (
-  <Mutate<void, UsererrorError, void, string, void> verb="DELETE" path={`/users`} base={getConfig('code')} {...props} />
-)
-
-export type UseDeleteUserProps = Omit<UseMutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
-
-export const useDeleteUser = (props: UseDeleteUserProps) =>
-  useMutate<void, UsererrorError, void, string, void>('DELETE', `/users`, { base: getConfig('code'), ...props })
-
-export interface GetUserEmailPathParams {
-  email: string
-}
-
-export type GetUserEmailProps = Omit<GetProps<TypesUser, UsererrorError, void, GetUserEmailPathParams>, 'path'> &
-  GetUserEmailPathParams
-
-export const GetUserEmail = ({ email, ...props }: GetUserEmailProps) => (
-  <Get<TypesUser, UsererrorError, void, GetUserEmailPathParams>
-    path={`/users/${email}`}
-    base={getConfig('code')}
-    {...props}
-  />
-)
-
-export type UseGetUserEmailProps = Omit<UseGetProps<TypesUser, UsererrorError, void, GetUserEmailPathParams>, 'path'> &
-  GetUserEmailPathParams
-
-export const useGetUserEmail = ({ email, ...props }: UseGetUserEmailProps) =>
-  useGet<TypesUser, UsererrorError, void, GetUserEmailPathParams>(
-    (paramsInPath: GetUserEmailPathParams) => `/users/${paramsInPath.email}`,
-    { base: getConfig('code'), pathParams: { email }, ...props }
-  )

@@ -160,6 +160,7 @@ draft: Draft
 conversation: Conversation
 pr:
   ableToMerge: Able to merge.
+  cantBeMerged: This branch has conflicts with the base branch.
   cantMerge: Can't be merged. You can still create the pull request.
   failedToCreate: Failed to create Pull Request.
   titlePlaceHolder: Enter the pull request title
@@ -205,7 +206,7 @@ pr:
   mergeOptions:
     squashAndMerge: Squash and merge
     squashAndMergeDesc: All commits from this branch will be combined into one commit in the base branch.
-    createMergeCommit: Create a merge commit
+    createMergeCommit: Merge pull request
     createMergeCommitDesc: All commits from this branch will be added to the base branch via a merge commit.
     rebaseAndMerge: Rebase and merge
     rebaseAndMergeDesc: All commits from this branch will be rebased and added to the base branch.
@@ -333,5 +334,5 @@ reviewers: Reviewers
 refresh: Refresh
 enableWebhookTitle: Enable the Webhook
 disableWebhookTitle: Disable the Webhook
-enableWebhookContent: Please confirm that you wanted to turn on 
+enableWebhookContent: Please confirm that you wanted to turn on
 disableWebhookContent: Please confirm that you wanted to turn off

@@ -2,6 +2,9 @@
 // this is an auto-generated file
 declare const styles: {
   readonly box: string
+  readonly desc: string
+  readonly mdWrapper: string
+  readonly menuWrapper: string
   readonly mergedBox: string
   readonly mergeContainer: string
   readonly descBox: string

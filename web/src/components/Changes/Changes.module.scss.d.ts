@@ -3,6 +3,7 @@
 declare const styles: {
   readonly wrapper: string
   readonly header: string
+  readonly stickied: string
   readonly diffStatsLabel: string
   readonly main: string
   readonly enableDiffLineBreaks: string

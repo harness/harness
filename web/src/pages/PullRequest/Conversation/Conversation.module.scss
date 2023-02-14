@@ -5,6 +5,21 @@
 
   border-radius: 4px;
   padding: var(--spacing-xlarge) var(--spacing-large) !important;
+
+  &.desc {
+    padding: var(--spacing-xxlarge) !important;
+
+    .mdWrapper {
+      position: relative;
+
+      .menuWrapper {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        display: inline-block;
+      }
+    }
+  }
 }
 
 .mergedBox {

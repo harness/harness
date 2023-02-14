@@ -12,7 +12,7 @@ import {
   FlexExpander
 } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
-import { orderBy } from 'lodash-es'
+import { noop, orderBy } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type { TypesCommit } from 'services/code'
@@ -27,8 +27,8 @@ interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
   commits: TypesCommit[]
   emptyTitle: string
   emptyMessage: string
-  prHasChanged: boolean
-  handleRefresh: () => void
+  prHasChanged?: boolean
+  handleRefresh?: () => void
 }
 
 export function CommitsView({
@@ -36,7 +36,7 @@ export function CommitsView({
   commits,
   emptyTitle,
   emptyMessage,
-  handleRefresh,
+  handleRefresh = noop,
   prHasChanged
 }: CommitsViewProps) {
   const { getString } = useStrings()

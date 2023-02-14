@@ -301,88 +301,64 @@ const DescriptionBox: React.FC<ConversationProps> = ({
     verb: 'PATCH',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}`
   })
-  const name = pullRequestMetadata.author?.display_name
 
   return (
-    <Container className={css.box}>
-      <Layout.Vertical spacing="medium">
-        <Container>
-          <Layout.Horizontal spacing="xsmall" style={{ alignItems: 'center' }}>
-            <StringSubstitute
-              str={getString('pr.authorCommentedPR')}
-              vars={{
-                author: (
-                  <>
-                    <Avatar name={name} size="small" hoverCard={false} />
-                    <Text inline margin={{ right: 'xsmall' }}>
-                      <strong>{name}</strong>
-                    </Text>
-                  </>
-                ),
-                time: (
-                  <Text inline>
-                    <ReactTimeago date={pullRequestMetadata.created as number} />
-                  </Text>
-                )
-              }}
-            />
-
-            {/* <PipeSeparator height={8} />
-            <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-            </Text> */}
-            <FlexExpander />
-            <OptionsMenuButton
-              isDark={true}
-              icon="Options"
-              iconProps={{ size: 14 }}
-              style={{ padding: '5px' }}
-              items={[
-                {
-                  text: getString('edit'),
-                  className: css.optionMenuIcon,
-                  hasIcon: true,
-                  iconName: 'Edit',
-                  onClick: () => setEdit(true)
-                }
-              ]}
-            />
-          </Layout.Horizontal>
-        </Container>
-        <Container padding={{ left: 'small', bottom: 'small' }}>
-          {(edit && (
-            <MarkdownEditorWithPreview
-              value={content}
-              onSave={value => {
-                const payload: OpenapiUpdatePullReqRequest = {
-                  title: pullRequestMetadata.title,
-                  description: value
-                }
-                mutate(payload)
-                  .then(() => {
-                    setContent(value)
-                    setOriginalContent(value)
-                    setEdit(false)
-                    // setUpdated(Date.now())
-                    refreshPullRequestMetadata()
-                  })
-                  .catch(exception => showError(getErrorMessage(exception), 0, getString('pr.failedToUpdate')))
-              }}
-              onCancel={() => {
-                setContent(originalContent)
-                setEdit(false)
-              }}
-              i18n={{
-                placeHolder: getString('pr.enterDesc'),
-                tabEdit: getString('write'),
-                tabPreview: getString('preview'),
-                save: getString('save'),
-                cancel: getString('cancel')
-              }}
-              maxEditorHeight="400px"
-            />
-          )) || <MarkdownViewer source={content} />}
-        </Container>
-      </Layout.Vertical>
+    <Container className={cx(css.box, css.desc)}>
+      <Container padding={{ left: 'small', bottom: 'small' }}>
+        {(edit && (
+          <MarkdownEditorWithPreview
+            value={content}
+            onSave={value => {
+              const payload: OpenapiUpdatePullReqRequest = {
+                title: pullRequestMetadata.title,
+                description: value
+              }
+              mutate(payload)
+                .then(() => {
+                  setContent(value)
+                  setOriginalContent(value)
+                  setEdit(false)
+                  // setUpdated(Date.now())
+                  refreshPullRequestMetadata()
+                })
+                .catch(exception => showError(getErrorMessage(exception), 0, getString('pr.failedToUpdate')))
+            }}
+            onCancel={() => {
+              setContent(originalContent)
+              setEdit(false)
+            }}
+            i18n={{
+              placeHolder: getString('pr.enterDesc'),
+              tabEdit: getString('write'),
+              tabPreview: getString('preview'),
+              save: getString('save'),
+              cancel: getString('cancel')
+            }}
+            maxEditorHeight="400px"
+          />
+        )) || (
+          <Container className={css.mdWrapper}>
+            <MarkdownViewer source={content} />
+            <Container className={css.menuWrapper}>
+              <OptionsMenuButton
+                isDark={true}
+                icon="Options"
+                iconProps={{ size: 14 }}
+                style={{ padding: '5px' }}
+                items={[
+                  {
+                    text: getString('edit'),
+                    className: css.optionMenuIcon,
+                    hasIcon: true,
+                    iconName: 'Edit',
+                    onClick: () => setEdit(true)
+                  }
+                ]}
+              />
+            </Container>
+          </Container>
+        )}
+      </Container>
     </Container>
   )
 }

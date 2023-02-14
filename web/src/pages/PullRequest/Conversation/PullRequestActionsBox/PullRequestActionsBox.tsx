@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Button,
   ButtonVariation,
@@ -17,9 +17,16 @@ import { Case, Else, Match, Render, Truthy } from 'react-jsx-match'
 import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
-import type { EnumMergeMethod, OpenapiMergePullReq, OpenapiStatePullReqRequest, TypesPullReq } from 'services/code'
+import type {
+  EnumMergeMethod,
+  OpenapiMergePullReq,
+  OpenapiStatePullReqRequest,
+  RepoMergeCheck,
+  TypesPullReq
+} from 'services/code'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, PullRequestFilterOption, PullRequestState } from 'utils/GitUtils'
+import { useShowRequestError } from 'hooks/useShowRequestError'
 import { getErrorMessage } from 'utils/Utils'
 import css from './PullRequestActionsBox.module.scss'
 
@@ -31,6 +38,7 @@ interface PRMergeOption {
   method: EnumMergeMethod | 'close'
   title: string
   desc: string
+  disabled?: boolean
 }
 
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
@@ -48,13 +56,22 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/state`
   })
-
+  const {
+    mutate: mergeCheck,
+    error: errorMergeCheck,
+    loading: loadingMergeCheck
+  } = useMutate<RepoMergeCheck>({
+    verb: 'POST',
+    path: `/api/v1/repos/${repoMetadata.path}/+/merge-check/${pullRequestMetadata.target_branch}..${pullRequestMetadata.source_branch}`
+  })
+  const [mergeable, setMergable] = useState<boolean | undefined>()
   const isDraft = pullRequestMetadata.is_draft
   const mergeOptions: PRMergeOption[] = [
     {
       method: 'squash',
       title: getString('pr.mergeOptions.squashAndMerge'),
-      desc: getString('pr.mergeOptions.squashAndMergeDesc')
+      desc: getString('pr.mergeOptions.squashAndMergeDesc'),
+      disabled: true
     },
     {
       method: 'merge',
@@ -64,7 +81,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     {
       method: 'rebase',
       title: getString('pr.mergeOptions.rebaseAndMerge'),
-      desc: getString('pr.mergeOptions.rebaseAndMergeDesc')
+      desc: getString('pr.mergeOptions.rebaseAndMergeDesc'),
+      disabled: true
     },
     {
       method: 'close',
@@ -72,25 +90,47 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       desc: getString('pr.mergeOptions.closeDesc')
     }
   ]
-  const [mergeOption, setMergeOption] = useState<PRMergeOption>(mergeOptions[0])
+  const [mergeOption, setMergeOption] = useState<PRMergeOption>(mergeOptions[1])
+
+  useShowRequestError(errorMergeCheck)
+
+  useEffect(() => {
+    if (!isDraft && pullRequestMetadata.state === PullRequestState.OPEN) {
+      mergeCheck({}).then(response => {
+        setMergable(response.mergeable)
+      })
+    }
+  }, [isDraft, mergeCheck, pullRequestMetadata])
 
   if (pullRequestMetadata.state === PullRequestFilterOption.MERGED) {
     return <MergeInfo pullRequestMetadata={pullRequestMetadata} />
   }
 
   return (
-    <Container className={css.main}>
+    <Container className={cx(css.main, { [css.error]: mergeable === false })}>
       <Layout.Vertical spacing="xlarge">
         <Container>
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }} className={css.layout}>
-            <Icon
-              name={isDraft ? CodeIcon.Draft : 'tick-circle'}
-              size={20}
-              color={isDraft ? Color.ORANGE_900 : Color.GREEN_700}
-            />
-            <Text className={css.sub}>{getString(isDraft ? 'prState.draftHeading' : 'pr.branchHasNoConflicts')}</Text>
+            {!loadingMergeCheck && (
+              <>
+                <Icon
+                  name={isDraft ? CodeIcon.Draft : mergeable === false ? 'warning-sign' : 'tick-circle'}
+                  size={20}
+                  color={isDraft ? Color.ORANGE_900 : mergeable === false ? Color.RED_500 : Color.GREEN_700}
+                />
+                <Text className={css.sub}>
+                  {getString(
+                    isDraft
+                      ? 'prState.draftHeading'
+                      : mergeable === false
+                      ? 'pr.cantBeMerged'
+                      : 'pr.branchHasNoConflicts'
+                  )}
+                </Text>
+              </>
+            )}
             <FlexExpander />
-            <Render when={loading || loadingState}>
+            <Render when={loading || loadingState || loadingMergeCheck}>
               <Icon name={CodeIcon.InputSpinner} size={16} margin={{ right: 'xsmall' }} />
             </Render>
             <Match expr={isDraft}>
@@ -129,12 +169,19 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                       <Layout.Horizontal
                         inline
                         spacing="huge"
-                        className={cx({ [css.btnWrapper]: mergeOption.method !== 'close' })}>
+                        className={cx({
+                          [css.btnWrapper]: mergeOption.method !== 'close',
+                          [css.hasError]: mergeable === false
+                        })}>
                         <SplitButton
                           text={mergeOption.title}
+                          disabled={loading || loadingMergeCheck}
+                          // dropdownDisabled={mergeButtonDisabled}
                           className={cx({ [css.secondaryButton]: mergeOption.method === 'close' })}
                           variation={
-                            mergeOption.method === 'close' ? ButtonVariation.TERTIARY : ButtonVariation.PRIMARY
+                            mergeOption.method === 'close' || mergeable === false
+                              ? ButtonVariation.TERTIARY
+                              : ButtonVariation.PRIMARY
                           }
                           popoverProps={{
                             interactionKind: 'click',
@@ -145,11 +192,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           }}
                           onClick={() => {
                             if (mergeOption.method !== 'close') {
-                              const payload: OpenapiMergePullReq = {
-                                method: mergeOption.method,
-                                force: false,
-                                delete_branch: false
-                              }
+                              const payload: OpenapiMergePullReq = { method: mergeOption.method }
 
                               mergePR(payload)
                                 .then(onPRStateChanged)
@@ -161,10 +204,9 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                                 .then(onPRStateChanged)
                                 .catch(exception => showError(getErrorMessage(exception)))
                             }
-                          }}
-                          disabled={loading}
-                          dropdownDisabled={loading}>
-                          {/* <Menu.Item
+                          }}>
+                          {/* TODO: These two items are used for creating a PR
+                          <Menu.Item
                         className={css.menuItem}
                         text={
                           <>
@@ -191,6 +233,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                               <Menu.Item
                                 key={option.method}
                                 className={css.menuItem}
+                                disabled={option.disabled}
                                 text={
                                   <>
                                     <BIcon icon={mergeOption.method === option.method ? 'tick' : 'blank'} />

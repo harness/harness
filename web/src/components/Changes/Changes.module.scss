@@ -6,8 +6,11 @@
   position: sticky;
   top: 0;
   padding: var(--spacing-medium) 0 !important;
-  background-color: var(--white) !important;
   z-index: 2;
+
+  &.stickied {
+    background-color: var(--primary-bg) !important;
+  }
 }
 
 .diffStatsLabel {

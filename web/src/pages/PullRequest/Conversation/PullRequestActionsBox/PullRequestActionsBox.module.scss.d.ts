@@ -3,6 +3,7 @@
 declare const styles: {
   readonly main: string
   readonly merged: string
+  readonly error: string
   readonly layout: string
   readonly secondaryButton: string
   readonly btn: string
@@ -11,6 +12,7 @@ declare const styles: {
   readonly popover: string
   readonly menuItem: string
   readonly btnWrapper: string
+  readonly hasError: string
   readonly mergeContainer: string
 }
 export default styles

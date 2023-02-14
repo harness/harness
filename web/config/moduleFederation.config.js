@@ -13,8 +13,8 @@ const ExactSharedPackages = [
   '@blueprintjs/select',
   '@blueprintjs/datetime',
   '@blueprintjs/icons',
-  'restful-react',
-  'lodash-es'
+  'restful-react'
+  // 'lodash-es'
 ]
 
 /**

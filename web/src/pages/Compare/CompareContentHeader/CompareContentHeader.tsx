@@ -1,10 +1,13 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { useMutate } from 'restful-react'
 import { Container, Layout, FlexExpander, ButtonVariation, Icon, Text, Color } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
+import type { RepoMergeCheck } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { GitInfoProps, isRefATag } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
+import { getErrorMessage } from 'utils/Utils'
 import { CreatePullRequestModalButton } from 'components/CreatePullRequestModal/CreatePullRequestModal'
 import css from './CompareContentHeader.module.scss'
 
@@ -52,7 +55,9 @@ export function CompareContentHeader({
           placeHolder={getString('selectBranchPlaceHolder')}
           style={{ '--background-color': 'var(--white)' } as React.CSSProperties}
         />
-        {!!targetGitRef && !!sourceGitRef && <MergeableLabel mergeable />}
+        {!!targetGitRef && !!sourceGitRef && (
+          <MergeableLabel repoMetadata={repoMetadata} targetGitRef={targetGitRef} sourceGitRef={sourceGitRef} />
+        )}
         <FlexExpander />
         <CreatePullRequestModalButton
           repoMetadata={repoMetadata}
@@ -85,17 +90,38 @@ export function CompareContentHeader({
   )
 }
 
-const MergeableLabel: React.FC<Pick<CompareContentHeaderProps, 'mergeable'>> = ({ mergeable }) => {
+const MergeableLabel: React.FC<Pick<CompareContentHeaderProps, 'repoMetadata' | 'targetGitRef' | 'sourceGitRef'>> = ({
+  repoMetadata,
+  targetGitRef,
+  sourceGitRef
+}) => {
+  const {
+    mutate: mergeCheck,
+    loading,
+    error
+  } = useMutate<RepoMergeCheck>({
+    verb: 'POST',
+    path: `/api/v1/repos/${repoMetadata.path}/+/merge-check/${targetGitRef}..${sourceGitRef}`
+  })
+  const [mergeable, setMergable] = useState<boolean | undefined>()
   const color = mergeable ? Color.GREEN_700 : Color.RED_500
   const { getString } = useStrings()
+
+  useEffect(() => {
+    if (targetGitRef && sourceGitRef) {
+      mergeCheck({}).then(response => {
+        setMergable(response.mergeable)
+      })
+    }
+  }, [targetGitRef, sourceGitRef, mergeCheck])
 
   return (
     <Text
       className={css.mergeText}
-      icon={mergeable === true ? 'command-artifact-check' : 'cross'}
+      icon={loading ? 'spinner' : mergeable === true ? 'command-artifact-check' : 'cross'}
       iconProps={{ color }}
       color={color}>
-      {getString(mergeable ? 'pr.ableToMerge' : 'pr.cantMerge')}
+      {loading ? '' : error ? getErrorMessage(error) : getString(mergeable ? 'pr.ableToMerge' : 'pr.cantMerge')}
     </Text>
   )
 }

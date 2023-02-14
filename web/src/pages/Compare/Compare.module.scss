@@ -15,6 +15,7 @@
       padding-left: var(--spacing-medium);
       padding-right: var(--spacing-xlarge);
       border-bottom: 1px solid var(--grey-100);
+      filter: drop-shadow(0px 0px 1px rgba(40, 41, 61, 0.08));
     }
 
     [role='tabpanel'] {

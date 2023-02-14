@@ -157,7 +157,7 @@ export const Changes: React.FC<ChangesProps> = ({
         <Match expr={diffs?.length}>
           <Case val={(len: number) => len > 0}>
             <>
-              <Container className={css.header}>
+              <Container className={cx(css.header, { [css.stickied]: isSticky })}>
                 <Layout.Horizontal>
                   <Container flex={{ alignItems: 'center' }}>
                     {/* Files Changed stats */}

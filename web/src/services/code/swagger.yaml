@@ -1,12 +1,206 @@
 openapi: 3.0.0
 info:
   title: API Specification
-  version: 1.0.0
+  version: 0.0.0
 servers:
   - url: /api/v1/
 security:
   - bearerAuth: []
 paths:
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      parameters:
+        - in: query
+          name: sort
+          schema:
+            enum:
+              - id
+              - email
+              - created
+              - updated
+            type: string
+        - in: query
+          name: order
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - in: query
+          name: page
+          schema:
+            default: 1
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            default: 30
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesUser'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - admin
+    post:
+      operationId: adminCreateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiAdminUsersCreateRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesUser'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - admin
+  /admin/users/{user_uid}:
+    delete:
+      operationId: adminDeleteUser
+      parameters:
+        - in: path
+          name: user_uid
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - admin
+    get:
+      operationId: adminGetUser
+      parameters:
+        - in: path
+          name: user_uid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesUser'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - admin
+    patch:
+      operationId: adminUpdateUser
+      parameters:
+        - in: path
+          name: user_uid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiAdminUsersUpdateRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesUser'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - admin
   /login:
     post:
       operationId: onLogin
@@ -42,6 +236,42 @@ paths:
           description: Internal Server Error
       tags:
         - account
+  /principals/{principal_uid}:
+    get:
+      operationId: getPrincipal
+      parameters:
+        - in: path
+          name: principal_uid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPrincipalInfo'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - principals
   /register:
     post:
       operationId: onRegister
@@ -804,6 +1034,90 @@ paths:
               schema:
                 $ref: '#/components/schemas/UsererrorError'
           description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+  /repos/{repo_ref}/diff-stats/{range}:
+    get:
+      operationId: diffStats
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: range
+          required: true
+          schema:
+            example: main..dev
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesDiffStats'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+  /repos/{repo_ref}/merge-check/{range}:
+    post:
+      operationId: mergeCheck
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: range
+          required: true
+          schema:
+            example: main..dev
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepoMergeCheck'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
         '500':
           content:
             application/json:
@@ -1734,9 +2048,9 @@ paths:
       responses:
         '200':
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/TypesPullReqStats'
           description: OK
         '401':
           content:
@@ -3229,160 +3543,6 @@ paths:
           description: Internal Server Error
       tags:
         - user
-  /users:
-    get:
-      operationId: listUsers
-      parameters:
-        - in: query
-          name: sort
-          schema:
-            enum:
-              - id
-              - email
-              - created
-              - updated
-            type: string
-        - in: query
-          name: order
-          schema:
-            enum:
-              - asc
-              - desc
-            type: string
-        - in: query
-          name: page
-          schema:
-            default: 1
-            type: integer
-        - in: query
-          name: limit
-          schema:
-            default: 30
-            type: integer
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: '#/components/schemas/TypesUser'
-                type: array
-          description: OK
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Bad Request
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - users
-    post:
-      operationId: createUser
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TypesUserInput'
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TypesUser'
-          description: OK
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Bad Request
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - users
-  /users/{email}:
-    delete:
-      operationId: deleteUser
-      parameters:
-        - in: path
-          name: email
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: No Content
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - users
-    get:
-      operationId: getUserEmail
-      parameters:
-        - in: path
-          name: email
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TypesUser'
-          description: OK
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Bad Request
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - users
 components:
   schemas:
     EnumAccessGrant:
@@ -3393,12 +3553,20 @@ components:
         - rebase
         - squash
       type: string
+    EnumMergeStatus:
+      type: string
     EnumParentResourceType:
       enum:
         - space
         - repo
       type: string
     EnumPathTargetType:
+      type: string
+    EnumPrincipalType:
+      enum:
+        - service
+        - serviceaccount
+        - user
       type: string
     EnumPullReqActivityKind:
       enum:
@@ -3477,6 +3645,29 @@ components:
         - DELETE
         - MOVE
       type: string
+    OpenapiAdminUsersCreateRequest:
+      properties:
+        display_name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        uid:
+          type: string
+      type: object
+    OpenapiAdminUsersUpdateRequest:
+      properties:
+        display_name:
+          nullable: true
+          type: string
+        email:
+          nullable: true
+          type: string
+        password:
+          nullable: true
+          type: string
+      type: object
     OpenapiCalculateCommitDivergenceRequest:
       properties:
         max_count:
@@ -3657,10 +3848,8 @@ components:
       type: object
     OpenapiMergePullReq:
       properties:
-        delete_branch:
-          type: boolean
-        force:
-          type: boolean
+        head_sha:
+          type: string
         method:
           $ref: '#/components/schemas/EnumMergeMethod'
       type: object
@@ -3879,6 +4068,11 @@ components:
       type: object
     RepoFileEncodingType:
       type: string
+    RepoMergeCheck:
+      properties:
+        mergeable:
+          type: boolean
+      type: object
     RepoSubmoduleContent:
       properties:
         commit_sha:
@@ -3905,6 +4099,13 @@ components:
           type: string
         title:
           type: string
+      type: object
+    TypesDiffStats:
+      properties:
+        commits:
+          type: integer
+        files_changed:
+          type: integer
       type: object
     TypesIdentity:
       properties:
@@ -3933,16 +4134,21 @@ components:
           type: string
       type: object
     TypesPrincipalInfo:
-      nullable: true
       properties:
+        created:
+          type: integer
         display_name:
           type: string
         email:
           type: string
         id:
           type: integer
+        type:
+          $ref: '#/components/schemas/EnumPrincipalType'
         uid:
           type: string
+        updated:
+          type: integer
       type: object
     TypesPullReq:
       properties:
@@ -3959,9 +4165,17 @@ components:
         merge_base_sha:
           nullable: true
           type: string
+        merge_conflicts:
+          nullable: true
+          type: string
         merge_head_sha:
           nullable: true
           type: string
+        merge_ref_sha:
+          nullable: true
+          type: string
+        merge_status:
+          $ref: '#/components/schemas/EnumMergeStatus'
         merge_strategy:
           $ref: '#/components/schemas/EnumMergeMethod'
         merged:
@@ -3975,6 +4189,8 @@ components:
           type: string
         source_repo_id:
           type: integer
+        source_sha:
+          type: string
         state:
           $ref: '#/components/schemas/EnumPullReqState'
         stats:
@@ -4167,21 +4383,6 @@ components:
           type: string
         updated:
           type: integer
-      type: object
-    TypesUserInput:
-      properties:
-        admin:
-          nullable: true
-          type: boolean
-        email:
-          nullable: true
-          type: string
-        name:
-          nullable: true
-          type: string
-        password:
-          nullable: true
-          type: string
       type: object
     TypesWebhookExecution:
       properties:
