@@ -20,7 +20,7 @@ pullreq_id SERIAL PRIMARY KEY
 ,pullreq_merged_by INTEGER
 ,pullreq_merged BIGINT
 ,pullreq_merge_method TEXT
-,pullreq_merge_check_status TEXT
+,pullreq_merge_check_status TEXT NOT NULL
 ,pullreq_merge_target_sha TEXT
 ,pullreq_merge_base_sha TEXT
 ,pullreq_merge_sha TEXT
