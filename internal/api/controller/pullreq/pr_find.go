@@ -7,7 +7,6 @@ package pullreq
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/api/usererror"
@@ -37,13 +36,13 @@ func (c *Controller) Find(
 		return nil, err
 	}
 
+	headRef := pr.SourceBranch
+	if pr.SourceSHA != "" {
+		headRef = pr.SourceSHA
+	}
 	baseRef := pr.TargetBranch
-	headRef := pr.SourceSHA
 	if pr.MergeBaseSHA != nil {
 		baseRef = *pr.MergeBaseSHA
-	}
-	if pr.MergeHeadSHA != nil {
-		headRef = *pr.MergeHeadSHA
 	}
 
 	output, err := c.gitRPCClient.DiffStats(ctx, &gitrpc.DiffParams{
@@ -58,27 +57,5 @@ func (c *Controller) Find(
 	pr.Stats.DiffStats.Commits = output.Commits
 	pr.Stats.DiffStats.FilesChanged = output.FilesChanged
 
-	updateMergeStatus(pr)
-
 	return pr, nil
-}
-
-func updateMergeStatus(pr *types.PullReq) {
-	mc := ""
-	if pr.MergeConflicts != nil {
-		mc = strings.TrimSpace(*pr.MergeConflicts)
-	}
-
-	switch {
-	case pr.State == enum.PullReqStateClosed:
-		pr.MergeStatus = enum.MergeStatusClosed
-	case pr.IsDraft:
-		pr.MergeStatus = enum.MergeStatusDraft
-	case mc != "":
-		pr.MergeStatus = enum.MergeStatusConflict
-	case pr.MergeRefSHA != nil:
-		pr.MergeStatus = enum.MergeStatusMergeable
-	default:
-		pr.MergeStatus = enum.MergeStatusUnchecked
-	}
 }

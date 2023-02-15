@@ -46,8 +46,12 @@ message MergeRequest {
 }
 
 message MergeResponse {
-  // The merge_sha is merge commit between head_sha and base_sha
-  string merge_sha = 1;
-  string base_sha  = 2;
-  string head_sha  = 3;
+  // base_sha is the sha of the latest commit on the base branch that was used for merging.
+  string base_sha = 1;
+  // head_sha is the sha of the latest commit on the head branch that was used for merging.
+  string head_sha = 2;
+  // merge_base_sha is the sha of the merge base of the head_sha and base_sha
+  string merge_base_sha = 3;
+  // merge_sha is the sha of the commit after merging head_sha with base_sha.
+  string merge_sha = 4;
 }

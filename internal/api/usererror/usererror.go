@@ -31,6 +31,9 @@ var (
 	// ErrPreconditionFailed is returned when a precondition failed.
 	ErrPreconditionFailed = New(http.StatusPreconditionFailed, "Precondition failed")
 
+	// ErrNotMergeable is returned when a branch can't be merged.
+	ErrNotMergeable = New(http.StatusPreconditionFailed, "Branch can't be merged")
+
 	// ErrNoChange is returned when no change was found based on the request.
 	ErrNoChange = New(http.StatusBadRequest, "No Change")
 

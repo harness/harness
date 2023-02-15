@@ -73,9 +73,20 @@ func (s MergeService) Merge(
 	// no error check needed, all branches were created when creating the temporary repo
 	baseBranch := "base"
 	trackingBranch := "tracking"
-	baseCommitSHA, _, _ := s.adapter.GetMergeBase(ctx, tmpBasePath, "origin", baseBranch, trackingBranch)
-	headCommit, _ := s.adapter.GetCommit(ctx, tmpBasePath, trackingBranch)
+	headCommit, err := s.adapter.GetCommit(ctx, tmpBasePath, trackingBranch)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get commit of tracking branch (head): %w", err)
+	}
 	headCommitSHA := headCommit.SHA
+	baseCommit, err := s.adapter.GetCommit(ctx, tmpBasePath, baseBranch)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get commit of base branch: %w", err)
+	}
+	baseCommitSHA := baseCommit.SHA
+	mergeBaseCommitSHA, _, err := s.adapter.GetMergeBase(ctx, tmpBasePath, "origin", baseBranch, trackingBranch)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get merge base: %w", err)
+	}
 
 	if request.HeadExpectedSha != "" && request.HeadExpectedSha != headCommitSHA {
 		return nil, status.Errorf(
@@ -170,9 +181,10 @@ func (s MergeService) Merge(
 	refType := enum.RefFromRPC(request.RefType)
 	if refType == enum.RefTypeUndefined {
 		return &rpc.MergeResponse{
-			MergeSha: mergeCommitSHA,
-			BaseSha:  baseCommitSHA,
-			HeadSha:  headCommitSHA,
+			BaseSha:      baseCommitSHA,
+			HeadSha:      headCommitSHA,
+			MergeBaseSha: mergeBaseCommitSHA,
+			MergeSha:     mergeCommitSHA,
 		}, nil
 	}
 
@@ -193,9 +205,10 @@ func (s MergeService) Merge(
 	}
 
 	return &rpc.MergeResponse{
-		MergeSha: mergeCommitSHA,
-		BaseSha:  baseCommitSHA,
-		HeadSha:  headCommitSHA,
+		BaseSha:      baseCommitSHA,
+		HeadSha:      headCommitSHA,
+		MergeBaseSha: mergeBaseCommitSHA,
+		MergeSha:     mergeCommitSHA,
 	}, nil
 }
 

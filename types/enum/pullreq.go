@@ -189,12 +189,13 @@ var mergeMethods = sortEnum([]MergeMethod{
 	MergeMethodRebase,
 })
 
-type MergeStatus string
+type MergeCheckStatus string
 
 const (
-	MergeStatusUnchecked MergeStatus = "unchecked" // The merge status has not been checked.
-	MergeStatusConflict  MergeStatus = "conflict"  // Can’t merge into the target branch due to a potential conflict.
-	MergeStatusDraft     MergeStatus = "draft_pr"  // Can’t merge because the pull request is a draft.
-	MergeStatusClosed    MergeStatus = "closed"    // The merge request must be open before merge.
-	MergeStatusMergeable MergeStatus = "mergeable" // The branch can merge cleanly into the target branch.
+	// MergeCheckStatusUnchecked merge status has not been checked.
+	MergeCheckStatusUnchecked MergeCheckStatus = "unchecked"
+	// MergeCheckStatusConflict can’t merge into the target branch due to a potential conflict.
+	MergeCheckStatusConflict MergeCheckStatus = "conflict"
+	// MergeCheckStatusMergeable branch can merged cleanly into the target branch.
+	MergeCheckStatusMergeable MergeCheckStatus = "mergeable"
 )

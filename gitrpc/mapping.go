@@ -39,6 +39,9 @@ func processRPCErrorf(err error, format string, args ...interface{}) error {
 		return ErrInvalidArgument
 	case rpcErr.Code() == codes.FailedPrecondition:
 		return ErrPreconditionFailed
+	case rpcErr.Code() == codes.Aborted:
+		// TODO: this should not be so generic ...
+		return ErrNotMergeable
 	default:
 		return fallbackErr
 	}

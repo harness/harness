@@ -295,7 +295,11 @@ func (g Adapter) GetMergeBase(ctx context.Context, repoPath, remote, base, head 
 	}
 
 	stdout, _, err := git.NewCommand(ctx, "merge-base", "--", base, head).RunStdString(&git.RunOpts{Dir: repoPath})
-	return strings.TrimSpace(stdout), base, err
+	if err != nil {
+		return "", "", processGiteaErrorf(err, "failed to get merge-base")
+	}
+
+	return strings.TrimSpace(stdout), base, nil
 }
 
 // giteaRunStdError is an implementation of the RunStdError interface in the gitea codebase.

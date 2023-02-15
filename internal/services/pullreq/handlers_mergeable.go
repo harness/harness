@@ -207,23 +207,36 @@ func (s *Service) updateMergeData(
 		Force:           true,
 	})
 	if errors.Is(err, gitrpc.ErrPreconditionFailed) {
-		// TODO: in case of merge conflict, update conflicts in pr entry - for that we need a
-		// nice way to distinguish between the two errors.
-		return events.NewDiscardEventErrorf("Source branch '%s' is not on SHA '%s' anymore or is not mergeable.",
+		return events.NewDiscardEventErrorf("Source branch '%s' is not on SHA '%s' anymore.",
 			pr.SourceBranch, newSHA)
 	}
-	if err != nil {
+
+	isNotMergeableError := errors.Is(err, gitrpc.ErrNotMergeable)
+	if err != nil && !isNotMergeableError {
 		return fmt.Errorf("merge check failed for %s and %s with err: %w",
 			targetRepo.UID+":"+pr.TargetBranch, sourceRepo.UID+":"+pr.SourceBranch, err)
 	}
 
+	// Update DB in both cases (failure or success)
 	_, err = s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 		if pr.SourceSHA != newSHA {
 			return events.NewDiscardEventErrorf("PR SHA %s is newer than %s", pr.SourceSHA, newSHA)
 		}
-		pr.MergeRefSHA = &output.MergedSHA
-		pr.MergeBaseSHA = &output.BaseSHA
-		pr.MergeHeadSHA = &output.HeadSHA
+
+		if isNotMergeableError {
+			// TODO: gitrpc should return sha's either way, and also conflicting files!
+			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
+			pr.MergeTargetSHA = nil
+			pr.MergeBaseSHA = nil
+			pr.MergeSHA = nil
+			pr.MergeConflicts = nil
+		} else {
+			pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
+			pr.MergeTargetSHA = &output.BaseSHA
+			pr.MergeBaseSHA = &output.MergeBaseSHA
+			pr.MergeSHA = &output.MergeSHA
+			pr.MergeConflicts = nil
+		}
 		return nil
 	})
 	if err != nil {

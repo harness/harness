@@ -99,7 +99,7 @@ func pullReqInfoFrom(pr *types.PullReq) PullReqInfo {
 		SourceBranch:  pr.SourceBranch,
 		TargetRepoID:  pr.TargetRepoID,
 		TargetBranch:  pr.TargetBranch,
-		MergeStrategy: pr.MergeStrategy,
+		MergeStrategy: pr.MergeMethod,
 	}
 }
 

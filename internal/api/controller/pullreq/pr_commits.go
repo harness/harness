@@ -34,9 +34,11 @@ func (c *Controller) Commits(
 	}
 
 	gitRef := pr.SourceBranch
+	if pr.SourceSHA != "" {
+		gitRef = pr.SourceSHA
+	}
 	afterRef := pr.TargetBranch
 	if pr.State == enum.PullReqStateMerged {
-		gitRef = *pr.MergeHeadSHA
 		afterRef = *pr.MergeBaseSHA
 	}
 

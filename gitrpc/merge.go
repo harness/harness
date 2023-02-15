@@ -41,9 +41,14 @@ type MergeParams struct {
 // MergeOutput is result object from merging and returns
 // base, head and commit sha.
 type MergeOutput struct {
-	MergedSHA string
-	BaseSHA   string
-	HeadSHA   string
+	// BaseSHA is the sha of the latest commit on the base branch that was used for merging.
+	BaseSHA string
+	// HeadSHA is the sha of the latest commit on the head branch that was used for merging.
+	HeadSHA string
+	// MergeBaseSHA is the sha of the merge base of the HeadSHA and BaseSHA
+	MergeBaseSHA string
+	// MergeSHA is the sha of the commit after merging HeadSHA with BaseSHA.
+	MergeSHA string
 }
 
 // Merge method executes git merge operation. Refs can be sha, branch or tag.
@@ -83,8 +88,9 @@ func (c *Client) Merge(ctx context.Context, params *MergeParams) (MergeOutput, e
 	}
 
 	return MergeOutput{
-		MergedSHA: resp.GetMergeSha(),
-		BaseSHA:   resp.GetBaseSha(),
-		HeadSHA:   resp.GetHeadSha(),
+		BaseSHA:      resp.GetBaseSha(),
+		HeadSHA:      resp.GetHeadSha(),
+		MergeBaseSHA: resp.GetMergeBaseSha(),
+		MergeSHA:     resp.GetMergeSha(),
 	}, nil
 }

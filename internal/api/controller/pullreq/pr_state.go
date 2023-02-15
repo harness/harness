@@ -122,9 +122,12 @@ func (c *Controller) State(ctx context.Context,
 		pr.IsDraft = in.IsDraft
 		pr.Edited = time.Now().UnixMilli()
 		if in.State == enum.PullReqStateClosed {
-			pr.MergeRefSHA = nil
+			// clear all merge (check) related fields
+			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
+			pr.MergeTargetSHA = nil
 			pr.MergeBaseSHA = nil
-			pr.MergeHeadSHA = nil
+			pr.MergeSHA = nil
+			pr.MergeConflicts = nil
 		}
 		pr.ActivitySeq++ // because we need to add the activity entry
 		return nil

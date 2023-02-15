@@ -19,10 +19,11 @@ pullreq_id INTEGER PRIMARY KEY AUTOINCREMENT
 ,pullreq_activity_seq INTEGER DEFAULT 0
 ,pullreq_merged_by INTEGER
 ,pullreq_merged BIGINT
-,pullreq_merge_strategy TEXT
-,pullreq_merge_head_sha TEXT
+,pullreq_merge_method TEXT
+,pullreq_merge_check_status TEXT NOT NULL
+,pullreq_merge_target_sha TEXT
 ,pullreq_merge_base_sha TEXT
-,pullreq_merge_ref_sha TEXT
+,pullreq_merge_sha TEXT
 ,pullreq_merge_conflicts TEXT
 ,CONSTRAINT fk_pullreq_created_by FOREIGN KEY (pullreq_created_by)
     REFERENCES principals (principal_id) MATCH SIMPLE

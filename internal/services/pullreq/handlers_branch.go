@@ -31,10 +31,15 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 					"failed to set SourceSHA for PR %d to value '%s', expected SHA '%s' but current pr has '%s'",
 					pr.Number, event.Payload.NewSHA, event.Payload.OldSHA, pr.SourceSHA)
 			}
+
 			pr.SourceSHA = event.Payload.NewSHA
-			pr.MergeRefSHA = nil
+
+			// reset merge-check fields for new run
+			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
+			pr.MergeTargetSHA = nil
 			pr.MergeBaseSHA = nil
-			pr.MergeHeadSHA = nil
+			pr.MergeSHA = nil
+			pr.MergeConflicts = nil
 			return nil
 		})
 		if err != nil {
@@ -76,11 +81,15 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 ) error {
 	s.forEveryOpenPR(ctx, event.Payload.RepoID, event.Payload.Ref, func(pr *types.PullReq) error {
 		pr, err := s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
-			pr.State = enum.PullReqStateClosed
-			pr.MergeRefSHA = nil
-			pr.MergeBaseSHA = nil
-			pr.MergeHeadSHA = nil
 			pr.ActivitySeq++ // because we need to write the activity
+
+			pr.State = enum.PullReqStateClosed
+			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
+			pr.MergeTargetSHA = nil
+			pr.MergeBaseSHA = nil
+			pr.MergeSHA = nil
+			pr.MergeConflicts = nil
+
 			return nil
 		})
 		if err != nil {

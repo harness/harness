@@ -35,15 +35,15 @@ type PullReq struct {
 
 	ActivitySeq int64 `json:"-"` // not returned, because it's a server's internal field
 
-	MergedBy      *int64            `json:"-"` // not returned, because the merger info is in the Merger field
-	Merged        *int64            `json:"merged"`
-	MergeStrategy *enum.MergeMethod `json:"merge_strategy"`
+	MergedBy    *int64            `json:"-"` // not returned, because the merger info is in the Merger field
+	Merged      *int64            `json:"merged"`
+	MergeMethod *enum.MergeMethod `json:"merge_method"`
 
-	MergeHeadSHA   *string          `json:"merge_head_sha"`
-	MergeBaseSHA   *string          `json:"merge_base_sha"`
-	MergeRefSHA    *string          `json:"merge_ref_sha"`
-	MergeStatus    enum.MergeStatus `json:"merge_status"`
-	MergeConflicts *string          `json:"merge_conflicts,omitempty"`
+	MergeCheckStatus enum.MergeCheckStatus `json:"merge_check_status"`
+	MergeTargetSHA   *string               `json:"merge_target_sha"`
+	MergeBaseSHA     *string               `json:"merge_base_sha"`
+	MergeSHA         *string               `json:"merge_sha"`
+	MergeConflicts   *string               `json:"merge_conflicts,omitempty"`
 
 	Author PrincipalInfo  `json:"author"`
 	Merger *PrincipalInfo `json:"merger"`

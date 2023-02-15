@@ -23,8 +23,8 @@ import (
 )
 
 type MergeInput struct {
-	Method  enum.MergeMethod `json:"method"`
-	HeadSHA string           `json:"head_sha"`
+	Method    enum.MergeMethod `json:"method"`
+	SourceSHA string           `json:"source_sha"`
 }
 
 // Merge merges the pull request.
@@ -116,23 +116,26 @@ func (c *Controller) Merge(
 		Author:          rpcIdentityFromPrincipal(session.Principal),
 		RefType:         gitrpcenum.RefTypeBranch,
 		RefName:         pr.TargetBranch,
-		HeadExpectedSHA: in.HeadSHA,
+		HeadExpectedSHA: in.SourceSHA,
 	})
 	if err != nil {
 		return types.MergeResponse{}, err
 	}
 
 	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
-		now := time.Now().UnixMilli()
-		pr.MergeStrategy = &in.Method
-		pr.Merged = &now
-		pr.MergedBy = &session.Principal.ID
 		pr.State = enum.PullReqStateMerged
 
-		// update all SHAs (might be empty if previous merge check failed)
-		pr.MergeRefSHA = &mergeOutput.MergedSHA
-		pr.MergeBaseSHA = &mergeOutput.BaseSHA
-		pr.MergeHeadSHA = &mergeOutput.HeadSHA
+		now := time.Now().UnixMilli()
+		pr.Merged = &now
+		pr.MergedBy = &session.Principal.ID
+		pr.MergeMethod = &in.Method
+
+		// update all Merge specific information (might be empty if previous merge check failed)
+		pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
+		pr.MergeTargetSHA = &mergeOutput.BaseSHA
+		pr.MergeBaseSHA = &mergeOutput.MergeBaseSHA
+		pr.MergeSHA = &mergeOutput.MergeSHA
+		pr.MergeConflicts = nil
 
 		pr.ActivitySeq++ // because we need to write the activity entry
 		return nil
@@ -143,9 +146,9 @@ func (c *Controller) Merge(
 
 	activityPayload := &types.PullRequestActivityPayloadMerge{
 		MergeMethod: in.Method,
-		MergedSHA:   mergeOutput.MergedSHA,
-		BaseSHA:     mergeOutput.BaseSHA,
-		HeadSHA:     mergeOutput.HeadSHA,
+		MergeSHA:    mergeOutput.MergeSHA,
+		TargetSHA:   mergeOutput.BaseSHA,
+		SourceSHA:   mergeOutput.HeadSHA,
 	}
 	if _, errAct := c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, activityPayload); errAct != nil {
 		// non-critical error
@@ -155,9 +158,9 @@ func (c *Controller) Merge(
 	c.eventReporter.Merged(ctx, &pullreqevents.MergedPayload{
 		Base:        eventBase(pr, &session.Principal),
 		MergeMethod: in.Method,
-		MergedSHA:   mergeOutput.MergedSHA,
-		BaseSHA:     mergeOutput.BaseSHA,
-		HeadSHA:     mergeOutput.HeadSHA,
+		MergeSHA:    mergeOutput.MergeSHA,
+		TargetSHA:   mergeOutput.BaseSHA,
+		SourceSHA:   mergeOutput.HeadSHA,
 	})
 
 	return types.MergeResponse{

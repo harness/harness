@@ -33,14 +33,12 @@ func (c *Controller) RawDiff(
 	}
 
 	headRef := pr.SourceBranch
+	if pr.SourceSHA != "" {
+		headRef = pr.SourceSHA
+	}
 	baseRef := pr.TargetBranch
 	if pr.State == enum.PullReqStateMerged {
-		if pr.MergeBaseSHA != nil {
-			baseRef = *pr.MergeBaseSHA
-		}
-		if pr.MergeHeadSHA != nil {
-			headRef = *pr.MergeHeadSHA
-		}
+		baseRef = *pr.MergeBaseSHA
 	}
 
 	return c.gitRPCClient.RawDiff(ctx, &gitrpc.DiffParams{

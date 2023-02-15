@@ -50,7 +50,7 @@ func (c *Controller) MergeCheck(
 		HeadRepoUID: writeParams.RepoUID, // forks are not supported for now
 		HeadBranch:  info.HeadRef,
 	})
-	if errors.Is(err, gitrpc.ErrPreconditionFailed) {
+	if errors.Is(err, gitrpc.ErrNotMergeable) {
 		return MergeCheck{
 			Mergeable: false,
 		}, nil

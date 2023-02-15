@@ -97,9 +97,9 @@ const MergedEvent events.EventType = "merged"
 type MergedPayload struct {
 	Base
 	MergeMethod enum.MergeMethod `json:"merge_method"`
-	MergedSHA   string           `json:"merged_sha"`
-	BaseSHA     string           `json:"base_sha"`
-	HeadSHA     string           `json:"head_sha"`
+	MergeSHA    string           `json:"merge_sha"`
+	TargetSHA   string           `json:"target_sha"`
+	SourceSHA   string           `json:"source_sha"`
 }
 
 func (r *Reporter) Merged(ctx context.Context, payload *MergedPayload) {
