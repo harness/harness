@@ -7,9 +7,9 @@ import { getConfig } from '../config'
 export const SPEC_VERSION = '0.0.0'
 export type EnumAccessGrant = number
 
-export type EnumMergeMethod = 'merge' | 'rebase' | 'squash'
+export type EnumMergeCheckStatus = string
 
-export type EnumMergeStatus = string
+export type EnumMergeMethod = 'merge' | 'rebase' | 'squash'
 
 export type EnumParentResourceType = 'space' | 'repo'
 
@@ -176,8 +176,8 @@ export interface OpenapiGetContentOutput {
 }
 
 export interface OpenapiMergePullReq {
-  head_sha?: string
   method?: EnumMergeMethod
+  source_sha?: string
 }
 
 export interface OpenapiMoveRepoRequest {
@@ -369,11 +369,11 @@ export interface TypesPullReq {
   edited?: number
   is_draft?: boolean
   merge_base_sha?: string | null
+  merge_check_status?: EnumMergeCheckStatus
   merge_conflicts?: string | null
-  merge_head_sha?: string | null
-  merge_ref_sha?: string | null
-  merge_status?: EnumMergeStatus
-  merge_strategy?: EnumMergeMethod
+  merge_method?: EnumMergeMethod
+  merge_sha?: string | null
+  merge_target_sha?: string | null
   merged?: number | null
   merger?: TypesPrincipalInfo
   number?: number
