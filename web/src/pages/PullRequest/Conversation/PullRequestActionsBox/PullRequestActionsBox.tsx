@@ -111,12 +111,12 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     return <MergeInfo pullRequestMetadata={pullRequestMetadata} />
   }
 
-  console.log(
-    'variation',
-    mergeOption.method === 'close' || mergeable === false || loadingMergeCheck || shouldCallMergeCheck
-      ? ButtonVariation.TERTIARY
-      : ButtonVariation.PRIMARY
-  )
+  // console.log(
+  //   'variation',
+  //   mergeOption.method === 'close' || mergeable === false || loadingMergeCheck || shouldCallMergeCheck
+  //     ? ButtonVariation.TERTIARY
+  //     : ButtonVariation.PRIMARY
+  // )
 
   return (
     <Container

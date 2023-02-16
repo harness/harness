@@ -38,7 +38,8 @@ export enum CommentBoxOutletPosition {
   TOP = 'top',
   BOTTOM = 'bottom',
   TOP_OF_FIRST_COMMENT = 'top_of_first_comment',
-  BOTTOM_OF_COMMENT_EDITOR = 'bottom_of_comment_editor'
+  BOTTOM_OF_COMMENT_EDITOR = 'bottom_of_comment_editor',
+  LEFT_OF_OPTIONS_MENU = 'left_of_options_menu'
 }
 
 interface CommentBoxProps<T> {
@@ -244,43 +245,50 @@ const CommentsThread = <T = unknown,>({
                   </Render>
 
                   <FlexExpander />
-                  <OptionsMenuButton
-                    isDark={true}
-                    icon="Options"
-                    iconProps={{ size: 14 }}
-                    style={{ padding: '5px' }}
-                    disabled={!!commentItem?.deleted}
-                    width="100px"
-                    items={[
-                      {
-                        hasIcon: true,
-                        className: css.optionMenuIcon,
-                        iconName: 'Edit',
-                        text: getString('edit'),
-                        onClick: () => setEditIndexes({ ...editIndexes, ...{ [index]: true } })
-                      },
-                      {
-                        hasIcon: true,
-                        className: css.optionMenuIcon,
-                        iconName: 'code-quote',
-                        text: getString('quote'),
-                        onClick: () => onQuote(commentItem?.content)
-                      },
-                      '-',
-                      {
-                        className: css.deleteIcon,
-                        hasIcon: true,
-                        iconName: 'main-trash',
-                        isDanger: true,
-                        text: getString('delete'),
-                        onClick: async () => {
-                          if (await handleAction(CommentAction.DELETE, '', commentItem)) {
-                            resetStateAtIndex(index)
+                  <Layout.Horizontal>
+                    <Render when={index === 0 && outlets[CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]}>
+                      <Container padding={{ right: 'medium' }}>
+                        {outlets[CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]}
+                      </Container>
+                    </Render>
+                    <OptionsMenuButton
+                      isDark={true}
+                      icon="Options"
+                      iconProps={{ size: 14 }}
+                      style={{ padding: '5px' }}
+                      disabled={!!commentItem?.deleted}
+                      width="100px"
+                      items={[
+                        {
+                          hasIcon: true,
+                          className: css.optionMenuIcon,
+                          iconName: 'Edit',
+                          text: getString('edit'),
+                          onClick: () => setEditIndexes({ ...editIndexes, ...{ [index]: true } })
+                        },
+                        {
+                          hasIcon: true,
+                          className: css.optionMenuIcon,
+                          iconName: 'code-quote',
+                          text: getString('quote'),
+                          onClick: () => onQuote(commentItem?.content)
+                        },
+                        '-',
+                        {
+                          className: css.deleteIcon,
+                          hasIcon: true,
+                          iconName: 'main-trash',
+                          isDanger: true,
+                          text: getString('delete'),
+                          onClick: async () => {
+                            if (await handleAction(CommentAction.DELETE, '', commentItem)) {
+                              resetStateAtIndex(index)
+                            }
                           }
                         }
-                      }
-                    ]}
-                  />
+                      ]}
+                    />
+                  </Layout.Horizontal>
                 </Layout.Horizontal>
               }
               hideGutter={isLastItem}>

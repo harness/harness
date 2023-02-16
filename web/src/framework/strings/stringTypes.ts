@@ -3,6 +3,7 @@
  * Use the command `yarn strings` to regenerate this file.
  */
 export interface StringsMap {
+  active: string
   activeBranches: string
   addComment: string
   addGitIgnore: string
@@ -11,9 +12,11 @@ export interface StringsMap {
   addReadMe: string
   all: string
   allBranches: string
+  allComments: string
   alreadyExists: string
   and: string
   approve: string
+  ascending: string
   botAlerts: string
   branch: string
   branchCreated: string
@@ -80,6 +83,7 @@ export interface StringsMap {
   deleteNotAllowed: string
   deleted: string
   deployKeys: string
+  descending: string
   description: string
   diff: string
   disableWebhookContent: string
@@ -124,6 +128,7 @@ export interface StringsMap {
   makeOptional: string
   makeRequired: string
   merged: string
+  myComments: string
   name: string
   nameYourBranch: string
   nameYourFile: string
@@ -161,6 +166,7 @@ export interface StringsMap {
   password: string
   payloadUrl: string
   payloadUrlLabel: string
+  pending: string
   'pr.ableToMerge': string
   'pr.authorCommentedPR': string
   'pr.branchHasNoConflicts': string
@@ -196,6 +202,7 @@ export interface StringsMap {
   'pr.prCanBeMerged': string
   'pr.prMerged': string
   'pr.prMergedInfo': string
+  'pr.prReviewSubmit': string
   'pr.prStateChanged': string
   'pr.prStateChangedDraft': string
   'pr.readyForReview': string
@@ -245,6 +252,7 @@ export interface StringsMap {
   repositories: string
   requestChanges: string
   required: string
+  resolved: string
   reviewers: string
   samplePayloadUrl: string
   save: string
@@ -256,6 +264,7 @@ export interface StringsMap {
   selectBranchPlaceHolder: string
   selectToViewMore: string
   settings: string
+  showEverything: string
   signIn: string
   signUp: string
   sslVerificationLabel: string
@@ -298,6 +307,7 @@ export interface StringsMap {
   webhookTagUpdated: string
   webhookUpdated: string
   webhooks: string
+  whatsNew: string
   write: string
   yourBranches: string
   yours: string

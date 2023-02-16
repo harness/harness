@@ -20,6 +20,8 @@ export function showToaster(message: string, props?: Partial<IToastProps>): IToa
   return toaster
 }
 
+export const dayAgoInMS = 86400000
+
 export const getErrorMessage = (error: Unknown): string =>
   get(error, 'data.error', get(error, 'data.message', get(error, 'message', error)))
 
@@ -100,6 +102,17 @@ export const ButtonRoleProps = {
   tabIndex: 0,
   role: 'button',
   style: { cursor: 'pointer ' }
+}
+
+export enum orderSortDate {
+  ASC = 'asc',
+  DESC = 'desc'
+}
+
+export enum commentState {
+  ACTIVE = 'active',
+  PENDING = 'pending',
+  RESOLVED = 'resolved'
 }
 
 const MONACO_SUPPORTED_LANGUAGES = [

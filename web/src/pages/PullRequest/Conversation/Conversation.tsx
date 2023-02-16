@@ -10,6 +10,8 @@ import {
   FontVariation,
   Icon,
   Layout,
+  Select,
+  SelectOption,
   StringSubstitute,
   Text,
   useToaster
@@ -26,7 +28,7 @@ import { useAppContext } from 'AppContext'
 import type { TypesPullReqActivity } from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import { formatDate, formatTime, getErrorMessage } from 'utils/Utils'
+import { commentState, formatDate, formatTime, getErrorMessage, orderSortDate, dayAgoInMS } from 'utils/Utils'
 import {
   activityToCommentItem,
   CommentType,
@@ -42,6 +44,13 @@ export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | '
   onCommentUpdate: () => void
   prHasChanged?: boolean
   handleRefresh?: () => void
+}
+
+export enum prSortState {
+  SHOW_EVERYTHING = 'showEverything',
+  ALL_COMMENTS = 'allComments',
+  WHATS_NEW = 'whatsNew',
+  MY_COMMENTS = 'myComments'
 }
 
 export const Conversation: React.FC<ConversationProps> = ({
@@ -66,15 +75,24 @@ export const Conversation: React.FC<ConversationProps> = ({
   })
   const { showError } = useToaster()
   const [newComments, setNewComments] = useState<TypesPullReqActivity[]>([])
+
+  const [dateOrderSort, setDateOrderSort] = useState<boolean | 'desc' | 'asc'>(orderSortDate.ASC)
+
+  const [prShowState, setPrShowState] = useState<SelectOption>({
+    label: `Show Everything `,
+    value: 'showEverything'
+  })
   const activityBlocks = useMemo(() => {
     // Each block may have one or more activities which are grouped into it. For example, one comment block
     // contains a parent comment and multiple replied comments
     const blocks: CommentItem<TypesPullReqActivity>[][] = []
 
     // Determine all parent activities
-    const parentActivities = orderBy(activities?.filter(activity => !activity.parent_id) || [], 'edited', 'asc').map(
-      _comment => [_comment]
-    )
+    const parentActivities = orderBy(
+      activities?.filter(activity => !activity.parent_id) || [],
+      'edited',
+      dateOrderSort
+    ).map(_comment => [_comment])
 
     // Then add their children as follow-up elements (same array)
     parentActivities?.forEach(parentActivity => {
@@ -90,7 +108,7 @@ export const Conversation: React.FC<ConversationProps> = ({
     })
 
     if (newComments.length) {
-      blocks.push(orderBy(newComments, 'edited', 'asc').map(activityToCommentItem))
+      blocks.push(orderBy(newComments, 'edited', orderSortDate.ASC).map(activityToCommentItem))
     }
 
     // Group title-change events into one single block
@@ -106,10 +124,48 @@ export const Conversation: React.FC<ConversationProps> = ({
     //   }
     // })
     // titleChangeItems.shift()
-    // return blocks.filter(_activities => !titleChangeItems.includes(_activities))
+    // return blocks.filter(_activities => !titleChangeItems.includes (_activities))
+
+    if (prShowState.value === prSortState.ALL_COMMENTS) {
+      const allCommentBlock = blocks.filter(_activities => !isSystemComment(_activities))
+      return allCommentBlock
+    }
+
+    if (prShowState.value === prSortState.WHATS_NEW) {
+      // get current time in seconds and subtract it by a day and see if comments are newer than a day
+      const lastComment = blocks[blocks.length - 1]
+      const lastCommentTime = lastComment[lastComment.length - 1].payload?.edited
+      if (lastCommentTime !== undefined) {
+        const currentTime = lastCommentTime - dayAgoInMS
+
+        const newestBlock = blocks.filter(_activities => {
+          const mostRecentComment = _activities[_activities.length - 1]
+          if (mostRecentComment?.payload?.edited !== undefined) {
+            return mostRecentComment?.payload?.edited > currentTime
+          }
+        })
+        return newestBlock
+      }
+    }
+
+    // show only comments made by user or replies in threads by user
+    if (prShowState.value === prSortState.MY_COMMENTS) {
+      const allCommentBlock = blocks.filter(_activities => !isSystemComment(_activities))
+      const userCommentsOnly = allCommentBlock.filter(_activities => {
+        const userCommentReply = _activities.filter(
+          authorIsUser => authorIsUser.payload?.author?.uid === currentUser.uid
+        )
+        if (userCommentReply.length !== 0) {
+          return true
+        } else {
+          return false
+        }
+      })
+      return userCommentsOnly
+    }
 
     return blocks
-  }, [activities, newComments])
+  }, [activities, newComments, dateOrderSort, prShowState])
   const path = useMemo(
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/comments`,
     [repoMetadata.path, pullRequestMetadata.number]
@@ -119,6 +175,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   const { mutate: deleteComment } = useMutate({ verb: 'DELETE', path: ({ id }) => `${path}/${id}` })
   const confirmAct = useConfirmAct()
   const [commentCreated, setCommentCreated] = useState(false)
+
   const refreshPR = useCallback(() => {
     onCommentUpdate()
     refetchActivities()
@@ -159,10 +216,66 @@ export const Conversation: React.FC<ConversationProps> = ({
                     pullRequestMetadata={pullRequestMetadata}
                     onCommentUpdate={onCommentUpdate}
                   />
+                  <Layout.Horizontal className={css.sortContainer} padding={{ top: 'xxlarge', bottom: 'medium' }}>
+                    <Container width={200}>
+                      <Select
+                        items={[
+                          {
+                            label: getString('showEverything'),
+                            value: prSortState.SHOW_EVERYTHING
+                          },
+                          {
+                            label: getString('allComments'),
+                            value: prSortState.ALL_COMMENTS
+                          },
+                          {
+                            label: getString('whatsNew'),
+                            value: prSortState.WHATS_NEW
+                          },
+                          {
+                            label: getString('myComments'),
+                            value: prSortState.MY_COMMENTS
+                          }
+                          // {
+                          //   label: 'Active comments',
+                          //   value: 'activeComments'
+                          // },
+                          // {
+                          //   label: 'Resolved comments',
+                          //   value: 'resolvedComments'
+                          // }
+                        ]}
+                        value={prShowState}
+                        className={css.selectButton}
+                        onChange={newState => {
+                          setPrShowState(newState)
+                        }}
+                      />
+                    </Container>
+                    <FlexExpander />
+
+                    <Text
+                      className={css.timeButton}
+                      rightIconProps={{ size: 24 }}
+                      rightIcon={dateOrderSort === orderSortDate.ASC ? 'code-ascending' : 'code-descending'}
+                      onClick={() => {
+                        if (dateOrderSort === orderSortDate.ASC) {
+                          setDateOrderSort(orderSortDate.DESC)
+                        } else {
+                          setDateOrderSort(orderSortDate.ASC)
+                        }
+                      }}>
+                      {dateOrderSort === orderSortDate.ASC ? getString('ascending') : getString('descending')}
+                    </Text>
+                  </Layout.Horizontal>
 
                   {activityBlocks?.map((blocks, index) => {
                     const threadId = blocks[0].payload?.id
                     const commentItems = blocks
+                    let state = {
+                      label: getString('active'),
+                      value: commentState.ACTIVE
+                    } as SelectOption
 
                     if (isSystemComment(commentItems)) {
                       return (
@@ -173,7 +286,6 @@ export const Conversation: React.FC<ConversationProps> = ({
                         />
                       )
                     }
-
                     return (
                       <CommentBox
                         key={threadId}
@@ -239,6 +351,29 @@ export const Conversation: React.FC<ConversationProps> = ({
                         outlets={{
                           [CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]: isCodeComment(commentItems) && (
                             <CodeCommentHeader commentItems={commentItems} />
+                          ),
+                          [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
+                            <Select
+                              className={css.stateSelect}
+                              items={[
+                                {
+                                  label: getString('active'),
+                                  value: commentState.ACTIVE
+                                },
+                                {
+                                  label: getString('pending'),
+                                  value: commentState.PENDING
+                                },
+                                {
+                                  label: getString('resolved'),
+                                  value: commentState.RESOLVED
+                                }
+                              ]}
+                              value={state}
+                              // onChange={(newState)=>{
+                              //   state= newState
+                              // }}
+                            />
                           )
                         }}
                       />
@@ -368,10 +503,40 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
       )
     }
 
+    case CommentType.REVIEW_SUBMIT: {
+      return (
+        <Container>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
+            {/* <Container width={24} height={24} className={css.mergeContainer}> */}
+            <Icon
+              margin={{ left: 'small' }}
+              padding={{ right: 'small' }}
+              name={(payload?.payload as Unknown)?.decision === 'approved' ? 'execution-success' : 'execution-error'}
+              size={18}
+              color={(payload?.payload as Unknown)?.decision === 'approved' ? Color.GREEN_700 : Color.RED_700}
+            />
+            {/* </Container> */}
+
+            <Avatar name={payload?.author?.display_name as string} size="small" hoverCard={false} />
+            <Text color={Color.GREY_500}>
+              <StringSubstitute
+                str={getString('pr.prReviewSubmit')}
+                vars={{
+                  user: <strong>{payload?.author?.display_name}</strong>,
+                  state: (payload?.payload as Unknown)?.decision,
+                  time: <ReactTimeago className={css.timeText} date={payload?.created as number} />
+                }}
+              />
+            </Text>
+          </Layout.Horizontal>
+        </Container>
+      )
+    }
+
     case CommentType.BRANCH_UPDATE: {
       return (
         <Container>
-          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.box}>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
             <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
             <Text>
               <StringSubstitute
@@ -382,7 +547,6 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
                 }}
               />
             </Text>
-            <FlexExpander />
             <Text
               inline
               font={{ variation: FontVariation.SMALL }}
@@ -402,7 +566,7 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
 
       return (
         <Container>
-          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.box}>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
             <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
             <Text>
               <StringSubstitute
@@ -414,7 +578,7 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
                 }}
               />
             </Text>
-            <FlexExpander />
+
             <Text
               inline
               font={{ variation: FontVariation.SMALL }}
@@ -430,7 +594,7 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
 
     case CommentType.TITLE_CHANGE: {
       return (
-        <Container className={css.box}>
+        <Container className={css.mergedBox}>
           <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
             <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
             <Text tag="div">
@@ -447,7 +611,7 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
                 }}
               />
             </Text>
-            <FlexExpander />
+
             <Text
               inline
               font={{ variation: FontVariation.SMALL }}
@@ -485,7 +649,7 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
       // eslint-disable-next-line no-console
       console.warn('Unable to render system type activity', commentItems)
       return (
-        <Text className={css.box}>
+        <Text className={css.mergedBox}>
           <Icon name={CodeIcon.Commit} padding={{ right: 'small' }} />
           {type}
         </Text>

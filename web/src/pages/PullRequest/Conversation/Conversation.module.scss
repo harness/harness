@@ -20,6 +20,47 @@
   }
 }
 
+.selectButton {
+  :global {
+    .bp3-input {
+      border: unset !important;
+      background: inherit !important;
+      font-weight: 600 !important;
+      color: var(--grey-800);
+    }
+    .bp3-input-action:last-child {
+      right: 10% !important;
+    }
+  }
+}
+
+.timeButton {
+  line-height: 32px !important;
+  height: 32px;
+  cursor: pointer;
+}
+
+.timeButton:hover {
+  box-shadow: unset !important;
+}
+
+.timeText {
+  padding-left: var(--spacing-xxlarge);
+  color: var(--grey-400);
+  font-size: var(--font-size-small);
+}
+
+.sortContainer {
+  border-bottom: 1px solid var(--grey-200);
+}
+
+.sortDropdown {
+  .bp3-popover-wrapper {
+    width: 200px;
+    min-width: 200px;
+  }
+}
+
 .mergedBox {
   padding: var(--spacing-xlarge) 0 !important;
 }
@@ -120,6 +161,7 @@
 .repeatBtn:hover {
   box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.04), 0px 2px 4px rgba(96, 97, 112, 0.16) !important;
 }
+
 .repeatBtn {
   margin-left: var(--spacing-xsmall) !important;
   padding: 5px 1px !important;
@@ -137,5 +179,20 @@
 
   .bp3-button-text {
     color: var(--orange-300);
+  }
+}
+
+.stateSelect {
+  width: 100px !important;
+
+  :global {
+    .bp3-menu {
+      width: 100px !important;
+      min-width: 103px !important;
+
+      .Select--menuItem {
+        width: 100px !important;
+      }
+    }
   }
 }
