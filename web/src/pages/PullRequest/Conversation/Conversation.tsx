@@ -9,6 +9,7 @@ import {
   FlexExpander,
   FontVariation,
   Icon,
+  IconName,
   Layout,
   Select,
   SelectOption,
@@ -472,6 +473,35 @@ interface SystemBoxProps extends Pick<GitInfoProps, 'pullRequestMetadata'> {
   commentItems: CommentItem<TypesPullReqActivity>[]
 }
 
+const generateReviewDecisionIcon = (
+  reviewDecision: string
+): {
+  name: IconName
+  color: string | undefined
+  size: number | undefined
+  icon: IconName
+  iconProps?: { color?: Color }
+} => {
+  let icon: IconName = 'dot'
+  let color: Color | undefined = undefined
+  let size: number | undefined = undefined
+
+  switch (reviewDecision) {
+    case 'changereq':
+      icon = 'main-issue-filled'
+      color = Color.ORANGE_700
+      size = 18
+      break
+    case 'approved':
+      icon = 'execution-success'
+      size = 18
+      color = Color.GREEN_700
+      break
+  }
+  const name = icon
+  return { name, color, size, icon, ...(color ? { iconProps: { color } } : undefined) }
+}
+
 const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems }) => {
   const { getString } = useStrings()
   const payload = commentItems[0].payload
@@ -511,9 +541,8 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
             <Icon
               margin={{ left: 'small' }}
               padding={{ right: 'small' }}
-              name={(payload?.payload as Unknown)?.decision === 'approved' ? 'execution-success' : 'execution-error'}
-              size={18}
-              color={(payload?.payload as Unknown)?.decision === 'approved' ? Color.GREEN_700 : Color.RED_700}
+              {...generateReviewDecisionIcon((payload?.payload as Unknown)?.decision)}
+             
             />
             {/* </Container> */}
 
