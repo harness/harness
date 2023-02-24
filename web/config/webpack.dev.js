@@ -18,7 +18,6 @@ const baseUrl = process.env.BASE_URL ?? 'https://qa.harness.io/gateway'
 const targetLocalHost = JSON.parse(process.env.TARGET_LOCALHOST || 'true')
 
 const ON_PREM = `${process.env.ON_PREM}` === 'true'
-const DEV = process.env.NODE_ENV === 'development'
 
 const devConfig = {
   mode: 'development',
@@ -54,13 +53,14 @@ const devConfig = {
       filename: 'index.html',
       minify: false,
       templateParameters: {
-        __DEV__: DEV,
+        __DEV__: true,
         __ON_PREM__: ON_PREM
       }
     }),
     new DefinePlugin({
       'process.env': '{}', // required for @blueprintjs/core
-      __DEV__: DEV
+      __DEV__: true,
+      __ENABLE_CDN__: false
     })
     // new ForkTsCheckerWebpackPlugin()
     // new WatchIgnorePlugin({

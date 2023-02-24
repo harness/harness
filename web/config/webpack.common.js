@@ -23,6 +23,9 @@ module.exports = {
     modules: false,
     children: false
   },
+  entry: {
+    [moduleFederationConfig.name]: './src/public-path'
+  },
   output: {
     publicPath: 'auto',
     filename: DEV ? 'static/[name].js' : 'static/[name].[contenthash:6].js',

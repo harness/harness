@@ -47,6 +47,8 @@ declare interface Window {
   harnessNameSpace: string
   bugsnagClient?: any
   STRIP_CODE_PREFIX?: boolean
+  __ENABLE_CDN__: string
+  __webpack_public_path__: string
 }
 
 declare const monaco: any

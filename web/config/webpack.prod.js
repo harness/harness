@@ -1,11 +1,11 @@
-const { merge } = require('webpack-merge');
-const HTMLWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const CircularDependencyPlugin = require('circular-dependency-plugin');
-const JSONGeneratorPlugin = require('@harness/jarvis/lib/webpack/json-generator-plugin').default;
-const { DefinePlugin } = require('webpack');
+const { merge } = require('webpack-merge')
+const HTMLWebpackPlugin = require('html-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const CircularDependencyPlugin = require('circular-dependency-plugin')
+const JSONGeneratorPlugin = require('@harness/jarvis/lib/webpack/json-generator-plugin').default
+const { DefinePlugin } = require('webpack')
 
-const commonConfig = require('./webpack.common');
+const commonConfig = require('./webpack.common')
 
 const ON_PREM = `${process.env.ON_PREM}` === 'true'
 
@@ -15,11 +15,6 @@ const prodConfig = {
   output: {
     filename: '[name].[contenthash:6].js',
     chunkFilename: '[name].[id].[contenthash:6].js'
-  },
-  optimization: {
-    splitChunks: {
-      chunks: 'all'
-    }
   },
   plugins: [
     new MiniCssExtractPlugin({
@@ -39,14 +34,14 @@ const prodConfig = {
       failOnError: true
     }),
     new HTMLWebpackPlugin({
-        template: 'src/index.html',
-        filename: 'index.html',
-        minify: false,
-        templateParameters: {
-          __ON_PREM__: ON_PREM
-        }
-      }),
+      template: 'src/index.html',
+      filename: 'index.html',
+      minify: false,
+      templateParameters: {
+        __ON_PREM__: ON_PREM
+      }
+    })
   ]
-};
+}
 
-module.exports = merge(commonConfig, prodConfig);
+module.exports = merge(commonConfig, prodConfig)

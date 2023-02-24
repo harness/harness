@@ -13,20 +13,16 @@ const ExactSharedPackages = [
   '@blueprintjs/select',
   '@blueprintjs/datetime',
   '@blueprintjs/icons',
-  'restful-react'
-  // 'lodash-es'
+  'restful-react',
+  'lodash-es'
 ]
 
 /**
  * @type {import('webpack').ModuleFederationPluginOptions}
  */
 module.exports = {
-  name: 'code',
+  name: 'codeRemote',
   filename: 'remoteEntry.js',
-  library: {
-    type: 'var',
-    name: 'codeRemote'
-  },
   exposes: {
     './App': './src/App.tsx',
     './Repositories': './src/pages/RepositoriesListing/RepositoriesListing.tsx',

@@ -9,10 +9,16 @@
 package web
 
 import (
+	"bytes"
 	"embed"
+	"io"
 	"io/fs"
 	"net/http"
+	"os"
 	"path/filepath"
+	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 //go:embed dist/*
@@ -46,12 +52,52 @@ func Handler() http.HandlerFunc {
 
 		// Disable caching and sniffing via HTTP headers for UI main entry resources
 		if r.URL.Path == "/" || r.URL.Path == "/remoteEntry.js" || r.URL.Path == "/index.html" {
-			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate;")
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
 			w.Header().Set("pragma", "no-cache")
 			w.Header().Set("X-Content-Type-Options", "nosniff")
 		}
 
-		// and finally server the file.
-		handler.ServeHTTP(w, r)
+		if r.URL.Path == "/remoteEntry.js" {
+			if readerRemoteEntry, errFetch := fetchRemoteEntryJS(fs); errFetch == nil {
+				http.ServeContent(w, r, r.URL.Path, time.Now(), readerRemoteEntry)
+			} else {
+				log.Error().Msgf("Failed to fetch remoteEntry.js %v", err)
+				http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+			}
+		} else {
+			// and finally serve the file.
+			handler.ServeHTTP(w, r)
+		}
 	})
+}
+
+var remoteEntryContent *bytes.Reader
+
+func fetchRemoteEntryJS(fs fs.FS) (*bytes.Reader, error) {
+	if remoteEntryContent == nil {
+		path := "remoteEntry.js"
+
+		file, err := fs.Open(path)
+		if err != nil {
+			log.Error().Msgf("Failed to open file %v", path)
+			return nil, err
+		}
+
+		buf, err := io.ReadAll(file)
+		if err != nil {
+			log.Error().Msgf("Failed to read file %v", path)
+			return nil, err
+		}
+
+		enableCDN := os.Getenv("ENABLE_CDN")
+		if len(enableCDN) == 0 {
+			enableCDN = "false"
+		}
+
+		modBuf := bytes.Replace(buf, []byte("__ENABLE_CDN__"), []byte(enableCDN), 1)
+
+		remoteEntryContent = bytes.NewReader(modBuf)
+	}
+
+	return remoteEntryContent, nil
 }
