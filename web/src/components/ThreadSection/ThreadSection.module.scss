@@ -1,9 +1,69 @@
 .thread {
-  margin-bottom: var(--spacing-medium) !important;
+  margin-bottom: var(--spacing-medium);
+  --layout-spacing: var(--spacing-2) !important;
 
   .content {
     padding-left: 25px;
     position: relative;
+
+    > ::before {
+      position: absolute;
+      top: -8px;
+      left: 7px;
+      content: '';
+      width: 1px;
+      height: calc(100% + 18px);
+      border: 1px dashed var(--grey-200);
+      opacity: 0.7;
+    }
+
+    &.hideGutter > ::before {
+      display: none;
+    }
+  }
+}
+
+.titleContent {
+  padding-left: 25px;
+  position: relative;
+
+  > ::before {
+    position: absolute;
+    top: 34px;
+    left: 15px;
+    content: '';
+    width: 1px;
+    height: 28px;
+    border: 1px dashed var(--grey-200);
+    opacity: 0.7;
+    z-index: 2;
+  }
+}
+.inCommentBox {
+  padding-left: 25px;
+  position: relative;
+
+  > ::after {
+    position: absolute;
+    bottom: -12px;
+    left: 15px;
+    content: '';
+    width: 1px;
+    height: 22px;
+    border: 1px dashed var(--grey-200);
+    opacity: 0.7;
+    z-index: 2;
+  }
+}
+
+.threadLessSpace {
+  margin-bottom: var(--spacing-small) !important;
+  --layout-spacing: var(--spacing-2) !important;
+
+  .content {
+    padding-left: 25px;
+    position: relative;
+    --layout-spacing: var(--spacing-2) !important;
 
     > ::before {
       position: absolute;

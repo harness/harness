@@ -40,6 +40,7 @@ import { DescriptionBox } from './DescriptionBox'
 import { PullRequestActionsBox } from './PullRequestActionsBox/PullRequestActionsBox'
 import PullRequestSideBar from './PullRequestSideBar/PullRequestSideBar'
 import css from './Conversation.module.scss'
+import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 
 export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   onCommentUpdate: () => void
@@ -280,104 +281,129 @@ export const Conversation: React.FC<ConversationProps> = ({
 
                     if (isSystemComment(commentItems)) {
                       return (
-                        <SystemBox
-                          key={threadId}
-                          pullRequestMetadata={pullRequestMetadata}
-                          commentItems={commentItems}
-                        />
+                        <ThreadSection
+                          key={`thread-${threadId}`}
+                          onlyTitle
+                          lastItem={activityBlocks.length - 1 === index}
+                          title={
+                            <SystemBox
+                              key={`system-${threadId}`}
+                              pullRequestMetadata={pullRequestMetadata}
+                              commentItems={commentItems}
+                            />
+                          }></ThreadSection>
                       )
                     }
                     return (
-                      <CommentBox
-                        key={threadId}
-                        fluid
-                        className={cx({
-                          [css.newCommentCreated]: commentCreated && index === activityBlocks.length - 1
-                        })}
-                        getString={getString}
-                        commentItems={commentItems}
-                        currentUserName={currentUser.display_name}
-                        handleAction={async (action, value, commentItem) => {
-                          let result = true
-                          let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
-                          const id = (commentItem as CommentItem<TypesPullReqActivity>)?.payload?.id
+                      <ThreadSection
+                        key={`comment-${threadId}`}
+                        onlyTitle={
+                          activityBlocks[index + 1] !== undefined && isSystemComment(activityBlocks[index + 1])
+                            ? true
+                            : false
+                        }
+                        inCommentBox={
+                          activityBlocks[index + 1] !== undefined && isSystemComment(activityBlocks[index + 1])
+                            ? true
+                            : false
+                        }
+                        title={
+                          <CommentBox
+                            key={threadId}
+                            fluid
+                            className={cx({
+                              [css.hideDottedLine]: true,
+                              [css.newCommentCreated]: commentCreated && index === activityBlocks.length - 1
+                            })}
+                            getString={getString}
+                            commentItems={commentItems}
+                            currentUserName={currentUser.display_name}
+                            handleAction={async (action, value, commentItem) => {
+                              let result = true
+                              let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
+                              const id = (commentItem as CommentItem<TypesPullReqActivity>)?.payload?.id
 
-                          switch (action) {
-                            case CommentAction.DELETE:
-                              result = false
-                              await confirmAct({
-                                message: getString('deleteCommentConfirm'),
-                                action: async () => {
-                                  await deleteComment({}, { pathParams: { id } })
-                                    .then(() => {
-                                      result = true
+                              switch (action) {
+                                case CommentAction.DELETE:
+                                  result = false
+                                  await confirmAct({
+                                    message: getString('deleteCommentConfirm'),
+                                    action: async () => {
+                                      await deleteComment({}, { pathParams: { id } })
+                                        .then(() => {
+                                          result = true
+                                        })
+                                        .catch(exception => {
+                                          result = false
+                                          showError(
+                                            getErrorMessage(exception),
+                                            0,
+                                            getString('pr.failedToDeleteComment')
+                                          )
+                                        })
+                                    }
+                                  })
+                                  break
+
+                                case CommentAction.REPLY:
+                                  await saveComment({ text: value, parent_id: Number(threadId) })
+                                    .then(newComment => {
+                                      updatedItem = activityToCommentItem(newComment)
                                     })
                                     .catch(exception => {
                                       result = false
-                                      showError(getErrorMessage(exception), 0, getString('pr.failedToDeleteComment'))
+                                      showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
                                     })
-                                }
-                              })
-                              break
+                                  break
 
-                            case CommentAction.REPLY:
-                              await saveComment({ text: value, parent_id: Number(threadId) })
-                                .then(newComment => {
-                                  updatedItem = activityToCommentItem(newComment)
-                                })
-                                .catch(exception => {
-                                  result = false
-                                  showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
-                                })
-                              break
+                                case CommentAction.UPDATE:
+                                  await updateComment({ text: value }, { pathParams: { id } })
+                                    .then(newComment => {
+                                      updatedItem = activityToCommentItem(newComment)
+                                    })
+                                    .catch(exception => {
+                                      result = false
+                                      showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
+                                    })
+                                  break
+                              }
 
-                            case CommentAction.UPDATE:
-                              await updateComment({ text: value }, { pathParams: { id } })
-                                .then(newComment => {
-                                  updatedItem = activityToCommentItem(newComment)
-                                })
-                                .catch(exception => {
-                                  result = false
-                                  showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
-                                })
-                              break
-                          }
+                              if (result) {
+                                onCommentUpdate()
+                              }
 
-                          if (result) {
-                            onCommentUpdate()
-                          }
-
-                          return [result, updatedItem]
-                        }}
-                        outlets={{
-                          [CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]: isCodeComment(commentItems) && (
-                            <CodeCommentHeader commentItems={commentItems} />
-                          ),
-                          [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
-                            <Select
-                              className={css.stateSelect}
-                              items={[
-                                {
-                                  label: getString('active'),
-                                  value: commentState.ACTIVE
-                                },
-                                {
-                                  label: getString('pending'),
-                                  value: commentState.PENDING
-                                },
-                                {
-                                  label: getString('resolved'),
-                                  value: commentState.RESOLVED
-                                }
-                              ]}
-                              value={state}
-                              // onChange={(newState)=>{
-                              //   state= newState
-                              // }}
-                            />
-                          )
-                        }}
-                      />
+                              return [result, updatedItem]
+                            }}
+                            outlets={{
+                              [CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]: isCodeComment(commentItems) && (
+                                <CodeCommentHeader commentItems={commentItems} />
+                              ),
+                              [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
+                                <Select
+                                  className={css.stateSelect}
+                                  items={[
+                                    {
+                                      label: getString('active'),
+                                      value: commentState.ACTIVE
+                                    },
+                                    {
+                                      label: getString('pending'),
+                                      value: commentState.PENDING
+                                    },
+                                    {
+                                      label: getString('resolved'),
+                                      value: commentState.RESOLVED
+                                    }
+                                  ]}
+                                  value={state}
+                                  // onChange={(newState)=>{
+                                  //   state= newState
+                                  // }}
+                                />
+                              )
+                            }}
+                          />
+                        }></ThreadSection>
                     )
                   })}
 
@@ -542,7 +568,6 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
               margin={{ left: 'small' }}
               padding={{ right: 'small' }}
               {...generateReviewDecisionIcon((payload?.payload as Unknown)?.decision)}
-             
             />
             {/* </Container> */}
 

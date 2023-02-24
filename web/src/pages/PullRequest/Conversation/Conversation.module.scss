@@ -52,6 +52,7 @@
 
 .sortContainer {
   border-bottom: 1px solid var(--grey-200);
+  margin-bottom: var(--spacing-small) !important;
 }
 
 .sortDropdown {
@@ -62,7 +63,8 @@
 }
 
 .mergedBox {
-  padding: var(--spacing-xlarge) 0 !important;
+  padding-top: var(--spacing-small) !important;
+  padding-bottom: var(--spacing-small) !important;
 }
 
 .mergeContainer {
@@ -135,6 +137,9 @@
   div[data-annotation-for-line] {
     display: none !important;
   }
+}
+.hideDottedLine {
+  z-index: 3;
 }
 
 .newCommentCreated {

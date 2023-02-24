@@ -18,6 +18,7 @@ declare const styles: {
   readonly title: string
   readonly fname: string
   readonly snapshotContent: string
+  readonly hideDottedLine: string
   readonly newCommentCreated: string
   readonly clear: string
   readonly refreshIcon: string
