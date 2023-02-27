@@ -21,6 +21,7 @@ import cx from 'classnames'
 import { useGet, useMutate } from 'restful-react'
 import ReactTimeago from 'react-timeago'
 import { orderBy } from 'lodash-es'
+import { useHistory } from 'react-router-dom'
 import { Render } from 'react-jsx-match'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
@@ -35,12 +36,12 @@ import {
   CommentType,
   PullRequestCodeCommentPayload
 } from 'components/DiffViewer/DiffViewerUtils'
+import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { DescriptionBox } from './DescriptionBox'
 import { PullRequestActionsBox } from './PullRequestActionsBox/PullRequestActionsBox'
 import PullRequestSideBar from './PullRequestSideBar/PullRequestSideBar'
 import css from './Conversation.module.scss'
-import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 
 export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   onCommentUpdate: () => void
@@ -529,6 +530,7 @@ const generateReviewDecisionIcon = (
 }
 
 const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems }) => {
+  const history = useHistory()
   const { getString } = useStrings()
   const payload = commentItems[0].payload
   const type = payload?.type
@@ -692,6 +694,7 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
                       )
                   )
                   .join('\n')}
+                navigateTo={history.push}
               />
             </Container>
           </Render>

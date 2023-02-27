@@ -61,7 +61,10 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
 
       <Render when={(data?.content as RepoFileContent)?.data}>
         <Container className={css.readmeContent}>
-          <MarkdownViewer source={window.atob((data?.content as RepoFileContent)?.data || '')} />
+          <MarkdownViewer
+            source={window.atob((data?.content as RepoFileContent)?.data || '')}
+            navigateTo={history.push}
+          />
         </Container>
       </Render>
     </Container>

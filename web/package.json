@@ -1,21 +1,21 @@
 {
-  "name": "ui-template",
-  "description": "Harness Inc",
+  "name": "codeui",
+  "description": "Harness Code UI",
   "version": "0.0.1",
   "author": "Harness Inc",
   "license": "Harness Inc",
   "private": true,
-  "homepage": "http://harness.io/",
+  "homepage": "http://app.harness.io/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wings-software/ui-template.git"
+    "url": "https://github.com/harness/gitness.git"
   },
   "bugs": {
-    "url": "https://github.com/wings-software/ui-template/issues"
+    "url": "https://github.com/harness/gitness/issues"
   },
   "keywords": [],
   "scripts": {
-    "dev": "NODE_ENV=development webpack serve --config config/webpack.dev.js",
+    "dev": "webpack serve --config config/webpack.dev.js",
     "test": "jest src --silent",
     "test:watch": "jest --watch",
     "lint": "eslint  --rulesdir ./scripts/eslint-rules --ext .ts --ext .tsx src",
@@ -80,9 +80,11 @@
     "react-split-pane": "^0.1.92",
     "react-table": "^7.1.0",
     "react-timeago": "^4.4.0",
+    "rehype-external-links": "^2.0.1",
     "rehype-highlight": "^5.0.2",
     "rehype-raw": "^6.1.1",
     "rehype-sanitize": "^5.0.1",
+    "rehype-video": "^1.2.2",
     "remark-gfm": "^3.0.1",
     "restful-react": "15.6.0",
     "webpack-retry-chunk-load-plugin": "^3.1.0",
