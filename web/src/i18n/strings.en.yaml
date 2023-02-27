@@ -311,8 +311,7 @@ repoCloneHeader: Or you can clone this repository
 repoCloneLabel: Clone with HTTPS
 emptyRepoHeader: This repository is empty. Let's get started...
 addNewFile: + New File
-# emptyRepoInclude: We recommend every repository include a [README](README_URL), [LICENSE](LICENSE_URL), and [.gitignore](GITIGNORE_URL).
-emptyRepoInclude: We recommend every repository include a
+emptyRepoInclude: We recommend every repository include a {README}, {LICENSE}, and {GITIGNORE}.
 readMe: README,
 license: LICENSE
 gitIgnore: .gitignore

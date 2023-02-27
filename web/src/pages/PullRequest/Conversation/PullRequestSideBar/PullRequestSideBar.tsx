@@ -1,3 +1,4 @@
+import { noop } from 'lodash-es'
 import React from 'react'
 import {
   Container,
@@ -18,7 +19,7 @@ import { useStrings } from 'framework/strings'
 import css from './PullRequestSideBar.module.scss'
 
 interface PullRequestSideBarProps {
-  reviewers?: any
+  reviewers?: Unknown
 }
 
 const PullRequestSideBar = (props: PullRequestSideBarProps) => {
@@ -99,17 +100,17 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                         items={[
                           {
                             text: getString('makeOptional'),
-                            onClick: () => {}
+                            onClick: noop
                           },
                           {
                             text: getString('makeRequired'),
-                            onClick: () => {}
+                            onClick: noop
                           },
                           '-',
                           {
                             isDanger: true,
                             text: getString('remove'),
-                            onClick: () => {}
+                            onClick: noop
                           }
                         ]}
                       />
@@ -155,17 +156,17 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                       items={[
                         {
                           text: getString('makeOptional'),
-                          onClick: () => {}
+                          onClick: noop
                         },
                         {
                           text: getString('makeRequired'),
-                          onClick: () => {}
+                          onClick: noop
                         },
                         '-',
                         {
                           isDanger: true,
                           text: getString('remove'),
-                          onClick: () => {}
+                          onClick: noop
                         }
                       ]}
                     />

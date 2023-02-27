@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Container, useToaster } from '@harness/uicore'
 import cx from 'classnames'
-import { useHistory } from 'react-router-dom'
 import { useMutate } from 'restful-react'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import { useStrings } from 'framework/strings'
@@ -17,7 +16,6 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
   pullRequestMetadata,
   onCommentUpdate: refreshPullRequestMetadata
 }) => {
-  const history = useHistory()
   const [edit, setEdit] = useState(false)
   // const [updated, setUpdated] = useState(pullRequestMetadata.edited as number)
   const [originalContent, setOriginalContent] = useState(pullRequestMetadata.description as string)
@@ -65,7 +63,7 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
           />
         )) || (
           <Container className={css.mdWrapper}>
-            <MarkdownViewer source={content} navigateTo={history.push} />
+            <MarkdownViewer source={content} />
             <Container className={css.menuWrapper}>
               <OptionsMenuButton
                 isDark={true}

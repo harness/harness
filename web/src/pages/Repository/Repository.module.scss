@@ -14,15 +14,14 @@
 }
 
 .textContainer {
-  display: flex;
+  a {
+    color: var(--primary-7) !important;
+  }
 }
 
-.clickableText {
-  cursor: pointer;
-}
 .bannerContainer {
   padding: var(--spacing-small) var(--spacing-xsmall) !important;
-  background-color: var(--red-50) !important; 
+  background-color: var(--red-50) !important;
   position: sticky;
   top: 0;
   z-index: 2;

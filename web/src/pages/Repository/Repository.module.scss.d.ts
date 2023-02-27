@@ -5,7 +5,6 @@ declare const styles: {
   readonly emptyRepo: string
   readonly divContainer: string
   readonly textContainer: string
-  readonly clickableText: string
   readonly bannerContainer: string
 }
 export default styles

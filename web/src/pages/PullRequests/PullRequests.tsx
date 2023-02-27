@@ -29,9 +29,9 @@ import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequestStateLabel'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
+import { ExecutionStatusLabel } from 'components/ExecutionStatusLabel/ExecutionStatusLabel'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
 import css from './PullRequests.module.scss'
-import { ExecutionStatusLabel } from 'components/ExecutionStatusLabel/ExecutionStatusLabel'
 
 export default function PullRequests() {
   const { getString } = useStrings()

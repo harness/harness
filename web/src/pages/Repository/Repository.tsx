@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import {
   Button,
   ButtonVariation,
-  Color,
   Container,
   FontVariation,
   Layout,
@@ -143,40 +142,18 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
           <Button
             variation={ButtonVariation.PRIMARY}
             text={getString('addNewFile')}
-            onClick={() => {
-              history.push(newFileURL)
-            }}></Button>
+            onClick={() => history.push(newFileURL)}></Button>
 
           <Container padding={{ left: 'medium', top: 'small' }}>
             <Text className={css.textContainer}>
-              {getString('emptyRepoInclude')}
-              <Text
-                onClick={() => {
-                  history.push(newFileURL + `?name=README.md`)
+              <StringSubstitute
+                str={getString('emptyRepoInclude')}
+                vars={{
+                  README: <Link to={newFileURL + `?name=README.md`}>README</Link>,
+                  LICENSE: <Link to={newFileURL + `?name=LICENSE.md`}>LICENSE</Link>,
+                  GITIGNORE: <Link to={newFileURL + `?name=.gitignore`}>.gitignore</Link>
                 }}
-                className={css.clickableText}
-                padding={{ left: 'small' }}
-                color={Color.PRIMARY_7}>
-                {getString('readMe')}
-              </Text>
-              <Text
-                onClick={() => {
-                  history.push(newFileURL + `?name=LICENSE.md`)
-                }}
-                className={css.clickableText}
-                padding={{ left: 'small', right: 'small' }}
-                color={Color.PRIMARY_7}>
-                {getString('license')}
-              </Text>
-              <Text padding={{ right: 'small' }}>{getString('and')}</Text>
-              <Text
-                onClick={() => {
-                  history.push(newFileURL + `?name=.gitignore`)
-                }}
-                className={css.clickableText}
-                color={Color.PRIMARY_7}>
-                {getString('gitIgnore')}
-              </Text>
+              />
             </Text>
           </Container>
         </Layout.Horizontal>
@@ -189,7 +166,6 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
           source={getString('repoEmptyMarkdownClone')
             .replace(/REPO_URL/g, repoMetadata.git_url || '')
             .replace(/REPO_NAME/g, repoMetadata.uid || '')}
-          navigateTo={history.push}
         />
       </Container>
       <Container
@@ -201,7 +177,6 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
             .replace(/REPO_URL/g, '...')
             .replace(/REPO_NAME/g, repoMetadata.uid || '')
             .replace(/CREATE_API_TOKEN_URL/g, currentUserProfileURL || '')}
-          navigateTo={history.push}
         />
       </Container>
     </Container>

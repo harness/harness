@@ -1,3 +1,4 @@
+import { useHistory } from 'react-router-dom'
 import React, { Suspense, useCallback } from 'react'
 import { Container, Text } from '@harness/uicore'
 import MarkdownEditor from '@uiw/react-markdown-editor'
@@ -10,38 +11,34 @@ import css from './SourceCodeViewer.module.scss'
 
 interface MarkdownViewerProps {
   source: string
-  navigateTo: (url: string) => void
 }
 
-export function MarkdownViewer({ source, navigateTo }: MarkdownViewerProps) {
+export function MarkdownViewer({ source }: MarkdownViewerProps) {
   const { getString } = useStrings()
-  const interceptClickEventOnViewerContainer = useCallback(
-    event => {
-      const { target } = event
+  const history = useHistory()
+  const interceptClickEventOnViewerContainer = useCallback(event => {
+    const { target } = event
 
-      if (target?.tagName?.toLowerCase() === 'a') {
-        const { href } = target
+    if (target?.tagName?.toLowerCase() === 'a') {
+      const { href } = target
 
-        // Intercept click event on internal links and navigate to pages to avoid full page reload
-        if (href && !href.startsWith('#')) {
-          try {
-            const origin = new URL(href).origin
+      // Intercept click event on internal links and navigate to pages to avoid full page reload
+      if (href && !href.startsWith('#')) {
+        try {
+          const url = new URL(href)
 
-            if (origin === window.location.origin) {
-              // For some reason, history.push(href) does not work in the context of @uiw/react-markdown-editor library.
-              navigateTo?.(href)
-              event.stopPropagation()
-              event.preventDefault()
-            }
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.error('MarkdownViewer/interceptClickEventOnViewerContainer', e)
+          if (url.origin === window.location.origin) {
+            event.stopPropagation()
+            event.preventDefault()
+            history.push(url.pathname)
           }
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error('MarkdownViewer/interceptClickEventOnViewerContainer', e)
         }
       }
-    },
-    [navigateTo]
-  )
+    }
+  }, [])
 
   return (
     <Container className={css.main} onClick={interceptClickEventOnViewerContainer}>

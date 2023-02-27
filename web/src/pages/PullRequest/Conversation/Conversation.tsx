@@ -21,7 +21,6 @@ import cx from 'classnames'
 import { useGet, useMutate } from 'restful-react'
 import ReactTimeago from 'react-timeago'
 import { orderBy } from 'lodash-es'
-import { useHistory } from 'react-router-dom'
 import { Render } from 'react-jsx-match'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
@@ -275,7 +274,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                   {activityBlocks?.map((blocks, index) => {
                     const threadId = blocks[0].payload?.id
                     const commentItems = blocks
-                    let state = {
+                    const state = {
                       label: getString('active'),
                       value: commentState.ACTIVE
                     } as SelectOption
@@ -530,7 +529,6 @@ const generateReviewDecisionIcon = (
 }
 
 const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems }) => {
-  const history = useHistory()
   const { getString } = useStrings()
   const payload = commentItems[0].payload
   const type = payload?.type
@@ -694,7 +692,6 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
                       )
                   )
                   .join('\n')}
-                navigateTo={history.push}
               />
             </Container>
           </Render>
