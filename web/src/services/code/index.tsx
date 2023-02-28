@@ -7,6 +7,8 @@ import { getConfig } from '../config'
 export const SPEC_VERSION = '0.0.0'
 export type EnumAccessGrant = number
 
+export type EnumContentEncodingType = 'base64' | 'utf8'
+
 export type EnumMergeCheckStatus = string
 
 export type EnumMergeMethod = 'merge' | 'rebase' | 'squash'
@@ -268,7 +270,7 @@ export interface RepoCommitDivergenceRequest {
 
 export interface RepoCommitFileAction {
   action?: GitrpcFileAction
-  encoding?: string
+  encoding?: EnumContentEncodingType
   path?: string
   payload?: string
   sha?: string
@@ -303,11 +305,9 @@ export type RepoContentType = string
 
 export interface RepoFileContent {
   data?: string
-  encoding?: RepoFileEncodingType
+  encoding?: EnumContentEncodingType
   size?: number
 }
-
-export type RepoFileEncodingType = string
 
 export interface RepoMergeCheck {
   mergeable?: boolean

@@ -45,21 +45,15 @@ type GetContentOutput struct {
 	Content Content `json:"content"`
 }
 
-type FileEncodingType string
-
-const (
-	FileEncodingTypeBase64 FileEncodingType = "base64"
-)
-
 // Content restricts the possible types of content returned by the api.
 type Content interface {
 	isContent()
 }
 
 type FileContent struct {
-	Encoding FileEncodingType `json:"encoding"`
-	Data     string           `json:"data"`
-	Size     int64            `json:"size"`
+	Encoding enum.ContentEncodingType `json:"encoding"`
+	Data     string                   `json:"data"`
+	Size     int64                    `json:"size"`
 }
 
 func (c *FileContent) isContent() {}
@@ -175,14 +169,12 @@ func (c *Controller) getFileContent(ctx context.Context, readParams gitrpc.ReadP
 		SizeLimit:  maxGetContentFileSize,
 	})
 	if err != nil {
-		// TODO: handle not found error
-		// This requires gitrpc to also return notfound though!
 		return nil, fmt.Errorf("failed to get file content: %w", err)
 	}
 
 	return &FileContent{
 		Size:     output.Blob.Size,
-		Encoding: FileEncodingTypeBase64,
+		Encoding: enum.ContentEncodingTypeBase64,
 		Data:     base64.StdEncoding.EncodeToString(output.Blob.Content),
 	}, nil
 }

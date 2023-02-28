@@ -7,7 +7,6 @@ package gitrpc
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -30,11 +29,10 @@ func (FileAction) Enum() []interface{} {
 
 // CommitFileAction holds file operation data.
 type CommitFileAction struct {
-	Action   FileAction
-	Path     string
-	Payload  []byte
-	Encoding string
-	SHA      string
+	Action  FileAction
+	Path    string
+	Payload []byte
+	SHA     string
 }
 
 // CommitFilesParams holds the data for file operations.
@@ -100,10 +98,7 @@ func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesParams) (Co
 		// send file content
 		n := 0
 		buffer := make([]byte, FileTransferChunkSize)
-		reader := io.Reader(bytes.NewReader(action.Payload))
-		if action.Encoding == "base64" {
-			reader = base64.NewDecoder(base64.StdEncoding, reader)
-		}
+		reader := bytes.NewReader(action.Payload)
 		for {
 			n, err = reader.Read(buffer)
 			if errors.Is(err, io.EOF) {

@@ -3547,6 +3547,11 @@ components:
   schemas:
     EnumAccessGrant:
       type: integer
+    EnumContentEncodingType:
+      enum:
+        - base64
+        - utf8
+      type: string
     EnumMergeCheckStatus:
       type: string
     EnumMergeMethod:
@@ -4011,7 +4016,7 @@ components:
         action:
           $ref: '#/components/schemas/GitrpcFileAction'
         encoding:
-          type: string
+          $ref: '#/components/schemas/EnumContentEncodingType'
         path:
           type: string
         payload:
@@ -4062,12 +4067,10 @@ components:
         data:
           type: string
         encoding:
-          $ref: '#/components/schemas/RepoFileEncodingType'
+          $ref: '#/components/schemas/EnumContentEncodingType'
         size:
           type: integer
       type: object
-    RepoFileEncodingType:
-      type: string
     RepoMergeCheck:
       properties:
         mergeable:

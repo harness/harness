@@ -6,6 +6,7 @@ package repo
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
@@ -17,11 +18,11 @@ import (
 
 // CommitFileAction holds file operation data.
 type CommitFileAction struct {
-	Action   gitrpc.FileAction `json:"action"`
-	Path     string            `json:"path"`
-	Payload  string            `json:"payload"`
-	Encoding string            `json:"encoding"`
-	SHA      string            `json:"sha"`
+	Action   gitrpc.FileAction        `json:"action"`
+	Path     string                   `json:"path"`
+	Payload  string                   `json:"payload"`
+	Encoding enum.ContentEncodingType `json:"encoding"`
+	SHA      string                   `json:"sha"`
 }
 
 // CommitFilesOptions holds the data for file operations.
@@ -51,12 +52,25 @@ func (c *Controller) CommitFiles(ctx context.Context, session *auth.Session,
 
 	actions := make([]gitrpc.CommitFileAction, len(in.Actions))
 	for i, action := range in.Actions {
+		var rawPayload []byte
+		switch action.Encoding {
+		case enum.ContentEncodingTypeBase64:
+			rawPayload, err = base64.StdEncoding.DecodeString(action.Payload)
+			if err != nil {
+				return CommitFilesResponse{}, fmt.Errorf("failed to decode base64 payload: %w", err)
+			}
+		case enum.ContentEncodingTypeUTF8:
+			fallthrough
+		default:
+			// by default we treat content as is
+			rawPayload = []byte(action.Payload)
+		}
+
 		actions[i] = gitrpc.CommitFileAction{
-			Action:   action.Action,
-			Path:     action.Path,
-			Payload:  []byte(action.Payload),
-			Encoding: action.Encoding,
-			SHA:      action.SHA,
+			Action:  action.Action,
+			Path:    action.Path,
+			Payload: rawPayload,
+			SHA:     action.SHA,
 		}
 	}
 
