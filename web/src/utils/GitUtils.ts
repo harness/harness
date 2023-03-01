@@ -146,3 +146,5 @@ export const diffRefsToRefs = (diffRefs: string) => {
     sourceGitRef: parts[1] || ''
   }
 }
+
+export const decodeGitContent = (content = '') => decodeURIComponent(escape(window.atob(content)))

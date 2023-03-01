@@ -4,7 +4,15 @@ import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import type { OpenapiContentInfo, RepoFileContent } from 'services/code'
-import { CodeIcon, findMarkdownInfo, GitCommitAction, GitInfoProps, isRefATag, makeDiffRefs } from 'utils/GitUtils'
+import {
+  CodeIcon,
+  decodeGitContent,
+  findMarkdownInfo,
+  GitCommitAction,
+  GitInfoProps,
+  isRefATag,
+  makeDiffRefs
+} from 'utils/GitUtils'
 import { filenameToLanguage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { LatestCommitForFile } from 'components/LatestCommit/LatestCommit'
@@ -23,7 +31,7 @@ export function FileContent({
   const { getString } = useStrings()
   const history = useHistory()
   const content = useMemo(
-    () => window.atob((resourceContent?.content as RepoFileContent)?.data || ''),
+    () => decodeGitContent((resourceContent?.content as RepoFileContent)?.data),
     [resourceContent?.content]
   )
   const markdownInfo = useMemo(() => findMarkdownInfo(resourceContent), [resourceContent])

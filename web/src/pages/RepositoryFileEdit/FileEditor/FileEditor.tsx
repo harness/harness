@@ -6,7 +6,7 @@ import cx from 'classnames'
 import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
 import type { RepoFileContent } from 'services/code'
 import { useAppContext } from 'AppContext'
-import { GitCommitAction, GitContentType, GitInfoProps, isDir, makeDiffRefs } from 'utils/GitUtils'
+import { decodeGitContent, GitCommitAction, GitContentType, GitInfoProps, isDir, makeDiffRefs } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { filenameToLanguage, FILE_SEPERATOR } from 'utils/Utils'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
@@ -31,7 +31,7 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
   const { routes } = useAppContext()
   const [language, setLanguage] = useState(() => filenameToLanguage(fileName))
   const [originalContent, setOriginalContent] = useState(
-    window.atob((resourceContent?.content as RepoFileContent)?.data || '')
+    decodeGitContent((resourceContent?.content as RepoFileContent)?.data)
   )
   const [content, setContent] = useState(originalContent)
   const fileResourcePath = useMemo(

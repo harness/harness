@@ -8,7 +8,7 @@ import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
-import { CodeIcon } from 'utils/GitUtils'
+import { CodeIcon, decodeGitContent } from 'utils/GitUtils'
 import css from './Readme.module.scss'
 
 interface FolderContentProps {
@@ -61,7 +61,7 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
 
       <Render when={(data?.content as RepoFileContent)?.data}>
         <Container className={css.readmeContent}>
-          <MarkdownViewer source={window.atob((data?.content as RepoFileContent)?.data || '')} />
+          <MarkdownViewer source={decodeGitContent((data?.content as RepoFileContent)?.data)} />
         </Container>
       </Render>
     </Container>
