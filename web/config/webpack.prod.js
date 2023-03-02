@@ -11,7 +11,7 @@ const ON_PREM = `${process.env.ON_PREM}` === 'true'
 
 const prodConfig = {
   mode: 'production',
-  devtool: 'hidden-source-map',
+  devtool: 'source-map',
   output: {
     filename: '[name].[contenthash:6].js',
     chunkFilename: '[name].[id].[contenthash:6].js'
