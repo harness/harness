@@ -72,7 +72,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   } = useGet<TypesPullReqActivity[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/activities`
   })
-  const { data: reviewers } = useGet<any[]>({
+  const { data: reviewers } = useGet<Unknown[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`
   })
   const { showError } = useToaster()
@@ -167,7 +167,7 @@ export const Conversation: React.FC<ConversationProps> = ({
     }
 
     return blocks
-  }, [activities, newComments, dateOrderSort, prShowState])
+  }, [activities, newComments, dateOrderSort, prShowState, currentUser.uid])
   const path = useMemo(
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/comments`,
     [repoMetadata.path, pullRequestMetadata.number]

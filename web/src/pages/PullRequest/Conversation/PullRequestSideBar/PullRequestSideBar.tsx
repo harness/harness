@@ -76,7 +76,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
             </Text>
             {reviewers && reviewers?.length !== 0 ? (
               reviewers.map(
-                (reviewer: { reviewer: { display_name: string; id: number }; review_decision: string }): any => {
+                (reviewer: { reviewer: { display_name: string; id: number }; review_decision: string }): Unknown => {
                   return (
                     <Layout.Horizontal key={reviewer.reviewer.id}>
                       <Icon className={css.reviewerPadding} {...generateReviewDecisionIcon(reviewer.review_decision)} />

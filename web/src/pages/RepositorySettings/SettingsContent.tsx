@@ -3,7 +3,6 @@ import { orderBy } from 'lodash-es'
 import { Container, Color, TableV2 as Table, Text, Layout, Icon, Button, ButtonVariation } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { useStrings } from 'framework/strings'
-import { useAppContext } from 'AppContext'
 import type { GitInfoProps } from 'utils/GitUtils'
 import css from './RepositorySettings.module.scss'
 
@@ -14,9 +13,8 @@ interface SettingsContentProps extends Pick<GitInfoProps, 'repoMetadata'> {
   hooks: Hook[]
 }
 
-export function SettingsContent({ repoMetadata, hooks }: SettingsContentProps) {
+export function SettingsContent({ hooks }: SettingsContentProps) {
   const { getString } = useStrings()
-  const { routes } = useAppContext()
   const columns: Column<Hook>[] = useMemo(
     () => [
       {
@@ -51,7 +49,7 @@ export function SettingsContent({ repoMetadata, hooks }: SettingsContentProps) {
         }
       }
     ],
-    [repoMetadata.path, routes]
+    [getString]
   )
 
   return (

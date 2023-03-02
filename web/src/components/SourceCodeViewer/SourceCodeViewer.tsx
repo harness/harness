@@ -16,29 +16,32 @@ interface MarkdownViewerProps {
 export function MarkdownViewer({ source }: MarkdownViewerProps) {
   const { getString } = useStrings()
   const history = useHistory()
-  const interceptClickEventOnViewerContainer = useCallback(event => {
-    const { target } = event
+  const interceptClickEventOnViewerContainer = useCallback(
+    event => {
+      const { target } = event
 
-    if (target?.tagName?.toLowerCase() === 'a') {
-      const { href } = target
+      if (target?.tagName?.toLowerCase() === 'a') {
+        const { href } = target
 
-      // Intercept click event on internal links and navigate to pages to avoid full page reload
-      if (href && !href.startsWith('#')) {
-        try {
-          const url = new URL(href)
+        // Intercept click event on internal links and navigate to pages to avoid full page reload
+        if (href && !href.startsWith('#')) {
+          try {
+            const url = new URL(href)
 
-          if (url.origin === window.location.origin) {
-            event.stopPropagation()
-            event.preventDefault()
-            history.push(url.pathname)
+            if (url.origin === window.location.origin) {
+              event.stopPropagation()
+              event.preventDefault()
+              history.push(url.pathname)
+            }
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error('MarkdownViewer/interceptClickEventOnViewerContainer', e)
           }
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.error('MarkdownViewer/interceptClickEventOnViewerContainer', e)
         }
       }
-    }
-  }, [])
+    },
+    [history]
+  )
 
   return (
     <Container className={css.main} onClick={interceptClickEventOnViewerContainer}>

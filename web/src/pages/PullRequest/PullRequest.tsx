@@ -82,8 +82,8 @@ export default function PullRequest() {
       setNewPrData(pollPrData as TypesPullReq)
     }, PR_POLLING_LIMIT)
     return () => window.clearTimeout(interval)
-  }, [pollPrData])
-  
+  }, [pollPrData, refetchPollPullRequest])
+
   useEffect(() => {
     if (prData?.stats && newPrData?.stats) {
       const prStatsChanged =
@@ -92,7 +92,7 @@ export default function PullRequest() {
         setPrHasChanged(prStatsChanged)
       }
     }
-  }, [newPrData])
+  }, [newPrData, refetchPollPullRequest, prData?.stats])
 
   const activeTab = useMemo(
     () =>

@@ -24,11 +24,11 @@ export const renderers: TreeRenderProps = {
         Classes.TREE_NODE,
         (props.context.isSelected || props.context.isDraggingOver) && Classes.TREE_NODE_SELECTED
       )}
-      {...(props.context.itemContainerWithChildrenProps as any)}>
+      {...(props.context.itemContainerWithChildrenProps as Unknown)}>
       <div
         className={cx(Classes.TREE_NODE_CONTENT, `${Classes.TREE_NODE_CONTENT}-${props.depth}`)}
-        {...(props.context.itemContainerWithoutChildrenProps as any)}
-        {...(props.context.interactiveElementProps as any)}>
+        {...(props.context.itemContainerWithoutChildrenProps as Unknown)}
+        {...(props.context.interactiveElementProps as Unknown)}>
         {props.item.hasChildren ? props.arrow : <span className={Classes.TREE_NODE_CARET_NONE} />}
         {props.item.data.icon !== undefined ? (
           props.item.data.icon === null ? null : (
@@ -71,7 +71,7 @@ export const renderers: TreeRenderProps = {
         Classes.TREE_NODE_CARET,
         props.context.isExpanded ? Classes.TREE_NODE_CARET_OPEN : Classes.TREE_NODE_CARET_CLOSED
       )}
-      {...(props.context.arrowProps as any)}
+      {...(props.context.arrowProps as Unknown)}
     />
   ),
 
@@ -79,15 +79,15 @@ export const renderers: TreeRenderProps = {
     if (!info.isSearching || !context.isSearchMatching) {
       return <span className={Classes.TREE_NODE_LABEL}>{title}</span>
     } else {
-      const startIndex = title.toLowerCase().indexOf(info.search!.toLowerCase())
+      const startIndex = title.toLowerCase().indexOf((info.search as string).toLowerCase())
       return (
         <React.Fragment>
           {startIndex > 0 && <span>{title.slice(0, startIndex)}</span>}
           <span className="rct-tree-item-search-highlight">
-            {title.slice(startIndex, startIndex + info.search!.length)}
+            {title.slice(startIndex, startIndex + (info.search as string).length)}
           </span>
-          {startIndex + info.search!.length < title.length && (
-            <span>{title.slice(startIndex + info.search!.length, title.length)}</span>
+          {startIndex + (info.search as string).length < title.length && (
+            <span>{title.slice(startIndex + (info.search as string).length, title.length)}</span>
           )}
         </React.Fragment>
       )
@@ -119,14 +119,14 @@ export const renderers: TreeRenderProps = {
         <input {...props.inputProps} ref={props.inputRef} className="rct-tree-item-renaming-input" />
       </span>
       <span className={Classes.TREE_NODE_SECONDARY_LABEL}>
-        <Button icon="tick" {...(props.submitButtonProps as any)} type="submit" minimal={true} small={true} />
+        <Button icon="tick" {...(props.submitButtonProps as Unknown)} type="submit" minimal={true} small={true} />
       </span>
     </form>
   ),
 
   renderSearchInput: props => (
     <div className={cx('rct-tree-search-input-container')}>
-      <InputGroup {...(props.inputProps as any)} placeholder="Search..." />
+      <InputGroup {...(props.inputProps as Unknown)} placeholder="Search..." />
     </div>
   ),
 

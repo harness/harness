@@ -230,7 +230,7 @@ export default function Webhooks() {
         }
       }
     ],
-    [history, getString, refetchWebhooks, repoMetadata?.path, routes, setPage]
+    [history, getString, refetchWebhooks, repoMetadata?.path, routes, setPage, showError, showSuccess]
   )
 
   return (
