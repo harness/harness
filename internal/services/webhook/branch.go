@@ -6,7 +6,6 @@ package webhook
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/events"
@@ -140,7 +139,7 @@ func (s *Service) fetchCommitInfoForEvent(ctx context.Context, repoUID string, s
 		SHA: sha,
 	})
 
-	if errors.Is(err, gitrpc.ErrNotFound) {
+	if gitrpc.ErrorStatus(err) == gitrpc.StatusNotFound {
 		// this could happen if the commit has been deleted and garbage collected by now
 		// or if the sha doesn't point to an event - either way discard the event.
 		return CommitInfo{}, events.NewDiscardEventErrorf("commit with sha '%s' doesn't exist", sha)

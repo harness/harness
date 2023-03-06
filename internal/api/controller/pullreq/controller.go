@@ -6,7 +6,6 @@ package pullreq
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
@@ -83,7 +82,7 @@ func (c *Controller) verifyBranchExistence(ctx context.Context,
 			Name:       branch,
 			Type:       gitrpcenum.RefTypeBranch,
 		})
-	if errors.Is(err, gitrpc.ErrNotFound) {
+	if gitrpc.ErrorStatus(err) == gitrpc.StatusNotFound {
 		return "", usererror.BadRequest(
 			fmt.Sprintf("branch %s does not exist in the repository %s", branch, repo.UID))
 	}

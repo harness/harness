@@ -55,3 +55,10 @@ message MergeResponse {
   // merge_sha is the sha of the commit after merging head_sha with base_sha.
   string merge_sha = 4;
 }
+
+// MergeConflictError is an error returned in the case when merging two commits
+// fails due to a merge conflict.
+message MergeConflictError {
+  // ConflictingFiles is the set of files which have been conflicting.
+  repeated string conflicting_files = 1;
+}

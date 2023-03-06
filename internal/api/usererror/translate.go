@@ -18,8 +18,12 @@ import (
 )
 
 func Translate(err error) *Error {
-	var rError *Error
-	var checkError *check.ValidationError
+	var (
+		rError      *Error
+		checkError  *check.ValidationError
+		gitrpcError *gitrpc.Error
+	)
+
 	switch {
 	// api errors
 	case errors.As(err, &rError):
@@ -52,16 +56,12 @@ func Translate(err error) *Error {
 		return ErrSpaceWithChildsCantBeDeleted
 
 	// gitrpc errors
-	case errors.Is(err, gitrpc.ErrAlreadyExists):
-		return ErrDuplicate
-	case errors.Is(err, gitrpc.ErrInvalidArgument):
-		return ErrBadRequest
-	case errors.Is(err, gitrpc.ErrNotFound):
-		return ErrNotFound
-	case errors.Is(err, gitrpc.ErrPreconditionFailed):
-		return ErrPreconditionFailed
-	case errors.Is(err, gitrpc.ErrNotMergeable):
-		return ErrNotMergeable
+	case errors.As(err, &gitrpcError):
+		return NewWithPayload(httpStatusCode(
+			gitrpcError.Status),
+			gitrpcError.Message,
+			gitrpcError.Details,
+		)
 
 	// webhook errors
 	case errors.Is(err, webhook.ErrWebhookNotRetriggerable):
@@ -72,4 +72,24 @@ func Translate(err error) *Error {
 		log.Warn().Msgf("Unable to translate error: %s", err)
 		return ErrInternal
 	}
+}
+
+// lookup of gitrpc error codes to HTTP status codes.
+var codes = map[gitrpc.Status]int{
+	gitrpc.StatusConflict:           http.StatusConflict,
+	gitrpc.StatusInvalidArgument:    http.StatusBadRequest,
+	gitrpc.StatusNotFound:           http.StatusNotFound,
+	gitrpc.StatusNotImplemented:     http.StatusNotImplemented,
+	gitrpc.StatusPreconditionFailed: http.StatusPreconditionFailed,
+	gitrpc.StatusUnauthorized:       http.StatusUnauthorized,
+	gitrpc.StatusInternal:           http.StatusInternalServerError,
+	gitrpc.StatusNotMergeable:       http.StatusPreconditionFailed,
+}
+
+// httpStatusCode returns the associated HTTP status code for a gitrpc error code.
+func httpStatusCode(code gitrpc.Status) int {
+	if v, ok := codes[code]; ok {
+		return v
+	}
+	return http.StatusInternalServerError
 }

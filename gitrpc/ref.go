@@ -9,9 +9,6 @@ import (
 
 	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/rpc"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type GetRefParams struct {
@@ -27,7 +24,7 @@ type GetRefResponse struct {
 func (c *Client) GetRef(ctx context.Context, params GetRefParams) (GetRefResponse, error) {
 	refType := enum.RefToRPC(params.Type)
 	if refType == rpc.RefType_Undefined {
-		return GetRefResponse{}, ErrInvalidArgument
+		return GetRefResponse{}, ErrInvalidArgumentf("invalid argument: '%s'", refType)
 	}
 
 	result, err := c.refService.GetRef(ctx, &rpc.GetRefRequest{
@@ -35,8 +32,8 @@ func (c *Client) GetRef(ctx context.Context, params GetRefParams) (GetRefRespons
 		RefName: params.Name,
 		RefType: refType,
 	})
-	if s, ok := status.FromError(err); err != nil && ok && s.Code() == codes.NotFound {
-		return GetRefResponse{}, ErrNotFound
+	if err != nil {
+		return GetRefResponse{}, processRPCErrorf(err, "failed to get %s ref '%s'", params.Type.String(), params.Name)
 	}
 
 	return GetRefResponse{SHA: result.Sha}, nil
@@ -57,7 +54,7 @@ type UpdateRefParams struct {
 func (c *Client) UpdateRef(ctx context.Context, params UpdateRefParams) error {
 	refType := enum.RefToRPC(params.Type)
 	if refType == rpc.RefType_Undefined {
-		return ErrInvalidArgument
+		return ErrInvalidArgumentf("invalid argument: '%s'", refType)
 	}
 
 	_, err := c.refService.UpdateRef(ctx, &rpc.UpdateRefRequest{
@@ -67,8 +64,8 @@ func (c *Client) UpdateRef(ctx context.Context, params UpdateRefParams) error {
 		NewValue: params.NewValue,
 		OldValue: params.OldValue,
 	})
-	if s, ok := status.FromError(err); err != nil && ok && s.Code() == codes.NotFound {
-		return ErrNotFound
+	if err != nil {
+		return processRPCErrorf(err, "failed to update %s ref '%s'", params.Type.String(), params.Name)
 	}
 
 	return err

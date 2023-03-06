@@ -206,6 +206,9 @@ func (g Adapter) Merge(
 		// Merge will leave a MERGE_HEAD file in the .git folder if there is a conflict
 		if _, statErr := os.Stat(filepath.Join(tmpBasePath, ".git", "MERGE_HEAD")); statErr == nil {
 			// We have a merge conflict error
+			if err = conflictFiles(ctx, pr, env, tmpBasePath, &outbuf); err != nil {
+				return err
+			}
 			return &types.MergeConflictsError{
 				Method: mergeMethod,
 				StdOut: outbuf.String(),
@@ -225,6 +228,29 @@ func (g Adapter) Merge(
 			pr.HeadBranch, pr.BaseBranch, outbuf.String(), errbuf.String())
 	}
 
+	return nil
+}
+
+func conflictFiles(ctx context.Context,
+	pr *types.PullRequest,
+	env []string,
+	repoPath string,
+	buf *strings.Builder,
+) error {
+	stdout, stderr, cferr := git.NewCommand(
+		ctx, "diff", "--name-only", "--diff-filter=U", "--relative",
+	).RunStdString(&git.RunOpts{
+		Env: env,
+		Dir: repoPath,
+	})
+	if cferr != nil {
+		return processGiteaErrorf(cferr, "failed to list conflict files [%s -> %s], stderr: %v, err: %v",
+			pr.HeadBranch, pr.BaseBranch, stderr, cferr)
+	}
+	if len(stdout) > 0 {
+		buf.Reset()
+		buf.WriteString(stdout)
+	}
 	return nil
 }
 

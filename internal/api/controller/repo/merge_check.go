@@ -6,7 +6,6 @@ package repo
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
@@ -24,24 +23,24 @@ func (c *Controller) MergeCheck(
 	session *auth.Session,
 	repoRef string,
 	diffPath string,
-) (MergeCheck, error) {
+) error {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
-		return MergeCheck{}, err
+		return err
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
-		return MergeCheck{}, fmt.Errorf("access check failed: %w", err)
+		return fmt.Errorf("access check failed: %w", err)
 	}
 
 	info, err := parseDiffPath(diffPath)
 	if err != nil {
-		return MergeCheck{}, err
+		return err
 	}
 
 	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return MergeCheck{}, fmt.Errorf("failed to create rpc write params: %w", err)
+		return fmt.Errorf("failed to create rpc write params: %w", err)
 	}
 
 	_, err = c.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
@@ -50,16 +49,9 @@ func (c *Controller) MergeCheck(
 		HeadRepoUID: writeParams.RepoUID, // forks are not supported for now
 		HeadBranch:  info.HeadRef,
 	})
-	if errors.Is(err, gitrpc.ErrNotMergeable) {
-		return MergeCheck{
-			Mergeable: false,
-		}, nil
-	}
 	if err != nil {
-		return MergeCheck{}, fmt.Errorf("merge execution failed: %w", err)
+		return fmt.Errorf("merge execution failed: %w", err)
 	}
 
-	return MergeCheck{
-		Mergeable: true,
-	}, nil
+	return nil
 }
