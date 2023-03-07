@@ -87,7 +87,7 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
             url: webhook?.url || '',
             secret: isEdit && webhook?.has_secret ? SECRET_MASK : '',
             enabled: webhook ? (webhook?.enabled as boolean) : true,
-            secure: webhook ? (webhook?.insecure === false as boolean) : true,
+            secure: webhook ? webhook?.insecure === (false as boolean) : true,
             branchCreated: webhook?.triggers?.includes(WebhookIndividualEvent.BRANCH_CREATED) || false,
             branchUpdated: webhook?.triggers?.includes(WebhookIndividualEvent.BRANCH_UPDATED) || false,
             branchDeleted: webhook?.triggers?.includes(WebhookIndividualEvent.BRANCH_DELETED) || false,

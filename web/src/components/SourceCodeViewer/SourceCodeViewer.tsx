@@ -1,12 +1,15 @@
 import { useHistory } from 'react-router-dom'
-import React, { Suspense, useCallback } from 'react'
+import React, { Suspense, useCallback, useState } from 'react'
 import { Container, Text } from '@harness/uicore'
 import MarkdownEditor from '@uiw/react-markdown-editor'
+
 import rehypeVideo from 'rehype-video'
 import rehypeExternalLinks from 'rehype-external-links'
 import { useStrings } from 'framework/strings'
 import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
-import type { SourceCodeEditorProps } from 'utils/Utils'
+import { INITIAL_ZOOM_LEVEL, SourceCodeEditorProps } from 'utils/Utils'
+
+import ImageCarousel from 'components/ImageCarousel/ImageCarousel'
 import css from './SourceCodeViewer.module.scss'
 
 interface MarkdownViewerProps {
@@ -15,11 +18,22 @@ interface MarkdownViewerProps {
 
 export function MarkdownViewer({ source }: MarkdownViewerProps) {
   const { getString } = useStrings()
+  const [isOpen, setIsOpen] = useState<boolean>(false)
   const history = useHistory()
+  const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM_LEVEL)
+
+  const [imgEvent, setImageEvent] = useState<string[]>([])
+
   const interceptClickEventOnViewerContainer = useCallback(
     event => {
       const { target } = event
 
+      const imageArray = source.split('\n').filter(string => string.includes('![image]'))
+      const imageStringArray = imageArray.map(string => {
+        const imageSrc = string.split('![image]')[1]
+        return imageSrc.slice(1, imageSrc.length - 1)
+      })
+      setImageEvent(imageStringArray)
       if (target?.tagName?.toLowerCase() === 'a') {
         const { href } = target
 
@@ -38,6 +52,8 @@ export function MarkdownViewer({ source }: MarkdownViewerProps) {
             console.error('MarkdownViewer/interceptClickEventOnViewerContainer', e)
           }
         }
+      } else if (event.target.nodeName?.toLowerCase() === 'img') {
+        setIsOpen(true)
       }
     },
     [history]
@@ -63,6 +79,13 @@ export function MarkdownViewer({ source }: MarkdownViewerProps) {
           ]}
         />
       </Suspense>
+      <ImageCarousel
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        setZoomLevel={setZoomLevel}
+        zoomLevel={zoomLevel}
+        imgEvent={imgEvent}
+      />
     </Container>
   )
 }

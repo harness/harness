@@ -1,0 +1,70 @@
+.imageModal {
+  width: 100% !important;
+  background: unset !important;
+
+  .content {
+    width: fit-content !important;
+    background: unset !important;
+
+    overflow: visible;
+    .image {
+      padding: var(--spacing-small);
+      scale: 1;
+    }
+  }
+
+  :global {
+    .bp3-dialog-header {
+      background: unset !important;
+      position: absolute !important;
+      top: -2%;
+      left: 1.5%;
+
+      .bp3-heading {
+        font-size: 12px;
+        color: var(--grey-500) !important;
+        position: absolute !important;
+        top: -2%;
+        left: 1.5%;
+      }
+    }
+
+    .Dialog--children,
+    .Carousel--carouselItem {
+      justify-content: center !important;
+      display: flex !important;
+    }
+
+    .Dialog--close {
+      fill: var(--primary-bg) !important;
+      --intent-color: var(--primary-bg) !important;
+      position: absolute !important;
+      top: -2%;
+    }
+  }
+}
+
+.vertical {
+  position: absolute !important;
+  bottom: -2.5%;
+  right: 0.75%;
+
+  :global {
+    .Button--variation.Button--variation-tertiary {
+      --background-color: unset !important;
+      .bp3-icon {
+        padding-right: unset !important;
+      }
+    }
+  }
+}
+
+.portalContainer {
+  background: blue !important;
+
+  :global {
+    .bp3-overlay-backdrop {
+      background-color: rgba(16, 22, 26, 1) !important;
+    }
+  }
+}

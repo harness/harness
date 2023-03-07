@@ -3,7 +3,6 @@ import { useResizeDetector } from 'react-resize-detector'
 import { Render, Match, Truthy, Falsy, Else } from 'react-jsx-match'
 import { Container, Layout, Avatar, TextInput, Text, Color, FontVariation, FlexExpander } from '@harness/uicore'
 import cx from 'classnames'
-import MarkdownEditor from '@uiw/react-markdown-editor'
 import ReactTimeago from 'react-timeago'
 import { noop } from 'lodash-es'
 import type { UseStringsReturn } from 'framework/strings'
@@ -15,6 +14,7 @@ import {
   MarkdownEditorWithPreview,
   MarkdownEditorWithPreviewResetProps
 } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
+import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import css from './CommentBox.module.scss'
 
 export interface CommentItem<T = unknown> {
@@ -331,7 +331,7 @@ const CommentsThread = <T = unknown,>({
                         <Text className={css.deleted}>{getString('commentDeleted')}</Text>
                       </Truthy>
                       <Else>
-                        <MarkdownEditor.Markdown source={commentItem?.content} />
+                        <MarkdownViewer source={commentItem?.content} />
                       </Else>
                     </Match>
                   </Else>

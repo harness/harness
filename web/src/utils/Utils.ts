@@ -11,7 +11,8 @@ export const REGEX_VALID_REPO_NAME = /^[a-zA-Z_][0-9a-zA-Z-_.$]*$/
 export const SUGGESTED_BRANCH_NAMES = [DEFAULT_BRANCH_NAME, 'master']
 export const FILE_SEPERATOR = '/'
 export const PR_POLLING_LIMIT = 15000
-
+export const INITIAL_ZOOM_LEVEL = 1
+export const ZOOM_INC_DEC_LEVEL = 0.1
 /** This utility shows a toaster without being bound to any component.
  * It's useful to show cross-page/component messages */
 export function showToaster(message: string, props?: Partial<IToastProps>): IToaster {

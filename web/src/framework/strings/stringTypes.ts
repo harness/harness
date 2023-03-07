@@ -252,6 +252,7 @@ export interface StringsMap {
   repositories: string
   requestChanges: string
   required: string
+  resetZoom: string
   resolved: string
   reviewers: string
   samplePayloadUrl: string
@@ -311,4 +312,6 @@ export interface StringsMap {
   write: string
   yourBranches: string
   yours: string
+  zoomIn: string
+  zoomOut: string
 }
