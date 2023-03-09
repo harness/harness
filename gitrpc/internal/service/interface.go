@@ -51,4 +51,5 @@ type GitAdapter interface {
 	RawDiff(ctx context.Context, repoPath, base, head string, w io.Writer, args ...string) error
 	DiffShortStat(ctx context.Context, repoPath string,
 		baseRef string, headRef string, direct bool) (types.DiffShortStat, error)
+	Blame(ctx context.Context, repoPath, rev, file string, lineFrom, lineTo int) types.BlameReader
 }

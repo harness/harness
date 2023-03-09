@@ -53,4 +53,9 @@ type Interface interface {
 	 * Merge services
 	 */
 	Merge(ctx context.Context, in *MergeParams) (MergeOutput, error)
+
+	/*
+	 * Blame services
+	 */
+	Blame(ctx context.Context, params *BlameParams) (<-chan *BlamePart, <-chan error)
 }

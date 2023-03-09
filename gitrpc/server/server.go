@@ -94,6 +94,7 @@ func NewServer(config Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	blameService := service.NewBlameService(adapter, reposRoot)
 
 	// register services
 	rpc.RegisterRepositoryServiceServer(s, repoService)
@@ -102,6 +103,7 @@ func NewServer(config Config) (*Server, error) {
 	rpc.RegisterCommitFilesServiceServer(s, commitFilesService)
 	rpc.RegisterDiffServiceServer(s, diffService)
 	rpc.RegisterMergeServiceServer(s, mergeService)
+	rpc.RegisterBlameServiceServer(s, blameService)
 
 	return &Server{
 		Server: s,

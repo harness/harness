@@ -21,6 +21,7 @@ type Client struct {
 	commitFilesService rpc.CommitFilesServiceClient
 	diffService        rpc.DiffServiceClient
 	mergeService       rpc.MergeServiceClient
+	blameService       rpc.BlameServiceClient
 }
 
 func New(config Config) (*Client, error) {
@@ -55,5 +56,6 @@ func New(config Config) (*Client, error) {
 		commitFilesService: rpc.NewCommitFilesServiceClient(conn),
 		diffService:        rpc.NewDiffServiceClient(conn),
 		mergeService:       rpc.NewMergeServiceClient(conn),
+		blameService:       rpc.NewBlameServiceClient(conn),
 	}, nil
 }

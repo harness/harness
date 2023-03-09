@@ -172,6 +172,10 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Co
 				r.Get("/*", handlerrepo.HandleGetContent(repoCtrl))
 			})
 
+			r.Route("/blame", func(r chi.Router) {
+				r.Get("/*", handlerrepo.HandleBlame(repoCtrl))
+			})
+
 			// commit operations
 			r.Route("/commits", func(r chi.Router) {
 				r.Get("/", handlerrepo.HandleListCommits(repoCtrl))

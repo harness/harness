@@ -7,6 +7,7 @@ package openapi
 import (
 	"net/http"
 
+	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
@@ -52,6 +53,11 @@ type deleteRepoPathRequest struct {
 }
 
 type getContentRequest struct {
+	repoRequest
+	Path string `path:"path"`
+}
+
+type getBlameRequest struct {
 	repoRequest
 	Path string `path:"path"`
 }
@@ -161,6 +167,36 @@ var queryParameterIncludeCommit = openapi3.ParameterOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
 				Default: ptrptr(false),
+			},
+		},
+	},
+}
+
+var queryParameterLineFrom = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryLineFrom,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Line number from which the file data is considered"),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Default: ptrptr(0),
+			},
+		},
+	},
+}
+
+var queryParameterLineTo = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryLineTo,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Line number to which the file data is considered"),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
+				Default: ptrptr(0),
 			},
 		},
 	},
@@ -377,6 +413,19 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/content/{path}", opGetContent)
+
+	opGetBlame := openapi3.Operation{}
+	opGetBlame.WithTags("repository")
+	opGetBlame.WithMapOfAnything(map[string]interface{}{"operationId": "getBlame"})
+	opGetBlame.WithParameters(queryParameterGitRef,
+		queryParameterLineFrom, queryParameterLineTo)
+	_ = reflector.SetRequest(&opGetBlame, new(getBlameRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opGetBlame, []gitrpc.BlamePart{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opGetBlame, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opGetBlame, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opGetBlame, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opGetBlame, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/blame/{path}", opGetBlame)
 
 	opListCommits := openapi3.Operation{}
 	opListCommits.WithTags("repository")

@@ -5,13 +5,17 @@
 package render
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/harness/gitness/internal/api/usererror"
+	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog/log"
 )
@@ -99,4 +103,55 @@ func JSON(w http.ResponseWriter, code int, v interface{}) {
 	if err := enc.Encode(v); err != nil {
 		log.Err(err).Msgf("Failed to write json encoding to response body.")
 	}
+}
+
+// JSONArrayDynamic outputs an JSON array whose elements are streamed from a channel.
+// Due to the dynamic nature (unknown number of elements) the function will use
+// chunked transfer encoding for large files.
+func JSONArrayDynamic[T comparable](ctx context.Context, w http.ResponseWriter, stream types.Stream[T]) {
+	count := 0
+	enc := json.NewEncoder(w)
+
+	for {
+		data, err := stream.Next()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+
+		if err != nil {
+			// User canceled the request - no need to do anything
+			if errors.Is(err, context.Canceled) {
+				return
+			}
+
+			if count == 0 {
+				// Write the error only if no data has been streamed yet.
+				TranslatedUserError(w, err)
+				return
+			}
+
+			// Array data has been already streamed, it's too late for the output - so just log and quit.
+			log.Ctx(ctx).Warn().Msgf("Failed to write JSON array response body: %v", err)
+			return
+		}
+
+		if count == 0 {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.Header().Set("X-Content-Type-Options", "nosniff")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte{'['})
+		} else {
+			_, _ = w.Write([]byte{','})
+		}
+
+		count++
+
+		_ = enc.Encode(data)
+	}
+
+	if count == 0 {
+		_, _ = w.Write([]byte{'['})
+	}
+
+	_, _ = w.Write([]byte{']'})
 }

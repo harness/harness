@@ -252,3 +252,12 @@ type DiffShortStat struct {
 	Additions int
 	Deletions int
 }
+
+type BlameReader interface {
+	NextPart() (*BlamePart, error)
+}
+
+type BlamePart struct {
+	Commit Commit
+	Lines  []string
+}

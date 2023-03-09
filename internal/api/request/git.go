@@ -15,6 +15,8 @@ const (
 	QueryParamGitRef        = "git_ref"
 	QueryParamIncludeCommit = "include_commit"
 	PathParamCommitSHA      = "commit_sha"
+	QueryLineFrom           = "line_from"
+	QueryLineTo             = "line_to"
 )
 
 func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
