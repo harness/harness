@@ -42,7 +42,7 @@
     "@harness/ng-tooltip": ">=1.31.25",
     "@harness/telemetry": ">=1.0.42",
     "@harness/uicore": "3.106.3",
-    "@harness/use-modal": "1.3.0",
+    "@harness/use-modal": "1.1.0",
     "@popperjs/core": "^2.4.2",
     "@uiw/react-markdown-editor": "^5.10.1",
     "anser": "2.0.1",
