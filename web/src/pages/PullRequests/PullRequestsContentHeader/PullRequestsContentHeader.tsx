@@ -61,6 +61,7 @@ export function PullRequestsContentHeader({
             setSearchTerm(value)
             onSearchTermChanged(value)
           }}
+          spinnerPosition="right"
         />
         <FlexExpander />
         <Button

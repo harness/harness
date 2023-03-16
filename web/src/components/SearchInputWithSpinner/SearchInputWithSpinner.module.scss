@@ -7,8 +7,13 @@
   }
 
   .wrapper {
-    padding: 0 0 0 var(--spacing-small) !important;
+    padding-left: var(--spacing-small) !important;
     margin-bottom: 0 !important;
+
+    &.spinnerOnRight {
+      padding-left: 0 !important;
+      padding-right: var(--spacing-small) !important;
+    }
 
     .input {
       span[data-icon],

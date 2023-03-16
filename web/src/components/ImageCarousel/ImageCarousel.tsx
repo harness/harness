@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { ButtonGroup, ButtonVariation, Button, Container, Dialog, Carousel } from '@harness/uicore'
 import { ZOOM_INC_DEC_LEVEL } from 'utils/Utils'
-
-import { useStrings } from 'framework/strings'
+import type { UseStringsReturn } from 'framework/strings'
 import css from './ImageCarousel.module.scss'
 interface ImageCarouselProps {
   isOpen: boolean
@@ -10,12 +9,11 @@ interface ImageCarouselProps {
   setZoomLevel: (value: number) => void
   zoomLevel: number
   imgEvent: string[]
+  getString: UseStringsReturn['getString']
 }
 
 const ImageCarousel = (props: ImageCarouselProps) => {
-  const { getString } = useStrings()
-
-  const { isOpen, setIsOpen, setZoomLevel, zoomLevel, imgEvent } = props
+  const { getString, isOpen, setIsOpen, setZoomLevel, zoomLevel, imgEvent } = props
   const [imgTitle, setImageTitle] = useState(imgEvent[0])
   return (
     <Dialog

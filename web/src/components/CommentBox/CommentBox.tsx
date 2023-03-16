@@ -14,7 +14,7 @@ import {
   MarkdownEditorWithPreview,
   MarkdownEditorWithPreviewResetProps
 } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
-import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
+import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import css from './CommentBox.module.scss'
 
 export interface CommentItem<T = unknown> {
@@ -331,7 +331,7 @@ const CommentsThread = <T = unknown,>({
                         <Text className={css.deleted}>{getString('commentDeleted')}</Text>
                       </Truthy>
                       <Else>
-                        <MarkdownViewer source={commentItem?.content} />
+                        <MarkdownViewer source={commentItem?.content} getString={getString} />
                       </Else>
                     </Match>
                   </Else>
