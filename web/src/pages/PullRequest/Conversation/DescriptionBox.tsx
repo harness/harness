@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Container, useToaster } from '@harness/uicore'
 import cx from 'classnames'
 import { useMutate } from 'restful-react'
-import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
+import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
 import type { OpenapiUpdatePullReqRequest } from 'services/code'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
@@ -63,7 +63,7 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
           />
         )) || (
           <Container className={css.mdWrapper}>
-            <MarkdownViewer source={content} />
+            <MarkdownViewer source={content} getString={getString} />
             <Container className={css.menuWrapper}>
               <OptionsMenuButton
                 isDark={true}

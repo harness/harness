@@ -4,8 +4,9 @@ import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import cx from 'classnames'
-import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
+import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useAppContext } from 'AppContext'
+import { useStrings } from 'framework/strings'
 import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { CodeIcon, decodeGitContent } from 'utils/GitUtils'
@@ -21,6 +22,7 @@ interface FolderContentProps {
 
 function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: FolderContentProps) {
   const history = useHistory()
+  const { getString } = useStrings()
   const { routes } = useAppContext()
 
   const { data, error, loading } = useGet<OpenapiGetContentOutput>({
@@ -61,7 +63,7 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
 
       <Render when={(data?.content as RepoFileContent)?.data}>
         <Container className={css.readmeContent}>
-          <MarkdownViewer source={decodeGitContent((data?.content as RepoFileContent)?.data)} />
+          <MarkdownViewer source={decodeGitContent((data?.content as RepoFileContent)?.data)} getString={getString} />
         </Container>
       </Render>
     </Container>

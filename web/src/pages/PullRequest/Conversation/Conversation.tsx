@@ -23,7 +23,7 @@ import ReactTimeago from 'react-timeago'
 import { orderBy } from 'lodash-es'
 import { Render } from 'react-jsx-match'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
-import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
+import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type { TypesPullReqActivity } from 'services/code'
@@ -680,6 +680,7 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
               margin={{ top: 'medium', left: 'xxxlarge' }}
               style={{ maxWidth: 'calc(100vw - 450px)', overflow: 'auto' }}>
               <MarkdownViewer
+                getString={getString}
                 source={[getString('pr.titleChangedTable').replace(/\n$/, '')]
                   .concat(
                     commentItems

@@ -18,7 +18,7 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useStrings } from 'framework/strings'
 import type { OpenapiGetContentOutput, TypesRepository } from 'services/code'
-import { MarkdownViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
+import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useDisableCodeMainLinks } from 'hooks/useDisableCodeMainLinks'
 import { Images } from 'images'
@@ -163,6 +163,7 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
         padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
         className={css.divContainer}>
         <MarkdownViewer
+          getString={getString}
           source={getString('repoEmptyMarkdownClone')
             .replace(/REPO_URL/g, repoMetadata.git_url || '')
             .replace(/REPO_NAME/g, repoMetadata.uid || '')}
@@ -173,6 +174,7 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
         padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
         className={css.divContainer}>
         <MarkdownViewer
+          getString={getString}
           source={getString('repoEmptyMarkdownExisting')
             .replace(/REPO_URL/g, '...')
             .replace(/REPO_NAME/g, repoMetadata.uid || '')

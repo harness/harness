@@ -1,0 +1,22 @@
+.main {
+  :global {
+    .wmde-markdown {
+      pre {
+        position: relative;
+      }
+
+      // Customize https://wangchujiang.com/rehype-video/
+      details.octicon.octicon-video {
+        display: block;
+
+        > summary {
+          padding-bottom: var(--spacing-xsmall);
+
+          > svg {
+            margin: 0 var(--spacing-small);
+          }
+        }
+      }
+    }
+  }
+}
