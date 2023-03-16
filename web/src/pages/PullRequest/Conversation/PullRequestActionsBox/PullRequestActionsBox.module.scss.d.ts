@@ -4,7 +4,6 @@ declare const styles: {
   readonly main: string
   readonly merged: string
   readonly error: string
-  readonly hide: string
   readonly layout: string
   readonly secondaryButton: string
   readonly btn: string
