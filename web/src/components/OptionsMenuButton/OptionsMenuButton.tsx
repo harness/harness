@@ -46,7 +46,10 @@ export const OptionsMenuButton = ({
                     ) : null
                   }
                   key={(item as React.ComponentProps<typeof Menu.Item>)?.text as string}
-                  className={cx(Classes.POPOVER_DISMISS, { [css.danger]: (item as OptionsMenuItem).isDanger })}
+                  className={cx(Classes.POPOVER_DISMISS, {
+                    [css.danger]: (item as OptionsMenuItem).isDanger,
+                    [css.isDark]: isDark
+                  })}
                   {...omit(item as IMenuItemProps & React.AnchorHTMLAttributes<HTMLAnchorElement>, 'isDanger')}
                 />
               )

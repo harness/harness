@@ -1,6 +1,8 @@
 .danger {
-  * {
-    color: var(--red-500) !important;
+  &:not(.isDark) {
+    * {
+      color: var(--red-500) !important;
+    }
   }
 
   &:hover {

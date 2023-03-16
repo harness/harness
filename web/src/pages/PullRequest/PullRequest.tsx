@@ -27,6 +27,7 @@ import type { TypesPullReq, TypesRepository } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
+import { Checks } from './Checks/Checks'
 import { Changes } from '../../components/Changes/Changes'
 import { PullRequestCommits } from './PullRequestCommits/PullRequestCommits'
 import css from './PullRequest.module.scss'
@@ -34,7 +35,8 @@ import css from './PullRequest.module.scss'
 enum PullRequestSection {
   CONVERSATION = 'conversation',
   COMMITS = 'commits',
-  FILES_CHANGED = 'changes'
+  FILES_CHANGED = 'changes',
+  CHECKS = 'checks'
 }
 
 export default function PullRequest() {
@@ -200,6 +202,18 @@ export default function PullRequest() {
                         />
                       </Container>
                     )
+                  },
+                  {
+                    id: PullRequestSection.CHECKS,
+                    disabled: true,
+                    title: (
+                      <TabTitle
+                        icon={CodeIcon.ChecksSuccess}
+                        title={getString('checks')}
+                        count={0} // TODO: Count for checks when API supports it
+                      />
+                    ),
+                    panel: <Checks />
                   }
                 ]}
               />

@@ -38,6 +38,7 @@ export interface StringsMap {
   cancel: string
   checkRuns: string
   checkSuites: string
+  checks: string
   clone: string
   cloneHTTPS: string
   closed: string

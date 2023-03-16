@@ -91,7 +91,9 @@ export const CodeIcon = {
   Webhook: 'code-webhook' as IconName,
   InputSpinner: 'spinner' as IconName,
   InputSearch: 'search' as IconName,
-  Chat: 'code-chat' as IconName
+  Chat: 'code-chat' as IconName,
+  Checks: 'main-tick' as IconName,
+  ChecksSuccess: 'success-tick' as IconName
 }
 
 export const REFS_TAGS_PREFIX = 'refs/tags/'

@@ -700,10 +700,10 @@
   resolved "https://npm.pkg.github.com/download/@harness/uicore/3.106.3/64b3c1cfb645a3eaaa2fe5ea481bd96a912de468#64b3c1cfb645a3eaaa2fe5ea481bd96a912de468"
   integrity sha512-LHDMbhdHHklJCKPj/n9EZBPNiWBPMHacQoInuTcSEswiXdQDThlozJ/3ccrsUk4Qbak16LV4xpDkDYCwolo5Pg==
 
-"@harness/use-modal@1.3.0":
-  version "1.3.0"
-  resolved "https://npm.pkg.github.com/download/@harness/use-modal/1.3.0/fdedeb097e62000c856ed9e73368ff439692549f#fdedeb097e62000c856ed9e73368ff439692549f"
-  integrity sha512-2CxYlv4rLtHNAZz3Kg7zC+UyMaTeyLwYh3cr7xUtBVJsYpggm4GgyuJSui+gRaO75Os9mdtKQzBt+paPgY8krQ==
+"@harness/use-modal@1.1.0":
+  version "1.1.0"
+  resolved "https://npm.pkg.github.com/download/@harness/use-modal/1.1.0/98ff8498247e27c239626ff1b195797e4c69882c#98ff8498247e27c239626ff1b195797e4c69882c"
+  integrity sha512-cpbd8xUfbkz1jA9ANGlbLjd1bC+aP3/SJ66j7V3ErsHIv6apK6B8eTgL4N7pnMiTemuTNyjhGvsGCZOF9FO6Pg==
 
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"
@@ -13689,6 +13689,31 @@ xtend@^4.0.0, xtend@~4.0.1:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.2.tgz#bb72779f5fa465186b1f438f674fa347fdb5db54"
   integrity sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==
+
+xterm-addon-canvas@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/xterm-addon-canvas/-/xterm-addon-canvas-0.3.0.tgz#8cfb5a13297f4a31a12870c1119af2c139392b50"
+  integrity sha512-2deF4ev6T+NjgSM56H+jcAWz4k5viEoaBtuDEyfo5Qdh1r7HOvNzLC45HSeegdH38qmEcL9XIt0KXyOINpSFRA==
+
+xterm-addon-fit@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/xterm-addon-fit/-/xterm-addon-fit-0.7.0.tgz#b8ade6d96e63b47443862088f6670b49fb752c6a"
+  integrity sha512-tQgHGoHqRTgeROPnvmtEJywLKoC/V9eNs4bLLz7iyJr1aW/QFzRwfd3MGiJ6odJd9xEfxcW36/xRU47JkD5NKQ==
+
+xterm-addon-search@^0.11.0:
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/xterm-addon-search/-/xterm-addon-search-0.11.0.tgz#2a00ff7f9848f6140e7c4d1782486b0b18b06e0d"
+  integrity sha512-6U4uHXcQ7G5igsdaGqrJ9ehm7vep24bXqWxuy3AnIosXF2Z5uy2MvmYRyTGNembIqPV/x1YhBQ7uShtuqBHhOQ==
+
+xterm-addon-web-links@^0.8.0:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/xterm-addon-web-links/-/xterm-addon-web-links-0.8.0.tgz#2cb1d57129271022569208578b0bf4774e7e6ea9"
+  integrity sha512-J4tKngmIu20ytX9SEJjAP3UGksah7iALqBtfTwT9ZnmFHVplCumYQsUJfKuS+JwMhjsjH61YXfndenLNvjRrEw==
+
+xterm@^5.1.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/xterm/-/xterm-5.1.0.tgz#3e160d60e6801c864b55adf19171c49d2ff2b4fc"
+  integrity sha512-LovENH4WDzpwynj+OTkLyZgJPeDom9Gra4DMlGAgz6pZhIDCQ+YuO7yfwanY+gVbn/mmZIStNOnVRU/ikQuAEQ==
 
 y18n@^3.2.0:
   version "3.2.2"

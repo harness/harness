@@ -2,7 +2,6 @@ import { useHistory } from 'react-router-dom'
 import React, { Suspense, useCallback, useState } from 'react'
 import { Container, Text } from '@harness/uicore'
 import MarkdownEditor from '@uiw/react-markdown-editor'
-
 import rehypeVideo from 'rehype-video'
 import rehypeExternalLinks from 'rehype-external-links'
 import { useStrings } from 'framework/strings'
@@ -49,14 +48,14 @@ export function MarkdownViewer({ source }: MarkdownViewerProps) {
             }
           } catch (e) {
             // eslint-disable-next-line no-console
-            console.error('MarkdownViewer/interceptClickEventOnViewerContainer', e)
+            console.error('Error: MarkdownViewer/interceptClickEventOnViewerContainer', e)
           }
         }
       } else if (event.target.nodeName?.toLowerCase() === 'img') {
         setIsOpen(true)
       }
     },
-    [history]
+    [history, source]
   )
 
   return (
