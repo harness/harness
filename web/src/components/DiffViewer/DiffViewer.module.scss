@@ -157,10 +157,17 @@
     border-top-right-radius: 5px;
 
     .fname {
-      font-size: 13px !important;
-      font-weight: 600 !important;
-      color: var(--grey-900) !important;
       align-self: center;
+
+      a {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        color: var(--grey-900) !important;
+
+        &:hover {
+          color: var(--primary-7) !important;
+        }
+      }
     }
   }
 

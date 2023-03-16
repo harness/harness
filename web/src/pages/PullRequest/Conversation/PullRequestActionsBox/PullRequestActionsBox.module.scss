@@ -1,7 +1,7 @@
 .main {
   --bar-height: 60px;
 
-  background-color: var(--green-50) !important; // #f6fff2
+  background-color: var(--green-50) !important;
   margin: -24px -24px 0 !important;
   position: sticky;
   top: 0;
@@ -14,10 +14,6 @@
 
   &.error {
     background-color: var(--red-50) !important;
-  }
-
-  &.hide {
-    visibility: hidden !important;
   }
 
   .layout {

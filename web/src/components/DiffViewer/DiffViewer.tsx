@@ -15,6 +15,7 @@ import {
 } from '@harness/uicore'
 import cx from 'classnames'
 import { Render } from 'react-jsx-match'
+import { Link } from 'react-router-dom'
 import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
@@ -25,6 +26,7 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { useAppContext } from 'AppContext'
 import type { TypesPullReq, TypesPullReqActivity } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
+import { CopyButton } from 'components/CopyButton/CopyButton'
 import {
   activitiesToDiffCommentItems,
   activityToCommentItem,
@@ -66,6 +68,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   pullRequestMetadata,
   onCommentUpdate
 }) => {
+  const { routes } = useAppContext()
   const { getString } = useStrings()
   const [viewed, setViewed] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -267,10 +270,12 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
             const element = commentRowElement.firstElementChild as HTMLTableCellElement
 
-            // Note: CommentBox is rendered as an independent React component
+            // Note: 1. CommentBox is rendered as an independent React component
             //       everything passed to it must be either values, or refs. If you
             //       pass callbacks or states, they won't be updated and might
-            // .     cause unexpected bugs
+            //       cause unexpected bugs
+            //       2. If you use a component inside CommentBox, make sure it follow
+            //       the above rules as well (i.e useString as a prop instead of importing)
             ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
             ReactDOM.render(
               <CommentBox
@@ -461,9 +466,16 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               </Layout.Horizontal>
             </Container>
             <Text inline className={css.fname}>
-              {diff.fileTitle}
+              <Link
+                to={routes.toCODERepository({
+                  repoPath: repoMetadata.path as string,
+                  gitRef: pullRequestMetadata?.source_branch,
+                  resourcePath: diff.fileTitle
+                })}>
+                {diff.fileTitle}
+              </Link>
             </Text>
-            <Button variation={ButtonVariation.ICON} icon={CodeIcon.Copy} size={ButtonSize.SMALL} />
+            <CopyButton content={diff.fileTitle} icon={CodeIcon.Copy} size={ButtonSize.SMALL} />
             <FlexExpander />
 
             <Render when={!readOnly}>

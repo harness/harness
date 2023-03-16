@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import {
   Button,
   ButtonVariation,
@@ -17,16 +17,9 @@ import { Case, Else, Match, Render, Truthy } from 'react-jsx-match'
 import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
-import type {
-  EnumMergeMethod,
-  OpenapiMergePullReq,
-  OpenapiStatePullReqRequest,
-  RepoMergeCheck,
-  TypesPullReq
-} from 'services/code'
+import type { EnumMergeMethod, OpenapiMergePullReq, OpenapiStatePullReqRequest, TypesPullReq } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, PullRequestFilterOption, PullRequestState } from 'utils/GitUtils'
-import { useShowRequestError } from 'hooks/useShowRequestError'
 import { getErrorMessage } from 'utils/Utils'
 import css from './PullRequestActionsBox.module.scss'
 
@@ -56,15 +49,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/state`
   })
-  const {
-    mutate: mergeCheck,
-    error: errorMergeCheck,
-    loading: loadingMergeCheck
-  } = useMutate<RepoMergeCheck>({
-    verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata.path}/+/merge-check/${pullRequestMetadata.target_branch}..${pullRequestMetadata.source_branch}`
-  })
-  const [mergeable, setMergable] = useState<boolean | undefined>()
+  const mergeable = pullRequestMetadata.merge_check_status === 'mergeable'
   const isDraft = pullRequestMetadata.is_draft
   const mergeOptions: PRMergeOption[] = [
     {
@@ -91,38 +76,14 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     }
   ]
   const [mergeOption, setMergeOption] = useState<PRMergeOption>(mergeOptions[1])
-  const [shouldCallMergeCheck, setShouldCallMergeCheck] = useState(
-    !isDraft && pullRequestMetadata.state === PullRequestState.OPEN
-  )
-
-  useShowRequestError(errorMergeCheck)
-
-  useEffect(() => {
-    if (shouldCallMergeCheck) {
-      mergeCheck({})
-        .then(response => {
-          setMergable(response.mergeable)
-        })
-        .finally(() => setShouldCallMergeCheck(false))
-    }
-  }, [isDraft, mergeCheck, pullRequestMetadata, shouldCallMergeCheck])
-
   if (pullRequestMetadata.state === PullRequestFilterOption.MERGED) {
     return <MergeInfo pullRequestMetadata={pullRequestMetadata} />
   }
 
-  // console.log(
-  //   'variation',
-  //   mergeOption.method === 'close' || mergeable === false || loadingMergeCheck || shouldCallMergeCheck
-  //     ? ButtonVariation.TERTIARY
-  //     : ButtonVariation.PRIMARY
-  // )
-
   return (
     <Container
       className={cx(css.main, {
-        [css.error]: mergeable === false,
-        [css.hide]: loadingMergeCheck || shouldCallMergeCheck
+        [css.error]: mergeable === false
       })}>
       <Layout.Vertical spacing="xlarge">
         <Container>
@@ -139,7 +100,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
             </Text>
 
             <FlexExpander />
-            <Render when={loading || loadingState || loadingMergeCheck}>
+            <Render when={loading || loadingState}>
               <Icon name={CodeIcon.InputSpinner} size={16} margin={{ right: 'xsmall' }} />
             </Render>
             <Match expr={isDraft}>
@@ -178,8 +139,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                         inline
                         className={cx({
                           [css.btnWrapper]: mergeOption.method !== 'close',
-                          [css.hasError]: mergeable === false,
-                          [css.hide]: loadingMergeCheck || shouldCallMergeCheck
+                          [css.hasError]: mergeable === false
                         })}>
                         <SplitButton
                           text={mergeOption.title}
@@ -188,10 +148,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                             [css.secondaryButton]: mergeOption.method === 'close' || mergeable === false
                           })}
                           variation={
-                            mergeOption.method === 'close' ||
-                            mergeable === false ||
-                            loadingMergeCheck ||
-                            shouldCallMergeCheck
+                            mergeOption.method === 'close' || mergeable === false
                               ? ButtonVariation.TERTIARY
                               : ButtonVariation.PRIMARY
                           }
