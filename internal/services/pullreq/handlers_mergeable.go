@@ -73,14 +73,14 @@ func (s *Service) mergeCheckOnReopen(ctx context.Context,
 func (s *Service) mergeCheckOnClosed(ctx context.Context,
 	event *events.Event[*pullreqevents.ClosedPayload],
 ) error {
-	return s.deleteMergeRef(ctx, event.Payload.PrincipalID, event.Payload.SourceRepoID, event.Payload.PullReqID)
+	return s.deleteMergeRef(ctx, event.Payload.PrincipalID, event.Payload.SourceRepoID, event.Payload.Number)
 }
 
 // mergeCheckOnMerged deletes the merge ref.
 func (s *Service) mergeCheckOnMerged(ctx context.Context,
 	event *events.Event[*pullreqevents.MergedPayload],
 ) error {
-	return s.deleteMergeRef(ctx, event.Payload.PrincipalID, event.Payload.SourceRepoID, event.Payload.PullReqID)
+	return s.deleteMergeRef(ctx, event.Payload.PrincipalID, event.Payload.SourceRepoID, event.Payload.Number)
 }
 
 func (s *Service) deleteMergeRef(ctx context.Context, principalID int64, repoID int64, prNum int64) error {
