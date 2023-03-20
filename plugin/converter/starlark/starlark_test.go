@@ -57,7 +57,7 @@ func TestParseStarlark(t *testing.T) {
 
 	req.Config.Data = string(before)
 
-	parsedFile, err := Parse(req, template, templateData, 0)
+	parsedFile, err := Parse(req, template, templateData, 0, 0)
 	if err != nil {
 		t.Error(err)
 		return
@@ -95,7 +95,7 @@ func TestParseStarlarkNotTemplateFile(t *testing.T) {
 	req.Repo.Config = "plugin.starlark.star"
 	req.Config.Data = string(before)
 
-	parsedFile, err := Parse(req, nil, nil, 0)
+	parsedFile, err := Parse(req, nil, nil, 0, 0)
 	if err != nil {
 		t.Error(err)
 		return

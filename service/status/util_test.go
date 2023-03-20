@@ -13,9 +13,10 @@ import (
 
 func TestCreateLabel(t *testing.T) {
 	tests := []struct {
-		name  string
-		event string
-		label string
+		name     string
+		event    string
+		label    string
+		deployTo string
 	}{
 		{
 			event: core.EventPullRequest,
@@ -30,6 +31,16 @@ func TestCreateLabel(t *testing.T) {
 			label: "continuous-integration/drone/tag",
 		},
 		{
+			event:    core.EventPromote,
+			deployTo: "production",
+			label:    "continuous-integration/drone/promote/production",
+		},
+		{
+			event:    core.EventPromote,
+			deployTo: "$production%",
+			label:    "continuous-integration/drone/promote/production",
+		},
+		{
 			event: "unknown",
 			label: "continuous-integration/drone",
 		},
@@ -40,7 +51,7 @@ func TestCreateLabel(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		if got, want := createLabel(test.name, test.event), test.label; got != want {
+		if got, want := createLabel(test.name, test.event, test.deployTo), test.label; got != want {
 			t.Errorf("Want label %q, got %q", want, got)
 		}
 	}

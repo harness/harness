@@ -17,9 +17,3 @@ manifests:
       architecture: arm64
       os: linux
       variant: v8
-  -
-    image: drone/drone:{{#if build.tag}}{{trimPrefix "v" build.tag}}-{{/if}}linux-arm
-    platform:
-      architecture: arm
-      os: linux
-      variant: v7

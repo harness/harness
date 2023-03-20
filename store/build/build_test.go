@@ -7,6 +7,7 @@ package build
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"testing"
 
 	"github.com/drone/drone/core"
@@ -25,7 +26,7 @@ func TestBuild(t *testing.T) {
 	}
 	defer func() {
 		dbtest.Reset(conn)
-		dbtest.Disconnect(conn)
+		_ = dbtest.Disconnect(conn)
 	}()
 
 	store := New(conn).(*buildStore)
@@ -201,14 +202,29 @@ func testBuildDelete(store *buildStore, build *core.Build) func(t *testing.T) {
 
 func testBuildPurge(store *buildStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		store.db.Update(func(execer db.Execer, binder db.Binder) error {
-			_, err := execer.Exec("DELETE FROM builds")
-			return err
+		_ = store.db.Update(func(execer db.Execer, binder db.Binder) error {
+			_, _ = execer.Exec("DELETE FROM builds")
+			_, _ = execer.Exec("DELETE FROM stages")
+			_, _ = execer.Exec("DELETE FROM steps")
+			return nil
 		})
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 98}, nil)
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 99}, nil)
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 100}, nil)
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 101}, nil)
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 98}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusPending}})
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 99}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusPending}})
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 100}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusPending}})
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 101}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusPending}})
+		// get the first stageid
+		var startingStageID int64
+		_ = store.db.View(func(queryer db.Queryer, binder db.Binder) error {
+			return queryer.QueryRow("SELECT stage_id FROM stages limit 1").Scan(&startingStageID)
+		})
+		// lets add steps to the builds
+		_ = store.db.Update(func(execer db.Execer, binder db.Binder) error {
+			_, _ = execer.Exec(fmt.Sprintf("INSERT INTO steps (step_stage_id, step_number, step_status) VALUES (%d, 1, 'pending')", startingStageID))
+			_, _ = execer.Exec(fmt.Sprintf("INSERT INTO steps (step_stage_id, step_number, step_status) VALUES (%d, 1, 'pending')", startingStageID+1))
+			_, _ = execer.Exec(fmt.Sprintf("INSERT INTO steps (step_stage_id, step_number, step_status) VALUES (%d, 1, 'pending')", startingStageID+2))
+			_, _ = execer.Exec(fmt.Sprintf("INSERT INTO steps (step_stage_id, step_number, step_status) VALUES (%d, 1, 'pending')", startingStageID+3))
+			return nil
+		})
 
 		before, err := store.List(noContext, 1, 100, 0)
 		if err != nil {
@@ -217,6 +233,25 @@ func testBuildPurge(store *buildStore) func(t *testing.T) {
 		if got, want := len(before), 4; got != want {
 			t.Errorf("Want build count %d, got %d", want, got)
 		}
+		// count the number of stages
+		countOfStages := 4
+		_ = store.db.View(func(queryer db.Queryer, binder db.Binder) error {
+			return queryer.QueryRow("SELECT count(*) FROM stages").Scan(&countOfStages)
+		})
+		want := 4
+		if want != countOfStages {
+			t.Errorf("Want stage count %d, got %d", want, countOfStages)
+		}
+		// count the number of steps
+		countOfSteps := 4
+		_ = store.db.View(func(queryer db.Queryer, binder db.Binder) error {
+			return queryer.QueryRow("SELECT count(*) FROM steps").Scan(&countOfSteps)
+		})
+		want = 4
+		if want != countOfSteps {
+			t.Errorf("Want step count %d, got %d", want, countOfSteps)
+		}
+		// purge the builds
 		err = store.Purge(noContext, 1, 100)
 		if err != nil {
 			t.Error(err)
@@ -225,7 +260,10 @@ func testBuildPurge(store *buildStore) func(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if got, want := len(after), 2; got != want {
+		// we want 2 builds
+		want = 2
+		got := len(after)
+		if got != want {
 			t.Errorf("Want build count %d, got %d", want, got)
 		}
 		for _, build := range after {
@@ -233,19 +271,37 @@ func testBuildPurge(store *buildStore) func(t *testing.T) {
 				t.Errorf("Expect purge if build number is less than 100")
 			}
 		}
+		// check that orphaned stages are deleted
+		_ = store.db.View(func(queryer db.Queryer, binder db.Binder) error {
+			return queryer.QueryRow("SELECT count(*) FROM stages").Scan(&countOfStages)
+		})
+		want = 2
+		if want != countOfStages {
+			t.Errorf("Want stage count %d, got %d", want, countOfStages)
+		}
+		// check that orphaned steps are deleted
+		// count the number of steps
+		countOfSteps = 2
+		_ = store.db.View(func(queryer db.Queryer, binder db.Binder) error {
+			return queryer.QueryRow("SELECT count(*) FROM steps").Scan(&countOfSteps)
+		})
+		want = 2
+		if want != countOfSteps {
+			t.Errorf("Want step count %d, got %d", want, countOfSteps)
+		}
 	}
 }
 
 func testBuildCount(store *buildStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		store.db.Update(func(execer db.Execer, binder db.Binder) error {
+		_ = store.db.Update(func(execer db.Execer, binder db.Binder) error {
 			_, err := execer.Exec("DELETE FROM builds")
 			return err
 		})
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 98}, nil)
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 99}, nil)
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 100}, nil)
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 101}, nil)
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 98}, nil)
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 99}, nil)
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 100}, nil)
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 101}, nil)
 
 		count, err := store.Count(noContext)
 		if err != nil {
@@ -258,15 +314,15 @@ func testBuildCount(store *buildStore) func(t *testing.T) {
 
 func testBuildPending(store *buildStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		store.db.Update(func(execer db.Execer, binder db.Binder) error {
-			execer.Exec("DELETE FROM builds")
-			execer.Exec("DELETE FROM stages")
+		_ = store.db.Update(func(execer db.Execer, binder db.Binder) error {
+			_, _ = execer.Exec("DELETE FROM builds")
+			_, _ = execer.Exec("DELETE FROM stages")
 			return nil
 		})
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 98, Status: core.StatusPending}, []*core.Stage{&core.Stage{RepoID: 1, Number: 1, Status: core.StatusPending}})
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 99, Status: core.StatusPending}, []*core.Stage{&core.Stage{RepoID: 1, Number: 1, Status: core.StatusPending}})
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 100, Status: core.StatusRunning}, []*core.Stage{&core.Stage{RepoID: 1, Number: 1, Status: core.StatusRunning}})
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 101, Status: core.StatusPassing}, []*core.Stage{&core.Stage{RepoID: 1, Number: 1, Status: core.StatusPassing}})
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 98, Status: core.StatusPending}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusPending}})
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 99, Status: core.StatusPending}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusPending}})
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 100, Status: core.StatusRunning}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusRunning}})
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 101, Status: core.StatusPassing}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusPassing}})
 
 		count, err := store.Count(noContext)
 		if err != nil {
@@ -285,15 +341,15 @@ func testBuildPending(store *buildStore) func(t *testing.T) {
 
 func testBuildRunning(store *buildStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		store.db.Update(func(execer db.Execer, binder db.Binder) error {
-			execer.Exec("DELETE FROM builds")
-			execer.Exec("DELETE FROM stages")
+		_ = store.db.Update(func(execer db.Execer, binder db.Binder) error {
+			_, _ = execer.Exec("DELETE FROM builds")
+			_, _ = execer.Exec("DELETE FROM stages")
 			return nil
 		})
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 98, Status: core.StatusRunning}, []*core.Stage{&core.Stage{RepoID: 1, Number: 1, Status: core.StatusRunning}})
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 99, Status: core.StatusRunning}, []*core.Stage{&core.Stage{RepoID: 1, Number: 1, Status: core.StatusRunning}})
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 100, Status: core.StatusBlocked}, []*core.Stage{&core.Stage{RepoID: 1, Number: 1, Status: core.StatusBlocked}})
-		store.Create(noContext, &core.Build{RepoID: 1, Number: 101, Status: core.StatusPassing}, []*core.Stage{&core.Stage{RepoID: 1, Number: 1, Status: core.StatusPassing}})
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 98, Status: core.StatusRunning}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusRunning}})
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 99, Status: core.StatusRunning}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusRunning}})
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 100, Status: core.StatusBlocked}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusBlocked}})
+		_ = store.Create(noContext, &core.Build{RepoID: 1, Number: 101, Status: core.StatusPassing}, []*core.Stage{{RepoID: 1, Number: 1, Status: core.StatusPassing}})
 
 		count, err := store.Count(noContext)
 		if err != nil {
@@ -312,17 +368,14 @@ func testBuildRunning(store *buildStore) func(t *testing.T) {
 
 func testBuildLatest(store *buildStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		store.db.Update(func(execer db.Execer, binder db.Binder) error {
-			execer.Exec("DELETE FROM stages")
-			execer.Exec("DELETE FROM latest")
-			execer.Exec("DELETE FROM builds")
+		_ = store.db.Update(func(execer db.Execer, binder db.Binder) error {
+			_, _ = execer.Exec("DELETE FROM stages")
+			_, _ = execer.Exec("DELETE FROM latest")
+			_, _ = execer.Exec("DELETE FROM builds")
 			return nil
 		})
 
-		//
 		// step 1: insert the initial builds
-		//
-
 		build := &core.Build{
 			RepoID: 1,
 			Number: 99,
@@ -363,10 +416,7 @@ func testBuildLatest(store *buildStore) func(t *testing.T) {
 			return
 		}
 
-		//
 		// step 2: verify the latest build number was captured
-		//
-
 		latest, _ := store.LatestBranches(noContext, build.RepoID)
 		if len(latest) != 2 {
 			t.Errorf("Expect latest branch list == 1, got %d", len(latest))

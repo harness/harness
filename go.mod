@@ -14,13 +14,13 @@ require (
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/drone/drone-go v1.7.2-0.20220308165842-f9e4fe31c2af
 	github.com/drone/drone-runtime v1.1.1-0.20200623162453-61e33e2cab5d
-	github.com/drone/drone-ui v2.8.2+incompatible
+	github.com/drone/drone-ui v2.9.1+incompatible
 	github.com/drone/drone-yaml v1.2.4-0.20220204000225-01fb17858c9b
 	github.com/drone/envsubst v1.0.3-0.20200709231038-aa43e1c1a629
 	github.com/drone/funcmap v0.0.0-20210823160631-9e9dec149056
 	github.com/drone/go-license v1.0.2
 	github.com/drone/go-login v1.1.0
-	github.com/drone/go-scm v1.24.0
+	github.com/drone/go-scm v1.28.0
 	github.com/drone/signal v1.0.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-chi/chi v3.3.3+incompatible

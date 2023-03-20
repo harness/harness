@@ -24,7 +24,7 @@ import (
 )
 
 func TestStarlarkConvert(t *testing.T) {
-	plugin := Starlark(true, 0)
+	plugin := Starlark(true, 0, 0)
 
 	req := &core.ConvertArgs{
 		Build: &core.Build{
@@ -102,7 +102,7 @@ func TestConvert_Multi(t *testing.T) {
 		},
 	}
 
-	plugin := Starlark(true, 0)
+	plugin := Starlark(true, 0, 0)
 	config, err := plugin.Convert(noContext, req)
 	if err != nil {
 		t.Error(err)
@@ -134,7 +134,7 @@ func TestConvert_Multi(t *testing.T) {
 // this test verifies the plugin is skipped when it has
 // not been explicitly enabled.
 func TestConvert_Skip(t *testing.T) {
-	plugin := Starlark(false, 0)
+	plugin := Starlark(false, 0, 0)
 	config, err := plugin.Convert(noContext, nil)
 	if err != nil {
 		t.Error(err)
@@ -154,7 +154,7 @@ func TestConvert_SkipYaml(t *testing.T) {
 		},
 	}
 
-	plugin := Starlark(true, 0)
+	plugin := Starlark(true, 0, 0)
 	config, err := plugin.Convert(noContext, req)
 	if err != nil {
 		t.Error(err)
@@ -162,5 +162,37 @@ func TestConvert_SkipYaml(t *testing.T) {
 	}
 	if config != nil {
 		t.Errorf("Expect nil config returned for non-starlark files")
+	}
+}
+
+// this test verifies the plugin returns error
+// if the generated file size is exceeded.
+func TestConvert_SizeLimit(t *testing.T) {
+	smallFileSizeLimit := uint64(1)
+	plugin := Starlark(true, 0, smallFileSizeLimit)
+
+	req := &core.ConvertArgs{
+		Build: &core.Build{
+			After: "3d21ec53a331a6f037a91c368710b99387d012c1",
+		},
+		Repo: &core.Repository{
+			Slug:   "octocat/hello-world",
+			Config: ".drone.yml",
+		},
+		Config: &core.Config{},
+	}
+
+	before, err := ioutil.ReadFile("testdata/single.star")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	req.Repo.Config = "single.star"
+	req.Config.Data = string(before)
+	_, expectedError := plugin.Convert(noContext, req)
+	if expectedError == nil {
+		t.Error("Expected 'starlark: maximum file size exceeded' error")
+		return
 	}
 }

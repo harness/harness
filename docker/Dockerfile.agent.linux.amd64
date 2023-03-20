@@ -1,5 +1,5 @@
 FROM alpine:3.11 as alpine
-RUN apk add -U --no-cache ca-certificates
+RUN apk add -U --no-cache ca-certificates tzdata
 
 FROM alpine:3.11
 ENV GODEBUG netdns=go
@@ -12,6 +12,7 @@ ADD release/linux/amd64/drone-agent /bin/
 RUN [ ! -e /etc/nsswitch.conf ] && echo 'hosts: files dns' > /etc/nsswitch.conf
 
 COPY --from=alpine /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=alpine /usr/share/zoneinfo /usr/share/zoneinfo
 
 LABEL com.centurylinklabs.watchtower.stop-signal="SIGINT"
 
