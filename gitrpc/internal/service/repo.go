@@ -57,19 +57,21 @@ type Storage interface {
 
 type RepositoryService struct {
 	rpc.UnimplementedRepositoryServiceServer
-	adapter     GitAdapter
-	store       Storage
-	reposRoot   string
-	gitHookPath string
+	adapter        GitAdapter
+	store          Storage
+	reposRoot      string
+	gitHookPath    string
+	reposGraveyard string
 }
 
 func NewRepositoryService(adapter GitAdapter, store Storage, reposRoot string,
-	gitHookPath string) (*RepositoryService, error) {
+	gitHookPath string, reposGraveyard string) (*RepositoryService, error) {
 	return &RepositoryService{
-		adapter:     adapter,
-		store:       store,
-		reposRoot:   reposRoot,
-		gitHookPath: gitHookPath,
+		adapter:        adapter,
+		store:          store,
+		reposRoot:      reposRoot,
+		gitHookPath:    gitHookPath,
+		reposGraveyard: reposGraveyard,
 	}, nil
 }
 
@@ -104,11 +106,17 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	err = s.adapter.InitRepository(ctx, repoPath, true)
-	if err != nil {
-		// on error cleanup repo dir
-		if errCleanup := os.RemoveAll(repoPath); errCleanup != nil {
-			log.Err(errCleanup).Msg("failed to cleanup repository dir")
+	// delete repo dir on error
+	defer func() {
+		if err != nil {
+			cleanuperr := s.DeleteRepositoryBestEffort(ctx, base.GetRepoUid())
+			if cleanuperr != nil {
+				log.Warn().Err(cleanuperr).Msg("failed to cleanup repo dir")
+			}
 		}
+	}()
+
+	if err != nil {
 		return processGitErrorf(err, "failed to initialize the repository")
 	}
 
@@ -198,4 +206,40 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 // isValidGitSHA returns true iff the provided string is a valid git sha (short or long form).
 func isValidGitSHA(sha string) bool {
 	return gitSHARegex.MatchString(sha)
+}
+
+func (s RepositoryService) DeleteRepository(ctx context.Context, request *rpc.DeleteRepositoryRequest) (*rpc.DeleteRepositoryResponse, error) {
+	base := request.GetBase()
+
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.RepoUid)
+	// check if directory exists
+	// if dir does not exist already fail silently
+	if _, err := os.Stat(repoPath); err != nil && os.IsNotExist(err) {
+		return nil, status.Errorf(codes.NotFound, "repository does not exist %v", repoPath)
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to check the status of the repository %v: %w", repoPath, err)
+	}
+
+	rmerr := s.DeleteRepositoryBestEffort(ctx, base.RepoUid)
+
+	return &rpc.DeleteRepositoryResponse{}, rmerr
+}
+
+func (s *RepositoryService) DeleteRepositoryBestEffort(ctx context.Context, repoUID string) error {
+	repoPath := getFullPathForRepo(s.reposRoot, repoUID)
+	tempPath := path.Join(s.reposGraveyard, repoUID)
+
+	// move current dir to a temp dir (prevent partial deletion)
+	if err := os.Rename(repoPath, tempPath); err != nil {
+		return fmt.Errorf("couldn't move dir %s to %s : %w", repoPath, tempPath, err)
+	}
+
+	if err := os.RemoveAll(tempPath); err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msgf("failed to delete dir %s from graveyard", tempPath)
+	}
+	return nil
 }

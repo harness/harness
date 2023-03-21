@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -81,10 +82,18 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			ForkID:        in.ForkID,
 			DefaultBranch: in.DefaultBranch,
 		}
-		err = c.repoStore.Create(ctx, repo)
-		if err != nil {
-			// TODO: cleanup git repo!
-			return fmt.Errorf("faild to create repository in storage: %w", err)
+		dberr := c.repoStore.Create(ctx, repo)
+		// cleanup git repo if we fail to create repo in db (best effort deletion)
+		defer func() {
+			if dberr != nil {
+				err := c.DeleteRepositoryRPC(ctx, session, repo)
+				if err != nil {
+					log.Ctx(ctx).Warn().Err(err).Msg("gitrpc failed to delete repo for cleanup")
+				}
+			}
+		}()
+		if dberr != nil {
+			return fmt.Errorf("faild to create repository in storage: %w", dberr)
 		}
 
 		path := &types.Path{
@@ -97,11 +106,10 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			Created:    repo.Created,
 			Updated:    repo.Updated,
 		}
-		err = c.pathStore.Create(ctx, path)
-		if err != nil {
-			return fmt.Errorf("failed to create path: %w", err)
+		dberr = c.pathStore.Create(ctx, path)
+		if dberr != nil {
+			return fmt.Errorf("failed to create path: %w", dberr)
 		}
-
 		return nil
 	})
 	if err != nil {

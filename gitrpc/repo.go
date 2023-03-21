@@ -41,6 +41,10 @@ type CreateRepositoryOutput struct {
 	UID string
 }
 
+type DeleteRepositoryParams struct {
+	WriteParams
+}
+
 func (c *Client) CreateRepository(ctx context.Context,
 	params *CreateRepositoryParams) (*CreateRepositoryOutput, error) {
 	if params == nil {
@@ -112,4 +116,18 @@ func (c *Client) CreateRepository(ctx context.Context,
 
 func newRepositoryUID() (string, error) {
 	return gonanoid.Generate(repoGitUIDAlphabet, repoGitUIDLength)
+}
+
+func (c *Client) DeleteRepository(ctx context.Context, params *DeleteRepositoryParams) error {
+	if params == nil {
+		return ErrNoParamsProvided
+	}
+
+	_, err := c.repoService.DeleteRepository(ctx, &rpc.DeleteRepositoryRequest{
+		Base: mapToRPCWriteRequest(params.WriteParams),
+	})
+	if err != nil {
+		return processRPCErrorf(err, "failed to delete repository on server")
+	}
+	return nil
 }

@@ -24,7 +24,8 @@ import (
 )
 
 const (
-	repoSubdirName = "repos"
+	repoSubdirName           = "repos"
+	reposGraveyardSubdirName = "cleanup"
 )
 
 type Server struct {
@@ -68,9 +69,16 @@ func NewServer(config Config) (*Server, error) {
 		)),
 	)
 	store := storage.NewLocalStore()
-
+	// create a temp dir for deleted repositories
+	// this dir should get cleaned up peridocally if it's not empty
+	reposGraveyard := filepath.Join(config.GitRoot, reposGraveyardSubdirName)
+	if _, errdir := os.Stat(reposGraveyard); os.IsNotExist(errdir) {
+		if errdir = os.MkdirAll(reposGraveyard, 0o700); errdir != nil {
+			return nil, errdir
+		}
+	}
 	// initialize services
-	repoService, err := service.NewRepositoryService(adapter, store, reposRoot, config.GitHookPath)
+	repoService, err := service.NewRepositoryService(adapter, store, reposRoot, config.GitHookPath, reposGraveyard)
 	if err != nil {
 		return nil, err
 	}
