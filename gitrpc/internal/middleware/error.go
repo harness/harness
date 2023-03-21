@@ -9,8 +9,7 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/harness/gitness/gitrpc/internal/types"
-
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -30,7 +29,7 @@ func (i ErrInterceptor) UnaryInterceptor() grpc.UnaryServerInterceptor {
 		if (value == nil || reflect.ValueOf(value).IsNil()) && err == nil {
 			return nil, status.Error(codes.Internal, "service returned no error and no object")
 		}
-		err = processError(err)
+		err = processError(ctx, err)
 		return value, err
 	}
 }
@@ -39,44 +38,56 @@ func (i ErrInterceptor) StreamInterceptor() grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo,
 		handler grpc.StreamHandler) error {
 		err := handler(srv, stream)
-		err = processError(err)
+		err = processError(stream.Context(), err)
 		return err
 	}
 }
 
-func processError(err error) error {
+func processError(ctx context.Context, err error) (rerr error) {
 	if err == nil {
 		return nil
 	}
 
-	// check if error already is grpc error
-	// TODO: this should be removed once all error handling has been refactored.
+	defer func() {
+		statusErr, ok := status.FromError(rerr)
+		if !ok {
+			return
+		}
+		//nolint: exhaustive // log only server side errors, no need to log user based errors
+		switch statusErr.Code() {
+		case codes.Unknown,
+			codes.DeadlineExceeded,
+			codes.ResourceExhausted,
+			codes.FailedPrecondition,
+			codes.Aborted,
+			codes.OutOfRange,
+			codes.Unimplemented,
+			codes.Internal,
+			codes.Unavailable,
+			codes.DataLoss:
+			{
+				logCtx := log.Ctx(ctx)
+				logCtx.Error().Msg(err.Error())
+			}
+		}
+	}()
+
+	// custom errors should implement StatusError
+	var statusError interface {
+		Status() (*status.Status, error)
+	}
+
+	if errors.As(err, &statusError) {
+		st, sterr := statusError.Status()
+		if sterr != nil {
+			return sterr
+		}
+		return st.Err()
+	}
+
 	if status, ok := status.FromError(err); ok {
 		return status.Err()
 	}
 
-	message := err.Error()
-
-	switch {
-	case errors.Is(err, context.DeadlineExceeded):
-		return status.Error(codes.DeadlineExceeded, message)
-	case errors.Is(err, types.ErrNotFound):
-		return status.Error(codes.NotFound, message)
-	case errors.Is(err, types.ErrAlreadyExists):
-		return status.Error(codes.AlreadyExists, message)
-	case errors.Is(err, types.ErrInvalidArgument):
-		return status.Error(codes.InvalidArgument, message)
-	case errors.Is(err, types.ErrInvalidPath):
-		return status.Error(codes.InvalidArgument, message)
-	case errors.Is(err, types.ErrUndefinedAction):
-		return status.Error(codes.InvalidArgument, message)
-	case errors.Is(err, types.ErrHeaderCannotBeEmpty):
-		return status.Error(codes.InvalidArgument, message)
-	case errors.Is(err, types.ErrActionListEmpty):
-		return status.Error(codes.FailedPrecondition, message)
-	case errors.Is(err, types.ErrContentSentBeforeAction):
-		return status.Error(codes.FailedPrecondition, message)
-	default:
-		return status.Errorf(codes.Unknown, message)
-	}
+	return status.Errorf(codes.Unknown, err.Error())
 }

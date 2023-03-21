@@ -54,3 +54,22 @@ func RefToRPC(t RefType) rpc.RefType {
 		return rpc.RefType_Undefined
 	}
 }
+
+func (t RefType) String() string {
+	switch t {
+	case RefTypeRaw:
+		return "raw"
+	case RefTypeBranch:
+		return "branch"
+	case RefTypeTag:
+		return "tag"
+	case RefTypePullReqHead:
+		return "head"
+	case RefTypePullReqMerge:
+		return "merge"
+	case RefTypeUndefined:
+		fallthrough
+	default:
+		return ""
+	}
+}

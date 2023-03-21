@@ -6,7 +6,6 @@ package pullreq
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -206,12 +205,12 @@ func (s *Service) updateMergeData(
 		HeadExpectedSHA: newSHA,
 		Force:           true,
 	})
-	if errors.Is(err, gitrpc.ErrPreconditionFailed) {
+	if gitrpc.ErrorStatus(err) == gitrpc.StatusPreconditionFailed {
 		return events.NewDiscardEventErrorf("Source branch '%s' is not on SHA '%s' anymore.",
 			pr.SourceBranch, newSHA)
 	}
 
-	isNotMergeableError := errors.Is(err, gitrpc.ErrNotMergeable)
+	isNotMergeableError := gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable
 	if err != nil && !isNotMergeableError {
 		return fmt.Errorf("merge check failed for %s and %s with err: %w",
 			targetRepo.UID+":"+pr.TargetBranch, sourceRepo.UID+":"+pr.SourceBranch, err)
