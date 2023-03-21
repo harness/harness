@@ -36,6 +36,10 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 		return nil, processGitErrorf(err, "failed to open repo")
 	}
 
+	if ok, err := repo.IsEmpty(); ok {
+		return nil, ErrInvalidArgumentf("branch cannot be created on empty repository", err)
+	}
+
 	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to create new shared repo")

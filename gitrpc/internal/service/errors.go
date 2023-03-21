@@ -64,6 +64,9 @@ func Errorf(code codes.Code, format string, args ...any) (err error) {
 	newargs := make([]any, 0, len(args))
 
 	for _, arg := range args {
+		if arg == nil {
+			continue
+		}
 		switch t := arg.(type) {
 		case error:
 			err = t

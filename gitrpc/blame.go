@@ -7,7 +7,6 @@ package gitrpc
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -31,19 +30,19 @@ func (params *BlameParams) Validate() error {
 	}
 
 	if params.GitRef == "" {
-		return fmt.Errorf("git ref needs to be provided: %w", ErrInvalidArgument)
+		return Errorf(StatusInvalidArgument, "git ref needs to be provided")
 	}
 
 	if params.Path == "" {
-		return fmt.Errorf("file path needs to be provided: %w", ErrInvalidArgument)
+		return Errorf(StatusInvalidArgument, "file path needs to be provided")
 	}
 
 	if params.LineFrom < 0 || params.LineTo < 0 {
-		return fmt.Errorf("line from and line to can't be negative: %w", ErrInvalidArgument)
+		return Errorf(StatusInvalidArgument, "line from and line to can't be negative")
 	}
 
 	if params.LineTo > 0 && params.LineFrom > params.LineTo {
-		return fmt.Errorf("line from can't be after line after: %w", ErrInvalidArgument)
+		return Errorf(StatusInvalidArgument, "line from can't be after line after")
 	}
 
 	return nil
