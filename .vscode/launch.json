@@ -18,7 +18,7 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}",
+            "program": "cmd/gitness",
             "args": ["server", "../../.local.env"]
         }
     ]
