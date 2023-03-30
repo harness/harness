@@ -181,6 +181,7 @@ func provideReaper(
 		canceler,
 		config.Cleanup.Running,
 		config.Cleanup.Pending,
+		config.Cleanup.Buffer,
 	)
 }
 
@@ -212,7 +213,7 @@ func provideDatadog(
 			EnableStash:     config.IsStash(),
 			EnableGogs:      config.IsGogs(),
 			EnableGitea:     config.IsGitea(),
-			EnableGitee:	 config.IsGitee(),
+			EnableGitee:     config.IsGitee(),
 			EnableAgents:    !config.Agent.Disabled,
 		},
 	)

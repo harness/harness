@@ -16,10 +16,6 @@ package reaper
 
 import "time"
 
-// buffer is applied when calculating whether or not the timeout
-// period is exceeded. The added buffer helps prevent false positives.
-var buffer = time.Minute * 30
-
 // helper function returns the current time.
 var now = time.Now
 

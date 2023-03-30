@@ -34,6 +34,10 @@ type Reaper struct {
 	Canceler core.Canceler
 	Pending  time.Duration // Pending is the pending pipeline deadline
 	Running  time.Duration // Running is the running pipeline deadline
+
+	// Buffer is applied when calculating whether or not the timeout
+	// period is exceeded. The added buffer helps prevent false positives.
+	Buffer time.Duration
 }
 
 // New returns a new Reaper.
@@ -44,12 +48,17 @@ func New(
 	canceler core.Canceler,
 	running time.Duration,
 	pending time.Duration,
+	buffer time.Duration,
 ) *Reaper {
 	if running == 0 {
 		running = time.Hour * 24
 	}
 	if pending == 0 {
 		pending = time.Hour * 24
+	}
+
+	if buffer == 0 {
+		buffer = time.Minute * 30
 	}
 	return &Reaper{
 		Repos:    repos,
@@ -58,6 +67,7 @@ func New(
 		Canceler: canceler,
 		Pending:  pending,
 		Running:  running,
+		Buffer:   buffer,
 	}
 }
 
@@ -105,7 +115,7 @@ func (r *Reaper) reap(ctx context.Context) error {
 
 		// if a build is pending for longer than the maximum
 		// pending time limit, the build is maybe cancelled.
-		if isExceeded(build.Created, r.Pending, buffer) {
+		if isExceeded(build.Created, r.Pending, r.Buffer) {
 			logger.Traceln("reaper: cancel build: time limit exceeded")
 			err = r.reapMaybe(ctx, build)
 			if err != nil {
@@ -134,7 +144,7 @@ func (r *Reaper) reap(ctx context.Context) error {
 
 		// if a build is running for longer than the maximum
 		// running time limit, the build is maybe cancelled.
-		if isExceeded(build.Started, r.Running, buffer) {
+		if isExceeded(build.Started, r.Running, r.Buffer) {
 			logger.Traceln("reaper: cancel build: time limit exceeded")
 
 			err = r.reapMaybe(ctx, build)
@@ -188,7 +198,7 @@ func (r *Reaper) reapMaybe(ctx context.Context, build *core.Build) error {
 
 	// if the build stage has exceeded the timeout by a reasonable
 	// margin cancel the build and all build stages, else ignore.
-	if isExceeded(started, time.Duration(repo.Timeout)*time.Minute, buffer) {
+	if isExceeded(started, time.Duration(repo.Timeout)*time.Minute, r.Buffer) {
 		// TODO trace log entry
 		return r.Canceler.Cancel(ctx, repo, build)
 	}

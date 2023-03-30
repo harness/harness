@@ -72,6 +72,7 @@ func TestReapPending(t *testing.T) {
 		canceler,
 		time.Hour*24,
 		time.Hour*24,
+		time.Minute*30,
 	)
 
 	r.reap(nocontext)
@@ -139,6 +140,7 @@ func TestReapRunning(t *testing.T) {
 		canceler,
 		time.Hour*24,
 		time.Hour*24,
+		time.Minute*30,
 	)
 
 	r.reap(nocontext)
