@@ -15,7 +15,8 @@ import (
 )
 
 type MergeCheck struct {
-	Mergeable bool `json:"mergeable"`
+	Mergeable     bool     `json:"mergeable"`
+	ConflictFiles []string `json:"conflict_files,omitempty"`
 }
 
 func (c *Controller) MergeCheck(
@@ -23,24 +24,24 @@ func (c *Controller) MergeCheck(
 	session *auth.Session,
 	repoRef string,
 	diffPath string,
-) error {
+) (MergeCheck, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
-		return err
+		return MergeCheck{}, err
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
-		return fmt.Errorf("access check failed: %w", err)
+		return MergeCheck{}, fmt.Errorf("access check failed: %w", err)
 	}
 
 	info, err := parseDiffPath(diffPath)
 	if err != nil {
-		return err
+		return MergeCheck{}, err
 	}
 
 	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return fmt.Errorf("failed to create rpc write params: %w", err)
+		return MergeCheck{}, fmt.Errorf("failed to create rpc write params: %w", err)
 	}
 
 	_, err = c.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
@@ -50,8 +51,16 @@ func (c *Controller) MergeCheck(
 		HeadBranch:  info.HeadRef,
 	})
 	if err != nil {
-		return fmt.Errorf("merge execution failed: %w", err)
+		if gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable {
+			return MergeCheck{
+				Mergeable:     false,
+				ConflictFiles: gitrpc.AsConflictFilesError(err),
+			}, nil
+		}
+		return MergeCheck{}, fmt.Errorf("merge check execution failed: %w", err)
 	}
 
-	return nil
+	return MergeCheck{
+		Mergeable: true,
+	}, nil
 }
