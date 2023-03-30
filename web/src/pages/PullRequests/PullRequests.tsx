@@ -21,8 +21,9 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT, permissionProps } from 'utils/Utils'
 import { usePageIndex } from 'hooks/usePageIndex'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { TypesPullReq, TypesRepository } from 'services/code'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
@@ -42,6 +43,8 @@ export default function PullRequests() {
     UserPreference.PULL_REQUESTS_FILTER_SELECTED_OPTIONS,
     PullRequestFilterOption.OPEN
   )
+  const space = useGetSpaceParam()
+
   const [page, setPage] = usePageIndex()
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const {
@@ -61,6 +64,18 @@ export default function PullRequests() {
     },
     lazy: !repoMetadata
   })
+
+  const { standalone } = useAppContext()
+  const { hooks } = useAppContext()
+  const permPushResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPO'
+      },
+      permissions: ['code_repo_push']
+    },
+    [space]
+  )
 
   const columns: Column<TypesPullReq>[] = useMemo(
     () => [
@@ -177,6 +192,7 @@ export default function PullRequests() {
                         })
                       )
                     }
+                    permissionProp={permissionProps(permPushResult, standalone)}
                   />
                 </Case>
               </Match>

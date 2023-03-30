@@ -101,6 +101,7 @@ deleteBranch: Delete Branch
 deleteBranchConfirm: Are you sure you want to delete branch <strong>{{name}}</strong>? You can't undo this action.
 browse: Browse
 compare: Compare
+repoDeleted: Repository {{repo}} deleted.
 branchDeleted: Branch {{branch}} deleted.
 failedToDeleteBranch: Failed to delete Branch. Please try again.
 createFile: Create __path__
@@ -350,3 +351,12 @@ zoomIn: Zoom In
 zoomOut: Zoom Out
 checks: Checks
 blameCommitLine: '{author} committed {timestamp}'
+tooltipRepoEdit: You are not authorized to {PERMS}
+missingPerms: 'You are missing the following permission:'
+createRepoPerms: 'Create / Edit Repository'
+missingPermsContent: '"{PERMS}" in project "{PROJECT}"'
+repositoryName: Repository name
+dangerDeleteRepo: Danger, are you sure you want to delete it? 
+repoUpdate: Repository Updated
+deleteRepoText: Are you sure you want to delete the repository '{REPONAME}'?
+deleteRepoTitle: Delete the repository

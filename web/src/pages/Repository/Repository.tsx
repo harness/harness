@@ -12,7 +12,7 @@ import {
 } from '@harness/uicore'
 import { Falsy, Match, Truthy } from 'react-jsx-match'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
-import { voidFn, getErrorMessage } from 'utils/Utils'
+import { voidFn, getErrorMessage, permissionProps } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -21,6 +21,7 @@ import type { OpenapiGetContentOutput, TypesRepository } from 'services/code'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useDisableCodeMainLinks } from 'hooks/useDisableCodeMainLinks'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { Images } from 'images'
 import { RepositoryContent } from './RepositoryContent/RepositoryContent'
 import { RepositoryHeader } from './RepositoryHeader/RepositoryHeader'
@@ -124,6 +125,19 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
     gitRef: repoMetadata.default_branch as string,
     resourcePath: ''
   })
+  const { standalone } = useAppContext()
+  const { hooks } = useAppContext()
+  const space = useGetSpaceParam()
+
+  const permPushResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPO'
+      },
+      permissions: ['code_repo_push']
+    },
+    [space]
+  )
   useDisableCodeMainLinks(true)
   return (
     <Container className={css.emptyRepo}>
@@ -142,7 +156,8 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
           <Button
             variation={ButtonVariation.PRIMARY}
             text={getString('addNewFile')}
-            onClick={() => history.push(newFileURL)}></Button>
+            onClick={() => history.push(newFileURL)}
+            {...permissionProps(permPushResult, standalone)}></Button>
 
           <Container padding={{ left: 'medium', top: 'small' }}>
             <Text className={css.textContainer}>

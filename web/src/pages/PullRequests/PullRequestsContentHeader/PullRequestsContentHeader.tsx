@@ -4,9 +4,11 @@ import { Container, Layout, FlexExpander, DropDown, ButtonVariation, Button } fr
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import css from './PullRequestsContentHeader.module.scss'
+import { permissionProps } from 'utils/Utils'
 
 interface PullRequestsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
   loading?: boolean
@@ -30,6 +32,19 @@ export function PullRequestsContentHeader({
     activePullRequestFilterOption
   )
   const [searchTerm, setSearchTerm] = useState('')
+  const space = useGetSpaceParam()
+
+  const { standalone } = useAppContext()
+  const { hooks } = useAppContext()
+  const permPushResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPO'
+      },
+      permissions: ['code_repo_push']
+    },
+    [space]
+  )
   const items = useMemo(
     () => [
       { label: getString('open'), value: PullRequestFilterOption.OPEN },
@@ -76,6 +91,7 @@ export function PullRequestsContentHeader({
               })
             )
           }}
+          {...permissionProps(permPushResult, standalone)}
         />
       </Layout.Horizontal>
     </Container>

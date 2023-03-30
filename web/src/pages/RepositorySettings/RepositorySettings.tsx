@@ -1,16 +1,13 @@
 import React from 'react'
-import { useHistory } from 'react-router-dom'
 
-import { PageBody, Button, Intent, Container, Tabs } from '@harness/uicore'
+import { PageBody, Container, Tabs } from '@harness/uicore'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
-import { useAppContext } from 'AppContext'
-import { CodeIcon } from 'utils/GitUtils'
+
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { getErrorMessage } from 'utils/Utils'
-import { Images } from 'images'
-import hooks from './mockWebhooks.json'
-import { SettingsContent } from './SettingsContent'
+import { getErrorMessage, voidFn } from 'utils/Utils'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
+import GeneralSettingsContent from './GeneralSettingsContent/GeneralSettingsContent'
 import css from './RepositorySettings.module.scss'
 
 enum SettingsTab {
@@ -18,27 +15,10 @@ enum SettingsTab {
   general = 'general'
 }
 export default function RepositorySettings() {
-  const { repoMetadata, error, loading } = useGetRepositoryMetadata()
-  const { routes } = useAppContext()
-  const history = useHistory()
-  const [activeTab, setActiveTab] = React.useState<string>(SettingsTab.webhooks)
+  const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
 
-  const NewWebHookButton = (
-    <Button
-      type="button"
-      text={'Create Webhook'}
-      intent={Intent.PRIMARY}
-      icon={CodeIcon.Add}
-      className={css.btn}
-      onClick={() => {
-        history.push(
-          routes.toCODECreateWebhook({
-            repoPath: repoMetadata?.path as string
-          })
-        )
-      }}
-    />
-  )
+  const [activeTab, setActiveTab] = React.useState<string>(SettingsTab.general)
+
   const { getString } = useStrings()
   return (
     <Container className={css.main}>
@@ -47,45 +27,28 @@ export default function RepositorySettings() {
         title={getString('settings')}
         dataTooltipId="repositorySettings"
       />
-      <Container className={css.main} padding={'large'}>
-        <Tabs
-          id="SettingsTabs"
-          vertical
-          large={false}
-          defaultSelectedTabId={activeTab}
-          animate={false}
-          onChange={(id: string) => setActiveTab(id)}
-          tabList={[
-            {
-              id: SettingsTab.general,
-              title: getString('general'),
-              panel: <div> General content</div>,
-              iconProps: { name: 'cog' }
-            },
-            {
-              id: SettingsTab.webhooks,
-              title: getString('webhooks'),
-              iconProps: { name: 'code-webhook' },
-              panel: (
-                <PageBody
-                  loading={loading}
-                  error={getErrorMessage(error)}
-                  className={css.webhooksContent}
-                  noData={{
-                    when: () => repoMetadata !== null,
-                    message: getString('noWebHooks'),
-                    image: Images.EmptyState,
-                    button: NewWebHookButton
-                  }}>
-                  <Container className={css.contentContainer}>
-                    <Container>{NewWebHookButton}</Container>
-                    {repoMetadata ? <SettingsContent repoMetadata={repoMetadata} hooks={hooks} /> : null}
-                  </Container>
-                </PageBody>
-              )
-            }
-          ]}></Tabs>
-      </Container>
+      <PageBody error={getErrorMessage(error)} retryOnError={voidFn(refetch)}>
+        <LoadingSpinner visible={loading} />
+        {repoMetadata && (
+          <Container className={css.main} padding={'large'}>
+            <Tabs
+              id="SettingsTabs"
+              vertical
+              large={false}
+              defaultSelectedTabId={activeTab}
+              animate={false}
+              onChange={(id: string) => setActiveTab(id)}
+              tabList={[
+                {
+                  id: SettingsTab.general,
+                  title: getString('general'),
+                  panel: <GeneralSettingsContent repoMetadata={repoMetadata} refetch={refetch} />,
+                  iconProps: { name: 'cog' }
+                }
+              ]}></Tabs>
+          </Container>
+        )}
+      </PageBody>
     </Container>
   )
 }

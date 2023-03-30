@@ -28,10 +28,12 @@ import { useMutate } from 'restful-react'
 import { get } from 'lodash-es'
 import { useModalHook } from '@harness/use-modal'
 import { useStrings } from 'framework/strings'
-import { getErrorMessage } from 'utils/Utils'
+import { getErrorMessage, permissionProps } from 'utils/Utils'
 import { CodeIcon, GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import type { RepoBranch } from 'services/code'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { useAppContext } from 'AppContext'
 import css from './CreateBranchModal.module.scss'
 
 interface FormData {
@@ -195,5 +197,18 @@ export const CreateBranchModalButton: React.FC<CreateBranchModalButtonProps> = (
   ...props
 }) => {
   const openModal = useCreateBranchModal({ repoMetadata, onSuccess, showSuccessMessage })
-  return <Button onClick={() => openModal()} {...props} />
+  const { standalone } = useAppContext()
+  const { hooks } = useAppContext()
+  const space = useGetSpaceParam()
+
+  const permPushResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPO'
+      },
+      permissions: ['code_repo_push']
+    },
+    [space]
+  )
+  return <Button onClick={() => openModal()} {...props} {...permissionProps(permPushResult, standalone)} />
 }

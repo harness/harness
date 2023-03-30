@@ -8,6 +8,8 @@ import { CloneButtonTooltip } from 'components/CloneButtonTooltip/CloneButtonToo
 import { CodeIcon, GitInfoProps, isDir, isRefATag } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { useCreateBranchModal } from 'components/CreateBranchModal/CreateBranchModal'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { permissionProps } from 'utils/Utils'
 import css from './ContentHeader.module.scss'
 
 export function ContentHeader({
@@ -20,6 +22,19 @@ export function ContentHeader({
   const { routes } = useAppContext()
   const history = useHistory()
   const _isDir = isDir(resourceContent)
+  const { standalone } = useAppContext()
+  const { hooks } = useAppContext()
+  const space = useGetSpaceParam()
+
+  const permPushResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPO'
+      },
+      permissions: ['code_repo_push']
+    },
+    [space]
+  )
   const openCreateNewBranchModal = useCreateBranchModal({
     repoMetadata,
     onSuccess: branchInfo => {
@@ -107,6 +122,7 @@ export function ContentHeader({
                   })
                 )
               }}
+              {...permissionProps(permPushResult, standalone)}
             />
           </>
         )}

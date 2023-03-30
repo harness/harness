@@ -30,7 +30,13 @@ import { useGet, useMutate } from 'restful-react'
 import { get } from 'lodash-es'
 import { useModalHook } from '@harness/use-modal'
 import { useStrings } from 'framework/strings'
-import { DEFAULT_BRANCH_NAME, getErrorMessage, REGEX_VALID_REPO_NAME, SUGGESTED_BRANCH_NAMES } from 'utils/Utils'
+import {
+  DEFAULT_BRANCH_NAME,
+  getErrorMessage,
+  permissionProps,
+  REGEX_VALID_REPO_NAME,
+  SUGGESTED_BRANCH_NAMES
+} from 'utils/Utils'
 import { isGitBranchNameValid } from 'utils/GitUtils'
 import type { TypesRepository, OpenapiCreateRepositoryRequest } from 'services/code'
 import { useAppContext } from 'AppContext'
@@ -82,6 +88,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
     const { getString } = useStrings()
     const [branchName, setBranchName] = useState(DEFAULT_BRANCH_NAME)
     const { showError } = useToaster()
+
     const { mutate: createRepo, loading: submitLoading } = useMutate<TypesRepository>({
       verb: 'POST',
       path: `/api/v1/repos`,
@@ -285,8 +292,19 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
   }
 
   const [openModal, hideModal] = useModalHook(ModalComponent, [onSubmit])
+  const { standalone } = useAppContext()
+  const { hooks } = useAppContext()
+  const permResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPO'
+      },
+      permissions: ['code_repo_edit']
+    },
+    [space]
+  )
 
-  return <Button onClick={openModal} {...props} />
+  return <Button onClick={openModal} {...props} {...permissionProps(permResult, standalone)} />
 }
 
 interface BranchNameProps {
