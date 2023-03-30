@@ -25,12 +25,12 @@ func HandleMergeCheck(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		path := request.GetOptionalRemainderFromPath(r)
 
-		err = repoCtrl.MergeCheck(ctx, session, repoRef, path)
+		output, err := repoCtrl.MergeCheck(ctx, session, repoRef, path)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		w.WriteHeader(http.StatusNoContent)
+		render.JSON(w, http.StatusOK, output)
 	}
 }

@@ -18,6 +18,10 @@ var (
 	ErrNoParamsProvided = ErrInvalidArgumentf("params not provided")
 )
 
+const (
+	conflictFilesKey = "conflict_files"
+)
+
 type Status string
 
 const (
@@ -147,7 +151,7 @@ func processRPCErrorf(err error, format string, args ...interface{}) error {
 		for _, detail := range st.Details() {
 			switch t := detail.(type) {
 			case *rpc.MergeConflictError:
-				details["conflict_files"] = t.ConflictingFiles
+				details[conflictFilesKey] = t.ConflictingFiles
 				code = StatusNotMergeable
 			default:
 			}
@@ -159,4 +163,14 @@ func processRPCErrorf(err error, format string, args ...interface{}) error {
 	default:
 		return fallbackErr
 	}
+}
+
+func AsConflictFilesError(err error) (files []string) {
+	details := ErrorDetails(err)
+	object, ok := details[conflictFilesKey]
+	if ok {
+		files, _ = object.([]string)
+	}
+
+	return
 }
