@@ -15,6 +15,7 @@ service RepositoryService {
   rpc ListCommits(ListCommitsRequest) returns (stream ListCommitsResponse);
   rpc GetCommit(GetCommitRequest) returns (GetCommitResponse);
   rpc GetCommitDivergences(GetCommitDivergencesRequest) returns (GetCommitDivergencesResponse);
+  rpc DeleteRepository(DeleteRepositoryRequest) returns (DeleteRepositoryResponse);
 }
 
 message CreateRepositoryRequest {
@@ -152,4 +153,11 @@ message GetCommitDivergencesResponse {
 message CommitDivergence {
   int32 ahead  = 1;
   int32 behind = 2;
+}
+
+message DeleteRepositoryRequest {
+  WriteRequest base = 1;
+}
+
+message DeleteRepositoryResponse {
 }

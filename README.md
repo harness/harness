@@ -4,6 +4,20 @@
 
 Install the latest stable version of Node and Go version 1.19 or higher, and then install the below Go programs. Ensure the GOPATH [bin directory](https://go.dev/doc/gopath_code#GOPATH) is added to your PATH.
 
+Install protobuf
+- Check if you've already installed protobuf ```protoc --version```
+- If your version is different than v3.21.11, run ```brew unlink protobuf```
+- Get v3.21.11 ```curl -s https://raw.githubusercontent.com/Homebrew/homebrew-core/9de8de7a533609ebfded833480c1f7c05a3448cb/Formula/protobuf.rb > /tmp/protobuf.rb```
+- Install it ```brew install /tmp/protobuf.rb```
+- Check out your version ```protoc --version```
+
+Install protoc-gen-go and protoc-gen-go-rpc:
+
+- Install protoc-gen-go v1.28.1 ```go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1```
+(Note that this will install a binary in $GOBIN so make sure $GOBIN is in your $PATH)
+
+- Install protoc-gen-go-grpc v1.2.0 ```go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0```
+
 ```bash
 $ make all
 ```

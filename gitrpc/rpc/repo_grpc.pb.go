@@ -30,6 +30,7 @@ type RepositoryServiceClient interface {
 	ListCommits(ctx context.Context, in *ListCommitsRequest, opts ...grpc.CallOption) (RepositoryService_ListCommitsClient, error)
 	GetCommit(ctx context.Context, in *GetCommitRequest, opts ...grpc.CallOption) (*GetCommitResponse, error)
 	GetCommitDivergences(ctx context.Context, in *GetCommitDivergencesRequest, opts ...grpc.CallOption) (*GetCommitDivergencesResponse, error)
+	DeleteRepository(ctx context.Context, in *DeleteRepositoryRequest, opts ...grpc.CallOption) (*DeleteRepositoryResponse, error)
 }
 
 type repositoryServiceClient struct {
@@ -183,6 +184,15 @@ func (c *repositoryServiceClient) GetCommitDivergences(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *repositoryServiceClient) DeleteRepository(ctx context.Context, in *DeleteRepositoryRequest, opts ...grpc.CallOption) (*DeleteRepositoryResponse, error) {
+	out := new(DeleteRepositoryResponse)
+	err := c.cc.Invoke(ctx, "/rpc.RepositoryService/DeleteRepository", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RepositoryServiceServer is the server API for RepositoryService service.
 // All implementations must embed UnimplementedRepositoryServiceServer
 // for forward compatibility
@@ -195,6 +205,7 @@ type RepositoryServiceServer interface {
 	ListCommits(*ListCommitsRequest, RepositoryService_ListCommitsServer) error
 	GetCommit(context.Context, *GetCommitRequest) (*GetCommitResponse, error)
 	GetCommitDivergences(context.Context, *GetCommitDivergencesRequest) (*GetCommitDivergencesResponse, error)
+	DeleteRepository(context.Context, *DeleteRepositoryRequest) (*DeleteRepositoryResponse, error)
 	mustEmbedUnimplementedRepositoryServiceServer()
 }
 
@@ -225,6 +236,9 @@ func (UnimplementedRepositoryServiceServer) GetCommit(context.Context, *GetCommi
 }
 func (UnimplementedRepositoryServiceServer) GetCommitDivergences(context.Context, *GetCommitDivergencesRequest) (*GetCommitDivergencesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCommitDivergences not implemented")
+}
+func (UnimplementedRepositoryServiceServer) DeleteRepository(context.Context, *DeleteRepositoryRequest) (*DeleteRepositoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteRepository not implemented")
 }
 func (UnimplementedRepositoryServiceServer) mustEmbedUnimplementedRepositoryServiceServer() {}
 
@@ -397,6 +411,24 @@ func _RepositoryService_GetCommitDivergences_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RepositoryService_DeleteRepository_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteRepositoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepositoryServiceServer).DeleteRepository(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.RepositoryService/DeleteRepository",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepositoryServiceServer).DeleteRepository(ctx, req.(*DeleteRepositoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RepositoryService_ServiceDesc is the grpc.ServiceDesc for RepositoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -423,6 +455,10 @@ var RepositoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCommitDivergences",
 			Handler:    _RepositoryService_GetCommitDivergences_Handler,
+		},
+		{
+			MethodName: "DeleteRepository",
+			Handler:    _RepositoryService_DeleteRepository_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

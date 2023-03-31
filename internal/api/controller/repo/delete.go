@@ -6,10 +6,15 @@ package repo
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
+	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/rs/zerolog/log"
 )
 
 // Delete deletes a repo.
@@ -23,10 +28,32 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef 
 		return err
 	}
 
+	if err = c.DeleteRepositoryRPC(ctx, session, repo); err != nil {
+		return err
+	}
+
 	err = c.repoStore.Delete(ctx, repo.ID)
 	if err != nil {
 		return err
 	}
+	return nil
+}
+func (c *Controller) DeleteRepositoryRPC(ctx context.Context, session *auth.Session, repo *types.Repository) error {
+	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
+	if err != nil {
+		return fmt.Errorf("failed to create RPC write params: %w", err)
+	}
 
+	err = c.gitRPCClient.DeleteRepository(ctx, &gitrpc.DeleteRepositoryParams{
+		WriteParams: writeParams,
+	})
+
+	// deletion should not fail if dir does not exist in repos dir
+	if errors.Is(err, gitrpc.ErrNotFound) {
+		log.Ctx(ctx).Warn().Msgf("gitrpc repo %s does not exist", repo.GitUID)
+	} else if err != nil {
+		// deletion has failed before removing(rename) the repo dir
+		return fmt.Errorf("gitrpc failed to delete repo %s: %w", repo.GitUID, err)
+	}
 	return nil
 }
