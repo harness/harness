@@ -31,6 +31,7 @@ import (
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
+	"github.com/harness/gitness/internal/services/codecomments"
 	pullreqservice "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
@@ -83,6 +84,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		githook.WireSet,
 		lock.WireSet,
 		pubsub.WireSet,
+		codecomments.WireSet,
 	)
 	return &system{}, nil
 }

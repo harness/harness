@@ -208,7 +208,10 @@ func isValidGitSHA(sha string) bool {
 	return gitSHARegex.MatchString(sha)
 }
 
-func (s RepositoryService) DeleteRepository(ctx context.Context, request *rpc.DeleteRepositoryRequest) (*rpc.DeleteRepositoryResponse, error) {
+func (s RepositoryService) DeleteRepository(
+	ctx context.Context,
+	request *rpc.DeleteRepositoryRequest,
+) (*rpc.DeleteRepositoryResponse, error) {
 	base := request.GetBase()
 
 	if base == nil {

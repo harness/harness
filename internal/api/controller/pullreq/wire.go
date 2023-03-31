@@ -8,6 +8,7 @@ import (
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/auth/authz"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
+	"github.com/harness/gitness/internal/services/codecomments"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/lock"
@@ -23,13 +24,16 @@ var WireSet = wire.NewSet(
 
 func ProvideController(db *sqlx.DB, urlProvider *url.Provider, authorizer authz.Authorizer,
 	pullReqStore store.PullReqStore, pullReqActivityStore store.PullReqActivityStore,
+	codeCommentsView store.CodeCommentView,
 	pullReqReviewStore store.PullReqReviewStore, pullReqReviewerStore store.PullReqReviewerStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore,
 	rpcClient gitrpc.Interface, eventReporter *pullreqevents.Reporter,
-	mtxManager lock.MutexManager) *Controller {
+	mtxManager lock.MutexManager, codeCommentMigrator *codecomments.Migrator) *Controller {
 	return NewController(db, urlProvider, authorizer,
 		pullReqStore, pullReqActivityStore,
+		codeCommentsView,
 		pullReqReviewStore, pullReqReviewerStore,
 		repoStore, principalStore,
-		rpcClient, eventReporter, mtxManager)
+		rpcClient, eventReporter,
+		mtxManager, codeCommentMigrator)
 }

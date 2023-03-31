@@ -122,7 +122,7 @@ func (s *Service) deleteMergeRef(ctx context.Context, principalID int64, repoID 
 	return nil
 }
 
-//nolint:funlen // refactor if required.
+//nolint:funlen,gocognit // refactor if required.
 func (s *Service) updateMergeData(
 	ctx context.Context,
 	principalID int64,
@@ -161,14 +161,14 @@ func (s *Service) updateMergeData(
 	}()
 
 	// load repository objects
-	targetRepo, err := s.repoStore.Find(ctx, pr.TargetRepoID)
+	targetRepo, err := s.repoGitInfoCache.Get(ctx, pr.TargetRepoID)
 	if err != nil {
 		return err
 	}
 
 	sourceRepo := targetRepo
 	if pr.TargetRepoID != pr.SourceRepoID {
-		sourceRepo, err = s.repoStore.Find(ctx, pr.SourceRepoID)
+		sourceRepo, err = s.repoGitInfoCache.Get(ctx, pr.SourceRepoID)
 		if err != nil {
 			return err
 		}
@@ -187,8 +187,7 @@ func (s *Service) updateMergeData(
 	}
 
 	// call merge and store output in pr merge reference.
-	var output gitrpc.MergeOutput
-	output, err = s.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
+	output, err := s.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
 		WriteParams: gitrpc.WriteParams{
 			RepoUID: targetRepo.GitUID,
 			Actor: gitrpc.Identity{
@@ -212,8 +211,10 @@ func (s *Service) updateMergeData(
 
 	isNotMergeableError := gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable
 	if err != nil && !isNotMergeableError {
-		return fmt.Errorf("merge check failed for %s and %s with err: %w",
-			targetRepo.UID+":"+pr.TargetBranch, sourceRepo.UID+":"+pr.SourceBranch, err)
+		return fmt.Errorf("merge check failed for %d:%s and %d:%s with err: %w",
+			targetRepo.ID, pr.TargetBranch,
+			sourceRepo.ID, pr.SourceBranch,
+			err)
 	}
 
 	// Update DB in both cases (failure or success)
@@ -225,8 +226,8 @@ func (s *Service) updateMergeData(
 		if isNotMergeableError {
 			// TODO: gitrpc should return sha's either way, and also conflicting files!
 			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
-			pr.MergeTargetSHA = nil
-			pr.MergeBaseSHA = nil
+			pr.MergeTargetSHA = &output.BaseSHA
+			pr.MergeBaseSHA = &output.MergeBaseSHA
 			pr.MergeSHA = nil
 			pr.MergeConflicts = nil
 		} else {
@@ -240,6 +241,15 @@ func (s *Service) updateMergeData(
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update PR merge ref in db with error: %w", err)
+	}
+
+	if pr.MergeBaseSHA != nil && *pr.MergeBaseSHA != output.MergeBaseSHA {
+		oldMergeBaseSHA := *pr.MergeBaseSHA
+		newMergeBaseSHA := output.MergeBaseSHA
+		err = s.updateCodeCommentsOnMergeBaseUpdate(ctx, pr, sourceRepo.GitUID, oldMergeBaseSHA, newMergeBaseSHA)
+		if err != nil {
+			return fmt.Errorf("failed to update code comment after merge base SHA change: %w", err)
+		}
 	}
 
 	return nil

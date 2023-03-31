@@ -6,9 +6,7 @@ package pullreq
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/harness/gitness/internal/auth"
@@ -17,30 +15,11 @@ import (
 )
 
 type CommentUpdateInput struct {
-	Text    *string                                  `json:"text"`
-	Payload *types.PullRequestActivityPayloadComment `json:"payload"`
+	Text string `json:"text"`
 }
 
-func (in *CommentUpdateInput) hasChanges(act *types.PullReqActivity) (bool, error) {
-	if in.Text != nil && *in.Text != act.Text {
-		return true, nil
-	}
-
-	if in.Payload != nil {
-		oldPayload, err := act.GetPayload()
-		if errors.Is(err, types.ErrNoPayload) {
-			return true, nil
-		}
-		if err != nil {
-			return false, fmt.Errorf("failed to get old payload: %w", err)
-		}
-
-		if !reflect.DeepEqual(oldPayload, in.Payload) {
-			return true, nil
-		}
-	}
-
-	return false, nil
+func (in *CommentUpdateInput) hasChanges(act *types.PullReqActivity) bool {
+	return in.Text != act.Text
 }
 
 // CommentUpdate updates a pull request comment.
@@ -67,23 +46,14 @@ func (c *Controller) CommentUpdate(
 		return nil, fmt.Errorf("failed to get comment: %w", err)
 	}
 
-	hasChanges, err := in.hasChanges(act)
-	if err != nil {
-		return nil, fmt.Errorf("failed to verify if input has changes: %w", err)
-	}
-	if !hasChanges {
+	if !in.hasChanges(act) {
 		return act, nil
 	}
 
 	now := time.Now().UnixMilli()
 	act.Edited = now
 
-	if in.Text != nil {
-		act.Text = *in.Text
-	}
-	if in.Payload != nil {
-		_ = act.SetPayload(in.Payload)
-	}
+	act.Text = in.Text
 
 	err = c.activityStore.Update(ctx, act)
 	if err != nil {

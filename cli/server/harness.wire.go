@@ -34,6 +34,7 @@ import (
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
+	"github.com/harness/gitness/internal/services/codecomments"
 	pullreqservice "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store/cache"
@@ -86,6 +87,7 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 		githook.WireSet,
 		lock.WireSet,
 		pubsub.WireSet,
+		codecomments.WireSet,
 	)
 	return &system{}, nil
 }

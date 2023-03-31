@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/gitrpc"
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
+	"github.com/harness/gitness/internal/services/codecomments"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/stream"
@@ -22,14 +23,16 @@ import (
 )
 
 type Service struct {
-	pullreqEvReporter *pullreqevents.Reporter
-	gitRPCClient      gitrpc.Interface
-	db                *sqlx.DB
-	repoGitInfoCache  store.RepoGitInfoCache
-	principalCache    store.PrincipalInfoCache
-	repoStore         store.RepoStore
-	pullreqStore      store.PullReqStore
-	activityStore     store.PullReqActivityStore
+	pullreqEvReporter   *pullreqevents.Reporter
+	gitRPCClient        gitrpc.Interface
+	db                  *sqlx.DB
+	repoGitInfoCache    store.RepoGitInfoCache
+	principalCache      store.PrincipalInfoCache
+	repoStore           store.RepoStore
+	pullreqStore        store.PullReqStore
+	activityStore       store.PullReqActivityStore
+	codeCommentView     store.CodeCommentView
+	codeCommentMigrator *codecomments.Migrator
 
 	cancelMutex       sync.Mutex
 	cancelMergability map[string]context.CancelFunc
@@ -50,19 +53,23 @@ func New(ctx context.Context,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
 	activityStore store.PullReqActivityStore,
+	codeCommentView store.CodeCommentView,
+	codeCommentMigrator *codecomments.Migrator,
 	bus pubsub.PubSub,
 ) (*Service, error) {
 	service := &Service{
-		pullreqEvReporter: pullreqEvReporter,
-		gitRPCClient:      gitRPCClient,
-		db:                db,
-		repoGitInfoCache:  repoGitInfoCache,
-		principalCache:    principalCache,
-		repoStore:         repoStore,
-		pullreqStore:      pullreqStore,
-		activityStore:     activityStore,
-		cancelMergability: make(map[string]context.CancelFunc),
-		pubsub:            bus,
+		pullreqEvReporter:   pullreqEvReporter,
+		gitRPCClient:        gitRPCClient,
+		db:                  db,
+		repoGitInfoCache:    repoGitInfoCache,
+		principalCache:      principalCache,
+		repoStore:           repoStore,
+		pullreqStore:        pullreqStore,
+		activityStore:       activityStore,
+		codeCommentView:     codeCommentView,
+		codeCommentMigrator: codeCommentMigrator,
+		cancelMergability:   make(map[string]context.CancelFunc),
+		pubsub:              bus,
 	}
 
 	var err error
@@ -178,6 +185,26 @@ func New(ctx context.Context,
 
 		return nil
 	}, pubsub.WithChannelNamespace("pullreq"))
+
+	// mergability check
+	const groupPullReqCodeComments = "gitness:pullreq:codecomments"
+	_, err = pullreqEvReaderFactory.Launch(ctx, groupPullReqCodeComments, config.InstanceID,
+		func(r *pullreqevents.Reader) error {
+			const idleTimeout = 10 * time.Second
+			r.Configure(
+				stream.WithConcurrency(3),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(2),
+				))
+
+			_ = r.RegisterBranchUpdated(service.updateCodeCommentsOnBranchUpdate)
+
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
 
 	return service, nil
 }

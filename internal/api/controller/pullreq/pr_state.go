@@ -124,8 +124,6 @@ func (c *Controller) State(ctx context.Context,
 		if in.State == enum.PullReqStateClosed {
 			// clear all merge (check) related fields
 			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
-			pr.MergeTargetSHA = nil
-			pr.MergeBaseSHA = nil
 			pr.MergeSHA = nil
 			pr.MergeConflicts = nil
 		}

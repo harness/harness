@@ -225,3 +225,20 @@ func mapToRPCIdentityOptional(identity *Identity) *rpc.Identity {
 		Email: identity.Email,
 	}
 }
+
+func mapHunkHeader(h *rpc.HunkHeader) HunkHeader {
+	return HunkHeader{
+		OldLine: int(h.OldLine),
+		OldSpan: int(h.OldSpan),
+		NewLine: int(h.NewLine),
+		NewSpan: int(h.NewSpan),
+		Text:    h.Text,
+	}
+}
+
+func mapDiffFileHeader(h *rpc.DiffFileHeader) DiffFileHeader {
+	return DiffFileHeader{
+		OldName: h.OldFileName,
+		NewName: h.NewFileName,
+	}
+}

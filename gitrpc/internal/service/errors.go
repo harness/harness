@@ -197,7 +197,9 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 	// when we add err as argument it will be part of the new error
 	args = append(args, err)
 	switch {
-	case errors.Is(err, types.ErrNotFound):
+	case errors.Is(err, types.ErrNotFound),
+		errors.Is(err, types.ErrSHADoesNotMatch),
+		errors.Is(err, types.ErrHunkNotFound):
 		return ErrNotFoundf(format, args...)
 	case errors.Is(err, types.ErrAlreadyExists):
 		return ErrAlreadyExistsf(format, args...)

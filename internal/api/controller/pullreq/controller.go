@@ -15,6 +15,7 @@ import (
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
+	"github.com/harness/gitness/internal/services/codecomments"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/lock"
@@ -25,18 +26,20 @@ import (
 )
 
 type Controller struct {
-	db             *sqlx.DB
-	urlProvider    *url.Provider
-	authorizer     authz.Authorizer
-	pullreqStore   store.PullReqStore
-	activityStore  store.PullReqActivityStore
-	reviewStore    store.PullReqReviewStore
-	reviewerStore  store.PullReqReviewerStore
-	repoStore      store.RepoStore
-	principalStore store.PrincipalStore
-	gitRPCClient   gitrpc.Interface
-	eventReporter  *pullreqevents.Reporter
-	mtxManager     lock.MutexManager
+	db                  *sqlx.DB
+	urlProvider         *url.Provider
+	authorizer          authz.Authorizer
+	pullreqStore        store.PullReqStore
+	activityStore       store.PullReqActivityStore
+	codeCommentView     store.CodeCommentView
+	reviewStore         store.PullReqReviewStore
+	reviewerStore       store.PullReqReviewerStore
+	repoStore           store.RepoStore
+	principalStore      store.PrincipalStore
+	gitRPCClient        gitrpc.Interface
+	eventReporter       *pullreqevents.Reporter
+	mtxManager          lock.MutexManager
+	codeCommentMigrator *codecomments.Migrator
 }
 
 func NewController(
@@ -45,6 +48,7 @@ func NewController(
 	authorizer authz.Authorizer,
 	pullreqStore store.PullReqStore,
 	pullreqActivityStore store.PullReqActivityStore,
+	codeCommentView store.CodeCommentView,
 	pullreqReviewStore store.PullReqReviewStore,
 	pullreqReviewerStore store.PullReqReviewerStore,
 	repoStore store.RepoStore,
@@ -52,20 +56,23 @@ func NewController(
 	gitRPCClient gitrpc.Interface,
 	eventReporter *pullreqevents.Reporter,
 	mtxManager lock.MutexManager,
+	codeCommentMigrator *codecomments.Migrator,
 ) *Controller {
 	return &Controller{
-		db:             db,
-		urlProvider:    urlProvider,
-		authorizer:     authorizer,
-		pullreqStore:   pullreqStore,
-		activityStore:  pullreqActivityStore,
-		reviewStore:    pullreqReviewStore,
-		reviewerStore:  pullreqReviewerStore,
-		repoStore:      repoStore,
-		principalStore: principalStore,
-		gitRPCClient:   gitRPCClient,
-		eventReporter:  eventReporter,
-		mtxManager:     mtxManager,
+		db:                  db,
+		urlProvider:         urlProvider,
+		authorizer:          authorizer,
+		pullreqStore:        pullreqStore,
+		activityStore:       pullreqActivityStore,
+		codeCommentView:     codeCommentView,
+		reviewStore:         pullreqReviewStore,
+		reviewerStore:       pullreqReviewerStore,
+		repoStore:           repoStore,
+		principalStore:      principalStore,
+		gitRPCClient:        gitRPCClient,
+		codeCommentMigrator: codeCommentMigrator,
+		eventReporter:       eventReporter,
+		mtxManager:          mtxManager,
 	}
 }
 

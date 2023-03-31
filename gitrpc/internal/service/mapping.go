@@ -108,3 +108,34 @@ func mapGitSignature(gitSignature types.Signature) *rpc.Signature {
 		When: gitSignature.When.Unix(),
 	}
 }
+func mapHunkHeader(hunkHeader types.HunkHeader) *rpc.HunkHeader {
+	return &rpc.HunkHeader{
+		OldLine: int32(hunkHeader.OldLine),
+		OldSpan: int32(hunkHeader.OldSpan),
+		NewLine: int32(hunkHeader.NewLine),
+		NewSpan: int32(hunkHeader.NewSpan),
+		Text:    hunkHeader.Text,
+	}
+}
+
+func mapDiffFileHeader(h types.DiffFileHeader) *rpc.DiffFileHeader {
+	return &rpc.DiffFileHeader{
+		OldFileName: h.OldFileName,
+		NewFileName: h.NewFileName,
+	}
+}
+
+func mapDiffFileHunkHeaders(diffHunkHeaders []*types.DiffFileHunkHeaders) []*rpc.DiffFileHunkHeaders {
+	res := make([]*rpc.DiffFileHunkHeaders, len(diffHunkHeaders))
+	for i, diffHunkHeader := range diffHunkHeaders {
+		hunkHeaders := make([]*rpc.HunkHeader, len(diffHunkHeader.HunksHeaders))
+		for j, hunkHeader := range diffHunkHeader.HunksHeaders {
+			hunkHeaders[j] = mapHunkHeader(hunkHeader)
+		}
+		res[i] = &rpc.DiffFileHunkHeaders{
+			FileHeader:  mapDiffFileHeader(diffHunkHeader.FileHeader),
+			HunkHeaders: hunkHeaders,
+		}
+	}
+	return res
+}

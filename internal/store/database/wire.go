@@ -26,6 +26,7 @@ var WireSet = wire.NewSet(
 	ProvideTokenStore,
 	ProvidePullReqStore,
 	ProvidePullReqActivityStore,
+	ProvideCodeCommentView,
 	ProvidePullReqReviewStore,
 	ProvidePullReqReviewerStore,
 	ProvideWebhookStore,
@@ -86,6 +87,11 @@ func ProvidePullReqStore(db *sqlx.DB,
 func ProvidePullReqActivityStore(db *sqlx.DB,
 	principalInfoCache store.PrincipalInfoCache) store.PullReqActivityStore {
 	return NewPullReqActivityStore(db, principalInfoCache)
+}
+
+// ProvideCodeCommentView provides a code comment view.
+func ProvideCodeCommentView(db *sqlx.DB) store.CodeCommentView {
+	return NewCodeCommentView(db)
 }
 
 // ProvidePullReqReviewStore provides a pull request review store.

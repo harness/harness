@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/store"
@@ -20,12 +21,57 @@ import (
 )
 
 type CommentCreateInput struct {
-	ParentID int64                                    `json:"parent_id"`
-	Text     string                                   `json:"text"`
-	Payload  *types.PullRequestActivityPayloadComment `json:"payload"`
+	// ParentID is set only for replies
+	ParentID int64 `json:"parent_id"`
+	// Text is comment text
+	Text string `json:"text"`
+	// Used only for code comments
+	TargetCommitSHA string `json:"target_commit_sha"`
+	SourceCommitSHA string `json:"source_commit_sha"`
+	Path            string `json:"path"`
+	LineStart       int    `json:"line_start"`
+	LineStartNew    bool   `json:"line_start_new"`
+	LineEnd         int    `json:"line_end"`
+	LineEndNew      bool   `json:"line_end_new"`
 }
 
-// CommentCreate creates a new pull request comment (pull request activity, type=comment).
+func (in *CommentCreateInput) IsReply() bool {
+	return in.ParentID != 0
+}
+
+func (in *CommentCreateInput) IsCodeComment() bool {
+	return in.SourceCommitSHA != ""
+}
+
+func (in *CommentCreateInput) Validate() error {
+	// TODO: Validate Text size.
+
+	if in.SourceCommitSHA == "" && in.TargetCommitSHA == "" {
+		return nil // not a code comment
+	}
+
+	if in.SourceCommitSHA == "" || in.TargetCommitSHA == "" {
+		return usererror.BadRequest("for code comments source commit SHA and target commit SHA must be provided")
+	}
+
+	if in.ParentID != 0 {
+		return usererror.BadRequest("can't create a reply that is a code comment")
+	}
+
+	if in.Path == "" {
+		return usererror.BadRequest("code comment requires file path")
+	}
+
+	if in.LineStart <= 0 || in.LineEnd <= 0 {
+		return usererror.BadRequest("code comments require line numbers")
+	}
+
+	return nil
+}
+
+// CommentCreate creates a new pull request comment (pull request activity, type=comment/code-comment).
+//
+//nolint:gocognit // refactor if needed
 func (c *Controller) CommentCreate(
 	ctx context.Context,
 	session *auth.Session,
@@ -43,17 +89,77 @@ func (c *Controller) CommentCreate(
 		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
+	if errValidate := in.Validate(); errValidate != nil {
+		return nil, errValidate
+	}
+
 	act := getCommentActivity(session, pr, in)
 
-	if in.ParentID != 0 {
+	switch {
+	case in.IsCodeComment():
+		var cut gitrpc.DiffCutOutput
+
+		cut, err = c.gitRPCClient.DiffCut(ctx, &gitrpc.DiffCutParams{
+			ReadParams:      gitrpc.ReadParams{RepoUID: repo.GitUID},
+			SourceCommitSHA: in.SourceCommitSHA,
+			SourceBranch:    pr.SourceBranch,
+			TargetCommitSHA: in.TargetCommitSHA,
+			TargetBranch:    pr.TargetBranch,
+			Path:            in.Path,
+			LineStart:       in.LineStart,
+			LineStartNew:    in.LineStartNew,
+			LineEnd:         in.LineEnd,
+			LineEndNew:      in.LineEndNew,
+		})
+		if gitrpc.ErrorStatus(err) == gitrpc.StatusNotFound {
+			return nil, usererror.BadRequest(gitrpc.ErrorMessage(err))
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		setAsCodeComment(act, cut, in.Path, in.SourceCommitSHA)
+		_ = act.SetPayload(&types.PullRequestActivityPayloadCodeComment{
+			Title:  cut.Header.Text,
+			Lines:  cut.Lines,
+			AnyNew: cut.AnyNew,
+		})
+
+		err = c.writeActivity(ctx, pr, act)
+
+		// Migrate the comment if necessary... Note: we still need to return the code comment as is.
+		needsNewLineMigrate := in.SourceCommitSHA != cut.LatestSourceSHA
+		needsOldLineMigrate := pr.MergeBaseSHA != nil && *pr.MergeBaseSHA != cut.MergeBaseSHA
+		if err == nil && (needsNewLineMigrate || needsOldLineMigrate) {
+			comments := []*types.CodeComment{act.AsCodeComment()}
+
+			if needsNewLineMigrate {
+				c.codeCommentMigrator.MigrateNew(ctx, repo.GitUID, cut.LatestSourceSHA, comments)
+			}
+			if needsOldLineMigrate {
+				c.codeCommentMigrator.MigrateOld(ctx, repo.GitUID, cut.MergeBaseSHA, comments)
+			}
+
+			if errMigrateUpdate := c.codeCommentView.UpdateAll(ctx, comments); errMigrateUpdate != nil {
+				// non-critical error
+				log.Ctx(ctx).Err(errMigrateUpdate).
+					Msgf("failed to migrate code comment to the latest source/merge-base commit SHA")
+			}
+		}
+	case in.ParentID != 0:
 		var parentAct *types.PullReqActivity
 		parentAct, err = c.checkIsReplyable(ctx, pr, in.ParentID)
 		if err != nil {
 			return nil, err
 		}
+
 		act.ParentID = &parentAct.ID
+		act.Kind = parentAct.Kind
+		_ = act.SetPayload(types.PullRequestActivityPayloadComment{})
+
 		err = c.writeReplyActivity(ctx, parentAct, act)
-	} else {
+	default:
+		_ = act.SetPayload(types.PullRequestActivityPayloadComment{})
 		err = c.writeActivity(ctx, pr, act)
 	}
 	if err != nil {
@@ -162,7 +268,24 @@ func getCommentActivity(session *auth.Session, pr *types.PullReq, in *CommentCre
 		Author:     *session.Principal.ToPrincipalInfo(),
 	}
 
-	_ = act.SetPayload(in.Payload)
-
 	return act
+}
+
+func setAsCodeComment(a *types.PullReqActivity, cut gitrpc.DiffCutOutput, path, sourceCommitSHA string) {
+	var falseBool bool
+	newLine := int64(cut.Header.NewLine)
+	newSpan := int64(cut.Header.NewSpan)
+	oldLine := int64(cut.Header.OldLine)
+	oldSpan := int64(cut.Header.OldSpan)
+
+	a.Type = enum.PullReqActivityTypeCodeComment
+	a.Kind = enum.PullReqActivityKindChangeComment
+	a.Outdated = &falseBool
+	a.CodeCommentMergeBaseSHA = &cut.MergeBaseSHA
+	a.CodeCommentSourceSHA = &sourceCommitSHA
+	a.CodeCommentPath = &path
+	a.CodeCommentLineNew = &newLine
+	a.CodeCommentSpanNew = &newSpan
+	a.CodeCommentLineOld = &oldLine
+	a.CodeCommentSpanOld = &oldSpan
 }

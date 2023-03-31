@@ -100,15 +100,15 @@ func GetAllPullReqActivityKinds() ([]PullReqActivityKind, PullReqActivityKind) {
 
 // PullReqActivityKind enumeration.
 const (
-	PullReqActivityKindSystem      PullReqActivityKind = "system"
-	PullReqActivityKindComment     PullReqActivityKind = "comment"
-	PullReqActivityKindCodeComment PullReqActivityKind = "code"
+	PullReqActivityKindSystem        PullReqActivityKind = "system"
+	PullReqActivityKindComment       PullReqActivityKind = "comment"
+	PullReqActivityKindChangeComment PullReqActivityKind = "change-comment"
 )
 
 var pullReqActivityKinds = sortEnum([]PullReqActivityKind{
 	PullReqActivityKindSystem,
 	PullReqActivityKindComment,
-	PullReqActivityKindCodeComment,
+	PullReqActivityKindChangeComment,
 })
 
 // PullReqReviewDecision defines state of a pull request review.

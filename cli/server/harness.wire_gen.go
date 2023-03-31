@@ -7,7 +7,6 @@ package server
 
 import (
 	"context"
-
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	server2 "github.com/harness/gitness/gitrpc/server"
@@ -33,6 +32,7 @@ import (
 	router2 "github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
+	"github.com/harness/gitness/internal/services/codecomments"
 	pullreq2 "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store/cache"
@@ -116,6 +116,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	principalInfoCache := cache.ProvidePrincipalInfoCache(principalInfoView)
 	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
+	codeCommentView := database.ProvideCodeCommentView(db)
 	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
 	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db, principalInfoCache)
 	eventsConfig, err := ProvideEventsConfig()
@@ -136,7 +137,8 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	}
 	lockConfig := lock.ProvideConfig(config)
 	mutexManager := lock.ProvideMutexManager(lockConfig, universalClient)
-	pullreqController := pullreq.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface, reporter, mutexManager)
+	migrator := codecomments.ProvideMigrator(gitrpcInterface)
+	pullreqController := pullreq.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface, reporter, mutexManager, migrator)
 	webhookConfig, err := ProvideWebhookConfig()
 	if err != nil {
 		return nil, err
@@ -179,7 +181,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
 	pubsubConfig := pubsub.ProvideConfig(config)
 	pubSub := pubsub.ProvidePubSub(pubsubConfig, universalClient)
-	pullreqService, err := pullreq2.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter, gitrpcInterface, db, repoGitInfoCache, principalInfoCache, repoStore, pullReqStore, pullReqActivityStore, pubSub)
+	pullreqService, err := pullreq2.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter, gitrpcInterface, db, repoGitInfoCache, principalInfoCache, repoStore, pullReqStore, pullReqActivityStore, codeCommentView, migrator, pubSub)
 	if err != nil {
 		return nil, err
 	}

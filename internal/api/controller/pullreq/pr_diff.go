@@ -37,7 +37,7 @@ func (c *Controller) RawDiff(
 		headRef = pr.SourceSHA
 	}
 	baseRef := pr.TargetBranch
-	if pr.State == enum.PullReqStateMerged {
+	if pr.MergeBaseSHA != nil {
 		baseRef = *pr.MergeBaseSHA
 	}
 
