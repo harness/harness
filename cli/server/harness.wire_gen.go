@@ -7,10 +7,10 @@ package server
 
 import (
 	"context"
-
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	server2 "github.com/harness/gitness/gitrpc/server"
+	"github.com/harness/gitness/gitrpc/server/cron"
 	"github.com/harness/gitness/harness/auth/authn"
 	"github.com/harness/gitness/harness/auth/authz"
 	"github.com/harness/gitness/harness/bootstrap"
@@ -27,7 +27,6 @@ import (
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
 	webhook2 "github.com/harness/gitness/internal/api/controller/webhook"
-	"github.com/harness/gitness/internal/cron"
 	events3 "github.com/harness/gitness/internal/events/git"
 	events2 "github.com/harness/gitness/internal/events/pullreq"
 	router2 "github.com/harness/gitness/internal/router"
@@ -177,7 +176,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	nightly := cron.NewNightly()
+	cronManager := cron.ProvideCronManager(serverConfig)
 	repoGitInfoView := database.ProvideRepoGitInfoView(db)
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
 	pubsubConfig := pubsub.ProvideConfig(config)
@@ -187,6 +186,6 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	servicesServices := services.ProvideServices(webhookService, pullreqService)
-	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, nightly, servicesServices)
+	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, cronManager, servicesServices)
 	return serverSystem, nil
 }

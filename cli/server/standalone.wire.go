@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
+	gitrpccron "github.com/harness/gitness/gitrpc/server/cron"
 	"github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
@@ -25,7 +26,6 @@ import (
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/bootstrap"
-	"github.com/harness/gitness/internal/cron"
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/router"
@@ -57,7 +57,6 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		pullreqservice.WireSet,
 		services.WireSet,
 		server.WireSet,
-		cron.WireSet,
 		url.WireSet,
 		space.WireSet,
 		repo.WireSet,
@@ -85,6 +84,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		lock.WireSet,
 		pubsub.WireSet,
 		codecomments.WireSet,
+		gitrpccron.WireSet,
 	)
 	return &system{}, nil
 }
