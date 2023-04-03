@@ -49,8 +49,8 @@ func (params *BlameParams) Validate() error {
 }
 
 type BlamePart struct {
-	Commit *Commit
-	Lines  []string
+	Commit *Commit  `json:"commit"`
+	Lines  []string `json:"lines"`
 }
 
 // Blame processes and streams the git blame output data.
