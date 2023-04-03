@@ -23,25 +23,25 @@ type GetCommitParams struct {
 }
 
 type GetCommitOutput struct {
-	Commit Commit
+	Commit Commit `json:"commit"`
 }
 
 type Commit struct {
-	SHA       string
-	Title     string
-	Message   string
-	Author    Signature
-	Committer Signature
+	SHA       string    `json:"sha"`
+	Title     string    `json:"title"`
+	Message   string    `json:"message,omitempty"`
+	Author    Signature `json:"author"`
+	Committer Signature `json:"committer"`
 }
 
 type Signature struct {
-	Identity Identity
-	When     time.Time
+	Identity Identity  `json:"identity"`
+	When     time.Time `json:"when"`
 }
 
 type Identity struct {
-	Name  string
-	Email string
+	Name  string `json:"name"`
+	Email string `json:"email"`
 }
 
 func (c *Client) GetCommit(ctx context.Context, params *GetCommitParams) (*GetCommitOutput, error) {
