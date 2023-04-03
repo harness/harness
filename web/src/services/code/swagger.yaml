@@ -481,6 +481,78 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+  /repos/{repo_ref}/blame/{path}:
+    get:
+      operationId: getBlame
+      parameters:
+        - description: The git reference (branch / tag / commitID) that will be used
+            to retrieve the data. If no value is provided the default branch of the
+            repository is used.
+          in: query
+          name: git_ref
+          required: false
+          schema:
+            default: '{Repository Default Branch}'
+            type: string
+        - description: Line number from which the file data is considered
+          in: query
+          name: line_from
+          required: false
+          schema:
+            default: 0
+            type: integer
+        - description: Line number to which the file data is considered
+          in: query
+          name: line_to
+          required: false
+          schema:
+            default: 0
+            type: integer
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/GitrpcBlamePart'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repo_ref}/branches:
     get:
       operationId: listBranches
@@ -3642,6 +3714,8 @@ components:
           type: string
         username:
           type: string
+      type: object
+    GitrpcBlamePart:
       type: object
     GitrpcFileAction:
       enum:

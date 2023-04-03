@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { RestfulProvider } from 'restful-react'
-import { TooltipContextProvider } from '@harness/uicore'
+import { Container, TooltipContextProvider } from '@harness/uicore'
 import { ModalProvider } from '@harness/use-modal'
 import { FocusStyleManager } from '@blueprintjs/core'
 import { tooltipDictionary } from '@harness/ng-tooltip'
@@ -17,7 +17,7 @@ import type { LanguageRecord } from './framework/strings/languageLoader'
 import { StringsContextProvider } from './framework/strings/StringsContextProvider'
 import 'highlight.js/styles/github.css'
 import 'diff2html/bundles/css/diff2html.min.css'
-import './App.scss'
+import css from './App.module.scss'
 
 FocusStyleManager.onlyShowFocusOnTabs()
 
@@ -43,40 +43,42 @@ const App: React.FC<AppProps> = React.memo(function App({
     languageLoader(lang).then(setStrings)
   }, [lang, setStrings])
 
-  // Workaround to disable editor dark mode (https://github.com/uiwjs/react-markdown-editor#support-dark-modenight-mode)
+  // TODO: Workaround to disable editor dark mode (https://github.com/uiwjs/react-markdown-editor#support-dark-modenight-mode)
   document.documentElement.setAttribute('data-color-mode', 'light')
 
   return strings ? (
-    <StringsContextProvider initialStrings={strings}>
-      <AppErrorBoundary>
-        <RestfulProvider
-          base={standalone ? '/' : getConfig('code')}
-          requestOptions={getRequestOptions}
-          queryParams={queryParams}
-          queryParamStringifyOptions={{ skipNulls: true }}
-          onResponse={response => {
-            if (!response.ok && response.status === 401) {
-              on401()
-            }
-          }}>
-          <AppContextProvider
-            value={{
-              standalone,
-              space,
-              routes,
-              lang,
-              on401,
-              hooks,
-              currentUser: defaultCurrentUser,
-              currentUserProfileURL
+    <Container className={css.main}>
+      <StringsContextProvider initialStrings={strings}>
+        <AppErrorBoundary>
+          <RestfulProvider
+            base={standalone ? '/' : getConfig('code')}
+            requestOptions={getRequestOptions}
+            queryParams={queryParams}
+            queryParamStringifyOptions={{ skipNulls: true }}
+            onResponse={response => {
+              if (!response.ok && response.status === 401) {
+                on401()
+              }
             }}>
-            <TooltipContextProvider initialTooltipDictionary={tooltipDictionary}>
-              <ModalProvider>{children ? children : <RouteDestinations />}</ModalProvider>
-            </TooltipContextProvider>
-          </AppContextProvider>
-        </RestfulProvider>
-      </AppErrorBoundary>
-    </StringsContextProvider>
+            <AppContextProvider
+              value={{
+                standalone,
+                space,
+                routes,
+                lang,
+                on401,
+                hooks,
+                currentUser: defaultCurrentUser,
+                currentUserProfileURL
+              }}>
+              <TooltipContextProvider initialTooltipDictionary={tooltipDictionary}>
+                <ModalProvider>{children ? children : <RouteDestinations />}</ModalProvider>
+              </TooltipContextProvider>
+            </AppContextProvider>
+          </RestfulProvider>
+        </AppErrorBoundary>
+      </StringsContextProvider>
+    </Container>
   ) : null
 })
 

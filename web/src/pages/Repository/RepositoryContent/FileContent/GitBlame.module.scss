@@ -1,0 +1,83 @@
+@import 'src/utils/utils';
+
+.main {
+  flex-grow: 1;
+
+  :global {
+    .cm-editor {
+      .cm-content {
+        padding: 0;
+      }
+      .cm-line {
+        &,
+        * {
+          @include mono-font;
+        }
+      }
+    }
+  }
+
+  .lineNo {
+    min-width: 70px !important;
+    text-align: right;
+    padding-right: 10px;
+    height: 100%;
+    color: var(--grey-400);
+  }
+}
+
+.gitBlame {
+  padding: 0 var(--spacing-xlarge) 0 var(--spacing-small) !important;
+
+  :global {
+    .cm-gutter {
+      background-color: var(--grey-50);
+    }
+  }
+
+  .layout {
+    overflow: hidden;
+    border: 1px solid var(--code-editor-border-color);
+    border-radius: 4px;
+
+    .blameColumn {
+      width: 400px;
+      background: var(--grey-50);
+      flex-shrink: 0;
+      position: relative;
+      border-right: 1px solid var(--code-editor-border-color);
+
+      .blameBox {
+        position: absolute;
+        width: 100%;
+
+        &::before {
+          position: absolute;
+          z-index: 2;
+          content: '';
+          width: 100vw;
+          height: 1px;
+          background-color: var(--code-editor-border-color);
+        }
+
+        &:first-of-type::before {
+          display: none;
+        }
+
+        .blameBoxLayout {
+          padding: var(--spacing-medium);
+          align-items: center;
+        }
+      }
+    }
+  }
+}
+
+.blameCommitPortalClass {
+  :global {
+    .bp3-popover-content {
+      padding: var(--spacing-large);
+      max-width: 600px;
+    }
+  }
+}
