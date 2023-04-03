@@ -17,6 +17,7 @@ export interface StringsMap {
   and: string
   approve: string
   ascending: string
+  blameCommitLine: string
   botAlerts: string
   branch: string
   branchCreated: string

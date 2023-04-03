@@ -1,0 +1,4 @@
+@mixin mono-font {
+  font-family: var(--code-editor-font-family) !important;
+  font-size: var(--code-editor-font-size) !important;
+}

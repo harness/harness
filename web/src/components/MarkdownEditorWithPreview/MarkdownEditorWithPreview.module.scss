@@ -1,3 +1,5 @@
+@import 'src/utils/utils';
+
 .main {
   --color-border: var(--grey-200);
   --box-radius: 5px;
@@ -102,8 +104,7 @@
       .cm-editor .cm-line {
         &,
         * {
-          font-family: var(--font-family);
-          font-size: 13px;
+          @include mono-font;
         }
       }
 

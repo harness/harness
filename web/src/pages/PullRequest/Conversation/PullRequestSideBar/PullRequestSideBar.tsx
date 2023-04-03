@@ -60,7 +60,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
   }
   //TODO add actions when you click the options menu button and also api integration
   return (
-    <Container width={`30%`} padding={{ left: 'xxlarge', right: 'xxlarge' }}>
+    <Container width={`30%`}>
       <Container padding={{ left: 'xxlarge' }}>
         <Layout.Vertical>
           <Layout.Horizontal>

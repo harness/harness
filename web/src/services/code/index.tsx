@@ -62,6 +62,10 @@ export interface FormDataOpenapiRegisterRequest {
   username?: string
 }
 
+export interface GitrpcBlamePart {
+  [key: string]: any
+}
+
 export type GitrpcFileAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE'
 
 export interface OpenapiAdminUsersCreateRequest {
@@ -830,6 +834,52 @@ export const useUpdateRepository = ({ repo_ref, ...props }: UseUpdateRepositoryP
     'PATCH',
     (paramsInPath: UpdateRepositoryPathParams) => `/repos/${paramsInPath.repo_ref}`,
     { base: getConfig('code'), pathParams: { repo_ref }, ...props }
+  )
+
+export interface GetBlameQueryParams {
+  /**
+   * The git reference (branch / tag / commitID) that will be used to retrieve the data. If no value is provided the default branch of the repository is used.
+   */
+  git_ref?: string
+  /**
+   * Line number from which the file data is considered
+   */
+  line_from?: number
+  /**
+   * Line number to which the file data is considered
+   */
+  line_to?: number
+}
+
+export interface GetBlamePathParams {
+  repo_ref: string
+  path: string
+}
+
+export type GetBlameProps = Omit<
+  GetProps<GitrpcBlamePart[], UsererrorError, GetBlameQueryParams, GetBlamePathParams>,
+  'path'
+> &
+  GetBlamePathParams
+
+export const GetBlame = ({ repo_ref, path, ...props }: GetBlameProps) => (
+  <Get<GitrpcBlamePart[], UsererrorError, GetBlameQueryParams, GetBlamePathParams>
+    path={`/repos/${repo_ref}/blame/${path}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseGetBlameProps = Omit<
+  UseGetProps<GitrpcBlamePart[], UsererrorError, GetBlameQueryParams, GetBlamePathParams>,
+  'path'
+> &
+  GetBlamePathParams
+
+export const useGetBlame = ({ repo_ref, path, ...props }: UseGetBlameProps) =>
+  useGet<GitrpcBlamePart[], UsererrorError, GetBlameQueryParams, GetBlamePathParams>(
+    (paramsInPath: GetBlamePathParams) => `/repos/${paramsInPath.repo_ref}/blame/${paramsInPath.path}`,
+    { base: getConfig('code'), pathParams: { repo_ref, path }, ...props }
   )
 
 export interface ListBranchesQueryParams {

@@ -1,6 +1,16 @@
 import React, { useMemo } from 'react'
-import { Button, ButtonVariation, Color, Container, FlexExpander, Heading, Layout, Utils } from '@harness/uicore'
-import { Render } from 'react-jsx-match'
+import {
+  Button,
+  ButtonVariation,
+  Color,
+  Container,
+  FlexExpander,
+  Heading,
+  Layout,
+  useToggle,
+  Utils
+} from '@harness/uicore'
+import { Else, Match, Render, Truthy } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import type { OpenapiContentInfo, RepoFileContent } from 'services/code'
@@ -16,9 +26,11 @@ import {
 import { filenameToLanguage } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { LatestCommitForFile } from 'components/LatestCommit/LatestCommit'
+import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { CommitModalButton } from 'components/CommitModalButton/CommitModalButton'
 import { useStrings } from 'framework/strings'
 import { Readme } from '../FolderContent/Readme'
+import { GitBlame } from './GitBlame'
 import css from './FileContent.module.scss'
 
 export function FileContent({
@@ -30,6 +42,7 @@ export function FileContent({
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const history = useHistory()
+  const [showGitBlame, toggleGitBlame] = useToggle(false)
   const content = useMemo(
     () => decodeGitContent((resourceContent?.content as RepoFileContent)?.data),
     [resourceContent?.content]
@@ -98,23 +111,38 @@ export function FileContent({
                 }
               }}
             />
+            <PipeSeparator />
+            <Container padding={{ left: 'small', right: 'xsmall' }}>
+              <Button
+                variation={ButtonVariation.SECONDARY}
+                text={showGitBlame ? 'View File' : 'Blame'}
+                onClick={toggleGitBlame}
+              />
+            </Container>
           </Layout.Horizontal>
         </Layout.Horizontal>
 
         <Render when={(resourceContent?.content as RepoFileContent)?.data}>
           <Container className={css.content}>
-            <Render when={!markdownInfo}>
-              <SourceCodeViewer language={filenameToLanguage(resourceContent?.name)} source={content} />
-            </Render>
-            <Render when={markdownInfo}>
-              <Readme
-                metadata={repoMetadata}
-                readmeInfo={markdownInfo as OpenapiContentInfo}
-                contentOnly
-                maxWidth="calc(100vw - 346px)"
-                gitRef={gitRef}
-              />
-            </Render>
+            <Match expr={showGitBlame}>
+              <Truthy>
+                <GitBlame repoMetadata={repoMetadata} resourcePath={resourcePath} />
+              </Truthy>
+              <Else>
+                <Render when={!markdownInfo}>
+                  <SourceCodeViewer language={filenameToLanguage(resourceContent?.name)} source={content} />
+                </Render>
+                <Render when={markdownInfo}>
+                  <Readme
+                    metadata={repoMetadata}
+                    readmeInfo={markdownInfo as OpenapiContentInfo}
+                    contentOnly
+                    maxWidth="calc(100vw - 346px)"
+                    gitRef={gitRef}
+                  />
+                </Render>
+              </Else>
+            </Match>
           </Container>
         </Render>
       </Container>
