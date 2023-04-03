@@ -6,7 +6,6 @@ package repo
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
@@ -49,7 +48,7 @@ func (c *Controller) DeleteRepositoryRPC(ctx context.Context, session *auth.Sess
 	})
 
 	// deletion should not fail if dir does not exist in repos dir
-	if errors.Is(err, gitrpc.ErrNotFound) {
+	if gitrpc.ErrorStatus(err) == gitrpc.StatusNotFound {
 		log.Ctx(ctx).Warn().Msgf("gitrpc repo %s does not exist", repo.GitUID)
 	} else if err != nil {
 		// deletion has failed before removing(rename) the repo dir

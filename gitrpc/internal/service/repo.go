@@ -219,7 +219,7 @@ func (s RepositoryService) DeleteRepository(ctx context.Context, request *rpc.De
 	// check if directory exists
 	// if dir does not exist already fail silently
 	if _, err := os.Stat(repoPath); err != nil && os.IsNotExist(err) {
-		return nil, status.Errorf(codes.NotFound, "repository does not exist %v", repoPath)
+		return nil, ErrNotFound(err)
 	} else if err != nil {
 		return nil, fmt.Errorf("failed to check the status of the repository %v: %w", repoPath, err)
 	}
