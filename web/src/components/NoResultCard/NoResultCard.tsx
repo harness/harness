@@ -15,6 +15,8 @@ interface NoResultCardProps {
   buttonText?: string
   buttonIcon?: IconName
   onButtonClick?: () => void
+  permissionProp?: { disabled: boolean; tooltip: JSX.Element | string } | undefined
+  standalone?: boolean
 }
 
 export const NoResultCard: React.FC<NoResultCardProps> = ({
@@ -25,7 +27,8 @@ export const NoResultCard: React.FC<NoResultCardProps> = ({
   emptySearchMessage,
   buttonText = '',
   buttonIcon = CodeIcon.Add,
-  onButtonClick = noop
+  onButtonClick = noop,
+  permissionProp
 }) => {
   const { getString } = useStrings()
 
@@ -48,6 +51,7 @@ export const NoResultCard: React.FC<NoResultCardProps> = ({
               text={buttonText}
               icon={buttonIcon as IconName}
               onClick={onButtonClick}
+              {...permissionProp}
             />
           )
         }

@@ -21,6 +21,11 @@ export function showToaster(message: string, props?: Partial<IToastProps>): IToa
   return toaster
 }
 
+export function permissionProps(permResult: { disabled: boolean; tooltip: JSX.Element | string }, standalone: boolean) {
+  const perm = standalone ? true : false
+  return !perm ? permResult : undefined
+}
+
 export const dayAgoInMS = 86400000
 
 export const getErrorMessage = (error: Unknown): string =>

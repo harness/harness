@@ -75,7 +75,9 @@ export interface StringsMap {
   'createRepoModal.branchLabel': string
   'createRepoModal.privateLabel': string
   'createRepoModal.publicLabel': string
+  createRepoPerms: string
   createWebhook: string
+  dangerDeleteRepo: string
   defaultBranch: string
   delete: string
   deleteBranch: string
@@ -83,6 +85,8 @@ export interface StringsMap {
   deleteCommentConfirm: string
   deleteFile: string
   deleteNotAllowed: string
+  deleteRepoText: string
+  deleteRepoTitle: string
   deleted: string
   deployKeys: string
   descending: string
@@ -130,6 +134,8 @@ export interface StringsMap {
   makeOptional: string
   makeRequired: string
   merged: string
+  missingPerms: string
+  missingPermsContent: string
   myComments: string
   name: string
   nameYourBranch: string
@@ -241,9 +247,11 @@ export interface StringsMap {
   replyHere: string
   repoCloneHeader: string
   repoCloneLabel: string
+  repoDeleted: string
   repoEmptyMarkdown: string
   repoEmptyMarkdownClone: string
   repoEmptyMarkdownExisting: string
+  repoUpdate: string
   'repos.activities': string
   'repos.data': string
   'repos.enterBranchName': string
@@ -252,6 +260,7 @@ export interface StringsMap {
   'repos.noDataMessage': string
   'repos.updated': string
   repositories: string
+  repositoryName: string
   requestChanges: string
   required: string
   resetZoom: string
@@ -277,6 +286,7 @@ export interface StringsMap {
   tagNotFound: string
   tags: string
   title: string
+  tooltipRepoEdit: string
   updateFile: string
   updateWebhook: string
   updated: string
