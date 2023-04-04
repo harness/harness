@@ -103,6 +103,7 @@ type (
 		Interval time.Duration `envconfig:"DRONE_CLEANUP_INTERVAL"         default:"24h"`
 		Running  time.Duration `envconfig:"DRONE_CLEANUP_DEADLINE_RUNNING" default:"24h"`
 		Pending  time.Duration `envconfig:"DRONE_CLEANUP_DEADLINE_PENDING" default:"24h"`
+		Buffer   time.Duration `envconfig:"DRONE_CLEANUP_BUFFER" default:"30m"`
 	}
 
 	// Cron provides the cron configuration.
