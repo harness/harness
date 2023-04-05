@@ -13,7 +13,7 @@ import { hyperLink } from '@uiw/codemirror-extensions-hyper-link'
 import { githubLight as theme } from '@uiw/codemirror-themes-all'
 import { useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
-import type { GitBlameEntry, GitBlameResponse } from 'utils/types'
+import type { GitrpcBlamePart } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
@@ -25,8 +25,8 @@ interface BlameBlock {
   toLineNumber: number
   topPosition: number
   heights: Record<number, number>
-  commitInfo: GitBlameEntry['Commit']
-  lines: GitBlameEntry['Lines']
+  commitInfo: GitrpcBlamePart['commit']
+  lines: GitrpcBlamePart['lines']
   numberOfLines: number
 }
 
@@ -40,7 +40,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
 }) => {
   const { getString } = useStrings()
   const [blameBlocks, setBlameBlocks] = useState<BlameBlockRecord>({})
-  const { data, error, loading } = useGet<GitBlameResponse>({
+  const { data, error, loading } = useGet<GitrpcBlamePart[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/blame/${resourcePath}`,
     lazy: !repoMetadata || !resourcePath
   })
@@ -49,17 +49,17 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
     if (data) {
       let fromLineNumber = 1
 
-      data.forEach(({ Commit, Lines }) => {
-        const toLineNumber = fromLineNumber + Lines.length - 1
+      data.forEach(({ commit, lines }) => {
+        const toLineNumber = fromLineNumber + (lines?.length || 0) - 1
 
         blameBlocks[fromLineNumber] = {
           fromLineNumber,
           toLineNumber,
           topPosition: BLAME_BLOCK_NOT_YET_CALCULATED_TOP_POSITION, // Not yet calculated
           heights: {}, // Not yet calculated
-          commitInfo: Commit,
-          lines: Lines,
-          numberOfLines: Lines.length
+          commitInfo: commit,
+          lines: lines,
+          numberOfLines: lines?.length || 0
         }
 
         fromLineNumber = toLineNumber + 1
@@ -142,7 +142,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
                 <Container className={css.blameBox} key={fromLineNumber} height={height} style={{ top }}>
                   <Layout.Horizontal spacing="small" className={css.blameBoxLayout}>
                     <Container>
-                      <Avatar name={commitInfo.Author.Identity.Name} size="normal" hoverCard={false} />
+                      <Avatar name={commitInfo?.author?.identity?.name} size="normal" hoverCard={false} />
                     </Container>
                     <Container style={{ flexGrow: 1 }}>
                       <Layout.Vertical spacing="xsmall">
@@ -152,14 +152,14 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
                           tooltipProps={{
                             portalClassName: css.blameCommitPortalClass
                           }}>
-                          {commitInfo.Title}
+                          {commitInfo?.title}
                         </Text>
                         <Text font={{ variation: FontVariation.BODY }} lineClamp={1}>
                           <StringSubstitute
                             str={getString('blameCommitLine')}
                             vars={{
-                              author: <strong>{commitInfo.Author.Identity.Name}</strong>,
-                              timestamp: <ReactTimeago date={commitInfo.Author.When} />
+                              author: <strong>{commitInfo?.author?.identity?.name as string}</strong>,
+                              timestamp: <ReactTimeago date={commitInfo?.author?.when as string} />
                             }}
                           />
                         </Text>
@@ -172,7 +172,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
         </Container>
         <Render when={Object.values(blameBlocks).length}>
           <GitBlameSourceViewer
-            source={data?.map(({ Lines }) => Lines.join('\n')).join('\n') || ''}
+            source={data?.map(({ lines }) => (lines as string[]).join('\n')).join('\n') || ''}
             filename={resourcePath}
             onViewUpdate={onViewUpdate}
             blameBlocks={blameBlocks}
@@ -326,6 +326,7 @@ class EditorLinePaddingWidget extends WidgetType {
     div.setAttribute('data-position', position)
 
     div.style.height = `${height}px`
+    // div.style.backgroundColor = position === LineWidgetPosition.TOP ? 'cyan' : 'yellow'
 
     return div
   }

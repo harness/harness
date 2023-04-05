@@ -63,10 +63,29 @@ export interface FormDataOpenapiRegisterRequest {
 }
 
 export interface GitrpcBlamePart {
-  [key: string]: any
+  commit?: GitrpcCommit
+  lines?: string[] | null
 }
 
+export type GitrpcCommit = {
+  author?: GitrpcSignature
+  committer?: GitrpcSignature
+  message?: string
+  sha?: string
+  title?: string
+} | null
+
 export type GitrpcFileAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE'
+
+export interface GitrpcIdentity {
+  email?: string
+  name?: string
+}
+
+export interface GitrpcSignature {
+  identity?: GitrpcIdentity
+  when?: string
+}
 
 export interface OpenapiAdminUsersCreateRequest {
   display_name?: string
@@ -314,6 +333,7 @@ export interface RepoFileContent {
 }
 
 export interface RepoMergeCheck {
+  conflict_files?: string[]
   mergeable?: boolean
 }
 

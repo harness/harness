@@ -3716,6 +3716,28 @@ components:
           type: string
       type: object
     GitrpcBlamePart:
+      properties:
+        commit:
+          $ref: '#/components/schemas/GitrpcCommit'
+        lines:
+          items:
+            type: string
+          nullable: true
+          type: array
+      type: object
+    GitrpcCommit:
+      nullable: true
+      properties:
+        author:
+          $ref: '#/components/schemas/GitrpcSignature'
+        committer:
+          $ref: '#/components/schemas/GitrpcSignature'
+        message:
+          type: string
+        sha:
+          type: string
+        title:
+          type: string
       type: object
     GitrpcFileAction:
       enum:
@@ -3724,6 +3746,21 @@ components:
         - DELETE
         - MOVE
       type: string
+    GitrpcIdentity:
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+      type: object
+    GitrpcSignature:
+      properties:
+        identity:
+          $ref: '#/components/schemas/GitrpcIdentity'
+        when:
+          format: date-time
+          type: string
+      type: object
     OpenapiAdminUsersCreateRequest:
       properties:
         display_name:
@@ -4147,6 +4184,10 @@ components:
       type: object
     RepoMergeCheck:
       properties:
+        conflict_files:
+          items:
+            type: string
+          type: array
         mergeable:
           type: boolean
       type: object

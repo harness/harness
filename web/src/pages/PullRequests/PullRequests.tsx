@@ -96,7 +96,7 @@ export default function PullRequests() {
                       name="code-chat"
                       size={15}
                     />
-                    <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
+                    <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500} tag="span">
                       {row.original.stats?.conversations}
                     </Text>
                   </Text>
