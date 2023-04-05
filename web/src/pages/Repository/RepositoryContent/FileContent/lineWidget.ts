@@ -51,7 +51,9 @@ export function lineWidget<T extends LineWidgetSpec = LineWidgetSpec>({ spec, wi
     },
 
     update(decorations, transation) {
-      return transation.docChanged ? buildLineDecorations(transation.newDoc, widgetFor, spec) : decorations
+      return transation.docChanged
+        ? buildLineDecorations(transation.newDoc, widgetFor, spec)
+        : decorations.map(transation.changes)
     },
 
     provide: f => EditorView.decorations.from(f)
