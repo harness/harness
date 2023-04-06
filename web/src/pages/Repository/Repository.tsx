@@ -191,7 +191,7 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
         <MarkdownViewer
           getString={getString}
           source={getString('repoEmptyMarkdownExisting')
-            .replace(/REPO_URL/g, '...')
+            .replace(/REPO_URL/g, repoMetadata.git_url || '')
             .replace(/REPO_NAME/g, repoMetadata.uid || '')
             .replace(/CREATE_API_TOKEN_URL/g, currentUserProfileURL || '')}
         />
