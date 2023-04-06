@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { throttle } from 'lodash-es'
 import { Avatar, Container, FontVariation, Layout, StringSubstitute, Text } from '@harness/uicore'
 import { LanguageDescription } from '@codemirror/language'
 import { indentWithTab } from '@codemirror/commands'
@@ -32,7 +31,7 @@ interface BlameBlock {
 
 type BlameBlockRecord = Record<number, BlameBlock>
 
-const BLAME_BLOCK_NOT_YET_CALCULATED_TOP_POSITION = -1
+const INITIAL_TOP_POSITION = -1
 
 export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePath'>> = ({
   repoMetadata,
@@ -55,7 +54,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
         blameBlocks[fromLineNumber] = {
           fromLineNumber,
           toLineNumber,
-          topPosition: BLAME_BLOCK_NOT_YET_CALCULATED_TOP_POSITION, // Not yet calculated
+          topPosition: INITIAL_TOP_POSITION, // Not yet calculated
           heights: {}, // Not yet calculated
           commitInfo: commit,
           lines: lines,
@@ -68,6 +67,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
       setBlameBlocks({ ...blameBlocks })
     }
   }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const findBlockForLineNumber = useCallback(
     lineNumber => {
       let startLine = lineNumber
@@ -81,7 +81,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const onViewUpdate = useCallback(
-    throttle(({ view, geometryChanged }: ViewUpdate) => {
+    ({ view, geometryChanged }: ViewUpdate) => {
       if (geometryChanged) {
         view.viewportLineBlocks.forEach(lineBlock => {
           const { from, top, height } = lineBlock
@@ -90,9 +90,9 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
 
           if (!blameBlockAtLineNumber) {
             // eslint-disable-next-line no-console
-            console.error('Bad math! Cannot find a block at line', lineNumber)
+            console.error('Bad math! Cannot find a blame block for line', lineNumber)
           } else {
-            if (blameBlockAtLineNumber.topPosition === BLAME_BLOCK_NOT_YET_CALCULATED_TOP_POSITION) {
+            if (blameBlockAtLineNumber.topPosition === INITIAL_TOP_POSITION) {
               blameBlockAtLineNumber.topPosition = top
             }
 
@@ -115,8 +115,8 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
 
         setBlameBlocks({ ...blameBlocks })
       }
-    }, 50),
-    [blameBlocks]
+    },
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   // TODO: Normalize loading and error rendering when implementing new Design layout
@@ -129,46 +129,20 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
     return <Container padding="xlarge">{getErrorMessage(error)}</Container>
   }
 
+  // NOTE 1: Using React in combined with CodeMirror is not ideal due to the fact that
+  // React will re-render the entire component tree on every CodeMirror update.
+  // We might want to consider using minimal React usage in the future, plus CodeMirror APIs more.
+  // NOTE 2: Try to improve by using ref instead of state.
+
   return (
     <Container className={css.gitBlame}>
       <Layout.Horizontal className={css.layout}>
         <Container className={css.blameColumn}>
           {Object.values(blameBlocks)
-            .filter(({ topPosition }) => topPosition !== BLAME_BLOCK_NOT_YET_CALCULATED_TOP_POSITION)
-            .map(({ fromLineNumber, topPosition: top, heights, commitInfo }) => {
-              const height = Object.values(heights).reduce((a, b) => a + b, 0)
-
-              return (
-                <Container className={css.blameBox} key={fromLineNumber} height={height} style={{ top }}>
-                  <Layout.Horizontal spacing="small" className={css.blameBoxLayout}>
-                    <Container>
-                      <Avatar name={commitInfo?.author?.identity?.name} size="normal" hoverCard={false} />
-                    </Container>
-                    <Container style={{ flexGrow: 1 }}>
-                      <Layout.Vertical spacing="xsmall">
-                        <Text
-                          font={{ variation: FontVariation.BODY }}
-                          lineClamp={2}
-                          tooltipProps={{
-                            portalClassName: css.blameCommitPortalClass
-                          }}>
-                          {commitInfo?.title}
-                        </Text>
-                        <Text font={{ variation: FontVariation.BODY }} lineClamp={1}>
-                          <StringSubstitute
-                            str={getString('blameCommitLine')}
-                            vars={{
-                              author: <strong>{commitInfo?.author?.identity?.name as string}</strong>,
-                              timestamp: <ReactTimeago date={commitInfo?.author?.when as string} />
-                            }}
-                          />
-                        </Text>
-                      </Layout.Vertical>
-                    </Container>
-                  </Layout.Horizontal>
-                </Container>
-              )
-            })}
+            .filter(({ topPosition }) => topPosition !== INITIAL_TOP_POSITION)
+            .map(blameInfo => (
+              <GitBlameMetaInfo key={blameInfo.fromLineNumber} {...blameInfo} />
+            ))}
         </Container>
         <Render when={Object.values(blameBlocks).length}>
           <GitBlameSourceViewer
@@ -210,33 +184,35 @@ interface EditorLinePaddingWidgetSpec extends LineWidgetSpec {
   blockLines: number
 }
 
-function GitBlameSourceViewer({ source, filename, onViewUpdate, blameBlocks }: GitBlameSourceViewerProps) {
-  const [view, setView] = useState<EditorView>()
+const GitBlameSourceViewer = React.memo(function GitBlameSourceViewer({
+  source,
+  filename,
+  onViewUpdate,
+  blameBlocks
+}: GitBlameSourceViewerProps) {
+  const view = useRef<EditorView>()
   const ref = useRef<HTMLDivElement>()
   const languageConfig = useMemo(() => new Compartment(), [])
-  const lineWidgetSpec = useMemo(() => {
-    const spec: EditorLinePaddingWidgetSpec[] = []
+
+  useEffect(() => {
+    const lineWidgetSpec: EditorLinePaddingWidgetSpec[] = []
 
     Object.values(blameBlocks).forEach(block => {
       const blockLines = block.numberOfLines
 
-      spec.push({
+      lineWidgetSpec.push({
         lineNumber: block.fromLineNumber,
         position: LineWidgetPosition.TOP,
         blockLines
       })
 
-      spec.push({
+      lineWidgetSpec.push({
         lineNumber: block.toLineNumber,
         position: LineWidgetPosition.BOTTOM,
         blockLines
       })
     })
 
-    return spec
-  }, [blameBlocks])
-
-  useEffect(() => {
     const customLineNumberGutter = gutter({
       lineMarker(_view, line) {
         const lineNumber: number = _view.state.doc.lineAt(line.from).number
@@ -282,25 +258,25 @@ function GitBlameSourceViewer({ source, filename, onViewUpdate, blameBlocks }: G
       parent: ref.current
     })
 
-    setView(editorView)
+    view.current = editorView
 
     return () => {
       editorView.destroy()
     }
-  }, []) // eslint-disable-line
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (view && filename) {
+    if (filename) {
       languageDescriptionFrom(filename)
         ?.load()
         .then(languageSupport => {
-          view.dispatch({ effects: languageConfig.reconfigure(languageSupport) })
+          view.current?.dispatch({ effects: languageConfig.reconfigure(languageSupport) })
         })
     }
   }, [filename, view, languageConfig])
 
   return <Container ref={ref} className={css.main} />
-}
+})
 
 function languageDescriptionFrom(filename: string) {
   return LanguageDescription.matchFilename(languages, filename)
@@ -338,4 +314,44 @@ class EditorLinePaddingWidget extends WidgetType {
   ignoreEvent() {
     return false
   }
+}
+
+function GitBlameMetaInfo({ fromLineNumber, topPosition, heights, commitInfo }: BlameBlock) {
+  const height = Object.values(heights).reduce((a, b) => a + b, 0)
+  const { getString } = useStrings()
+
+  return (
+    <Container
+      className={css.blameBox}
+      key={`${fromLineNumber}-${height}`}
+      height={height}
+      style={{ top: topPosition }}>
+      <Layout.Horizontal spacing="small" className={css.blameBoxLayout}>
+        <Container>
+          <Avatar name={commitInfo?.author?.identity?.name} size="normal" hoverCard={false} />
+        </Container>
+        <Container style={{ flexGrow: 1 }}>
+          <Layout.Vertical spacing="xsmall">
+            <Text
+              font={{ variation: FontVariation.BODY }}
+              lineClamp={2}
+              tooltipProps={{
+                portalClassName: css.blameCommitPortalClass
+              }}>
+              {commitInfo?.title}
+            </Text>
+            <Text font={{ variation: FontVariation.BODY }} lineClamp={1}>
+              <StringSubstitute
+                str={getString('blameCommitLine')}
+                vars={{
+                  author: <strong>{commitInfo?.author?.identity?.name as string}</strong>,
+                  timestamp: <ReactTimeago date={commitInfo?.author?.when as string} />
+                }}
+              />
+            </Text>
+          </Layout.Vertical>
+        </Container>
+      </Layout.Horizontal>
+    </Container>
+  )
 }
