@@ -54,8 +54,8 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
         blameBlocks[fromLineNumber] = {
           fromLineNumber,
           toLineNumber,
-          topPosition: INITIAL_TOP_POSITION, // Not yet calculated
-          heights: {}, // Not yet calculated
+          topPosition: INITIAL_TOP_POSITION,
+          heights: {},
           commitInfo: commit,
           lines: lines,
           numberOfLines: lines?.length || 0
@@ -86,34 +86,47 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
         view.viewportLineBlocks.forEach(lineBlock => {
           const { from, top, height } = lineBlock
           const lineNumber = view.state.doc.lineAt(from).number
-          const blameBlockAtLineNumber = findBlockForLineNumber(lineNumber)
+          const blockAtLineNumber = findBlockForLineNumber(lineNumber)
 
-          if (!blameBlockAtLineNumber) {
+          if (!blockAtLineNumber) {
             // eslint-disable-next-line no-console
             console.error('Bad math! Cannot find a blame block for line', lineNumber)
           } else {
-            if (blameBlockAtLineNumber.topPosition === INITIAL_TOP_POSITION) {
-              blameBlockAtLineNumber.topPosition = top
+            if (blockAtLineNumber.topPosition === INITIAL_TOP_POSITION) {
+              blockAtLineNumber.topPosition = top
             }
 
             // CodeMirror reports top position of a block incorrectly sometimes, so we need to normalize it
-            // using the previous block.
+            // using dimensions of the previous block.
             if (lineNumber > 1) {
               const previousBlock = findBlockForLineNumber(lineNumber - 1)
 
-              if (previousBlock.fromLineNumber !== blameBlockAtLineNumber.fromLineNumber) {
-                const normalizedTop =
-                  previousBlock.topPosition + Object.values(previousBlock.heights).reduce((a, b) => a + b, 0)
-
-                blameBlockAtLineNumber.topPosition = normalizedTop
+              if (previousBlock.fromLineNumber !== blockAtLineNumber.fromLineNumber) {
+                blockAtLineNumber.topPosition = previousBlock.topPosition + computeHeight(previousBlock.heights)
               }
             }
 
-            blameBlockAtLineNumber.heights[lineNumber] = height
+            blockAtLineNumber.heights[lineNumber] = height
+
+            const blockDOM = document.querySelector(
+              `.${css.blameBox}[data-block-from-line="${blockAtLineNumber.fromLineNumber}"]`
+            ) as HTMLDivElement
+
+            if (blockDOM) {
+              const _height = `${computeHeight(blockAtLineNumber.heights)}px`
+              const _top = `${blockAtLineNumber.topPosition}px`
+
+              if (blockDOM.style.height !== _height || blockDOM.style.top !== _top) {
+                blockDOM.style.height = _height
+                blockDOM.style.top = _top
+
+                if (blockAtLineNumber.topPosition !== INITIAL_TOP_POSITION) {
+                  blockDOM.removeAttribute('data-block-top')
+                }
+              }
+            }
           }
         })
-
-        setBlameBlocks({ ...blameBlocks })
       }
     },
     [] // eslint-disable-line react-hooks/exhaustive-deps
@@ -129,20 +142,13 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
     return <Container padding="xlarge">{getErrorMessage(error)}</Container>
   }
 
-  // NOTE 1: Using React in combined with CodeMirror is not ideal due to the fact that
-  // React will re-render the entire component tree on every CodeMirror update.
-  // We might want to consider using minimal React usage in the future, plus CodeMirror APIs more.
-  // NOTE 2: Try to improve by using ref instead of state.
-
   return (
     <Container className={css.gitBlame}>
       <Layout.Horizontal className={css.layout}>
         <Container className={css.blameColumn}>
-          {Object.values(blameBlocks)
-            .filter(({ topPosition }) => topPosition !== INITIAL_TOP_POSITION)
-            .map(blameInfo => (
-              <GitBlameMetaInfo key={blameInfo.fromLineNumber} {...blameInfo} />
-            ))}
+          {Object.values(blameBlocks).map(blameInfo => (
+            <GitBlameMetaInfo key={blameInfo.fromLineNumber} {...blameInfo} />
+          ))}
         </Container>
         <Render when={Object.values(blameBlocks).length}>
           <GitBlameSourceViewer
@@ -316,13 +322,20 @@ class EditorLinePaddingWidget extends WidgetType {
   }
 }
 
-function GitBlameMetaInfo({ fromLineNumber, topPosition, heights, commitInfo }: BlameBlock) {
-  const height = Object.values(heights).reduce((a, b) => a + b, 0)
+function computeHeight(heights: Record<number, number>) {
+  return Object.values(heights).reduce((a, b) => a + b, 0)
+}
+
+function GitBlameMetaInfo({ fromLineNumber, toLineNumber, topPosition, heights, commitInfo }: BlameBlock) {
+  const height = computeHeight(heights)
   const { getString } = useStrings()
 
   return (
     <Container
       className={css.blameBox}
+      data-block-from-line={`${fromLineNumber}`}
+      data-block-to-line={`${toLineNumber}`}
+      data-block-top={`${topPosition}`}
       key={`${fromLineNumber}-${height}`}
       height={height}
       style={{ top: topPosition }}>
