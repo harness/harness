@@ -51,6 +51,10 @@
         position: absolute;
         width: 100%;
 
+        &[data-block-top='-1'] {
+          display: none;
+        }
+
         &::before {
           position: absolute;
           z-index: 2;
