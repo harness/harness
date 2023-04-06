@@ -21,7 +21,7 @@ interface EditorProps {
   viewRef?: React.MutableRefObject<EditorView | undefined>
 }
 
-export const Editor = React.memo(function GitBlameSourceViewer({
+export const Editor = React.memo(function CodeMirrorReactEditor({
   source,
   filename,
   onViewUpdate = noop,
