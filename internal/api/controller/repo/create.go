@@ -136,7 +136,7 @@ func (c *Controller) checkAuthRepoCreation(ctx context.Context, session *auth.Se
 		Name: "",
 	}
 
-	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionRepoCreate)
+	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionRepoEdit)
 	if err != nil {
 		return fmt.Errorf("auth check failed: %w", err)
 	}

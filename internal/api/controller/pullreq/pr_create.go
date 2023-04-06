@@ -40,7 +40,7 @@ func (c *Controller) Create(
 		return nil, usererror.BadRequest("pull request title can't be empty")
 	}
 
-	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access access to target repo: %w", err)
 	}

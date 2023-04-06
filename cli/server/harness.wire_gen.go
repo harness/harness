@@ -55,11 +55,11 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	aclClient, err := client.ProvideACLClient(serviceJWTProvider, typesConfig)
+	acl, err := client.ProvideACL(ctx, serviceJWTProvider, typesConfig)
 	if err != nil {
 		return nil, err
 	}
-	authorizer := authz.ProvideAuthorizer(typesConfig, aclClient)
+	authorizer := authz.ProvideAuthorizer(ctx, typesConfig, config, acl)
 	db, err := database.ProvideDatabase(ctx, config)
 	if err != nil {
 		return nil, err
