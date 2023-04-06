@@ -1,21 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Avatar, Container, FontVariation, Layout, StringSubstitute, Text } from '@harness/uicore'
-import { LanguageDescription } from '@codemirror/language'
-import { indentWithTab } from '@codemirror/commands'
-import { ViewPlugin, ViewUpdate } from '@codemirror/view'
-import { languages } from '@codemirror/language-data'
-import { EditorView, gutter, GutterMarker, keymap, WidgetType } from '@codemirror/view'
-import { Compartment, EditorState } from '@codemirror/state'
+import type { ViewUpdate } from '@codemirror/view'
+import { EditorView, gutter, GutterMarker, WidgetType } from '@codemirror/view'
+import { Compartment } from '@codemirror/state'
 import ReactTimeago from 'react-timeago'
-import { color } from '@uiw/codemirror-extensions-color'
-import { hyperLink } from '@uiw/codemirror-extensions-hyper-link'
-import { githubLight as theme } from '@uiw/codemirror-themes-all'
 import { useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
+import { noop } from 'lodash-es'
 import type { GitrpcBlamePart } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
+import { Editor } from 'components/Editor/Editor'
 import { lineWidget, LineWidgetPosition, LineWidgetSpec } from './lineWidget'
 import css from './GitBlame.module.scss'
 
@@ -151,7 +147,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
           ))}
         </Container>
         <Render when={Object.values(blameBlocks).length}>
-          <GitBlameSourceViewer
+          <GitBlameRenderer
             source={data?.map(({ lines }) => (lines as string[]).join('\n')).join('\n') || ''}
             filename={resourcePath}
             onViewUpdate={onViewUpdate}
@@ -179,7 +175,7 @@ class CustomLineNumber extends GutterMarker {
   }
 }
 
-interface GitBlameSourceViewerProps {
+interface GitBlameRendererProps {
   filename: string
   source: string
   onViewUpdate?: (update: ViewUpdate) => void
@@ -190,17 +186,22 @@ interface EditorLinePaddingWidgetSpec extends LineWidgetSpec {
   blockLines: number
 }
 
-const GitBlameSourceViewer = React.memo(function GitBlameSourceViewer({
+const GitBlameRenderer = React.memo(function GitBlameSourceViewer({
   source,
   filename,
-  onViewUpdate,
+  onViewUpdate = noop,
   blameBlocks
-}: GitBlameSourceViewerProps) {
-  const view = useRef<EditorView>()
-  const ref = useRef<HTMLDivElement>()
-  const languageConfig = useMemo(() => new Compartment(), [])
+}: GitBlameRendererProps) {
+  const extensions = useMemo(() => new Compartment(), [])
+  const viewRef = useRef<EditorView>()
 
   useEffect(() => {
+    const customLineNumberGutter = gutter({
+      lineMarker(_view, line) {
+        const lineNumber: number = _view.state.doc.lineAt(line.from).number
+        return new CustomLineNumber(lineNumber)
+      }
+    })
     const lineWidgetSpec: EditorLinePaddingWidgetSpec[] = []
 
     Object.values(blameBlocks).forEach(block => {
@@ -219,74 +220,29 @@ const GitBlameSourceViewer = React.memo(function GitBlameSourceViewer({
       })
     })
 
-    const customLineNumberGutter = gutter({
-      lineMarker(_view, line) {
-        const lineNumber: number = _view.state.doc.lineAt(line.from).number
-        return new CustomLineNumber(lineNumber)
-      }
-    })
-
-    const editorView = new EditorView({
-      doc: source,
-      extensions: [
+    viewRef.current?.dispatch({
+      effects: extensions.reconfigure([
         customLineNumberGutter,
-
-        ViewPlugin.fromClass(
-          class {
-            update(update: ViewUpdate) {
-              onViewUpdate?.(update)
-            }
-          }
-        ),
-
-        color,
-        hyperLink, // works pretty well in a markdown file
-        theme,
-
-        EditorView.lineWrapping,
-        keymap.of([indentWithTab]),
-
-        EditorState.readOnly.of(true),
-        EditorView.editable.of(false),
-
         lineWidget({
           spec: lineWidgetSpec,
           widgetFor: spec => new EditorLinePaddingWidget(spec)
-        }),
-
-        /**
-        languageConfig is a compartment that defaults to an empty array (no language support)
-        at first, when a language is detected, languageConfig is used to reconfigure dynamically.
-        @see https://codemirror.net/examples/config/
-        */
-        languageConfig.of([])
-      ],
-      parent: ref.current
-    })
-
-    view.current = editorView
-
-    return () => {
-      editorView.destroy()
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (filename) {
-      languageDescriptionFrom(filename)
-        ?.load()
-        .then(languageSupport => {
-          view.current?.dispatch({ effects: languageConfig.reconfigure(languageSupport) })
         })
-    }
-  }, [filename, view, languageConfig])
+      ])
+    })
+  }, [extensions, blameBlocks])
 
-  return <Container ref={ref} className={css.main} />
+  return (
+    <Editor
+      viewRef={viewRef}
+      filename={filename}
+      source={source}
+      readonly={true}
+      className={css.main}
+      onViewUpdate={onViewUpdate}
+      extensions={extensions.of([])}
+    />
+  )
 })
-
-function languageDescriptionFrom(filename: string) {
-  return LanguageDescription.matchFilename(languages, filename)
-}
 
 class EditorLinePaddingWidget extends WidgetType {
   constructor(readonly spec: EditorLinePaddingWidgetSpec) {
@@ -306,9 +262,7 @@ class EditorLinePaddingWidget extends WidgetType {
     div.setAttribute('aria-hidden', 'true')
     div.setAttribute('data-line-number', String(lineNumber))
     div.setAttribute('data-position', position)
-
     div.style.height = `${height}px`
-    // div.style.backgroundColor = position === LineWidgetPosition.TOP ? 'cyan' : 'yellow'
 
     return div
   }
