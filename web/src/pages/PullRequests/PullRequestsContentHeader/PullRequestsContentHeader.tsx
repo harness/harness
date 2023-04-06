@@ -7,8 +7,8 @@ import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import css from './PullRequestsContentHeader.module.scss'
 import { permissionProps } from 'utils/Utils'
+import css from './PullRequestsContentHeader.module.scss'
 
 interface PullRequestsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
   loading?: boolean

@@ -100,7 +100,7 @@ export default function PullRequests() {
                       {row.original.stats?.conversations}
                     </Text>
                   </Text>
-                  <Text color={Color.GREY_500} font={{size:"small"}}>
+                  <Text color={Color.GREY_500} font={{ size: 'small' }}>
                     <StringSubstitute
                       str={getString('pr.statusLine')}
                       vars={{
