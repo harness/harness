@@ -47,8 +47,7 @@ func Middleware(next http.Handler) http.Handler {
 }
 
 func authType(r *http.Request) string {
-	switch {
-	case r.Header.Get("Authorization") != "" || r.FormValue("access_token") != "":
+	if r.Header.Get("Authorization") != "" || r.FormValue("access_token") != "" {
 		return "token"
 	}
 
