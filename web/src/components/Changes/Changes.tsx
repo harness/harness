@@ -35,7 +35,7 @@ import { useShowRequestError } from 'hooks/useShowRequestError'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
-import ReviewSplitButton from './ReviewSplitButton/ReviewSplitButton'
+import { ReviewDecisionButton } from './ReviewDecisionButton/ReviewDecisionButton'
 import css from './Changes.module.scss'
 
 const STICKY_TOP_POSITION = 64
@@ -73,7 +73,6 @@ export const Changes: React.FC<ChangesProps> = ({
   const [lineBreaks, setLineBreaks] = useUserPreference(UserPreference.DIFF_LINE_BREAKS, false)
   const [diffs, setDiffs] = useState<DiffFileEntry[]>([])
   const [isSticky, setSticky] = useState(false)
-
   const {
     data: rawDiff,
     error,
@@ -210,16 +209,11 @@ export const Changes: React.FC<ChangesProps> = ({
                   </Container>
                   <FlexExpander />
 
-                  <ReviewSplitButton
-                    shouldHide={readOnly || pullRequestMetadata?.state === 'merged'}
+                  <ReviewDecisionButton
                     repoMetadata={repoMetadata}
                     pullRequestMetadata={pullRequestMetadata}
+                    shouldHide={readOnly || pullRequestMetadata?.state === 'merged'}
                   />
-                  {/* <ReviewDecisionButton
-                    repoMetadata={repoMetadata}
-                    pullRequestMetadata={pullRequestMetadata}
-                    shouldHide={readOnly || pullRequestMetadata?.state === 'merged'}
-                  /> */}
                 </Layout.Horizontal>
               </Container>
 

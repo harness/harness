@@ -172,6 +172,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                           setEditDesc(ACCESS_MODES.EDIT)
                         }}
                         {...permissionProps(permEditResult, standalone)}
+
                       />
                     </Text>
                   )}
@@ -190,7 +191,8 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                   }}
                   variation={ButtonVariation.SECONDARY}
                   text={getString('delete')}
-                  {...permissionProps(permDeleteResult, standalone)}></Button>
+                  {...permissionProps(permDeleteResult, standalone)}
+                  ></Button>
               </Container>
             </Container>
           </Layout.Vertical>

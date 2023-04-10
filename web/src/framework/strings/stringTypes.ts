@@ -241,7 +241,6 @@ export interface StringsMap {
   quote: string
   readMe: string
   refresh: string
-  reject: string
   rejected: string
   remove: string
   renameFile: string

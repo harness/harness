@@ -538,7 +538,7 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
       return (
         <Container>
           <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
-            <Container margin={{ left: 'xsmall' }} width={24} height={24} className={css.mergeContainer}>
+            <Container width={24} height={24} className={css.mergeContainer}>
               <Icon name={CodeIcon.Merged} size={16} color={Color.PURPLE_700} />
             </Container>
 

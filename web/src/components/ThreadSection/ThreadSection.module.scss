@@ -29,11 +29,11 @@
 
   > ::before {
     position: absolute;
-    top: 28px;
+    top: 34px;
     left: 15px;
     content: '';
     width: 1px;
-    height: 25px;
+    height: 28px;
     border: 1px dashed var(--grey-200);
     opacity: 0.7;
     z-index: 2;
@@ -45,7 +45,7 @@
 
   > ::after {
     position: absolute;
-    bottom: -10px;
+    bottom: -12px;
     left: 15px;
     content: '';
     width: 1px;
