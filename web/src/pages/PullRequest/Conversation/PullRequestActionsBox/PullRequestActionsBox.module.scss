@@ -63,6 +63,20 @@
       max-width: 320px;
     }
   }
+  .menuReviewItem {
+    strong {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    p {
+      font-size: 12px;
+      padding-left: 2px;
+      line-height: 16px;
+      margin: 0px 1px;
+      max-width: 320px;
+    }
+  }
 }
 
 .btnWrapper {

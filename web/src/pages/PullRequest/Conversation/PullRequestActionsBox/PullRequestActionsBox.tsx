@@ -17,10 +17,17 @@ import { Case, Else, Match, Render, Truthy } from 'react-jsx-match'
 import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
-import type { EnumMergeMethod, OpenapiMergePullReq, OpenapiStatePullReqRequest, TypesPullReq } from 'services/code'
+import type {
+  EnumMergeMethod,
+  EnumPullReqState,
+  OpenapiMergePullReq,
+  OpenapiStatePullReqRequest,
+  TypesPullReq
+} from 'services/code'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, PullRequestFilterOption, PullRequestState } from 'utils/GitUtils'
 import { getErrorMessage } from 'utils/Utils'
+import ReviewSplitButton from 'components/Changes/ReviewSplitButton/ReviewSplitButton'
 import css from './PullRequestActionsBox.module.scss'
 
 interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
@@ -135,46 +142,53 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                       />
                     </Case>
                     <Case val={PullRequestState.OPEN}>
-                      <Container
-                        inline
-                        className={cx({
-                          [css.btnWrapper]: mergeOption.method !== 'close',
-                          [css.hasError]: mergeable === false
-                        })}>
-                        <SplitButton
-                          text={mergeOption.title}
-                          disabled={loading}
+                      <Layout.Horizontal>
+                        <ReviewSplitButton
+                          shouldHide={(pullRequestMetadata?.state as EnumPullReqState) === 'merged'}
+                          repoMetadata={repoMetadata}
+                          pullRequestMetadata={pullRequestMetadata}
+                        />
+                        <Container
+                          inline
+                          padding={{ left: 'medium' }}
                           className={cx({
-                            [css.secondaryButton]: mergeOption.method === 'close' || mergeable === false
-                          })}
-                          variation={
-                            mergeOption.method === 'close' || mergeable === false
-                              ? ButtonVariation.TERTIARY
-                              : ButtonVariation.PRIMARY
-                          }
-                          popoverProps={{
-                            interactionKind: 'click',
-                            usePortal: true,
-                            popoverClassName: css.popover,
-                            position: PopoverPosition.BOTTOM_RIGHT,
-                            transitionDuration: 1000
-                          }}
-                          onClick={() => {
-                            if (mergeOption.method !== 'close') {
-                              const payload: OpenapiMergePullReq = { method: mergeOption.method }
-
-                              mergePR(payload)
-                                .then(onPRStateChanged)
-                                .catch(exception => showError(getErrorMessage(exception)))
-                            } else {
-                              const payload: OpenapiStatePullReqRequest = { state: 'closed' }
-
-                              updatePRState(payload)
-                                .then(onPRStateChanged)
-                                .catch(exception => showError(getErrorMessage(exception)))
+                            [css.btnWrapper]: mergeOption.method !== 'close',
+                            [css.hasError]: mergeable === false
+                          })}>
+                          <SplitButton
+                            text={mergeOption.title}
+                            disabled={loading}
+                            className={cx({
+                              [css.secondaryButton]: mergeOption.method === 'close' || mergeable === false
+                            })}
+                            variation={
+                              mergeOption.method === 'close' || mergeable === false
+                                ? ButtonVariation.TERTIARY
+                                : ButtonVariation.PRIMARY
                             }
-                          }}>
-                          {/* TODO: These two items are used for creating a PR
+                            popoverProps={{
+                              interactionKind: 'click',
+                              usePortal: true,
+                              popoverClassName: css.popover,
+                              position: PopoverPosition.BOTTOM_RIGHT,
+                              transitionDuration: 1000
+                            }}
+                            onClick={() => {
+                              if (mergeOption.method !== 'close') {
+                                const payload: OpenapiMergePullReq = { method: mergeOption.method }
+
+                                mergePR(payload)
+                                  .then(onPRStateChanged)
+                                  .catch(exception => showError(getErrorMessage(exception)))
+                              } else {
+                                const payload: OpenapiStatePullReqRequest = { state: 'closed' }
+
+                                updatePRState(payload)
+                                  .then(onPRStateChanged)
+                                  .catch(exception => showError(getErrorMessage(exception)))
+                              }
+                            }}>
+                            {/* TODO: These two items are used for creating a PR
                           <Menu.Item
                         className={css.menuItem}
                         text={
@@ -197,25 +211,26 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           </>
                         }
                       /> */}
-                          {mergeOptions.map(option => {
-                            return (
-                              <Menu.Item
-                                key={option.method}
-                                className={css.menuItem}
-                                disabled={option.disabled}
-                                text={
-                                  <>
-                                    <BIcon icon={mergeOption.method === option.method ? 'tick' : 'blank'} />
-                                    <strong>{option.title}</strong>
-                                    <p>{option.desc}</p>
-                                  </>
-                                }
-                                onClick={() => setMergeOption(option)}
-                              />
-                            )
-                          })}
-                        </SplitButton>
-                      </Container>
+                            {mergeOptions.map(option => {
+                              return (
+                                <Menu.Item
+                                  key={option.method}
+                                  className={css.menuItem}
+                                  disabled={option.disabled}
+                                  text={
+                                    <>
+                                      <BIcon icon={mergeOption.method === option.method ? 'tick' : 'blank'} />
+                                      <strong>{option.title}</strong>
+                                      <p>{option.desc}</p>
+                                    </>
+                                  }
+                                  onClick={() => setMergeOption(option)}
+                                />
+                              )
+                            })}
+                          </SplitButton>
+                        </Container>
+                      </Layout.Horizontal>
                     </Case>
                   </Match>
                 </Container>
