@@ -11,5 +11,11 @@ declare const styles: {
   readonly hideBtn: string
   readonly refreshIcon: string
   readonly repeatBtn: string
+  readonly popover: string
+  readonly menuItem: string
+  readonly menuReviewItem: string
+  readonly reviewIcon: string
+  readonly btn: string
+  readonly hide: string
 }
 export default styles

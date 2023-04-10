@@ -11,6 +11,7 @@ declare const styles: {
   readonly sub: string
   readonly popover: string
   readonly menuItem: string
+  readonly menuReviewItem: string
   readonly btnWrapper: string
   readonly hasError: string
   readonly mergeContainer: string
