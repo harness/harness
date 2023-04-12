@@ -105,6 +105,15 @@ func JSON(w http.ResponseWriter, code int, v interface{}) {
 	}
 }
 
+// Reader reads the content from the provided reader and writes it as is to the response body.
+func Reader(ctx context.Context, w http.ResponseWriter, code int, reader io.Reader) {
+	w.WriteHeader(code)
+	_, err := io.Copy(w, reader)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to render data from reader")
+	}
+}
+
 // JSONArrayDynamic outputs an JSON array whose elements are streamed from a channel.
 // Due to the dynamic nature (unknown number of elements) the function will use
 // chunked transfer encoding for large files.

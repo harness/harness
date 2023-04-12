@@ -71,7 +71,7 @@ func (s RepositoryService) GetTreeNode(ctx context.Context,
 	// TODO: do we need to validate request for nil?
 	gitNode, err := s.adapter.GetTreeNode(ctx, repoPath, request.GetGitRef(), request.GetPath())
 	if err != nil {
-		return nil, processGitErrorf(err, "failed to get tree node %s", request.Path)
+		return nil, processGitErrorf(err, "no such path '%s' in '%s'", request.Path, request.GetGitRef())
 	}
 
 	res := &rpc.GetTreeNodeResponse{

@@ -26,7 +26,7 @@ type GitAdapter interface {
 	ListTreeNodes(ctx context.Context, repoPath string, ref string, treePath string,
 		recursive bool, includeLatestCommit bool) ([]types.TreeNodeWithCommit, error)
 	GetSubmodule(ctx context.Context, repoPath string, ref string, treePath string) (*types.Submodule, error)
-	GetBlob(ctx context.Context, repoPath string, sha string, sizeLimit int64) (*types.Blob, error)
+	GetBlob(ctx context.Context, repoPath string, sha string, sizeLimit int64) (*types.BlobReader, error)
 	WalkReferences(ctx context.Context, repoPath string, handler types.WalkReferencesHandler,
 		opts *types.WalkReferencesOptions) error
 	GetCommit(ctx context.Context, repoPath string, ref string) (*types.Commit, error)

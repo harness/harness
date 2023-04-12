@@ -247,7 +247,6 @@ type CommitFilesAction struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Payload:
-	//
 	//	*CommitFilesAction_Header
 	//	*CommitFilesAction_Content
 	Payload isCommitFilesAction_Payload `protobuf_oneof:"payload"`
@@ -331,7 +330,6 @@ type CommitFilesRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Payload:
-	//
 	//	*CommitFilesRequest_Header
 	//	*CommitFilesRequest_Action
 	Payload isCommitFilesRequest_Payload `protobuf_oneof:"payload"`

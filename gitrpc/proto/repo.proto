@@ -11,7 +11,7 @@ service RepositoryService {
   rpc GetTreeNode(GetTreeNodeRequest) returns (GetTreeNodeResponse);
   rpc ListTreeNodes(ListTreeNodesRequest) returns (stream ListTreeNodesResponse);
   rpc GetSubmodule(GetSubmoduleRequest) returns (GetSubmoduleResponse);
-  rpc GetBlob(GetBlobRequest) returns (GetBlobResponse);
+  rpc GetBlob(GetBlobRequest) returns (stream GetBlobResponse);
   rpc ListCommits(ListCommitsRequest) returns (stream ListCommitsResponse);
   rpc GetCommit(GetCommitRequest) returns (GetCommitResponse);
   rpc GetCommitDivergences(GetCommitDivergencesRequest) returns (GetCommitDivergencesResponse);
@@ -106,17 +106,20 @@ message ListCommitsResponse {
 message GetBlobRequest {
   ReadRequest base = 1;
   string sha       = 2;
-  int64 sizeLimit  = 3;
+  int64 size_limit = 3;
 }
 
 message GetBlobResponse {
-  Blob blob = 1;
+  oneof data {
+    GetBlobResponseHeader header = 1;
+    bytes content                = 2;
+  }
 }
 
-message Blob {
-  string sha    = 1;
-  int64 size    = 2;
-  bytes content = 3; 
+message GetBlobResponseHeader {
+  string sha         = 1;
+  int64 size         = 2;
+  int64 content_size = 3;
 }
 
 message GetSubmoduleRequest {

@@ -24,6 +24,7 @@ var (
 	ErrEmptyBaseRef                = errors.New("empty base reference")
 	ErrEmptyHeadRef                = errors.New("empty head reference")
 	ErrHunkNotFound                = errors.New("hunk not found")
+	ErrEmptySHA                    = errors.New("empty SHA")
 )
 
 // MergeConflictsError represents an error if merging fails with a conflict.
