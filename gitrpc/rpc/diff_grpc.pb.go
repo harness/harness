@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type DiffServiceClient interface {
 	RawDiff(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (DiffService_RawDiffClient, error)
 	DiffShortStat(ctx context.Context, in *DiffRequest, opts ...grpc.CallOption) (*DiffShortStatResponse, error)
+	GetDiffHunkHeaders(ctx context.Context, in *GetDiffHunkHeadersRequest, opts ...grpc.CallOption) (*GetDiffHunkHeadersResponse, error)
+	DiffCut(ctx context.Context, in *DiffCutRequest, opts ...grpc.CallOption) (*DiffCutResponse, error)
 }
 
 type diffServiceClient struct {
@@ -75,12 +77,32 @@ func (c *diffServiceClient) DiffShortStat(ctx context.Context, in *DiffRequest, 
 	return out, nil
 }
 
+func (c *diffServiceClient) GetDiffHunkHeaders(ctx context.Context, in *GetDiffHunkHeadersRequest, opts ...grpc.CallOption) (*GetDiffHunkHeadersResponse, error) {
+	out := new(GetDiffHunkHeadersResponse)
+	err := c.cc.Invoke(ctx, "/rpc.DiffService/GetDiffHunkHeaders", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *diffServiceClient) DiffCut(ctx context.Context, in *DiffCutRequest, opts ...grpc.CallOption) (*DiffCutResponse, error) {
+	out := new(DiffCutResponse)
+	err := c.cc.Invoke(ctx, "/rpc.DiffService/DiffCut", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DiffServiceServer is the server API for DiffService service.
 // All implementations must embed UnimplementedDiffServiceServer
 // for forward compatibility
 type DiffServiceServer interface {
 	RawDiff(*DiffRequest, DiffService_RawDiffServer) error
 	DiffShortStat(context.Context, *DiffRequest) (*DiffShortStatResponse, error)
+	GetDiffHunkHeaders(context.Context, *GetDiffHunkHeadersRequest) (*GetDiffHunkHeadersResponse, error)
+	DiffCut(context.Context, *DiffCutRequest) (*DiffCutResponse, error)
 	mustEmbedUnimplementedDiffServiceServer()
 }
 
@@ -93,6 +115,12 @@ func (UnimplementedDiffServiceServer) RawDiff(*DiffRequest, DiffService_RawDiffS
 }
 func (UnimplementedDiffServiceServer) DiffShortStat(context.Context, *DiffRequest) (*DiffShortStatResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DiffShortStat not implemented")
+}
+func (UnimplementedDiffServiceServer) GetDiffHunkHeaders(context.Context, *GetDiffHunkHeadersRequest) (*GetDiffHunkHeadersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiffHunkHeaders not implemented")
+}
+func (UnimplementedDiffServiceServer) DiffCut(context.Context, *DiffCutRequest) (*DiffCutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DiffCut not implemented")
 }
 func (UnimplementedDiffServiceServer) mustEmbedUnimplementedDiffServiceServer() {}
 
@@ -146,6 +174,42 @@ func _DiffService_DiffShortStat_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DiffService_GetDiffHunkHeaders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDiffHunkHeadersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiffServiceServer).GetDiffHunkHeaders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.DiffService/GetDiffHunkHeaders",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiffServiceServer).GetDiffHunkHeaders(ctx, req.(*GetDiffHunkHeadersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DiffService_DiffCut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DiffCutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiffServiceServer).DiffCut(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.DiffService/DiffCut",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiffServiceServer).DiffCut(ctx, req.(*DiffCutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DiffService_ServiceDesc is the grpc.ServiceDesc for DiffService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -156,6 +220,14 @@ var DiffService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DiffShortStat",
 			Handler:    _DiffService_DiffShortStat_Handler,
+		},
+		{
+			MethodName: "GetDiffHunkHeaders",
+			Handler:    _DiffService_GetDiffHunkHeaders_Handler,
+		},
+		{
+			MethodName: "DiffCut",
+			Handler:    _DiffService_DiffCut_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -36,8 +36,6 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 
 			// reset merge-check fields for new run
 			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
-			pr.MergeTargetSHA = nil
-			pr.MergeBaseSHA = nil
 			pr.MergeSHA = nil
 			pr.MergeConflicts = nil
 			return nil
@@ -85,8 +83,6 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 
 			pr.State = enum.PullReqStateClosed
 			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
-			pr.MergeTargetSHA = nil
-			pr.MergeBaseSHA = nil
 			pr.MergeSHA = nil
 			pr.MergeConflicts = nil
 

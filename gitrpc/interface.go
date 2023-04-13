@@ -50,6 +50,9 @@ type Interface interface {
 	DiffShortStat(ctx context.Context, params *DiffParams) (DiffShortStatOutput, error)
 	DiffStats(ctx context.Context, params *DiffParams) (DiffStatsOutput, error)
 
+	GetDiffHunkHeaders(ctx context.Context, params GetDiffHunkHeadersParams) (GetDiffHunkHeadersOutput, error)
+	DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOutput, error)
+
 	/*
 	 * Merge services
 	 */

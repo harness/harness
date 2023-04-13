@@ -52,6 +52,46 @@ type PullReqActivity struct {
 
 	Author   PrincipalInfo  `json:"author"`
 	Resolver *PrincipalInfo `json:"resolver"`
+
+	Outdated                *bool   `json:"outdated"`
+	CodeCommentMergeBaseSHA *string `json:"code_comment_merge_base_sha"`
+	CodeCommentSourceSHA    *string `json:"code_comment_source_sha"`
+	CodeCommentPath         *string `json:"code_comment_path"`
+	CodeCommentLineNew      *int64  `json:"code_comment_line_new"`
+	CodeCommentSpanNew      *int64  `json:"code_comment_span_new"`
+	CodeCommentLineOld      *int64  `json:"code_comment_line_old"`
+	CodeCommentSpanOld      *int64  `json:"code_comment_span_old"`
+}
+
+func (a *PullReqActivity) IsValidCodeComment() bool {
+	return a.Type == enum.PullReqActivityTypeCodeComment &&
+		a.Kind == enum.PullReqActivityKindChangeComment &&
+		a.CodeCommentMergeBaseSHA != nil &&
+		a.CodeCommentSourceSHA != nil &&
+		a.CodeCommentPath != nil &&
+		a.CodeCommentLineNew != nil &&
+		a.CodeCommentSpanNew != nil &&
+		a.CodeCommentLineOld != nil &&
+		a.CodeCommentSpanOld != nil
+}
+
+func (a *PullReqActivity) AsCodeComment() *CodeComment {
+	if !a.IsValidCodeComment() {
+		return &CodeComment{}
+	}
+	return &CodeComment{
+		ID:           a.ID,
+		Version:      a.Version,
+		Updated:      a.Updated,
+		Outdated:     *a.Outdated,
+		MergeBaseSHA: *a.CodeCommentMergeBaseSHA,
+		SourceSHA:    *a.CodeCommentSourceSHA,
+		Path:         *a.CodeCommentPath,
+		LineNew:      int(*a.CodeCommentLineNew),
+		SpanNew:      int(*a.CodeCommentSpanNew),
+		LineOld:      int(*a.CodeCommentLineOld),
+		SpanOld:      int(*a.CodeCommentSpanOld),
+	}
 }
 
 func (a *PullReqActivity) IsReplyable() bool {
@@ -130,14 +170,16 @@ type activityPayloadFactoryMethod func() PullReqActivityPayload
 
 // allPullReqActivityPayloads is a map that contains the payload factory methods for all activity types with payload.
 var allPullReqActivityPayloads = func(
-	factoryMethods []activityPayloadFactoryMethod) map[enum.PullReqActivityType]activityPayloadFactoryMethod {
+	factoryMethods []activityPayloadFactoryMethod,
+) map[enum.PullReqActivityType]activityPayloadFactoryMethod {
 	payloadMap := make(map[enum.PullReqActivityType]activityPayloadFactoryMethod)
 	for _, factoryMethod := range factoryMethods {
 		payloadMap[factoryMethod().ActivityType()] = factoryMethod
 	}
 	return payloadMap
 }([]activityPayloadFactoryMethod{
-	func() PullReqActivityPayload { return &PullRequestActivityPayloadComment{} },
+	func() PullReqActivityPayload { return PullRequestActivityPayloadComment{} },
+	func() PullReqActivityPayload { return &PullRequestActivityPayloadCodeComment{} },
 	func() PullReqActivityPayload { return &PullRequestActivityPayloadMerge{} },
 	func() PullReqActivityPayload { return &PullRequestActivityPayloadStateChange{} },
 	func() PullReqActivityPayload { return &PullRequestActivityPayloadTitleChange{} },
@@ -156,12 +198,20 @@ func newPayloadForActivity(t enum.PullReqActivityType) (PullReqActivityPayload, 
 	return payloadFactoryMethod(), nil
 }
 
-// PullRequestActivityPayloadComment represents the payload for a comment.
-// NOTE: Allow UI to store whatever needed for code comments until we have a proper solution.
-type PullRequestActivityPayloadComment map[string]interface{}
+type PullRequestActivityPayloadComment struct{}
 
-func (a *PullRequestActivityPayloadComment) ActivityType() enum.PullReqActivityType {
+func (a PullRequestActivityPayloadComment) ActivityType() enum.PullReqActivityType {
 	return enum.PullReqActivityTypeComment
+}
+
+type PullRequestActivityPayloadCodeComment struct {
+	Title  string   `json:"title"`
+	Lines  []string `json:"lines"`
+	AnyNew bool     `json:"any_new"`
+}
+
+func (a *PullRequestActivityPayloadCodeComment) ActivityType() enum.PullReqActivityType {
+	return enum.PullReqActivityTypeCodeComment
 }
 
 type PullRequestActivityPayloadMerge struct {

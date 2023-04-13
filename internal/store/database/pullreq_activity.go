@@ -68,6 +68,15 @@ type pullReqActivity struct {
 
 	ResolvedBy null.Int `db:"pullreq_activity_resolved_by"`
 	Resolved   null.Int `db:"pullreq_activity_resolved"`
+
+	Outdated                null.Bool   `db:"pullreq_activity_outdated"`
+	CodeCommentMergeBaseSHA null.String `db:"pullreq_activity_code_comment_merge_base_sha"`
+	CodeCommentSourceSHA    null.String `db:"pullreq_activity_code_comment_source_sha"`
+	CodeCommentPath         null.String `db:"pullreq_activity_code_comment_path"`
+	CodeCommentLineNew      null.Int    `db:"pullreq_activity_code_comment_line_new"`
+	CodeCommentSpanNew      null.Int    `db:"pullreq_activity_code_comment_span_new"`
+	CodeCommentLineOld      null.Int    `db:"pullreq_activity_code_comment_line_old"`
+	CodeCommentSpanOld      null.Int    `db:"pullreq_activity_code_comment_span_old"`
 }
 
 const (
@@ -91,7 +100,15 @@ const (
 		,pullreq_activity_payload
 		,pullreq_activity_metadata
 		,pullreq_activity_resolved_by
-		,pullreq_activity_resolved`
+		,pullreq_activity_resolved
+		,pullreq_activity_outdated
+		,pullreq_activity_code_comment_merge_base_sha
+		,pullreq_activity_code_comment_source_sha
+		,pullreq_activity_code_comment_path
+		,pullreq_activity_code_comment_line_new
+		,pullreq_activity_code_comment_span_new
+		,pullreq_activity_code_comment_line_old
+		,pullreq_activity_code_comment_span_old`
 
 	pullreqActivitySelectBase = `
 	SELECT` + pullreqActivityColumns + `
@@ -136,6 +153,14 @@ func (s *PullReqActivityStore) Create(ctx context.Context, act *types.PullReqAct
 		,pullreq_activity_metadata
 		,pullreq_activity_resolved_by
 		,pullreq_activity_resolved
+		,pullreq_activity_outdated
+		,pullreq_activity_code_comment_merge_base_sha
+		,pullreq_activity_code_comment_source_sha
+		,pullreq_activity_code_comment_path
+		,pullreq_activity_code_comment_line_new
+		,pullreq_activity_code_comment_span_new
+		,pullreq_activity_code_comment_line_old
+		,pullreq_activity_code_comment_span_old
 	) values (
 		 :pullreq_activity_version
 		,:pullreq_activity_created_by
@@ -156,6 +181,14 @@ func (s *PullReqActivityStore) Create(ctx context.Context, act *types.PullReqAct
 		,:pullreq_activity_metadata
 		,:pullreq_activity_resolved_by
 		,:pullreq_activity_resolved
+		,:pullreq_activity_outdated
+		,:pullreq_activity_code_comment_merge_base_sha
+		,:pullreq_activity_code_comment_source_sha
+		,:pullreq_activity_code_comment_path
+		,:pullreq_activity_code_comment_line_new
+		,:pullreq_activity_code_comment_span_new
+		,:pullreq_activity_code_comment_line_old
+		,:pullreq_activity_code_comment_span_old
 	) RETURNING pullreq_activity_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -217,6 +250,14 @@ func (s *PullReqActivityStore) Update(ctx context.Context, act *types.PullReqAct
 		,pullreq_activity_metadata = :pullreq_activity_metadata
 		,pullreq_activity_resolved_by = :pullreq_activity_resolved_by
 		,pullreq_activity_resolved = :pullreq_activity_resolved
+		,pullreq_activity_outdated = :pullreq_activity_outdated
+		,pullreq_activity_code_comment_merge_base_sha = :pullreq_activity_code_comment_merge_base_sha
+		,pullreq_activity_code_comment_source_sha = :pullreq_activity_code_comment_source_sha
+		,pullreq_activity_code_comment_path = :pullreq_activity_code_comment_path
+		,pullreq_activity_code_comment_line_new = :pullreq_activity_code_comment_line_new
+		,pullreq_activity_code_comment_span_new = :pullreq_activity_code_comment_span_new
+		,pullreq_activity_code_comment_line_old = :pullreq_activity_code_comment_line_old
+		,pullreq_activity_code_comment_span_old = :pullreq_activity_code_comment_span_old
 	WHERE pullreq_activity_id = :pullreq_activity_id AND pullreq_activity_version = :pullreq_activity_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -375,28 +416,36 @@ func (s *PullReqActivityStore) List(ctx context.Context, prID int64,
 
 func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
 	m := &types.PullReqActivity{
-		ID:         act.ID,
-		Version:    act.Version,
-		CreatedBy:  act.CreatedBy,
-		Created:    act.Created,
-		Updated:    act.Updated,
-		Edited:     act.Edited,
-		Deleted:    act.Deleted.Ptr(),
-		ParentID:   act.ParentID.Ptr(),
-		RepoID:     act.RepoID,
-		PullReqID:  act.PullReqID,
-		Order:      act.Order,
-		SubOrder:   act.SubOrder,
-		ReplySeq:   act.ReplySeq,
-		Type:       act.Type,
-		Kind:       act.Kind,
-		Text:       act.Text,
-		PayloadRaw: act.Payload,
-		Metadata:   make(map[string]interface{}),
-		ResolvedBy: act.ResolvedBy.Ptr(),
-		Resolved:   act.Resolved.Ptr(),
-		Author:     types.PrincipalInfo{},
-		Resolver:   nil,
+		ID:                      act.ID,
+		Version:                 act.Version,
+		CreatedBy:               act.CreatedBy,
+		Created:                 act.Created,
+		Updated:                 act.Updated,
+		Edited:                  act.Edited,
+		Deleted:                 act.Deleted.Ptr(),
+		ParentID:                act.ParentID.Ptr(),
+		RepoID:                  act.RepoID,
+		PullReqID:               act.PullReqID,
+		Order:                   act.Order,
+		SubOrder:                act.SubOrder,
+		ReplySeq:                act.ReplySeq,
+		Type:                    act.Type,
+		Kind:                    act.Kind,
+		Text:                    act.Text,
+		PayloadRaw:              act.Payload,
+		Metadata:                make(map[string]interface{}),
+		ResolvedBy:              act.ResolvedBy.Ptr(),
+		Resolved:                act.Resolved.Ptr(),
+		Author:                  types.PrincipalInfo{},
+		Resolver:                nil,
+		Outdated:                act.Outdated.Ptr(),
+		CodeCommentMergeBaseSHA: act.CodeCommentMergeBaseSHA.Ptr(),
+		CodeCommentSourceSHA:    act.CodeCommentSourceSHA.Ptr(),
+		CodeCommentPath:         act.CodeCommentPath.Ptr(),
+		CodeCommentLineNew:      act.CodeCommentLineNew.Ptr(),
+		CodeCommentSpanNew:      act.CodeCommentSpanNew.Ptr(),
+		CodeCommentLineOld:      act.CodeCommentLineOld.Ptr(),
+		CodeCommentSpanOld:      act.CodeCommentSpanOld.Ptr(),
 	}
 
 	_ = json.Unmarshal(act.Metadata, &m.Metadata)
@@ -406,26 +455,34 @@ func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
 
 func mapInternalPullReqActivity(act *types.PullReqActivity) *pullReqActivity {
 	m := &pullReqActivity{
-		ID:         act.ID,
-		Version:    act.Version,
-		CreatedBy:  act.CreatedBy,
-		Created:    act.Created,
-		Updated:    act.Updated,
-		Edited:     act.Edited,
-		Deleted:    null.IntFromPtr(act.Deleted),
-		ParentID:   null.IntFromPtr(act.ParentID),
-		RepoID:     act.RepoID,
-		PullReqID:  act.PullReqID,
-		Order:      act.Order,
-		SubOrder:   act.SubOrder,
-		ReplySeq:   act.ReplySeq,
-		Type:       act.Type,
-		Kind:       act.Kind,
-		Text:       act.Text,
-		Payload:    act.PayloadRaw,
-		Metadata:   nil,
-		ResolvedBy: null.IntFromPtr(act.ResolvedBy),
-		Resolved:   null.IntFromPtr(act.Resolved),
+		ID:                      act.ID,
+		Version:                 act.Version,
+		CreatedBy:               act.CreatedBy,
+		Created:                 act.Created,
+		Updated:                 act.Updated,
+		Edited:                  act.Edited,
+		Deleted:                 null.IntFromPtr(act.Deleted),
+		ParentID:                null.IntFromPtr(act.ParentID),
+		RepoID:                  act.RepoID,
+		PullReqID:               act.PullReqID,
+		Order:                   act.Order,
+		SubOrder:                act.SubOrder,
+		ReplySeq:                act.ReplySeq,
+		Type:                    act.Type,
+		Kind:                    act.Kind,
+		Text:                    act.Text,
+		Payload:                 act.PayloadRaw,
+		Metadata:                nil,
+		ResolvedBy:              null.IntFromPtr(act.ResolvedBy),
+		Resolved:                null.IntFromPtr(act.Resolved),
+		Outdated:                null.BoolFromPtr(act.Outdated),
+		CodeCommentMergeBaseSHA: null.StringFromPtr(act.CodeCommentMergeBaseSHA),
+		CodeCommentSourceSHA:    null.StringFromPtr(act.CodeCommentSourceSHA),
+		CodeCommentPath:         null.StringFromPtr(act.CodeCommentPath),
+		CodeCommentLineNew:      null.IntFromPtr(act.CodeCommentLineNew),
+		CodeCommentSpanNew:      null.IntFromPtr(act.CodeCommentSpanNew),
+		CodeCommentLineOld:      null.IntFromPtr(act.CodeCommentLineOld),
+		CodeCommentSpanOld:      null.IntFromPtr(act.CodeCommentSpanOld),
 	}
 
 	m.Metadata, _ = json.Marshal(act.Metadata)

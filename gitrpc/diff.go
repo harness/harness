@@ -9,8 +9,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/harness/gitness/gitrpc/internal/streamio"
+	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 
 	"golang.org/x/sync/errgroup"
@@ -150,5 +152,133 @@ func (c *Client) DiffStats(ctx context.Context, params *DiffParams) (DiffStatsOu
 	return DiffStatsOutput{
 		Commits:      totalCommits,
 		FilesChanged: totalFiles,
+	}, nil
+}
+
+type GetDiffHunkHeadersParams struct {
+	ReadParams
+	SourceCommitSHA string
+	TargetCommitSHA string
+}
+
+type DiffFileHeader struct {
+	OldName string
+	NewName string
+}
+
+type HunkHeader struct {
+	OldLine int
+	OldSpan int
+	NewLine int
+	NewSpan int
+	Text    string
+}
+
+type DiffFileHunkHeaders struct {
+	FileHeader  DiffFileHeader
+	HunkHeaders []HunkHeader
+}
+
+type GetDiffHunkHeadersOutput struct {
+	Files []DiffFileHunkHeaders
+}
+
+func (c *Client) GetDiffHunkHeaders(
+	ctx context.Context,
+	params GetDiffHunkHeadersParams,
+) (GetDiffHunkHeadersOutput, error) {
+	if params.SourceCommitSHA == params.TargetCommitSHA {
+		return GetDiffHunkHeadersOutput{}, nil
+	}
+
+	hunkHeaders, err := c.diffService.GetDiffHunkHeaders(ctx, &rpc.GetDiffHunkHeadersRequest{
+		Base:            mapToRPCReadRequest(params.ReadParams),
+		SourceCommitSha: params.SourceCommitSHA,
+		TargetCommitSha: params.TargetCommitSHA,
+	})
+	if err != nil {
+		return GetDiffHunkHeadersOutput{}, processRPCErrorf(err, "failed to get git diff hunk headers")
+	}
+
+	files := make([]DiffFileHunkHeaders, len(hunkHeaders.Files))
+	for i, file := range hunkHeaders.Files {
+		headers := make([]HunkHeader, len(file.HunkHeaders))
+		for j, header := range file.HunkHeaders {
+			headers[j] = mapHunkHeader(header)
+		}
+		files[i] = DiffFileHunkHeaders{
+			FileHeader:  mapDiffFileHeader(file.FileHeader),
+			HunkHeaders: headers,
+		}
+	}
+
+	return GetDiffHunkHeadersOutput{
+		Files: files,
+	}, nil
+}
+
+type DiffCutOutput struct {
+	Header          HunkHeader
+	Lines           []string
+	MergeBaseSHA    string
+	LatestSourceSHA string
+	AnyNew          bool
+}
+
+type DiffCutParams struct {
+	ReadParams
+	SourceCommitSHA string
+	SourceBranch    string
+	TargetCommitSHA string
+	TargetBranch    string
+	Path            string
+	LineStart       int
+	LineStartNew    bool
+	LineEnd         int
+	LineEndNew      bool
+}
+
+// DiffCut extracts diff snippet from a git diff hunk.
+// The snippet is from the specific commit (specified by commit SHA), between refs
+// source branch and target branch, from the specific file.
+func (c *Client) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOutput, error) {
+	result, err := c.diffService.DiffCut(ctx, &rpc.DiffCutRequest{
+		Base:            mapToRPCReadRequest(params.ReadParams),
+		SourceCommitSha: params.SourceCommitSHA,
+		SourceBranch:    params.SourceBranch,
+		TargetCommitSha: params.TargetCommitSHA,
+		TargetBranch:    params.TargetBranch,
+		Path:            params.Path,
+		LineStart:       int32(params.LineStart),
+		LineStartNew:    params.LineStartNew,
+		LineEnd:         int32(params.LineEnd),
+		LineEndNew:      params.LineEndNew,
+	})
+	if err != nil {
+		return DiffCutOutput{}, processRPCErrorf(err, "failed to get git diff sub hunk")
+	}
+
+	var anyNew bool
+	for _, line := range result.Lines {
+		if strings.HasPrefix(line, "+") {
+			anyNew = true
+			break
+		}
+	}
+
+	hunkHeader := types.HunkHeader{
+		OldLine: int(result.HunkHeader.OldLine),
+		OldSpan: int(result.HunkHeader.OldSpan),
+		NewLine: int(result.HunkHeader.NewLine),
+		NewSpan: int(result.HunkHeader.NewSpan),
+		Text:    result.HunkHeader.Text,
+	}
+
+	return DiffCutOutput{
+		Header:          HunkHeader(hunkHeader),
+		Lines:           result.Lines,
+		MergeBaseSHA:    result.MergeBaseSha,
+		LatestSourceSHA: result.LatestSourceSha,
+		AnyNew:          anyNew,
 	}, nil
 }

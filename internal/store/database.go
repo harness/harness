@@ -302,6 +302,22 @@ type (
 		List(ctx context.Context, prID int64, opts *types.PullReqActivityFilter) ([]*types.PullReqActivity, error)
 	}
 
+	// CodeCommentView is to manipulate only code-comment subset of PullReqActivity.
+	// It's used by internal service that migrates code comment line numbers after new commits.
+	CodeCommentView interface {
+		// ListNotAtSourceSHA loads code comments that need to be updated after a new commit.
+		// Resulting list is ordered by the file name and the relevant line number.
+		ListNotAtSourceSHA(ctx context.Context, prID int64, sourceSHA string) ([]*types.CodeComment, error)
+
+		// ListNotAtMergeBaseSHA loads code comments that need to be updated after merge base update.
+		// Resulting list is ordered by the file name and the relevant line number.
+		ListNotAtMergeBaseSHA(ctx context.Context, prID int64, targetSHA string) ([]*types.CodeComment, error)
+
+		// UpdateAll updates code comments (pull request activity of types code-comment).
+		// entities coming from the input channel.
+		UpdateAll(ctx context.Context, codeComments []*types.CodeComment) error
+	}
+
 	// PullReqReviewStore defines the pull request review storage.
 	PullReqReviewStore interface {
 		// Find returns the pull request review entity or an error if it doesn't exist.

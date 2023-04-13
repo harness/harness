@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+
 	"github.com/rs/zerolog/log"
 )
 

@@ -253,6 +253,26 @@ type DiffShortStat struct {
 	Deletions int
 }
 
+type DiffFileHeader struct {
+	OldFileName string
+	NewFileName string
+}
+
+type DiffFileHunkHeaders struct {
+	FileHeader   DiffFileHeader
+	HunksHeaders []HunkHeader
+}
+
+type DiffCutParams struct {
+	LineStart    int
+	LineStartNew bool
+	LineEnd      int
+	LineEndNew   bool
+	BeforeLines  int
+	AfterLines   int
+	LineLimit    int
+}
+
 type BlameReader interface {
 	NextPart() (*BlamePart, error)
 }

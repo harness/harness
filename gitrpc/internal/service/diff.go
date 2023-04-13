@@ -94,3 +94,58 @@ func (s DiffService) DiffShortStat(ctx context.Context, r *rpc.DiffRequest) (*rp
 		Deletions: int32(stat.Deletions),
 	}, nil
 }
+
+func (s DiffService) GetDiffHunkHeaders(
+	ctx context.Context,
+	r *rpc.GetDiffHunkHeadersRequest,
+) (*rpc.GetDiffHunkHeadersResponse, error) {
+	base := r.GetBase()
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
+
+	hunkHeaders, err := s.adapter.GetDiffHunkHeaders(ctx, repoPath, r.TargetCommitSha, r.SourceCommitSha)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to get diff hunk headers between two commits")
+	}
+
+	return &rpc.GetDiffHunkHeadersResponse{
+		Files: mapDiffFileHunkHeaders(hunkHeaders),
+	}, nil
+}
+
+func (s DiffService) DiffCut(
+	ctx context.Context,
+	r *rpc.DiffCutRequest,
+) (*rpc.DiffCutResponse, error) {
+	base := r.GetBase()
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
+
+	mergeBase, _, err := s.adapter.GetMergeBase(ctx, repoPath, "", r.TargetBranch, r.SourceBranch)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to find merge base")
+	}
+
+	sourceCommits, err := s.adapter.ListCommits(ctx, repoPath, r.SourceBranch, r.TargetBranch, 0, 1)
+	if err != nil || len(sourceCommits) == 0 {
+		return nil, processGitErrorf(err, "failed to get list of source branch commits")
+	}
+
+	hunk, err := s.adapter.DiffCut(ctx, repoPath, r.TargetCommitSha, r.SourceCommitSha, r.Path, types.DiffCutParams{
+		LineStart:    int(r.LineStart),
+		LineStartNew: r.LineStartNew,
+		LineEnd:      int(r.LineEnd),
+		LineEndNew:   r.LineEndNew,
+		BeforeLines:  2,
+		AfterLines:   2,
+		LineLimit:    40,
+	})
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to get diff hunk")
+	}
+
+	return &rpc.DiffCutResponse{
+		HunkHeader:      mapHunkHeader(hunk.HunkHeader),
+		Lines:           hunk.Lines,
+		MergeBaseSha:    mergeBase,
+		LatestSourceSha: sourceCommits[0].SHA,
+	}, nil
+}

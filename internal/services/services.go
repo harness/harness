@@ -20,7 +20,10 @@ type Services struct {
 	bms *pullreq.Service
 }
 
-func ProvideServices(ws *webhook.Service, bms *pullreq.Service) Services {
+func ProvideServices(
+	ws *webhook.Service,
+	bms *pullreq.Service,
+) Services {
 	return Services{
 		ws:  ws,
 		bms: bms,
