@@ -35,6 +35,8 @@
       display: flex;
       align-items: center;
       height: 24px;
+      margin-top: var(--spacing-8);
+
 
       > svg {
         display: inline-block;
@@ -51,6 +53,10 @@
         background-color: var(--primary-1) !important;
         padding: 3px 6px !important;
       }
+    }
+
+    .tabTitle:not:first-child {
+      margin-left: var(--spacing-8) !important;
     }
   }
 }

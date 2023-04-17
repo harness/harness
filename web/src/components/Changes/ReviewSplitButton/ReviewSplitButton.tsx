@@ -31,9 +31,10 @@ interface PrReviewOption {
 interface ReviewSplitButtonProps extends Pick<GitInfoProps, 'repoMetadata'> {
   shouldHide: boolean
   pullRequestMetadata?: TypesPullReq
+  refreshPr: () => void
 }
 const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
-  const { pullRequestMetadata, repoMetadata, shouldHide } = props
+  const { pullRequestMetadata, repoMetadata, shouldHide, refreshPr } = props
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
 
@@ -69,6 +70,7 @@ const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
       .then(() => {
         // setReset(true)
         showSuccess(getString('pr.reviewSubmitted'))
+        refreshPr()
       })
       .catch(exception => showError(getErrorMessage(exception)))
   }, [decisionOption, mutate, showError, showSuccess, getString])

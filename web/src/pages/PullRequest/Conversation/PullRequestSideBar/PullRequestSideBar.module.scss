@@ -11,6 +11,8 @@
   padding-right: var(--spacing-small);
 }
 
-.noReviewerText {
-  padding-left: var(--spacing-13) !important;
+.semiBoldText {
+  font-weight: 500 !important;
+  line-height: 18px !important;
+  --typography-color: var(--grey-500) !important;
 }

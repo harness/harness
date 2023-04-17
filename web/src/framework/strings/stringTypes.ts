@@ -265,6 +265,7 @@ export interface StringsMap {
   requestChanges: string
   required: string
   resetZoom: string
+  resolve: string
   resolved: string
   reviewers: string
   samplePayloadUrl: string

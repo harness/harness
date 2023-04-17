@@ -71,7 +71,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
             <Button variation={ButtonVariation.TERTIARY} size={ButtonSize.SMALL} text={'Add +'}></Button>
           </Layout.Horizontal>
           <Container padding={{ top: 'medium', bottom: 'large' }}>
-            <Text padding={{ bottom: 'medium' }} font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
+            <Text className={css.semiBoldText} padding={{ bottom: 'medium' }} font={{ variation: FontVariation.FORM_LABEL, size: 'small' }}>
               {getString('required')}
             </Text>
             {reviewers && reviewers?.length !== 0 ? (
@@ -120,13 +120,13 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               )
             ) : (
               <Text
-                className={css.noReviewerText}
                 color={Color.GREY_300}
                 font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
                 {getString('noRequiredReviewers')}
               </Text>
             )}
             <Text
+             className={css.semiBoldText} 
               padding={{ top: 'medium', bottom: 'medium' }}
               font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
               {getString('optional')}
@@ -175,7 +175,6 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               })
             ) : (
               <Text
-                className={css.noReviewerText}
                 color={Color.GREY_300}
                 font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
                 {getString('noOptionalReviewers')}
