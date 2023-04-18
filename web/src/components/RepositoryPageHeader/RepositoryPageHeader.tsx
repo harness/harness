@@ -48,7 +48,7 @@ export function RepositoryPageHeader({
               </Fragment>
             ))}
           </Layout.Horizontal>
-          <Container padding={{ top: 'xsmall', bottom: 'small' }}>
+          <Container padding={{ top: 'large', bottom: 'small' }}>
             {typeof title === 'string' ? (
               <Text tag="h1" font={{ variation: FontVariation.H4 }} tooltipProps={{ dataTooltipId }}>
                 {title}

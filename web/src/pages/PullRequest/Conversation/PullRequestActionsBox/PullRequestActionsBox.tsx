@@ -147,6 +147,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           shouldHide={(pullRequestMetadata?.state as EnumPullReqState) === 'merged'}
                           repoMetadata={repoMetadata}
                           pullRequestMetadata={pullRequestMetadata}
+                          refreshPr={onPRStateChanged}
                         />
                         <Container
                           inline

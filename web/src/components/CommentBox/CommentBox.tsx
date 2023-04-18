@@ -1,7 +1,19 @@
 import React, { useCallback, useRef, useState } from 'react'
 import { useResizeDetector } from 'react-resize-detector'
 import { Render, Match, Truthy, Falsy, Else } from 'react-jsx-match'
-import { Container, Layout, Avatar, TextInput, Text, Color, FontVariation, FlexExpander } from '@harness/uicore'
+import {
+  Container,
+  Layout,
+  Avatar,
+  TextInput,
+  Text,
+  Color,
+  FontVariation,
+  FlexExpander,
+  Button,
+  ButtonVariation,
+  ButtonSize
+} from '@harness/uicore'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
 import { noop } from 'lodash-es'
@@ -140,6 +152,10 @@ export const CommentBox = <T = unknown,>({
                 <Layout.Horizontal spacing="small" className={css.replyPlaceHolder} padding="medium">
                   <Avatar name={currentUserName} size="small" hoverCard={false} />
                   <TextInput placeholder={getString('replyHere')} onFocus={hidePlaceHolder} onClick={hidePlaceHolder} />
+                  <Button
+                    text={<strong>{getString('resolve')}</strong>}
+                    variation={ButtonVariation.TERTIARY}
+                    size={ButtonSize.SMALL}></Button>
                 </Layout.Horizontal>
               </Container>
             </Truthy>

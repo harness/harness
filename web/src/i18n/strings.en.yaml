@@ -361,3 +361,4 @@ dangerDeleteRepo: Danger, are you sure you want to delete it?
 repoUpdate: Repository Updated
 deleteRepoText: Are you sure you want to delete the repository '{REPONAME}'?
 deleteRepoTitle: Delete the repository
+resolve: Resolve

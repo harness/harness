@@ -12,7 +12,9 @@ import {
   ButtonVariation,
   ButtonSize,
   TextInput,
-  useToaster
+  useToaster,
+  Spacing,
+  PaddingProps
 } from '@harness/uicore'
 import { useGet, useMutate } from 'restful-react'
 import { Render, Match, Truthy, Else } from 'react-jsx-match'
@@ -167,6 +169,7 @@ export default function PullRequest() {
                         icon={CodeIcon.Commit}
                         title={getString('commits')}
                         count={prData?.stats?.commits || 0}
+                        padding={{ left: 'medium' }}
                       />
                     ),
                     panel: (
@@ -185,6 +188,7 @@ export default function PullRequest() {
                         icon={CodeIcon.File}
                         title={getString('filesChanged')}
                         count={prData?.stats?.files_changed || 0}
+                        padding={{ left: 'medium' }}
                       />
                     ),
                     panel: (
@@ -211,6 +215,7 @@ export default function PullRequest() {
                         icon={CodeIcon.ChecksSuccess}
                         title={getString('checks')}
                         count={0} // TODO: Count for checks when API supports it
+                        padding={{ left: 'medium' }}
                       />
                     ),
                     panel: <Checks />
@@ -311,13 +316,18 @@ const PullRequestTitle: React.FC<PullRequestTitleProps> = ({ repoMetadata, title
   )
 }
 
-const TabTitle: React.FC<{ icon: IconName; title: string; count?: number }> = ({ icon, title, count }) => {
+const TabTitle: React.FC<{ icon: IconName; title: string; count?: number; padding?: Spacing | PaddingProps }> = ({
+  icon,
+  title,
+  count,
+  padding
+}) => {
   // Icon inside a tab got overriden-and-looked-bad styles from UICore
   // on hover. Use icon directly instead
   const TabIcon: React.ElementType = HarnessIcons[icon]
 
   return (
-    <Text className={css.tabTitle}>
+    <Text className={css.tabTitle} padding={padding}>
       <TabIcon width={16} height={16} />
       {title}
       <Render when={count}>
