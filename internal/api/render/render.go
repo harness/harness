@@ -106,6 +106,8 @@ func JSON(w http.ResponseWriter, code int, v interface{}) {
 }
 
 // Reader reads the content from the provided reader and writes it as is to the response body.
+// NOTE: If no content-type header is added beforehand, the content-type will be deduced
+// automatically by `http.DetectContentType` (https://pkg.go.dev/net/http#DetectContentType).
 func Reader(ctx context.Context, w http.ResponseWriter, code int, reader io.Reader) {
 	w.WriteHeader(code)
 	_, err := io.Copy(w, reader)

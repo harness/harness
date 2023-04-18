@@ -19,7 +19,7 @@ export type EnumPathTargetType = string
 
 export type EnumPrincipalType = 'service' | 'serviceaccount' | 'user'
 
-export type EnumPullReqActivityKind = 'code' | 'comment' | 'system'
+export type EnumPullReqActivityKind = 'change-comment' | 'comment' | 'system'
 
 export type EnumPullReqActivityType =
   | 'branch-delete'
@@ -106,14 +106,19 @@ export interface OpenapiCalculateCommitDivergenceRequest {
 }
 
 export interface OpenapiCommentCreatePullReqRequest {
+  line_end?: number
+  line_end_new?: boolean
+  line_start?: number
+  line_start_new?: boolean
   parent_id?: number
-  payload?: TypesPullRequestActivityPayloadComment
+  path?: string
+  source_commit_sha?: string
+  target_commit_sha?: string
   text?: string
 }
 
 export interface OpenapiCommentUpdatePullReqRequest {
-  payload?: TypesPullRequestActivityPayloadComment
-  text?: string | null
+  text?: string
 }
 
 export interface OpenapiCommitFilesRequest {
@@ -328,6 +333,7 @@ export type RepoContentType = string
 
 export interface RepoFileContent {
   data?: string
+  data_size?: number
   encoding?: EnumContentEncodingType
   size?: number
 }
@@ -413,6 +419,13 @@ export interface TypesPullReq {
 
 export interface TypesPullReqActivity {
   author?: TypesPrincipalInfo
+  code_comment_line_new?: number | null
+  code_comment_line_old?: number | null
+  code_comment_merge_base_sha?: string | null
+  code_comment_path?: string | null
+  code_comment_source_sha?: string | null
+  code_comment_span_new?: number | null
+  code_comment_span_old?: number | null
   created?: number
   deleted?: number | null
   edited?: number
@@ -420,6 +433,7 @@ export interface TypesPullReqActivity {
   kind?: EnumPullReqActivityKind
   metadata?: { [key: string]: any } | null
   order?: number
+  outdated?: boolean | null
   parent_id?: number | null
   payload?: {}
   pullreq_id?: number
@@ -436,8 +450,6 @@ export interface TypesPullReqStats {
   conversations?: number
   files_changed?: number
 }
-
-export type TypesPullRequestActivityPayloadComment = { [key: string]: any } | null
 
 export interface TypesRepository {
   created?: number
@@ -1639,7 +1651,7 @@ export interface ListPullReqActivitiesQueryParams {
   /**
    * The kind of the pull request activity to include in the result.
    */
-  kind?: ('code' | 'comment' | 'system')[]
+  kind?: ('change-comment' | 'comment' | 'system')[]
   /**
    * The type of the pull request activity to include in the result.
    */
@@ -2132,6 +2144,38 @@ export const useStatePullReq = ({ repo_ref, pullreq_number, ...props }: UseState
     (paramsInPath: StatePullReqPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/state`,
     { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface GetRawQueryParams {
+  /**
+   * The git reference (branch / tag / commitID) that will be used to retrieve the data. If no value is provided the default branch of the repository is used.
+   */
+  git_ref?: string
+}
+
+export interface GetRawPathParams {
+  repo_ref: string
+  path: string
+}
+
+export type GetRawProps = Omit<GetProps<void, UsererrorError, GetRawQueryParams, GetRawPathParams>, 'path'> &
+  GetRawPathParams
+
+export const GetRaw = ({ repo_ref, path, ...props }: GetRawProps) => (
+  <Get<void, UsererrorError, GetRawQueryParams, GetRawPathParams>
+    path={`/repos/${repo_ref}/raw/${path}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseGetRawProps = Omit<UseGetProps<void, UsererrorError, GetRawQueryParams, GetRawPathParams>, 'path'> &
+  GetRawPathParams
+
+export const useGetRaw = ({ repo_ref, path, ...props }: UseGetRawProps) =>
+  useGet<void, UsererrorError, GetRawQueryParams, GetRawPathParams>(
+    (paramsInPath: GetRawPathParams) => `/repos/${paramsInPath.repo_ref}/raw/${paramsInPath.path}`,
+    { base: getConfig('code'), pathParams: { repo_ref, path }, ...props }
   )
 
 export interface ListRepositoryServiceAccountsPathParams {
