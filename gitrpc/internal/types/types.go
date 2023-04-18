@@ -6,6 +6,7 @@ package types
 
 import (
 	"fmt"
+	"io"
 	"time"
 )
 
@@ -216,11 +217,14 @@ type Submodule struct {
 	URL  string
 }
 
-type Blob struct {
+type BlobReader struct {
+	SHA string
+	// Size is the actual size of the blob.
 	Size int64
-	// Content contains the content of the blob
-	// NOTE: can be only partial Content - compare len(.Content) with .Size
-	Content []byte
+	// ContentSize is the total number of bytes returned by the Content Reader.
+	ContentSize int64
+	// Content contains the (partial) content of the blob.
+	Content io.ReadCloser
 }
 
 // CommitDivergenceRequest contains the refs for which the converging commits should be counted.

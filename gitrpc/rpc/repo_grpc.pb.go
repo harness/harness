@@ -26,7 +26,7 @@ type RepositoryServiceClient interface {
 	GetTreeNode(ctx context.Context, in *GetTreeNodeRequest, opts ...grpc.CallOption) (*GetTreeNodeResponse, error)
 	ListTreeNodes(ctx context.Context, in *ListTreeNodesRequest, opts ...grpc.CallOption) (RepositoryService_ListTreeNodesClient, error)
 	GetSubmodule(ctx context.Context, in *GetSubmoduleRequest, opts ...grpc.CallOption) (*GetSubmoduleResponse, error)
-	GetBlob(ctx context.Context, in *GetBlobRequest, opts ...grpc.CallOption) (*GetBlobResponse, error)
+	GetBlob(ctx context.Context, in *GetBlobRequest, opts ...grpc.CallOption) (RepositoryService_GetBlobClient, error)
 	ListCommits(ctx context.Context, in *ListCommitsRequest, opts ...grpc.CallOption) (RepositoryService_ListCommitsClient, error)
 	GetCommit(ctx context.Context, in *GetCommitRequest, opts ...grpc.CallOption) (*GetCommitResponse, error)
 	GetCommitDivergences(ctx context.Context, in *GetCommitDivergencesRequest, opts ...grpc.CallOption) (*GetCommitDivergencesResponse, error)
@@ -125,17 +125,40 @@ func (c *repositoryServiceClient) GetSubmodule(ctx context.Context, in *GetSubmo
 	return out, nil
 }
 
-func (c *repositoryServiceClient) GetBlob(ctx context.Context, in *GetBlobRequest, opts ...grpc.CallOption) (*GetBlobResponse, error) {
-	out := new(GetBlobResponse)
-	err := c.cc.Invoke(ctx, "/rpc.RepositoryService/GetBlob", in, out, opts...)
+func (c *repositoryServiceClient) GetBlob(ctx context.Context, in *GetBlobRequest, opts ...grpc.CallOption) (RepositoryService_GetBlobClient, error) {
+	stream, err := c.cc.NewStream(ctx, &RepositoryService_ServiceDesc.Streams[2], "/rpc.RepositoryService/GetBlob", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &repositoryServiceGetBlobClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type RepositoryService_GetBlobClient interface {
+	Recv() (*GetBlobResponse, error)
+	grpc.ClientStream
+}
+
+type repositoryServiceGetBlobClient struct {
+	grpc.ClientStream
+}
+
+func (x *repositoryServiceGetBlobClient) Recv() (*GetBlobResponse, error) {
+	m := new(GetBlobResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *repositoryServiceClient) ListCommits(ctx context.Context, in *ListCommitsRequest, opts ...grpc.CallOption) (RepositoryService_ListCommitsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &RepositoryService_ServiceDesc.Streams[2], "/rpc.RepositoryService/ListCommits", opts...)
+	stream, err := c.cc.NewStream(ctx, &RepositoryService_ServiceDesc.Streams[3], "/rpc.RepositoryService/ListCommits", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +224,7 @@ type RepositoryServiceServer interface {
 	GetTreeNode(context.Context, *GetTreeNodeRequest) (*GetTreeNodeResponse, error)
 	ListTreeNodes(*ListTreeNodesRequest, RepositoryService_ListTreeNodesServer) error
 	GetSubmodule(context.Context, *GetSubmoduleRequest) (*GetSubmoduleResponse, error)
-	GetBlob(context.Context, *GetBlobRequest) (*GetBlobResponse, error)
+	GetBlob(*GetBlobRequest, RepositoryService_GetBlobServer) error
 	ListCommits(*ListCommitsRequest, RepositoryService_ListCommitsServer) error
 	GetCommit(context.Context, *GetCommitRequest) (*GetCommitResponse, error)
 	GetCommitDivergences(context.Context, *GetCommitDivergencesRequest) (*GetCommitDivergencesResponse, error)
@@ -225,8 +248,8 @@ func (UnimplementedRepositoryServiceServer) ListTreeNodes(*ListTreeNodesRequest,
 func (UnimplementedRepositoryServiceServer) GetSubmodule(context.Context, *GetSubmoduleRequest) (*GetSubmoduleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubmodule not implemented")
 }
-func (UnimplementedRepositoryServiceServer) GetBlob(context.Context, *GetBlobRequest) (*GetBlobResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetBlob not implemented")
+func (UnimplementedRepositoryServiceServer) GetBlob(*GetBlobRequest, RepositoryService_GetBlobServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetBlob not implemented")
 }
 func (UnimplementedRepositoryServiceServer) ListCommits(*ListCommitsRequest, RepositoryService_ListCommitsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListCommits not implemented")
@@ -336,22 +359,25 @@ func _RepositoryService_GetSubmodule_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RepositoryService_GetBlob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetBlobRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _RepositoryService_GetBlob_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetBlobRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(RepositoryServiceServer).GetBlob(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/rpc.RepositoryService/GetBlob",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RepositoryServiceServer).GetBlob(ctx, req.(*GetBlobRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(RepositoryServiceServer).GetBlob(m, &repositoryServiceGetBlobServer{stream})
+}
+
+type RepositoryService_GetBlobServer interface {
+	Send(*GetBlobResponse) error
+	grpc.ServerStream
+}
+
+type repositoryServiceGetBlobServer struct {
+	grpc.ServerStream
+}
+
+func (x *repositoryServiceGetBlobServer) Send(m *GetBlobResponse) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _RepositoryService_ListCommits_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -445,10 +471,6 @@ var RepositoryService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RepositoryService_GetSubmodule_Handler,
 		},
 		{
-			MethodName: "GetBlob",
-			Handler:    _RepositoryService_GetBlob_Handler,
-		},
-		{
 			MethodName: "GetCommit",
 			Handler:    _RepositoryService_GetCommit_Handler,
 		},
@@ -470,6 +492,11 @@ var RepositoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "ListTreeNodes",
 			Handler:       _RepositoryService_ListTreeNodes_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetBlob",
+			Handler:       _RepositoryService_GetBlob_Handler,
 			ServerStreams: true,
 		},
 		{

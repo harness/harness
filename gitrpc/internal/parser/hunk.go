@@ -5,9 +5,10 @@
 package parser
 
 import (
-	"github.com/harness/gitness/gitrpc/internal/types"
 	"regexp"
 	"strconv"
+
+	"github.com/harness/gitness/gitrpc/internal/types"
 )
 
 var regExpHunkHeader = regexp.MustCompile(`^@@ -([0-9]+)(,([0-9]+))? \+([0-9]+)(,([0-9]+))? @@( (.+))?$`)

@@ -71,7 +71,7 @@ func (in *CommentCreateInput) Validate() error {
 
 // CommentCreate creates a new pull request comment (pull request activity, type=comment/code-comment).
 //
-//nolint:gocognit // refactor if needed
+//nolint:gocognit,funlen // refactor if needed
 func (c *Controller) CommentCreate(
 	ctx context.Context,
 	session *auth.Session,

@@ -84,7 +84,7 @@ func (c *Client) Merge(ctx context.Context, params *MergeParams) (MergeOutput, e
 		DeleteHeadBranch: params.DeleteHeadBranch,
 	})
 	if err != nil {
-		return MergeOutput{}, processRPCErrorf(err, "merging failed: %w", err)
+		return MergeOutput{}, processRPCErrorf(err, "merging failed")
 	}
 
 	return MergeOutput{

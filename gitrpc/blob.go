@@ -6,8 +6,9 @@ package gitrpc
 
 import (
 	"context"
-	"fmt"
+	"io"
 
+	"github.com/harness/gitness/gitrpc/internal/streamio"
 	"github.com/harness/gitness/gitrpc/rpc"
 )
 
@@ -18,15 +19,13 @@ type GetBlobParams struct {
 }
 
 type GetBlobOutput struct {
-	Blob Blob
-}
-
-type Blob struct {
-	SHA  string
+	SHA string
+	// Size is the actual size of the blob.
 	Size int64
-	// Content contains the data of the blob
-	// NOTE: can be only partial data - compare len(.content) with .size
-	Content []byte
+	// ContentSize is the total number of bytes returned by the Content Reader.
+	ContentSize int64
+	// Content contains the (partial) content of the blob.
+	Content io.Reader
 }
 
 func (c *Client) GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobOutput, error) {
@@ -34,25 +33,35 @@ func (c *Client) GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobOu
 		return nil, ErrNoParamsProvided
 	}
 
-	resp, err := c.repoService.GetBlob(ctx, &rpc.GetBlobRequest{
+	stream, err := c.repoService.GetBlob(ctx, &rpc.GetBlobRequest{
 		Base:      mapToRPCReadRequest(params.ReadParams),
 		Sha:       params.SHA,
 		SizeLimit: params.SizeLimit,
 	})
 	if err != nil {
-		return nil, processRPCErrorf(err, "failed to get blob from server")
+		return nil, processRPCErrorf(err, "failed to start blob stream")
 	}
 
-	blob := resp.GetBlob()
-	if blob == nil {
-		return nil, fmt.Errorf("rpc blob is nil")
+	msg, err := stream.Recv()
+	if err != nil {
+		return nil, processRPCErrorf(err, "failed to read blob header from stream")
 	}
+
+	header := msg.GetHeader()
+	if header == nil {
+		return nil, Errorf(StatusInternal, "expected to receive header from server")
+	}
+
+	// setup contentReader that reads content from grpc stream
+	contentReader := streamio.NewReader(func() ([]byte, error) {
+		resp, rErr := stream.Recv()
+		return resp.GetContent(), rErr
+	})
 
 	return &GetBlobOutput{
-		Blob: Blob{
-			SHA:     blob.GetSha(),
-			Size:    blob.GetSize(),
-			Content: blob.GetContent(),
-		},
+		SHA:         header.GetSha(),
+		Size:        header.GetSize(),
+		ContentSize: header.GetContentSize(),
+		Content:     contentReader,
 	}, nil
 }

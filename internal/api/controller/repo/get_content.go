@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"io"
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
@@ -20,7 +21,7 @@ import (
 const (
 	// maxGetContentFileSize specifies the maximum number of bytes a file content response contains.
 	// If a file is any larger, the content is truncated.
-	maxGetContentFileSize = 1 << 27 // 128 MB
+	maxGetContentFileSize = 1 << 22 // 4 MB
 )
 
 type ContentType string
@@ -54,6 +55,7 @@ type FileContent struct {
 	Encoding enum.ContentEncodingType `json:"encoding"`
 	Data     string                   `json:"data"`
 	Size     int64                    `json:"size"`
+	DataSize int64                    `json:"data_size"`
 }
 
 func (c *FileContent) isContent() {}
@@ -172,10 +174,16 @@ func (c *Controller) getFileContent(ctx context.Context, readParams gitrpc.ReadP
 		return nil, fmt.Errorf("failed to get file content: %w", err)
 	}
 
+	content, err := io.ReadAll(output.Content)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read blob content: %w", err)
+	}
+
 	return &FileContent{
-		Size:     output.Blob.Size,
+		Size:     output.Size,
+		DataSize: output.ContentSize,
 		Encoding: enum.ContentEncodingTypeBase64,
-		Data:     base64.StdEncoding.EncodeToString(output.Blob.Content),
+		Data:     base64.StdEncoding.EncodeToString(content),
 	}, nil
 }
 
@@ -184,7 +192,7 @@ func (c *Controller) getSymlinkContent(ctx context.Context, readParams gitrpc.Re
 	output, err := c.gitRPCClient.GetBlob(ctx, &gitrpc.GetBlobParams{
 		ReadParams: readParams,
 		SHA:        blobSHA,
-		SizeLimit:  maxGetContentFileSize,
+		SizeLimit:  maxGetContentFileSize, // TODO: do we need to guard against too big symlinks?
 	})
 	if err != nil {
 		// TODO: handle not found error
@@ -192,9 +200,14 @@ func (c *Controller) getSymlinkContent(ctx context.Context, readParams gitrpc.Re
 		return nil, fmt.Errorf("failed to get symlink: %w", err)
 	}
 
+	content, err := io.ReadAll(output.Content)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read blob content: %w", err)
+	}
+
 	return &SymlinkContent{
-		Size:   output.Blob.Size,
-		Target: string(output.Blob.Content),
+		Size:   output.Size,
+		Target: string(content),
 	}, nil
 }
 

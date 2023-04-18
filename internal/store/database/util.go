@@ -41,8 +41,6 @@ func offset(page, size int) int {
 
 // Logs the error and message, returns either the provided message or a gitrpc equivalent if possible.
 // Always logs the full message with error as warning.
-//
-//nolint:unparam // revisit error processing
 func processSQLErrorf(err error, format string, args ...interface{}) error {
 	// create fallback error returned if we can't map it
 	fallbackErr := fmt.Errorf(format, args...)
