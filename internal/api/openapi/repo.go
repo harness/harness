@@ -414,6 +414,19 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opGetContent, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/content/{path}", opGetContent)
 
+	opGetRaw := openapi3.Operation{}
+	opGetRaw.WithTags("repository")
+	opGetRaw.WithMapOfAnything(map[string]interface{}{"operationId": "getRaw"})
+	opGetRaw.WithParameters(queryParameterGitRef)
+	_ = reflector.SetRequest(&opGetRaw, new(getContentRequest), http.MethodGet)
+	// TODO: Figure out how to provide proper list of all potential mime types
+	_ = reflector.SetStringResponse(&opGetRaw, http.StatusOK, "")
+	_ = reflector.SetJSONResponse(&opGetRaw, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opGetRaw, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opGetRaw, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opGetRaw, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/raw/{path}", opGetRaw)
+
 	opGetBlame := openapi3.Operation{}
 	opGetBlame.WithTags("repository")
 	opGetBlame.WithMapOfAnything(map[string]interface{}{"operationId": "getBlame"})

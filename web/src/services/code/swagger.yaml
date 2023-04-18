@@ -1676,7 +1676,7 @@ paths:
           schema:
             items:
               enum:
-                - code
+                - change-comment
                 - comment
                 - system
               type: string
@@ -2340,6 +2340,58 @@ paths:
           description: Internal Server Error
       tags:
         - pullreq
+  /repos/{repo_ref}/raw/{path}:
+    get:
+      operationId: getRaw
+      parameters:
+        - description: The git reference (branch / tag / commitID) that will be used
+            to retrieve the data. If no value is provided the default branch of the
+            repository is used.
+          in: query
+          name: git_ref
+          required: false
+          schema:
+            default: '{Repository Default Branch}'
+            type: string
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repo_ref}/service-accounts:
     get:
       operationId: listRepositoryServiceAccounts
@@ -3647,7 +3699,7 @@ components:
       type: string
     EnumPullReqActivityKind:
       enum:
-        - code
+        - change-comment
         - comment
         - system
       type: string
@@ -3796,19 +3848,28 @@ components:
       type: object
     OpenapiCommentCreatePullReqRequest:
       properties:
+        line_end:
+          type: integer
+        line_end_new:
+          type: boolean
+        line_start:
+          type: integer
+        line_start_new:
+          type: boolean
         parent_id:
           type: integer
-        payload:
-          $ref: '#/components/schemas/TypesPullRequestActivityPayloadComment'
+        path:
+          type: string
+        source_commit_sha:
+          type: string
+        target_commit_sha:
+          type: string
         text:
           type: string
       type: object
     OpenapiCommentUpdatePullReqRequest:
       properties:
-        payload:
-          $ref: '#/components/schemas/TypesPullRequestActivityPayloadComment'
         text:
-          nullable: true
           type: string
       type: object
     OpenapiCommitFilesRequest:
@@ -4177,6 +4238,8 @@ components:
       properties:
         data:
           type: string
+        data_size:
+          type: integer
         encoding:
           $ref: '#/components/schemas/EnumContentEncodingType'
         size:
@@ -4324,6 +4387,27 @@ components:
       properties:
         author:
           $ref: '#/components/schemas/TypesPrincipalInfo'
+        code_comment_line_new:
+          nullable: true
+          type: integer
+        code_comment_line_old:
+          nullable: true
+          type: integer
+        code_comment_merge_base_sha:
+          nullable: true
+          type: string
+        code_comment_path:
+          nullable: true
+          type: string
+        code_comment_source_sha:
+          nullable: true
+          type: string
+        code_comment_span_new:
+          nullable: true
+          type: integer
+        code_comment_span_old:
+          nullable: true
+          type: integer
         created:
           type: integer
         deleted:
@@ -4341,6 +4425,9 @@ components:
           type: object
         order:
           type: integer
+        outdated:
+          nullable: true
+          type: boolean
         parent_id:
           nullable: true
           type: integer
@@ -4369,10 +4456,6 @@ components:
           type: integer
         files_changed:
           type: integer
-      type: object
-    TypesPullRequestActivityPayloadComment:
-      additionalProperties: {}
-      nullable: true
       type: object
     TypesRepository:
       properties:
