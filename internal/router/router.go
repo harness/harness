@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-logr/logr"
+	"github.com/go-logr/zerologr"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/request"
 
@@ -54,7 +56,10 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var err error
 	// setup logger for request
 	log := log.Logger.With().Logger()
-	req = req.WithContext(log.WithContext(req.Context()))
+	ctx := log.WithContext(req.Context())
+	// add logger to logr interface for usage in 3rd party libs
+	ctx = logr.NewContext(ctx, zerologr.New(&log))
+	req = req.WithContext(ctx)
 	log.UpdateContext(func(c zerolog.Context) zerolog.Context {
 		return c.
 			Str("http.original_url", req.URL.String())

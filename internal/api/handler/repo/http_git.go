@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/internal/api/auth"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	repoctrl "github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/request"
@@ -107,12 +108,18 @@ func PostReceivePack(client gitrpc.Interface, urlProvider *url.Provider,
 	return func(w http.ResponseWriter, r *http.Request) {
 		const service = "receive-pack"
 		if err := serviceRPC(w, r, client, urlProvider, repoStore, authorizer, service, true,
-			enum.PermissionRepoEdit, false); err != nil {
+			enum.PermissionRepoPush, false); err != nil {
 			var authError *GitAuthError
 			if errors.As(err, &authError) {
 				basicAuth(w, authError.AccountID)
 				return
 			}
+
+			if errors.Is(err, auth.ErrNotAuthorized) {
+				http.Error(w, err.Error(), http.StatusForbidden)
+				return
+			}
+
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

@@ -33,10 +33,10 @@ const (
 	/*
 		----- REPOSITORY -----
 	*/
-	PermissionRepoCreate Permission = "repository_create"
-	PermissionRepoView   Permission = "repository_view"
-	PermissionRepoEdit   Permission = "repository_edit"
-	PermissionRepoDelete Permission = "repository_delete"
+	PermissionRepoView   Permission = "repo_view"
+	PermissionRepoEdit   Permission = "repo_edit"
+	PermissionRepoDelete Permission = "repo_delete"
+	PermissionRepoPush   Permission = "repo_push"
 )
 
 const (
