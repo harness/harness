@@ -10,11 +10,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-logr/logr"
-	"github.com/go-logr/zerologr"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/request"
 
+	"github.com/go-logr/logr"
+	"github.com/go-logr/zerologr"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"

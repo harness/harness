@@ -33,7 +33,7 @@ func (c *Controller) CreateBranch(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoEdit, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoPush, false); err != nil {
 		return nil, err
 	}
 

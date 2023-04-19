@@ -23,7 +23,7 @@ func (c *Controller) Commits(
 	pullreqNum int64,
 	filter *types.PaginationFilter,
 ) ([]types.Commit, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}

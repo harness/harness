@@ -46,7 +46,7 @@ func (c *Controller) CommitFiles(ctx context.Context, session *auth.Session,
 		return CommitFilesResponse{}, err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoEdit, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoPush, false); err != nil {
 		return CommitFilesResponse{}, err
 	}
 
