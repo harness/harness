@@ -22,7 +22,7 @@ func (c *Controller) RawDiff(
 	pullreqNum int64,
 	w io.Writer,
 ) error {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}

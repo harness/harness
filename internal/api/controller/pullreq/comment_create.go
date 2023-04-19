@@ -79,7 +79,7 @@ func (c *Controller) CommentCreate(
 	prNum int64,
 	in *CommentCreateInput,
 ) (*types.PullReqActivity, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}

@@ -55,7 +55,7 @@ func (c *Controller) State(ctx context.Context,
 		return nil, err
 	}
 
-	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	targetRepo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access to target repo: %w", err)
 	}

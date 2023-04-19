@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/gitrpc"
-	"github.com/harness/gitness/internal/api/auth"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	repoctrl "github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/request"
@@ -115,7 +114,7 @@ func PostReceivePack(client gitrpc.Interface, urlProvider *url.Provider,
 				return
 			}
 
-			if errors.Is(err, auth.ErrNotAuthorized) {
+			if errors.Is(err, apiauth.ErrNotAuthorized) {
 				http.Error(w, err.Error(), http.StatusForbidden)
 				return
 			}

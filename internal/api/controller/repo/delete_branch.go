@@ -22,7 +22,7 @@ func (c *Controller) DeleteBranch(ctx context.Context, session *auth.Session, re
 		return err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoEdit, false); err != nil {
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoPush, false); err != nil {
 		return err
 	}
 

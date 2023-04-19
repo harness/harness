@@ -21,7 +21,7 @@ func (c *Controller) CommentDelete(
 	prNum int64,
 	commentID int64,
 ) error {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
 		return fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
