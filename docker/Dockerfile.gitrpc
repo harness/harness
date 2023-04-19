@@ -2,10 +2,15 @@
 FROM golang:1.19-alpine as builder
 
 RUN apk update \
-    && apk add --no-cache protoc build-base
+    && apk add --no-cache protoc build-base git
 
 # Setup workig dir
 WORKDIR /app
+
+# Access to private repos
+ARG GITHUB_ACCESS_TOKEN
+RUN git config --global url."https://${GITHUB_ACCESS_TOKEN}:x-oauth-basic@github.com/harness".insteadOf "https://github.com/harness"
+RUN go env -w GOPRIVATE=github.com/harness/*
 
 # Get dependancies - will also be cached if we won't change mod/sum
 COPY go.mod .
