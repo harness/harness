@@ -70,7 +70,7 @@ const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
       .then(() => {
         // setReset(true)
         showSuccess(getString('pr.reviewSubmitted'))
-        refreshPr()
+        refreshPr?.()
       })
       .catch(exception => showError(getErrorMessage(exception)))
   }, [decisionOption, mutate, showError, showSuccess, getString])
