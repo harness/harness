@@ -150,7 +150,7 @@ export const Changes: React.FC<ChangesProps> = ({
 
   return (
     <Container className={cx(css.container, className)} {...(!!loading || !!error ? { flex: true } : {})}>
-      <LoadingSpinner visible={loading || loadingActivities} />
+      <LoadingSpinner visible={loading || loadingActivities} withBorder={true} />
       <Render when={error}>
         <PageError message={getErrorMessage(error || errorActivities)} onClick={voidFn(refetch)} />
       </Render>

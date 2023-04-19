@@ -26,7 +26,9 @@ import type {
 } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, PullRequestFilterOption, PullRequestState } from 'utils/GitUtils'
-import { getErrorMessage } from 'utils/Utils'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { useAppContext } from 'AppContext'
+import { getErrorMessage, permissionProps } from 'utils/Utils'
 import ReviewSplitButton from 'components/Changes/ReviewSplitButton/ReviewSplitButton'
 import css from './PullRequestActionsBox.module.scss'
 
@@ -86,6 +88,18 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   if (pullRequestMetadata.state === PullRequestFilterOption.MERGED) {
     return <MergeInfo pullRequestMetadata={pullRequestMetadata} />
   }
+  const { hooks, standalone } = useAppContext()
+  const space = useGetSpaceParam()
+
+  const permPushResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPO'
+      },
+      permissions: ['code_repo_push']
+    },
+    [space]
+  )
 
   return (
     <Container
@@ -174,6 +188,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                               position: PopoverPosition.BOTTOM_RIGHT,
                               transitionDuration: 1000
                             }}
+                            {...permissionProps(permPushResult, standalone)}
                             onClick={() => {
                               if (mergeOption.method !== 'close') {
                                 const payload: OpenapiMergePullReq = { method: mergeOption.method }

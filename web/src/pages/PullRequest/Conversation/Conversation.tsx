@@ -251,6 +251,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                         className={css.selectButton}
                         onChange={newState => {
                           setPrShowState(newState)
+                          refetchActivities()
                         }}
                       />
                     </Container>
