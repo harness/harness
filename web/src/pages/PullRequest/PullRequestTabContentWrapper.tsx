@@ -16,10 +16,12 @@ export const PullRequestTabContentWrapper: React.FC<PullRequestTabContentWrapper
   error,
   onRetry,
   children
-}) => (
-  <Container className={className} padding="xlarge" {...(!!loading || !!error ? { flex: true } : {})}>
-    <LoadingSpinner visible={loading} />
-    {error && <PageError message={getErrorMessage(error)} onClick={onRetry} />}
-    {!loading && !error && children}
-  </Container>
-)
+}) => {
+  return (
+    <Container className={className} padding="xlarge">
+      <LoadingSpinner visible={loading} withBorder={true} />
+      {error && <PageError message={getErrorMessage(error)} onClick={onRetry} />}
+      {!error && children}
+    </Container>
+  )
+}
