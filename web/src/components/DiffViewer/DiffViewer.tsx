@@ -27,6 +27,7 @@ import { useAppContext } from 'AppContext'
 import type { TypesPullReq, TypesPullReqActivity } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 import { CopyButton } from 'components/CopyButton/CopyButton'
+import { AppWrapper } from 'App'
 import {
   activitiesToDiffCommentItems,
   activityToCommentItem,
@@ -278,72 +279,103 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             //       the above rules as well (i.e useString as a prop instead of importing)
             ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
             ReactDOM.render(
-              <CommentBox
-                commentItems={comment.commentItems}
-                initialContent={getInitialCommentContentFromSelection(diff)}
-                getString={getString}
-                width={isSideBySide ? 'calc(100vw / 2 - 163px)' : undefined} // TODO: Re-calcualte for standalone version
-                onHeightChange={boxHeight => {
-                  if (comment.height !== boxHeight) {
-                    comment.height = boxHeight
-                    setTimeout(() => setComments([...commentsRef.current]), 0)
-                  }
-                }}
-                onCancel={() => {
-                  // Clean up CommentBox rendering and reset states bound to lineInfo
-                  ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
-                  commentRowElement.parentElement?.removeChild(commentRowElement)
-                  lineInfo.oppositeRowElement?.parentElement?.removeChild(
-                    lineInfo.oppositeRowElement?.nextElementSibling as Element
-                  )
-                  delete lineInfo.rowElement.dataset.annotated
-                  setTimeout(() => setComments(commentsRef.current.filter(item => item !== comment)), 0)
-                }}
-                currentUserName={currentUser.display_name}
-                handleAction={async (action, value, commentItem) => {
-                  let result = true
-                  let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
-                  const id = (commentItem as CommentItem<TypesPullReqActivity>)?.payload?.id
+              <AppWrapper>
+                <CommentBox
+                  commentItems={comment.commentItems}
+                  initialContent={getInitialCommentContentFromSelection(diff)}
+                  width={isSideBySide ? 'calc(100vw / 2 - 163px)' : undefined} // TODO: Re-calcualte for standalone version
+                  onHeightChange={boxHeight => {
+                    if (comment.height !== boxHeight) {
+                      comment.height = boxHeight
+                      setTimeout(() => setComments([...commentsRef.current]), 0)
+                    }
+                  }}
+                  onCancel={() => {
+                    // Clean up CommentBox rendering and reset states bound to lineInfo
+                    ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
+                    commentRowElement.parentElement?.removeChild(commentRowElement)
+                    lineInfo.oppositeRowElement?.parentElement?.removeChild(
+                      lineInfo.oppositeRowElement?.nextElementSibling as Element
+                    )
+                    delete lineInfo.rowElement.dataset.annotated
+                    setTimeout(() => setComments(commentsRef.current.filter(item => item !== comment)), 0)
+                  }}
+                  currentUserName={currentUser.display_name}
+                  handleAction={async (action, value, commentItem) => {
+                    let result = true
+                    let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
+                    const id = (commentItem as CommentItem<TypesPullReqActivity>)?.payload?.id
 
-                  switch (action) {
-                    case CommentAction.NEW: {
-                      // lineNumberRange can be used to allow multiple-line selection when commenting in the future
-                      const lineNumberRange = [comment.lineNumber]
-                      const payload: PullRequestCodeCommentPayload = {
-                        type: CommentType.CODE_COMMENT,
-                        version: PR_CODE_COMMENT_PAYLOAD_VERSION,
-                        file_id: diff.fileId,
-                        file_title: diff.fileTitle,
-                        language: diff.language || '',
-                        is_on_left: comment.left,
-                        at_line_number: comment.lineNumber,
-                        line_number_range: lineNumberRange,
-                        range_text_content: getRawTextInRange(diff, lineNumberRange),
-                        diff_html_snapshot: getDiffHTMLSnapshotFromRow(rowElement)
+                    switch (action) {
+                      case CommentAction.NEW: {
+                        // lineNumberRange can be used to allow multiple-line selection when commenting in the future
+                        const lineNumberRange = [comment.lineNumber]
+                        const payload: PullRequestCodeCommentPayload = {
+                          type: CommentType.CODE_COMMENT,
+                          version: PR_CODE_COMMENT_PAYLOAD_VERSION,
+                          file_id: diff.fileId,
+                          file_title: diff.fileTitle,
+                          language: diff.language || '',
+                          is_on_left: comment.left,
+                          at_line_number: comment.lineNumber,
+                          line_number_range: lineNumberRange,
+                          range_text_content: getRawTextInRange(diff, lineNumberRange),
+                          diff_html_snapshot: getDiffHTMLSnapshotFromRow(rowElement)
+                        }
+
+                        await saveComment({ type: CommentType.CODE_COMMENT, text: value, payload })
+                          .then((newComment: TypesPullReqActivity) => {
+                            updatedItem = activityToCommentItem(newComment)
+                          })
+                          .catch(exception => {
+                            result = false
+                            showError(getErrorMessage(exception), 0)
+                          })
+                        break
                       }
 
-                      await saveComment({ type: CommentType.CODE_COMMENT, text: value, payload })
-                        .then((newComment: TypesPullReqActivity) => {
-                          updatedItem = activityToCommentItem(newComment)
-                        })
-                        .catch(exception => {
-                          result = false
-                          showError(getErrorMessage(exception), 0)
-                        })
-                      break
-                    }
+                      case CommentAction.REPLY: {
+                        const parentComment = diff.fileActivities?.find(
+                          activity => (activity.payload as PullRequestCodeCommentPayload).file_id === diff.fileId
+                        )
 
-                    case CommentAction.REPLY: {
-                      const parentComment = diff.fileActivities?.find(
-                        activity => (activity.payload as PullRequestCodeCommentPayload).file_id === diff.fileId
-                      )
+                        if (parentComment) {
+                          await saveComment({
+                            type: CommentType.CODE_COMMENT,
+                            text: value,
+                            parent_id: Number(parentComment.id as number)
+                          })
+                            .then(newComment => {
+                              updatedItem = activityToCommentItem(newComment)
+                            })
+                            .catch(exception => {
+                              result = false
+                              showError(getErrorMessage(exception), 0)
+                            })
+                        }
+                        break
+                      }
 
-                      if (parentComment) {
-                        await saveComment({
-                          type: CommentType.CODE_COMMENT,
-                          text: value,
-                          parent_id: Number(parentComment.id as number)
+                      case CommentAction.DELETE: {
+                        result = false
+                        await confirmAct({
+                          message: getString('deleteCommentConfirm'),
+                          action: async () => {
+                            await deleteComment({}, { pathParams: { id } })
+                              .then(() => {
+                                result = true
+                              })
+                              .catch(exception => {
+                                result = false
+                                showError(getErrorMessage(exception), 0, getString('pr.failedToDeleteComment'))
+                              })
+                          }
                         })
+                        break
+                      }
+
+                      case CommentAction.UPDATE: {
+                        await updateComment({ text: value }, { pathParams: { id } })
                           .then(newComment => {
                             updatedItem = activityToCommentItem(newComment)
                           })
@@ -351,48 +383,18 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                             result = false
                             showError(getErrorMessage(exception), 0)
                           })
+                        break
                       }
-                      break
                     }
 
-                    case CommentAction.DELETE: {
-                      result = false
-                      await confirmAct({
-                        message: getString('deleteCommentConfirm'),
-                        action: async () => {
-                          await deleteComment({}, { pathParams: { id } })
-                            .then(() => {
-                              result = true
-                            })
-                            .catch(exception => {
-                              result = false
-                              showError(getErrorMessage(exception), 0, getString('pr.failedToDeleteComment'))
-                            })
-                        }
-                      })
-                      break
+                    if (result) {
+                      onCommentUpdate()
                     }
 
-                    case CommentAction.UPDATE: {
-                      await updateComment({ text: value }, { pathParams: { id } })
-                        .then(newComment => {
-                          updatedItem = activityToCommentItem(newComment)
-                        })
-                        .catch(exception => {
-                          result = false
-                          showError(getErrorMessage(exception), 0)
-                        })
-                      break
-                    }
-                  }
-
-                  if (result) {
-                    onCommentUpdate()
-                  }
-
-                  return [result, updatedItem]
-                }}
-              />,
+                    return [result, updatedItem]
+                  }}
+                />
+              </AppWrapper>,
               element
             )
 

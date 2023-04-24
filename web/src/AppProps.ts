@@ -43,6 +43,7 @@ export interface AppProps {
   hooks: Partial<{
     useGetToken: Unknown
     usePermissionTranslate: Unknown
+    useGenerateToken: Unknown
   }>
 
   currentUser: Required<TypesUser>

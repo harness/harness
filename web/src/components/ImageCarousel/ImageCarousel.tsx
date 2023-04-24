@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { ButtonGroup, ButtonVariation, Button, Container, Dialog, Carousel } from '@harness/uicore'
 import { ZOOM_INC_DEC_LEVEL } from 'utils/Utils'
+import { useStrings } from 'framework/strings'
 import css from './ImageCarousel.module.scss'
 
 interface ImageCarouselProps {
@@ -9,14 +10,11 @@ interface ImageCarouselProps {
   setZoomLevel: (value: number) => void
   zoomLevel: number
   imgEvent: string[]
-  i18n: {
-    zoomIn: string
-    zoomOut: string
-  }
 }
 
 const ImageCarousel = (props: ImageCarouselProps) => {
-  const { isOpen, setIsOpen, setZoomLevel, zoomLevel, imgEvent, i18n } = props
+  const { getString } = useStrings()
+  const { isOpen, setIsOpen, setZoomLevel, zoomLevel, imgEvent } = props
   const [imgTitle, setImageTitle] = useState(imgEvent[0])
 
   return (
@@ -59,7 +57,7 @@ const ImageCarousel = (props: ImageCarouselProps) => {
             variation={ButtonVariation.TERTIARY}
             icon="zoom-in"
             data-testid="zoomInButton"
-            tooltip={i18n.zoomIn}
+            tooltip={getString('zoomIn')}
             onClick={() => {
               Number(zoomLevel.toFixed(1)) < 2 && setZoomLevel(zoomLevel + ZOOM_INC_DEC_LEVEL)
             }}
@@ -75,7 +73,7 @@ const ImageCarousel = (props: ImageCarouselProps) => {
             variation={ButtonVariation.TERTIARY}
             icon="zoom-out"
             data-testid="zoomOutButton"
-            tooltip={i18n.zoomOut}
+            tooltip={getString('zoomOut')}
             onClick={() => {
               Number(zoomLevel.toFixed(1)) > 0.3 && setZoomLevel(zoomLevel - ZOOM_INC_DEC_LEVEL)
             }}
@@ -87,6 +85,3 @@ const ImageCarousel = (props: ImageCarouselProps) => {
 }
 
 export default ImageCarousel
-
-// TODO: Dialog does not have i18n context when mounted inside CommentBox/different React root
-// Hence getString can't get proper translations

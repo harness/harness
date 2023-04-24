@@ -279,6 +279,7 @@ repoEmptyMarkdownClone: |
   ```sh
   git clone REPO_URL
   ```
+repoEmptyMarkdownClonePush: |
   Then push some content into it.
 
   ```sh
@@ -362,3 +363,12 @@ repoUpdate: Repository Updated
 deleteRepoText: Are you sure you want to delete the repository '{REPONAME}'?
 deleteRepoTitle: Delete the repository
 resolve: Resolve
+generateCloneCred: + Generate Clone Credential
+generateCloneText: "Please generate clone credential if it’s your first time"
+getMyCloneTitle: Get My Clone Credential
+cloneText: Your clone credentials have been generated. Please make sure to copy and store your password somewhere safe, you won't be able to see it again.
+manageApiToken: Manage Api Token
+userName: User Name
+passwordApi: Password (API Token)
+firstTimeTitle: Please generate Git Credentials if it’s your first time to clone the repository
+manageCredText: You can also manage your git credential {URL}

@@ -5,7 +5,6 @@ import type { EditorView } from '@codemirror/view'
 import { EditorSelection } from '@codemirror/state'
 import { Editor } from 'components/Editor/Editor'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
-import { useStrings } from 'framework/strings'
 import css from './MarkdownEditorWithPreview.module.scss'
 
 enum MarkdownEditorTab {
@@ -70,7 +69,6 @@ export function MarkdownEditorWithPreview({
   const [selectedTab, setSelectedTab] = useState(MarkdownEditorTab.WRITE)
   const viewRef = useRef<EditorView>()
   const [dirty, setDirty] = useState(false)
-  const { getString } = useStrings()
   const onToolbarAction = useCallback((action: ToolbarAction) => {
     const view = viewRef.current
 
@@ -249,7 +247,7 @@ export function MarkdownEditorWithPreview({
           }}
         />
         {selectedTab === MarkdownEditorTab.PREVIEW && (
-          <MarkdownViewer source={viewRef.current?.state.doc.toString() || ''} getString={getString} maxHeight={800} />
+          <MarkdownViewer source={viewRef.current?.state.doc.toString() || ''} maxHeight={800} />
         )}
       </Container>
       {!hideButtons && (

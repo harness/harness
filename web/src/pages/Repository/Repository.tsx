@@ -4,6 +4,7 @@ import {
   Button,
   ButtonVariation,
   Container,
+  FlexExpander,
   FontVariation,
   Layout,
   PageBody,
@@ -19,10 +20,14 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useStrings } from 'framework/strings'
 import type { OpenapiGetContentOutput, TypesRepository } from 'services/code'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
-import type { GitInfoProps } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { useDisableCodeMainLinks } from 'hooks/useDisableCodeMainLinks'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { CopyButton } from 'components/CopyButton/CopyButton'
+import CloneCredentialDialog from 'components/CloneCredentialDialog/CloneCredentialDialog'
 import { Images } from 'images'
+import { CopyButton } from 'components/CopyButton/CopyButton'
+import CloneCredentialDialog from 'components/CloneCredentialDialog/CloneCredentialDialog'
 import { RepositoryContent } from './RepositoryContent/RepositoryContent'
 import { RepositoryHeader } from './RepositoryHeader/RepositoryHeader'
 import { ContentHeader } from './RepositoryContent/ContentHeader/ContentHeader'
@@ -128,6 +133,7 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
   const { standalone } = useAppContext()
   const { hooks } = useAppContext()
   const space = useGetSpaceParam()
+  const [flag, setFlag] = useState(false)
 
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
@@ -177,11 +183,58 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
         margin={{ bottom: 'xxlarge' }}
         padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
         className={css.divContainer}>
+        <Text font={{ variation: FontVariation.H4 }}>{getString('firstTimeTitle')}</Text>
+        <Text
+          className={css.text}
+          padding={{ top: 'medium', bottom: 'small' }}
+          font={{ variation: FontVariation.BODY }}>
+          {getString('cloneHTTPS')}
+        </Text>
+        <Layout.Horizontal>
+          <Container padding={{ bottom: 'medium' }} width={400} margin={{ right: 'small' }}>
+            <Layout.Horizontal className={css.layout}>
+              <Text className={css.url}>{repoMetadata.git_url}</Text>
+              <FlexExpander />
+              <CopyButton
+                content={repoMetadata?.git_url as string}
+                id={css.cloneCopyButton}
+                icon={CodeIcon.Copy}
+                iconProps={{ size: 14 }}
+              />
+            </Layout.Horizontal>
+          </Container>
+          {standalone ? null : (
+            <Button
+              onClick={() => {
+                setFlag(true)
+              }}
+              variation={ButtonVariation.SECONDARY}>
+              {getString('generateCloneCred')}
+            </Button>
+          )}
+        </Layout.Horizontal>
+        <Text font={{ variation: FontVariation.BODY, size: 'small' }}>
+          <StringSubstitute
+            str={getString('manageCredText')}
+            vars={{
+              URL: (
+                <a
+                  onClick={() => {
+                    history.push(currentUserProfileURL)
+                  }}>
+                  here
+                </a>
+              )
+            }}
+          />
+        </Text>
+      </Container>
+      <Container
+        margin={{ bottom: 'xxlarge' }}
+        padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
+        className={css.divContainer}>
         <MarkdownViewer
-          getString={getString}
-          source={getString('repoEmptyMarkdownClone')
-            .replace(/REPO_URL/g, repoMetadata.git_url || '')
-            .replace(/REPO_NAME/g, repoMetadata.uid || '')}
+          source={getString('repoEmptyMarkdownClonePush').replace(/REPO_NAME/g, repoMetadata.uid || '')}
         />
       </Container>
       <Container
@@ -189,13 +242,13 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
         padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
         className={css.divContainer}>
         <MarkdownViewer
-          getString={getString}
           source={getString('repoEmptyMarkdownExisting')
             .replace(/REPO_URL/g, repoMetadata.git_url || '')
             .replace(/REPO_NAME/g, repoMetadata.uid || '')
             .replace(/CREATE_API_TOKEN_URL/g, currentUserProfileURL || '')}
         />
       </Container>
+      <CloneCredentialDialog flag={flag} setFlag={setFlag} />
     </Container>
   )
 }
