@@ -42,6 +42,7 @@ export interface StringsMap {
   checks: string
   clone: string
   cloneHTTPS: string
+  cloneText: string
   closed: string
   comment: string
   commentDeleted: string
@@ -122,7 +123,11 @@ export interface StringsMap {
   findATag: string
   findBranch: string
   findOrCreateBranch: string
+  firstTimeTitle: string
   general: string
+  generateCloneCred: string
+  generateCloneText: string
+  getMyCloneTitle: string
   gitIgnore: string
   history: string
   in: string
@@ -133,6 +138,8 @@ export interface StringsMap {
   loading: string
   makeOptional: string
   makeRequired: string
+  manageApiToken: string
+  manageCredText: string
   merged: string
   missingPerms: string
   missingPermsContent: string
@@ -172,6 +179,7 @@ export interface StringsMap {
   pageLoading: string
   pageNotFound: string
   password: string
+  passwordApi: string
   payloadUrl: string
   payloadUrlLabel: string
   pending: string
@@ -251,6 +259,7 @@ export interface StringsMap {
   repoDeleted: string
   repoEmptyMarkdown: string
   repoEmptyMarkdownClone: string
+  repoEmptyMarkdownClonePush: string
   repoEmptyMarkdownExisting: string
   repoUpdate: string
   'repos.activities': string
@@ -292,6 +301,7 @@ export interface StringsMap {
   updateFile: string
   updateWebhook: string
   updated: string
+  userName: string
   'validation.gitBranchNameInvalid': string
   'validation.repoNamePatternIsNotValid': string
   viewAllBranches: string
