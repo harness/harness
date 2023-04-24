@@ -14,6 +14,7 @@ import { Match, Case, Render } from 'react-jsx-match'
 import * as Diff2Html from 'diff2html'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
+import { noop } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { formatNumber, getErrorMessage, voidFn } from 'utils/Utils'
@@ -214,6 +215,7 @@ export const Changes: React.FC<ChangesProps> = ({
                     shouldHide={readOnly || pullRequestMetadata?.state === 'merged'}
                     repoMetadata={repoMetadata}
                     pullRequestMetadata={pullRequestMetadata}
+                    refreshPr={voidFn(noop)}
                   />
                   {/* <ReviewDecisionButton
                     repoMetadata={repoMetadata}
