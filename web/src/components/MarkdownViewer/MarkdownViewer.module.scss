@@ -1,8 +1,14 @@
 .main {
+  overflow: auto;
+
   :global {
     .wmde-markdown {
       pre {
         position: relative;
+
+        .code-line {
+          white-space: break-spaces;
+        }
       }
 
       // Customize https://wangchujiang.com/rehype-video/

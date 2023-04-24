@@ -1,7 +1,8 @@
 import { useHistory } from 'react-router-dom'
 import React, { useCallback, useState } from 'react'
 import { Container } from '@harness/uicore'
-import MarkdownEditor from '@uiw/react-markdown-editor'
+import cx from 'classnames'
+import MarkdownPreview from '@uiw/react-markdown-preview'
 import rehypeVideo from 'rehype-video'
 import rehypeExternalLinks from 'rehype-external-links'
 import { INITIAL_ZOOM_LEVEL } from 'utils/Utils'
@@ -12,9 +13,11 @@ import css from './MarkdownViewer.module.scss'
 interface MarkdownViewerProps {
   source: string
   getString: UseStringsReturn['getString']
+  className?: string
+  maxHeight?: string | number
 }
 
-export function MarkdownViewer({ source, getString }: MarkdownViewerProps) {
+export function MarkdownViewer({ source, getString, className, maxHeight }: MarkdownViewerProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const history = useHistory()
   const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM_LEVEL)
@@ -57,8 +60,11 @@ export function MarkdownViewer({ source, getString }: MarkdownViewerProps) {
   )
 
   return (
-    <Container className={css.main} onClick={interceptClickEventOnViewerContainer}>
-      <MarkdownEditor.Markdown
+    <Container
+      className={cx(css.main, className)}
+      onClick={interceptClickEventOnViewerContainer}
+      style={{ maxHeight: maxHeight }}>
+      <MarkdownPreview
         source={source}
         skipHtml={true}
         warpperElement={{ 'data-color-mode': 'light' }}
@@ -80,7 +86,10 @@ export function MarkdownViewer({ source, getString }: MarkdownViewerProps) {
         setZoomLevel={setZoomLevel}
         zoomLevel={zoomLevel}
         imgEvent={imgEvent}
-        getString={getString}
+        i18n={{
+          zoomIn: getString('zoomIn'),
+          zoomOut: getString('zoomOut')
+        }}
       />
     </Container>
   )

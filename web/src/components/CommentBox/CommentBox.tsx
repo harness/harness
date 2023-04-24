@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react'
 import { useResizeDetector } from 'react-resize-detector'
+import type { EditorView } from '@codemirror/view'
 import { Render, Match, Truthy, Falsy, Else } from 'react-jsx-match'
 import { Container, Layout, Avatar, TextInput, Text, Color, FontVariation, FlexExpander } from '@harness/uicore'
 import cx from 'classnames'
@@ -10,10 +11,7 @@ import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { useAppContext } from 'AppContext'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
-import {
-  MarkdownEditorWithPreview,
-  MarkdownEditorWithPreviewResetProps
-} from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
+import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import css from './CommentBox.module.scss'
 
@@ -106,7 +104,7 @@ export const CommentBox = <T = unknown,>({
         .join(CRLF)
     )
   }, [])
-  const editorRef = useRef<MarkdownEditorWithPreviewResetProps>()
+  const viewRef = useRef<EditorView>()
 
   return (
     <Container
@@ -144,11 +142,10 @@ export const CommentBox = <T = unknown,>({
               </Container>
             </Truthy>
             <Falsy>
-              <Container
-                padding="xlarge"
-                className={cx(css.newCommentContainer, { [css.hasThread]: !!comments.length })}>
+              <Container className={cx(css.newCommentContainer, { [css.hasThread]: !!comments.length })}>
                 <MarkdownEditorWithPreview
-                  editorRef={editorRef as React.MutableRefObject<MarkdownEditorWithPreviewResetProps>}
+                  viewRef={viewRef}
+                  noBorder
                   i18n={{
                     placeHolder: getString(comments.length ? 'replyHere' : 'leaveAComment'),
                     tabEdit: getString('write'),
@@ -170,7 +167,13 @@ export const CommentBox = <T = unknown,>({
                         setMarkdown('')
 
                         if (resetOnSave) {
-                          editorRef.current?.resetEditor?.()
+                          viewRef.current?.dispatch({
+                            changes: {
+                              from: 0,
+                              to: viewRef.current.state.doc.length,
+                              insert: ''
+                            }
+                          })
                         } else {
                           setComments([...comments, updatedItem as CommentItem<T>])
                           setShowReplyPlaceHolder(true)
