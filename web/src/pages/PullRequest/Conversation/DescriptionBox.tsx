@@ -28,8 +28,8 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
   })
 
   return (
-    <Container className={cx(css.box, css.desc)}>
-      <Container padding={{ left: 'small', bottom: 'small' }}>
+    <Container className={cx({ [css.box]: !edit, [css.desc]: !edit })}>
+      <Container padding={!edit ? { left: 'small', bottom: 'small' } : undefined}>
         {(edit && (
           <MarkdownEditorWithPreview
             value={content}
@@ -59,7 +59,7 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
               save: getString('save'),
               cancel: getString('cancel')
             }}
-            maxEditorHeight="400px"
+            editorHeight="400px"
           />
         )) || (
           <Container className={css.mdWrapper}>

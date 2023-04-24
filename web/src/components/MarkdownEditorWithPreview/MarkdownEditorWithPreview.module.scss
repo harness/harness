@@ -101,12 +101,12 @@
 
   .markdownEditor {
     :global {
-      .cm-editor .cm-line {
-        &,
-        * {
-          @include mono-font;
-        }
-      }
+      // .cm-editor .cm-line {
+      //   &,
+      //   * {
+      //     @include mono-font;
+      //   }
+      // }
 
       .md-editor {
         background-color: transparent !important;
@@ -151,5 +151,101 @@
         min-height: 46px;
       }
     }
+  }
+}
+
+.container {
+  --tab-border-primary: rgba(176, 177, 195, 0.5);
+  --radius: 5px;
+
+  box-shadow: var(--elevation-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--tab-border-primary);
+  border-bottom: none;
+  background-color: var(--white);
+
+  &.noBorder {
+    border: none;
+    box-shadow: none;
+  }
+
+  position: relative;
+
+  .tabs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    background-color: var(--grey-100);
+    padding: 15px 15px 0;
+    background: var(--grey-50) !important;
+    border-bottom: 1px solid var(--tab-border-primary);
+    border-top-left-radius: var(--radius);
+    border-top-right-radius: var(--radius);
+
+    li {
+      a {
+        padding: 6px 15px;
+        display: block;
+        font-style: normal;
+        font-weight: 500;
+        font-size: 12px;
+        line-height: 18px;
+        text-decoration: none;
+        color: var(--grey-900);
+
+        position: relative;
+        border: 1px solid transparent;
+        border-bottom: none;
+        border-top-left-radius: var(--radius);
+        border-top-right-radius: var(--radius);
+
+        &::after {
+          content: '';
+          right: 0;
+          left: 0;
+          bottom: -1px;
+          height: 1px;
+          width: 100%;
+          position: absolute;
+          background-color: transparent;
+        }
+
+        &[aria-selected='true'] {
+          background-color: var(--white);
+          border-color: var(--tab-border-primary);
+
+          &::after {
+            background-color: var(--white);
+          }
+        }
+      }
+    }
+  }
+
+  .toolbar {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    margin: 0;
+    padding: 0;
+    display: flex;
+  }
+
+  .tabContent {
+    padding: var(--spacing-large);
+    background-color: var(--white);
+    border-bottom-left-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
+  }
+
+  .buttonsBar {
+    padding: 0 var(--spacing-large) var(--spacing-large);
+    background-color: var(--white);
+    border-radius: var(--radius);
+  }
+
+  .hidden {
+    display: none;
   }
 }

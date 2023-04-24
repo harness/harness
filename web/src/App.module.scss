@@ -5,11 +5,6 @@
  */
 
 .main {
-  --code-editor-font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono',
-    monospace;
-  --code-editor-font-size: 13px;
-  --code-editor-border-color: var(--grey-200);
-
   :global {
     .Resizer {
       background-color: var(--grey-300);

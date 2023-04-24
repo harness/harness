@@ -1,4 +1,15 @@
+$code-editor-font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono',
+  monospace;
+
 @mixin mono-font {
-  font-family: var(--code-editor-font-family) !important;
-  font-size: var(--code-editor-font-size) !important;
+  font-family: var(--font-family-mono) !important;
+  font-size: 12px !important;
+  font-feature-settings: 'liga' 0, 'calt' 0;
+  line-height: 18px;
+  letter-spacing: 0px;
+}
+
+@mixin markdown-font {
+  font-family: var(--font-family) !important;
+  font-size: 12px !important;
 }

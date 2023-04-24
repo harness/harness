@@ -177,7 +177,7 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
                     disabled={disableBranchCreation}
                     label=""
                     onChange={e => {
-                      setTargetBranchOption(get(e.target, 'defaultValue'))
+                      setTargetBranchOption(get(e.target, 'defaultValue') as unknown as CommitToGitRefOption)
                     }}
                     items={[
                       {

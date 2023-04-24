@@ -73,7 +73,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
           showSuccess(getString('repoDeleted', { repo: repoMetadata?.uid }), 5000)
           history.push(routes.toCODERepositories({ space }))
         })
-        .catch((error: any) => {
+        .catch((error: Unknown) => {
           showError(getErrorMessage(error), 0, 'failedToDeleteBranch')
         })
     }

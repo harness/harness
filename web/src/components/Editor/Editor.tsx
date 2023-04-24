@@ -2,41 +2,64 @@ import React, { useEffect, useMemo, useRef } from 'react'
 import { Container } from '@harness/uicore'
 import { LanguageDescription } from '@codemirror/language'
 import { indentWithTab } from '@codemirror/commands'
+import cx from 'classnames'
 import type { ViewUpdate } from '@codemirror/view'
+import type { Text } from '@codemirror/state'
 import { languages } from '@codemirror/language-data'
-import { EditorView, keymap } from '@codemirror/view'
-import { noop } from 'lodash-es'
+import { markdown } from '@codemirror/lang-markdown'
+import { EditorView, keymap, placeholder as placeholderExtension } from '@codemirror/view'
 import { Compartment, EditorState, Extension } from '@codemirror/state'
 import { color } from '@uiw/codemirror-extensions-color'
 import { hyperLink } from '@uiw/codemirror-extensions-hyper-link'
 import { githubLight as theme } from '@uiw/codemirror-themes-all'
+import css from './Editor.module.scss'
 
-interface EditorProps {
-  filename: string
-  source: string
-  onViewUpdate?: (update: ViewUpdate) => void
+export interface EditorProps {
+  content: string
+  filename?: string
+  forMarkdown?: boolean
+  placeholder?: string
   readonly?: boolean
+  autoFocus?: boolean
   className?: string
   extensions?: Extension
+  maxHeight?: string | number
   viewRef?: React.MutableRefObject<EditorView | undefined>
+  setDirty?: React.Dispatch<React.SetStateAction<boolean>>
+  onChange?: (doc: Text, viewUpdate: ViewUpdate) => void
+  onViewUpdate?: (viewUpdate: ViewUpdate) => void
 }
 
 export const Editor = React.memo(function CodeMirrorReactEditor({
-  source,
+  content,
   filename,
-  onViewUpdate = noop,
+  forMarkdown,
+  placeholder,
   readonly = false,
+  autoFocus,
   className,
   extensions = new Compartment().of([]),
-  viewRef
+  maxHeight,
+  viewRef,
+  setDirty,
+  onChange,
+  onViewUpdate
 }: EditorProps) {
   const view = useRef<EditorView>()
   const ref = useRef<HTMLDivElement>()
   const languageConfig = useMemo(() => new Compartment(), [])
+  const markdownLanguageSupport = useMemo(() => markdown({ codeLanguages: languages }), [])
+  const style = useMemo(() => {
+    if (maxHeight) {
+      return {
+        '--editor-max-height': Number.isInteger(maxHeight) ? `${maxHeight}px` : maxHeight
+      } as React.CSSProperties
+    }
+  }, [maxHeight])
 
   useEffect(() => {
     const editorView = new EditorView({
-      doc: source,
+      doc: content,
       extensions: [
         extensions,
 
@@ -45,11 +68,21 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
         theme,
 
         EditorView.lineWrapping,
+
+        ...(placeholder ? [placeholderExtension(placeholder)] : []),
+
         keymap.of([indentWithTab]),
 
         ...(readonly ? [EditorState.readOnly.of(true), EditorView.editable.of(false)] : []),
 
-        EditorView.updateListener.of(onViewUpdate),
+        EditorView.updateListener.of(viewUpdate => {
+          setDirty?.(!cleanDoc.eq(viewUpdate.state.doc))
+          onViewUpdate?.(viewUpdate)
+
+          if (viewUpdate.docChanged) {
+            onChange?.(viewUpdate.state.doc, viewUpdate)
+          }
+        }),
 
         /**
         languageConfig is a compartment that defaults to an empty array (no language support)
@@ -67,25 +100,35 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
       viewRef.current = editorView
     }
 
+    const cleanDoc = editorView.state.doc
+
+    if (autoFocus) {
+      editorView.focus()
+    }
+
     return () => {
       editorView.destroy()
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Dynamically load language support based on filename
+  // Dynamically load language support based on filename. Note that
+  // we need to configure languageSupport for Markdown separately to
+  // enable syntax highlighting for all code blocks (multi-lang).
   useEffect(() => {
-    if (filename) {
-      languageDescriptionFrom(filename)
+    if (forMarkdown) {
+      view.current?.dispatch({ effects: languageConfig.reconfigure(markdownLanguageSupport) })
+    } else if (filename) {
+      LanguageDescription.matchFilename(languages, filename)
         ?.load()
         .then(languageSupport => {
-          view.current?.dispatch({ effects: languageConfig.reconfigure(languageSupport) })
+          view.current?.dispatch({
+            effects: languageConfig.reconfigure(
+              languageSupport.language.name === 'markdown' ? markdownLanguageSupport : languageSupport
+            )
+          })
         })
     }
-  }, [filename, view, languageConfig])
+  }, [filename, forMarkdown, view, languageConfig, markdownLanguageSupport])
 
-  return <Container ref={ref} className={className} />
+  return <Container ref={ref} className={cx(css.editor, className)} style={style} />
 })
-
-function languageDescriptionFrom(filename: string) {
-  return LanguageDescription.matchFilename(languages, filename)
-}

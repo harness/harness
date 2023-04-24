@@ -235,7 +235,7 @@ const GitBlameRenderer = React.memo(function GitBlameSourceViewer({
     <Editor
       viewRef={viewRef}
       filename={filename}
-      source={source}
+      content={source}
       readonly={true}
       className={css.main}
       onViewUpdate={onViewUpdate}

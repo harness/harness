@@ -50,7 +50,12 @@ export const OptionsMenuButton = ({
                     [css.danger]: (item as OptionsMenuItem).isDanger,
                     [css.isDark]: isDark
                   })}
-                  {...omit(item as IMenuItemProps & React.AnchorHTMLAttributes<HTMLAnchorElement>, 'isDanger')}
+                  {...omit(
+                    item as IMenuItemProps & React.AnchorHTMLAttributes<HTMLAnchorElement>,
+                    'isDanger',
+                    'hasIcon',
+                    'iconName'
+                  )}
                 />
               )
           )}

@@ -1,0 +1,30 @@
+@import 'src/utils/utils';
+
+.editor {
+  :global {
+    .cm-editor {
+      outline: none;
+      border: 1px solid var(--grey-200);
+      border-radius: 4px;
+      min-height: var(--editor-min-height, 60px);
+      max-height: var(--editor-max-height, 600px);
+
+      &.cm-focused {
+        border-color: var(--primary-7);
+        outline: none;
+      }
+
+      .cm-scroller {
+        overflow: auto;
+        padding: var(--spacing-small);
+
+        .cm-line {
+          &,
+          * {
+            @include markdown-font;
+          }
+        }
+      }
+    }
+  }
+}
