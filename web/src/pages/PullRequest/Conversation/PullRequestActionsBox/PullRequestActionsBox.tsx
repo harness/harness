@@ -50,6 +50,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
 }) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
+  const { hooks, standalone } = useAppContext()
+  const space = useGetSpaceParam()
   const { mutate: mergePR, loading } = useMutate({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/merge`
@@ -88,8 +90,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   if (pullRequestMetadata.state === PullRequestFilterOption.MERGED) {
     return <MergeInfo pullRequestMetadata={pullRequestMetadata} />
   }
-  const { hooks, standalone } = useAppContext()
-  const space = useGetSpaceParam()
 
   const permPushResult = hooks?.usePermissionTranslate?.(
     {

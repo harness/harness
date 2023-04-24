@@ -24,12 +24,12 @@ import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { useDisableCodeMainLinks } from 'hooks/useDisableCodeMainLinks'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { Images } from 'images'
+import { CopyButton } from 'components/CopyButton/CopyButton'
+import CloneCredentialDialog from 'components/CloneCredentialDialog/CloneCredentialDialog'
 import { RepositoryContent } from './RepositoryContent/RepositoryContent'
 import { RepositoryHeader } from './RepositoryHeader/RepositoryHeader'
 import { ContentHeader } from './RepositoryContent/ContentHeader/ContentHeader'
 import css from './Repository.module.scss'
-import { CopyButton } from 'components/CopyButton/CopyButton'
-import CloneCredentialDialog from 'components/CloneCredentialDialog/CloneCredentialDialog'
 
 export default function Repository() {
   const { gitRef, resourcePath, repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()

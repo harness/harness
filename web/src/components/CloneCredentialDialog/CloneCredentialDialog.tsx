@@ -10,13 +10,13 @@ import {
   Text,
   useToaster
 } from '@harness/uicore'
+import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { CodeIcon } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { generateAlphaNumericHash } from 'utils/Utils'
 import css from './CloneCredentialDialog.module.scss'
-import { useHistory } from 'react-router-dom'
 
 interface CloneCredentialDialogProps {
   setFlag: (val: boolean) => void
