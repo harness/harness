@@ -182,7 +182,10 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
         padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
         className={css.divContainer}>
         <Text font={{ variation: FontVariation.H4 }}>{getString('firstTimeTitle')}</Text>
-        <Text className={css.text} padding={{ top: 'medium', bottom: 'small' }} font={{ variation: FontVariation.BODY }}>
+        <Text
+          className={css.text}
+          padding={{ top: 'medium', bottom: 'small' }}
+          font={{ variation: FontVariation.BODY }}>
           {getString('cloneHTTPS')}
         </Text>
         <Layout.Horizontal>
@@ -198,13 +201,15 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
               />
             </Layout.Horizontal>
           </Container>
-          <Button
-            onClick={() => {
-              setFlag(true)
-            }}
-            variation={ButtonVariation.SECONDARY}>
-            {getString('generateCloneCred')}
-          </Button>
+          {standalone ? null : (
+            <Button
+              onClick={() => {
+                setFlag(true)
+              }}
+              variation={ButtonVariation.SECONDARY}>
+              {getString('generateCloneCred')}
+            </Button>
+          )}
         </Layout.Horizontal>
         <Text font={{ variation: FontVariation.BODY, size: 'small' }}>
           <StringSubstitute
