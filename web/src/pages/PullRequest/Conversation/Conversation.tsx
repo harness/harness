@@ -316,7 +316,6 @@ export const Conversation: React.FC<ConversationProps> = ({
                               [css.hideDottedLine]: true,
                               [css.newCommentCreated]: commentCreated && index === activityBlocks.length - 1
                             })}
-                            getString={getString}
                             commentItems={commentItems}
                             currentUserName={currentUser.display_name}
                             handleAction={async (action, value, commentItem) => {
@@ -410,7 +409,6 @@ export const Conversation: React.FC<ConversationProps> = ({
 
                   <CommentBox
                     fluid
-                    getString={getString}
                     commentItems={[]}
                     currentUserName={currentUser.display_name}
                     resetOnSave
@@ -681,7 +679,6 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
               margin={{ top: 'medium', left: 'xxxlarge' }}
               style={{ maxWidth: 'calc(100vw - 450px)', overflow: 'auto' }}>
               <MarkdownViewer
-                getString={getString}
                 source={[getString('pr.titleChangedTable').replace(/\n$/, '')]
                   .concat(
                     commentItems

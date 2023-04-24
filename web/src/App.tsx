@@ -43,43 +43,52 @@ const App: React.FC<AppProps> = React.memo(function App({
     languageLoader(lang).then(setStrings)
   }, [lang, setStrings])
 
-  // TODO: Workaround to disable editor dark mode (https://github.com/uiwjs/react-markdown-editor#support-dark-modenight-mode)
-  document.documentElement.setAttribute('data-color-mode', 'light')
+  const Wrapper: React.FC = useCallback(
+    props => {
+      return strings ? (
+        <Container className={css.main}>
+          <StringsContextProvider initialStrings={strings}>
+            <AppErrorBoundary>
+              <RestfulProvider
+                base={standalone ? '/' : getConfig('code')}
+                requestOptions={getRequestOptions}
+                queryParams={queryParams}
+                queryParamStringifyOptions={{ skipNulls: true }}
+                onResponse={response => {
+                  if (!response.ok && response.status === 401) {
+                    on401()
+                  }
+                }}>
+                <AppContextProvider
+                  value={{
+                    standalone,
+                    space,
+                    routes,
+                    lang,
+                    on401,
+                    hooks,
+                    currentUser: defaultCurrentUser,
+                    currentUserProfileURL
+                  }}>
+                  <TooltipContextProvider initialTooltipDictionary={tooltipDictionary}>
+                    <ModalProvider>{props.children ? props.children : <RouteDestinations />}</ModalProvider>
+                  </TooltipContextProvider>
+                </AppContextProvider>
+              </RestfulProvider>
+            </AppErrorBoundary>
+          </StringsContextProvider>
+        </Container>
+      ) : null
+    },
+    [strings] // eslint-disable-line react-hooks/exhaustive-deps
+  )
 
-  return strings ? (
-    <Container className={css.main}>
-      <StringsContextProvider initialStrings={strings}>
-        <AppErrorBoundary>
-          <RestfulProvider
-            base={standalone ? '/' : getConfig('code')}
-            requestOptions={getRequestOptions}
-            queryParams={queryParams}
-            queryParamStringifyOptions={{ skipNulls: true }}
-            onResponse={response => {
-              if (!response.ok && response.status === 401) {
-                on401()
-              }
-            }}>
-            <AppContextProvider
-              value={{
-                standalone,
-                space,
-                routes,
-                lang,
-                on401,
-                hooks,
-                currentUser: defaultCurrentUser,
-                currentUserProfileURL
-              }}>
-              <TooltipContextProvider initialTooltipDictionary={tooltipDictionary}>
-                <ModalProvider>{children ? children : <RouteDestinations />}</ModalProvider>
-              </TooltipContextProvider>
-            </AppContextProvider>
-          </RestfulProvider>
-        </AppErrorBoundary>
-      </StringsContextProvider>
-    </Container>
-  ) : null
+  useEffect(() => {
+    AppWrapper = Wrapper
+  }, [Wrapper])
+
+  return <Wrapper>{children}</Wrapper>
 })
 
+export let AppWrapper: React.FC = () => <Container />
 export default App

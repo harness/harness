@@ -6,18 +6,16 @@ import MarkdownPreview from '@uiw/react-markdown-preview'
 import rehypeVideo from 'rehype-video'
 import rehypeExternalLinks from 'rehype-external-links'
 import { INITIAL_ZOOM_LEVEL } from 'utils/Utils'
-import type { UseStringsReturn } from 'framework/strings'
 import ImageCarousel from 'components/ImageCarousel/ImageCarousel'
 import css from './MarkdownViewer.module.scss'
 
 interface MarkdownViewerProps {
   source: string
-  getString: UseStringsReturn['getString']
   className?: string
   maxHeight?: string | number
 }
 
-export function MarkdownViewer({ source, getString, className, maxHeight }: MarkdownViewerProps) {
+export function MarkdownViewer({ source, className, maxHeight }: MarkdownViewerProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const history = useHistory()
   const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM_LEVEL)
@@ -86,10 +84,6 @@ export function MarkdownViewer({ source, getString, className, maxHeight }: Mark
         setZoomLevel={setZoomLevel}
         zoomLevel={zoomLevel}
         imgEvent={imgEvent}
-        i18n={{
-          zoomIn: getString('zoomIn'),
-          zoomOut: getString('zoomOut')
-        }}
       />
     </Container>
   )

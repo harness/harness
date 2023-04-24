@@ -73,7 +73,7 @@ const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
         refreshPr?.()
       })
       .catch(exception => showError(getErrorMessage(exception)))
-  }, [decisionOption, mutate, showError, showSuccess, getString])
+  }, [decisionOption, mutate, showError, showSuccess, getString, refreshPr])
   return (
     <Container className={cx(css.btn, { [css.hide]: shouldHide })}>
       <SplitButton

@@ -23,9 +23,9 @@ import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { useDisableCodeMainLinks } from 'hooks/useDisableCodeMainLinks'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { Images } from 'images'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import CloneCredentialDialog from 'components/CloneCredentialDialog/CloneCredentialDialog'
+import { Images } from 'images'
 import { RepositoryContent } from './RepositoryContent/RepositoryContent'
 import { RepositoryHeader } from './RepositoryHeader/RepositoryHeader'
 import { ContentHeader } from './RepositoryContent/ContentHeader/ContentHeader'
@@ -232,7 +232,6 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
         padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
         className={css.divContainer}>
         <MarkdownViewer
-          getString={getString}
           source={getString('repoEmptyMarkdownClonePush').replace(/REPO_NAME/g, repoMetadata.uid || '')}
         />
       </Container>
@@ -241,7 +240,6 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
         padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
         className={css.divContainer}>
         <MarkdownViewer
-          getString={getString}
           source={getString('repoEmptyMarkdownExisting')
             .replace(/REPO_URL/g, repoMetadata.git_url || '')
             .replace(/REPO_NAME/g, repoMetadata.uid || '')

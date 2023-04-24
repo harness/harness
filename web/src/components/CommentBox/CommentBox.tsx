@@ -18,7 +18,7 @@ import {
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
 import { noop } from 'lodash-es'
-import type { UseStringsReturn } from 'framework/strings'
+import { useStrings } from 'framework/strings'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { useAppContext } from 'AppContext'
@@ -54,7 +54,6 @@ export enum CommentBoxOutletPosition {
 
 interface CommentBoxProps<T> {
   className?: string
-  getString: UseStringsReturn['getString']
   onHeightChange?: (height: number) => void
   initialContent?: string
   width?: string
@@ -74,7 +73,6 @@ interface CommentBoxProps<T> {
 
 export const CommentBox = <T = unknown,>({
   className,
-  getString,
   onHeightChange = noop,
   initialContent = '',
   width,
@@ -87,6 +85,7 @@ export const CommentBox = <T = unknown,>({
   resetOnSave,
   outlets = {}
 }: CommentBoxProps<T>) => {
+  const { getString } = useStrings()
   const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
   const [showReplyPlaceHolder, setShowReplyPlaceHolder] = useState(!!comments.length)
   const [markdown, setMarkdown] = useState(initialContent)
@@ -130,7 +129,6 @@ export const CommentBox = <T = unknown,>({
         <Layout.Vertical>
           <CommentsThread<T>
             commentItems={comments}
-            getString={getString}
             onQuote={onQuote}
             handleAction={async (action, content, atCommentItem) => {
               const [result, updatedItem] = await handleAction(action, content, atCommentItem)
@@ -211,18 +209,17 @@ export const CommentBox = <T = unknown,>({
   )
 }
 
-interface CommentsThreadProps<T>
-  extends Pick<CommentBoxProps<T>, 'commentItems' | 'getString' | 'handleAction' | 'outlets'> {
+interface CommentsThreadProps<T> extends Pick<CommentBoxProps<T>, 'commentItems' | 'handleAction' | 'outlets'> {
   onQuote: (content: string) => void
 }
 
 const CommentsThread = <T = unknown,>({
-  getString,
   onQuote,
   commentItems = [],
   handleAction,
   outlets = {}
 }: CommentsThreadProps<T>) => {
+  const { getString } = useStrings()
   const { standalone } = useAppContext()
   const [editIndexes, setEditIndexes] = useState<Record<number, boolean>>({})
   const resetStateAtIndex = useCallback(
@@ -350,7 +347,7 @@ const CommentsThread = <T = unknown,>({
                         <Text className={css.deleted}>{getString('commentDeleted')}</Text>
                       </Truthy>
                       <Else>
-                        <MarkdownViewer source={commentItem?.content} getString={getString} />
+                        <MarkdownViewer source={commentItem?.content} />
                       </Else>
                     </Match>
                   </Else>

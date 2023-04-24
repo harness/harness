@@ -63,7 +63,7 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
           />
         )) || (
           <Container className={css.mdWrapper}>
-            <MarkdownViewer source={content} getString={getString} />
+            <MarkdownViewer source={content} />
             <Container className={css.menuWrapper}>
               <OptionsMenuButton
                 isDark={true}

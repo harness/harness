@@ -87,10 +87,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     }
   ]
   const [mergeOption, setMergeOption] = useState<PRMergeOption>(mergeOptions[1])
-  if (pullRequestMetadata.state === PullRequestFilterOption.MERGED) {
-    return <MergeInfo pullRequestMetadata={pullRequestMetadata} />
-  }
-
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
@@ -100,6 +96,10 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     },
     [space]
   )
+
+  if (pullRequestMetadata.state === PullRequestFilterOption.MERGED) {
+    return <MergeInfo pullRequestMetadata={pullRequestMetadata} />
+  }
 
   return (
     <Container
