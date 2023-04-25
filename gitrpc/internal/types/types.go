@@ -260,6 +260,7 @@ type DiffShortStat struct {
 type DiffFileHeader struct {
 	OldFileName string
 	NewFileName string
+	Extensions  map[string]string
 }
 
 type DiffFileHunkHeaders struct {

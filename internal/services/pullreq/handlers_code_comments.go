@@ -11,27 +11,35 @@ import (
 	"github.com/harness/gitness/events"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/types"
-
-	"github.com/rs/zerolog/log"
 )
 
 func (s *Service) updateCodeCommentsOnBranchUpdate(ctx context.Context,
 	event *events.Event[*pullreqevents.BranchUpdatedPayload],
 ) error {
-	oldSourceSHA := event.Payload.OldSHA // NOTE: we're ignoring the old value and instead try to update all
-	newSourceSHA := event.Payload.NewSHA
-
-	log.Ctx(ctx).Debug().
-		Str("oldSHA", oldSourceSHA).
-		Str("newSHA", newSourceSHA).
-		Msgf("code comment update after source branch update")
-
-	repoGit, err := s.repoGitInfoCache.Get(ctx, event.Payload.SourceRepoID)
+	repoGit, err := s.repoGitInfoCache.Get(ctx, event.Payload.TargetRepoID)
 	if err != nil {
 		return fmt.Errorf("failed to get repo git info: %w", err)
 	}
 
-	codeComments, err := s.codeCommentView.ListNotAtSourceSHA(ctx, event.Payload.PullReqID, newSourceSHA)
+	var codeComments []*types.CodeComment
+
+	newMergeBaseSHA := event.Payload.NewMergeBaseSHA
+
+	codeComments, err = s.codeCommentView.ListNotAtMergeBaseSHA(ctx, event.Payload.PullReqID, newMergeBaseSHA)
+	if err != nil {
+		return fmt.Errorf("failed to get list of code comments for update after merge base update: %w", err)
+	}
+
+	s.codeCommentMigrator.MigrateOld(ctx, repoGit.GitUID, newMergeBaseSHA, codeComments)
+
+	err = s.codeCommentView.UpdateAll(ctx, codeComments)
+	if err != nil {
+		return fmt.Errorf("failed to update code comments after merge base update: %w", err)
+	}
+
+	newSourceSHA := event.Payload.NewSHA
+
+	codeComments, err = s.codeCommentView.ListNotAtSourceSHA(ctx, event.Payload.PullReqID, newSourceSHA)
 	if err != nil {
 		return fmt.Errorf("failed to get list of code comments for update after source branch update: %w", err)
 	}
@@ -41,31 +49,6 @@ func (s *Service) updateCodeCommentsOnBranchUpdate(ctx context.Context,
 	err = s.codeCommentView.UpdateAll(ctx, codeComments)
 	if err != nil {
 		return fmt.Errorf("failed to update code comments after source branch update: %w", err)
-	}
-
-	return nil
-}
-
-func (s *Service) updateCodeCommentsOnMergeBaseUpdate(ctx context.Context,
-	pr *types.PullReq,
-	gitUID string,
-	oldMergeBaseSHA, newMergeBaseSHA string,
-) error {
-	log.Ctx(ctx).Debug().
-		Str("oldSHA", oldMergeBaseSHA).
-		Str("newSHA", newMergeBaseSHA).
-		Msgf("code comment update after merge base update")
-
-	codeComments, err := s.codeCommentView.ListNotAtMergeBaseSHA(ctx, pr.ID, newMergeBaseSHA)
-	if err != nil {
-		return fmt.Errorf("failed to get list of code comments for update after merge base update: %w", err)
-	}
-
-	s.codeCommentMigrator.MigrateOld(ctx, gitUID, newMergeBaseSHA, codeComments)
-
-	err = s.codeCommentView.UpdateAll(ctx, codeComments)
-	if err != nil {
-		return fmt.Errorf("failed to update code comments after merge base update: %w", err)
 	}
 
 	return nil

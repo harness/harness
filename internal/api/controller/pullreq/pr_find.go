@@ -36,14 +36,8 @@ func (c *Controller) Find(
 		return nil, err
 	}
 
-	headRef := pr.SourceBranch
-	if pr.SourceSHA != "" {
-		headRef = pr.SourceSHA
-	}
-	baseRef := pr.TargetBranch
-	if pr.MergeBaseSHA != nil {
-		baseRef = *pr.MergeBaseSHA
-	}
+	headRef := pr.SourceSHA
+	baseRef := pr.MergeBaseSHA
 
 	output, err := c.gitRPCClient.DiffStats(ctx, &gitrpc.DiffParams{
 		ReadParams: gitrpc.CreateRPCReadParams(repo),

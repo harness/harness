@@ -36,6 +36,7 @@ type Interface interface {
 	ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, error)
 	GetCommitDivergences(ctx context.Context, params *GetCommitDivergencesParams) (*GetCommitDivergencesOutput, error)
 	CommitFiles(ctx context.Context, params *CommitFilesParams) (CommitFilesResponse, error)
+	MergeBase(ctx context.Context, params MergeBaseParams) (MergeBaseOutput, error)
 
 	/*
 	 * Git Cli Service

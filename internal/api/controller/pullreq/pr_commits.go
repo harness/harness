@@ -33,14 +33,8 @@ func (c *Controller) Commits(
 		return nil, fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
-	gitRef := pr.SourceBranch
-	if pr.SourceSHA != "" {
-		gitRef = pr.SourceSHA
-	}
-	afterRef := pr.TargetBranch
-	if pr.MergeBaseSHA != nil {
-		afterRef = *pr.MergeBaseSHA
-	}
+	gitRef := pr.SourceSHA
+	afterRef := pr.MergeBaseSHA
 
 	rpcOut, err := c.gitRPCClient.ListCommits(ctx, &gitrpc.ListCommitsParams{
 		ReadParams: gitrpc.CreateRPCReadParams(repo),

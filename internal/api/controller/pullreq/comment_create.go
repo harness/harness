@@ -129,7 +129,7 @@ func (c *Controller) CommentCreate(
 
 		// Migrate the comment if necessary... Note: we still need to return the code comment as is.
 		needsNewLineMigrate := in.SourceCommitSHA != cut.LatestSourceSHA
-		needsOldLineMigrate := pr.MergeBaseSHA != nil && *pr.MergeBaseSHA != cut.MergeBaseSHA
+		needsOldLineMigrate := pr.MergeBaseSHA != cut.MergeBaseSHA
 		if err == nil && (needsNewLineMigrate || needsOldLineMigrate) {
 			comments := []*types.CodeComment{act.AsCodeComment()}
 

@@ -133,7 +133,7 @@ func (c *Controller) Merge(
 		// update all Merge specific information (might be empty if previous merge check failed)
 		pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
 		pr.MergeTargetSHA = &mergeOutput.BaseSHA
-		pr.MergeBaseSHA = &mergeOutput.MergeBaseSHA
+		pr.MergeBaseSHA = mergeOutput.MergeBaseSHA
 		pr.MergeSHA = &mergeOutput.MergeSHA
 		pr.MergeConflicts = nil
 

@@ -103,6 +103,10 @@ func (s *CodeCommentView) list(ctx context.Context,
 
 // UpdateAll updates all code comments provided in the slice.
 func (s *CodeCommentView) UpdateAll(ctx context.Context, codeComments []*types.CodeComment) error {
+	if len(codeComments) == 0 {
+		return nil
+	}
+
 	const sqlQuery = `
 	UPDATE pullreq_activities
 	SET

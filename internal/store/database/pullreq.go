@@ -73,7 +73,7 @@ type pullReq struct {
 
 	MergeCheckStatus enum.MergeCheckStatus `db:"pullreq_merge_check_status"`
 	MergeTargetSHA   null.String           `db:"pullreq_merge_target_sha"`
-	MergeBaseSHA     null.String           `db:"pullreq_merge_base_sha"`
+	MergeBaseSHA     string                `db:"pullreq_merge_base_sha"`
 	MergeSHA         null.String           `db:"pullreq_merge_sha"`
 	MergeConflicts   null.String           `db:"pullreq_merge_conflicts"`
 }
@@ -481,7 +481,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		MergeMethod:      (*enum.MergeMethod)(pr.MergeMethod.Ptr()),
 		MergeCheckStatus: pr.MergeCheckStatus,
 		MergeTargetSHA:   pr.MergeTargetSHA.Ptr(),
-		MergeBaseSHA:     pr.MergeBaseSHA.Ptr(),
+		MergeBaseSHA:     pr.MergeBaseSHA,
 		MergeSHA:         pr.MergeSHA.Ptr(),
 		MergeConflicts:   pr.MergeConflicts.Ptr(),
 		Author:           types.PrincipalInfo{},
@@ -521,7 +521,7 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		MergeMethod:      null.StringFromPtr((*string)(pr.MergeMethod)),
 		MergeCheckStatus: pr.MergeCheckStatus,
 		MergeTargetSHA:   null.StringFromPtr(pr.MergeTargetSHA),
-		MergeBaseSHA:     null.StringFromPtr(pr.MergeBaseSHA),
+		MergeBaseSHA:     pr.MergeBaseSHA,
 		MergeSHA:         null.StringFromPtr(pr.MergeSHA),
 		MergeConflicts:   null.StringFromPtr(pr.MergeConflicts),
 	}
