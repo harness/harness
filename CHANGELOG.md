@@ -1,8 +1,30 @@
 # Changelog
 
-## [2.16.0](https://github.com/harness/drone/tree/2.16.0) (2022-12-15)
+## [v2.17.0](https://github.com/harness/drone/tree/v2.17.0) (2023-04-25)
 
-[Full Changelog](https://github.com/harness/drone/compare/v2.15.0...2.16.0)
+[Full Changelog](https://github.com/harness/drone/compare/v2.16.0...v2.17.0)
+
+**Implemented enhancements:**
+
+- Add `authtype` to logging middleware [\#3310](https://github.com/harness/drone/pull/3310) ([colinhoglund](https://github.com/colinhoglund))
+- Add config for the buffer [\#3308](https://github.com/harness/drone/pull/3308) ([TheJokersThief](https://github.com/TheJokersThief))
+
+**Fixed bugs:**
+
+- store/card: fix dropped error [\#3300](https://github.com/harness/drone/pull/3300) ([alrs](https://github.com/alrs))
+- bump drone-ui to 2.9.1 [\#3298](https://github.com/harness/drone/pull/3298) ([d1wilko](https://github.com/d1wilko))
+- Starlark: Update `go.starlark.net` dependency [\#3284](https://github.com/harness/drone/pull/3284) ([dsotirakis](https://github.com/dsotirakis))
+
+**Merged pull requests:**
+
+- bump drone-ui to 2.11.1 [\#3315](https://github.com/harness/drone/pull/3315) ([d1wilko](https://github.com/d1wilko))
+- bump drone-ui to 2.11.0 [\#3313](https://github.com/harness/drone/pull/3313) ([d1wilko](https://github.com/d1wilko))
+- bump drone-ui to 2.10.0 [\#3311](https://github.com/harness/drone/pull/3311) ([d1wilko](https://github.com/d1wilko))
+- \(maint\) move to use the arm64 pool [\#3296](https://github.com/harness/drone/pull/3296) ([tphoney](https://github.com/tphoney))
+
+## [v2.16.0](https://github.com/harness/drone/tree/v2.16.0) (2022-12-15)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.15.0...v2.16.0)
 
 **Implemented enhancements:**
 
@@ -12,6 +34,10 @@
 **Fixed bugs:**
 
 - \(bugfix\) bump go-scm to v1.28.0 [\#3290](https://github.com/harness/drone/pull/3290) ([tphoney](https://github.com/tphoney))
+
+**Merged pull requests:**
+
+- \(maint\) 2.16.0 release prep [\#3295](https://github.com/harness/drone/pull/3295) ([tphoney](https://github.com/tphoney))
 
 ## [v2.15.0](https://github.com/harness/drone/tree/v2.15.0) (2022-10-28)
 
