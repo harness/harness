@@ -13,7 +13,7 @@ export function RepositoryContent({
   resourceContent
 }: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent'>) {
   return (
-    <Container padding="xlarge" className={css.resourceContent}>
+    <Container className={css.resourceContent}>
       <ContentHeader
         repoMetadata={repoMetadata}
         gitRef={gitRef}

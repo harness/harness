@@ -1,4 +1,6 @@
 .main {
+  padding: var(--spacing-large) var(--spacing-xlarge) 0 var(--spacing-xlarge) !important;
+
   div[class*='TextInput'] {
     margin-bottom: 0 !important;
     margin-left: 0 !important;
@@ -11,7 +13,8 @@
 
   > div {
     align-items: center;
-    padding-bottom: var(--spacing-xlarge) !important;
+    padding-bottom: var(--spacing-large) !important;
+    // border-bottom: 1px solid var(--grey-100);
   }
 
   .btnColorFix > span[data-icon] {

@@ -17,6 +17,7 @@ export interface StringsMap {
   and: string
   approve: string
   ascending: string
+  blame: string
   blameCommitLine: string
   botAlerts: string
   branch: string
@@ -95,6 +96,7 @@ export interface StringsMap {
   diff: string
   disableWebhookContent: string
   disableWebhookTitle: string
+  download: string
   draft: string
   edit: string
   editFile: string
@@ -307,6 +309,7 @@ export interface StringsMap {
   viewAllBranches: string
   viewAllTags: string
   viewCommitDetails: string
+  viewRaw: string
   viewed: string
   webhook: string
   webhookAllEventsSelected: string

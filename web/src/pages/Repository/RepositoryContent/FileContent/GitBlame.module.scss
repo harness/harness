@@ -5,9 +5,16 @@
 
   :global {
     .cm-editor {
+      border: none !important;
+
+      .cm-scroller {
+        padding: 0 !important;
+      }
+
       .cm-content {
         padding: 0;
       }
+
       .cm-line {
         &,
         * {
@@ -28,8 +35,7 @@
 
 .gitBlame {
   --code-editor-border-color: var(--grey-200);
-
-  padding: 0 var(--spacing-xlarge) 0 var(--spacing-small) !important;
+  // padding: 0 var(--spacing-xlarge) 0 var(--spacing-small) !important;
 
   :global {
     .cm-gutter {

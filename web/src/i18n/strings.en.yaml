@@ -358,13 +358,13 @@ missingPerms: 'You are missing the following permission:'
 createRepoPerms: 'Create / Edit Repository'
 missingPermsContent: '"{PERMS}" in project "{PROJECT}"'
 repositoryName: Repository name
-dangerDeleteRepo: Danger, are you sure you want to delete it? 
+dangerDeleteRepo: Danger, are you sure you want to delete it?
 repoUpdate: Repository Updated
 deleteRepoText: Are you sure you want to delete the repository '{REPONAME}'?
 deleteRepoTitle: Delete the repository
 resolve: Resolve
 generateCloneCred: + Generate Clone Credential
-generateCloneText: "Please generate clone credential if it’s your first time"
+generateCloneText: 'Please generate clone credential if it’s your first time'
 getMyCloneTitle: Get My Clone Credential
 cloneText: Your clone credentials have been generated. Please make sure to copy and store your password somewhere safe, you won't be able to see it again.
 manageApiToken: Manage Api Token
@@ -372,3 +372,6 @@ userName: User Name
 passwordApi: Password (API Token)
 firstTimeTitle: Please generate Git Credentials if it’s your first time to clone the repository
 manageCredText: You can also manage your git credential {URL}
+blame: Blame
+viewRaw: View Raw
+download: Download

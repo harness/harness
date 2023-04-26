@@ -105,7 +105,6 @@ export default function PullRequest() {
         : PullRequestSection.CONVERSATION,
     [pullRequestSection]
   )
-  // /repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/metadata
 
   return (
     <Container className={css.main}>

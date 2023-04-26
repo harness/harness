@@ -45,7 +45,7 @@ interface FormData {
   newBranch?: string
 }
 
-interface CommitModalButtonProps extends Omit<ButtonProps, 'onClick' | 'onSubmit'>, Pick<GitInfoProps, 'repoMetadata'> {
+interface CommitModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
   commitAction: GitCommitAction
   gitRef: string
   resourcePath: string
@@ -57,7 +57,7 @@ interface CommitModalButtonProps extends Omit<ButtonProps, 'onClick' | 'onSubmit
   onSuccess: (data: RepoCommitFilesResponse, newBranch?: string) => void
 }
 
-export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
+export function useCommitModal({
   repoMetadata,
   commitAction,
   gitRef,
@@ -67,9 +67,8 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
   disableBranchCreation = false,
   payload = '',
   sha,
-  onSuccess,
-  ...props
-}) => {
+  onSuccess
+}: CommitModalProps) {
   const ModalComponent: React.FC = () => {
     const { getString } = useStrings()
     const [targetBranchOption, setTargetBranchOption] = useState(CommitToGitRefOption.DIRECTLY)
@@ -228,6 +227,47 @@ export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
   }
 
   const [openModal, hideModal] = useModalHook(ModalComponent, [onSuccess, gitRef, resourcePath, commitTitlePlaceHolder])
+
+  return [openModal, hideModal]
+}
+
+interface CommitModalButtonProps extends Omit<ButtonProps, 'onClick' | 'onSubmit'>, Pick<GitInfoProps, 'repoMetadata'> {
+  commitAction: GitCommitAction
+  gitRef: string
+  resourcePath: string
+  commitTitlePlaceHolder: string
+  disableBranchCreation?: boolean
+  oldResourcePath?: string
+  payload?: string
+  sha?: string
+  onSuccess: (data: RepoCommitFilesResponse, newBranch?: string) => void
+}
+
+export const CommitModalButton: React.FC<CommitModalButtonProps> = ({
+  repoMetadata,
+  commitAction,
+  gitRef,
+  resourcePath,
+  commitTitlePlaceHolder,
+  oldResourcePath,
+  disableBranchCreation = false,
+  payload = '',
+  sha,
+  onSuccess,
+  ...props
+}) => {
+  const [openModal] = useCommitModal({
+    repoMetadata,
+    commitAction,
+    gitRef,
+    resourcePath,
+    commitTitlePlaceHolder,
+    oldResourcePath,
+    disableBranchCreation,
+    payload,
+    sha,
+    onSuccess
+  })
 
   return <Button onClick={openModal} {...props} />
 }

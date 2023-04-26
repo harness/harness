@@ -13,6 +13,7 @@ type OptionsMenuItem = React.ComponentProps<typeof Menu.Item> & {
   text?: string
   hasIcon?: boolean
   iconName?: string
+  iconSize?: number
 }
 
 export interface OptionsMenuButtonProps extends ButtonProps {
@@ -42,14 +43,22 @@ export const OptionsMenuButton = ({
                 <Menu.Item
                   icon={
                     (item as OptionsMenuItem).hasIcon ? (
-                      <Icon size={12} className={css.icon} name={(item as OptionsMenuItem).iconName as IconName} />
+                      <Icon
+                        size={(item as OptionsMenuItem).iconSize || 12}
+                        className={css.icon}
+                        name={(item as OptionsMenuItem).iconName as IconName}
+                      />
                     ) : null
                   }
                   key={(item as React.ComponentProps<typeof Menu.Item>)?.text as string}
-                  className={cx(Classes.POPOVER_DISMISS, {
-                    [css.danger]: (item as OptionsMenuItem).isDanger,
-                    [css.isDark]: isDark
-                  })}
+                  className={cx(
+                    Classes.POPOVER_DISMISS,
+                    {
+                      [css.danger]: (item as OptionsMenuItem).isDanger,
+                      [css.isDark]: isDark
+                    },
+                    (item as OptionsMenuItem).className
+                  )}
                   {...omit(
                     item as IMenuItemProps & React.AnchorHTMLAttributes<HTMLAnchorElement>,
                     'isDanger',
