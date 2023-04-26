@@ -240,6 +240,7 @@ const GitBlameRenderer = React.memo(function GitBlameSourceViewer({
       className={css.main}
       onViewUpdate={onViewUpdate}
       extensions={extensions.of([])}
+      maxHeight="auto"
     />
   )
 })

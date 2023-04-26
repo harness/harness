@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, Color, Layout, Button, FlexExpander, ButtonVariation, Heading, Icon } from '@harness/uicore'
+import { Container, Color, Layout, FlexExpander, ButtonVariation, Heading, Icon, ButtonSize } from '@harness/uicore'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
@@ -7,8 +7,10 @@ import cx from 'classnames'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/code'
+import { useStrings } from 'framework/strings'
 import { useShowRequestError } from 'hooks/useShowRequestError'
-import { CodeIcon, decodeGitContent } from 'utils/GitUtils'
+import { decodeGitContent } from 'utils/GitUtils'
+import { PlainButton } from 'components/PlainButton/PlainButton'
 import css from './Readme.module.scss'
 
 interface FolderContentProps {
@@ -20,6 +22,7 @@ interface FolderContentProps {
 }
 
 function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: FolderContentProps) {
+  const { getString } = useStrings()
   const history = useHistory()
   const { routes } = useAppContext()
 
@@ -43,9 +46,13 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
           <Heading level={5}>{readmeInfo.name}</Heading>
           <FlexExpander />
           {loading && <Icon name="spinner" color={Color.PRIMARY_7} />}
-          <Button
-            variation={ButtonVariation.ICON}
-            icon={CodeIcon.Edit}
+          <PlainButton
+            withoutCurrentColor
+            size={ButtonSize.SMALL}
+            variation={ButtonVariation.TERTIARY}
+            iconProps={{ size: 16 }}
+            text={getString('edit')}
+            icon="code-edit"
             onClick={() => {
               history.push(
                 routes.toCODEFileEdit({

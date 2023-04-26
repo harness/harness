@@ -1,0 +1,17 @@
+.btn {
+  --border: 1px solid var(--grey-200) !important;
+  --background-color: var(--white) !important;
+  --background-color-active: var(--white) !important;
+  --box-shadow: none !important;
+
+  &:active,
+  &:hover,
+  &[class*='bp3-active'] {
+    --border: 1px solid var(--primary-7) !important;
+  }
+
+  .prefix {
+    color: var(--grey-450) !important;
+    font-weight: normal;
+  }
+}

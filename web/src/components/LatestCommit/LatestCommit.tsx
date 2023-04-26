@@ -1,16 +1,5 @@
 import React from 'react'
-import {
-  Button,
-  Container,
-  Color,
-  Layout,
-  FlexExpander,
-  Text,
-  FontVariation,
-  Avatar,
-  ButtonVariation,
-  ButtonSize
-} from '@harness/uicore'
+import { Container, Color, Layout, FlexExpander, Text, FontVariation, Avatar } from '@harness/uicore'
 import { Link } from 'react-router-dom'
 import { Render } from 'react-jsx-match'
 import ReactTimeago from 'react-timeago'
@@ -19,9 +8,8 @@ import type { TypesCommit } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useAppContext } from 'AppContext'
 import { formatDate } from 'utils/Utils'
-import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
+import type { GitInfoProps } from 'utils/GitUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
-import { useStrings } from 'framework/strings'
 import css from './LatestCommit.module.scss'
 
 interface LatestCommitProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -60,7 +48,6 @@ export function LatestCommitForFolder({ repoMetadata, latestCommit, standaloneSt
 
 export function LatestCommitForFile({ repoMetadata, latestCommit, standaloneStyle }: LatestCommitProps) {
   const { routes } = useAppContext()
-  const { getString } = useStrings()
   const commitURL = routes.toCODECommits({
     repoPath: repoMetadata.path as string,
     commitRef: latestCommit?.sha as string
@@ -77,22 +64,17 @@ export function LatestCommitForFile({ repoMetadata, latestCommit, standaloneStyl
             {latestCommit?.author?.identity?.name || latestCommit?.author?.identity?.email}
           </Text>
           <PipeSeparator height={9} />
+
           <Link to={commitURL} className={css.commitLink}>
             {latestCommit?.title}
           </Link>
           <PipeSeparator height={9} />
-          <CommitActions sha={latestCommit?.sha as string} href={commitURL} />
-          <PipeSeparator height={9} />
           <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-            {getString('onDate', { date: formatDate(latestCommit?.author?.when as string) })}
+            {formatDate(latestCommit?.author?.when as string)}
           </Text>
+
           <FlexExpander />
-          <Button
-            size={ButtonSize.SMALL}
-            icon={CodeIcon.History}
-            text={getString('history')}
-            variation={ButtonVariation.PRIMARY}
-          />
+          <CommitActions sha={latestCommit?.sha as string} href={commitURL} />
         </Layout.Horizontal>
       </Container>
     </Render>
