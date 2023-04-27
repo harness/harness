@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/gitrpc"
+	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog/log"
@@ -75,7 +76,7 @@ func (migrator *Migrator) MigrateOld(
 	)
 }
 
-//nolint:gocognit // refactor if needed
+//nolint:gocognit,funlen // refactor if needed
 func (migrator *Migrator) migrate(
 	ctx context.Context,
 	repoGitUID string,
@@ -136,7 +137,15 @@ func (migrator *Migrator) migrate(
 			}
 
 			// Handle file delete
-			if len(file.HunkHeaders) == 1 && file.HunkHeaders[0].NewLine == 0 && file.HunkHeaders[0].NewSpan == 0 {
+			if _, isDeleted := file.FileHeader.Extensions[gitrpcenum.DiffExtHeaderDeletedFileMode]; isDeleted {
+				for _, codeComment := range codeComments {
+					codeComment.Outdated = true
+				}
+				continue
+			}
+
+			// Handle new files - shouldn't happen because code comments should exist for a non-existing file.
+			if _, isAdded := file.FileHeader.Extensions[gitrpcenum.DiffExtHeaderNewFileMode]; isAdded {
 				for _, codeComment := range codeComments {
 					codeComment.Outdated = true
 				}

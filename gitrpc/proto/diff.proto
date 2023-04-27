@@ -46,6 +46,7 @@ message HunkHeader {
 message DiffFileHeader {
   string old_file_name = 1;
   string new_file_name = 2;
+  map<string, string> extensions = 3;
 }
 
 message DiffFileHunkHeaders {

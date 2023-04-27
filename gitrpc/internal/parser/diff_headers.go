@@ -9,6 +9,7 @@ import (
 	"io"
 	"regexp"
 
+	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/internal/types"
 )
 
@@ -23,7 +24,32 @@ func ParseDiffFileHeader(line string) (types.DiffFileHeader, bool) {
 	return types.DiffFileHeader{
 		OldFileName: groups[1],
 		NewFileName: groups[2],
+		Extensions:  map[string]string{},
 	}, true
+}
+
+var regExpDiffExtHeader = regexp.MustCompile(
+	"^(" +
+		enum.DiffExtHeaderOldMode + "|" +
+		enum.DiffExtHeaderNewMode + "|" +
+		enum.DiffExtHeaderDeletedFileMode + "|" +
+		enum.DiffExtHeaderNewFileMode + "|" +
+		enum.DiffExtHeaderCopyFrom + "|" +
+		enum.DiffExtHeaderCopyTo + "|" +
+		enum.DiffExtHeaderRenameFrom + "|" +
+		enum.DiffExtHeaderRenameTo + "|" +
+		enum.DiffExtHeaderSimilarity + "|" +
+		enum.DiffExtHeaderDissimilarity + "|" +
+		enum.DiffExtHeaderIndex +
+		") (.+)$")
+
+func ParseDiffFileExtendedHeader(line string) (string, string) {
+	groups := regExpDiffExtHeader.FindStringSubmatch(line)
+	if groups == nil {
+		return "", ""
+	}
+
+	return groups[1], groups[2]
 }
 
 // GetHunkHeaders parses git diff output and returns all diff headers for all files.
@@ -49,12 +75,18 @@ func GetHunkHeaders(r io.Reader) ([]*types.DiffFileHunkHeaders, error) {
 			continue
 		}
 
+		if currentFile == nil {
+			// should not happen: we reached the hunk header without first finding the file header.
+			return nil, types.ErrHunkNotFound
+		}
+
 		if h, ok := ParseDiffHunkHeader(line); ok {
-			if currentFile == nil {
-				// should not happen: we reached the hunk header without first finding the file header.
-				return nil, types.ErrHunkNotFound
-			}
 			currentFile.HunksHeaders = append(currentFile.HunksHeaders, h)
+			continue
+		}
+
+		if headerKey, headerValue := ParseDiffFileExtendedHeader(line); headerKey != "" {
+			currentFile.FileHeader.Extensions[headerKey] = headerValue
 			continue
 		}
 	}

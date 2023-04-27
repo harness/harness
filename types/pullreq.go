@@ -41,7 +41,7 @@ type PullReq struct {
 
 	MergeCheckStatus enum.MergeCheckStatus `json:"merge_check_status"`
 	MergeTargetSHA   *string               `json:"merge_target_sha"`
-	MergeBaseSHA     *string               `json:"merge_base_sha"`
+	MergeBaseSHA     string                `json:"merge_base_sha"`
 	MergeSHA         *string               `json:"merge_sha"`
 	MergeConflicts   *string               `json:"merge_conflicts,omitempty"`
 

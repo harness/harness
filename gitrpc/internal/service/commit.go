@@ -134,3 +134,19 @@ func (s RepositoryService) GetCommitDivergences(ctx context.Context,
 
 	return response, nil
 }
+
+func (s RepositoryService) MergeBase(ctx context.Context,
+	r *rpc.MergeBaseRequest,
+) (*rpc.MergeBaseResponse, error) {
+	base := r.GetBase()
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
+
+	mergeBase, _, err := s.adapter.GetMergeBase(ctx, repoPath, "", r.Ref1, r.Ref2)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to find merge base")
+	}
+
+	return &rpc.MergeBaseResponse{
+		MergeBaseSha: mergeBase,
+	}, nil
+}

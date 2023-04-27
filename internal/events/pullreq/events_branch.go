@@ -16,9 +16,11 @@ const BranchUpdatedEvent events.EventType = "branch-updated"
 
 type BranchUpdatedPayload struct {
 	Base
-	OldSHA string `json:"old_sha"`
-	NewSHA string `json:"new_sha"`
-	Forced bool   `json:"forced"`
+	OldSHA          string `json:"old_sha"`
+	NewSHA          string `json:"new_sha"`
+	OldMergeBaseSHA string `json:"old_merge_base_sha"`
+	NewMergeBaseSHA string `json:"new_merge_base_sha"`
+	Forced          bool   `json:"forced"`
 }
 
 func (r *Reporter) BranchUpdated(ctx context.Context, payload *BranchUpdatedPayload) {

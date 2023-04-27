@@ -122,7 +122,7 @@ func (s *Service) deleteMergeRef(ctx context.Context, principalID int64, repoID 
 	return nil
 }
 
-//nolint:funlen,gocognit // refactor if required.
+//nolint:funlen // refactor if required.
 func (s *Service) updateMergeData(
 	ctx context.Context,
 	principalID int64,
@@ -131,6 +131,10 @@ func (s *Service) updateMergeData(
 	oldSHA string,
 	newSHA string,
 ) error {
+	// TODO: Merge check should not update the merge base.
+	// TODO: Instead it should accept it as an argument and fail if it doesn't match.
+	// Then is would not longer be necessary to cancel already active mergeability checks.
+
 	pr, err := s.pullreqStore.FindByNumber(ctx, repoID, prNum)
 	if err != nil {
 		return fmt.Errorf("failed to get pull request number %d: %w", prNum, err)
@@ -227,13 +231,12 @@ func (s *Service) updateMergeData(
 			// TODO: gitrpc should return sha's either way, and also conflicting files!
 			pr.MergeCheckStatus = enum.MergeCheckStatusConflict
 			pr.MergeTargetSHA = &output.BaseSHA
-			pr.MergeBaseSHA = &output.MergeBaseSHA
 			pr.MergeSHA = nil
 			pr.MergeConflicts = nil
 		} else {
 			pr.MergeCheckStatus = enum.MergeCheckStatusMergeable
 			pr.MergeTargetSHA = &output.BaseSHA
-			pr.MergeBaseSHA = &output.MergeBaseSHA
+			pr.MergeBaseSHA = output.MergeBaseSHA // TODO: Merge check should not update the merge base.
 			pr.MergeSHA = &output.MergeSHA
 			pr.MergeConflicts = nil
 		}
@@ -241,15 +244,6 @@ func (s *Service) updateMergeData(
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update PR merge ref in db with error: %w", err)
-	}
-
-	if pr.MergeBaseSHA != nil && *pr.MergeBaseSHA != output.MergeBaseSHA {
-		oldMergeBaseSHA := *pr.MergeBaseSHA
-		newMergeBaseSHA := output.MergeBaseSHA
-		err = s.updateCodeCommentsOnMergeBaseUpdate(ctx, pr, sourceRepo.GitUID, oldMergeBaseSHA, newMergeBaseSHA)
-		if err != nil {
-			return fmt.Errorf("failed to update code comment after merge base SHA change: %w", err)
-		}
 	}
 
 	return nil

@@ -197,3 +197,30 @@ func (c *Client) GetCommitDivergences(ctx context.Context,
 
 	return output, nil
 }
+
+type MergeBaseParams struct {
+	ReadParams
+	Ref1 string
+	Ref2 string
+}
+
+type MergeBaseOutput struct {
+	MergeBaseSHA string
+}
+
+func (c *Client) MergeBase(ctx context.Context,
+	params MergeBaseParams,
+) (MergeBaseOutput, error) {
+	result, err := c.repoService.MergeBase(ctx, &rpc.MergeBaseRequest{
+		Base: mapToRPCReadRequest(params.ReadParams),
+		Ref1: params.Ref1,
+		Ref2: params.Ref2,
+	})
+	if err != nil {
+		return MergeBaseOutput{}, fmt.Errorf("failed to get merge base commit: %w", err)
+	}
+
+	return MergeBaseOutput{
+		MergeBaseSHA: result.MergeBaseSha,
+	}, nil
+}

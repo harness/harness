@@ -33,6 +33,8 @@ type GitAdapter interface {
 	GetCommits(ctx context.Context, repoPath string, refs []string) ([]types.Commit, error)
 	ListCommits(ctx context.Context, repoPath string,
 		ref string, afterRef string, page int, limit int) ([]types.Commit, error)
+	ListCommitSHAs(ctx context.Context, repoPath string,
+		ref string, afterRef string, page int, limit int) ([]string, error)
 	GetLatestCommit(ctx context.Context, repoPath string, ref string, treePath string) (*types.Commit, error)
 	GetFullCommitID(ctx context.Context, repoPath, shortID string) (string, error)
 	GetAnnotatedTag(ctx context.Context, repoPath string, sha string) (*types.Tag, error)

@@ -162,8 +162,9 @@ type GetDiffHunkHeadersParams struct {
 }
 
 type DiffFileHeader struct {
-	OldName string
-	NewName string
+	OldName    string
+	NewName    string
+	Extensions map[string]string
 }
 
 type HunkHeader struct {

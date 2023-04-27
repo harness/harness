@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
@@ -71,6 +72,17 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
+	mergeBaseResult, err := c.gitRPCClient.MergeBase(ctx, gitrpc.MergeBaseParams{
+		ReadParams: gitrpc.ReadParams{RepoUID: sourceRepo.GitUID},
+		Ref1:       in.SourceBranch,
+		Ref2:       in.TargetBranch,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to find merge base: %w", err)
+	}
+
+	mergeBaseSHA := mergeBaseResult.MergeBaseSHA
+
 	targetRepo, err = c.repoStore.UpdateOptLock(ctx, targetRepo, func(repo *types.Repository) error {
 		repo.PullReqSeq++
 		return nil
@@ -79,7 +91,7 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to aquire PullReqSeq number: %w", err)
 	}
 
-	pr := newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in, sourceSHA)
+	pr := newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in, sourceSHA, mergeBaseSHA)
 
 	err = c.pullreqStore.Create(ctx, pr)
 	if err != nil {
@@ -103,7 +115,7 @@ func newPullReq(
 	sourceRepo *types.Repository,
 	targetRepo *types.Repository,
 	in *CreateInput,
-	sourceSHA string,
+	sourceSHA, mergeBaseSHA string,
 ) *types.PullReq {
 	now := time.Now().UnixMilli()
 	return &types.PullReq{
@@ -128,6 +140,7 @@ func newPullReq(
 		Merged:           nil,
 		MergeCheckStatus: enum.MergeCheckStatusUnchecked,
 		MergeMethod:      nil,
+		MergeBaseSHA:     mergeBaseSHA,
 		Author:           *session.Principal.ToPrincipalInfo(),
 		Merger:           nil,
 	}

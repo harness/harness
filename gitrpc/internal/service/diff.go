@@ -124,7 +124,7 @@ func (s DiffService) DiffCut(
 		return nil, processGitErrorf(err, "failed to find merge base")
 	}
 
-	sourceCommits, err := s.adapter.ListCommits(ctx, repoPath, r.SourceBranch, r.TargetBranch, 0, 1)
+	sourceCommits, err := s.adapter.ListCommitSHAs(ctx, repoPath, r.SourceBranch, r.TargetBranch, 0, 1)
 	if err != nil || len(sourceCommits) == 0 {
 		return nil, processGitErrorf(err, "failed to get list of source branch commits")
 	}
@@ -146,6 +146,6 @@ func (s DiffService) DiffCut(
 		HunkHeader:      mapHunkHeader(hunk.HunkHeader),
 		Lines:           hunk.Lines,
 		MergeBaseSha:    mergeBase,
-		LatestSourceSha: sourceCommits[0].SHA,
+		LatestSourceSha: sourceCommits[0],
 	}, nil
 }

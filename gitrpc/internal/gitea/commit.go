@@ -41,7 +41,7 @@ func (g Adapter) GetLatestCommit(ctx context.Context, repoPath string,
 	return mapGiteaCommit(giteaCommit)
 }
 
-// giteaGetCommitByPath is a copy of gitea code - required as we want latest commit per specific branch.
+// giteaGetCommitByPath returns the latest commit per specific branch.
 func giteaGetCommitByPath(giteaRepo *gitea.Repository, ref string, treePath string) (*gitea.Commit, error) {
 	if treePath == "" {
 		treePath = "."
@@ -54,7 +54,9 @@ func giteaGetCommitByPath(giteaRepo *gitea.Repository, ref string, treePath stri
 		return nil, fmt.Errorf("failed to trigger log command: %w", runErr)
 	}
 
-	giteaCommits, err := giteaParsePrettyFormatLogToList(giteaRepo, stdout)
+	lines := parseLinesToSlice(stdout)
+
+	giteaCommits, err := getGiteaCommits(giteaRepo, lines)
 	if err != nil {
 		return nil, err
 	}
@@ -62,19 +64,16 @@ func giteaGetCommitByPath(giteaRepo *gitea.Repository, ref string, treePath stri
 	return giteaCommits[0], nil
 }
 
-// giteaParsePrettyFormatLogToList is an exact copy of gitea code.
-func giteaParsePrettyFormatLogToList(giteaRepo *gitea.Repository, logs []byte) ([]*gitea.Commit, error) {
+func getGiteaCommits(giteaRepo *gitea.Repository, commitIDs []string) ([]*gitea.Commit, error) {
 	var giteaCommits []*gitea.Commit
-	if len(logs) == 0 {
+	if len(commitIDs) == 0 {
 		return giteaCommits, nil
 	}
 
-	parts := bytes.Split(logs, []byte{'\n'})
-
-	for _, commitID := range parts {
-		commit, err := giteaRepo.GetCommit(string(commitID))
+	for _, commitID := range commitIDs {
+		commit, err := giteaRepo.GetCommit(commitID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get commit '%s': %w", string(commitID), err)
+			return nil, fmt.Errorf("failed to get commit '%s': %w", commitID, err)
 		}
 		giteaCommits = append(giteaCommits, commit)
 	}
@@ -82,17 +81,10 @@ func giteaParsePrettyFormatLogToList(giteaRepo *gitea.Repository, logs []byte) (
 	return giteaCommits, nil
 }
 
-// ListCommits lists the commits reachable from ref.
-// Note: ref & afterRef can be Branch / Tag / CommitSHA.
-// Note: commits returned are [ref->...->afterRef).
-func (g Adapter) ListCommits(ctx context.Context, repoPath string,
-	ref string, afterRef string, page int, limit int) ([]types.Commit, error) {
-	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, err
-	}
-	defer giteaRepo.Close()
-
+func (g Adapter) listCommitSHAs(giteaRepo *gitea.Repository,
+	ref string, afterRef string,
+	page int, limit int,
+) ([]string, error) {
 	args := []string{"rev-list"}
 
 	// add pagination if requested
@@ -120,7 +112,46 @@ func (g Adapter) ListCommits(ctx context.Context, repoPath string,
 		return nil, processGiteaErrorf(runErr, "failed to trigger rev-list command")
 	}
 
-	giteaCommits, err := giteaParsePrettyFormatLogToList(giteaRepo, bytes.TrimSpace(stdout))
+	return parseLinesToSlice(stdout), nil
+}
+
+// ListCommitSHAs lists the commits reachable from ref.
+// Note: ref & afterRef can be Branch / Tag / CommitSHA.
+// Note: commits returned are [ref->...->afterRef).
+func (g Adapter) ListCommitSHAs(ctx context.Context,
+	repoPath string,
+	ref string, afterRef string,
+	page int, limit int,
+) ([]string, error) {
+	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
+	if err != nil {
+		return nil, err
+	}
+	defer giteaRepo.Close()
+
+	return g.listCommitSHAs(giteaRepo, ref, afterRef, page, limit)
+}
+
+// ListCommits lists the commits reachable from ref.
+// Note: ref & afterRef can be Branch / Tag / CommitSHA.
+// Note: commits returned are [ref->...->afterRef).
+func (g Adapter) ListCommits(ctx context.Context,
+	repoPath string,
+	ref string, afterRef string,
+	page int, limit int,
+) ([]types.Commit, error) {
+	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
+	if err != nil {
+		return nil, err
+	}
+	defer giteaRepo.Close()
+
+	commitSHAs, err := g.listCommitSHAs(giteaRepo, ref, afterRef, page, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	giteaCommits, err := getGiteaCommits(giteaRepo, commitSHAs)
 	if err != nil {
 		return nil, err
 	}
@@ -263,4 +294,19 @@ func (g Adapter) getCommitDivergence(ctx context.Context, repoPath string,
 		Ahead:  int32(left),
 		Behind: int32(right),
 	}, nil
+}
+
+func parseLinesToSlice(output []byte) []string {
+	if len(output) == 0 {
+		return nil
+	}
+
+	lines := bytes.Split(bytes.TrimSpace(output), []byte{'\n'})
+
+	slice := make([]string, len(lines))
+	for i, line := range lines {
+		slice[i] = string(line)
+	}
+
+	return slice
 }
