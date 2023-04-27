@@ -30,7 +30,12 @@ func HandleRawDiff(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		if err = pullreqCtrl.RawDiff(ctx, session, repoRef, pullreqNumber, w); err != nil {
+		setSHAs := func(sourceSHA, mergeBaseSHA string) {
+			w.Header().Set("X-Source-Sha", sourceSHA)
+			w.Header().Set("X-Merge-Base-Sha", mergeBaseSHA)
+		}
+
+		if err = pullreqCtrl.RawDiff(ctx, session, repoRef, pullreqNumber, setSHAs, w); err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
