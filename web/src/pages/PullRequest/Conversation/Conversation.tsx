@@ -19,8 +19,10 @@ import {
 } from '@harness/uicore'
 import cx from 'classnames'
 import { useGet, useMutate } from 'restful-react'
+import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
 import ReactTimeago from 'react-timeago'
-import { orderBy } from 'lodash-es'
+import * as Diff2Html from 'diff2html'
+import { get, orderBy } from 'lodash-es'
 import { Render } from 'react-jsx-match'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
@@ -30,11 +32,7 @@ import type { TypesPullReqActivity } from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { commentState, formatDate, formatTime, getErrorMessage, orderSortDate, dayAgoInMS } from 'utils/Utils'
-import {
-  activityToCommentItem,
-  CommentType,
-  PullRequestCodeCommentPayload
-} from 'components/DiffViewer/DiffViewerUtils'
+import { activityToCommentItem, CommentType, DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { DescriptionBox } from './DescriptionBox'
@@ -447,7 +445,7 @@ export const Conversation: React.FC<ConversationProps> = ({
 }
 
 function isCodeComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
-  return (commentItems[0]?.payload?.payload as Unknown)?.type === CommentType.CODE_COMMENT
+  return commentItems[0]?.payload?.type === CommentType.CODE_COMMENT
 }
 
 interface CodeCommentHeaderProps {
@@ -455,39 +453,41 @@ interface CodeCommentHeaderProps {
 }
 
 const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({ commentItems }) => {
-  if (isCodeComment(commentItems)) {
-    const payload = commentItems[0]?.payload?.payload as PullRequestCodeCommentPayload
+  const _isCodeComment = isCodeComment(commentItems)
+  const id = `code-comment-snapshot-${commentItems[0]?.payload?.code_comment_path}`
 
-    return (
-      <Container className={css.snapshot}>
-        <Layout.Vertical>
-          <Container className={css.title}>
-            <Text inline className={css.fname}>
-              {payload?.file_title}
-            </Text>
-          </Container>
-          <Container className={css.snapshotContent}>
-            <Container className="d2h-wrapper">
-              <Container className="d2h-file-wrapper line-by-line-file-diff">
-                <Container className="d2h-file-diff">
-                  <Container className="d2h-code-wrapper">
-                    <table className="d2h-diff-table" cellPadding="0px" cellSpacing="0px">
-                      <tbody
-                        className="d2h-diff-tbody"
-                        dangerouslySetInnerHTML={{
-                          __html: payload?.diff_html_snapshot || ''
-                        }}></tbody>
-                    </table>
-                  </Container>
-                </Container>
-              </Container>
-            </Container>
-          </Container>
-        </Layout.Vertical>
-      </Container>
-    )
-  }
-  return null
+  useEffect(() => {
+    if (_isCodeComment) {
+      const codeDiffSnapshot = [
+        `diff --git a/hello-world.md b/hello-world.md`,
+        `new file mode 100644`,
+        'index 0000000..0000000',
+        '--- /dev/null',
+        '+++ b/hello-world.md',
+        get(commentItems[0], 'payload.payload.title', ''),
+        ...get(commentItems[0], 'payload.payload.lines', [])
+      ].join('\n')
+
+      new Diff2HtmlUI(
+        document.getElementById(id) as HTMLElement,
+        Diff2Html.parse(codeDiffSnapshot, DIFF2HTML_CONFIG),
+        Object.assign({}, DIFF2HTML_CONFIG, { outputFormat: ViewStyle.LINE_BY_LINE })
+      ).draw()
+    }
+  }, [id, commentItems, _isCodeComment])
+
+  return _isCodeComment ? (
+    <Container className={css.snapshot}>
+      <Layout.Vertical>
+        <Container className={css.title}>
+          <Text inline className={css.fname}>
+            {commentItems[0].payload?.code_comment_path}
+          </Text>
+        </Container>
+        <Container className={css.snapshotContent} id={id} />
+      </Layout.Vertical>
+    </Container>
+  ) : null
 }
 
 function isSystemComment(commentItems: CommentItem<TypesPullReqActivity>[]) {

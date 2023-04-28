@@ -23,11 +23,10 @@ import { useEventListener } from 'hooks/useEventListener'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
-import { DIFF2HTML_CONFIG, PullRequestCodeCommentPayload, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
+import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import type { TypesPullReq, TypesPullReqActivity } from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
-// import { Render } from 'components/Render/Render'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
@@ -74,7 +73,8 @@ export const Changes: React.FC<ChangesProps> = ({
     data: rawDiff,
     error,
     loading,
-    refetch
+    refetch,
+    response
   } = useGet<string>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/${
       pullRequestMetadata ? `pullreq/${pullRequestMetadata.number}/diff` : `compare/${targetBranch}...${sourceBranch}`
@@ -114,10 +114,9 @@ export const Changes: React.FC<ChangesProps> = ({
           const containerId = `container-${fileId}`
           const contentId = `content-${fileId}`
           const filePath = diff.isDeleted ? diff.oldName : diff.newName
-          const fileActivities: TypesPullReqActivity[] | undefined = activities?.filter(activity => {
-            const payload = activity.payload as PullRequestCodeCommentPayload
-            return payload?.file_id === fileId
-          })
+          const fileActivities: TypesPullReqActivity[] | undefined = activities?.filter(
+            activity => filePath === activity.code_comment_path
+          )
 
           return {
             ...diff,
@@ -208,11 +207,6 @@ export const Changes: React.FC<ChangesProps> = ({
                     pullRequestMetadata={pullRequestMetadata}
                     refreshPr={voidFn(noop)}
                   />
-                  {/* <ReviewDecisionButton
-                    repoMetadata={repoMetadata}
-                    pullRequestMetadata={pullRequestMetadata}
-                    shouldHide={readOnly || pullRequestMetadata?.state === 'merged'}
-                  /> */}
                 </Layout.Horizontal>
               </Container>
 
@@ -235,6 +229,8 @@ export const Changes: React.FC<ChangesProps> = ({
                     repoMetadata={repoMetadata}
                     pullRequestMetadata={pullRequestMetadata}
                     onCommentUpdate={onCommentUpdate}
+                    mergeBaseSHA={response?.headers?.get('x-merge-base-sha') || ''}
+                    sourceSHA={response?.headers?.get('x-source-sha') || ''}
                   />
                 ))}
               </Layout.Vertical>

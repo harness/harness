@@ -36,7 +36,6 @@ import {
   DiffCommentItem,
   DIFF_VIEWER_HEADER_HEIGHT,
   getCommentLineInfo,
-  PullRequestCodeCommentPayload,
   renderCommentOppositePlaceHolder,
   ViewStyle
 } from './DiffViewerUtils'
@@ -50,6 +49,8 @@ interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
   readOnly?: boolean
   pullRequestMetadata?: TypesPullReq
   onCommentUpdate: () => void
+  mergeBaseSHA?: string
+  sourceSHA?: string
 }
 
 //
@@ -64,7 +65,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   readOnly,
   repoMetadata,
   pullRequestMetadata,
-  onCommentUpdate
+  onCommentUpdate,
+  mergeBaseSHA,
+  sourceSHA
 }) => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
@@ -268,12 +271,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
             const element = commentRowElement.firstElementChild as HTMLTableCellElement
 
-            // Note: 1. CommentBox is rendered as an independent React component
+            // Note: CommentBox is rendered as an independent React component
             //       everything passed to it must be either values, or refs. If you
             //       pass callbacks or states, they won't be updated and might
             //       cause unexpected bugs
-            //       2. If you use a component inside CommentBox, make sure it follow
-            //       the above rules as well (i.e useString as a prop instead of importing)
             ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
             ReactDOM.render(
               <AppWrapper>
@@ -305,33 +306,18 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
                     switch (action) {
                       case CommentAction.NEW: {
-                        const commentPayload: OpenapiCommentCreatePullReqRequest = {
+                        const payload: OpenapiCommentCreatePullReqRequest = {
                           line_start: comment.lineNumber,
                           line_end: comment.lineNumber,
                           line_start_new: !comment.left,
                           line_end_new: !comment.left,
                           path: diff.filePath,
-                          source_commit_sha: pullRequestMetadata?.merge_sha || '',
-                          target_commit_sha: pullRequestMetadata?.merge_target_sha || '',
+                          source_commit_sha: sourceSHA,
+                          target_commit_sha: mergeBaseSHA,
                           text: value
                         }
 
-                        // lineNumberRange can be used to allow multiple-line selection when commenting in the future
-                        // const lineNumberRange = [comment.lineNumber]
-                        // const payload: PullRequestCodeCommentPayload = {
-                        //   type: CommentType.CODE_COMMENT,
-                        //   version: PR_CODE_COMMENT_PAYLOAD_VERSION,
-                        //   file_id: diff.fileId,
-                        //   file_title: diff.filePath,
-                        //   language: diff.language || '',
-                        //   is_on_left: comment.left,
-                        //   at_line_number: comment.lineNumber,
-                        //   line_number_range: lineNumberRange,
-                        //   range_text_content: getRawTextInRange(diff, lineNumberRange),
-                        //   diff_html_snapshot: getDiffHTMLSnapshotFromRow(rowElement)
-                        // }
-
-                        await saveComment({ type: CommentType.CODE_COMMENT, ...commentPayload })
+                        await saveComment(payload)
                           .then((newComment: TypesPullReqActivity) => {
                             updatedItem = activityToCommentItem(newComment)
                           })
@@ -344,7 +330,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
                       case CommentAction.REPLY: {
                         const parentComment = diff.fileActivities?.find(
-                          activity => (activity.payload as PullRequestCodeCommentPayload).file_id === diff.fileId
+                          activity => diff.filePath === activity.code_comment_path
                         )
 
                         if (parentComment) {
@@ -412,10 +398,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             }
           }
         }
-        // Comment no longer has UI relevant anchors to be rendered
-        // else {
-        //   console.info('Comment is discarded due to no UI relevant anchors', { comment, lineInfo })
-        // }
       })
     },
     [
@@ -430,7 +412,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       updateComment,
       deleteComment,
       confirmAct,
-      onCommentUpdate
+      onCommentUpdate,
+      mergeBaseSHA,
+      sourceSHA
     ]
   )
 

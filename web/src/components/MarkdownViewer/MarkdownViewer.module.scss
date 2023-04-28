@@ -1,14 +1,23 @@
+@import 'src/utils/utils';
+
 .main {
   overflow: auto;
 
   :global {
     .wmde-markdown {
+      @include markdown-font;
+
       pre {
         position: relative;
 
         .code-line {
           white-space: break-spaces;
         }
+      }
+
+      tt,
+      code {
+        @include mono-font;
       }
 
       // Customize https://wangchujiang.com/rehype-video/

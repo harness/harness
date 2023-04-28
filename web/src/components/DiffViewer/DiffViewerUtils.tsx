@@ -21,6 +21,9 @@ export enum CommentType {
   STATE_CHANGE = 'state-change'
 }
 
+/**
+ * @deprecated
+ */
 export interface PullRequestCodeCommentPayload {
   type: CommentType
   version: string // used to avoid rendering old payload structure
@@ -201,17 +204,18 @@ export const activityToCommentItem = (activity: TypesPullReqActivity): CommentIt
 export function activitiesToDiffCommentItems(diff: DiffFileEntry): DiffCommentItem<TypesPullReqActivity>[] {
   return (
     diff.fileActivities?.map(activity => {
-      const payload = activity.payload as PullRequestCodeCommentPayload
       const replyComments =
         diff.activities
           ?.filter(replyActivity => replyActivity.parent_id === activity.id)
           .map(_activity => activityToCommentItem(_activity)) || []
+      // TODO: Use backend support when it's ready https://harness.slack.com/archives/C03Q1Q4C9J8/p1682609265294089
+      const left = activity.payload?.line_start_new || false
 
       return {
-        left: payload.is_on_left,
-        right: !payload.is_on_left,
+        left,
+        right: !left,
         height: 0,
-        lineNumber: payload.at_line_number,
+        lineNumber: (left ? activity.code_comment_line_old : activity.code_comment_line_new) as number,
         commentItems: [activityToCommentItem(activity)].concat(replyComments)
       }
     }) || []

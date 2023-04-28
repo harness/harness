@@ -3,7 +3,7 @@ $code-editor-font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menl
 
 @mixin mono-font {
   font-family: var(--font-family-mono) !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-feature-settings: 'liga' 0, 'calt' 0;
   line-height: 18px;
   letter-spacing: 0px;
@@ -11,5 +11,5 @@ $code-editor-font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menl
 
 @mixin markdown-font {
   font-family: var(--font-family) !important;
-  font-size: 12px !important;
+  font-size: 13px !important;
 }
