@@ -4344,7 +4344,6 @@ components:
         is_draft:
           type: boolean
         merge_base_sha:
-          nullable: true
           type: string
         merge_check_status:
           $ref: '#/components/schemas/EnumMergeCheckStatus'

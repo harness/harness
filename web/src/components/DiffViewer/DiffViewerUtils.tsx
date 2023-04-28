@@ -21,8 +21,9 @@ export enum CommentType {
   STATE_CHANGE = 'state-change'
 }
 
-export const PR_CODE_COMMENT_PAYLOAD_VERSION = '0.1'
-
+/**
+ * @deprecated
+ */
 export interface PullRequestCodeCommentPayload {
   type: CommentType
   version: string // used to avoid rendering old payload structure
@@ -200,92 +201,21 @@ export const activityToCommentItem = (activity: TypesPullReqActivity): CommentIt
   payload: activity
 })
 
-/**
- * Take a small HTML snapshot of a diff in order to render code comment.
- * @param atRow Row element where the comment is placed.
- * @param maxNumberOfLines Maximum number of lines to take.
- * @returns HTML content of the diff.
- */
-export function getDiffHTMLSnapshotFromRow(atRow: HTMLTableRowElement, maxNumberOfLines = 5) {
-  let linesCapturedCount = 0
-  const diffSnapshot = [atRow.outerHTML.trim()]
-
-  let prev = atRow.previousElementSibling
-
-  while (prev && linesCapturedCount < maxNumberOfLines) {
-    if (!prev.hasAttribute('data-annotated-line') && !prev.hasAttribute('data-place-holder-for-line')) {
-      // Don't count empty lines
-      const textContent = prev.textContent?.replace(/\s/g, '')
-      if (textContent?.length && textContent !== '+') {
-        linesCapturedCount++
-      }
-
-      if (textContent !== '+') {
-        diffSnapshot.unshift((prev.outerHTML || '').trim())
-      }
-    }
-    prev = prev.previousElementSibling
-  }
-
-  return diffSnapshot.join('')
-}
-
-// export function getDiffHTMLSnapshotFromDiff(diff: DiffFileEntry, lineNumberRange: number[], isOnLeft: boolean) {
-//   const lines = diff?.blocks.reduce((group, item) => {
-//     group = group.concat(item.lines)
-//     return group
-//   }, [] as DiffLine[])
-
-//   const lastIndex = lines.findIndex(line =>
-//     lineNumberRange.includes((isOnLeft ? line.oldNumber : line.newNumber) as number)
-//   )
-//   const startIndex = Math.max(0, lastIndex - 5)
-
-//   const copiedLines = lines.slice(startIndex, lastIndex)
-//   const copiedDiff: DiffFileEntry = {
-//     ...diff,
-//     blocks: [
-//       {
-//         header: '',
-//         lines: copiedLines,
-//         newStartLine: copiedLines[0].newNumber as number,
-//         oldStartLine: copiedLines[0].oldNumber as number
-//       }
-//     ]
-//   }
-
-//   // console.log({ isOnLeft, startIndex, lastIndex, copiedLines, lines, lineNumberRange })
-
-//   const div = document.createElement('div')
-//   new Diff2HtmlUI(div, [copiedDiff], Object.assign({}, DIFF2HTML_CONFIG, { outputFormat: 'line-by-line' })).draw()
-
-//   return div.querySelector('table')?.outerHTML || ''
-// }
-
-export function getRawTextInRange(diff: DiffFileEntry, lineNumberRange: number[]) {
-  return (
-    // TODO: This is wrong, blocks can have multiple items, not one
-    (diff?.blocks[0]?.lines || [])
-      .filter(line => lineNumberRange.includes(line.newNumber as number))
-      .map(line => line.content)
-      .join('\n') || ''
-  )
-}
-
 export function activitiesToDiffCommentItems(diff: DiffFileEntry): DiffCommentItem<TypesPullReqActivity>[] {
   return (
     diff.fileActivities?.map(activity => {
-      const payload = activity.payload as PullRequestCodeCommentPayload
       const replyComments =
         diff.activities
           ?.filter(replyActivity => replyActivity.parent_id === activity.id)
           .map(_activity => activityToCommentItem(_activity)) || []
+      // TODO: Use backend support when it's ready https://harness.slack.com/archives/C03Q1Q4C9J8/p1682609265294089
+      const left = activity.payload?.line_start_new || false
 
       return {
-        left: payload.is_on_left,
-        right: !payload.is_on_left,
+        left,
+        right: !left,
         height: 0,
-        lineNumber: payload.at_line_number,
+        lineNumber: (left ? activity.code_comment_line_old : activity.code_comment_line_new) as number,
         commentItems: [activityToCommentItem(activity)].concat(replyComments)
       }
     }) || []

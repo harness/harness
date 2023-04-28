@@ -6,7 +6,8 @@ declare const styles: {
   readonly path: string
   readonly inputContainer: string
   readonly refLink: string
-  readonly content: string
+  readonly tabs: string
+  readonly selectedView: string
   readonly editorContainer: string
 }
 export default styles

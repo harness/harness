@@ -310,7 +310,7 @@ const CommentsThread = <T = unknown,>({
               hideGutter={isLastItem}>
               <Container
                 padding={{
-                  left: editIndexes[index] ? undefined : 'medium',
+                  // left: editIndexes[index] ? undefined : 'medium',
                   bottom: isLastItem ? undefined : 'xsmall'
                 }}>
                 <Render when={index === 0 && outlets[CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]}>

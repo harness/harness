@@ -398,7 +398,7 @@ export interface TypesPullReq {
   description?: string
   edited?: number
   is_draft?: boolean
-  merge_base_sha?: string | null
+  merge_base_sha?: string
   merge_check_status?: EnumMergeCheckStatus
   merge_conflicts?: string | null
   merge_method?: EnumMergeMethod

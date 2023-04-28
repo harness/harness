@@ -3,7 +3,7 @@ import type { TypesPullReqActivity } from 'services/code'
 
 export interface DiffFileEntry extends DiffFile {
   fileId: string
-  fileTitle: string
+  filePath: string
   containerId: string
   contentId: string
   fileActivities?: TypesPullReqActivity[]

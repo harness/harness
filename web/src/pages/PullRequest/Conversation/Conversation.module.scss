@@ -83,6 +83,7 @@
 .snapshot {
   --border-color: var(--grey-200);
   --radius: 4px;
+  margin-top: var(--spacing-small) !important;
 
   .title {
     display: grid;
@@ -110,6 +111,10 @@
     border-bottom-right-radius: var(--radius);
 
     :global {
+      .d2h-file-header {
+        display: none;
+      }
+
       .d2h-wrapper > div {
         margin-bottom: 0;
       }
