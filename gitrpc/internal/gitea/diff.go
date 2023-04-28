@@ -122,7 +122,7 @@ func (g Adapter) DiffCut(
 	ctx context.Context,
 	repoPath, targetRef, sourceRef, path string,
 	params types.DiffCutParams,
-) (types.Hunk, error) {
+) (types.HunkHeader, types.Hunk, error) {
 	pipeRead, pipeWrite := io.Pipe()
 	stderr := &bytes.Buffer{}
 	go func() {
@@ -143,19 +143,19 @@ func (g Adapter) DiffCut(
 		})
 	}()
 
-	hunk, err := parser.DiffCut(pipeRead, params)
+	diffCutHeader, linesHunk, err := parser.DiffCut(pipeRead, params)
 
 	// First check if there's something in the stderr buffer, if yes that's the error
 	if errStderr := parseDiffStderr(stderr); errStderr != nil {
-		return types.Hunk{}, errStderr
+		return types.HunkHeader{}, types.Hunk{}, errStderr
 	}
 
 	// Next check if reading the git diff output caused an error
 	if err != nil {
-		return types.Hunk{}, err
+		return types.HunkHeader{}, types.Hunk{}, err
 	}
 
-	return hunk, nil
+	return diffCutHeader, linesHunk, nil
 }
 
 func parseDiffStderr(stderr *bytes.Buffer) error {

@@ -55,6 +55,6 @@ type GitAdapter interface {
 		baseRef string, headRef string, direct bool) (types.DiffShortStat, error)
 	GetDiffHunkHeaders(ctx context.Context, repoPath, targetRef, sourceRef string) ([]*types.DiffFileHunkHeaders, error)
 	DiffCut(ctx context.Context, repoPath, targetRef, sourceRef, path string,
-		params types.DiffCutParams) (types.Hunk, error)
+		params types.DiffCutParams) (types.HunkHeader, types.Hunk, error)
 	Blame(ctx context.Context, repoPath, rev, file string, lineFrom, lineTo int) types.BlameReader
 }

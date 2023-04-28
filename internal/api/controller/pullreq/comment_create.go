@@ -120,7 +120,7 @@ func (c *Controller) CommentCreate(
 
 		setAsCodeComment(act, cut, in.Path, in.SourceCommitSHA)
 		_ = act.SetPayload(&types.PullRequestActivityPayloadCodeComment{
-			Title:  cut.Header.Text,
+			Title:  cut.LinesHeader,
 			Lines:  cut.Lines,
 			AnyNew: cut.AnyNew,
 		})

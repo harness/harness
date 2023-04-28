@@ -12,6 +12,7 @@ import (
 	"github.com/harness/gitness/gitrpc/internal/types"
 )
 
+//nolint:gocognit // it's a unit test!!!
 func TestDiffCut(t *testing.T) {
 	const input = `diff --git a/test.txt b/test.txt
 --- a/test.txt
@@ -107,7 +108,7 @@ func TestDiffCut(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			hunk, err := DiffCut(
+			hunkHeader, linesHunk, err := DiffCut(
 				strings.NewReader(input),
 				test.params,
 			)
@@ -122,11 +123,19 @@ func TestDiffCut(t *testing.T) {
 				return
 			}
 
-			if want, got := test.expCutHeader, hunk.HunkHeader.String(); want != got {
+			if test.params.LineStartNew && test.params.LineStart != hunkHeader.NewLine {
+				t.Errorf("hunk line start mismatch: want=%d got=%d", test.params.LineStart, hunkHeader.NewLine)
+			}
+
+			if !test.params.LineStartNew && test.params.LineStart != hunkHeader.OldLine {
+				t.Errorf("hunk line start mismatch: want=%d got=%d", test.params.LineStart, hunkHeader.OldLine)
+			}
+
+			if want, got := test.expCutHeader, linesHunk.String(); want != got {
 				t.Errorf("header mismatch: want=%s got=%s", want, got)
 			}
 
-			if want, got := test.expCut, hunk.Lines; !reflect.DeepEqual(want, got) {
+			if want, got := test.expCut, linesHunk.Lines; !reflect.DeepEqual(want, got) {
 				t.Errorf("lines mismatch: want=%s got=%s", want, got)
 			}
 		})
