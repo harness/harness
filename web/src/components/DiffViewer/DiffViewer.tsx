@@ -24,7 +24,7 @@ import type { DiffFileEntry } from 'utils/types'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { useAppContext } from 'AppContext'
-import type { TypesPullReq, TypesPullReqActivity } from 'services/code'
+import type { OpenapiCommentCreatePullReqRequest, TypesPullReq, TypesPullReqActivity } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { AppWrapper } from 'App'
@@ -36,9 +36,6 @@ import {
   DiffCommentItem,
   DIFF_VIEWER_HEADER_HEIGHT,
   getCommentLineInfo,
-  getDiffHTMLSnapshotFromRow,
-  getRawTextInRange,
-  PR_CODE_COMMENT_PAYLOAD_VERSION,
   PullRequestCodeCommentPayload,
   renderCommentOppositePlaceHolder,
   ViewStyle
@@ -308,22 +305,33 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
                     switch (action) {
                       case CommentAction.NEW: {
-                        // lineNumberRange can be used to allow multiple-line selection when commenting in the future
-                        const lineNumberRange = [comment.lineNumber]
-                        const payload: PullRequestCodeCommentPayload = {
-                          type: CommentType.CODE_COMMENT,
-                          version: PR_CODE_COMMENT_PAYLOAD_VERSION,
-                          file_id: diff.fileId,
-                          file_title: diff.fileTitle,
-                          language: diff.language || '',
-                          is_on_left: comment.left,
-                          at_line_number: comment.lineNumber,
-                          line_number_range: lineNumberRange,
-                          range_text_content: getRawTextInRange(diff, lineNumberRange),
-                          diff_html_snapshot: getDiffHTMLSnapshotFromRow(rowElement)
+                        const commentPayload: OpenapiCommentCreatePullReqRequest = {
+                          line_start: comment.lineNumber,
+                          line_end: comment.lineNumber,
+                          line_start_new: !comment.left,
+                          line_end_new: !comment.left,
+                          path: diff.filePath,
+                          source_commit_sha: pullRequestMetadata?.merge_sha || '',
+                          target_commit_sha: pullRequestMetadata?.merge_target_sha || '',
+                          text: value
                         }
 
-                        await saveComment({ type: CommentType.CODE_COMMENT, text: value, payload })
+                        // lineNumberRange can be used to allow multiple-line selection when commenting in the future
+                        // const lineNumberRange = [comment.lineNumber]
+                        // const payload: PullRequestCodeCommentPayload = {
+                        //   type: CommentType.CODE_COMMENT,
+                        //   version: PR_CODE_COMMENT_PAYLOAD_VERSION,
+                        //   file_id: diff.fileId,
+                        //   file_title: diff.filePath,
+                        //   language: diff.language || '',
+                        //   is_on_left: comment.left,
+                        //   at_line_number: comment.lineNumber,
+                        //   line_number_range: lineNumberRange,
+                        //   range_text_content: getRawTextInRange(diff, lineNumberRange),
+                        //   diff_html_snapshot: getDiffHTMLSnapshotFromRow(rowElement)
+                        // }
+
+                        await saveComment({ type: CommentType.CODE_COMMENT, ...commentPayload })
                           .then((newComment: TypesPullReqActivity) => {
                             updatedItem = activityToCommentItem(newComment)
                           })
@@ -472,12 +480,12 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 to={routes.toCODERepository({
                   repoPath: repoMetadata.path as string,
                   gitRef: pullRequestMetadata?.source_branch,
-                  resourcePath: diff.fileTitle
+                  resourcePath: diff.isRename ? diff.newName : diff.filePath
                 })}>
-                {diff.fileTitle}
+                {diff.isRename ? `${diff.oldName} -> ${diff.newName}` : diff.filePath}
               </Link>
             </Text>
-            <CopyButton content={diff.fileTitle} icon={CodeIcon.Copy} size={ButtonSize.SMALL} />
+            <CopyButton content={diff.filePath} icon={CodeIcon.Copy} size={ButtonSize.SMALL} />
             <FlexExpander />
 
             <Render when={!readOnly}>

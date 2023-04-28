@@ -38,6 +38,7 @@ export interface StringsMap {
   branches: string
   browse: string
   cancel: string
+  changes: string
   checkRuns: string
   checkSuites: string
   checks: string
@@ -62,6 +63,7 @@ export interface StringsMap {
   confirmDeleteWebhook: string
   confirmation: string
   content: string
+  contents: string
   conversation: string
   copy: string
   copyCommitSHA: string

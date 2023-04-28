@@ -192,7 +192,7 @@ pr:
   failedToDeleteComment: Failed to delete comment. Please try again.
   prMerged: This Pull Request was merged
   reviewSubmitted: Review submitted.
-  prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested changes to, reviewed} the pull request. {time}'
+  prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested  to, reviewed} the pull request. {time}'
   prMergedInfo: '{user} merged branch {source} into {target} {time}.'
   prBranchPushInfo: '{user} pushed a new commit {commit}.'
   prStateChanged: '{user} changed pull request state from {old} to {new}.'
@@ -375,3 +375,5 @@ manageCredText: You can also manage your git credential {URL}
 blame: Blame
 viewRaw: View Raw
 download: Download
+changes: Changes
+contents: Contents

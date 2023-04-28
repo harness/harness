@@ -63,7 +63,8 @@ export const OptionsMenuButton = ({
                     item as IMenuItemProps & React.AnchorHTMLAttributes<HTMLAnchorElement>,
                     'isDanger',
                     'hasIcon',
-                    'iconName'
+                    'iconName',
+                    'iconSize'
                   )}
                 />
               )

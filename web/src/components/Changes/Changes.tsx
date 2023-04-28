@@ -23,12 +23,7 @@ import { useEventListener } from 'hooks/useEventListener'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
-import {
-  DIFF2HTML_CONFIG,
-  PR_CODE_COMMENT_PAYLOAD_VERSION,
-  PullRequestCodeCommentPayload,
-  ViewStyle
-} from 'components/DiffViewer/DiffViewerUtils'
+import { DIFF2HTML_CONFIG, PullRequestCodeCommentPayload, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import type { TypesPullReq, TypesPullReqActivity } from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
@@ -118,14 +113,10 @@ export const Changes: React.FC<ChangesProps> = ({
           const fileId = changedFileId([diff.oldName, diff.newName])
           const containerId = `container-${fileId}`
           const contentId = `content-${fileId}`
-          const fileTitle = diff.isDeleted
-            ? diff.oldName
-            : diff.isRename
-            ? `${diff.oldName} -> ${diff.newName}`
-            : diff.newName
+          const filePath = diff.isDeleted ? diff.oldName : diff.newName
           const fileActivities: TypesPullReqActivity[] | undefined = activities?.filter(activity => {
             const payload = activity.payload as PullRequestCodeCommentPayload
-            return payload?.file_id === fileId && payload?.version === PR_CODE_COMMENT_PAYLOAD_VERSION
+            return payload?.file_id === fileId
           })
 
           return {
@@ -133,7 +124,7 @@ export const Changes: React.FC<ChangesProps> = ({
             containerId,
             contentId,
             fileId,
-            fileTitle,
+            filePath,
             fileActivities: fileActivities || [],
             activities: activities || []
           }

@@ -49,7 +49,6 @@ export interface SourceCodeEditorProps {
   lineNumbers?: boolean
   readOnly?: boolean
   highlightLines?: string // i.e: {1,3-4}, TODO: not yet supported
-  className?: string
   height?: number | string
   autoHeight?: boolean
   wordWrap?: boolean

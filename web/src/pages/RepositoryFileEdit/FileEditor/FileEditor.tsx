@@ -1,5 +1,17 @@
 import React, { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, ButtonVariation, Color, Container, FlexExpander, Icon, Layout, Text, TextInput } from '@harness/uicore'
+import {
+  Button,
+  ButtonVariation,
+  Color,
+  Container,
+  FlexExpander,
+  Icon,
+  Layout,
+  Text,
+  TextInput,
+  VisualYamlSelectedView,
+  VisualYamlToggle
+} from '@harness/uicore'
 import { Link, useHistory } from 'react-router-dom'
 import ReactJoin from 'react-join'
 import cx from 'classnames'
@@ -11,6 +23,7 @@ import { useStrings } from 'framework/strings'
 import { filenameToLanguage, FILE_SEPERATOR } from 'utils/Utils'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { CommitModalButton } from 'components/CommitModalButton/CommitModalButton'
+import { DiffEditor } from 'components/SourceCodeEditor/MonacoSourceCodeEditor'
 import css from './FileEditor.module.scss'
 
 interface EditorProps extends Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath'> {
@@ -83,6 +96,7 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
     // Make API call to verify if fileResourcePath is an existing folder
     verifyFolder().then(() => setStartVerifyFolder(true))
   }, [fileName, parentPath, language, content, verifyFolder])
+  const [selectedView, setSelectedView] = useState(VisualYamlSelectedView.VISUAL)
 
   // Calculate file name input field width based on number of characters inside
   useEffect(() => {
@@ -111,16 +125,14 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
       }
     }
   }, [isNew, name])
+
   return (
     <Container className={css.container}>
       <Layout.Horizontal className={css.heading}>
         <Container>
           <Layout.Horizontal spacing="small" className={css.path}>
             <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef })}>
-              <Icon name="main-folder" padding={{ right: 'xsmall' }} />
-              {/* <Text color={Color.GREY_900} inline>
-                {repoMetadata.uid}
-              </Text> */}
+              <Icon name="code-folder" padding={{ right: 'xsmall' }} />
             </Link>
             <PathSeparator />
             {parentPath && (
@@ -148,7 +160,7 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
             <TextInput
               autoFocus={isNew}
               value={fileName}
-              inputRef={ref => (inputRef.current = ref)}
+              inputRef={_ref => (inputRef.current = _ref)}
               wrapperClassName={css.inputContainer}
               placeholder={getString('nameYourFile')}
               onInput={(event: ChangeEvent<HTMLInputElement>) => {
@@ -231,14 +243,21 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
         </Container>
       </Layout.Horizontal>
 
-      <Container className={cx(css.content, language)}>
-        <SourceCodeEditor
-          className={css.editorContainer}
-          height="100%"
-          language={language}
-          source={originalContent}
-          onChange={setContent}
+      <Container className={css.tabs}>
+        <VisualYamlToggle
+          onChange={setSelectedView}
+          selectedView={selectedView}
+          labels={{ visual: getString('contents'), yaml: getString('changes') }}
+          className={css.selectedView}
         />
+      </Container>
+
+      <Container className={cx(css.editorContainer, language)}>
+        {selectedView === VisualYamlSelectedView.VISUAL ? (
+          <SourceCodeEditor language={language} source={content} onChange={setContent} />
+        ) : (
+          <DiffEditor language={language} original={originalContent} source={content} onChange={setContent} />
+        )}
       </Container>
     </Container>
   )
