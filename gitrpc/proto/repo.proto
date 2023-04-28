@@ -16,6 +16,7 @@ service RepositoryService {
   rpc GetCommit(GetCommitRequest) returns (GetCommitResponse);
   rpc GetCommitDivergences(GetCommitDivergencesRequest) returns (GetCommitDivergencesResponse);
   rpc DeleteRepository(DeleteRepositoryRequest) returns (DeleteRepositoryResponse);
+  rpc MergeBase(MergeBaseRequest) returns (MergeBaseResponse);
 }
 
 message CreateRepositoryRequest {
@@ -163,4 +164,14 @@ message DeleteRepositoryRequest {
 }
 
 message DeleteRepositoryResponse {
+}
+
+message MergeBaseRequest {
+  ReadRequest base = 1;
+  string ref1 = 2;
+  string ref2 = 3;
+}
+
+message MergeBaseResponse {
+  string merge_base_sha = 1;
 }

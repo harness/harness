@@ -238,7 +238,8 @@ func mapHunkHeader(h *rpc.HunkHeader) HunkHeader {
 
 func mapDiffFileHeader(h *rpc.DiffFileHeader) DiffFileHeader {
 	return DiffFileHeader{
-		OldName: h.OldFileName,
-		NewName: h.NewFileName,
+		OldName:    h.OldFileName,
+		NewName:    h.NewFileName,
+		Extensions: h.Extensions,
 	}
 }

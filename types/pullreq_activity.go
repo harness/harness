@@ -30,7 +30,7 @@ type PullReqActivity struct {
 	Created   int64  `json:"created"`
 	Updated   int64  `json:"-"` // not returned, it's updated by the server internally. Clients should use EditedAt.
 	Edited    int64  `json:"edited"`
-	Deleted   *int64 `json:"deleted"`
+	Deleted   *int64 `json:"deleted,omitempty"`
 
 	ParentID  *int64 `json:"parent_id"`
 	RepoID    int64  `json:"repo_id"`
@@ -48,19 +48,19 @@ type PullReqActivity struct {
 	Metadata   map[string]interface{} `json:"metadata"`
 
 	ResolvedBy *int64 `json:"-"` // not returned, because the resolver info is in the Resolver field
-	Resolved   *int64 `json:"resolved"`
+	Resolved   *int64 `json:"resolved,omitempty"`
 
 	Author   PrincipalInfo  `json:"author"`
-	Resolver *PrincipalInfo `json:"resolver"`
+	Resolver *PrincipalInfo `json:"resolver,omitempty"`
 
-	Outdated                *bool   `json:"outdated"`
-	CodeCommentMergeBaseSHA *string `json:"code_comment_merge_base_sha"`
-	CodeCommentSourceSHA    *string `json:"code_comment_source_sha"`
-	CodeCommentPath         *string `json:"code_comment_path"`
-	CodeCommentLineNew      *int64  `json:"code_comment_line_new"`
-	CodeCommentSpanNew      *int64  `json:"code_comment_span_new"`
-	CodeCommentLineOld      *int64  `json:"code_comment_line_old"`
-	CodeCommentSpanOld      *int64  `json:"code_comment_span_old"`
+	Outdated                *bool   `json:"outdated,omitempty"`
+	CodeCommentMergeBaseSHA *string `json:"code_comment_merge_base_sha,omitempty"`
+	CodeCommentSourceSHA    *string `json:"code_comment_source_sha,omitempty"`
+	CodeCommentPath         *string `json:"code_comment_path,omitempty"`
+	CodeCommentLineNew      *int64  `json:"code_comment_line_new,omitempty"`
+	CodeCommentSpanNew      *int64  `json:"code_comment_span_new,omitempty"`
+	CodeCommentLineOld      *int64  `json:"code_comment_line_old,omitempty"`
+	CodeCommentSpanOld      *int64  `json:"code_comment_span_old,omitempty"`
 }
 
 func (a *PullReqActivity) IsValidCodeComment() bool {

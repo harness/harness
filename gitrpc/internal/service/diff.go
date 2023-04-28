@@ -124,28 +124,33 @@ func (s DiffService) DiffCut(
 		return nil, processGitErrorf(err, "failed to find merge base")
 	}
 
-	sourceCommits, err := s.adapter.ListCommits(ctx, repoPath, r.SourceBranch, r.TargetBranch, 0, 1)
+	sourceCommits, err := s.adapter.ListCommitSHAs(ctx, repoPath, r.SourceBranch, r.TargetBranch, 0, 1)
 	if err != nil || len(sourceCommits) == 0 {
 		return nil, processGitErrorf(err, "failed to get list of source branch commits")
 	}
 
-	hunk, err := s.adapter.DiffCut(ctx, repoPath, r.TargetCommitSha, r.SourceCommitSha, r.Path, types.DiffCutParams{
-		LineStart:    int(r.LineStart),
-		LineStartNew: r.LineStartNew,
-		LineEnd:      int(r.LineEnd),
-		LineEndNew:   r.LineEndNew,
-		BeforeLines:  2,
-		AfterLines:   2,
-		LineLimit:    40,
-	})
+	diffHunkHeader, linesHunk, err := s.adapter.DiffCut(ctx,
+		repoPath,
+		r.TargetCommitSha, r.SourceCommitSha,
+		r.Path,
+		types.DiffCutParams{
+			LineStart:    int(r.LineStart),
+			LineStartNew: r.LineStartNew,
+			LineEnd:      int(r.LineEnd),
+			LineEndNew:   r.LineEndNew,
+			BeforeLines:  2,
+			AfterLines:   2,
+			LineLimit:    40,
+		})
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to get diff hunk")
 	}
 
 	return &rpc.DiffCutResponse{
-		HunkHeader:      mapHunkHeader(hunk.HunkHeader),
-		Lines:           hunk.Lines,
+		HunkHeader:      mapHunkHeader(diffHunkHeader),
+		LinesHeader:     linesHunk.HunkHeader.String(),
+		Lines:           linesHunk.Lines,
 		MergeBaseSha:    mergeBase,
-		LatestSourceSha: sourceCommits[0].SHA,
+		LatestSourceSha: sourceCommits[0],
 	}, nil
 }

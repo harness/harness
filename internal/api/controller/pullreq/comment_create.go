@@ -120,7 +120,7 @@ func (c *Controller) CommentCreate(
 
 		setAsCodeComment(act, cut, in.Path, in.SourceCommitSHA)
 		_ = act.SetPayload(&types.PullRequestActivityPayloadCodeComment{
-			Title:  cut.Header.Text,
+			Title:  cut.LinesHeader,
 			Lines:  cut.Lines,
 			AnyNew: cut.AnyNew,
 		})
@@ -129,7 +129,7 @@ func (c *Controller) CommentCreate(
 
 		// Migrate the comment if necessary... Note: we still need to return the code comment as is.
 		needsNewLineMigrate := in.SourceCommitSHA != cut.LatestSourceSHA
-		needsOldLineMigrate := pr.MergeBaseSHA != nil && *pr.MergeBaseSHA != cut.MergeBaseSHA
+		needsOldLineMigrate := pr.MergeBaseSHA != cut.MergeBaseSHA
 		if err == nil && (needsNewLineMigrate || needsOldLineMigrate) {
 			comments := []*types.CodeComment{act.AsCodeComment()}
 

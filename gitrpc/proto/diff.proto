@@ -46,6 +46,7 @@ message HunkHeader {
 message DiffFileHeader {
   string old_file_name = 1;
   string new_file_name = 2;
+  map<string, string> extensions = 3;
 }
 
 message DiffFileHunkHeaders {
@@ -78,7 +79,8 @@ message DiffCutRequest {
 
 message DiffCutResponse {
   HunkHeader hunk_header = 1;
-  repeated string lines = 2;
-  string merge_base_sha = 3;
-  string latest_source_sha = 4;
+  string lines_header = 2;
+  repeated string lines = 3;
+  string merge_base_sha = 4;
+  string latest_source_sha = 5;
 }

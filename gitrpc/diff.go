@@ -162,8 +162,9 @@ type GetDiffHunkHeadersParams struct {
 }
 
 type DiffFileHeader struct {
-	OldName string
-	NewName string
+	OldName    string
+	NewName    string
+	Extensions map[string]string
 }
 
 type HunkHeader struct {
@@ -219,6 +220,7 @@ func (c *Client) GetDiffHunkHeaders(
 
 type DiffCutOutput struct {
 	Header          HunkHeader
+	LinesHeader     string
 	Lines           []string
 	MergeBaseSHA    string
 	LatestSourceSHA string
@@ -276,6 +278,7 @@ func (c *Client) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOut
 
 	return DiffCutOutput{
 		Header:          HunkHeader(hunkHeader),
+		LinesHeader:     result.LinesHeader,
 		Lines:           result.Lines,
 		MergeBaseSHA:    result.MergeBaseSha,
 		LatestSourceSHA: result.LatestSourceSha,

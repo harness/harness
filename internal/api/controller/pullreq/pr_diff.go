@@ -20,6 +20,7 @@ func (c *Controller) RawDiff(
 	session *auth.Session,
 	repoRef string,
 	pullreqNum int64,
+	setSHAs func(sourceSHA, mergeBaseSHA string),
 	w io.Writer,
 ) error {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
@@ -32,14 +33,10 @@ func (c *Controller) RawDiff(
 		return fmt.Errorf("failed to get pull request by number: %w", err)
 	}
 
-	headRef := pr.SourceBranch
-	if pr.SourceSHA != "" {
-		headRef = pr.SourceSHA
-	}
-	baseRef := pr.TargetBranch
-	if pr.MergeBaseSHA != nil {
-		baseRef = *pr.MergeBaseSHA
-	}
+	headRef := pr.SourceSHA
+	baseRef := pr.MergeBaseSHA
+
+	setSHAs(headRef, baseRef)
 
 	return c.gitRPCClient.RawDiff(ctx, &gitrpc.DiffParams{
 		ReadParams: gitrpc.CreateRPCReadParams(repo),

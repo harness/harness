@@ -122,6 +122,7 @@ func mapDiffFileHeader(h types.DiffFileHeader) *rpc.DiffFileHeader {
 	return &rpc.DiffFileHeader{
 		OldFileName: h.OldFileName,
 		NewFileName: h.NewFileName,
+		Extensions:  h.Extensions,
 	}
 }
 

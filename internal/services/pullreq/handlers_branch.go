@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/gitrpc"
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/types"
@@ -23,8 +24,33 @@ import (
 func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 	event *events.Event[*gitevents.BranchUpdatedPayload],
 ) error {
+	// TODO: This function is currently executed directly on branch update event.
+	// TODO: But it should be executed after the PR's head ref has been updated.
+	// TODO: This is to make sure the commit exists on the target repository for forked repositories.
 	s.forEveryOpenPR(ctx, event.Payload.RepoID, event.Payload.Ref, func(pr *types.PullReq) error {
-		pr, err := s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+		// First check if the merge base has changed
+
+		targetRepoGit, err := s.repoGitInfoCache.Get(ctx, pr.TargetRepoID)
+		if err != nil {
+			return fmt.Errorf("failed to get repo git info: %w", err)
+		}
+
+		mergeBaseInfo, err := s.gitRPCClient.MergeBase(ctx, gitrpc.MergeBaseParams{
+			ReadParams: gitrpc.ReadParams{RepoUID: targetRepoGit.GitUID},
+			Ref1:       event.Payload.NewSHA,
+			Ref2:       pr.TargetBranch,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to get merge base after branch update to=%s for PR=%d: %w",
+				event.Payload.NewSHA, pr.Number, err)
+		}
+
+		oldMergeBase := pr.MergeBaseSHA
+		newMergeBase := mergeBaseInfo.MergeBaseSHA
+
+		// Update the database with the latest source commit SHA and the merge base SHA.
+
+		pr, err = s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 			pr.ActivitySeq++
 			if pr.SourceSHA != event.Payload.OldSHA {
 				return fmt.Errorf(
@@ -33,6 +59,7 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 			}
 
 			pr.SourceSHA = event.Payload.NewSHA
+			pr.MergeBaseSHA = newMergeBase
 
 			// reset merge-check fields for new run
 			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
@@ -63,9 +90,11 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 				PrincipalID:  event.Payload.PrincipalID,
 				Number:       pr.Number,
 			},
-			OldSHA: event.Payload.OldSHA,
-			NewSHA: event.Payload.NewSHA,
-			Forced: event.Payload.Forced,
+			OldSHA:          event.Payload.OldSHA,
+			NewSHA:          event.Payload.NewSHA,
+			OldMergeBaseSHA: oldMergeBase,
+			NewMergeBaseSHA: newMergeBase,
+			Forced:          event.Payload.Forced,
 		})
 		return nil
 	})
