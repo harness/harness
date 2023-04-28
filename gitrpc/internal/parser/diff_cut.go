@@ -17,18 +17,18 @@ import (
 // and returns lines specified with the parameters.
 //
 //nolint:funlen,gocognit,nestif,gocognit,gocyclo,cyclop // it's actually very readable
-func DiffCut(r io.Reader, params types.DiffCutParams) (types.Hunk, error) {
+func DiffCut(r io.Reader, params types.DiffCutParams) (types.HunkHeader, types.Hunk, error) {
 	scanner := bufio.NewScanner(r)
 
 	var err error
 	var hunkHeader types.HunkHeader
 
 	if _, err = scanFileHeader(scanner); err != nil {
-		return types.Hunk{}, err
+		return types.HunkHeader{}, types.Hunk{}, err
 	}
 
 	if hunkHeader, err = scanHunkHeader(scanner); err != nil {
-		return types.Hunk{}, err
+		return types.HunkHeader{}, types.Hunk{}, err
 	}
 
 	currentOldLine := hunkHeader.OldLine
@@ -51,7 +51,7 @@ func DiffCut(r io.Reader, params types.DiffCutParams) (types.Hunk, error) {
 
 		line, action, err = scanHunkLine(scanner)
 		if err != nil {
-			return types.Hunk{}, err
+			return types.HunkHeader{}, types.Hunk{}, err
 		}
 
 		if line == "" {
@@ -93,7 +93,7 @@ func DiffCut(r io.Reader, params types.DiffCutParams) (types.Hunk, error) {
 	}
 
 	if !inCut {
-		return types.Hunk{}, types.ErrHunkNotFound
+		return types.HunkHeader{}, types.Hunk{}, types.ErrHunkNotFound
 	}
 
 	var (
@@ -111,34 +111,36 @@ func DiffCut(r io.Reader, params types.DiffCutParams) (types.Hunk, error) {
 			linesAfter = append(linesAfter, line)
 		}
 		if err = scanner.Err(); err != nil {
-			return types.Hunk{}, err
+			return types.HunkHeader{}, types.Hunk{}, err
 		}
 	}
+
+	diffCutHeaderLines := diffCutHeader
 
 	for _, s := range linesBefore {
 		action := diffAction(s[0])
 		if action != actionRemoved {
-			diffCutHeader.NewLine--
-			diffCutHeader.NewSpan++
+			diffCutHeaderLines.NewLine--
+			diffCutHeaderLines.NewSpan++
 		}
 		if action != actionAdded {
-			diffCutHeader.OldLine--
-			diffCutHeader.OldSpan++
+			diffCutHeaderLines.OldLine--
+			diffCutHeaderLines.OldSpan++
 		}
 	}
 
 	for _, s := range linesAfter {
 		action := diffAction(s[0])
 		if action != actionRemoved {
-			diffCutHeader.NewSpan++
+			diffCutHeaderLines.NewSpan++
 		}
 		if action != actionAdded {
-			diffCutHeader.OldSpan++
+			diffCutHeaderLines.OldSpan++
 		}
 	}
 
-	return types.Hunk{
-		HunkHeader: diffCutHeader,
+	return diffCutHeader, types.Hunk{
+		HunkHeader: diffCutHeaderLines,
 		Lines:      concat(linesBefore, diffCut, linesAfter),
 	}, nil
 }
