@@ -33,6 +33,7 @@ import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { commentState, formatDate, formatTime, getErrorMessage, orderSortDate, dayAgoInMS } from 'utils/Utils'
 import { activityToCommentItem, CommentType, DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
+import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { DescriptionBox } from './DescriptionBox'
@@ -175,6 +176,8 @@ export const Conversation: React.FC<ConversationProps> = ({
   const { mutate: deleteComment } = useMutate({ verb: 'DELETE', path: ({ id }) => `${path}/${id}` })
   const confirmAct = useConfirmAct()
   const [commentCreated, setCommentCreated] = useState(false)
+  const [dirtyNewComment, setDirtyNewComment] = useState(false)
+  const [dirtyCurrentComments, setDirtyCurrentComments] = useState(false)
 
   const refreshPR = useCallback(() => {
     onCommentUpdate()
@@ -316,6 +319,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                             })}
                             commentItems={commentItems}
                             currentUserName={currentUser.display_name}
+                            setDirty={setDirtyCurrentComments}
                             handleAction={async (action, value, commentItem) => {
                               let result = true
                               let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
@@ -411,6 +415,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                     currentUserName={currentUser.display_name}
                     resetOnSave
                     hideCancel
+                    setDirty={setDirtyNewComment}
                     handleAction={async (_action, value) => {
                       let result = true
                       let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
@@ -440,6 +445,7 @@ export const Conversation: React.FC<ConversationProps> = ({
           </Container>
         </Layout.Vertical>
       </Container>
+      <NavigationCheck when={dirtyCurrentComments || dirtyNewComment} />
     </PullRequestTabContentWrapper>
   )
 }

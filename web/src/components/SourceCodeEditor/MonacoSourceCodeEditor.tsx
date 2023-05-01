@@ -10,7 +10,7 @@ export const MonacoEditorOptions = {
   minimap: { enabled: false },
   codeLens: false,
   scrollBeyondLastLine: false,
-  smartSelect: false,
+  // smartSelect: false,
   tabSize: 2,
   insertSpaces: true,
   overviewRulerBorder: false,

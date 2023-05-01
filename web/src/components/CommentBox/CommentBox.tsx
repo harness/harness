@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useResizeDetector } from 'react-resize-detector'
 import type { EditorView } from '@codemirror/view'
 import { Render, Match, Truthy, Falsy, Else } from 'react-jsx-match'
@@ -68,6 +68,7 @@ interface CommentBoxProps<T> {
     atCommentItem?: CommentItem<T>
   ) => Promise<[boolean, CommentItem<T> | undefined]>
   onCancel?: () => void
+  setDirty: (dirty: boolean) => void
   outlets?: Partial<Record<CommentBoxOutletPosition, React.ReactNode>>
 }
 
@@ -83,12 +84,14 @@ export const CommentBox = <T = unknown,>({
   onCancel = noop,
   hideCancel,
   resetOnSave,
+  setDirty: setDirtyProp,
   outlets = {}
 }: CommentBoxProps<T>) => {
   const { getString } = useStrings()
   const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
   const [showReplyPlaceHolder, setShowReplyPlaceHolder] = useState(!!comments.length)
   const [markdown, setMarkdown] = useState(initialContent)
+  const [dirties, setDirties] = useState<Record<string, boolean>>({})
   const { ref } = useResizeDetector<HTMLDivElement>({
     refreshMode: 'debounce',
     handleWidth: false,
@@ -117,6 +120,13 @@ export const CommentBox = <T = unknown,>({
   }, [])
   const viewRef = useRef<EditorView>()
 
+  useEffect(() => {
+    setDirtyProp(Object.values(dirties).some(dirty => dirty))
+    return () => {
+      setDirtyProp(false)
+    }
+  }, [dirties]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <Container
       className={cx(css.main, { [css.fluid]: fluid }, className)}
@@ -139,6 +149,9 @@ export const CommentBox = <T = unknown,>({
               }
 
               return [result, updatedItem]
+            }}
+            setDirty={(index, dirty) => {
+              setDirties({ ...dirties, [index]: dirty })
             }}
             outlets={outlets}
           />
@@ -199,6 +212,9 @@ export const CommentBox = <T = unknown,>({
                   }}
                   onCancel={_onCancel}
                   hideCancel={hideCancel}
+                  setDirty={_dirty => {
+                    setDirties({ ...dirties, ['new']: _dirty })
+                  }}
                 />
               </Container>
             </Falsy>
@@ -211,12 +227,14 @@ export const CommentBox = <T = unknown,>({
 
 interface CommentsThreadProps<T> extends Pick<CommentBoxProps<T>, 'commentItems' | 'handleAction' | 'outlets'> {
   onQuote: (content: string) => void
+  setDirty: (index: number, dirty: boolean) => void
 }
 
 const CommentsThread = <T = unknown,>({
   onQuote,
   commentItems = [],
   handleAction,
+  setDirty,
   outlets = {}
 }: CommentsThreadProps<T>) => {
   const { getString } = useStrings()
@@ -331,6 +349,9 @@ const CommentsThread = <T = unknown,>({
                           }
                         }}
                         onCancel={() => resetStateAtIndex(index)}
+                        setDirty={_dirty => {
+                          setDirty(index, _dirty)
+                        }}
                         i18n={{
                           placeHolder: getString('leaveAComment'),
                           tabEdit: getString('write'),

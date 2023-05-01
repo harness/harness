@@ -7,6 +7,7 @@ import { useStrings } from 'framework/strings'
 import type { OpenapiUpdatePullReqRequest } from 'services/code'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
+import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { getErrorMessage } from 'utils/Utils'
 import type { ConversationProps } from './Conversation'
 import css from './Conversation.module.scss'
@@ -17,7 +18,7 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
   onCommentUpdate: refreshPullRequestMetadata
 }) => {
   const [edit, setEdit] = useState(false)
-  // const [updated, setUpdated] = useState(pullRequestMetadata.edited as number)
+  const [dirty, setDirty] = useState(false)
   const [originalContent, setOriginalContent] = useState(pullRequestMetadata.description as string)
   const [content, setContent] = useState(originalContent)
   const { getString } = useStrings()
@@ -52,6 +53,7 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
               setContent(originalContent)
               setEdit(false)
             }}
+            setDirty={setDirty}
             i18n={{
               placeHolder: getString('pr.enterDesc'),
               tabEdit: getString('write'),
@@ -84,6 +86,7 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
           </Container>
         )}
       </Container>
+      <NavigationCheck when={dirty} />
     </Container>
   )
 }

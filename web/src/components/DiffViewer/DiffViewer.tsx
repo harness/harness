@@ -28,6 +28,7 @@ import type { OpenapiCommentCreatePullReqRequest, TypesPullReq, TypesPullReqActi
 import { getErrorMessage } from 'utils/Utils'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { AppWrapper } from 'App'
+import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import {
   activitiesToDiffCommentItems,
   activityToCommentItem,
@@ -91,6 +92,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   const { mutate: updateComment } = useMutate({ verb: 'PATCH', path: ({ id }) => `${path}/${id}` })
   const { mutate: deleteComment } = useMutate({ verb: 'DELETE', path: ({ id }) => `${path}/${id}` })
   const [comments, setComments] = useState<DiffCommentItem<TypesPullReqActivity>[]>(activitiesToDiffCommentItems(diff))
+  const [dirty, setDirty] = useState(false)
   const commentsRef = useRef<DiffCommentItem<TypesPullReqActivity>[]>(comments)
   const setContainerRef = useCallback(
     node => {
@@ -298,6 +300,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                     delete lineInfo.rowElement.dataset.annotated
                     setTimeout(() => setComments(commentsRef.current.filter(item => item !== comment)), 0)
                   }}
+                  setDirty={setDirty}
                   currentUserName={currentUser.display_name}
                   handleAction={async (action, value, commentItem) => {
                     let result = true
@@ -511,6 +514,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           </Render>
         </Container>
       </Layout.Vertical>
+      <NavigationCheck when={dirty} />
     </Container>
   )
 }
