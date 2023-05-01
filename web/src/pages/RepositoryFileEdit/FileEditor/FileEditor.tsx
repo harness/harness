@@ -98,10 +98,11 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
     verifyFolder().then(() => setStartVerifyFolder(true))
   }, [fileName, parentPath, language, content, verifyFolder])
   const [selectedView, setSelectedView] = useState(VisualYamlSelectedView.VISUAL)
-  const disabled = useMemo(
-    () => !fileName || (isUpdate && content === originalContent),
-    [fileName, isUpdate, content, originalContent]
-  )
+  const [dirty, setDirty] = useState(false)
+
+  useEffect(() => {
+    setDirty(!(!fileName || (isUpdate && content === originalContent)))
+  }, [fileName, isUpdate, content, originalContent])
 
   // Calculate file name input field width based on number of characters inside
   useEffect(() => {
@@ -199,7 +200,7 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
             <CommitModalButton
               text={getString('commitChanges')}
               variation={ButtonVariation.PRIMARY}
-              disabled={disabled}
+              disabled={!dirty}
               repoMetadata={repoMetadata}
               commitAction={commitAction}
               commitTitlePlaceHolder={getString(isNew ? 'createFile' : isUpdate ? 'updateFile' : 'renameFile')
@@ -211,6 +212,8 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
               payload={content}
               sha={resourceContent?.sha}
               onSuccess={(_data, newBranch) => {
+                setDirty(false)
+
                 if (newBranch) {
                   history.replace(
                     routes.toCODECompare({
@@ -264,7 +267,7 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
           <DiffEditor language={language} original={originalContent} source={content} onChange={setContent} />
         )}
       </Container>
-      <NavigationCheck when={!disabled} />
+      <NavigationCheck when={dirty} />
     </Container>
   )
 }
