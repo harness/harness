@@ -1,7 +1,11 @@
 @import 'src/utils/utils';
 
 .main {
-  overflow: auto;
+  overflow: hidden;
+
+  &.withMaxHeight {
+    overflow: auto;
+  }
 
   :global {
     .wmde-markdown {

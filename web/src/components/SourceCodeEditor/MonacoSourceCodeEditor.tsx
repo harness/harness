@@ -10,7 +10,7 @@ export const MonacoEditorOptions = {
   minimap: { enabled: false },
   codeLens: false,
   scrollBeyondLastLine: false,
-  smartSelect: false,
+  // smartSelect: false,
   tabSize: 2,
   insertSpaces: true,
   overviewRulerBorder: false,
@@ -96,7 +96,7 @@ export default function MonacoSourceCodeEditor({
       }}
       editorDidMount={_editor => {
         if (autoHeight) {
-          autoAdjustEditorHeight(_editor)
+          // autoAdjustEditorHeight(_editor)
         }
         setEditor(_editor)
       }}
@@ -135,9 +135,13 @@ export function DiffEditor({
       height={height}
       options={{
         ...MonacoEditorOptions,
+        smartSelect: {
+          selectLeadingAndTrailingWhitespace: true
+        },
         readOnly,
         wordWrap: toOnOff(wordWrap),
         lineNumbers: toOnOff(lineNumbers),
+        originalEditable: false,
         scrollbar: {
           vertical: 'auto',
           horizontal: 'auto',

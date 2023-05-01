@@ -1,8 +1,30 @@
 .main {
-  min-height: var(--page-min-height, 100%);
   background-color: var(--primary-bg) !important;
-}
 
-.resourceContent {
-  background-color: var(--primary-bg);
+  &,
+  > div:first-of-type {
+    min-height: var(--page-min-height) !important;
+  }
+
+  > div:first-of-type {
+    display: flex;
+    flex-direction: column;
+
+    .resourceContent {
+      background-color: var(--primary-bg);
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+
+      > div:first-of-type {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+
+        > div:last-of-type {
+          flex-grow: 1;
+        }
+      }
+    }
+  }
 }
