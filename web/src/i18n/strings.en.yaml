@@ -377,3 +377,8 @@ viewRaw: View Raw
 download: Download
 changes: Changes
 contents: Contents
+unsavedChanges:
+  title: Close without saving?
+  message: 'You have unsaved changes. Are you sure you want to leave this page without saving?'
+  leave: Leave this Page
+  stay: Stay on this Page

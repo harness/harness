@@ -40,6 +40,7 @@ interface MarkdownEditorWithPreviewProps {
   onChange?: (value: string) => void
   onSave?: (value: string) => void
   onCancel?: () => void
+  setDirty: (dirty: boolean) => void
   i18n: {
     placeHolder: string
     tabEdit: string
@@ -59,6 +60,7 @@ export function MarkdownEditorWithPreview({
   onChange,
   onSave,
   onCancel,
+  setDirty: setDirtyProp,
   i18n,
   hideButtons,
   hideCancel,
@@ -185,6 +187,14 @@ export function MarkdownEditorWithPreview({
       }
     }
   }, [])
+
+  useEffect(() => {
+    setDirtyProp?.(dirty)
+
+    return () => {
+      setDirtyProp?.(false)
+    }
+  }, [dirty]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (viewRefProp) {

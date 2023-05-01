@@ -24,6 +24,7 @@ import { filenameToLanguage, FILE_SEPERATOR } from 'utils/Utils'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { CommitModalButton } from 'components/CommitModalButton/CommitModalButton'
 import { DiffEditor } from 'components/SourceCodeEditor/MonacoSourceCodeEditor'
+import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import css from './FileEditor.module.scss'
 
 interface EditorProps extends Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath'> {
@@ -97,6 +98,11 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
     verifyFolder().then(() => setStartVerifyFolder(true))
   }, [fileName, parentPath, language, content, verifyFolder])
   const [selectedView, setSelectedView] = useState(VisualYamlSelectedView.VISUAL)
+  const [dirty, setDirty] = useState(false)
+
+  useEffect(() => {
+    setDirty(!(!fileName || (isUpdate && content === originalContent)))
+  }, [fileName, isUpdate, content, originalContent])
 
   // Calculate file name input field width based on number of characters inside
   useEffect(() => {
@@ -194,7 +200,7 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
             <CommitModalButton
               text={getString('commitChanges')}
               variation={ButtonVariation.PRIMARY}
-              disabled={!fileName || (isUpdate && content === originalContent)}
+              disabled={!dirty}
               repoMetadata={repoMetadata}
               commitAction={commitAction}
               commitTitlePlaceHolder={getString(isNew ? 'createFile' : isUpdate ? 'updateFile' : 'renameFile')
@@ -206,6 +212,8 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
               payload={content}
               sha={resourceContent?.sha}
               onSuccess={(_data, newBranch) => {
+                setDirty(false)
+
                 if (newBranch) {
                   history.replace(
                     routes.toCODECompare({
@@ -259,6 +267,7 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
           <DiffEditor language={language} original={originalContent} source={content} onChange={setContent} />
         )}
       </Container>
+      <NavigationCheck when={dirty} />
     </Container>
   )
 }

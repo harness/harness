@@ -302,6 +302,10 @@ export interface StringsMap {
   tags: string
   title: string
   tooltipRepoEdit: string
+  'unsavedChanges.leave': string
+  'unsavedChanges.message': string
+  'unsavedChanges.stay': string
+  'unsavedChanges.title': string
   updateFile: string
   updateWebhook: string
   updated: string
