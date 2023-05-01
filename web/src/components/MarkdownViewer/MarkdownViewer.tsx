@@ -59,7 +59,7 @@ export function MarkdownViewer({ source, className, maxHeight }: MarkdownViewerP
 
   return (
     <Container
-      className={cx(css.main, className)}
+      className={cx(css.main, className, { [css.withMaxHeight]: maxHeight && maxHeight > 0 })}
       onClick={interceptClickEventOnViewerContainer}
       style={{ maxHeight: maxHeight }}>
       <MarkdownPreview

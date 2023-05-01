@@ -138,6 +138,7 @@ export function DiffEditor({
         readOnly,
         wordWrap: toOnOff(wordWrap),
         lineNumbers: toOnOff(lineNumbers),
+        originalEditable: false,
         scrollbar: {
           vertical: 'auto',
           horizontal: 'auto',
