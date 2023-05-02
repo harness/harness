@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Container } from '@harness/uicore'
 import { GitInfoProps, isDir } from 'utils/GitUtils'
 import { ContentHeader } from './ContentHeader/ContentHeader'
@@ -12,6 +12,10 @@ export function RepositoryContent({
   resourcePath,
   resourceContent
 }: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent'>) {
+  useEffect(() => {
+    window.scroll({ top: 0 })
+  }, [gitRef, resourcePath])
+
   return (
     <Container className={css.resourceContent}>
       <ContentHeader

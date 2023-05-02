@@ -68,7 +68,9 @@ export function ContentHeader({
         />
         <Container>
           <Layout.Horizontal spacing="small">
-            <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef })}>
+            <Link
+              id="repository-ref-root"
+              to={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef })}>
               <Icon name={CodeIcon.Folder} />
             </Link>
             <Text color={Color.GREY_900}>/</Text>
