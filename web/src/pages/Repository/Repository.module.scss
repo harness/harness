@@ -1,6 +1,18 @@
 .main {
   min-height: var(--page-min-height, 100%);
   background-color: var(--white) !important;
+
+  &.withFileViewer {
+    &,
+    > div:first-of-type {
+      min-height: var(--page-min-height) !important;
+    }
+
+    > div:first-of-type {
+      display: flex;
+      flex-direction: column;
+    }
+  }
 }
 
 .emptyRepo {
