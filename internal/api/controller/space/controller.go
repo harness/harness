@@ -5,6 +5,7 @@
 package space
 
 import (
+	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
@@ -22,12 +23,14 @@ type Controller struct {
 	spaceStore     store.SpaceStore
 	repoStore      store.RepoStore
 	principalStore store.PrincipalStore
+	repoCtrl       *repo.Controller
 }
 
 func NewController(db *sqlx.DB, urlProvider *url.Provider,
 	uidCheck check.PathUID, authorizer authz.Authorizer,
 	pathStore store.PathStore, spaceStore store.SpaceStore,
-	repoStore store.RepoStore, principalStore store.PrincipalStore) *Controller {
+	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
+) *Controller {
 	return &Controller{
 		db:             db,
 		urlProvider:    urlProvider,
@@ -37,5 +40,6 @@ func NewController(db *sqlx.DB, urlProvider *url.Provider,
 		spaceStore:     spaceStore,
 		repoStore:      repoStore,
 		principalStore: principalStore,
+		repoCtrl:       repoCtrl,
 	}
 }

@@ -5,6 +5,7 @@
 package space
 
 import (
+	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
@@ -21,6 +22,6 @@ var WireSet = wire.NewSet(
 
 func ProvideController(db *sqlx.DB, urlProvider *url.Provider, uidCheck check.PathUID, authorizer authz.Authorizer,
 	pathStore store.PathStore, spaceStore store.SpaceStore, repoStore store.RepoStore,
-	principalStore store.PrincipalStore) *Controller {
-	return NewController(db, urlProvider, uidCheck, authorizer, pathStore, spaceStore, repoStore, principalStore)
+	principalStore store.PrincipalStore, repoCtrl *repo.Controller) *Controller {
+	return NewController(db, urlProvider, uidCheck, authorizer, pathStore, spaceStore, repoStore, principalStore, repoCtrl)
 }

@@ -7,7 +7,6 @@ package server
 
 import (
 	"context"
-
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	server2 "github.com/harness/gitness/gitrpc/server"
@@ -94,16 +93,6 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	pathUID := check.ProvidePathUIDCheck()
-	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, spaceStore, repoStore, principalStore)
-	accountClient, err := client.ProvideAccountClient(serviceJWTProvider, typesConfig)
-	if err != nil {
-		return nil, err
-	}
-	authenticator, err := authn.ProvideAuthenticator(controller, tokenClient, userClient, typesConfig, serviceAccountClient, serviceaccountController, serviceController, spaceController, accountClient)
-	if err != nil {
-		return nil, err
-	}
-	principalController := principal.NewController(principalStore)
 	gitrpcConfig, err := ProvideGitRPCClientConfig()
 	if err != nil {
 		return nil, err
@@ -113,6 +102,16 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, principalStore, gitrpcInterface)
+	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, spaceStore, repoStore, principalStore, repoController)
+	accountClient, err := client.ProvideAccountClient(serviceJWTProvider, typesConfig)
+	if err != nil {
+		return nil, err
+	}
+	authenticator, err := authn.ProvideAuthenticator(controller, tokenClient, userClient, typesConfig, serviceAccountClient, serviceaccountController, serviceController, spaceController, accountClient)
+	if err != nil {
+		return nil, err
+	}
+	principalController := principal.NewController(principalStore)
 	principalInfoView := database.ProvidePrincipalInfoView(db)
 	principalInfoCache := cache.ProvidePrincipalInfoCache(principalInfoView)
 	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)

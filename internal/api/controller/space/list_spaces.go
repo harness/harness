@@ -14,9 +14,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
-* ListSpaces lists the child spaces of a space.
- */
+// ListSpaces lists the child spaces of a space.
 func (c *Controller) ListSpaces(ctx context.Context, session *auth.Session,
 	spaceRef string, filter *types.SpaceFilter) ([]*types.Space, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
@@ -27,13 +25,17 @@ func (c *Controller) ListSpaces(ctx context.Context, session *auth.Session,
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, true); err != nil {
 		return nil, 0, err
 	}
+	return c.ListSpacesNoAuth(ctx, space.ID, filter)
+}
 
-	count, err := c.spaceStore.Count(ctx, space.ID, filter)
+// List spaces WITHOUT checking PermissionSpaceView.
+func (c *Controller) ListSpacesNoAuth(ctx context.Context, spaceID int64, filter *types.SpaceFilter) ([]*types.Space, int64, error) {
+	count, err := c.spaceStore.Count(ctx, spaceID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count child spaces: %w", err)
 	}
 
-	spaces, err := c.spaceStore.List(ctx, space.ID, filter)
+	spaces, err := c.spaceStore.List(ctx, spaceID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list child spaces: %w", err)
 	}

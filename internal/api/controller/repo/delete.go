@@ -28,16 +28,20 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef 
 		return err
 	}
 
-	if err = c.DeleteRepositoryRPC(ctx, session, repo); err != nil {
+	return c.DeleteNoAuth(ctx, session, repo)
+}
+
+func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, repo *types.Repository) error {
+	if err := c.DeleteRepositoryRPC(ctx, session, repo); err != nil {
 		return err
 	}
 
-	err = c.repoStore.Delete(ctx, repo.ID)
-	if err != nil {
+	if err := c.repoStore.Delete(ctx, repo.ID); err != nil {
 		return err
 	}
 	return nil
 }
+
 func (c *Controller) DeleteRepositoryRPC(ctx context.Context, session *auth.Session, repo *types.Repository) error {
 	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {

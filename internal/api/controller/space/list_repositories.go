@@ -14,9 +14,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
-* ListRepositories lists the repositories of a space.
- */
+// ListRepositories lists the repositories of a space.
 func (c *Controller) ListRepositories(ctx context.Context, session *auth.Session,
 	spaceRef string, filter *types.RepoFilter) ([]*types.Repository, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
@@ -27,13 +25,18 @@ func (c *Controller) ListRepositories(ctx context.Context, session *auth.Session
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionRepoView, true); err != nil {
 		return nil, 0, err
 	}
+	return c.ListRepositoriesNoAuth(ctx, space.ID, filter)
 
-	count, err := c.repoStore.Count(ctx, space.ID, filter)
+}
+
+// ListRepositoriesNoAuth list repositories WITHOUT checking for PermissionRepoView.
+func (c *Controller) ListRepositoriesNoAuth(ctx context.Context, spaceID int64, filter *types.RepoFilter) ([]*types.Repository, int64, error) {
+	count, err := c.repoStore.Count(ctx, spaceID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count child repos: %w", err)
 	}
 
-	repos, err := c.repoStore.List(ctx, space.ID, filter)
+	repos, err := c.repoStore.List(ctx, spaceID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list child repos: %w", err)
 	}
