@@ -1,0 +1,114 @@
+kind: pipeline
+name: test
+
+platform:
+  arch: amd64
+
+steps:
+- name: test
+  image: golang:1.14.15
+  commands:
+  - go test ./...
+  - go build -o /dev/null github.com/drone/drone/cmd/drone-server
+  - go build -o /dev/null -tags "oss nolimit" github.com/drone/drone/cmd/drone-server
+
+- name: build
+  image: golang:1.14.15
+  commands:
+  - sh scripts/build.sh
+  environment:
+    GOARCH: amd64
+    GOOS: linux
+
+- name: build-image
+  image: plugins/kaniko-ecr
+  settings:
+    dockerfile: docker/Dockerfile.server.linux.amd64
+    no_push: true
+  when:
+    event: [pull_request]
+
+trigger:
+  branch:
+  - release
+
+---
+kind: pipeline
+name: linux-amd64
+
+platform:
+  arch: amd64
+
+steps:
+- name: build
+  image: golang:1.14.15
+  commands:
+  - sh scripts/build.sh
+  environment:
+    GOARCH: amd64
+    GOOS: linux
+
+- name: publish
+  image: plugins/kaniko-ecr
+  settings:
+    create_repository: true
+    registry: public.ecr.aws/kanopy
+    repo: ${DRONE_REPO_NAME}
+    auto_tag: true
+    auto_tag_suffix: linux-amd64
+    dockerfile: docker/Dockerfile.server.linux.amd64
+    access_key:
+      from_secret: ecr_access_key
+    secret_key:
+      from_secret: ecr_secret_key
+
+trigger:
+  branch:
+  - release
+  event:
+  - push
+  - tag
+
+depends_on:
+- test
+
+---
+kind: pipeline
+name: linux-arm64
+
+platform:
+  arch: arm64
+  os: linux
+
+steps:
+- name: build
+  image: golang:1.14.15
+  commands:
+  - sh scripts/build.sh
+  environment:
+    GOARCH: arm64
+    GOOS: linux
+
+- name: publish
+  image: plugins/kaniko-ecr
+  settings:
+    create_repository: true
+    registry: public.ecr.aws/kanopy
+    repo: ${DRONE_REPO_NAME}
+    auto_tag: true
+    auto_tag_suffix: linux-arm64
+    dockerfile: docker/Dockerfile.server.linux.arm64
+    access_key:
+      from_secret: ecr_access_key
+    secret_key:
+      from_secret: ecr_secret_key
+
+trigger:
+  branch:
+  - release
+  event:
+  - push
+  - tag
+
+depends_on:
+- test
