@@ -28,29 +28,6 @@ const compilerOptions = {
   allowNonTsExtensions: true
 }
 
-function autoAdjustEditorHeight(editor: monacoEditor.editor.IStandaloneCodeEditor) {
-  // Adjust editor height based on its content
-  // https://github.com/microsoft/monaco-editor/issues/794#issuecomment-427092969
-  const LINE_HEIGHT = 18
-  const CONTAINER_GUTTER = 10
-  const editorNode = editor.getDomNode() as HTMLElement
-  const codeContainer = editorNode.getElementsByClassName('view-lines')[0]
-  let prevLineCount = 0
-  const adjustHeight = () => {
-    const _height =
-      codeContainer.childElementCount > prevLineCount
-        ? (codeContainer as HTMLElement).offsetHeight // unfold
-        : codeContainer.childElementCount * LINE_HEIGHT + CONTAINER_GUTTER // fold
-    prevLineCount = codeContainer.childElementCount
-
-    editorNode.style.height = Math.max(_height, 100) + 'px'
-    editor.layout()
-  }
-
-  setTimeout(adjustHeight, 0)
-  editor.onDidChangeModelDecorations(() => setTimeout(adjustHeight, 0))
-}
-
 const toOnOff = (flag: boolean) => (flag ? 'on' : 'off')
 
 export default function MonacoSourceCodeEditor({

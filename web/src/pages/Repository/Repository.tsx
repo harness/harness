@@ -12,6 +12,7 @@ import {
   Text
 } from '@harness/uicore'
 import { Falsy, Match, Truthy } from 'react-jsx-match'
+import cx from 'classnames'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { voidFn, getErrorMessage, permissionProps } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
@@ -50,7 +51,7 @@ export default function Repository() {
     }
   }, [resourceError])
   return (
-    <Container className={css.main}>
+    <Container className={cx(css.main, !!resourceContent && css.withFileViewer)}>
       <Match expr={fileNotExist}>
         <Truthy>
           <RepositoryHeader repoMetadata={repoMetadata as TypesRepository} />
