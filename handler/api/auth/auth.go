@@ -47,10 +47,21 @@ func HandleAuthentication(session core.Session) func(http.Handler) http.Handler 
 				log = log.WithField("user.admin", user.Admin)
 			}
 			log = log.WithField("user.login", user.Login)
+
+			log.WithField("authtype", authType(r)).Debugln("api: authentication successful")
+
 			ctx = logger.WithContext(ctx, log)
 			next.ServeHTTP(w, r.WithContext(
 				request.WithUser(ctx, user),
 			))
 		})
 	}
+}
+
+func authType(r *http.Request) string {
+	if r.Header.Get("Authorization") != "" || r.FormValue("access_token") != "" {
+		return "token"
+	}
+
+	return "cookie"
 }

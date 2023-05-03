@@ -36,20 +36,11 @@ func Middleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 		end := time.Now()
 		log.WithFields(logrus.Fields{
-			"method":   r.Method,
-			"request":  r.RequestURI,
-			"remote":   r.RemoteAddr,
-			"latency":  end.Sub(start),
-			"time":     end.Format(time.RFC3339),
-			"authtype": authType(r),
+			"method":  r.Method,
+			"request": r.RequestURI,
+			"remote":  r.RemoteAddr,
+			"latency": end.Sub(start),
+			"time":    end.Format(time.RFC3339),
 		}).Debug()
 	})
-}
-
-func authType(r *http.Request) string {
-	if r.Header.Get("Authorization") != "" || r.FormValue("access_token") != "" {
-		return "token"
-	}
-
-	return "cookie"
 }
