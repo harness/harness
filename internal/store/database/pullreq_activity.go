@@ -416,36 +416,40 @@ func (s *PullReqActivityStore) List(ctx context.Context, prID int64,
 
 func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
 	m := &types.PullReqActivity{
-		ID:                      act.ID,
-		Version:                 act.Version,
-		CreatedBy:               act.CreatedBy,
-		Created:                 act.Created,
-		Updated:                 act.Updated,
-		Edited:                  act.Edited,
-		Deleted:                 act.Deleted.Ptr(),
-		ParentID:                act.ParentID.Ptr(),
-		RepoID:                  act.RepoID,
-		PullReqID:               act.PullReqID,
-		Order:                   act.Order,
-		SubOrder:                act.SubOrder,
-		ReplySeq:                act.ReplySeq,
-		Type:                    act.Type,
-		Kind:                    act.Kind,
-		Text:                    act.Text,
-		PayloadRaw:              act.Payload,
-		Metadata:                make(map[string]interface{}),
-		ResolvedBy:              act.ResolvedBy.Ptr(),
-		Resolved:                act.Resolved.Ptr(),
-		Author:                  types.PrincipalInfo{},
-		Resolver:                nil,
-		Outdated:                act.Outdated.Ptr(),
-		CodeCommentMergeBaseSHA: act.CodeCommentMergeBaseSHA.Ptr(),
-		CodeCommentSourceSHA:    act.CodeCommentSourceSHA.Ptr(),
-		CodeCommentPath:         act.CodeCommentPath.Ptr(),
-		CodeCommentLineNew:      act.CodeCommentLineNew.Ptr(),
-		CodeCommentSpanNew:      act.CodeCommentSpanNew.Ptr(),
-		CodeCommentLineOld:      act.CodeCommentLineOld.Ptr(),
-		CodeCommentSpanOld:      act.CodeCommentSpanOld.Ptr(),
+		ID:         act.ID,
+		Version:    act.Version,
+		CreatedBy:  act.CreatedBy,
+		Created:    act.Created,
+		Updated:    act.Updated,
+		Edited:     act.Edited,
+		Deleted:    act.Deleted.Ptr(),
+		ParentID:   act.ParentID.Ptr(),
+		RepoID:     act.RepoID,
+		PullReqID:  act.PullReqID,
+		Order:      act.Order,
+		SubOrder:   act.SubOrder,
+		ReplySeq:   act.ReplySeq,
+		Type:       act.Type,
+		Kind:       act.Kind,
+		Text:       act.Text,
+		PayloadRaw: act.Payload,
+		Metadata:   make(map[string]interface{}),
+		ResolvedBy: act.ResolvedBy.Ptr(),
+		Resolved:   act.Resolved.Ptr(),
+		Author:     types.PrincipalInfo{},
+		Resolver:   nil,
+	}
+	if m.Type == enum.PullReqActivityTypeCodeComment && m.Kind == enum.PullReqActivityKindChangeComment {
+		m.CodeComment = &types.CodeCommentFields{
+			Outdated:     act.Outdated.Bool,
+			MergeBaseSHA: act.CodeCommentMergeBaseSHA.String,
+			SourceSHA:    act.CodeCommentSourceSHA.String,
+			Path:         act.CodeCommentPath.String,
+			LineNew:      int(act.CodeCommentLineNew.Int64),
+			SpanNew:      int(act.CodeCommentSpanNew.Int64),
+			LineOld:      int(act.CodeCommentLineOld.Int64),
+			SpanOld:      int(act.CodeCommentSpanOld.Int64),
+		}
 	}
 
 	_ = json.Unmarshal(act.Metadata, &m.Metadata)
@@ -455,34 +459,36 @@ func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {
 
 func mapInternalPullReqActivity(act *types.PullReqActivity) *pullReqActivity {
 	m := &pullReqActivity{
-		ID:                      act.ID,
-		Version:                 act.Version,
-		CreatedBy:               act.CreatedBy,
-		Created:                 act.Created,
-		Updated:                 act.Updated,
-		Edited:                  act.Edited,
-		Deleted:                 null.IntFromPtr(act.Deleted),
-		ParentID:                null.IntFromPtr(act.ParentID),
-		RepoID:                  act.RepoID,
-		PullReqID:               act.PullReqID,
-		Order:                   act.Order,
-		SubOrder:                act.SubOrder,
-		ReplySeq:                act.ReplySeq,
-		Type:                    act.Type,
-		Kind:                    act.Kind,
-		Text:                    act.Text,
-		Payload:                 act.PayloadRaw,
-		Metadata:                nil,
-		ResolvedBy:              null.IntFromPtr(act.ResolvedBy),
-		Resolved:                null.IntFromPtr(act.Resolved),
-		Outdated:                null.BoolFromPtr(act.Outdated),
-		CodeCommentMergeBaseSHA: null.StringFromPtr(act.CodeCommentMergeBaseSHA),
-		CodeCommentSourceSHA:    null.StringFromPtr(act.CodeCommentSourceSHA),
-		CodeCommentPath:         null.StringFromPtr(act.CodeCommentPath),
-		CodeCommentLineNew:      null.IntFromPtr(act.CodeCommentLineNew),
-		CodeCommentSpanNew:      null.IntFromPtr(act.CodeCommentSpanNew),
-		CodeCommentLineOld:      null.IntFromPtr(act.CodeCommentLineOld),
-		CodeCommentSpanOld:      null.IntFromPtr(act.CodeCommentSpanOld),
+		ID:         act.ID,
+		Version:    act.Version,
+		CreatedBy:  act.CreatedBy,
+		Created:    act.Created,
+		Updated:    act.Updated,
+		Edited:     act.Edited,
+		Deleted:    null.IntFromPtr(act.Deleted),
+		ParentID:   null.IntFromPtr(act.ParentID),
+		RepoID:     act.RepoID,
+		PullReqID:  act.PullReqID,
+		Order:      act.Order,
+		SubOrder:   act.SubOrder,
+		ReplySeq:   act.ReplySeq,
+		Type:       act.Type,
+		Kind:       act.Kind,
+		Text:       act.Text,
+		Payload:    act.PayloadRaw,
+		Metadata:   nil,
+		ResolvedBy: null.IntFromPtr(act.ResolvedBy),
+		Resolved:   null.IntFromPtr(act.Resolved),
+	}
+	if act.IsValidCodeComment() {
+		m.Outdated = null.BoolFrom(act.CodeComment.Outdated)
+		m.CodeCommentMergeBaseSHA = null.StringFrom(act.CodeComment.MergeBaseSHA)
+		m.CodeCommentSourceSHA = null.StringFrom(act.CodeComment.SourceSHA)
+		m.CodeCommentPath = null.StringFrom(act.CodeComment.Path)
+		m.CodeCommentLineNew = null.IntFrom(int64(act.CodeComment.LineNew))
+		m.CodeCommentSpanNew = null.IntFrom(int64(act.CodeComment.SpanNew))
+		m.CodeCommentLineOld = null.IntFrom(int64(act.CodeComment.LineOld))
+		m.CodeCommentSpanOld = null.IntFrom(int64(act.CodeComment.SpanOld))
 	}
 
 	m.Metadata, _ = json.Marshal(act.Metadata)

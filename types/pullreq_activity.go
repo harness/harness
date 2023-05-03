@@ -53,26 +53,13 @@ type PullReqActivity struct {
 	Author   PrincipalInfo  `json:"author"`
 	Resolver *PrincipalInfo `json:"resolver,omitempty"`
 
-	Outdated                *bool   `json:"outdated,omitempty"`
-	CodeCommentMergeBaseSHA *string `json:"code_comment_merge_base_sha,omitempty"`
-	CodeCommentSourceSHA    *string `json:"code_comment_source_sha,omitempty"`
-	CodeCommentPath         *string `json:"code_comment_path,omitempty"`
-	CodeCommentLineNew      *int64  `json:"code_comment_line_new,omitempty"`
-	CodeCommentSpanNew      *int64  `json:"code_comment_span_new,omitempty"`
-	CodeCommentLineOld      *int64  `json:"code_comment_line_old,omitempty"`
-	CodeCommentSpanOld      *int64  `json:"code_comment_span_old,omitempty"`
+	CodeComment *CodeCommentFields `json:"code_comment,omitempty"`
 }
 
 func (a *PullReqActivity) IsValidCodeComment() bool {
 	return a.Type == enum.PullReqActivityTypeCodeComment &&
 		a.Kind == enum.PullReqActivityKindChangeComment &&
-		a.CodeCommentMergeBaseSHA != nil &&
-		a.CodeCommentSourceSHA != nil &&
-		a.CodeCommentPath != nil &&
-		a.CodeCommentLineNew != nil &&
-		a.CodeCommentSpanNew != nil &&
-		a.CodeCommentLineOld != nil &&
-		a.CodeCommentSpanOld != nil
+		a.CodeComment != nil
 }
 
 func (a *PullReqActivity) AsCodeComment() *CodeComment {
@@ -80,17 +67,19 @@ func (a *PullReqActivity) AsCodeComment() *CodeComment {
 		return &CodeComment{}
 	}
 	return &CodeComment{
-		ID:           a.ID,
-		Version:      a.Version,
-		Updated:      a.Updated,
-		Outdated:     *a.Outdated,
-		MergeBaseSHA: *a.CodeCommentMergeBaseSHA,
-		SourceSHA:    *a.CodeCommentSourceSHA,
-		Path:         *a.CodeCommentPath,
-		LineNew:      int(*a.CodeCommentLineNew),
-		SpanNew:      int(*a.CodeCommentSpanNew),
-		LineOld:      int(*a.CodeCommentLineOld),
-		SpanOld:      int(*a.CodeCommentSpanOld),
+		ID:      a.ID,
+		Version: a.Version,
+		Updated: a.Updated,
+		CodeCommentFields: CodeCommentFields{
+			Outdated:     a.CodeComment.Outdated,
+			MergeBaseSHA: a.CodeComment.MergeBaseSHA,
+			SourceSHA:    a.CodeComment.SourceSHA,
+			Path:         a.CodeComment.Path,
+			LineNew:      a.CodeComment.LineNew,
+			SpanNew:      a.CodeComment.SpanNew,
+			LineOld:      a.CodeComment.LineOld,
+			SpanOld:      a.CodeComment.SpanOld,
+		},
 	}
 }
 
@@ -205,9 +194,10 @@ func (a PullRequestActivityPayloadComment) ActivityType() enum.PullReqActivityTy
 }
 
 type PullRequestActivityPayloadCodeComment struct {
-	Title  string   `json:"title"`
-	Lines  []string `json:"lines"`
-	AnyNew bool     `json:"any_new"`
+	Title        string   `json:"title"`
+	Lines        []string `json:"lines"`
+	LineStartNew bool     `json:"line_start_new"`
+	LineEndNew   bool     `json:"line_end_new"`
 }
 
 func (a *PullRequestActivityPayloadCodeComment) ActivityType() enum.PullReqActivityType {

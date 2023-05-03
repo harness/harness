@@ -120,9 +120,10 @@ func (c *Controller) CommentCreate(
 
 		setAsCodeComment(act, cut, in.Path, in.SourceCommitSHA)
 		_ = act.SetPayload(&types.PullRequestActivityPayloadCodeComment{
-			Title:  cut.LinesHeader,
-			Lines:  cut.Lines,
-			AnyNew: cut.AnyNew,
+			Title:        cut.LinesHeader,
+			Lines:        cut.Lines,
+			LineStartNew: in.LineStartNew,
+			LineEndNew:   in.LineEndNew,
 		})
 
 		err = c.writeActivity(ctx, pr, act)
@@ -273,19 +274,16 @@ func getCommentActivity(session *auth.Session, pr *types.PullReq, in *CommentCre
 
 func setAsCodeComment(a *types.PullReqActivity, cut gitrpc.DiffCutOutput, path, sourceCommitSHA string) {
 	var falseBool bool
-	newLine := int64(cut.Header.NewLine)
-	newSpan := int64(cut.Header.NewSpan)
-	oldLine := int64(cut.Header.OldLine)
-	oldSpan := int64(cut.Header.OldSpan)
-
 	a.Type = enum.PullReqActivityTypeCodeComment
 	a.Kind = enum.PullReqActivityKindChangeComment
-	a.Outdated = &falseBool
-	a.CodeCommentMergeBaseSHA = &cut.MergeBaseSHA
-	a.CodeCommentSourceSHA = &sourceCommitSHA
-	a.CodeCommentPath = &path
-	a.CodeCommentLineNew = &newLine
-	a.CodeCommentSpanNew = &newSpan
-	a.CodeCommentLineOld = &oldLine
-	a.CodeCommentSpanOld = &oldSpan
+	a.CodeComment = &types.CodeCommentFields{
+		Outdated:     falseBool,
+		MergeBaseSHA: cut.MergeBaseSHA,
+		SourceSHA:    sourceCommitSHA,
+		Path:         path,
+		LineNew:      cut.Header.NewLine,
+		SpanNew:      cut.Header.NewSpan,
+		LineOld:      cut.Header.OldLine,
+		SpanOld:      cut.Header.OldSpan,
+	}
 }
