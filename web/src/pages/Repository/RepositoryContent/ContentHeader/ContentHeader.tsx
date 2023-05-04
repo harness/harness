@@ -29,7 +29,7 @@ export function ContentHeader({
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
-        resourceType: 'CODE_REPO'
+        resourceType: 'CODE_REPOSITORY'
       },
       permissions: ['code_repo_push']
     },
