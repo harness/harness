@@ -32,7 +32,7 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
   const { showError } = useToaster()
   const hash = generateAlphaNumericHash(6)
 
-  const tokenData = hooks?.useGenerateToken(hash, currentUser.uid, flag)
+  const tokenData = hooks?.useGenerateToken?.(hash, currentUser.uid, flag)
   useEffect(() => {
     if (tokenData) {
       if (tokenData && tokenData?.status !== 400) {
