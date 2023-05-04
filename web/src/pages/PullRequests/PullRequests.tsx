@@ -70,7 +70,7 @@ export default function PullRequests() {
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
-        resourceType: 'CODE_REPO'
+        resourceType: 'CODE_REPOSITORY'
       },
       permissions: ['code_repo_push']
     },
@@ -156,7 +156,7 @@ export default function PullRequests() {
                 setSearchTerm(value)
                 setPage(1)
               }}
-            />
+          />
             <Container padding="xlarge">
               <Match expr={data?.length}>
                 <Truthy>

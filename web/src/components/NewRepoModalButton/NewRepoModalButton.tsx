@@ -297,9 +297,9 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
   const permResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
-        resourceType: 'CODE_REPO'
+        resourceType: 'CODE_REPOSITORY'
       },
-      permissions: ['code_repo_edit']
+      permissions: ['code_repo_push']
     },
     [space]
   )

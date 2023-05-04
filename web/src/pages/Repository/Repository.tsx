@@ -137,7 +137,7 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
-        resourceType: 'CODE_REPO'
+        resourceType: 'CODE_REPOSITORY'
       },
       permissions: ['code_repo_push']
     },
