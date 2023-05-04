@@ -22,4 +22,43 @@
       fill: none !important;
     }
   }
+
+  .refRoot,
+  .rootSlash {
+    align-self: center;
+  }
+
+  :global {
+    .bp3-breadcrumb,
+    .bp3-breadcrumb-current,
+    .bp3-breadcrumbs-collapsed {
+      white-space: nowrap !important;
+      font-size: var(--typography-size, var(--font-size));
+      font-weight: var(--typography-weight, normal);
+      font-family: var(--font-family);
+      color: var(--grey-900);
+      line-height: var(--typography-line-height, var(--line-height));
+    }
+
+    .bp3-breadcrumbs > li::after {
+      background: none;
+      content: '/';
+      color: var(--grey-900);
+      background: none;
+      text-align: center;
+      height: 100%;
+    }
+
+    .bp3-breadcrumbs-collapsed {
+      background: var(--grey-100);
+    }
+  }
+
+  .breadcrumbItem {
+    white-space: nowrap !important;
+  }
+}
+
+.foo {
+  white-space: nowrap;
 }

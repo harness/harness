@@ -13,7 +13,7 @@ import {
   VisualYamlToggle
 } from '@harness/uicore'
 import { Link, useHistory } from 'react-router-dom'
-import ReactJoin from 'react-join'
+import { Breadcrumbs, IBreadcrumbProps } from '@blueprintjs/core'
 import cx from 'classnames'
 import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
 import type { RepoFileContent } from 'services/code'
@@ -99,6 +99,18 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
   }, [fileName, parentPath, language, content, verifyFolder])
   const [selectedView, setSelectedView] = useState(VisualYamlSelectedView.VISUAL)
   const [dirty, setDirty] = useState(false)
+  const breadcrumbs = useMemo(() => {
+    return parentPath.split('/').map((_path, index, paths) => {
+      const pathAtIndex = paths.slice(0, index + 1).join('/')
+      const href = routes.toCODERepository({
+        repoPath: repoMetadata.path as string,
+        gitRef,
+        resourcePath: pathAtIndex
+      })
+
+      return { href, text: _path }
+    })
+  }, [parentPath, gitRef, repoMetadata.path, routes])
 
   useEffect(() => {
     setDirty(!(!fileName || (isUpdate && content === originalContent)))
@@ -135,7 +147,7 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
   return (
     <Container className={css.container}>
       <Layout.Horizontal className={css.heading}>
-        <Container>
+        <Container style={{ maxWidth: 'calc(100vw - 800px)' }}>
           <Layout.Horizontal spacing="small" className={css.path}>
             <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef })}>
               <Icon name="code-folder" padding={{ right: 'xsmall' }} />
@@ -143,23 +155,16 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
             <PathSeparator />
             {parentPath && (
               <>
-                <ReactJoin separator={<PathSeparator />}>
-                  {parentPath.split(FILE_SEPERATOR).map((_path, index, paths) => {
-                    const pathAtIndex = paths.slice(0, index + 1).join('/')
-
+                <Breadcrumbs
+                  items={breadcrumbs}
+                  breadcrumbRenderer={({ text, href }: IBreadcrumbProps) => {
                     return (
-                      <Link
-                        key={_path + index}
-                        to={routes.toCODERepository({
-                          repoPath: repoMetadata.path as string,
-                          gitRef,
-                          resourcePath: pathAtIndex
-                        })}>
-                        <Text color={Color.GREY_900}>{_path}</Text>
+                      <Link to={href as string}>
+                        <Text color={Color.GREY_900}>{text}</Text>
                       </Link>
                     )
-                  })}
-                </ReactJoin>
+                  }}
+                />
                 <PathSeparator />
               </>
             )}
