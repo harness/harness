@@ -9,12 +9,16 @@ type CodeComment struct {
 	Version int64 `db:"pullreq_activity_version"`
 	Updated int64 `db:"pullreq_activity_updated"`
 
-	Outdated     bool   `db:"pullreq_activity_outdated"`
-	MergeBaseSHA string `db:"pullreq_activity_code_comment_merge_base_sha"`
-	SourceSHA    string `db:"pullreq_activity_code_comment_source_sha"`
-	Path         string `db:"pullreq_activity_code_comment_path"`
-	LineNew      int    `db:"pullreq_activity_code_comment_line_new"`
-	SpanNew      int    `db:"pullreq_activity_code_comment_span_new"`
-	LineOld      int    `db:"pullreq_activity_code_comment_line_old"`
-	SpanOld      int    `db:"pullreq_activity_code_comment_span_old"`
+	CodeCommentFields
+}
+
+type CodeCommentFields struct {
+	Outdated     bool   `db:"pullreq_activity_outdated" json:"outdated"`
+	MergeBaseSHA string `db:"pullreq_activity_code_comment_merge_base_sha" json:"merge_base_sha"`
+	SourceSHA    string `db:"pullreq_activity_code_comment_source_sha" json:"source_sha"`
+	Path         string `db:"pullreq_activity_code_comment_path" json:"path"`
+	LineNew      int    `db:"pullreq_activity_code_comment_line_new" json:"line_new"`
+	SpanNew      int    `db:"pullreq_activity_code_comment_span_new" json:"span_new"`
+	LineOld      int    `db:"pullreq_activity_code_comment_line_old" json:"line_old"`
+	SpanOld      int    `db:"pullreq_activity_code_comment_span_old" json:"span_old"`
 }

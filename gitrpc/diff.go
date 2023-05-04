@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/harness/gitness/gitrpc/internal/streamio"
 	"github.com/harness/gitness/gitrpc/internal/types"
@@ -224,7 +223,6 @@ type DiffCutOutput struct {
 	Lines           []string
 	MergeBaseSHA    string
 	LatestSourceSHA string
-	AnyNew          bool
 }
 
 type DiffCutParams struct {
@@ -260,14 +258,6 @@ func (c *Client) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOut
 		return DiffCutOutput{}, processRPCErrorf(err, "failed to get git diff sub hunk")
 	}
 
-	var anyNew bool
-	for _, line := range result.Lines {
-		if strings.HasPrefix(line, "+") {
-			anyNew = true
-			break
-		}
-	}
-
 	hunkHeader := types.HunkHeader{
 		OldLine: int(result.HunkHeader.OldLine),
 		OldSpan: int(result.HunkHeader.OldSpan),
@@ -282,6 +272,5 @@ func (c *Client) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOut
 		Lines:           result.Lines,
 		MergeBaseSHA:    result.MergeBaseSha,
 		LatestSourceSHA: result.LatestSourceSha,
-		AnyNew:          anyNew,
 	}, nil
 }
