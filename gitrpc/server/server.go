@@ -25,7 +25,7 @@ import (
 
 const (
 	repoSubdirName           = "repos"
-	reposGraveyardSubdirName = "cleanup"
+	ReposGraveyardSubdirName = "cleanup"
 )
 
 type Server struct {
@@ -71,7 +71,7 @@ func NewServer(config Config) (*Server, error) {
 	store := storage.NewLocalStore()
 	// create a temp dir for deleted repositories
 	// this dir should get cleaned up peridocally if it's not empty
-	reposGraveyard := filepath.Join(config.GitRoot, reposGraveyardSubdirName)
+	reposGraveyard := filepath.Join(config.GitRoot, ReposGraveyardSubdirName)
 	if _, errdir := os.Stat(reposGraveyard); os.IsNotExist(errdir) {
 		if errdir = os.MkdirAll(reposGraveyard, 0o700); errdir != nil {
 			return nil, errdir

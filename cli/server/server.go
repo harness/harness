@@ -83,16 +83,15 @@ func (c *command) run(*kingpin.ParseContext) error {
 		Stringer("version", version.Version).
 		Msg("server started")
 
-	// start the purge routine.
-	g.Go(func() error {
-		system.nightly.Run(gCtx)
-		return nil
-	})
-	log.Info().Msg("nightly subroutine started")
-
 	// start grpc server
 	g.Go(system.gitRPCServer.Start)
 	log.Info().Msg("gitrpc server started")
+
+	// run the gitrpc cron jobs
+	g.Go(func() error {
+		return system.gitRPCCronMngr.Run(ctx)
+	})
+	log.Info().Msg("gitrpc cron manager subroutine started")
 
 	// wait until the error group context is done
 	<-gCtx.Done()

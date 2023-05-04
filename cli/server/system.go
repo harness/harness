@@ -6,29 +6,29 @@ package server
 
 import (
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
+	gitrpccron "github.com/harness/gitness/gitrpc/server/cron"
 	"github.com/harness/gitness/internal/bootstrap"
-	"github.com/harness/gitness/internal/cron"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 )
 
 // system stores high level system sub-routines.
 type system struct {
-	bootstrap    bootstrap.Bootstrap
-	server       *server.Server
-	gitRPCServer *gitrpcserver.Server
-	nightly      *cron.Nightly
-	services     services.Services
+	bootstrap      bootstrap.Bootstrap
+	server         *server.Server
+	gitRPCServer   *gitrpcserver.Server
+	services       services.Services
+	gitRPCCronMngr *gitrpccron.CronManager
 }
 
 // newSystem returns a new system structure.
 func newSystem(bootstrap bootstrap.Bootstrap, server *server.Server, gitRPCServer *gitrpcserver.Server,
-	nightly *cron.Nightly, services services.Services) *system {
+	gitrpccron *gitrpccron.CronManager, services services.Services) *system {
 	return &system{
-		bootstrap:    bootstrap,
-		server:       server,
-		gitRPCServer: gitRPCServer,
-		nightly:      nightly,
-		services:     services,
+		bootstrap:      bootstrap,
+		server:         server,
+		gitRPCServer:   gitRPCServer,
+		services:       services,
+		gitRPCCronMngr: gitrpccron,
 	}
 }
