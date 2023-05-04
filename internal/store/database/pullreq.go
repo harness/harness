@@ -54,7 +54,8 @@ type pullReq struct {
 	State   enum.PullReqState `db:"pullreq_state"`
 	IsDraft bool              `db:"pullreq_is_draft"`
 
-	CommentCount int `db:"pullreq_comment_count"`
+	CommentCount    int `db:"pullreq_comment_count"`
+	UnresolvedCount int `db:"pullreq_unresolved_count"`
 
 	Title       string `db:"pullreq_title"`
 	Description string `db:"pullreq_description"`
@@ -90,6 +91,7 @@ const (
 		,pullreq_state
 		,pullreq_is_draft
 		,pullreq_comment_count
+		,pullreq_unresolved_count
 		,pullreq_title
 		,pullreq_description
 		,pullreq_source_repo_id
@@ -178,6 +180,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_state
 		,pullreq_is_draft
 		,pullreq_comment_count
+		,pullreq_unresolved_count
 		,pullreq_title
 		,pullreq_description
 		,pullreq_source_repo_id
@@ -204,6 +207,7 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 		,:pullreq_state
 		,:pullreq_is_draft
 		,:pullreq_comment_count
+		,:pullreq_unresolved_count
 		,:pullreq_title
 		,:pullreq_description
 		,:pullreq_source_repo_id
@@ -247,6 +251,7 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		,pullreq_state = :pullreq_state
 		,pullreq_is_draft = :pullreq_is_draft
 		,pullreq_comment_count = :pullreq_comment_count
+		,pullreq_unresolved_count = :pullreq_unresolved_count
 		,pullreq_title = :pullreq_title
 		,pullreq_description = :pullreq_description
 		,pullreq_activity_seq = :pullreq_activity_seq
@@ -288,8 +293,7 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 		return store.ErrVersionConflict
 	}
 
-	pr.Version = dbPR.Version
-	pr.Updated = dbPR.Updated
+	*pr = *s.mapPullReq(ctx, dbPR)
 
 	return nil
 }
@@ -468,6 +472,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		State:            pr.State,
 		IsDraft:          pr.IsDraft,
 		CommentCount:     pr.CommentCount,
+		UnresolvedCount:  pr.UnresolvedCount,
 		Title:            pr.Title,
 		Description:      pr.Description,
 		SourceRepoID:     pr.SourceRepoID,
@@ -487,7 +492,8 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		Author:           types.PrincipalInfo{},
 		Merger:           nil,
 		Stats: types.PullReqStats{
-			Conversations: pr.CommentCount,
+			Conversations:   pr.CommentCount,
+			UnresolvedCount: pr.UnresolvedCount,
 			DiffStats: types.DiffStats{
 				Commits:      0,
 				FilesChanged: 0,
@@ -508,6 +514,7 @@ func mapInternalPullReq(pr *types.PullReq) *pullReq {
 		State:            pr.State,
 		IsDraft:          pr.IsDraft,
 		CommentCount:     pr.CommentCount,
+		UnresolvedCount:  pr.UnresolvedCount,
 		Title:            pr.Title,
 		Description:      pr.Description,
 		SourceRepoID:     pr.SourceRepoID,

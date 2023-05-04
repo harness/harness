@@ -121,7 +121,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	return repo, nil
 }
 
-func (c *Controller) getCommentCheckEditAccess(ctx context.Context,
+func (c *Controller) getCommentCheckModifyAccess(ctx context.Context,
 	session *auth.Session, pr *types.PullReq, commentID int64,
 ) (*types.PullReqActivity, error) {
 	if commentID <= 0 {
@@ -133,7 +133,7 @@ func (c *Controller) getCommentCheckEditAccess(ctx context.Context,
 		return nil, fmt.Errorf("failed to find comment by ID: %w", err)
 	}
 
-	if comment == nil || comment.Type != enum.PullReqActivityTypeComment {
+	if comment == nil {
 		return nil, usererror.ErrNotFound
 	}
 
@@ -145,8 +145,38 @@ func (c *Controller) getCommentCheckEditAccess(ctx context.Context,
 		return nil, usererror.BadRequest("Can't update a comment created by the system.")
 	}
 
+	if comment.Type != enum.PullReqActivityTypeComment && comment.Type != enum.PullReqActivityTypeCodeComment {
+		return nil, usererror.BadRequest("Only comments and code comments can be edited.")
+	}
+
+	return comment, nil
+}
+
+func (c *Controller) getCommentCheckEditAccess(ctx context.Context,
+	session *auth.Session, pr *types.PullReq, commentID int64,
+) (*types.PullReqActivity, error) {
+	comment, err := c.getCommentCheckModifyAccess(ctx, session, pr, commentID)
+	if err != nil {
+		return nil, err
+	}
+
 	if comment.CreatedBy != session.Principal.ID {
 		return nil, usererror.BadRequest("Only own comments may be updated.")
+	}
+
+	return comment, nil
+}
+
+func (c *Controller) getCommentCheckChangeStatusAccess(ctx context.Context,
+	session *auth.Session, pr *types.PullReq, commentID int64,
+) (*types.PullReqActivity, error) {
+	comment, err := c.getCommentCheckModifyAccess(ctx, session, pr, commentID)
+	if err != nil {
+		return nil, err
+	}
+
+	if comment.SubOrder != 0 {
+		return nil, usererror.BadRequest("Can't change status of replies.")
 	}
 
 	return comment, nil

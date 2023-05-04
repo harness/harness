@@ -18,6 +18,11 @@ type CommentUpdateInput struct {
 	Text string `json:"text"`
 }
 
+func (in *CommentUpdateInput) Validate() error {
+	// TODO: Check Text length
+	return nil
+}
+
 func (in *CommentUpdateInput) hasChanges(act *types.PullReqActivity) bool {
 	return in.Text != act.Text
 }
@@ -41,6 +46,10 @@ func (c *Controller) CommentUpdate(
 		return nil, fmt.Errorf("failed to find pull request by number: %w", err)
 	}
 
+	if errValidate := in.Validate(); errValidate != nil {
+		return nil, errValidate
+	}
+
 	act, err := c.getCommentCheckEditAccess(ctx, session, pr, commentID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get comment: %w", err)
@@ -50,12 +59,12 @@ func (c *Controller) CommentUpdate(
 		return act, nil
 	}
 
-	now := time.Now().UnixMilli()
-	act.Edited = now
-
-	act.Text = in.Text
-
-	err = c.activityStore.Update(ctx, act)
+	act, err = c.activityStore.UpdateOptLock(ctx, act, func(act *types.PullReqActivity) error {
+		now := time.Now().UnixMilli()
+		act.Edited = now
+		act.Text = in.Text
+		return nil
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to update comment: %w", err)
 	}

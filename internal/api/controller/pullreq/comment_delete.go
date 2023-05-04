@@ -10,7 +10,10 @@ import (
 	"time"
 
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 // CommentDelete deletes a pull request comment.
@@ -40,12 +43,27 @@ func (c *Controller) CommentDelete(
 		return nil
 	}
 
-	now := time.Now().UnixMilli()
-	act.Deleted = &now
+	isBlocking := act.IsBlocking()
 
-	err = c.activityStore.Update(ctx, act)
+	_, err = c.activityStore.UpdateOptLock(ctx, act, func(act *types.PullReqActivity) error {
+		now := time.Now().UnixMilli()
+		act.Deleted = &now
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("failed to mark comment as deleted: %w", err)
+	}
+
+	_, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+		pr.CommentCount--
+		if isBlocking {
+			pr.UnresolvedCount--
+		}
+		return nil
+	})
+	if err != nil {
+		// non-critical error
+		log.Ctx(ctx).Err(err).Msgf("failed to decrement pull request comment counters")
 	}
 
 	return nil

@@ -92,6 +92,11 @@ func (a *PullReqActivity) IsReply() bool {
 	return a.SubOrder > 0
 }
 
+// IsBlocking returns true if the pull request activity (comment/code-comment) is blocking the pull request merge.
+func (a *PullReqActivity) IsBlocking() bool {
+	return a.SubOrder == 0 && a.Resolved == nil && a.Deleted == nil && a.Kind != enum.PullReqActivityKindSystem
+}
+
 // SetPayload sets the payload and verifies it's of correct type for the activity.
 func (a *PullReqActivity) SetPayload(payload PullReqActivityPayload) error {
 	if payload == nil {

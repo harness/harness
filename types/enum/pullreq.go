@@ -111,6 +111,30 @@ var pullReqActivityKinds = sortEnum([]PullReqActivityKind{
 	PullReqActivityKindChangeComment,
 })
 
+// PullReqCommentStatus defines status of a pull request comment.
+type PullReqCommentStatus string
+
+func (PullReqCommentStatus) Enum() []interface{} { return toInterfaceSlice(pullReqCommentStatuses) }
+
+func (s PullReqCommentStatus) Sanitize() (PullReqCommentStatus, bool) {
+	return Sanitize(s, GetAllPullReqCommentStatuses)
+}
+
+func GetAllPullReqCommentStatuses() ([]PullReqCommentStatus, PullReqCommentStatus) {
+	return pullReqCommentStatuses, "" // No default value
+}
+
+// PullReqCommentStatus enumeration.
+const (
+	PullReqCommentStatusActive   PullReqCommentStatus = "active"
+	PullReqCommentStatusResolved PullReqCommentStatus = "resolved"
+)
+
+var pullReqCommentStatuses = sortEnum([]PullReqCommentStatus{
+	PullReqCommentStatusActive,
+	PullReqCommentStatusResolved,
+})
+
 // PullReqReviewDecision defines state of a pull request review.
 type PullReqReviewDecision string
 

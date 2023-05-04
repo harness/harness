@@ -266,6 +266,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 				r.Route(fmt.Sprintf("/{%s}", request.PathParamPullReqCommentID), func(r chi.Router) {
 					r.Patch("/", handlerpullreq.HandleCommentUpdate(pullreqCtrl))
 					r.Delete("/", handlerpullreq.HandleCommentDelete(pullreqCtrl))
+					r.Put("/status", handlerpullreq.HandleCommentStatus(pullreqCtrl))
 				})
 			})
 			r.Route("/reviewers", func(r chi.Router) {
