@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Container, Layout, Button, FlexExpander, ButtonVariation, Text, Icon, Color } from '@harness/uicore'
-import ReactJoin from 'react-join'
+import { Breadcrumbs, IBreadcrumbProps } from '@blueprintjs/core'
 import { Link, useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -48,6 +48,18 @@ export function ContentHeader({
     suggestedSourceBranch: gitRef,
     showSuccessMessage: true
   })
+  const breadcrumbs = useMemo(() => {
+    return resourcePath.split('/').map((_path, index, paths) => {
+      const pathAtIndex = paths.slice(0, index + 1).join('/')
+      const href = routes.toCODERepository({
+        repoPath: repoMetadata.path as string,
+        gitRef,
+        resourcePath: pathAtIndex
+      })
+
+      return { href, text: _path }
+    })
+  }, [resourcePath, gitRef, repoMetadata.path, routes])
 
   return (
     <Container className={css.main}>
@@ -66,31 +78,27 @@ export function ContentHeader({
           }}
           onCreateBranch={openCreateNewBranchModal}
         />
-        <Container>
+        <Container style={{ maxWidth: 'calc(100vw - 750px)' }}>
           <Layout.Horizontal spacing="small">
             <Link
               id="repository-ref-root"
+              className={css.refRoot}
               to={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef })}>
               <Icon name={CodeIcon.Folder} />
             </Link>
-            <Text color={Color.GREY_900}>/</Text>
-            <ReactJoin separator={<Text color={Color.GREY_900}>/</Text>}>
-              {resourcePath.split('/').map((_path, index, paths) => {
-                const pathAtIndex = paths.slice(0, index + 1).join('/')
-
+            <Text className={css.rootSlash} color={Color.GREY_900}>
+              /
+            </Text>
+            <Breadcrumbs
+              items={breadcrumbs}
+              breadcrumbRenderer={({ text, href }: IBreadcrumbProps) => {
                 return (
-                  <Link
-                    key={_path + index}
-                    to={routes.toCODERepository({
-                      repoPath: repoMetadata.path as string,
-                      gitRef,
-                      resourcePath: pathAtIndex
-                    })}>
-                    <Text color={Color.GREY_900}>{_path}</Text>
+                  <Link to={href as string}>
+                    <Text color={Color.GREY_900}>{text}</Text>
                   </Link>
                 )
-              })}
-            </ReactJoin>
+              }}
+            />
           </Layout.Horizontal>
         </Container>
         <FlexExpander />
