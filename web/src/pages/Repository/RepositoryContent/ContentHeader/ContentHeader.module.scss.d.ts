@@ -6,6 +6,5 @@ declare const styles: {
   readonly refRoot: string
   readonly rootSlash: string
   readonly breadcrumbItem: string
-  readonly foo: string
 }
 export default styles
