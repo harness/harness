@@ -287,20 +287,25 @@ func (s *PullReqActivityStore) Update(ctx context.Context, act *types.PullReqAct
 		return store.ErrVersionConflict
 	}
 
-	act.Version = dbAct.Version
-	act.Updated = dbAct.Updated
+	*act = *s.mapPullReqActivity(ctx, dbAct)
 
 	return nil
 }
 
-// UpdateReplySeq updates the pull request activity's reply sequence.
-func (s *PullReqActivityStore) UpdateReplySeq(ctx context.Context,
-	act *types.PullReqActivity) (*types.PullReqActivity, error) {
+// UpdateOptLock updates the pull request using the optimistic locking mechanism.
+func (s *PullReqActivityStore) UpdateOptLock(ctx context.Context,
+	act *types.PullReqActivity,
+	mutateFn func(act *types.PullReqActivity) error,
+) (*types.PullReqActivity, error) {
 	for {
 		dup := *act
 
-		dup.ReplySeq++
-		err := s.Update(ctx, &dup)
+		err := mutateFn(&dup)
+		if err != nil {
+			return nil, err
+		}
+
+		err = s.Update(ctx, &dup)
 		if err == nil {
 			return &dup, nil
 		}
@@ -412,6 +417,32 @@ func (s *PullReqActivityStore) List(ctx context.Context, prID int64,
 	}
 
 	return result, nil
+}
+
+func (s *PullReqActivityStore) CountUnresolved(ctx context.Context, prID int64) (int, error) {
+	stmt := builder.
+		Select("count(*)").
+		From("pullreq_activities").
+		Where("pullreq_activity_pullreq_id = ?", prID).
+		Where("pullreq_activity_sub_order = 0").
+		Where("pullreq_activity_resolved IS NULL").
+		Where("pullreq_activity_deleted IS NULL").
+		Where("pullreq_activity_kind <> ?", enum.PullReqActivityKindSystem)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, processSQLErrorf(err, "Failed executing count unresolved query")
+	}
+
+	return count, nil
 }
 
 func mapPullReqActivity(act *pullReqActivity) *types.PullReqActivity {

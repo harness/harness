@@ -256,7 +256,7 @@ type (
 		Create(ctx context.Context, pullreq *types.PullReq) error
 
 		// Update the pull request. It will set new values to the Version and Updated fields.
-		Update(ctx context.Context, repo *types.PullReq) error
+		Update(ctx context.Context, pr *types.PullReq) error
 
 		// UpdateOptLock the pull request details using the optimistic locking mechanism.
 		UpdateOptLock(ctx context.Context, pr *types.PullReq,
@@ -281,7 +281,7 @@ type (
 		Find(ctx context.Context, id int64) (*types.PullReqActivity, error)
 
 		// Create a new pull request activity. Value of the Order field should be fetched with UpdateActivitySeq.
-		// Value of the SubOrder field (for replies) should be fetched with UpdateReplySeq (non-replies have 0).
+		// Value of the SubOrder field (for replies) should be the incremented ReplySeq field (non-replies have 0).
 		Create(ctx context.Context, act *types.PullReqActivity) error
 
 		// CreateWithPayload create a new system activity from the provided payload.
@@ -291,12 +291,17 @@ type (
 		// Update the pull request activity. It will set new values to the Version and Updated fields.
 		Update(ctx context.Context, act *types.PullReqActivity) error
 
-		// UpdateReplySeq the pull request activity's reply sequence number.
-		// It will set new values to the ReplySeq, Version and Updated fields.
-		UpdateReplySeq(ctx context.Context, act *types.PullReqActivity) (*types.PullReqActivity, error)
+		// UpdateOptLock updates the pull request activity using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context,
+			act *types.PullReqActivity,
+			mutateFn func(act *types.PullReqActivity) error,
+		) (*types.PullReqActivity, error)
 
 		// Count returns number of pull request activities in a pull request.
 		Count(ctx context.Context, prID int64, opts *types.PullReqActivityFilter) (int64, error)
+
+		// CountUnresolved returns number of unresolved comments.
+		CountUnresolved(ctx context.Context, prID int64) (int, error)
 
 		// List returns a list of pull request activities in a pull request (a timeline).
 		List(ctx context.Context, prID int64, opts *types.PullReqActivityFilter) ([]*types.PullReqActivity, error)

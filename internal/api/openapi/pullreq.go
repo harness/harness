@@ -71,7 +71,11 @@ type commentUpdatePullReqRequest struct {
 
 type commentDeletePullReqRequest struct {
 	pullReqCommentRequest
-	pullreq.CommentUpdateInput
+}
+
+type commentStatusPullReqRequest struct {
+	pullReqCommentRequest
+	pullreq.CommentStatusInput
 }
 
 type reviewerListPullReqRequest struct {
@@ -363,6 +367,18 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&commentDeletePullReq, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}", commentDeletePullReq)
+
+	commentStatusPullReq := openapi3.Operation{}
+	commentStatusPullReq.WithTags("pullreq")
+	commentStatusPullReq.WithMapOfAnything(map[string]interface{}{"operationId": "commentStatusPullReq"})
+	_ = reflector.SetRequest(&commentStatusPullReq, new(commentStatusPullReqRequest), http.MethodPut)
+	_ = reflector.SetJSONResponse(&commentStatusPullReq, new(types.PullReqActivity), http.StatusOK)
+	_ = reflector.SetJSONResponse(&commentStatusPullReq, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&commentStatusPullReq, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&commentStatusPullReq, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&commentStatusPullReq, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPut,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}/status", commentStatusPullReq)
 
 	reviewerAdd := openapi3.Operation{}
 	reviewerAdd.WithTags("pullreq")

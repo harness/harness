@@ -169,11 +169,14 @@ func (c *Controller) CommentCreate(
 
 	_, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 		pr.CommentCount++
+		if act.IsBlocking() {
+			pr.UnresolvedCount++
+		}
 		return nil
 	})
 	if err != nil {
 		// non-critical error
-		log.Ctx(ctx).Err(err).Msgf("failed to increment pull request comment counter")
+		log.Ctx(ctx).Err(err).Msgf("failed to increment pull request comment counters")
 	}
 
 	return act, nil
@@ -226,7 +229,10 @@ func (c *Controller) writeActivity(ctx context.Context, pr *types.PullReq, act *
 // sets the correct Order and SubOrder values and writes the activity to the database.
 // Even if the writing fails, the updating of the sequence number can succeed.
 func (c *Controller) writeReplyActivity(ctx context.Context, parent, act *types.PullReqActivity) error {
-	parentUpd, err := c.activityStore.UpdateReplySeq(ctx, parent)
+	parentUpd, err := c.activityStore.UpdateOptLock(ctx, parent, func(act *types.PullReqActivity) error {
+		act.ReplySeq++
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("failed to get pull request activity number: %w", err)
 	}
