@@ -48,7 +48,6 @@ func TestCronManagerNonFatalErr(t *testing.T) {
 	case <-time.After(1500 * time.Microsecond):
 		// cron manager should keep running
 	}
-
 }
 func TestCronManagerNewTask(t *testing.T) {
 	cmngr := NewCronManager()

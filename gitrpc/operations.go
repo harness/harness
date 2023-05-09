@@ -96,11 +96,10 @@ func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesParams) (Co
 		}
 
 		// send file content
-		n := 0
 		buffer := make([]byte, FileTransferChunkSize)
 		reader := bytes.NewReader(action.Payload)
 		for {
-			n, err = reader.Read(buffer)
+			n, err := reader.Read(buffer)
 			if errors.Is(err, io.EOF) {
 				break
 			}
