@@ -8,10 +8,9 @@ import (
 	context "context"
 	reflect "reflect"
 
+	gomock "github.com/golang/mock/gomock"
 	types "github.com/harness/gitness/types"
 	enum "github.com/harness/gitness/types/enum"
-
-	gomock "github.com/golang/mock/gomock"
 )
 
 // MockPrincipalStore is a mock of PrincipalStore interface.

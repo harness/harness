@@ -59,3 +59,13 @@ type Identity struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
+
+type RenameDetails struct {
+	IsRenamed bool   `json:"is_renamed"`
+	OldPath   string `json:"old_path"`
+}
+
+type ListCommitResponse struct {
+	Commits       []Commit      `json:"commits"`
+	RenameDetails RenameDetails `json:"rename_details"`
+}
