@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/harness/gitness/gitrpc"
-	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/store"
@@ -24,11 +23,16 @@ import (
 )
 
 type ReviewSubmitInput struct {
-	Decision enum.PullReqReviewDecision `json:"decision"`
-	Message  string                     `json:"message"`
+	CommitSHA string                     `json:"commit_sha"`
+	Decision  enum.PullReqReviewDecision `json:"decision"`
+	Message   string                     `json:"message"`
 }
 
 func (in *ReviewSubmitInput) Validate() error {
+	if in.CommitSHA == "" {
+		return usererror.BadRequest("CommitSHA is a mandatory field")
+	}
+
 	decision, ok := in.Decision.Sanitize()
 	if !ok || decision == enum.PullReqReviewDecisionPending {
 		msg := fmt.Sprintf("Decision must be: %q, %q or %q.",
@@ -72,18 +76,15 @@ func (c *Controller) ReviewSubmit(
 		return nil, usererror.BadRequest("Can't submit review to own pull requests.")
 	}
 
-	ref, err := c.gitRPCClient.GetRef(ctx, gitrpc.GetRefParams{
+	commit, err := c.gitRPCClient.GetCommit(ctx, &gitrpc.GetCommitParams{
 		ReadParams: gitrpc.ReadParams{RepoUID: repo.GitUID},
-		Name:       pr.TargetBranch,
-		Type:       gitrpcenum.RefTypeBranch,
+		SHA:        in.CommitSHA,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get git branch sha: %w", err)
 	}
 
-	if ref.SHA == "" {
-		return nil, usererror.BadRequest("Failed to get branch SHA. Does the branch still exist?")
-	}
+	commitSHA := commit.Commit.SHA
 
 	var review *types.PullReqReview
 
@@ -96,7 +97,7 @@ func (c *Controller) ReviewSubmit(
 			Updated:   now,
 			PullReqID: pr.ID,
 			Decision:  in.Decision,
-			SHA:       ref.SHA,
+			SHA:       commitSHA,
 		}
 
 		err = c.reviewStore.Create(ctx, review)
@@ -104,7 +105,7 @@ func (c *Controller) ReviewSubmit(
 			return err
 		}
 
-		_, err = c.updateReviewer(ctx, session, pr, review, ref.SHA)
+		_, err = c.updateReviewer(ctx, session, pr, review, commitSHA)
 		return err
 	})
 	if err != nil {
@@ -117,8 +118,9 @@ func (c *Controller) ReviewSubmit(
 		}
 
 		payload := &types.PullRequestActivityPayloadReviewSubmit{
-			Message:  in.Message,
-			Decision: in.Decision,
+			CommitSHA: commitSHA,
+			Message:   in.Message,
+			Decision:  in.Decision,
 		}
 		_, err = c.activityStore.CreateWithPayload(ctx, pr, session.Principal.ID, payload)
 		return err
