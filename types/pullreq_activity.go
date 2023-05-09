@@ -242,8 +242,9 @@ func (a *PullRequestActivityPayloadTitleChange) ActivityType() enum.PullReqActiv
 }
 
 type PullRequestActivityPayloadReviewSubmit struct {
-	Message  string                     `json:"message,omitempty"`
-	Decision enum.PullReqReviewDecision `json:"decision"`
+	CommitSHA string                     `json:"commit_sha"`
+	Message   string                     `json:"message,omitempty"`
+	Decision  enum.PullReqReviewDecision `json:"decision"`
 }
 
 func (a *PullRequestActivityPayloadReviewSubmit) ActivityType() enum.PullReqActivityType {
