@@ -147,5 +147,6 @@ func mapRenameDetails(renameDetails *types.PathRenameDetails) *rpc.RenameDetails
 	}
 
 	return &rpc.RenameDetails{IsRenamed: renameDetails.Renamed,
-		OldPath: renameDetails.OldPath}
+		OldPath: renameDetails.OldPath,
+		NewPath: renameDetails.NewPath}
 }

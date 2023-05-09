@@ -81,6 +81,7 @@ type ListCommitsParams struct {
 type RenameDetails struct {
 	IsRenamed bool
 	OldPath   string
+	NewPath   string
 }
 
 type ListCommitsOutput struct {

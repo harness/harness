@@ -63,6 +63,7 @@ func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 	if rpcOut.RenameDetails != nil {
 		renameDetails.IsRenamed = rpcOut.RenameDetails.IsRenamed
 		renameDetails.OldPath = rpcOut.RenameDetails.OldPath
+		renameDetails.NewPath = rpcOut.RenameDetails.NewPath
 	}
 	return commits, &renameDetails, nil
 }

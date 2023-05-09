@@ -116,6 +116,7 @@ func mapRPCRenameDetails(c *rpc.RenameDetails) *RenameDetails {
 		renameDetails = &RenameDetails{
 			IsRenamed: c.GetIsRenamed(),
 			OldPath:   c.GetOldPath(),
+			NewPath:   c.GetNewPath(),
 		}
 	}
 	return renameDetails

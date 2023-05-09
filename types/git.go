@@ -63,6 +63,7 @@ type Identity struct {
 type RenameDetails struct {
 	IsRenamed bool   `json:"is_renamed"`
 	OldPath   string `json:"old_path"`
+	NewPath   string `json:"new_path"`
 }
 
 type ListCommitResponse struct {

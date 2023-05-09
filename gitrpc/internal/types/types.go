@@ -290,4 +290,5 @@ type BlamePart struct {
 type PathRenameDetails struct {
 	Renamed bool
 	OldPath string
+	NewPath string
 }

@@ -85,7 +85,8 @@ func (g Adapter) listCommitSHAs(giteaRepo *gitea.Repository,
 	ref string, afterRef string,
 	page int, limit int, path string,
 ) ([]string, error) {
-	args := []string{"rev-list"}
+	args := make([]string, 0, 8)
+	args = append(args, "rev-list")
 
 	// return commits only up to a certain reference if requested
 	if afterRef != "" {
@@ -189,7 +190,7 @@ func giteaGetRenameDetails(giteaRepo *gitea.Repository, ref string, path string)
 
 	lines := parseLinesToSlice(stdout)
 
-	changeType, oldPath, err := getFileChangeTypeFromLog(lines, path)
+	changeType, oldPath, newPath, err := getFileChangeTypeFromLog(lines, path)
 	if err != nil {
 		return nil, err
 	}
@@ -198,6 +199,7 @@ func giteaGetRenameDetails(giteaRepo *gitea.Repository, ref string, path string)
 		return &types.PathRenameDetails{
 			Renamed: true,
 			OldPath: *oldPath,
+			NewPath: *newPath,
 		}, nil
 	}
 
@@ -206,17 +208,17 @@ func giteaGetRenameDetails(giteaRepo *gitea.Repository, ref string, path string)
 	}, nil
 }
 
-func getFileChangeTypeFromLog(changeStrings []string, filePath string) (*string, *string, error) {
+func getFileChangeTypeFromLog(changeStrings []string, filePath string) (*string, *string, *string, error) {
 	for _, changeString := range changeStrings {
 		if strings.Contains(changeString, filePath) {
 			changeInfo := strings.Split(changeString, "\t")
 			if len(changeInfo) != 3 {
-				return &changeInfo[0], nil, nil
+				return &changeInfo[0], nil, nil, nil
 			}
-			return &changeInfo[0], &changeInfo[1], nil
+			return &changeInfo[0], &changeInfo[1], &changeInfo[2], nil
 		}
 	}
-	return nil, nil, fmt.Errorf("could not parse change for the file")
+	return nil, nil, nil, fmt.Errorf("could not parse change for the file")
 }
 
 // GetCommit returns the (latest) commit for a specific ref.
