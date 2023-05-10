@@ -7,8 +7,7 @@ import {
   Text,
   StringSubstitute,
   Button,
-  PageError,
-  ButtonSize
+  PageError
 } from '@harness/uicore'
 import { Match, Case, Render } from 'react-jsx-match'
 import * as Diff2Html from 'diff2html'
@@ -47,7 +46,6 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   className?: string
   onCommentUpdate: () => void
   prHasChanged?: boolean
-  handleRefresh?: () => void
 }
 
 export const Changes: React.FC<ChangesProps> = ({
@@ -60,8 +58,7 @@ export const Changes: React.FC<ChangesProps> = ({
   pullRequestMetadata,
   onCommentUpdate,
   className,
-  prHasChanged,
-  handleRefresh
+  prHasChanged
 }) => {
   const { getString } = useStrings()
   const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SIDE_BY_SIDE)
@@ -84,8 +81,8 @@ export const Changes: React.FC<ChangesProps> = ({
   const {
     data: activities,
     loading: loadingActivities,
-    error: errorActivities
-    // refetch: refetchActivities
+    error: errorActivities,
+    refetch: refetchActivities
   } = useGet<TypesPullReqActivity[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/activities`,
     lazy: !pullRequestMetadata?.number
@@ -105,6 +102,12 @@ export const Changes: React.FC<ChangesProps> = ({
   )
 
   useEffect(() => {
+    if (prHasChanged) {
+      refetchActivities()
+    }
+  }, [prHasChanged, refetchActivities])
+
+  useEffect(() => {
     const _raw = rawDiff && typeof rawDiff === 'string' ? rawDiff : ''
 
     if (rawDiff) {
@@ -115,7 +118,7 @@ export const Changes: React.FC<ChangesProps> = ({
           const contentId = `content-${fileId}`
           const filePath = diff.isDeleted ? diff.oldName : diff.newName
           const fileActivities: TypesPullReqActivity[] | undefined = activities?.filter(
-            activity => filePath === activity.code_comment_path
+            activity => filePath === activity.code_comment?.path
           )
 
           return {
@@ -171,18 +174,6 @@ export const Changes: React.FC<ChangesProps> = ({
                         }}
                       />
                     </Text>
-                    {!prHasChanged ? null : (
-                      <Button
-                        onClick={handleRefresh}
-                        iconProps={{ className: css.refreshIcon, size: 12 }}
-                        icon="repeat"
-                        text={getString('refresh')}
-                        variation={ButtonVariation.SECONDARY}
-                        size={ButtonSize.SMALL}
-                        padding={{ left: 'small' }}
-                        className={css.repeatBtn}
-                      />
-                    )}
 
                     {/* Show "Scroll to top" button */}
                     <Render when={isSticky}>

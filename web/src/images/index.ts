@@ -5,6 +5,8 @@ import PrRejected from 'images/pull-request-rejected.svg'
 import PrDraft from 'images/pull-request-draft.svg'
 import EmptyState from 'images/empty-state.svg'
 import error404 from 'images/404-error.svg'
+import PrUnchecked from 'images/pull-request-unchecked.svg'
+
 export const Images = {
   PrOpen,
   PrMerged,
@@ -12,5 +14,6 @@ export const Images = {
   PrRejected,
   PrDraft,
   error404,
-  EmptyState
+  EmptyState,
+  PrUnchecked
 }

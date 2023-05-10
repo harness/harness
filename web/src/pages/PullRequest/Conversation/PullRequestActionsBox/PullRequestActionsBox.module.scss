@@ -16,6 +16,10 @@
     background-color: var(--red-50) !important;
   }
 
+  &.unchecked {
+    background-color: #fcf4e3 !important; // Note: No UICore color variable for this background
+  }
+
   .layout {
     height: var(--bar-height);
     padding: 0 var(--spacing-xlarge) !important;
@@ -43,6 +47,11 @@
     font-size: 13px !important;
     line-height: 20px !important;
     color: var(--grey-700) !important;
+
+    &.unchecked {
+      color: #c05809 !important; // Note: No UICore color variable for this text
+      font-weight: 600 !important;
+    }
   }
 }
 
@@ -86,7 +95,8 @@
     --background-color-active: var(--grey-100) !important;
   }
 
-  a, button {
+  a,
+  button {
     --background-color: var(--green-800) !important;
     --background-color-hover: var(--green-900) !important;
     --background-color-active: var(--green-900) !important;
