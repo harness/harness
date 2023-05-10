@@ -75,10 +75,18 @@ type ListCommitsParams struct {
 	After string
 	Page  int32
 	Limit int32
+	Path  string
+}
+
+type RenameDetails struct {
+	IsRenamed bool
+	OldPath   string
+	NewPath   string
 }
 
 type ListCommitsOutput struct {
-	Commits []Commit
+	Commits       []Commit
+	RenameDetails *RenameDetails
 }
 
 func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error) {
@@ -91,6 +99,7 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 		After:  params.After,
 		Page:   params.Page,
 		Limit:  params.Limit,
+		Path:   params.Path,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to start stream for commits: %w", err)
@@ -119,8 +128,11 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 		if err != nil {
 			return nil, fmt.Errorf("failed to map rpc commit: %w", err)
 		}
-
 		output.Commits = append(output.Commits, *commit)
+
+		if next.RenameDetails != nil {
+			output.RenameDetails = mapRPCRenameDetails(next.RenameDetails)
+		}
 	}
 
 	return output, nil

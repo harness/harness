@@ -140,3 +140,13 @@ func mapDiffFileHunkHeaders(diffHunkHeaders []*types.DiffFileHunkHeaders) []*rpc
 	}
 	return res
 }
+
+func mapRenameDetails(renameDetails *types.PathRenameDetails) *rpc.RenameDetails {
+	if renameDetails == nil {
+		return &rpc.RenameDetails{IsRenamed: false}
+	}
+
+	return &rpc.RenameDetails{IsRenamed: renameDetails.Renamed,
+		OldPath: renameDetails.OldPath,
+		NewPath: renameDetails.NewPath}
+}

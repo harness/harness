@@ -108,6 +108,20 @@ func mapRPCCommitTag(t *rpc.CommitTag) (*CommitTag, error) {
 	}, nil
 }
 
+func mapRPCRenameDetails(c *rpc.RenameDetails) *RenameDetails {
+	renameDetails := &RenameDetails{
+		IsRenamed: false,
+	}
+	if c != nil {
+		renameDetails = &RenameDetails{
+			IsRenamed: c.GetIsRenamed(),
+			OldPath:   c.GetOldPath(),
+			NewPath:   c.GetNewPath(),
+		}
+	}
+	return renameDetails
+}
+
 func mapRPCCommit(c *rpc.Commit) (*Commit, error) {
 	if c == nil {
 		return nil, fmt.Errorf("rpc commit is nil")

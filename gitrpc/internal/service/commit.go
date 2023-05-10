@@ -55,8 +55,8 @@ func (s RepositoryService) ListCommits(request *rpc.ListCommitsRequest,
 	ctx := stream.Context()
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
-	gitCommits, err := s.adapter.ListCommits(ctx, repoPath, request.GetGitRef(),
-		request.GetAfter(), int(request.GetPage()), int(request.GetLimit()))
+	gitCommits, renameDetails, err := s.adapter.ListCommits(ctx, repoPath, request.GetGitRef(),
+		request.GetAfter(), int(request.GetPage()), int(request.GetLimit()), request.GetPath())
 	if err != nil {
 		return processGitErrorf(err, "failed to get list of commits")
 	}
@@ -71,7 +71,8 @@ func (s RepositoryService) ListCommits(request *rpc.ListCommitsRequest,
 		}
 
 		err = stream.Send(&rpc.ListCommitsResponse{
-			Commit: commit,
+			Commit:        commit,
+			RenameDetails: mapRenameDetails(renameDetails),
 		})
 		if err != nil {
 			return status.Errorf(codes.Internal, "failed to send commit: %v", err)

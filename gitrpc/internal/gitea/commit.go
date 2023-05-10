@@ -83,9 +83,22 @@ func getGiteaCommits(giteaRepo *gitea.Repository, commitIDs []string) ([]*gitea.
 
 func (g Adapter) listCommitSHAs(giteaRepo *gitea.Repository,
 	ref string, afterRef string,
-	page int, limit int,
+	page int, limit int, path string,
 ) ([]string, error) {
-	args := []string{"rev-list"}
+	args := make([]string, 0, 8)
+	args = append(args, "rev-list")
+
+	// return commits only up to a certain reference if requested
+	if afterRef != "" {
+		// ^REF tells the rev-list command to return only commits that aren't reachable by SHA
+		args = append(args, fmt.Sprintf("^%s", afterRef))
+	}
+	// add refCommitSHA as starting point
+	args = append(args, ref)
+
+	if len(path) != 0 {
+		args = append(args, "--", path)
+	}
 
 	// add pagination if requested
 	// TODO: we should add absolut limits to protect gitrpc (return error)
@@ -95,15 +108,6 @@ func (g Adapter) listCommitSHAs(giteaRepo *gitea.Repository,
 		if page > 1 {
 			args = append(args, "--skip", fmt.Sprint((page-1)*limit))
 		}
-	}
-
-	// add refCommitSHA as starting point
-	args = append(args, ref)
-
-	// return commits only up to a certain reference if requested
-	if afterRef != "" {
-		// ^REF tells the rev-list command to return only commits that aren't reachable by SHA
-		args = append(args, fmt.Sprintf("^%s", afterRef))
 	}
 
 	stdout, _, runErr := gitea.NewCommand(giteaRepo.Ctx, args...).RunStdBytes(&gitea.RunOpts{Dir: giteaRepo.Path})
@@ -121,7 +125,7 @@ func (g Adapter) listCommitSHAs(giteaRepo *gitea.Repository,
 func (g Adapter) ListCommitSHAs(ctx context.Context,
 	repoPath string,
 	ref string, afterRef string,
-	page int, limit int,
+	page int, limit int, path string,
 ) ([]string, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
@@ -129,7 +133,7 @@ func (g Adapter) ListCommitSHAs(ctx context.Context,
 	}
 	defer giteaRepo.Close()
 
-	return g.listCommitSHAs(giteaRepo, ref, afterRef, page, limit)
+	return g.listCommitSHAs(giteaRepo, ref, afterRef, page, limit, path)
 }
 
 // ListCommits lists the commits reachable from ref.
@@ -138,22 +142,22 @@ func (g Adapter) ListCommitSHAs(ctx context.Context,
 func (g Adapter) ListCommits(ctx context.Context,
 	repoPath string,
 	ref string, afterRef string,
-	page int, limit int,
-) ([]types.Commit, error) {
+	page int, limit int, path string,
+) ([]types.Commit, *types.PathRenameDetails, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer giteaRepo.Close()
 
-	commitSHAs, err := g.listCommitSHAs(giteaRepo, ref, afterRef, page, limit)
+	commitSHAs, err := g.listCommitSHAs(giteaRepo, ref, afterRef, page, limit, path)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	giteaCommits, err := getGiteaCommits(giteaRepo, commitSHAs)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	commits := make([]types.Commit, len(giteaCommits))
@@ -161,12 +165,60 @@ func (g Adapter) ListCommits(ctx context.Context,
 		var commit *types.Commit
 		commit, err = mapGiteaCommit(giteaCommits[i])
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		commits[i] = *commit
 	}
 
-	return commits, nil
+	if len(path) != 0 {
+		renameDetails, err := giteaGetRenameDetails(giteaRepo, commits[0].SHA, path)
+		if err != nil {
+			return nil, nil, err
+		}
+		return commits, renameDetails, nil
+	}
+
+	return commits, nil, nil
+}
+
+func giteaGetRenameDetails(giteaRepo *gitea.Repository, ref string, path string) (*types.PathRenameDetails, error) {
+	stdout, _, runErr := gitea.NewCommand(giteaRepo.Ctx, "log", ref, "--name-status", "--pretty=format:", "-1").
+		RunStdBytes(&gitea.RunOpts{Dir: giteaRepo.Path})
+	if runErr != nil {
+		return nil, fmt.Errorf("failed to trigger log command: %w", runErr)
+	}
+
+	lines := parseLinesToSlice(stdout)
+
+	changeType, oldPath, newPath, err := getFileChangeTypeFromLog(lines, path)
+	if err != nil {
+		return nil, err
+	}
+
+	if strings.HasPrefix(*changeType, "R") {
+		return &types.PathRenameDetails{
+			Renamed: true,
+			OldPath: *oldPath,
+			NewPath: *newPath,
+		}, nil
+	}
+
+	return &types.PathRenameDetails{
+		Renamed: false,
+	}, nil
+}
+
+func getFileChangeTypeFromLog(changeStrings []string, filePath string) (*string, *string, *string, error) {
+	for _, changeString := range changeStrings {
+		if strings.Contains(changeString, filePath) {
+			changeInfo := strings.Split(changeString, "\t")
+			if len(changeInfo) != 3 {
+				return &changeInfo[0], nil, nil, nil
+			}
+			return &changeInfo[0], &changeInfo[1], &changeInfo[2], nil
+		}
+	}
+	return nil, nil, nil, fmt.Errorf("could not parse change for the file")
 }
 
 // GetCommit returns the (latest) commit for a specific ref.

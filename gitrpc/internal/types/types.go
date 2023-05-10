@@ -286,3 +286,9 @@ type BlamePart struct {
 	Commit Commit
 	Lines  []string
 }
+
+type PathRenameDetails struct {
+	Renamed bool
+	OldPath string
+	NewPath string
+}

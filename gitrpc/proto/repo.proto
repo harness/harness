@@ -97,12 +97,20 @@ message ListCommitsRequest {
   string after     = 3;
   int32 page       = 4;
   int32 limit      = 5;
+  string path      = 6;
 }
 
 message ListCommitsResponse {
     Commit commit = 1;
+    RenameDetails rename_details = 2;
 }
 
+
+message RenameDetails{
+  bool is_renamed = 1;
+  string old_path = 2;
+  string new_path = 3;
+}
 
 message GetBlobRequest {
   ReadRequest base = 1;

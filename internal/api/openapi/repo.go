@@ -157,6 +157,21 @@ var queryParameterGitRef = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterPath = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryPath,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Path for which commit information should be retrieved"),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(""),
+			},
+		},
+	},
+}
+
 var queryParameterIncludeCommit = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamIncludeCommit,
@@ -452,6 +467,20 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/commits", opListCommits)
+
+	// will Remove old one once this is adopted everywhere in UI
+	opListCommitsV2 := openapi3.Operation{}
+	opListCommitsV2.WithTags("repository")
+	opListCommitsV2.WithMapOfAnything(map[string]interface{}{"operationId": "listCommitsV2"})
+	opListCommitsV2.WithParameters(queryParameterGitRef, queryParameterAfterCommits, queryParameterPath,
+		queryParameterPage, queryParameterLimit)
+	_ = reflector.SetRequest(&opListCommitsV2, new(listCommitsRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opListCommitsV2, []types.ListCommitResponse{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListCommitsV2, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opListCommitsV2, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opListCommitsV2, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opListCommitsV2, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/commitsV2", opListCommitsV2)
 
 	opGetCommit := openapi3.Operation{}
 	opGetCommit.WithTags("repository")

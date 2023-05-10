@@ -17,6 +17,7 @@ const (
 	PathParamCommitSHA      = "commit_sha"
 	QueryLineFrom           = "line_from"
 	QueryLineTo             = "line_to"
+	QueryPath               = "path"
 )
 
 func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
@@ -76,4 +77,8 @@ func ParseCommitFilter(r *http.Request) *types.CommitFilter {
 			Limit: ParseLimit(r),
 		},
 	}
+}
+
+func GetPathFromQueryOrDefault(r *http.Request, deflt string) string {
+	return QueryParamOrDefault(r, QueryPath, deflt)
 }

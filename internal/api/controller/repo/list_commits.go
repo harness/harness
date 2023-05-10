@@ -20,14 +20,14 @@ import (
 * ListCommits lists the commits of a repo.
  */
 func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
-	repoRef string, gitRef string, filter *types.CommitFilter) ([]types.Commit, error) {
+	repoRef string, gitRef string, filter *types.CommitFilter, path string) ([]types.Commit, *types.RenameDetails, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// set gitRef to default branch in case an empty reference was provided
@@ -41,9 +41,10 @@ func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 		After:      filter.After,
 		Page:       int32(filter.Page),
 		Limit:      int32(filter.Limit),
+		Path:       path,
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	commits := make([]types.Commit, len(rpcOut.Commits))
@@ -51,10 +52,18 @@ func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 		var commit *types.Commit
 		commit, err = controller.MapCommit(&rpcOut.Commits[i])
 		if err != nil {
-			return nil, fmt.Errorf("failed to map commit: %w", err)
+			return nil, nil, fmt.Errorf("failed to map commit: %w", err)
 		}
 		commits[i] = *commit
 	}
 
-	return commits, nil
+	var renameDetails = types.RenameDetails{
+		IsRenamed: false,
+	}
+	if rpcOut.RenameDetails != nil {
+		renameDetails.IsRenamed = rpcOut.RenameDetails.IsRenamed
+		renameDetails.OldPath = rpcOut.RenameDetails.OldPath
+		renameDetails.NewPath = rpcOut.RenameDetails.NewPath
+	}
+	return commits, &renameDetails, nil
 }
