@@ -10,6 +10,8 @@ declare const styles: {
   readonly btn: string
   readonly heading: string
   readonly sub: string
+  readonly draft: string
+  readonly unmergeable: string
   readonly popover: string
   readonly menuItem: string
   readonly menuReviewItem: string

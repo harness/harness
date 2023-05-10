@@ -1924,6 +1924,63 @@ paths:
           description: Internal Server Error
       tags:
         - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}/status:
+    put:
+      operationId: commentStatusPullReq
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: pullreq_comment_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCommentStatusPullReqRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPullReqActivity'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}/commits:
     get:
       operationId: listPullReqCommits
@@ -3714,6 +3771,11 @@ components:
         - state-change
         - title-change
       type: string
+    EnumPullReqCommentStatus:
+      enum:
+        - active
+        - resolved
+      type: string
     EnumPullReqReviewDecision:
       enum:
         - approved
@@ -3866,6 +3928,11 @@ components:
           type: string
         text:
           type: string
+      type: object
+    OpenapiCommentStatusPullReqRequest:
+      properties:
+        status:
+          $ref: '#/components/schemas/EnumPullReqCommentStatus'
       type: object
     OpenapiCommentUpdatePullReqRequest:
       properties:
@@ -4054,6 +4121,8 @@ components:
       type: object
     OpenapiReviewSubmitPullReqRequest:
       properties:
+        commit_sha:
+          type: string
         decision:
           $ref: '#/components/schemas/EnumPullReqReviewDecision'
         message:
@@ -4451,6 +4520,8 @@ components:
         conversations:
           type: integer
         files_changed:
+          type: integer
+        unresolved_count:
           type: integer
       type: object
     TypesRepository:

@@ -75,6 +75,16 @@
     }
   }
   .menuReviewItem {
+    &:hover {
+      p {
+        color: var(--white) !important;
+      }
+
+      svg path {
+        fill: var(--white) !important;
+      }
+    }
+
     .reviewIcon {
       margin-top: 2px;
     }

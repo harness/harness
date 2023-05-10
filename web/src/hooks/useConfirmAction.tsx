@@ -4,11 +4,11 @@
  * that can be found in the licenses directory at the root of this repository, also available at
  * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
  */
-
+import React from 'react'
 import { Intent } from '@blueprintjs/core'
 import { useCallback, useRef, useState } from 'react'
 import { noop } from 'lodash-es'
-import { useConfirmationDialog } from '@harness/uicore'
+import { useConfirmationDialog, Text } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
 
 export interface UseConfirmActionDialogProps {
@@ -66,7 +66,7 @@ export const useConfirmAct = () => {
   const resolve = useRef<() => void>(noop)
   const { openDialog } = useConfirmationDialog({
     titleText: _args.title || getString('confirmation'),
-    contentText: _args.message,
+    contentText: toParagraph(_args.message),
     intent: _args.intent,
     confirmButtonText: _args.confirmText || getString('confirm'),
     cancelButtonText: _args.cancelText || getString('cancel'),
@@ -87,4 +87,20 @@ export const useConfirmAct = () => {
     },
     [_args, openDialog]
   )
+}
+
+function toParagraph(message: React.ReactNode) {
+  if (typeof message === 'string' && message.includes('\\n')) {
+    return (
+      <>
+        {message.split('\\n').map((line, i) => (
+          <Text key={i} tag="span" style={{ display: 'block', marginTop: '10px', wordBreak: 'break-word' }}>
+            {line}
+          </Text>
+        ))}
+      </>
+    )
+  }
+
+  return message
 }

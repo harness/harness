@@ -28,7 +28,7 @@ import { useAppContext } from 'AppContext'
 import type { TypesPullReqActivity } from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import { commentState, formatDate, formatTime, getErrorMessage, orderSortDate, dayAgoInMS } from 'utils/Utils'
+import { CodeCommentState, formatDate, formatTime, getErrorMessage, orderSortDate, dayAgoInMS } from 'utils/Utils'
 import { activityToCommentItem, CommentType, DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
@@ -66,6 +66,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   } = useGet<TypesPullReqActivity[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/activities`
   })
+  const showSpinner = useMemo(() => loading && !activities, [loading, activities])
   const { data: reviewers } = useGet<Unknown[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`
   })
@@ -166,11 +167,25 @@ export const Conversation: React.FC<ConversationProps> = ({
   )
   const { mutate: saveComment } = useMutate({ verb: 'POST', path })
   const { mutate: updateComment } = useMutate({ verb: 'PATCH', path: ({ id }) => `${path}/${id}` })
+  const { mutate: updateCodeCommentStatus } = useMutate({ verb: 'PUT', path: ({ id }) => `${path}/${id}/status` })
   const { mutate: deleteComment } = useMutate({ verb: 'DELETE', path: ({ id }) => `${path}/${id}` })
   const confirmAct = useConfirmAct()
   const [commentCreated, setCommentCreated] = useState(false)
   const [dirtyNewComment, setDirtyNewComment] = useState(false)
   const [dirtyCurrentComments, setDirtyCurrentComments] = useState(false)
+  const codeCommentStatusItems = useMemo(
+    () => [
+      {
+        label: getString('active'),
+        value: CodeCommentState.ACTIVE
+      },
+      {
+        label: getString('resolved'),
+        value: CodeCommentState.RESOLVED
+      }
+    ],
+    [getString]
+  )
   const onPRStateChanged = useCallback(() => {
     onCommentUpdate()
     refetchActivities()
@@ -185,7 +200,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   useAnimateNewCommentBox(commentCreated, setCommentCreated)
 
   return (
-    <PullRequestTabContentWrapper loading={loading} error={error} onRetry={refetchActivities}>
+    <PullRequestTabContentWrapper loading={showSpinner} error={error} onRetry={refetchActivities}>
       <Container>
         <Layout.Vertical spacing="xlarge">
           <PullRequestActionsBox
@@ -259,10 +274,9 @@ export const Conversation: React.FC<ConversationProps> = ({
                   {activityBlocks?.map((blocks, index) => {
                     const threadId = blocks[0].payload?.id
                     const commentItems = blocks
-                    const state = {
-                      label: getString('active'),
-                      value: commentState.ACTIVE
-                    } as SelectOption
+                    const codeCommentStatus = blocks[0].payload?.resolved
+                      ? codeCommentStatusItems[1]
+                      : codeCommentStatusItems[0]
 
                     if (isSystemComment(commentItems)) {
                       return (
@@ -366,27 +380,29 @@ export const Conversation: React.FC<ConversationProps> = ({
                               [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
                                 <Select
                                   className={css.stateSelect}
-                                  items={[
-                                    {
-                                      label: getString('active'),
-                                      value: commentState.ACTIVE
-                                    },
-                                    {
-                                      label: getString('pending'),
-                                      value: commentState.PENDING
-                                    },
-                                    {
-                                      label: getString('resolved'),
-                                      value: commentState.RESOLVED
-                                    }
-                                  ]}
-                                  value={state}
-                                  // onChange={(newState)=>{
-                                  //   state= newState
-                                  // }}
+                                  items={codeCommentStatusItems}
+                                  value={codeCommentStatus}
+                                  onChange={newState => {
+                                    const payload = { status: newState.value }
+                                    const id = commentItems[0]?.payload?.id
+
+                                    updateCodeCommentStatus(payload, { pathParams: { id } })
+                                      .then(() => {
+                                        onCommentUpdate()
+                                        refetchActivities()
+                                      })
+                                      .catch(exception => {
+                                        showError(
+                                          getErrorMessage(exception),
+                                          0,
+                                          getString('pr.failedToUpdateCommentStatus')
+                                        )
+                                      })
+                                  }}
                                 />
                               )
                             }}
+                            autoFocusAndPositioning
                           />
                         }></ThreadSection>
                     )

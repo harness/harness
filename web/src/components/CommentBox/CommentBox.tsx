@@ -70,6 +70,7 @@ interface CommentBoxProps<T> {
   onCancel?: () => void
   setDirty: (dirty: boolean) => void
   outlets?: Partial<Record<CommentBoxOutletPosition, React.ReactNode>>
+  autoFocusAndPositioning?: boolean
 }
 
 export const CommentBox = <T = unknown,>({
@@ -85,7 +86,8 @@ export const CommentBox = <T = unknown,>({
   hideCancel,
   resetOnSave,
   setDirty: setDirtyProp,
-  outlets = {}
+  outlets = {},
+  autoFocusAndPositioning
 }: CommentBoxProps<T>) => {
   const { getString } = useStrings()
   const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
@@ -109,14 +111,13 @@ export const CommentBox = <T = unknown,>({
   }, [comments, setShowReplyPlaceHolder, onCancel])
   const hidePlaceHolder = useCallback(() => setShowReplyPlaceHolder(false), [setShowReplyPlaceHolder])
   const onQuote = useCallback((content: string) => {
+    const replyContent = content
+      .split(CRLF)
+      .map(line => `> ${line}`)
+      .concat([CRLF])
+      .join(CRLF)
     setShowReplyPlaceHolder(false)
-    setMarkdown(
-      content
-        .split(CRLF)
-        .map(line => `> ${line}`)
-        .concat([CRLF, CRLF])
-        .join(CRLF)
-    )
+    setMarkdown(replyContent)
   }, [])
   const viewRef = useRef<EditorView>()
 
@@ -207,7 +208,7 @@ export const CommentBox = <T = unknown,>({
                         }
                       }
                     } else {
-                      alert('handleAction must be implemented...')
+                      console.error('handleAction must be implemented...') // eslint-disable-line no-console
                     }
                   }}
                   onCancel={_onCancel}
@@ -215,6 +216,7 @@ export const CommentBox = <T = unknown,>({
                   setDirty={_dirty => {
                     setDirties({ ...dirties, ['new']: _dirty })
                   }}
+                  autoFocusAndPositioning={autoFocusAndPositioning}
                 />
               </Container>
             </Falsy>
@@ -326,11 +328,7 @@ const CommentsThread = <T = unknown,>({
                 </Layout.Horizontal>
               }
               hideGutter={isLastItem}>
-              <Container
-                padding={{
-                  // left: editIndexes[index] ? undefined : 'medium',
-                  bottom: isLastItem ? undefined : 'xsmall'
-                }}>
+              <Container padding={{ bottom: isLastItem ? undefined : 'xsmall' }}>
                 <Render when={index === 0 && outlets[CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]}>
                   <Container className={cx(css.outletTopOfFirstOfComment, { [css.standalone]: standalone })}>
                     {outlets[CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]}
@@ -359,6 +357,7 @@ const CommentsThread = <T = unknown,>({
                           save: getString('save'),
                           cancel: getString('cancel')
                         }}
+                        autoFocusAndPositioning
                       />
                     </Container>
                   </Truthy>

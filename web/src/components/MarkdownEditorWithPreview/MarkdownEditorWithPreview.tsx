@@ -53,6 +53,10 @@ interface MarkdownEditorWithPreviewProps {
   editorHeight?: string
   noBorder?: boolean
   viewRef?: React.MutableRefObject<EditorView | undefined>
+
+  // When set to true, the editor will be scrolled to center of screen
+  // and cursor is set to the end of the document
+  autoFocusAndPositioning?: boolean
 }
 
 export function MarkdownEditorWithPreview({
@@ -66,10 +70,12 @@ export function MarkdownEditorWithPreview({
   hideCancel,
   editorHeight,
   noBorder,
-  viewRef: viewRefProp
+  viewRef: viewRefProp,
+  autoFocusAndPositioning
 }: MarkdownEditorWithPreviewProps) {
   const [selectedTab, setSelectedTab] = useState(MarkdownEditorTab.WRITE)
   const viewRef = useRef<EditorView>()
+  const containerRef = useRef<HTMLDivElement>(null)
   const [dirty, setDirty] = useState(false)
   const onToolbarAction = useCallback((action: ToolbarAction) => {
     const view = viewRef.current
@@ -202,8 +208,14 @@ export function MarkdownEditorWithPreview({
     }
   }, [viewRefProp, viewRef.current]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (autoFocusAndPositioning) {
+      scrollToAndSetCursorToEnd(containerRef, viewRef, value)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
-    <Container className={cx(css.container, { [css.noBorder]: noBorder })}>
+    <Container ref={containerRef} className={cx(css.container, { [css.noBorder]: noBorder })}>
       <ul className={css.tabs}>
         <li>
           <a
@@ -275,4 +287,25 @@ export function MarkdownEditorWithPreview({
       )}
     </Container>
   )
+}
+
+function scrollToAndSetCursorToEnd(
+  containerRef: React.RefObject<HTMLDivElement>,
+  viewRef: React.MutableRefObject<EditorView | undefined>,
+  content = '',
+  moveCursorToEnd = true
+) {
+  window.setTimeout(() => {
+    const dom = containerRef?.current as unknown as { scrollIntoViewIfNeeded: () => void }
+
+    if (dom?.scrollIntoViewIfNeeded) {
+      dom.scrollIntoViewIfNeeded()
+    } else {
+      containerRef?.current?.scrollIntoView({ block: 'center' })
+    }
+
+    if (moveCursorToEnd) {
+      viewRef.current?.dispatch({ selection: { anchor: content.length, head: content.length } })
+    }
+  }, 250)
 }

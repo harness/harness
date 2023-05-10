@@ -43,14 +43,21 @@
   }
 
   .sub {
-    font-weight: 500 !important;
+    font-weight: 600 !important;
     font-size: 13px !important;
     line-height: 20px !important;
-    color: var(--grey-700) !important;
+    color: var(--green-800) !important;
+
+    &.draft {
+      color: var(--grey-700) !important;
+    }
+
+    &.unmergeable {
+      color: var(--red-500) !important;
+    }
 
     &.unchecked {
       color: #c05809 !important; // Note: No UICore color variable for this text
-      font-weight: 600 !important;
     }
   }
 }
