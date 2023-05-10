@@ -4268,6 +4268,25 @@ components:
         target:
           type: string
       type: object
+    TypesCodeCommentFields:
+      properties:
+        line_new:
+          type: integer
+        line_old:
+          type: integer
+        merge_base_sha:
+          type: string
+        outdated:
+          type: boolean
+        path:
+          type: string
+        source_sha:
+          type: string
+        span_new:
+          type: integer
+        span_old:
+          type: integer
+      type: object
     TypesCommit:
       properties:
         author:
@@ -4386,27 +4405,8 @@ components:
       properties:
         author:
           $ref: '#/components/schemas/TypesPrincipalInfo'
-        code_comment_line_new:
-          nullable: true
-          type: integer
-        code_comment_line_old:
-          nullable: true
-          type: integer
-        code_comment_merge_base_sha:
-          nullable: true
-          type: string
-        code_comment_path:
-          nullable: true
-          type: string
-        code_comment_source_sha:
-          nullable: true
-          type: string
-        code_comment_span_new:
-          nullable: true
-          type: integer
-        code_comment_span_old:
-          nullable: true
-          type: integer
+        code_comment:
+          $ref: '#/components/schemas/TypesCodeCommentFields'
         created:
           type: integer
         deleted:
@@ -4424,9 +4424,6 @@ components:
           type: object
         order:
           type: integer
-        outdated:
-          nullable: true
-          type: boolean
         parent_id:
           nullable: true
           type: integer

@@ -353,6 +353,17 @@ export interface RepoSymlinkContent {
   target?: string
 }
 
+export interface TypesCodeCommentFields {
+  line_new?: number
+  line_old?: number
+  merge_base_sha?: string
+  outdated?: boolean
+  path?: string
+  source_sha?: string
+  span_new?: number
+  span_old?: number
+}
+
 export interface TypesCommit {
   author?: TypesSignature
   committer?: TypesSignature
@@ -419,13 +430,7 @@ export interface TypesPullReq {
 
 export interface TypesPullReqActivity {
   author?: TypesPrincipalInfo
-  code_comment_line_new?: number | null
-  code_comment_line_old?: number | null
-  code_comment_merge_base_sha?: string | null
-  code_comment_path?: string | null
-  code_comment_source_sha?: string | null
-  code_comment_span_new?: number | null
-  code_comment_span_old?: number | null
+  code_comment?: TypesCodeCommentFields
   created?: number
   deleted?: number | null
   edited?: number
@@ -433,7 +438,6 @@ export interface TypesPullReqActivity {
   kind?: EnumPullReqActivityKind
   metadata?: { [key: string]: any } | null
   order?: number
-  outdated?: boolean | null
   parent_id?: number | null
   payload?: {}
   pullreq_id?: number

@@ -192,6 +192,7 @@ export interface StringsMap {
   'pr.branchHasNoConflicts': string
   'pr.cantBeMerged': string
   'pr.cantMerge': string
+  'pr.checkingToMerge': string
   'pr.createDraftPR': string
   'pr.descriptionPlaceHolder': string
   'pr.diffStatsLabel': string

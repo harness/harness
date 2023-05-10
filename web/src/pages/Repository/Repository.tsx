@@ -50,6 +50,7 @@ export default function Repository() {
       setFileNotExist(false)
     }
   }, [resourceError])
+
   return (
     <Container className={cx(css.main, !!resourceContent && css.withFileViewer)}>
       <Match expr={fileNotExist}>
@@ -101,12 +102,7 @@ export default function Repository() {
                   />
                 )}
 
-                {isRepositoryEmpty && (
-                  <EmptyRepositoryInfo
-                    repoMetadata={repoMetadata}
-                    resourceContent={resourceContent as OpenapiGetContentOutput}
-                  />
-                )}
+                {isRepositoryEmpty && <EmptyRepositoryInfo repoMetadata={repoMetadata} />}
               </>
             )}
           </PageBody>
@@ -116,10 +112,7 @@ export default function Repository() {
   )
 }
 
-const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourceContent'>> = (
-  { repoMetadata },
-  resourceContent
-) => {
+const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> = ({ repoMetadata }) => {
   const history = useHistory()
   const { routes } = useAppContext()
   const { getString } = useStrings()
@@ -146,12 +139,6 @@ const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourc
   useDisableCodeMainLinks(true)
   return (
     <Container className={css.emptyRepo}>
-      <ContentHeader
-        repoMetadata={repoMetadata}
-        gitRef={repoMetadata.default_branch as string}
-        resourcePath={''}
-        resourceContent={resourceContent}
-      />
       <Container
         margin={{ bottom: 'xxlarge' }}
         padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}

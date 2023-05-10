@@ -184,6 +184,7 @@ pr:
   reviewChanges: Review changes
   mergePR: Merge pull request
   branchHasNoConflicts: This branch has no conflicts with the base branch
+  checkingToMerge: Checking for ability to merge automatically...
   prCanBeMerged: Mergeing can be performed automatically.
   enterDesc: Enter description here
   failedToUpdate: Failed to update Pull Request. Please try again.

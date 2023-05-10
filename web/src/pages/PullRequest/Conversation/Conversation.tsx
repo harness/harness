@@ -1,9 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Avatar,
-  Button,
-  ButtonSize,
-  ButtonVariation,
   Color,
   Container,
   FlexExpander,
@@ -44,7 +41,6 @@ import css from './Conversation.module.scss'
 export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   onCommentUpdate: () => void
   prHasChanged?: boolean
-  handleRefresh?: () => void
 }
 
 export enum prSortState {
@@ -58,8 +54,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   repoMetadata,
   pullRequestMetadata,
   onCommentUpdate,
-  prHasChanged,
-  handleRefresh
+  prHasChanged
 }) => {
   const { getString } = useStrings()
   const { currentUser } = useAppContext()
@@ -76,9 +71,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   })
   const { showError } = useToaster()
   const [newComments, setNewComments] = useState<TypesPullReqActivity[]>([])
-
   const [dateOrderSort, setDateOrderSort] = useState<boolean | 'desc' | 'asc'>(orderSortDate.ASC)
-
   const [prShowState, setPrShowState] = useState<SelectOption>({
     label: `Show Everything `,
     value: 'showEverything'
@@ -178,11 +171,16 @@ export const Conversation: React.FC<ConversationProps> = ({
   const [commentCreated, setCommentCreated] = useState(false)
   const [dirtyNewComment, setDirtyNewComment] = useState(false)
   const [dirtyCurrentComments, setDirtyCurrentComments] = useState(false)
-
-  const refreshPR = useCallback(() => {
+  const onPRStateChanged = useCallback(() => {
     onCommentUpdate()
     refetchActivities()
   }, [onCommentUpdate, refetchActivities])
+
+  useEffect(() => {
+    if (prHasChanged) {
+      refetchActivities()
+    }
+  }, [prHasChanged, refetchActivities])
 
   useAnimateNewCommentBox(commentCreated, setCommentCreated)
 
@@ -193,24 +191,9 @@ export const Conversation: React.FC<ConversationProps> = ({
           <PullRequestActionsBox
             repoMetadata={repoMetadata}
             pullRequestMetadata={pullRequestMetadata}
-            onPRStateChanged={refreshPR}
+            onPRStateChanged={onPRStateChanged}
           />
           <Container>
-            <Layout.Horizontal width={`70%`}>
-              <FlexExpander />
-              {!prHasChanged ? null : (
-                <Button
-                  onClick={handleRefresh}
-                  iconProps={{ className: css.refreshIcon, size: 12 }}
-                  icon="repeat"
-                  text={getString('refresh')}
-                  variation={ButtonVariation.SECONDARY}
-                  size={ButtonSize.SMALL}
-                  margin={{ bottom: 'small' }}
-                />
-              )}
-            </Layout.Horizontal>
-
             <Layout.Horizontal>
               <Container width={`70%`}>
                 <Layout.Vertical spacing="xlarge">
@@ -378,7 +361,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                             }}
                             outlets={{
                               [CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]: isCodeComment(commentItems) && (
-                                <CodeCommentHeader commentItems={commentItems} />
+                                <CodeCommentHeader commentItems={commentItems} threadId={threadId} />
                               ),
                               [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
                                 <Select
@@ -456,20 +439,23 @@ function isCodeComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
 
 interface CodeCommentHeaderProps {
   commentItems: CommentItem<TypesPullReqActivity>[]
+  threadId: number | undefined
 }
 
-const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({ commentItems }) => {
+const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({ commentItems, threadId }) => {
   const _isCodeComment = isCodeComment(commentItems)
-  const id = `code-comment-snapshot-${commentItems[0]?.payload?.code_comment_path}`
+  const id = `code-comment-snapshot-${threadId}`
 
   useEffect(() => {
     if (_isCodeComment) {
+      // Note: Since payload does not have information about the file path, mode, and index, and we
+      // don't render them anyway in the UI, we just use dummy info for them.
       const codeDiffSnapshot = [
-        `diff --git a/hello-world.md b/hello-world.md`,
+        `diff --git a/src b/dest`,
         `new file mode 100644`,
         'index 0000000..0000000',
-        '--- /dev/null',
-        '+++ b/hello-world.md',
+        '--- a/src',
+        '+++ b/dest',
         get(commentItems[0], 'payload.payload.title', ''),
         ...get(commentItems[0], 'payload.payload.lines', [])
       ].join('\n')
@@ -480,14 +466,14 @@ const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({ commentItems }) =
         Object.assign({}, DIFF2HTML_CONFIG, { outputFormat: ViewStyle.LINE_BY_LINE })
       ).draw()
     }
-  }, [id, commentItems, _isCodeComment])
+  }, [id, commentItems, _isCodeComment, threadId])
 
   return _isCodeComment ? (
     <Container className={css.snapshot}>
       <Layout.Vertical>
         <Container className={css.title}>
           <Text inline className={css.fname}>
-            {commentItems[0].payload?.code_comment_path}
+            {commentItems[0].payload?.code_comment?.path}
           </Text>
         </Container>
         <Container className={css.snapshotContent} id={id} />
@@ -568,13 +554,11 @@ const SystemBox: React.FC<SystemBoxProps> = ({ pullRequestMetadata, commentItems
       return (
         <Container>
           <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
-            {/* <Container width={24} height={24} className={css.mergeContainer}> */}
             <Icon
               margin={{ left: 'small' }}
               padding={{ right: 'small' }}
               {...generateReviewDecisionIcon((payload?.payload as Unknown)?.decision)}
             />
-            {/* </Container> */}
 
             <Avatar name={payload?.author?.display_name as string} size="small" hoverCard={false} />
             <Text color={Color.GREY_500}>

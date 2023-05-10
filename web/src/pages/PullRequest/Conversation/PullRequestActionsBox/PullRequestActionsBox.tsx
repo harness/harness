@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Button,
   ButtonVariation,
@@ -28,7 +28,8 @@ import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, PullRequestFilterOption, PullRequestState } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useAppContext } from 'AppContext'
-import { getErrorMessage, permissionProps } from 'utils/Utils'
+import { Images } from 'images'
+import { getErrorMessage, MergeCheckStatus, permissionProps } from 'utils/Utils'
 import ReviewSplitButton from 'components/Changes/ReviewSplitButton/ReviewSplitButton'
 import css from './PullRequestActionsBox.module.scss'
 
@@ -60,7 +61,14 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/state`
   })
-  const mergeable = pullRequestMetadata.merge_check_status === 'mergeable'
+  const mergeable = useMemo(
+    () => pullRequestMetadata.merge_check_status === MergeCheckStatus.MERGEABLE,
+    [pullRequestMetadata]
+  )
+  const unchecked = useMemo(
+    () => pullRequestMetadata.merge_check_status === MergeCheckStatus.UNCHCKED,
+    [pullRequestMetadata]
+  )
   const isDraft = pullRequestMetadata.is_draft
   const mergeOptions: PRMergeOption[] = [
     {
@@ -104,19 +112,28 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   return (
     <Container
       className={cx(css.main, {
-        [css.error]: mergeable === false
+        [css.error]: mergeable === false && !unchecked,
+        [css.unchecked]: unchecked
       })}>
       <Layout.Vertical spacing="xlarge">
         <Container>
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }} className={css.layout}>
-            <Icon
-              name={isDraft ? CodeIcon.Draft : mergeable === false ? 'warning-sign' : 'tick-circle'}
-              size={20}
-              color={isDraft ? Color.ORANGE_900 : mergeable === false ? Color.RED_500 : Color.GREEN_700}
-            />
-            <Text className={css.sub}>
+            {(unchecked && <img src={Images.PrUnchecked} width={20} height={20} />) || (
+              <Icon
+                name={isDraft ? CodeIcon.Draft : mergeable === false ? 'warning-sign' : 'tick-circle'}
+                size={20}
+                color={isDraft ? Color.ORANGE_900 : mergeable === false ? Color.RED_500 : Color.GREEN_700}
+              />
+            )}
+            <Text className={cx(css.sub, { [css.unchecked]: unchecked })}>
               {getString(
-                isDraft ? 'prState.draftHeading' : mergeable === false ? 'pr.cantBeMerged' : 'pr.branchHasNoConflicts'
+                isDraft
+                  ? 'prState.draftHeading'
+                  : unchecked
+                  ? 'pr.checkingToMerge'
+                  : mergeable === false
+                  ? 'pr.cantBeMerged'
+                  : 'pr.branchHasNoConflicts'
               )}
             </Text>
 

@@ -1,7 +1,6 @@
 import type * as Diff2Html from 'diff2html'
-// import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
 import HoganJsUtils from 'diff2html/lib/hoganjs-utils'
-// import type { DiffLine } from 'diff2html/lib/types'
+import { get } from 'lodash-es'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
 import type { TypesPullReqActivity } from 'services/code'
 import type { DiffFileEntry } from 'utils/types'
@@ -208,14 +207,13 @@ export function activitiesToDiffCommentItems(diff: DiffFileEntry): DiffCommentIt
         diff.activities
           ?.filter(replyActivity => replyActivity.parent_id === activity.id)
           .map(_activity => activityToCommentItem(_activity)) || []
-      // TODO: Use backend support when it's ready https://harness.slack.com/archives/C03Q1Q4C9J8/p1682609265294089
-      const left = activity.payload?.line_start_new || false
+      const right = get(activity.payload, 'line_start_new', false)
 
       return {
-        left,
-        right: !left,
+        left: !right,
+        right,
         height: 0,
-        lineNumber: (left ? activity.code_comment_line_old : activity.code_comment_line_new) as number,
+        lineNumber: (right ? activity.code_comment?.line_new : activity.code_comment?.line_old) as number,
         commentItems: [activityToCommentItem(activity)].concat(replyComments)
       }
     }) || []

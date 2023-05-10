@@ -333,7 +333,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
                       case CommentAction.REPLY: {
                         const parentComment = diff.fileActivities?.find(
-                          activity => diff.filePath === activity.code_comment_path
+                          activity => diff.filePath === activity.code_comment?.path
                         )
 
                         if (parentComment) {

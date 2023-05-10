@@ -23,9 +23,9 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { voidFn, getErrorMessage, PR_POLLING_LIMIT } from 'utils/Utils'
+import { voidFn, getErrorMessage, MergeCheckStatus } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
-import type { TypesPullReq, TypesRepository } from 'services/code'
+import type { TypesPullReq, TypesPullReqStats, TypesRepository } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
@@ -34,18 +34,10 @@ import { Changes } from '../../components/Changes/Changes'
 import { PullRequestCommits } from './PullRequestCommits/PullRequestCommits'
 import css from './PullRequest.module.scss'
 
-enum PullRequestSection {
-  CONVERSATION = 'conversation',
-  COMMITS = 'commits',
-  FILES_CHANGED = 'changes',
-  CHECKS = 'checks'
-}
-
 export default function PullRequest() {
   const history = useHistory()
   const { getString } = useStrings()
   const { routes } = useAppContext()
-  const [prHasChanged, setPrHasChanged] = useState(false)
   const {
     repoMetadata,
     error,
@@ -54,49 +46,59 @@ export default function PullRequest() {
     pullRequestId,
     pullRequestSection = PullRequestSection.CONVERSATION
   } = useGetRepositoryMetadata()
-
+  const path = useMemo(
+    () => `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestId}`,
+    [repoMetadata?.path, pullRequestId]
+  )
   const {
     data: prData,
     error: prError,
     loading: prLoading,
     refetch: refetchPullRequest
   } = useGet<TypesPullReq>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestId}`,
+    path,
     lazy: !repoMetadata
   })
-  const {
-    data: pollPrData,
-    error: pollPrError,
-    refetch: refetchPollPullRequest
-  } = useGet<TypesPullReq>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestId}`,
-    lazy: !repoMetadata
-  })
-  const [newPrData, setNewPrData] = useState<TypesPullReq>()
-
-  const handleRefresh = () => {
-    refetchPullRequest()
-    setNewPrData(prData as TypesPullReq)
-    setPrHasChanged(false)
-  }
-
-  useEffect(() => {
-    const interval = window.setTimeout(() => {
-      refetchPollPullRequest()
-      setNewPrData(pollPrData as TypesPullReq)
-    }, PR_POLLING_LIMIT)
-    return () => window.clearTimeout(interval)
-  }, [pollPrData, refetchPollPullRequest])
-
-  useEffect(() => {
-    if (prData?.stats && newPrData?.stats) {
-      const prStatsChanged =
-        prData.stats.commits !== newPrData.stats.commits || prData.stats.files_changed !== newPrData.stats.files_changed
-      if (prStatsChanged) {
-        setPrHasChanged(prStatsChanged)
+  const showSpinner = useMemo(() => {
+    return loading || (prLoading && !prData)
+  }, [loading, prLoading, prData])
+  const [stats, setStats] = useState<TypesPullReqStats>()
+  const prHasChanged = useMemo(() => {
+    if (stats && prData?.stats) {
+      if (
+        stats.commits !== prData.stats.commits ||
+        stats.conversations !== prData.stats.conversations ||
+        stats.files_changed !== prData.stats.files_changed
+      ) {
+        window.setTimeout(() => setStats(prData.stats), 50)
+        return true
       }
     }
-  }, [newPrData, refetchPollPullRequest, prData?.stats])
+    return false
+  }, [prData?.stats, stats])
+  const mergeable = useMemo(() => prData?.merge_check_status === MergeCheckStatus.MERGEABLE, [prData])
+
+  useEffect(
+    function setStatsIfNotSet() {
+      if (!stats && prData?.stats) {
+        setStats(prData.stats)
+      }
+    },
+    [prData?.stats, stats]
+  )
+
+  useEffect(() => {
+    const fn = () => {
+      if (repoMetadata) {
+        refetchPullRequest().then(() => {
+          interval = window.setTimeout(fn, mergeable ? PR_POLLING_INTERVAL : PR_POLLING_INTERVAL_WHEN_NOT_MERGEABLE)
+        })
+      }
+    }
+    let interval = window.setTimeout(fn, mergeable ? PR_POLLING_INTERVAL : PR_POLLING_INTERVAL_WHEN_NOT_MERGEABLE)
+
+    return () => window.clearTimeout(interval)
+  }, [repoMetadata, refetchPullRequest, path, mergeable])
 
   const activeTab = useMemo(
     () =>
@@ -121,8 +123,8 @@ export default function PullRequest() {
           ]
         }
       />
-      <PageBody error={getErrorMessage(error || prError || pollPrError)} retryOnError={voidFn(refetch)}>
-        <LoadingSpinner visible={loading || prLoading} withBorder={!!prData && prLoading} />
+      <PageBody error={getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
+        <LoadingSpinner visible={showSpinner} />
 
         <Render when={repoMetadata && prData}>
           <>
@@ -157,7 +159,6 @@ export default function PullRequest() {
                         pullRequestMetadata={prData as TypesPullReq}
                         onCommentUpdate={voidFn(refetchPullRequest)}
                         prHasChanged={prHasChanged}
-                        handleRefresh={voidFn(handleRefresh)}
                       />
                     )
                   },
@@ -176,7 +177,7 @@ export default function PullRequest() {
                         repoMetadata={repoMetadata as TypesRepository}
                         pullRequestMetadata={prData as TypesPullReq}
                         prHasChanged={prHasChanged}
-                        handleRefresh={voidFn(handleRefresh)}
+                        handleRefresh={voidFn(refetchPullRequest)}
                       />
                     )
                   },
@@ -201,14 +202,13 @@ export default function PullRequest() {
                           emptyMessage={getString('noChangesPR')}
                           onCommentUpdate={voidFn(refetchPullRequest)}
                           prHasChanged={prHasChanged}
-                          handleRefresh={voidFn(handleRefresh)}
                         />
                       </Container>
                     )
                   },
                   {
                     id: PullRequestSection.CHECKS,
-                    disabled: true,
+                    disabled: window.location.hostname !== 'localhost', // TODO: Remove when API supports checks
                     title: (
                       <TabTitle
                         icon={CodeIcon.ChecksSuccess}
@@ -337,3 +337,13 @@ const TabTitle: React.FC<{ icon: IconName; title: string; count?: number; paddin
     </Text>
   )
 }
+
+enum PullRequestSection {
+  CONVERSATION = 'conversation',
+  COMMITS = 'commits',
+  FILES_CHANGED = 'changes',
+  CHECKS = 'checks'
+}
+
+const PR_POLLING_INTERVAL = 15000
+const PR_POLLING_INTERVAL_WHEN_NOT_MERGEABLE = 5000
