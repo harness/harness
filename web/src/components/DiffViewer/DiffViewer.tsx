@@ -390,6 +390,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
                     return [result, updatedItem]
                   }}
+                  autoFocusAndPositioning
                 />
               </AppWrapper>,
               element

@@ -31,6 +31,8 @@ export type EnumPullReqActivityType =
   | 'state-change'
   | 'title-change'
 
+export type EnumPullReqCommentStatus = 'active' | 'resolved'
+
 export type EnumPullReqReviewDecision = 'approved' | 'changereq' | 'pending' | 'reviewed'
 
 export type EnumPullReqState = 'closed' | 'merged' | 'open'
@@ -115,6 +117,10 @@ export interface OpenapiCommentCreatePullReqRequest {
   source_commit_sha?: string
   target_commit_sha?: string
   text?: string
+}
+
+export interface OpenapiCommentStatusPullReqRequest {
+  status?: EnumPullReqCommentStatus
 }
 
 export interface OpenapiCommentUpdatePullReqRequest {
@@ -223,6 +229,7 @@ export interface OpenapiMoveSpaceRequest {
 }
 
 export interface OpenapiReviewSubmitPullReqRequest {
+  commit_sha?: string
   decision?: EnumPullReqReviewDecision
   message?: string
 }
@@ -453,6 +460,7 @@ export interface TypesPullReqStats {
   commits?: number
   conversations?: number
   files_changed?: number
+  unresolved_count?: number
 }
 
 export interface TypesRepository {
@@ -1878,6 +1886,75 @@ export const useCommentUpdatePullReq = ({
     'PATCH',
     (paramsInPath: CommentUpdatePullReqPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/comments/${paramsInPath.pullreq_comment_id}`,
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number, pullreq_comment_id }, ...props }
+  )
+
+export interface CommentStatusPullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+  pullreq_comment_id: number
+}
+
+export type CommentStatusPullReqProps = Omit<
+  MutateProps<
+    TypesPullReqActivity,
+    UsererrorError,
+    void,
+    OpenapiCommentStatusPullReqRequest,
+    CommentStatusPullReqPathParams
+  >,
+  'path' | 'verb'
+> &
+  CommentStatusPullReqPathParams
+
+export const CommentStatusPullReq = ({
+  repo_ref,
+  pullreq_number,
+  pullreq_comment_id,
+  ...props
+}: CommentStatusPullReqProps) => (
+  <Mutate<
+    TypesPullReqActivity,
+    UsererrorError,
+    void,
+    OpenapiCommentStatusPullReqRequest,
+    CommentStatusPullReqPathParams
+  >
+    verb="PUT"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/comments/${pullreq_comment_id}/status`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseCommentStatusPullReqProps = Omit<
+  UseMutateProps<
+    TypesPullReqActivity,
+    UsererrorError,
+    void,
+    OpenapiCommentStatusPullReqRequest,
+    CommentStatusPullReqPathParams
+  >,
+  'path' | 'verb'
+> &
+  CommentStatusPullReqPathParams
+
+export const useCommentStatusPullReq = ({
+  repo_ref,
+  pullreq_number,
+  pullreq_comment_id,
+  ...props
+}: UseCommentStatusPullReqProps) =>
+  useMutate<
+    TypesPullReqActivity,
+    UsererrorError,
+    void,
+    OpenapiCommentStatusPullReqRequest,
+    CommentStatusPullReqPathParams
+  >(
+    'PUT',
+    (paramsInPath: CommentStatusPullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/comments/${paramsInPath.pullreq_comment_id}/status`,
     { base: getConfig('code'), pathParams: { repo_ref, pullreq_number, pullreq_comment_id }, ...props }
   )
 

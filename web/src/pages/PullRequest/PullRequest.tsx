@@ -51,7 +51,7 @@ export default function PullRequest() {
     [repoMetadata?.path, pullRequestId]
   )
   const {
-    data: prData,
+    data: pullRequestData,
     error: prError,
     loading: prLoading,
     refetch: refetchPullRequest
@@ -59,6 +59,7 @@ export default function PullRequest() {
     path,
     lazy: !repoMetadata
   })
+  const [prData, setPrData] = useState<TypesPullReq>()
   const showSpinner = useMemo(() => {
     return loading || (prLoading && !prData)
   }, [loading, prLoading, prData])
@@ -85,6 +86,17 @@ export default function PullRequest() {
       }
     },
     [prData?.stats, stats]
+  )
+
+  // prData holds the latest good PR data to make sure page is not broken
+  // when polling fails
+  useEffect(
+    function setPrDataIfNotSet() {
+      if (pullRequestData) {
+        setPrData(pullRequestData)
+      }
+    },
+    [pullRequestData]
   )
 
   useEffect(() => {
@@ -123,7 +135,7 @@ export default function PullRequest() {
           ]
         }
       />
-      <PageBody error={getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
+      <PageBody error={!prData && getErrorMessage(error || prError)} retryOnError={voidFn(refetch)}>
         <LoadingSpinner visible={showSpinner} />
 
         <Render when={repoMetadata && prData}>

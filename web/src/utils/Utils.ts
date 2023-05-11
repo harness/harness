@@ -126,9 +126,8 @@ export enum orderSortDate {
   DESC = 'desc'
 }
 
-export enum commentState {
+export enum CodeCommentState {
   ACTIVE = 'active',
-  PENDING = 'pending',
   RESOLVED = 'resolved'
 }
 
@@ -238,5 +237,5 @@ export const voidFn = (f: Function) => () => {
 
 export enum MergeCheckStatus {
   MERGEABLE = 'mergeable',
-  UNCHCKED = 'unchecked'
+  UNCHECKED = 'unchecked'
 }

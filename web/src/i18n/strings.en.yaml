@@ -191,6 +191,7 @@ pr:
   failedToUpdateTitle: Failed to update Pull Request title. Please try again.
   failedToSaveComment: Failed to save comment. Please try again.
   failedToDeleteComment: Failed to delete comment. Please try again.
+  failedToUpdateCommentStatus: Failed to update comment status. Please try again.
   prMerged: This Pull Request was merged
   reviewSubmitted: Review submitted.
   prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested  to, reviewed} the pull request. {time}'
@@ -215,6 +216,8 @@ pr:
     rebaseAndMergeDesc: All commits from this branch will be rebased and added to the base branch.
     close: Close pull request
     closeDesc: Close this pull request. You can still re-open the request after closing.
+  forceMergeWithUnresolvedComment: This pull request has {unrsolvedComment} unresolved {unrsolvedComment|1:comment,comments}. As an administrator, you can still merge it.\nAre you sure you want to force merge it?
+  notMergeableWithUnresolvedComment: This pull request has {unrsolvedComment} unresolved {unrsolvedComment|1:comment,comments}. Please resolve them before merging.
 prState:
   draftHeading: This pull request is still a work in progress
   draftDesc: Draft pull requests cannot be merged.

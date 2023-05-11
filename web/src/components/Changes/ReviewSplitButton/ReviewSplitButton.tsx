@@ -50,14 +50,14 @@ const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
       title: getString('requestChanges'),
       icon: 'error' as IconName,
       color: Color.ORANGE_700
-    },
-    {
-      method: 'reject',
-      title: getString('reject'),
-      disabled: true,
-      icon: 'danger-icon' as IconName,
-      color: Color.RED_700
     }
+    // {
+    //   method: 'reject',
+    //   title: getString('reject'),
+    //   disabled: true,
+    //   icon: 'danger-icon' as IconName,
+    //   color: Color.RED_700
+    // }
   ]
 
   const [decisionOption, setDecisionOption] = useState<PrReviewOption>(prDecisionOptions[0])
@@ -66,14 +66,14 @@ const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/reviews`
   })
   const submitReview = useCallback(() => {
-    mutate({ decision: decisionOption.method })
+    mutate({ decision: decisionOption.method, commit_sha: pullRequestMetadata?.source_sha })
       .then(() => {
         // setReset(true)
         showSuccess(getString('pr.reviewSubmitted'))
         refreshPr?.()
       })
       .catch(exception => showError(getErrorMessage(exception)))
-  }, [decisionOption, mutate, showError, showSuccess, getString, refreshPr])
+  }, [decisionOption, mutate, showError, showSuccess, getString, refreshPr, pullRequestMetadata?.source_sha])
   return (
     <Container className={cx(css.btn, { [css.hide]: shouldHide })}>
       <SplitButton
@@ -87,9 +87,7 @@ const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
           position: PopoverPosition.BOTTOM_RIGHT,
           transitionDuration: 1000
         }}
-        onClick={() => {
-          submitReview()
-        }}>
+        onClick={submitReview}>
         {prDecisionOptions.map(option => {
           return (
             <Menu.Item
