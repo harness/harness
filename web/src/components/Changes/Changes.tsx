@@ -79,7 +79,7 @@ export const Changes: React.FC<ChangesProps> = ({
     lazy: !targetBranch || !sourceBranch
   })
   const {
-    data: activities,
+    data: prActivities,
     loading: loadingActivities,
     error: errorActivities,
     refetch: refetchActivities
@@ -87,7 +87,10 @@ export const Changes: React.FC<ChangesProps> = ({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/activities`,
     lazy: !pullRequestMetadata?.number
   })
-
+  const [activities, setActivities] = useState<TypesPullReqActivity[]>()
+  const showSpinner = useMemo(() => {
+    return loading || (loadingActivities && !activities)
+  }, [loading, loadingActivities, activities])
   const diffStats = useMemo(
     () =>
       (diffs || []).reduce(
@@ -99,6 +102,18 @@ export const Changes: React.FC<ChangesProps> = ({
         { addedLines: 0, deletedLines: 0 }
       ),
     [diffs]
+  )
+
+  // Optimization to avoid showing unnecessary loading spinner. The trick is to
+  // show only the spinner when the component is mounted and not when refetching
+  // happens after some comments are authored.
+  useEffect(
+    function setActivitiesIfNotSet() {
+      if (prActivities) {
+        setActivities(prActivities)
+      }
+    },
+    [prActivities]
   )
 
   useEffect(() => {
@@ -144,7 +159,7 @@ export const Changes: React.FC<ChangesProps> = ({
 
   return (
     <Container className={cx(css.container, className)} {...(!!loading || !!error ? { flex: true } : {})}>
-      <LoadingSpinner visible={loading || loadingActivities} withBorder={true} />
+      <LoadingSpinner visible={loading || showSpinner} withBorder={true} />
       <Render when={error}>
         <PageError message={getErrorMessage(error || errorActivities)} onClick={voidFn(refetch)} />
       </Render>
