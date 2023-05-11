@@ -162,6 +162,10 @@ type Identity struct {
 	Email string
 }
 
+func (i Identity) String() string {
+	return fmt.Sprintf("%s <%s>", i.Name, i.Email)
+}
+
 type CommitChangesOptions struct {
 	Committer Signature
 	Author    Signature

@@ -169,7 +169,10 @@ func (s MergeService) Merge(
 		mergeMsg += "\n\n" + strings.TrimSpace(request.Message)
 	}
 
-	if err = s.adapter.Merge(ctx, pr, "merge", trackingBranch, tmpBasePath, mergeMsg, env); err != nil {
+	if err = s.adapter.Merge(ctx, pr, enum.MergeMethodFromRPC(request.Method), trackingBranch, tmpBasePath, mergeMsg, env, &types.Identity{
+		Name:  author.Name,
+		Email: author.Email,
+	}); err != nil {
 		return nil, processGitErrorf(err, "merge failed")
 	}
 

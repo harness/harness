@@ -23,8 +23,8 @@ import (
 )
 
 type MergeInput struct {
-	Method    enum.MergeMethod `json:"method"`
-	SourceSHA string           `json:"source_sha"`
+	Method    gitrpcenum.MergeMethod `json:"method"`
+	SourceSHA string                 `json:"source_sha"`
 }
 
 // Merge merges the pull request.
@@ -117,6 +117,7 @@ func (c *Controller) Merge(
 		RefType:         gitrpcenum.RefTypeBranch,
 		RefName:         pr.TargetBranch,
 		HeadExpectedSHA: in.SourceSHA,
+		Method:          in.Method,
 	})
 	if err != nil {
 		return types.MergeResponse{}, err

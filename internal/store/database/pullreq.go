@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -483,7 +484,7 @@ func mapPullReq(pr *pullReq) *types.PullReq {
 		ActivitySeq:      pr.ActivitySeq,
 		MergedBy:         pr.MergedBy.Ptr(),
 		Merged:           pr.Merged.Ptr(),
-		MergeMethod:      (*enum.MergeMethod)(pr.MergeMethod.Ptr()),
+		MergeMethod:      (*gitrpcenum.MergeMethod)(pr.MergeMethod.Ptr()),
 		MergeCheckStatus: pr.MergeCheckStatus,
 		MergeTargetSHA:   pr.MergeTargetSHA.Ptr(),
 		MergeBaseSHA:     pr.MergeBaseSHA,

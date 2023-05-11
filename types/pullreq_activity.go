@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 
+	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -210,10 +211,10 @@ func (a *PullRequestActivityPayloadCodeComment) ActivityType() enum.PullReqActiv
 }
 
 type PullRequestActivityPayloadMerge struct {
-	MergeMethod enum.MergeMethod `json:"merge_method"`
-	MergeSHA    string           `json:"merge_sha"`
-	TargetSHA   string           `json:"target_sha"`
-	SourceSHA   string           `json:"source_sha"`
+	MergeMethod gitrpcenum.MergeMethod `json:"merge_method"`
+	MergeSHA    string                 `json:"merge_sha"`
+	TargetSHA   string                 `json:"target_sha"`
+	SourceSHA   string                 `json:"source_sha"`
 }
 
 func (a *PullRequestActivityPayloadMerge) ActivityType() enum.PullReqActivityType {

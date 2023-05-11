@@ -191,28 +191,6 @@ var pullReqReviewerTypes = sortEnum([]PullReqReviewerType{
 	PullReqReviewerTypeSelfAssigned,
 })
 
-// MergeMethod represents the approach to merge commits into base branch.
-type MergeMethod string
-
-func (MergeMethod) Enum() []interface{}                { return toInterfaceSlice(mergeMethods) }
-func (m MergeMethod) Sanitize() (MergeMethod, bool)    { return Sanitize(m, GetAllMergeMethods) }
-func GetAllMergeMethods() ([]MergeMethod, MergeMethod) { return mergeMethods, MergeMethodMerge }
-
-const (
-	// MergeMethodMerge create merge commit.
-	MergeMethodMerge MergeMethod = "merge"
-	// MergeMethodSquash squash commits into single commit before merging.
-	MergeMethodSquash MergeMethod = "squash"
-	// MergeMethodRebase rebase before merging.
-	MergeMethodRebase MergeMethod = "rebase"
-)
-
-var mergeMethods = sortEnum([]MergeMethod{
-	MergeMethodMerge,
-	MergeMethodSquash,
-	MergeMethodRebase,
-})
-
 type MergeCheckStatus string
 
 const (
