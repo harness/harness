@@ -38,12 +38,12 @@ func HandleReviewSubmit(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		review, err := pullreqCtrl.ReviewSubmit(ctx, session, repoRef, pullreqNumber, in)
+		_, err = pullreqCtrl.ReviewSubmit(ctx, session, repoRef, pullreqNumber, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, review)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
