@@ -83,8 +83,25 @@ func (c *Controller) Merge(
 		return types.MergeResponse{}, usererror.BadRequest("Pull request must be open")
 	}
 
+	if pr.UnresolvedCount > 0 {
+		return types.MergeResponse{}, usererror.BadRequest("Pull requests with unresolved comments can't be merged. Resolve all the comments first.")
+	}
+
 	if pr.IsDraft {
 		return types.MergeResponse{}, usererror.BadRequest("Draft pull requests can't be merged. Clear the draft flag first.")
+	}
+
+	reviewers, err := c.reviewerStore.List(ctx, pr.ID)
+	if err != nil {
+		return types.MergeResponse{}, fmt.Errorf("failed to load list of reviwers: %w", err)
+	}
+
+	// TODO: We need to extend this section. A review decision might be for an older commit.
+	// TODO: Repository admin users should be able to override this and proceed with the merge.
+	for _, reviewer := range reviewers {
+		if reviewer.ReviewDecision == enum.PullReqReviewDecisionChangeReq {
+			return types.MergeResponse{}, usererror.BadRequest("At least one reviewer still requests changes.")
+		}
 	}
 
 	sourceRepo := targetRepo
