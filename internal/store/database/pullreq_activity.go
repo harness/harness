@@ -25,8 +25,10 @@ import (
 var _ store.PullReqActivityStore = (*PullReqActivityStore)(nil)
 
 // NewPullReqActivityStore returns a new PullReqJournalStore.
-func NewPullReqActivityStore(db *sqlx.DB,
-	pCache store.PrincipalInfoCache) *PullReqActivityStore {
+func NewPullReqActivityStore(
+	db *sqlx.DB,
+	pCache store.PrincipalInfoCache,
+) *PullReqActivityStore {
 	return &PullReqActivityStore{
 		db:     db,
 		pCache: pCache,
@@ -321,8 +323,10 @@ func (s *PullReqActivityStore) UpdateOptLock(ctx context.Context,
 }
 
 // Count of pull requests for a repo.
-func (s *PullReqActivityStore) Count(ctx context.Context, prID int64,
-	opts *types.PullReqActivityFilter) (int64, error) {
+func (s *PullReqActivityStore) Count(ctx context.Context,
+	prID int64,
+	opts *types.PullReqActivityFilter,
+) (int64, error) {
 	stmt := builder.
 		Select("count(*)").
 		From("pullreq_activities").
@@ -365,8 +369,10 @@ func (s *PullReqActivityStore) Count(ctx context.Context, prID int64,
 }
 
 // List returns a list of pull requests for a repo.
-func (s *PullReqActivityStore) List(ctx context.Context, prID int64,
-	opts *types.PullReqActivityFilter) ([]*types.PullReqActivity, error) {
+func (s *PullReqActivityStore) List(ctx context.Context,
+	prID int64,
+	opts *types.PullReqActivityFilter,
+) ([]*types.PullReqActivity, error) {
 	stmt := builder.
 		Select(pullreqActivityColumns).
 		From("pullreq_activities").
@@ -552,14 +558,16 @@ func (s *PullReqActivityStore) mapPullReqActivity(ctx context.Context, act *pull
 	return m
 }
 
-func (s *PullReqActivityStore) mapSlicePullReqActivity(ctx context.Context,
-	activities []*pullReqActivity) ([]*types.PullReqActivity, error) {
+func (s *PullReqActivityStore) mapSlicePullReqActivity(
+	ctx context.Context,
+	activities []*pullReqActivity,
+) ([]*types.PullReqActivity, error) {
 	// collect all principal IDs
 	ids := make([]int64, 0, 2*len(activities))
 	for _, act := range activities {
 		ids = append(ids, act.CreatedBy)
 		if act.ResolvedBy.Valid {
-			ids = append(ids, act.Resolved.Int64)
+			ids = append(ids, act.ResolvedBy.Int64)
 		}
 	}
 
