@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/internal/tempdir"
 	"github.com/harness/gitness/gitrpc/internal/types"
 
@@ -171,37 +172,20 @@ func (g Adapter) CreateTemporaryRepoForPR(
 	return tmpBasePath, nil
 }
 
-func (g Adapter) Merge(
+func runMergeCommand(
 	ctx context.Context,
 	pr *types.PullRequest,
 	mergeMethod string,
-	trackingBranch string,
+	cmd *git.Command,
 	tmpBasePath string,
-	mergeMsg string,
 	env []string,
 ) error {
-	// TODO: mergeMethod should be an enum.
-	if mergeMethod != "merge" {
-		return fmt.Errorf("merge method '%s' is not supported", mergeMethod)
-	}
 	var outbuf, errbuf strings.Builder
-	args := []string{
-		mergeMethod,
-		"--no-ff",
-		trackingBranch,
-	}
-
-	// override message for merging iff mergeMsg was provided (only for merge for now)
-	if mergeMethod == "merge" && mergeMsg != "" {
-		args = append(args, "-m", mergeMsg)
-	}
-
-	cmd := git.NewCommand(ctx, args...)
 	if err := cmd.Run(&git.RunOpts{
-		Env:    env,
 		Dir:    tmpBasePath,
 		Stdout: &outbuf,
 		Stderr: &errbuf,
+		Env:    env,
 	}); err != nil {
 		// Merge will leave a MERGE_HEAD file in the .git folder if there is a conflict
 		if _, statErr := os.Stat(filepath.Join(tmpBasePath, ".git", "MERGE_HEAD")); statErr == nil {
@@ -226,6 +210,109 @@ func (g Adapter) Merge(
 		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
 		return processGiteaErrorf(giteaErr, "git merge [%s -> %s]\n%s\n%s",
 			pr.HeadBranch, pr.BaseBranch, outbuf.String(), errbuf.String())
+	}
+
+	return nil
+}
+
+func commitAndSignNoAuthor(
+	ctx context.Context,
+	pr *types.PullRequest,
+	message string,
+	signArg string,
+	tmpBasePath string,
+	env []string,
+) error {
+	var outbuf, errbuf strings.Builder
+	if signArg == "" {
+		if err := git.NewCommand(ctx, "commit", "-m", message).
+			Run(&git.RunOpts{
+				Env:    env,
+				Dir:    tmpBasePath,
+				Stdout: &outbuf,
+				Stderr: &errbuf,
+			}); err != nil {
+			return processGiteaErrorf(err, "git commit [%s -> %s]\n%s\n%s",
+				pr.HeadBranch, pr.BaseBranch, outbuf.String(), errbuf.String())
+		}
+	} else {
+		if err := git.NewCommand(ctx, "commit", signArg, "-m", message).
+			Run(&git.RunOpts{
+				Env:    env,
+				Dir:    tmpBasePath,
+				Stdout: &outbuf,
+				Stderr: &errbuf,
+			}); err != nil {
+			return processGiteaErrorf(err, "git commit [%s -> %s]\n%s\n%s",
+				pr.HeadBranch, pr.BaseBranch, outbuf.String(), errbuf.String())
+		}
+	}
+	return nil
+}
+
+func (g Adapter) Merge(
+	ctx context.Context,
+	pr *types.PullRequest,
+	mergeMethod enum.MergeMethod,
+	trackingBranch string,
+	tmpBasePath string,
+	mergeMsg string,
+	env []string,
+	identity *types.Identity,
+) error {
+	var (
+		outbuf, errbuf strings.Builder
+	)
+
+	if mergeMsg == "" {
+		mergeMsg = "Merge commit"
+	}
+
+	// TODO: sign merge commit
+	signArg := "--no-gpg-sign"
+
+	switch mergeMethod {
+	case enum.MergeMethodMerge:
+		cmd := git.NewCommand(ctx, "merge", "--no-ff", "--no-commit", trackingBranch)
+		if err := runMergeCommand(ctx, pr, string(mergeMethod), cmd, tmpBasePath, env); err != nil {
+			return fmt.Errorf("unable to merge tracking into base: %w", err)
+		}
+
+		if err := commitAndSignNoAuthor(ctx, pr, mergeMsg, signArg, tmpBasePath, env); err != nil {
+			return fmt.Errorf("unable to make final commit: %w", err)
+		}
+	case enum.MergeMethodSquash:
+		// Merge with squash
+		cmd := git.NewCommand(ctx, "merge", "--squash", trackingBranch)
+		if err := runMergeCommand(ctx, pr, string(mergeMethod), cmd, tmpBasePath, env); err != nil {
+			return fmt.Errorf("unable to merge --squash tracking into base: %v", err)
+		}
+
+		if signArg == "" {
+			if err := git.NewCommand(ctx, "commit", fmt.Sprintf("--author='%s'", identity.String()), "-m", mergeMsg).
+				Run(&git.RunOpts{
+					Env:    env,
+					Dir:    tmpBasePath,
+					Stdout: &outbuf,
+					Stderr: &errbuf,
+				}); err != nil {
+				return processGiteaErrorf(err, "git commit [%s -> %s]\n%s\n%s",
+					pr.HeadBranch, pr.BaseBranch, outbuf.String(), errbuf.String())
+			}
+		} else {
+			if err := git.NewCommand(ctx, "commit", signArg, fmt.Sprintf("--author='%s'", identity.String()), "-m", mergeMsg).
+				Run(&git.RunOpts{
+					Env:    env,
+					Dir:    tmpBasePath,
+					Stdout: &outbuf,
+					Stderr: &errbuf,
+				}); err != nil {
+				return processGiteaErrorf(err, "git commit [%s -> %s]\n%s\n%s",
+					pr.HeadBranch, pr.BaseBranch, outbuf.String(), errbuf.String())
+			}
+		}
+	default:
+		return fmt.Errorf("wrong merge method provided: %s", mergeMethod)
 	}
 
 	return nil

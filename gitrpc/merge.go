@@ -36,6 +36,8 @@ type MergeParams struct {
 
 	Force            bool
 	DeleteHeadBranch bool
+
+	Method enum.MergeMethod
 }
 
 // MergeOutput is result object from merging and returns
@@ -82,6 +84,7 @@ func (c *Client) Merge(ctx context.Context, params *MergeParams) (MergeOutput, e
 		HeadExpectedSha:  params.HeadExpectedSHA,
 		Force:            params.Force,
 		DeleteHeadBranch: params.DeleteHeadBranch,
+		Method:           params.Method.ToRPC(),
 	})
 	if err != nil {
 		return MergeOutput{}, processRPCErrorf(err, "merging failed")

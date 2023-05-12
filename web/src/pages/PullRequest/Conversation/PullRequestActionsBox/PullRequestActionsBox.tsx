@@ -77,7 +77,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       method: 'squash',
       title: getString('pr.mergeOptions.squashAndMerge'),
       desc: getString('pr.mergeOptions.squashAndMergeDesc'),
-      disabled: true
+      disabled: false
     },
     {
       method: 'merge',
