@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/events"
-	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -96,10 +96,10 @@ const MergedEvent events.EventType = "merged"
 
 type MergedPayload struct {
 	Base
-	MergeMethod gitrpcenum.MergeMethod `json:"merge_method"`
-	MergeSHA    string                 `json:"merge_sha"`
-	TargetSHA   string                 `json:"target_sha"`
-	SourceSHA   string                 `json:"source_sha"`
+	MergeMethod enum.MergeMethod `json:"merge_method"`
+	MergeSHA    string           `json:"merge_sha"`
+	TargetSHA   string           `json:"target_sha"`
+	SourceSHA   string           `json:"source_sha"`
 }
 
 func (r *Reporter) Merged(ctx context.Context, payload *MergedPayload) {

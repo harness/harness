@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/harness/gitness/gitrpc"
-	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -78,15 +77,15 @@ func repositoryInfoFrom(repo *types.Repository, urlProvider *url.Provider) Repos
 // PullReqInfo describes the pullreq related info for a webhook payload.
 // NOTE: don't use types package as we want pullreq payload to be independent from API calls.
 type PullReqInfo struct {
-	Number        int64                   `json:"number"`
-	State         enum.PullReqState       `json:"state"`
-	IsDraft       bool                    `json:"is_draft"`
-	Title         string                  `json:"title"`
-	SourceRepoID  int64                   `json:"source_repo_id"`
-	SourceBranch  string                  `json:"source_branch"`
-	TargetRepoID  int64                   `json:"target_repo_id"`
-	TargetBranch  string                  `json:"target_branch"`
-	MergeStrategy *gitrpcenum.MergeMethod `json:"merge_strategy"`
+	Number        int64             `json:"number"`
+	State         enum.PullReqState `json:"state"`
+	IsDraft       bool              `json:"is_draft"`
+	Title         string            `json:"title"`
+	SourceRepoID  int64             `json:"source_repo_id"`
+	SourceBranch  string            `json:"source_branch"`
+	TargetRepoID  int64             `json:"target_repo_id"`
+	TargetBranch  string            `json:"target_branch"`
+	MergeStrategy *enum.MergeMethod `json:"merge_strategy"`
 }
 
 // pullReqInfoFrom gets the PullReqInfo from a types.PullReq.
