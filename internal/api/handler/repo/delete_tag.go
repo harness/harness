@@ -5,7 +5,6 @@
 package repo
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -18,19 +17,18 @@ func HandleDeleteCommitTag(repoCtrl *repo.Controller) http.HandlerFunc {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 		repoRef, err := request.GetRepoRefFromPath(r)
+
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+		tagName, err := request.GetRemainderFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		in := new(repo.DeleteTagInput)
-		err = json.NewDecoder(r.Body).Decode(in)
-		if err != nil {
-			render.BadRequestf(w, "Invalid request body: %s.", err)
-			return
-		}
-		//
-		err = repoCtrl.DeleteTag(ctx, session, repoRef, in)
+		err = repoCtrl.DeleteTag(ctx, session, repoRef, tagName)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

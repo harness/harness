@@ -11,8 +11,14 @@ service ReferenceService {
   rpc DeleteBranch(DeleteBranchRequest) returns (DeleteBranchResponse);
   rpc ListBranches(ListBranchesRequest) returns (stream ListBranchesResponse);
   rpc ListCommitTags(ListCommitTagsRequest) returns (stream ListCommitTagsResponse);
+  rpc DeleteTag(DeleteTagRequest) returns (UpdateRefResponse);
   rpc GetRef(GetRefRequest) returns (GetRefResponse);
   rpc UpdateRef(UpdateRefRequest) returns (UpdateRefResponse);
+}
+
+message DeleteTagRequest{
+  WriteRequest base  = 1;
+  string tag_name = 2;
 }
 
 message CreateBranchRequest {

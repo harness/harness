@@ -5,6 +5,7 @@
 package service
 
 import (
+	"code.gitea.io/gitea/modules/git"
 	"context"
 	"fmt"
 
@@ -183,4 +184,42 @@ func listCommitTagsWalkReferencesHandler(tags *[]*rpc.CommitTag) types.WalkRefer
 
 		return nil
 	}
+}
+
+func (s ReferenceService) DeleteTag(ctx context.Context, deleteTagRequest *rpc.DeleteTagRequest) (*rpc.UpdateRefResponse, error) {
+	base := deleteTagRequest.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
+
+	repo, err := git.OpenRepository(ctx, repoPath)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to open repo")
+	}
+	defer repo.Close()
+
+	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to create new shared repo")
+	}
+
+	defer sharedRepo.Close(ctx)
+
+	err = sharedRepo.Clone(ctx, "")
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to clone shared repo with tag '%s'", deleteTagRequest.GetTagName())
+	}
+	actor := deleteTagRequest.GetBase().GetActor()
+	env := append(CreateEnvironmentForPush(ctx, base),
+		"GIT_COMMITTER_NAME="+actor.GetName(),
+		"GIT_COMMITTER_EMAIL="+actor.GetEmail(),
+	)
+	err = s.adapter.DeleteTag(ctx, repoPath, deleteTagRequest.TagName, env)
+	sharedRepo.PushDeleteBranch(ctx, base, "")
+	if err != nil {
+		return nil, processGitErrorf(err, "Failed to delete the tag")
+	}
+	return &rpc.UpdateRefResponse{}, nil
 }

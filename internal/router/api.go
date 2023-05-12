@@ -210,6 +210,7 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Co
 			// tags operations
 			r.Route("/tags", func(r chi.Router) {
 				r.Get("/", handlerrepo.HandleListCommitTags(repoCtrl))
+				r.Delete("/*", handlerrepo.HandleDeleteCommitTag(repoCtrl))
 			})
 
 			// repo path operations

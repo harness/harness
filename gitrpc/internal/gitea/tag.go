@@ -62,6 +62,15 @@ func (g Adapter) GetAnnotatedTags(ctx context.Context, repoPath string, shas []s
 	return tags, nil
 }
 
+func (g Adapter) DeleteTag(ctx context.Context, repoPath string, ref string, env []string) error {
+	cmd := gitea.NewCommand(ctx, "tag", "-d", ref)
+	_, stdErr, err := cmd.RunStdString(&gitea.RunOpts{Dir: repoPath, Env: env})
+	if err != nil {
+		return processGiteaErrorf(err, "Service failed to delete tag with error", stdErr)
+	}
+	return nil
+}
+
 // giteaGetAnnotatedTag is a custom implementation to retrieve an annotated tag from a sha.
 // The code is following parts of the gitea implementation.
 //
