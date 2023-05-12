@@ -5,7 +5,6 @@
 package types
 
 import (
-	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -37,9 +36,9 @@ type PullReq struct {
 
 	ActivitySeq int64 `json:"-"` // not returned, because it's a server's internal field
 
-	MergedBy    *int64                  `json:"-"` // not returned, because the merger info is in the Merger field
-	Merged      *int64                  `json:"merged"`
-	MergeMethod *gitrpcenum.MergeMethod `json:"merge_method"`
+	MergedBy    *int64            `json:"-"` // not returned, because the merger info is in the Merger field
+	Merged      *int64            `json:"merged"`
+	MergeMethod *enum.MergeMethod `json:"merge_method"`
 
 	MergeCheckStatus enum.MergeCheckStatus `json:"merge_check_status"`
 	MergeTargetSHA   *string               `json:"merge_target_sha"`

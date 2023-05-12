@@ -14,6 +14,12 @@ const (
 	MergeMethodRebase MergeMethod = "rebase"
 )
 
+var MergeMethods = []MergeMethod{
+	MergeMethodMerge,
+	MergeMethodSquash,
+	MergeMethodRebase,
+}
+
 func MergeMethodFromRPC(t rpc.MergeRequest_MergeMethod) MergeMethod {
 	switch t {
 	case rpc.MergeRequest_merge:

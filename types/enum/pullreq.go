@@ -4,6 +4,10 @@
 
 package enum
 
+import (
+	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
+)
+
 // PullReqState defines pull request state.
 type PullReqState string
 
@@ -190,6 +194,14 @@ var pullReqReviewerTypes = sortEnum([]PullReqReviewerType{
 	PullReqReviewerTypeAssigned,
 	PullReqReviewerTypeSelfAssigned,
 })
+
+type MergeMethod gitrpcenum.MergeMethod
+
+func (MergeMethod) Enum() []interface{} { return toInterfaceSlice(gitrpcenum.MergeMethods) }
+func (m MergeMethod) Sanitize() (MergeMethod, bool) {
+	s, ok := gitrpcenum.MergeMethod(m).Sanitize()
+	return MergeMethod(s), ok
+}
 
 type MergeCheckStatus string
 
