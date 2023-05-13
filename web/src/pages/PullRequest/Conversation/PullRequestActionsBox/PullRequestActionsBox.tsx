@@ -88,7 +88,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       method: 'rebase',
       title: getString('pr.mergeOptions.rebaseAndMerge'),
       desc: getString('pr.mergeOptions.rebaseAndMergeDesc'),
-      disabled: true
+      disabled: false
     },
     {
       method: 'close',
