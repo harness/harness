@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/internal/tempdir"
 	"github.com/harness/gitness/gitrpc/internal/types"
+	"github.com/rs/zerolog/log"
 
 	"code.gitea.io/gitea/modules/git"
 )
@@ -175,7 +176,7 @@ func (g Adapter) CreateTemporaryRepoForPR(
 func runMergeCommand(
 	ctx context.Context,
 	pr *types.PullRequest,
-	mergeMethod string,
+	mergeMethod enum.MergeMethod,
 	cmd *git.Command,
 	tmpBasePath string,
 	env []string,
@@ -254,6 +255,7 @@ func (g Adapter) Merge(
 	ctx context.Context,
 	pr *types.PullRequest,
 	mergeMethod enum.MergeMethod,
+	baseBranch string,
 	trackingBranch string,
 	tmpBasePath string,
 	mergeMsg string,
@@ -268,13 +270,14 @@ func (g Adapter) Merge(
 		mergeMsg = "Merge commit"
 	}
 
+	stagingBranch := "staging"
 	// TODO: sign merge commit
 	signArg := "--no-gpg-sign"
 
 	switch mergeMethod {
 	case enum.MergeMethodMerge:
 		cmd := git.NewCommand(ctx, "merge", "--no-ff", "--no-commit", trackingBranch)
-		if err := runMergeCommand(ctx, pr, string(mergeMethod), cmd, tmpBasePath, env); err != nil {
+		if err := runMergeCommand(ctx, pr, mergeMethod, cmd, tmpBasePath, env); err != nil {
 			return fmt.Errorf("unable to merge tracking into base: %w", err)
 		}
 
@@ -284,7 +287,7 @@ func (g Adapter) Merge(
 	case enum.MergeMethodSquash:
 		// Merge with squash
 		cmd := git.NewCommand(ctx, "merge", "--squash", trackingBranch)
-		if err := runMergeCommand(ctx, pr, string(mergeMethod), cmd, tmpBasePath, env); err != nil {
+		if err := runMergeCommand(ctx, pr, mergeMethod, cmd, tmpBasePath, env); err != nil {
 			return fmt.Errorf("unable to merge --squash tracking into base: %v", err)
 		}
 
@@ -310,6 +313,79 @@ func (g Adapter) Merge(
 				return processGiteaErrorf(err, "git commit [%s -> %s]\n%s\n%s",
 					pr.HeadBranch, pr.BaseBranch, outbuf.String(), errbuf.String())
 			}
+		}
+	case enum.MergeMethodRebase:
+		// Checkout head branch
+		if err := git.NewCommand(ctx, "checkout", "-b", stagingBranch, trackingBranch).
+			Run(&git.RunOpts{
+				Dir:    tmpBasePath,
+				Stdout: &outbuf,
+				Stderr: &errbuf,
+			}); err != nil {
+			return fmt.Errorf("git checkout base prior to merge post staging rebase  [%s -> %s]: %v\n%s\n%s", pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String())
+		}
+		outbuf.Reset()
+		errbuf.Reset()
+
+		// Rebase before merging
+		if err := git.NewCommand(ctx, "rebase", baseBranch).
+			Run(&git.RunOpts{
+				Dir:    tmpBasePath,
+				Stdout: &outbuf,
+				Stderr: &errbuf,
+			}); err != nil {
+			// Rebase will leave a REBASE_HEAD file in .git if there is a conflict
+			if _, statErr := os.Stat(filepath.Join(tmpBasePath, ".git", "REBASE_HEAD")); statErr == nil {
+				var commitSha string
+				// TBD git version we will support
+				// failingCommitPath := filepath.Join(tmpBasePath, ".git", "rebase-apply", "original-commit") // Git < 2.26
+				// if _, statErr := os.Stat(failingCommitPath); statErr != nil {
+				// 	return fmt.Errorf("git rebase staging on to base [%s -> %s]: %v\n%s\n%s", pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String())
+				// }
+
+				failingCommitPath := filepath.Join(tmpBasePath, ".git", "rebase-merge", "stopped-sha") // Git >= 2.26
+				if _, statErr := os.Stat(failingCommitPath); statErr != nil {
+					return fmt.Errorf("git rebase staging on to base [%s -> %s]: %v\n%s\n%s", pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String())
+				}
+
+				commitShaBytes, readErr := os.ReadFile(failingCommitPath)
+				if readErr != nil {
+					// Abandon this attempt to handle the error
+					return fmt.Errorf("git rebase staging on to base [%s -> %s]: %v\n%s\n%s", pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String())
+				}
+				commitSha = strings.TrimSpace(string(commitShaBytes))
+
+				log.Debug().Msgf("RebaseConflict at %s [%s -> %s]: %v\n%s\n%s", commitSha, pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String())
+				return &types.MergeConflictsError{
+					Method:    mergeMethod,
+					CommitSHA: commitSha,
+					StdOut:    outbuf.String(),
+					StdErr:    errbuf.String(),
+					Err:       err,
+				}
+			}
+			return fmt.Errorf("git rebase staging on to base [%s -> %s]: %v\n%s\n%s", pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String())
+		}
+		outbuf.Reset()
+		errbuf.Reset()
+
+		// Checkout base branch again
+		if err := git.NewCommand(ctx, "checkout", baseBranch).
+			Run(&git.RunOpts{
+				Dir:    tmpBasePath,
+				Stdout: &outbuf,
+				Stderr: &errbuf,
+			}); err != nil {
+			return fmt.Errorf("git checkout base prior to merge post staging rebase  [%s -> %s]: %v\n%s\n%s", pr.HeadBranch, pr.BaseBranch, err, outbuf.String(), errbuf.String())
+		}
+		outbuf.Reset()
+		errbuf.Reset()
+
+		cmd := git.NewCommand(ctx, "merge", "--ff-only", stagingBranch)
+
+		// Prepare merge with commit
+		if err := runMergeCommand(ctx, pr, mergeMethod, cmd, tmpBasePath, env); err != nil {
+			return err
 		}
 	default:
 		return fmt.Errorf("wrong merge method provided: %s", mergeMethod)

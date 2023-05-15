@@ -7,6 +7,8 @@ package types
 import (
 	"errors"
 	"fmt"
+
+	"github.com/harness/gitness/gitrpc/enum"
 )
 
 var (
@@ -29,10 +31,11 @@ var (
 
 // MergeConflictsError represents an error if merging fails with a conflict.
 type MergeConflictsError struct {
-	Method string
-	StdOut string
-	StdErr string
-	Err    error
+	Method    enum.MergeMethod
+	CommitSHA string
+	StdOut    string
+	StdErr    string
+	Err       error
 }
 
 func IsMergeConflictsError(err error) bool {
@@ -55,7 +58,7 @@ func (e *MergeConflictsError) Is(target error) bool {
 
 // MergeUnrelatedHistoriesError represents an error if merging fails due to unrelated histories.
 type MergeUnrelatedHistoriesError struct {
-	Method string
+	Method enum.MergeMethod
 	StdOut string
 	StdErr string
 	Err    error
