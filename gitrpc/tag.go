@@ -47,6 +47,18 @@ type CommitTag struct {
 	Commit      *Commit
 }
 
+type DeleteTagParams struct {
+	WriteParams
+	Name string
+}
+
+func (p DeleteTagParams) Validate() error {
+	if p.Name == "" {
+		return errors.New("tag name cannot be empty")
+	}
+	return nil
+}
+
 func (c *Client) ListCommitTags(ctx context.Context, params *ListCommitTagsParams) (*ListCommitTagsOutput, error) {
 	if params == nil {
 		return nil, ErrNoParamsProvided
@@ -98,4 +110,23 @@ func (c *Client) ListCommitTags(ctx context.Context, params *ListCommitTagsParam
 	}
 
 	return output, nil
+}
+
+func (c *Client) DeleteTag(ctx context.Context, params *DeleteTagParams) error {
+
+	err := params.Validate()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = c.refService.DeleteTag(ctx, &rpc.DeleteTagRequest{
+		Base:    mapToRPCWriteRequest(params.WriteParams),
+		TagName: params.Name,
+	})
+
+	if err != nil {
+		return processRPCErrorf(err, "Failed to create tag %s", params.Name)
+	}
+	return nil
 }

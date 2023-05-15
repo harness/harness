@@ -39,6 +39,7 @@ type GitAdapter interface {
 	GetFullCommitID(ctx context.Context, repoPath, shortID string) (string, error)
 	GetAnnotatedTag(ctx context.Context, repoPath string, sha string) (*types.Tag, error)
 	GetAnnotatedTags(ctx context.Context, repoPath string, shas []string) ([]types.Tag, error)
+	DeleteTag(ctx context.Context, repoPath string, ref string, env []string) error
 	GetBranch(ctx context.Context, repoPath string, branchName string) (*types.Branch, error)
 	GetCommitDivergences(ctx context.Context, repoPath string,
 		requests []types.CommitDivergenceRequest, max int32) ([]types.CommitDivergence, error)
