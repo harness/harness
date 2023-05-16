@@ -48,6 +48,10 @@
     line-height: 20px !important;
     color: var(--green-800) !important;
 
+    &.merged {
+      color: var(--purple-700) !important;
+    }
+
     &.draft {
       color: var(--grey-700) !important;
     }

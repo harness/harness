@@ -200,7 +200,9 @@ export function FileContent({
             title: getString('blame'),
             panel: (
               <Container className={css.gitBlame}>
-                <GitBlame repoMetadata={repoMetadata} resourcePath={resourcePath} />
+                {[resourcePath + gitRef].map(key => (
+                  <GitBlame repoMetadata={repoMetadata} resourcePath={resourcePath} gitRef={gitRef} key={key} />
+                ))}
               </Container>
             )
           }

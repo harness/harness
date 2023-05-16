@@ -367,6 +367,7 @@ repoUpdate: Repository Updated
 deleteRepoText: Are you sure you want to delete the repository '{REPONAME}'?
 deleteRepoTitle: Delete the repository
 resolve: Resolve
+unresolve: Unresolve
 generateCloneCred: + Generate Clone Credential
 generateCloneText: 'Please generate clone credential if it’s your first time'
 getMyCloneTitle: Get My Clone Credential

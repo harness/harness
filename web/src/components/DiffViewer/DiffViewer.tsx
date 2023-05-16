@@ -29,6 +29,8 @@ import { getErrorMessage } from 'utils/Utils'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { AppWrapper } from 'App'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
+import { CodeCommentStatusButton } from 'components/CodeCommentStatusButton/CodeCommentStatusButton'
+import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/CodeCommentStatusSelect'
 import {
   activitiesToDiffCommentItems,
   activityToCommentItem,
@@ -40,7 +42,7 @@ import {
   renderCommentOppositePlaceHolder,
   ViewStyle
 } from './DiffViewerUtils'
-import { CommentAction, CommentBox, CommentItem } from '../CommentBox/CommentBox'
+import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from '../CommentBox/CommentBox'
 import css from './DiffViewer.module.scss'
 
 interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -390,6 +392,24 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
                     return [result, updatedItem]
                   }}
+                  outlets={{
+                    [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
+                      <CodeCommentStatusSelect
+                        repoMetadata={repoMetadata}
+                        pullRequestMetadata={pullRequestMetadata as TypesPullReq}
+                        onCommentUpdate={onCommentUpdate}
+                        commentItems={comment.commentItems}
+                      />
+                    ),
+                    [CommentBoxOutletPosition.LEFT_OF_REPLY_PLACEHOLDER]: (
+                      <CodeCommentStatusButton
+                        repoMetadata={repoMetadata}
+                        pullRequestMetadata={pullRequestMetadata as TypesPullReq}
+                        onCommentUpdate={onCommentUpdate}
+                        commentItems={comment.commentItems}
+                      />
+                    )
+                  }}
                   autoFocusAndPositioning
                 />
               </AppWrapper>,
@@ -418,7 +438,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       confirmAct,
       onCommentUpdate,
       mergeBaseSHA,
-      sourceSHA
+      sourceSHA,
+      pullRequestMetadata,
+      repoMetadata
     ]
   )
 

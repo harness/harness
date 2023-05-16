@@ -27,7 +27,7 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
   const { setFlag, flag } = props
   const history = useHistory()
   const { getString } = useStrings()
-  const { hooks, currentUser,currentUserProfileURL } = useAppContext()
+  const { hooks, currentUser, currentUserProfileURL } = useAppContext()
   const [token, setToken] = useState('')
   const { showError } = useToaster()
   const hash = generateAlphaNumericHash(6)
@@ -42,7 +42,7 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
         showError(tokenData?.data?.message || tokenData?.message)
       }
     }
-  }, [flag, tokenData])
+  }, [flag, tokenData, showError])
   return (
     <Dialog
       isOpen={flag}
@@ -86,9 +86,13 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
         <Text padding={{ bottom: 'medium' }} font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
           {getString('cloneText')}
         </Text>
-        <Button onClick={()=>{
+        <Button
+          onClick={() => {
             history.push(currentUserProfileURL)
-        }} variation={ButtonVariation.TERTIARY} text={getString('manageApiToken')} />
+          }}
+          variation={ButtonVariation.TERTIARY}
+          text={getString('manageApiToken')}
+        />
       </Layout.Vertical>
     </Dialog>
   )

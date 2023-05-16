@@ -306,6 +306,7 @@ export interface StringsMap {
   tags: string
   title: string
   tooltipRepoEdit: string
+  unresolve: string
   'unsavedChanges.leave': string
   'unsavedChanges.message': string
   'unsavedChanges.stay': string

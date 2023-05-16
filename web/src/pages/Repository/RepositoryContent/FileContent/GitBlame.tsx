@@ -29,14 +29,22 @@ type BlameBlockRecord = Record<number, BlameBlock>
 
 const INITIAL_TOP_POSITION = -1
 
-export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePath'>> = ({
+export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePath' | 'gitRef'>> = ({
   repoMetadata,
-  resourcePath
+  resourcePath,
+  gitRef
 }) => {
   const { getString } = useStrings()
   const [blameBlocks, setBlameBlocks] = useState<BlameBlockRecord>({})
+  const path = useMemo(
+    () => `/api/v1/repos/${repoMetadata?.path}/+/blame/${resourcePath}`,
+    [repoMetadata, resourcePath]
+  )
   const { data, error, loading } = useGet<GitrpcBlamePart[]>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/blame/${resourcePath}`,
+    path,
+    queryParams: {
+      git_ref: gitRef
+    },
     lazy: !repoMetadata || !resourcePath
   })
 

@@ -329,20 +329,17 @@ const MergeInfo: React.FC<{ pullRequestMetadata: TypesPullReq }> = ({ pullReques
         <Container width={24} height={24} className={css.mergeContainer}>
           <Icon name={CodeIcon.Merged} size={20} color={Color.PURPLE_700} />
         </Container>
-        <Container>
-          {/* <Text className={css.heading}>{getString('pr.prMerged')}</Text> */}
-          <Text className={css.sub}>
-            <StringSubstitute
-              str={getString('pr.prMergedInfo')}
-              vars={{
-                user: <strong>{pullRequestMetadata.merger?.display_name}</strong>,
-                source: <strong>{pullRequestMetadata.source_branch}</strong>,
-                target: <strong>{pullRequestMetadata.target_branch} </strong>,
-                time: <ReactTimeago date={pullRequestMetadata.merged as number} />
-              }}
-            />
-          </Text>
-        </Container>
+        <Text className={cx(css.sub, css.merged)}>
+          <StringSubstitute
+            str={getString('pr.prMergedInfo')}
+            vars={{
+              user: <strong>{pullRequestMetadata.merger?.display_name}</strong>,
+              source: <strong>{pullRequestMetadata.source_branch}</strong>,
+              target: <strong>{pullRequestMetadata.target_branch} </strong>,
+              time: <ReactTimeago date={pullRequestMetadata.merged as number} />
+            }}
+          />
+        </Text>
         <FlexExpander />
       </Layout.Horizontal>
     </Container>

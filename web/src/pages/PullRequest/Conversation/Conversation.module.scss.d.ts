@@ -19,13 +19,10 @@ declare const styles: {
   readonly fname: string
   readonly snapshotContent: string
   readonly hideDottedLine: string
-  readonly newCommentCreated: string
-  readonly clear: string
   readonly refreshIcon: string
   readonly optionMenuIcon: string
   readonly bp3Icon: string
   readonly repeatBtn: string
   readonly bp3ButtonText: string
-  readonly stateSelect: string
 }
 export default styles

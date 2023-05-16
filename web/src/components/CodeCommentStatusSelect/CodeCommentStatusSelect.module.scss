@@ -1,0 +1,14 @@
+.select {
+  width: 110px !important;
+
+  :global {
+    .bp3-menu {
+      width: 100px !important;
+      min-width: 103px !important;
+
+      .Select--menuItem {
+        width: 100px !important;
+      }
+    }
+  }
+}

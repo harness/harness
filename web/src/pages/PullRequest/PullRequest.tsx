@@ -77,7 +77,9 @@ export default function PullRequest() {
     }
     return false
   }, [prData?.stats, stats])
-  const mergeable = useMemo(() => prData?.merge_check_status === MergeCheckStatus.MERGEABLE, [prData])
+  const mergeable = useMemo(() => {
+    return prData?.merge_check_status === MergeCheckStatus.MERGEABLE
+  }, [prData])
 
   useEffect(
     function setStatsIfNotSet() {

@@ -2,19 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useResizeDetector } from 'react-resize-detector'
 import type { EditorView } from '@codemirror/view'
 import { Render, Match, Truthy, Falsy, Else } from 'react-jsx-match'
-import {
-  Container,
-  Layout,
-  Avatar,
-  TextInput,
-  Text,
-  Color,
-  FontVariation,
-  FlexExpander,
-  Button,
-  ButtonVariation,
-  ButtonSize
-} from '@harness/uicore'
+import { Container, Layout, Avatar, TextInput, Text, Color, FontVariation, FlexExpander } from '@harness/uicore'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
 import { noop } from 'lodash-es'
@@ -25,6 +13,7 @@ import { useAppContext } from 'AppContext'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
+import { ButtonRoleProps } from 'utils/Utils'
 import css from './CommentBox.module.scss'
 
 export interface CommentItem<T = unknown> {
@@ -40,7 +29,9 @@ export enum CommentAction {
   NEW = 'new',
   UPDATE = 'update',
   REPLY = 'reply',
-  DELETE = 'delete'
+  DELETE = 'delete',
+  RESOLVE = 'resolve',
+  UNRESOLVE = 'unresolve'
 }
 
 // Outlets are used to insert additional components into CommentBox
@@ -49,7 +40,8 @@ export enum CommentBoxOutletPosition {
   BOTTOM = 'bottom',
   TOP_OF_FIRST_COMMENT = 'top_of_first_comment',
   BOTTOM_OF_COMMENT_EDITOR = 'bottom_of_comment_editor',
-  LEFT_OF_OPTIONS_MENU = 'left_of_options_menu'
+  LEFT_OF_OPTIONS_MENU = 'left_of_options_menu',
+  LEFT_OF_REPLY_PLACEHOLDER = 'left_of_reply_placeholder'
 }
 
 interface CommentBoxProps<T> {
@@ -161,11 +153,13 @@ export const CommentBox = <T = unknown,>({
               <Container>
                 <Layout.Horizontal spacing="small" className={css.replyPlaceHolder} padding="medium">
                   <Avatar name={currentUserName} size="small" hoverCard={false} />
-                  <TextInput placeholder={getString('replyHere')} onFocus={hidePlaceHolder} onClick={hidePlaceHolder} />
-                  <Button
-                    text={<strong>{getString('resolve')}</strong>}
-                    variation={ButtonVariation.TERTIARY}
-                    size={ButtonSize.SMALL}></Button>
+                  <TextInput
+                    {...ButtonRoleProps}
+                    placeholder={getString('replyHere')}
+                    onFocus={hidePlaceHolder}
+                    onClick={hidePlaceHolder}
+                  />
+                  {outlets[CommentBoxOutletPosition.LEFT_OF_REPLY_PLACEHOLDER]}
                 </Layout.Horizontal>
               </Container>
             </Truthy>
