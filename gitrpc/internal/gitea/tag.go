@@ -9,6 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/harness/gitness/gitrpc/rpc"
 	"io"
 	"strconv"
 	"strings"
@@ -60,6 +61,14 @@ func (g Adapter) GetAnnotatedTags(ctx context.Context, repoPath string, shas []s
 	}
 
 	return tags, nil
+}
+func (g Adapter) CreateAnnotatedTag(ctx context.Context, repoPath string, request *rpc.CreateTagRequest, env []string) error {
+	cmd := gitea.NewCommand(ctx, "tag", "-a", "-m", request.GetMessage(), "--", request.GetTagName(), request.GetSha())
+	_, _, err := cmd.RunStdString(&gitea.RunOpts{Dir: repoPath, Env: env})
+	if err != nil {
+		return processGiteaErrorf(err, "Service failed to create a tag")
+	}
+	return nil
 }
 
 func (g Adapter) DeleteTag(ctx context.Context, repoPath string, ref string, env []string) error {

@@ -71,7 +71,7 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 	}
 
 	// push to new branch (all changes should go through push flow for hooks and other safety meassures)
-	err = sharedRepo.PushCommit(ctx, base, targetCommit.ID.String(), request.GetBranchName())
+	err = sharedRepo.PushCommitToBranch(ctx, base, targetCommit.ID.String(), request.GetBranchName())
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to push new branch '%s'", request.GetBranchName())
 	}

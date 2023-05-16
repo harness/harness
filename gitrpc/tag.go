@@ -47,6 +47,34 @@ type CommitTag struct {
 	Commit      *Commit
 }
 
+type CreateTagParams struct {
+	WriteParams
+	Name    string
+	SHA     string
+	Message string
+}
+
+func (p *CreateTagParams) Validate() error {
+	if p == nil {
+		return ErrNoParamsProvided
+	}
+
+	if p.Name == "" {
+		return errors.New("Tag name cannot be empty")
+	}
+	if p.SHA == "" {
+		return errors.New("Target cannot be empty")
+	}
+	if p.Message == "" {
+		return errors.New("Message cannot be empty")
+	}
+	return nil
+}
+
+type CreateTagOutput struct {
+	CommitTag
+}
+
 type DeleteTagParams struct {
 	WriteParams
 	Name string
@@ -110,6 +138,36 @@ func (c *Client) ListCommitTags(ctx context.Context, params *ListCommitTagsParam
 	}
 
 	return output, nil
+}
+func (c *Client) CreateTag(ctx context.Context, params *CreateTagParams) (*CreateTagOutput, error) {
+
+	err := params.Validate()
+
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.refService.CreateTag(ctx, &rpc.CreateTagRequest{
+		Base:    mapToRPCWriteRequest(params.WriteParams),
+		Sha:     params.SHA,
+		TagName: params.Name,
+		Message: params.Message,
+	})
+
+	if err != nil {
+		return nil, processRPCErrorf(err, "Failed to create tag %s", params.Name)
+	}
+
+	var commitTag *CommitTag
+	commitTag, err = mapRPCCommitTag(resp.GetTag())
+	if err != nil {
+		return nil, fmt.Errorf("failed to map rpc tag: %w", err)
+	}
+
+	return &CreateTagOutput{
+		CommitTag: *commitTag,
+	}, nil
+
 }
 
 func (c *Client) DeleteTag(ctx context.Context, params *DeleteTagParams) error {

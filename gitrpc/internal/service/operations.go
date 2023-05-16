@@ -142,7 +142,7 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 		return err
 	}
 
-	if err = shared.PushCommit(ctx, base, commitSHA, header.GetNewBranchName()); err != nil {
+	if err = shared.PushCommitToBranch(ctx, base, commitSHA, header.GetNewBranchName()); err != nil {
 		return err
 	}
 

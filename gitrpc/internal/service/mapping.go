@@ -150,3 +150,14 @@ func mapRenameDetails(renameDetails *types.PathRenameDetails) *rpc.RenameDetails
 		OldPath: renameDetails.OldPath,
 		NewPath: renameDetails.NewPath}
 }
+
+func mapCommitTag(tag *types.Tag) *rpc.CommitTag {
+	return &rpc.CommitTag{
+		Name:        tag.Name,
+		Sha:         tag.Sha,
+		Message:     tag.Message,
+		Tagger:      mapGitSignature(tag.Tagger),
+		IsAnnotated: true,
+		Commit:      nil,
+	}
+}

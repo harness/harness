@@ -17,11 +17,11 @@ type Interface interface {
 	GetSubmodule(ctx context.Context, params *GetSubmoduleParams) (*GetSubmoduleOutput, error)
 	GetBlob(ctx context.Context, params *GetBlobParams) (*GetBlobOutput, error)
 	CreateBranch(ctx context.Context, params *CreateBranchParams) (*CreateBranchOutput, error)
+	CreateTag(ctx context.Context, params *CreateTagParams) (*CreateTagOutput, error)
 	DeleteTag(ctx context.Context, params *DeleteTagParams) error
 	GetBranch(ctx context.Context, params *GetBranchParams) (*GetBranchOutput, error)
 	DeleteBranch(ctx context.Context, params *DeleteBranchParams) error
 	ListBranches(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error)
-
 	GetRef(ctx context.Context, params GetRefParams) (GetRefResponse, error)
 
 	// UpdateRef creates, updates or deletes a git ref. If the OldValue is defined it must match the reference value

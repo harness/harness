@@ -8,10 +8,8 @@ import (
 	"code.gitea.io/gitea/modules/git"
 	"context"
 	"fmt"
-
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
-
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -184,6 +182,55 @@ func listCommitTagsWalkReferencesHandler(tags *[]*rpc.CommitTag) types.WalkRefer
 
 		return nil
 	}
+}
+func (s ReferenceService) CreateTag(ctx context.Context, createTagRequest *rpc.CreateTagRequest) (*rpc.CreateTagResponse, error) {
+	base := createTagRequest.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
+
+	repo, err := git.OpenRepository(ctx, repoPath)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to open repo")
+	}
+	defer repo.Close()
+
+	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to create new shared repo")
+	}
+
+	defer sharedRepo.Close(ctx)
+
+	err = sharedRepo.Clone(ctx, "")
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to clone shared repo with branch '%s'", createTagRequest.GetSha())
+	}
+	actor := createTagRequest.GetBase().GetActor()
+	env := append(CreateEnvironmentForPush(ctx, base),
+		"GIT_COMMITTER_NAME="+actor.GetName(),
+		"GIT_COMMITTER_EMAIL="+actor.GetEmail(),
+	)
+
+	err = s.adapter.CreateAnnotatedTag(ctx, sharedRepo.repo.Path, createTagRequest, env)
+
+	if err != nil {
+		return nil, processGitErrorf(err, "Failed to create tag %s - %s", createTagRequest.GetTagName(), err.Error())
+	}
+
+	if err = sharedRepo.PushTag(ctx, base, createTagRequest.GetTagName()); err != nil {
+		return nil, err
+	}
+
+	tag, err := s.adapter.GetAnnotatedTag(ctx, repoPath, createTagRequest.GetTagName())
+
+	if err != nil {
+		return nil, err
+	}
+	commitTag := mapCommitTag(tag)
+	return &rpc.CreateTagResponse{Tag: commitTag}, nil
 }
 
 func (s ReferenceService) DeleteTag(ctx context.Context, deleteTagRequest *rpc.DeleteTagRequest) (*rpc.UpdateRefResponse, error) {

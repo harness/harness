@@ -303,27 +303,32 @@ func (r *SharedRepo) CommitTreeWithDate(
 
 func (r *SharedRepo) PushDeleteBranch(ctx context.Context, writeRequest *rpc.WriteRequest,
 	branch string) error {
-	return r.push(ctx, writeRequest, "", branch)
+	return r.push(ctx, writeRequest, "", GetReferenceFromBranchName(branch))
 }
 
-func (r *SharedRepo) PushCommit(ctx context.Context, writeRequest *rpc.WriteRequest,
+func (r *SharedRepo) PushCommitToBranch(ctx context.Context, writeRequest *rpc.WriteRequest,
 	commitSHA string, branch string) error {
-	return r.push(ctx, writeRequest, commitSHA, branch)
+	return r.push(ctx, writeRequest, commitSHA, GetReferenceFromBranchName(branch))
 }
 
 func (r *SharedRepo) PushBranch(ctx context.Context, writeRequest *rpc.WriteRequest,
 	sourceBranch string, branch string) error {
-	return r.push(ctx, writeRequest, GetReferenceFromBranchName(sourceBranch), branch)
+	return r.push(ctx, writeRequest, GetReferenceFromBranchName(sourceBranch), GetReferenceFromBranchName(branch))
+}
+func (r *SharedRepo) PushTag(ctx context.Context, writeRequest *rpc.WriteRequest,
+	tagName string) error {
+	refTag := GetReferenceFromTagName(tagName)
+	return r.push(ctx, writeRequest, refTag, refTag)
 }
 
 // push pushes the provided references to the provided branch in the original repository.
 func (r *SharedRepo) push(ctx context.Context, writeRequest *rpc.WriteRequest,
-	sourceRef, branch string) error {
+	sourceRef, destinationRef string) error {
 	// Because calls hooks we need to pass in the environment
 	env := CreateEnvironmentForPush(ctx, writeRequest)
 	if err := git.Push(ctx, r.tmpPath, git.PushOptions{
 		Remote: r.remoteRepo.Path,
-		Branch: sourceRef + ":" + GetReferenceFromBranchName(branch),
+		Branch: sourceRef + ":" + destinationRef,
 		Env:    env,
 	}); err != nil {
 		if git.IsErrPushOutOfDate(err) {
@@ -395,4 +400,16 @@ func GetReferenceFromBranchName(branchName string) string {
 
 	// return reference
 	return gitReferenceNamePrefixBranch + branchName
+}
+
+func GetReferenceFromTagName(tagName string) string {
+	// remove spaces
+	tagName = strings.TrimSpace(tagName)
+	// remove `refs/heads/` prefix (shouldn't be there, but if it is remove it to try to avoid complications)
+	// NOTE: This is used to reduce missconfigurations via api
+	// TODO: block via CLI, too
+	tagName = strings.TrimPrefix(tagName, gitReferenceNamePrefixTag)
+
+	// return reference
+	return gitReferenceNamePrefixTag + tagName
 }
