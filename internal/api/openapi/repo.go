@@ -132,8 +132,18 @@ type deleteBranchRequest struct {
 	BranchName string `path:"branch_name"`
 }
 
+type createTagRequest struct {
+	repoRequest
+	repo.CreateTagInput
+}
+
 type listTagsRequest struct {
 	repoRequest
+}
+
+type deleteTagRequest struct {
+	repoRequest
+	TagName string `path:"tag_name"`
 }
 
 type getRawDiffRequest struct {
@@ -565,6 +575,30 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opListTags, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opListTags, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/tags", opListTags)
+
+	opCreateTag := openapi3.Operation{}
+	opCreateTag.WithTags("repository")
+	opCreateTag.WithMapOfAnything(map[string]interface{}{"operationId": "createTag"})
+	_ = reflector.SetRequest(&opCreateTag, new(createTagRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opCreateTag, new(repo.CommitTag), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opCreateTag, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opCreateTag, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opCreateTag, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opCreateTag, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opCreateTag, new(usererror.Error), http.StatusConflict)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/tags", opCreateTag)
+
+	opDeleteTag := openapi3.Operation{}
+	opDeleteTag.WithTags("repository")
+	opDeleteTag.WithMapOfAnything(map[string]interface{}{"operationId": "deleteTag"})
+	_ = reflector.SetRequest(&opDeleteTag, new(deleteTagRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opDeleteTag, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opDeleteTag, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opDeleteTag, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opDeleteTag, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opDeleteTag, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opDeleteTag, new(usererror.Error), http.StatusConflict)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/tags/{tag_name}", opDeleteTag)
 
 	opCommitFiles := openapi3.Operation{}
 	opCommitFiles.WithTags("repository")

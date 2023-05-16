@@ -27,6 +27,7 @@ type ReferenceServiceClient interface {
 	DeleteBranch(ctx context.Context, in *DeleteBranchRequest, opts ...grpc.CallOption) (*DeleteBranchResponse, error)
 	ListBranches(ctx context.Context, in *ListBranchesRequest, opts ...grpc.CallOption) (ReferenceService_ListBranchesClient, error)
 	ListCommitTags(ctx context.Context, in *ListCommitTagsRequest, opts ...grpc.CallOption) (ReferenceService_ListCommitTagsClient, error)
+	CreateTag(ctx context.Context, in *CreateTagRequest, opts ...grpc.CallOption) (*CreateTagResponse, error)
 	DeleteTag(ctx context.Context, in *DeleteTagRequest, opts ...grpc.CallOption) (*UpdateRefResponse, error)
 	GetRef(ctx context.Context, in *GetRefRequest, opts ...grpc.CallOption) (*GetRefResponse, error)
 	UpdateRef(ctx context.Context, in *UpdateRefRequest, opts ...grpc.CallOption) (*UpdateRefResponse, error)
@@ -131,6 +132,15 @@ func (x *referenceServiceListCommitTagsClient) Recv() (*ListCommitTagsResponse, 
 	return m, nil
 }
 
+func (c *referenceServiceClient) CreateTag(ctx context.Context, in *CreateTagRequest, opts ...grpc.CallOption) (*CreateTagResponse, error) {
+	out := new(CreateTagResponse)
+	err := c.cc.Invoke(ctx, "/rpc.ReferenceService/CreateTag", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *referenceServiceClient) DeleteTag(ctx context.Context, in *DeleteTagRequest, opts ...grpc.CallOption) (*UpdateRefResponse, error) {
 	out := new(UpdateRefResponse)
 	err := c.cc.Invoke(ctx, "/rpc.ReferenceService/DeleteTag", in, out, opts...)
@@ -167,6 +177,7 @@ type ReferenceServiceServer interface {
 	DeleteBranch(context.Context, *DeleteBranchRequest) (*DeleteBranchResponse, error)
 	ListBranches(*ListBranchesRequest, ReferenceService_ListBranchesServer) error
 	ListCommitTags(*ListCommitTagsRequest, ReferenceService_ListCommitTagsServer) error
+	CreateTag(context.Context, *CreateTagRequest) (*CreateTagResponse, error)
 	DeleteTag(context.Context, *DeleteTagRequest) (*UpdateRefResponse, error)
 	GetRef(context.Context, *GetRefRequest) (*GetRefResponse, error)
 	UpdateRef(context.Context, *UpdateRefRequest) (*UpdateRefResponse, error)
@@ -191,6 +202,9 @@ func (UnimplementedReferenceServiceServer) ListBranches(*ListBranchesRequest, Re
 }
 func (UnimplementedReferenceServiceServer) ListCommitTags(*ListCommitTagsRequest, ReferenceService_ListCommitTagsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListCommitTags not implemented")
+}
+func (UnimplementedReferenceServiceServer) CreateTag(context.Context, *CreateTagRequest) (*CreateTagResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTag not implemented")
 }
 func (UnimplementedReferenceServiceServer) DeleteTag(context.Context, *DeleteTagRequest) (*UpdateRefResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTag not implemented")
@@ -310,6 +324,24 @@ func (x *referenceServiceListCommitTagsServer) Send(m *ListCommitTagsResponse) e
 	return x.ServerStream.SendMsg(m)
 }
 
+func _ReferenceService_CreateTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTagRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReferenceServiceServer).CreateTag(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.ReferenceService/CreateTag",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReferenceServiceServer).CreateTag(ctx, req.(*CreateTagRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ReferenceService_DeleteTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteTagRequest)
 	if err := dec(in); err != nil {
@@ -382,6 +414,10 @@ var ReferenceService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteBranch",
 			Handler:    _ReferenceService_DeleteBranch_Handler,
+		},
+		{
+			MethodName: "CreateTag",
+			Handler:    _ReferenceService_CreateTag_Handler,
 		},
 		{
 			MethodName: "DeleteTag",
