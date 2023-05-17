@@ -66,7 +66,7 @@ func (s MergeService) Merge(
 	defer func() {
 		rmErr := tempdir.RemoveTemporaryPath(tmpBasePath)
 		if rmErr != nil {
-			log.Ctx(ctx).Warn().Msgf("Removing temporary location %s for merge operation was not successfull", tmpBasePath)
+			log.Ctx(ctx).Warn().Msgf("Removing temporary location %s for merge operation was not successful", tmpBasePath)
 		}
 	}()
 
@@ -86,6 +86,11 @@ func (s MergeService) Merge(
 	mergeBaseCommitSHA, _, err := s.adapter.GetMergeBase(ctx, tmpBasePath, "origin", baseBranch, trackingBranch)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get merge base: %w", err)
+	}
+
+	if headCommitSHA == mergeBaseCommitSHA {
+		return nil, ErrInvalidArgumentf("no changes between head branch %s and base branch %s",
+			request.HeadBranch, request.BaseBranch)
 	}
 
 	if request.HeadExpectedSha != "" && request.HeadExpectedSha != headCommitSHA {

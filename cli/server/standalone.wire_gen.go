@@ -7,6 +7,7 @@ package server
 
 import (
 	"context"
+
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	server2 "github.com/harness/gitness/gitrpc/server"
@@ -143,7 +144,7 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	cronManager := cron.ProvideCronManager(serverConfig)
+	manager := cron.ProvideManager(serverConfig)
 	repoGitInfoView := database.ProvideRepoGitInfoView(db)
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
 	pubsubConfig := pubsub.ProvideConfig(config)
@@ -153,6 +154,6 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	servicesServices := services.ProvideServices(webhookService, pullreqService)
-	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, cronManager, servicesServices)
+	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, manager, servicesServices)
 	return serverSystem, nil
 }

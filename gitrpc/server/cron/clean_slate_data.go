@@ -1,3 +1,7 @@
+// Copyright 2022 Harness Inc. All rights reserved.
+// Use of this source code is governed by the Polyform Free Trial License
+// that can be found in the LICENSE.md file for this repository.
+
 package cron
 
 import (
@@ -7,10 +11,11 @@ import (
 	"path/filepath"
 
 	"github.com/harness/gitness/gitrpc/server"
+
 	"github.com/rs/zerolog/log"
 )
 
-// cleanup repository graveyard
+// cleanupRepoGraveyard cleanups repository graveyard.
 func cleanupRepoGraveyard(ctx context.Context, graveyardpath string) error {
 	logger := log.Ctx(ctx)
 	repolist, err := os.ReadDir(graveyardpath)
@@ -32,7 +37,7 @@ func cleanupRepoGraveyard(ctx context.Context, graveyardpath string) error {
 	return nil
 }
 
-func AddAllGitRPCCronJobs(cm *CronManager, gitrpcconfig server.Config) error {
+func AddAllGitRPCCronJobs(cm *Manager, gitrpcconfig server.Config) error {
 	// periodic repository graveyard cleanup
 	graveyardpath := filepath.Join(gitrpcconfig.GitRoot, server.ReposGraveyardSubdirName)
 	err := cm.NewCronTask(Nightly, func(ctx context.Context) error { return cleanupRepoGraveyard(ctx, graveyardpath) })

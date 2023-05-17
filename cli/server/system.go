@@ -18,12 +18,12 @@ type system struct {
 	server         *server.Server
 	gitRPCServer   *gitrpcserver.Server
 	services       services.Services
-	gitRPCCronMngr *gitrpccron.CronManager
+	gitRPCCronMngr *gitrpccron.Manager
 }
 
 // newSystem returns a new system structure.
 func newSystem(bootstrap bootstrap.Bootstrap, server *server.Server, gitRPCServer *gitrpcserver.Server,
-	gitrpccron *gitrpccron.CronManager, services services.Services) *system {
+	gitrpccron *gitrpccron.Manager, services services.Services) *system {
 	return &system{
 		bootstrap:      bootstrap,
 		server:         server,

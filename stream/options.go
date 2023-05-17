@@ -16,7 +16,7 @@ const (
 	// MaxMaxRetries is the max number of retries of a message for a single consumer group.
 	MaxMaxRetries = 64
 
-	// MinIdleTimeout is the minumum time that can be configured as idle timeout for a stream consumer.
+	// MinIdleTimeout is the minimum time that can be configured as idle timeout for a stream consumer.
 	MinIdleTimeout = 5 * time.Second
 )
 

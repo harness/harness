@@ -105,7 +105,7 @@ func (c *GitHook) PostReceive(ctx context.Context) error {
 
 func handleServerHookOutput(out *types.ServerHookOutput, err error) error {
 	if err != nil {
-		return fmt.Errorf("an error occured when calling the server: %w", err)
+		return fmt.Errorf("an error occurred when calling the server: %w", err)
 	}
 
 	if out == nil {

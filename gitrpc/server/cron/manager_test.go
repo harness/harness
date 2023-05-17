@@ -1,3 +1,7 @@
+// Copyright 2022 Harness Inc. All rights reserved.
+// Use of this source code is governed by the Polyform Free Trial License
+// that can be found in the LICENSE.md file for this repository.
+
 package cron
 
 import (
@@ -8,7 +12,7 @@ import (
 	"time"
 )
 
-func run(cmngr *CronManager, ctx context.Context) chan error {
+func run(ctx context.Context, cmngr *Manager) chan error {
 	cron := make(chan error)
 	go func() {
 		cron <- cmngr.Run(ctx)
@@ -17,14 +21,14 @@ func run(cmngr *CronManager, ctx context.Context) chan error {
 }
 
 func TestCronManagerFatalErr(t *testing.T) {
-	cmngr := NewCronManager()
+	cmngr := NewManager()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	_ = cmngr.NewCronTask(EverySecond, func(ctx context.Context) error {
 		return fmt.Errorf("inner: %w", ErrFatal)
 	})
 	select {
-	case ferr := <-run(cmngr, ctx):
+	case ferr := <-run(ctx, cmngr):
 		if ferr == nil {
 			t.Error("Cronmanager failed to receive fatal error")
 		}
@@ -34,14 +38,14 @@ func TestCronManagerFatalErr(t *testing.T) {
 }
 
 func TestCronManagerNonFatalErr(t *testing.T) {
-	cmngr := NewCronManager()
+	cmngr := NewManager()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	_ = cmngr.NewCronTask(EverySecond, func(ctx context.Context) error {
 		return errors.New("dummy error")
 	})
 	select {
-	case ferr := <-run(cmngr, ctx):
+	case ferr := <-run(ctx, cmngr):
 		if ferr != nil {
 			t.Error("Cronmanager failed at a non fatal error")
 		}
@@ -50,7 +54,7 @@ func TestCronManagerNonFatalErr(t *testing.T) {
 	}
 }
 func TestCronManagerNewTask(t *testing.T) {
-	cmngr := NewCronManager()
+	cmngr := NewManager()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	a := 0
@@ -61,7 +65,7 @@ func TestCronManagerNewTask(t *testing.T) {
 	})
 
 	select {
-	case cerr := <-run(cmngr, ctx):
+	case cerr := <-run(ctx, cmngr):
 		if cerr != nil {
 			t.Error("Cronmanager failed at Run:", cerr)
 		}
@@ -73,7 +77,7 @@ func TestCronManagerNewTask(t *testing.T) {
 }
 
 func TestCronManagerStopOnCtxCancel(t *testing.T) {
-	cmngr := NewCronManager()
+	cmngr := NewManager()
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -88,7 +92,7 @@ func TestCronManagerStopOnCtxCancel(t *testing.T) {
 }
 
 func TestCronManagerStopOnCtxTimeout(t *testing.T) {
-	cmngr := NewCronManager()
+	cmngr := NewManager()
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 

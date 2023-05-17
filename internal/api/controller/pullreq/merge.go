@@ -29,7 +29,7 @@ type MergeInput struct {
 
 // Merge merges the pull request.
 //
-//nolint:funlen // no need to refactor
+//nolint:gocognit
 func (c *Controller) Merge(
 	ctx context.Context,
 	session *auth.Session,
@@ -84,11 +84,15 @@ func (c *Controller) Merge(
 	}
 
 	if pr.UnresolvedCount > 0 {
-		return types.MergeResponse{}, usererror.BadRequest("Pull requests with unresolved comments can't be merged. Resolve all the comments first.")
+		return types.MergeResponse{}, usererror.BadRequest(
+			"Pull requests with unresolved comments can't be merged. Resolve all the comments first.",
+		)
 	}
 
 	if pr.IsDraft {
-		return types.MergeResponse{}, usererror.BadRequest("Draft pull requests can't be merged. Clear the draft flag first.")
+		return types.MergeResponse{}, usererror.BadRequest(
+			"Draft pull requests can't be merged. Clear the draft flag first.",
+		)
 	}
 
 	reviewers, err := c.reviewerStore.List(ctx, pr.ID)
@@ -119,7 +123,12 @@ func (c *Controller) Merge(
 	}
 
 	// TODO: for forking merge title might be different?
-	mergeTitle := fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
+	var mergeTitle string
+	if in.Method == enum.MergeMethod(gitrpcenum.MergeMethodSquash) {
+		mergeTitle = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
+	} else {
+		mergeTitle = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
+	}
 
 	var mergeOutput gitrpc.MergeOutput
 	mergeOutput, err = c.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{

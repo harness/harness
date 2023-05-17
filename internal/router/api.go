@@ -314,7 +314,7 @@ func SetupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
 
 func setupUser(r chi.Router, userCtrl *user.Controller) {
 	r.Route("/user", func(r chi.Router) {
-		// enforce principial authenticated and it's a user
+		// enforce principal authenticated and it's a user
 		r.Use(middlewareprincipal.RestrictTo(enum.PrincipalTypeUser))
 
 		r.Get("/", handleruser.HandleFind(userCtrl))

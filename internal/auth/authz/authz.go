@@ -26,7 +26,7 @@ type Authorizer interface {
 	 * Returns
 	 *		(true, nil)   - the action is permitted
 	 *		(false, nil)  - the action is not permitted
-	 *		(false, err)  - an error occured while performing the permission check and the action should be denied
+	 *		(false, err)  - an error occurred while performing the permission check and the action should be denied
 	 */
 	Check(ctx context.Context,
 		session *auth.Session,
@@ -40,7 +40,7 @@ type Authorizer interface {
 	 * Returns
 	 *		(true, nil)   - all requested actions are permitted
 	 *		(false, nil)  - at least one requested action is not permitted
-	 *		(false, err)  - an error occured while performing the permission check and all actions should be denied
+	 *		(false, err)  - an error occurred while performing the permission check and all actions should be denied
 	 */
 	CheckAll(ctx context.Context,
 		session *auth.Session,

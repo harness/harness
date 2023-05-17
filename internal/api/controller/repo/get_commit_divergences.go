@@ -27,7 +27,7 @@ type CommitDivergenceRequest struct {
 	// From is the ref from which the counting of the diverging commits starts.
 	From string `json:"from"`
 	// To is the ref at which the counting of the diverging commits ends.
-	// If the value is empty the divergence is caluclated to the default branch of the repo.
+	// If the value is empty the divergence is calculated to the default branch of the repo.
 	To string `json:"to"`
 }
 

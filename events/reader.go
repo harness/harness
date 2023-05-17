@@ -60,7 +60,7 @@ func (f *ReaderFactory[R]) Launch(ctx context.Context,
 		category:       f.category,
 	}
 
-	// create new reader (could return the innerReader itself, but also allows to launch costumized readers)
+	// create new reader (could return the innerReader itself, but also allows to launch customized readers)
 	reader, err := f.readerFactoryFn(innerReader)
 	if err != nil {
 		//nolint:gocritic // only way to achieve this AFAIK - lint proposal is not building
@@ -165,7 +165,7 @@ func ReaderRegisterEvent[T interface{}](reader *GenericReader,
 			}
 
 			// retrieve bytes from raw event
-			// NOTE: Redis returns []byte as string - to avoid unnecessary convertion we handle both types here.
+			// NOTE: Redis returns []byte as string - to avoid unnecessary conversion we handle both types here.
 			var eventBytes []byte
 			switch v := eventRaw.(type) {
 			case string:

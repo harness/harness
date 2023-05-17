@@ -122,7 +122,7 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 }
 
 func (c *Controller) getCommentCheckModifyAccess(ctx context.Context,
-	session *auth.Session, pr *types.PullReq, commentID int64,
+	pr *types.PullReq, commentID int64,
 ) (*types.PullReqActivity, error) {
 	if commentID <= 0 {
 		return nil, usererror.BadRequest("A valid comment ID must be provided.")
@@ -155,7 +155,7 @@ func (c *Controller) getCommentCheckModifyAccess(ctx context.Context,
 func (c *Controller) getCommentCheckEditAccess(ctx context.Context,
 	session *auth.Session, pr *types.PullReq, commentID int64,
 ) (*types.PullReqActivity, error) {
-	comment, err := c.getCommentCheckModifyAccess(ctx, session, pr, commentID)
+	comment, err := c.getCommentCheckModifyAccess(ctx, pr, commentID)
 	if err != nil {
 		return nil, err
 	}
@@ -168,9 +168,9 @@ func (c *Controller) getCommentCheckEditAccess(ctx context.Context,
 }
 
 func (c *Controller) getCommentCheckChangeStatusAccess(ctx context.Context,
-	session *auth.Session, pr *types.PullReq, commentID int64,
+	pr *types.PullReq, commentID int64,
 ) (*types.PullReqActivity, error) {
-	comment, err := c.getCommentCheckModifyAccess(ctx, session, pr, commentID)
+	comment, err := c.getCommentCheckModifyAccess(ctx, pr, commentID)
 	if err != nil {
 		return nil, err
 	}

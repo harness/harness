@@ -7,6 +7,7 @@ package repo
 import (
 	"context"
 	"fmt"
+
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -57,7 +58,7 @@ func (c *Controller) CreateTag(ctx context.Context, session *auth.Session,
 	commitTag, err := mapCommitTag(rpcOut.CommitTag)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to map tag recieved from service output: %w", err)
+		return nil, fmt.Errorf("failed to map tag received from service output: %w", err)
 	}
 	return &commitTag, nil
 }

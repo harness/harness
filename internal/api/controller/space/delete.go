@@ -35,8 +35,13 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef
 }
 
 // DeleteNoAuth bypasses these permission
-// PermissionSpaceDelete, PermissionSpaceView, PermissionRepoView, PermissionRepoDelete
-func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, spaceID int64, filter *types.SpaceFilter) error {
+// PermissionSpaceDelete, PermissionSpaceView, PermissionRepoView, PermissionRepoDelete.
+func (c *Controller) DeleteNoAuth(
+	ctx context.Context,
+	session *auth.Session,
+	spaceID int64,
+	filter *types.SpaceFilter,
+) error {
 	subSpaces, _, err := c.ListSpacesNoAuth(ctx, spaceID, filter)
 	if err != nil {
 		return fmt.Errorf("failed to list space %d sub spaces: %w", spaceID, err)
