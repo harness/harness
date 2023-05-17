@@ -88,7 +88,7 @@ func (g Adapter) listCommitSHAs(
 	limit int,
 	filter types.CommitFilter,
 ) ([]string, error) {
-	args := make([]string, 0, 12)
+	args := make([]string, 0, 16)
 	args = append(args, "rev-list")
 
 	// return commits only up to a certain reference if requested
