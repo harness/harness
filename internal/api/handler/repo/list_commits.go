@@ -61,12 +61,12 @@ func HandleListCommitsV2(repoCtrl *repo.Controller) http.HandlerFunc {
 		filter := request.ParseCommitFilter(r)
 
 		path := request.GetPathFromQueryOrDefault(r, "")
-		since, err := request.GetSinceFromQueryOrDefault(r)
+		since, err := request.GetSinceFromQuery(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		until, err := request.GetUntilFromQueryOrDefault(r)
+		until, err := request.GetUntilFromQuery(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

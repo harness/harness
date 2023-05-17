@@ -85,10 +85,10 @@ func GetPathFromQueryOrDefault(r *http.Request, deflt string) string {
 	return QueryParamOrDefault(r, QueryPath, deflt)
 }
 
-func GetSinceFromQueryOrDefault(r *http.Request) (int64, error) {
+func GetSinceFromQuery(r *http.Request) (int64, error) {
 	return QueryParamAsPositiveInt64(r, QuerySince)
 }
 
-func GetUntilFromQueryOrDefault(r *http.Request) (int64, error) {
+func GetUntilFromQuery(r *http.Request) (int64, error) {
 	return QueryParamAsPositiveInt64(r, QueryUntil)
 }

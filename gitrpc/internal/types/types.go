@@ -296,3 +296,10 @@ type PathRenameDetails struct {
 	OldPath string
 	NewPath string
 }
+
+type CommitFilter struct {
+	Path     string
+	AfterRef string
+	Since    int64
+	Until    int64
+}

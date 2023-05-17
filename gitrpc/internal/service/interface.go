@@ -8,8 +8,6 @@ import (
 	"context"
 	"io"
 
-	"github.com/harness/gitness/gitrpc/rpc"
-
 	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -35,9 +33,9 @@ type GitAdapter interface {
 	GetCommit(ctx context.Context, repoPath string, ref string) (*types.Commit, error)
 	GetCommits(ctx context.Context, repoPath string, refs []string) ([]types.Commit, error)
 	ListCommits(ctx context.Context, repoPath string,
-		ref string, afterRef string, page int, limit int, path string, since int64, until int64) ([]types.Commit, *types.PathRenameDetails, error)
+		ref string, page int, limit int, filter types.CommitFilter) ([]types.Commit, *types.PathRenameDetails, error)
 	ListCommitSHAs(ctx context.Context, repoPath string,
-		ref string, afterRef string, page int, limit int, path string, since int64, until int64) ([]string, error)
+		ref string, page int, limit int, filter types.CommitFilter) ([]string, error)
 	GetLatestCommit(ctx context.Context, repoPath string, ref string, treePath string) (*types.Commit, error)
 	GetFullCommitID(ctx context.Context, repoPath, shortID string) (string, error)
 	GetAnnotatedTag(ctx context.Context, repoPath string, sha string) (*types.Tag, error)

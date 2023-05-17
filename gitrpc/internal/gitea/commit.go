@@ -81,23 +81,26 @@ func getGiteaCommits(giteaRepo *gitea.Repository, commitIDs []string) ([]*gitea.
 	return giteaCommits, nil
 }
 
-func (g Adapter) listCommitSHAs(giteaRepo *gitea.Repository,
-	ref string, afterRef string,
-	page int, limit int, path string, since int64, until int64,
+func (g Adapter) listCommitSHAs(
+	giteaRepo *gitea.Repository,
+	ref string,
+	page int,
+	limit int,
+	filter types.CommitFilter,
 ) ([]string, error) {
-	args := make([]string, 0, 11)
+	args := make([]string, 0, 12)
 	args = append(args, "rev-list")
 
 	// return commits only up to a certain reference if requested
-	if afterRef != "" {
+	if filter.AfterRef != "" {
 		// ^REF tells the rev-list command to return only commits that aren't reachable by SHA
-		args = append(args, fmt.Sprintf("^%s", afterRef))
+		args = append(args, fmt.Sprintf("^%s", filter.AfterRef))
 	}
 	// add refCommitSHA as starting point
 	args = append(args, ref)
 
-	if len(path) != 0 {
-		args = append(args, "--", path)
+	if len(filter.Path) != 0 {
+		args = append(args, "--", filter.Path)
 	}
 
 	// add pagination if requested
@@ -110,14 +113,14 @@ func (g Adapter) listCommitSHAs(giteaRepo *gitea.Repository,
 		}
 	}
 
-	if since > 0 || until > 0 {
-		args = append(args, "--date", fmt.Sprint("unix"))
+	if filter.Since > 0 || filter.Until > 0 {
+		args = append(args, "--date", "unix")
 	}
-	if since > 0 {
-		args = append(args, "--since", fmt.Sprint(since))
+	if filter.Since > 0 {
+		args = append(args, "--since", fmt.Sprint(filter.Since))
 	}
-	if until > 0 {
-		args = append(args, "--until", fmt.Sprint(until))
+	if filter.Until > 0 {
+		args = append(args, "--until", fmt.Sprint(filter.Until))
 	}
 
 	stdout, _, runErr := gitea.NewCommand(giteaRepo.Ctx, args...).RunStdBytes(&gitea.RunOpts{Dir: giteaRepo.Path})
@@ -132,10 +135,13 @@ func (g Adapter) listCommitSHAs(giteaRepo *gitea.Repository,
 // ListCommitSHAs lists the commits reachable from ref.
 // Note: ref & afterRef can be Branch / Tag / CommitSHA.
 // Note: commits returned are [ref->...->afterRef).
-func (g Adapter) ListCommitSHAs(ctx context.Context,
+func (g Adapter) ListCommitSHAs(
+	ctx context.Context,
 	repoPath string,
-	ref string, afterRef string,
-	page int, limit int, path string, since int64, until int64,
+	ref string,
+	page int,
+	limit int,
+	filter types.CommitFilter,
 ) ([]string, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
@@ -143,7 +149,7 @@ func (g Adapter) ListCommitSHAs(ctx context.Context,
 	}
 	defer giteaRepo.Close()
 
-	return g.listCommitSHAs(giteaRepo, ref, afterRef, page, limit, path, since, until)
+	return g.listCommitSHAs(giteaRepo, ref, page, limit, filter)
 }
 
 // ListCommits lists the commits reachable from ref.
@@ -151,8 +157,8 @@ func (g Adapter) ListCommitSHAs(ctx context.Context,
 // Note: commits returned are [ref->...->afterRef).
 func (g Adapter) ListCommits(ctx context.Context,
 	repoPath string,
-	ref string, afterRef string,
-	page int, limit int, path string, since int64, until int64,
+	ref string,
+	page int, limit int, filter types.CommitFilter,
 ) ([]types.Commit, *types.PathRenameDetails, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
@@ -160,7 +166,7 @@ func (g Adapter) ListCommits(ctx context.Context,
 	}
 	defer giteaRepo.Close()
 
-	commitSHAs, err := g.listCommitSHAs(giteaRepo, ref, afterRef, page, limit, path, since, until)
+	commitSHAs, err := g.listCommitSHAs(giteaRepo, ref, page, limit, filter)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -180,8 +186,8 @@ func (g Adapter) ListCommits(ctx context.Context,
 		commits[i] = *commit
 	}
 
-	if len(path) != 0 {
-		renameDetails, err := giteaGetRenameDetails(giteaRepo, commits[0].SHA, path)
+	if len(filter.Path) != 0 {
+		renameDetails, err := giteaGetRenameDetails(giteaRepo, commits[0].SHA, filter.Path)
 		if err != nil {
 			return nil, nil, err
 		}

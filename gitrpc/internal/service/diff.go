@@ -124,7 +124,8 @@ func (s DiffService) DiffCut(
 		return nil, processGitErrorf(err, "failed to find merge base")
 	}
 
-	sourceCommits, err := s.adapter.ListCommitSHAs(ctx, repoPath, r.SourceBranch, r.TargetBranch, 0, 1, "", 0, 0)
+	sourceCommits, err := s.adapter.ListCommitSHAs(ctx, repoPath, r.SourceBranch, 0, 1,
+		types.CommitFilter{AfterRef: r.TargetBranch})
 	if err != nil || len(sourceCommits) == 0 {
 		return nil, processGitErrorf(err, "failed to get list of source branch commits")
 	}
