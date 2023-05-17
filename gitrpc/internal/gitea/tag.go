@@ -9,13 +9,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/harness/gitness/gitrpc/rpc"
 	"io"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/harness/gitness/gitrpc/internal/types"
+	"github.com/harness/gitness/gitrpc/rpc"
 
 	gitea "code.gitea.io/gitea/modules/git"
 )
@@ -62,7 +62,12 @@ func (g Adapter) GetAnnotatedTags(ctx context.Context, repoPath string, shas []s
 
 	return tags, nil
 }
-func (g Adapter) CreateAnnotatedTag(ctx context.Context, repoPath string, request *rpc.CreateTagRequest, env []string) error {
+func (g Adapter) CreateAnnotatedTag(
+	ctx context.Context,
+	repoPath string,
+	request *rpc.CreateTagRequest,
+	env []string,
+) error {
 	cmd := gitea.NewCommand(ctx, "tag", "-a", "-m", request.GetMessage(), "--", request.GetTagName(), request.GetSha())
 	_, _, err := cmd.RunStdString(&gitea.RunOpts{Dir: repoPath, Env: env})
 	if err != nil {
@@ -75,7 +80,7 @@ func (g Adapter) DeleteTag(ctx context.Context, repoPath string, ref string, env
 	cmd := gitea.NewCommand(ctx, "tag", "-d", ref)
 	_, stdErr, err := cmd.RunStdString(&gitea.RunOpts{Dir: repoPath, Env: env})
 	if err != nil {
-		return processGiteaErrorf(err, "Service failed to delete tag with error", stdErr)
+		return processGiteaErrorf(err, "Service failed to delete tag with error: %v", stdErr)
 	}
 	return nil
 }
@@ -200,7 +205,7 @@ func giteaParseCatFileLine(data []byte, start int, header string) (string, int, 
 		return "", 0, fmt.Errorf("expected '%s' but started with '%s'", header, string(data[:lenHeader]))
 	}
 
-	// get end of line and start of next line (used externaly, transpose with provided start index)
+	// get end of line and start of next line (used externally, transpose with provided start index)
 	lineEnd := bytes.IndexByte(data, '\n')
 	externalNextLine := start + lineEnd + 1
 	if lineEnd == -1 {

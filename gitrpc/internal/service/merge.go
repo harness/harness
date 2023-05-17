@@ -66,7 +66,7 @@ func (s MergeService) Merge(
 	defer func() {
 		rmErr := tempdir.RemoveTemporaryPath(tmpBasePath)
 		if rmErr != nil {
-			log.Ctx(ctx).Warn().Msgf("Removing temporary location %s for merge operation was not successfull", tmpBasePath)
+			log.Ctx(ctx).Warn().Msgf("Removing temporary location %s for merge operation was not successful", tmpBasePath)
 		}
 	}()
 

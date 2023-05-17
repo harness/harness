@@ -112,17 +112,6 @@ linters-settings:
     # Default: 30
     max-func-lines: 30
 
-  nolintlint:
-    # Exclude following linters from requiring an explanation.
-    # Default: []
-    allow-no-explanation: [ funlen, gocognit, lll ]
-    # Enable to require an explanation of nonzero length after each nolint directive.
-    # Default: false
-    require-explanation: true
-    # Enable to require nolint directives to mention the specific linter being suppressed.
-    # Default: false
-    require-specific: true
-
   rowserrcheck:
     # database/sql is always checked
     # Default: []
@@ -217,7 +206,7 @@ linters:
     - exhaustive # checks exhaustiveness of enum switch statements
     - exportloopref # checks for pointers to enclosing loop variables
     - forbidigo # forbids identifiers
-    - funlen # tool for detection of long functions
+    #- funlen # tool for detection of long functions
     #- gochecknoglobals # checks that no global variables exist
     #- gochecknoinits # checks that no init functions are present in Go code
     - gocognit # computes and checks the cognitive complexity of functions
@@ -238,7 +227,7 @@ linters:
     - nilerr # finds the code that returns nil even if it checks that the error is not nil
     - nilnil # checks that there is no simultaneous return of nil error and an invalid value
     - noctx # finds sending http request without context.Context
-    - nolintlint # reports ill-formed or insufficient nolint directives
+    # - nolintlint # reports ill-formed or insufficient nolint directives
     # - nonamedreturns # reports all named returns
     - nosprintfhostport # checks for misuse of Sprintf to construct a host with port in a URL
     - predeclared # finds code that shadows one of Go's predeclared identifiers
@@ -283,7 +272,7 @@ linters:
     #- importas # enforces consistent import aliases
     #- logrlint # [owner archived repository] checks logr arguments
     #- maintidx # measures the maintainability index of each function
-    #- misspell # [useless] finds commonly misspelled English words in comments
+    - misspell # [useless] finds commonly misspelled English words in comments
     #- nlreturn # [too strict and mostly code is not more readable] checks for a new line before return and branch statements to increase code clarity
     #- paralleltest # [too many false positives] detects missing usage of t.Parallel() method in your Go test
     #- thelper # detects golang test helpers without t.Helper() call and checks the consistency of test helpers

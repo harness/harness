@@ -9,7 +9,7 @@ import (
 )
 
 // PrincipalUIDTransformation transforms a principalUID to a value that should be duplicate free.
-// This allows us to simply switch between principalUIDs being case sensitive, insensitive or anything inbetween.
+// This allows us to simply switch between principalUIDs being case sensitive, insensitive or anything in between.
 type PrincipalUIDTransformation func(uid string) (string, error)
 
 func ToLowerPrincipalUIDTransformation(uid string) (string, error) {
@@ -17,7 +17,7 @@ func ToLowerPrincipalUIDTransformation(uid string) (string, error) {
 }
 
 // PathTransformation transforms a path to a value that should be duplicate free.
-// This allows us to simply switch between paths being case sensitive, insensitive or anything inbetween.
+// This allows us to simply switch between paths being case sensitive, insensitive or anything in between.
 type PathTransformation func(string) (string, error)
 
 func ToLowerPathTransformation(original string) (string, error) {

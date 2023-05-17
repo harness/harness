@@ -23,7 +23,7 @@ func Pagination(r *http.Request, w http.ResponseWriter, page, size, total int) {
 	// Add information that doesn't require total
 	PaginationNoTotal(r, w, page, size, page >= last)
 
-	// add information that requries total
+	// add information that requires total
 	uri := getPaginationBaseURL(r, page, size)
 	params := uri.Query()
 

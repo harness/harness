@@ -178,7 +178,7 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 		TriggerType: triggerType,
 		// for unexpected errors we don't retry - protect the system. User can retrigger manually (if body was set)
 		Result: enum.WebhookExecutionResultFatalError,
-		Error:  "An unknown error occured",
+		Error:  "An unknown error occurred",
 	}
 	defer func(oCtx context.Context, start time.Time) {
 		// set total execution time
@@ -253,7 +253,7 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 
 	case err != nil:
 		// for all other errors we don't retry - protect the system. User can retrigger manually (if body was set)
-		tErr := fmt.Errorf("an error occured while sending the request: %w", err)
+		tErr := fmt.Errorf("an error occurred while sending the request: %w", err)
 		execution.Error = tErr.Error()
 		execution.Result = enum.WebhookExecutionResultFatalError
 		return &execution, tErr
@@ -298,7 +298,7 @@ func (s *Service) prepareHTTPRequest(ctx context.Context, execution *types.Webho
 		err := json.NewEncoder(bBuff).Encode(body)
 		if err != nil {
 			// this is an internal issue, nothing the user can do - don't expose error details
-			execution.Error = "an error occured preparing the request body"
+			execution.Error = "an error occurred preparing the request body"
 			execution.Result = enum.WebhookExecutionResultFatalError
 			return nil, fmt.Errorf("failed to serialize body to json: %w", err)
 		}
@@ -380,7 +380,7 @@ func handleWebhookResponse(execution *types.WebhookExecution, resp *http.Respons
 		var bodyRaw []byte
 		bodyRaw, err = io.ReadAll(io.LimitReader(resp.Body, responseBodyBytesLimit))
 		if err != nil {
-			tErr := fmt.Errorf("an error occured while reading the response body: %w", err)
+			tErr := fmt.Errorf("an error occurred while reading the response body: %w", err)
 			execution.Error = tErr.Error()
 			execution.Result = enum.WebhookExecutionResultRetriableError
 			return tErr

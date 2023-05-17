@@ -26,11 +26,14 @@ func (c *Controller) ListRepositories(ctx context.Context, session *auth.Session
 		return nil, 0, err
 	}
 	return c.ListRepositoriesNoAuth(ctx, space.ID, filter)
-
 }
 
 // ListRepositoriesNoAuth list repositories WITHOUT checking for PermissionRepoView.
-func (c *Controller) ListRepositoriesNoAuth(ctx context.Context, spaceID int64, filter *types.RepoFilter) ([]*types.Repository, int64, error) {
+func (c *Controller) ListRepositoriesNoAuth(
+	ctx context.Context,
+	spaceID int64,
+	filter *types.RepoFilter,
+) ([]*types.Repository, int64, error) {
 	count, err := c.repoStore.Count(ctx, spaceID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count child repos: %w", err)

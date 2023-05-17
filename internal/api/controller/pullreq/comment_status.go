@@ -64,7 +64,7 @@ func (c *Controller) CommentStatus(
 			return errValidate
 		}
 
-		act, err = c.getCommentCheckChangeStatusAccess(ctx, session, pr, commentID)
+		act, err = c.getCommentCheckChangeStatusAccess(ctx, pr, commentID)
 		if err != nil {
 			return fmt.Errorf("failed to get comment: %w", err)
 		}
