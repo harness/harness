@@ -98,6 +98,8 @@ message ListCommitsRequest {
   int32 page       = 4;
   int32 limit      = 5;
   string path      = 6;
+  int64 since      = 7;
+  int64 until      = 8;
 }
 
 message ListCommitsResponse {

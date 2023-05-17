@@ -18,6 +18,8 @@ const (
 	QueryLineFrom           = "line_from"
 	QueryLineTo             = "line_to"
 	QueryPath               = "path"
+	QuerySince              = "since"
+	QueryUntil              = "until"
 )
 
 func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
@@ -81,4 +83,12 @@ func ParseCommitFilter(r *http.Request) *types.CommitFilter {
 
 func GetPathFromQueryOrDefault(r *http.Request, deflt string) string {
 	return QueryParamOrDefault(r, QueryPath, deflt)
+}
+
+func GetSinceFromQueryOrDefault(r *http.Request) (int64, error) {
+	return QueryParamAsPositiveInt64(r, QuerySince)
+}
+
+func GetUntilFromQueryOrDefault(r *http.Request) (int64, error) {
+	return QueryParamAsPositiveInt64(r, QueryUntil)
 }
