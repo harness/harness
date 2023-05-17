@@ -117,10 +117,10 @@ func (g Adapter) listCommitSHAs(
 		args = append(args, "--date", "unix")
 	}
 	if filter.Since > 0 {
-		args = append(args, "--since", fmt.Sprint(filter.Since))
+		args = append(args, "--since", strconv.FormatInt(filter.Since, 10))
 	}
 	if filter.Until > 0 {
-		args = append(args, "--until", fmt.Sprint(filter.Until))
+		args = append(args, "--until", strconv.FormatInt(filter.Until, 10))
 	}
 
 	stdout, _, runErr := gitea.NewCommand(giteaRepo.Ctx, args...).RunStdBytes(&gitea.RunOpts{Dir: giteaRepo.Path})
