@@ -88,6 +88,11 @@ func (s MergeService) Merge(
 		return nil, fmt.Errorf("failed to get merge base: %w", err)
 	}
 
+	if headCommitSHA == mergeBaseCommitSHA {
+		return nil, ErrInvalidArgumentf("no changes between head branch %s and base branch %s",
+			request.HeadBranch, request.BaseBranch)
+	}
+
 	if request.HeadExpectedSha != "" && request.HeadExpectedSha != headCommitSHA {
 		return nil, status.Errorf(
 			codes.FailedPrecondition,
