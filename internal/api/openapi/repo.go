@@ -513,7 +513,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListCommitsV2.WithTags("repository")
 	opListCommitsV2.WithMapOfAnything(map[string]interface{}{"operationId": "listCommitsV2"})
 	opListCommitsV2.WithParameters(queryParameterGitRef, queryParameterAfterCommits, queryParameterPath,
-		queryParameterPage, queryParameterLimit, queryParameterSince, queryParameterUntil)
+		queryParameterSince, queryParameterUntil, queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opListCommitsV2, new(listCommitsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListCommitsV2, []types.ListCommitResponse{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListCommitsV2, new(usererror.Error), http.StatusInternalServerError)
