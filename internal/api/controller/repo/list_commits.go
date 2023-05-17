@@ -20,7 +20,8 @@ import (
 * ListCommits lists the commits of a repo.
  */
 func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
-	repoRef string, gitRef string, filter *types.CommitFilter, path string, since int64, until int64) ([]types.Commit, *types.RenameDetails, error) {
+	repoRef string, gitRef string, filter *types.CommitFilter, path string,
+	since int64, until int64) ([]types.Commit, *types.RenameDetails, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, nil, err
