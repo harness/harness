@@ -119,7 +119,12 @@ func (c *Controller) Merge(
 	}
 
 	// TODO: for forking merge title might be different?
-	mergeTitle := fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
+	var mergeTitle string
+	if in.Method == enum.MergeMethod(gitrpcenum.MergeMethodSquash) {
+		mergeTitle = fmt.Sprintf("%s (#%d)", pr.Title, pr.Number)
+	} else {
+		mergeTitle = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
+	}
 
 	var mergeOutput gitrpc.MergeOutput
 	mergeOutput, err = c.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
