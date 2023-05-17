@@ -28,9 +28,13 @@ func HandleListCommits(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		gitRef := request.GetGitRefFromQueryOrDefault(r, "")
 
-		filter := request.ParseCommitFilter(r)
+		filter, err := request.ParseCommitFilter(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 
-		commits, _, err := repoCtrl.ListCommits(ctx, session, repoRef, gitRef, filter, "", 0, 0)
+		commits, _, err := repoCtrl.ListCommits(ctx, session, repoRef, gitRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -58,20 +62,13 @@ func HandleListCommitsV2(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		gitRef := request.GetGitRefFromQueryOrDefault(r, "")
 
-		filter := request.ParseCommitFilter(r)
+		filter, err := request.ParseCommitFilter(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 
-		path := request.GetPathFromQueryOrDefault(r, "")
-		since, err := request.GetSinceFromQuery(r)
-		if err != nil {
-			render.TranslatedUserError(w, err)
-			return
-		}
-		until, err := request.GetUntilFromQuery(r)
-		if err != nil {
-			render.TranslatedUserError(w, err)
-			return
-		}
-		commits, renameDetails, err := repoCtrl.ListCommits(ctx, session, repoRef, gitRef, filter, path, since, until)
+		commits, renameDetails, err := repoCtrl.ListCommits(ctx, session, repoRef, gitRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

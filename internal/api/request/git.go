@@ -71,14 +71,25 @@ func ParseTagFilter(r *http.Request) *types.TagFilter {
 }
 
 // ParseCommitFilter extracts the commit filter from the url.
-func ParseCommitFilter(r *http.Request) *types.CommitFilter {
+func ParseCommitFilter(r *http.Request) (*types.CommitFilter, error) {
+	since, err := QueryParamAsPositiveInt64(r, QuerySince)
+	if err != nil {
+		return nil, err
+	}
+	until, err := QueryParamAsPositiveInt64(r, QueryUntil)
+	if err != nil {
+		return nil, err
+	}
 	return &types.CommitFilter{
 		After: QueryParamOrDefault(r, QueryParamAfter, ""),
 		PaginationFilter: types.PaginationFilter{
 			Page:  ParsePage(r),
 			Limit: ParseLimit(r),
 		},
-	}
+		Path:  QueryParamOrDefault(r, QueryPath, ""),
+		Since: since,
+		Until: until,
+	}, nil
 }
 
 func GetPathFromQueryOrDefault(r *http.Request, deflt string) string {
