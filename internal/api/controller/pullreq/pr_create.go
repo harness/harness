@@ -83,6 +83,10 @@ func (c *Controller) Create(
 
 	mergeBaseSHA := mergeBaseResult.MergeBaseSHA
 
+	if mergeBaseSHA == sourceSHA {
+		return nil, usererror.BadRequest("The source branch doesn't contain any new commits")
+	}
+
 	targetRepo, err = c.repoStore.UpdateOptLock(ctx, targetRepo, func(repo *types.Repository) error {
 		repo.PullReqSeq++
 		return nil
