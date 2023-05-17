@@ -8,9 +8,10 @@ import (
 	context "context"
 	reflect "reflect"
 
-	gomock "github.com/golang/mock/gomock"
 	user "github.com/harness/gitness/internal/api/controller/user"
 	types "github.com/harness/gitness/types"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
 // MockClient is a mock of Client interface.

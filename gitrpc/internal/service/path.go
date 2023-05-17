@@ -10,7 +10,7 @@ import (
 )
 
 // getFullPathForRepo returns the full path of a repo given the root dir of repos and the uid of the repo.
-// NOTE: Split repos into subfolders using their prefix to distribute repos accross a set of folders.
+// NOTE: Split repos into subfolders using their prefix to distribute repos across a set of folders.
 func getFullPathForRepo(reposRoot, uid string) string {
 	// ASSUMPTION: repoUID is of lenth at least 4 - otherwise we have trouble either way.
 	return filepath.Join(

@@ -78,7 +78,7 @@ func createReferenceWalkPatternsFromQuery(basePath string, query string) []strin
 		return []string{}
 	}
 
-	// ensure non-empty basepath ends with "/" for proper matching and concatination.
+	// ensure non-empty basepath ends with "/" for proper matching and concatenation.
 	if basePath != "" && basePath[len(basePath)-1] != '/' {
 		basePath += "/"
 	}

@@ -6,11 +6,11 @@ package service
 
 import (
 	"context"
-	"github.com/harness/gitness/gitrpc/rpc"
 	"io"
 
 	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/internal/types"
+	"github.com/harness/gitness/gitrpc/rpc"
 )
 
 // GitAdapter for accessing git commands from gitea.

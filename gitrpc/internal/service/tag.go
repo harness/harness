@@ -5,11 +5,13 @@
 package service
 
 import (
-	"code.gitea.io/gitea/modules/git"
 	"context"
 	"fmt"
+
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
+
+	"code.gitea.io/gitea/modules/git"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -183,7 +185,10 @@ func listCommitTagsWalkReferencesHandler(tags *[]*rpc.CommitTag) types.WalkRefer
 		return nil
 	}
 }
-func (s ReferenceService) CreateTag(ctx context.Context, createTagRequest *rpc.CreateTagRequest) (*rpc.CreateTagResponse, error) {
+func (s ReferenceService) CreateTag(
+	ctx context.Context,
+	createTagRequest *rpc.CreateTagRequest,
+) (*rpc.CreateTagResponse, error) {
 	base := createTagRequest.GetBase()
 	if base == nil {
 		return nil, types.ErrBaseCannotBeEmpty
@@ -233,8 +238,11 @@ func (s ReferenceService) CreateTag(ctx context.Context, createTagRequest *rpc.C
 	return &rpc.CreateTagResponse{Tag: commitTag}, nil
 }
 
-func (s ReferenceService) DeleteTag(ctx context.Context, deleteTagRequest *rpc.DeleteTagRequest) (*rpc.UpdateRefResponse, error) {
-	base := deleteTagRequest.GetBase()
+func (s ReferenceService) DeleteTag(
+	ctx context.Context,
+	request *rpc.DeleteTagRequest,
+) (*rpc.UpdateRefResponse, error) {
+	base := request.GetBase()
 	if base == nil {
 		return nil, types.ErrBaseCannotBeEmpty
 	}
@@ -256,17 +264,23 @@ func (s ReferenceService) DeleteTag(ctx context.Context, deleteTagRequest *rpc.D
 
 	err = sharedRepo.Clone(ctx, "")
 	if err != nil {
-		return nil, processGitErrorf(err, "failed to clone shared repo with tag '%s'", deleteTagRequest.GetTagName())
+		return nil, processGitErrorf(err, "failed to clone shared repo with tag '%s'", request.GetTagName())
 	}
-	actor := deleteTagRequest.GetBase().GetActor()
+	actor := request.GetBase().GetActor()
 	env := append(CreateEnvironmentForPush(ctx, base),
 		"GIT_COMMITTER_NAME="+actor.GetName(),
 		"GIT_COMMITTER_EMAIL="+actor.GetEmail(),
 	)
-	err = s.adapter.DeleteTag(ctx, repoPath, deleteTagRequest.TagName, env)
-	sharedRepo.PushDeleteBranch(ctx, base, "")
+
+	err = s.adapter.DeleteTag(ctx, repoPath, request.TagName, env)
 	if err != nil {
-		return nil, processGitErrorf(err, "Failed to delete the tag")
+		return nil, processGitErrorf(err, "Failed to delete the tag %s", request.GetTagName())
 	}
+
+	err = sharedRepo.PushDeleteBranch(ctx, base, "")
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to delete tag '%s' from remote repo", request.GetTagName())
+	}
+
 	return &rpc.UpdateRefResponse{}, nil
 }

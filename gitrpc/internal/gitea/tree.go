@@ -70,7 +70,7 @@ func (g Adapter) GetTreeNode(ctx context.Context, repoPath string,
 func (g Adapter) ListTreeNodes(ctx context.Context, repoPath string,
 	ref string, treePath string, recursive bool, includeLatestCommit bool) ([]types.TreeNodeWithCommit, error) {
 	if recursive && includeLatestCommit {
-		// To avoid potential performance catastrophies, block recursive with includeLatestCommit
+		// To avoid potential performance catastrophe, block recursive with includeLatestCommit
 		// TODO: this should return bad error to caller if needed?
 		// TODO: should this be refactored in two methods?
 		return nil, fmt.Errorf("latest commit with recursive query is not supported")

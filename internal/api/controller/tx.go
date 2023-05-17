@@ -7,8 +7,10 @@ package controller
 import (
 	"context"
 	"errors"
+
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -16,7 +18,7 @@ type TxOptionRetryCount int
 
 // TxOptLock runs the provided function inside a database transaction. If optimistic lock error occurs
 // during the operation, the function will retry the whole transaction again (to the maximum of 5 times,
-// but this can be overridden by providing an additional TxOptionRetryCount option)
+// but this can be overridden by providing an additional TxOptionRetryCount option).
 func TxOptLock(ctx context.Context,
 	db *sqlx.DB,
 	txFn func(ctx context.Context) error,

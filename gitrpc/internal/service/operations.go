@@ -87,7 +87,7 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 	// check if repo is empty
 	// IMPORTANT: we don't use gitea's repo.IsEmpty() as that only checks whether the default branch exists (in HEAD).
 	// This can be an issue in case someone created a branch already in the repo (just default branch is missing).
-	// In that case the user can accidentaly create separate git histories (which most likely is unintended).
+	// In that case the user can accidentally create separate git histories (which most likely is unintended).
 	// If the user wants to actually build a disconnected commit graph they can use the cli.
 	isEmpty, err := repoHasBranches(ctx, repo)
 	if err != nil {
@@ -225,7 +225,7 @@ func (s *CommitFilesService) validateAndPrepareHeader(repo *git.Repository, isEm
 	header.BranchName = strings.TrimPrefix(strings.TrimSpace(header.GetBranchName()), gitReferenceNamePrefixBranch)
 	header.NewBranchName = strings.TrimPrefix(strings.TrimSpace(header.GetNewBranchName()), gitReferenceNamePrefixBranch)
 
-	// if the repo is empty then we can skip branch existance checks
+	// if the repo is empty then we can skip branch existence checks
 	if isEmpty {
 		return nil
 	}

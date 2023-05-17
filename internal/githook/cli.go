@@ -38,7 +38,7 @@ var (
 	ExecutionTimeout = 3 * time.Minute
 )
 
-// SanitizeArgsForGit sanitizes the command line arguments (os.Args) if the command indicates they are comming from git.
+// SanitizeArgsForGit sanitizes the command line arguments (os.Args) if the command indicates they are coming from git.
 // Returns the santized args and true if the call comes from git, otherwise the original args are returned with false.
 func SanitizeArgsForGit(command string, args []string) ([]string, bool) {
 	switch command {
