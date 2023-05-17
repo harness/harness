@@ -186,12 +186,11 @@ var queryParameterSince = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QuerySince,
 		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("Date since when commit information should be retrieved."),
+		Description: ptr.String("Epoch since when commit information should be retrieved."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
-				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
-				Default: ptrptr(0),
+				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
 			},
 		},
 	},
@@ -201,12 +200,11 @@ var queryParameterUntil = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryUntil,
 		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("Date until when commit information should be retrieved."),
+		Description: ptr.String("Epoch until when commit information should be retrieved."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
-				Type:    ptrSchemaType(openapi3.SchemaTypeInteger),
-				Default: ptrptr(0),
+				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
 			},
 		},
 	},
