@@ -187,9 +187,9 @@ func listCommitTagsWalkReferencesHandler(tags *[]*rpc.CommitTag) types.WalkRefer
 }
 func (s ReferenceService) CreateTag(
 	ctx context.Context,
-	createTagRequest *rpc.CreateTagRequest,
+	request *rpc.CreateTagRequest,
 ) (*rpc.CreateTagResponse, error) {
-	base := createTagRequest.GetBase()
+	base := request.GetBase()
 	if base == nil {
 		return nil, types.ErrBaseCannotBeEmpty
 	}
@@ -211,25 +211,25 @@ func (s ReferenceService) CreateTag(
 
 	err = sharedRepo.Clone(ctx, "")
 	if err != nil {
-		return nil, processGitErrorf(err, "failed to clone shared repo with branch '%s'", createTagRequest.GetSha())
+		return nil, processGitErrorf(err, "failed to clone shared repo with branch '%s'", request.GetSha())
 	}
-	actor := createTagRequest.GetBase().GetActor()
+	actor := request.GetBase().GetActor()
 	env := append(CreateEnvironmentForPush(ctx, base),
 		"GIT_COMMITTER_NAME="+actor.GetName(),
 		"GIT_COMMITTER_EMAIL="+actor.GetEmail(),
 	)
 
-	err = s.adapter.CreateAnnotatedTag(ctx, sharedRepo.repo.Path, createTagRequest, env)
+	err = s.adapter.CreateAnnotatedTag(ctx, sharedRepo.repo.Path, request, env)
 
 	if err != nil {
-		return nil, processGitErrorf(err, "Failed to create tag %s - %s", createTagRequest.GetTagName(), err.Error())
+		return nil, processGitErrorf(err, "Failed to create tag %s - %s", request.GetTagName(), err.Error())
 	}
 
-	if err = sharedRepo.PushTag(ctx, base, createTagRequest.GetTagName()); err != nil {
-		return nil, err
+	if err = sharedRepo.PushTag(ctx, base, request.GetTagName()); err != nil {
+		return nil, processGitErrorf(err, "Failed to push the tag %s to remote", request.GetTagName())
 	}
 
-	tag, err := s.adapter.GetAnnotatedTag(ctx, repoPath, createTagRequest.GetTagName())
+	tag, err := s.adapter.GetAnnotatedTag(ctx, repoPath, request.GetTagName())
 
 	if err != nil {
 		return nil, err
@@ -274,12 +274,11 @@ func (s ReferenceService) DeleteTag(
 
 	err = s.adapter.DeleteTag(ctx, repoPath, request.TagName, env)
 	if err != nil {
-		return nil, processGitErrorf(err, "Failed to delete the tag %s", request.GetTagName())
+		return nil, processGitErrorf(err, "Failed to delete tag '%s' from remote repo", request.GetTagName())
 	}
 
-	err = sharedRepo.PushDeleteBranch(ctx, base, "")
-	if err != nil {
-		return nil, processGitErrorf(err, "failed to delete tag '%s' from remote repo", request.GetTagName())
+	if err = sharedRepo.push(ctx, base, "", GetReferenceFromTagName(request.GetTagName())); err != nil {
+		return nil, processGitErrorf(err, "Failed to push the tag %s to remote", request.GetTagName())
 	}
 
 	return &rpc.UpdateRefResponse{}, nil
