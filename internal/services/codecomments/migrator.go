@@ -153,22 +153,11 @@ func (migrator *Migrator) migrate(
 			}
 
 			for _, hunk := range file.HunkHeaders {
-				hunkStart := hunk.NewLine
-				hunkEnd := hunk.NewLine + hunk.NewSpan - 1
 				for _, cc := range codeComments {
-					commentStart, commentEnd := getCommentStartEnd(cc)
-					if commentEnd < hunkStart {
-						continue
-					}
-
-					outdated := commentStart <= hunkEnd
+					ccStart, ccEnd := getCommentStartEnd(cc)
+					outdated, moveDelta := processCodeComment(ccStart, ccEnd, hunk)
 					cc.Outdated = outdated
-
-					if outdated {
-						continue
-					}
-
-					updateCommentLine(cc, hunk.NewSpan-hunk.OldSpan)
+					updateCommentLine(cc, moveDelta)
 				}
 			}
 		}
@@ -207,4 +196,23 @@ func mapCodeComments(
 	}
 
 	return commitMap
+}
+
+func processCodeComment(ccStart, ccEnd int, h gitrpc.HunkHeader) (outdated bool, moveDelta int) {
+	// it's outdated if code is changed (old code) inside the code comment or
+	// if there are added lines inside the code comment, don't care about how many (NewSpan).
+	outdated = (h.OldSpan > 0 && ccEnd >= h.OldLine && ccStart <= h.OldLine+h.OldSpan-1) ||
+		(h.NewSpan > 0 && h.NewLine > ccStart && h.NewLine <= ccEnd)
+
+	if outdated {
+		return // outdated comments aren't moved
+	}
+
+	if ccEnd <= h.OldLine {
+		return // the change described by the hunk header is below the code comment, so it doesn't affect it
+	}
+
+	moveDelta = h.NewSpan - h.OldSpan
+
+	return
 }
