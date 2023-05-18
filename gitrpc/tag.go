@@ -60,13 +60,13 @@ func (p *CreateTagParams) Validate() error {
 	}
 
 	if p.Name == "" {
-		return errors.New("Tag name cannot be empty")
+		return errors.New("tag name cannot be empty")
 	}
 	if p.SHA == "" {
-		return errors.New("Target cannot be empty")
+		return errors.New("target cannot be empty")
 	}
 	if p.Message == "" {
-		return errors.New("Message cannot be empty")
+		return errors.New("message cannot be empty")
 	}
 	return nil
 }
@@ -140,7 +140,6 @@ func (c *Client) ListCommitTags(ctx context.Context, params *ListCommitTagsParam
 	return output, nil
 }
 func (c *Client) CreateTag(ctx context.Context, params *CreateTagParams) (*CreateTagOutput, error) {
-
 	err := params.Validate()
 
 	if err != nil {
@@ -167,11 +166,9 @@ func (c *Client) CreateTag(ctx context.Context, params *CreateTagParams) (*Creat
 	return &CreateTagOutput{
 		CommitTag: *commitTag,
 	}, nil
-
 }
 
 func (c *Client) DeleteTag(ctx context.Context, params *DeleteTagParams) error {
-
 	err := params.Validate()
 
 	if err != nil {

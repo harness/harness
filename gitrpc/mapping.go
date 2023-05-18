@@ -208,7 +208,7 @@ func mapRPCTreeNodeType(t rpc.TreeNodeType) (TreeNodeType, error) {
 	case rpc.TreeNodeType_TreeNodeTypeTree:
 		return TreeNodeTypeTree, nil
 	default:
-		return TreeNodeTypeBlob, fmt.Errorf("unkown rpc tree node type: %d", t)
+		return TreeNodeTypeBlob, fmt.Errorf("unknown rpc tree node type: %d", t)
 	}
 }
 
@@ -225,7 +225,7 @@ func mapRPCTreeNodeMode(m rpc.TreeNodeMode) (TreeNodeMode, error) {
 	case rpc.TreeNodeMode_TreeNodeModeTree:
 		return TreeNodeModeTree, nil
 	default:
-		return TreeNodeModeFile, fmt.Errorf("unkown rpc tree node mode: %d", m)
+		return TreeNodeModeFile, fmt.Errorf("unknown rpc tree node mode: %d", m)
 	}
 }
 

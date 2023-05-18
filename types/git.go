@@ -22,6 +22,9 @@ type PaginationFilter struct {
 type CommitFilter struct {
 	PaginationFilter
 	After string `json:"after"`
+	Path  string `json:"path"`
+	Since int64  `json:"since"`
+	Until int64  `json:"until"`
 }
 
 // BranchFilter stores branch query parameters.

@@ -175,7 +175,7 @@ func (s ReferenceService) ListBranches(request *rpc.ListBranchesRequest,
 	ctx := stream.Context()
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
-	// get all required information from git refrences
+	// get all required information from git references
 	branches, err := s.listBranchesLoadReferenceData(ctx, repoPath, request)
 	if err != nil {
 		return err

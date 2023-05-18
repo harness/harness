@@ -29,7 +29,11 @@ func (c *Controller) ListSpaces(ctx context.Context, session *auth.Session,
 }
 
 // List spaces WITHOUT checking PermissionSpaceView.
-func (c *Controller) ListSpacesNoAuth(ctx context.Context, spaceID int64, filter *types.SpaceFilter) ([]*types.Space, int64, error) {
+func (c *Controller) ListSpacesNoAuth(
+	ctx context.Context,
+	spaceID int64,
+	filter *types.SpaceFilter,
+) ([]*types.Space, int64, error) {
 	count, err := c.spaceStore.Count(ctx, spaceID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count child spaces: %w", err)

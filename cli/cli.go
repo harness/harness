@@ -53,7 +53,7 @@ func getArguments() []string {
 	command := os.Args[0]
 	args := os.Args[1:]
 
-	// in case of githooks, translate the arguments comming from git to work with gitness.
+	// in case of githooks, translate the arguments coming from git to work with gitness.
 	if gitArgs, fromGit := githook.SanitizeArgsForGit(command, args); fromGit {
 		return append([]string{hooks.ParamHooks}, gitArgs...)
 	}

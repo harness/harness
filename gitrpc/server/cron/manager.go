@@ -1,3 +1,7 @@
+// Copyright 2022 Harness Inc. All rights reserved.
+// Use of this source code is governed by the Polyform Free Trial License
+// that can be found in the LICENSE.md file for this repository.
+
 package cron
 
 import (
@@ -9,8 +13,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Format: seconds minute(0-59) hour(0-23) day of month(1-31) month(1-12) day of week(0-6).
 const (
-	//Format: seconds minute(0-59) hour(0-23) day of month(1-31) month(1-12) day of week(0-6)
 	Hourly      = "0 0 * * * *" // once an hour at minute 0
 	Nightly     = "0 0 0 * * *" // once a day at midnight
 	Weekly      = "0 0 0 * * 0" // once a week on Sun midnight
@@ -18,25 +22,25 @@ const (
 	EverySecond = "* * * * * *" // every second (for testing)
 )
 
-var ErrFatal = errors.New("fatal error occured")
+var ErrFatal = errors.New("fatal error occurred")
 
-type CronManager struct {
+type Manager struct {
 	c      *cron.Cron
 	ctx    context.Context
 	cancel context.CancelFunc
 	fatal  chan error
 }
 
-// options could be location, logger, etc.
-func NewCronManager() *CronManager {
-	return &CronManager{
+// NewManager creates a cron manager.
+func NewManager() *Manager {
+	return &Manager{
 		c:     cron.New(cron.WithSeconds()),
 		fatal: make(chan error),
 	}
 }
 
-// add a new func to cron job
-func (c *CronManager) NewCronTask(sepc string, job func(ctx context.Context) error) error {
+// NewCronTask adds a new func to cron job.
+func (c *Manager) NewCronTask(sepc string, job func(ctx context.Context) error) error {
 	_, err := c.c.AddFunc(sepc, func() {
 		jerr := job(c.ctx)
 		if jerr != nil { // check different severity of errors
@@ -55,7 +59,7 @@ func (c *CronManager) NewCronTask(sepc string, job func(ctx context.Context) err
 }
 
 // Run the cron scheduler, or no-op if already running.
-func (c *CronManager) Run(ctx context.Context) error {
+func (c *Manager) Run(ctx context.Context) error {
 	c.ctx, c.cancel = context.WithCancel(ctx)
 	var err error
 	go func() {
@@ -63,7 +67,7 @@ func (c *CronManager) Run(ctx context.Context) error {
 		case <-ctx.Done():
 			err = fmt.Errorf("context done: %w", ctx.Err())
 		case fErr := <-c.fatal:
-			err = fmt.Errorf("fatal error occured: %w", fErr)
+			err = fmt.Errorf("fatal error occurred: %w", fErr)
 		}
 
 		// stop scheduling of new jobs.

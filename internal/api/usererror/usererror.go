@@ -11,7 +11,7 @@ import (
 
 var (
 	// ErrInternal is returned when an internal error occurred.
-	ErrInternal = New(http.StatusInternalServerError, "Internal error occured")
+	ErrInternal = New(http.StatusInternalServerError, "Internal error occurred")
 
 	// ErrInvalidToken is returned when the api request token is invalid.
 	ErrInvalidToken = New(http.StatusUnauthorized, "Invalid or missing token")

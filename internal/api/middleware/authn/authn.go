@@ -19,25 +19,25 @@ import (
 // Attempt returns an http.HandlerFunc middleware that authenticates
 // the http.Request if authentication payload is available.
 func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler {
-	return performAuthentication(authenticator, false)
+	return performAuthentication(authenticator, false, authn.AuthGitCaller)
 }
 
 // Required returns an http.HandlerFunc middleware that authenticates
 // the http.Request and fails the request if no auth data was available.
 func Required(authenticator authn.Authenticator) func(http.Handler) http.Handler {
-	return performAuthentication(authenticator, true)
+	return performAuthentication(authenticator, true, authn.AuthAPICaller)
 }
 
 // performAuthentication returns an http.HandlerFunc middleware that authenticates
 // the http.Request if authentication payload is available.
 // Depending on whether it is required or not, the request will be failed.
-func performAuthentication(authenticator authn.Authenticator, required bool) func(http.Handler) http.Handler {
+func performAuthentication(authenticator authn.Authenticator, required bool, caller authn.APICaller) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			log := hlog.FromRequest(r)
 
-			session, err := authenticator.Authenticate(r)
+			session, err := authenticator.Authenticate(r, caller)
 
 			if errors.Is(err, authn.ErrNoAuthData) {
 				if required {

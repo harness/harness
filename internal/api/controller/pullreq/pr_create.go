@@ -92,7 +92,7 @@ func (c *Controller) Create(
 		return nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to aquire PullReqSeq number: %w", err)
+		return nil, fmt.Errorf("failed to acquire PullReqSeq number: %w", err)
 	}
 
 	pr := newPullReq(session, targetRepo.PullReqSeq, sourceRepo, targetRepo, in, sourceSHA, mergeBaseSHA)

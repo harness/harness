@@ -182,6 +182,34 @@ var queryParameterPath = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterSince = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QuerySince,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Epoch since when commit information should be retrieved."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+			},
+		},
+	},
+}
+
+var queryParameterUntil = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryUntil,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Epoch until when commit information should be retrieved."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+			},
+		},
+	},
+}
+
 var queryParameterIncludeCommit = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamIncludeCommit,
@@ -483,7 +511,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListCommitsV2.WithTags("repository")
 	opListCommitsV2.WithMapOfAnything(map[string]interface{}{"operationId": "listCommitsV2"})
 	opListCommitsV2.WithParameters(queryParameterGitRef, queryParameterAfterCommits, queryParameterPath,
-		queryParameterPage, queryParameterLimit)
+		queryParameterSince, queryParameterUntil, queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opListCommitsV2, new(listCommitsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListCommitsV2, []types.ListCommitResponse{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListCommitsV2, new(usererror.Error), http.StatusInternalServerError)

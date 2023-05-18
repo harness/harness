@@ -76,6 +76,8 @@ type ListCommitsParams struct {
 	Page  int32
 	Limit int32
 	Path  string
+	Since int64
+	Until int64
 }
 
 type RenameDetails struct {
@@ -100,6 +102,8 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 		Page:   params.Page,
 		Limit:  params.Limit,
 		Path:   params.Path,
+		Since:  params.Since,
+		Until:  params.Until,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to start stream for commits: %w", err)
