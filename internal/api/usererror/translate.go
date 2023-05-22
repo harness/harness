@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/check"
+	"github.com/harness/go-rbac"
 
 	"github.com/rs/zerolog/log"
 )
@@ -23,6 +24,11 @@ func Translate(err error) *Error {
 		checkError  *check.ValidationError
 		gitrpcError *gitrpc.Error
 	)
+
+	// check if err is RBAC error
+	if rbacErr := processRBACErrors(err); rbacErr != nil {
+		return rbacErr
+	}
 
 	switch {
 	// api errors
@@ -92,4 +98,31 @@ func httpStatusCode(code gitrpc.Status) int {
 		return v
 	}
 	return http.StatusInternalServerError
+}
+
+func processRBACErrors(err error) *Error {
+	msg := err.Error()
+	switch errors.Unwrap(err) {
+	case
+		rbac.ErrBaseURLRequired,
+		rbac.ErrInvalidPrincipalType,
+		rbac.ErrAccountRequired,
+		rbac.ErrPrincipalIdentifierRequired,
+		rbac.ErrPermissionsRequired,
+		rbac.ErrResourceTypeRequired,
+		rbac.ErrResourceTypeKeyRequired,
+		rbac.ErrResourceTypeValueRequired,
+		rbac.ErrPermissionRequired,
+		rbac.ErrPermissionsSizeExceeded,
+		rbac.ErrInvalidCacheEntryType,
+		rbac.ErrNoHeader,
+		rbac.ErrAuthorizationTokenRequired,
+		rbac.ErrOddNumberOfArguments:
+		return New(http.StatusBadRequest, msg)
+	case rbac.ErrMapperFuncCannotBeNil,
+		rbac.ErrLoggerCannotBeNil:
+		return New(http.StatusInternalServerError, msg)
+	}
+
+	return nil
 }
