@@ -14,11 +14,7 @@ export default function RepositoryTags() {
 
   return (
     <Container className={css.main}>
-      <RepositoryPageHeader
-        repoMetadata={repoMetadata}
-        title={getString('tags')}
-        dataTooltipId="repositoryTags"
-      />
+      <RepositoryPageHeader repoMetadata={repoMetadata} title={getString('tags')} dataTooltipId="repositoryTags" />
       <PageBody error={getErrorMessage(error)} retryOnError={voidFn(refetch)}>
         <LoadingSpinner visible={loading} />
 

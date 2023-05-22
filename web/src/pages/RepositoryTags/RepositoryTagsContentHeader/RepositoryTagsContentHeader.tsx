@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from 'react'
-import { Container, Layout, FlexExpander, DropDown, ButtonVariation } from '@harness/uicore'
+import React, { useState } from 'react'
+import { Container, Layout, FlexExpander, ButtonVariation } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
 import { GitBranchType, CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
-import { CreateBranchModalButton } from 'components/CreateBranchModal/CreateBranchModal'
-import css from './RepositoryTagsContentHeader.module.scss'
 import { CreateTagModalButton } from 'components/CreateTagModal/CreateTagModal'
+import css from './RepositoryTagsContentHeader.module.scss'
 
 interface RepositoryTagsContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
   loading?: boolean
@@ -16,39 +15,27 @@ interface RepositoryTagsContentHeaderProps extends Pick<GitInfoProps, 'repoMetad
 }
 
 export function RepositoryTagsContentHeader({
-  onBranchTypeSwitched,
   onSearchTermChanged,
-  activeBranchType = GitBranchType.ALL,
   repoMetadata,
   onNewBranchCreated,
   loading
 }: RepositoryTagsContentHeaderProps) {
   const { getString } = useStrings()
-  const [branchType, setBranchType] = useState(activeBranchType)
   const [searchTerm, setSearchTerm] = useState('')
-  const items = useMemo(
-    () => [
-      { label: getString('activeBranches'), value: GitBranchType.ACTIVE },
-      { label: getString('inactiveBranches'), value: GitBranchType.INACTIVE },
-      // { label: getString('yourBranches'), value: GitBranchType.YOURS },
-      { label: getString('allBranches'), value: GitBranchType.ALL }
-    ],
-    [getString]
-  )
+  
 
   return (
     <Container className={css.main}>
       <Layout.Horizontal spacing="medium">
-    
         <SearchInputWithSpinner
           loading={loading}
           query={searchTerm}
           setQuery={value => {
-              setSearchTerm(value)
-              onSearchTermChanged(value)
-            }}
+            setSearchTerm(value)
+            onSearchTermChanged(value)
+          }}
         />
-            <FlexExpander />
+        <FlexExpander />
         <CreateTagModalButton
           text={getString('createTag')}
           icon={CodeIcon.Add}

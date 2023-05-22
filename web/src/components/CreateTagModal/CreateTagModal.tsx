@@ -29,7 +29,7 @@ import { get } from 'lodash-es'
 import { useModalHook } from '@harness/use-modal'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
-import { CodeIcon, GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
+import { GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import type { RepoBranch } from 'services/code'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -112,7 +112,6 @@ export function useCreateTagModal({
                 name: branchName,
                 sourceBranch: suggestedSourceBranch,
                 description: ''
-
               }}
               formName="createGitTag"
               enableReinitialize={true}
@@ -156,7 +155,7 @@ export function useCreateTagModal({
                   </Layout.Horizontal>
                 </Container>
                 <FormInput.TextArea
-                label={getString('description')}
+                  label={getString('description')}
                   className={css.extendedDescription}
                   name="description"
                   placeholder={getString('tagDescription')}

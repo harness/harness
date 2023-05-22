@@ -156,7 +156,7 @@ export default function PullRequests() {
                 setSearchTerm(value)
                 setPage(1)
               }}
-          />
+            />
             <Container padding="xlarge">
               <Match expr={data?.length}>
                 <Truthy>

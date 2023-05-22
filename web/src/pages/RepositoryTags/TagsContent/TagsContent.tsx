@@ -5,32 +5,31 @@ import {
   TableV2 as Table,
   Text,
   Avatar,
-  Tag,
   Intent,
   useToaster,
-  ButtonVariation
 } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { Link, useHistory } from 'react-router-dom'
 import cx from 'classnames'
 import Keywords from 'react-keywords'
 import { useMutate } from 'restful-react'
+import { noop } from 'lodash-es'
 import { String, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
+
 import type {
   OpenapiCalculateCommitDivergenceRequest,
   RepoBranch,
   RepoCommitDivergence,
   TypesRepository
 } from 'services/code'
-import { formatDate, getErrorMessage } from 'utils/Utils'
+import { formatDate, getErrorMessage, voidFn } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
-import { CommitDivergence } from 'components/CommitDivergence/CommitDivergence'
-import { CodeIcon, makeDiffRefs } from 'utils/GitUtils'
-import css from './TagsContent.module.scss'
-import { CreateBranchModalButton, useCreateBranchModal } from 'components/CreateBranchModal/CreateBranchModal'
+import { useCreateBranchModal } from 'components/CreateBranchModal/CreateBranchModal'
 import { CommitActions } from 'components/CommitActions/CommitActions'
+import { CodeIcon } from 'utils/GitUtils'
+import css from './TagsContent.module.scss'
 
 interface TagsContentProps {
   searchTerm?: string
@@ -63,7 +62,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
       })
     }
   }, [getBranchDivergence, branchDivergenceRequestBody])
-  const onSuccess = () => {}
+  const onSuccess = voidFn(noop)
   const openModal = useCreateBranchModal({ repoMetadata, onSuccess })
 
   const columns: Column<RepoBranch>[] = useMemo(

@@ -1,16 +1,15 @@
 .main {
-    .title {
-      --typography-size: 20px !important;
-    }
-  
-    .label {
-      color: var(--grey-600) !important;
-      font-size: var(--form-input-font-size) !important;
-      font-weight: 500 !important;
-    }
-
-}
-  
-.extendedDescription textarea {
-    height: 100px !important;
+  .title {
+    --typography-size: 20px !important;
   }
+
+  .label {
+    color: var(--grey-600) !important;
+    font-size: var(--form-input-font-size) !important;
+    font-weight: 500 !important;
+  }
+}
+
+.extendedDescription textarea {
+  height: 100px !important;
+}
