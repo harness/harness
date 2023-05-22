@@ -17,6 +17,7 @@ export interface StringsMap {
   and: string
   approve: string
   ascending: string
+  basedOn: string
   blame: string
   blameCommitLine: string
   botAlerts: string
@@ -60,6 +61,7 @@ export interface StringsMap {
   compareEmptyDiffTitle: string
   comparingChanges: string
   confirm: string
+  confirmDelete: string
   confirmDeleteWebhook: string
   confirmation: string
   content: string
@@ -69,6 +71,7 @@ export interface StringsMap {
   copyCommitSHA: string
   create: string
   createABranch: string
+  createATag: string
   createBranch: string
   createBranchFromBranch: string
   createBranchFromTag: string
@@ -80,7 +83,9 @@ export interface StringsMap {
   'createRepoModal.privateLabel': string
   'createRepoModal.publicLabel': string
   createRepoPerms: string
+  createTag: string
   createWebhook: string
+  creationDate: string
   dangerDeleteRepo: string
   defaultBranch: string
   delete: string
@@ -91,6 +96,8 @@ export interface StringsMap {
   deleteNotAllowed: string
   deleteRepoText: string
   deleteRepoTitle: string
+  deleteTag: string
+  deleteTagConfirm: string
   deleted: string
   deployKeys: string
   descending: string
@@ -115,6 +122,7 @@ export interface StringsMap {
   enterNewBranchName: string
   enterRepoName: string
   enterSecret: string
+  enterTagPlaceholder: string
   error404Text: string
   existingAccount: string
   failedToCreateBranch: string
@@ -151,6 +159,7 @@ export interface StringsMap {
   name: string
   nameYourBranch: string
   nameYourFile: string
+  nameYourTag: string
   nameYourWebhook: string
   newFile: string
   newFileNotAllowed: string
@@ -302,7 +311,12 @@ export interface StringsMap {
   status: string
   submitReview: string
   switchBranchesTags: string
+  tag: string
+  tagCreated: string
+  tagDeleted: string
+  tagDescription: string
   tagNotFound: string
+  tagger: string
   tags: string
   title: string
   tooltipRepoEdit: string
@@ -316,10 +330,12 @@ export interface StringsMap {
   updated: string
   userName: string
   'validation.gitBranchNameInvalid': string
+  'validation.gitTagNameInvalid': string
   'validation.repoNamePatternIsNotValid': string
   viewAllBranches: string
   viewAllTags: string
   viewCommitDetails: string
+  viewFiles: string
   viewRaw: string
   viewed: string
   webhook: string

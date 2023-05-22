@@ -30,6 +30,7 @@ module.exports = {
     './Commits': './src/pages/RepositoryCommits/RepositoryCommits.tsx',
     './Branches': './src/pages/RepositoryBranches/RepositoryBranches.tsx',
     './PullRequests': './src/pages/PullRequests/PullRequests.tsx',
+    './Tags':'./src/pages/RepositoryTags/RepositoryTags.tsx',
     './PullRequest': './src/pages/PullRequest/PullRequest.tsx',
     './Compare': './src/pages/Compare/Compare.tsx',
     './Settings': './src/pages/RepositorySettings/RepositorySettings.tsx',
