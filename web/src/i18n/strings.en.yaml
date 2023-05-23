@@ -55,6 +55,8 @@ inactiveBranches: Inactive Branches
 yourBranches: Your Branches
 allBranches: All Branches
 createBranch: Create Branch
+createTag: Create Tag
+tagDescription: Enter tag description here
 findBranch: Find a branch
 searchBranches: Search branches
 updated: Updated
@@ -78,6 +80,7 @@ createRepoModal:
 validation:
   repoNamePatternIsNotValid: "Name can only contain alphanumerics, '-', '_', '.', and '$'"
   gitBranchNameInvalid: Branch name is invalid.
+  gitTagNameInvalid: Tag name is invalid.
 commitMessage: Commit message
 optionalExtendedDescription: Optional extended description
 optional: Optional
@@ -88,26 +91,35 @@ onDate: on {{date}}
 deleteFile: Delete file __path__
 confirm: Confirm
 createABranch: Create a branch
+createATag: Create a tag
 delete: Delete
 edit: Edit
 branchName: Branch name
 nameYourBranch: Name your branch
+nameYourTag: Name your tag
+enterTagPlaceholder: Enter the tag name here
 branchSource: Branch source
 branchSourceDesc: Choose a source branch
+basedOn: Based on
 failedToCreateBranch: Failed to create Branch. Please try again.
 branchCreated: Branch {{branch}} created.
+tagCreated: Tag {{tag}} created.
 confirmation: Confirmation
-deleteBranch: Delete Branch
+deleteBranch: Delete Branches
+deleteTag: Delete Tag
+deleteTagConfirm: Are you sure you want to delete tag <strong>{{name}}</strong>? You can't undo this action.
 deleteBranchConfirm: Are you sure you want to delete branch <strong>{{name}}</strong>? You can't undo this action.
 browse: Browse
 compare: Compare
 repoDeleted: Repository {{repo}} deleted.
 branchDeleted: Branch {{branch}} deleted.
+tagDeleted: Tag {{tag}} deleted.
 failedToDeleteBranch: Failed to delete Branch. Please try again.
 createFile: Create __path__
 updateFile: Update __path__
 renameFile: Rename __path__ to __newPath__
 switchBranchesTags: Switch branches/tags
+tag: Tag
 tags: Tags
 findOrCreateBranch: Find or create a branch
 findATag: Find a tag
@@ -387,3 +399,7 @@ unsavedChanges:
   message: 'You have unsaved changes. Are you sure you want to leave this page without saving?'
   leave: Leave this Page
   stay: Stay on this Page
+creationDate: Creation Date
+viewFiles: View Files
+tagger: Tagger
+confirmDelete: Confirm delete
