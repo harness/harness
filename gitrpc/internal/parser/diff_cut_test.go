@@ -142,6 +142,93 @@ func TestDiffCut(t *testing.T) {
 	}
 }
 
+func TestDiffCutNoEOLInOld(t *testing.T) {
+	const input = `diff --git a/test.txt b/test.txt
+index 541cb64f..047d7ee2 100644
+--- a/test.txt
++++ b/test.txt
+@@ -1 +1,4 @@
+-test
+\ No newline at end of file
++123
++456
++789
+`
+
+	hh, h, err := DiffCut(
+		strings.NewReader(input),
+		types.DiffCutParams{
+			LineStart:    3,
+			LineStartNew: true,
+			LineEnd:      3,
+			LineEndNew:   true,
+			BeforeLines:  1,
+			AfterLines:   1,
+			LineLimit:    100,
+		},
+	)
+	if err != nil {
+		t.Errorf("got error: %v", err)
+		return
+	}
+
+	expectedHH := types.HunkHeader{OldLine: 2, OldSpan: 0, NewLine: 3, NewSpan: 1}
+	if expectedHH != hh {
+		t.Errorf("expected hunk header: %+v, but got: %+v", expectedHH, hh)
+	}
+
+	expectedHunkLines := types.Hunk{
+		HunkHeader: types.HunkHeader{OldLine: 2, OldSpan: 0, NewLine: 2, NewSpan: 2},
+		Lines:      []string{"+456", "+789"},
+	}
+	if !reflect.DeepEqual(expectedHunkLines, h) {
+		t.Errorf("expected hunk header: %+v, but got: %+v", expectedHunkLines, h)
+	}
+}
+
+func TestDiffCutNoEOLInNew(t *testing.T) {
+	const input = `diff --git a/test.txt b/test.txt
+index af7864ba..541cb64f 100644
+--- a/test.txt
++++ b/test.txt
+@@ -1,3 +1 @@
+-123
+-456
+-789
++test
+\ No newline at end of file
+`
+	hh, h, err := DiffCut(
+		strings.NewReader(input),
+		types.DiffCutParams{
+			LineStart:    1,
+			LineStartNew: true,
+			LineEnd:      1,
+			LineEndNew:   true,
+			BeforeLines:  0,
+			AfterLines:   0,
+			LineLimit:    100,
+		},
+	)
+	if err != nil {
+		t.Errorf("got error: %v", err)
+		return
+	}
+
+	expectedHH := types.HunkHeader{OldLine: 1, OldSpan: 3, NewLine: 1, NewSpan: 1}
+	if expectedHH != hh {
+		t.Errorf("expected hunk header: %+v, but got: %+v", expectedHH, hh)
+	}
+
+	expectedHunkLines := types.Hunk{
+		HunkHeader: types.HunkHeader{OldLine: 1, OldSpan: 3, NewLine: 1, NewSpan: 1},
+		Lines:      []string{"-123", "-456", "-789", "+test"},
+	}
+	if !reflect.DeepEqual(expectedHunkLines, h) {
+		t.Errorf("expected hunk header: %+v, but got: %+v", expectedHunkLines, h)
+	}
+}
+
 func TestStrCircBuf(t *testing.T) {
 	tests := []struct {
 		name string
