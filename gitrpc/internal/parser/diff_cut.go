@@ -103,15 +103,15 @@ func DiffCut(r io.Reader, params types.DiffCutParams) (types.HunkHeader, types.H
 
 	linesBefore = linesBeforeBuf.lines()
 	if !errors.Is(err, io.EOF) {
-		for i := 0; i < params.AfterLines && scanner.Scan(); i++ {
-			line := scanner.Text()
+		for i := 0; i < params.AfterLines; i++ {
+			line, _, err := scanHunkLine(scanner)
+			if err != nil {
+				return types.HunkHeader{}, types.Hunk{}, err
+			}
 			if line == "" {
 				break
 			}
 			linesAfter = append(linesAfter, line)
-		}
-		if err = scanner.Err(); err != nil {
-			return types.HunkHeader{}, types.Hunk{}, err
 		}
 	}
 
@@ -185,22 +185,34 @@ const (
 	actionAdded     diffAction = '+'
 )
 
-func scanHunkLine(scan *bufio.Scanner) (string, diffAction, error) {
+func scanHunkLine(scan *bufio.Scanner) (line string, action diffAction, err error) {
+again:
+	action = actionUnchanged
+
 	if !scan.Scan() {
-		return "", actionUnchanged, scan.Err()
+		err = scan.Err()
+		return
 	}
 
-	line := scan.Text()
+	line = scan.Text()
 	if line == "" {
-		return "", actionUnchanged, types.ErrHunkNotFound // should not happen: empty line in diff output
+		err = types.ErrHunkNotFound // should not happen: empty line in diff output
+		return
 	}
 
-	action := diffAction(line[0])
+	action = diffAction(line[0])
+	if action == '\\' { // handle the "\ No newline at end of file" line
+		goto again
+	}
+
 	if action != actionRemoved && action != actionAdded && action != actionUnchanged {
-		return "", actionUnchanged, nil
+		// treat this as the end of hunk
+		line = ""
+		action = actionUnchanged
+		return
 	}
 
-	return line, action, nil
+	return
 }
 
 type strCircBuf struct {
