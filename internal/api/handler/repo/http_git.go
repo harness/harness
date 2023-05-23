@@ -62,6 +62,10 @@ func GetInfoRefs(client gitrpc.Interface, repoStore store.RepoStore, authorizer 
 				basicAuth(w, accountID)
 				return
 			}
+			if errors.Is(err, apiauth.ErrNotAuthorized) {
+				http.Error(w, err.Error(), http.StatusForbidden)
+				return
+			}
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -96,6 +100,10 @@ func GetUploadPack(client gitrpc.Interface, urlProvider *url.Provider,
 
 		if err := serviceRPC(w, r, client, urlProvider, repoStore, authorizer, service, false,
 			enum.PermissionRepoView, true); err != nil {
+			if errors.Is(err, apiauth.ErrNotAuthorized) {
+				http.Error(w, err.Error(), http.StatusForbidden)
+				return
+			}
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -113,7 +121,6 @@ func PostReceivePack(client gitrpc.Interface, urlProvider *url.Provider,
 				basicAuth(w, authError.AccountID)
 				return
 			}
-
 			if errors.Is(err, apiauth.ErrNotAuthorized) {
 				http.Error(w, err.Error(), http.StatusForbidden)
 				return
