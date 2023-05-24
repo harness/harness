@@ -57,9 +57,10 @@ func (s RepositoryService) ListCommits(request *rpc.ListCommitsRequest,
 
 	gitCommits, renameDetails, err := s.adapter.ListCommits(ctx, repoPath, request.GetGitRef(),
 		int(request.GetPage()), int(request.GetLimit()), types.CommitFilter{AfterRef: request.After,
-			Path:  request.Path,
-			Since: request.Since,
-			Until: request.Until})
+			Path:      request.Path,
+			Since:     request.Since,
+			Until:     request.Until,
+			Committer: request.Committer})
 	if err != nil {
 		return processGitErrorf(err, "failed to get list of commits")
 	}

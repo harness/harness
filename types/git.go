@@ -21,10 +21,11 @@ type PaginationFilter struct {
 // CommitFilter stores commit query parameters.
 type CommitFilter struct {
 	PaginationFilter
-	After string `json:"after"`
-	Path  string `json:"path"`
-	Since int64  `json:"since"`
-	Until int64  `json:"until"`
+	After     string `json:"after"`
+	Path      string `json:"path"`
+	Since     int64  `json:"since"`
+	Until     int64  `json:"until"`
+	Committer string `json:"committer"`
 }
 
 // BranchFilter stores branch query parameters.
@@ -64,12 +65,13 @@ type Identity struct {
 }
 
 type RenameDetails struct {
-	IsRenamed bool   `json:"is_renamed"`
-	OldPath   string `json:"old_path"`
-	NewPath   string `json:"new_path"`
+	OldPath         string `json:"old_path"`
+	NewPath         string `json:"new_path"`
+	CommitShaBefore string `json:"commit_sha_before"`
+	CommitShaAfter  string `json:"commit_sha_after"`
 }
 
 type ListCommitResponse struct {
-	Commits       []Commit      `json:"commits"`
-	RenameDetails RenameDetails `json:"rename_details"`
+	Commits       []Commit        `json:"commits"`
+	RenameDetails []RenameDetails `json:"rename_details"`
 }

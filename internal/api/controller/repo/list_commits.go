@@ -20,7 +20,7 @@ import (
 * ListCommits lists the commits of a repo.
  */
 func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
-	repoRef string, gitRef string, filter *types.CommitFilter) ([]types.Commit, *types.RenameDetails, error) {
+	repoRef string, gitRef string, filter *types.CommitFilter) ([]types.Commit, []types.RenameDetails, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, nil, err
@@ -44,6 +44,7 @@ func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 		Path:       filter.Path,
 		Since:      filter.Since,
 		Until:      filter.Until,
+		Committer:  filter.Committer,
 	})
 	if err != nil {
 		return nil, nil, err
@@ -59,13 +60,13 @@ func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 		commits[i] = *commit
 	}
 
-	var renameDetails = types.RenameDetails{
-		IsRenamed: false,
+	renameDetailList := make([]types.RenameDetails, len(rpcOut.RenameDetails))
+	for i := range rpcOut.RenameDetails {
+		renameDetails := controller.MapRenameDetails(rpcOut.RenameDetails[i])
+		if renameDetails == nil {
+			return nil, nil, fmt.Errorf("rename details was nil")
+		}
+		renameDetailList[i] = *renameDetails
 	}
-	if rpcOut.RenameDetails != nil {
-		renameDetails.IsRenamed = rpcOut.RenameDetails.IsRenamed
-		renameDetails.OldPath = rpcOut.RenameDetails.OldPath
-		renameDetails.NewPath = rpcOut.RenameDetails.NewPath
-	}
-	return commits, &renameDetails, nil
+	return commits, renameDetailList, nil
 }
