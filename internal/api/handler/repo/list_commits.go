@@ -76,7 +76,7 @@ func HandleListCommitsV2(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		commitsResponse := types.ListCommitResponse{
 			Commits:       commits,
-			RenameDetails: *renameDetails,
+			RenameDetails: renameDetails,
 		}
 
 		// TODO: get last page indicator explicitly - current check is wrong in case len % limit == 0

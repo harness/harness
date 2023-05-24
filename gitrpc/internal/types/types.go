@@ -292,14 +292,16 @@ type BlamePart struct {
 }
 
 type PathRenameDetails struct {
-	Renamed bool
-	OldPath string
-	NewPath string
+	OldPath         string
+	NewPath         string
+	CommitSHABefore string
+	CommitSHAAfter  string
 }
 
 type CommitFilter struct {
-	Path     string
-	AfterRef string
-	Since    int64
-	Until    int64
+	Path      string
+	AfterRef  string
+	Since     int64
+	Until     int64
+	Committer string
 }

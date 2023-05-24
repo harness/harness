@@ -100,18 +100,20 @@ message ListCommitsRequest {
   string path      = 6;
   int64 since      = 7;
   int64 until      = 8;
+  string committer = 9;
 }
 
 message ListCommitsResponse {
     Commit commit = 1;
-    RenameDetails rename_details = 2;
+    repeated RenameDetails rename_details = 2;
 }
 
 
 message RenameDetails{
-  bool is_renamed = 1;
-  string old_path = 2;
-  string new_path = 3;
+  string old_path = 1;
+  string new_path = 2;
+  string commit_sha_before = 3;
+  string commit_sha_after = 4;
 }
 
 message GetBlobRequest {

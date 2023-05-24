@@ -122,6 +122,9 @@ func (g Adapter) listCommitSHAs(
 	if filter.Until > 0 {
 		args = append(args, "--until", strconv.FormatInt(filter.Until, 10))
 	}
+	if filter.Committer != "" {
+		args = append(args, "--committer", filter.Committer)
+	}
 
 	stdout, _, runErr := gitea.NewCommand(giteaRepo.Ctx, args...).RunStdBytes(&gitea.RunOpts{Dir: giteaRepo.Path})
 	if runErr != nil {
@@ -159,7 +162,7 @@ func (g Adapter) ListCommits(ctx context.Context,
 	repoPath string,
 	ref string,
 	page int, limit int, filter types.CommitFilter,
-) ([]types.Commit, *types.PathRenameDetails, error) {
+) ([]types.Commit, []types.PathRenameDetails, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
 		return nil, nil, err
@@ -187,14 +190,45 @@ func (g Adapter) ListCommits(ctx context.Context,
 	}
 
 	if len(filter.Path) != 0 {
-		renameDetails, err := giteaGetRenameDetails(giteaRepo, commits[0].SHA, filter.Path)
+		renameDetailsList, err := getRenameDetails(giteaRepo, commits, filter.Path)
 		if err != nil {
 			return nil, nil, err
 		}
-		return commits, renameDetails, nil
+		return commits, renameDetailsList, nil
 	}
 
 	return commits, nil, nil
+}
+
+func getRenameDetails(
+	giteaRepo *gitea.Repository,
+	commits []types.Commit,
+	path string) ([]types.PathRenameDetails, error) {
+	renameDetailsList := make([]types.PathRenameDetails, 0, 2)
+
+	renameDetails, err := giteaGetRenameDetails(giteaRepo, commits[0].SHA, path)
+	if err != nil {
+		return nil, err
+	}
+	if renameDetails.NewPath != "" || renameDetails.OldPath != "" {
+		renameDetails.CommitSHABefore = commits[0].SHA
+		renameDetailsList = append(renameDetailsList, *renameDetails)
+	}
+
+	if len(commits) == 1 {
+		return renameDetailsList, nil
+	}
+
+	renameDetailsLast, err := giteaGetRenameDetails(giteaRepo, commits[len(commits)-1].SHA, path)
+	if err != nil {
+		return nil, err
+	}
+
+	if renameDetailsLast.NewPath != "" || renameDetailsLast.OldPath != "" {
+		renameDetailsLast.CommitSHAAfter = commits[len(commits)-1].SHA
+		renameDetailsList = append(renameDetailsList, *renameDetailsLast)
+	}
+	return renameDetailsList, nil
 }
 
 func giteaGetRenameDetails(giteaRepo *gitea.Repository, ref string, path string) (*types.PathRenameDetails, error) {
@@ -213,15 +247,12 @@ func giteaGetRenameDetails(giteaRepo *gitea.Repository, ref string, path string)
 
 	if strings.HasPrefix(*changeType, "R") {
 		return &types.PathRenameDetails{
-			Renamed: true,
 			OldPath: *oldPath,
 			NewPath: *newPath,
 		}, nil
 	}
 
-	return &types.PathRenameDetails{
-		Renamed: false,
-	}, nil
+	return &types.PathRenameDetails{}, nil
 }
 
 func getFileChangeTypeFromLog(changeStrings []string, filePath string) (*string, *string, *string, error) {

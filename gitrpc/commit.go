@@ -72,23 +72,25 @@ type ListCommitsParams struct {
 	GitREF string
 	// After is a git reference (branch / tag / commit SHA)
 	// If provided, commits only up to that reference will be returned (exlusive)
-	After string
-	Page  int32
-	Limit int32
-	Path  string
-	Since int64
-	Until int64
+	After     string
+	Page      int32
+	Limit     int32
+	Path      string
+	Since     int64
+	Until     int64
+	Committer string
 }
 
 type RenameDetails struct {
-	IsRenamed bool
-	OldPath   string
-	NewPath   string
+	OldPath         string
+	NewPath         string
+	CommitShaBefore string
+	CommitShaAfter  string
 }
 
 type ListCommitsOutput struct {
 	Commits       []Commit
-	RenameDetails *RenameDetails
+	RenameDetails []*RenameDetails
 }
 
 func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error) {
@@ -96,14 +98,15 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 		return nil, ErrNoParamsProvided
 	}
 	stream, err := c.repoService.ListCommits(ctx, &rpc.ListCommitsRequest{
-		Base:   mapToRPCReadRequest(params.ReadParams),
-		GitRef: params.GitREF,
-		After:  params.After,
-		Page:   params.Page,
-		Limit:  params.Limit,
-		Path:   params.Path,
-		Since:  params.Since,
-		Until:  params.Until,
+		Base:      mapToRPCReadRequest(params.ReadParams),
+		GitRef:    params.GitREF,
+		After:     params.After,
+		Page:      params.Page,
+		Limit:     params.Limit,
+		Path:      params.Path,
+		Since:     params.Since,
+		Until:     params.Until,
+		Committer: params.Committer,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to start stream for commits: %w", err)

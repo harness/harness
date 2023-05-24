@@ -351,6 +351,20 @@ var queryParameterAfterCommits = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterCommitter = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryCommitter,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Committer pattern for which commit information should be retrieved."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
 //nolint:funlen
 func repoOperations(reflector *openapi3.Reflector) {
 	createRepository := openapi3.Operation{}
@@ -511,7 +525,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListCommitsV2.WithTags("repository")
 	opListCommitsV2.WithMapOfAnything(map[string]interface{}{"operationId": "listCommitsV2"})
 	opListCommitsV2.WithParameters(queryParameterGitRef, queryParameterAfterCommits, queryParameterPath,
-		queryParameterSince, queryParameterUntil, queryParameterPage, queryParameterLimit)
+		queryParameterSince, queryParameterUntil, queryParameterCommitter, queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opListCommitsV2, new(listCommitsRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opListCommitsV2, []types.ListCommitResponse{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListCommitsV2, new(usererror.Error), http.StatusInternalServerError)
