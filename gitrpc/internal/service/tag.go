@@ -200,7 +200,6 @@ func (s ReferenceService) CreateTag(
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to open repo")
 	}
-	defer repo.Close()
 
 	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
 	if err != nil {
@@ -214,12 +213,14 @@ func (s ReferenceService) CreateTag(
 		return nil, processGitErrorf(err, "failed to clone shared repo with branch '%s'", request.GetSha())
 	}
 	actor := request.GetBase().GetActor()
-	env := append(CreateEnvironmentForPush(ctx, base),
-		"GIT_COMMITTER_NAME="+actor.GetName(),
-		"GIT_COMMITTER_EMAIL="+actor.GetEmail(),
-	)
-
-	err = s.adapter.CreateAnnotatedTag(ctx, sharedRepo.repo.Path, request, env)
+	createTagRequest := types.CreateTagRequest{
+		Name:        request.GetTagName(),
+		TargetSha:   request.GetSha(),
+		Message:     request.GetMessage(),
+		TaggerEmail: actor.GetEmail(),
+		TaggerName:  actor.GetName(),
+	}
+	err = s.adapter.CreateAnnotatedTag(ctx, sharedRepo.tmpPath, &createTagRequest)
 
 	if err != nil {
 		return nil, processGitErrorf(err, "Failed to create tag %s - %s", request.GetTagName(), err.Error())
@@ -253,7 +254,6 @@ func (s ReferenceService) DeleteTag(
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to open repo")
 	}
-	defer repo.Close()
 
 	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
 	if err != nil {
@@ -262,22 +262,12 @@ func (s ReferenceService) DeleteTag(
 
 	defer sharedRepo.Close(ctx)
 
-	err = sharedRepo.Clone(ctx, "")
+	err = sharedRepo.Clone(ctx, request.GetTagName())
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to clone shared repo with tag '%s'", request.GetTagName())
 	}
-	actor := request.GetBase().GetActor()
-	env := append(CreateEnvironmentForPush(ctx, base),
-		"GIT_COMMITTER_NAME="+actor.GetName(),
-		"GIT_COMMITTER_EMAIL="+actor.GetEmail(),
-	)
 
-	err = s.adapter.DeleteTag(ctx, repoPath, request.TagName, env)
-	if err != nil {
-		return nil, processGitErrorf(err, "Failed to delete tag '%s' from remote repo", request.GetTagName())
-	}
-
-	if err = sharedRepo.push(ctx, base, "", GetReferenceFromTagName(request.GetTagName())); err != nil {
+	if err = sharedRepo.PushDeleteTag(ctx, base, request.GetTagName()); err != nil {
 		return nil, processGitErrorf(err, "Failed to push the tag %s to remote", request.GetTagName())
 	}
 

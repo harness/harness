@@ -150,6 +150,14 @@ type Tag struct {
 	Tagger     Signature
 }
 
+type CreateTagRequest struct {
+	Name        string
+	TargetSha   string
+	Message     string
+	TaggerName  string
+	TaggerEmail string
+}
+
 // Signature represents the Author or Committer information.
 type Signature struct {
 	Identity Identity
