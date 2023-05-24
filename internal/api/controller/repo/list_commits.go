@@ -62,9 +62,9 @@ func (c *Controller) ListCommits(ctx context.Context, session *auth.Session,
 
 	renameDetailList := make([]types.RenameDetails, len(rpcOut.RenameDetails))
 	for i := range rpcOut.RenameDetails {
-		renameDetails, err := controller.MapRenameDetails(rpcOut.RenameDetails[i])
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to map rename details: %w", err)
+		renameDetails := controller.MapRenameDetails(rpcOut.RenameDetails[i])
+		if renameDetails == nil {
+			return nil, nil, fmt.Errorf("rename details was nil")
 		}
 		renameDetailList[i] = *renameDetails
 	}

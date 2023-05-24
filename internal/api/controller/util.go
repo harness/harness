@@ -78,16 +78,16 @@ func MapCommit(c *gitrpc.Commit) (*types.Commit, error) {
 	}, nil
 }
 
-func MapRenameDetails(c *gitrpc.RenameDetails) (*types.RenameDetails, error) {
+func MapRenameDetails(c *gitrpc.RenameDetails) *types.RenameDetails {
 	if c == nil {
-		return nil, fmt.Errorf("rename details is nil")
+		return nil
 	}
 	return &types.RenameDetails{
 		OldPath:         c.OldPath,
 		NewPath:         c.NewPath,
 		CommitShaBefore: c.CommitShaBefore,
 		CommitShaAfter:  c.CommitShaAfter,
-	}, nil
+	}
 }
 
 func MapSignature(s *gitrpc.Signature) (*types.Signature, error) {

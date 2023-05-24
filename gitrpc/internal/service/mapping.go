@@ -142,14 +142,13 @@ func mapDiffFileHunkHeaders(diffHunkHeaders []*types.DiffFileHunkHeaders) []*rpc
 }
 
 func mapRenameDetails(renameDetails []types.PathRenameDetails) []*rpc.RenameDetails {
-	renameDetailsList := make([]*rpc.RenameDetails, 0, 2)
-	for _, details := range renameDetails {
-		renameDetail := &rpc.RenameDetails{
-			OldPath:         details.OldPath,
-			NewPath:         details.NewPath,
-			CommitShaBefore: details.CommitSHABefore,
-			CommitShaAfter:  details.CommitSHAAfter}
-		renameDetailsList = append(renameDetailsList, renameDetail)
+	renameDetailsList := make([]*rpc.RenameDetails, len(renameDetails))
+	for i := range renameDetails {
+		renameDetailsList[i] = &rpc.RenameDetails{
+			OldPath:         renameDetails[i].OldPath,
+			NewPath:         renameDetails[i].NewPath,
+			CommitShaBefore: renameDetails[i].CommitSHABefore,
+			CommitShaAfter:  renameDetails[i].CommitSHAAfter}
 	}
 	return renameDetailsList
 }
