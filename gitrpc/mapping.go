@@ -110,12 +110,12 @@ func mapRPCCommitTag(t *rpc.CommitTag) (*CommitTag, error) {
 
 func mapRPCRenameDetails(c []*rpc.RenameDetails) []*RenameDetails {
 	renameDetailsList := make([]*RenameDetails, len(c))
-	for i := range renameDetailsList {
+	for i, detail := range c {
 		renameDetailsList[i] = &RenameDetails{
-			OldPath:         c[i].OldPath,
-			NewPath:         c[i].NewPath,
-			CommitShaBefore: c[i].CommitShaBefore,
-			CommitShaAfter:  c[i].CommitShaAfter,
+			OldPath:         detail.OldPath,
+			NewPath:         detail.NewPath,
+			CommitShaBefore: detail.CommitShaBefore,
+			CommitShaAfter:  detail.CommitShaAfter,
 		}
 	}
 	return renameDetailsList

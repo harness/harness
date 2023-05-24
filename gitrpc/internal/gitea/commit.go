@@ -204,10 +204,12 @@ func getRenameDetails(
 	giteaRepo *gitea.Repository,
 	commits []types.Commit,
 	path string) ([]types.PathRenameDetails, error) {
-	renameDetailsList := make([]types.PathRenameDetails, 0, 2)
 	if len(commits) == 0 {
-		return renameDetailsList, nil
+		return []types.PathRenameDetails{}, nil
 	}
+
+	renameDetailsList := make([]types.PathRenameDetails, 0, 2)
+
 	renameDetails, err := giteaGetRenameDetails(giteaRepo, commits[0].SHA, path)
 	if err != nil {
 		return nil, err
