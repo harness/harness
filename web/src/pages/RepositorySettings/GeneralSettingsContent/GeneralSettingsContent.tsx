@@ -184,6 +184,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                   {getString('dangerDeleteRepo')}
                 </Text>
                 <Button
+                  disabled={true} // TODO: Disable until backend has soft delete
                   intent={Intent.DANGER}
                   onClick={() => {
                     confirmDeleteBranch()

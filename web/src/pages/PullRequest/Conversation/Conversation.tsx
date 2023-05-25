@@ -8,7 +8,7 @@ import { useAppContext } from 'AppContext'
 import type { TypesPullReqActivity } from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import { getErrorMessage, orderSortDate, dayAgoInMS, ButtonRoleProps } from 'utils/Utils'
+import { getErrorMessage, orderSortDate, ButtonRoleProps } from 'utils/Utils'
 import { activityToCommentItem } from 'components/DiffViewer/DiffViewerUtils'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
@@ -26,13 +26,6 @@ import css from './Conversation.module.scss'
 export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   onCommentUpdate: () => void
   prHasChanged?: boolean
-}
-
-export enum prSortState {
-  SHOW_EVERYTHING = 'showEverything',
-  ALL_COMMENTS = 'allComments',
-  WHATS_NEW = 'whatsNew',
-  MY_COMMENTS = 'myComments'
 }
 
 export const Conversation: React.FC<ConversationProps> = ({
@@ -57,10 +50,8 @@ export const Conversation: React.FC<ConversationProps> = ({
   })
   const { showError } = useToaster()
   const [dateOrderSort, setDateOrderSort] = useState<boolean | 'desc' | 'asc'>(orderSortDate.ASC)
-  const [prShowState, setPrShowState] = useState<SelectOption>({
-    label: `Show Everything `,
-    value: 'showEverything'
-  })
+  const activityFilters = useActivityFilters()
+  const [activityFilter, setActivityFilter] = useState<SelectOption>(activityFilters[0] as SelectOption)
   const activityBlocks = useMemo(() => {
     // Each block may have one or more activities which are grouped into it. For example, one comment block
     // contains a parent comment and multiple replied comments
@@ -86,61 +77,30 @@ export const Conversation: React.FC<ConversationProps> = ({
       blocks.push(parentActivity.map(activityToCommentItem))
     })
 
-    // Group title-change events into one single block
-    // Disabled for now, @see https://harness.atlassian.net/browse/SCM-79
-    // const titleChangeItems =
-    //   blocks.filter(
-    //     _activities => isSystemComment(_activities) && _activities[0].payload?.type === CommentType.TITLE_CHANGE
-    //   ) || []
+    switch (activityFilter.value) {
+      case PRCommentFilterType.ALL_COMMENTS:
+        return blocks.filter(_activities => !isSystemComment(_activities))
 
-    // titleChangeItems.forEach((value, index) => {
-    //   if (index > 0) {
-    //     titleChangeItems[0].push(...value)
-    //   }
-    // })
-    // titleChangeItems.shift()
-    // return blocks.filter(_activities => !titleChangeItems.includes (_activities))
+      case PRCommentFilterType.RESOLVED_COMMENTS:
+        return blocks.filter(_activities => isCodeComment(_activities) && _activities[0].payload?.resolved)
 
-    if (prShowState.value === prSortState.ALL_COMMENTS) {
-      const allCommentBlock = blocks.filter(_activities => !isSystemComment(_activities))
-      return allCommentBlock
-    }
+      case PRCommentFilterType.UNRESOLVED_COMMENTS:
+        return blocks.filter(_activities => isCodeComment(_activities) && !_activities[0].payload?.resolved)
 
-    if (prShowState.value === prSortState.WHATS_NEW) {
-      // get current time in seconds and subtract it by a day and see if comments are newer than a day
-      const lastComment = blocks[blocks.length - 1]
-      const lastCommentTime = lastComment[lastComment.length - 1].payload?.edited
-      if (lastCommentTime !== undefined) {
-        const currentTime = lastCommentTime - dayAgoInMS
-
-        const newestBlock = blocks.filter(_activities => {
-          const mostRecentComment = _activities[_activities.length - 1]
-          if (mostRecentComment?.payload?.edited !== undefined) {
-            return mostRecentComment?.payload?.edited > currentTime
-          }
+      case PRCommentFilterType.MY_COMMENTS: {
+        const allCommentBlock = blocks.filter(_activities => !isSystemComment(_activities))
+        const userCommentsOnly = allCommentBlock.filter(_activities => {
+          const userCommentReply = _activities.filter(
+            authorIsUser => authorIsUser.payload?.author?.uid === currentUser.uid
+          )
+          return userCommentReply.length !== 0
         })
-        return newestBlock
+        return userCommentsOnly
       }
     }
 
-    // show only comments made by user or replies in threads by user
-    if (prShowState.value === prSortState.MY_COMMENTS) {
-      const allCommentBlock = blocks.filter(_activities => !isSystemComment(_activities))
-      const userCommentsOnly = allCommentBlock.filter(_activities => {
-        const userCommentReply = _activities.filter(
-          authorIsUser => authorIsUser.payload?.author?.uid === currentUser.uid
-        )
-        if (userCommentReply.length !== 0) {
-          return true
-        } else {
-          return false
-        }
-      })
-      return userCommentsOnly
-    }
-
     return blocks
-  }, [activities, dateOrderSort, prShowState, currentUser.uid])
+  }, [activities, dateOrderSort, activityFilter, currentUser.uid])
   const path = useMemo(
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/comments`,
     [repoMetadata.path, pullRequestMetadata.number]
@@ -183,28 +143,11 @@ export const Conversation: React.FC<ConversationProps> = ({
                   <Layout.Horizontal className={css.sortContainer} padding={{ top: 'xxlarge', bottom: 'medium' }}>
                     <Container>
                       <Select
-                        items={[
-                          {
-                            label: getString('showEverything'),
-                            value: prSortState.SHOW_EVERYTHING
-                          },
-                          {
-                            label: getString('allComments'),
-                            value: prSortState.ALL_COMMENTS
-                          },
-                          {
-                            label: getString('whatsNew'),
-                            value: prSortState.WHATS_NEW
-                          },
-                          {
-                            label: getString('myComments'),
-                            value: prSortState.MY_COMMENTS
-                          }
-                        ]}
-                        value={prShowState}
+                        items={activityFilters}
+                        value={activityFilter}
                         className={css.selectButton}
                         onChange={newState => {
-                          setPrShowState(newState)
+                          setActivityFilter(newState)
                           refetchActivities()
                         }}
                       />
@@ -385,5 +328,43 @@ export const Conversation: React.FC<ConversationProps> = ({
       </Container>
       <NavigationCheck when={dirtyCurrentComments || dirtyNewComment} />
     </PullRequestTabContentWrapper>
+  )
+}
+
+export enum PRCommentFilterType {
+  SHOW_EVERYTHING = 'showEverything',
+  ALL_COMMENTS = 'allComments',
+  MY_COMMENTS = 'myComments',
+  RESOLVED_COMMENTS = 'resolvedComments',
+  UNRESOLVED_COMMENTS = 'unresolvedComments'
+}
+
+function useActivityFilters() {
+  const { getString } = useStrings()
+
+  return useMemo(
+    () => [
+      {
+        label: getString('showEverything'),
+        value: PRCommentFilterType.SHOW_EVERYTHING
+      },
+      {
+        label: getString('allComments'),
+        value: PRCommentFilterType.ALL_COMMENTS
+      },
+      {
+        label: getString('myComments'),
+        value: PRCommentFilterType.MY_COMMENTS
+      },
+      {
+        label: getString('unrsolvedComment'),
+        value: PRCommentFilterType.UNRESOLVED_COMMENTS
+      },
+      {
+        label: getString('resolvedComments'),
+        value: PRCommentFilterType.RESOLVED_COMMENTS
+      }
+    ],
+    [getString]
   )
 }

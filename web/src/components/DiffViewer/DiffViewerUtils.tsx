@@ -196,6 +196,7 @@ export const activityToCommentItem = (activity: TypesPullReqActivity): CommentIt
   created: activity.created as number,
   updated: activity.edited as number,
   deleted: activity.deleted as number,
+  outdated: !!activity.code_comment?.outdated,
   content: (activity.text || (activity.payload as Unknown)?.Message) as string,
   payload: activity
 })

@@ -205,6 +205,7 @@ pr:
   failedToDeleteComment: Failed to delete comment. Please try again.
   failedToUpdateCommentStatus: Failed to update comment status. Please try again.
   prMerged: This Pull Request was merged
+  prClosed: This Pull Request was closed.
   reviewSubmitted: Review submitted.
   prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested  to, reviewed} the pull request. {time}'
   prMergedInfo: '{user} merged branch {source} into {target} {time}.'
@@ -230,6 +231,7 @@ pr:
     closeDesc: Close this pull request. You can still re-open the request after closing.
   forceMergeWithUnresolvedComment: This pull request has {unrsolvedComment} unresolved {unrsolvedComment|1:comment,comments}. As an administrator, you can still merge it.\nAre you sure you want to force merge it?
   notMergeableWithUnresolvedComment: This pull request has {unrsolvedComment} unresolved {unrsolvedComment|1:comment,comments}. Please resolve them before merging.
+  outdated: Outdated
 prState:
   draftHeading: This pull request is still a work in progress
   draftDesc: Draft pull requests cannot be merged.
@@ -250,6 +252,9 @@ viewed: Viewed
 comment: Comment
 addComment: Add comment
 replyHere: Reply here...
+reply: Reply
+replyAndResolve: Reply & Resolve
+replyAndReactivate: Reply & Reactivate
 leaveAComment: Leave a comment...
 lineBreaks: Line Breaks
 quote: Quote
@@ -364,6 +369,8 @@ showEverything: Show everything
 allComments: All comments
 whatsNew: What's new
 myComments: My comments/replies
+resolvedComments: Resolved comments
+unrsolvedComment: Unresolved comment
 resetZoom: Reset Zoom
 zoomIn: Zoom In
 zoomOut: Zoom Out
@@ -379,7 +386,7 @@ repoUpdate: Repository Updated
 deleteRepoText: Are you sure you want to delete the repository '{REPONAME}'?
 deleteRepoTitle: Delete the repository
 resolve: Resolve
-unresolve: Unresolve
+reactivate: Reactivate
 generateCloneCred: + Generate Clone Credential
 generateCloneText: 'Please generate clone credential if it’s your first time'
 getMyCloneTitle: Get My Clone Credential

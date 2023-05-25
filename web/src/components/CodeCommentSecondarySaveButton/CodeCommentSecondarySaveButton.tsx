@@ -1,84 +1,74 @@
 import React, { useMemo, useState } from 'react'
 import { useMutate } from 'restful-react'
-import { useToaster, Select } from '@harness/uicore'
+import { useToaster, Button, ButtonVariation, ButtonSize, ButtonProps, useIsMounted } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
 import type { GitInfoProps } from 'utils/GitUtils'
 import type { TypesPullReqActivity } from 'services/code'
-import { CodeCommentState, getErrorMessage } from 'utils/Utils'
 import { useEmitCodeCommentStatus } from 'hooks/useEmitCodeCommentStatus'
+import { CodeCommentState, getErrorMessage } from 'utils/Utils'
 import type { CommentItem } from '../CommentBox/CommentBox'
-import css from './CodeCommentStatusSelect.module.scss'
 
-interface CodeCommentStatusSelectProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+interface CodeCommentSecondarySaveButtonProps
+  extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>,
+    ButtonProps {
   commentItems: CommentItem<TypesPullReqActivity>[]
-  onCommentUpdate: () => void
 }
 
-export const CodeCommentStatusSelect: React.FC<CodeCommentStatusSelectProps> = ({
+export const CodeCommentSecondarySaveButton: React.FC<CodeCommentSecondarySaveButtonProps> = ({
   repoMetadata,
   pullRequestMetadata,
   commentItems,
-  onCommentUpdate
+  onClick,
+  ...props
 }) => {
   const { getString } = useStrings()
+  const isMounted = useIsMounted()
   const { showError } = useToaster()
   const path = useMemo(
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/comments`,
     [repoMetadata.path, pullRequestMetadata?.number]
   )
   const { mutate: updateCodeCommentStatus } = useMutate({ verb: 'PUT', path: ({ id }) => `${path}/${id}/status` })
-  const codeCommentStatusItems = useMemo(
-    () => [
-      {
-        label: getString('active'),
-        value: CodeCommentState.ACTIVE
-      },
-      {
-        label: getString('resolved'),
-        value: CodeCommentState.RESOLVED
-      }
-    ],
-    [getString]
-  )
-  const [codeCommentStatus, setCodeCommentStatus] = useState(
-    commentItems[0]?.payload?.resolved ? codeCommentStatusItems[1] : codeCommentStatusItems[0]
-  )
+  const [resolved, setResolved] = useState(commentItems[0]?.payload?.resolved ? true : false)
   const emitCodeCommentStatus = useEmitCodeCommentStatus({
     id: commentItems[0]?.payload?.id,
     onMatch: status => {
-      setCodeCommentStatus(status === CodeCommentState.ACTIVE ? codeCommentStatusItems[0] : codeCommentStatusItems[1])
+      if (isMounted.current) {
+        setResolved(status === CodeCommentState.RESOLVED)
+      }
     }
   })
 
   return (
-    <Select
-      className={css.select}
-      items={codeCommentStatusItems}
-      value={codeCommentStatus}
-      onChange={newState => {
-        const status = newState.value as CodeCommentState
+    <Button
+      text={getString(resolved ? 'replyAndReactivate' : 'replyAndResolve')}
+      variation={ButtonVariation.TERTIARY}
+      size={ButtonSize.MEDIUM}
+      onClick={async () => {
+        const status = resolved ? CodeCommentState.ACTIVE : CodeCommentState.RESOLVED
         const payload = { status }
         const id = commentItems[0]?.payload?.id
-        const isActive = status === CodeCommentState.ACTIVE
 
         updateCodeCommentStatus(payload, { pathParams: { id } })
           .then(() => {
-            onCommentUpdate()
-            setCodeCommentStatus(isActive ? codeCommentStatusItems[0] : codeCommentStatusItems[1])
-            emitCodeCommentStatus(status)
-
             if (commentItems[0]?.payload) {
-              if (isActive) {
+              if (resolved) {
                 commentItems[0].payload.resolved = 0
               } else {
                 commentItems[0].payload.resolved = Date.now()
               }
             }
+            if (isMounted.current) {
+              setResolved(!resolved)
+            }
+            emitCodeCommentStatus(status)
+            ;(onClick as () => void)()
           })
           .catch(_exception => {
             showError(getErrorMessage(_exception), 0, getString('pr.failedToUpdateCommentStatus'))
           })
       }}
+      {...props}
     />
   )
 }

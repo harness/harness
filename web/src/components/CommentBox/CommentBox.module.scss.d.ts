@@ -6,6 +6,7 @@ declare const styles: {
   readonly box: string
   readonly viewer: string
   readonly deleted: string
+  readonly outdated: string
   readonly replyPlaceHolder: string
   readonly newCommentContainer: string
   readonly hasThread: string

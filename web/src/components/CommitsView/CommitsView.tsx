@@ -9,10 +9,12 @@ import {
   ButtonVariation,
   ButtonSize,
   Button,
-  FlexExpander
+  FlexExpander,
+  StringSubstitute
 } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { noop, orderBy } from 'lodash-es'
+import { Link } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type { TypesCommit } from 'services/code'
@@ -21,6 +23,7 @@ import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { formatDate } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
+import type { CODERoutes } from 'RouteDefinitions'
 import css from './CommitsView.module.scss'
 
 interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -63,7 +66,7 @@ export function CommitsView({
         Cell: ({ row }: CellProps<TypesCommit>) => {
           return (
             <Text color={Color.BLACK} lineClamp={1} className={css.rowText}>
-              {row.original.message}
+              {renderPullRequestLinkFromCommitMessage(repoMetadata, routes, row.original.message)}
             </Text>
           )
         }
@@ -85,7 +88,7 @@ export function CommitsView({
         }
       }
     ],
-    [repoMetadata.path, routes]
+    [repoMetadata, routes]
   )
   const commitsGroupedByDate: Record<string, TypesCommit[]> = useMemo(
     () =>
@@ -141,4 +144,37 @@ export function CommitsView({
       />
     </Container>
   )
+}
+
+function renderPullRequestLinkFromCommitMessage(
+  repoMetadata: GitInfoProps['repoMetadata'],
+  routes: CODERoutes,
+  commitMessage = ''
+) {
+  let message: string | JSX.Element = commitMessage
+  const match = message.match(/\(#\d+\)$/)
+
+  if (match?.length) {
+    message = message.replace(match[0], '({URL})')
+    const pullRequestId = match[0].replace('(#', '').replace(')', '')
+
+    message = (
+      <StringSubstitute
+        str={message}
+        vars={{
+          URL: (
+            <Link
+              to={routes.toCODEPullRequest({
+                repoPath: repoMetadata.path as string,
+                pullRequestId
+              })}>
+              #{pullRequestId}
+            </Link>
+          )
+        }}
+      />
+    )
+  }
+
+  return message
 }

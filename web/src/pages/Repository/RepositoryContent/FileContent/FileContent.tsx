@@ -90,7 +90,7 @@ export function FileContent({
             title: getString('content'),
             panel: (
               <Container className={css.fileContent}>
-                <Layout.Vertical spacing="small">
+                <Layout.Vertical spacing="small" style={{ maxWidth: '100%' }}>
                   <LatestCommitForFile
                     repoMetadata={repoMetadata}
                     latestCommit={resourceContent.latest_commit}

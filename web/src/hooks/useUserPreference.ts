@@ -3,7 +3,8 @@ import { useCallback, useState } from 'react'
 export enum UserPreference {
   DIFF_VIEW_STYLE = 'DIFF_VIEW_STYLE',
   DIFF_LINE_BREAKS = 'DIFF_LINE_BREAKS',
-  PULL_REQUESTS_FILTER_SELECTED_OPTIONS = 'PULL_REQUESTS_FILTER_SELECTED_OPTIONS'
+  PULL_REQUESTS_FILTER_SELECTED_OPTIONS = 'PULL_REQUESTS_FILTER_SELECTED_OPTIONS',
+  PULL_REQUEST_MERGE_STRATEGY = 'PULL_REQUEST_MERGE_STRATEGY'
 }
 
 export function useUserPreference<T = string>(key: UserPreference, defaultValue: T): [T, (val: T) => void] {

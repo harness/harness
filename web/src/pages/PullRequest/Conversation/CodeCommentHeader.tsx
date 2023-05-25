@@ -15,7 +15,7 @@ interface CodeCommentHeaderProps {
 }
 
 export const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({ commentItems, threadId }) => {
-  const _isCodeComment = isCodeComment(commentItems)
+  const _isCodeComment = isCodeComment(commentItems) && !commentItems[0].deleted
   const id = `code-comment-snapshot-${threadId}`
 
   useEffect(() => {
