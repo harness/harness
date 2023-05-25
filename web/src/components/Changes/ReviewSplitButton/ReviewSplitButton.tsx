@@ -32,9 +32,10 @@ interface ReviewSplitButtonProps extends Pick<GitInfoProps, 'repoMetadata'> {
   shouldHide: boolean
   pullRequestMetadata?: TypesPullReq
   refreshPr: () => void
+  disabled?: boolean
 }
 const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
-  const { pullRequestMetadata, repoMetadata, shouldHide, refreshPr } = props
+  const { pullRequestMetadata, repoMetadata, shouldHide, refreshPr, disabled } = props
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
 
@@ -75,7 +76,11 @@ const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
       .catch(exception => showError(getErrorMessage(exception)))
   }, [decisionOption, mutate, showError, showSuccess, getString, refreshPr, pullRequestMetadata?.source_sha])
   return (
-    <Container className={cx(css.btn, { [css.hide]: shouldHide })}>
+    <Container
+      className={cx(css.reviewButton, {
+        [css.hide]: shouldHide,
+        [css.disabled]: disabled
+      })}>
       <SplitButton
         text={decisionOption.title}
         disabled={loading}
@@ -93,7 +98,7 @@ const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
             <Menu.Item
               key={option.method}
               className={css.menuReviewItem}
-              disabled={option.disabled}
+              disabled={disabled || option.disabled}
               text={
                 <Layout.Horizontal>
                   <Icon

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import {
   Button,
   ButtonVariation,
@@ -32,6 +32,7 @@ import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useAppContext } from 'AppContext'
 import { Images } from 'images'
 import { getErrorMessage, MergeCheckStatus, permissionProps } from 'utils/Utils'
+import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import ReviewSplitButton from 'components/Changes/ReviewSplitButton/ReviewSplitButton'
 import css from './PullRequestActionsBox.module.scss'
 
@@ -53,6 +54,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
 }) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
+  const { currentUser } = useAppContext()
   const { hooks, standalone } = useAppContext()
   const space = useGetSpaceParam()
   const { mutate: mergePR, loading } = useMutate({
@@ -67,9 +69,11 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     () => pullRequestMetadata.merge_check_status === MergeCheckStatus.MERGEABLE,
     [pullRequestMetadata]
   )
+  const isClosed = pullRequestMetadata.state === PullRequestState.CLOSED
+  const isOpen = pullRequestMetadata.state === PullRequestState.OPEN
   const unchecked = useMemo(
-    () => pullRequestMetadata.merge_check_status === MergeCheckStatus.UNCHECKED,
-    [pullRequestMetadata]
+    () => pullRequestMetadata.merge_check_status === MergeCheckStatus.UNCHECKED && !isClosed,
+    [pullRequestMetadata, isClosed]
   )
   const isDraft = pullRequestMetadata.is_draft
   const mergeOptions: PRMergeOption[] = [
@@ -77,18 +81,19 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       method: 'squash',
       title: getString('pr.mergeOptions.squashAndMerge'),
       desc: getString('pr.mergeOptions.squashAndMergeDesc'),
-      disabled: false
+      disabled: mergeable === false
     },
     {
       method: 'merge',
       title: getString('pr.mergeOptions.createMergeCommit'),
-      desc: getString('pr.mergeOptions.createMergeCommitDesc')
+      desc: getString('pr.mergeOptions.createMergeCommitDesc'),
+      disabled: mergeable === false
     },
     {
       method: 'rebase',
       title: getString('pr.mergeOptions.rebaseAndMerge'),
       desc: getString('pr.mergeOptions.rebaseAndMergeDesc'),
-      disabled: false
+      disabled: mergeable === false
     },
     {
       method: 'close',
@@ -106,7 +111,11 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     },
     [space]
   )
-  const [mergeOption, setMergeOption] = useState<PRMergeOption>(mergeOptions[1])
+
+  const [mergeOption, setMergeOption] = useUserPreference<PRMergeOption>(
+    UserPreference.PULL_REQUEST_MERGE_STRATEGY,
+    mergeOptions[mergeable === false ? 3 : 1]
+  )
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
@@ -116,6 +125,11 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     },
     [space]
   )
+  const isActiveUserPROwner = useMemo(() => {
+    return (
+      !!currentUser?.uid && !!pullRequestMetadata?.author?.uid && currentUser?.uid === pullRequestMetadata?.author?.uid
+    )
+  }, [currentUser, pullRequestMetadata])
 
   if (pullRequestMetadata.state === PullRequestFilterOption.MERGED) {
     return <MergeInfo pullRequestMetadata={pullRequestMetadata} />
@@ -124,31 +138,46 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   return (
     <Container
       className={cx(css.main, {
-        [css.error]: mergeable === false && !unchecked,
-        [css.unchecked]: unchecked
+        [css.error]: mergeable === false && !unchecked && !isClosed && !isDraft,
+        [css.unchecked]: unchecked,
+        [css.closed]: isClosed,
+        [css.draft]: isDraft
       })}>
       <Layout.Vertical spacing="xlarge">
         <Container>
           <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }} className={css.layout}>
             {(unchecked && <img src={Images.PrUnchecked} width={20} height={20} />) || (
               <Icon
-                name={isDraft ? CodeIcon.Draft : mergeable === false ? 'warning-sign' : 'tick-circle'}
+                name={
+                  isDraft ? CodeIcon.Draft : isClosed ? 'issue' : mergeable === false ? 'warning-sign' : 'tick-circle'
+                }
                 size={20}
-                color={isDraft ? Color.ORANGE_900 : mergeable === false ? Color.RED_500 : Color.GREEN_700}
+                color={
+                  isDraft
+                    ? Color.ORANGE_900
+                    : isClosed
+                    ? Color.GREY_500
+                    : mergeable === false
+                    ? Color.RED_500
+                    : Color.GREEN_700
+                }
               />
             )}
             <Text
               className={cx(css.sub, {
                 [css.unchecked]: unchecked,
                 [css.draft]: isDraft,
-                [css.unmergeable]: mergeable === false
+                [css.closed]: isClosed,
+                [css.unmergeable]: mergeable === false && isOpen
               })}>
               {getString(
                 isDraft
                   ? 'prState.draftHeading'
+                  : isClosed
+                  ? 'pr.prClosed'
                   : unchecked
                   ? 'pr.checkingToMerge'
-                  : mergeable === false
+                  : mergeable === false && isOpen
                   ? 'pr.cantBeMerged'
                   : 'pr.branchHasNoConflicts'
               )}
@@ -196,6 +225,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           repoMetadata={repoMetadata}
                           pullRequestMetadata={pullRequestMetadata}
                           refreshPr={onPRStateChanged}
+                          disabled={isActiveUserPROwner}
                         />
                         <Container
                           inline
@@ -265,29 +295,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                                   .catch(exception => showError(getErrorMessage(exception)))
                               }
                             }}>
-                            {/* TODO: These two items are used for creating a PR
-                          <Menu.Item
-                        className={css.menuItem}
-                        text={
-                          <>
-                            <BIcon icon="blank" />
-                            <strong>Create pull request</strong>
-                            <p>Open a pull request that is ready for review</p>
-                            <p>Automatically request reviews from code owners</p>
-                          </>
-                        }
-                      />
-                      <Menu.Item
-                        className={css.menuItem}
-                        text={
-                          <>
-                            <BIcon icon="blank" />
-                            <strong>Create draft pull request</strong>
-                            <p>Does not request code reviews and cannot be merged</p>
-                            <p>Cannot be merged until marked ready for review</p>
-                          </>
-                        }
-                      /> */}
                             {mergeOptions.map(option => {
                               return (
                                 <Menu.Item

@@ -11,7 +11,8 @@ import {
   Layout,
   Text,
   ButtonSize,
-  useToaster
+  useToaster,
+  ButtonProps
 } from '@harness/uicore'
 import cx from 'classnames'
 import { Render } from 'react-jsx-match'
@@ -30,6 +31,7 @@ import { CopyButton } from 'components/CopyButton/CopyButton'
 import { AppWrapper } from 'App'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { CodeCommentStatusButton } from 'components/CodeCommentStatusButton/CodeCommentStatusButton'
+import { CodeCommentSecondarySaveButton } from 'components/CodeCommentSecondarySaveButton/CodeCommentSecondarySaveButton'
 import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/CodeCommentStatusSelect'
 import {
   activitiesToDiffCommentItems,
@@ -93,7 +95,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   const { mutate: saveComment } = useMutate({ verb: 'POST', path })
   const { mutate: updateComment } = useMutate({ verb: 'PATCH', path: ({ id }) => `${path}/${id}` })
   const { mutate: deleteComment } = useMutate({ verb: 'DELETE', path: ({ id }) => `${path}/${id}` })
-  const [comments, setComments] = useState<DiffCommentItem<TypesPullReqActivity>[]>(activitiesToDiffCommentItems(diff))
+  const [comments, setComments] = useState<DiffCommentItem<TypesPullReqActivity>[]>([])
   const [dirty, setDirty] = useState(false)
   const commentsRef = useRef<DiffCommentItem<TypesPullReqActivity>[]>(comments)
   const setContainerRef = useCallback(
@@ -129,6 +131,19 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     },
     [diffRenderer, renderCustomContent]
   )
+
+  useEffect(() => {
+    // For some unknown reason, comments is [] when we switch to Changes tab very quickly sometimes,
+    // but diff is not empty, and activitiesToDiffCommentItems(diff) is not []. So assigning
+    // comments = activitiesToDiffCommentItems(diff) from the useState() is not enough.
+    if (diff) {
+      const _comments = activitiesToDiffCommentItems(diff)
+
+      if (_comments.length > 0 && !comments.length) {
+        setComments(_comments)
+      }
+    }
+  }, [diff, comments])
 
   useEffect(
     function createDiffRenderer() {
@@ -231,7 +246,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   )
 
   useEffect(
-    function renderAnnotatations() {
+    function renderCodeComments() {
       if (readOnly) {
         return
       }
@@ -274,6 +289,28 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             rowElement.after(commentRowElement)
 
             const element = commentRowElement.firstElementChild as HTMLTableCellElement
+            const resetCommentState = (ignoreCurrentComment = true) => {
+              // Clean up CommentBox rendering and reset states bound to lineInfo
+              ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
+              commentRowElement.parentElement?.removeChild(commentRowElement)
+              lineInfo.oppositeRowElement?.parentElement?.removeChild(
+                lineInfo.oppositeRowElement?.nextElementSibling as Element
+              )
+              delete lineInfo.rowElement.dataset.annotated
+
+              setTimeout(
+                () =>
+                  setComments(
+                    commentsRef.current.filter(item => {
+                      if (ignoreCurrentComment) {
+                        return item !== comment
+                      }
+                      return true
+                    })
+                  ),
+                0
+              )
+            }
 
             // Note: CommentBox is rendered as an independent React component
             //       everything passed to it must be either values, or refs. If you
@@ -284,7 +321,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               <AppWrapper>
                 <CommentBox
                   commentItems={comment.commentItems}
-                  initialContent={getInitialCommentContentFromSelection(diff)}
+                  initialContent={''}
                   width={isSideBySide ? 'calc(100vw / 2 - 163px)' : undefined} // TODO: Re-calcualte for standalone version
                   onHeightChange={boxHeight => {
                     if (comment.height !== boxHeight) {
@@ -292,16 +329,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                       setTimeout(() => setComments([...commentsRef.current]), 0)
                     }
                   }}
-                  onCancel={() => {
-                    // Clean up CommentBox rendering and reset states bound to lineInfo
-                    ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
-                    commentRowElement.parentElement?.removeChild(commentRowElement)
-                    lineInfo.oppositeRowElement?.parentElement?.removeChild(
-                      lineInfo.oppositeRowElement?.nextElementSibling as Element
-                    )
-                    delete lineInfo.rowElement.dataset.annotated
-                    setTimeout(() => setComments(commentsRef.current.filter(item => item !== comment)), 0)
-                  }}
+                  onCancel={resetCommentState}
                   setDirty={setDirty}
                   currentUserName={currentUser.display_name}
                   handleAction={async (action, value, commentItem) => {
@@ -325,6 +353,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                         await saveComment(payload)
                           .then((newComment: TypesPullReqActivity) => {
                             updatedItem = activityToCommentItem(newComment)
+                            diff.fileActivities?.push(newComment)
+                            comment.commentItems.push(updatedItem)
+                            resetCommentState(false)
                           })
                           .catch(exception => {
                             result = false
@@ -334,24 +365,19 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                       }
 
                       case CommentAction.REPLY: {
-                        const parentComment = diff.fileActivities?.find(
-                          activity => diff.filePath === activity.code_comment?.path
-                        )
-
-                        if (parentComment) {
-                          await saveComment({
-                            type: CommentType.CODE_COMMENT,
-                            text: value,
-                            parent_id: Number(parentComment.id as number)
+                        await saveComment({
+                          type: CommentType.CODE_COMMENT,
+                          text: value,
+                          parent_id: Number(commentItem?.payload?.id as number)
+                        })
+                          .then(newComment => {
+                            updatedItem = activityToCommentItem(newComment)
+                            diff.fileActivities?.push(newComment)
                           })
-                            .then(newComment => {
-                              updatedItem = activityToCommentItem(newComment)
-                            })
-                            .catch(exception => {
-                              result = false
-                              showError(getErrorMessage(exception), 0)
-                            })
-                        }
+                          .catch(exception => {
+                            result = false
+                            showError(getErrorMessage(exception), 0)
+                          })
                         break
                       }
 
@@ -407,6 +433,14 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                         pullRequestMetadata={pullRequestMetadata as TypesPullReq}
                         onCommentUpdate={onCommentUpdate}
                         commentItems={comment.commentItems}
+                      />
+                    ),
+                    [CommentBoxOutletPosition.BETWEEN_SAVE_AND_CANCEL_BUTTONS]: (props: ButtonProps) => (
+                      <CodeCommentSecondarySaveButton
+                        repoMetadata={repoMetadata}
+                        pullRequestMetadata={pullRequestMetadata as TypesPullReq}
+                        commentItems={comment.commentItems}
+                        {...props}
                       />
                     )
                   }}
@@ -540,8 +574,4 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       <NavigationCheck when={dirty} />
     </Container>
   )
-}
-
-function getInitialCommentContentFromSelection(_diff: DiffFileEntry) {
-  return ''
 }

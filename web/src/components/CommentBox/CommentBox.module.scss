@@ -35,6 +35,18 @@
       display: inline-block;
       border-radius: var(--box-radius);
     }
+
+    .outdated {
+      background: #fcf4e3 !important;
+      color: #c05809 !important;
+      border: 1px solid var(--yellow-300) !important;
+      padding: 4px 6px !important;
+      border-radius: 4px !important;
+      font-weight: 700;
+      font-size: 10px;
+      line-height: 15px;
+      text-transform: uppercase;
+    }
   }
 
   .replyPlaceHolder {

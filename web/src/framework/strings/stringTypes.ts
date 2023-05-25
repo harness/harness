@@ -222,8 +222,10 @@ export interface StringsMap {
   'pr.modalTitle': string
   'pr.notMergeableWithUnresolvedComment': string
   'pr.openForReview': string
+  'pr.outdated': string
   'pr.prBranchPushInfo': string
   'pr.prCanBeMerged': string
+  'pr.prClosed': string
   'pr.prMerged': string
   'pr.prMergedInfo': string
   'pr.prReviewSubmit': string
@@ -255,12 +257,16 @@ export interface StringsMap {
   pullRequestEmpty: string
   pullRequests: string
   quote: string
+  reactivate: string
   readMe: string
   refresh: string
   reject: string
   rejected: string
   remove: string
   renameFile: string
+  reply: string
+  replyAndReactivate: string
+  replyAndResolve: string
   replyHere: string
   repoCloneHeader: string
   repoCloneLabel: string
@@ -284,6 +290,7 @@ export interface StringsMap {
   resetZoom: string
   resolve: string
   resolved: string
+  resolvedComments: string
   reviewers: string
   samplePayloadUrl: string
   save: string
@@ -306,7 +313,7 @@ export interface StringsMap {
   tags: string
   title: string
   tooltipRepoEdit: string
-  unresolve: string
+  unrsolvedComment: string
   'unsavedChanges.leave': string
   'unsavedChanges.message': string
   'unsavedChanges.stay': string

@@ -16,6 +16,14 @@
     background-color: var(--red-50) !important;
   }
 
+  &.closed {
+    background-color: var(--grey-100) !important;
+  }
+
+  &.draft {
+    background-color: var(--orange-100) !important;
+  }
+
   &.unchecked {
     background-color: #fcf4e3 !important; // Note: No UICore color variable for this background
   }
@@ -48,12 +56,16 @@
     line-height: 20px !important;
     color: var(--green-800) !important;
 
+    &.closed {
+      color: var(--grey-600) !important;
+    }
+
     &.merged {
       color: var(--purple-700) !important;
     }
 
     &.draft {
-      color: var(--grey-700) !important;
+      color: var(--orange-900) !important;
     }
 
     &.unmergeable {
@@ -104,6 +116,11 @@
     --background-color: var(--grey-50) !important;
     --background-color-hover: var(--white) !important;
     --background-color-active: var(--grey-100) !important;
+  }
+
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.5;
   }
 
   a,

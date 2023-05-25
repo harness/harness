@@ -23,7 +23,7 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { voidFn, getErrorMessage, MergeCheckStatus } from 'utils/Utils'
+import { voidFn, getErrorMessage } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { TypesPullReq, TypesPullReqStats, TypesRepository } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -77,9 +77,6 @@ export default function PullRequest() {
     }
     return false
   }, [prData?.stats, stats])
-  const mergeable = useMemo(() => {
-    return prData?.merge_check_status === MergeCheckStatus.MERGEABLE
-  }, [prData])
 
   useEffect(
     function setStatsIfNotSet() {
@@ -105,14 +102,14 @@ export default function PullRequest() {
     const fn = () => {
       if (repoMetadata) {
         refetchPullRequest().then(() => {
-          interval = window.setTimeout(fn, mergeable ? PR_POLLING_INTERVAL : PR_POLLING_INTERVAL_WHEN_NOT_MERGEABLE)
+          interval = window.setTimeout(fn, PR_POLLING_INTERVAL)
         })
       }
     }
-    let interval = window.setTimeout(fn, mergeable ? PR_POLLING_INTERVAL : PR_POLLING_INTERVAL_WHEN_NOT_MERGEABLE)
+    let interval = window.setTimeout(fn, PR_POLLING_INTERVAL)
 
     return () => window.clearTimeout(interval)
-  }, [repoMetadata, refetchPullRequest, path, mergeable])
+  }, [repoMetadata, refetchPullRequest, path])
 
   const activeTab = useMemo(
     () =>
@@ -359,5 +356,4 @@ enum PullRequestSection {
   CHECKS = 'checks'
 }
 
-const PR_POLLING_INTERVAL = 15000
-const PR_POLLING_INTERVAL_WHEN_NOT_MERGEABLE = 5000
+const PR_POLLING_INTERVAL = 10000

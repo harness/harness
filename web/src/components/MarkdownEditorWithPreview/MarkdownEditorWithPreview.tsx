@@ -53,6 +53,7 @@ interface MarkdownEditorWithPreviewProps {
   editorHeight?: string
   noBorder?: boolean
   viewRef?: React.MutableRefObject<EditorView | undefined>
+  secondarySaveButton?: typeof Button
 
   // When set to true, the editor will be scrolled to center of screen
   // and cursor is set to the end of the document
@@ -71,7 +72,8 @@ export function MarkdownEditorWithPreview({
   editorHeight,
   noBorder,
   viewRef: viewRefProp,
-  autoFocusAndPositioning
+  autoFocusAndPositioning,
+  secondarySaveButton: SecondarySaveButton
 }: MarkdownEditorWithPreviewProps) {
   const [selectedTab, setSelectedTab] = useState(MarkdownEditorTab.WRITE)
   const viewRef = useRef<EditorView>()
@@ -281,6 +283,12 @@ export function MarkdownEditorWithPreview({
               onClick={() => onSave?.(viewRef.current?.state.doc.toString() || '')}
               text={i18n.save}
             />
+            {SecondarySaveButton && (
+              <SecondarySaveButton
+                disabled={!dirty}
+                onClick={async () => await onSave?.(viewRef.current?.state.doc.toString() || '')}
+              />
+            )}
             {!hideCancel && <Button variation={ButtonVariation.TERTIARY} onClick={onCancel} text={i18n.cancel} />}
           </Layout.Horizontal>
         </Container>

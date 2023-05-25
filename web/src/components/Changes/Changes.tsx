@@ -26,6 +26,7 @@ import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUti
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import type { TypesPullReq, TypesPullReqActivity } from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
+import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
@@ -88,9 +89,10 @@ export const Changes: React.FC<ChangesProps> = ({
     lazy: !pullRequestMetadata?.number
   })
   const [activities, setActivities] = useState<TypesPullReqActivity[]>()
-  const showSpinner = useMemo(() => {
-    return loading || (loadingActivities && !activities)
-  }, [loading, loadingActivities, activities])
+  const showSpinner = useMemo(
+    () => loading || (loadingActivities && !activities),
+    [loading, loadingActivities, activities]
+  )
   const diffStats = useMemo(
     () =>
       (diffs || []).reduce(
@@ -103,6 +105,16 @@ export const Changes: React.FC<ChangesProps> = ({
       ),
     [diffs]
   )
+  const shouldHideReviewButton = useMemo(
+    () => readOnly || pullRequestMetadata?.state === 'merged' || pullRequestMetadata?.state === 'closed',
+    [readOnly, pullRequestMetadata?.state]
+  )
+  const { currentUser } = useAppContext()
+  const isActiveUserPROwner = useMemo(() => {
+    return (
+      !!currentUser?.uid && !!pullRequestMetadata?.author?.uid && currentUser?.uid === pullRequestMetadata?.author?.uid
+    )
+  }, [currentUser, pullRequestMetadata])
 
   // Optimization to avoid showing unnecessary loading spinner. The trick is to
   // show only the spinner when the component is mounted and not when refetching
@@ -208,10 +220,11 @@ export const Changes: React.FC<ChangesProps> = ({
                   <FlexExpander />
 
                   <ReviewSplitButton
-                    shouldHide={readOnly || pullRequestMetadata?.state === 'merged'}
+                    shouldHide={shouldHideReviewButton}
                     repoMetadata={repoMetadata}
                     pullRequestMetadata={pullRequestMetadata}
                     refreshPr={voidFn(noop)}
+                    disabled={isActiveUserPROwner}
                   />
                 </Layout.Horizontal>
               </Container>

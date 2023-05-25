@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useResizeDetector } from 'react-resize-detector'
 import type { EditorView } from '@codemirror/view'
 import { Render, Match, Truthy, Falsy, Else } from 'react-jsx-match'
-import { Container, Layout, Avatar, TextInput, Text, Color, FontVariation, FlexExpander } from '@harness/uicore'
+import { Container, Layout, Avatar, TextInput, Text, Color, FontVariation, FlexExpander, Button } from '@harness/uicore'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
 import { noop } from 'lodash-es'
@@ -21,6 +21,7 @@ export interface CommentItem<T = unknown> {
   created: string | number
   updated: string | number
   deleted: string | number
+  outdated: boolean
   content: string
   payload?: T // optional payload for callers to handle on callback calls
 }
@@ -31,7 +32,7 @@ export enum CommentAction {
   REPLY = 'reply',
   DELETE = 'delete',
   RESOLVE = 'resolve',
-  UNRESOLVE = 'unresolve'
+  REACTIVATE = 'reactivate'
 }
 
 // Outlets are used to insert additional components into CommentBox
@@ -41,7 +42,8 @@ export enum CommentBoxOutletPosition {
   TOP_OF_FIRST_COMMENT = 'top_of_first_comment',
   BOTTOM_OF_COMMENT_EDITOR = 'bottom_of_comment_editor',
   LEFT_OF_OPTIONS_MENU = 'left_of_options_menu',
-  LEFT_OF_REPLY_PLACEHOLDER = 'left_of_reply_placeholder'
+  LEFT_OF_REPLY_PLACEHOLDER = 'left_of_reply_placeholder',
+  BETWEEN_SAVE_AND_CANCEL_BUTTONS = 'between_save_and_cancel_buttons'
 }
 
 interface CommentBoxProps<T> {
@@ -172,7 +174,7 @@ export const CommentBox = <T = unknown,>({
                     placeHolder: getString(comments.length ? 'replyHere' : 'leaveAComment'),
                     tabEdit: getString('write'),
                     tabPreview: getString('preview'),
-                    save: getString('comment'),
+                    save: getString(comments.length ? 'reply' : 'comment'),
                     cancel: getString('cancel')
                   }}
                   value={markdown}
@@ -205,6 +207,11 @@ export const CommentBox = <T = unknown,>({
                       console.error('handleAction must be implemented...') // eslint-disable-line no-console
                     }
                   }}
+                  secondarySaveButton={
+                    comments.length
+                      ? (outlets[CommentBoxOutletPosition.BETWEEN_SAVE_AND_CANCEL_BUTTONS] as typeof Button)
+                      : undefined
+                  }
                   onCancel={_onCancel}
                   hideCancel={hideCancel}
                   setDirty={_dirty => {
@@ -272,6 +279,12 @@ const CommentsThread = <T = unknown,>({
                         {getString(commentItem?.deleted ? 'deleted' : 'edited')}
                       </Text>
                     </>
+                  </Render>
+
+                  <Render when={commentItem?.outdated}>
+                    <Text inline font={{ variation: FontVariation.SMALL }} className={css.outdated}>
+                      {getString('pr.outdated')}
+                    </Text>
                   </Render>
 
                   <FlexExpander />

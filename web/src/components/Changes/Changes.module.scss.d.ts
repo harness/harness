@@ -15,7 +15,8 @@ declare const styles: {
   readonly menuItem: string
   readonly menuReviewItem: string
   readonly reviewIcon: string
-  readonly btn: string
+  readonly reviewButton: string
   readonly hide: string
+  readonly disabled: string
 }
 export default styles
