@@ -18,14 +18,14 @@ import (
 
 // Attempt returns an http.HandlerFunc middleware that authenticates
 // the http.Request if authentication payload is available.
-func Attempt(authenticator authn.Authenticator) func(http.Handler) http.Handler {
-	return performAuthentication(authenticator, false, authn.AuthGitCaller)
+func Attempt(authenticator authn.Authenticator, sourceRouter authn.SourceRouter) func(http.Handler) http.Handler {
+	return performAuthentication(authenticator, false, sourceRouter)
 }
 
 // Required returns an http.HandlerFunc middleware that authenticates
 // the http.Request and fails the request if no auth data was available.
-func Required(authenticator authn.Authenticator) func(http.Handler) http.Handler {
-	return performAuthentication(authenticator, true, authn.AuthAPICaller)
+func Required(authenticator authn.Authenticator, sourceRouter authn.SourceRouter) func(http.Handler) http.Handler {
+	return performAuthentication(authenticator, true, sourceRouter)
 }
 
 // performAuthentication returns an http.HandlerFunc middleware that authenticates
@@ -33,14 +33,14 @@ func Required(authenticator authn.Authenticator) func(http.Handler) http.Handler
 // Depending on whether it is required or not, the request will be failed.
 func performAuthentication(
 	authenticator authn.Authenticator,
-	required bool, caller authn.APICaller,
+	required bool, sourceRouter authn.SourceRouter,
 ) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			log := hlog.FromRequest(r)
 
-			session, err := authenticator.Authenticate(r, caller)
+			session, err := authenticator.Authenticate(r, sourceRouter)
 
 			if errors.Is(err, authn.ErrNoAuthData) {
 				if required {

@@ -19,11 +19,11 @@ var (
 	ErrNotAcceptedAuthMethod = errors.New("the request contains auth method that is not accepted by the Authorizer")
 )
 
-type APICaller string
+type SourceRouter string
 
 const (
-	AuthAPICaller APICaller = "api"
-	AuthGitCaller APICaller = "git"
+	SourceRouterAPI SourceRouter = "api"
+	SourceRouterGIT SourceRouter = "git"
 )
 
 // Authenticator is an abstraction of an entity that's responsible for authenticating principals
@@ -36,5 +36,5 @@ type Authenticator interface {
 	 *		(nil, ErrNoAuthData)	- request doesn't contain any auth data
 	 *		(nil, err)  			- request contains auth data but verification failed
 	 */
-	Authenticate(r *http.Request, caller APICaller) (*auth.Session, error)
+	Authenticate(r *http.Request, sourceRouter SourceRouter) (*auth.Session, error)
 }
