@@ -82,7 +82,7 @@ func NewAPIHandler(
 	r.Use(corsHandler(config))
 
 	// for now always attempt auth - enforced per operation.
-	r.Use(middlewareauthn.Attempt(authenticator))
+	r.Use(middlewareauthn.Attempt(authenticator, authn.SourceRouterAPI))
 
 	r.Route("/v1", func(r chi.Router) {
 		setupRoutesV1(r, repoCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl)

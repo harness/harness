@@ -38,7 +38,7 @@ func NewTokenAuthenticator(
 	}
 }
 
-func (a *TokenAuthenticator) Authenticate(r *http.Request, caller APICaller) (*auth.Session, error) {
+func (a *TokenAuthenticator) Authenticate(r *http.Request, sourceRouter SourceRouter) (*auth.Session, error) {
 	ctx := r.Context()
 	str := extractToken(r)
 

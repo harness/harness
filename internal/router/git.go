@@ -53,7 +53,7 @@ func NewGitHandler(
 	r.Use(logging.HLogAccessLogHandler())
 
 	r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
-		r.Use(middlewareauthn.Attempt(authenticator))
+		r.Use(middlewareauthn.Attempt(authenticator, authn.SourceRouterGIT))
 
 		// smart protocol
 		r.Handle("/git-upload-pack", handlerrepo.GetUploadPack(client, urlProvider, repoStore, authorizer))
