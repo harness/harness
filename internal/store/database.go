@@ -7,6 +7,7 @@ package store
 
 import (
 	"context"
+	"time"
 
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -388,5 +389,27 @@ type (
 
 		// ListForTrigger lists the webhook executions for a given trigger id.
 		ListForTrigger(ctx context.Context, triggerID string) ([]*types.WebhookExecution, error)
+	}
+
+	CheckStore interface {
+		// Upsert creates new or updates an existing status check result.
+		Upsert(ctx context.Context, check *types.Check) error
+
+		// List returns a list of status check results for a specific commit in a repo.
+		List(ctx context.Context, repoID int64, commitSHA string) ([]*types.Check, error)
+
+		// ListRecent returns a list of recently executed status checks in a repository.
+		ListRecent(ctx context.Context, repoID int64, since time.Time) ([]string, error)
+	}
+
+	ReqCheckStore interface {
+		// Create creates new required status check.
+		Create(ctx context.Context, reqCheck *types.ReqCheck) error
+
+		// List returns a list of required status checks for a repo.
+		List(ctx context.Context, repoID int64) ([]*types.ReqCheck, error)
+
+		// Delete removes a required status checks for a repo.
+		Delete(ctx context.Context, repoID, reqCheckID int64) error
 	}
 )
