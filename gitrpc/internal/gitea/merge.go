@@ -31,7 +31,9 @@ func (g Adapter) CreateTemporaryRepoForPR(
 	ctx context.Context,
 	reposTempPath string,
 	pr *types.PullRequest,
-) (string, error) {
+	baseBranch string,
+	trackingBranch string,
+) (types.TempRepository, error) {
 	if pr.BaseRepoPath == "" && pr.HeadRepoPath != "" {
 		pr.BaseRepoPath = pr.HeadRepoPath
 	}
@@ -41,11 +43,11 @@ func (g Adapter) CreateTemporaryRepoForPR(
 	}
 
 	if pr.BaseBranch == "" {
-		return "", errors.New("empty base branch")
+		return types.TempRepository{}, errors.New("empty base branch")
 	}
 
 	if pr.HeadBranch == "" {
-		return "", errors.New("empty head branch")
+		return types.TempRepository{}, errors.New("empty head branch")
 	}
 
 	baseRepoPath := pr.BaseRepoPath
@@ -54,17 +56,15 @@ func (g Adapter) CreateTemporaryRepoForPR(
 	// Clone base repo.
 	tmpBasePath, err := tempdir.CreateTemporaryPath(reposTempPath, "pull")
 	if err != nil {
-		return "", err
+		return types.TempRepository{}, err
 	}
 
 	if err = g.InitRepository(ctx, tmpBasePath, false); err != nil {
-		// log.Error("git init tmpBasePath: %v", err)
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
-		return "", err
+		return types.TempRepository{}, err
 	}
 
 	remoteRepoName := "head_repo"
-	baseBranch := "base"
 
 	// Add head repo remote.
 	addCacheRepo := func(staging, cache string) error {
@@ -84,7 +84,7 @@ func (g Adapter) CreateTemporaryRepoForPR(
 
 	if err = addCacheRepo(tmpBasePath, baseRepoPath); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
-		return "", fmt.Errorf("unable to add base repository to temporary repo [%s -> tmpBasePath]: %w", pr.BaseRepoPath, err)
+		return types.TempRepository{}, fmt.Errorf("unable to add base repository to temporary repo [%s -> tmpBasePath]: %w", pr.BaseRepoPath, err)
 	}
 
 	var outbuf, errbuf strings.Builder
@@ -96,14 +96,20 @@ func (g Adapter) CreateTemporaryRepoForPR(
 		}); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
 		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
-		return "", processGiteaErrorf(giteaErr, "unable to add base repository as origin "+
+		return types.TempRepository{}, processGiteaErrorf(giteaErr, "unable to add base repository as origin "+
 			"[%s -> tmpBasePath]:\n%s\n%s", pr.BaseRepoPath, outbuf.String(), errbuf.String())
 	}
 	outbuf.Reset()
 	errbuf.Reset()
 
+	// Fetch base branch
+	baseCommit, err := g.GetCommit(ctx, pr.BaseRepoPath, pr.BaseBranch)
+	if err != nil {
+		return types.TempRepository{}, fmt.Errorf("failed to get commit of %s branch: %w", baseBranch, err)
+	}
+	baseID := baseCommit.SHA
 	if err = git.NewCommand(ctx, "fetch", "origin", "--no-tags", "--",
-		pr.BaseBranch+":"+baseBranch, pr.BaseBranch+":original_"+baseBranch).
+		baseID+":"+baseBranch, baseID+":original_"+baseBranch).
 		Run(&git.RunOpts{
 			Dir:    tmpBasePath,
 			Stdout: &outbuf,
@@ -111,7 +117,7 @@ func (g Adapter) CreateTemporaryRepoForPR(
 		}); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
 		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
-		return "", processGiteaErrorf(giteaErr, "unable to fetch origin base branch "+
+		return types.TempRepository{}, processGiteaErrorf(giteaErr, "unable to fetch origin base branch "+
 			"[%s:%s -> base, original_base in tmpBasePath].\n%s\n%s",
 			pr.BaseRepoPath, pr.BaseBranch, outbuf.String(), errbuf.String())
 	}
@@ -126,7 +132,7 @@ func (g Adapter) CreateTemporaryRepoForPR(
 		}); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
 		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
-		return "", processGiteaErrorf(giteaErr, "unable to set HEAD as base "+
+		return types.TempRepository{}, processGiteaErrorf(giteaErr, "unable to set HEAD as base "+
 			"branch [tmpBasePath]:\n%s\n%s", outbuf.String(), errbuf.String())
 	}
 	outbuf.Reset()
@@ -135,7 +141,7 @@ func (g Adapter) CreateTemporaryRepoForPR(
 	if err = addCacheRepo(tmpBasePath, headRepoPath); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
 		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
-		return "", processGiteaErrorf(giteaErr, "unable to head base repository "+
+		return types.TempRepository{}, processGiteaErrorf(giteaErr, "unable to head base repository "+
 			"to temporary repo [%s -> tmpBasePath]", pr.HeadRepoPath)
 	}
 
@@ -147,15 +153,18 @@ func (g Adapter) CreateTemporaryRepoForPR(
 		}); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
 		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
-		return "", processGiteaErrorf(giteaErr, "unable to add head repository as head_repo "+
+		return types.TempRepository{}, processGiteaErrorf(giteaErr, "unable to add head repository as head_repo "+
 			"[%s -> tmpBasePath]:\n%s\n%s", pr.HeadRepoPath, outbuf.String(), errbuf.String())
 	}
 	outbuf.Reset()
 	errbuf.Reset()
 
-	trackingBranch := "tracking"
-	headBranch := git.BranchPrefix + pr.HeadBranch
-	if err = git.NewCommand(ctx, "fetch", "--no-tags", remoteRepoName, headBranch+":"+trackingBranch).
+	headCommit, err := g.GetCommit(ctx, pr.HeadRepoPath, pr.HeadBranch)
+	if err != nil {
+		return types.TempRepository{}, fmt.Errorf("failed to get commit of %s branch: %w", trackingBranch, err)
+	}
+	headID := headCommit.SHA
+	if err = git.NewCommand(ctx, "fetch", "--no-tags", remoteRepoName, headID+":"+trackingBranch).
 		Run(&git.RunOpts{
 			Dir:    tmpBasePath,
 			Stdout: &outbuf,
@@ -163,14 +172,18 @@ func (g Adapter) CreateTemporaryRepoForPR(
 		}); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
 		giteaErr := &giteaRunStdError{err: err, stderr: errbuf.String()}
-		return "", processGiteaErrorf(giteaErr, "unable to fetch head_repo head branch "+
+		return types.TempRepository{}, processGiteaErrorf(giteaErr, "unable to fetch head_repo head branch "+
 			"[%s:%s -> tracking in tmpBasePath]:\n%s\n%s",
-			pr.HeadRepoPath, headBranch, outbuf.String(), errbuf.String())
+			pr.HeadRepoPath, pr.HeadBranch, outbuf.String(), errbuf.String())
 	}
 	outbuf.Reset()
 	errbuf.Reset()
 
-	return tmpBasePath, nil
+	return types.TempRepository{
+		Path:    tmpBasePath,
+		BaseSHA: baseID,
+		HeadSHA: headID,
+	}, nil
 }
 
 func runMergeCommand(

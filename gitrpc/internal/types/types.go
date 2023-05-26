@@ -305,3 +305,9 @@ type CommitFilter struct {
 	Until     int64
 	Committer string
 }
+
+type TempRepository struct {
+	Path    string
+	BaseSHA string
+	HeadSHA string
+}

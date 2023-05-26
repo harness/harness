@@ -52,6 +52,9 @@ func (s MergeService) Merge(
 	base := request.Base
 	repoPath := getFullPathForRepo(s.reposRoot, base.RepoUid)
 
+	baseBranch := "base"
+	trackingBranch := "tracking"
+
 	pr := &types.PullRequest{
 		BaseRepoPath: repoPath,
 		BaseBranch:   request.BaseBranch,
@@ -59,90 +62,77 @@ func (s MergeService) Merge(
 	}
 
 	// Clone base repo.
-	tmpBasePath, err := s.adapter.CreateTemporaryRepoForPR(ctx, s.reposTempDir, pr)
+	tmpRepo, err := s.adapter.CreateTemporaryRepoForPR(ctx, s.reposTempDir, pr, baseBranch, trackingBranch)
 	if err != nil {
 		return nil, err
 	}
 	defer func() {
-		rmErr := tempdir.RemoveTemporaryPath(tmpBasePath)
+		rmErr := tempdir.RemoveTemporaryPath(tmpRepo.Path)
 		if rmErr != nil {
-			log.Ctx(ctx).Warn().Msgf("Removing temporary location %s for merge operation was not successful", tmpBasePath)
+			log.Ctx(ctx).Warn().Msgf("Removing temporary location %s for merge operation was not successful", tmpRepo.Path)
 		}
 	}()
 
-	// no error check needed, all branches were created when creating the temporary repo
-	baseBranch := "base"
-	trackingBranch := "tracking"
-	headCommit, err := s.adapter.GetCommit(ctx, tmpBasePath, trackingBranch)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get commit of tracking branch (head): %w", err)
-	}
-	headCommitSHA := headCommit.SHA
-	baseCommit, err := s.adapter.GetCommit(ctx, tmpBasePath, baseBranch)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get commit of base branch: %w", err)
-	}
-	baseCommitSHA := baseCommit.SHA
-	mergeBaseCommitSHA, _, err := s.adapter.GetMergeBase(ctx, tmpBasePath, "origin", baseBranch, trackingBranch)
+	mergeBaseCommitSHA, _, err := s.adapter.GetMergeBase(ctx, tmpRepo.Path, "origin", baseBranch, trackingBranch)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get merge base: %w", err)
 	}
 
-	if headCommitSHA == mergeBaseCommitSHA {
+	if tmpRepo.HeadSHA == mergeBaseCommitSHA {
 		return nil, ErrInvalidArgumentf("no changes between head branch %s and base branch %s",
 			request.HeadBranch, request.BaseBranch)
 	}
 
-	if request.HeadExpectedSha != "" && request.HeadExpectedSha != headCommitSHA {
+	if request.HeadExpectedSha != "" && request.HeadExpectedSha != tmpRepo.HeadSHA {
 		return nil, status.Errorf(
 			codes.FailedPrecondition,
 			"head branch '%s' is on SHA '%s' which doesn't match expected SHA '%s'.",
 			request.HeadBranch,
-			headCommitSHA,
+			tmpRepo.HeadSHA,
 			request.HeadExpectedSha)
 	}
 
 	var outbuf, errbuf strings.Builder
 	// Enable sparse-checkout
-	sparseCheckoutList, err := s.adapter.GetDiffTree(ctx, tmpBasePath, baseBranch, trackingBranch)
+	sparseCheckoutList, err := s.adapter.GetDiffTree(ctx, tmpRepo.Path, baseBranch, trackingBranch)
 	if err != nil {
 		return nil, fmt.Errorf("execution of GetDiffTree failed: %w", err)
 	}
 
-	infoPath := filepath.Join(tmpBasePath, ".git", "info")
+	infoPath := filepath.Join(tmpRepo.Path, ".git", "info")
 	if err = os.MkdirAll(infoPath, 0o700); err != nil {
-		return nil, fmt.Errorf("unable to create .git/info in tmpBasePath: %w", err)
+		return nil, fmt.Errorf("unable to create .git/info in tmpRepo.Path: %w", err)
 	}
 
 	sparseCheckoutListPath := filepath.Join(infoPath, "sparse-checkout")
 	if err = os.WriteFile(sparseCheckoutListPath, []byte(sparseCheckoutList), 0o600); err != nil {
 		return nil,
-			fmt.Errorf("unable to write .git/info/sparse-checkout file in tmpBasePath: %w", err)
+			fmt.Errorf("unable to write .git/info/sparse-checkout file in tmpRepo.Path: %w", err)
 	}
 
 	// Switch off LFS process (set required, clean and smudge here also)
-	if err = s.adapter.Config(ctx, tmpBasePath, "filter.lfs.process", ""); err != nil {
+	if err = s.adapter.Config(ctx, tmpRepo.Path, "filter.lfs.process", ""); err != nil {
 		return nil, err
 	}
 
-	if err = s.adapter.Config(ctx, tmpBasePath, "filter.lfs.required", "false"); err != nil {
+	if err = s.adapter.Config(ctx, tmpRepo.Path, "filter.lfs.required", "false"); err != nil {
 		return nil, err
 	}
 
-	if err = s.adapter.Config(ctx, tmpBasePath, "filter.lfs.clean", ""); err != nil {
+	if err = s.adapter.Config(ctx, tmpRepo.Path, "filter.lfs.clean", ""); err != nil {
 		return nil, err
 	}
 
-	if err = s.adapter.Config(ctx, tmpBasePath, "filter.lfs.smudge", ""); err != nil {
+	if err = s.adapter.Config(ctx, tmpRepo.Path, "filter.lfs.smudge", ""); err != nil {
 		return nil, err
 	}
 
-	if err = s.adapter.Config(ctx, tmpBasePath, "core.sparseCheckout", "true"); err != nil {
+	if err = s.adapter.Config(ctx, tmpRepo.Path, "core.sparseCheckout", "true"); err != nil {
 		return nil, err
 	}
 
 	// Read base branch index
-	if err = s.adapter.ReadTree(ctx, tmpBasePath, "HEAD", io.Discard); err != nil {
+	if err = s.adapter.ReadTree(ctx, tmpRepo.Path, "HEAD", io.Discard); err != nil {
 		return nil, fmt.Errorf("failed to read tree: %w", err)
 	}
 	outbuf.Reset()
@@ -180,7 +170,7 @@ func (s MergeService) Merge(
 		enum.MergeMethodFromRPC(request.Method),
 		baseBranch,
 		trackingBranch,
-		tmpBasePath,
+		tmpRepo.Path,
 		mergeMsg,
 		env,
 		&types.Identity{
@@ -190,7 +180,7 @@ func (s MergeService) Merge(
 		return nil, processGitErrorf(err, "merge failed")
 	}
 
-	mergeCommitSHA, err := s.adapter.GetFullCommitID(ctx, tmpBasePath, baseBranch)
+	mergeCommitSHA, err := s.adapter.GetFullCommitID(ctx, tmpRepo.Path, baseBranch)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get full commit id for the new merge: %w", err)
 	}
@@ -198,8 +188,8 @@ func (s MergeService) Merge(
 	refType := enum.RefFromRPC(request.RefType)
 	if refType == enum.RefTypeUndefined {
 		return &rpc.MergeResponse{
-			BaseSha:      baseCommitSHA,
-			HeadSha:      headCommitSHA,
+			BaseSha:      tmpRepo.BaseSHA,
+			HeadSha:      tmpRepo.HeadSHA,
 			MergeBaseSha: mergeBaseCommitSHA,
 			MergeSha:     mergeCommitSHA,
 		}, nil
@@ -212,7 +202,7 @@ func (s MergeService) Merge(
 	}
 	pushRef := baseBranch + ":" + refPath
 
-	if err = s.adapter.Push(ctx, tmpBasePath, types.PushOptions{
+	if err = s.adapter.Push(ctx, tmpRepo.Path, types.PushOptions{
 		Remote: "origin",
 		Branch: pushRef,
 		Force:  request.Force,
@@ -222,8 +212,8 @@ func (s MergeService) Merge(
 	}
 
 	return &rpc.MergeResponse{
-		BaseSha:      baseCommitSHA,
-		HeadSha:      headCommitSHA,
+		BaseSha:      tmpRepo.BaseSHA,
+		HeadSha:      tmpRepo.HeadSHA,
 		MergeBaseSha: mergeBaseCommitSHA,
 		MergeSha:     mergeCommitSHA,
 	}, nil
