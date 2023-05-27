@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react'
 import cx from 'classnames'
 import { Button, ButtonSize, Container, Layout, Pagination } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
+import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import css from './ResourceListingPagination.module.scss'
 
 interface ResourceListingPaginationProps {
@@ -22,6 +23,8 @@ export const ResourceListingPagination: React.FC<ResourceListingPaginationProps>
   setPage,
   scrollTop = true
 }) => {
+  const { updateQueryParams } = useUpdateQueryParams()
+
   const { X_NEXT_PAGE, X_PREV_PAGE, totalItems, totalPages, pageSize } = useParsePaginationInfo(response)
   const _setPage = useCallback(
     (_page: number) => {
@@ -35,6 +38,8 @@ export const ResourceListingPagination: React.FC<ResourceListingPaginationProps>
         }, 0)
       }
       setPage(_page)
+      updateQueryParams({ page: page.toString() })
+
     },
     [setPage, scrollTop]
   )
