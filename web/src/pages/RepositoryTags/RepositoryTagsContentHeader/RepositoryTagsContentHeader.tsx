@@ -37,7 +37,7 @@ export function RepositoryTagsContentHeader({
         />
         <FlexExpander />
         <CreateTagModalButton
-          text={getString('createTag')}
+          text={getString('newTag')}
           icon={CodeIcon.Add}
           variation={ButtonVariation.PRIMARY}
           repoMetadata={repoMetadata}

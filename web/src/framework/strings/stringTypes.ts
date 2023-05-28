@@ -166,6 +166,7 @@ export interface StringsMap {
   newFolder: string
   newPullRequest: string
   newRepo: string
+  newTag: string
   next: string
   noAccount: string
   noChanges: string
@@ -322,6 +323,7 @@ export interface StringsMap {
   tagCreated: string
   tagDeleted: string
   tagDescription: string
+  tagEmpty: string
   tagNotFound: string
   tagger: string
   tags: string
