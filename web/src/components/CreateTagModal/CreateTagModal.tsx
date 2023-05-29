@@ -42,14 +42,14 @@ interface FormData {
   description: string
 }
 
-interface UseCreateBranchModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
+interface UseCreateTagModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
   suggestedBranchName?: string
   suggestedSourceBranch?: string
   onSuccess: (data: RepoBranch) => void
   showSuccessMessage?: boolean
 }
 
-interface CreateBranchModalButtonProps extends Omit<ButtonProps, 'onClick'>, UseCreateBranchModalProps {
+interface CreateTagModalButtonProps extends Omit<ButtonProps, 'onClick'>, UseCreateTagModalProps {
   onSuccess: (data: RepoBranch) => void
   showSuccessMessage?: boolean
 }
@@ -60,7 +60,7 @@ export function useCreateTagModal({
   onSuccess,
   repoMetadata,
   showSuccessMessage
-}: UseCreateBranchModalProps) {
+}: CreateTagModalButtonProps) {
   const [branchName, setBranchName] = useState(suggestedBranchName)
   const ModalComponent: React.FC = () => {
     const { getString } = useStrings()
@@ -202,7 +202,7 @@ export function useCreateTagModal({
   return fn
 }
 
-export const CreateTagModalButton: React.FC<CreateBranchModalButtonProps> = ({
+export const CreateTagModalButton: React.FC<CreateTagModalButtonProps> = ({
   onSuccess,
   repoMetadata,
   showSuccessMessage,

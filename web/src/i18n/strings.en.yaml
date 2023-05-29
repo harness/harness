@@ -410,3 +410,5 @@ creationDate: Creation Date
 viewFiles: View Files
 tagger: Tagger
 confirmDelete: Confirm delete
+tagEmpty: Here is no Tag. Try to
+newTag: New Tag
