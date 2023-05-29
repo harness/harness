@@ -1,11 +1,13 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Container } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import { noop } from 'lodash-es'
 import type { RepoCommitTag } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
-import { LIST_FETCHING_LIMIT, permissionProps, voidFn } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT, permissionProps, voidFn,PageBrowserProps } from 'utils/Utils'
+import { useQueryParams } from 'hooks/useQueryParams'
+import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { useAppContext } from 'AppContext'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
@@ -23,10 +25,14 @@ export function RepositoryTagsContent({ repoMetadata }: Pick<GitInfoProps, 'repo
   const { routes } = useAppContext()
   const history = useHistory()
   const [searchTerm, setSearchTerm] = useState('')
-  const [page, setPage] = usePageIndex()
   const onSuccess = voidFn(noop)
   const openModal = useCreateTagModal({ repoMetadata, onSuccess })
 
+  const { updateQueryParams } = useUpdateQueryParams()
+
+  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page): 1
+  const [page, setPage] = usePageIndex(pageInit)
   const {
     data: branches,
     response,
@@ -44,6 +50,10 @@ export function RepositoryTagsContent({ repoMetadata }: Pick<GitInfoProps, 'repo
       query: searchTerm
     }
   })
+
+  useEffect(() => {
+    updateQueryParams({ page: page.toString() })
+  }, [setPage])
 
   useShowRequestError(error)
   const space = useGetSpaceParam()

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Container,
   PageBody,
@@ -25,10 +25,12 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { usePageIndex } from 'hooks/usePageIndex'
+import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
+import { useQueryParams } from 'hooks/useQueryParams'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
@@ -40,7 +42,11 @@ export default function Webhooks() {
   const { getString } = useStrings()
   const history = useHistory()
   const { routes } = useAppContext()
-  const [page, setPage] = usePageIndex()
+  const { updateQueryParams } = useUpdateQueryParams()
+
+  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page): 1
+  const [page, setPage] = usePageIndex(pageInit)
   const [searchTerm, setSearchTerm] = useState('')
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const { showError, showSuccess } = useToaster()
@@ -62,6 +68,9 @@ export default function Webhooks() {
     },
     lazy: !repoMetadata
   })
+  useEffect(() => {
+    updateQueryParams({ page: page.toString() })
+  }, [setPage])
 
   const columns: Column<OpenapiWebhookType>[] = useMemo(
     () => [

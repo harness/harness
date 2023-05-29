@@ -17,10 +17,12 @@ import cx from 'classnames'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
-import { voidFn, formatDate, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { voidFn, formatDate, getErrorMessage, LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
 import { NewRepoModalButton } from 'components/NewRepoModalButton/NewRepoModalButton'
 import type { TypesRepository } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
+import { useQueryParams } from 'hooks/useQueryParams'
+import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useAppContext } from 'AppContext'
@@ -38,7 +40,12 @@ export default function RepositoriesListing() {
   const space = useGetSpaceParam()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const { routes } = useAppContext()
-  const [page, setPage] = usePageIndex()
+  const { updateQueryParams } = useUpdateQueryParams()
+
+  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page): 1
+  const [page, setPage] = usePageIndex(pageInit)
+
   const {
     data: repositories,
     error,
@@ -52,7 +59,7 @@ export default function RepositoriesListing() {
 
   useEffect(() => {
     setSearchTerm(undefined)
-    setPage(1)
+    updateQueryParams({ page: page.toString() })
   }, [space, setPage])
 
   const columns: Column<TypesRepository>[] = useMemo(

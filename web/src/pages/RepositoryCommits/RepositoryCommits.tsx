@@ -1,12 +1,14 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Container, FlexExpander, Layout, PageBody } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useAppContext } from 'AppContext'
 import { usePageIndex } from 'hooks/usePageIndex'
+import { useQueryParams } from 'hooks/useQueryParams'
+import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import type { TypesCommit } from 'services/code'
-import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -20,7 +22,11 @@ export default function RepositoryCommits() {
   const { routes } = useAppContext()
   const history = useHistory()
   const { getString } = useStrings()
-  const [page, setPage] = usePageIndex()
+  const { updateQueryParams } = useUpdateQueryParams()
+
+  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page): 1
+  const [page, setPage] = usePageIndex(pageInit)
   const {
     data: commits,
     response,
@@ -35,6 +41,10 @@ export default function RepositoryCommits() {
     },
     lazy: !repoMetadata
   })
+
+  useEffect(() => {
+    updateQueryParams({ page: page.toString() })
+  }, [setPage])
 
   return (
     <Container className={css.main}>

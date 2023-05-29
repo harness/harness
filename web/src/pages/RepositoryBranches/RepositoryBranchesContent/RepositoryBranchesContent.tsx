@@ -1,14 +1,16 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Container } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import type { RepoBranch } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
-import { LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT, PageBrowserProps } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { useShowRequestError } from 'hooks/useShowRequestError'
+import { useQueryParams } from 'hooks/useQueryParams'
+import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { BranchesContentHeader } from './BranchesContentHeader/BranchesContentHeader'
 import { BranchesContent } from './BranchesContent/BranchesContent'
@@ -18,7 +20,11 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
   const { routes } = useAppContext()
   const history = useHistory()
   const [searchTerm, setSearchTerm] = useState('')
-  const [page, setPage] = usePageIndex()
+  const { updateQueryParams } = useUpdateQueryParams()
+
+  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page): 1
+  const [page, setPage] = usePageIndex(pageInit)
   const {
     data: branches,
     response,
@@ -37,6 +43,10 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
     }
   })
 
+  useEffect(() => {
+    updateQueryParams({ page: page.toString() })
+  }, [page,updateQueryParams,setPage])
+  
   useShowRequestError(error)
 
   return (

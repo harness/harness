@@ -21,10 +21,11 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT, permissionProps } from 'utils/Utils'
+import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT, permissionProps, PageBrowserProps } from 'utils/Utils'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
+import { useQueryParams } from 'hooks/useQueryParams'
 import type { TypesPullReq, TypesRepository } from 'services/code'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
@@ -45,26 +46,15 @@ export default function PullRequests() {
     PullRequestFilterOption.OPEN
   )
   const space = useGetSpaceParam()
-
-  const [page, setPage] = usePageIndex()
-  const currPageString = new URLSearchParams(window.location.href.split('?')?.[1]).get('page')
-  const currPage = currPageString ? parseInt(currPageString) : undefined
   const { updateQueryParams } = useUpdateQueryParams()
-  console.log(page, currPage)
+
+  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page): 1
+  const [page, setPage] = usePageIndex(pageInit)
 
   useEffect(() => {
-    if (currPage) {
-      setPage(currPage)
-      updateQueryParams({ page: page.toString() })
-    }
-  }, [window.location])
-
-  useEffect(() => {
-    if (currPage && page !== currPage && page > currPage) {
-      setPage(page)
-    }
     updateQueryParams({ page: page.toString() })
-  }, [page])
+  }, [setPage])
 
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const {
@@ -76,7 +66,7 @@ export default function PullRequests() {
     path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq`,
     queryParams: {
       limit: String(LIST_FETCHING_LIMIT),
-      page: page,
+      page,
       sort: filter == PullRequestFilterOption.MERGED ? 'merged' : 'number',
       order: 'desc',
       query: searchTerm,

@@ -38,8 +38,7 @@ export const ResourceListingPagination: React.FC<ResourceListingPaginationProps>
         }, 0)
       }
       setPage(_page)
-      updateQueryParams({ page: page.toString() })
-
+      updateQueryParams({ page: _page.toString() })
     },
     [setPage, scrollTop]
   )
@@ -60,8 +59,20 @@ export const ResourceListingPagination: React.FC<ResourceListingPaginationProps>
     )
   ) : page === 1 && !X_PREV_PAGE && !X_NEXT_PAGE ? null : (
     <PrevNextPagination
-      onPrev={!!X_PREV_PAGE && (() => _setPage(page - 1))}
-      onNext={!!X_NEXT_PAGE && (() => _setPage(page + 1))}
+      onPrev={
+        !!X_PREV_PAGE &&
+        (() => {
+          _setPage(page - 1)
+          // updateQueryParams({ page: page.toString() })
+        })
+      }
+      onNext={
+        !!X_NEXT_PAGE &&
+        (() => {
+          _setPage(page + 1)
+          // updateQueryParams({ page: page.toString() })
+        })
+      }
     />
   )
 }
