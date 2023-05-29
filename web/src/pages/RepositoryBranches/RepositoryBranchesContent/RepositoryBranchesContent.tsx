@@ -45,7 +45,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
 
   useEffect(() => {
     updateQueryParams({ page: page.toString() })
-  }, [page,updateQueryParams,setPage])
+  }, [setPage])
   
   useShowRequestError(error)
 
