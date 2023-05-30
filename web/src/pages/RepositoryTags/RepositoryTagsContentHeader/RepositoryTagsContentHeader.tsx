@@ -22,12 +22,12 @@ export function RepositoryTagsContentHeader({
 }: RepositoryTagsContentHeaderProps) {
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState('')
-  
 
   return (
     <Container className={css.main}>
       <Layout.Horizontal spacing="medium">
         <SearchInputWithSpinner
+          spinnerPosition="right"
           loading={loading}
           query={searchTerm}
           setQuery={value => {
