@@ -321,6 +321,12 @@ func (r *SharedRepo) PushTag(ctx context.Context, writeRequest *rpc.WriteRequest
 	return r.push(ctx, writeRequest, refTag, refTag)
 }
 
+func (r *SharedRepo) PushDeleteTag(ctx context.Context, writeRequest *rpc.WriteRequest,
+	tagName string) error {
+	refTag := GetReferenceFromTagName(tagName)
+	return r.push(ctx, writeRequest, "", refTag)
+}
+
 // push pushes the provided references to the provided branch in the original repository.
 func (r *SharedRepo) push(ctx context.Context, writeRequest *rpc.WriteRequest,
 	sourceRef, destinationRef string) error {

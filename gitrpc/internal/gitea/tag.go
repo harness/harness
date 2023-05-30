@@ -14,10 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/gitrpc/internal/types"
-	"github.com/harness/gitness/gitrpc/rpc"
-
 	gitea "code.gitea.io/gitea/modules/git"
+	"github.com/harness/gitness/gitrpc/internal/types"
 )
 
 const (
@@ -65,22 +63,16 @@ func (g Adapter) GetAnnotatedTags(ctx context.Context, repoPath string, shas []s
 func (g Adapter) CreateAnnotatedTag(
 	ctx context.Context,
 	repoPath string,
-	request *rpc.CreateTagRequest,
-	env []string,
+	request *types.CreateTagRequest,
 ) error {
-	cmd := gitea.NewCommand(ctx, "tag", "-a", "-m", request.GetMessage(), "--", request.GetTagName(), request.GetSha())
+	cmd := gitea.NewCommand(ctx, "tag", "-a", "-m", request.Message, "--", request.Name, request.TargetSha)
+	env := []string{
+		"GIT_COMMITTER_NAME=" + request.TaggerName,
+		"GIT_COMMITTER_EMAIL=" + request.TaggerEmail,
+	}
 	_, _, err := cmd.RunStdString(&gitea.RunOpts{Dir: repoPath, Env: env})
 	if err != nil {
 		return processGiteaErrorf(err, "Service failed to create a tag")
-	}
-	return nil
-}
-
-func (g Adapter) DeleteTag(ctx context.Context, repoPath string, ref string, env []string) error {
-	cmd := gitea.NewCommand(ctx, "tag", "-d", ref)
-	_, stdErr, err := cmd.RunStdString(&gitea.RunOpts{Dir: repoPath, Env: env})
-	if err != nil {
-		return processGiteaErrorf(err, "Service failed to delete tag with error: %v", stdErr)
 	}
 	return nil
 }
