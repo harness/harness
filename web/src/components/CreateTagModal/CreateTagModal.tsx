@@ -147,7 +147,6 @@ export function useCreateTagModal({
                       repoMetadata={repoMetadata}
                       disableBranchCreation
                       disableViewAllBranches
-                      forBranchesOnly
                       gitRef={sourceBranch}
                       onSelect={setSourceBranch}
                     />

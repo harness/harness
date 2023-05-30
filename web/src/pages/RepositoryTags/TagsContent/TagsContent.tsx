@@ -21,6 +21,7 @@ import type {
   OpenapiCalculateCommitDivergenceRequest,
   RepoBranch,
   RepoCommitDivergence,
+  RepoCommitTag,
   TypesRepository
 } from 'services/code'
 import { formatDate, getErrorMessage, voidFn } from 'utils/Utils'
@@ -28,7 +29,7 @@ import { useConfirmAction } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useCreateBranchModal } from 'components/CreateBranchModal/CreateBranchModal'
 import { CommitActions } from 'components/CommitActions/CommitActions'
-import { CodeIcon } from 'utils/GitUtils'
+import { CodeIcon, REFS_TAGS_PREFIX } from 'utils/GitUtils'
 import css from './TagsContent.module.scss'
 
 interface TagsContentProps {
@@ -63,7 +64,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
     }
   }, [getBranchDivergence, branchDivergenceRequestBody])
   const onSuccess = voidFn(noop)
-  const openModal = useCreateBranchModal({ repoMetadata, onSuccess })
+  const openModal = useCreateBranchModal({ repoMetadata, onSuccess,showSuccessMessage: true })
 
   const columns: Column<RepoBranch>[] = useMemo(
     () => [
@@ -110,12 +111,12 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
       {
         Header: getString('tagger'),
         width: '20%',
-        Cell: ({ row }: CellProps<RepoBranch>) => {
+        Cell: ({ row }: CellProps<RepoCommitTag>) => {
           return (
             <Text className={css.rowText} color={Color.BLACK} tag="div">
               <Avatar hoverCard={false} size="small" name={row.original.commit?.author?.identity?.name || ''} />
               <span className={css.spacer} />
-              {row.original.commit?.author?.identity?.name || ''}
+              {row.original.tagger?.identity?.name || ''}
             </Text>
           )
         }
@@ -123,11 +124,11 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
       {
         Header: getString('creationDate'),
         width: '200px',
-        Cell: ({ row }: CellProps<RepoBranch>) => {
+        Cell: ({ row }: CellProps<RepoCommitTag>) => {
           return (
             <Text className={css.rowText} color={Color.BLACK} tag="div">
               <span className={css.spacer} />
-              {formatDate(row.original.commit?.author?.when as string)}
+              {formatDate(row.original.tagger?.when as string)}
             </Text>
           )
         }
@@ -179,7 +180,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
                     history.push(
                       routes.toCODERepository({
                         repoPath: repoMetadata.path as string,
-                        gitRef: row.original?.name
+                        gitRef: `${REFS_TAGS_PREFIX}${row.original?.name}`
                       })
                     )
                   }
