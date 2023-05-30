@@ -63,14 +63,12 @@ export const ResourceListingPagination: React.FC<ResourceListingPaginationProps>
         !!X_PREV_PAGE &&
         (() => {
           _setPage(page - 1)
-          // updateQueryParams({ page: page.toString() })
         })
       }
       onNext={
         !!X_NEXT_PAGE &&
         (() => {
           _setPage(page + 1)
-          // updateQueryParams({ page: page.toString() })
         })
       }
     />
