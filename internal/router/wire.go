@@ -6,6 +6,7 @@ package router
 
 import (
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/internal/api/controller/check"
 	"github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
@@ -62,9 +63,11 @@ func ProvideAPIHandler(
 	githookCtrl *githook.Controller,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
-	principalCtrl *principal.Controller) APIHandler {
+	principalCtrl *principal.Controller,
+	checkCtrl *check.Controller,
+) APIHandler {
 	return NewAPIHandler(config, authenticator, repoCtrl, spaceCtrl, pullreqCtrl,
-		webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl)
+		webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl)
 }
 
 func ProvideWebHandler(config *types.Config) WebHandler {

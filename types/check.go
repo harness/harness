@@ -17,15 +17,20 @@ type Check struct {
 	Updated   int64            `json:"updated"`
 	RepoID    int64            `json:"-"` // status checks are always returned for a commit in a repository
 	CommitSHA string           `json:"-"` // status checks are always returned for a commit in a repository
-	Type      string           `json:"type"`
 	UID       string           `json:"uid"`
 	Status    enum.CheckStatus `json:"status"`
 	Summary   string           `json:"summary"`
 	Link      string           `json:"link"`
-	Payload   json.RawMessage  `json:"payload"`
 	Metadata  json.RawMessage  `json:"metadata"`
 
+	Payload    CheckPayload  `json:"payload"`
 	ReportedBy PrincipalInfo `json:"reported_by"`
+}
+
+type CheckPayload struct {
+	Version string                `json:"version"`
+	Kind    enum.CheckPayloadKind `json:"kind"`
+	Data    json.RawMessage       `json:"data"`
 }
 
 type ReqCheck struct {
