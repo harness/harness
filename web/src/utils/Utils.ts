@@ -43,6 +43,10 @@ export const dayAgoInMS = 86400000
 export const getErrorMessage = (error: Unknown): string =>
   get(error, 'data.error', get(error, 'data.message', get(error, 'message', error)))
 
+export interface PageBrowserProps {
+  page: string
+}
+
 export interface SourceCodeEditorProps {
   source: string
   language?: string

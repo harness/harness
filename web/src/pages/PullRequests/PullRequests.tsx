@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Container,
   PageBody,
@@ -21,9 +21,11 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT, permissionProps } from 'utils/Utils'
+import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT, permissionProps, PageBrowserProps } from 'utils/Utils'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
+import { useQueryParams } from 'hooks/useQueryParams'
 import type { TypesPullReq, TypesRepository } from 'services/code'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
@@ -44,8 +46,16 @@ export default function PullRequests() {
     PullRequestFilterOption.OPEN
   )
   const space = useGetSpaceParam()
+  const { updateQueryParams } = useUpdateQueryParams()
 
-  const [page, setPage] = usePageIndex()
+  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page): 1
+  const [page, setPage] = usePageIndex(pageInit)
+
+  useEffect(() => {
+    updateQueryParams({ page: page.toString() })
+  }, [setPage])
+
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const {
     data,
