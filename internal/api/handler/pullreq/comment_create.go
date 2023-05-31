@@ -44,6 +44,6 @@ func HandleCommentCreate(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, comment)
+		render.JSON(w, http.StatusCreated, comment)
 	}
 }

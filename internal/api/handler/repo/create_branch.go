@@ -39,6 +39,6 @@ func HandleCreateBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, branch)
+		render.JSON(w, http.StatusCreated, branch)
 	}
 }

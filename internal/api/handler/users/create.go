@@ -33,6 +33,6 @@ func HandleCreate(userCtrl *user.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, usr)
+		render.JSON(w, http.StatusCreated, usr)
 	}
 }

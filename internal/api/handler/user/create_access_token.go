@@ -34,6 +34,6 @@ func HandleCreateAccessToken(userCtrl *user.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, tokenResponse)
+		render.JSON(w, http.StatusCreated, tokenResponse)
 	}
 }

@@ -32,6 +32,6 @@ func HandleCreate(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, repo)
+		render.JSON(w, http.StatusCreated, repo)
 	}
 }

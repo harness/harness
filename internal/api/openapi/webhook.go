@@ -90,7 +90,7 @@ func webhookOperations(reflector *openapi3.Reflector) {
 	createWebhook.WithTags("webhook")
 	createWebhook.WithMapOfAnything(map[string]interface{}{"operationId": "createWebhook"})
 	_ = reflector.SetRequest(&createWebhook, new(createWebhookRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&createWebhook, new(webhookType), http.StatusOK)
+	_ = reflector.SetJSONResponse(&createWebhook, new(webhookType), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&createWebhook, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&createWebhook, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&createWebhook, new(usererror.Error), http.StatusUnauthorized)

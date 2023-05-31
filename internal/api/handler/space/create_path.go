@@ -37,6 +37,6 @@ func HandleCreatePath(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, path)
+		render.JSON(w, http.StatusCreated, path)
 	}
 }

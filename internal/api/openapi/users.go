@@ -68,7 +68,7 @@ func buildAdmin(reflector *openapi3.Reflector) {
 	opCreate.WithTags("admin")
 	opCreate.WithMapOfAnything(map[string]interface{}{"operationId": "adminCreateUser"})
 	_ = reflector.SetRequest(&opCreate, new(adminUsersCreateRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opCreate, new(types.User), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opCreate, new(types.User), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusNotFound)

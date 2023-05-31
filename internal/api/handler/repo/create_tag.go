@@ -36,6 +36,6 @@ func HandleCreateCommitTag(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, tag)
+		render.JSON(w, http.StatusCreated, tag)
 	}
 }

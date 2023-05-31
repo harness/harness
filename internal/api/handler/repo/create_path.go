@@ -39,6 +39,6 @@ func HandleCreatePath(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, path)
+		render.JSON(w, http.StatusCreated, path)
 	}
 }

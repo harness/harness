@@ -34,6 +34,6 @@ func HandleCreate(saCtrl *serviceaccount.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, sa)
+		render.JSON(w, http.StatusCreated, sa)
 	}
 }
