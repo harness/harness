@@ -31,6 +31,8 @@ var WireSet = wire.NewSet(
 	ProvidePullReqReviewerStore,
 	ProvideWebhookStore,
 	ProvideWebhookExecutionStore,
+	ProvideCheckStore,
+	ProvideReqCheckStore,
 )
 
 // ProvideDatabase provides a database connection.
@@ -113,4 +115,18 @@ func ProvideWebhookStore(db *sqlx.DB) store.WebhookStore {
 // ProvideWebhookExecutionStore provides a webhook execution store.
 func ProvideWebhookExecutionStore(db *sqlx.DB) store.WebhookExecutionStore {
 	return NewWebhookExecutionStore(db)
+}
+
+// ProvideCheckStore provides a status check result store.
+func ProvideCheckStore(db *sqlx.DB,
+	principalInfoCache store.PrincipalInfoCache,
+) store.CheckStore {
+	return NewCheckStore(db, principalInfoCache)
+}
+
+// ProvideReqCheckStore provides a required status check store.
+func ProvideReqCheckStore(db *sqlx.DB,
+	principalInfoCache store.PrincipalInfoCache,
+) store.ReqCheckStore {
+	return NewReqCheckStore(db, principalInfoCache)
 }
