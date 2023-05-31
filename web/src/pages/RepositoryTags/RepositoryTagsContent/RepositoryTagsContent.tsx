@@ -25,9 +25,7 @@ export function RepositoryTagsContent({ repoMetadata }: Pick<GitInfoProps, 'repo
   const { routes } = useAppContext()
   const history = useHistory()
   const [searchTerm, setSearchTerm] = useState('')
-  const onSuccess = voidFn(noop)
-  const openModal = useCreateTagModal({ repoMetadata, onSuccess })
-
+  const openModal = useCreateTagModal({ repoMetadata, onSuccess:()=>{refetch()},showSuccessMessage:true })
   const { updateQueryParams } = useUpdateQueryParams()
 
   const pageBrowser = useQueryParams<PageBrowserProps>()
@@ -108,7 +106,6 @@ export function RepositoryTagsContent({ repoMetadata }: Pick<GitInfoProps, 'repo
         message={getString('tagEmpty')}
         onButtonClick={() => {
           openModal()
-          refetch()
         }}
       />
 
