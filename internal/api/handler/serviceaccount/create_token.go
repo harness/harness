@@ -38,6 +38,6 @@ func HandleCreateToken(saCrl *serviceaccount.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, tokenResponse)
+		render.JSON(w, http.StatusCreated, tokenResponse)
 	}
 }

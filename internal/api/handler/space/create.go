@@ -32,6 +32,6 @@ func HandleCreate(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, space)
+		render.JSON(w, http.StatusCreated, space)
 	}
 }

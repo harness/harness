@@ -38,6 +38,6 @@ func HandleCreate(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, pr)
+		render.JSON(w, http.StatusCreated, pr)
 	}
 }

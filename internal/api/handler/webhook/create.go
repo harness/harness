@@ -38,6 +38,6 @@ func HandleCreate(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, hook)
+		render.JSON(w, http.StatusCreated, hook)
 	}
 }
