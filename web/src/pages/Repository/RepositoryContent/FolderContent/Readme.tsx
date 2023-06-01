@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Container, Color, Layout, FlexExpander, ButtonVariation, Heading, Icon, ButtonSize } from '@harness/uicore'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
@@ -9,9 +9,11 @@ import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useShowRequestError } from 'hooks/useShowRequestError'
-import { decodeGitContent } from 'utils/GitUtils'
+import { decodeGitContent, isRefATag } from 'utils/GitUtils'
 import { PlainButton } from 'components/PlainButton/PlainButton'
 import css from './Readme.module.scss'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { permissionProps } from 'utils/Utils'
 
 interface FolderContentProps {
   metadata: TypesRepository
@@ -36,6 +38,34 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
 
   useShowRequestError(error)
 
+  const { standalone } = useAppContext()
+  const { hooks } = useAppContext()
+  const space = useGetSpaceParam()
+
+  const permPushResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPOSITORY'
+      },
+      permissions: ['code_repo_push']
+    },
+    [space]
+  )
+
+  const permsFinal = useMemo(() => {
+    const perms = permissionProps(permPushResult, standalone)
+    if (gitRef && isRefATag(gitRef) && perms) {
+      return { tooltip: perms.tooltip, disabled: true }
+    }
+
+    if (gitRef && isRefATag(gitRef)) {
+      return { tooltip: getString('editNotAllowed'), disabled: true }
+    } else if (perms?.disabled) {
+      return { disabled: perms.disabled, tooltip: perms.tooltip }
+    }
+    return { disabled: (gitRef && isRefATag(gitRef)) || false, tooltip: undefined }
+  }, [permPushResult, gitRef])
+
   return (
     <Container
       className={cx(css.readmeContainer, { [css.contentOnly]: contentOnly })}
@@ -53,6 +83,8 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
             iconProps={{ size: 16 }}
             text={getString('edit')}
             icon="code-edit"
+            tooltip={permsFinal.tooltip}
+            disabled={permsFinal.disabled}
             onClick={() => {
               history.push(
                 routes.toCODEFileEdit({

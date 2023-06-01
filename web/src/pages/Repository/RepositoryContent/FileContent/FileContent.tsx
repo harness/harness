@@ -22,7 +22,7 @@ import {
   isRefATag,
   makeDiffRefs
 } from 'utils/GitUtils'
-import { filenameToLanguage } from 'utils/Utils'
+import { filenameToLanguage, permissionProps } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { LatestCommitForFile } from 'components/LatestCommit/LatestCommit'
 import { useCommitModal } from 'components/CommitModalButton/CommitModalButton'
@@ -32,6 +32,7 @@ import { PlainButton } from 'components/PlainButton/PlainButton'
 import { Readme } from '../FolderContent/Readme'
 import { GitBlame } from './GitBlame'
 import css from './FileContent.module.scss'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 
 enum FileSection {
   CONTENT = 'content',
@@ -78,6 +79,33 @@ export function FileContent({
     }
   })
 
+  const { standalone } = useAppContext()
+  const { hooks } = useAppContext()
+  const space = useGetSpaceParam()
+
+  const permPushResult = hooks?.usePermissionTranslate?.(
+    {
+      resource: {
+        resourceType: 'CODE_REPOSITORY'
+      },
+      permissions: ['code_repo_push']
+    },
+    [space]
+  )
+  const permsFinal = useMemo(() => {
+    const perms = permissionProps(permPushResult, standalone)
+    if (isRefATag(gitRef) && perms) {
+      return { tooltip: perms.tooltip, disabled: true }
+    }
+
+    if (isRefATag(gitRef)) {
+      return { tooltip: getString('editNotAllowed'), disabled: true }
+    } else if (perms?.disabled) {
+      return { disabled: perms.disabled, tooltip: perms.tooltip }
+    }
+    return { disabled: isRefATag(gitRef) || false, tooltip: undefined }
+  }, [permPushResult, gitRef])
+
   return (
     <Container className={css.tabsContainer}>
       <Tabs
@@ -110,9 +138,9 @@ export function FileContent({
                           iconProps={{ size: 16 }}
                           text={getString('edit')}
                           icon="code-edit"
-                          tooltip={isRefATag(gitRef) ? getString('editNotAllowed') : undefined}
                           tooltipProps={{ isDark: true }}
-                          disabled={isRefATag(gitRef)}
+                          tooltip={permsFinal.tooltip}
+                          disabled={permsFinal.disabled}
                           onClick={() => {
                             history.push(
                               routes.toCODEFileEdit({
