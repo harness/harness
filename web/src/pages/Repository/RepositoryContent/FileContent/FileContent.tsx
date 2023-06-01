@@ -92,7 +92,7 @@ export function FileContent({
     },
     [space]
   )
-  function checkPermTagTooltip(): { disabled: boolean; tooltip: JSX.Element | string | undefined } {
+  const permsFinal = useMemo(() => {
     const perms = permissionProps(permPushResult, standalone)
     if (isRefATag(gitRef) && perms) {
       return { tooltip: perms.tooltip, disabled: true }
@@ -103,8 +103,8 @@ export function FileContent({
     } else if (perms?.disabled) {
       return { disabled: perms.disabled, tooltip: perms.tooltip }
     }
-    return { disabled: isRefATag(gitRef), tooltip: undefined }
-  }
+    return { disabled: isRefATag(gitRef) || false, tooltip: undefined }
+  }, [permPushResult, gitRef])
 
   return (
     <Container className={css.tabsContainer}>
@@ -139,7 +139,8 @@ export function FileContent({
                           text={getString('edit')}
                           icon="code-edit"
                           tooltipProps={{ isDark: true }}
-                          {...checkPermTagTooltip()}
+                          tooltip={permsFinal.tooltip}
+                          disabled={permsFinal.disabled}
                           onClick={() => {
                             history.push(
                               routes.toCODEFileEdit({

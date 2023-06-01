@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Container, Color, Layout, FlexExpander, ButtonVariation, Heading, Icon, ButtonSize } from '@harness/uicore'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
@@ -51,7 +51,8 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
     },
     [space]
   )
-  function checkPermTagTooltip(): { disabled: boolean; tooltip: JSX.Element | string | undefined } {
+
+  const permsFinal = useMemo(() => {
     const perms = permissionProps(permPushResult, standalone)
     if (gitRef && isRefATag(gitRef) && perms) {
       return { tooltip: perms.tooltip, disabled: true }
@@ -63,7 +64,8 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
       return { disabled: perms.disabled, tooltip: perms.tooltip }
     }
     return { disabled: (gitRef && isRefATag(gitRef)) || false, tooltip: undefined }
-  }
+  }, [permPushResult, gitRef])
+
   return (
     <Container
       className={cx(css.readmeContainer, { [css.contentOnly]: contentOnly })}
@@ -81,7 +83,8 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
             iconProps={{ size: 16 }}
             text={getString('edit')}
             icon="code-edit"
-            {...checkPermTagTooltip()}
+            tooltip={permsFinal.tooltip}
+            disabled={permsFinal.disabled}
             onClick={() => {
               history.push(
                 routes.toCODEFileEdit({
