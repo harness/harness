@@ -1,28 +1,17 @@
-.main {
-  min-height: var(--page-min-height, 100%);
-  background-color: var(--white) !important;
-
-  &.withFileViewer {
-    &,
-    > div:first-of-type {
-      min-height: var(--page-min-height) !important;
-    }
-
-    > div:first-of-type {
-      display: flex;
-      flex-direction: column;
-    }
-  }
+.emptyRepo {
+  padding: var(--spacing-xxlarge) !important;
 }
 
-.bannerContainer {
-  padding: var(--spacing-small) var(--spacing-xsmall) !important;
-  background-color: var(--red-50) !important;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  margin: var(--spacing-small) var(--spacing-xlarge) !important;
-  border-radius: 5px;
+.divContainer {
+  background: var(--white);
+  box-shadow: var(--elevation-2);
+  border-radius: 4px;
+}
+
+.textContainer {
+  a {
+    color: var(--primary-7) !important;
+  }
 }
 
 .layout {

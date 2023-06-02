@@ -11,9 +11,9 @@ import { useStrings } from 'framework/strings'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { decodeGitContent, isRefATag } from 'utils/GitUtils'
 import { PlainButton } from 'components/PlainButton/PlainButton'
-import css from './Readme.module.scss'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { permissionProps } from 'utils/Utils'
+import css from './Readme.module.scss'
 
 interface FolderContentProps {
   metadata: TypesRepository

@@ -26,7 +26,7 @@ export interface EditorProps {
   maxHeight?: string | number
   viewRef?: React.MutableRefObject<EditorView | undefined>
   setDirty?: React.Dispatch<React.SetStateAction<boolean>>
-  onChange?: (doc: Text, viewUpdate: ViewUpdate) => void
+  onChange?: (doc: Text, viewUpdate: ViewUpdate, isDirty: boolean) => void
   onViewUpdate?: (viewUpdate: ViewUpdate) => void
 }
 
@@ -56,6 +56,11 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
       } as React.CSSProperties
     }
   }, [maxHeight])
+  const onChangeRef = useRef<EditorProps['onChange']>(onChange)
+
+  useEffect(() => {
+    onChangeRef.current = onChange
+  }, [onChange])
 
   useEffect(() => {
     const editorView = new EditorView({
@@ -76,11 +81,12 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
         ...(readonly ? [EditorState.readOnly.of(true), EditorView.editable.of(false)] : []),
 
         EditorView.updateListener.of(viewUpdate => {
-          setDirty?.(!cleanDoc.eq(viewUpdate.state.doc))
+          const isDirty = !cleanDoc.eq(viewUpdate.state.doc)
+          setDirty?.(isDirty)
           onViewUpdate?.(viewUpdate)
 
           if (viewUpdate.docChanged) {
-            onChange?.(viewUpdate.state.doc, viewUpdate)
+            onChangeRef.current?.(viewUpdate.state.doc, viewUpdate, isDirty)
           }
         }),
 

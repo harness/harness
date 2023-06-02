@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   Button,
   ButtonVariation,
@@ -42,6 +42,13 @@ interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMetadata' |
 
 interface PRMergeOption {
   method: EnumMergeMethod | 'close'
+  title: string
+  desc: string
+  disabled?: boolean
+}
+
+interface PRDraftOption {
+  method: 'close' | 'open'
   title: string
   desc: string
   disabled?: boolean
@@ -101,6 +108,18 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       desc: getString('pr.mergeOptions.closeDesc')
     }
   ]
+  const draftOptions: PRDraftOption[] = [
+    {
+      method: 'open',
+      title: getString('pr.draftOpenForReview.title'),
+      desc: getString('pr.draftOpenForReview.desc')
+    },
+    {
+      method: 'close',
+      title: getString('pr.mergeOptions.close'),
+      desc: getString('pr.mergeOptions.closeDesc')
+    }
+  ]
   const confirmAct = useConfirmAct()
   const permEditResult = hooks?.usePermissionTranslate?.(
     {
@@ -114,8 +133,9 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
 
   const [mergeOption, setMergeOption] = useUserPreference<PRMergeOption>(
     UserPreference.PULL_REQUEST_MERGE_STRATEGY,
-    mergeOptions[mergeable === false ? 3 : 1]
+    mergeOptions[1]
   )
+  const [draftOption, setDraftOption] = useState<PRDraftOption>(draftOptions[0])
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
@@ -189,18 +209,48 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
             </Render>
             <Match expr={isDraft}>
               <Truthy>
-                <Button
+                <SplitButton
+                  text={draftOption.title}
+                  disabled={loading}
                   className={css.secondaryButton}
-                  text={getString('pr.readyForReview')}
                   variation={ButtonVariation.TERTIARY}
-                  onClick={() => {
-                    const payload: OpenapiStatePullReqRequest = { is_draft: false, state: 'open' }
-
-                    updatePRState(payload)
-                      .then(onPRStateChanged)
-                      .catch(exception => showError(getErrorMessage(exception)))
+                  popoverProps={{
+                    interactionKind: 'click',
+                    usePortal: true,
+                    popoverClassName: css.popover,
+                    position: PopoverPosition.BOTTOM_RIGHT,
+                    transitionDuration: 1000
                   }}
-                />
+                  {...permissionProps(permPushResult, standalone)}
+                  onClick={async () => {
+                    if (draftOption.method === 'open') {
+                      updatePRState({ is_draft: false, state: 'open' })
+                        .then(onPRStateChanged)
+                        .catch(exception => showError(getErrorMessage(exception)))
+                    } else {
+                      updatePRState({ state: 'closed' })
+                        .then(onPRStateChanged)
+                        .catch(exception => showError(getErrorMessage(exception)))
+                    }
+                  }}>
+                  {draftOptions.map(option => {
+                    return (
+                      <Menu.Item
+                        key={option.method}
+                        className={css.menuItem}
+                        disabled={option.disabled}
+                        text={
+                          <>
+                            <BIcon icon={draftOption.method === option.method ? 'tick' : 'blank'} />
+                            <strong>{option.title}</strong>
+                            <p>{option.desc}</p>
+                          </>
+                        }
+                        onClick={() => setDraftOption(option)}
+                      />
+                    )
+                  })}
+                </SplitButton>
               </Truthy>
               <Else>
                 <Container>
@@ -236,7 +286,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           })}>
                           <SplitButton
                             text={mergeOption.title}
-                            disabled={loading}
+                            disabled={loading || unchecked}
                             className={cx({
                               [css.secondaryButton]: mergeOption.method === 'close' || mergeable === false
                             })}
@@ -288,9 +338,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                                     .catch(exception => showError(getErrorMessage(exception)))
                                 }
                               } else {
-                                const payload: OpenapiStatePullReqRequest = { state: 'closed' }
-
-                                updatePRState(payload)
+                                updatePRState({ state: 'closed' })
                                   .then(onPRStateChanged)
                                   .catch(exception => showError(getErrorMessage(exception)))
                               }

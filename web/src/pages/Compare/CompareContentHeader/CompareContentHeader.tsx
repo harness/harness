@@ -1,34 +1,55 @@
 import React, { useEffect, useState } from 'react'
 import { useMutate } from 'restful-react'
-import { Container, Layout, FlexExpander, ButtonVariation, Icon, Text, Color } from '@harness/uicore'
-import { useHistory } from 'react-router-dom'
-import { useAppContext } from 'AppContext'
+import { Container, Layout, FlexExpander, ButtonVariation, Icon, Text, Color, SplitButton } from '@harness/uicore'
+import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
 import type { RepoMergeCheck } from 'services/code'
 import { useStrings } from 'framework/strings'
-import { GitInfoProps, isRefATag } from 'utils/GitUtils'
+import type { GitInfoProps } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
-import { getErrorMessage } from 'utils/Utils'
-import { CreatePullRequestModalButton } from 'components/CreatePullRequestModal/CreatePullRequestModal'
+import { getErrorMessage, permissionProps } from 'utils/Utils'
+import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
+import { useAppContext } from 'AppContext'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import css from './CompareContentHeader.module.scss'
 
 interface CompareContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
+  loading?: boolean
   targetGitRef: string
   onTargetGitRefChanged: (gitRef: string) => void
   sourceGitRef: string
   onSourceGitRefChanged: (gitRef: string) => void
   mergeable?: boolean
+  onCreatePullRequestClick: (creationType: PRCreationType) => void
 }
 
 export function CompareContentHeader({
+  loading,
   repoMetadata,
   targetGitRef,
   onTargetGitRefChanged,
   sourceGitRef,
-  onSourceGitRefChanged
+  onSourceGitRefChanged,
+  onCreatePullRequestClick
 }: CompareContentHeaderProps) {
   const { getString } = useStrings()
-  const history = useHistory()
-  const { routes } = useAppContext()
+  const space = useGetSpaceParam()
+  const {
+    hooks: { usePermissionTranslate },
+    standalone
+  } = useAppContext()
+  const permPushResult = usePermissionTranslate(
+    {
+      resource: {
+        resourceType: 'CODE_REPOSITORY'
+      },
+      permissions: ['code_repo_push']
+    },
+    [space]
+  )
+  const [createOption, setCreateOption] = useUserPreference<PRCreationOption>(
+    UserPreference.PULL_REQUEST_CREATION_OPTION,
+    prCreationOptions[0]
+  )
 
   return (
     <Container className={css.main} padding="xlarge">
@@ -59,32 +80,38 @@ export function CompareContentHeader({
           <MergeableLabel repoMetadata={repoMetadata} targetGitRef={targetGitRef} sourceGitRef={sourceGitRef} />
         )}
         <FlexExpander />
-        <CreatePullRequestModalButton
-          repoMetadata={repoMetadata}
-          targetGitRef={targetGitRef}
-          sourceGitRef={sourceGitRef}
-          onSuccess={data => {
-            history.replace(
-              routes.toCODEPullRequest({
-                repoPath: repoMetadata.path as string,
-                pullRequestId: String(data.number)
-              })
-            )
-          }}
-          text={getString('createPullRequest')}
+        <SplitButton
+          loading={loading}
+          text={createOption.title}
           variation={ButtonVariation.PRIMARY}
-          disabled={
-            !sourceGitRef ||
-            !targetGitRef ||
-            sourceGitRef === targetGitRef ||
-            isRefATag(sourceGitRef) ||
-            isRefATag(targetGitRef)
-          }
-          tooltip={
-            isRefATag(sourceGitRef) || isRefATag(targetGitRef) ? getString('pullMustBeMadeFromBranches') : undefined
-          }
-          tooltipProps={{ isDark: true }}
-        />
+          popoverProps={{
+            interactionKind: 'click',
+            usePortal: true,
+            popoverClassName: css.popover,
+            position: PopoverPosition.BOTTOM_RIGHT,
+            transitionDuration: 1000
+          }}
+          {...permissionProps(permPushResult, standalone)}
+          onClick={() => {
+            onCreatePullRequestClick(createOption.type)
+          }}>
+          {prCreationOptions.map(option => {
+            return (
+              <Menu.Item
+                key={option.type}
+                className={css.menuItem}
+                text={
+                  <>
+                    <BIcon icon={createOption.type === option.type ? 'tick' : 'blank'} />
+                    <strong>{option.title}</strong>
+                    <p>{option.desc}</p>
+                  </>
+                }
+                onClick={() => setCreateOption(option)}
+              />
+            )
+          })}
+        </SplitButton>
       </Layout.Horizontal>
     </Container>
   )
@@ -125,3 +152,27 @@ const MergeableLabel: React.FC<Pick<CompareContentHeaderProps, 'repoMetadata' | 
     </Text>
   )
 }
+
+export enum PRCreationType {
+  NORMAL = 'normal',
+  DRAFT = 'draft'
+}
+
+interface PRCreationOption {
+  type: PRCreationType
+  title: string
+  desc: string
+}
+
+const prCreationOptions: PRCreationOption[] = [
+  {
+    type: PRCreationType.NORMAL,
+    title: 'Create pull request',
+    desc: 'Open a pull request that is ready for review'
+  },
+  {
+    type: PRCreationType.DRAFT,
+    title: 'Create draft pull request',
+    desc: 'Does not request code reviews and cannot be merged'
+  }
+]

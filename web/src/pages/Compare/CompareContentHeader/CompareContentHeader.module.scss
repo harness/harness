@@ -15,3 +15,22 @@
   font-size: 13px !important;
   font-weight: 600 !important;
 }
+
+.popover {
+  transform: translateY(5px) !important;
+
+  .menuItem {
+    strong {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    p {
+      font-size: 12px;
+      padding-left: 27px;
+      line-height: 16px;
+      margin: 5px 0;
+      max-width: 320px;
+    }
+  }
+}

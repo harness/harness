@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Container, FlexExpander, Layout, Select, SelectOption, Text, useToaster } from '@harness/uicore'
+import { ButtonProps, Container, FlexExpander, Layout, Select, SelectOption, Text, useToaster } from '@harness/uicore'
 import { useGet, useMutate } from 'restful-react'
 import { orderBy } from 'lodash-es'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { TypesPullReqActivity } from 'services/code'
+import type { TypesPullReqActivity, TypesPullReq } from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage, orderSortDate, ButtonRoleProps } from 'utils/Utils'
@@ -14,6 +14,7 @@ import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/CodeCommentStatusSelect'
 import { CodeCommentStatusButton } from 'components/CodeCommentStatusButton/CodeCommentStatusButton'
+import { CodeCommentSecondarySaveButton } from 'components/CodeCommentSecondarySaveButton/CodeCommentSecondarySaveButton'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { DescriptionBox } from './DescriptionBox'
 import { PullRequestActionsBox } from './PullRequestActionsBox/PullRequestActionsBox'
@@ -276,13 +277,20 @@ export const Conversation: React.FC<ConversationProps> = ({
                                   commentItems={commentItems}
                                 />
                               ),
-
                               [CommentBoxOutletPosition.LEFT_OF_REPLY_PLACEHOLDER]: (
                                 <CodeCommentStatusButton
                                   repoMetadata={repoMetadata}
                                   pullRequestMetadata={pullRequestMetadata}
                                   onCommentUpdate={onCommentUpdate}
                                   commentItems={commentItems}
+                                />
+                              ),
+                              [CommentBoxOutletPosition.BETWEEN_SAVE_AND_CANCEL_BUTTONS]: (props: ButtonProps) => (
+                                <CodeCommentSecondarySaveButton
+                                  repoMetadata={repoMetadata}
+                                  pullRequestMetadata={pullRequestMetadata as TypesPullReq}
+                                  commentItems={commentItems}
+                                  {...props}
                                 />
                               )
                             }}

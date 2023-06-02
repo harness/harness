@@ -40,7 +40,7 @@ interface MarkdownEditorWithPreviewProps {
   onChange?: (value: string) => void
   onSave?: (value: string) => void
   onCancel?: () => void
-  setDirty: (dirty: boolean) => void
+  setDirty?: (dirty: boolean) => void
   i18n: {
     placeHolder: string
     tabEdit: string
@@ -264,8 +264,8 @@ export function MarkdownEditorWithPreview({
           setDirty={setDirty}
           maxHeight={editorHeight}
           className={selectedTab === MarkdownEditorTab.PREVIEW ? css.hidden : undefined}
-          onChange={doc => {
-            if (dirty) {
+          onChange={(doc, _viewUpdate, isDirty) => {
+            if (isDirty) {
               onChange?.(doc.toString())
             }
           }}

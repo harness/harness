@@ -13,7 +13,6 @@ export interface StringsMap {
   all: string
   allBranches: string
   allComments: string
-  alreadyExists: string
   and: string
   approve: string
   ascending: string
@@ -204,10 +203,13 @@ export interface StringsMap {
   'pr.cantMerge': string
   'pr.checkingToMerge': string
   'pr.createDraftPR': string
+  'pr.descIsRequired': string
   'pr.descriptionPlaceHolder': string
   'pr.diffStatsLabel': string
   'pr.diffStatus': string
   'pr.diffView': string
+  'pr.draftOpenForReview.desc': string
+  'pr.draftOpenForReview.title': string
   'pr.enterDesc': string
   'pr.executionState': string
   'pr.failedToCreate': string
@@ -251,9 +253,11 @@ export interface StringsMap {
   'pr.statusLine': string
   'pr.titleChanged': string
   'pr.titleChangedTable': string
+  'pr.titleIsRequired': string
   'pr.titlePlaceHolder': string
   'pr.unified': string
-  prExists: string
+  prMustSelectSourceAndTargetBranches: string
+  prSourceAndTargetMustBeDifferent: string
   'prState.draftDesc': string
   'prState.draftHeading': string
   prefixBase: string
@@ -263,8 +267,8 @@ export interface StringsMap {
   private: string
   public: string
   pullMustBeMadeFromBranches: string
-  pullRequest: string
   pullRequestEmpty: string
+  pullRequestalreadyExists: string
   pullRequests: string
   quote: string
   reactivate: string

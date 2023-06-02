@@ -47,6 +47,7 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   className?: string
   onCommentUpdate: () => void
   prHasChanged?: boolean
+  onDataReady?: (data: DiffFileEntry[]) => void
 }
 
 export const Changes: React.FC<ChangesProps> = ({
@@ -59,7 +60,8 @@ export const Changes: React.FC<ChangesProps> = ({
   pullRequestMetadata,
   onCommentUpdate,
   className,
-  prHasChanged
+  prHasChanged,
+  onDataReady
 }) => {
   const { getString } = useStrings()
   const [viewStyle, setViewStyle] = useUserPreference(UserPreference.DIFF_VIEW_STYLE, ViewStyle.SIDE_BY_SIDE)
@@ -138,29 +140,30 @@ export const Changes: React.FC<ChangesProps> = ({
     const _raw = rawDiff && typeof rawDiff === 'string' ? rawDiff : ''
 
     if (rawDiff) {
-      setDiffs(
-        Diff2Html.parse(_raw, DIFF2HTML_CONFIG).map(diff => {
-          const fileId = changedFileId([diff.oldName, diff.newName])
-          const containerId = `container-${fileId}`
-          const contentId = `content-${fileId}`
-          const filePath = diff.isDeleted ? diff.oldName : diff.newName
-          const fileActivities: TypesPullReqActivity[] | undefined = activities?.filter(
-            activity => filePath === activity.code_comment?.path
-          )
+      const _diffs = Diff2Html.parse(_raw, DIFF2HTML_CONFIG).map(diff => {
+        const fileId = changedFileId([diff.oldName, diff.newName])
+        const containerId = `container-${fileId}`
+        const contentId = `content-${fileId}`
+        const filePath = diff.isDeleted ? diff.oldName : diff.newName
+        const fileActivities: TypesPullReqActivity[] | undefined = activities?.filter(
+          activity => filePath === activity.code_comment?.path
+        )
 
-          return {
-            ...diff,
-            containerId,
-            contentId,
-            fileId,
-            filePath,
-            fileActivities: fileActivities || [],
-            activities: activities || []
-          }
-        })
-      )
+        return {
+          ...diff,
+          containerId,
+          contentId,
+          fileId,
+          filePath,
+          fileActivities: fileActivities || [],
+          activities: activities || []
+        }
+      })
+
+      setDiffs(_diffs)
+      onDataReady?.(_diffs)
     }
-  }, [rawDiff, activities])
+  }, [rawDiff, activities, onDataReady])
 
   useEventListener(
     'scroll',

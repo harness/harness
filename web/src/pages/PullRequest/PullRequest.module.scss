@@ -5,59 +5,6 @@
   > div[class*='PageHeader'] {
     border-bottom: none !important;
   }
-
-  .tabsContainer {
-    min-height: calc(100vh - 97px);
-    background-color: var(--primary-bg) !important;
-
-    > div > div[role='tablist'] {
-      background-color: var(--white) !important;
-      padding-left: var(--spacing-medium) !important;
-      padding-right: var(--spacing-xlarge) !important;
-      border-bottom: 1px solid var(--grey-200) !important;
-    }
-
-    > div > div[role='tabpanel'] {
-      margin-top: 0;
-    }
-
-    [aria-selected='true'] {
-      .tabTitle,
-      .tabTitle:hover {
-        color: var(--grey-900) !important;
-        font-weight: 600 !important;
-      }
-    }
-
-    .tabTitle {
-      font-weight: 500;
-      color: var(--grey-700);
-      display: flex;
-      align-items: center;
-      height: 24px;
-      margin-top: var(--spacing-8);
-
-      > svg {
-        display: inline-block;
-        margin-right: 5px;
-      }
-
-      .count {
-        margin-left: var(--spacing-small);
-        display: inline-block;
-        border-radius: 8px;
-        font-weight: 500;
-        font-size: var(--font-size-small);
-        color: var(--primary-7) !important;
-        background-color: var(--primary-1) !important;
-        padding: 3px 6px !important;
-      }
-    }
-
-    .tabTitle:not:first-child {
-      margin-left: var(--spacing-8) !important;
-    }
-  }
 }
 
 .prNumber {

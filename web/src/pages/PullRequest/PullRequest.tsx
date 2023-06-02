@@ -5,16 +5,12 @@ import {
   Text,
   FontVariation,
   Tabs,
-  IconName,
-  HarnessIcons,
   Layout,
   Button,
   ButtonVariation,
   ButtonSize,
   TextInput,
-  useToaster,
-  Spacing,
-  PaddingProps
+  useToaster
 } from '@harness/uicore'
 import { useGet, useMutate } from 'restful-react'
 import { Render, Match, Truthy, Else } from 'react-jsx-match'
@@ -27,6 +23,7 @@ import { voidFn, getErrorMessage } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { TypesPullReq, TypesPullReqStats, TypesRepository } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
+import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
 import { Checks } from './Checks/Checks'
@@ -140,7 +137,7 @@ export default function PullRequest() {
         <Render when={repoMetadata && prData}>
           <>
             <PullRequestMetaLine repoMetadata={repoMetadata as TypesRepository} {...prData} />
-            <Container className={css.tabsContainer}>
+            <Container className={tabContainerCSS.tabsContainer} style={{ minHeight: 'calc(100vh - 97px)' }}>
               <Tabs
                 id="prTabs"
                 defaultSelectedTabId={activeTab}
@@ -158,7 +155,7 @@ export default function PullRequest() {
                   {
                     id: PullRequestSection.CONVERSATION,
                     title: (
-                      <TabTitle
+                      <TabTitleWithCount
                         icon={CodeIcon.Chat}
                         title={getString('conversation')}
                         count={prData?.stats?.conversations || 0}
@@ -176,7 +173,7 @@ export default function PullRequest() {
                   {
                     id: PullRequestSection.COMMITS,
                     title: (
-                      <TabTitle
+                      <TabTitleWithCount
                         icon={CodeIcon.Commit}
                         title={getString('commits')}
                         count={prData?.stats?.commits || 0}
@@ -195,7 +192,7 @@ export default function PullRequest() {
                   {
                     id: PullRequestSection.FILES_CHANGED,
                     title: (
-                      <TabTitle
+                      <TabTitleWithCount
                         icon={CodeIcon.File}
                         title={getString('filesChanged')}
                         count={prData?.stats?.files_changed || 0}
@@ -221,7 +218,7 @@ export default function PullRequest() {
                     id: PullRequestSection.CHECKS,
                     disabled: window.location.hostname !== 'localhost', // TODO: Remove when API supports checks
                     title: (
-                      <TabTitle
+                      <TabTitleWithCount
                         icon={CodeIcon.ChecksSuccess}
                         title={getString('checks')}
                         count={0} // TODO: Count for checks when API supports it
@@ -323,29 +320,6 @@ const PullRequestTitle: React.FC<PullRequestTitleProps> = ({ repoMetadata, title
         </Else>
       </Match>
     </Layout.Horizontal>
-  )
-}
-
-const TabTitle: React.FC<{ icon: IconName; title: string; count?: number; padding?: Spacing | PaddingProps }> = ({
-  icon,
-  title,
-  count,
-  padding
-}) => {
-  // Icon inside a tab got overriden-and-looked-bad styles from UICore
-  // on hover. Use icon directly instead
-  const TabIcon: React.ElementType = HarnessIcons[icon]
-
-  return (
-    <Text className={css.tabTitle} padding={padding}>
-      <TabIcon width={16} height={16} />
-      {title}
-      <Render when={count}>
-        <Text inline className={css.count}>
-          {count}
-        </Text>
-      </Render>
-    </Text>
   )
 }
 

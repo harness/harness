@@ -125,7 +125,7 @@ export const findReadmeInfo = (content: Nullable<OpenapiGetContentOutput>): Open
 export const findMarkdownInfo = (content: Nullable<OpenapiGetContentOutput>): OpenapiContentInfo | undefined =>
   content?.type === GitContentType.FILE && /.md$/.test(content?.name?.toLowerCase() || '') ? content : undefined
 
-export const isRefATag = (gitRef: string) => gitRef.includes(REFS_TAGS_PREFIX)
+export const isRefATag = (gitRef: string | undefined) => gitRef?.includes(REFS_TAGS_PREFIX) || false
 
 /**
  * Make a diff refs string to use in URL.

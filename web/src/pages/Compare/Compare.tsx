@@ -1,22 +1,38 @@
 import { noop } from 'lodash-es'
-import React, { useState } from 'react'
-import { Container, PageBody, NoDataCard, Tabs } from '@harness/uicore'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  Container,
+  PageBody,
+  NoDataCard,
+  Tabs,
+  Layout,
+  TextInput,
+  Text,
+  FontVariation,
+  useToaster,
+  Color,
+  StringSubstitute
+} from '@harness/uicore'
+import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
-import { useGet } from 'restful-react'
+import { useGet, useMutate } from 'restful-react'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT, showToaster } from 'utils/Utils'
 import { Images } from 'images'
-import { makeDiffRefs } from 'utils/GitUtils'
+import { CodeIcon, isRefATag, makeDiffRefs } from 'utils/GitUtils'
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { Changes } from 'components/Changes/Changes'
-import type { TypesCommit } from 'services/code'
+import type { OpenapiCreatePullReqRequest, TypesCommit, TypesPullReq } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
-import { CompareContentHeader } from './CompareContentHeader/CompareContentHeader'
+import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
+import type { DiffFileEntry } from 'utils/types'
+import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
+import { CompareContentHeader, PRCreationType } from './CompareContentHeader/CompareContentHeader'
 import css from './Compare.module.scss'
 
 export default function Compare() {
@@ -43,6 +59,117 @@ export default function Compare() {
     },
     lazy: !repoMetadata
   })
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [diffs, setDiffs] = useState<DiffFileEntry[]>([])
+  const { showError } = useToaster()
+  const { mutate: createPullRequest, loading: creatingInProgress } = useMutate<TypesPullReq>({
+    verb: 'POST',
+    path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq`
+  })
+  const onCreatePullRequest = useCallback(
+    (creationType: PRCreationType) => {
+      if (!sourceGitRef || !targetGitRef) {
+        return showToaster(getString('prMustSelectSourceAndTargetBranches'))
+      }
+
+      if (isRefATag(sourceGitRef) || isRefATag(targetGitRef)) {
+        return showToaster(getString('pullMustBeMadeFromBranches'))
+      }
+
+      if (sourceGitRef === targetGitRef) {
+        return showToaster(getString('prSourceAndTargetMustBeDifferent'))
+      }
+
+      if (!title) {
+        return showToaster(getString('pr.titleIsRequired'))
+      }
+
+      if (!description) {
+        return showToaster(getString('pr.descIsRequired'))
+      }
+
+      const pullReqUrl = window.location.href.split('compare')?.[0]
+      const payload: OpenapiCreatePullReqRequest = {
+        target_branch: targetGitRef,
+        source_branch: sourceGitRef,
+        title: title,
+        description: description,
+        is_draft: creationType === PRCreationType.DRAFT
+      }
+
+      try {
+        createPullRequest(payload)
+          .then(data => {
+            history.replace(
+              routes.toCODEPullRequest({
+                repoPath: repoMetadata?.path as string,
+                pullRequestId: String(data.number)
+              })
+            )
+          })
+          .catch(_error => {
+            if (_error.status === 409) {
+              showError(
+                <StringSubstitute
+                  str={getString('pullRequestalreadyExists')}
+                  vars={{
+                    prLink: (
+                      <a
+                        className={css.hyperlink}
+                        color={Color.PRIMARY_7}
+                        href={`${pullReqUrl}${_error.data.values.number}`}>
+                        {` #${_error.data.values.number} ${_error.data.values.title} `}
+                      </a>
+                    )
+                  }}
+                />
+              )
+            } else {
+              showError(getErrorMessage(_error), 0, 'pr.failedToCreate')
+            }
+          })
+      } catch (exception) {
+        showError(getErrorMessage(exception), 0, 'pr.failedToCreate')
+      }
+    },
+    [
+      createPullRequest,
+      description,
+      showError,
+      sourceGitRef,
+      getString,
+      targetGitRef,
+      title,
+      history,
+      routes,
+      repoMetadata
+    ]
+  )
+  const ChangesTab = useMemo(() => {
+    if (repoMetadata) {
+      return (
+        <Container className={css.changesContainer}>
+          <Changes
+            readOnly
+            repoMetadata={repoMetadata}
+            targetBranch={targetGitRef}
+            sourceBranch={sourceGitRef}
+            emptyTitle={getString('noChanges')}
+            emptyMessage={getString('noChangesCompare')}
+            onCommentUpdate={noop}
+            onDataReady={setDiffs}
+          />
+        </Container>
+      )
+    }
+  }, [repoMetadata, sourceGitRef, targetGitRef, getString])
+
+  useEffect(() => {
+    if (commits?.length) {
+      setTitle(commits[0].title as string)
+    }
+  }, [commits])
 
   return (
     <Container className={css.main}>
@@ -51,11 +178,12 @@ export default function Compare() {
         title={getString('comparingChanges')}
         dataTooltipId="comparingChanges"
       />
-      <PageBody error={getErrorMessage(error || commitsError)} retryOnError={voidFn(refetch)}>
+      <PageBody error={getErrorMessage(error || commitsError)} retryOnError={voidFn(refetch)} className={css.pageBody}>
         <LoadingSpinner visible={loading} />
 
         {repoMetadata && (
           <CompareContentHeader
+            loading={creatingInProgress}
             repoMetadata={repoMetadata}
             targetGitRef={targetGitRef}
             onTargetGitRefChanged={gitRef => {
@@ -77,6 +205,7 @@ export default function Compare() {
                 })
               )
             }}
+            onCreatePullRequestClick={onCreatePullRequest}
           />
         )}
 
@@ -87,16 +216,66 @@ export default function Compare() {
         )}
 
         {!!repoMetadata && !!targetGitRef && !!sourceGitRef && (
-          <Container className={css.tabsContainer}>
+          <Container className={cx(css.tabsContainer, tabContainerCSS.tabsContainer)}>
             <Tabs
-              id="branchesTags"
-              defaultSelectedTabId="diff"
+              id="prComparing"
+              defaultSelectedTabId="general"
               large={false}
               onChange={() => setPage(1)}
               tabList={[
                 {
+                  id: 'general',
+                  title: <TabTitleWithCount icon={CodeIcon.Chat} title={getString('general')} count={0} />,
+                  panel: (
+                    <Container className={css.generalTab}>
+                      <Layout.Vertical spacing="small" padding="xxlarge">
+                        <Container>
+                          <Layout.Vertical spacing="small">
+                            <Text font={{ variation: FontVariation.SMALL_BOLD }}>{getString('title')} *</Text>
+                            <TextInput
+                              defaultValue={title}
+                              onInput={e => {
+                                setTitle((e.currentTarget.value || '').trim())
+                              }}
+                              placeholder={getString('pr.titlePlaceHolder')}
+                            />
+                          </Layout.Vertical>
+                        </Container>
+                        <Container className={css.markdownContainer}>
+                          <Layout.Vertical spacing="small">
+                            <Text font={{ variation: FontVariation.SMALL_BOLD }}>{getString('description')} *</Text>
+                            <MarkdownEditorWithPreview
+                              value={description}
+                              onChange={setDescription}
+                              hideButtons
+                              autoFocusAndPositioning={true}
+                              i18n={{
+                                placeHolder: getString('pr.descriptionPlaceHolder'),
+                                tabEdit: getString('write'),
+                                tabPreview: getString('preview'),
+                                save: getString('save'),
+                                cancel: getString('cancel')
+                              }}
+                              editorHeight="100%"
+                            />
+                          </Layout.Vertical>
+                        </Container>
+                      </Layout.Vertical>
+                      {/** Fake rendering Changes Tab to get changes count - no API has it now */}
+                      <Container style={{ display: 'none' }}>{ChangesTab}</Container>
+                    </Container>
+                  )
+                },
+                {
                   id: 'commits',
-                  title: getString('commits'),
+                  title: (
+                    <TabTitleWithCount
+                      icon={CodeIcon.Commit}
+                      title={getString('commits')}
+                      count={commits?.length || 0}
+                      padding={{ left: 'medium' }}
+                    />
+                  ),
                   panel: (
                     <Container padding="xlarge">
                       <CommitsView
@@ -111,20 +290,15 @@ export default function Compare() {
                 },
                 {
                   id: 'diff',
-                  title: getString('filesChanged'),
-                  panel: (
-                    <Container className={css.changesContainer}>
-                      <Changes
-                        readOnly
-                        repoMetadata={repoMetadata}
-                        targetBranch={targetGitRef}
-                        sourceBranch={sourceGitRef}
-                        emptyTitle={getString('noChanges')}
-                        emptyMessage={getString('noChangesCompare')}
-                        onCommentUpdate={noop} // TODO: Update tab stats
-                      />
-                    </Container>
-                  )
+                  title: (
+                    <TabTitleWithCount
+                      icon={CodeIcon.File}
+                      title={getString('filesChanged')}
+                      count={diffs?.length || 0}
+                      padding={{ left: 'medium' }}
+                    />
+                  ),
+                  panel: ChangesTab
                 }
               ]}
             />

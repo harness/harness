@@ -147,6 +147,8 @@ prefixBase: 'base: '
 prefixCompare: 'compare: '
 selectBranchPlaceHolder: select a branch here
 pullMustBeMadeFromBranches: Pull Request can only be created from two diffrent branches
+prMustSelectSourceAndTargetBranches: You must select source and target branches
+prSourceAndTargetMustBeDifferent: Source and target branches must be different
 payloadUrl: 'Payload URL'
 samplePayloadUrl: 'https://examples.com/harness'
 payloadUrlLabel: 'Payload URL'
@@ -177,7 +179,7 @@ pr:
   cantMerge: Can't be merged. You can still create the pull request.
   failedToCreate: Failed to create Pull Request.
   titlePlaceHolder: Enter the pull request title
-  descriptionPlaceHolder: Leave pull request comment here
+  descriptionPlaceHolder: Add Pull Request description here.
   modalTitle: Open a pull request
   createDraftPR: Create draft pull request
   metaLine: '{user} wants to merge {commits} {commitsCount|1:commit,commits} into {target} from {source}'
@@ -232,6 +234,11 @@ pr:
   forceMergeWithUnresolvedComment: This pull request has {unrsolvedComment} unresolved {unrsolvedComment|1:comment,comments}. As an administrator, you can still merge it.\nAre you sure you want to force merge it?
   notMergeableWithUnresolvedComment: This pull request has {unrsolvedComment} unresolved {unrsolvedComment|1:comment,comments}. Please resolve them before merging.
   outdated: Outdated
+  titleIsRequired: Pull Request title is required.
+  descIsRequired: Pull Request description is required.
+  draftOpenForReview:
+    title: Ready for review
+    desc: Open this pull request for review.
 prState:
   draftHeading: This pull request is still a work in progress
   draftDesc: Draft pull requests cannot be merged.
@@ -344,9 +351,7 @@ error404Text: This is not the web page that you are looking for
 branchDoesNotHaveFile: The "{repoName}" repository doesn't contain the "{fileName}" path in the "{branchName}" branch
 webhookDialogTitle: Turn ON/OFF Webhook
 webhookDialogContent: Please confirm you want to on/off this webhook
-prExists: Pull request [#prNumber prTitle](prUrl) already exists
-pullRequest: Pull request
-alreadyExists: already exists
+pullRequestalreadyExists: Pull request {prLink} already exists.
 makeRequired: Make Required
 makeOptional: Make Optional
 remove: Remove
