@@ -21,16 +21,13 @@ export function MarkdownViewer({ source, className, maxHeight }: MarkdownViewerP
   const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM_LEVEL)
   const [imgEvent, setImageEvent] = useState<string[]>([])
   const refRootHref = useMemo(() => document.getElementById('repository-ref-root')?.getAttribute('href'), [])
+
   const interceptClickEventOnViewerContainer = useCallback(
     event => {
+      const imgTags = document.querySelectorAll('img');
       const { target } = event
-      const imgPattern = /!\[.*?\]\((.*?)\)/;
-      const imageArray = source.split('\n').filter(string => imgPattern.test(string))
-      const imageStringArray = imageArray.map(string => {
-        const match = string.match(imgPattern);
-        return match ? match[1] : '';
-      })
-
+      const imageArray= Array.from(imgTags)
+      const imageStringArray= imageArray.filter(object=>object.src && !object.className).map(img=>img.src)
       setImageEvent(imageStringArray)
 
       if (target?.tagName?.toLowerCase() === 'a') {
