@@ -1,5 +1,5 @@
 import { useHistory } from 'react-router-dom'
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { Container } from '@harness/uicore'
 import cx from 'classnames'
 import MarkdownPreview from '@uiw/react-markdown-preview'
@@ -21,14 +21,17 @@ export function MarkdownViewer({ source, className, maxHeight }: MarkdownViewerP
   const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM_LEVEL)
   const [imgEvent, setImageEvent] = useState<string[]>([])
   const refRootHref = useMemo(() => document.getElementById('repository-ref-root')?.getAttribute('href'), [])
+  const ref = useRef<HTMLDivElement>()
 
   const interceptClickEventOnViewerContainer = useCallback(
     event => {
-      const imgTags = document.querySelectorAll('img');
+      const imgTags = ref?.current?.querySelectorAll('img');
       const { target } = event
-      const imageArray= Array.from(imgTags)
-      const imageStringArray= imageArray.filter(object=>object.src && !object.className).map(img=>img.src)
-      setImageEvent(imageStringArray)
+      const imageArray= imgTags&&Array.from(imgTags)
+      const imageStringArray= imageArray&& imageArray.filter(object=>object.src && !object.className).map(img=>img.src)
+      if (imageStringArray){
+        setImageEvent(imageStringArray)
+      }
 
       if (target?.tagName?.toLowerCase() === 'a') {
         const href = target.getAttribute('href')
@@ -64,7 +67,9 @@ export function MarkdownViewer({ source, className, maxHeight }: MarkdownViewerP
     <Container
       className={cx(css.main, className, { [css.withMaxHeight]: maxHeight && maxHeight > 0 })}
       onClick={interceptClickEventOnViewerContainer}
-      style={{ maxHeight: maxHeight }}>
+      style={{ maxHeight: maxHeight }} 
+      ref={ref}
+      >
       <MarkdownPreview
         source={source}
         skipHtml={true}
