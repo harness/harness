@@ -24,11 +24,11 @@ export function MarkdownViewer({ source, className, maxHeight }: MarkdownViewerP
   const interceptClickEventOnViewerContainer = useCallback(
     event => {
       const { target } = event
-
-      const imageArray = source.split('\n').filter(string => string.includes('![image]'))
+      const imgPattern = /!\[.*?\]\((.*?)\)/;
+      const imageArray = source.split('\n').filter(string => imgPattern.test(string))
       const imageStringArray = imageArray.map(string => {
-        const imageSrc = string.split('![image]')[1]
-        return imageSrc.slice(1, imageSrc.length - 1)
+        const match = string.match(imgPattern);
+        return match ? match[1] : '';
       })
 
       setImageEvent(imageStringArray)

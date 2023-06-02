@@ -44,7 +44,7 @@ export default function RepositoryCommits() {
 
   useEffect(() => {
     updateQueryParams({ page: page.toString() })
-  }, [setPage])
+  }, [setPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Container className={css.main}>

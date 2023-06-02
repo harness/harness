@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { Container } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
-import { noop } from 'lodash-es'
 import type { RepoCommitTag } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
-import { LIST_FETCHING_LIMIT, permissionProps, voidFn,PageBrowserProps } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT, permissionProps,PageBrowserProps } from 'utils/Utils'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import { useAppContext } from 'AppContext'
@@ -51,7 +50,7 @@ export function RepositoryTagsContent({ repoMetadata }: Pick<GitInfoProps, 'repo
 
   useEffect(() => {
     updateQueryParams({ page: page.toString() })
-  }, [setPage])
+  }, [setPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useShowRequestError(error)
   const space = useGetSpaceParam()

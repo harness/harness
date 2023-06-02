@@ -54,7 +54,7 @@ export default function PullRequests() {
 
   useEffect(() => {
     updateQueryParams({ page: page.toString() })
-  }, [setPage])
+  }, [setPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const {

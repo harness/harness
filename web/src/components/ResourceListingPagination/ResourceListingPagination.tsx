@@ -40,7 +40,7 @@ export const ResourceListingPagination: React.FC<ResourceListingPaginationProps>
       setPage(_page)
       updateQueryParams({ page: _page.toString() })
     },
-    [setPage, scrollTop]
+    [setPage, scrollTop] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   return totalItems ? (

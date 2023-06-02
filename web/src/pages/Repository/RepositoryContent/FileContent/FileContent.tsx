@@ -29,10 +29,10 @@ import { useCommitModal } from 'components/CommitModalButton/CommitModalButton'
 import { useStrings } from 'framework/strings'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { PlainButton } from 'components/PlainButton/PlainButton'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { Readme } from '../FolderContent/Readme'
 import { GitBlame } from './GitBlame'
 import css from './FileContent.module.scss'
-import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 
 enum FileSection {
   CONTENT = 'content',
@@ -104,7 +104,7 @@ export function FileContent({
       return { disabled: perms.disabled, tooltip: perms.tooltip }
     }
     return { disabled: isRefATag(gitRef) || false, tooltip: undefined }
-  }, [permPushResult, gitRef])
+  }, [permPushResult, gitRef]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Container className={css.tabsContainer}>

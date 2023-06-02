@@ -64,7 +64,7 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
       return { disabled: perms.disabled, tooltip: perms.tooltip }
     }
     return { disabled: (gitRef && isRefATag(gitRef)) || false, tooltip: undefined }
-  }, [permPushResult, gitRef])
+  }, [permPushResult, gitRef]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Container

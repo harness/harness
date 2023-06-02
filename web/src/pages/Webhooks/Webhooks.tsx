@@ -70,7 +70,7 @@ export default function Webhooks() {
   })
   useEffect(() => {
     updateQueryParams({ page: page.toString() })
-  }, [setPage])
+  }, [setPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const columns: Column<OpenapiWebhookType>[] = useMemo(
     () => [

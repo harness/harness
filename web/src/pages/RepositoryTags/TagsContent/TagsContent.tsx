@@ -201,7 +201,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
         }
       }
     ],
-    [
+    [ // eslint-disable-line react-hooks/exhaustive-deps
       getString,
       repoMetadata.default_branch,
       repoMetadata.path,
@@ -210,7 +210,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
       history,
       onDeleteSuccess,
       divergence
-    ]
+    ] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   return (
