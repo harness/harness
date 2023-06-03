@@ -25,11 +25,11 @@ export function MarkdownViewer({ source, className, maxHeight }: MarkdownViewerP
 
   const interceptClickEventOnViewerContainer = useCallback(
     event => {
-      const imgTags = ref?.current?.querySelectorAll('img');
+      const imgTags = ref?.current?.querySelector('.wmde-markdown')?.querySelectorAll("img")
       const { target } = event
-      const imageArray= imgTags&&Array.from(imgTags)
-      const imageStringArray= imageArray&& imageArray.filter(object=>object.src && !object.className).map(img=>img.src)
-      if (imageStringArray){
+      if (imgTags) {
+        const imageArray = Array.from(imgTags)
+        const imageStringArray = imageArray.filter(object => object.src && !object.className).map(img => img.src)
         setImageEvent(imageStringArray)
       }
 
@@ -67,9 +67,8 @@ export function MarkdownViewer({ source, className, maxHeight }: MarkdownViewerP
     <Container
       className={cx(css.main, className, { [css.withMaxHeight]: maxHeight && maxHeight > 0 })}
       onClick={interceptClickEventOnViewerContainer}
-      style={{ maxHeight: maxHeight }} 
-      ref={ref}
-      >
+      style={{ maxHeight: maxHeight }}
+      ref={ref}>
       <MarkdownPreview
         source={source}
         skipHtml={true}
