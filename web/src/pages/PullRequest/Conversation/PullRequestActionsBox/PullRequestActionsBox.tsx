@@ -133,7 +133,8 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
 
   const [mergeOption, setMergeOption] = useUserPreference<PRMergeOption>(
     UserPreference.PULL_REQUEST_MERGE_STRATEGY,
-    mergeOptions[1]
+    mergeOptions[1],
+    option => option.method !== 'close'
   )
   const [draftOption, setDraftOption] = useState<PRDraftOption>(draftOptions[0])
   const permPushResult = hooks?.usePermissionTranslate?.(

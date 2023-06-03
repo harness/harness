@@ -1,26 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  Container,
-  PageBody,
-  Text,
-  FontVariation,
-  Tabs,
-  Layout,
-  Button,
-  ButtonVariation,
-  ButtonSize,
-  TextInput,
-  useToaster
-} from '@harness/uicore'
-import { useGet, useMutate } from 'restful-react'
-import { Render, Match, Truthy, Else } from 'react-jsx-match'
+import { Container, PageBody, Tabs } from '@harness/uicore'
+import { useGet } from 'restful-react'
+import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { voidFn, getErrorMessage } from 'utils/Utils'
-import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
+import { CodeIcon } from 'utils/GitUtils'
 import type { TypesPullReq, TypesPullReqStats, TypesRepository } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
@@ -29,6 +17,7 @@ import { Conversation } from './Conversation/Conversation'
 import { Checks } from './Checks/Checks'
 import { Changes } from '../../components/Changes/Changes'
 import { PullRequestCommits } from './PullRequestCommits/PullRequestCommits'
+import { PullRequestTitle } from './PullRequestTitle'
 import css from './PullRequest.module.scss'
 
 export default function PullRequest() {
@@ -61,6 +50,7 @@ export default function PullRequest() {
     return loading || (prLoading && !prData)
   }, [loading, prLoading, prData])
   const [stats, setStats] = useState<TypesPullReqStats>()
+  const [showEditDescription, setShowEditDescription] = useState(false)
   const prHasChanged = useMemo(() => {
     if (stats && prData?.stats) {
       if (
@@ -74,6 +64,9 @@ export default function PullRequest() {
     }
     return false
   }, [prData?.stats, stats])
+  const onAddDescriptionClick = useCallback(() => {
+    setShowEditDescription(true)
+  }, [])
 
   useEffect(
     function setStatsIfNotSet() {
@@ -120,7 +113,13 @@ export default function PullRequest() {
     <Container className={css.main}>
       <RepositoryPageHeader
         repoMetadata={repoMetadata}
-        title={repoMetadata && prData ? <PullRequestTitle repoMetadata={repoMetadata} {...prData} /> : ''}
+        title={
+          repoMetadata && prData ? (
+            <PullRequestTitle repoMetadata={repoMetadata} {...prData} onAddDescriptionClick={onAddDescriptionClick} />
+          ) : (
+            ''
+          )
+        }
         dataTooltipId="repositoryPullRequests"
         extraBreadcrumbLinks={
           repoMetadata && [
@@ -165,8 +164,13 @@ export default function PullRequest() {
                       <Conversation
                         repoMetadata={repoMetadata as TypesRepository}
                         pullRequestMetadata={prData as TypesPullReq}
-                        onCommentUpdate={voidFn(refetchPullRequest)}
+                        onCommentUpdate={() => {
+                          setShowEditDescription(false)
+                          refetchPullRequest()
+                        }}
                         prHasChanged={prHasChanged}
+                        showEditDescription={showEditDescription}
+                        onCancelEditDescription={() => setShowEditDescription(false)}
                       />
                     )
                   },
@@ -234,92 +238,6 @@ export default function PullRequest() {
         </Render>
       </PageBody>
     </Container>
-  )
-}
-
-interface PullRequestTitleProps extends TypesPullReq, Pick<GitInfoProps, 'repoMetadata'> {
-  onSaveDone?: (newTitle: string) => Promise<boolean>
-}
-
-const PullRequestTitle: React.FC<PullRequestTitleProps> = ({ repoMetadata, title, number, description }) => {
-  const [original, setOriginal] = useState(title)
-  const [val, setVal] = useState(title)
-  const [edit, setEdit] = useState(false)
-  const { getString } = useStrings()
-  const { showError } = useToaster()
-  const { mutate } = useMutate({
-    verb: 'PATCH',
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${number}`
-  })
-  const submitChange = useCallback(() => {
-    mutate({
-      title: val,
-      description
-    })
-      .then(() => {
-        setEdit(false)
-        setOriginal(val)
-      })
-      .catch(exception => showError(getErrorMessage(exception), 0))
-  }, [description, val, mutate, showError])
-
-  return (
-    <Layout.Horizontal spacing="xsmall" className={css.prTitle}>
-      <Match expr={edit}>
-        <Truthy>
-          <Container>
-            <Layout.Horizontal spacing="small">
-              <TextInput
-                wrapperClassName={css.input}
-                value={val}
-                onFocus={event => event.target.select()}
-                onInput={event => setVal(event.currentTarget.value)}
-                autoFocus
-                onKeyDown={event => {
-                  switch (event.key) {
-                    case 'Enter':
-                      submitChange()
-                      break
-                    case 'Escape': // does not work, maybe TextInput cancels ESC?
-                      setEdit(false)
-                      break
-                  }
-                }}
-              />
-              <Button
-                variation={ButtonVariation.PRIMARY}
-                text={getString('save')}
-                size={ButtonSize.MEDIUM}
-                disabled={(val || '').trim().length === 0 || title === val}
-                onClick={submitChange}
-              />
-              <Button
-                variation={ButtonVariation.TERTIARY}
-                text={getString('cancel')}
-                size={ButtonSize.MEDIUM}
-                onClick={() => setEdit(false)}
-              />
-            </Layout.Horizontal>
-          </Container>
-        </Truthy>
-        <Else>
-          <>
-            <Text tag="h1" font={{ variation: FontVariation.H4 }}>
-              {original} <span className={css.prNumber}>#{number}</span>
-            </Text>
-            <Button
-              variation={ButtonVariation.ICON}
-              tooltip={getString('edit')}
-              tooltipProps={{ isDark: true, position: 'right' }}
-              size={ButtonSize.SMALL}
-              icon="code-edit"
-              className={css.btn}
-              onClick={() => setEdit(true)}
-            />
-          </>
-        </Else>
-      </Match>
-    </Layout.Horizontal>
   )
 }
 

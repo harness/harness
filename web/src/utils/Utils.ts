@@ -115,7 +115,7 @@ export function formatNumber(num: number | bigint): string {
  * support (hit Enter/Space will trigger click event)
  */
 export const ButtonRoleProps = {
-  onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+  onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar' || e.which === 13 || e.which === 32) {
       ;(e.target as unknown as { click: () => void })?.click?.()
     }

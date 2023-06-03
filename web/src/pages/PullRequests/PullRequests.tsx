@@ -9,7 +9,8 @@ import {
   StringSubstitute,
   Icon,
   FontVariation,
-  FlexExpander
+  FlexExpander,
+  Utils
 } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
@@ -30,6 +31,8 @@ import type { TypesPullReq, TypesRepository } from 'services/code'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
+import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
+import { GitRefLink } from 'components/GitRefLink/GitRefLink'
 import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequestStateLabel'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { ExecutionStatusLabel } from 'components/ExecutionStatusLabel/ExecutionStatusLabel'
@@ -49,7 +52,7 @@ export default function PullRequests() {
   const { updateQueryParams } = useUpdateQueryParams()
 
   const pageBrowser = useQueryParams<PageBrowserProps>()
-  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page): 1
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
 
   useEffect(() => {
@@ -97,7 +100,7 @@ export default function PullRequests() {
             <Layout.Horizontal className={css.titleRow} spacing="medium">
               <PullRequestStateLabel iconSize={22} data={row.original} iconOnly />
               <Container padding={{ left: 'small' }}>
-                <Layout.Vertical spacing="small">
+                <Layout.Vertical spacing="xsmall">
                   <Text color={Color.GREY_800} className={css.title}>
                     {row.original.title}
                     <Icon
@@ -110,29 +113,55 @@ export default function PullRequests() {
                       {row.original.stats?.conversations}
                     </Text>
                   </Text>
-                  <Text color={Color.GREY_500} font={{ size: 'small' }}>
-                    <StringSubstitute
-                      str={getString('pr.statusLine')}
-                      vars={{
-                        state: <strong className={css.state}>{row.original.state}</strong>,
-                        number: <Text inline>{row.original.number}</Text>,
-                        time: (
-                          <strong>
-                            <ReactTimeago
-                              date={
-                                (row.original.state == 'merged' ? row.original.merged : row.original.created) as number
-                              }
-                            />
-                          </strong>
-                        ),
-                        user: <strong>{row.original.author?.display_name}</strong>
-                      }}
-                    />
-                  </Text>
+                  <Container>
+                    <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
+                      <Text color={Color.GREY_500} font={{ size: 'small' }}>
+                        <StringSubstitute
+                          str={getString('pr.statusLine')}
+                          vars={{
+                            state: <strong className={css.state}>{row.original.state}</strong>,
+                            number: <Text inline>{row.original.number}</Text>,
+                            time: (
+                              <strong>
+                                <ReactTimeago
+                                  date={
+                                    (row.original.state == 'merged'
+                                      ? row.original.merged
+                                      : row.original.created) as number
+                                  }
+                                />
+                              </strong>
+                            ),
+                            user: <strong>{row.original.author?.display_name}</strong>
+                          }}
+                        />
+                      </Text>
+                      <PipeSeparator height={10} />
+                      <Container>
+                        <Layout.Horizontal spacing="xsmall" style={{ alignItems: 'center' }} onClick={Utils.stopEvent}>
+                          <GitRefLink
+                            text={row.original.target_branch as string}
+                            url={routes.toCODERepository({
+                              repoPath: repoMetadata?.path as string,
+                              gitRef: row.original.target_branch
+                            })}
+                          />
+                          <Text color={Color.GREY_500}>←</Text>
+                          <GitRefLink
+                            text={row.original.source_branch as string}
+                            url={routes.toCODERepository({
+                              repoPath: repoMetadata?.path as string,
+                              gitRef: row.original.source_branch
+                            })}
+                          />
+                        </Layout.Horizontal>
+                      </Container>
+                    </Layout.Horizontal>
+                  </Container>
                 </Layout.Vertical>
               </Container>
               <FlexExpander />
-              {/* fix state when api is fully implemented */}
+              {/* TODO: Pass proper state when check api is fully implemented */}
               <ExecutionStatusLabel data={{ state: 'success' }} />
             </Layout.Horizontal>
           )

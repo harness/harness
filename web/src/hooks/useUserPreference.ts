@@ -8,7 +8,11 @@ export enum UserPreference {
   PULL_REQUEST_CREATION_OPTION = 'PULL_REQUEST_CREATION_OPTION'
 }
 
-export function useUserPreference<T = string>(key: UserPreference, defaultValue: T): [T, (val: T) => void] {
+export function useUserPreference<T = string>(
+  key: UserPreference,
+  defaultValue: T,
+  filter: (val: T) => boolean = () => true
+): [T, (val: T) => void] {
   const prefKey = `CODE_MOD_USER_PREF__${key}`
   const convert = useCallback(
     val => {
@@ -40,14 +44,16 @@ export function useUserPreference<T = string>(key: UserPreference, defaultValue:
   const savePreference = useCallback(
     (val: T) => {
       try {
-        localStorage[prefKey] = Array.isArray(val) || typeof val === 'object' ? JSON.stringify(val) : val
+        if (filter(val)) {
+          localStorage[prefKey] = Array.isArray(val) || typeof val === 'object' ? JSON.stringify(val) : val
+        }
       } catch (exception) {
         // eslint-disable-next-line no-console
         console.error('useUserPreference: Failed to stringify object', val)
       }
       setPreference(val)
     },
-    [prefKey]
+    [prefKey, filter]
   )
 
   return [preference, savePreference]

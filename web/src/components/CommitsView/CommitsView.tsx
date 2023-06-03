@@ -27,7 +27,7 @@ import type { CODERoutes } from 'RouteDefinitions'
 import css from './CommitsView.module.scss'
 
 interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
-  commits: TypesCommit[]
+  commits: TypesCommit[] | null
   emptyTitle: string
   emptyMessage: string
   prHasChanged?: boolean
@@ -116,7 +116,7 @@ export function CommitsView({
           />
         )}
       </Layout.Horizontal>
-      {!!commits.length &&
+      {!!commits?.length &&
         Object.entries(commitsGroupedByDate).map(([date, commitsByDate]) => {
           return (
             <ThreadSection
