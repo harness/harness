@@ -85,16 +85,12 @@ export default function Compare() {
         return showToaster(getString('pr.titleIsRequired'))
       }
 
-      if (!description) {
-        return showToaster(getString('pr.descIsRequired'))
-      }
-
       const pullReqUrl = window.location.href.split('compare')?.[0]
       const payload: OpenapiCreatePullReqRequest = {
         target_branch: targetGitRef,
         source_branch: sourceGitRef,
         title: title,
-        description: description,
+        description: description || '',
         is_draft: creationType === PRCreationType.DRAFT
       }
 
@@ -243,7 +239,7 @@ export default function Compare() {
                         </Container>
                         <Container className={css.markdownContainer}>
                           <Layout.Vertical spacing="small">
-                            <Text font={{ variation: FontVariation.SMALL_BOLD }}>{getString('description')} *</Text>
+                            <Text font={{ variation: FontVariation.SMALL_BOLD }}>{getString('description')}</Text>
                             <MarkdownEditorWithPreview
                               value={description}
                               onChange={setDescription}

@@ -27,13 +27,17 @@ import css from './Conversation.module.scss'
 export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   onCommentUpdate: () => void
   prHasChanged?: boolean
+  showEditDescription?: boolean
+  onCancelEditDescription: () => void
 }
 
 export const Conversation: React.FC<ConversationProps> = ({
   repoMetadata,
   pullRequestMetadata,
   onCommentUpdate,
-  prHasChanged
+  prHasChanged,
+  showEditDescription,
+  onCancelEditDescription
 }) => {
   const { getString } = useStrings()
   const { currentUser } = useAppContext()
@@ -116,6 +120,10 @@ export const Conversation: React.FC<ConversationProps> = ({
     onCommentUpdate()
     refetchActivities()
   }, [onCommentUpdate, refetchActivities])
+  const hasDescription = useMemo(
+    () => !!pullRequestMetadata?.description?.length,
+    [pullRequestMetadata?.description?.length]
+  )
 
   useEffect(() => {
     if (prHasChanged) {
@@ -136,12 +144,17 @@ export const Conversation: React.FC<ConversationProps> = ({
             <Layout.Horizontal>
               <Container width={`70%`}>
                 <Layout.Vertical spacing="xlarge">
-                  <DescriptionBox
-                    repoMetadata={repoMetadata}
-                    pullRequestMetadata={pullRequestMetadata}
-                    onCommentUpdate={onCommentUpdate}
-                  />
-                  <Layout.Horizontal className={css.sortContainer} padding={{ top: 'xxlarge', bottom: 'medium' }}>
+                  {(hasDescription || showEditDescription) && (
+                    <DescriptionBox
+                      repoMetadata={repoMetadata}
+                      pullRequestMetadata={pullRequestMetadata}
+                      onCommentUpdate={onCommentUpdate}
+                      onCancelEditDescription={onCancelEditDescription}
+                    />
+                  )}
+                  <Layout.Horizontal
+                    className={css.sortContainer}
+                    padding={{ top: hasDescription || showEditDescription ? 'xxlarge' : undefined, bottom: 'medium' }}>
                     <Container>
                       <Select
                         items={activityFilters}

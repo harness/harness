@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Container, useToaster } from '@harness/uicore'
 import cx from 'classnames'
 import { useMutate } from 'restful-react'
@@ -12,10 +12,15 @@ import { getErrorMessage } from 'utils/Utils'
 import type { ConversationProps } from './Conversation'
 import css from './Conversation.module.scss'
 
-export const DescriptionBox: React.FC<ConversationProps> = ({
+interface DescriptionBoxProps extends Omit<ConversationProps, 'onCancelEditDescription'> {
+  onCancelEditDescription: () => void
+}
+
+export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
   repoMetadata,
   pullRequestMetadata,
-  onCommentUpdate: refreshPullRequestMetadata
+  onCommentUpdate: refreshPullRequestMetadata,
+  onCancelEditDescription
 }) => {
   const [edit, setEdit] = useState(false)
   const [dirty, setDirty] = useState(false)
@@ -28,6 +33,10 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}`
   })
 
+  useEffect(() => {
+    setEdit(!pullRequestMetadata?.description?.length)
+  }, [pullRequestMetadata?.description?.length])
+
   return (
     <Container className={cx({ [css.box]: !edit, [css.desc]: !edit })}>
       <Container padding={!edit ? { left: 'small', bottom: 'small' } : undefined}>
@@ -37,14 +46,13 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
             onSave={value => {
               const payload: OpenapiUpdatePullReqRequest = {
                 title: pullRequestMetadata.title,
-                description: value
+                description: value || ''
               }
               mutate(payload)
                 .then(() => {
                   setContent(value)
                   setOriginalContent(value)
                   setEdit(false)
-                  // setUpdated(Date.now())
                   refreshPullRequestMetadata()
                 })
                 .catch(exception => showError(getErrorMessage(exception), 0, getString('pr.failedToUpdate')))
@@ -52,6 +60,7 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
             onCancel={() => {
               setContent(originalContent)
               setEdit(false)
+              onCancelEditDescription()
             }}
             setDirty={setDirty}
             i18n={{
@@ -62,6 +71,7 @@ export const DescriptionBox: React.FC<ConversationProps> = ({
               cancel: getString('cancel')
             }}
             editorHeight="400px"
+            autoFocusAndPositioning
           />
         )) || (
           <Container className={css.mdWrapper}>

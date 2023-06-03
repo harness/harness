@@ -43,7 +43,7 @@ export const PullRequestCommits: React.FC<CommitProps> = ({
   return (
     <PullRequestTabContentWrapper loading={loading} error={error} onRetry={voidFn(refetch)}>
       <CommitsView
-        commits={commits || []}
+        commits={commits}
         repoMetadata={repoMetadata}
         emptyTitle={getString('noCommits')}
         emptyMessage={getString('noCommitsPR')}
