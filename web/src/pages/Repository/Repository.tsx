@@ -16,7 +16,7 @@ import { EmptyRepositoryInfo } from './EmptyRepositoryInfo'
 import css from './Repository.module.scss'
 
 export default function Repository() {
-  const { gitRef, resourcePath, repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
+  const { gitRef, resourcePath, repoMetadata, error, loading, refetch, commitRef } = useGetRepositoryMetadata()
   const {
     data: resourceContent,
     error: resourceError,
@@ -82,6 +82,7 @@ export default function Repository() {
                     gitRef={gitRef}
                     resourcePath={resourcePath}
                     resourceContent={resourceContent}
+                    commitRef={commitRef}
                   />
                 )}
 

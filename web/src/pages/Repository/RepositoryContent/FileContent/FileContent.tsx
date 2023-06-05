@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import { useGet } from 'restful-react'
 import {
   ButtonSize,
   ButtonVariation,
@@ -13,7 +14,7 @@ import {
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
-import type { OpenapiContentInfo, RepoFileContent } from 'services/code'
+import type { OpenapiContentInfo, RepoFileContent, TypesCommit } from 'services/code'
 import {
   decodeGitContent,
   findMarkdownInfo,
@@ -22,33 +23,34 @@ import {
   isRefATag,
   makeDiffRefs
 } from 'utils/GitUtils'
-import { filenameToLanguage, permissionProps } from 'utils/Utils'
+import { filenameToLanguage, permissionProps, LIST_FETCHING_LIMIT, RenameDetails, FileSection } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { LatestCommitForFile } from 'components/LatestCommit/LatestCommit'
 import { useCommitModal } from 'components/CommitModalButton/CommitModalButton'
 import { useStrings } from 'framework/strings'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { PlainButton } from 'components/PlainButton/PlainButton'
+import { CommitsView } from 'components/CommitsView/CommitsView'
+import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { usePageIndex } from 'hooks/usePageIndex'
 import { Readme } from '../FolderContent/Readme'
 import { GitBlame } from './GitBlame'
+import RenameContentHistory from './RenameContentHistory'
 import css from './FileContent.module.scss'
-
-enum FileSection {
-  CONTENT = 'content',
-  BLAME = 'blame',
-  HISTORY = 'history'
-}
 
 export function FileContent({
   repoMetadata,
   gitRef,
   resourcePath,
-  resourceContent
-}: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent'>) {
+  resourceContent,
+  commitRef
+}: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent' | 'commitRef'>) {
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const history = useHistory()
+  const [activeTab, setActiveTab] = React.useState<string>(FileSection.CONTENT)
+
   const content = useMemo(
     () => decodeGitContent((resourceContent?.content as RepoFileContent)?.data),
     [resourceContent?.content]
@@ -105,13 +107,27 @@ export function FileContent({
     }
     return { disabled: isRefATag(gitRef) || false, tooltip: undefined }
   }, [permPushResult, gitRef]) // eslint-disable-line react-hooks/exhaustive-deps
+  
+  const [page, setPage] = usePageIndex()
+  const { data: commits, response } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/commitsV2`,
+    queryParams: {
+      limit: LIST_FETCHING_LIMIT,
+      page,
+      git_ref: commitRef || repoMetadata?.default_branch,
+      path: resourcePath
+    },
+    lazy: !repoMetadata
+  })
 
   return (
     <Container className={css.tabsContainer}>
       <Tabs
         id="fileTabs"
+        selectedTabId={activeTab}
         defaultSelectedTabId={FileSection.CONTENT}
         large={false}
+        onChange={(id: string) => setActiveTab(id)}
         tabList={[
           {
             id: FileSection.CONTENT,
@@ -232,6 +248,38 @@ export function FileContent({
                   <GitBlame repoMetadata={repoMetadata} resourcePath={resourcePath} gitRef={gitRef} key={key} />
                 ))}
               </Container>
+            )
+          },
+          {
+            id: FileSection.HISTORY,
+            title: getString('history'),
+            panel: (
+              <>
+                {repoMetadata && !!commits?.commits?.length && (
+                  <>
+                    <Container className={css.gitBlame}>
+                      <CommitsView
+                        commits={commits.commits}
+                        repoMetadata={repoMetadata}
+                        emptyTitle={getString('noCommits')}
+                        emptyMessage={getString('noCommitsMessage')}
+                        showFileHistoryIcons={true}
+                        gitRef={gitRef}
+                        resourcePath={resourcePath}
+                        setActiveTab={setActiveTab}
+                      />
+                      {/* <ThreadSection></ThreadSection> */}
+
+                      <ResourceListingPagination response={response} page={page} setPage={setPage} />
+                    </Container>
+                    <Container className={css.gitHistory}>
+                      {commits?.rename_details && repoMetadata ? (
+                        <RenameContentHistory rename_details={commits.rename_details} repoMetadata={repoMetadata} />
+                      ) : null}
+                    </Container>
+                  </>
+                )}
+              </>
             )
           }
         ]}
