@@ -17,7 +17,7 @@ const RenameContentHistory = (props: { rename_details: RenameDetails[], repoMeta
   const [fileVisibility, setFileVisibility] = useState(initialFileVisibility || {});
   const [page, setPage] = usePageIndex();
   const { data: commits, response, refetch: getCommitHistory } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/commitsV2`,
+    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     lazy: true
   });
 
