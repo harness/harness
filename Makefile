@@ -51,9 +51,17 @@ build: generate ## Build the all-in-one gitness binary
 	@echo "Building Gitness Server"
 	go build -ldflags=${LDFLAGS} -o ./gitness ./cmd/gitness
 
+build-pq: generate ## Build the all-in-one gitness binary
+	@echo "Building Gitness Server"
+	go build -tags=pq -ldflags=${LDFLAGS} -o ./gitness ./cmd/gitness
+
 harness-build: generate ## Build the all-in-one gitness binary for harness embedded mode
 	@echo "Building Gitness Server for Harness"
 	go build -tags=harness -ldflags=${LDFLAGS} -o ./gitness ./cmd/gitness
+
+harness-build-pq: generate ## Build the all-in-one gitness binary for harness embedded mode using postgres
+	@echo "Building Gitness Server for Harness"
+	go build -tags=harness,pq -ldflags=${LDFLAGS} -o ./gitness ./cmd/gitness
 
 build-gitrpc: generate ## Build the gitrpc binary
 	@echo "Building GitRPC Server"
@@ -101,12 +109,23 @@ test-env: stop ## Run test environment - this runs all services and the gitness 
 image: ## Build the gitness docker image
 	@echo "Building Gitness Image"
 	@docker build \
+			--secret id=npmrc,src=${HOME}/.npmrc \
 			--build-arg GITNESS_VERSION=latest \
 			--build-arg GIT_COMMIT=${GIT_COMMIT} \
 			--build-arg GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN} \
 			--platform linux/amd64 \
 			 -t gitness:latest \
 			 -f ./docker/Dockerfile .
+
+gitrpc-image: ## Build the gitness gitrpc docker image
+	@echo "Building Gitness GitRPC Image"
+	@docker build \
+			--build-arg GITNESS_VERSION=latest \
+			--build-arg GIT_COMMIT=${GIT_COMMIT} \
+			--build-arg GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN} \
+			--platform linux/amd64 \
+			 -t gitness-gitrpc:latest \
+			 -f ./docker/Dockerfile.gitrpc .
 
 e2e: generate test-env ## Run e2e tests
 	chmod +x wait-for-gitness.sh && ./wait-for-gitness.sh

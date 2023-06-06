@@ -1,4 +1,23 @@
-### Build operator
+### Build web
+FROM node:16 as web
+
+# Create app directory
+WORKDIR /usr/src/app
+
+COPY web/package.json ./
+COPY web/yarn.lock ./
+
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc yarn
+
+# If you are building your code for production
+# RUN npm ci --omit=dev
+
+COPY ./web .
+
+RUN yarn build && \
+    yarn cache clean
+
+### Build gitness
 FROM golang:1.19-alpine as builder
 
 RUN apk update \
@@ -21,17 +40,28 @@ RUN make dep
 RUN make tools
 # COPY the source code as the last step
 COPY . .
-# set required build flags
-ENV CGO_ENABLED=1 \
-    GOOS=linux \
-    GOARCH=amd64
+
+COPY --from=web /usr/src/app/dist /app/web/dist
 
 # build
 ARG GIT_COMMIT
 ARG GITNESS_VERSION_MAJOR
 ARG GITNESS_VERSION_MINOR
 ARG GITNESS_VERSION_PATCH
-RUN make harness-build
+
+# set required build flags
+ARG sqlite
+RUN if [[ -z "$sqlite" ]] ; then \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64 \
+    make harness-build-pq \
+; else \
+    CGO_ENABLED=1 \
+    GOOS=linux \
+    GOARCH=amd64 \
+    make harness-build \
+; fi
 
 ### Pull CA Certs
 FROM alpine:latest as cert-image
@@ -39,21 +69,20 @@ FROM alpine:latest as cert-image
 RUN apk --update add ca-certificates
 
 ### Create final image
-FROM alpine/git:2.36.3 as final
+FROM us.gcr.io/platform-205701/ubi/ubi-go:8.7 as final
 
-RUN adduser -u 1001 -D -h /app iamuser
+USER root
+RUN mkdir /app && chown nobody:nobody /app
 
+USER nobody
 WORKDIR /app
 
-COPY --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=builder /app/gitness /app/gitness
+COPY --chown=nobody:nobody --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --chown=nobody:nobody --from=builder /app/gitness /app/gitness
 
-RUN chown -R 1001:1001 /app
 RUN chmod -R 700 /app/gitness
 
 EXPOSE 3000
 EXPOSE 3001
-
-USER 1001
 
 ENTRYPOINT [ "/app/gitness", "server" ]
