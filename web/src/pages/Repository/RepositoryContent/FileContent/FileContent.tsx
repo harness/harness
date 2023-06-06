@@ -110,7 +110,7 @@ export function FileContent({
   
   const [page, setPage] = usePageIndex()
   const { data: commits, response } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
+    path: `/api/v1/repos/${repoMetadata?.path}/+/commitsV2`,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
       page,
