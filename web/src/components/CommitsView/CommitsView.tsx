@@ -127,7 +127,7 @@ export function CommitsView({
                             resourcePath
                           })
                         )
-                        if(setActiveTab){
+                        if (setActiveTab) {
                           setActiveTab(FileSection.CONTENT)
                         }
                       }}
@@ -157,7 +157,7 @@ export function CommitsView({
         }
       }
     ],
-    [repoMetadata, routes]  // eslint-disable-line react-hooks/exhaustive-deps
+    [repoMetadata, routes] // eslint-disable-line react-hooks/exhaustive-deps
   )
   const commitsGroupedByDate: Record<string, TypesCommit[]> = useMemo(
     () =>

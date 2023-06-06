@@ -107,14 +107,14 @@ export function FileContent({
     }
     return { disabled: isRefATag(gitRef) || false, tooltip: undefined }
   }, [permPushResult, gitRef]) // eslint-disable-line react-hooks/exhaustive-deps
-  
+
   const [page, setPage] = usePageIndex()
   const { data: commits, response } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commitsV2`,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
       page,
-      git_ref: commitRef || repoMetadata?.default_branch,
+      git_ref: commitRef || gitRef || repoMetadata?.default_branch,
       path: resourcePath
     },
     lazy: !repoMetadata
@@ -268,13 +268,16 @@ export function FileContent({
                         resourcePath={resourcePath}
                         setActiveTab={setActiveTab}
                       />
-                      {/* <ThreadSection></ThreadSection> */}
 
                       <ResourceListingPagination response={response} page={page} setPage={setPage} />
                     </Container>
                     <Container className={css.gitHistory}>
                       {commits?.rename_details && repoMetadata ? (
-                        <RenameContentHistory rename_details={commits.rename_details} repoMetadata={repoMetadata} />
+                        <RenameContentHistory
+                          rename_details={commits.rename_details}
+                          repoMetadata={repoMetadata}
+                          setActiveTab={setActiveTab}
+                        />
                       ) : null}
                     </Container>
                   </>

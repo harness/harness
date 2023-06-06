@@ -20,8 +20,9 @@ const SingleFileRenameHistory = (props: {
   page: number
   response: any
   setPage: React.Dispatch<React.SetStateAction<number>>
+  setActiveTab: React.Dispatch<React.SetStateAction<string>>
 }) => {
-  const { details, fileVisibility, setFileVisibility, repoMetadata, page, response, setPage } = props
+  const { details, fileVisibility, setFileVisibility, repoMetadata, page, response, setPage, setActiveTab } = props
   const { getString } = useStrings()
   const { data: commits, refetch: getCommitHistory } = useGet<{
     commits: TypesCommit[]
@@ -59,9 +60,19 @@ const SingleFileRenameHistory = (props: {
       hideTitleGutter
       contentClassName={css.contentSection}
       title={
-        <Text padding={{top:"large"}} hidden={showCommitHistory} className={cx(css.hideText, css.lineDiv)} onClick={toggleCommitHistory}>
-          {showCommitHistory ? getString('hideCommitHistory', { file: details.old_path }) : getString('showCommitHistory', { file: details.old_path })} 
-          {showCommitHistory ? <Icon padding={'xsmall'} name={'main-chevron-up'} size={8}></Icon> : <Icon padding={'xsmall'} name={'main-chevron-down'} size={8}></Icon>} 
+        <Text
+          padding={{ top: 'large' }}
+          hidden={showCommitHistory}
+          className={cx(css.hideText, css.lineDiv)}
+          onClick={toggleCommitHistory}>
+          {showCommitHistory
+            ? getString('hideCommitHistory', { file: details.old_path })
+            : getString('showCommitHistory', { file: details.old_path })}
+          {showCommitHistory ? (
+            <Icon padding={'xsmall'} name={'main-chevron-up'} size={8}></Icon>
+          ) : (
+            <Icon padding={'xsmall'} name={'main-chevron-down'} size={8}></Icon>
+          )}
         </Text>
       }
       onlyTitle={showCommitHistory}>
@@ -74,23 +85,24 @@ const SingleFileRenameHistory = (props: {
             emptyMessage={getString('noCommitsMessage')}
             showFileHistoryIcons={true}
             resourcePath={details.old_path}
+            setActiveTab={setActiveTab}
           />
           <Container className={css.lineDiv}>
-
-          <Text
-            className={cx(css.hideText,css.lineDiv)}
-            padding={{ left: 'xxxlarge', right: 'xxxlarge', top: 'large' }}
-            onClick={toggleCommitHistory}>
-            {getString('hideCommitHistory', { file: details.old_path })}
-            <Icon padding={'xsmall'} name={'main-chevron-up'} size={8}></Icon>
-          </Text>
-              </Container>
+            <Text
+              className={cx(css.hideText, css.lineDiv)}
+              padding={{ left: 'xxxlarge', right: 'xxxlarge', top: 'large' }}
+              onClick={toggleCommitHistory}>
+              {getString('hideCommitHistory', { file: details.old_path })}
+              <Icon padding={'xsmall'} name={'main-chevron-up'} size={8}></Icon>
+            </Text>
+          </Container>
           <ResourceListingPagination response={response} page={page} setPage={setPage} />
           <AllFilesRenameHistory
             rename_details={commits.rename_details.filter(file => file.old_path !== details.old_path)}
             repoMetadata={repoMetadata}
             fileVisibility={fileVisibility}
             setFileVisibility={setFileVisibility}
+            setActiveTab={setActiveTab}
           />
         </>
       )}
@@ -103,8 +115,9 @@ const AllFilesRenameHistory = (props: {
   repoMetadata: TypesRepository
   fileVisibility: { [key: string]: boolean }
   setFileVisibility: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>
+  setActiveTab: React.Dispatch<React.SetStateAction<string>>
 }) => {
-  const { rename_details, repoMetadata, fileVisibility, setFileVisibility } = props
+  const { rename_details, repoMetadata, fileVisibility, setFileVisibility, setActiveTab } = props
   const [page, setPage] = usePageIndex()
   const { data: commits, response } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commitsV2`,
@@ -123,14 +136,19 @@ const AllFilesRenameHistory = (props: {
           page={page}
           response={response}
           setPage={setPage}
+          setActiveTab={setActiveTab}
         />
       ))}
     </>
   )
 }
 
-const RenameContentHistory = (props: { rename_details: RenameDetails[]; repoMetadata: TypesRepository }) => {
-  const { rename_details, repoMetadata } = props
+const RenameContentHistory = (props: {
+  rename_details: RenameDetails[]
+  repoMetadata: TypesRepository
+  setActiveTab: React.Dispatch<React.SetStateAction<string>>
+}) => {
+  const { rename_details, repoMetadata, setActiveTab } = props
   const [fileVisibility, setFileVisibility] = useState({})
 
   return (
@@ -139,6 +157,7 @@ const RenameContentHistory = (props: { rename_details: RenameDetails[]; repoMeta
       repoMetadata={repoMetadata}
       fileVisibility={fileVisibility}
       setFileVisibility={setFileVisibility}
+      setActiveTab={setActiveTab}
     />
   )
 }
