@@ -507,7 +507,6 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opGetBlame, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/blame/{path}", opGetBlame)
 
-	// will Remove old one once this is adopted everywhere in UI
 	opListCommits := openapi3.Operation{}
 	opListCommits.WithTags("repository")
 	opListCommits.WithMapOfAnything(map[string]interface{}{"operationId": "listCommits"})
