@@ -32,7 +32,7 @@ export default function RepositoryCommits() {
     response,
     error: errorCommits,
     loading: loadingCommits
-  } = useGet<TypesCommit[]>({
+  } = useGet<{ commits: TypesCommit[]}>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
@@ -55,9 +55,9 @@ export default function RepositoryCommits() {
       />
 
       <PageBody error={getErrorMessage(error || errorCommits)} retryOnError={voidFn(refetch)}>
-        <LoadingSpinner visible={loading || loadingCommits} withBorder={!!commits && loadingCommits} />
+        <LoadingSpinner visible={loading || loadingCommits} withBorder={!!commits?.commits && loadingCommits} />
 
-        {(repoMetadata && !!commits?.length && (
+        {(repoMetadata && !!commits?.commits?.length && (
           <Container padding="xlarge" className={css.resourceContent}>
             <Container className={css.contentHeader}>
               <Layout.Horizontal spacing="medium">
@@ -81,7 +81,7 @@ export default function RepositoryCommits() {
             </Container>
 
             <CommitsView
-              commits={commits}
+              commits={commits?.commits}
               repoMetadata={repoMetadata}
               emptyTitle={getString('noCommits')}
               emptyMessage={getString('noCommitsMessage')}

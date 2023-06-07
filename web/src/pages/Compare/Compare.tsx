@@ -49,7 +49,9 @@ export default function Compare() {
     error: commitsError,
     refetch,
     response
-  } = useGet<TypesCommit[]>({
+  } = useGet<{
+    commits: TypesCommit[]
+  }>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
       limit,
@@ -162,10 +164,10 @@ export default function Compare() {
   }, [repoMetadata, sourceGitRef, targetGitRef, getString])
 
   useEffect(() => {
-    if (commits?.length) {
-      setTitle(commits[0].title as string)
+    if (commits?.commits?.length) {
+      setTitle(commits.commits[0].title as string)
     }
-  }, [commits])
+  }, [commits?.commits])
 
   return (
     <Container className={css.main}>
@@ -268,14 +270,14 @@ export default function Compare() {
                     <TabTitleWithCount
                       icon={CodeIcon.Commit}
                       title={getString('commits')}
-                      count={commits?.length || 0}
+                      count={commits?.commits?.length || 0}
                       padding={{ left: 'medium' }}
                     />
                   ),
                   panel: (
                     <Container padding="xlarge">
                       <CommitsView
-                        commits={commits || []}
+                        commits={commits?.commits || []}
                         repoMetadata={repoMetadata}
                         emptyTitle={getString('compareEmptyDiffTitle')}
                         emptyMessage={getString('compareEmptyDiffMessage')}
