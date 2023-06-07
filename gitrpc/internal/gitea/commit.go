@@ -208,6 +208,7 @@ func cleanupCommitsForRename(commits []types.Commit, renameDetails []types.PathR
 		return commits
 	}
 	for _, renameDetail := range renameDetails {
+		// Since rename details is present here it implies that we would have some commits and hence we need not do null check.
 		if commits[0].SHA == renameDetail.CommitSHABefore && path == renameDetail.OldPath {
 			return commits[1:]
 		}
