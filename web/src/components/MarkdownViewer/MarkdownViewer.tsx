@@ -25,7 +25,7 @@ export function MarkdownViewer({ source, className, maxHeight }: MarkdownViewerP
 
   const interceptClickEventOnViewerContainer = useCallback(
     event => {
-      const imgTags = ref?.current?.querySelector('.wmde-markdown')?.querySelectorAll("img")
+      const imgTags = ref?.current?.querySelector('.wmde-markdown')?.querySelectorAll('img')
       const { target } = event
       if (imgTags) {
         const imageArray = Array.from(imgTags)
