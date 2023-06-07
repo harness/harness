@@ -23,7 +23,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
   const { updateQueryParams } = useUpdateQueryParams()
 
   const pageBrowser = useQueryParams<PageBrowserProps>()
-  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page): 1
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
   const {
     data: branches,
@@ -46,7 +46,7 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
   useEffect(() => {
     updateQueryParams({ page: page.toString() })
   }, [setPage]) // eslint-disable-line react-hooks/exhaustive-deps
-  
+
   useShowRequestError(error)
 
   return (
