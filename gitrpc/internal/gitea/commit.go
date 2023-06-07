@@ -194,10 +194,25 @@ func (g Adapter) ListCommits(ctx context.Context,
 		if err != nil {
 			return nil, nil, err
 		}
-		return commits, renameDetailsList, nil
+		cleanedUpCommits := cleanupCommitsForRename(commits, renameDetailsList, filter.Path)
+		return cleanedUpCommits, renameDetailsList, nil
 	}
 
 	return commits, nil, nil
+}
+
+// In case of rename of a file, same commit will be listed twice - Once in old file and second time in new file.
+// Hence, we are making it a pattern to only list it as part of new file and not as part of old file.
+func cleanupCommitsForRename(commits []types.Commit, renameDetails []types.PathRenameDetails, path string) []types.Commit {
+	if len(commits) == 0 {
+		return commits
+	}
+	for _, renameDetail := range renameDetails {
+		if commits[0].SHA == renameDetail.CommitSHABefore && path == renameDetail.OldPath {
+			return commits[1:]
+		}
+	}
+	return commits
 }
 
 func getRenameDetails(

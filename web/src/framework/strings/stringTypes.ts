@@ -140,6 +140,7 @@ export interface StringsMap {
   generateCloneText: string
   getMyCloneTitle: string
   gitIgnore: string
+  hideCommitHistory: string
   history: string
   in: string
   inactiveBranches: string
@@ -316,6 +317,7 @@ export interface StringsMap {
   selectBranchPlaceHolder: string
   selectToViewMore: string
   settings: string
+  showCommitHistory: string
   showEverything: string
   signIn: string
   signUp: string
@@ -348,8 +350,10 @@ export interface StringsMap {
   viewAllBranches: string
   viewAllTags: string
   viewCommitDetails: string
+  viewFile: string
   viewFiles: string
   viewRaw: string
+  viewRepo: string
   viewed: string
   webhook: string
   webhookAllEventsSelected: string

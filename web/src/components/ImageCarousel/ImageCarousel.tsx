@@ -16,7 +16,6 @@ const ImageCarousel = (props: ImageCarouselProps) => {
   const { getString } = useStrings()
   const { isOpen, setIsOpen, setZoomLevel, zoomLevel, imgEvent } = props
   const [imgTitle, setImageTitle] = useState(imgEvent[0])
-
   return (
     <Dialog
       portalClassName={css.portalContainer}

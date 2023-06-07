@@ -417,3 +417,7 @@ tagger: Tagger
 confirmDelete: Confirm delete
 tagEmpty: Here is no Tag. Try to
 newTag: New Tag
+viewFile: View the file at this point in the history
+viewRepo: View the repository at this point in the history
+hideCommitHistory: Hide Rename History for {{file}}
+showCommitHistory: Show Rename History for {{file}}

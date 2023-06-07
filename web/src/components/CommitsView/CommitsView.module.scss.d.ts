@@ -7,5 +7,10 @@ declare const styles: {
   readonly rowText: string
   readonly label: string
   readonly refreshIcon: string
+  readonly fileButton: string
+  readonly layout: string
+  readonly noCopy: string
+  readonly commitFileButton: string
+  readonly commitRepoButton: string
 }
 export default styles

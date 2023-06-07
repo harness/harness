@@ -47,6 +47,13 @@ export interface PageBrowserProps {
   page: string
 }
 
+export interface RenameDetails {
+  commit_sha_after: string
+  commit_sha_before: string
+  new_path: string
+  old_path: string
+}
+
 export interface SourceCodeEditorProps {
   source: string
   language?: string
@@ -133,6 +140,12 @@ export enum orderSortDate {
 export enum CodeCommentState {
   ACTIVE = 'active',
   RESOLVED = 'resolved'
+}
+
+export enum FileSection {
+  CONTENT = 'content',
+  BLAME = 'blame',
+  HISTORY = 'history'
 }
 
 const MONACO_SUPPORTED_LANGUAGES = [

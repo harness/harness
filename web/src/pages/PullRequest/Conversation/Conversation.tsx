@@ -65,7 +65,7 @@ export const Conversation: React.FC<ConversationProps> = ({
     // Determine all parent activities
     const parentActivities = orderBy(
       activities?.filter(activity => !activity.parent_id) || [],
-      'edited',
+      'created',
       dateOrderSort
     ).map(_comment => [_comment])
 

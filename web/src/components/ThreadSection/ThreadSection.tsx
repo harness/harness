@@ -8,6 +8,7 @@ interface ThreadSectionProps {
   className?: string
   contentClassName?: string
   hideGutter?: boolean
+  hideTitleGutter?: boolean
   onlyTitle?: boolean
   inCommentBox?: boolean
   lastItem?: boolean
@@ -19,13 +20,14 @@ export const ThreadSection: React.FC<ThreadSectionProps> = ({
   className,
   contentClassName,
   hideGutter,
+  hideTitleGutter,
   onlyTitle,
   inCommentBox = false,
   lastItem
 }) => {
   return (
     <Container
-      className={cx(inCommentBox ? css.thread : css.threadLessSpace, className, {
+      className={cx(inCommentBox ? css.thread : css.threadLessSpace,hideTitleGutter ? css.hideTitleGutter : '', className, {
         [css.titleContent]: onlyTitle && !inCommentBox && !lastItem,
         [css.inCommentBox]: inCommentBox && !lastItem
       })}>

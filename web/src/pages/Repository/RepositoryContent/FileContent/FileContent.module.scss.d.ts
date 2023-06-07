@@ -6,6 +6,7 @@ declare const styles: {
   readonly content: string
   readonly fileContent: string
   readonly gitBlame: string
+  readonly gitHistory: string
   readonly tabsContainer: string
   readonly tabTitle: string
   readonly count: string

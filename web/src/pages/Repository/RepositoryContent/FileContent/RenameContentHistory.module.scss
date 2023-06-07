@@ -1,0 +1,37 @@
+.contentSection {
+    padding-left: unset !important;
+}
+
+.hideText {
+    text-align: center !important;
+    width: 100% !important;
+}
+
+.lineDiv {
+    position: relative;
+  }
+  
+  .lineDiv::before,
+  .lineDiv::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    // width: 50%;
+    height: 1px;
+    background-color: var(--grey-200);
+    margin-top: 0.5625rem;
+  }
+  
+  .lineDiv::before {
+    left: 10%;
+    transform: translateY(-50%);
+    width: 20%;
+    // padding-top: var(--spacing-xsmall);
+  }
+  
+  .lineDiv::after {
+    right: 10%;
+    transform: translateY(-50%);
+    width: 20%;
+    // padding-top: var(--spacing-xsmall);
+  }

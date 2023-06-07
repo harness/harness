@@ -10,8 +10,9 @@ export function RepositoryContent({
   repoMetadata,
   gitRef,
   resourcePath,
-  resourceContent
-}: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent'>) {
+  resourceContent,
+  commitRef
+}: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent' | 'commitRef' >) {
   useEffect(() => {
     window.scroll({ top: 0 })
   }, [gitRef, resourcePath])
@@ -36,6 +37,7 @@ export function RepositoryContent({
           gitRef={gitRef}
           resourcePath={resourcePath}
           resourceContent={resourceContent}
+          commitRef={commitRef}
         />
       )}
     </Container>

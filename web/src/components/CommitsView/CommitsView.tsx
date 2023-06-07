@@ -10,18 +10,20 @@ import {
   ButtonSize,
   Button,
   FlexExpander,
-  StringSubstitute
+  StringSubstitute,
+  Icon,
+  Popover
 } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { noop, orderBy } from 'lodash-es'
-import { Link } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import type { TypesCommit } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
-import { formatDate } from 'utils/Utils'
+import { FileSection, formatDate } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { CODERoutes } from 'RouteDefinitions'
 import css from './CommitsView.module.scss'
@@ -32,6 +34,9 @@ interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
   emptyMessage: string
   prHasChanged?: boolean
   handleRefresh?: () => void
+  showFileHistoryIcons?: boolean
+  resourcePath?: string
+  setActiveTab?: React.Dispatch<React.SetStateAction<string>>
 }
 
 export function CommitsView({
@@ -40,8 +45,12 @@ export function CommitsView({
   emptyTitle,
   emptyMessage,
   handleRefresh = noop,
-  prHasChanged
+  prHasChanged,
+  showFileHistoryIcons = false,
+  resourcePath = '',
+  setActiveTab
 }: CommitsViewProps) {
+  const history = useHistory()
   const { getString } = useStrings()
   const { routes } = useAppContext()
   const columns: Column<TypesCommit>[] = useMemo(
@@ -86,9 +95,65 @@ export function CommitsView({
             />
           )
         }
+      },
+      {
+        id: 'buttons',
+        width: showFileHistoryIcons ? '60px' : '0px',
+        Cell: ({ row }: CellProps<TypesCommit>) => {
+          if (showFileHistoryIcons) {
+            return (
+              <Container padding={{ left: 'small' }}>
+                <Layout.Horizontal className={css.layout}>
+                  <Popover
+                    content={
+                      <Text color={Color.BLACK} padding="medium">
+                        {getString('viewFile')}
+                      </Text>
+                    }
+                    interactionKind="hover">
+                    <Icon
+                      id={css.commitFileButton}
+                      className={css.fileButton}
+                      name={'code-content'}
+                      size={14}
+                      onClick={() => {
+                        history.push(
+                          routes.toCODERepository({
+                            repoPath: repoMetadata.path as string,
+                            gitRef: row.original.sha,
+                            resourcePath
+                          })
+                        )
+                        if (setActiveTab) {
+                          setActiveTab(FileSection.CONTENT)
+                        }
+                      }}
+                    />
+                  </Popover>
+                  <Button
+                    id={css.commitRepoButton}
+                    variation={ButtonVariation.ICON}
+                    text={'<>'}
+                    onClick={() => {
+                      history.push(
+                        routes.toCODERepository({
+                          repoPath: repoMetadata.path as string,
+                          gitRef: row.original.sha
+                        })
+                      )
+                    }}
+                    tooltip={getString('viewRepo')}
+                  />
+                </Layout.Horizontal>
+              </Container>
+            )
+          } else {
+            return <Container width={0}></Container>
+          }
+        }
       }
     ],
-    [repoMetadata, routes]
+    [repoMetadata, routes] // eslint-disable-line react-hooks/exhaustive-deps
   )
   const commitsGroupedByDate: Record<string, TypesCommit[]> = useMemo(
     () =>
