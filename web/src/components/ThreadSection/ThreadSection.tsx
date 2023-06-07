@@ -27,15 +27,10 @@ export const ThreadSection: React.FC<ThreadSectionProps> = ({
 }) => {
   return (
     <Container
-      className={cx(
-        inCommentBox ? css.thread : css.threadLessSpace,
-        hideTitleGutter ? css.hideTitleGutter : '',
-        className,
-        {
-          [css.titleContent]: onlyTitle && !inCommentBox && !lastItem,
-          [css.inCommentBox]: inCommentBox && !lastItem
-        }
-      )}>
+      className={cx(inCommentBox ? css.thread : css.threadLessSpace,hideTitleGutter ? css.hideTitleGutter : '', className, {
+        [css.titleContent]: onlyTitle && !inCommentBox && !lastItem,
+        [css.inCommentBox]: inCommentBox && !lastItem
+      })}>
       <Layout.Vertical spacing={'medium'}>
         {title}
         <Container className={cx(css.content, contentClassName, hideGutter ? css.hideGutter : '')}>

@@ -4,6 +4,5 @@ declare const styles: {
   readonly main: string
   readonly title: string
   readonly label: string
-  readonly maxContainer: string
 }
 export default styles

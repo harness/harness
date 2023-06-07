@@ -25,7 +25,7 @@ export default function RepositoryCommits() {
   const { updateQueryParams } = useUpdateQueryParams()
 
   const pageBrowser = useQueryParams<PageBrowserProps>()
-  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page): 1
   const [page, setPage] = usePageIndex(pageInit)
   const {
     data: commits,

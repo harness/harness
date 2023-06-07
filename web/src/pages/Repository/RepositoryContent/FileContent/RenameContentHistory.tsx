@@ -19,7 +19,7 @@ const SingleFileRenameHistory = (props: {
   repoMetadata: TypesRepository
   page: number
   /* eslint-disable @typescript-eslint/no-explicit-any */
-  response: any
+  response: any 
   setPage: React.Dispatch<React.SetStateAction<number>>
   setActiveTab: React.Dispatch<React.SetStateAction<string>>
 }) => {
