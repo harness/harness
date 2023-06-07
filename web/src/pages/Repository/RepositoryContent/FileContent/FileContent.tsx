@@ -264,7 +264,6 @@ export function FileContent({
                         emptyTitle={getString('noCommits')}
                         emptyMessage={getString('noCommitsMessage')}
                         showFileHistoryIcons={true}
-                        gitRef={gitRef}
                         resourcePath={resourcePath}
                         setActiveTab={setActiveTab}
                       />

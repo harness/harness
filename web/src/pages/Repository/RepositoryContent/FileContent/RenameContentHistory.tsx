@@ -18,7 +18,8 @@ const SingleFileRenameHistory = (props: {
   setFileVisibility: React.Dispatch<React.SetStateAction<{ [key: string]: boolean }>>
   repoMetadata: TypesRepository
   page: number
-  response: any
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  response: any 
   setPage: React.Dispatch<React.SetStateAction<number>>
   setActiveTab: React.Dispatch<React.SetStateAction<string>>
 }) => {
@@ -119,7 +120,7 @@ const AllFilesRenameHistory = (props: {
 }) => {
   const { rename_details, repoMetadata, fileVisibility, setFileVisibility, setActiveTab } = props
   const [page, setPage] = usePageIndex()
-  const { data: commits, response } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
+  const { response } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commitsV2`,
     lazy: true
   })

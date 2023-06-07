@@ -168,7 +168,7 @@ export default function PullRequests() {
         }
       }
     ],
-    [getString]
+    [getString] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   return (

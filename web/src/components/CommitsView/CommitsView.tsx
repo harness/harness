@@ -35,7 +35,6 @@ interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
   prHasChanged?: boolean
   handleRefresh?: () => void
   showFileHistoryIcons?: boolean
-  gitRef?: string
   resourcePath?: string
   setActiveTab?: React.Dispatch<React.SetStateAction<string>>
 }
@@ -48,11 +47,9 @@ export function CommitsView({
   handleRefresh = noop,
   prHasChanged,
   showFileHistoryIcons = false,
-  gitRef = '',
   resourcePath = '',
   setActiveTab
 }: CommitsViewProps) {
-  console.log(repoMetadata, commits, gitRef, resourcePath)
   const history = useHistory()
   const { getString } = useStrings()
   const { routes } = useAppContext()
@@ -138,7 +135,6 @@ export function CommitsView({
                     variation={ButtonVariation.ICON}
                     text={'<>'}
                     onClick={() => {
-                      // console.log(gitRef)
                       history.push(
                         routes.toCODERepository({
                           repoPath: repoMetadata.path as string,
