@@ -11,7 +11,7 @@ func (CheckStatus) Enum() []interface{}                 { return toInterfaceSlic
 func (s CheckStatus) Sanitize() (CheckStatus, bool)     { return Sanitize(s, GetAllCheckStatuses) }
 func GetAllCheckStatuses() ([]CheckStatus, CheckStatus) { return checkStatuses, "" }
 
-// PullReqState enumeration.
+// CheckStatus enumeration.
 const (
 	CheckStatusPending CheckStatus = "pending"
 	CheckStatusRunning CheckStatus = "running"
@@ -26,4 +26,24 @@ var checkStatuses = sortEnum([]CheckStatus{
 	CheckStatusSuccess,
 	CheckStatusFailure,
 	CheckStatusError,
+})
+
+// CheckPayloadKind defines status payload type.
+type CheckPayloadKind string
+
+func (CheckPayloadKind) Enum() []interface{} { return toInterfaceSlice(checkPayloadTypes) }
+func (s CheckPayloadKind) Sanitize() (CheckPayloadKind, bool) {
+	return Sanitize(s, GetAllCheckPayloadTypes)
+}
+func GetAllCheckPayloadTypes() ([]CheckPayloadKind, CheckPayloadKind) {
+	return checkPayloadTypes, CheckPayloadKindExternal
+}
+
+// CheckPayloadKind enumeration.
+const (
+	CheckPayloadKindExternal CheckPayloadKind = "external"
+)
+
+var checkPayloadTypes = sortEnum([]CheckPayloadKind{
+	CheckPayloadKindExternal,
 })

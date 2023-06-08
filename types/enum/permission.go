@@ -70,3 +70,10 @@ const (
 	PermissionServiceDelete    Permission = "service_delete"
 	PermissionServiceEditAdmin Permission = "service_editadmin"
 )
+
+const (
+	/*
+		----- COMMIT CHECK -----
+	*/
+	PermissionCommitCheckReport Permission = "commitCheck_report"
+)

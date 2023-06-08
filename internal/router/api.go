@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/check"
 	"github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
@@ -17,6 +18,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/api/handler/account"
+	handlercheck "github.com/harness/gitness/internal/api/handler/check"
 	handlergithook "github.com/harness/gitness/internal/api/handler/githook"
 	handlerprincipal "github.com/harness/gitness/internal/api/handler/principal"
 	handlerpullreq "github.com/harness/gitness/internal/api/handler/pullreq"
@@ -64,7 +66,9 @@ func NewAPIHandler(
 	githookCtrl *githook.Controller,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
-	principalCtrl *principal.Controller) APIHandler {
+	principalCtrl *principal.Controller,
+	checkCtrl *check.Controller,
+) APIHandler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
 
@@ -85,7 +89,8 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator, authn.SourceRouterAPI))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, repoCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl)
+		setupRoutesV1(r, repoCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
+			saCtrl, userCtrl, principalCtrl, checkCtrl)
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -106,11 +111,18 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 }
 
 func setupRoutesV1(r chi.Router,
-	repoCtrl *repo.Controller, spaceCtrl *space.Controller,
-	pullreqCtrl *pullreq.Controller, webhookCtrl *webhook.Controller, githookCtrl *githook.Controller,
-	saCtrl *serviceaccount.Controller, userCtrl *user.Controller, principalCtrl *principal.Controller) {
+	repoCtrl *repo.Controller,
+	spaceCtrl *space.Controller,
+	pullreqCtrl *pullreq.Controller,
+	webhookCtrl *webhook.Controller,
+	githookCtrl *githook.Controller,
+	saCtrl *serviceaccount.Controller,
+	userCtrl *user.Controller,
+	principalCtrl *principal.Controller,
+	checkCtrl *check.Controller,
+) {
 	setupSpaces(r, spaceCtrl, repoCtrl)
-	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl)
+	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl, checkCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
 	setupPrincipals(r, principalCtrl)
@@ -151,8 +163,12 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller, repoCtrl *repo.Contr
 	})
 }
 
-func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Controller,
-	webhookCtrl *webhook.Controller) {
+func setupRepos(r chi.Router,
+	repoCtrl *repo.Controller,
+	pullreqCtrl *pullreq.Controller,
+	webhookCtrl *webhook.Controller,
+	checkCtrl *check.Controller,
+) {
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerrepo.HandleCreate(repoCtrl))
@@ -239,6 +255,8 @@ func setupRepos(r chi.Router, repoCtrl *repo.Controller, pullreqCtrl *pullreq.Co
 			SetupPullReq(r, pullreqCtrl)
 
 			SetupWebhook(r, webhookCtrl)
+
+			SetupChecks(r, checkCtrl)
 		})
 	})
 }
@@ -308,6 +326,15 @@ func SetupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
 					r.Post("/retrigger", handlerwebhook.HandleRetriggerExecution(webhookCtrl))
 				})
 			})
+		})
+	})
+}
+
+func SetupChecks(r chi.Router, checkCtrl *check.Controller) {
+	r.Route("/checks", func(r chi.Router) {
+		r.Route(fmt.Sprintf("/commits/{%s}", request.PathParamCommitSHA), func(r chi.Router) {
+			r.Put("/", handlercheck.HandleCheckReport(checkCtrl))
+			r.Get("/", handlercheck.HandleCheckList(checkCtrl))
 		})
 	})
 }

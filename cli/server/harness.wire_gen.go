@@ -20,6 +20,7 @@ import (
 	events4 "github.com/harness/gitness/harness/services/events"
 	"github.com/harness/gitness/harness/store"
 	"github.com/harness/gitness/harness/types/check"
+	check2 "github.com/harness/gitness/internal/api/controller/check"
 	"github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
@@ -164,7 +165,9 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 		return nil, err
 	}
 	githookController := githook.ProvideController(db, authorizer, principalStore, repoStore, eventsReporter)
-	apiHandler := router.ProvideAPIHandler(config, authenticator, accountClient, controller, principalController, spaceController, repoController, pullreqController, webhookController, githookController)
+	checkStore := database.ProvideCheckStore(db, principalInfoCache)
+	checkController := check2.ProvideController(db, authorizer, checkStore, repoStore, gitrpcInterface)
+	apiHandler := router.ProvideAPIHandler(config, authenticator, accountClient, controller, principalController, spaceController, repoController, pullreqController, webhookController, githookController, checkController)
 	gitHandler := router.ProvideGitHandler(config, provider, repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router2.ProvideWebHandler(config)
 	routerRouter := router2.ProvideRouter(config, apiHandler, gitHandler, webHandler)

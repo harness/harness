@@ -46,29 +46,31 @@ const (
 		,check_updated
 		,check_repo_id
 		,check_commit_sha
-		,check_type
 		,check_uid
 		,check_status
 		,check_summary
 		,check_link
 		,check_payload
-		,check_metadata`
+		,check_metadata
+		,check_payload_kind
+		,check_payload_version`
 )
 
 type check struct {
-	ID        int64            `db:"check_id"`
-	CreatedBy int64            `db:"check_created_by"`
-	Created   int64            `db:"check_created"`
-	Updated   int64            `db:"check_updated"`
-	RepoID    int64            `db:"check_repo_id"`
-	CommitSHA string           `db:"check_commit_sha"`
-	Type      string           `db:"check_type"`
-	UID       string           `db:"check_uid"`
-	Status    enum.CheckStatus `db:"check_status"`
-	Summary   string           `db:"check_summary"`
-	Link      string           `db:"check_link"`
-	Payload   json.RawMessage  `db:"check_payload"`
-	Metadata  json.RawMessage  `db:"check_metadata"`
+	ID             int64                 `db:"check_id"`
+	CreatedBy      int64                 `db:"check_created_by"`
+	Created        int64                 `db:"check_created"`
+	Updated        int64                 `db:"check_updated"`
+	RepoID         int64                 `db:"check_repo_id"`
+	CommitSHA      string                `db:"check_commit_sha"`
+	UID            string                `db:"check_uid"`
+	Status         enum.CheckStatus      `db:"check_status"`
+	Summary        string                `db:"check_summary"`
+	Link           string                `db:"check_link"`
+	Payload        json.RawMessage       `db:"check_payload"`
+	Metadata       json.RawMessage       `db:"check_metadata"`
+	PayloadKind    enum.CheckPayloadKind `db:"check_payload_kind"`
+	PayloadVersion string                `db:"check_payload_version"`
 }
 
 // Upsert creates new or updates an existing status check result.
@@ -80,26 +82,28 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 		,check_updated
 		,check_repo_id
 		,check_commit_sha
-		,check_type
 		,check_uid
 		,check_status
 		,check_summary
 		,check_link
 		,check_payload
 		,check_metadata
+		,check_payload_kind
+		,check_payload_version
 	) VALUES (
 		 :check_created_by
 		,:check_created
 		,:check_updated
 		,:check_repo_id
 		,:check_commit_sha
-		,:check_type
 		,:check_uid
 		,:check_status
 		,:check_summary
 		,:check_link
 		,:check_payload
 		,:check_metadata
+		,:check_payload_kind
+		,:check_payload_version
 	)
 	ON CONFLICT (check_repo_id, check_commit_sha, check_uid) DO
 	UPDATE SET
@@ -109,7 +113,9 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 		,check_link = :check_link
 		,check_payload = :check_payload
 		,check_metadata = :check_metadata
-	RETURNING check_id`
+		,check_payload_kind = :check_payload_kind
+		,check_payload_version = :check_payload_version
+	RETURNING check_id, check_created_by, check_created`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -118,7 +124,7 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 		return processSQLErrorf(err, "Failed to bind status check object")
 	}
 
-	if err = db.QueryRowContext(ctx, query, arg...).Scan(&check.ID); err != nil {
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&check.ID, &check.CreatedBy, &check.Created); err != nil {
 		return processSQLErrorf(err, "Upsert query failed")
 	}
 
@@ -182,19 +188,20 @@ func (s *CheckStore) ListRecent(ctx context.Context, repoID int64, since time.Ti
 
 func mapInternalCheck(c *types.Check) *check {
 	m := &check{
-		ID:        c.ID,
-		CreatedBy: c.CreatedBy,
-		Created:   c.Created,
-		Updated:   c.Updated,
-		RepoID:    c.RepoID,
-		CommitSHA: c.CommitSHA,
-		Type:      c.Type,
-		UID:       c.UID,
-		Status:    c.Status,
-		Summary:   c.Summary,
-		Link:      c.Link,
-		Payload:   c.Payload,
-		Metadata:  c.Metadata,
+		ID:             c.ID,
+		CreatedBy:      c.CreatedBy,
+		Created:        c.Created,
+		Updated:        c.Updated,
+		RepoID:         c.RepoID,
+		CommitSHA:      c.CommitSHA,
+		UID:            c.UID,
+		Status:         c.Status,
+		Summary:        c.Summary,
+		Link:           c.Link,
+		Payload:        c.Payload.Data,
+		Metadata:       c.Metadata,
+		PayloadKind:    c.Payload.Kind,
+		PayloadVersion: c.Payload.Version,
 	}
 
 	return m
@@ -202,19 +209,22 @@ func mapInternalCheck(c *types.Check) *check {
 
 func mapCheck(c *check) *types.Check {
 	return &types.Check{
-		ID:         c.ID,
-		CreatedBy:  c.CreatedBy,
-		Created:    c.Created,
-		Updated:    c.Updated,
-		RepoID:     c.RepoID,
-		CommitSHA:  c.CommitSHA,
-		Type:       c.Type,
-		UID:        c.UID,
-		Status:     c.Status,
-		Summary:    c.Summary,
-		Link:       c.Link,
-		Payload:    c.Payload,
-		Metadata:   c.Metadata,
+		ID:        c.ID,
+		CreatedBy: c.CreatedBy,
+		Created:   c.Created,
+		Updated:   c.Updated,
+		RepoID:    c.RepoID,
+		CommitSHA: c.CommitSHA,
+		UID:       c.UID,
+		Status:    c.Status,
+		Summary:   c.Summary,
+		Link:      c.Link,
+		Metadata:  c.Metadata,
+		Payload: types.CheckPayload{
+			Version: c.PayloadVersion,
+			Kind:    c.PayloadKind,
+			Data:    c.Payload,
+		},
 		ReportedBy: types.PrincipalInfo{},
 	}
 }

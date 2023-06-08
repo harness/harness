@@ -23,6 +23,7 @@ import (
 	harnessevents "github.com/harness/gitness/harness/services/events"
 	"github.com/harness/gitness/harness/store"
 	"github.com/harness/gitness/harness/types/check"
+	checkcontroller "github.com/harness/gitness/internal/api/controller/check"
 	"github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
@@ -90,6 +91,7 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 		pubsub.WireSet,
 		codecomments.WireSet,
 		gitrpccron.WireSet,
+		checkcontroller.WireSet,
 	)
 	return &system{}, nil
 }
