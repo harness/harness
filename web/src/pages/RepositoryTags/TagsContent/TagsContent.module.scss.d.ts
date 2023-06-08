@@ -9,5 +9,6 @@ declare const styles: {
   readonly defaultBranch: string
   readonly commitLink: string
   readonly spacer: string
+  readonly popover: string
 }
 export default styles

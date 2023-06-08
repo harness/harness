@@ -1,13 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  Container,
-  Color,
-  TableV2 as Table,
-  Text,
-  Avatar,
-  Intent,
-  useToaster,
-} from '@harness/uicore'
+import { Container, Color, TableV2 as Table, Text, Avatar, Intent, useToaster } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { Link, useHistory } from 'react-router-dom'
 import cx from 'classnames'
@@ -64,17 +56,19 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
     }
   }, [getBranchDivergence, branchDivergenceRequestBody])
   const onSuccess = voidFn(noop)
-  const openModal = useCreateBranchModal({ repoMetadata, onSuccess,showSuccessMessage: true })
 
   const columns: Column<RepoBranch>[] = useMemo(
     () => [
       {
         Header: getString('tag'),
-        width: '50%',
-        Cell: ({ row }: CellProps<RepoBranch>) => {
+        width: '20%',
+        Cell: ({ row }: CellProps<RepoCommitTag>) => {
           return (
             <Text
               icon="code-tag"
+              lineClamp={1}
+              width={`100%`}
+              tooltipProps={{ popoverClassName: css.popover }}
               iconProps={{ size: 22, color: Color.GREY_300 }}
               className={cx(css.rowText, row.original?.name === repoMetadata.default_branch ? css.defaultBranch : '')}
               color={Color.BLACK}>
@@ -91,10 +85,21 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
         }
       },
       {
+        Header: getString('description'),
+        width: '35%',
+        Cell: ({ row }: CellProps<RepoCommitTag>) => {
+          return (
+            <Text className={cx(css.rowText)} color={Color.BLACK} lineClamp={1} width={`100%`}>
+              {row.original?.message}
+            </Text>
+          )
+        }
+      },
+      {
         Header: getString('commit'),
         Id: 'commit',
-        width: '20%',
-        Cell: ({ row }: CellProps<RepoBranch>) => {
+        width: '15%',
+        Cell: ({ row }: CellProps<RepoCommitTag>) => {
           return (
             <CommitActions
               sha={row.original.sha as string}
@@ -110,7 +115,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
 
       {
         Header: getString('tagger'),
-        width: '20%',
+        width: '15%',
         Cell: ({ row }: CellProps<RepoCommitTag>) => {
           return (
             <Text className={css.rowText} color={Color.BLACK} tag="div">
@@ -158,6 +163,15 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
                 })
             }
           })
+          const openModal = useCreateBranchModal({
+            repoMetadata,
+            onSuccess,
+            showSuccessMessage: true,
+            suggestedSourceBranch: row.original.name,
+            showBranchTag: false,
+            refIsATag: true
+          })
+
           return (
             <OptionsMenuButton
               width="100px"
@@ -201,7 +215,8 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
         }
       }
     ],
-    [ // eslint-disable-line react-hooks/exhaustive-deps
+    [
+      // eslint-disable-line react-hooks/exhaustive-deps
       getString,
       repoMetadata.default_branch,
       repoMetadata.path,

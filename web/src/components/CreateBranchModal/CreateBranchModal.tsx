@@ -46,6 +46,8 @@ interface UseCreateBranchModalProps extends Pick<GitInfoProps, 'repoMetadata'> {
   suggestedSourceBranch?: string
   onSuccess: (data: RepoBranch) => void
   showSuccessMessage?: boolean
+  showBranchTag?: boolean
+  refIsATag?: boolean
 }
 
 interface CreateBranchModalButtonProps extends Omit<ButtonProps, 'onClick'>, UseCreateBranchModalProps {
@@ -58,7 +60,9 @@ export function useCreateBranchModal({
   suggestedSourceBranch = '',
   onSuccess,
   repoMetadata,
-  showSuccessMessage
+  showSuccessMessage,
+  showBranchTag = true,
+  refIsATag = false
 }: UseCreateBranchModalProps) {
   const [branchName, setBranchName] = useState(suggestedBranchName)
   const ModalComponent: React.FC = () => {
@@ -134,15 +138,15 @@ export function useCreateBranchModal({
                   inputGroup={{ autoFocus: true }}
                 />
                 <Container margin={{ top: 'medium', bottom: 'medium' }}>
-                  <Label className={css.label}>{getString('branchSourceDesc')}</Label>
+                  <Label className={css.label}>{getString('basedOn')}</Label>
                   {/* <Text className={css.branchSourceDesc}>{getString('branchSourceDesc')}</Text> */}
                   <Layout.Horizontal spacing="medium" padding={{ top: 'xsmall' }}>
                     <BranchTagSelect
                       repoMetadata={repoMetadata}
                       disableBranchCreation
                       disableViewAllBranches
-                      forBranchesOnly
-                      gitRef={sourceBranch}
+                      forBranchesOnly={showBranchTag}
+                      gitRef={refIsATag ? `refs/tags/${sourceBranch}` : sourceBranch}
                       onSelect={setSourceBranch}
                     />
                     <FlexExpander />
