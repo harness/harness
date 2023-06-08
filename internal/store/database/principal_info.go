@@ -99,5 +99,10 @@ func (s *PrincipalInfoView) FindMany(ctx context.Context, ids []int64) ([]*types
 		result = append(result, info)
 	}
 
+	err = rows.Err()
+	if err != nil {
+		return nil, processSQLErrorf(err, "failed to read principal info data")
+	}
+
 	return result, nil
 }
