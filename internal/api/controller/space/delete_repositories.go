@@ -14,7 +14,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// deleteRepositoriesNoAuth does not check PermissionRepoView, and PermissionRepoDelete permissions
+// deleteRepositoriesNoAuth does not check PermissionRepoView, and PermissionRepoDelete permissions.
 // Call this through Delete(Space) api to make sure the caller has DeleteSpace permission.
 func (c *Controller) deleteRepositoriesNoAuth(ctx context.Context, session *auth.Session, spaceID int64) error {
 	filter := &types.RepoFilter{

@@ -7,7 +7,6 @@ package server
 
 import (
 	"context"
-
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	server2 "github.com/harness/gitness/gitrpc/server"
@@ -17,6 +16,8 @@ import (
 	"github.com/harness/gitness/harness/bootstrap"
 	"github.com/harness/gitness/harness/client"
 	"github.com/harness/gitness/harness/router"
+	"github.com/harness/gitness/harness/services"
+	events4 "github.com/harness/gitness/harness/services/events"
 	"github.com/harness/gitness/harness/store"
 	"github.com/harness/gitness/harness/types/check"
 	"github.com/harness/gitness/internal/api/controller/githook"
@@ -32,7 +33,6 @@ import (
 	events2 "github.com/harness/gitness/internal/events/pullreq"
 	router2 "github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
-	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/codecomments"
 	pullreq2 "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/webhook"
@@ -186,7 +186,14 @@ func initSystem(ctx context.Context, config *types.Config) (*system, error) {
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService)
+	eventsService, err := events4.ProvideEventService(ctx, typesConfig, spaceController, config)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices, err := services.ProvideServices(ctx, webhookService, pullreqService, eventsService)
+	if err != nil {
+		return nil, err
+	}
 	serverSystem := newSystem(bootstrapBootstrap, serverServer, server3, manager, servicesServices)
 	return serverSystem, nil
 }

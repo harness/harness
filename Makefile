@@ -157,7 +157,13 @@ proto:
 			--go-grpc_opt=paths=source_relative \
 			./gitrpc/proto/*.proto
 
-
+harness-proto:
+	@protoc --proto_path=./harness/proto \
+			--go_out=./harness/rpc \
+			--go_opt=paths=source_relative \
+			--go-grpc_out=./harness/rpc \
+			--go-grpc_opt=paths=source_relative \
+			./harness/proto/*.proto
 ###########################################
 # Install Tools and deps
 #

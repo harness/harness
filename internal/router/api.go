@@ -109,7 +109,7 @@ func setupRoutesV1(r chi.Router,
 	repoCtrl *repo.Controller, spaceCtrl *space.Controller,
 	pullreqCtrl *pullreq.Controller, webhookCtrl *webhook.Controller, githookCtrl *githook.Controller,
 	saCtrl *serviceaccount.Controller, userCtrl *user.Controller, principalCtrl *principal.Controller) {
-	setupSpaces(r, spaceCtrl)
+	setupSpaces(r, spaceCtrl, repoCtrl)
 	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
@@ -121,7 +121,7 @@ func setupRoutesV1(r chi.Router,
 	setupResources(r)
 }
 
-func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
+func setupSpaces(r chi.Router, spaceCtrl *space.Controller, repoCtrl *repo.Controller) {
 	r.Route("/spaces", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerspace.HandleCreate(spaceCtrl))
@@ -130,7 +130,7 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 			// space operations
 			r.Get("/", handlerspace.HandleFind(spaceCtrl))
 			r.Patch("/", handlerspace.HandleUpdate(spaceCtrl))
-			r.Delete("/", handlerspace.HandleDelete(spaceCtrl))
+			r.Delete("/", handlerspace.HandleDelete(spaceCtrl, repoCtrl))
 
 			r.Post("/move", handlerspace.HandleMove(spaceCtrl))
 			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))

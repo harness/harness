@@ -13,8 +13,8 @@ import (
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/check"
-	"github.com/harness/go-rbac"
 
+	"github.com/harness/go-rbac"
 	"github.com/rs/zerolog/log"
 )
 

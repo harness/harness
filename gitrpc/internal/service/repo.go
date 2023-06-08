@@ -219,8 +219,7 @@ func (s RepositoryService) DeleteRepository(
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, base.RepoUid)
-	// check if directory exists
-	// if dir does not exist already fail silently
+
 	if _, err := os.Stat(repoPath); err != nil && os.IsNotExist(err) {
 		return nil, ErrNotFound(err)
 	} else if err != nil {

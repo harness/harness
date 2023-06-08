@@ -19,6 +19,8 @@ import (
 	"github.com/harness/gitness/harness/bootstrap"
 	"github.com/harness/gitness/harness/client"
 	"github.com/harness/gitness/harness/router"
+	harnessservices "github.com/harness/gitness/harness/services"
+	harnessevents "github.com/harness/gitness/harness/services/events"
 	"github.com/harness/gitness/harness/store"
 	"github.com/harness/gitness/harness/types/check"
 	"github.com/harness/gitness/internal/api/controller/githook"
@@ -33,7 +35,6 @@ import (
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/server"
-	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/codecomments"
 	pullreqservice "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/webhook"
@@ -51,11 +52,12 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 	wire.Build(
 		newSystem,
 		ProvideHarnessConfig,
+		harnessevents.WireSet,
 		ProvideRedis,
 		bootstrap.WireSet,
 		database.WireSet,
 		pullreqservice.WireSet,
-		services.WireSet,
+		harnessservices.WireSet,
 		cache.WireSet,
 		server.WireSet,
 		url.WireSet,

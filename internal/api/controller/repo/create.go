@@ -87,8 +87,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		// cleanup git repo if we fail to create repo in db (best effort deletion)
 		defer func() {
 			if dberr != nil {
-				err := c.DeleteRepositoryRPC(ctx, session, repo)
-				if err != nil {
+				if err := c.DeleteRepositoryRPC(ctx, session, repo); err != nil {
 					log.Ctx(ctx).Warn().Err(err).Msg("gitrpc failed to delete repo for cleanup")
 				}
 			}

@@ -122,7 +122,6 @@ func (c *Client) DeleteRepository(ctx context.Context, params *DeleteRepositoryP
 	if params == nil {
 		return ErrNoParamsProvided
 	}
-
 	_, err := c.repoService.DeleteRepository(ctx, &rpc.DeleteRepositoryRequest{
 		Base: mapToRPCWriteRequest(params.WriteParams),
 	})
