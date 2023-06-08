@@ -7,15 +7,15 @@ WORKDIR /usr/src/app
 COPY web/package.json ./
 COPY web/yarn.lock ./
 
-RUN --mount=type=secret,id=npmrc,target=/root/.npmrc yarn
+ARG GITHUB_ACCESS_TOKEN
 
 # If you are building your code for production
 # RUN npm ci --omit=dev
 
 COPY ./web .
+COPY .npmrc /root/.npmrc
 
-RUN yarn build && \
-    yarn cache clean
+RUN yarn && yarn build && yarn cache clean
 
 ### Build gitness
 FROM golang:1.19-alpine as builder
