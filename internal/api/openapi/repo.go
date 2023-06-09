@@ -510,29 +510,15 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opListCommits := openapi3.Operation{}
 	opListCommits.WithTags("repository")
 	opListCommits.WithMapOfAnything(map[string]interface{}{"operationId": "listCommits"})
-	opListCommits.WithParameters(queryParameterGitRef, queryParameterAfterCommits,
-		queryParameterPage, queryParameterLimit)
+	opListCommits.WithParameters(queryParameterGitRef, queryParameterAfterCommits, queryParameterPath,
+		queryParameterSince, queryParameterUntil, queryParameterCommitter, queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opListCommits, new(listCommitsRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opListCommits, []types.Commit{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opListCommits, []types.ListCommitResponse{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/commits", opListCommits)
-
-	// will Remove old one once this is adopted everywhere in UI
-	opListCommitsV2 := openapi3.Operation{}
-	opListCommitsV2.WithTags("repository")
-	opListCommitsV2.WithMapOfAnything(map[string]interface{}{"operationId": "listCommitsV2"})
-	opListCommitsV2.WithParameters(queryParameterGitRef, queryParameterAfterCommits, queryParameterPath,
-		queryParameterSince, queryParameterUntil, queryParameterCommitter, queryParameterPage, queryParameterLimit)
-	_ = reflector.SetRequest(&opListCommitsV2, new(listCommitsRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opListCommitsV2, []types.ListCommitResponse{}, http.StatusOK)
-	_ = reflector.SetJSONResponse(&opListCommitsV2, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opListCommitsV2, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opListCommitsV2, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.SetJSONResponse(&opListCommitsV2, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/commitsV2", opListCommitsV2)
 
 	opGetCommit := openapi3.Operation{}
 	opGetCommit.WithTags("repository")

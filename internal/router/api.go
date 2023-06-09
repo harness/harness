@@ -209,10 +209,6 @@ func setupRepos(r chi.Router,
 				})
 			})
 
-			r.Route("/commitsV2", func(r chi.Router) {
-				r.Get("/", handlerrepo.HandleListCommitsV2(repoCtrl))
-			})
-
 			// branch operations
 			r.Route("/branches", func(r chi.Router) {
 				r.Get("/", handlerrepo.HandleListBranches(repoCtrl))
