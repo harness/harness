@@ -1,7 +1,8 @@
-### Build web
+# ---------------------------------------------------------#
+#                     Build web image                      #
+# ---------------------------------------------------------#
 FROM node:16 as web
 
-# Create app directory
 WORKDIR /usr/src/app
 
 COPY web/package.json ./
@@ -17,7 +18,9 @@ COPY .npmrc /root/.npmrc
 
 RUN yarn && yarn build && yarn cache clean
 
-### Build gitness
+# ---------------------------------------------------------#
+#                   Build gitness image                    #
+# ---------------------------------------------------------#
 FROM golang:1.19-alpine as builder
 
 RUN apk update \
@@ -48,41 +51,38 @@ ARG GIT_COMMIT
 ARG GITNESS_VERSION_MAJOR
 ARG GITNESS_VERSION_MINOR
 ARG GITNESS_VERSION_PATCH
+ARG BUILD_TAGS
 
 # set required build flags
-ARG sqlite
-RUN if [[ -z "$sqlite" ]] ; then \
-    CGO_ENABLED=0 \
+RUN CGO_ENABLED=1 \
     GOOS=linux \
     GOARCH=amd64 \
-    make harness-build-pq \
-; else \
-    CGO_ENABLED=1 \
-    GOOS=linux \
-    GOARCH=amd64 \
-    make harness-build \
-; fi
+    BUILD_TAGS=${BUILD_TAGS} \
+    make build
 
 ### Pull CA Certs
 FROM alpine:latest as cert-image
 
 RUN apk --update add ca-certificates
 
-### Create final image
-FROM us.gcr.io/platform-205701/ubi/ubi-go:8.7 as final
+# ---------------------------------------------------------#
+#                   Create final image                     #
+# ---------------------------------------------------------#
+FROM alpine/git:2.36.3 as final
 
-USER root
-RUN mkdir /app && chown nobody:nobody /app
+RUN adduser -u 1001 -D -h /app iamuser
 
-USER nobody
 WORKDIR /app
 
-COPY --chown=nobody:nobody --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --chown=nobody:nobody --from=builder /app/gitness /app/gitness
+COPY --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=builder /app/gitness /app/gitness
 
+RUN chown -R 1001:1001 /app
 RUN chmod -R 700 /app/gitness
 
 EXPOSE 3000
 EXPOSE 3001
+
+USER 1001
 
 ENTRYPOINT [ "/app/gitness", "server" ]
