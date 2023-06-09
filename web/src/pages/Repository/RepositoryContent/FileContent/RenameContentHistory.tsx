@@ -29,7 +29,7 @@ const SingleFileRenameHistory = (props: {
     commits: TypesCommit[]
     rename_details: RenameDetails[]
   }>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/commitsV2`,
+    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     lazy: true
   })
 
@@ -121,7 +121,7 @@ const AllFilesRenameHistory = (props: {
   const { rename_details, repoMetadata, fileVisibility, setFileVisibility, setActiveTab } = props
   const [page, setPage] = usePageIndex()
   const { response } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/commitsV2`,
+    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     lazy: true
   })
 
