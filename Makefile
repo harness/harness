@@ -49,19 +49,15 @@ generate: $(mocks) wire mocks/mock_client.go proto
 
 build: generate ## Build the all-in-one gitness binary
 	@echo "Building Gitness Server"
-	go build -ldflags=${LDFLAGS} -o ./gitness ./cmd/gitness
-
-harness-build: generate ## Build the all-in-one gitness binary for harness embedded mode
-	@echo "Building Gitness Server for Harness"
-	go build -tags=harness -ldflags=${LDFLAGS} -o ./gitness ./cmd/gitness
+	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./gitness ./cmd/gitness
 
 build-gitrpc: generate ## Build the gitrpc binary
 	@echo "Building GitRPC Server"
-	go build -ldflags=${LDFLAGS} -o ./gitrpcserver ./cmd/gitrpcserver
+	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./gitrpcserver ./cmd/gitrpcserver
 
 build-githook: generate ## Build the githook binary
 	@echo "Building GitHook Binary"
-	go build -ldflags=${LDFLAGS} -o ./githook ./cmd/githook
+	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./githook ./cmd/githook
 
 test: generate  ## Run the go tests
 	@echo "Running tests"
@@ -99,14 +95,25 @@ test-env: stop ## Run test environment - this runs all services and the gitness 
 	docker-compose -f ./docker/docker-compose.yml -f ./docker/docker-compose.test.yml up -d ${DOCKER_BUILD_OPTS} --remove-orphans
 
 image: ## Build the gitness docker image
-	@echo "Building Gitness Image"
+	@echo "Building Gitness Standalone Image"
 	@docker build \
 			--build-arg GITNESS_VERSION=latest \
+			--build-arg BUILD_TAGS=${BUILD_TAGS} \
 			--build-arg GIT_COMMIT=${GIT_COMMIT} \
 			--build-arg GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN} \
 			--platform linux/amd64 \
-			 -t gitness:latest \
-			 -f ./docker/Dockerfile .
+			 -t gitness-standalone:latest .
+
+gitrpc-image: ## Build the gitness gitrpc docker image
+	@echo "Building Gitness GitRPC Image"
+	@docker build \
+			--build-arg GITNESS_VERSION=latest \
+			--build-arg BUILD_TAGS=${BUILD_TAGS} \
+			--build-arg GIT_COMMIT=${GIT_COMMIT} \
+			--build-arg GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN} \
+			--platform linux/amd64 \
+			 -t gitness-gitrpc:latest \
+			 -f ./docker/Dockerfile.gitrpc .
 
 e2e: generate test-env ## Run e2e tests
 	chmod +x wait-for-gitness.sh && ./wait-for-gitness.sh

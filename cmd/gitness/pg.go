@@ -2,15 +2,15 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-//go:build !pq
-// +build !pq
+//go:build pq
+// +build pq
 
 package main
 
 import (
 	"github.com/harness/gitness/cli"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 func main() {
