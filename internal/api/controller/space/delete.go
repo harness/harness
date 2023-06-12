@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/rs/zerolog/log"
 )
 
 // Delete deletes a space.
@@ -24,8 +25,10 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceDelete, false); err != nil {
 		return err
 	}
-
-	return c.DeleteNoAuth(ctx, session, space.ID)
+	// TODO: uncomment when soft delete is implemented
+	log.Ctx(ctx).Info().Msgf("Delete request received for space %s", space.Path)
+	//return c.DeleteNoAuth(ctx, session, space.ID)
+	return nil
 }
 
 // DeleteNoAuth bypasses PermissionSpaceDelete, PermissionSpaceView, PermissionRepoView, and PermissionRepoDelete.

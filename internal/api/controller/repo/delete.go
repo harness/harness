@@ -27,8 +27,10 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoDelete, false); err != nil {
 		return err
 	}
-
-	return c.DeleteNoAuth(ctx, session, repo)
+	log.Ctx(ctx).Info().Msgf("Delete request received for repo %s , id: %d", repo.Path, repo.ID)
+	// TODO: uncomment when soft delete is implemented
+	//return c.DeleteNoAuth(ctx, session, repo)
+	return nil
 }
 
 func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, repo *types.Repository) error {
