@@ -314,19 +314,19 @@ repoEmptyMarkdownClonePush: |
 
   ```sh
   cd REPO_NAME
-  git branch -M main
+  git branch -M DEFAULT_BRANCH
   echo "# Hello World" >> README.md
   git add README.md
   git commit -m "Initial commit"
-  git push -u origin main
+  git push -u origin DEFAULT_BRANCH
   ```
 repoEmptyMarkdownExisting: |
   ### Or you can push an existing repository
 
   ```sh
   git remote add REPO_URL
-  git branch -M main
-  git push -u origin main
+  git branch -M DEFAULT_BRANCH
+  git push -u origin DEFAULT_BRANCH
   ```
 
   You might need [to create an API token](CREATE_API_TOKEN_URL) in order to pull from or push into this repository.

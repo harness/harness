@@ -129,7 +129,9 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
         padding={{ top: 'xxlarge', bottom: 'xxlarge', left: 'xxlarge', right: 'xxlarge' }}
         className={css.divContainer}>
         <MarkdownViewer
-          source={getString('repoEmptyMarkdownClonePush').replace(/REPO_NAME/g, repoMetadata.uid || '')}
+          source={getString('repoEmptyMarkdownClonePush')
+            .replace(/REPO_NAME/g, repoMetadata.uid || '')
+            .replace(/DEFAULT_BRANCH/g, repoMetadata.default_branch || '')}
         />
       </Container>
       <Container
@@ -140,7 +142,8 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
           source={getString('repoEmptyMarkdownExisting')
             .replace(/REPO_URL/g, repoMetadata.git_url || '')
             .replace(/REPO_NAME/g, repoMetadata.uid || '')
-            .replace(/CREATE_API_TOKEN_URL/g, currentUserProfileURL || '')}
+            .replace(/CREATE_API_TOKEN_URL/g, currentUserProfileURL || '')
+            .replace(/DEFAULT_BRANCH/g, repoMetadata.default_branch || '')}
         />
       </Container>
       <CloneCredentialDialog flag={flag} setFlag={setFlag} />
