@@ -75,7 +75,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
               <Link
                 to={routes.toCODERepository({
                   repoPath: repoMetadata.path as string,
-                  gitRef: row.original?.name
+                  gitRef: `${REFS_TAGS_PREFIX}${row.original?.name}`
                 })}
                 className={css.commitLink}>
                 <Keywords value={searchTerm}>{row.original?.name}</Keywords>

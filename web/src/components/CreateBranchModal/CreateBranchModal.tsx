@@ -200,7 +200,7 @@ export const CreateBranchModalButton: React.FC<CreateBranchModalButtonProps> = (
   showSuccessMessage,
   ...props
 }) => {
-  const openModal = useCreateBranchModal({ repoMetadata, onSuccess, showSuccessMessage })
+  const openModal = useCreateBranchModal({ repoMetadata, onSuccess, showSuccessMessage, showBranchTag: false })
   const { standalone } = useAppContext()
   const { hooks } = useAppContext()
   const space = useGetSpaceParam()
