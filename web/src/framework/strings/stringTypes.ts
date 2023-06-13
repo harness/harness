@@ -37,6 +37,7 @@ export interface StringsMap {
   branchUpToDate: string
   branches: string
   browse: string
+  browseFiles: string
   cancel: string
   changes: string
   checkRuns: string
@@ -52,6 +53,7 @@ export interface StringsMap {
   commitChanges: string
   commitDirectlyTo: string
   commitMessage: string
+  commitString: string
   commitToNewBranch: string
   commits: string
   commitsOn: string

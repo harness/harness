@@ -1,0 +1,24 @@
+.commitInfoContainer {
+  width: 100%;
+
+  .commitTitleContainer {
+    background-color: var(--grey-100);
+    border: 1px solid var(--grey-200);
+  }
+  .infoContainer {
+    border: 1px solid var(--grey-200);
+  }
+  .alignContent {
+    align-items: center !important;
+  }
+}
+
+.infoText {
+  font-size: var(--font-size-small) !important;
+  font-weight: 500 !important;
+}
+
+.titleText {
+  font-size: var(--font-size-normal) !important;
+  font-weight: 600 !important;
+}

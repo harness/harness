@@ -215,8 +215,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
         }
       }
     ],
-    [
-      // eslint-disable-line react-hooks/exhaustive-deps
+    [// eslint-disable-line react-hooks/exhaustive-deps
       getString,
       repoMetadata.default_branch,
       repoMetadata.path,

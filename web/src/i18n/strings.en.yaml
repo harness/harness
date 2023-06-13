@@ -110,7 +110,9 @@ deleteTag: Delete Tag
 deleteTagConfirm: Are you sure you want to delete tag <strong>{{name}}</strong>? You can't undo this action.
 deleteBranchConfirm: Are you sure you want to delete branch <strong>{{name}}</strong>? You can't undo this action.
 browse: Browse
+browseFiles: Browse Files
 compare: Compare
+commitString: 'Commit  {commit}'
 repoDeleted: Repository {{repo}} deleted.
 branchDeleted: Branch {{branch}} deleted.
 tagDeleted: Tag {{tag}} deleted.

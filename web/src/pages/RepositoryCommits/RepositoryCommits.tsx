@@ -1,7 +1,13 @@
-import React, { useEffect } from 'react'
-import { Container, FlexExpander, Layout, PageBody } from '@harness/uicore'
+import React, { useEffect, useMemo, useState } from 'react'
+import {
+  Container,
+  FlexExpander,
+  Layout,
+  PageBody,
+} from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
+import { noop } from 'lodash-es'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useAppContext } from 'AppContext'
 import { usePageIndex } from 'hooks/usePageIndex'
@@ -15,6 +21,8 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { CommitsView } from 'components/CommitsView/CommitsView'
+import { Changes } from 'components/Changes/Changes'
+import CommitInfo from 'components/CommitInfo/CommitInfo'
 import css from './RepositoryCommits.module.scss'
 
 export default function RepositoryCommits() {
@@ -27,6 +35,7 @@ export default function RepositoryCommits() {
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
+
   const {
     data: commits,
     response,
@@ -46,6 +55,24 @@ export default function RepositoryCommits() {
     updateQueryParams({ page: page.toString() })
   }, [setPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const ChangesTab = useMemo(() => {
+    if (repoMetadata) {
+      return (
+        <Container className={css.changesContainer}>
+          <Changes
+            readOnly
+            repoMetadata={repoMetadata}
+            targetBranch={`${commitRef}~1`}
+            sourceBranch={commitRef}
+            emptyTitle={getString('noChanges')}
+            emptyMessage={getString('noChangesCompare')}
+            onCommentUpdate={noop}
+          />
+        </Container>
+      )
+    }
+  }, [repoMetadata, commitRef, getString])
+
   return (
     <Container className={css.main}>
       <RepositoryPageHeader
@@ -55,9 +82,20 @@ export default function RepositoryCommits() {
       />
 
       <PageBody error={getErrorMessage(error || errorCommits)} retryOnError={voidFn(refetch)}>
-        <LoadingSpinner visible={loading || loadingCommits} withBorder={!!commits?.commits && loadingCommits} />
-
-        {(repoMetadata && !!commits?.commits?.length && (
+        <LoadingSpinner visible={loading || loadingCommits} withBorder={!!commits && loadingCommits} />
+        {(repoMetadata && commitRef && !!commits?.commits?.length && (
+          <Container padding="xlarge" className={css.resourceContent}>
+            <Container className={css.contentHeader}>
+              <Layout.Horizontal>
+                <CommitInfo repoMetadata={repoMetadata} commitRef={commitRef}  /> 
+                <FlexExpander />
+              </Layout.Horizontal>
+            </Container>
+            {ChangesTab}
+          </Container>
+        )) ||
+          null}
+        {(repoMetadata && !commitRef && !!commits?.commits?.length && (
           <Container padding="xlarge" className={css.resourceContent}>
             <Container className={css.contentHeader}>
               <Layout.Horizontal spacing="medium">

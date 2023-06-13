@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Container, Color, TableV2 as Table, Text } from '@harness/uicore'
+import { Container, Color, TableV2 as Table, Text, Utils } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { Render } from 'react-jsx-match'
 import { sortBy } from 'lodash-es'
@@ -41,9 +41,24 @@ export function FolderContent({
         width: 'calc(60% - 100px)',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
-            <Text color={Color.BLACK} lineClamp={1} className={css.rowText}>
-              {row.original.latest_commit?.title}
-            </Text>
+            <Container onClick={Utils.stopEvent}>
+              <Text
+                tag="a"
+                role="button"
+                color={Color.BLACK}
+                lineClamp={1}
+                className={css.rowText}
+                onClick={() => {
+                  history.push(
+                    routes.toCODECommits({
+                      repoPath: repoMetadata.path as string,
+                      commitRef: row.original.latest_commit?.sha as string
+                    })
+                  )
+                }}>
+                {row.original.latest_commit?.title}
+              </Text>
+            </Container>
           )
         }
       },
@@ -59,7 +74,7 @@ export function FolderContent({
         }
       }
     ],
-    []
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   )
   const readmeInfo = useMemo(() => findReadmeInfo(resourceContent), [resourceContent])
 
