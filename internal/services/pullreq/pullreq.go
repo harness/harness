@@ -34,8 +34,8 @@ type Service struct {
 	codeCommentView     store.CodeCommentView
 	codeCommentMigrator *codecomments.Migrator
 
-	cancelMutex       sync.Mutex
-	cancelMergability map[string]context.CancelFunc
+	cancelMutex        sync.Mutex
+	cancelMergeability map[string]context.CancelFunc
 
 	pubsub pubsub.PubSub
 }
@@ -68,7 +68,7 @@ func New(ctx context.Context,
 		activityStore:       activityStore,
 		codeCommentView:     codeCommentView,
 		codeCommentMigrator: codeCommentMigrator,
-		cancelMergability:   make(map[string]context.CancelFunc),
+		cancelMergeability:  make(map[string]context.CancelFunc),
 		pubsub:              bus,
 	}
 
@@ -141,7 +141,7 @@ func New(ctx context.Context,
 		return nil, err
 	}
 
-	// mergability check
+	// mergeability check
 	const groupPullReqMergeable = "gitness:pullreq:mergeable"
 	_, err = pullreqEvReaderFactory.Launch(ctx, groupPullReqMergeable, config.InstanceID,
 		func(r *pullreqevents.Reader) error {
@@ -165,7 +165,7 @@ func New(ctx context.Context,
 		return nil, err
 	}
 
-	// cancel any previous pr mergability check
+	// cancel any previous pr mergeability check
 	// payload is oldsha.
 	_ = bus.Subscribe(ctx, cancelMergeCheckKey, func(payload []byte) error {
 		oldSHA := string(payload)
@@ -176,17 +176,17 @@ func New(ctx context.Context,
 		service.cancelMutex.Lock()
 		defer service.cancelMutex.Unlock()
 
-		cancel := service.cancelMergability[oldSHA]
+		cancel := service.cancelMergeability[oldSHA]
 		if cancel != nil {
 			cancel()
 		}
 
-		delete(service.cancelMergability, oldSHA)
+		delete(service.cancelMergeability, oldSHA)
 
 		return nil
 	}, pubsub.WithChannelNamespace("pullreq"))
 
-	// mergability check
+	// mergeability check
 	const groupPullReqCodeComments = "gitness:pullreq:codecomments"
 	_, err = pullreqEvReaderFactory.Launch(ctx, groupPullReqCodeComments, config.InstanceID,
 		func(r *pullreqevents.Reader) error {
@@ -199,6 +199,7 @@ func New(ctx context.Context,
 				))
 
 			_ = r.RegisterBranchUpdated(service.updateCodeCommentsOnBranchUpdate)
+			_ = r.RegisterReopened(service.updateCodeCommentsOnReopen)
 
 			return nil
 		})

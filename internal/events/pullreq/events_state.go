@@ -70,7 +70,8 @@ const ReopenedEvent events.EventType = "reopened"
 
 type ReopenedPayload struct {
 	Base
-	SourceSHA string `json:"source_sha"`
+	SourceSHA    string `json:"source_sha"`
+	MergeBaseSHA string `json:"merge_base_sha"`
 }
 
 func (r *Reporter) Reopened(ctx context.Context, payload *ReopenedPayload) {
