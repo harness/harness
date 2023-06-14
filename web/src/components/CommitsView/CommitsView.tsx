@@ -158,7 +158,7 @@ export function CommitsView({
   const commitsGroupedByDate: Record<string, TypesCommit[]> = useMemo(
     () =>
       commits?.reduce((group, commit) => {
-        const date = formatDate(commit.author?.when as string)
+        const date = formatDate(commit.committer?.when as string)
         group[date] = (group[date] || []).concat(commit)
         return group
       }, {} as Record<string, TypesCommit[]>) || {},
@@ -195,7 +195,7 @@ export function CommitsView({
                 className={css.table}
                 hideHeaders
                 columns={columns}
-                data={orderBy(commitsByDate || [], ['author.when'], ['desc'])}
+                data={orderBy(commitsByDate || [], ['committer.when'], ['desc'])}
                 getRowClassName={() => css.row}
               />
             </ThreadSection>
