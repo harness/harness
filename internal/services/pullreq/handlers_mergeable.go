@@ -154,13 +154,13 @@ func (s *Service) updateMergeData(
 	ctx, cancel = context.WithCancel(ctx)
 
 	s.cancelMutex.Lock()
-	s.cancelMergability[newSHA] = cancel
+	s.cancelMergeability[newSHA] = cancel
 	s.cancelMutex.Unlock()
 
 	defer func() {
 		cancel()
 		s.cancelMutex.Lock()
-		delete(s.cancelMergability, newSHA)
+		delete(s.cancelMergeability, newSHA)
 		s.cancelMutex.Unlock()
 	}()
 

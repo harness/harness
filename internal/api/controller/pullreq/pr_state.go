@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
@@ -96,6 +97,7 @@ func (c *Controller) State(ctx context.Context,
 	)
 
 	var sourceSHA string
+	var mergeBaseSHA string
 	var stateChange change
 
 	if pr.State != enum.PullReqStateOpen && in.State == enum.PullReqStateOpen {
@@ -112,6 +114,19 @@ func (c *Controller) State(ctx context.Context,
 			return nil, err
 		}
 
+		var mergeBaseResult gitrpc.MergeBaseOutput
+
+		mergeBaseResult, err = c.gitRPCClient.MergeBase(ctx, gitrpc.MergeBaseParams{
+			ReadParams: gitrpc.ReadParams{RepoUID: sourceRepo.GitUID},
+			Ref1:       pr.SourceBranch,
+			Ref2:       pr.TargetBranch,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to find merge base: %w", err)
+		}
+
+		mergeBaseSHA = mergeBaseResult.MergeBaseSHA
+
 		stateChange = changeReopen
 	} else if pr.State == enum.PullReqStateOpen && in.State != enum.PullReqStateOpen {
 		stateChange = changeClose
@@ -121,12 +136,18 @@ func (c *Controller) State(ctx context.Context,
 		pr.State = in.State
 		pr.IsDraft = in.IsDraft
 		pr.Edited = time.Now().UnixMilli()
-		if in.State == enum.PullReqStateClosed {
+
+		switch stateChange {
+		case changeClose:
 			// clear all merge (check) related fields
 			pr.MergeCheckStatus = enum.MergeCheckStatusUnchecked
 			pr.MergeSHA = nil
 			pr.MergeConflicts = nil
+		case changeReopen:
+			pr.SourceSHA = sourceSHA
+			pr.MergeBaseSHA = mergeBaseSHA
 		}
+
 		pr.ActivitySeq++ // because we need to add the activity entry
 		return nil
 	})
@@ -149,8 +170,9 @@ func (c *Controller) State(ctx context.Context,
 	switch stateChange {
 	case changeReopen:
 		c.eventReporter.Reopened(ctx, &pullreqevents.ReopenedPayload{
-			Base:      eventBase(pr, &session.Principal),
-			SourceSHA: sourceSHA,
+			Base:         eventBase(pr, &session.Principal),
+			SourceSHA:    sourceSHA,
+			MergeBaseSHA: mergeBaseSHA,
 		})
 	case changeClose:
 		c.eventReporter.Closed(ctx, &pullreqevents.ClosedPayload{

@@ -16,16 +16,31 @@ import (
 func (s *Service) updateCodeCommentsOnBranchUpdate(ctx context.Context,
 	event *events.Event[*pullreqevents.BranchUpdatedPayload],
 ) error {
-	repoGit, err := s.repoGitInfoCache.Get(ctx, event.Payload.TargetRepoID)
+	return s.updateCodeComments(ctx,
+		event.Payload.TargetRepoID, event.Payload.PullReqID,
+		event.Payload.NewSHA, event.Payload.NewMergeBaseSHA)
+}
+
+func (s *Service) updateCodeCommentsOnReopen(ctx context.Context,
+	event *events.Event[*pullreqevents.ReopenedPayload],
+) error {
+	return s.updateCodeComments(ctx,
+		event.Payload.TargetRepoID, event.Payload.PullReqID,
+		event.Payload.SourceSHA, event.Payload.MergeBaseSHA)
+}
+
+func (s *Service) updateCodeComments(ctx context.Context,
+	targetRepoID, pullreqID int64,
+	newSourceSHA, newMergeBaseSHA string,
+) error {
+	repoGit, err := s.repoGitInfoCache.Get(ctx, targetRepoID)
 	if err != nil {
 		return fmt.Errorf("failed to get repo git info: %w", err)
 	}
 
 	var codeComments []*types.CodeComment
 
-	newMergeBaseSHA := event.Payload.NewMergeBaseSHA
-
-	codeComments, err = s.codeCommentView.ListNotAtMergeBaseSHA(ctx, event.Payload.PullReqID, newMergeBaseSHA)
+	codeComments, err = s.codeCommentView.ListNotAtMergeBaseSHA(ctx, pullreqID, newMergeBaseSHA)
 	if err != nil {
 		return fmt.Errorf("failed to get list of code comments for update after merge base update: %w", err)
 	}
@@ -37,9 +52,7 @@ func (s *Service) updateCodeCommentsOnBranchUpdate(ctx context.Context,
 		return fmt.Errorf("failed to update code comments after merge base update: %w", err)
 	}
 
-	newSourceSHA := event.Payload.NewSHA
-
-	codeComments, err = s.codeCommentView.ListNotAtSourceSHA(ctx, event.Payload.PullReqID, newSourceSHA)
+	codeComments, err = s.codeCommentView.ListNotAtSourceSHA(ctx, pullreqID, newSourceSHA)
 	if err != nil {
 		return fmt.Errorf("failed to get list of code comments for update after source branch update: %w", err)
 	}
