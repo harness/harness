@@ -100,6 +100,7 @@ func (c *Controller) State(ctx context.Context,
 	var mergeBaseSHA string
 	var stateChange change
 
+	//nolint:nestif // refactor if needed
 	if pr.State != enum.PullReqStateOpen && in.State == enum.PullReqStateOpen {
 		if sourceSHA, err = c.verifyBranchExistence(ctx, sourceRepo, pr.SourceBranch); err != nil {
 			return nil, err

@@ -28,7 +28,7 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef
 	}
 	// TODO: uncomment when soft delete is implemented
 	log.Ctx(ctx).Info().Msgf("Delete request received for space %s", space.Path)
-	//return c.DeleteNoAuth(ctx, session, space.ID)
+	// return c.DeleteNoAuth(ctx, session, space.ID)
 	return nil
 }
 

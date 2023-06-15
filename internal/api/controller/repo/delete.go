@@ -29,7 +29,7 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef 
 	}
 	log.Ctx(ctx).Info().Msgf("Delete request received for repo %s , id: %d", repo.Path, repo.ID)
 	// TODO: uncomment when soft delete is implemented
-	//return c.DeleteNoAuth(ctx, session, repo)
+	// return c.DeleteNoAuth(ctx, session, repo)
 	return nil
 }
 

@@ -25,6 +25,8 @@ func Translate(err error) *Error {
 		gitrpcError *gitrpc.Error
 	)
 
+	// TODO: Improve performance of checking multiple errors with errors.Is
+
 	// check if err is RBAC error
 	if rbacErr := processRBACErrors(err); rbacErr != nil {
 		return rbacErr
@@ -102,25 +104,25 @@ func httpStatusCode(code gitrpc.Status) int {
 
 func processRBACErrors(err error) *Error {
 	msg := err.Error()
-	switch errors.Unwrap(err) {
+	switch {
 	case
-		rbac.ErrBaseURLRequired,
-		rbac.ErrInvalidPrincipalType,
-		rbac.ErrAccountRequired,
-		rbac.ErrPrincipalIdentifierRequired,
-		rbac.ErrPermissionsRequired,
-		rbac.ErrResourceTypeRequired,
-		rbac.ErrResourceTypeKeyRequired,
-		rbac.ErrResourceTypeValueRequired,
-		rbac.ErrPermissionRequired,
-		rbac.ErrPermissionsSizeExceeded,
-		rbac.ErrInvalidCacheEntryType,
-		rbac.ErrNoHeader,
-		rbac.ErrAuthorizationTokenRequired,
-		rbac.ErrOddNumberOfArguments:
+		errors.Is(err, rbac.ErrBaseURLRequired),
+		errors.Is(err, rbac.ErrInvalidPrincipalType),
+		errors.Is(err, rbac.ErrAccountRequired),
+		errors.Is(err, rbac.ErrPrincipalIdentifierRequired),
+		errors.Is(err, rbac.ErrPermissionsRequired),
+		errors.Is(err, rbac.ErrResourceTypeRequired),
+		errors.Is(err, rbac.ErrResourceTypeKeyRequired),
+		errors.Is(err, rbac.ErrResourceTypeValueRequired),
+		errors.Is(err, rbac.ErrPermissionRequired),
+		errors.Is(err, rbac.ErrPermissionsSizeExceeded),
+		errors.Is(err, rbac.ErrInvalidCacheEntryType),
+		errors.Is(err, rbac.ErrNoHeader),
+		errors.Is(err, rbac.ErrAuthorizationTokenRequired),
+		errors.Is(err, rbac.ErrOddNumberOfArguments):
 		return New(http.StatusBadRequest, msg)
-	case rbac.ErrMapperFuncCannotBeNil,
-		rbac.ErrLoggerCannotBeNil:
+	case errors.Is(err, rbac.ErrMapperFuncCannotBeNil),
+		errors.Is(err, rbac.ErrLoggerCannotBeNil):
 		return New(http.StatusInternalServerError, msg)
 	}
 

@@ -203,12 +203,16 @@ func (g Adapter) ListCommits(ctx context.Context,
 
 // In case of rename of a file, same commit will be listed twice - Once in old file and second time in new file.
 // Hence, we are making it a pattern to only list it as part of new file and not as part of old file.
-func cleanupCommitsForRename(commits []types.Commit, renameDetails []types.PathRenameDetails, path string) []types.Commit {
+func cleanupCommitsForRename(
+	commits []types.Commit,
+	renameDetails []types.PathRenameDetails,
+	path string,
+) []types.Commit {
 	if len(commits) == 0 {
 		return commits
 	}
 	for _, renameDetail := range renameDetails {
-		// Since rename details is present here it implies that we would have some commits and hence we need not do null check.
+		// Since rename details is present it implies that we have commits and hence don't need null check.
 		if commits[0].SHA == renameDetail.CommitSHABefore && path == renameDetail.OldPath {
 			return commits[1:]
 		}

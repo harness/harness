@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
@@ -42,10 +43,6 @@ import (
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
-)
-
-import (
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // Injectors from wire.go:
@@ -137,8 +134,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	githookController := githook.ProvideController(db, authorizer, principalStore, repoStore, eventsReporter)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore)
-	checkStore := database.ProvideCheckStore(db, principalInfoCache)
-	checkController := check2.ProvideController(db, authorizer, checkStore, repoStore, gitrpcInterface)
+	checkController := check2.ProvideController(db, authorizer, repoStore, gitrpcInterface)
 	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, spaceController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController)
 	gitHandler := router.ProvideGitHandler(config, provider, repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router.ProvideWebHandler(config)

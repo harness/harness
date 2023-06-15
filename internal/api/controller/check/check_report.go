@@ -50,6 +50,7 @@ func (in *ReportInput) Validate() error {
 	}
 	in.Payload.Kind = payloadKind
 
+	//nolint:gocritic // more values to follow on the enum (we want linter warning in case it is missed)
 	switch in.Payload.Kind {
 	case enum.CheckPayloadKindExternal:
 		// the default external type does not support payload: clear it here
@@ -96,7 +97,7 @@ func (c *Controller) Report(
 
 	now := time.Now().UnixMilli()
 
-	metadataJson, _ := json.Marshal(metadata)
+	metadataJSON, _ := json.Marshal(metadata)
 
 	statusCheckReport := &types.Check{
 		CreatedBy:  session.Principal.ID,
@@ -109,7 +110,7 @@ func (c *Controller) Report(
 		Summary:    in.Summary,
 		Link:       in.Link,
 		Payload:    in.Payload,
-		Metadata:   metadataJson,
+		Metadata:   metadataJSON,
 		ReportedBy: *session.Principal.ToPrincipalInfo(),
 	}
 

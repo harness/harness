@@ -39,7 +39,7 @@ var queryParameterAccountID = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        "accountIdentifier",
 		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The account ID the principals are retrieved for (Not requried in standalone)."),
+		Description: ptr.String("The account ID the principals are retrieved for (Not required in standalone)."),
 		Required:    ptr.Bool(false),
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
