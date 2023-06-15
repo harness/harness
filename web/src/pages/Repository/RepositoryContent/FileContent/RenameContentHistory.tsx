@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Container, Icon, Text } from '@harness/uicore'
+import { Icon, Text } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import cx from 'classnames'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
@@ -61,11 +61,7 @@ const SingleFileRenameHistory = (props: {
       hideTitleGutter
       contentClassName={css.contentSection}
       title={
-        <Text
-          padding={{ top: 'large' }}
-          hidden={showCommitHistory}
-          className={cx(css.hideText, css.lineDiv)}
-          onClick={toggleCommitHistory}>
+        <Text padding={{ top: 'large' }} className={cx(css.hideText, css.lineDiv)} onClick={toggleCommitHistory}>
           {showCommitHistory
             ? getString('hideCommitHistory', { file: details.old_path })
             : getString('showCommitHistory', { file: details.old_path })}
@@ -88,15 +84,6 @@ const SingleFileRenameHistory = (props: {
             resourcePath={details.old_path}
             setActiveTab={setActiveTab}
           />
-          <Container className={css.lineDiv}>
-            <Text
-              className={cx(css.hideText, css.lineDiv)}
-              padding={{ left: 'xxxlarge', right: 'xxxlarge', top: 'large' }}
-              onClick={toggleCommitHistory}>
-              {getString('hideCommitHistory', { file: details.old_path })}
-              <Icon padding={'xsmall'} name={'main-chevron-up'} size={8}></Icon>
-            </Text>
-          </Container>
           <ResourceListingPagination response={response} page={page} setPage={setPage} />
           <AllFilesRenameHistory
             rename_details={commits.rename_details.filter(file => file.old_path !== details.old_path)}

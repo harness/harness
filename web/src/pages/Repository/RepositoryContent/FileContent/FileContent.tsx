@@ -31,7 +31,6 @@ import { useStrings } from 'framework/strings'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { PlainButton } from 'components/PlainButton/PlainButton'
 import { CommitsView } from 'components/CommitsView/CommitsView'
-import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { Readme } from '../FolderContent/Readme'
@@ -108,8 +107,8 @@ export function FileContent({
     return { disabled: isRefATag(gitRef) || false, tooltip: undefined }
   }, [permPushResult, gitRef]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [page, setPage] = usePageIndex()
-  const { data: commits, response } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
+  const [page] = usePageIndex()
+  const { data: commits } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
@@ -257,7 +256,7 @@ export function FileContent({
               <>
                 {repoMetadata && !!commits?.commits?.length && (
                   <>
-                    <Container className={css.gitBlame}>
+                    <Container className={css.gitCommit}>
                       <CommitsView
                         commits={commits.commits}
                         repoMetadata={repoMetadata}
@@ -267,8 +266,6 @@ export function FileContent({
                         resourcePath={resourcePath}
                         setActiveTab={setActiveTab}
                       />
-
-                      <ResourceListingPagination response={response} page={page} setPage={setPage} />
                     </Container>
                     <Container className={css.gitHistory}>
                       {commits?.rename_details && repoMetadata ? (

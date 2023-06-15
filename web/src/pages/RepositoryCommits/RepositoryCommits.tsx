@@ -1,10 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import {
-  Container,
-  FlexExpander,
-  Layout,
-  PageBody,
-} from '@harness/uicore'
+import React, { useEffect, useMemo } from 'react'
+import { Container, FlexExpander, Layout, PageBody } from '@harness/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import { noop } from 'lodash-es'
@@ -41,7 +36,7 @@ export default function RepositoryCommits() {
     response,
     error: errorCommits,
     loading: loadingCommits
-  } = useGet<{ commits: TypesCommit[]}>({
+  } = useGet<{ commits: TypesCommit[] }>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
@@ -87,7 +82,7 @@ export default function RepositoryCommits() {
           <Container padding="xlarge" className={css.resourceContent}>
             <Container className={css.contentHeader}>
               <Layout.Horizontal>
-                <CommitInfo repoMetadata={repoMetadata} commitRef={commitRef}  /> 
+                <CommitInfo repoMetadata={repoMetadata} commitRef={commitRef} />
                 <FlexExpander />
               </Layout.Horizontal>
             </Container>
