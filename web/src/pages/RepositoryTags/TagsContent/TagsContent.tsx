@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import { Container, Color, TableV2 as Table, Text, Avatar, Intent, useToaster } from '@harness/uicore'
 import type { CellProps, Column } from 'react-table'
 import { Link, useHistory } from 'react-router-dom'
@@ -9,13 +9,7 @@ import { noop } from 'lodash-es'
 import { String, useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 
-import type {
-  OpenapiCalculateCommitDivergenceRequest,
-  RepoBranch,
-  RepoCommitDivergence,
-  RepoCommitTag,
-  TypesRepository
-} from 'services/code'
+import type { RepoBranch, RepoCommitTag, TypesRepository } from 'services/code'
 import { formatDate, getErrorMessage, voidFn } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
@@ -35,26 +29,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
   const { routes } = useAppContext()
   const history = useHistory()
   const { getString } = useStrings()
-  const { mutate: getBranchDivergence } = useMutate({
-    verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata.path}/+/commits/calculate-divergence`
-  })
-  const [divergence, setDivergence] = useState<RepoCommitDivergence[]>([])
-  const branchDivergenceRequestBody: OpenapiCalculateCommitDivergenceRequest = useMemo(() => {
-    return {
-      maxCount: 0,
-      requests: branches?.map(branch => ({ from: branch.name, to: repoMetadata.default_branch }))
-    }
-  }, [repoMetadata, branches])
 
-  useEffect(() => {
-    if (branchDivergenceRequestBody.requests?.length) {
-      setDivergence([])
-      getBranchDivergence(branchDivergenceRequestBody).then((response: RepoCommitDivergence[]) => {
-        setDivergence(response)
-      })
-    }
-  }, [getBranchDivergence, branchDivergenceRequestBody])
   const onSuccess = voidFn(noop)
 
   const columns: Column<RepoBranch>[] = useMemo(
@@ -102,10 +77,10 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
         Cell: ({ row }: CellProps<RepoCommitTag>) => {
           return (
             <CommitActions
-              sha={row.original.sha as string}
+              sha={row.original.commit?.sha as string}
               href={routes.toCODECommits({
                 repoPath: repoMetadata.path as string,
-                commitRef: row.original.sha as string
+                commitRef: row.original.commit?.sha as string
               })}
               enableCopy
             />
@@ -215,15 +190,15 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
         }
       }
     ],
-    [// eslint-disable-line react-hooks/exhaustive-deps
+    [
+      // eslint-disable-line react-hooks/exhaustive-deps
       getString,
-      repoMetadata.default_branch,
-      repoMetadata.path,
       routes,
       searchTerm,
       history,
       onDeleteSuccess,
-      divergence
+      repoMetadata,
+      onSuccess
     ] // eslint-disable-line react-hooks/exhaustive-deps
   )
 

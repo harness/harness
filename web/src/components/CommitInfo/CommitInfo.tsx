@@ -49,7 +49,7 @@ const CommitInfo = (props: { repoMetadata: TypesRepository; commitRef: string })
                 iconProps={{ size: 16 }}
                 padding="medium"
                 color="black">
-                {commitData ? commitData[0]?.title : ''}
+                {commitData[0] ? commitData[0]?.title : ''}
               </Text>
               <FlexExpander />
               <Button
@@ -69,15 +69,15 @@ const CommitInfo = (props: { repoMetadata: TypesRepository; commitRef: string })
           </Container>
           <Container className={css.infoContainer}>
             <Layout.Horizontal className={css.alignContent} padding={{ left: 'small', right: 'medium' }}>
-              <Avatar hoverCard={false} size="small" name={commitData ? commitData[0].author?.identity?.name : ''} />
+              <Avatar hoverCard={false} size="small" name={commitData[0] ? commitData[0].author?.identity?.name : ''} />
               <Text className={css.infoText} color={Color.BLACK}>
-                {commitData ? commitData[0].author?.identity?.name : ''}
+                {commitData[0] ? commitData[0].author?.identity?.name : ''}
               </Text>
               <Text
                 font={{ size: 'small' }}
                 padding={{ left: 'small', right: 'large', top: 'medium', bottom: 'medium' }}>
                 {getString('commitsOn', {
-                  date: formatDate((commitData[0].committer as TypesSignature).when as string)
+                  date: commitData[0] ? formatDate((commitData[0].committer as TypesSignature).when as string) : ''
                 })}
               </Text>
               <FlexExpander />
