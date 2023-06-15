@@ -8,11 +8,5 @@
 package main
 
 import (
-	"github.com/harness/gitness/cli"
-
 	_ "github.com/lib/pq"
 )
-
-func main() {
-	cli.Command()
-}

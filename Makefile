@@ -20,6 +20,16 @@ endif
 
 .DEFAULT_GOAL := all
 
+ifeq ($(BUILD_TAGS),)
+	BUILD_TAGS := sqlite
+endif
+
+###############################################################################
+#
+# Initialization
+#
+###############################################################################
+
 init: ## Install git hooks to perform pre-commit checks
 	git config core.hooksPath .githooks
 	git config commit.template .gitmessage
@@ -34,18 +44,11 @@ dep: $(deps) ## Install the deps required to generate code and build gitness
 tools: $(tools) ## Install tools required for the build
 	@echo "Installed tools"
 
-mocks: $(mocks)
-	@echo "Generating Test Mocks"
-
-wire: cli/server/harness.wire_gen.go cli/server/standalone.wire_gen.go cmd/gitrpcserver/wire_gen.go
-
-force-wire: ## Force wire code generation
-	@sh ./scripts/wire/server/standalone.sh
-	@sh ./scripts/wire/server/harness.sh
-	@sh ./scripts/wire/gitrpcserver/wire.sh
-
-generate: $(mocks) wire mocks/mock_client.go proto
-	@echo "Generating Code"
+###############################################################################
+#
+# Build and testing rules
+#
+###############################################################################
 
 build: generate ## Build the all-in-one gitness binary
 	@echo "Building Gitness Server"
@@ -65,34 +68,14 @@ test: generate  ## Run the go tests
 	go tool cover -html=coverage.out
 
 run: dep ## Run the gitness binary from source
-	@go run -race -ldflags=${LDFLAGS} .
+	@go run -race -ldflags=${LDFLAGS} ./cmd/gitness
 
-clean-db: ## delete all data from local database
-	psql postgresql://gitness:gitness@localhost:5432/gitness -f scripts/db/cleanup.sql
-
-populate-db: ## inject sample data into local database
-	psql postgresql://gitness:gitness@localhost:5432/gitness -f scripts/db/sample_data.sql
-
-update-tools: delete-tools $(tools) ## Update the tools by deleting and re-installing
-
-delete-tools: ## Delete the tools
-	@rm $(tools) || true
-
-#########################################
+###############################################################################
+#
 # Docker environment commands
 # The following targets relate to running gitness and its dependent services
-#########################################
-start: ## Run all dependent services and start the gitness server locally - the service will listen on :3000 by default
-	docker-compose -f ./docker/docker-compose.yml up ${DOCKER_BUILD_OPTS} --remove-orphans
-
-stop: ## Stop all services
-	docker-compose -f ./docker/docker-compose.yml down --remove-orphans
-
-dev: ## Run local dev environment this starts the services which gitness depends on
-	docker-compose -f ./docker/docker-compose.yml up ${DOCKER_BUILD_OPTS} --remove-orphans db redis
-
-test-env: stop ## Run test environment - this runs all services and the gitness in test mode.
-	docker-compose -f ./docker/docker-compose.yml -f ./docker/docker-compose.test.yml up -d ${DOCKER_BUILD_OPTS} --remove-orphans
+#
+###############################################################################
 
 image: ## Build the gitness docker image
 	@echo "Building Gitness Standalone Image"
@@ -115,14 +98,11 @@ gitrpc-image: ## Build the gitness gitrpc docker image
 			 -t gitness-gitrpc:latest \
 			 -f ./docker/Dockerfile.gitrpc .
 
-e2e: generate test-env ## Run e2e tests
-	chmod +x wait-for-gitness.sh && ./wait-for-gitness.sh
-	go test -p 1 -v -coverprofile=e2e_cov.out ./tests/... -env=".env.local"
-
-
-###########################################
+###############################################################################
+#
 # Code Formatting and linting
-###########################################
+#
+###############################################################################
 
 format: tools # Format go code and error if any changes are made
 	@echo "Formating ..."
@@ -138,16 +118,26 @@ lint: tools generate # lint the golang code
 	@echo "Linting $(1)"
 	@golangci-lint run --timeout=3m --verbose
 
-###########################################
+###############################################################################
 # Code Generation
 #
 # Some code generation can be slow, so we only run it if
 # the source file has changed.
-###########################################
-cli/server/harness.wire_gen.go: cli/server/harness.wire.go
-	@sh ./scripts/wire/server/harness.sh
+###############################################################################
 
-cli/server/standalone.wire_gen.go: cli/server/standalone.wire.go
+generate: $(mocks) wire mocks/mock_client.go proto
+	@echo "Generating Code"
+
+mocks: $(mocks)
+	@echo "Generating Test Mocks"
+
+wire: cmd/gitness/wire_gen.go cmd/gitrpcserver/wire_gen.go
+
+force-wire: ## Force wire code generation
+	@sh ./scripts/wire/server/standalone.sh
+	@sh ./scripts/wire/gitrpcserver/wire.sh
+
+cmd/gitness/wire_gen.go: cmd/gitness/wire.go
 	@sh ./scripts/wire/server/standalone.sh
 
 cmd/gitrpcserver/wire_gen.go: cmd/gitrpcserver/wire.go
@@ -156,7 +146,7 @@ cmd/gitrpcserver/wire_gen.go: cmd/gitrpcserver/wire.go
 mocks/mock_client.go: internal/store/database.go client/client.go
 	go generate mocks/mock.go
 
-proto:
+proto: ## generate proto files for gitrpc integration
 	@protoc --proto_path=./gitrpc/proto \
 			--go_out=./gitrpc/rpc \
 			--go_opt=paths=source_relative \
@@ -164,19 +154,17 @@ proto:
 			--go-grpc_opt=paths=source_relative \
 			./gitrpc/proto/*.proto
 
-harness-proto:
-	@protoc --proto_path=./harness/proto \
-			--go_out=./harness/rpc \
-			--go_opt=paths=source_relative \
-			--go-grpc_out=./harness/rpc \
-			--go-grpc_opt=paths=source_relative \
-			./harness/proto/*.proto
-###########################################
+###############################################################################
 # Install Tools and deps
 #
 # These targets specify the full path to where the tool is installed
 # If the tool already exists it wont be re-installed.
-###########################################
+###############################################################################
+
+update-tools: delete-tools $(tools) ## Update the tools by deleting and re-installing
+
+delete-tools: ## Delete the tools
+	@rm $(tools) || true
 
 # Install golangci-lint
 $(GOBIN)/golangci-lint:

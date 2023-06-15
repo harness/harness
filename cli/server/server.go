@@ -30,7 +30,9 @@ const (
 )
 
 type command struct {
-	envfile string
+	envfile      string
+	enableGitRPC bool
+	initializer  func(context.Context, *types.Config) (*System, error)
 }
 
 func (c *command) run(*kingpin.ParseContext) error {
@@ -57,7 +59,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	ctx = log.WithContext(ctx)
 
 	// initialize system
-	system, err := initSystem(ctx, config)
+	system, err := c.initializer(ctx, config)
 	if err != nil {
 		return fmt.Errorf("encountered an error while wiring the system: %w", err)
 	}
@@ -83,15 +85,17 @@ func (c *command) run(*kingpin.ParseContext) error {
 		Stringer("version", version.Version).
 		Msg("server started")
 
-	// start grpc server
-	g.Go(system.gitRPCServer.Start)
-	log.Info().Msg("gitrpc server started")
+	if c.enableGitRPC {
+		// start grpc server
+		g.Go(system.gitRPCServer.Start)
+		log.Info().Msg("gitrpc server started")
 
-	// run the gitrpc cron jobs
-	g.Go(func() error {
-		return system.gitRPCCronMngr.Run(ctx)
-	})
-	log.Info().Msg("gitrpc cron manager subroutine started")
+		// run the gitrpc cron jobs
+		g.Go(func() error {
+			return system.gitRPCCronMngr.Run(ctx)
+		})
+		log.Info().Msg("gitrpc cron manager subroutine started")
+	}
 
 	// wait until the error group context is done
 	<-gCtx.Done()
@@ -108,8 +112,10 @@ func (c *command) run(*kingpin.ParseContext) error {
 		log.Err(sErr).Msg("failed to shutdown http server gracefully")
 	}
 
-	if rpcErr := system.gitRPCServer.Stop(); rpcErr != nil {
-		log.Err(rpcErr).Msg("failed to shutdown grpc server gracefully")
+	if c.enableGitRPC {
+		if rpcErr := system.gitRPCServer.Stop(); rpcErr != nil {
+			log.Err(rpcErr).Msg("failed to shutdown grpc server gracefully")
+		}
 	}
 
 	log.Info().Msg("wait for subroutines to complete")
@@ -147,8 +153,9 @@ func SetupLogger(config *types.Config) {
 }
 
 // Register the server command.
-func Register(app *kingpin.Application) {
+func Register(app *kingpin.Application, initializer func(context.Context, *types.Config) (*System, error)) {
 	c := new(command)
+	c.initializer = initializer
 
 	cmd := app.Command("server", "starts the server").
 		Action(c.run)
@@ -156,4 +163,9 @@ func Register(app *kingpin.Application) {
 	cmd.Arg("envfile", "load the environment variable file").
 		Default("").
 		StringVar(&c.envfile)
+
+	cmd.Flag("enable-gitrpc", "start the gitrpc server").
+		Default("true").
+		Envar("ENABLE_GITRPC").
+		BoolVar(&c.enableGitRPC)
 }

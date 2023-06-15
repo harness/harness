@@ -9,10 +9,41 @@ package main
 
 import (
 	"github.com/harness/gitness/cli"
+	"github.com/harness/gitness/cli/operations/account"
+	"github.com/harness/gitness/cli/operations/hooks"
+	"github.com/harness/gitness/cli/operations/migrate"
+	"github.com/harness/gitness/cli/operations/user"
+	"github.com/harness/gitness/cli/operations/users"
+	"github.com/harness/gitness/cli/server"
+	"github.com/harness/gitness/version"
 
-	_ "github.com/mattn/go-sqlite3"
+	"gopkg.in/alecthomas/kingpin.v2"
+)
+
+const (
+	application = "gitness"
+	description = "Gitness Open source edition"
 )
 
 func main() {
-	cli.Command()
+	args := cli.GetArguments()
+
+	app := kingpin.New(application, description)
+
+	migrate.Register(app)
+	server.Register(app, initSystem)
+
+	user.Register(app)
+	users.Register(app)
+
+	account.RegisterLogin(app)
+	account.RegisterRegister(app)
+	account.RegisterLogout(app)
+
+	hooks.Register(app)
+
+	cli.RegisterSwagger(app)
+
+	kingpin.Version(version.Version.String())
+	kingpin.MustParse(app.Parse(args))
 }

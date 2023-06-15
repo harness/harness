@@ -27,7 +27,7 @@ func (c *swaggerCommand) run(*kingpin.ParseContext) error {
 }
 
 // helper function to register the swagger command.
-func registerSwagger(app *kingpin.Application) {
+func RegisterSwagger(app *kingpin.Application) {
 	c := new(swaggerCommand)
 
 	cmd := app.Command("swagger", "generate swagger file").

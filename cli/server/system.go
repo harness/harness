@@ -12,8 +12,8 @@ import (
 	"github.com/harness/gitness/internal/services"
 )
 
-// system stores high level system sub-routines.
-type system struct {
+// System stores high level System sub-routines.
+type System struct {
 	bootstrap      bootstrap.Bootstrap
 	server         *server.Server
 	gitRPCServer   *gitrpcserver.Server
@@ -21,10 +21,10 @@ type system struct {
 	gitRPCCronMngr *gitrpccron.Manager
 }
 
-// newSystem returns a new system structure.
-func newSystem(bootstrap bootstrap.Bootstrap, server *server.Server, gitRPCServer *gitrpcserver.Server,
-	gitrpccron *gitrpccron.Manager, services services.Services) *system {
-	return &system{
+// NewSystem returns a new system structure.
+func NewSystem(bootstrap bootstrap.Bootstrap, server *server.Server, gitRPCServer *gitrpcserver.Server,
+	gitrpccron *gitrpccron.Manager, services services.Services) *System {
+	return &System{
 		bootstrap:      bootstrap,
 		server:         server,
 		gitRPCServer:   gitRPCServer,

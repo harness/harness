@@ -2,27 +2,19 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-//go:build wireinject && harness
-// +build wireinject,harness
+//go:build wireinject
+// +build wireinject
 
-package server
+package main
 
 import (
 	"context"
 
+	cliserver "github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
 	gitrpccron "github.com/harness/gitness/gitrpc/server/cron"
-	"github.com/harness/gitness/harness/auth/authn"
-	"github.com/harness/gitness/harness/auth/authz"
-	"github.com/harness/gitness/harness/bootstrap"
-	"github.com/harness/gitness/harness/client"
-	"github.com/harness/gitness/harness/router"
-	harnessservices "github.com/harness/gitness/harness/services"
-	harnessevents "github.com/harness/gitness/harness/services/events"
-	"github.com/harness/gitness/harness/store"
-	"github.com/harness/gitness/harness/types/check"
 	checkcontroller "github.com/harness/gitness/internal/api/controller/check"
 	"github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/principal"
@@ -33,58 +25,62 @@ import (
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
 	controllerwebhook "github.com/harness/gitness/internal/api/controller/webhook"
+	"github.com/harness/gitness/internal/auth/authn"
+	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/bootstrap"
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
+	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
+	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/codecomments"
 	pullreqservice "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/webhook"
+	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/cache"
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
-	gitnesstypes "github.com/harness/gitness/types"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
 )
 
-func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, error) {
+func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, error) {
 	wire.Build(
-		newSystem,
-		ProvideHarnessConfig,
-		harnessevents.WireSet,
-		ProvideRedis,
+		cliserver.NewSystem,
+		cliserver.ProvideRedis,
 		bootstrap.WireSet,
 		database.WireSet,
-		pullreqservice.WireSet,
-		harnessservices.WireSet,
 		cache.WireSet,
+		router.WireSet,
+		pullreqservice.WireSet,
+		services.WireSet,
 		server.WireSet,
 		url.WireSet,
 		space.WireSet,
 		repo.WireSet,
 		pullreq.WireSet,
 		controllerwebhook.WireSet,
+		serviceaccount.WireSet,
 		user.WireSet,
 		service.WireSet,
-		serviceaccount.WireSet,
 		principal.WireSet,
-		gitevents.WireSet,
-		pullreqevents.WireSet,
-		ProvideGitRPCServerConfig,
-		gitrpcserver.WireSet,
-		ProvideGitRPCClientConfig,
-		gitrpc.WireSet,
-		router.WireSet,
 		authn.WireSet,
 		authz.WireSet,
-		client.WireSet,
+		gitevents.WireSet,
+		pullreqevents.WireSet,
+		cliserver.ProvideGitRPCServerConfig,
+		gitrpcserver.WireSet,
+		cliserver.ProvideGitRPCClientConfig,
+		gitrpc.WireSet,
 		store.WireSet,
 		check.WireSet,
-		ProvideEventsConfig,
+		cliserver.ProvideEventsConfig,
 		events.WireSet,
-		ProvideWebhookConfig,
+		cliserver.ProvideWebhookConfig,
 		webhook.WireSet,
 		githook.WireSet,
 		lock.WireSet,
@@ -93,5 +89,5 @@ func initSystem(ctx context.Context, config *gitnesstypes.Config) (*system, erro
 		gitrpccron.WireSet,
 		checkcontroller.WireSet,
 	)
-	return &system{}, nil
+	return &cliserver.System{}, nil
 }

@@ -9,15 +9,16 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "buildFlags": "-tags=harness",
-            "program": "cmd/gitness",
-            "args": ["server", "../../.harness.env"]
+            "buildFlags": "-tags=sqlite",
+            "program": "./harness",
+            "args": ["server", ".env"]
         },
         {
             "name": "Standalone",
             "type": "go",
             "request": "launch",
             "mode": "auto",
+            "buildFlags": "-tags=sqlite",
             "program": "cmd/gitness",
             "args": ["server", "../../.local.env"]
         }
