@@ -66,7 +66,7 @@ func NewAPIHandler(
 	githookCtrl *githook.Controller,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
-	principalCtrl *principal.Controller,
+	principalCtrl principal.Controller,
 	checkCtrl *check.Controller,
 ) APIHandler {
 	// Use go-chi router for inner routing.
@@ -118,7 +118,7 @@ func setupRoutesV1(r chi.Router,
 	githookCtrl *githook.Controller,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
-	principalCtrl *principal.Controller,
+	principalCtrl principal.Controller,
 	checkCtrl *check.Controller,
 ) {
 	setupSpaces(r, spaceCtrl, repoCtrl)
@@ -339,7 +339,6 @@ func setupUser(r chi.Router, userCtrl *user.Controller) {
 	r.Route("/user", func(r chi.Router) {
 		// enforce principal authenticated and it's a user
 		r.Use(middlewareprincipal.RestrictTo(enum.PrincipalTypeUser))
-
 		r.Get("/", handleruser.HandleFind(userCtrl))
 		r.Patch("/", handleruser.HandleUpdate(userCtrl))
 
@@ -403,11 +402,9 @@ func setupResources(r chi.Router) {
 	})
 }
 
-func setupPrincipals(r chi.Router, principalCtrl *principal.Controller) {
+func setupPrincipals(r chi.Router, principalCtrl principal.Controller) {
 	r.Route("/principals", func(r chi.Router) {
-		r.Route(fmt.Sprintf("/{%s}", request.PathParamPrincipalUID), func(r chi.Router) {
-			r.Get("/", handlerprincipal.HandleFindPublic(principalCtrl))
-		})
+		r.Get("/", handlerprincipal.HandleList(principalCtrl))
 	})
 }
 

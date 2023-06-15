@@ -63,7 +63,7 @@ func ProvideAPIHandler(
 	githookCtrl *githook.Controller,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
-	principalCtrl *principal.Controller,
+	principalCtrl principal.Controller,
 	checkCtrl *check.Controller,
 ) APIHandler {
 	return NewAPIHandler(config, authenticator, repoCtrl, spaceCtrl, pullreqCtrl,

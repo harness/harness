@@ -19,12 +19,15 @@ type (
 		/*
 		 * PRINCIPAL RELATED OPERATIONS.
 		 */
-
 		// Find finds the principal by id.
 		Find(ctx context.Context, id int64) (*types.Principal, error)
 
 		// FindByUID finds the principal by uid.
 		FindByUID(ctx context.Context, uid string) (*types.Principal, error)
+
+		// FindManyByUID returns all principals found for the provided UIDs.
+		// If a UID isn't found, it's not returned in the list.
+		FindManyByUID(ctx context.Context, uids []string) ([]*types.Principal, error)
 
 		// FindByEmail finds the principal by email.
 		FindByEmail(ctx context.Context, email string) (*types.Principal, error)
@@ -35,6 +38,9 @@ type (
 
 		// FindUser finds the user by id.
 		FindUser(ctx context.Context, id int64) (*types.User, error)
+
+		// List lists the principals matching the provided filter.
+		List(ctx context.Context, fetchQuery *types.PrincipalFilter) ([]*types.Principal, error)
 
 		// FindUserByUID finds the user by uid.
 		FindUserByUID(ctx context.Context, uid string) (*types.User, error)

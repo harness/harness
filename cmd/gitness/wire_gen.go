@@ -136,7 +136,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	githookController := githook.ProvideController(db, authorizer, principalStore, repoStore, eventsReporter)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
-	principalController := principal.NewController(principalStore)
+	principalController := principal.ProvideController(principalStore)
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	checkController := check2.ProvideController(db, authorizer, checkStore, repoStore, gitrpcInterface)
 	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, spaceController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController)

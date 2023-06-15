@@ -45,3 +45,31 @@ func ParseUserFilter(r *http.Request) *types.UserFilter {
 		Size:  ParseLimit(r),
 	}
 }
+
+// ParsePrincipalTypes extracts the principal types from the url.
+func ParsePrincipalTypes(r *http.Request) []enum.PrincipalType {
+	pTypesRaw := r.Form[QueryParamType]
+	m := make(map[enum.PrincipalType]struct{}) // use map to eliminate duplicates
+	for _, pTypeRaw := range pTypesRaw {
+		if pType, ok := enum.PrincipalType(pTypeRaw).Sanitize(); ok {
+			m[pType] = struct{}{}
+		}
+	}
+
+	res := make([]enum.PrincipalType, 0, len(m))
+	for t := range m {
+		res = append(res, t)
+	}
+
+	return res
+}
+
+// ParseRepoFilter extracts the principal filter from the url.
+func ParsePrincipalFilter(r *http.Request) *types.PrincipalFilter {
+	return &types.PrincipalFilter{
+		Query: ParseQuery(r),
+		Page:  ParsePage(r),
+		Size:  ParseLimit(r),
+		Types: ParsePrincipalTypes(r),
+	}
+}

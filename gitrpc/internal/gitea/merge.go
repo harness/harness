@@ -84,7 +84,8 @@ func (g Adapter) CreateTemporaryRepoForPR(
 
 	if err = addCacheRepo(tmpBasePath, baseRepoPath); err != nil {
 		_ = tempdir.RemoveTemporaryPath(tmpBasePath)
-		return types.TempRepository{}, fmt.Errorf("unable to add base repository to temporary repo [%s -> tmpBasePath]: %w", pr.BaseRepoPath, err)
+		return types.TempRepository{},
+			fmt.Errorf("unable to add base repository to temporary repo [%s -> tmpBasePath]: %w", pr.BaseRepoPath, err)
 	}
 
 	var outbuf, errbuf strings.Builder

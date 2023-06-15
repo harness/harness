@@ -210,6 +210,21 @@ func (mr *MockPrincipalStoreMockRecorder) FindByUID(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUID", reflect.TypeOf((*MockPrincipalStore)(nil).FindByUID), arg0, arg1)
 }
 
+// FindManyByUID mocks base method.
+func (m *MockPrincipalStore) FindManyByUID(arg0 context.Context, arg1 []string) ([]*types.Principal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindManyByUID", arg0, arg1)
+	ret0, _ := ret[0].([]*types.Principal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindManyByUID indicates an expected call of FindManyByUID.
+func (mr *MockPrincipalStoreMockRecorder) FindManyByUID(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindManyByUID", reflect.TypeOf((*MockPrincipalStore)(nil).FindManyByUID), arg0, arg1)
+}
+
 // FindService mocks base method.
 func (m *MockPrincipalStore) FindService(arg0 context.Context, arg1 int64) (*types.Service, error) {
 	m.ctrl.T.Helper()
@@ -313,6 +328,21 @@ func (m *MockPrincipalStore) FindUserByUID(arg0 context.Context, arg1 string) (*
 func (mr *MockPrincipalStoreMockRecorder) FindUserByUID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindUserByUID", reflect.TypeOf((*MockPrincipalStore)(nil).FindUserByUID), arg0, arg1)
+}
+
+// List mocks base method.
+func (m *MockPrincipalStore) List(arg0 context.Context, arg1 *types.PrincipalFilter) ([]*types.Principal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", arg0, arg1)
+	ret0, _ := ret[0].([]*types.Principal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List.
+func (mr *MockPrincipalStoreMockRecorder) List(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockPrincipalStore)(nil).List), arg0, arg1)
 }
 
 // ListServiceAccounts mocks base method.

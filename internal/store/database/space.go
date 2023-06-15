@@ -250,7 +250,7 @@ func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilte
 		Where("space_parent_id = ?", id)
 
 	if opts.Query != "" {
-		stmt = stmt.Where("space_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+		stmt = stmt.Where("LOWER(space_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
 	sql, args, err := stmt.ToSql()

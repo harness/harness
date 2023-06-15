@@ -6,13 +6,16 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -99,6 +102,39 @@ func (s *PrincipalStore) FindByUID(ctx context.Context, uid string) (*types.Prin
 	return s.mapDBPrincipal(dst), nil
 }
 
+// FindManyByUID returns all principals found for the provided UIDs.
+// If a UID isn't found, it's not returned in the list.
+func (s *PrincipalStore) FindManyByUID(ctx context.Context, uids []string) ([]*types.Principal, error) {
+	// map the UIDs to unique UIDs before searching!
+	uniqueUIDs := make([]string, len(uids))
+	for i := range uids {
+		var err error
+		uniqueUIDs[i], err = s.uidTransformation(uids[i])
+		if err != nil {
+			// in case we fail to transform, skip the entry (as it can't exist in the first place)
+			log.Ctx(ctx).Warn().Msgf("failed to transform uid '%s': %s", uids[i], err.Error())
+		}
+	}
+
+	stmt := builder.
+		Select(principalColumns).
+		From("principals").
+		Where(squirrel.Eq{"principal_uid_unique": uids})
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	sqlQuery, params, err := stmt.ToSql()
+	if err != nil {
+		return nil, processSQLErrorf(err, "failed to generate find many principal query")
+	}
+
+	dst := []*principal{}
+	if err := db.SelectContext(ctx, &dst, sqlQuery, params...); err != nil {
+		return nil, processSQLErrorf(err, "find many by uid for principals query failed")
+	}
+
+	return s.mapDBPrincipals(dst), nil
+}
+
 // FindByEmail finds the principal by email.
 func (s *PrincipalStore) FindByEmail(ctx context.Context, email string) (*types.Principal, error) {
 	const sqlQuery = principalSelectBase + `
@@ -114,6 +150,57 @@ func (s *PrincipalStore) FindByEmail(ctx context.Context, email string) (*types.
 	return s.mapDBPrincipal(dst), nil
 }
 
+// List lists the principals matching the provided filter.
+func (s *PrincipalStore) List(ctx context.Context,
+	opts *types.PrincipalFilter) ([]*types.Principal, error) {
+	stmt := builder.
+		Select(principalColumns).
+		From("principals")
+
+	if len(opts.Types) == 1 {
+		stmt = stmt.Where("principal_type = ?", opts.Types[0])
+	} else if len(opts.Types) > 1 {
+		stmt = stmt.Where(squirrel.Eq{"principal_type": opts.Types})
+	}
+
+	if opts.Query != "" {
+		// TODO: optimize performance
+		// https://harness.atlassian.net/browse/CODE-522
+		searchTerm := fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query))
+		stmt = stmt.Where(
+			"(LOWER(principal_uid) LIKE ? OR LOWER(principal_email) LIKE ? OR LOWER(principal_display_name) LIKE ?)",
+			searchTerm,
+			searchTerm,
+			searchTerm,
+		)
+	}
+
+	stmt = stmt.Limit(uint64(limit(opts.Size)))
+	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*principal{}
+	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, processSQLErrorf(err, "Search by display_name and email query failed")
+	}
+
+	return s.mapDBPrincipals(dst), nil
+}
+
 func (s *PrincipalStore) mapDBPrincipal(dbPrincipal *principal) *types.Principal {
 	return &dbPrincipal.Principal
+}
+
+func (s *PrincipalStore) mapDBPrincipals(dbPrincipals []*principal) []*types.Principal {
+	res := make([]*types.Principal, len(dbPrincipals))
+	for i := range dbPrincipals {
+		res[i] = s.mapDBPrincipal(dbPrincipals[i])
+	}
+	return res
 }

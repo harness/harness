@@ -8,12 +8,12 @@ import (
 	"github.com/harness/gitness/internal/store"
 )
 
-type Controller struct {
+type controller struct {
 	principalStore store.PrincipalStore
 }
 
-func NewController(principalStore store.PrincipalStore) *Controller {
-	return &Controller{
+func newController(principalStore store.PrincipalStore) *controller {
+	return &controller{
 		principalStore: principalStore,
 	}
 }

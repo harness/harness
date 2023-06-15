@@ -5,7 +5,9 @@
 // Package types defines common data structures.
 package types
 
-import "github.com/harness/gitness/types/enum"
+import (
+	"github.com/harness/gitness/types/enum"
+)
 
 // Principal represents the identity of an acting entity (User, ServiceAccount, Service).
 type Principal struct {
@@ -51,4 +53,11 @@ type PrincipalInfo struct {
 
 func (p *PrincipalInfo) Identifier() int64 {
 	return p.ID
+}
+
+type PrincipalFilter struct {
+	Page  int                  `json:"page"`
+	Size  int                  `json:"size"`
+	Query string               `json:"query"`
+	Types []enum.PrincipalType `json:"types"`
 }

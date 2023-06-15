@@ -12,9 +12,9 @@ import (
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	NewController,
+	ProvideController,
 )
 
-func ProvideController(principalStore store.PrincipalStore) *Controller {
-	return NewController(principalStore)
+func ProvideController(principalStore store.PrincipalStore) Controller {
+	return newController(principalStore)
 }
