@@ -11,7 +11,7 @@
             "mode": "auto",
             "buildFlags": "-tags=sqlite",
             "program": "./harness",
-            "args": ["server", ".env"]
+            "args": ["server", ".dev.env"]
         },
         {
             "name": "Standalone",
