@@ -83,6 +83,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.ProvideWebhookConfig,
 		webhook.WireSet,
 		githook.WireSet,
+		cliserver.ProvideLockConfig,
 		lock.WireSet,
 		pubsub.WireSet,
 		codecomments.WireSet,

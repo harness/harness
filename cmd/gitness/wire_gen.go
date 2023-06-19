@@ -104,7 +104,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	lockConfig := lock.ProvideConfig(config)
+	lockConfig := server.ProvideLockConfig(config)
 	mutexManager := lock.ProvideMutexManager(lockConfig, universalClient)
 	migrator := codecomments.ProvideMigrator(gitrpcInterface)
 	pullreqController := pullreq.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface, reporter, mutexManager, migrator)

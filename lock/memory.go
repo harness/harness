@@ -41,8 +41,8 @@ func (m *InMemory) NewMutex(key string, options ...Option) (Mutex, error) {
 	config := m.config
 
 	// set default delayFunc
-	config.delayFunc = func(i int) time.Duration {
-		return config.retryDelay
+	config.DelayFunc = func(i int) time.Duration {
+		return config.RetryDelay
 	}
 
 	// override config with custom options
@@ -51,13 +51,13 @@ func (m *InMemory) NewMutex(key string, options ...Option) (Mutex, error) {
 	}
 
 	// format key
-	key = formatKey(config.app, config.namespace, key)
+	key = formatKey(config.App, config.Namespace, key)
 
 	switch {
-	case config.value != "":
-		token = config.value
-	case config.genValueFunc != nil:
-		token, err = config.genValueFunc()
+	case config.Value != "":
+		token = config.Value
+	case config.GenValueFunc != nil:
+		token, err = config.GenValueFunc()
 	default:
 		token, err = randstr(32)
 	}
@@ -65,11 +65,18 @@ func (m *InMemory) NewMutex(key string, options ...Option) (Mutex, error) {
 		return nil, NewError(GenerateTokenFailed, key, nil)
 	}
 
+	// waitTime logic is similar to redis implementation:
+	// https://github.com/go-redsync/redsync/blob/e1e5da6654c81a2069d6a360f1a31c21f05cd22d/mutex.go#LL81C4-L81C100
+	waitTime := config.Expiry
+	if config.TimeoutFactor > 0 {
+		waitTime *= time.Duration(int64(float64(config.Expiry) * config.TimeoutFactor))
+	}
+
 	lock := inMemMutex{
-		expiry:    config.expiry,
-		waitTime:  15 * time.Second,
-		tries:     config.tries,
-		delayFunc: config.delayFunc,
+		expiry:    config.Expiry,
+		waitTime:  waitTime,
+		tries:     config.Tries,
+		delayFunc: config.DelayFunc,
 		provider:  m,
 		key:       key,
 		token:     token,

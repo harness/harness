@@ -41,22 +41,22 @@ func (r *Redis) NewMutex(key string, options ...Option) (Mutex, error) {
 	// convert to redis helper functions
 	args := make([]redsync.Option, 0, 8)
 	args = append(args,
-		redsync.WithExpiry(config.expiry),
-		redsync.WithTimeoutFactor(config.timeoutFactor),
-		redsync.WithTries(config.tries),
-		redsync.WithRetryDelay(config.retryDelay),
-		redsync.WithDriftFactor(config.driftFactor),
+		redsync.WithExpiry(config.Expiry),
+		redsync.WithTimeoutFactor(config.TimeoutFactor),
+		redsync.WithTries(config.Tries),
+		redsync.WithRetryDelay(config.RetryDelay),
+		redsync.WithDriftFactor(config.DriftFactor),
 	)
 
-	if config.delayFunc != nil {
-		args = append(args, redsync.WithRetryDelayFunc(redsync.DelayFunc(config.delayFunc)))
+	if config.DelayFunc != nil {
+		args = append(args, redsync.WithRetryDelayFunc(redsync.DelayFunc(config.DelayFunc)))
 	}
 
-	if config.genValueFunc != nil {
-		args = append(args, redsync.WithGenValueFunc(config.genValueFunc))
+	if config.GenValueFunc != nil {
+		args = append(args, redsync.WithGenValueFunc(config.GenValueFunc))
 	}
 
-	uniqKey := formatKey(config.app, config.namespace, key)
+	uniqKey := formatKey(config.App, config.Namespace, key)
 	mutex := r.rs.NewMutex(uniqKey, args...)
 
 	return &RedisMutex{

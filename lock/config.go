@@ -17,18 +17,18 @@ const (
 type DelayFunc func(tries int) time.Duration
 
 type Config struct {
-	app       string // app namespace prefix
-	namespace string
-	provider  Provider
-	expiry    time.Duration
+	App       string // app namespace prefix
+	Namespace string
+	Provider  Provider
+	Expiry    time.Duration
 
-	tries      int
-	retryDelay time.Duration
-	delayFunc  DelayFunc
+	Tries      int
+	RetryDelay time.Duration
+	DelayFunc  DelayFunc
 
-	driftFactor   float64
-	timeoutFactor float64
+	DriftFactor   float64
+	TimeoutFactor float64
 
-	genValueFunc func() (string, error)
-	value        string
+	GenValueFunc func() (string, error)
+	Value        string
 }

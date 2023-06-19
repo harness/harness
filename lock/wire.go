@@ -5,32 +5,16 @@
 package lock
 
 import (
-	"github.com/harness/gitness/types"
-
 	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 )
 
 var WireSet = wire.NewSet(
-	ProvideConfig,
 	ProvideMutexManager,
 )
 
-func ProvideConfig(config *types.Config) Config {
-	return Config{
-		app:           config.Lock.AppNamespace,
-		namespace:     config.Lock.DefaultNamespace,
-		provider:      Provider(config.Lock.Provider),
-		expiry:        config.Lock.Expiry,
-		tries:         config.Lock.Tries,
-		retryDelay:    config.Lock.RetryDelay,
-		driftFactor:   config.Lock.DriftFactor,
-		timeoutFactor: config.Lock.TimeoutFactor,
-	}
-}
-
 func ProvideMutexManager(config Config, client redis.UniversalClient) MutexManager {
-	switch config.provider {
+	switch config.Provider {
 	case MemoryProvider:
 		return NewInMemory(config)
 	case RedisProvider:

@@ -14,6 +14,7 @@ import (
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/internal/services/webhook"
+	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/types"
 
 	"github.com/kelseyhightower/envconfig"
@@ -154,4 +155,18 @@ func ProvideWebhookConfig() (webhook.Config, error) {
 	}
 
 	return config, nil
+}
+
+// ProvideLockConfig generates the `lock` package config from the gitness config.
+func ProvideLockConfig(config *types.Config) lock.Config {
+	return lock.Config{
+		App:           config.Lock.AppNamespace,
+		Namespace:     config.Lock.DefaultNamespace,
+		Provider:      lock.Provider(config.Lock.Provider),
+		Expiry:        config.Lock.Expiry,
+		Tries:         config.Lock.Tries,
+		RetryDelay:    config.Lock.RetryDelay,
+		DriftFactor:   config.Lock.DriftFactor,
+		TimeoutFactor: config.Lock.TimeoutFactor,
+	}
 }
