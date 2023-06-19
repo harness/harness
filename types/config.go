@@ -15,6 +15,10 @@ type Config struct {
 	InstanceID string `envconfig:"GITNESS_INSTANCE_ID"`
 	Debug      bool   `envconfig:"GITNESS_DEBUG"`
 	Trace      bool   `envconfig:"GITNESS_TRACE"`
+	Profiler   struct {
+		Type        string `envconfig:"GITNESS_PROFILER_TYPE"`
+		ServiceName string `envconfig:"GITNESS_PROFILER_SERVICE_NAME" default:"gitness"`
+	}
 
 	// URL defines the URLs via which the different parts of the service are reachable by.
 	URL struct {

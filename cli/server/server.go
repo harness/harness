@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/harness/gitness/profiler"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
 
@@ -53,6 +54,9 @@ func (c *command) run(*kingpin.ParseContext) error {
 
 	// configure the log level
 	SetupLogger(config)
+
+	// configure profiler
+	SetupProfiler(config)
 
 	// add logger to context
 	log := log.Logger.With().Logger()
@@ -150,6 +154,17 @@ func SetupLogger(config *types.Config) {
 			},
 		)
 	}
+}
+
+func SetupProfiler(config *types.Config) {
+	profilerType, parsed := profiler.ParseProfiler(config.Profiler.Type)
+	if !parsed {
+		log.Info().Msgf("No valid profiler so skipping profiling ['%s']", config.Profiler.Type)
+		return
+	}
+
+	gitnessProfiler, _ := profiler.GetProfiler(profilerType)
+	gitnessProfiler.StartProfiling(config.Profiler.ServiceName, version.Version.String())
 }
 
 // Register the server command.
