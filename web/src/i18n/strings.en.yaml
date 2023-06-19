@@ -419,6 +419,9 @@ tagger: Tagger
 confirmDelete: Confirm delete
 tagEmpty: Here is no Tag. Try to
 newTag: New Tag
+overview: Overview
+fileTooLarge: File is too large to open. {download}
+clickHereToDownload: Click here to download.
 viewFile: View the file at this point in the history
 viewRepo: View the repository at this point in the history
 hideCommitHistory: Hide Rename History for {{file}}

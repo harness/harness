@@ -25,7 +25,8 @@ const AppContext = React.createContext<AppContextProps>({
   routes,
   hooks: {},
   currentUser: defaultCurrentUser,
-  currentUserProfileURL: ''
+  currentUserProfileURL: '',
+  routingId: ''
 })
 
 export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(function AppContextProvider({

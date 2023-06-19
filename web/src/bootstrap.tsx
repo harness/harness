@@ -11,6 +11,6 @@ import './bootstrap.scss'
 window.STRIP_CODE_PREFIX = true
 
 ReactDOM.render(
-  <App standalone routes={routes} hooks={{}} currentUser={defaultCurrentUser} currentUserProfileURL="" />,
+  <App standalone routes={routes} hooks={{}} currentUser={defaultCurrentUser} currentUserProfileURL="" routingId="" />,
   document.getElementById('react-root')
 )

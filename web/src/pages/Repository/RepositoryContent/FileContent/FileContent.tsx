@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useGet } from 'restful-react'
 import {
   ButtonSize,
@@ -7,12 +7,15 @@ import {
   Container,
   FlexExpander,
   Heading,
+  Icon,
   Layout,
+  StringSubstitute,
   Tabs,
   Utils
 } from '@harness/uicore'
-import { Render } from 'react-jsx-match'
-import { useHistory } from 'react-router-dom'
+import { Document, Page, pdfjs } from 'react-pdf'
+import { Render, Match, Truthy, Falsy, Case, Else } from 'react-jsx-match'
+import { Link, useHistory } from 'react-router-dom'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import type { OpenapiContentInfo, RepoFileContent, TypesCommit } from 'services/code'
 import {
@@ -32,6 +35,8 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { PlainButton } from 'components/PlainButton/PlainButton'
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { FileCategory, useFileContentViewerDecision } from 'utils/FileUtils'
+import { useDownloadRawFile } from 'hooks/useDownloadRawFile'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { Readme } from '../FolderContent/Readme'
 import { GitBlame } from './GitBlame'
@@ -47,6 +52,9 @@ export function FileContent({
 }: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent' | 'commitRef'>) {
   const { routes } = useAppContext()
   const { getString } = useStrings()
+  const downloadFile = useDownloadRawFile()
+  const { category, isFileTooLarge, isViewable, filename, extension, size, base64Data, rawURL } =
+    useFileContentViewerDecision({ repoMetadata, gitRef, resourcePath, resourceContent })
   const history = useHistory()
   const [activeTab, setActiveTab] = React.useState<string>(FileSection.CONTENT)
 
@@ -83,7 +91,7 @@ export function FileContent({
   const { standalone } = useAppContext()
   const { hooks } = useAppContext()
   const space = useGetSpaceParam()
-
+  const isATextFile = category === FileCategory.TEXT
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
@@ -106,6 +114,19 @@ export function FileContent({
     }
     return { disabled: isRefATag(gitRef) || false, tooltip: undefined }
   }, [permPushResult, gitRef]) // eslint-disable-line react-hooks/exhaustive-deps
+  const [pdfWidth, setPdfWidth] = useState<number>(700)
+  const ref = useRef<HTMLDivElement>(null)
+  const [numPages, setNumPages] = useState<number>()
+
+  useEffect(() => {
+    if (ref.current) {
+      const width = Math.min(Math.max(ref.current.clientWidth - 100, 700), 1800)
+
+      if (pdfWidth !== width) {
+        setPdfWidth(width)
+      }
+    }
+  }, [pdfWidth, ref.current?.clientWidth])
 
   const [page] = usePageIndex()
   const { data: commits } = useGet<{ commits: TypesCommit[]; rename_details: RenameDetails[] }>({
@@ -120,7 +141,7 @@ export function FileContent({
   })
 
   return (
-    <Container className={css.tabsContainer}>
+    <Container className={css.tabsContainer} ref={ref}>
       <Tabs
         id="fileTabs"
         selectedTabId={activeTab}
@@ -138,6 +159,7 @@ export function FileContent({
                     repoMetadata={repoMetadata}
                     latestCommit={resourceContent.latest_commit}
                     standaloneStyle
+                    size={size}
                   />
                   <Container className={css.container} background={Color.WHITE}>
                     <Layout.Horizontal padding="small" className={css.heading}>
@@ -155,7 +177,7 @@ export function FileContent({
                           icon="code-edit"
                           tooltipProps={{ isDark: true }}
                           tooltip={permsFinal.tooltip}
-                          disabled={permsFinal.disabled}
+                          disabled={permsFinal.disabled || !isATextFile}
                           onClick={() => {
                             history.push(
                               routes.toCODEFileEdit({
@@ -177,24 +199,14 @@ export function FileContent({
                               hasIcon: true,
                               iconName: 'arrow-right',
                               text: getString('viewRaw'),
-                              onClick: () => {
-                                window.open(
-                                  `/code/api/v1/repos/${
-                                    repoMetadata?.path
-                                  }/+/raw/${resourcePath}?${`git_ref=${gitRef}`}`,
-                                  '_blank'
-                                )
-                              }
+                              onClick: () => window.open(rawURL, '_blank') // TODO: This is still not working due to token is not stored in cookies
                             },
                             '-',
                             {
                               hasIcon: true,
                               iconName: 'cloud-download',
                               text: getString('download'),
-                              download: resourceContent?.name || 'download',
-                              href: `/code/api/v1/repos/${
-                                repoMetadata?.path
-                              }/+/raw/${resourcePath}?${`git_ref=${gitRef}`}`
+                              onClick: () => downloadFile({ repoMetadata, resourcePath, gitRef, filename })
                             },
                             {
                               hasIcon: true,
@@ -219,18 +231,154 @@ export function FileContent({
 
                     <Render when={(resourceContent?.content as RepoFileContent)?.data}>
                       <Container className={css.content}>
-                        <Render when={!markdownInfo}>
-                          <SourceCodeViewer language={filenameToLanguage(resourceContent?.name)} source={content} />
-                        </Render>
-                        <Render when={markdownInfo}>
-                          <Readme
-                            metadata={repoMetadata}
-                            readmeInfo={markdownInfo as OpenapiContentInfo}
-                            contentOnly
-                            maxWidth="calc(100vw - 346px)"
-                            gitRef={gitRef}
-                          />
-                        </Render>
+                        <Match expr={isViewable}>
+                          <Falsy>
+                            <Center>
+                              <Link
+                                to={rawURL} // TODO: Link component generates wrong copy link
+                                onClick={e => {
+                                  Utils.stopEvent(e)
+                                  downloadFile({ repoMetadata, resourcePath, gitRef, filename })
+                                }}>
+                                <Layout.Horizontal spacing="small">
+                                  <Icon name="cloud-download" size={16} />
+                                  <span>{getString('download')}</span>
+                                </Layout.Horizontal>
+                              </Link>
+                            </Center>
+                          </Falsy>
+                          <Truthy>
+                            <Match expr={isFileTooLarge}>
+                              <Truthy>
+                                <Center>
+                                  <Match expr={category}>
+                                    <Case val={FileCategory.PDF}>
+                                      <Document
+                                        file={rawURL}
+                                        options={{
+                                          // TODO: Configure this to use a local worker/webpack loader
+                                          cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+                                          cMapPacked: true
+                                        }}
+                                        onLoadSuccess={({ numPages: nextNumPages }) => setNumPages(nextNumPages)}>
+                                        {Array.from(new Array(numPages), (_el, index) => (
+                                          <Page
+                                            loading=""
+                                            width={pdfWidth}
+                                            key={`page_${index + 1}`}
+                                            pageNumber={index + 1}
+                                            renderTextLayer={false}
+                                            renderAnnotationLayer={false}
+                                          />
+                                        ))}
+                                      </Document>
+                                    </Case>
+                                    <Case val={FileCategory.AUDIO}>
+                                      <audio controls>
+                                        <source src={rawURL} />
+                                      </audio>
+                                    </Case>
+                                    <Case val={FileCategory.VIDEO}>
+                                      <video controls height={500}>
+                                        <source src={rawURL} />
+                                      </video>
+                                    </Case>
+                                    <Else>
+                                      <StringSubstitute
+                                        str={getString('fileTooLarge')}
+                                        vars={{
+                                          download: (
+                                            <Link
+                                              to={rawURL} // TODO: Link component generates wrong copy link
+                                              onClick={e => {
+                                                Utils.stopEvent(e)
+                                                downloadFile({ repoMetadata, resourcePath, gitRef, filename })
+                                              }}>
+                                              <Layout.Horizontal spacing="small" padding={{ left: 'small' }}>
+                                                <Icon name="cloud-download" size={16} />
+                                                <span>{getString('clickHereToDownload')}</span>
+                                              </Layout.Horizontal>
+                                            </Link>
+                                          )
+                                        }}
+                                      />
+                                    </Else>
+                                  </Match>
+                                </Center>
+                              </Truthy>
+                              <Falsy>
+                                <Match expr={markdownInfo}>
+                                  <Truthy>
+                                    <Readme
+                                      metadata={repoMetadata}
+                                      readmeInfo={markdownInfo as OpenapiContentInfo}
+                                      contentOnly
+                                      maxWidth="calc(100vw - 346px)"
+                                      gitRef={gitRef}
+                                    />
+                                  </Truthy>
+                                  <Falsy>
+                                    <Center>
+                                      <Match expr={category}>
+                                        <Case val={FileCategory.SVG}>
+                                          <img
+                                            src={`data:image/svg+xml;base64,${base64Data}`}
+                                            alt={filename}
+                                            style={{ maxWidth: '100%', maxHeight: '100%' }}
+                                          />
+                                        </Case>
+                                        <Case val={FileCategory.IMAGE}>
+                                          <img
+                                            src={`data:image/${extension};base64,${base64Data}`}
+                                            alt={filename}
+                                            style={{ maxWidth: '100%', maxHeight: '100%' }}
+                                          />
+                                        </Case>
+                                        <Case val={FileCategory.PDF}>
+                                          <Document
+                                            file={`data:application/pdf;base64,${base64Data}`}
+                                            options={{
+                                              // TODO: Configure this to use a local worker/webpack loader
+                                              cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+                                              cMapPacked: true
+                                            }}
+                                            onLoadSuccess={({ numPages: nextNumPages }) => setNumPages(nextNumPages)}>
+                                            {Array.from(new Array(numPages), (_el, index) => (
+                                              <Page
+                                                loading=""
+                                                width={pdfWidth}
+                                                key={`page_${index + 1}`}
+                                                pageNumber={index + 1}
+                                                renderTextLayer={false}
+                                                renderAnnotationLayer={false}
+                                              />
+                                            ))}
+                                          </Document>
+                                        </Case>
+                                        <Case val={FileCategory.AUDIO}>
+                                          <audio controls>
+                                            <source src={`data:audio/${extension};base64,${base64Data}`} />
+                                          </audio>
+                                        </Case>
+                                        <Case val={FileCategory.VIDEO}>
+                                          <video controls height={500}>
+                                            <source src={`data:video/${extension};base64,${base64Data}`} />
+                                          </video>
+                                        </Case>
+                                        <Case val={FileCategory.TEXT}>
+                                          <SourceCodeViewer
+                                            language={filenameToLanguage(filename)}
+                                            source={decodeGitContent(base64Data)}
+                                          />
+                                        </Case>
+                                      </Match>
+                                    </Center>
+                                  </Falsy>
+                                </Match>
+                              </Falsy>
+                            </Match>
+                          </Truthy>
+                        </Match>
                       </Container>
                     </Render>
                   </Container>
@@ -286,3 +434,9 @@ export function FileContent({
     </Container>
   )
 }
+
+const Center: React.FC = ({ children }) => (
+  <Container flex={{ align: 'center-center' }} style={{ width: '100%', height: '100%' }} padding={{ right: 'large' }}>
+    {children}
+  </Container>
+)

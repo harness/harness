@@ -149,4 +149,17 @@ export const diffRefsToRefs = (diffRefs: string) => {
   }
 }
 
-export const decodeGitContent = (content = '') => decodeURIComponent(escape(window.atob(content)))
+export const decodeGitContent = (content = '') => {
+  try {
+    // Decode base64 content for text file
+    return decodeURIComponent(escape(window.atob(content)))
+  } catch (_exception) {
+    try {
+      // Return original base64 content for binary file
+      return content
+    } catch (exception) {
+      console.error(exception) // eslint-disable-line no-console
+    }
+  }
+  return ''
+}

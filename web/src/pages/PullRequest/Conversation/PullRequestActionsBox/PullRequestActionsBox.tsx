@@ -78,6 +78,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   )
   const isClosed = pullRequestMetadata.state === PullRequestState.CLOSED
   const isOpen = pullRequestMetadata.state === PullRequestState.OPEN
+  const isConflict = pullRequestMetadata.merge_check_status === MergeCheckStatus.CONFLICT
   const unchecked = useMemo(
     () => pullRequestMetadata.merge_check_status === MergeCheckStatus.UNCHECKED && !isClosed,
     [pullRequestMetadata, isClosed]
@@ -287,7 +288,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           })}>
                           <SplitButton
                             text={mergeOption.title}
-                            disabled={loading || unchecked}
+                            disabled={loading || unchecked || (isConflict && mergeOption.method !== 'close')}
                             className={cx({
                               [css.secondaryButton]: mergeOption.method === 'close' || mergeable === false
                             })}

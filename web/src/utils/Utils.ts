@@ -40,8 +40,8 @@ export function generateAlphaNumericHash(length: number) {
 
 export const dayAgoInMS = 86400000
 
-export const getErrorMessage = (error: Unknown): string =>
-  get(error, 'data.error', get(error, 'data.message', get(error, 'message', error)))
+export const getErrorMessage = (error: Unknown): string | undefined =>
+  error ? get(error, 'data.error', get(error, 'data.message', get(error, 'message', error))) : undefined
 
 export interface PageBrowserProps {
   page: string
@@ -254,5 +254,25 @@ export const voidFn = (f: Function) => () => {
 
 export enum MergeCheckStatus {
   MERGEABLE = 'mergeable',
-  UNCHECKED = 'unchecked'
+  UNCHECKED = 'unchecked',
+  CONFLICT = 'conflict'
+}
+
+/**
+ * Convert number of bytes into human readable format
+ *
+ * @param integer bytes     Number of bytes to convert
+ * @param integer precision Number of digits after the decimal separator
+ * @return string
+ * @link https://stackoverflow.com/a/18650828/1114931
+ */
+export function formatBytes(bytes: number, decimals = 2) {
+  if (!+bytes) return '0 Bytes'
+
+  const k = 1024
+  const dm = decimals < 0 ? 0 : decimals
+  const sizes = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }

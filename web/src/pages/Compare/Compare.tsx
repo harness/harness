@@ -223,7 +223,7 @@ export default function Compare() {
               tabList={[
                 {
                   id: 'general',
-                  title: <TabTitleWithCount icon={CodeIcon.Chat} title={getString('general')} count={0} />,
+                  title: <TabTitleWithCount icon={CodeIcon.Chat} title={getString('overview')} count={0} />,
                   panel: (
                     <Container className={css.generalTab}>
                       <Layout.Vertical spacing="small" padding="xxlarge">

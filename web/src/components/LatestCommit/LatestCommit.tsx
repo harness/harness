@@ -7,7 +7,7 @@ import cx from 'classnames'
 import type { TypesCommit } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useAppContext } from 'AppContext'
-import { formatDate } from 'utils/Utils'
+import { formatBytes, formatDate } from 'utils/Utils'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import css from './LatestCommit.module.scss'
@@ -15,6 +15,7 @@ import css from './LatestCommit.module.scss'
 interface LatestCommitProps extends Pick<GitInfoProps, 'repoMetadata'> {
   latestCommit?: TypesCommit
   standaloneStyle?: boolean
+  size?: number
 }
 
 export function LatestCommitForFolder({ repoMetadata, latestCommit, standaloneStyle }: LatestCommitProps) {
@@ -46,7 +47,7 @@ export function LatestCommitForFolder({ repoMetadata, latestCommit, standaloneSt
   )
 }
 
-export function LatestCommitForFile({ repoMetadata, latestCommit, standaloneStyle }: LatestCommitProps) {
+export function LatestCommitForFile({ repoMetadata, latestCommit, standaloneStyle, size }: LatestCommitProps) {
   const { routes } = useAppContext()
   const commitURL = routes.toCODECommits({
     repoPath: repoMetadata.path as string,
@@ -72,6 +73,14 @@ export function LatestCommitForFile({ repoMetadata, latestCommit, standaloneStyl
           <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
             {formatDate(latestCommit?.author?.when as string)}
           </Text>
+          {size && size > 0 && (
+            <>
+              <PipeSeparator height={9} />
+              <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
+                {formatBytes(size)}
+              </Text>
+            </>
+          )}
 
           <FlexExpander />
           <CommitActions sha={latestCommit?.sha as string} href={commitURL} />

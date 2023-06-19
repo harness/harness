@@ -43,6 +43,7 @@ export interface StringsMap {
   checkRuns: string
   checkSuites: string
   checks: string
+  clickHereToDownload: string
   clone: string
   cloneHTTPS: string
   cloneText: string
@@ -131,6 +132,7 @@ export interface StringsMap {
   failedToDeleteBranch: string
   failedToDeleteWebhook: string
   fileDeleted: string
+  fileTooLarge: string
   files: string
   filesChanged: string
   findATag: string
@@ -192,6 +194,7 @@ export interface StringsMap {
   open: string
   optional: string
   optionalExtendedDescription: string
+  overview: string
   pageLoading: string
   pageNotFound: string
   password: string

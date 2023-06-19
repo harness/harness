@@ -24,6 +24,9 @@ export interface AppProps {
   /** Flag to tell if App is mounted as a standalone app */
   standalone: boolean
 
+  /** Harness routingId */
+  routingId: string
+
   /** App children. When provided, children is a remote view which will be mounted under App contexts */
   children?: React.ReactNode
 
