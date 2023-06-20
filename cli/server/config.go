@@ -15,6 +15,7 @@ import (
 	"github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/lock"
+	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/types"
 
 	"github.com/kelseyhightower/envconfig"
@@ -84,6 +85,14 @@ func getSanitizedMachineName() (string, error) {
 	}
 
 	return hostName, nil
+}
+
+// ProvideDatabaseConfig loads the database config from the main config.
+func ProvideDatabaseConfig(config *types.Config) database.Config {
+	return database.Config{
+		Driver:     config.Database.Driver,
+		Datasource: config.Database.Datasource,
+	}
 }
 
 // ProvideGitRPCServerConfig loads the gitrpc server config from the environment.

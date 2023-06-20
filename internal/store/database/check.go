@@ -11,7 +11,8 @@ import (
 	"time"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -121,11 +122,11 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, mapInternalCheck(check))
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind status check object")
+		return database.ProcessSQLErrorf(err, "Failed to bind status check object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&check.ID, &check.CreatedBy, &check.Created); err != nil {
-		return processSQLErrorf(err, "Upsert query failed")
+		return database.ProcessSQLErrorf(err, "Upsert query failed")
 	}
 
 	return nil
@@ -133,7 +134,7 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 
 // List returns a list of status check results for a specific commit in a repo.
 func (s *CheckStore) List(ctx context.Context, repoID int64, commitSHA string) ([]*types.Check, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select(checkColumns).
 		From("checks").
 		Where("check_repo_id = ?", repoID).
@@ -150,7 +151,7 @@ func (s *CheckStore) List(ctx context.Context, repoID int64, commitSHA string) (
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Failed to execute list status checks query")
+		return nil, database.ProcessSQLErrorf(err, "Failed to execute list status checks query")
 	}
 
 	result, err := s.mapSliceCheck(ctx, dst)
@@ -163,7 +164,7 @@ func (s *CheckStore) List(ctx context.Context, repoID int64, commitSHA string) (
 
 // ListRecent returns a list of recently executed status checks in a repository.
 func (s *CheckStore) ListRecent(ctx context.Context, repoID int64, since time.Time) ([]string, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select("distinct check_uid").
 		From("checks").
 		Where("check_repo_id = ?", repoID).
@@ -180,7 +181,7 @@ func (s *CheckStore) ListRecent(ctx context.Context, repoID int64, since time.Ti
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Failed to execute list recent status checks query")
+		return nil, database.ProcessSQLErrorf(err, "Failed to execute list recent status checks query")
 	}
 
 	return dst, nil

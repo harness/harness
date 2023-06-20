@@ -9,7 +9,8 @@ import (
 	"time"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -65,7 +66,7 @@ func (s *CodeCommentView) list(ctx context.Context,
 		,coalesce(pullreq_activity_code_comment_line_old, 1) as "pullreq_activity_code_comment_line_old"
 		,coalesce(pullreq_activity_code_comment_span_old, 0) as "pullreq_activity_code_comment_span_old"`
 
-	stmt := builder.
+	stmt := database.Builder.
 		Select(codeCommentColumns).
 		From("pullreq_activities").
 		Where("pullreq_activity_pullreq_id = ?", prID).
@@ -95,7 +96,7 @@ func (s *CodeCommentView) list(ctx context.Context,
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &result, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Failed executing code comment list query")
+		return nil, database.ProcessSQLErrorf(err, "Failed executing code comment list query")
 	}
 
 	return result, nil
@@ -126,7 +127,7 @@ func (s *CodeCommentView) UpdateAll(ctx context.Context, codeComments []*types.C
 
 	stmt, err := db.PrepareNamedContext(ctx, sqlQuery)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to prepare update statement for update code comments")
+		return database.ProcessSQLErrorf(err, "Failed to prepare update statement for update code comments")
 	}
 
 	updatedAt := time.Now()
@@ -137,12 +138,12 @@ func (s *CodeCommentView) UpdateAll(ctx context.Context, codeComments []*types.C
 
 		result, err := stmt.ExecContext(ctx, codeComment)
 		if err != nil {
-			return processSQLErrorf(err, "Failed to update code comment=%d", codeComment.ID)
+			return database.ProcessSQLErrorf(err, "Failed to update code comment=%d", codeComment.ID)
 		}
 
 		count, err := result.RowsAffected()
 		if err != nil {
-			return processSQLErrorf(err, "Failed to get number of updated rows for code comment=%d", codeComment.ID)
+			return database.ProcessSQLErrorf(err, "Failed to get number of updated rows for code comment=%d", codeComment.ID)
 		}
 
 		if count == 0 {

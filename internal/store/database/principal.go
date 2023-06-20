@@ -10,7 +10,9 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
 	"github.com/Masterminds/squirrel"
@@ -73,7 +75,7 @@ func (s *PrincipalStore) Find(ctx context.Context, id int64) (*types.Principal, 
 
 	dst := new(principal)
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, processSQLErrorf(err, "Select by id query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select by id query failed")
 	}
 
 	return s.mapDBPrincipal(dst), nil
@@ -89,14 +91,14 @@ func (s *PrincipalStore) FindByUID(ctx context.Context, uid string) (*types.Prin
 	if err != nil {
 		// in case we fail to transform, return a not found (as it can't exist in the first place)
 		log.Ctx(ctx).Debug().Msgf("failed to transform uid '%s': %s", uid, err.Error())
-		return nil, store.ErrResourceNotFound
+		return nil, gitness_store.ErrResourceNotFound
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(principal)
 	if err = db.GetContext(ctx, dst, sqlQuery, uidUnique); err != nil {
-		return nil, processSQLErrorf(err, "Select by uid query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select by uid query failed")
 	}
 
 	return s.mapDBPrincipal(dst), nil
@@ -116,7 +118,7 @@ func (s *PrincipalStore) FindManyByUID(ctx context.Context, uids []string) ([]*t
 		}
 	}
 
-	stmt := builder.
+	stmt := database.Builder.
 		Select(principalColumns).
 		From("principals").
 		Where(squirrel.Eq{"principal_uid_unique": uids})
@@ -124,12 +126,12 @@ func (s *PrincipalStore) FindManyByUID(ctx context.Context, uids []string) ([]*t
 
 	sqlQuery, params, err := stmt.ToSql()
 	if err != nil {
-		return nil, processSQLErrorf(err, "failed to generate find many principal query")
+		return nil, database.ProcessSQLErrorf(err, "failed to generate find many principal query")
 	}
 
 	dst := []*principal{}
 	if err := db.SelectContext(ctx, &dst, sqlQuery, params...); err != nil {
-		return nil, processSQLErrorf(err, "find many by uid for principals query failed")
+		return nil, database.ProcessSQLErrorf(err, "find many by uid for principals query failed")
 	}
 
 	return s.mapDBPrincipals(dst), nil
@@ -144,7 +146,7 @@ func (s *PrincipalStore) FindByEmail(ctx context.Context, email string) (*types.
 
 	dst := new(principal)
 	if err := db.GetContext(ctx, dst, sqlQuery, strings.ToLower(email)); err != nil {
-		return nil, processSQLErrorf(err, "Select by email query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select by email query failed")
 	}
 
 	return s.mapDBPrincipal(dst), nil
@@ -153,7 +155,7 @@ func (s *PrincipalStore) FindByEmail(ctx context.Context, email string) (*types.
 // List lists the principals matching the provided filter.
 func (s *PrincipalStore) List(ctx context.Context,
 	opts *types.PrincipalFilter) ([]*types.Principal, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select(principalColumns).
 		From("principals")
 
@@ -175,8 +177,8 @@ func (s *PrincipalStore) List(ctx context.Context,
 		)
 	}
 
-	stmt = stmt.Limit(uint64(limit(opts.Size)))
-	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
+	stmt = stmt.Limit(database.Limit(opts.Size))
+	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -187,7 +189,7 @@ func (s *PrincipalStore) List(ctx context.Context,
 
 	dst := []*principal{}
 	if err := db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Search by display_name and email query failed")
+		return nil, database.ProcessSQLErrorf(err, "Search by display_name and email query failed")
 	}
 
 	return s.mapDBPrincipals(dst), nil

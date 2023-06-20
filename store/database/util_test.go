@@ -4,13 +4,15 @@
 
 package database
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestOffset(t *testing.T) {
 	tests := []struct {
 		page int
 		size int
-		want int
+		want uint64
 	}{
 		{
 			page: 0,
@@ -45,7 +47,7 @@ func TestOffset(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got, want := offset(test.page, test.size), test.want
+		got, want := Offset(test.page, test.size), test.want
 		if got != want {
 			t.Errorf("Got %d want %d for page %d, size %d", got, want, test.page, test.size)
 		}
@@ -55,7 +57,7 @@ func TestOffset(t *testing.T) {
 func TestLimit(t *testing.T) {
 	tests := []struct {
 		size int
-		want int
+		want uint64
 	}{
 		{
 			size: 0,
@@ -68,7 +70,7 @@ func TestLimit(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got, want := limit(test.size), test.want
+		got, want := Limit(test.size), test.want
 		if got != want {
 			t.Errorf("Got %d want %d for size %d", got, want, test.size)
 		}

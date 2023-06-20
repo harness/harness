@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -86,7 +88,7 @@ func (s *WebhookStore) Find(ctx context.Context, id int64) (*types.Webhook, erro
 
 	dst := &webhook{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select query failed")
 	}
 
 	res, err := mapToWebhook(dst)
@@ -139,11 +141,11 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, dbHook)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind webhook object")
+		return database.ProcessSQLErrorf(err, "Failed to bind webhook object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&hook.ID); err != nil {
-		return processSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -179,21 +181,21 @@ func (s *WebhookStore) Update(ctx context.Context, hook *types.Webhook) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, dbHook)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind webhook object")
+		return database.ProcessSQLErrorf(err, "Failed to bind webhook object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return processSQLErrorf(err, "failed to update webhook")
+		return database.ProcessSQLErrorf(err, "failed to update webhook")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return processSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
-		return store.ErrVersionConflict
+		return gitness_store.ErrVersionConflict
 	}
 
 	hook.Version = dbHook.Version
@@ -217,7 +219,7 @@ func (s *WebhookStore) UpdateOptLock(ctx context.Context, hook *types.Webhook,
 		if err == nil {
 			return &dup, nil
 		}
-		if !errors.Is(err, store.ErrVersionConflict) {
+		if !errors.Is(err, gitness_store.ErrVersionConflict) {
 			return nil, fmt.Errorf("failed to update the webhook: %w", err)
 		}
 
@@ -235,7 +237,7 @@ func (s *WebhookStore) Delete(ctx context.Context, id int64) error {
 		WHERE webhook_id = $1`
 
 	if _, err := s.db.ExecContext(ctx, sqlQuery, id); err != nil {
-		return processSQLErrorf(err, "The delete query failed")
+		return database.ProcessSQLErrorf(err, "The delete query failed")
 	}
 
 	return nil
@@ -244,7 +246,7 @@ func (s *WebhookStore) Delete(ctx context.Context, id int64) error {
 // Count counts the webhooks for a given parent type and id.
 func (s *WebhookStore) Count(ctx context.Context, parentType enum.WebhookParent, parentID int64,
 	opts *types.WebhookFilter) (int64, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select("count(*)").
 		From("webhooks")
 
@@ -267,7 +269,7 @@ func (s *WebhookStore) Count(ctx context.Context, parentType enum.WebhookParent,
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, processSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
 	}
 
 	return count, nil
@@ -276,7 +278,7 @@ func (s *WebhookStore) Count(ctx context.Context, parentType enum.WebhookParent,
 // List lists the webhooks for a given parent type and id.
 func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, parentID int64,
 	opts *types.WebhookFilter) ([]*types.Webhook, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select(webhookColumns).
 		From("webhooks")
 
@@ -293,8 +295,8 @@ func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, 
 		stmt = stmt.Where("LOWER(webhook_display_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
-	stmt = stmt.Limit(uint64(limit(opts.Size)))
-	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
+	stmt = stmt.Limit(database.Limit(opts.Size))
+	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 
 	switch opts.Sort {
 	case enum.WebhookAttrID, enum.WebhookAttrNone:
@@ -320,7 +322,7 @@ func (s *WebhookStore) List(ctx context.Context, parentType enum.WebhookParent, 
 
 	dst := []*webhook{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select query failed")
 	}
 
 	res, err := mapToWebhooks(dst)

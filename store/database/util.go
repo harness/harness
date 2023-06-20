@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/store"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -18,15 +18,15 @@ import (
 const defaultLimit = 100
 
 // limit returns the page size to a sql limit.
-func limit(size int) int {
+func Limit(size int) uint64 {
 	if size == 0 {
 		size = defaultLimit
 	}
-	return size
+	return uint64(size)
 }
 
 // offset converts the page to a sql offset.
-func offset(page, size int) int {
+func Offset(page, size int) uint64 {
 	if page == 0 {
 		page = 1
 	}
@@ -34,12 +34,14 @@ func offset(page, size int) int {
 		size = defaultLimit
 	}
 	page--
-	return page * size
+	return uint64(page * size)
 }
 
 // Logs the error and message, returns either the provided message or a gitrpc equivalent if possible.
 // Always logs the full message with error as warning.
-func processSQLErrorf(err error, format string, args ...interface{}) error {
+//
+//nolint:unparam // revisit error processing
+func ProcessSQLErrorf(err error, format string, args ...interface{}) error {
 	// create fallback error returned if we can't map it
 	fallbackErr := fmt.Errorf(format, args...)
 

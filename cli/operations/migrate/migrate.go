@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/cli/server"
-	"github.com/harness/gitness/internal/store/database"
+	"github.com/harness/gitness/store/database"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"

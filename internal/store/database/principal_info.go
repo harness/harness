@@ -8,7 +8,8 @@ import (
 	"context"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
 	"github.com/Masterminds/squirrel"
@@ -51,14 +52,14 @@ func (s *PrincipalInfoView) Find(ctx context.Context, id int64) (*types.Principa
 
 	v := db.QueryRowContext(ctx, sqlQuery, id)
 	if err := v.Err(); err != nil {
-		return nil, processSQLErrorf(err, "failed to find principal info")
+		return nil, database.ProcessSQLErrorf(err, "failed to find principal info")
 	}
 
 	info := &types.PrincipalInfo{}
 
 	if err := v.Scan(&info.ID, &info.UID, &info.Email, &info.DisplayName,
 		&info.Type, &info.Created, &info.Updated); err != nil {
-		return nil, processSQLErrorf(err, "failed to scan principal info")
+		return nil, database.ProcessSQLErrorf(err, "failed to scan principal info")
 	}
 
 	return info, nil
@@ -68,19 +69,19 @@ func (s *PrincipalInfoView) Find(ctx context.Context, id int64) (*types.Principa
 func (s *PrincipalInfoView) FindMany(ctx context.Context, ids []int64) ([]*types.PrincipalInfo, error) {
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	stmt := builder.
+	stmt := database.Builder.
 		Select(principalInfoCommonColumns).
 		From("principals").
 		Where(squirrel.Eq{"principal_id": ids})
 
 	sqlQuery, params, err := stmt.ToSql()
 	if err != nil {
-		return nil, processSQLErrorf(err, "failed to generate find many principal info SQL query")
+		return nil, database.ProcessSQLErrorf(err, "failed to generate find many principal info SQL query")
 	}
 
 	rows, err := db.QueryContext(ctx, sqlQuery, params...)
 	if err != nil {
-		return nil, processSQLErrorf(err, "failed to query find many principal info")
+		return nil, database.ProcessSQLErrorf(err, "failed to query find many principal info")
 	}
 	defer func() {
 		_ = rows.Close()
@@ -93,7 +94,7 @@ func (s *PrincipalInfoView) FindMany(ctx context.Context, ids []int64) ([]*types
 		err = rows.Scan(&info.ID, &info.UID, &info.Email, &info.DisplayName,
 			&info.Type, &info.Created, &info.Updated)
 		if err != nil {
-			return nil, processSQLErrorf(err, "failed to scan principal info")
+			return nil, database.ProcessSQLErrorf(err, "failed to scan principal info")
 		}
 
 		result = append(result, info)
@@ -101,7 +102,7 @@ func (s *PrincipalInfoView) FindMany(ctx context.Context, ids []int64) ([]*types
 
 	err = rows.Err()
 	if err != nil {
-		return nil, processSQLErrorf(err, "failed to read principal info data")
+		return nil, database.ProcessSQLErrorf(err, "failed to read principal info data")
 	}
 
 	return result, nil

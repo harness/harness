@@ -53,6 +53,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		cliserver.NewSystem,
 		cliserver.ProvideRedis,
 		bootstrap.WireSet,
+		cliserver.ProvideDatabaseConfig,
 		database.WireSet,
 		cache.WireSet,
 		router.WireSet,

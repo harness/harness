@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -126,7 +128,7 @@ func (s *PullReqActivityStore) Find(ctx context.Context, id int64) (*types.PullR
 
 	dst := &pullReqActivity{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, processSQLErrorf(err, "Failed to find pull request activity")
+		return nil, database.ProcessSQLErrorf(err, "Failed to find pull request activity")
 	}
 
 	return s.mapPullReqActivity(ctx, dst), nil
@@ -197,11 +199,11 @@ func (s *PullReqActivityStore) Create(ctx context.Context, act *types.PullReqAct
 
 	query, arg, err := db.BindNamed(sqlQuery, mapInternalPullReqActivity(act))
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind pull request activity object")
+		return database.ProcessSQLErrorf(err, "Failed to bind pull request activity object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&act.ID); err != nil {
-		return processSQLErrorf(err, "Failed to insert pull request activity")
+		return database.ProcessSQLErrorf(err, "Failed to insert pull request activity")
 	}
 
 	return nil
@@ -272,21 +274,21 @@ func (s *PullReqActivityStore) Update(ctx context.Context, act *types.PullReqAct
 
 	query, arg, err := db.BindNamed(sqlQuery, dbAct)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind pull request activity object")
+		return database.ProcessSQLErrorf(err, "Failed to bind pull request activity object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to update pull request activity")
+		return database.ProcessSQLErrorf(err, "Failed to update pull request activity")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return processSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
-		return store.ErrVersionConflict
+		return gitness_store.ErrVersionConflict
 	}
 
 	*act = *s.mapPullReqActivity(ctx, dbAct)
@@ -311,7 +313,7 @@ func (s *PullReqActivityStore) UpdateOptLock(ctx context.Context,
 		if err == nil {
 			return &dup, nil
 		}
-		if !errors.Is(err, store.ErrVersionConflict) {
+		if !errors.Is(err, gitness_store.ErrVersionConflict) {
 			return nil, err
 		}
 
@@ -327,7 +329,7 @@ func (s *PullReqActivityStore) Count(ctx context.Context,
 	prID int64,
 	opts *types.PullReqActivityFilter,
 ) (int64, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select("count(*)").
 		From("pullreq_activities").
 		Where("pullreq_activity_pullreq_id = ?", prID)
@@ -362,7 +364,7 @@ func (s *PullReqActivityStore) Count(ctx context.Context,
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, processSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
 	}
 
 	return count, nil
@@ -373,7 +375,7 @@ func (s *PullReqActivityStore) List(ctx context.Context,
 	prID int64,
 	opts *types.PullReqActivityFilter,
 ) ([]*types.PullReqActivity, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select(pullreqActivityColumns).
 		From("pullreq_activities").
 		Where("pullreq_activity_pullreq_id = ?", prID)
@@ -399,7 +401,7 @@ func (s *PullReqActivityStore) List(ctx context.Context,
 	}
 
 	if opts.Limit > 0 {
-		stmt = stmt.Limit(uint64(limit(opts.Limit)))
+		stmt = stmt.Limit(database.Limit(opts.Limit))
 	}
 
 	stmt = stmt.OrderBy("pullreq_activity_order asc", "pullreq_activity_sub_order asc")
@@ -414,7 +416,7 @@ func (s *PullReqActivityStore) List(ctx context.Context,
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Failed executing pull request activity list query")
+		return nil, database.ProcessSQLErrorf(err, "Failed executing pull request activity list query")
 	}
 
 	result, err := s.mapSlicePullReqActivity(ctx, dst)
@@ -426,7 +428,7 @@ func (s *PullReqActivityStore) List(ctx context.Context,
 }
 
 func (s *PullReqActivityStore) CountUnresolved(ctx context.Context, prID int64) (int, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select("count(*)").
 		From("pullreq_activities").
 		Where("pullreq_activity_pullreq_id = ?", prID).
@@ -445,7 +447,7 @@ func (s *PullReqActivityStore) CountUnresolved(ctx context.Context, prID int64) 
 	var count int
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, processSQLErrorf(err, "Failed executing count unresolved query")
+		return 0, database.ProcessSQLErrorf(err, "Failed executing count unresolved query")
 	}
 
 	return count, nil

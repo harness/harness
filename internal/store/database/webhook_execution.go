@@ -9,7 +9,8 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -87,7 +88,7 @@ func (s *WebhookExecutionStore) Find(ctx context.Context, id int64) (*types.Webh
 
 	dst := &webhookExecution{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select query failed")
 	}
 
 	return mapToWebhookExecution(dst), nil
@@ -136,11 +137,11 @@ func (s *WebhookExecutionStore) Create(ctx context.Context, execution *types.Web
 
 	query, arg, err := db.BindNamed(sqlQuery, mapToInternalWebhookExecution(execution))
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind webhook execution object")
+		return database.ProcessSQLErrorf(err, "Failed to bind webhook execution object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&execution.ID); err != nil {
-		return processSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -149,13 +150,13 @@ func (s *WebhookExecutionStore) Create(ctx context.Context, execution *types.Web
 // ListForWebhook lists the webhook executions for a given webhook id.
 func (s *WebhookExecutionStore) ListForWebhook(ctx context.Context, webhookID int64,
 	opts *types.WebhookExecutionFilter) ([]*types.WebhookExecution, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select(webhookExecutionColumns).
 		From("webhook_executions").
 		Where("webhook_execution_webhook_id = ?", webhookID)
 
-	stmt = stmt.Limit(uint64(limit(opts.Size)))
-	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
+	stmt = stmt.Limit(database.Limit(opts.Size))
+	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 
 	// fixed ordering by desc id (new ones first) - add customized ordering if deemed necessary.
 	stmt = stmt.OrderBy("webhook_execution_id DESC")
@@ -169,7 +170,7 @@ func (s *WebhookExecutionStore) ListForWebhook(ctx context.Context, webhookID in
 
 	dst := []*webhookExecution{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select query failed")
 	}
 
 	return mapToWebhookExecutions(dst), nil
@@ -185,7 +186,7 @@ func (s *WebhookExecutionStore) ListForTrigger(ctx context.Context,
 
 	dst := []*webhookExecution{}
 	if err := db.SelectContext(ctx, &dst, sqlQuery, triggerID); err != nil {
-		return nil, processSQLErrorf(err, "Select query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select query failed")
 	}
 
 	return mapToWebhookExecutions(dst), nil

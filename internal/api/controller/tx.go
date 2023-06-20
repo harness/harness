@@ -8,8 +8,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	"github.com/harness/gitness/store"
+	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/jmoiron/sqlx"
 )

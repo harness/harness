@@ -10,7 +10,8 @@ import (
 	"time"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -82,7 +83,7 @@ func (s *PullReqReviewerStore) Find(ctx context.Context, prID, principalID int64
 
 	dst := &pullReqReviewer{}
 	if err := db.GetContext(ctx, dst, sqlQuery, prID, principalID); err != nil {
-		return nil, processSQLErrorf(err, "Failed to find pull request reviewer")
+		return nil, database.ProcessSQLErrorf(err, "Failed to find pull request reviewer")
 	}
 
 	return s.mapPullReqReviewer(ctx, dst), nil
@@ -119,11 +120,11 @@ func (s *PullReqReviewerStore) Create(ctx context.Context, v *types.PullReqRevie
 
 	query, arg, err := db.BindNamed(sqlQuery, mapInternalPullReqReviewer(v))
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind pull request reviewer object")
+		return database.ProcessSQLErrorf(err, "Failed to bind pull request reviewer object")
 	}
 
 	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
-		return processSQLErrorf(err, "Failed to insert pull request reviewer")
+		return database.ProcessSQLErrorf(err, "Failed to insert pull request reviewer")
 	}
 
 	return nil
@@ -150,12 +151,12 @@ func (s *PullReqReviewerStore) Update(ctx context.Context, v *types.PullReqRevie
 
 	query, arg, err := db.BindNamed(sqlQuery, dbv)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind pull request activity object")
+		return database.ProcessSQLErrorf(err, "Failed to bind pull request activity object")
 	}
 
 	_, err = db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to update pull request activity")
+		return database.ProcessSQLErrorf(err, "Failed to update pull request activity")
 	}
 
 	v.Updated = dbv.Updated
@@ -165,7 +166,7 @@ func (s *PullReqReviewerStore) Update(ctx context.Context, v *types.PullReqRevie
 
 // List returns a list of pull reviewers for a pull request.
 func (s *PullReqReviewerStore) List(ctx context.Context, prID int64) ([]*types.PullReqReviewer, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select(pullreqReviewerColumns).
 		From("pullreq_reviewers").
 		Where("pullreq_reviewer_pullreq_id = ?", prID).
@@ -182,7 +183,7 @@ func (s *PullReqReviewerStore) List(ctx context.Context, prID int64) ([]*types.P
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Failed executing pull request reviewer list query")
+		return nil, database.ProcessSQLErrorf(err, "Failed executing pull request reviewer list query")
 	}
 
 	result, err := s.mapSlicePullReqReviewer(ctx, dst)

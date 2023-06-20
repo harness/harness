@@ -9,8 +9,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -41,7 +42,7 @@ func (s *PrincipalStore) FindUser(ctx context.Context, id int64) (*types.User, e
 
 	dst := new(user)
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, processSQLErrorf(err, "Select by id query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select by id query failed")
 	}
 
 	return s.mapDBUser(dst), nil
@@ -57,14 +58,14 @@ func (s *PrincipalStore) FindUserByUID(ctx context.Context, uid string) (*types.
 	if err != nil {
 		// in case we fail to transform, return a not found (as it can't exist in the first place)
 		log.Ctx(ctx).Debug().Msgf("failed to transform uid '%s': %s", uid, err.Error())
-		return nil, store.ErrResourceNotFound
+		return nil, gitness_store.ErrResourceNotFound
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(user)
 	if err = db.GetContext(ctx, dst, sqlQuery, uidUnique); err != nil {
-		return nil, processSQLErrorf(err, "Select by uid query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select by uid query failed")
 	}
 
 	return s.mapDBUser(dst), nil
@@ -79,7 +80,7 @@ func (s *PrincipalStore) FindUserByEmail(ctx context.Context, email string) (*ty
 
 	dst := new(user)
 	if err := db.GetContext(ctx, dst, sqlQuery, strings.ToLower(email)); err != nil {
-		return nil, processSQLErrorf(err, "Select by email query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select by email query failed")
 	}
 
 	return s.mapDBUser(dst), nil
@@ -123,11 +124,11 @@ func (s *PrincipalStore) CreateUser(ctx context.Context, user *types.User) error
 
 	query, arg, err := db.BindNamed(sqlQuery, dbUser)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind user object")
+		return database.ProcessSQLErrorf(err, "Failed to bind user object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&user.ID); err != nil {
-		return processSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -156,11 +157,11 @@ func (s *PrincipalStore) UpdateUser(ctx context.Context, user *types.User) error
 
 	query, arg, err := db.BindNamed(sqlQuery, dbUser)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind user object")
+		return database.ProcessSQLErrorf(err, "Failed to bind user object")
 	}
 
 	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
-		return processSQLErrorf(err, "Update query failed")
+		return database.ProcessSQLErrorf(err, "Update query failed")
 	}
 
 	return err
@@ -175,7 +176,7 @@ func (s *PrincipalStore) DeleteUser(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
-		return processSQLErrorf(err, "The delete query failed")
+		return database.ProcessSQLErrorf(err, "The delete query failed")
 	}
 
 	return nil
@@ -186,12 +187,12 @@ func (s *PrincipalStore) ListUsers(ctx context.Context, opts *types.UserFilter) 
 	db := dbtx.GetAccessor(ctx, s.db)
 	dst := []*user{}
 
-	stmt := builder.
+	stmt := database.Builder.
 		Select(userColumns).
 		From("principals").
 		Where("principal_type = 'user'")
-	stmt = stmt.Limit(uint64(limit(opts.Size)))
-	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
+	stmt = stmt.Limit(database.Limit(opts.Size))
+	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 
 	switch opts.Sort {
 	case enum.UserAttrName, enum.UserAttrNone:
@@ -217,7 +218,7 @@ func (s *PrincipalStore) ListUsers(ctx context.Context, opts *types.UserFilter) 
 	}
 
 	if err = db.SelectContext(ctx, &dst, sql); err != nil {
-		return nil, processSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}
 
 	return s.mapDBUsers(dst), nil
@@ -235,7 +236,7 @@ func (s *PrincipalStore) CountUsers(ctx context.Context) (int64, error) {
 	var count int64
 	err := db.QueryRowContext(ctx, sqlQuery).Scan(&count)
 	if err != nil {
-		return 0, processSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
 	}
 
 	return count, nil

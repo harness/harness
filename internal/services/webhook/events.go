@@ -10,7 +10,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/events"
-	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 

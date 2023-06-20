@@ -14,8 +14,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/harness/gitness/internal/store/database/migrate"
-
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
@@ -23,12 +21,14 @@ import (
 
 const (
 	// sqlForUpdate is the sql statement used for locking rows returned by select queries.
-	sqlForUpdate = "FOR UPDATE"
+	SQLForUpdate = "FOR UPDATE"
 )
 
-// build is a global instance of the sql builder. we are able to
+type Migrator func(ctx context.Context, dbx *sqlx.DB) error
+
+// Builder is a global instance of the sql builder. we are able to
 // hardcode to postgres since sqlite3 is compatible with postgres.
-var builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+var Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 // Connect to a database and verify with a ping.
 func Connect(ctx context.Context, driver string, datasource string) (*sqlx.DB, error) {
@@ -51,13 +51,13 @@ func Connect(ctx context.Context, driver string, datasource string) (*sqlx.DB, e
 }
 
 // ConnectAndMigrate creates the database handle and migrates the database.
-func ConnectAndMigrate(ctx context.Context, driver string, datasource string) (*sqlx.DB, error) {
+func ConnectAndMigrate(ctx context.Context, driver string, datasource string, migrator Migrator) (*sqlx.DB, error) {
 	dbx, err := Connect(ctx, driver, datasource)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = migrateDatabase(ctx, dbx); err != nil {
+	if err = migrator(ctx, dbx); err != nil {
 		return nil, fmt.Errorf("failed to setup the db: %w", err)
 	}
 
@@ -123,10 +123,4 @@ func pingDatabase(ctx context.Context, db *sqlx.DB) error {
 	}
 
 	return fmt.Errorf("all 30 tries failed, last failure: %w", err)
-}
-
-// helper function to setup the database by performing automated
-// database migration steps.
-func migrateDatabase(ctx context.Context, db *sqlx.DB) error {
-	return migrate.Migrate(ctx, db)
 }

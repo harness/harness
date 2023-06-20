@@ -18,7 +18,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 	"github.com/harness/gitness/version"

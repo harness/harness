@@ -8,8 +8,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
 	"github.com/rs/zerolog/log"
@@ -38,7 +39,7 @@ func (s *PrincipalStore) FindService(ctx context.Context, id int64) (*types.Serv
 
 	dst := new(service)
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, processSQLErrorf(err, "Select by id query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select by id query failed")
 	}
 
 	return s.mapDBService(dst), nil
@@ -54,14 +55,14 @@ func (s *PrincipalStore) FindServiceByUID(ctx context.Context, uid string) (*typ
 	if err != nil {
 		// in case we fail to transform, return a not found (as it can't exist in the first place)
 		log.Ctx(ctx).Debug().Msgf("failed to transform uid '%s': %s", uid, err.Error())
-		return nil, store.ErrResourceNotFound
+		return nil, gitness_store.ErrResourceNotFound
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(service)
 	if err = db.GetContext(ctx, dst, sqlQuery, uidUnique); err != nil {
-		return nil, processSQLErrorf(err, "Select by uid query failed")
+		return nil, database.ProcessSQLErrorf(err, "Select by uid query failed")
 	}
 
 	return s.mapDBService(dst), nil
@@ -103,11 +104,11 @@ func (s *PrincipalStore) CreateService(ctx context.Context, svc *types.Service) 
 
 	query, arg, err := db.BindNamed(sqlQuery, dbSVC)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind service object")
+		return database.ProcessSQLErrorf(err, "Failed to bind service object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&svc.ID); err != nil {
-		return processSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -134,11 +135,11 @@ func (s *PrincipalStore) UpdateService(ctx context.Context, svc *types.Service) 
 
 	query, arg, err := db.BindNamed(sqlQuery, dbSVC)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind service object")
+		return database.ProcessSQLErrorf(err, "Failed to bind service object")
 	}
 
 	if _, err = db.ExecContext(ctx, query, arg...); err != nil {
-		return processSQLErrorf(err, "Update query failed")
+		return database.ProcessSQLErrorf(err, "Update query failed")
 	}
 
 	return err
@@ -154,7 +155,7 @@ func (s *PrincipalStore) DeleteService(ctx context.Context, id int64) error {
 
 	// delete the service
 	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
-		return processSQLErrorf(err, "The delete query failed")
+		return database.ProcessSQLErrorf(err, "The delete query failed")
 	}
 
 	return nil
@@ -172,7 +173,7 @@ func (s *PrincipalStore) ListServices(ctx context.Context) ([]*types.Service, er
 
 	err := db.SelectContext(ctx, &dst, sqlQuery)
 	if err != nil {
-		return nil, processSQLErrorf(err, "Failed executing default list query")
+		return nil, database.ProcessSQLErrorf(err, "Failed executing default list query")
 	}
 
 	return s.mapDBServices(dst), nil
@@ -190,7 +191,7 @@ func (s *PrincipalStore) CountServices(ctx context.Context) (int64, error) {
 	var count int64
 	err := db.QueryRowContext(ctx, sqlQuery).Scan(&count)
 	if err != nil {
-		return 0, processSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
 	}
 
 	return count, nil

@@ -49,7 +49,8 @@ import (
 func initSystem(ctx context.Context, config *types.Config) (*server.System, error) {
 	principalUID := check.ProvidePrincipalUIDCheck()
 	authorizer := authz.ProvideAuthorizer()
-	db, err := database.ProvideDatabase(ctx, config)
+	databaseConfig := server.ProvideDatabaseConfig(config)
+	db, err := database.ProvideDatabase(ctx, databaseConfig)
 	if err != nil {
 		return nil, err
 	}

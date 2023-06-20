@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -123,7 +125,7 @@ func (s *PullReqStore) Find(ctx context.Context, id int64) (*types.PullReq, erro
 
 	dst := &pullReq{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, processSQLErrorf(err, "Failed to find pull request")
+		return nil, database.ProcessSQLErrorf(err, "Failed to find pull request")
 	}
 
 	return s.mapPullReq(ctx, dst), nil
@@ -139,14 +141,14 @@ func (s *PullReqStore) findByNumberInternal(
 	WHERE pullreq_target_repo_id = $1 AND pullreq_number = $2`
 
 	if lock && !strings.HasPrefix(s.db.DriverName(), "sqlite") {
-		sqlQuery += "\n" + sqlForUpdate
+		sqlQuery += "\n" + database.SQLForUpdate
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := &pullReq{}
 	if err := db.GetContext(ctx, dst, sqlQuery, repoID, number); err != nil {
-		return nil, processSQLErrorf(err, "Failed to find pull request by number")
+		return nil, database.ProcessSQLErrorf(err, "Failed to find pull request by number")
 	}
 
 	return s.mapPullReq(ctx, dst), nil
@@ -230,11 +232,11 @@ func (s *PullReqStore) Create(ctx context.Context, pr *types.PullReq) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, mapInternalPullReq(pr))
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind pullReq object")
+		return database.ProcessSQLErrorf(err, "Failed to bind pullReq object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&pr.ID); err != nil {
-		return processSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -276,21 +278,21 @@ func (s *PullReqStore) Update(ctx context.Context, pr *types.PullReq) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, dbPR)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind pull request object")
+		return database.ProcessSQLErrorf(err, "Failed to bind pull request object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to update pull request")
+		return database.ProcessSQLErrorf(err, "Failed to update pull request")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return processSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
-		return store.ErrVersionConflict
+		return gitness_store.ErrVersionConflict
 	}
 
 	*pr = *s.mapPullReq(ctx, dbPR)
@@ -314,7 +316,7 @@ func (s *PullReqStore) UpdateOptLock(ctx context.Context, pr *types.PullReq,
 		if err == nil {
 			return &dup, nil
 		}
-		if !errors.Is(err, store.ErrVersionConflict) {
+		if !errors.Is(err, gitness_store.ErrVersionConflict) {
 			return nil, err
 		}
 
@@ -340,7 +342,7 @@ func (s *PullReqStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, pullReqDelete, id); err != nil {
-		return processSQLErrorf(err, "the delete query failed")
+		return database.ProcessSQLErrorf(err, "the delete query failed")
 	}
 
 	return nil
@@ -348,7 +350,7 @@ func (s *PullReqStore) Delete(ctx context.Context, id int64) error {
 
 // Count of pull requests for a repo.
 func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (int64, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select("count(*)").
 		From("pullreqs")
 
@@ -388,7 +390,7 @@ func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (in
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, processSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
 	}
 
 	return count, nil
@@ -396,7 +398,7 @@ func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (in
 
 // List returns a list of pull requests for a repo.
 func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*types.PullReq, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select(pullReqColumns).
 		From("pullreqs")
 
@@ -430,8 +432,8 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 		stmt = stmt.Where("pullreq_created_by = ?", opts.CreatedBy)
 	}
 
-	stmt = stmt.Limit(uint64(limit(opts.Size)))
-	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
+	stmt = stmt.Limit(database.Limit(opts.Size))
+	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 
 	// NOTE: string concatenation is safe because the
 	// order attribute is an enum and is not user-defined,
@@ -449,7 +451,7 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}
 
 	result, err := s.mapSlicePullReq(ctx, dst)

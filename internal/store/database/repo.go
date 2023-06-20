@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -74,7 +76,7 @@ func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, erro
 
 	dst := new(types.Repository)
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, processSQLErrorf(err, "Failed to find repo")
+		return nil, database.ProcessSQLErrorf(err, "Failed to find repo")
 	}
 	return dst, nil
 }
@@ -92,7 +94,7 @@ func (s *RepoStore) FindByRef(ctx context.Context, repoRef string) (*types.Repos
 
 		if path.TargetType != enum.PathTargetTypeRepo {
 			// IMPORTANT: expose as not found error as we didn't find the repo!
-			return nil, fmt.Errorf("path is not targeting a repo - %w", store.ErrResourceNotFound)
+			return nil, fmt.Errorf("path is not targeting a repo - %w", gitness_store.ErrResourceNotFound)
 		}
 
 		id = path.TargetID
@@ -147,11 +149,11 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 	// insert repo first so we get id
 	query, arg, err := db.BindNamed(sqlQuery, repo)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind repo object")
+		return database.ProcessSQLErrorf(err, "Failed to bind repo object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&repo.ID); err != nil {
-		return processSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -185,21 +187,21 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, repo)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind repo object")
+		return database.ProcessSQLErrorf(err, "Failed to bind repo object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to update repository")
+		return database.ProcessSQLErrorf(err, "Failed to update repository")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return processSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
-		return store.ErrVersionConflict
+		return gitness_store.ErrVersionConflict
 	}
 
 	return nil
@@ -221,7 +223,7 @@ func (s *RepoStore) UpdateOptLock(ctx context.Context,
 		if err == nil {
 			return &dup, nil
 		}
-		if !errors.Is(err, store.ErrVersionConflict) {
+		if !errors.Is(err, gitness_store.ErrVersionConflict) {
 			return nil, err
 		}
 
@@ -241,7 +243,7 @@ func (s *RepoStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, repoDelete, id); err != nil {
-		return processSQLErrorf(err, "the delete query failed")
+		return database.ProcessSQLErrorf(err, "the delete query failed")
 	}
 
 	return nil
@@ -249,7 +251,7 @@ func (s *RepoStore) Delete(ctx context.Context, id int64) error {
 
 // Count of repos in a space.
 func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select("count(*)").
 		From("repositories").
 		Where("repo_parent_id = ?", parentID)
@@ -268,14 +270,14 @@ func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoF
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, processSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
 	}
 	return count, nil
 }
 
 // List returns a list of repos in a space.
 func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFilter) ([]*types.Repository, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select(repoColumnsForJoin).
 		From("repositories").
 		InnerJoin("paths ON repositories.repo_id=paths.path_repo_id AND paths.path_is_primary=true").
@@ -285,8 +287,8 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 		stmt = stmt.Where("LOWER(repo_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
-	stmt = stmt.Limit(uint64(limit(opts.Size)))
-	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
+	stmt = stmt.Limit(database.Limit(opts.Size))
+	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 
 	switch opts.Sort {
 	case enum.RepoAttrUID, enum.RepoAttrNone:
@@ -315,7 +317,7 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 
 	dst := []*types.Repository{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}
 
 	return dst, nil

@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -81,7 +83,7 @@ func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
 
 	dst := new(space)
 	if err := db.GetContext(ctx, dst, spaceSelectByID, id); err != nil {
-		return nil, processSQLErrorf(err, "Failed to find space")
+		return nil, database.ProcessSQLErrorf(err, "Failed to find space")
 	}
 
 	return mapToSpace(dst), nil
@@ -100,7 +102,7 @@ func (s *SpaceStore) FindByRef(ctx context.Context, spaceRef string) (*types.Spa
 
 		if path.TargetType != enum.PathTargetTypeSpace {
 			// IMPORTANT: expose as not found error as we didn't find the space!
-			return nil, fmt.Errorf("path is not targeting a space - %w", store.ErrResourceNotFound)
+			return nil, fmt.Errorf("path is not targeting a space - %w", gitness_store.ErrResourceNotFound)
 		}
 
 		id = path.TargetID
@@ -141,11 +143,11 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 
 	query, args, err := db.BindNamed(sqlQuery, dbSpace)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind space object")
+		return database.ProcessSQLErrorf(err, "Failed to bind space object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, args...).Scan(&space.ID); err != nil {
-		return processSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -177,21 +179,21 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, dbSpace)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind space object")
+		return database.ProcessSQLErrorf(err, "Failed to bind space object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return processSQLErrorf(err, "Update query failed")
+		return database.ProcessSQLErrorf(err, "Update query failed")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return processSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
-		return store.ErrVersionConflict
+		return gitness_store.ErrVersionConflict
 	}
 
 	space.Version = dbSpace.Version
@@ -216,7 +218,7 @@ func (s *SpaceStore) UpdateOptLock(ctx context.Context,
 		if err == nil {
 			return &dup, nil
 		}
-		if !errors.Is(err, store.ErrVersionConflict) {
+		if !errors.Is(err, gitness_store.ErrVersionConflict) {
 			return nil, err
 		}
 
@@ -236,7 +238,7 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
-		return processSQLErrorf(err, "The delete query failed")
+		return database.ProcessSQLErrorf(err, "The delete query failed")
 	}
 
 	return nil
@@ -244,7 +246,7 @@ func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 
 // Count the child spaces of a space.
 func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilter) (int64, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select("count(*)").
 		From("spaces").
 		Where("space_parent_id = ?", id)
@@ -263,20 +265,21 @@ func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilte
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, processSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
 	}
 	return count, nil
 }
 
 // List returns a list of spaces under the parent space.
 func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select(spaceColumnsForJoin).
 		From("spaces").
 		InnerJoin(`paths ON spaces.space_id=paths.path_space_id AND paths.path_is_primary=true`).
 		Where("space_parent_id = ?", fmt.Sprint(id))
-	stmt = stmt.Limit(uint64(limit(opts.Size)))
-	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
+
+	stmt = stmt.Limit(database.Limit(opts.Size))
+	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 
 	if opts.Query != "" {
 		stmt = stmt.Where("LOWER(space_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
@@ -309,7 +312,7 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 
 	dst := []*space{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Failed executing custom list query")
+		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}
 
 	return mapToSpaces(dst), nil

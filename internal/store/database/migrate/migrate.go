@@ -22,17 +22,31 @@ var postgres embed.FS
 //go:embed sqlite/*.sql
 var sqlite embed.FS
 
-const tableName = "migrations"
+const (
+	tableName = "migrations"
+
+	postgresDriverName = "postgres"
+	postgresSourceDir  = "postgres"
+
+	sqliteDriverName = "sqlite3"
+	sqliteSourceDir  = "sqlite"
+)
 
 // Migrate performs the database migration.
 func Migrate(ctx context.Context, db *sqlx.DB) error {
-	opts := getMigrator(db)
+	opts, err := getMigrator(db)
+	if err != nil {
+		return fmt.Errorf("failed to get migrator: %w", err)
+	}
 	return migrate.New(opts).MigrateUp(ctx)
 }
 
 // To performs the database migration to the specific version.
 func To(ctx context.Context, db *sqlx.DB, version string) error {
-	opts := getMigrator(db)
+	opts, err := getMigrator(db)
+	if err != nil {
+		return fmt.Errorf("failed to get migrator: %w", err)
+	}
 	return migrate.New(opts).MigrateTo(ctx, version)
 }
 
@@ -44,16 +58,18 @@ func Current(ctx context.Context, db *sqlx.DB) (string, error) {
 	)
 
 	switch db.DriverName() {
-	case "sqlite3":
+	case sqliteDriverName:
 		query = `
 			SELECT count(*)
 			FROM sqlite_master
 			WHERE name = ? and type = 'table'`
-	default:
+	case postgresDriverName:
 		query = `
 			SELECT count(*)
 			FROM information_schema.tables
 			WHERE table_name = ? and table_schema = 'public'`
+	default:
+		return "", fmt.Errorf("unsupported driver '%s'", db.DriverName())
 	}
 
 	if err := db.QueryRowContext(ctx, query, tableName).Scan(&migrationTableCount); err != nil {
@@ -74,7 +90,7 @@ func Current(ctx context.Context, db *sqlx.DB) (string, error) {
 	return version, nil
 }
 
-func getMigrator(db *sqlx.DB) migrate.Options {
+func getMigrator(db *sqlx.DB) (migrate.Options, error) {
 	before := func(_ context.Context, _ *sql.Tx, version string) error {
 		log.Trace().Str("version", version).Msg("migration started")
 		return nil
@@ -94,14 +110,16 @@ func getMigrator(db *sqlx.DB) migrate.Options {
 	}
 
 	switch db.DriverName() {
-	case "postgres":
-		folder, _ := fs.Sub(postgres, "postgres")
+	case sqliteDriverName:
+		folder, _ := fs.Sub(sqlite, sqliteSourceDir)
+		opts.FS = folder
+	case postgresDriverName:
+		folder, _ := fs.Sub(postgres, postgresSourceDir)
 		opts.FS = folder
 
 	default:
-		folder, _ := fs.Sub(sqlite, "sqlite")
-		opts.FS = folder
+		return migrate.Options{}, fmt.Errorf("unsupported driver '%s'", db.DriverName())
 	}
 
-	return opts
+	return opts, nil
 }

@@ -12,7 +12,9 @@ import (
 
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -111,11 +113,11 @@ func (s *PathStore) Create(ctx context.Context, path *types.Path) error {
 
 	query, arg, err := db.BindNamed(sqlQuery, dbPath)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind path object")
+		return database.ProcessSQLErrorf(err, "Failed to bind path object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&path.ID); err != nil {
-		return processSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -127,7 +129,7 @@ func (s *PathStore) findInner(ctx context.Context, id int64, lock bool) (*types.
 		WHERE path_id = $1`
 
 	if lock && !strings.HasPrefix(s.db.DriverName(), "sqlite") {
-		sqlQuery += "\n" + sqlForUpdate
+		sqlQuery += "\n" + database.SQLForUpdate
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -135,7 +137,7 @@ func (s *PathStore) findInner(ctx context.Context, id int64, lock bool) (*types.
 	dst := new(path)
 	err := db.GetContext(ctx, dst, sqlQuery, id)
 	if err != nil {
-		return nil, processSQLErrorf(err, "Failed to find path")
+		return nil, database.ProcessSQLErrorf(err, "Failed to find path")
 	}
 
 	res, err := mapToPath(dst)
@@ -172,7 +174,7 @@ func (s *PathStore) FindValue(ctx context.Context, value string) (*types.Path, e
 	dst := new(path)
 	err = db.GetContext(ctx, dst, sqlQuery, valueUnique)
 	if err != nil {
-		return nil, processSQLErrorf(err, "Failed to find path")
+		return nil, database.ProcessSQLErrorf(err, "Failed to find path")
 	}
 
 	res, err := mapToPath(dst)
@@ -186,7 +188,7 @@ func (s *PathStore) FindValue(ctx context.Context, value string) (*types.Path, e
 // findPrimaryInternal finds the  primary path for the given target and locks the record if requested.
 func (s *PathStore) findPrimaryInternal(ctx context.Context,
 	targetType enum.PathTargetType, targetID int64, lock bool) (*types.Path, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select(pathColumns).
 		From("paths").
 		Where("path_is_primary = ?", true)
@@ -197,7 +199,7 @@ func (s *PathStore) findPrimaryInternal(ctx context.Context,
 	}
 
 	if lock && !strings.HasPrefix(s.db.DriverName(), "sqlite") {
-		stmt.Suffix(sqlForUpdate)
+		stmt.Suffix(database.SQLForUpdate)
 	}
 
 	sqlQuery, args, err := stmt.ToSql()
@@ -211,7 +213,7 @@ func (s *PathStore) findPrimaryInternal(ctx context.Context,
 	dst := new(path)
 	err = db.GetContext(ctx, dst, sqlQuery, args...)
 	if err != nil {
-		return nil, processSQLErrorf(err, "Failed to find path")
+		return nil, database.ProcessSQLErrorf(err, "Failed to find path")
 	}
 
 	res, err := mapToPath(dst)
@@ -258,21 +260,21 @@ func (s *PathStore) Update(ctx context.Context, path *types.Path) error {
 
 	query, args, err := db.BindNamed(sqlQuery, dbPath)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind path object")
+		return database.ProcessSQLErrorf(err, "Failed to bind path object")
 	}
 
 	result, err := db.ExecContext(ctx, query, args...)
 	if err != nil {
-		return processSQLErrorf(err, "failed to update path")
+		return database.ProcessSQLErrorf(err, "failed to update path")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return processSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
-		return store.ErrVersionConflict
+		return gitness_store.ErrVersionConflict
 	}
 
 	path.Version = dbPath.Version
@@ -290,7 +292,7 @@ func (s *PathStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, sqlQuery, id); err != nil {
-		return processSQLErrorf(err, "Delete query failed")
+		return database.ProcessSQLErrorf(err, "Delete query failed")
 	}
 
 	return nil
@@ -299,7 +301,7 @@ func (s *PathStore) Delete(ctx context.Context, id int64) error {
 // Count returns the count of paths for a target.
 func (s *PathStore) Count(ctx context.Context, targetType enum.PathTargetType, targetID int64,
 	opts *types.PathFilter) (int64, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select("count(*)").
 		From("paths")
 
@@ -318,7 +320,7 @@ func (s *PathStore) Count(ctx context.Context, targetType enum.PathTargetType, t
 	var count int64
 	err = db.QueryRowContext(ctx, sqlQuery, args...).Scan(&count)
 	if err != nil {
-		return 0, processSQLErrorf(err, "Failed executing count query")
+		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
 	}
 	return count, nil
 }
@@ -327,7 +329,7 @@ func (s *PathStore) Count(ctx context.Context, targetType enum.PathTargetType, t
 func (s *PathStore) List(ctx context.Context, targetType enum.PathTargetType, targetID int64,
 	opts *types.PathFilter) ([]*types.Path, error) {
 	// else we construct the sql statement.
-	stmt := builder.
+	stmt := database.Builder.
 		Select("*").
 		From("paths")
 
@@ -336,8 +338,8 @@ func (s *PathStore) List(ctx context.Context, targetType enum.PathTargetType, ta
 		return nil, err
 	}
 
-	stmt = stmt.Limit(uint64(limit(opts.Size)))
-	stmt = stmt.Offset(uint64(offset(opts.Page, opts.Size)))
+	stmt = stmt.Limit(database.Limit(opts.Size))
+	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 
 	switch opts.Sort {
 	case enum.PathAttrID, enum.PathAttrNone:
@@ -362,7 +364,7 @@ func (s *PathStore) List(ctx context.Context, targetType enum.PathTargetType, ta
 
 	dst := []*path{}
 	if err = db.SelectContext(ctx, &dst, sqlQuery, args...); err != nil {
-		return nil, processSQLErrorf(err, "Path select query failed")
+		return nil, database.ProcessSQLErrorf(err, "Path select query failed")
 	}
 
 	res, err := mapToPaths(dst)
@@ -379,7 +381,7 @@ func (s *PathStore) ListPrimaryDescendantsWithLock(ctx context.Context, value st
 		WHERE path_value_unique LIKE $1 AND path_is_primary = true`
 
 	if !strings.HasPrefix(s.db.DriverName(), "sqlite") {
-		sqlQuery += "\n" + sqlForUpdate
+		sqlQuery += "\n" + database.SQLForUpdate
 	}
 
 	// map the Value to unique Value before searching!
@@ -394,7 +396,7 @@ func (s *PathStore) ListPrimaryDescendantsWithLock(ctx context.Context, value st
 
 	dst := []*path{}
 	if err = db.SelectContext(ctx, &dst, sqlQuery, valueUniquePattern); err != nil {
-		return nil, processSQLErrorf(err, "Failed to list paths")
+		return nil, database.ProcessSQLErrorf(err, "Failed to list paths")
 	}
 
 	res, err := mapToPaths(dst)

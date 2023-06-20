@@ -9,7 +9,8 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
 	"github.com/jmoiron/sqlx"
@@ -78,11 +79,11 @@ func (s *ReqCheckStore) Create(ctx context.Context, reqCheck *types.ReqCheck) er
 
 	query, arg, err := db.BindNamed(sqlQuery, mapInternalReqCheck(reqCheck))
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind required status check object")
+		return database.ProcessSQLErrorf(err, "Failed to bind required status check object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&reqCheck.ID); err != nil {
-		return processSQLErrorf(err, "Insert query failed")
+		return database.ProcessSQLErrorf(err, "Insert query failed")
 	}
 
 	return nil
@@ -90,7 +91,7 @@ func (s *ReqCheckStore) Create(ctx context.Context, reqCheck *types.ReqCheck) er
 
 // List returns a list of required status checks for a repo.
 func (s *ReqCheckStore) List(ctx context.Context, repoID int64) ([]*types.ReqCheck, error) {
-	stmt := builder.
+	stmt := database.Builder.
 		Select(reqCheckColumns).
 		From("reqchecks").
 		Where("reqcheck_repo_id = ?", repoID).
@@ -106,7 +107,7 @@ func (s *ReqCheckStore) List(ctx context.Context, repoID int64) ([]*types.ReqChe
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
-		return nil, processSQLErrorf(err, "Failed to execute list required status checks query")
+		return nil, database.ProcessSQLErrorf(err, "Failed to execute list required status checks query")
 	}
 
 	result, err := s.mapSliceReqCheck(ctx, dst)
@@ -119,7 +120,7 @@ func (s *ReqCheckStore) List(ctx context.Context, repoID int64) ([]*types.ReqChe
 
 // Delete removes a required status checks for a repo.
 func (s *ReqCheckStore) Delete(ctx context.Context, repoID, reqCheckID int64) error {
-	stmt := builder.
+	stmt := database.Builder.
 		Delete("reqchecks").
 		Where("reqcheck_repo_id = ?", repoID).
 		Where("reqcheck_id = ?", reqCheckID)
@@ -133,7 +134,7 @@ func (s *ReqCheckStore) Delete(ctx context.Context, repoID, reqCheckID int64) er
 
 	_, err = db.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return processSQLErrorf(err, "Failed to execute delete required status check query")
+		return database.ProcessSQLErrorf(err, "Failed to execute delete required status check query")
 	}
 
 	return nil

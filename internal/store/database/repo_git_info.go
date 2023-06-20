@@ -8,7 +8,8 @@ import (
 	"context"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
 	"github.com/jmoiron/sqlx"
@@ -38,13 +39,13 @@ func (s *RepoGitInfoView) Find(ctx context.Context, id int64) (*types.Repository
 
 	v := db.QueryRowContext(ctx, sqlQuery, id)
 	if err := v.Err(); err != nil {
-		return nil, processSQLErrorf(err, "failed to find git uid by repository id")
+		return nil, database.ProcessSQLErrorf(err, "failed to find git uid by repository id")
 	}
 
 	var result = types.RepositoryGitInfo{ID: id}
 
 	if err := v.Scan(&result.GitUID); err != nil {
-		return nil, processSQLErrorf(err, "failed to scan git uid")
+		return nil, database.ProcessSQLErrorf(err, "failed to scan git uid")
 	}
 
 	return &result, nil

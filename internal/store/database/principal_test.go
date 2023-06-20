@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/harness/gitness/internal/store"
+	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/go-cmp/cmp"
@@ -244,7 +245,7 @@ func testUserDelete(s store.PrincipalStore) func(t *testing.T) {
 			t.Error(err)
 			return
 		}
-		if _, err = s.Find(ctx, 1); !errors.Is(err, store.ErrResourceNotFound) {
+		if _, err = s.Find(ctx, 1); !errors.Is(err, gitness_store.ErrResourceNotFound) {
 			t.Errorf("Expected store.ErrResourceNotFound got %s", err)
 		}
 	}

@@ -8,7 +8,8 @@ import (
 	"context"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/store/database/dbtx"
+	"github.com/harness/gitness/store/database"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -67,7 +68,7 @@ func (s *PullReqReviewStore) Find(ctx context.Context, id int64) (*types.PullReq
 
 	dst := &pullReqReview{}
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
-		return nil, processSQLErrorf(err, "Failed to find pull request activity")
+		return nil, database.ProcessSQLErrorf(err, "Failed to find pull request activity")
 	}
 
 	return mapPullReqReview(dst), nil
@@ -96,11 +97,11 @@ func (s *PullReqReviewStore) Create(ctx context.Context, v *types.PullReqReview)
 
 	query, arg, err := db.BindNamed(sqlQuery, mapInternalPullReqReview(v))
 	if err != nil {
-		return processSQLErrorf(err, "Failed to bind pull request review object")
+		return database.ProcessSQLErrorf(err, "Failed to bind pull request review object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&v.ID); err != nil {
-		return processSQLErrorf(err, "Failed to insert pull request review")
+		return database.ProcessSQLErrorf(err, "Failed to insert pull request review")
 	}
 
 	return nil

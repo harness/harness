@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/harness/gitness/store/database"
+
 	"github.com/jmoiron/sqlx"
 
 	_ "github.com/lib/pq"
@@ -25,7 +27,7 @@ func connect() (*sqlx.DB, error) {
 		driver = os.Getenv("DATABASE_DRIVER")
 		config = os.Getenv("DATABASE_CONFIG")
 	}
-	return Connect(context.Background(), driver, config)
+	return database.Connect(context.Background(), driver, config)
 }
 
 // seed seed the database state.

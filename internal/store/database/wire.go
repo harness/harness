@@ -8,7 +8,8 @@ import (
 	"context"
 
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/internal/store/database/migrate"
+	"github.com/harness/gitness/store/database"
 
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
@@ -35,12 +36,19 @@ var WireSet = wire.NewSet(
 	ProvideReqCheckStore,
 )
 
+// helper function to setup the database by performing automated
+// database migration steps.
+func migrator(ctx context.Context, db *sqlx.DB) error {
+	return migrate.Migrate(ctx, db)
+}
+
 // ProvideDatabase provides a database connection.
-func ProvideDatabase(ctx context.Context, config *types.Config) (*sqlx.DB, error) {
-	return ConnectAndMigrate(
+func ProvideDatabase(ctx context.Context, config database.Config) (*sqlx.DB, error) {
+	return database.ConnectAndMigrate(
 		ctx,
-		config.Database.Driver,
-		config.Database.Datasource,
+		config.Driver,
+		config.Datasource,
+		migrator,
 	)
 }
 
