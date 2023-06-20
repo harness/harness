@@ -72,13 +72,12 @@ FROM alpine/git:2.36.3 as final
 
 RUN adduser -u 1001 -D -h /app iamuser
 
+# setup app dir and its content
 WORKDIR /app
+RUN chown -R 1001:1001 /app
+COPY --from=builder --chown=1001:1001 --chmod=700 /app/gitness /app/gitness
 
 COPY --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-COPY --from=builder /app/gitness /app/gitness
-
-RUN chown -R 1001:1001 /app
-RUN chmod -R 700 /app/gitness
 
 EXPOSE 3000
 EXPOSE 3001
