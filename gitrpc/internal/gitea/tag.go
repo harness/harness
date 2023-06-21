@@ -26,41 +26,19 @@ const (
 
 // GetAnnotatedTag returns the tag for a specific tag sha.
 func (g Adapter) GetAnnotatedTag(ctx context.Context, repoPath string, sha string) (*types.Tag, error) {
-	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, err
-	}
-	defer giteaRepo.Close()
-
-	tag, err := giteaGetAnnotatedTag(giteaRepo, sha)
-	if err != nil {
+	tags, err := giteaGetAnnotatedTags(ctx, repoPath, []string{sha})
+	if err != nil || len(tags) == 0 {
 		return nil, processGiteaErrorf(err, "failed to get annotated tag with sha '%s'", sha)
 	}
 
-	return tag, nil
+	return &tags[0], nil
 }
 
 // GetAnnotatedTags returns the tags for a specific list of tag sha.
 func (g Adapter) GetAnnotatedTags(ctx context.Context, repoPath string, shas []string) ([]types.Tag, error) {
-	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return nil, err
-	}
-	defer giteaRepo.Close()
-
-	tags := make([]types.Tag, len(shas))
-	for i, sha := range shas {
-		var tag *types.Tag
-		tag, err = giteaGetAnnotatedTag(giteaRepo, sha)
-		if err != nil {
-			return nil, processGiteaErrorf(err, "failed to get annotated tag with sha '%s'", sha)
-		}
-
-		tags[i] = *tag
-	}
-
-	return tags, nil
+	return giteaGetAnnotatedTags(ctx, repoPath, shas)
 }
+
 func (g Adapter) CreateAnnotatedTag(
 	ctx context.Context,
 	repoPath string,
@@ -80,85 +58,90 @@ func (g Adapter) CreateAnnotatedTag(
 
 // giteaGetAnnotatedTag is a custom implementation to retrieve an annotated tag from a sha.
 // The code is following parts of the gitea implementation.
-//
-// IMPORTANT: This is required as all gitea implementations of form get*Tag
-// are having huge performance issues (with 2,500 tags it took seconds per single tag!)
-func giteaGetAnnotatedTag(giteaRepo *gitea.Repository, sha string) (*types.Tag, error) {
+func giteaGetAnnotatedTags(ctx context.Context, repoPath string, shas []string) ([]types.Tag, error) {
 	// The tag is an annotated tag with a message.
-	writer, reader, cancel := giteaRepo.CatFileBatch(giteaRepo.Ctx)
-	defer cancel()
-	if _, err := writer.Write([]byte(sha + "\n")); err != nil {
-		return nil, err
-	}
-	tagSha, typ, size, err := gitea.ReadBatchLine(reader)
-	if err != nil {
-		if errors.Is(err, io.EOF) || gitea.IsErrNotExist(err) {
-			return nil, fmt.Errorf("tag with sha %s does not exist", sha)
+	writer, reader, cancel := gitea.CatFileBatch(ctx, repoPath)
+	defer func() {
+		cancel()
+		_ = writer.Close()
+	}()
+
+	tags := make([]types.Tag, len(shas))
+
+	for i, sha := range shas {
+		if _, err := writer.Write([]byte(sha + "\n")); err != nil {
+			return nil, err
 		}
-		return nil, err
-	}
-	if typ != string(types.GitObjectTypeTag) {
-		return nil, fmt.Errorf("git object is of type '%s', expected tag", typ)
+		tagSha, typ, size, err := gitea.ReadBatchLine(reader)
+		if err != nil {
+			if errors.Is(err, io.EOF) || gitea.IsErrNotExist(err) {
+				return nil, fmt.Errorf("tag with sha %s does not exist", sha)
+			}
+			return nil, err
+		}
+		if typ != string(types.GitObjectTypeTag) {
+			return nil, fmt.Errorf("git object is of type '%s', expected tag", typ)
+		}
+
+		// read the remaining rawData
+		rawData, err := io.ReadAll(io.LimitReader(reader, size))
+		if err != nil {
+			return nil, err
+		}
+		_, err = reader.Discard(1)
+		if err != nil {
+			return nil, err
+		}
+
+		tag, err := parseTagDataFromCatFile(rawData)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse tag '%s': %w", sha, err)
+		}
+
+		// fill in the sha
+		tag.Sha = string(tagSha)
+
+		tags[i] = tag
 	}
 
-	// read the remaining rawData
-	rawData, err := io.ReadAll(io.LimitReader(reader, size))
-	if err != nil {
-		return nil, err
-	}
-	_, err = reader.Discard(1)
-	if err != nil {
-		return nil, err
-	}
-
-	tag, err := parseTagDataFromCatFile(rawData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse tag '%s': %w", sha, err)
-	}
-
-	// fill in the sha
-	tag.Sha = string(tagSha)
-
-	return tag, nil
+	return tags, nil
 }
 
 // parseTagDataFromCatFile parses a tag from a cat-file output.
-func parseTagDataFromCatFile(data []byte) (*types.Tag, error) {
-	tag := &types.Tag{}
+func parseTagDataFromCatFile(data []byte) (tag types.Tag, err error) {
 	p := 0
-	var err error
 
 	// parse object Id
 	tag.TargetSha, p, err = giteaParseCatFileLine(data, p, "object")
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	// parse object type
 	rawType, p, err := giteaParseCatFileLine(data, p, "type")
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	tag.TargetType, err = types.ParseGitObjectType(rawType)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	// parse tag name
 	tag.Name, p, err = giteaParseCatFileLine(data, p, "tag")
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	// parse tagger
 	rawTaggerInfo, p, err := giteaParseCatFileLine(data, p, "tagger")
 	if err != nil {
-		return nil, err
+		return
 	}
 	tag.Tagger, err = parseSignatureFromCatFileLine(rawTaggerInfo)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	// remainder is message and gpg (remove leading and tailing new lines)
