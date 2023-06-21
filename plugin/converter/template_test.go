@@ -551,3 +551,196 @@ func TestTemplatePluginConvertYamlWithComment(t *testing.T) {
 		t.Errorf("Want %q got %q", want, got)
 	}
 }
+
+func TestTemplatePluginConvertYamlWithExtraPipeline(t *testing.T) {
+	templateArgs, err := ioutil.ReadFile("testdata/yaml.template.with-extra-pipeline.yml")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	req := &core.ConvertArgs{
+		Build: &core.Build{
+			After: "3d21ec53a331a6f037a91c368710b99387d012c1",
+		},
+		Repo: &core.Repository{
+			Slug:      "octocat/hello-world",
+			Config:    ".drone.yml",
+			Namespace: "octocat",
+		},
+		Config: &core.Config{
+			Data: string(templateArgs),
+		},
+	}
+
+	beforeInput, err := ioutil.ReadFile("testdata/yaml.input.yml")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	after, err := ioutil.ReadFile("testdata/yaml.input.with-extra-pipeline.golden")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	template := &core.Template{
+		Name:      "plugin.yaml",
+		Data:      string(beforeInput),
+		Namespace: "octocat",
+	}
+
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	templates := mock.NewMockTemplateStore(controller)
+	templates.EXPECT().FindName(gomock.Any(), template.Name, req.Repo.Namespace).Return(template, nil)
+
+	plugin := Template(templates, 0, 0)
+	config, err := plugin.Convert(noContext, req)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if config == nil {
+		t.Error("Want non-nil configuration")
+		return
+	}
+
+	if want, got := config.Data, string(after); want != got {
+		t.Errorf("Want %q got %q", want, got)
+	}
+}
+
+func TestTemplatePluginConvertYamlWithDoubleTemplate(t *testing.T) {
+	templateArgs, err := ioutil.ReadFile("testdata/yaml.two.templates.yml")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	req := &core.ConvertArgs{
+		Build: &core.Build{
+			After: "3d21ec53a331a6f037a91c368710b99387d012c1",
+		},
+		Repo: &core.Repository{
+			Slug:      "octocat/hello-world",
+			Config:    ".drone.yml",
+			Namespace: "octocat",
+		},
+		Config: &core.Config{
+			Data: string(templateArgs),
+		},
+	}
+
+	beforeInput, err := ioutil.ReadFile("testdata/yaml.input-with-name.yml")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	after, err := ioutil.ReadFile("testdata/yaml.input.two.golden")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	template := &core.Template{
+		Name:      "plugin.yaml",
+		Data:      string(beforeInput),
+		Namespace: "octocat",
+	}
+
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	templates := mock.NewMockTemplateStore(controller)
+	templates.EXPECT().FindName(gomock.Any(), template.Name, req.Repo.Namespace).Return(template, nil).Times(2)
+
+	plugin := Template(templates, 0, 0)
+	config, err := plugin.Convert(noContext, req)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if config == nil {
+		t.Error("Want non-nil configuration")
+		return
+	}
+
+	if want, got := config.Data, string(after); want != got {
+		t.Errorf("Want %q got %q", want, got)
+	}
+}
+
+func TestTemplatePluginConvertJsonnetWithFunction(t *testing.T) {
+	templateArgs, err := ioutil.ReadFile("testdata/go.template.yml")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	req := &core.ConvertArgs{
+		Build: &core.Build{
+			After: "3d21ec53a331a6f037a91c368710b99387d012c1",
+		},
+		Repo: &core.Repository{
+			Slug:      "octocat/hello-world",
+			Config:    ".drone.yml",
+			Namespace: "octocat",
+		},
+		Config: &core.Config{
+			Data: string(templateArgs),
+		},
+	}
+
+	beforeInput, err := ioutil.ReadFile("testdata/go-input.jsonnet")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	after, err := ioutil.ReadFile("testdata/go-input.jsonnet.golden")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	template := &core.Template{
+		Name:      "go-input.jsonnet",
+		Data:      string(beforeInput),
+		Namespace: "octocat",
+	}
+
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	templates := mock.NewMockTemplateStore(controller)
+	templates.EXPECT().FindName(gomock.Any(), template.Name, req.Repo.Namespace).Return(template, nil).Times(2)
+
+	plugin := Template(templates, 0, 0)
+	config, err := plugin.Convert(noContext, req)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if config == nil {
+		t.Error("Want non-nil configuration")
+		return
+	}
+
+	want := string(after)
+	// on windows line endings are \r\n, lets change them to linux for comparison
+	if runtime.GOOS == "windows" {
+		want = strings.Replace(want, "\r\n", "\n", -1)
+	}
+
+	got := config.Data
+	if want != got {
+		t.Errorf("Want %q got %q", want, got)
+	}
+}

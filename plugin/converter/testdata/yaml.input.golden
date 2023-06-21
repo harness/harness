@@ -6,3 +6,4 @@ steps:
     image: my_image
     commands:
       - my_command
+---

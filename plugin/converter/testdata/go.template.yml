@@ -1,0 +1,12 @@
+kind: template
+load: go-input.jsonnet
+data:
+  goImage: "golang:1.19"
+  pipelineName: "template-1"
+
+---
+kind: template
+load: go-input.jsonnet
+data:
+  goImage: "golang:1.19"
+  pipelineName: "template-2"

@@ -1,0 +1,78 @@
+---
+{
+   "kind": "pipeline",
+   "name": "template-1",
+   "steps": [
+      {
+         "commands": [
+            "golangci-lint run"
+         ],
+         "image": "golangci/golangci-lint:v1.52.0-alpine",
+         "name": "golint"
+      },
+      {
+         "commands": [
+            "go test -v ./..."
+         ],
+         "image": "golang:1.19",
+         "name": "gotest"
+      }
+   ],
+   "trigger": {
+      "branch": [
+         "dev"
+      ],
+      "event": [
+         "pull_request",
+         "push"
+      ]
+   },
+   "type": "docker",
+   "volumes": [
+      {
+         "host": {
+            "path": "/var/run/docker.sock"
+         },
+         "name": "docker"
+      }
+   ]
+}
+---
+{
+   "kind": "pipeline",
+   "name": "template-2",
+   "steps": [
+      {
+         "commands": [
+            "golangci-lint run"
+         ],
+         "image": "golangci/golangci-lint:v1.52.0-alpine",
+         "name": "golint"
+      },
+      {
+         "commands": [
+            "go test -v ./..."
+         ],
+         "image": "golang:1.19",
+         "name": "gotest"
+      }
+   ],
+   "trigger": {
+      "branch": [
+         "dev"
+      ],
+      "event": [
+         "pull_request",
+         "push"
+      ]
+   },
+   "type": "docker",
+   "volumes": [
+      {
+         "host": {
+            "path": "/var/run/docker.sock"
+         },
+         "name": "docker"
+      }
+   ]
+}

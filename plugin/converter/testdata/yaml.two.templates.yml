@@ -1,0 +1,16 @@
+kind: template
+load: plugin.yaml
+data:
+  stepName: my_step
+  image: my_image
+  commands: my_command
+  name: with_template_1
+
+---
+kind: template
+load: plugin.yaml
+data:
+  stepName: my_step
+  image: my_image
+  commands: my_command
+  name: with_template_2

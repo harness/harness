@@ -1,0 +1,17 @@
+# this is a comment
+kind: template
+load: plugin.yaml
+data:
+  stepName: my_step
+  image: my_image
+  commands: my_command
+
+---
+kind: pipeline
+type: docker
+name: extra-pipeline
+steps:
+  - name:  extra_my_step
+    image: extra_image
+    commands:
+      - echo "extra_command"
