@@ -7,14 +7,22 @@ package gitea
 import (
 	"context"
 
+	"github.com/harness/gitness/cache"
+	"github.com/harness/gitness/gitrpc/internal/types"
+
 	gitea "code.gitea.io/gitea/modules/git"
 	"code.gitea.io/gitea/modules/setting"
 )
 
 type Adapter struct {
+	repoCache       cache.Cache[string, *RepoEntryValue]
+	lastCommitCache cache.Cache[CommitEntryKey, *types.Commit]
 }
 
-func New() (Adapter, error) {
+func New(
+	repoCache cache.Cache[string, *RepoEntryValue],
+	lastCommitCache cache.Cache[CommitEntryKey, *types.Commit],
+) (Adapter, error) {
 	// TODO: should be subdir of gitRoot? What is it being used for?
 	setting.Git.HomePath = "home"
 
@@ -23,5 +31,8 @@ func New() (Adapter, error) {
 		return Adapter{}, err
 	}
 
-	return Adapter{}, nil
+	return Adapter{
+		repoCache:       repoCache,
+		lastCommitCache: lastCommitCache,
+	}, nil
 }

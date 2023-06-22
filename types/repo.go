@@ -57,7 +57,3 @@ type RepositoryGitInfo struct {
 	ID     int64
 	GitUID string
 }
-
-func (p *RepositoryGitInfo) Identifier() int64 {
-	return p.ID
-}

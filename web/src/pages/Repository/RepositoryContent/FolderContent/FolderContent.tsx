@@ -70,7 +70,7 @@ export function FolderContent({
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
             <Text lineClamp={1} color={Color.GREY_500} className={css.rowText}>
-              {formatDate(row.original.latest_commit?.author?.when as string)}
+                {!!row.original.latest_commit?.author?.when ? formatDate(row.original.latest_commit?.author?.when as string) : ""}
             </Text>
           )
         }
