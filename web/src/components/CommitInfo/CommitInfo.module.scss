@@ -4,9 +4,14 @@
   .commitTitleContainer {
     background-color: var(--grey-100);
     border: 1px solid var(--grey-200);
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
   }
   .infoContainer {
     border: 1px solid var(--grey-200);
+    border-top: unset;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
   }
   .alignContent {
     align-items: center !important;
