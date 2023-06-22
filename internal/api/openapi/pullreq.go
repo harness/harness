@@ -82,6 +82,11 @@ type reviewerListPullReqRequest struct {
 	pullReqRequest
 }
 
+type reviewerDeletePullReqRequest struct {
+	pullReqRequest
+	PullReqReviewerID int64 `path:"pullreq_reviewer_id"`
+}
+
 type reviewerAddPullReqRequest struct {
 	pullReqRequest
 	pullreq.ReviewerAddInput
@@ -403,6 +408,21 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&reviewerList, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/reviewers", reviewerList)
+
+	reviewerDelete := openapi3.Operation{}
+	reviewerDelete.WithTags("pullreq")
+	reviewerDelete.WithMapOfAnything(map[string]interface{}{"operationId": "reviewerDeletePullReq"})
+	err := reflector.SetRequest(&reviewerDelete, new(reviewerDeletePullReqRequest), http.MethodDelete)
+	err = reflector.SetJSONResponse(&reviewerDelete, nil, http.StatusNoContent)
+	err = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusBadRequest)
+	err = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusInternalServerError)
+	err = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusUnauthorized)
+	err = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusForbidden)
+	err = reflector.Spec.AddOperation(http.MethodDelete,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/reviewers/{pullreq_reviewer_id}", reviewerDelete)
+	if err != nil {
+		panic(err)
+	}
 
 	reviewSubmit := openapi3.Operation{}
 	reviewSubmit.WithTags("pullreq")

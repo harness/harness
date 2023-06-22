@@ -14,10 +14,15 @@ import (
 const (
 	PathParamPullReqNumber    = "pullreq_number"
 	PathParamPullReqCommentID = "pullreq_comment_id"
+	PathParamReviewerID       = "pullreq_reviewer_id"
 )
 
 func GetPullReqNumberFromPath(r *http.Request) (int64, error) {
 	return PathParamAsPositiveInt64(r, PathParamPullReqNumber)
+}
+
+func GetReviewerIDFromPath(r *http.Request) (int64, error) {
+	return PathParamAsPositiveInt64(r, PathParamReviewerID)
 }
 
 func GetPullReqCommentIDPath(r *http.Request) (int64, error) {

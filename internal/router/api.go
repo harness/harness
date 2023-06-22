@@ -292,6 +292,9 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 			r.Route("/reviewers", func(r chi.Router) {
 				r.Get("/", handlerpullreq.HandleReviewerList(pullreqCtrl))
 				r.Put("/", handlerpullreq.HandleReviewerAdd(pullreqCtrl))
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamReviewerID), func(r chi.Router) {
+					r.Delete("/", handlerpullreq.HandleReviewerDelete(pullreqCtrl))
+				})
 			})
 			r.Route("/reviews", func(r chi.Router) {
 				r.Post("/", handlerpullreq.HandleReviewSubmit(pullreqCtrl))
