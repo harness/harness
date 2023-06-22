@@ -74,6 +74,16 @@ export default function RepositoryCommits() {
         repoMetadata={repoMetadata}
         title={getString('commits')}
         dataTooltipId="repositoryCommits"
+        extraBreadcrumbLinks={
+          commitRef && repoMetadata
+            ? [
+                {
+                  label: getString('commits'),
+                  url: routes.toCODECommits({ repoPath: repoMetadata.path as string, commitRef: '' })
+                }
+              ]
+            : undefined
+        }
       />
 
       <PageBody error={getErrorMessage(error || errorCommits)} retryOnError={voidFn(refetch)}>
