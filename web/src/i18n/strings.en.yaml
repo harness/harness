@@ -424,8 +424,8 @@ fileTooLarge: File is too large to open. {download}
 clickHereToDownload: Click here to download.
 viewFile: View the file at this point in the history
 viewRepo: View the repository at this point in the history
-hideCommitHistory: Renamed from {{file}} - Hide History
-showCommitHistory: Renamed from {{file}} - Show History
+hideCommitHistory: Hide Rename History for {{file}}
+showCommitHistory: Show Rename History for {{file}}
 noReviewers: No Reviewers
 assignPeople: Assign people
 add: Add +
