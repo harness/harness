@@ -55,7 +55,7 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 	_, err = sharedRepo.GetBranchCommit(request.GetBranchName())
 	// return an error if branch alredy exists (push doesn't fail if it's a noop or fast forward push)
 	if err == nil {
-		return nil, fmt.Errorf("branch creation of '%s' failed: %w", request.GetBranchName(), types.ErrAlreadyExists)
+		return nil, ErrAlreadyExistsf("branch '%s' already exists", request.GetBranchName())
 	}
 	if !git.IsErrNotExist(err) {
 		return nil, fmt.Errorf("branch creation of '%s' failed: %w", request.GetBranchName(), err)
@@ -64,7 +64,7 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 	// get target commit (as target could be branch/tag/commit, and tag can't be pushed using source:destination syntax)
 	targetCommit, err := sharedRepo.GetCommit(strings.TrimSpace(request.GetTarget()))
 	if git.IsErrNotExist(err) {
-		return nil, fmt.Errorf("failed to get commit id for target '%s': %w", request.GetTarget(), types.ErrNotFound)
+		return nil, ErrNotFoundf("target '%s' doesn't exist", request.GetTarget())
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get commit id for target '%s': %w", request.GetTarget(), err)

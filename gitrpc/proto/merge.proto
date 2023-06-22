@@ -30,26 +30,30 @@ message MergeRequest {
   string message = 5;
   // author is the person who originally wrote the code
   Identity author = 6;
+  // authorDate is the date when the code was written
+  int64 authorDate = 7;
   // committer is the person who last applied the patch
-  Identity committer = 7;
+  Identity committer = 8;
+  // committer is the date when the code was applied
+  int64 committerDate = 9;
 
   // ref_type is an otional value and is used to generate the full
   // reference in which the merge result is stored.
-  RefType ref_type  = 8;
+  RefType ref_type  = 10;
   // ref_name is an otional value and is used to generate the full
   // reference in which the merge result is stored.
-  string ref_name  = 9;
+  string ref_name  = 11;
 
   // head_expected_sha is commit sha on the head branch, if head_expected_sha is older
   // than the head_branch latest sha then merge will fail.
-  string head_expected_sha = 10;
+  string head_expected_sha = 12;
 
   // force merge
-  bool force = 11;
+  bool force = 13;
   // delete branch after merge
-  bool delete_head_branch = 12;
+  bool delete_head_branch = 14;
   // merging method
-  MergeMethod method      = 13;
+  MergeMethod method      = 15;
 }
 
 message MergeResponse {

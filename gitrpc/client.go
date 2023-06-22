@@ -48,6 +48,10 @@ func New(config Config) (*Client, error) {
 		return nil, err
 	}
 
+	return NewWithConn(conn), nil
+}
+
+func NewWithConn(conn *grpc.ClientConn) *Client {
 	return &Client{
 		conn:               conn,
 		repoService:        rpc.NewRepositoryServiceClient(conn),
@@ -57,5 +61,5 @@ func New(config Config) (*Client, error) {
 		diffService:        rpc.NewDiffServiceClient(conn),
 		mergeService:       rpc.NewMergeServiceClient(conn),
 		blameService:       rpc.NewBlameServiceClient(conn),
-	}, nil
+	}
 }

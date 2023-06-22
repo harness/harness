@@ -13,6 +13,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"time"
 
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -75,11 +76,7 @@ func NewRepositoryService(adapter GitAdapter, store Storage, reposRoot string,
 	}, nil
 }
 
-//nolint:gocognit,funlen // need to refactor this code
 func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateRepositoryServer) error {
-	ctx := stream.Context()
-	log := log.Ctx(ctx)
-
 	// first get repo params from stream
 	request, err := stream.Recv()
 	if err != nil {
@@ -97,15 +94,76 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 		return types.ErrBaseCannotBeEmpty
 	}
 
+	committer := base.GetActor()
+	if header.GetCommitter() != nil {
+		committer = header.GetCommitter()
+	}
+	committerDate := time.Now().UTC()
+	if header.GetCommitterDate() != 0 {
+		committerDate = time.Unix(header.GetCommitterDate(), 0)
+	}
+
+	author := committer
+	if header.GetAuthor() != nil {
+		author = header.GetAuthor()
+	}
+	authorDate := committerDate
+	if header.GetAuthorDate() != 0 {
+		authorDate = time.Unix(header.GetAuthorDate(), 0)
+	}
+
+	nextFSElement := func() (*rpc.FileUpload, error) {
+		m, errStream := stream.Recv()
+		if errStream != nil {
+			return nil, errStream
+		}
+		return m.GetFile(), nil
+	}
+
+	err = s.createRepositoryInternal(
+		stream.Context(),
+		base,
+		header.GetDefaultBranch(),
+		nextFSElement,
+		committer,
+		committerDate,
+		author,
+		authorDate,
+	)
+	if err != nil {
+		return err
+	}
+
+	res := &rpc.CreateRepositoryResponse{}
+	err = stream.SendAndClose(res)
+	if err != nil {
+		return status.Errorf(codes.Internal, "cannot send completion response: %v", err)
+	}
+
+	return nil
+}
+
+//nolint:gocognit // refactor if needed
+func (s RepositoryService) createRepositoryInternal(
+	ctx context.Context,
+	base *rpc.WriteRequest,
+	defaultBranch string,
+	nextFSElement func() (*rpc.FileUpload, error),
+	committer *rpc.Identity,
+	committerDate time.Time,
+	author *rpc.Identity,
+	authorDate time.Time,
+) error {
+	log := log.Ctx(ctx)
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
-	if _, err = os.Stat(repoPath); !os.IsNotExist(err) {
+	if _, err := os.Stat(repoPath); !os.IsNotExist(err) {
 		return status.Errorf(codes.AlreadyExists, "repository exists already: %v", repoPath)
 	}
 
 	// create repository in repos folder
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	err = s.adapter.InitRepository(ctx, repoPath, true)
+	err := s.adapter.InitRepository(ctx, repoPath, true)
 	// delete repo dir on error
 	defer func() {
 		if err != nil {
@@ -121,69 +179,66 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 	}
 
 	// update default branch (currently set to non-existent branch)
-	err = s.adapter.SetDefaultBranch(ctx, repoPath, header.GetDefaultBranch(), true)
+	err = s.adapter.SetDefaultBranch(ctx, repoPath, defaultBranch, true)
 	if err != nil {
 		return processGitErrorf(err, "error updating default branch for repo '%s'", base.GetRepoUid())
 	}
 
-	// we need temp dir for cloning
-	tempDir, err := os.MkdirTemp("", "*-"+base.GetRepoUid())
-	if err != nil {
-		return fmt.Errorf("error creating temp dir for repo %s: %w", base.GetRepoUid(), err)
-	}
-	defer func(path string) {
-		// when repo is successfully created remove temp dir
-		errRm := os.RemoveAll(path)
-		if errRm != nil {
-			log.Err(errRm).Msg("failed to cleanup temporary dir.")
-		}
-	}(tempDir)
-
-	// Clone repository to temp dir
-	if err = s.adapter.Clone(ctx, repoPath, tempDir, types.CloneRepoOptions{}); err != nil {
-		return processGitErrorf(err, "failed to clone repo")
-	}
-
-	// logic for receiving files
-	filePaths := make([]string, 0, 16)
-	for {
-		var filePath string
-		filePath, err = s.handleFileUploadIfAvailable(ctx, tempDir, func() (*rpc.FileUpload, error) {
-			m, errStream := stream.Recv()
-			if errStream != nil {
-				return nil, errStream
-			}
-			return m.GetFile(), nil
-		})
-		if errors.Is(err, io.EOF) {
-			log.Info().Msg("received stream EOF")
-			break
-		}
+	// only execute file creation logic if files are provided
+	//nolint: nestif
+	if nextFSElement != nil {
+		// we need temp dir for cloning
+		tempDir, err := os.MkdirTemp("", "*-"+base.GetRepoUid())
 		if err != nil {
-			return status.Errorf(codes.Internal, "failed to receive file: %v", err)
+			return fmt.Errorf("error creating temp dir for repo %s: %w", base.GetRepoUid(), err)
+		}
+		defer func(path string) {
+			// when repo is successfully created remove temp dir
+			errRm := os.RemoveAll(path)
+			if errRm != nil {
+				log.Err(errRm).Msg("failed to cleanup temporary dir.")
+			}
+		}(tempDir)
+
+		// Clone repository to temp dir
+		if err = s.adapter.Clone(ctx, repoPath, tempDir, types.CloneRepoOptions{}); err != nil {
+			return processGitErrorf(err, "failed to clone repo")
 		}
 
-		filePaths = append(filePaths, filePath)
-	}
+		// logic for receiving files
+		filePaths := make([]string, 0, 16)
+		for {
+			var filePath string
+			filePath, err = s.handleFileUploadIfAvailable(ctx, tempDir, nextFSElement)
+			if errors.Is(err, io.EOF) {
+				log.Info().Msg("received stream EOF")
+				break
+			}
+			if err != nil {
+				return status.Errorf(codes.Internal, "failed to receive file: %v", err)
+			}
 
-	if len(filePaths) > 0 {
-		committer := base.GetActor()
-		if header.GetCommitter() != nil {
-			committer = header.GetCommitter()
+			filePaths = append(filePaths, filePath)
 		}
-		author := committer
-		if header.GetAuthor() != nil {
-			author = header.GetAuthor()
-		}
-		// NOTE: This creates the branch in origin repo (as it doesn't exist as of now)
-		// TODO: this should at least be a constant and not hardcoded?
-		if err = s.AddFilesAndPush(ctx, tempDir, filePaths, "HEAD:"+header.GetDefaultBranch(), author, committer,
-			"origin", "initial commit"); err != nil {
-			return err
+
+		if len(filePaths) > 0 {
+			if committer == nil {
+				committer = base.GetActor()
+			}
+			if author == nil {
+				author = committer
+			}
+			// NOTE: This creates the branch in origin repo (as it doesn't exist as of now)
+			// TODO: this should at least be a constant and not hardcoded?
+			if err = s.addFilesAndPush(ctx, tempDir, filePaths, "HEAD:"+defaultBranch, author, authorDate,
+				committer, committerDate, "origin", "initial commit"); err != nil {
+				return err
+			}
 		}
 	}
 
 	// setup server hook symlinks pointing to configured server hook binary
+	// IMPORTANT: Setup hooks after repo creation to avoid issues with externally dependent services.
 	for _, hook := range gitServerHookNames {
 		hookPath := path.Join(repoPath, gitHooksDir, hook)
 		err = os.Symlink(s.gitHookPath, hookPath)
@@ -191,12 +246,6 @@ func (s RepositoryService) CreateRepository(stream rpc.RepositoryService_CreateR
 			return status.Errorf(codes.Internal,
 				"failed to setup symlink for hook '%s' ('%s' -> '%s'): %s", hook, hookPath, s.gitHookPath, err)
 		}
-	}
-
-	res := &rpc.CreateRepositoryResponse{}
-	err = stream.SendAndClose(res)
-	if err != nil {
-		return status.Errorf(codes.Internal, "cannot send completion response: %v", err)
 	}
 
 	log.Info().Msgf("repository created. Path: %s", repoPath)
@@ -244,4 +293,64 @@ func (s *RepositoryService) DeleteRepositoryBestEffort(ctx context.Context, repo
 		log.Ctx(ctx).Warn().Err(err).Msgf("failed to delete dir %s from graveyard", tempPath)
 	}
 	return nil
+}
+
+func (s RepositoryService) SyncRepository(
+	ctx context.Context,
+	request *rpc.SyncRepositoryRequest,
+) (*rpc.SyncRepositoryResponse, error) {
+	base := request.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.RepoUid)
+
+	// create repo if requested
+	_, err := os.Stat(repoPath)
+	if err != nil && !os.IsNotExist(err) {
+		return nil, ErrInternalf("failed to create repo", err)
+	}
+
+	if os.IsNotExist(err) {
+		if !request.CreateIfNotExists {
+			return nil, ErrNotFound(err)
+		}
+
+		// the default branch doesn't matter for a sync,
+		// we create an empty repo and the head will by updated as part of the Sync.
+		const syncDefaultBranch = "main"
+		if err = s.createRepositoryInternal(
+			ctx,
+			base,
+			syncDefaultBranch,
+			nil,
+			nil,
+			time.Time{},
+			nil,
+			time.Time{},
+		); err != nil {
+			return nil, err
+		}
+	}
+
+	// sync repo content
+	err = s.adapter.Sync(ctx, repoPath, request.GetSource())
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to sync git repo")
+	}
+
+	// get remote default branch
+	defaultBranch, err := s.adapter.GetRemoteDefaultBranch(ctx, request.GetSource())
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to get default branch from repo")
+	}
+
+	// set default branch
+	err = s.adapter.SetDefaultBranch(ctx, repoPath, defaultBranch, true)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to set default branch of repo")
+	}
+
+	return &rpc.SyncRepositoryResponse{}, nil
 }

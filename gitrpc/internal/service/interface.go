@@ -17,9 +17,11 @@ type GitAdapter interface {
 	InitRepository(ctx context.Context, path string, bare bool) error
 	Config(ctx context.Context, repoPath, key, value string) error
 	SetDefaultBranch(ctx context.Context, repoPath string, defaultBranch string, allowEmpty bool) error
+	GetDefaultBranch(ctx context.Context, repoPath string) (string, error)
+	GetRemoteDefaultBranch(ctx context.Context, remoteURL string) (string, error)
 	Clone(ctx context.Context, from, to string, opts types.CloneRepoOptions) error
 	AddFiles(repoPath string, all bool, files ...string) error
-	Commit(repoPath string, opts types.CommitChangesOptions) error
+	Commit(ctx context.Context, repoPath string, opts types.CommitChangesOptions) error
 	Push(ctx context.Context, repoPath string, opts types.PushOptions) error
 	ReadTree(ctx context.Context, repoPath, ref string, w io.Writer, args ...string) error
 	GetTreeNode(ctx context.Context, repoPath string, ref string, treePath string) (*types.TreeNode, error)
@@ -43,9 +45,8 @@ type GitAdapter interface {
 	GetBranch(ctx context.Context, repoPath string, branchName string) (*types.Branch, error)
 	GetCommitDivergences(ctx context.Context, repoPath string,
 		requests []types.CommitDivergenceRequest, max int32) ([]types.CommitDivergence, error)
-	GetRef(ctx context.Context, repoPath string, name string, refType enum.RefType) (string, error)
-	GetRefPath(refName string, refType enum.RefType) (string, error)
-	UpdateRef(ctx context.Context, repoPath, refName string, refType enum.RefType, newValue, oldValue string) error
+	GetRef(ctx context.Context, repoPath string, reference string) (string, error)
+	UpdateRef(ctx context.Context, repoPath, reference, newValue, oldValue string) error
 	CreateTemporaryRepoForPR(ctx context.Context, reposTempPath string, pr *types.PullRequest,
 		baseBranch, trackingBranch string) (types.TempRepository, error)
 	Merge(ctx context.Context, pr *types.PullRequest, mergeMethod enum.MergeMethod, baseBranch, trackingBranch string,
@@ -59,4 +60,5 @@ type GitAdapter interface {
 	DiffCut(ctx context.Context, repoPath, targetRef, sourceRef, path string,
 		params types.DiffCutParams) (types.HunkHeader, types.Hunk, error)
 	Blame(ctx context.Context, repoPath, rev, file string, lineFrom, lineTo int) types.BlameReader
+	Sync(ctx context.Context, repoPath string, source string) error
 }

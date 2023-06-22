@@ -16,6 +16,7 @@ import (
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/bootstrap"
+	"github.com/harness/gitness/internal/githook"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/resources"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -199,13 +200,27 @@ func (c *Controller) createGitRPCRepository(ctx context.Context, session *auth.S
 		})
 	}
 
+	// generate envars (add everything githook CLI needs for execution)
+	envVars, err := githook.GenerateEnvironmentVariables(&githook.Payload{
+		APIBaseURL: c.urlProvider.GetAPIBaseURLInternal(),
+		Disabled:   true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate git hook environment variables: %w", err)
+	}
+
 	actor := rpcIdentityFromPrincipal(session.Principal)
+	committer := rpcIdentityFromPrincipal(bootstrap.NewSystemServiceSession().Principal)
+	now := time.Now()
 	resp, err := c.gitRPCClient.CreateRepository(ctx, &gitrpc.CreateRepositoryParams{
+		Actor:         *actor,
+		EnvVars:       envVars,
 		DefaultBranch: in.DefaultBranch,
 		Files:         files,
-		Actor:         *actor,
 		Author:        actor,
-		Committer:     rpcIdentityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
+		AuthorDate:    &now,
+		Committer:     committer,
+		CommitterDate: &now,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create repo on gitrpc: %w", err)

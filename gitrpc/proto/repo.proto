@@ -16,6 +16,7 @@ service RepositoryService {
   rpc GetCommit(GetCommitRequest) returns (GetCommitResponse);
   rpc GetCommitDivergences(GetCommitDivergencesRequest) returns (GetCommitDivergencesResponse);
   rpc DeleteRepository(DeleteRepositoryRequest) returns (DeleteRepositoryResponse);
+  rpc SyncRepository(SyncRepositoryRequest) returns (SyncRepositoryResponse) {}
   rpc MergeBase(MergeBaseRequest) returns (MergeBaseResponse);
 }
 
@@ -30,7 +31,9 @@ message CreateRepositoryRequestHeader {
   WriteRequest base     = 1;
   string default_branch = 2;
   Identity author       = 3;
-  Identity committer    = 4;
+  int64 authorDate      = 4;
+  Identity committer    = 5;
+  int64 committerDate   = 6;
 }
 
 message CreateRepositoryResponse { }
@@ -178,6 +181,14 @@ message DeleteRepositoryRequest {
 message DeleteRepositoryResponse {
 }
 
+message SyncRepositoryRequest {
+  WriteRequest base         = 1;
+  string source             = 2;
+  bool create_if_not_exists = 3;
+}
+
+message SyncRepositoryResponse {
+}
 message MergeBaseRequest {
   ReadRequest base = 1;
   string ref1 = 2;

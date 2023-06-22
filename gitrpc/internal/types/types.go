@@ -181,12 +181,12 @@ type CommitChangesOptions struct {
 }
 
 type PushOptions struct {
-	Remote  string
-	Branch  string
-	Force   bool
-	Mirror  bool
-	Env     []string
-	Timeout time.Duration
+	Remote         string
+	Branch         string
+	Force          bool
+	ForceWithLease string
+	Env            []string
+	Timeout        time.Duration
 }
 
 type TreeNodeWithCommit struct {

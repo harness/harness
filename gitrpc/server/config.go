@@ -18,6 +18,10 @@ type Config struct {
 	TmpDir string `envconfig:"GITRPC_SERVER_TMP_DIR"`
 	// GitHookPath points to the binary used as git server hook.
 	GitHookPath string `envconfig:"GITRPC_SERVER_GIT_HOOK_PATH"`
+
+	HTTP struct {
+		Bind string `envconfig:"GITRPC_SERVER_HTTP_BIND" default:":4001"`
+	}
 }
 
 func (c *Config) Validate() error {

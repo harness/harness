@@ -5,14 +5,27 @@
 package server
 
 import (
+	"github.com/harness/gitness/gitrpc/internal/gitea"
+	"github.com/harness/gitness/gitrpc/internal/service"
+
 	"github.com/google/wire"
 )
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
 	ProvideServer,
+	ProvideHTTPServer,
+	ProvideGITAdapter,
 )
 
-func ProvideServer(config Config) (*Server, error) {
-	return NewServer(config)
+func ProvideGITAdapter() (service.GitAdapter, error) {
+	return gitea.New()
+}
+
+func ProvideServer(config Config, adapter service.GitAdapter) (*GRPCServer, error) {
+	return NewServer(config, adapter)
+}
+
+func ProvideHTTPServer(config Config) (*HTTPServer, error) {
+	return NewHTTPServer(config)
 }

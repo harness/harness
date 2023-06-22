@@ -6,20 +6,26 @@ package pullreq
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/bootstrap"
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
+	"github.com/harness/gitness/internal/githook"
 	"github.com/harness/gitness/internal/services/codecomments"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/stream"
 	"github.com/harness/gitness/types"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog/log"
 )
 
 type Service struct {
@@ -27,12 +33,12 @@ type Service struct {
 	gitRPCClient        gitrpc.Interface
 	db                  *sqlx.DB
 	repoGitInfoCache    store.RepoGitInfoCache
-	principalCache      store.PrincipalInfoCache
 	repoStore           store.RepoStore
 	pullreqStore        store.PullReqStore
 	activityStore       store.PullReqActivityStore
 	codeCommentView     store.CodeCommentView
 	codeCommentMigrator *codecomments.Migrator
+	urlProvider         *url.Provider
 
 	cancelMutex        sync.Mutex
 	cancelMergeability map[string]context.CancelFunc
@@ -49,24 +55,24 @@ func New(ctx context.Context,
 	gitRPCClient gitrpc.Interface,
 	db *sqlx.DB,
 	repoGitInfoCache store.RepoGitInfoCache,
-	principalCache store.PrincipalInfoCache,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
 	activityStore store.PullReqActivityStore,
 	codeCommentView store.CodeCommentView,
 	codeCommentMigrator *codecomments.Migrator,
 	bus pubsub.PubSub,
+	urlProvider *url.Provider,
 ) (*Service, error) {
 	service := &Service{
 		pullreqEvReporter:   pullreqEvReporter,
 		gitRPCClient:        gitRPCClient,
 		db:                  db,
 		repoGitInfoCache:    repoGitInfoCache,
-		principalCache:      principalCache,
 		repoStore:           repoStore,
 		pullreqStore:        pullreqStore,
 		activityStore:       activityStore,
 		codeCommentView:     codeCommentView,
+		urlProvider:         urlProvider,
 		codeCommentMigrator: codeCommentMigrator,
 		cancelMergeability:  make(map[string]context.CancelFunc),
 		pubsub:              bus,
@@ -208,4 +214,37 @@ func New(ctx context.Context,
 	}
 
 	return service, nil
+}
+
+// createSystemRPCWriteParams creates base write parameters for gitrpc write operations.
+func createSystemRPCWriteParams(ctx context.Context, urlProvider *url.Provider,
+	repoID int64, repoGITUID string) (gitrpc.WriteParams, error) {
+	requestID, ok := request.RequestIDFrom(ctx)
+	if !ok {
+		// best effort retrieving of requestID - log in case we can't find it but don't fail operation.
+		log.Ctx(ctx).Warn().Msg("operation doesn't have a requestID in the context.")
+	}
+
+	principal := bootstrap.NewSystemServiceSession().Principal
+
+	// generate envars (add everything githook CLI needs for execution)
+	envVars, err := githook.GenerateEnvironmentVariables(&githook.Payload{
+		APIBaseURL:  urlProvider.GetAPIBaseURLInternal(),
+		RepoID:      repoID,
+		PrincipalID: principal.ID,
+		RequestID:   requestID,
+		Disabled:    false,
+	})
+	if err != nil {
+		return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
+	}
+
+	return gitrpc.WriteParams{
+		Actor: gitrpc.Identity{
+			Name:  principal.DisplayName,
+			Email: principal.Email,
+		},
+		RepoUID: repoGITUID,
+		EnvVars: envVars,
+	}, nil
 }

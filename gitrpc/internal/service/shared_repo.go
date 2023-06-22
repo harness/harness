@@ -21,6 +21,7 @@ import (
 
 	"code.gitea.io/gitea/modules/git"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/metadata"
 )
 
 // SharedRepo is a type to wrap our upload repositories as a shallow clone.
@@ -234,12 +235,6 @@ func (r *SharedRepo) GetLastCommitByRef(ctx context.Context, ref string) (string
 	return strings.TrimSpace(stdout), nil
 }
 
-// CommitTree creates a commit from a given tree for the user with provided message.
-func (r *SharedRepo) CommitTree(ctx context.Context, parent string, author, committer *rpc.Identity, treeHash,
-	message string, signoff bool) (string, error) {
-	return r.CommitTreeWithDate(ctx, parent, author, committer, treeHash, message, signoff, time.Now(), time.Now())
-}
-
 // CommitTreeWithDate creates a commit from a given tree for the user with provided message.
 func (r *SharedRepo) CommitTreeWithDate(
 	ctx context.Context,
@@ -385,9 +380,17 @@ func CreateEnvironmentForPush(ctx context.Context, writeRequest *rpc.WriteReques
 		EnvActorEmail + "=" + writeRequest.Actor.Email,
 	}
 
-	// add all environment variables coming from client
+	// add all environment variables coming from client request
 	for _, envVar := range writeRequest.EnvVars {
 		environ = append(environ, fmt.Sprintf("%s=%s", envVar.Name, envVar.Value))
+	}
+
+	// add all environment variables from the metadata
+	if metadata, mOK := metadata.FromIncomingContext(ctx); mOK {
+		if envVars, eOK := metadata[rpc.MetadataKeyEnvironmentVariables]; eOK {
+			// TODO: should we do a sanity check?
+			environ = append(environ, envVars...)
+		}
 	}
 
 	return environ

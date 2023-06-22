@@ -211,9 +211,11 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 		files := &rpc.MergeConflictError{
 			ConflictingFiles: conflictingFiles,
 		}
-		return ErrFailedPreconditionf("merging failed! conflict files error", files, err)
+		return ErrFailedPreconditionf("merging failed due to conflicting changes with the target branch", files, err)
 	case types.IsMergeUnrelatedHistoriesError(err):
 		return ErrFailedPreconditionf(format, args...)
+	case errors.Is(err, types.ErrFailedToConnect):
+		return ErrInvalidArgumentf(format, args...)
 	default:
 		return Errorf(codes.Unknown, format, args...)
 	}

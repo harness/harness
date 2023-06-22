@@ -144,7 +144,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	server4, err := server3.ProvideServer(serverConfig)
+	gitAdapter, err := server3.ProvideGITAdapter()
+	if err != nil {
+		return nil, err
+	}
+	grpcServer, err := server3.ProvideServer(serverConfig, gitAdapter)
 	if err != nil {
 		return nil, err
 	}
@@ -153,11 +157,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
 	pubsubConfig := pubsub.ProvideConfig(config)
 	pubSub := pubsub.ProvidePubSub(pubsubConfig, universalClient)
-	pullreqService, err := pullreq2.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter, gitrpcInterface, db, repoGitInfoCache, principalInfoCache, repoStore, pullReqStore, pullReqActivityStore, codeCommentView, migrator, pubSub)
+	pullreqService, err := pullreq2.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter, gitrpcInterface, db, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore, codeCommentView, migrator, pubSub, provider)
 	if err != nil {
 		return nil, err
 	}
 	servicesServices := services.ProvideServices(webhookService, pullreqService)
-	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, server4, manager, servicesServices)
+	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, grpcServer, manager, servicesServices)
 	return serverSystem, nil
 }

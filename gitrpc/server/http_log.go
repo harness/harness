@@ -2,14 +2,14 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package logging
+package server
 
 import (
 	"net/http"
 	"time"
 
 	"github.com/harness/gitness/gitrpc"
-	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/gitrpc/internal/middleware"
 
 	"github.com/rs/xid"
 	"github.com/rs/zerolog"
@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	// TODO: use single constant with githook / gitness
 	requestIDHeader = "X-Request-Id"
 )
 
@@ -37,7 +38,7 @@ func HLogRequestIDHandler() func(http.Handler) http.Handler {
 			}
 
 			// add requestID to context for internal usage + gitrpc client!
-			ctx = request.WithRequestID(ctx, reqID)
+			ctx = middleware.WithRequestID(ctx, reqID)
 			ctx = gitrpc.WithRequestID(ctx, reqID)
 
 			// update logging context with request ID

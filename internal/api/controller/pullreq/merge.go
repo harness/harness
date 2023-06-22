@@ -130,6 +130,7 @@ func (c *Controller) Merge(
 		mergeTitle = fmt.Sprintf("Merge branch '%s' of %s (#%d)", pr.SourceBranch, sourceRepo.Path, pr.Number)
 	}
 
+	now := time.Now()
 	var mergeOutput gitrpc.MergeOutput
 	mergeOutput, err = c.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
 		WriteParams:     writeParams,
@@ -139,7 +140,9 @@ func (c *Controller) Merge(
 		Title:           mergeTitle,
 		Message:         "",
 		Committer:       rpcIdentityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
+		CommitterDate:   &now,
 		Author:          rpcIdentityFromPrincipal(session.Principal),
+		AuthorDate:      &now,
 		RefType:         gitrpcenum.RefTypeBranch,
 		RefName:         pr.TargetBranch,
 		HeadExpectedSHA: in.SourceSHA,

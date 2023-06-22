@@ -6,6 +6,7 @@ package gitrpc
 
 import (
 	"context"
+	"time"
 
 	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -24,8 +25,12 @@ type MergeParams struct {
 
 	// Committer overwrites the git committer used for committing the files (optional, default: actor)
 	Committer *Identity
+	// CommitterDate overwrites the git committer date used for committing the files (optional, default: current time)
+	CommitterDate *time.Time
 	// Author overwrites the git author used for committing the files (optional, default: committer)
 	Author *Identity
+	// AuthorDate overwrites the git author date used for committing the files (optional, default: committer date)
+	AuthorDate *time.Time
 
 	RefType enum.RefType
 	RefName string
@@ -78,7 +83,9 @@ func (c *Client) Merge(ctx context.Context, params *MergeParams) (MergeOutput, e
 		Title:            params.Title,
 		Message:          params.Message,
 		Author:           mapToRPCIdentityOptional(params.Author),
+		AuthorDate:       mapToRPCTimeOptional(params.AuthorDate),
 		Committer:        mapToRPCIdentityOptional(params.Committer),
+		CommitterDate:    mapToRPCTimeOptional(params.CommitterDate),
 		RefType:          rpc.RefType(params.RefType),
 		RefName:          params.RefName,
 		HeadExpectedSha:  params.HeadExpectedSHA,

@@ -8,12 +8,12 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
-	"github.com/harness/gitness/internal/githook"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -21,6 +21,7 @@ import (
 
 const (
 	cancelMergeCheckKey = "cancel_merge_check_for_sha"
+	nilSHA              = "0000000000000000000000000000000000000000"
 )
 
 // mergeCheckOnCreated handles pull request Created events.
@@ -30,10 +31,9 @@ func (s *Service) mergeCheckOnCreated(ctx context.Context,
 ) error {
 	return s.updateMergeData(
 		ctx,
-		event.Payload.Base.PrincipalID,
 		event.Payload.TargetRepoID,
 		event.Payload.Number,
-		gitrpc.NilSHA,
+		nilSHA,
 		event.Payload.SourceSHA,
 	)
 }
@@ -45,7 +45,6 @@ func (s *Service) mergeCheckOnBranchUpdate(ctx context.Context,
 ) error {
 	return s.updateMergeData(
 		ctx,
-		event.Payload.Base.PrincipalID,
 		event.Payload.TargetRepoID,
 		event.Payload.Number,
 		event.Payload.OldSHA,
@@ -60,7 +59,6 @@ func (s *Service) mergeCheckOnReopen(ctx context.Context,
 ) error {
 	return s.updateMergeData(
 		ctx,
-		event.Payload.Base.PrincipalID,
 		event.Payload.TargetRepoID,
 		event.Payload.Number,
 		"",
@@ -72,48 +70,34 @@ func (s *Service) mergeCheckOnReopen(ctx context.Context,
 func (s *Service) mergeCheckOnClosed(ctx context.Context,
 	event *events.Event[*pullreqevents.ClosedPayload],
 ) error {
-	return s.deleteMergeRef(ctx, event.Payload.PrincipalID, event.Payload.SourceRepoID, event.Payload.Number)
+	return s.deleteMergeRef(ctx, event.Payload.SourceRepoID, event.Payload.Number)
 }
 
 // mergeCheckOnMerged deletes the merge ref.
 func (s *Service) mergeCheckOnMerged(ctx context.Context,
 	event *events.Event[*pullreqevents.MergedPayload],
 ) error {
-	return s.deleteMergeRef(ctx, event.Payload.PrincipalID, event.Payload.SourceRepoID, event.Payload.Number)
+	return s.deleteMergeRef(ctx, event.Payload.SourceRepoID, event.Payload.Number)
 }
 
-func (s *Service) deleteMergeRef(ctx context.Context, principalID int64, repoID int64, prNum int64) error {
+func (s *Service) deleteMergeRef(ctx context.Context, repoID int64, prNum int64) error {
 	repo, err := s.repoGitInfoCache.Get(ctx, repoID)
 	if err != nil {
 		return fmt.Errorf("failed to get repo with ID %d: %w", repoID, err)
 	}
 
-	principal, err := s.principalCache.Get(ctx, principalID)
+	writeParams, err := createSystemRPCWriteParams(ctx, s.urlProvider, repo.ID, repo.GitUID)
 	if err != nil {
-		return fmt.Errorf("failed to find principal with ID %d: %w", principalID, err)
-	}
-
-	envars, err := githook.GenerateEnvironmentVariables(&githook.Payload{
-		Disabled: true,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to generate githook environment variables: %w", err)
+		return fmt.Errorf("failed to generate rpc write params: %w", err)
 	}
 
 	// TODO: This doesn't work for forked repos
 	err = s.gitRPCClient.UpdateRef(ctx, gitrpc.UpdateRefParams{
-		WriteParams: gitrpc.WriteParams{
-			RepoUID: repo.GitUID,
-			Actor: gitrpc.Identity{
-				Name:  principal.DisplayName,
-				Email: principal.Email,
-			},
-			EnvVars: envars,
-		},
-		Name:     strconv.Itoa(int(prNum)),
-		Type:     gitrpcenum.RefTypePullReqMerge,
-		NewValue: "", // when NewValue is empty gitrpc will delete the ref.
-		OldValue: "", // we don't care about the old value
+		WriteParams: writeParams,
+		Name:        strconv.Itoa(int(prNum)),
+		Type:        gitrpcenum.RefTypePullReqMerge,
+		NewValue:    "", // when NewValue is empty gitrpc will delete the ref.
+		OldValue:    "", // we don't care about the old value
 	})
 	if err != nil {
 		return fmt.Errorf("failed to remove PR merge ref: %w", err)
@@ -125,7 +109,6 @@ func (s *Service) deleteMergeRef(ctx context.Context, principalID int64, repoID 
 //nolint:funlen // refactor if required.
 func (s *Service) updateMergeData(
 	ctx context.Context,
-	principalID int64,
 	repoID int64,
 	prNum int64,
 	oldSHA string,
@@ -178,28 +161,16 @@ func (s *Service) updateMergeData(
 		}
 	}
 
-	principal, err := s.principalCache.Get(ctx, principalID)
+	writeParams, err := createSystemRPCWriteParams(ctx, s.urlProvider, targetRepo.ID, targetRepo.GitUID)
 	if err != nil {
-		return fmt.Errorf("failed to find principal with ID %d, error: %w", principalID, err)
-	}
-
-	envars, err := githook.GenerateEnvironmentVariables(&githook.Payload{
-		Disabled: true,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to generate githook environment variables: %w", err)
+		return fmt.Errorf("failed to generate rpc write params: %w", err)
 	}
 
 	// call merge and store output in pr merge reference.
-	output, err := s.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
-		WriteParams: gitrpc.WriteParams{
-			RepoUID: targetRepo.GitUID,
-			Actor: gitrpc.Identity{
-				Name:  principal.DisplayName,
-				Email: principal.Email,
-			},
-			EnvVars: envars,
-		},
+	now := time.Now()
+	var output gitrpc.MergeOutput
+	output, err = s.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
+		WriteParams:     writeParams,
 		BaseBranch:      pr.TargetBranch,
 		HeadRepoUID:     sourceRepo.GitUID,
 		HeadBranch:      pr.SourceBranch,
@@ -207,6 +178,9 @@ func (s *Service) updateMergeData(
 		RefName:         strconv.Itoa(int(prNum)),
 		HeadExpectedSHA: newSHA,
 		Force:           true,
+
+		// set committer date to ensure repeatability of merge commit across replicas
+		CommitterDate: &now,
 	})
 	if gitrpc.ErrorStatus(err) == gitrpc.StatusPreconditionFailed {
 		return events.NewDiscardEventErrorf("Source branch '%s' is not on SHA '%s' anymore.",

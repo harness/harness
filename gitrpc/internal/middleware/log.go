@@ -104,7 +104,7 @@ func injectLogging(ctx context.Context, fullMethod string) context.Context {
 	logCtx := log.Logger.With().
 		Str("grpc.service", service).
 		Str("grpc.method", method).
-		Str("grpc.request_id", requestID)
+		Str("request_id", requestID)
 
 	// add peer information if available
 	if p, ok := peer.FromContext(ctx); ok && p.Addr != nil {

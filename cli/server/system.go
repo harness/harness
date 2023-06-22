@@ -16,13 +16,13 @@ import (
 type System struct {
 	bootstrap      bootstrap.Bootstrap
 	server         *server.Server
-	gitRPCServer   *gitrpcserver.Server
+	gitRPCServer   *gitrpcserver.GRPCServer
 	services       services.Services
 	gitRPCCronMngr *gitrpccron.Manager
 }
 
 // NewSystem returns a new system structure.
-func NewSystem(bootstrap bootstrap.Bootstrap, server *server.Server, gitRPCServer *gitrpcserver.Server,
+func NewSystem(bootstrap bootstrap.Bootstrap, server *server.Server, gitRPCServer *gitrpcserver.GRPCServer,
 	gitrpccron *gitrpccron.Manager, services services.Services) *System {
 	return &System{
 		bootstrap:      bootstrap,

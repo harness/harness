@@ -26,15 +26,21 @@ const (
 
 type CreateRepositoryParams struct {
 	// Create operation is different from all (from user side), as UID doesn't exist yet.
-	// Only take actor as input and create WriteParams manually
-	Actor         Identity
+	// Only take actor and envars as input and create WriteParams manually
+	Actor   Identity
+	EnvVars map[string]string
+
 	DefaultBranch string
 	Files         []File
 
 	// Committer overwrites the git committer used for committing the files (optional, default: actor)
 	Committer *Identity
+	// CommitterDate overwrites the git committer date used for committing the files (optional, default: current time)
+	CommitterDate *time.Time
 	// Author overwrites the git author used for committing the files (optional, default: committer)
 	Author *Identity
+	// AuthorDate overwrites the git author date used for committing the files (optional, default: committer date)
+	AuthorDate *time.Time
 }
 
 type CreateRepositoryOutput struct {
@@ -43,6 +49,15 @@ type CreateRepositoryOutput struct {
 
 type DeleteRepositoryParams struct {
 	WriteParams
+}
+
+type SyncRepositoryParams struct {
+	WriteParams
+	Source            string
+	CreateIfNotExists bool
+}
+
+type SyncRepositoryOutput struct {
 }
 
 func (c *Client) CreateRepository(ctx context.Context,
@@ -72,7 +87,7 @@ func (c *Client) CreateRepository(ctx context.Context,
 	writeParams := WriteParams{
 		RepoUID: uid,
 		Actor:   params.Actor,
-		EnvVars: map[string]string{}, // (no githook triggered for repo creation)
+		EnvVars: params.EnvVars,
 	}
 
 	req := &rpc.CreateRepositoryRequest{
@@ -81,7 +96,9 @@ func (c *Client) CreateRepository(ctx context.Context,
 				Base:          mapToRPCWriteRequest(writeParams),
 				DefaultBranch: params.DefaultBranch,
 				Author:        mapToRPCIdentityOptional(params.Author),
+				AuthorDate:    mapToRPCTimeOptional(params.AuthorDate),
 				Committer:     mapToRPCIdentityOptional(params.Committer),
+				CommitterDate: mapToRPCTimeOptional(params.CommitterDate),
 			},
 		},
 	}
@@ -129,4 +146,21 @@ func (c *Client) DeleteRepository(ctx context.Context, params *DeleteRepositoryP
 		return processRPCErrorf(err, "failed to delete repository on server")
 	}
 	return nil
+}
+
+func (c *Client) SyncRepository(ctx context.Context, params *SyncRepositoryParams) (*SyncRepositoryOutput, error) {
+	if params == nil {
+		return nil, ErrNoParamsProvided
+	}
+
+	_, err := c.repoService.SyncRepository(ctx, &rpc.SyncRepositoryRequest{
+		Base:              mapToRPCWriteRequest(params.WriteParams),
+		Source:            params.Source,
+		CreateIfNotExists: params.CreateIfNotExists,
+	})
+	if err != nil {
+		return nil, processRPCErrorf(err, "failed to sync repository on server to match provided source")
+	}
+
+	return &SyncRepositoryOutput{}, nil
 }

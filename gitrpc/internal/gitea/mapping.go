@@ -31,6 +31,9 @@ func processGiteaErrorf(err error, format string, args ...interface{}) error {
 	}
 
 	switch {
+	// gitea is using errors.New(no such file or directory") exclusively for OpenRepository ... (at least as of now)
+	case err.Error() == "no such file or directory":
+		return fmt.Errorf("repository not found: %w", types.ErrNotFound)
 	case gitea.IsErrNotExist(err):
 		return types.ErrNotFound
 	case gitea.IsErrBranchNotExist(err):
@@ -64,6 +67,11 @@ func mapGiteaRunStdError(err gitea.RunStdError, fallback error) error {
 	// exit status 128 - fatal: couldn't find remote ref v1.
 	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "couldn't find"):
 		return types.ErrNotFound
+
+	// exit status 128 - fatal: unable to access 'http://127.0.0.1:4101/hvfl1xj5fojwlrw77xjflw80uxjous254jrr967rvj/':
+	//   Failed to connect to 127.0.0.1 port 4101 after 4 ms: Connection refused
+	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "Failed to connect"):
+		return types.ErrFailedToConnect
 
 	default:
 		return fallback

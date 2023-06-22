@@ -25,14 +25,19 @@ func (s *Service) createHeadRefOnCreated(ctx context.Context,
 		return fmt.Errorf("failed to get repo git info: %w", err)
 	}
 
+	writeParams, err := createSystemRPCWriteParams(ctx, s.urlProvider, repoGit.ID, repoGit.GitUID)
+	if err != nil {
+		return fmt.Errorf("failed to generate rpc write params: %w", err)
+	}
+
 	// TODO: This doesn't work for forked repos (only works when sourceRepo==targetRepo).
 	// This is because commits from the source repository must be first pulled into the target repository.
 	err = s.gitRPCClient.UpdateRef(ctx, gitrpc.UpdateRefParams{
-		WriteParams: gitrpc.WriteParams{RepoUID: repoGit.GitUID},
+		WriteParams: writeParams,
 		Name:        strconv.Itoa(int(event.Payload.Number)),
 		Type:        gitrpcenum.RefTypePullReqHead,
 		NewValue:    event.Payload.SourceSHA,
-		OldValue:    gitrpc.NilSHA, // this is a new pull request, so we expect that the ref doesn't exist
+		OldValue:    "", // this is a new pull request, so we expect that the ref doesn't exist
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update PR head ref: %w", err)
@@ -51,10 +56,15 @@ func (s *Service) updateHeadRefOnBranchUpdate(ctx context.Context,
 		return fmt.Errorf("failed to get repo git info: %w", err)
 	}
 
+	writeParams, err := createSystemRPCWriteParams(ctx, s.urlProvider, repoGit.ID, repoGit.GitUID)
+	if err != nil {
+		return fmt.Errorf("failed to generate rpc write params: %w", err)
+	}
+
 	// TODO: This doesn't work for forked repos (only works when sourceRepo==targetRepo)
 	// This is because commits from the source repository must be first pulled into the target repository.
 	err = s.gitRPCClient.UpdateRef(ctx, gitrpc.UpdateRefParams{
-		WriteParams: gitrpc.WriteParams{RepoUID: repoGit.GitUID},
+		WriteParams: writeParams,
 		Name:        strconv.Itoa(int(event.Payload.Number)),
 		Type:        gitrpcenum.RefTypePullReqHead,
 		NewValue:    event.Payload.NewSHA,
@@ -77,10 +87,15 @@ func (s *Service) updateHeadRefOnReopen(ctx context.Context,
 		return fmt.Errorf("failed to get repo git info: %w", err)
 	}
 
+	writeParams, err := createSystemRPCWriteParams(ctx, s.urlProvider, repoGit.ID, repoGit.GitUID)
+	if err != nil {
+		return fmt.Errorf("failed to generate rpc write params: %w", err)
+	}
+
 	// TODO: This doesn't work for forked repos (only works when sourceRepo==targetRepo)
 	// This is because commits from the source repository must be first pulled into the target repository.
 	err = s.gitRPCClient.UpdateRef(ctx, gitrpc.UpdateRefParams{
-		WriteParams: gitrpc.WriteParams{RepoUID: repoGit.GitUID},
+		WriteParams: writeParams,
 		Name:        strconv.Itoa(int(event.Payload.Number)),
 		Type:        gitrpcenum.RefTypePullReqHead,
 		NewValue:    event.Payload.SourceSHA,

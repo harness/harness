@@ -138,25 +138,33 @@ func (s MergeService) Merge(
 	outbuf.Reset()
 	errbuf.Reset()
 
-	committer := base.Actor
-	if request.Committer != nil {
-		committer = request.Committer
+	committer := base.GetActor()
+	if request.GetCommitter() != nil {
+		committer = request.GetCommitter()
 	}
-	author := committer
-	if request.Author != nil {
-		author = request.Author
+	committerDate := time.Now().UTC()
+	if request.GetAuthorDate() != 0 {
+		committerDate = time.Unix(request.GetCommitterDate(), 0)
 	}
 
-	timeStr := time.Now().Format(time.RFC3339)
+	author := committer
+	if request.GetAuthor() != nil {
+		author = request.GetAuthor()
+	}
+	authorDate := committerDate
+	if request.GetAuthorDate() != 0 {
+		authorDate = time.Unix(request.GetAuthorDate(), 0)
+	}
 
 	// Because this may call hooks we should pass in the environment
+	// TODO: merge specific envars should be set by the adapter impl.
 	env := append(CreateEnvironmentForPush(ctx, base),
 		"GIT_AUTHOR_NAME="+author.Name,
 		"GIT_AUTHOR_EMAIL="+author.Email,
-		"GIT_AUTHOR_DATE="+timeStr,
+		"GIT_AUTHOR_DATE="+authorDate.Format(time.RFC3339),
 		"GIT_COMMITTER_NAME="+committer.Name,
 		"GIT_COMMITTER_EMAIL="+committer.Email,
-		"GIT_COMMITTER_DATE="+timeStr,
+		"GIT_COMMITTER_DATE="+committerDate.Format(time.RFC3339),
 	)
 
 	mergeMsg := strings.TrimSpace(request.Title)
@@ -195,7 +203,7 @@ func (s MergeService) Merge(
 		}, nil
 	}
 
-	refPath, err := s.adapter.GetRefPath(request.RefName, refType)
+	refPath, err := GetRefPath(request.RefName, refType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate full reference for type '%s' and name '%s' for merge operation: %w",
 			request.RefType, request.RefName, err)

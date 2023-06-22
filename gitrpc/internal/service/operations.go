@@ -13,6 +13,7 @@ import (
 	"io"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/harness/gitness/gitrpc/internal/files"
 	"github.com/harness/gitness/gitrpc/internal/slices"
@@ -49,7 +50,7 @@ func NewCommitFilesService(adapter GitAdapter, reposRoot, reposTempDir string) (
 	}, nil
 }
 
-//nolint:funlen // needs refactoring
+//nolint:funlen,gocognit // needs refactoring
 func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFilesServer) error {
 	ctx := stream.Context()
 	headerRequest, err := stream.Recv()
@@ -71,9 +72,18 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 	if header.GetCommitter() != nil {
 		committer = header.GetCommitter()
 	}
+	committerDate := time.Now().UTC()
+	if header.GetAuthorDate() != 0 {
+		committerDate = time.Unix(header.GetCommitterDate(), 0)
+	}
+
 	author := committer
 	if header.GetAuthor() != nil {
 		author = header.GetAuthor()
+	}
+	authorDate := committerDate
+	if header.GetAuthorDate() != 0 {
+		authorDate = time.Unix(header.GetAuthorDate(), 0)
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
@@ -137,7 +147,17 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 		message += "\n\n" + strings.TrimSpace(header.GetMessage())
 	}
 	// Now commit the tree
-	commitSHA, err := shared.CommitTree(ctx, parentCommitSHA, author, committer, treeHash, message, false)
+	commitSHA, err := shared.CommitTreeWithDate(
+		ctx,
+		parentCommitSHA,
+		author,
+		committer,
+		treeHash,
+		message,
+		false,
+		authorDate,
+		committerDate,
+	)
 	if err != nil {
 		return err
 	}

@@ -25,6 +25,8 @@ var (
 	ErrSHADoesNotMatch             = errors.New("sha does not match")
 	ErrEmptyBaseRef                = errors.New("empty base reference")
 	ErrEmptyHeadRef                = errors.New("empty head reference")
+	ErrNoDefaultBranch             = errors.New("no default branch")
+	ErrFailedToConnect             = errors.New("failed to connect")
 	ErrHunkNotFound                = errors.New("hunk not found")
 	ErrEmptySHA                    = errors.New("empty SHA")
 )

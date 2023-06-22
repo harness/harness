@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"time"
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
@@ -79,15 +80,18 @@ func (c *Controller) CommitFiles(ctx context.Context, session *auth.Session,
 		return CommitFilesResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
+	now := time.Now()
 	commit, err := c.gitRPCClient.CommitFiles(ctx, &gitrpc.CommitFilesParams{
-		WriteParams: writeParams,
-		Title:       in.Title,
-		Message:     in.Message,
-		Branch:      in.Branch,
-		NewBranch:   in.NewBranch,
-		Actions:     actions,
-		Committer:   rpcIdentityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
-		Author:      rpcIdentityFromPrincipal(session.Principal),
+		WriteParams:   writeParams,
+		Title:         in.Title,
+		Message:       in.Message,
+		Branch:        in.Branch,
+		NewBranch:     in.NewBranch,
+		Actions:       actions,
+		Committer:     rpcIdentityFromPrincipal(bootstrap.NewSystemServiceSession().Principal),
+		CommitterDate: &now,
+		Author:        rpcIdentityFromPrincipal(session.Principal),
+		AuthorDate:    &now,
 	})
 	if err != nil {
 		return CommitFilesResponse{}, err

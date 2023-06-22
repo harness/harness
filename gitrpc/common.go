@@ -10,8 +10,6 @@ import (
 	"github.com/harness/gitness/gitrpc/rpc"
 )
 
-const NilSHA = "0000000000000000000000000000000000000000"
-
 // ReadParams contains the base parameters for read operations.
 type ReadParams struct {
 	RepoUID string

@@ -11,9 +11,11 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/gitrpc/enum"
+	"github.com/harness/gitness/gitrpc/internal/gitea"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 
+	"code.gitea.io/gitea/modules/git"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -184,15 +186,18 @@ func (s ReferenceService) GetRef(ctx context.Context,
 	if request.Base == nil {
 		return nil, types.ErrBaseCannotBeEmpty
 	}
+	repoPath := getFullPathForRepo(s.reposRoot, request.Base.GetRepoUid())
 
 	refType := enum.RefFromRPC(request.GetRefType())
 	if refType == enum.RefTypeUndefined {
 		return nil, status.Error(codes.InvalidArgument, "invalid value of RefType argument")
 	}
+	reference, err := GetRefPath(request.GetRefName(), refType)
+	if err != nil {
+		return nil, err
+	}
 
-	repoPath := getFullPathForRepo(s.reposRoot, request.Base.GetRepoUid())
-
-	sha, err := s.adapter.GetRef(ctx, repoPath, request.RefName, refType)
+	sha, err := s.adapter.GetRef(ctx, repoPath, reference)
 	if err != nil {
 		return nil, err
 	}
@@ -203,21 +208,91 @@ func (s ReferenceService) GetRef(ctx context.Context,
 func (s ReferenceService) UpdateRef(ctx context.Context,
 	request *rpc.UpdateRefRequest,
 ) (*rpc.UpdateRefResponse, error) {
-	if request.Base == nil {
+	base := request.GetBase()
+	if base == nil {
 		return nil, types.ErrBaseCannotBeEmpty
 	}
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
 	refType := enum.RefFromRPC(request.GetRefType())
 	if refType == enum.RefTypeUndefined {
 		return nil, status.Error(codes.InvalidArgument, "invalid value of RefType argument")
 	}
-
-	repoPath := getFullPathForRepo(s.reposRoot, request.Base.GetRepoUid())
-
-	err := s.adapter.UpdateRef(ctx, repoPath, request.RefName, refType, request.NewValue, request.OldValue)
+	reference, err := GetRefPath(request.GetRefName(), refType)
 	if err != nil {
 		return nil, err
 	}
 
+	// TODO: why are we using gitea operations here?!
+	repo, err := git.OpenRepository(ctx, repoPath)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to open repo")
+	}
+
+	if ok, err := repo.IsEmpty(); ok {
+		return nil, ErrInvalidArgumentf("branch cannot be created on empty repository", err)
+	}
+
+	sharedRepo, err := NewSharedRepo(s.tmpDir, base.GetRepoUid(), repo)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to create new shared repo")
+	}
+	defer sharedRepo.Close(ctx)
+
+	// clone repo (with HEAD branch - target might be anything)
+	err = sharedRepo.Clone(ctx, "")
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to clone shared repo")
+	}
+
+	pushOpts := types.PushOptions{
+		Remote: sharedRepo.remoteRepo.Path,
+		Env:    CreateEnvironmentForPush(ctx, base),
+	}
+
+	// handle deletion explicitly to avoid any unwanted side effects
+	if request.GetNewValue() == "" {
+		pushOpts.Branch = ":" + reference
+	} else {
+		pushOpts.Branch = request.GetNewValue() + ":" + reference
+	}
+
+	if request.GetOldValue() == "" {
+		pushOpts.Force = true
+	} else {
+		pushOpts.ForceWithLease = reference + ":" + request.GetOldValue()
+	}
+
+	// TODO: our shared repo has so much duplication, that should be changed IMHO.
+	err = gitea.Push(ctx, sharedRepo.tmpPath, pushOpts)
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to push changes to original repo")
+	}
+
 	return &rpc.UpdateRefResponse{}, nil
+}
+
+func GetRefPath(refName string, refType enum.RefType) (string, error) {
+	const (
+		refPullReqPrefix      = "refs/pullreq/"
+		refPullReqHeadSuffix  = "/head"
+		refPullReqMergeSuffix = "/merge"
+	)
+
+	switch refType {
+	case enum.RefTypeRaw:
+		return refName, nil
+	case enum.RefTypeBranch:
+		return git.BranchPrefix + refName, nil
+	case enum.RefTypeTag:
+		return git.TagPrefix + refName, nil
+	case enum.RefTypePullReqHead:
+		return refPullReqPrefix + refName + refPullReqHeadSuffix, nil
+	case enum.RefTypePullReqMerge:
+		return refPullReqPrefix + refName + refPullReqMergeSuffix, nil
+	case enum.RefTypeUndefined:
+		fallthrough
+	default:
+		return "", ErrInvalidArgumentf("provided reference type '%s' is invalid", refType)
+	}
 }

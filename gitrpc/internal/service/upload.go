@@ -22,13 +22,15 @@ import (
 )
 
 // TODO: this should be taken as a struct input defined in proto.
-func (s RepositoryService) AddFilesAndPush(
+func (s RepositoryService) addFilesAndPush(
 	ctx context.Context,
 	repoPath string,
 	filePaths []string,
 	branch string,
 	author *rpc.Identity,
+	authorDate time.Time,
 	committer *rpc.Identity,
+	committerDate time.Time,
 	remote string,
 	message string,
 ) error {
@@ -40,23 +42,20 @@ func (s RepositoryService) AddFilesAndPush(
 	if err != nil {
 		return processGitErrorf(err, "failed to add files")
 	}
-	now := time.Now()
-	err = s.adapter.Commit(repoPath, types.CommitChangesOptions{
-		// TODO: Add gitness signature
+	err = s.adapter.Commit(ctx, repoPath, types.CommitChangesOptions{
 		Committer: types.Signature{
 			Identity: types.Identity{
 				Name:  committer.Name,
 				Email: committer.Email,
 			},
-			When: now,
+			When: committerDate,
 		},
-		// TODO: Add gitness signature
 		Author: types.Signature{
 			Identity: types.Identity{
 				Name:  author.Name,
 				Email: author.Email,
 			},
-			When: now,
+			When: authorDate,
 		},
 		Message: message,
 	})
@@ -68,7 +67,6 @@ func (s RepositoryService) AddFilesAndPush(
 		Remote:  remote,
 		Branch:  branch,
 		Force:   false,
-		Mirror:  false,
 		Env:     nil,
 		Timeout: 0,
 	})

@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/harness/gitness/gitrpc/rpc"
 )
@@ -46,8 +47,12 @@ type CommitFilesParams struct {
 
 	// Committer overwrites the git committer used for committing the files (optional, default: actor)
 	Committer *Identity
+	// CommitterDate overwrites the git committer date used for committing the files (optional, default: current time)
+	CommitterDate *time.Time
 	// Author overwrites the git author used for committing the files (optional, default: committer)
 	Author *Identity
+	// AuthorDate overwrites the git author date used for committing the files (optional, default: committer date)
+	AuthorDate *time.Time
 }
 
 type CommitFilesResponse struct {
@@ -69,7 +74,9 @@ func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesParams) (Co
 				Title:         params.Title,
 				Message:       params.Message,
 				Author:        mapToRPCIdentityOptional(params.Author),
+				AuthorDate:    mapToRPCTimeOptional(params.AuthorDate),
 				Committer:     mapToRPCIdentityOptional(params.Committer),
+				CommitterDate: mapToRPCTimeOptional(params.CommitterDate),
 			},
 		},
 	}); err != nil {

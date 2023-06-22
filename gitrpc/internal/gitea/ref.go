@@ -11,7 +11,6 @@ import (
 	"math"
 	"strings"
 
-	"github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/gitrpc/internal/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
@@ -81,6 +80,8 @@ func (g Adapter) WalkReferences(ctx context.Context,
 		}
 	}()
 
+	// TODO: return error from git command!!!!
+
 	parser := giteaFormat.Parser(pipeOut)
 	return walkGiteaReferenceParser(parser, handler, opts)
 }
@@ -127,13 +128,11 @@ func walkGiteaReferenceParser(parser *gitearef.Parser, handler types.WalkReferen
 	return nil
 }
 
-func (g Adapter) GetRef(ctx context.Context, repoPath, refName string, refType enum.RefType) (string, error) {
-	refName, errRef := g.GetRefPath(refName, refType)
-	if errRef != nil {
-		return "", errRef
-	}
-
-	cmd := gitea.NewCommand(ctx, "show-ref", "--verify", "-s", "--", refName)
+// GetRef get's the target of a reference
+// IMPORTANT provide full reference name to limit risk of collisions across reference types
+// (e.g `refs/heads/main` instead of `main`).
+func (g Adapter) GetRef(ctx context.Context, repoPath, reference string) (string, error) {
+	cmd := gitea.NewCommand(ctx, "show-ref", "--verify", "-s", "--", reference)
 	stdout, _, err := cmd.RunStdString(&gitea.RunOpts{
 		Dir: repoPath,
 	})
@@ -147,22 +146,19 @@ func (g Adapter) GetRef(ctx context.Context, repoPath, refName string, refType e
 	return strings.TrimSpace(stdout), nil
 }
 
+// UpdateRef allows to update / create / delete references
+// IMPORTANT provide full reference name to limit risk of collisions across reference types
+// (e.g `refs/heads/main` instead of `main`).
 func (g Adapter) UpdateRef(ctx context.Context,
-	repoPath, refName string, refType enum.RefType,
-	newValue, oldValue string,
+	repoPath, reference, newValue, oldValue string,
 ) error {
-	refName, errRef := g.GetRefPath(refName, refType)
-	if errRef != nil {
-		return errRef
-	}
-
 	args := make([]string, 0, 4)
 	args = append(args, "update-ref")
 	if newValue == "" {
 		// if newvalue is empty, delete ref
-		args = append(args, "-d", refName)
+		args = append(args, "-d", reference)
 	} else {
-		args = append(args, refName, newValue)
+		args = append(args, reference, newValue)
 	}
 
 	// if an old value was provided, verify it matches.
@@ -179,32 +175,4 @@ func (g Adapter) UpdateRef(ctx context.Context,
 	}
 
 	return nil
-}
-
-// TBD: IMHO all helper functions like this one should be on caller side
-// of Git adapter interface, so if we develop our own adapter package in future
-// we dont need to repeat helper like this again.
-func (g Adapter) GetRefPath(refName string, refType enum.RefType) (string, error) {
-	const (
-		refPullReqPrefix      = "refs/pullreq/"
-		refPullReqHeadSuffix  = "/head"
-		refPullReqMergeSuffix = "/merge"
-	)
-
-	switch refType {
-	case enum.RefTypeRaw:
-		return refName, nil
-	case enum.RefTypeBranch:
-		return gitea.BranchPrefix + refName, nil
-	case enum.RefTypeTag:
-		return gitea.TagPrefix + refName, nil
-	case enum.RefTypePullReqHead:
-		return refPullReqPrefix + refName + refPullReqHeadSuffix, nil
-	case enum.RefTypePullReqMerge:
-		return refPullReqPrefix + refName + refPullReqMergeSuffix, nil
-	case enum.RefTypeUndefined:
-		fallthrough
-	default:
-		return "", types.ErrInvalidArgument
-	}
 }

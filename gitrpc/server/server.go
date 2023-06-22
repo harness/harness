@@ -11,13 +11,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/harness/gitness/gitrpc/internal/gitea"
 	"github.com/harness/gitness/gitrpc/internal/middleware"
 	"github.com/harness/gitness/gitrpc/internal/service"
 	"github.com/harness/gitness/gitrpc/internal/storage"
 	"github.com/harness/gitness/gitrpc/rpc"
 
-	"code.gitea.io/gitea/modules/setting"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"google.golang.org/grpc"
@@ -28,12 +26,12 @@ const (
 	ReposGraveyardSubdirName = "cleanup"
 )
 
-type Server struct {
+type GRPCServer struct {
 	*grpc.Server
 	Bind string
 }
 
-func NewServer(config Config) (*Server, error) {
+func NewServer(config Config, adapter service.GitAdapter) (*GRPCServer, error) {
 	if err := config.Validate(); err != nil {
 		return nil, fmt.Errorf("configuration is invalid: %w", err)
 	}
@@ -43,13 +41,6 @@ func NewServer(config Config) (*Server, error) {
 		if err = os.MkdirAll(reposRoot, 0o700); err != nil {
 			return nil, err
 		}
-	}
-
-	// TODO: should be subdir of gitRoot? What is it being used for?
-	setting.Git.HomePath = "home"
-	adapter, err := gitea.New()
-	if err != nil {
-		return nil, err
 	}
 
 	// interceptors
@@ -113,13 +104,13 @@ func NewServer(config Config) (*Server, error) {
 	rpc.RegisterMergeServiceServer(s, mergeService)
 	rpc.RegisterBlameServiceServer(s, blameService)
 
-	return &Server{
+	return &GRPCServer{
 		Server: s,
 		Bind:   config.Bind,
 	}, nil
 }
 
-func (s *Server) Start() error {
+func (s *GRPCServer) Start() error {
 	lis, err := net.Listen("tcp", s.Bind)
 	if err != nil {
 		return err
@@ -127,7 +118,7 @@ func (s *Server) Start() error {
 	return s.Server.Serve(lis)
 }
 
-func (s *Server) Stop() error {
+func (s *GRPCServer) Stop() error {
 	s.Server.GracefulStop()
 	return nil
 }

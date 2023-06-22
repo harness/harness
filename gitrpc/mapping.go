@@ -239,6 +239,14 @@ func mapToRPCIdentityOptional(identity *Identity) *rpc.Identity {
 	}
 }
 
+func mapToRPCTimeOptional(t *time.Time) int64 {
+	if t == nil {
+		return 0
+	}
+
+	return t.Unix()
+}
+
 func mapHunkHeader(h *rpc.HunkHeader) HunkHeader {
 	return HunkHeader{
 		OldLine: int(h.OldLine),

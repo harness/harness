@@ -13,6 +13,7 @@ import (
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/services/codecomments"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
 
@@ -32,15 +33,15 @@ func ProvideService(ctx context.Context,
 	gitRPCClient gitrpc.Interface,
 	db *sqlx.DB,
 	repoGitInfoCache store.RepoGitInfoCache,
-	principalCache store.PrincipalInfoCache,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
 	activityStore store.PullReqActivityStore,
 	codeCommentView store.CodeCommentView,
 	codeCommentMigrator *codecomments.Migrator,
 	pubsub pubsub.PubSub,
+	urlProvider *url.Provider,
 ) (*Service, error) {
 	return New(ctx, config, gitReaderFactory, pullReqEvFactory, pullReqEvReporter, gitRPCClient,
-		db, repoGitInfoCache, principalCache, repoStore, pullreqStore, activityStore,
-		codeCommentView, codeCommentMigrator, pubsub)
+		db, repoGitInfoCache, repoStore, pullreqStore, activityStore,
+		codeCommentView, codeCommentMigrator, pubsub, urlProvider)
 }
