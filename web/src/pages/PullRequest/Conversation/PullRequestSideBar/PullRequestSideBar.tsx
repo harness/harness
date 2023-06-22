@@ -15,15 +15,23 @@ import {
   IconName
 } from '@harness/uicore'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
+import { useMutate } from 'restful-react'
 import { useStrings } from 'framework/strings'
+import type { TypesPullReq, TypesRepository } from 'services/code'
+import { ReviewerSelect } from 'components/ReviewerSelect/ReviewerSelect'
 import css from './PullRequestSideBar.module.scss'
 
 interface PullRequestSideBarProps {
   reviewers?: Unknown
+  repoMetadata: TypesRepository
+  pullRequestMetadata: TypesPullReq
+  refetchReviewers: () => void
 }
 
 const PullRequestSideBar = (props: PullRequestSideBarProps) => {
-  const { reviewers } = props
+  const { reviewers, repoMetadata, pullRequestMetadata, refetchReviewers } = props
+  // const [searchTerm, setSearchTerm] = useState('')
+  // const [page] = usePageIndex(1)
   const { getString } = useStrings()
   const tagArr = []
 
@@ -58,7 +66,44 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
     const name = icon
     return { name, color, size, icon, ...(color ? { iconProps: { color } } : undefined) }
   }
-  //TODO add actions when you click the options menu button and also api integration
+  // const { data: reviewersData,refetch:refetchReviewers } = useGet<Unknown[]>({
+  //   path: `/api/v1/principals`,
+  //   queryParams: {
+  //     query: searchTerm,
+  //     limit: LIST_FETCHING_LIMIT,
+  //     page: page,
+  //     accountIdentifier: 'kmpySmUISimoRrJL6NL73w',
+  //     type: 'user'
+  //   }
+  // })
+  // console.log(reviewers)
+
+  // interface PrReviewOption {
+  //   method: 'optional' | 'required' | 'reject'
+  //   title: string
+  //   disabled?: boolean
+  //   color: Color
+  // }
+  // const prDecisionOptions: PrReviewOption[] = [
+  //   {
+  //     method: 'optional',
+  //     title: getString('optional'),
+  //     color: Color.GREEN_700
+  //   },
+  //   {
+  //     method: 'required',
+  //     title: getString('required'),
+  //     color: Color.ORANGE_700
+  //   }
+  // ]
+  const { mutate: updateCodeCommentStatus } = useMutate({
+    verb: 'PUT',
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`
+  })
+
+  // const [isOptionsOpen, setOptionsOpen] = React.useState(false)
+  // const [val, setVal] = useState<SelectOption>()
+  //TODO: add actions when you click the options menu button and also api integration when there's optional and required reviwers
   return (
     <Container width={`30%`}>
       <Container padding={{ left: 'xxlarge' }}>
@@ -68,15 +113,59 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               {getString('reviewers')}
             </Text>
             <FlexExpander />
-            <Button variation={ButtonVariation.TERTIARY} size={ButtonSize.SMALL} text={'Add +'}></Button>
+
+            {/* <Popover
+              isOpen={isOptionsOpen}
+              onInteraction={nextOpenState => {
+                setOptionsOpen(nextOpenState)
+              }}
+              content={
+                <Menu>
+                  {prDecisionOptions.map(option => {
+                    return (
+                      <Menu.Item
+                        key={option.method}
+                        // className={css.menuReviewItem}
+                        disabled={false || option.disabled}
+                        text={
+                          <Layout.Horizontal>
+                            <Text flex width={'fit-content'} font={{ variation: FontVariation.BODY }}>
+                              {option.title}
+                            </Text>
+                          </Layout.Horizontal>
+                        }
+                        onClick={() => {
+                          // setDecisionOption(option)
+                        }}
+                      />
+                    )
+                  })}
+                </Menu>
+              }
+              usePortal={true}
+              minimal={true}
+              fill={false}
+              position={Position.BOTTOM_RIGHT}> */}
+            <ReviewerSelect
+              gitRef={''}
+              text={getString('add')}
+              labelPrefix={getString('add')}
+              onSelect={function (id: number): void {
+                updateCodeCommentStatus({ reviewer_id: id })
+                if (refetchReviewers) {
+                  refetchReviewers?.()
+                }
+              }}
+              repoMetadata={{}}></ReviewerSelect>
+            {/* </Popover> */}
           </Layout.Horizontal>
           <Container padding={{ top: 'medium', bottom: 'large' }}>
-            <Text
+            {/* <Text
               className={css.semiBoldText}
               padding={{ bottom: 'medium' }}
               font={{ variation: FontVariation.FORM_LABEL, size: 'small' }}>
               {getString('required')}
-            </Text>
+            </Text> */}
             {reviewers && reviewers?.length !== 0 ? (
               reviewers.map(
                 (reviewer: { reviewer: { display_name: string; id: number }; review_decision: string }): Unknown => {
@@ -123,10 +212,10 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               )
             ) : (
               <Text color={Color.GREY_300} font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
-                {getString('noRequiredReviewers')}
+                {getString('noReviewers')}
               </Text>
             )}
-            <Text
+            {/* <Text
               className={css.semiBoldText}
               padding={{ top: 'medium', bottom: 'medium' }}
               font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
@@ -178,7 +267,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               <Text color={Color.GREY_300} font={{ variation: FontVariation.BODY2_SEMI, size: 'small' }}>
                 {getString('noOptionalReviewers')}
               </Text>
-            )}
+            )} */}
           </Container>
           <Layout.Horizontal>
             <Text style={{ lineHeight: '24px' }} font={{ variation: FontVariation.H6 }}>

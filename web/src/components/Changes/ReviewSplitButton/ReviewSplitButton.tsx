@@ -33,9 +33,10 @@ interface ReviewSplitButtonProps extends Pick<GitInfoProps, 'repoMetadata'> {
   pullRequestMetadata?: TypesPullReq
   refreshPr: () => void
   disabled?: boolean
+  refetchReviewers?: () => void
 }
 const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
-  const { pullRequestMetadata, repoMetadata, shouldHide, refreshPr, disabled } = props
+  const { refetchReviewers, pullRequestMetadata, repoMetadata, shouldHide, refreshPr, disabled } = props
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
 
@@ -72,9 +73,19 @@ const ReviewSplitButton = (props: ReviewSplitButtonProps) => {
         // setReset(true)
         showSuccess(getString('pr.reviewSubmitted'))
         refreshPr?.()
+        refetchReviewers?.()
       })
       .catch(exception => showError(getErrorMessage(exception)))
-  }, [decisionOption, mutate, showError, showSuccess, getString, refreshPr, pullRequestMetadata?.source_sha])
+  }, [
+    decisionOption,
+    mutate,
+    showError,
+    showSuccess,
+    getString,
+    refreshPr,
+    pullRequestMetadata?.source_sha,
+    refetchReviewers
+  ])
   return (
     <Container
       className={cx(css.reviewButton, {

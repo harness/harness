@@ -1,0 +1,65 @@
+.button {
+  //   --border: 1px solid var(--grey-200) !important;
+  --background-color-active: var(--white) !important;
+  --box-shadow: none !important;
+
+  &:active,
+  &:hover,
+  &[class*='bp3-active'] {
+    --box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.04), 0px 2px 4px rgba(96, 97, 112, 0.16) !important;
+    // --border: 1px solid var(--primary-7) !important;
+  }
+
+  .prefix {
+    color: var(--grey-450) !important;
+    font-weight: normal;
+  }
+}
+
+.main {
+  .input {
+    margin-bottom: 0 !important;
+
+    span[data-icon],
+    span[icon] {
+      margin-top: 10px !important;
+    }
+  }
+
+  .tabContainer {
+    margin-top: 0 !important;
+
+    [role='tablist'] {
+      background-color: var(--white) !important;
+      padding-left: 0;
+      padding-right: 0;
+      border-bottom: 1px solid var(--grey-200);
+    }
+
+    [role='tabpanel'] {
+      margin-top: 0;
+    }
+
+    &.branchesOnly {
+      [role='tablist'] {
+        display: none;
+      }
+    }
+  }
+}
+
+.popover {
+  > div[class*='popover-arrow'] {
+    display: none;
+  }
+
+  .listContainer {
+    min-height: 50px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .newBtnText {
+    font-weight: normal;
+  }
+}

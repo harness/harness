@@ -41,6 +41,11 @@ export enum GitRefType {
   TAG = 'tag'
 }
 
+export enum PrincipalUserType {
+  USER = 'user',
+  SERVICE = 'service'
+}
+
 export enum GitCommitAction {
   DELETE = 'DELETE',
   CREATE = 'CREATE',

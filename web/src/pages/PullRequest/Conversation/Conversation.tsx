@@ -50,7 +50,7 @@ export const Conversation: React.FC<ConversationProps> = ({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/activities`
   })
   const showSpinner = useMemo(() => loading && !activities, [loading, activities])
-  const { data: reviewers } = useGet<Unknown[]>({
+  const { data: reviewers, refetch: refetchReviewers } = useGet<Unknown[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`
   })
   const { showError } = useToaster()
@@ -139,6 +139,7 @@ export const Conversation: React.FC<ConversationProps> = ({
             repoMetadata={repoMetadata}
             pullRequestMetadata={pullRequestMetadata}
             onPRStateChanged={onPRStateChanged}
+            refetchReviewers={refetchReviewers}
           />
           <Container>
             <Layout.Horizontal>
@@ -342,7 +343,14 @@ export const Conversation: React.FC<ConversationProps> = ({
                   />
                 </Layout.Vertical>
               </Container>
-              <PullRequestSideBar reviewers={reviewers} />
+              {repoMetadata ? (
+                <PullRequestSideBar
+                  reviewers={reviewers}
+                  repoMetadata={repoMetadata}
+                  pullRequestMetadata={pullRequestMetadata}
+                  refetchReviewers={refetchReviewers}
+                />
+              ) : null}
             </Layout.Horizontal>
           </Container>
         </Layout.Vertical>

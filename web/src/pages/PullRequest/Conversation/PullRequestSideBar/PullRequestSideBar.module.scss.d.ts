@@ -5,5 +5,6 @@ declare const styles: {
   readonly reviewerName: string
   readonly reviewerAvatar: string
   readonly semiBoldText: string
+  readonly selectButton: string
 }
 export default styles

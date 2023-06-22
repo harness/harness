@@ -426,3 +426,9 @@ viewFile: View the file at this point in the history
 viewRepo: View the repository at this point in the history
 hideCommitHistory: Hide Rename History for {{file}}
 showCommitHistory: Show Rename History for {{file}}
+noReviewers: No Reviewers
+assignPeople: Assign people
+add: Add +
+users: Users
+findAUser: Find a user
+reviewerNotFound: 'Reviewer <strong>{{reviewer}}</strong> not found.'

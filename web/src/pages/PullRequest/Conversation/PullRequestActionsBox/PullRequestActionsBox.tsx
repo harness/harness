@@ -38,6 +38,7 @@ import css from './PullRequestActionsBox.module.scss'
 
 interface PullRequestActionsBoxProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   onPRStateChanged: () => void
+  refetchReviewers: () => void
 }
 
 interface PRMergeOption {
@@ -57,7 +58,8 @@ interface PRDraftOption {
 export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
   repoMetadata,
   pullRequestMetadata,
-  onPRStateChanged
+  onPRStateChanged,
+  refetchReviewers
 }) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
@@ -278,6 +280,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                           pullRequestMetadata={pullRequestMetadata}
                           refreshPr={onPRStateChanged}
                           disabled={isActiveUserPROwner}
+                          refetchReviewers={refetchReviewers}
                         />
                         <Container
                           inline

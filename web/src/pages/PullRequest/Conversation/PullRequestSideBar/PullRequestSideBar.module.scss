@@ -16,3 +16,18 @@
   line-height: 18px !important;
   --typography-color: var(--grey-500) !important;
 }
+
+.selectButton {
+  :global {
+    .bp3-input {
+      border: unset !important;
+      background: inherit !important;
+      // font-weight: 600 !important;
+      // color: var(--grey-800);
+    }
+
+    .bp3-input-action:last-child {
+      right: 10% !important;
+    }
+  }
+}

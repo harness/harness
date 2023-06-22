@@ -5,6 +5,7 @@
 export interface StringsMap {
   active: string
   activeBranches: string
+  add: string
   addComment: string
   addGitIgnore: string
   addLicense: string
@@ -16,6 +17,7 @@ export interface StringsMap {
   and: string
   approve: string
   ascending: string
+  assignPeople: string
   basedOn: string
   blame: string
   blameCommitLine: string
@@ -136,6 +138,7 @@ export interface StringsMap {
   files: string
   filesChanged: string
   findATag: string
+  findAUser: string
   findBranch: string
   findOrCreateBranch: string
   firstTimeTitle: string
@@ -183,6 +186,7 @@ export interface StringsMap {
   noRequiredReviewers: string
   noResultMessage: string
   noResultTitle: string
+  noReviewers: string
   noWebHooks: string
   none: string
   noneYet: string
@@ -311,6 +315,7 @@ export interface StringsMap {
   resolve: string
   resolved: string
   resolvedComments: string
+  reviewerNotFound: string
   reviewers: string
   samplePayloadUrl: string
   save: string
@@ -349,6 +354,7 @@ export interface StringsMap {
   updateWebhook: string
   updated: string
   userName: string
+  users: string
   'validation.gitBranchNameInvalid': string
   'validation.gitTagNameInvalid': string
   'validation.repoNamePatternIsNotValid': string
