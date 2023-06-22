@@ -14,13 +14,16 @@ import (
 
 // ReviewerDelete deletes reviewer from the reviewerlist for the given PR.
 func (c *Controller) ReviewerDelete(ctx context.Context, session *auth.Session,
-	repoRef string, prID, reviewerID int64) error {
-	_, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
+	repoRef string, prNum, reviewerID int64) error {
+
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit)
 	if err != nil {
 		return fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
-	err = c.reviewerStore.Delete(ctx, prID, reviewerID)
+	pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
+
+	err = c.reviewerStore.Delete(ctx, pr.ID, reviewerID)
 	if err != nil {
 		return fmt.Errorf("failed to delete reviewer: %w", err)
 	}

@@ -24,7 +24,7 @@ func HandleReviewerDelete(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		prID, err := request.GetPullReqNumberFromPath(r)
+		prNum, err := request.GetPullReqNumberFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -36,7 +36,7 @@ func HandleReviewerDelete(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		err = pullreqCtrl.ReviewerDelete(ctx, session, repoRef, prID, reviewerID)
+		err = pullreqCtrl.ReviewerDelete(ctx, session, repoRef, prNum, reviewerID)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
