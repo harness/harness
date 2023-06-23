@@ -105,11 +105,13 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
         Header: getString('creationDate'),
         width: '200px',
         Cell: ({ row }: CellProps<RepoCommitTag>) => {
-          return (
+          return row.original.tagger?.when ? (
             <Text className={css.rowText} color={Color.BLACK} tag="div">
               <span className={css.spacer} />
               {formatDate(row.original.tagger?.when as string)}
             </Text>
+          ) : (
+            ''
           )
         }
       },
