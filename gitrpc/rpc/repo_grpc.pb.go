@@ -32,6 +32,7 @@ type RepositoryServiceClient interface {
 	GetCommitDivergences(ctx context.Context, in *GetCommitDivergencesRequest, opts ...grpc.CallOption) (*GetCommitDivergencesResponse, error)
 	DeleteRepository(ctx context.Context, in *DeleteRepositoryRequest, opts ...grpc.CallOption) (*DeleteRepositoryResponse, error)
 	SyncRepository(ctx context.Context, in *SyncRepositoryRequest, opts ...grpc.CallOption) (*SyncRepositoryResponse, error)
+	HashRepository(ctx context.Context, in *HashRepositoryRequest, opts ...grpc.CallOption) (*HashRepositoryResponse, error)
 	MergeBase(ctx context.Context, in *MergeBaseRequest, opts ...grpc.CallOption) (*MergeBaseResponse, error)
 }
 
@@ -227,6 +228,15 @@ func (c *repositoryServiceClient) SyncRepository(ctx context.Context, in *SyncRe
 	return out, nil
 }
 
+func (c *repositoryServiceClient) HashRepository(ctx context.Context, in *HashRepositoryRequest, opts ...grpc.CallOption) (*HashRepositoryResponse, error) {
+	out := new(HashRepositoryResponse)
+	err := c.cc.Invoke(ctx, "/rpc.RepositoryService/HashRepository", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *repositoryServiceClient) MergeBase(ctx context.Context, in *MergeBaseRequest, opts ...grpc.CallOption) (*MergeBaseResponse, error) {
 	out := new(MergeBaseResponse)
 	err := c.cc.Invoke(ctx, "/rpc.RepositoryService/MergeBase", in, out, opts...)
@@ -250,6 +260,7 @@ type RepositoryServiceServer interface {
 	GetCommitDivergences(context.Context, *GetCommitDivergencesRequest) (*GetCommitDivergencesResponse, error)
 	DeleteRepository(context.Context, *DeleteRepositoryRequest) (*DeleteRepositoryResponse, error)
 	SyncRepository(context.Context, *SyncRepositoryRequest) (*SyncRepositoryResponse, error)
+	HashRepository(context.Context, *HashRepositoryRequest) (*HashRepositoryResponse, error)
 	MergeBase(context.Context, *MergeBaseRequest) (*MergeBaseResponse, error)
 	mustEmbedUnimplementedRepositoryServiceServer()
 }
@@ -287,6 +298,9 @@ func (UnimplementedRepositoryServiceServer) DeleteRepository(context.Context, *D
 }
 func (UnimplementedRepositoryServiceServer) SyncRepository(context.Context, *SyncRepositoryRequest) (*SyncRepositoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SyncRepository not implemented")
+}
+func (UnimplementedRepositoryServiceServer) HashRepository(context.Context, *HashRepositoryRequest) (*HashRepositoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HashRepository not implemented")
 }
 func (UnimplementedRepositoryServiceServer) MergeBase(context.Context, *MergeBaseRequest) (*MergeBaseResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MergeBase not implemented")
@@ -501,6 +515,24 @@ func _RepositoryService_SyncRepository_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RepositoryService_HashRepository_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HashRepositoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepositoryServiceServer).HashRepository(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.RepositoryService/HashRepository",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepositoryServiceServer).HashRepository(ctx, req.(*HashRepositoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _RepositoryService_MergeBase_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MergeBaseRequest)
 	if err := dec(in); err != nil {
@@ -549,6 +581,10 @@ var RepositoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SyncRepository",
 			Handler:    _RepositoryService_SyncRepository_Handler,
+		},
+		{
+			MethodName: "HashRepository",
+			Handler:    _RepositoryService_HashRepository_Handler,
 		},
 		{
 			MethodName: "MergeBase",

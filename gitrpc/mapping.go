@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/gitrpc/hash"
 	"github.com/harness/gitness/gitrpc/rpc"
 )
 
@@ -245,6 +246,24 @@ func mapToRPCTimeOptional(t *time.Time) int64 {
 	}
 
 	return t.Unix()
+}
+
+func mapToRPCHashType(t hash.Type) (rpc.HashType, error) {
+	switch t {
+	case hash.TypeSHA256:
+		return rpc.HashType_HashTypeSHA256, nil
+	default:
+		return -1, fmt.Errorf("unknown hash type '%s'", t)
+	}
+}
+
+func mapToRPCHashAggregationType(t hash.AggregationType) (rpc.HashAggregationType, error) {
+	switch t {
+	case hash.AggregationTypeXOR:
+		return rpc.HashAggregationType_HashAggregationTypeXOR, nil
+	default:
+		return -1, fmt.Errorf("unknown hash aggregation type '%s'", t)
+	}
 }
 
 func mapHunkHeader(h *rpc.HunkHeader) HunkHeader {

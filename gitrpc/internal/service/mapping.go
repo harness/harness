@@ -5,6 +5,9 @@
 package service
 
 import (
+	"fmt"
+
+	"github.com/harness/gitness/gitrpc/hash"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 
@@ -161,5 +164,23 @@ func mapCommitTag(tag *types.Tag) *rpc.CommitTag {
 		Tagger:      mapGitSignature(tag.Tagger),
 		IsAnnotated: true,
 		Commit:      nil,
+	}
+}
+
+func mapHashType(t rpc.HashType) (hash.Type, error) {
+	switch t {
+	case rpc.HashType_HashTypeSHA256:
+		return hash.TypeSHA256, nil
+	default:
+		return hash.Type(""), fmt.Errorf("unknown hash type: '%s'", t)
+	}
+}
+
+func mapHashAggregationType(t rpc.HashAggregationType) (hash.AggregationType, error) {
+	switch t {
+	case rpc.HashAggregationType_HashAggregationTypeXOR:
+		return hash.AggregationTypeXOR, nil
+	default:
+		return hash.AggregationType(""), fmt.Errorf("unknown hash aggregation type: '%s'", t)
 	}
 }

@@ -13,8 +13,10 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"runtime/debug"
 	"time"
 
+	"github.com/harness/gitness/gitrpc/hash"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 
@@ -353,4 +355,95 @@ func (s RepositoryService) SyncRepository(
 	}
 
 	return &rpc.SyncRepositoryResponse{}, nil
+}
+
+func (s RepositoryService) HashRepository(
+	ctx context.Context,
+	request *rpc.HashRepositoryRequest,
+) (*rpc.HashRepositoryResponse, error) {
+	base := request.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.RepoUid)
+
+	hashType, err := mapHashType(request.GetHashType())
+	if err != nil {
+		return nil, ErrInvalidArgumentf("unknown hash type '%s'", request.GetHashType())
+	}
+
+	aggregationType, err := mapHashAggregationType(request.GetAggregationType())
+	if err != nil {
+		return nil, ErrInvalidArgumentf("unknown aggregation type '%s'", request.GetAggregationType())
+	}
+
+	// add all references of the repo to the channel in a separate go routine, to allow streamed processing.
+	// Ensure we cancel the go routine in case we exit the func early.
+	goCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	hashChan := make(chan hash.SourceNext)
+
+	go func() {
+		// always close channel last before leaving go routine
+		defer close(hashChan)
+		defer func() {
+			if r := recover(); r != nil {
+				hashChan <- hash.SourceNext{
+					Err: fmt.Errorf("panic received while filling data source: %s", debug.Stack()),
+				}
+			}
+		}()
+
+		// add default branch to hash
+		defaultBranch, err := s.adapter.GetDefaultBranch(goCtx, repoPath)
+		if err != nil {
+			hashChan <- hash.SourceNext{
+				Err: processGitErrorf(err, "failed to get default branch"),
+			}
+			return
+		}
+
+		hashChan <- hash.SourceNext{
+			Data: hash.SerializeHead(defaultBranch),
+		}
+
+		err = s.adapter.WalkReferences(goCtx, repoPath, func(wre types.WalkReferencesEntry) error {
+			ref, ok := wre[types.GitReferenceFieldRefName]
+			if !ok {
+				return errors.New("ref entry didn't contain the ref name")
+			}
+			sha, ok := wre[types.GitReferenceFieldObjectName]
+			if !ok {
+				return errors.New("ref entry didn't contain the ref object sha")
+			}
+
+			hashChan <- hash.SourceNext{
+				Data: hash.SerializeReference(ref, sha),
+			}
+
+			return nil
+		}, &types.WalkReferencesOptions{})
+		if err != nil {
+			hashChan <- hash.SourceNext{
+				Err: processGitErrorf(err, "failed to walk references"),
+			}
+		}
+	}()
+
+	hasher, err := hash.New(hashType, aggregationType)
+	if err != nil {
+		return nil, ErrInternalf("failed to get new reference hasher", err)
+	}
+	source := hash.SourceFromChannel(ctx, hashChan)
+
+	res, err := hasher.Hash(source)
+	if err != nil {
+		return nil, ErrInternalf("failed to hash repo refs", err)
+	}
+
+	return &rpc.HashRepositoryResponse{
+		Hash: res,
+	}, nil
 }

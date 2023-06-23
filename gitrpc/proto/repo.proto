@@ -17,6 +17,7 @@ service RepositoryService {
   rpc GetCommitDivergences(GetCommitDivergencesRequest) returns (GetCommitDivergencesResponse);
   rpc DeleteRepository(DeleteRepositoryRequest) returns (DeleteRepositoryResponse);
   rpc SyncRepository(SyncRepositoryRequest) returns (SyncRepositoryResponse) {}
+  rpc HashRepository(HashRepositoryRequest) returns (HashRepositoryResponse) {}
   rpc MergeBase(MergeBaseRequest) returns (MergeBaseResponse);
 }
 
@@ -189,6 +190,24 @@ message SyncRepositoryRequest {
 
 message SyncRepositoryResponse {
 }
+enum HashType {
+  HashTypeSHA256 = 0;
+}
+
+enum HashAggregationType {
+  HashAggregationTypeXOR = 0;
+}
+
+message HashRepositoryRequest {
+  ReadRequest base                     = 1;
+  HashType hash_type                   = 2;
+  HashAggregationType aggregation_type = 3;
+}
+
+message HashRepositoryResponse {
+  bytes hash = 1;
+}
+
 message MergeBaseRequest {
   ReadRequest base = 1;
   string ref1 = 2;

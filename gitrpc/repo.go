@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/gitrpc/hash"
 	"github.com/harness/gitness/gitrpc/rpc"
 
 	gonanoid "github.com/matoous/go-nanoid/v2"
@@ -58,6 +59,16 @@ type SyncRepositoryParams struct {
 }
 
 type SyncRepositoryOutput struct {
+}
+
+type HashRepositoryParams struct {
+	ReadParams
+	HashType        hash.Type
+	AggregationType hash.AggregationType
+}
+
+type HashRepositoryOutput struct {
+	Hash []byte
 }
 
 func (c *Client) CreateRepository(ctx context.Context,
@@ -149,10 +160,6 @@ func (c *Client) DeleteRepository(ctx context.Context, params *DeleteRepositoryP
 }
 
 func (c *Client) SyncRepository(ctx context.Context, params *SyncRepositoryParams) (*SyncRepositoryOutput, error) {
-	if params == nil {
-		return nil, ErrNoParamsProvided
-	}
-
 	_, err := c.repoService.SyncRepository(ctx, &rpc.SyncRepositoryRequest{
 		Base:              mapToRPCWriteRequest(params.WriteParams),
 		Source:            params.Source,
@@ -163,4 +170,28 @@ func (c *Client) SyncRepository(ctx context.Context, params *SyncRepositoryParam
 	}
 
 	return &SyncRepositoryOutput{}, nil
+}
+
+func (c *Client) HashRepository(ctx context.Context, params *HashRepositoryParams) (*HashRepositoryOutput, error) {
+	hashType, err := mapToRPCHashType(params.HashType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map hash type: %w", err)
+	}
+	aggregationType, err := mapToRPCHashAggregationType(params.AggregationType)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map aggregation type: %w", err)
+	}
+
+	resp, err := c.repoService.HashRepository(ctx, &rpc.HashRepositoryRequest{
+		Base:            mapToRPCReadRequest(params.ReadParams),
+		HashType:        hashType,
+		AggregationType: aggregationType,
+	})
+	if err != nil {
+		return nil, processRPCErrorf(err, "failed to hash repository on server")
+	}
+
+	return &HashRepositoryOutput{
+		Hash: resp.GetHash(),
+	}, nil
 }
