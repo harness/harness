@@ -24,7 +24,6 @@ export const ResourceListingPagination: React.FC<ResourceListingPaginationProps>
   scrollTop = true
 }) => {
   const { updateQueryParams } = useUpdateQueryParams()
-
   const { X_NEXT_PAGE, X_PREV_PAGE, totalItems, totalPages, pageSize } = useParsePaginationInfo(response)
   const _setPage = useCallback(
     (_page: number) => {
@@ -40,7 +39,7 @@ export const ResourceListingPagination: React.FC<ResourceListingPaginationProps>
       setPage(_page)
       updateQueryParams({ page: _page.toString() })
     },
-    [setPage, scrollTop] // eslint-disable-line react-hooks/exhaustive-deps
+    [setPage, scrollTop, response] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   return totalItems ? (

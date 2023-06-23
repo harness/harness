@@ -47,7 +47,9 @@ export default function RepositoryCommits() {
   })
 
   useEffect(() => {
-    updateQueryParams({ page: page.toString() })
+    if (pageBrowser.page) {
+      updateQueryParams({ page: page.toString() })
+    }
   }, [setPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const ChangesTab = useMemo(() => {
@@ -66,7 +68,7 @@ export default function RepositoryCommits() {
         </Container>
       )
     }
-  }, [repoMetadata, commitRef, getString])
+  }, [repoMetadata, commitRef, getString, response])
 
   return (
     <Container className={css.main}>
@@ -88,7 +90,7 @@ export default function RepositoryCommits() {
 
       <PageBody error={getErrorMessage(error || errorCommits)} retryOnError={voidFn(refetch)}>
         <LoadingSpinner visible={loading || loadingCommits} withBorder={!!commits && loadingCommits} />
-        {(repoMetadata && commitRef && !!commits?.commits?.length && (
+        {(repoMetadata && commitRef && !pageBrowser.page && !!commits?.commits?.length && (
           <Container padding="xlarge" className={css.resourceContent}>
             <Container className={css.contentHeader}>
               <Layout.Horizontal>
@@ -100,7 +102,7 @@ export default function RepositoryCommits() {
           </Container>
         )) ||
           null}
-        {(repoMetadata && !commitRef && !!commits?.commits?.length && (
+        {(repoMetadata && (!commitRef || pageBrowser.page) && !!commits?.commits?.length && (
           <Container padding="xlarge" className={css.resourceContent}>
             <Container className={css.contentHeader}>
               <Layout.Horizontal spacing="medium">
@@ -114,7 +116,7 @@ export default function RepositoryCommits() {
                     history.push(
                       routes.toCODECommits({
                         repoPath: repoMetadata.path as string,
-                        commitRef: ref
+                        commitRef: `${ref}?page=1`
                       })
                     )
                   }}
