@@ -164,6 +164,21 @@ func (s *PullReqReviewerStore) Update(ctx context.Context, v *types.PullReqRevie
 	return nil
 }
 
+// Delete deletes the pull request reviewer.
+func (s *PullReqReviewerStore) Delete(ctx context.Context, prID, reviewerID int64) error {
+	const sqlQuery = `
+	DELETE from pullreq_reviewers
+	WHERE pullreq_reviewer_pullreq_id = $1 AND
+	      pullreq_reviewer_principal_id = $2`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if _, err := db.ExecContext(ctx, sqlQuery, prID, reviewerID); err != nil {
+		return database.ProcessSQLErrorf(err, "delete reviewer query failed")
+	}
+	return nil
+}
+
 // List returns a list of pull reviewers for a pull request.
 func (s *PullReqReviewerStore) List(ctx context.Context, prID int64) ([]*types.PullReqReviewer, error) {
 	stmt := database.Builder.

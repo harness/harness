@@ -350,6 +350,9 @@ type (
 		// Update updates the pull request reviewer.
 		Update(ctx context.Context, v *types.PullReqReviewer) error
 
+		// Delete the Pull request reviewer
+		Delete(ctx context.Context, prID, principalID int64) error
+
 		// List returns all pull request reviewers for the pull request.
 		List(ctx context.Context, prID int64) ([]*types.PullReqReviewer, error)
 	}
