@@ -157,13 +157,13 @@ func SetupLogger(config *types.Config) {
 }
 
 func SetupProfiler(config *types.Config) {
-	profilerType, parsed := profiler.ParseProfiler(config.Profiler.Type)
+	profilerType, parsed := profiler.ParseType(config.Profiler.Type)
 	if !parsed {
 		log.Info().Msgf("No valid profiler so skipping profiling ['%s']", config.Profiler.Type)
 		return
 	}
 
-	gitnessProfiler, _ := profiler.GetProfiler(profilerType)
+	gitnessProfiler, _ := profiler.New(profilerType)
 	gitnessProfiler.StartProfiling(config.Profiler.ServiceName, version.Version.String())
 }
 

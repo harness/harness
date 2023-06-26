@@ -412,17 +412,14 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	reviewerDelete := openapi3.Operation{}
 	reviewerDelete.WithTags("pullreq")
 	reviewerDelete.WithMapOfAnything(map[string]interface{}{"operationId": "reviewerDeletePullReq"})
-	err := reflector.SetRequest(&reviewerDelete, new(reviewerDeletePullReqRequest), http.MethodDelete)
-	err = reflector.SetJSONResponse(&reviewerDelete, nil, http.StatusNoContent)
-	err = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusBadRequest)
-	err = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusInternalServerError)
-	err = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusUnauthorized)
-	err = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusForbidden)
-	err = reflector.Spec.AddOperation(http.MethodDelete,
+	_ = reflector.SetRequest(&reviewerDelete, new(reviewerDeletePullReqRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&reviewerDelete, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&reviewerDelete, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodDelete,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/reviewers/{pullreq_reviewer_id}", reviewerDelete)
-	if err != nil {
-		panic(err)
-	}
 
 	reviewSubmit := openapi3.Operation{}
 	reviewSubmit.WithTags("pullreq")

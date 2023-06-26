@@ -1,27 +1,36 @@
+// Copyright 2022 Harness Inc. All rights reserved.
+// Use of this source code is governed by the Polyform Free Trial License
+// that can be found in the LICENSE.md file for this repository.
+
 package profiler
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Profiler interface {
 	StartProfiling(serviceName, serviceVersion string)
 }
 
-type ProfilerType string
+type Type string
 
 const (
-	ProfilerTypeGCP ProfilerType = "GCP"
+	TypeGCP Type = "gcp"
 )
 
-func ParseProfiler(profiler string) (ProfilerType, bool) {
-	if profiler == string(ProfilerTypeGCP) {
-		return ProfilerTypeGCP, true
+func ParseType(profilerType string) (Type, bool) {
+	switch strings.ToLower(strings.TrimSpace(profilerType)) {
+	case string(TypeGCP):
+		return TypeGCP, true
+	default:
+		return "", false
 	}
-	return "", false
 }
 
-func GetProfiler(profiler ProfilerType) (Profiler, error) {
+func New(profiler Type) (Profiler, error) {
 	switch profiler {
-	case ProfilerTypeGCP:
+	case TypeGCP:
 		return &GCPProfiler{}, nil
 	default:
 		return &NoopProfiler{}, fmt.Errorf("profiler '%s' not supported", profiler)
