@@ -20,7 +20,7 @@ const (
 )
 
 func ParseType(profilerType string) (Type, bool) {
-	switch strings.TrimSpace(strings.ToLower(profilerType)) {
+	switch strings.ToLower(strings.TrimSpace(profilerType)) {
 	case string(TypeGCP):
 		return TypeGCP, true
 	default:
