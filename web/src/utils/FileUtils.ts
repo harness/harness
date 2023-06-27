@@ -60,14 +60,12 @@ export function useFileContentViewerDecision({
     const isFileTooLarge = resourceData?.size !== resourceData?.data_size
     const rawURL = `/code/api/v1/repos/${repoMetadata?.path}/+/raw/${resourcePath}?routingId=${routingId}&git_ref=${gitRef}`
 
-    // TODO: TEST ONLY
-    // const rawURL = `https://localhost:8181/rawfile/${filename}`
-
     return {
       category,
 
       isFileTooLarge,
       isViewable,
+      isText,
 
       filename,
       extension,
@@ -439,7 +437,21 @@ const TextExtensions = [
   'yml',
   'zsh',
   'zshrc',
-  'ics'
+  'ics',
+
+  'rego',
+  'tf',
+  'hcl',
+  'mod',
+  'sum',
+  'rst',
+  'toml',
+  'abap',
+  'uos',
+  'uot',
+  'ahk',
+  'asciidoc',
+  'slk'
 ]
 
 const SpecialTextFiles = [
