@@ -53,7 +53,7 @@ export function FileContent({
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const downloadFile = useDownloadRawFile()
-  const { category, isFileTooLarge, isViewable, filename, extension, size, base64Data, rawURL } =
+  const { category, isText, isFileTooLarge, isViewable, filename, extension, size, base64Data, rawURL } =
     useFileContentViewerDecision({ repoMetadata, gitRef, resourcePath, resourceContent })
   const history = useHistory()
   const [activeTab, setActiveTab] = React.useState<string>(FileSection.CONTENT)
@@ -91,7 +91,6 @@ export function FileContent({
   const { standalone } = useAppContext()
   const { hooks } = useAppContext()
   const space = useGetSpaceParam()
-  const isATextFile = category === FileCategory.TEXT
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
@@ -177,7 +176,7 @@ export function FileContent({
                           icon="code-edit"
                           tooltipProps={{ isDark: true }}
                           tooltip={permsFinal.tooltip}
-                          disabled={permsFinal.disabled || !isATextFile}
+                          disabled={permsFinal.disabled || !isText}
                           onClick={() => {
                             history.push(
                               routes.toCODEFileEdit({
