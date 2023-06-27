@@ -6,6 +6,7 @@ package queue
 
 import (
 	"context"
+	"math/rand"
 	"sync"
 	"testing"
 	"time"
@@ -33,7 +34,7 @@ func TestQueue(t *testing.T) {
 	store.EXPECT().ListIncomplete(ctx).Return(items[1:], nil).Times(1)
 	store.EXPECT().ListIncomplete(ctx).Return(items[2:], nil).Times(1)
 
-	q := newQueue(store)
+	q := newQueue(ctx, store)
 	for _, item := range items {
 		next, err := q.Request(ctx, core.Filter{OS: "linux", Arch: "amd64"})
 		if err != nil {
@@ -54,8 +55,7 @@ func TestQueueCancel(t *testing.T) {
 	store := mock.NewMockStageStore(controller)
 	store.EXPECT().ListIncomplete(ctx).Return(nil, nil)
 
-	q := newQueue(store)
-	q.ctx = ctx
+	q := newQueue(ctx, store)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -354,5 +354,65 @@ func TestWithinLimits_Old(t *testing.T) {
 		if got, want := withinLimits(stage, stages), test.Want; got != want {
 			t.Errorf("Unexpected results at index %d", i)
 		}
+	}
+}
+
+func incomplete(n int) ([]*core.Stage, error) {
+	ret := make([]*core.Stage, n)
+	for i := range ret {
+		ret[i] = &core.Stage{
+			OS:   "linux/amd64",
+			Arch: "amd64",
+		}
+	}
+	return ret, nil
+}
+
+func TestQueueDeadlock(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	n := 10
+	donechan := make(chan struct{}, n)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	store := mock.NewMockStageStore(controller)
+	store.EXPECT().ListIncomplete(ctx).Return(incomplete(n)).AnyTimes()
+
+	q := newQueue(ctx, store)
+	doWork := func(i int) bool {
+		select {
+		case <-ctx.Done():
+			return false
+		default:
+		}
+		ctx, cancel := context.WithTimeout(ctx,
+			time.Duration(i+rand.Intn(1000/n))*time.Millisecond)
+		defer cancel()
+		if i%3 == 0 {
+			// Randomly cancel some contexts to simulate timeouts
+			cancel()
+		}
+		_, err := q.Request(ctx, core.Filter{OS: "linux/amd64", Arch: "amd64"})
+		if err != nil && err != context.Canceled && err !=
+			context.DeadlineExceeded {
+			t.Errorf("Expected context.Canceled or context.DeadlineExceeded error, got %s", err)
+		}
+		select {
+		case donechan <- struct{}{}:
+		case <-ctx.Done():
+		}
+		return true
+	}
+	for i := 0; i < n; i++ {
+		go func(i int) {
+			// Spawn n workers, doing work until the parent context is canceled
+			for doWork(i) {
+			}
+		}(i)
+	}
+	// Wait for n * 10 tasks to complete, then exit and cancel all the workers.
+	for seen := 0; seen < n*10; seen++ {
+		<-donechan
 	}
 }
