@@ -12,12 +12,14 @@ import {
   FlexExpander,
   ButtonSize,
   Color,
-  IconName
+  IconName,
+  useToaster
 } from '@harness/uicore'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useMutate } from 'restful-react'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReq, TypesRepository } from 'services/code'
+import { getErrorMessage } from 'utils/Utils'
 import { ReviewerSelect } from 'components/ReviewerSelect/ReviewerSelect'
 import css from './PullRequestSideBar.module.scss'
 
@@ -34,6 +36,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
   // const [page] = usePageIndex(1)
   const { getString } = useStrings()
   const tagArr = []
+  const { showError } = useToaster()
 
   const generateReviewDecisionIcon = (
     reviewDecision: string
@@ -100,7 +103,10 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
     verb: 'PUT',
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`
   })
-
+  const { mutate: removeReviewer } = useMutate({
+    verb: 'DELETE',
+    path: ({ id }) => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/reviewers/${id}`
+  })
   // const [isOptionsOpen, setOptionsOpen] = React.useState(false)
   // const [val, setVal] = useState<SelectOption>()
   //TODO: add actions when you click the options menu button and also api integration when there's optional and required reviwers
@@ -151,7 +157,9 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               text={getString('add')}
               labelPrefix={getString('add')}
               onSelect={function (id: number): void {
-                updateCodeCommentStatus({ reviewer_id: id })
+                updateCodeCommentStatus({ reviewer_id: id }).catch(err => {
+                  showError(getErrorMessage(err))
+                })
                 if (refetchReviewers) {
                   refetchReviewers?.()
                 }
@@ -202,7 +210,14 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                           {
                             isDanger: true,
                             text: getString('remove'),
-                            onClick: noop
+                            onClick: () => {
+                              removeReviewer({}, { pathParams: { id: reviewer.reviewer.id } }).catch(err => {
+                                showError(getErrorMessage(err))
+                              })
+                              if (refetchReviewers) {
+                                refetchReviewers?.()
+                              }
+                            }
                           }
                         ]}
                       />
