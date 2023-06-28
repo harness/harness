@@ -12,13 +12,16 @@ import css from './CodeCommentStatusSelect.module.scss'
 interface CodeCommentStatusSelectProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   commentItems: CommentItem<TypesPullReqActivity>[]
   onCommentUpdate: () => void
+
+  refetchActivities: () => void
 }
 
 export const CodeCommentStatusSelect: React.FC<CodeCommentStatusSelectProps> = ({
   repoMetadata,
   pullRequestMetadata,
   commentItems,
-  onCommentUpdate
+  onCommentUpdate,
+  refetchActivities
 }) => {
   const { getString } = useStrings()
   const { showError } = useToaster()
@@ -74,6 +77,7 @@ export const CodeCommentStatusSelect: React.FC<CodeCommentStatusSelectProps> = (
                 commentItems[0].payload.resolved = Date.now()
               }
             }
+            refetchActivities()
           })
           .catch(_exception => {
             showError(getErrorMessage(_exception), 0, getString('pr.failedToUpdateCommentStatus'))

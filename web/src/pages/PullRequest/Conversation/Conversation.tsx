@@ -19,7 +19,7 @@ import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { DescriptionBox } from './DescriptionBox'
 import { PullRequestActionsBox } from './PullRequestActionsBox/PullRequestActionsBox'
 import PullRequestSideBar from './PullRequestSideBar/PullRequestSideBar'
-import { isCodeComment, isSystemComment } from '../PullRequestUtils'
+import { isCodeComment, isComment, isSystemComment } from '../PullRequestUtils'
 import { CodeCommentHeader } from './CodeCommentHeader'
 import { SystemComment } from './SystemComment'
 import css from './Conversation.module.scss'
@@ -87,10 +87,14 @@ export const Conversation: React.FC<ConversationProps> = ({
         return blocks.filter(_activities => !isSystemComment(_activities))
 
       case PRCommentFilterType.RESOLVED_COMMENTS:
-        return blocks.filter(_activities => isCodeComment(_activities) && _activities[0].payload?.resolved)
+        return blocks.filter(
+          _activities => _activities[0].payload?.resolved && (isCodeComment(_activities) || isComment(_activities))
+        )
 
       case PRCommentFilterType.UNRESOLVED_COMMENTS:
-        return blocks.filter(_activities => isCodeComment(_activities) && !_activities[0].payload?.resolved)
+        return blocks.filter(
+          _activities => !_activities[0].payload?.resolved && (isComment(_activities) || isCodeComment(_activities))
+        )
 
       case PRCommentFilterType.MY_COMMENTS: {
         const allCommentBlock = blocks.filter(_activities => !isSystemComment(_activities))
@@ -289,6 +293,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                                   pullRequestMetadata={pullRequestMetadata}
                                   onCommentUpdate={onCommentUpdate}
                                   commentItems={commentItems}
+                                  refetchActivities={refetchActivities}
                                 />
                               ),
                               [CommentBoxOutletPosition.LEFT_OF_REPLY_PLACEHOLDER]: (

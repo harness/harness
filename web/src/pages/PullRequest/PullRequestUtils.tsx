@@ -6,6 +6,9 @@ export function isCodeComment(commentItems: CommentItem<TypesPullReqActivity>[])
   return commentItems[0]?.payload?.type === CommentType.CODE_COMMENT
 }
 
+export function isComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
+  return commentItems[0]?.payload?.type === CommentType.COMMENT
+}
 export function isSystemComment(commentItems: CommentItem<TypesPullReqActivity>[]) {
   return commentItems[0].payload?.kind === 'system'
 }
