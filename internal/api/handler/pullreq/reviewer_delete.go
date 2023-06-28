@@ -42,6 +42,6 @@ func HandleReviewerDelete(pullreqCtrl *pullreq.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusNoContent, nil)
+		render.DeleteSuccessful(w)
 	}
 }
