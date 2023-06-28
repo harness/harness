@@ -211,7 +211,7 @@ pr:
   prMerged: This Pull Request was merged
   prClosed: This Pull Request was closed.
   reviewSubmitted: Review submitted.
-  prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested  to, reviewed} the pull request. {time}'
+  prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested changes to, reviewed} the pull request. {time}'
   prMergedInfo: '{user} merged branch {source} into {target} {time}.'
   prBranchPushInfo: '{user} pushed a new commit {commit}.'
   prStateChanged: '{user} changed pull request state from {old} to {new}.'
