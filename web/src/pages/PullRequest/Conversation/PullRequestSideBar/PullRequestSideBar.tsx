@@ -4,13 +4,10 @@ import {
   Container,
   Layout,
   Text,
-  Button,
   FontVariation,
-  ButtonVariation,
   Icon,
   Avatar,
   FlexExpander,
-  ButtonSize,
   Color,
   IconName,
   useToaster
@@ -35,7 +32,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
   // const [searchTerm, setSearchTerm] = useState('')
   // const [page] = usePageIndex(1)
   const { getString } = useStrings()
-  const tagArr = []
+  // const tagArr = []
   const { showError } = useToaster()
 
   const generateReviewDecisionIcon = (
@@ -198,15 +195,15 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                         width="100px"
                         height="24px"
                         items={[
-                          {
-                            text: getString('makeOptional'),
-                            onClick: noop
-                          },
-                          {
-                            text: getString('makeRequired'),
-                            onClick: noop
-                          },
-                          '-',
+                          // {
+                          //   text: getString('makeOptional'),
+                          //   onClick: noop
+                          // },
+                          // {
+                          //   text: getString('makeRequired'),
+                          //   onClick: noop
+                          // },
+                          // '-',
                           {
                             isDanger: true,
                             text: getString('remove'),
@@ -284,7 +281,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               </Text>
             )} */}
           </Container>
-          <Layout.Horizontal>
+          {/* <Layout.Horizontal>
             <Text style={{ lineHeight: '24px' }} font={{ variation: FontVariation.H6 }}>
               {getString('tags')}
             </Text>
@@ -299,7 +296,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               padding={{ top: 'large', bottom: 'large' }}>
               {getString('noneYet')}
             </Text>
-          )}
+          )} */}
         </Layout.Vertical>
       </Container>
     </Container>

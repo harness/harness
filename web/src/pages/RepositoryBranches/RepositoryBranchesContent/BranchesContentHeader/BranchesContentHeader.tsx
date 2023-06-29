@@ -15,30 +15,30 @@ interface BranchesContentHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> 
 }
 
 export function BranchesContentHeader({
-  onBranchTypeSwitched,
+  // onBranchTypeSwitched,
   onSearchTermChanged,
-  activeBranchType = GitBranchType.ALL,
+  // activeBranchType = GitBranchType.ALL,
   repoMetadata,
   onNewBranchCreated,
   loading
 }: BranchesContentHeaderProps) {
   const { getString } = useStrings()
-  const [branchType, setBranchType] = useState(activeBranchType)
+  // const [branchType, setBranchType] = useState(activeBranchType)
   const [searchTerm, setSearchTerm] = useState('')
-  const items = useMemo(
-    () => [
-      { label: getString('activeBranches'), value: GitBranchType.ACTIVE },
-      { label: getString('inactiveBranches'), value: GitBranchType.INACTIVE },
-      // { label: getString('yourBranches'), value: GitBranchType.YOURS },
-      { label: getString('allBranches'), value: GitBranchType.ALL }
-    ],
-    [getString]
-  )
+  // const items = useMemo(
+  //   () => [
+  //     { label: getString('activeBranches'), value: GitBranchType.ACTIVE },
+  //     { label: getString('inactiveBranches'), value: GitBranchType.INACTIVE },
+  //     // { label: getString('yourBranches'), value: GitBranchType.YOURS },
+  //     { label: getString('allBranches'), value: GitBranchType.ALL }
+  //   ],
+  //   [getString]
+  // )
 
   return (
     <Container className={css.main}>
       <Layout.Horizontal spacing="medium">
-        <DropDown
+        {/* <DropDown
           value={branchType}
           items={items}
           onChange={({ value }) => {
@@ -46,7 +46,7 @@ export function BranchesContentHeader({
             onBranchTypeSwitched(value as GitBranchType)
           }}
           popoverClassName={css.branchDropdown}
-        />
+        /> */}
         <FlexExpander />
         <SearchInputWithSpinner
           loading={loading}
