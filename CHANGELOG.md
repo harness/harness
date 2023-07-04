@@ -1,5 +1,18 @@
 # Changelog
 
+## [v2.18.0](https://github.com/harness/drone/tree/v2.18.0) (2023-07-04)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.17.0...v2.18.0)
+
+**Implemented enhancements:**
+
+- support custom pipeline message [\#3294](https://github.com/harness/drone/pull/3294) ([zc2638](https://github.com/zc2638))
+
+**Fixed bugs:**
+
+- bump drone-ui to 2.11.2 [\#3327](https://github.com/harness/drone/pull/3327) ([d1wilko](https://github.com/d1wilko))
+- Fix comment errors [\#3302](https://github.com/harness/drone/pull/3302) ([weidongkl](https://github.com/weidongkl))
+
 ## [v2.17.0](https://github.com/harness/drone/tree/v2.17.0) (2023-04-25)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.16.0...v2.17.0)
@@ -17,6 +30,7 @@
 
 **Merged pull requests:**
 
+- release prep for v2.17.0 [\#3316](https://github.com/harness/drone/pull/3316) ([eoinmcafee00](https://github.com/eoinmcafee00))
 - bump drone-ui to 2.11.1 [\#3315](https://github.com/harness/drone/pull/3315) ([d1wilko](https://github.com/d1wilko))
 - bump drone-ui to 2.11.0 [\#3313](https://github.com/harness/drone/pull/3313) ([d1wilko](https://github.com/d1wilko))
 - bump drone-ui to 2.10.0 [\#3311](https://github.com/harness/drone/pull/3311) ([d1wilko](https://github.com/d1wilko))
