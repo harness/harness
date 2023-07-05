@@ -20,7 +20,7 @@ interface LatestCommitProps extends Pick<GitInfoProps, 'repoMetadata'> {
 
 export function LatestCommitForFolder({ repoMetadata, latestCommit, standaloneStyle }: LatestCommitProps) {
   const { routes } = useAppContext()
-  const commitURL = routes.toCODECommits({
+  const commitURL = routes.toCODECommit({
     repoPath: repoMetadata.path as string,
     commitRef: latestCommit?.sha as string
   })
@@ -49,7 +49,7 @@ export function LatestCommitForFolder({ repoMetadata, latestCommit, standaloneSt
 
 export function LatestCommitForFile({ repoMetadata, latestCommit, standaloneStyle, size }: LatestCommitProps) {
   const { routes } = useAppContext()
-  const commitURL = routes.toCODECommits({
+  const commitURL = routes.toCODECommit({
     repoPath: repoMetadata.path as string,
     commitRef: latestCommit?.sha as string
   })

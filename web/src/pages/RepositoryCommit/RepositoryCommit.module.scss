@@ -1,0 +1,18 @@
+.main {
+  min-height: var(--page-min-height, 100%);
+  background-color: var(--primary-bg) !important;
+}
+
+.resourceContent {
+  background-color: var(--primary-bg);
+}
+
+.contentHeader {
+  > div {
+    align-items: center;
+  }
+}
+
+.changesContainer {
+  padding: 0 0 var(--spacing-xlarge) 0 !important;
+}

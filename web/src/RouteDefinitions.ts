@@ -36,6 +36,7 @@ export interface CODERoutes {
   toCODERepository: (args: RequiredField<Pick<CODEProps, 'repoPath' | 'gitRef' | 'resourcePath'>, 'repoPath'>) => string
   toCODEFileEdit: (args: Required<Pick<CODEProps, 'repoPath' | 'gitRef' | 'resourcePath'>>) => string
   toCODECommits: (args: Required<Pick<CODEProps, 'repoPath' | 'commitRef'>>) => string
+  toCODECommit: (args: Required<Pick<CODEProps, 'repoPath' | 'commitRef'>>) => string
   toCODEPullRequests: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEPullRequest: (
     args: RequiredField<
@@ -61,6 +62,7 @@ export const routes: CODERoutes = {
     `/${repoPath}/${gitRef ? '/' + gitRef : ''}${resourcePath ? '/~/' + resourcePath : ''}`,
   toCODEFileEdit: ({ repoPath, gitRef, resourcePath }) => `/${repoPath}/edit/${gitRef}/~/${resourcePath}`,
   toCODECommits: ({ repoPath, commitRef }) => `/${repoPath}/commits/${commitRef}`,
+  toCODECommit: ({ repoPath, commitRef }) => `/${repoPath}/commit/${commitRef}`,
   toCODEPullRequests: ({ repoPath }) => `/${repoPath}/pulls`,
   toCODEPullRequest: ({ repoPath, pullRequestId, pullRequestSection }) =>
     `/${repoPath}/pulls/${pullRequestId}${pullRequestSection ? '/' + pullRequestSection : ''}`,
