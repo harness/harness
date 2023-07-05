@@ -50,7 +50,7 @@ export function FolderContent({
                 className={css.rowText}
                 onClick={() => {
                   history.push(
-                    routes.toCODECommit({
+                    routes.toCODECommits({
                       repoPath: repoMetadata.path as string,
                       commitRef: row.original.latest_commit?.sha as string
                     })

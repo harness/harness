@@ -87,7 +87,7 @@ export function CommitsView({
           return (
             <CommitActions
               sha={row.original.sha as string}
-              href={routes.toCODECommit({
+              href={routes.toCODECommits({
                 repoPath: repoMetadata.path as string,
                 commitRef: row.original.sha as string
               })}

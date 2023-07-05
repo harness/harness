@@ -13,7 +13,7 @@ interface CodeCommentStatusSelectProps extends Pick<GitInfoProps, 'repoMetadata'
   commentItems: CommentItem<TypesPullReqActivity>[]
   onCommentUpdate: () => void
 
-  refetchActivities?: () => void
+  refetchActivities: () => void
 }
 
 export const CodeCommentStatusSelect: React.FC<CodeCommentStatusSelectProps> = ({
@@ -77,9 +77,7 @@ export const CodeCommentStatusSelect: React.FC<CodeCommentStatusSelectProps> = (
                 commentItems[0].payload.resolved = Date.now()
               }
             }
-            if (refetchActivities) {
-              refetchActivities()
-            }
+            refetchActivities()
           })
           .catch(_exception => {
             showError(getErrorMessage(_exception), 0, getString('pr.failedToUpdateCommentStatus'))
