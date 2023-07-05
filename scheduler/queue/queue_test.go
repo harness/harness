@@ -50,16 +50,15 @@ func TestQueueCancel(t *testing.T) {
 	controller := gomock.NewController(t)
 	defer controller.Finish()
 
-	ctx, cancel := context.WithCancel(context.Background())
 	store := mock.NewMockStageStore(controller)
-	store.EXPECT().ListIncomplete(ctx).Return(nil, nil)
+	store.EXPECT().ListIncomplete(gomock.Any()).Return(nil, nil)
 
 	q := newQueue(store)
-	q.ctx = ctx
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 
+	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		build, err := q.Request(ctx, core.Filter{OS: "linux/amd64", Arch: "amd64"})
 		if err != context.Canceled {
@@ -102,10 +101,7 @@ func TestQueuePush(t *testing.T) {
 	ctx := context.Background()
 	store := mock.NewMockStageStore(controller)
 
-	q := &queue{
-		store: store,
-		ready: make(chan struct{}, 1),
-	}
+	q := newQueue(store)
 	q.Schedule(ctx, item1)
 	q.Schedule(ctx, item2)
 	select {
@@ -354,5 +350,35 @@ func TestWithinLimits_Old(t *testing.T) {
 		if got, want := withinLimits(stage, stages), test.Want; got != want {
 			t.Errorf("Unexpected results at index %d", i)
 		}
+	}
+}
+
+func TestQueueContextCanceling(t *testing.T) {
+	listIncompleteResponse := []*core.Stage{
+		{ID: 1, OS: "linux/amd64", Arch: "amd64", Status: drone.StatusPending},
+	}
+
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	globCtx := context.Background()
+
+	mockStageStore := mock.NewMockStageStore(controller)
+	mockStageStore.EXPECT().ListIncomplete(globCtx).Return(listIncompleteResponse, nil).AnyTimes()
+
+	q := newQueue(mockStageStore)
+
+	for k := 0; k < 1000; k++ {
+		reqCtx, reqCanc := context.WithCancel(context.Background())
+		go reqCanc() // asynchronously cancel the context
+
+		stage, err := q.Request(reqCtx, core.Filter{OS: "linux/amd64", Arch: "amd64"})
+		if stage == nil && err == context.Canceled {
+			continue // we got the ctx canceled error
+		}
+		if stage == listIncompleteResponse[0] && err == nil {
+			continue // we got a stage before the context got canceled
+		}
+		t.Errorf("got neither the context canceled error nor the data: stage=%v err=%v", stage, err)
 	}
 }
