@@ -24,6 +24,8 @@ ifeq ($(BUILD_TAGS),)
 	BUILD_TAGS := sqlite
 endif
 
+BUILD_TAGS := $(BUILD_TAGS),gogit
+
 ###############################################################################
 #
 # Initialization
