@@ -96,7 +96,6 @@ func (q *queue) Request(ctx context.Context, params core.Filter) (*core.Stage, e
 		variant: params.Variant,
 		labels:  params.Labels,
 		channel: make(chan *core.Stage),
-		done:    ctx.Done(),
 	}
 	q.Lock()
 	q.workers[w] = struct{}{}
@@ -109,6 +108,9 @@ func (q *queue) Request(ctx context.Context, params core.Filter) (*core.Stage, e
 
 	select {
 	case <-ctx.Done():
+		q.Lock()
+		delete(q.workers, w)
+		q.Unlock()
 		return nil, ctx.Err()
 	case b := <-w.channel:
 		return b, nil
@@ -209,12 +211,9 @@ func (q *queue) signal(ctx context.Context) error {
 			// }
 			select {
 			case w.channel <- item:
-			case <-w.done:
-			case <-time.After(q.interval):
+				delete(q.workers, w)
+				break loop
 			}
-
-			delete(q.workers, w)
-			break loop
 		}
 	}
 	return nil
@@ -242,7 +241,6 @@ type worker struct {
 	variant string
 	labels  map[string]string
 	channel chan *core.Stage
-	done    <-chan struct{}
 }
 
 type counter struct {
