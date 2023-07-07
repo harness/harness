@@ -76,7 +76,7 @@ func (r *SharedRepo) Clone(ctx context.Context, branchName string) error {
 	}
 	gitRepo, err := git.OpenRepository(ctx, r.tmpPath)
 	if err != nil {
-		return err
+		return processGitErrorf(err, "failed to open repo")
 	}
 	r.repo = gitRepo
 	return nil
@@ -89,7 +89,7 @@ func (r *SharedRepo) Init(ctx context.Context) error {
 	}
 	gitRepo, err := git.OpenRepository(ctx, r.tmpPath)
 	if err != nil {
-		return err
+		return processGitErrorf(err, "failed to open repo")
 	}
 	r.repo = gitRepo
 	return nil

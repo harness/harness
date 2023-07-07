@@ -29,7 +29,7 @@ func (g Adapter) GetLatestCommit(ctx context.Context, repoPath string,
 
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return nil, err
+		return nil, processGiteaErrorf(err, "failed to open repository")
 	}
 	defer giteaRepo.Close()
 
@@ -148,7 +148,7 @@ func (g Adapter) ListCommitSHAs(
 ) ([]string, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return nil, err
+		return nil, processGiteaErrorf(err, "failed to open repository")
 	}
 	defer giteaRepo.Close()
 
@@ -165,7 +165,7 @@ func (g Adapter) ListCommits(ctx context.Context,
 ) ([]types.Commit, []types.PathRenameDetails, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, processGiteaErrorf(err, "failed to open repository")
 	}
 	defer giteaRepo.Close()
 
@@ -297,7 +297,7 @@ func getFileChangeTypeFromLog(changeStrings []string, filePath string) (*string,
 func (g Adapter) GetCommit(ctx context.Context, repoPath string, ref string) (*types.Commit, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return nil, err
+		return nil, processGiteaErrorf(err, "failed to open repository")
 	}
 	defer giteaRepo.Close()
 
@@ -318,7 +318,7 @@ func (g Adapter) GetFullCommitID(ctx context.Context, repoPath, shortID string) 
 func (g Adapter) GetCommits(ctx context.Context, repoPath string, refs []string) ([]types.Commit, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return nil, err
+		return nil, processGiteaErrorf(err, "failed to open repository")
 	}
 	defer giteaRepo.Close()
 

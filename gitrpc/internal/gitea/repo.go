@@ -29,7 +29,7 @@ func (g Adapter) SetDefaultBranch(ctx context.Context, repoPath string,
 	defaultBranch string, allowEmpty bool) error {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return err
+		return processGiteaErrorf(err, "failed to open repository")
 	}
 	defer giteaRepo.Close()
 
