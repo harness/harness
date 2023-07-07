@@ -432,3 +432,4 @@ add: Add +
 users: Users
 findAUser: Find a user
 reviewerNotFound: 'Reviewer <strong>{{reviewer}}</strong> not found.'
+copyBranch: Copy Branch Name

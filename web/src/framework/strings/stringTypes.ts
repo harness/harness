@@ -72,6 +72,7 @@ export interface StringsMap {
   contents: string
   conversation: string
   copy: string
+  copyBranch: string
   copyCommitSHA: string
   create: string
   createABranch: string
