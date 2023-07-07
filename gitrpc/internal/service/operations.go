@@ -91,7 +91,7 @@ func (s *CommitFilesService) CommitFiles(stream rpc.CommitFilesService_CommitFil
 	// TODO: why are we using the giteat operations here?
 	repo, err := git.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return err
+		return processGitErrorf(err, "failed to open repo")
 	}
 
 	// check if repo is empty

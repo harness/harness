@@ -18,7 +18,7 @@ func (g Adapter) GetBranch(ctx context.Context, repoPath string,
 	branchName string) (*types.Branch, error) {
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return nil, err
+		return nil, processGiteaErrorf(err, "failed to open repository")
 	}
 	defer giteaRepo.Close()
 

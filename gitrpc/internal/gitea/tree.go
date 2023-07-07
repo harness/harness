@@ -30,7 +30,7 @@ func (g Adapter) GetTreeNode(ctx context.Context, repoPath string,
 
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return nil, err
+		return nil, processGiteaErrorf(err, "failed to open repository")
 	}
 	defer giteaRepo.Close()
 
@@ -80,7 +80,7 @@ func (g Adapter) ListTreeNodes(ctx context.Context, repoPath string,
 
 	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
 	if err != nil {
-		return nil, err
+		return nil, processGiteaErrorf(err, "failed to open repository")
 	}
 	defer giteaRepo.Close()
 
