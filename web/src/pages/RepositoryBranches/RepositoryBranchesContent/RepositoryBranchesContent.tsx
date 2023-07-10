@@ -44,7 +44,9 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
   })
 
   useEffect(() => {
-    updateQueryParams({ page: page.toString() })
+    if (page > 1) {
+      updateQueryParams({ page: page.toString() })
+    }
   }, [setPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useShowRequestError(error)
