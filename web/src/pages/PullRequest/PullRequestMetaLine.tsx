@@ -9,9 +9,8 @@ import type { TypesPullReq } from 'services/code'
 import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequestStateLabel'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { GitRefLink } from 'components/GitRefLink/GitRefLink'
-import css from './PullRequestMetaLine.module.scss'
-import BranchCopyButton from 'components/BranchCopyButton/BranchCopyButton'
 import { CopyButton } from 'components/CopyButton/CopyButton'
+import css from './PullRequestMetaLine.module.scss'
 
 export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 'repoMetadata'>> = ({
   repoMetadata,
