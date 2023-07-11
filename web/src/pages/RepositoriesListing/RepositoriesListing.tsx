@@ -59,7 +59,9 @@ export default function RepositoriesListing() {
 
   useEffect(() => {
     setSearchTerm(undefined)
-    updateQueryParams({ page: page.toString() })
+    if (page > 1) {
+      updateQueryParams({ page: page.toString() })
+    }
   }, [space, setPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const columns: Column<TypesRepository>[] = useMemo(

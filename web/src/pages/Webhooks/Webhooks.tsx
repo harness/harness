@@ -69,7 +69,9 @@ export default function Webhooks() {
     lazy: !repoMetadata
   })
   useEffect(() => {
-    updateQueryParams({ page: page.toString() })
+    if (page > 1) {
+      updateQueryParams({ page: page.toString() })
+    }
   }, [setPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const columns: Column<OpenapiWebhookType>[] = useMemo(
