@@ -10,9 +10,12 @@ import (
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
-
 	"github.com/swaggest/openapi-go/openapi3"
 )
+
+type createTokenRequest struct {
+	user.CreateTokenInput
+}
 
 // helper function that constructs the openapi specification
 // for user account resources.
@@ -36,8 +39,7 @@ func buildUser(reflector *openapi3.Reflector) {
 	opToken := openapi3.Operation{}
 	opToken.WithTags("user")
 	opToken.WithMapOfAnything(map[string]interface{}{"operationId": "createToken"})
-	_ = reflector.SetRequest(&opToken, new(types.TokenResponse), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opToken, new(types.User), http.StatusCreated)
+	_ = reflector.SetRequest(&opToken, new(createTokenRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opToken, new(types.TokenResponse), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opToken, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.Spec.AddOperation(http.MethodPost, "/user/token", opToken)
 }

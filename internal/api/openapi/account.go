@@ -21,8 +21,10 @@ type loginRequest struct {
 
 // request to register an account.
 type registerRequest struct {
-	Username string `formData:"username"`
-	Password string `formData:"password"`
+	Email       string `formData:"email"`
+	DisplayName string `formData:"displayname"`
+	Username    string `formData:"username"`
+	Password    string `formData:"password"`
 }
 
 // helper function that constructs the openapi specification

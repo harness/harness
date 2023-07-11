@@ -64,7 +64,7 @@ func ParsePrincipalTypes(r *http.Request) []enum.PrincipalType {
 	return res
 }
 
-// ParseRepoFilter extracts the principal filter from the url.
+// ParsePrincipalFilter extracts the principal filter from the url.
 func ParsePrincipalFilter(r *http.Request) *types.PrincipalFilter {
 	return &types.PrincipalFilter{
 		Query: ParseQuery(r),
