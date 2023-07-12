@@ -14,6 +14,7 @@ import (
 
 const (
 	PathParamRepoRef = "repo_ref"
+	QueryParamRepoID = "repo_id"
 )
 
 func GetRepoRefFromPath(r *http.Request) (string, error) {
@@ -24,6 +25,11 @@ func GetRepoRefFromPath(r *http.Request) (string, error) {
 
 	// paths are unescaped
 	return url.PathUnescape(rawRef)
+}
+
+// GetRepoIDFromQuery returns the repo id from the request query.
+func GetRepoIDFromQuery(r *http.Request) (int64, error) {
+	return QueryParamAsPositiveInt64(r, QueryParamRepoID)
 }
 
 // ParseSortRepo extracts the repo sort parameter from the url.

@@ -12,17 +12,26 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
+)
 
-	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/version"
+const (
+	// HTTPRequestPathPreReceive is the subpath under the provided base url the client uses to call pre-receive.
+	HTTPRequestPathPreReceive = "pre-receive"
+
+	// HTTPRequestPathPostReceive is the subpath under the provided base url the client uses to call post-receive.
+	HTTPRequestPathPostReceive = "post-receive"
+
+	// HTTPRequestPathUpdate is the subpath under the provided base url the client uses to call update.
+	HTTPRequestPathUpdate = "update"
 )
 
 var (
 	ErrNotFound = fmt.Errorf("not found")
 )
 
-// client is the client used to call the githooks api of gitness api server.
-type client struct {
+// Client is the Client used to call the githooks api of gitness api server.
+type Client struct {
 	httpClient *http.Client
 
 	// baseURL is the base url of the gitness api server.
@@ -33,27 +42,35 @@ type client struct {
 	requestPreparation func(*http.Request) *http.Request
 }
 
+func NewClient(httpClient *http.Client, baseURL string, requestPreparation func(*http.Request) *http.Request) *Client {
+	return &Client{
+		httpClient:         httpClient,
+		baseURL:            strings.TrimRight(baseURL, "/"),
+		requestPreparation: requestPreparation,
+	}
+}
+
 // PreReceive calls the pre-receive githook api of the gitness api server.
-func (c *client) PreReceive(ctx context.Context,
-	in *types.PreReceiveInput) (*types.ServerHookOutput, error) {
-	return c.githook(ctx, "pre-receive", in)
+func (c *Client) PreReceive(ctx context.Context,
+	in *PreReceiveInput) (*Output, error) {
+	return c.githook(ctx, HTTPRequestPathPreReceive, in)
 }
 
 // Update calls the update githook api of the gitness api server.
-func (c *client) Update(ctx context.Context,
-	in *types.UpdateInput) (*types.ServerHookOutput, error) {
-	return c.githook(ctx, "update", in)
+func (c *Client) Update(ctx context.Context,
+	in *UpdateInput) (*Output, error) {
+	return c.githook(ctx, HTTPRequestPathUpdate, in)
 }
 
 // PostReceive calls the post-receive githook api of the gitness api server.
-func (c *client) PostReceive(ctx context.Context,
-	in *types.PostReceiveInput) (*types.ServerHookOutput, error) {
-	return c.githook(ctx, "post-receive", in)
+func (c *Client) PostReceive(ctx context.Context,
+	in *PostReceiveInput) (*Output, error) {
+	return c.githook(ctx, HTTPRequestPathPostReceive, in)
 }
 
 // githook executes the requested githook type using the provided input.
-func (c *client) githook(ctx context.Context, githookType string, in interface{}) (*types.ServerHookOutput, error) {
-	uri := fmt.Sprintf("%s/v1/internal/git-hooks/%s", c.baseURL, githookType)
+func (c *Client) githook(ctx context.Context, githookType string, in interface{}) (*Output, error) {
+	uri := c.baseURL + "/" + githookType
 	bodyBytes, err := json.Marshal(in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize input: %w", err)
@@ -64,7 +81,6 @@ func (c *client) githook(ctx context.Context, githookType string, in interface{}
 		return nil, fmt.Errorf("failed to create new http request: %w", err)
 	}
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("User-Agent", fmt.Sprintf("Gitness/%s", version.Version)) //TODO: change once it's separate CLI.
 
 	// prepare request if configured
 	if c.requestPreparation != nil {
@@ -84,7 +100,7 @@ func (c *client) githook(ctx context.Context, githookType string, in interface{}
 		return nil, fmt.Errorf("request execution failed: %w", err)
 	}
 
-	return unmarshalResponse[types.ServerHookOutput](resp)
+	return unmarshalResponse[Output](resp)
 }
 
 // unmarshalResponse reads the response body and if there are no errors marshall's it into

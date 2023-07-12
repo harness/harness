@@ -8,26 +8,38 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/controller/githook"
+	"github.com/harness/gitness/githook"
+	controllergithook "github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/types"
 )
 
 // HandlePostReceive returns a handler function that handles post-receive git hooks.
-func HandlePostReceive(githookCtrl *githook.Controller) http.HandlerFunc {
+func HandlePostReceive(githookCtrl *controllergithook.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		in := new(types.PostReceiveInput)
-		err := json.NewDecoder(r.Body).Decode(in)
+		repoID, err := request.GetRepoIDFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		principalID, err := request.GetPrincipalIDFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		in := new(githook.PostReceiveInput)
+		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid Request Body: %s.", err)
 			return
 		}
 
-		out, err := githookCtrl.PostReceive(ctx, session, in)
+		out, err := githookCtrl.PostReceive(ctx, session, repoID, principalID, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harness/gitness/githook"
 	"github.com/harness/gitness/internal/api/controller/check"
-	"github.com/harness/gitness/internal/api/controller/githook"
+	controllergithook "github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -63,7 +64,7 @@ func NewAPIHandler(
 	spaceCtrl *space.Controller,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
-	githookCtrl *githook.Controller,
+	githookCtrl *controllergithook.Controller,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
 	principalCtrl principal.Controller,
@@ -115,7 +116,7 @@ func setupRoutesV1(r chi.Router,
 	spaceCtrl *space.Controller,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
-	githookCtrl *githook.Controller,
+	githookCtrl *controllergithook.Controller,
 	saCtrl *serviceaccount.Controller,
 	userCtrl *user.Controller,
 	principalCtrl principal.Controller,
@@ -257,17 +258,17 @@ func setupRepos(r chi.Router,
 	})
 }
 
-func setupInternal(r chi.Router, githookCtrl *githook.Controller) {
+func setupInternal(r chi.Router, githookCtrl *controllergithook.Controller) {
 	r.Route("/internal", func(r chi.Router) {
 		SetupGitHooks(r, githookCtrl)
 	})
 }
 
-func SetupGitHooks(r chi.Router, githookCtrl *githook.Controller) {
+func SetupGitHooks(r chi.Router, githookCtrl *controllergithook.Controller) {
 	r.Route("/git-hooks", func(r chi.Router) {
-		r.Post("/pre-receive", handlergithook.HandlePreReceive(githookCtrl))
-		r.Post("/update", handlergithook.HandleUpdate(githookCtrl))
-		r.Post("/post-receive", handlergithook.HandlePostReceive(githookCtrl))
+		r.Post("/"+githook.HTTPRequestPathPreReceive, handlergithook.HandlePreReceive(githookCtrl))
+		r.Post("/"+githook.HTTPRequestPathUpdate, handlergithook.HandleUpdate(githookCtrl))
+		r.Post("/"+githook.HTTPRequestPathPostReceive, handlergithook.HandlePostReceive(githookCtrl))
 	})
 }
 

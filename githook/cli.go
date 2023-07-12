@@ -9,7 +9,6 @@ import (
 	"errors"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -33,11 +32,6 @@ const (
 	CommandNamePostReceive = "hooks/post-receive"
 )
 
-var (
-	// ExecutionTimeout is the timeout used for githook CLI runs.
-	ExecutionTimeout = 3 * time.Minute
-)
-
 // SanitizeArgsForGit sanitizes the command line arguments (os.Args) if the command indicates they are coming from git.
 // Returns the santized args and true if the call comes from git, otherwise the original args are returned with false.
 func SanitizeArgsForGit(command string, args []string) ([]string, bool) {
@@ -59,24 +53,38 @@ type KingpinRegister interface {
 	Command(name, help string) *kingpin.CmdClause
 }
 
+var (
+	// ErrDisabled can be returned by the loading function to indicate the githook has been disabled.
+	// Returning the error will cause the githook execution to be skipped (githook is noop and returns success).
+	ErrDisabled = errors.New("githook disabled")
+)
+
+// LoadCLICoreFunc is a function that creates a new CLI core that's used for githook cli execution.
+// This allows users to initialize their own CLI core with custom Client and configuration.
+type LoadCLICoreFunc func() (*CLICore, error)
+
 // RegisterAll registers all githook commands.
-func RegisterAll(cmd KingpinRegister) {
-	RegisterPreReceive(cmd)
-	RegisterUpdate(cmd)
-	RegisterPostReceive(cmd)
+func RegisterAll(cmd KingpinRegister, loadCoreFn LoadCLICoreFunc) {
+	RegisterPreReceive(cmd, loadCoreFn)
+	RegisterUpdate(cmd, loadCoreFn)
+	RegisterPostReceive(cmd, loadCoreFn)
 }
 
 // RegisterPreReceive registers the pre-receive githook command.
-func RegisterPreReceive(cmd KingpinRegister) {
-	c := &preReceiveCommand{}
+func RegisterPreReceive(cmd KingpinRegister, loadCoreFn LoadCLICoreFunc) {
+	c := &preReceiveCommand{
+		loadCoreFn: loadCoreFn,
+	}
 
 	cmd.Command(ParamPreReceive, "hook that is executed before any reference of the push is updated").
 		Action(c.run)
 }
 
 // RegisterUpdate registers the update githook command.
-func RegisterUpdate(cmd KingpinRegister) {
-	c := &updateCommand{}
+func RegisterUpdate(cmd KingpinRegister, loadCoreFn LoadCLICoreFunc) {
+	c := &updateCommand{
+		loadCoreFn: loadCoreFn,
+	}
 
 	subCmd := cmd.Command(ParamUpdate, "hook that is executed before the specific reference gets updated").
 		Action(c.run)
@@ -95,56 +103,64 @@ func RegisterUpdate(cmd KingpinRegister) {
 }
 
 // RegisterPostReceive registers the post-receive githook command.
-func RegisterPostReceive(cmd KingpinRegister) {
-	c := &postReceiveCommand{}
+func RegisterPostReceive(cmd KingpinRegister, loadCoreFn LoadCLICoreFunc) {
+	c := &postReceiveCommand{
+		loadCoreFn: loadCoreFn,
+	}
 
 	cmd.Command(ParamPostReceive, "hook that is executed after all references of the push got updated").
 		Action(c.run)
 }
 
-type preReceiveCommand struct{}
+type preReceiveCommand struct {
+	loadCoreFn LoadCLICoreFunc
+}
 
 func (c *preReceiveCommand) run(*kingpin.ParseContext) error {
-	return run(func(ctx context.Context, hook *GitHook) error {
-		return hook.PreReceive(ctx)
+	return run(c.loadCoreFn, func(ctx context.Context, core *CLICore) error {
+		return core.PreReceive(ctx)
 	})
 }
 
 type updateCommand struct {
+	loadCoreFn LoadCLICoreFunc
+
 	ref    string
 	oldSHA string
 	newSHA string
 }
 
 func (c *updateCommand) run(*kingpin.ParseContext) error {
-	return run(func(ctx context.Context, hook *GitHook) error {
-		return hook.Update(ctx, c.ref, c.oldSHA, c.newSHA)
+	return run(c.loadCoreFn, func(ctx context.Context, core *CLICore) error {
+		return core.Update(ctx, c.ref, c.oldSHA, c.newSHA)
 	})
 }
 
-type postReceiveCommand struct{}
+type postReceiveCommand struct {
+	loadCoreFn LoadCLICoreFunc
+}
 
 func (c *postReceiveCommand) run(*kingpin.ParseContext) error {
-	return run(func(ctx context.Context, hook *GitHook) error {
-		return hook.PostReceive(ctx)
+	return run(c.loadCoreFn, func(ctx context.Context, core *CLICore) error {
+		return core.PostReceive(ctx)
 	})
 }
 
-func run(fn func(ctx context.Context, hook *GitHook) error) error {
-	// load hook here (as it loads environment variables, has to be done at time of execution, not register)
-	hook, err := NewFromEnvironment()
+func run(loadCoreFn LoadCLICoreFunc, fn func(ctx context.Context, core *CLICore) error) error {
+	core, err := loadCoreFn()
+	if errors.Is(err, ErrDisabled) {
+		// complete operation successfully without making any calls to the server.
+		return nil
+	}
 	if err != nil {
-		if errors.Is(err, ErrHookDisabled) {
-			return nil
-		}
 		return err
 	}
 
 	// Create context that listens for the interrupt signal from the OS and has a timeout.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	ctx, cancel := context.WithTimeout(ctx, ExecutionTimeout)
+	ctx, cancel := context.WithTimeout(ctx, core.executionTimeout)
 	defer cancel()
 
-	return fn(ctx, hook)
+	return fn(ctx, core)
 }

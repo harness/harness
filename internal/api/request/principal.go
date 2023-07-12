@@ -15,10 +15,17 @@ const (
 	PathParamPrincipalUID      = "principal_uid"
 	PathParamUserUID           = "user_uid"
 	PathParamServiceAccountUID = "sa_uid"
+
+	QueryParamPrincipalID = "principal_id"
 )
 
 func GetPrincipalUIDFromPath(r *http.Request) (string, error) {
 	return PathParamOrError(r, PathParamPrincipalUID)
+}
+
+// GetPrincipalIDFromQuery returns the principal id from the request query.
+func GetPrincipalIDFromQuery(r *http.Request) (int64, error) {
+	return QueryParamAsPositiveInt64(r, QueryParamPrincipalID)
 }
 
 func GetUserUIDFromPath(r *http.Request) (string, error) {

@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
-	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/githook"
@@ -19,7 +18,6 @@ import (
 	"github.com/harness/gitness/types/check"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/rs/zerolog/log"
 )
 
 type Controller struct {
@@ -65,19 +63,14 @@ func NewController(
 // IMPORTANT: session & repo are assumed to be not nil!
 func CreateRPCWriteParams(ctx context.Context, urlProvider *url.Provider,
 	session *auth.Session, repo *types.Repository) (gitrpc.WriteParams, error) {
-	requestID, ok := request.RequestIDFrom(ctx)
-	if !ok {
-		// best effort retrieving of requestID - log in case we can't find it but don't fail operation.
-		log.Ctx(ctx).Warn().Msg("operation doesn't have a requestID in the context.")
-	}
-
 	// generate envars (add everything githook CLI needs for execution)
-	envVars, err := githook.GenerateEnvironmentVariables(&githook.Payload{
-		APIBaseURL:  urlProvider.GetAPIBaseURLInternal(),
-		RepoID:      repo.ID,
-		PrincipalID: session.Principal.ID,
-		RequestID:   requestID,
-	})
+	envVars, err := githook.GenerateEnvironmentVariables(
+		ctx,
+		urlProvider.GetAPIBaseURLInternal(),
+		repo.ID,
+		session.Principal.ID,
+		false,
+	)
 	if err != nil {
 		return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
 	}

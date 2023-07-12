@@ -5,7 +5,8 @@
 package hooks
 
 import (
-	"github.com/harness/gitness/internal/githook"
+	"github.com/harness/gitness/githook"
+	gitnessgithook "github.com/harness/gitness/internal/githook"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -17,5 +18,5 @@ const (
 
 func Register(app *kingpin.Application) {
 	subCmd := app.Command(ParamHooks, "manage git server hooks")
-	githook.RegisterAll(subCmd)
+	githook.RegisterAll(subCmd, gitnessgithook.LoadFromEnvironment)
 }

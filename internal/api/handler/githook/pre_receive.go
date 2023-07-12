@@ -8,26 +8,38 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/controller/githook"
+	"github.com/harness/gitness/githook"
+	controllergithook "github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/types"
 )
 
 // HandlePreReceive returns a handler function that handles pre-receive git hooks.
-func HandlePreReceive(githookCtrl *githook.Controller) http.HandlerFunc {
+func HandlePreReceive(githookCtrl *controllergithook.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		in := new(types.PreReceiveInput)
-		err := json.NewDecoder(r.Body).Decode(in)
+		repoID, err := request.GetRepoIDFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		principalID, err := request.GetPrincipalIDFromQuery(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		in := new(githook.PreReceiveInput)
+		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid Request Body: %s.", err)
 			return
 		}
 
-		out, err := githookCtrl.PreReceive(ctx, session, in)
+		out, err := githookCtrl.PreReceive(ctx, session, repoID, principalID, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

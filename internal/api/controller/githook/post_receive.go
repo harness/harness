@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/harness/gitness/githook"
 	"github.com/harness/gitness/internal/auth"
 	events "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/types"
@@ -26,36 +27,47 @@ const (
 func (c *Controller) PostReceive(
 	ctx context.Context,
 	session *auth.Session,
-	in *types.PostReceiveInput,
-) (*types.ServerHookOutput, error) {
+	repoID int64,
+	principalID int64,
+	in *githook.PostReceiveInput,
+) (*githook.Output, error) {
 	if in == nil {
 		return nil, fmt.Errorf("input is nil")
 	}
 
 	// report ref events (best effort)
-	c.reportReferenceEvents(ctx, in)
+	c.reportReferenceEvents(ctx, repoID, principalID, in)
 
-	return &types.ServerHookOutput{}, nil
+	return &githook.Output{}, nil
 }
 
 // reportReferenceEvents is reporting reference events to the event system.
 // NOTE: keep best effort for now as it doesn't change the outcome of the git operation.
 // TODO: in the future we might want to think about propagating errors so user is aware of events not being triggered.
-func (c *Controller) reportReferenceEvents(ctx context.Context, in *types.PostReceiveInput) {
+func (c *Controller) reportReferenceEvents(
+	ctx context.Context,
+	repoID int64,
+	principalID int64,
+	in *githook.PostReceiveInput,
+) {
 	for _, refUpdate := range in.RefUpdates {
 		switch {
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixBranch):
-			c.reportBranchEvent(ctx, in.PrincipalID, in.RepoID, refUpdate)
+			c.reportBranchEvent(ctx, repoID, principalID, refUpdate)
 		case strings.HasPrefix(refUpdate.Ref, gitReferenceNamePrefixTag):
-			c.reportTagEvent(ctx, in.PrincipalID, in.RepoID, refUpdate)
+			c.reportTagEvent(ctx, repoID, principalID, refUpdate)
 		default:
 			// Ignore any other references in post-receive
 		}
 	}
 }
 
-func (c *Controller) reportBranchEvent(ctx context.Context,
-	principalID int64, repoID int64, branchUpdate types.ReferenceUpdate) {
+func (c *Controller) reportBranchEvent(
+	ctx context.Context,
+	repoID int64,
+	principalID int64,
+	branchUpdate githook.ReferenceUpdate,
+) {
 	switch {
 	case branchUpdate.Old == types.NilSHA:
 		c.gitReporter.BranchCreated(ctx, &events.BranchCreatedPayload{
@@ -83,8 +95,12 @@ func (c *Controller) reportBranchEvent(ctx context.Context,
 	}
 }
 
-func (c *Controller) reportTagEvent(ctx context.Context,
-	principalID int64, repoID int64, tagUpdate types.ReferenceUpdate) {
+func (c *Controller) reportTagEvent(
+	ctx context.Context,
+	repoID int64,
+	principalID int64,
+	tagUpdate githook.ReferenceUpdate,
+) {
 	switch {
 	case tagUpdate.Old == types.NilSHA:
 		c.gitReporter.TagCreated(ctx, &events.TagCreatedPayload{

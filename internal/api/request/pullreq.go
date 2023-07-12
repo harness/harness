@@ -55,7 +55,7 @@ func parsePullReqStates(r *http.Request) []enum.PullReqState {
 
 // ParsePullReqFilter extracts the pull request query parameter from the url.
 func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
-	createdBy, err := QueryParamAsID(r, QueryParamCreatedBy)
+	createdBy, err := QueryParamAsPositiveInt64(r, QueryParamCreatedBy)
 	if err != nil {
 		return nil, err
 	}

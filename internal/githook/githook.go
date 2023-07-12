@@ -5,154 +5,95 @@
 package githook
 
 import (
-	"bufio"
 	"context"
-	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
 	"strings"
+	"time"
 
+	"github.com/harness/gitness/githook"
+	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/version"
+
+	"github.com/rs/zerolog/log"
 )
 
-// GitHook represents the githook implementation.
-type GitHook struct {
-	payload *Payload
-	client  *client
-}
+var (
+	// ExecutionTimeout is the timeout used for githook CLI runs.
+	ExecutionTimeout = 3 * time.Minute
+)
 
-// NewFromEnvironment creates a new githook app from environment variables for githook execution.
-func NewFromEnvironment() (*GitHook, error) {
-	payload, err := loadPayloadFromEnvironment()
-	if err != nil {
-		return nil, fmt.Errorf("failed to load payload: %w", err)
+// GenerateEnvironmentVariables generates the required environment variables for a payload
+// constructed from the provided parameters.
+func GenerateEnvironmentVariables(
+	ctx context.Context,
+	apiBaseURL string,
+	repoID int64,
+	principalID int64,
+	disabled bool,
+) (map[string]string, error) {
+	// best effort retrieving of requestID - log in case we can't find it but don't fail operation.
+	requestID, ok := request.RequestIDFrom(ctx)
+	if !ok {
+		log.Ctx(ctx).Warn().Msg("operation doesn't have a requestID in the context - generate githook payload without")
 	}
 
-	return &GitHook{
-		payload: payload,
-		client: &client{
-			httpClient: http.DefaultClient,
-			baseURL:    payload.APIBaseURL,
-			requestPreparation: func(r *http.Request) *http.Request {
-				// TODO: reference single constant (together with gitness middleware)
-				r.Header.Add("X-Request-Id", payload.RequestID)
+	// generate githook base url
+	baseURL := strings.TrimLeft(apiBaseURL, "/") + "/v1/internal/git-hooks"
+
+	payload := &types.GithookPayload{
+		BaseURL:     baseURL,
+		RepoID:      repoID,
+		PrincipalID: principalID,
+		RequestID:   requestID,
+		Disabled:    disabled,
+	}
+
+	if err := payload.Validate(); err != nil {
+		return nil, fmt.Errorf("generated payload is invalid: %w", err)
+	}
+
+	return githook.GenerateEnvironmentVariables(payload)
+}
+
+// LoadFromEnvironment returns a new githook.CLICore created by loading the payload from the environment variable.
+func LoadFromEnvironment() (*githook.CLICore, error) {
+	payload, err := githook.LoadPayloadFromEnvironment[*types.GithookPayload]()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load payload from environment: %w", err)
+	}
+
+	// ensure we return disabled error in case it's explicitly disabled (will result in no-op)
+	if payload.Disabled {
+		return nil, githook.ErrDisabled
+	}
+
+	if err := payload.Validate(); err != nil {
+		return nil, fmt.Errorf("payload validation failed: %w", err)
+	}
+
+	return githook.NewCLICore(
+		githook.NewClient(
+			http.DefaultClient,
+			payload.BaseURL,
+			func(r *http.Request) *http.Request {
+				// add query params
+				query := r.URL.Query()
+				query.Add(request.QueryParamRepoID, fmt.Sprint(payload.RepoID))
+				query.Add(request.QueryParamPrincipalID, fmt.Sprint(payload.PrincipalID))
+
+				r.URL.RawQuery = query.Encode()
+
+				// add headers
+				if len(payload.RequestID) > 0 {
+					r.Header.Add(request.HeaderRequestID, payload.RequestID)
+				}
+				r.Header.Add(request.HeaderUserAgent, fmt.Sprintf("Gitness/%s", version.Version))
+
 				return r
 			},
-		},
-	}, nil
-}
-
-// PreReceive executes the pre-receive git hook.
-func (c *GitHook) PreReceive(ctx context.Context) error {
-	refUpdates, err := getUpdatedReferencesFromStdIn()
-	if err != nil {
-		return fmt.Errorf("failed to read updated references from std in: %w", err)
-	}
-
-	in := &types.PreReceiveInput{
-		BaseInput: types.BaseInput{
-			RepoID:      c.payload.RepoID,
-			PrincipalID: c.payload.PrincipalID,
-		},
-		RefUpdates: refUpdates,
-	}
-
-	out, err := c.client.PreReceive(ctx, in)
-
-	return handleServerHookOutput(out, err)
-}
-
-// Update executes the update git hook.
-func (c *GitHook) Update(ctx context.Context, ref string, oldSHA string, newSHA string) error {
-	in := &types.UpdateInput{
-		BaseInput: types.BaseInput{
-			RepoID:      c.payload.RepoID,
-			PrincipalID: c.payload.PrincipalID,
-		},
-		RefUpdate: types.ReferenceUpdate{
-			Ref: ref,
-			Old: oldSHA,
-			New: newSHA,
-		},
-	}
-
-	out, err := c.client.Update(ctx, in)
-
-	return handleServerHookOutput(out, err)
-}
-
-// PostReceive executes the post-receive git hook.
-func (c *GitHook) PostReceive(ctx context.Context) error {
-	refUpdates, err := getUpdatedReferencesFromStdIn()
-	if err != nil {
-		return fmt.Errorf("failed to read updated references from std in: %w", err)
-	}
-
-	in := &types.PostReceiveInput{
-		BaseInput: types.BaseInput{
-			RepoID:      c.payload.RepoID,
-			PrincipalID: c.payload.PrincipalID,
-		},
-		RefUpdates: refUpdates,
-	}
-
-	out, err := c.client.PostReceive(ctx, in)
-
-	return handleServerHookOutput(out, err)
-}
-
-func handleServerHookOutput(out *types.ServerHookOutput, err error) error {
-	if err != nil {
-		return fmt.Errorf("an error occurred when calling the server: %w", err)
-	}
-
-	if out == nil {
-		return errors.New("the server returned an empty output")
-	}
-
-	if out.Error != nil {
-		return errors.New(*out.Error)
-	}
-
-	return nil
-}
-
-// getUpdatedReferencesFromStdIn reads the updated references provided by git from stdin.
-// The expected format is "<old-value> SP <new-value> SP <ref-name> LF"
-// For more details see https://git-scm.com/docs/githooks#pre-receive
-func getUpdatedReferencesFromStdIn() ([]types.ReferenceUpdate, error) {
-	reader := bufio.NewReader(os.Stdin)
-	updatedRefs := []types.ReferenceUpdate{}
-	for {
-		line, err := reader.ReadString('\n')
-		// if end of file is reached, break the loop
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			fmt.Printf("Error when reading from standard input - %s\n", err) //nolint:forbidigo // executes as cli.
-			return nil, err
-		}
-
-		if len(line) == 0 {
-			return nil, errors.New("ref data from stdin contains empty line - not expected")
-		}
-
-		// splitting line of expected form "<old-value> SP <new-value> SP <ref-name> LF"
-		splitGitHookData := strings.Split(line[:len(line)-1], " ")
-		if len(splitGitHookData) != 3 {
-			return nil, fmt.Errorf("received invalid data format or didn't receive enough parameters - %v",
-				splitGitHookData)
-		}
-
-		updatedRefs = append(updatedRefs, types.ReferenceUpdate{
-			Old: splitGitHookData[0],
-			New: splitGitHookData[1],
-			Ref: splitGitHookData[2],
-		})
-	}
-
-	return updatedRefs, nil
+		),
+		ExecutionTimeout,
+	), nil
 }

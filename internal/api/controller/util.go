@@ -9,13 +9,10 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
-	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/githook"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
-
-	"github.com/rs/zerolog/log"
 )
 
 // TODO: this file should be in gitrpc package and should accept
@@ -27,19 +24,14 @@ import (
 // function will be best fit.
 func CreateRPCWriteParams(ctx context.Context, urlProvider *url.Provider,
 	session *auth.Session, repo *types.Repository) (gitrpc.WriteParams, error) {
-	requestID, ok := request.RequestIDFrom(ctx)
-	if !ok {
-		// best effort retrieving of requestID - log in case we can't find it but don't fail operation.
-		log.Ctx(ctx).Warn().Msg("operation doesn't have a requestID in the context.")
-	}
-
 	// generate envars (add everything githook CLI needs for execution)
-	envVars, err := githook.GenerateEnvironmentVariables(&githook.Payload{
-		APIBaseURL:  urlProvider.GetAPIBaseURLInternal(),
-		RepoID:      repo.ID,
-		PrincipalID: session.Principal.ID,
-		RequestID:   requestID,
-	})
+	envVars, err := githook.GenerateEnvironmentVariables(
+		ctx,
+		urlProvider.GetAPIBaseURLInternal(),
+		repo.ID,
+		session.Principal.ID,
+		false,
+	)
 	if err != nil {
 		return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
 	}

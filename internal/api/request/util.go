@@ -91,9 +91,9 @@ func QueryParamAsID(r *http.Request, paramName string) (int64, error) {
 
 // QueryParamAsPositiveInt64 extracts an integer parameter from the request query.
 func QueryParamAsPositiveInt64(r *http.Request, paramName string) (int64, error) {
-	value, ok := QueryParam(r, paramName)
-	if !ok {
-		return 0, nil
+	value, err := QueryParamOrError(r, paramName)
+	if err != nil {
+		return 0, err
 	}
 
 	valueInt, err := strconv.ParseInt(value, 10, 64)

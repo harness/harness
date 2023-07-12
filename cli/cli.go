@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/harness/gitness/cli/operations/hooks"
-	"github.com/harness/gitness/internal/githook"
+	"github.com/harness/gitness/githook"
 )
 
 func GetArguments() []string {

@@ -201,10 +201,13 @@ func (c *Controller) createGitRPCRepository(ctx context.Context, session *auth.S
 	}
 
 	// generate envars (add everything githook CLI needs for execution)
-	envVars, err := githook.GenerateEnvironmentVariables(&githook.Payload{
-		APIBaseURL: c.urlProvider.GetAPIBaseURLInternal(),
-		Disabled:   true,
-	})
+	envVars, err := githook.GenerateEnvironmentVariables(
+		ctx,
+		c.urlProvider.GetAPIBaseURLInternal(),
+		0,
+		session.Principal.ID,
+		true,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate git hook environment variables: %w", err)
 	}

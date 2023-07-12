@@ -12,7 +12,6 @@ import (
 
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
-	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/bootstrap"
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
@@ -25,7 +24,6 @@ import (
 	"github.com/harness/gitness/types"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/rs/zerolog/log"
 )
 
 type Service struct {
@@ -217,24 +215,22 @@ func New(ctx context.Context,
 }
 
 // createSystemRPCWriteParams creates base write parameters for gitrpc write operations.
-func createSystemRPCWriteParams(ctx context.Context, urlProvider *url.Provider,
-	repoID int64, repoGITUID string) (gitrpc.WriteParams, error) {
-	requestID, ok := request.RequestIDFrom(ctx)
-	if !ok {
-		// best effort retrieving of requestID - log in case we can't find it but don't fail operation.
-		log.Ctx(ctx).Warn().Msg("operation doesn't have a requestID in the context.")
-	}
-
+func createSystemRPCWriteParams(
+	ctx context.Context,
+	urlProvider *url.Provider,
+	repoID int64,
+	repoGITUID string,
+) (gitrpc.WriteParams, error) {
 	principal := bootstrap.NewSystemServiceSession().Principal
 
 	// generate envars (add everything githook CLI needs for execution)
-	envVars, err := githook.GenerateEnvironmentVariables(&githook.Payload{
-		APIBaseURL:  urlProvider.GetAPIBaseURLInternal(),
-		RepoID:      repoID,
-		PrincipalID: principal.ID,
-		RequestID:   requestID,
-		Disabled:    false,
-	})
+	envVars, err := githook.GenerateEnvironmentVariables(
+		ctx,
+		urlProvider.GetAPIBaseURLInternal(),
+		repoID,
+		principal.ID,
+		false,
+	)
 	if err != nil {
 		return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
 	}

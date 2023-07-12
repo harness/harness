@@ -10,6 +10,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
+
 	"github.com/swaggest/openapi-go/openapi3"
 )
 

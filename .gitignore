@@ -15,4 +15,5 @@ gitness.session.sql
 # ignore any executables we build
 /gitness
 /gitrpcserver
-/githook
+/gitness-githook
+/githa-githook

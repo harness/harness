@@ -60,9 +60,13 @@ build-gitrpc: generate ## Build the gitrpc binary
 	@echo "Building GitRPC Server"
 	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./gitrpcserver ./cmd/gitrpcserver
 
-build-githook: generate ## Build the githook binary
-	@echo "Building GitHook Binary"
-	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./githook ./cmd/githook
+build-githook: generate ## Build the githook binary for gitness
+	@echo "Building gitness GitHook Binary"
+	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./gitness-githook ./cmd/gitness-githook
+
+build-githa-githook: generate ## Build the githook binary for githa
+	@echo "Building githa GitHook Binary"
+	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./githa-githook ./cmd/githa-githook
 
 test: generate  ## Run the go tests
 	@echo "Running tests"
