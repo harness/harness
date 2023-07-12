@@ -29,7 +29,7 @@ func GetRepoRefFromPath(r *http.Request) (string, error) {
 // ParseSortRepo extracts the repo sort parameter from the url.
 func ParseSortRepo(r *http.Request) enum.RepoAttr {
 	return enum.ParseRepoAtrr(
-		r.FormValue(QueryParamSort),
+		r.URL.Query().Get(QueryParamSort),
 	)
 }
 

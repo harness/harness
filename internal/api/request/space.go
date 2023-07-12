@@ -29,7 +29,7 @@ func GetSpaceRefFromPath(r *http.Request) (string, error) {
 // ParseSortSpace extracts the space sort parameter from the url.
 func ParseSortSpace(r *http.Request) enum.SpaceAttr {
 	return enum.ParseSpaceAttr(
-		r.FormValue(QueryParamSort),
+		r.URL.Query().Get(QueryParamSort),
 	)
 }
 

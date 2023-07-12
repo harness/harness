@@ -31,7 +31,7 @@ func GetPullReqCommentIDPath(r *http.Request) (int64, error) {
 
 // ParseSortPullReq extracts the pull request sort parameter from the url.
 func ParseSortPullReq(r *http.Request) enum.PullReqSort {
-	result, _ := enum.PullReqSort(r.FormValue(QueryParamSort)).Sanitize()
+	result, _ := enum.PullReqSort(r.URL.Query().Get(QueryParamSort)).Sanitize()
 	return result
 }
 
@@ -64,9 +64,9 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 		Size:          ParseLimit(r),
 		Query:         ParseQuery(r),
 		CreatedBy:     createdBy,
-		SourceRepoRef: r.FormValue("source_repo_ref"),
-		SourceBranch:  r.FormValue("source_branch"),
-		TargetBranch:  r.FormValue("target_branch"),
+		SourceRepoRef: r.URL.Query().Get("source_repo_ref"),
+		SourceBranch:  r.URL.Query().Get("source_branch"),
+		TargetBranch:  r.URL.Query().Get("target_branch"),
 		States:        parsePullReqStates(r),
 		Sort:          ParseSortPullReq(r),
 		Order:         ParseOrder(r),

@@ -38,7 +38,7 @@ func GetCommitSHAFromPath(r *http.Request) (string, error) {
 // ParseSortBranch extracts the branch sort parameter from the url.
 func ParseSortBranch(r *http.Request) enum.BranchSortOption {
 	return enum.ParseBranchSortOption(
-		r.FormValue(QueryParamSort),
+		r.URL.Query().Get(QueryParamSort),
 	)
 }
 
@@ -56,7 +56,7 @@ func ParseBranchFilter(r *http.Request) *types.BranchFilter {
 // ParseSortTag extracts the tag sort parameter from the url.
 func ParseSortTag(r *http.Request) enum.TagSortOption {
 	return enum.ParseTagSortOption(
-		r.FormValue(QueryParamSort),
+		r.URL.Query().Get(QueryParamSort),
 	)
 }
 

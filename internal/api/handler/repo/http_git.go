@@ -218,7 +218,7 @@ func setHeaderNoCache(w http.ResponseWriter) {
 }
 
 func getServiceType(r *http.Request) string {
-	serviceType := r.FormValue("service")
+	serviceType := r.URL.Query().Get("service")
 	if !strings.HasPrefix(serviceType, "git-") {
 		return ""
 	}

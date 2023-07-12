@@ -12,6 +12,13 @@ import (
 	"github.com/harness/gitness/types"
 )
 
+type RegisterInput struct {
+	Email       string `json:"email"`
+	DisplayName string `json:"displayname"`
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+}
+
 /*
  * Register creates a new user and returns a new session token on success.
  * This differs from the Create method as it doesn't require auth, but has limited
