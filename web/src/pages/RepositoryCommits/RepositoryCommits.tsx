@@ -104,7 +104,7 @@ export default function RepositoryCommits() {
           null}
         {(repoMetadata && (!commitRef || pageBrowser.page) && !!commits?.commits?.length && (
           <Container padding="xlarge" className={css.resourceContent}>
-            <Container className={css.contentHeader}>
+            <Container className={css.contentHeader} padding={{ bottom: 'xlarge' }}>
               <Layout.Horizontal spacing="medium">
                 <BranchTagSelect
                   repoMetadata={repoMetadata}

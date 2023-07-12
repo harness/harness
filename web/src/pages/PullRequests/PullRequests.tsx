@@ -145,6 +145,7 @@ export default function PullRequests() {
                               repoPath: repoMetadata?.path as string,
                               gitRef: row.original.target_branch
                             })}
+                            showCopy={false}
                           />
                           <Text color={Color.GREY_500}>←</Text>
                           <GitRefLink
@@ -153,6 +154,7 @@ export default function PullRequests() {
                               repoPath: repoMetadata?.path as string,
                               gitRef: row.original.source_branch
                             })}
+                            showCopy={false}
                           />
                         </Layout.Horizontal>
                       </Container>

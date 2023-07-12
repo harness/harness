@@ -18,3 +18,30 @@
     align-items: center;
   }
 }
+
+.copyContainer {
+  background-color: var(--primary-1) !important;
+  color: var(--primary-7) !important;
+  border-radius: 4px !important;
+  --button-height: unset !important;
+  --text-color: unset !important;
+  padding: unset !important ;
+  --padding-right: 2px !important;
+  padding-left: 8px !important;
+  min-width: unset !important;
+}
+
+.linkText {
+  color: var(--primary-7) !important;
+}
+
+.link {
+  background-color: var(--primary-1) !important;
+  color: var(--primary-7) !important;
+  border-radius: 4px;
+  line-height: 20px;
+  font-size: var(--font-size-small);
+  font-weight: 600;
+  padding: 2px 6px !important;
+  width: fit-content !important;
+}

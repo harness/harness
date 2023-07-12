@@ -5,5 +5,8 @@ declare const styles: {
   readonly metaline: string
   readonly time: string
   readonly layout: string
+  readonly copyContainer: string
+  readonly linkText: string
+  readonly link: string
 }
 export default styles

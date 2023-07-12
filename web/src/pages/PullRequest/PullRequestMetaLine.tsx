@@ -2,14 +2,13 @@ import React from 'react'
 import { Container, Text, Layout, StringSubstitute } from '@harness/uicore'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
-import { CodeIcon, type GitInfoProps } from 'utils/GitUtils'
+import type { GitInfoProps } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReq } from 'services/code'
 import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequestStateLabel'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { GitRefLink } from 'components/GitRefLink/GitRefLink'
-import { CopyButton } from 'components/CopyButton/CopyButton'
 import css from './PullRequestMetaLine.module.scss'
 
 export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 'repoMetadata'>> = ({
@@ -32,12 +31,14 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
       <GitRefLink
         text={target_branch as string}
         url={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef: target_branch })}
+        showCopy
       />
     ),
     source: (
       <GitRefLink
         text={source_branch as string}
         url={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef: source_branch })}
+        showCopy
       />
     )
   }
@@ -48,15 +49,6 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
         <PullRequestStateLabel data={{ is_draft, state }} />
         <Text className={css.metaline}>
           <StringSubstitute str={getString('pr.metaLine')} vars={vars} />
-          {source_branch ? (
-            <CopyButton
-              content={source_branch}
-              tooltip={getString('copyBranch')}
-              icon={CodeIcon.Copy}
-              iconProps={{ size: 14 }}
-              padding={{ bottom: 'xsmall' }}
-            />
-          ) : null}
         </Text>
 
         <PipeSeparator height={9} />
