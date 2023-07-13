@@ -17,6 +17,8 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type ReviewerAddInput struct {
@@ -76,6 +78,7 @@ func (c *Controller) ReviewerAdd(
 			Principal: *reviewerPrincipal,
 			Metadata:  nil,
 		}, repo, enum.PermissionRepoView, false); err != nil {
+			log.Ctx(ctx).Info().Msgf("Reviewer principal: %s access error: %s", reviewerInfo.UID, err)
 			return nil, usererror.BadRequest("The reviewer doesn't have enough permissions for the repository.")
 		}
 	}
