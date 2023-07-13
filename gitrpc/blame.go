@@ -14,10 +14,16 @@ import (
 
 type BlameParams struct {
 	ReadParams
-	GitRef   string
-	Path     string
+	GitRef string
+	Path   string
+
+	// LineFrom allows to restrict the blame output to only lines starting from the provided line number (inclusive).
+	// Optional, ignored if value is 0.
 	LineFrom int
-	LineTo   int
+
+	// LineTo allows to restrict the blame output to only lines up to the provided line number (inclusive).
+	// Optional, ignored if value is 0.
+	LineTo int
 }
 
 func (params *BlameParams) Validate() error {

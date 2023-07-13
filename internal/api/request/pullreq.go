@@ -55,7 +55,8 @@ func parsePullReqStates(r *http.Request) []enum.PullReqState {
 
 // ParsePullReqFilter extracts the pull request query parameter from the url.
 func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
-	createdBy, err := QueryParamAsPositiveInt64(r, QueryParamCreatedBy)
+	// created_by is optional, skipped if set to 0
+	createdBy, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamCreatedBy, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -75,15 +76,18 @@ func ParsePullReqFilter(r *http.Request) (*types.PullReqFilter, error) {
 
 // ParsePullReqActivityFilter extracts the pull request activity query parameter from the url.
 func ParsePullReqActivityFilter(r *http.Request) (*types.PullReqActivityFilter, error) {
-	after, err := QueryParamAsPositiveInt64(r, QueryParamAfter)
+	// after is optional, skipped if set to 0
+	after, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamAfter, 0)
 	if err != nil {
 		return nil, err
 	}
-	before, err := QueryParamAsPositiveInt64(r, QueryParamBefore)
+	// before is optional, skipped if set to 0
+	before, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamBefore, 0)
 	if err != nil {
 		return nil, err
 	}
-	limit, err := QueryParamAsPositiveInt64(r, QueryParamLimit)
+	// limit is optional, skipped if set to 0
+	limit, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamLimit, 0)
 	if err != nil {
 		return nil, err
 	}

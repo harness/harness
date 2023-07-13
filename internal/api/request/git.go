@@ -15,12 +15,12 @@ const (
 	QueryParamGitRef        = "git_ref"
 	QueryParamIncludeCommit = "include_commit"
 	PathParamCommitSHA      = "commit_sha"
-	QueryLineFrom           = "line_from"
-	QueryLineTo             = "line_to"
-	QueryPath               = "path"
-	QuerySince              = "since"
-	QueryUntil              = "until"
-	QueryCommitter          = "committer"
+	QueryParamLineFrom      = "line_from"
+	QueryParamLineTo        = "line_to"
+	QueryParamPath          = "path"
+	QueryParamSince         = "since"
+	QueryParamUntil         = "until"
+	QueryParamCommitter     = "committer"
 )
 
 func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
@@ -73,11 +73,13 @@ func ParseTagFilter(r *http.Request) *types.TagFilter {
 
 // ParseCommitFilter extracts the commit filter from the url.
 func ParseCommitFilter(r *http.Request) (*types.CommitFilter, error) {
-	since, err := QueryParamAsPositiveInt64(r, QuerySince)
+	// since is optional, skipped if set to 0
+	since, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamSince, 0)
 	if err != nil {
 		return nil, err
 	}
-	until, err := QueryParamAsPositiveInt64(r, QueryUntil)
+	// until is optional, skipped if set to 0
+	until, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamUntil, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -87,9 +89,9 @@ func ParseCommitFilter(r *http.Request) (*types.CommitFilter, error) {
 			Page:  ParsePage(r),
 			Limit: ParseLimit(r),
 		},
-		Path:      QueryParamOrDefault(r, QueryPath, ""),
+		Path:      QueryParamOrDefault(r, QueryParamPath, ""),
 		Since:     since,
 		Until:     until,
-		Committer: QueryParamOrDefault(r, QueryCommitter, ""),
+		Committer: QueryParamOrDefault(r, QueryParamCommitter, ""),
 	}, nil
 }

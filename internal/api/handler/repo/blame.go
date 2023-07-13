@@ -27,13 +27,15 @@ func HandleBlame(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		path := request.GetOptionalRemainderFromPath(r)
 
-		lineFrom, err := request.QueryParamAsPositiveInt64(r, request.QueryLineFrom)
+		// line_from is optional, skipped if set to 0
+		lineFrom, err := request.QueryParamAsPositiveInt64OrDefault(r, request.QueryParamLineFrom, 0)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		lineTo, err := request.QueryParamAsPositiveInt64(r, request.QueryLineTo)
+		// line_to is optional, skipped if set to 0
+		lineTo, err := request.QueryParamAsPositiveInt64OrDefault(r, request.QueryParamLineTo, 0)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

@@ -347,11 +347,11 @@ func (s *PullReqActivityStore) Count(ctx context.Context,
 	}
 
 	if opts.After != 0 {
-		stmt = stmt.Where("pullreq_created >= ?", opts.After)
+		stmt = stmt.Where("pullreq_activity_created > ?", opts.After)
 	}
 
 	if opts.Before != 0 {
-		stmt = stmt.Where("pullreq_created < ?", opts.Before)
+		stmt = stmt.Where("pullreq_activity_created < ?", opts.Before)
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -393,11 +393,11 @@ func (s *PullReqActivityStore) List(ctx context.Context,
 	}
 
 	if opts.After != 0 {
-		stmt = stmt.Where("pullreq_created >= ?", opts.After)
+		stmt = stmt.Where("pullreq_activity_created > ?", opts.After)
 	}
 
 	if opts.Before != 0 {
-		stmt = stmt.Where("pullreq_created < ?", opts.Before)
+		stmt = stmt.Where("pullreq_activity_created < ?", opts.Before)
 	}
 
 	if opts.Limit > 0 {

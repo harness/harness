@@ -72,12 +72,18 @@ type ListCommitsParams struct {
 	GitREF string
 	// After is a git reference (branch / tag / commit SHA)
 	// If provided, commits only up to that reference will be returned (exlusive)
-	After     string
-	Page      int32
-	Limit     int32
-	Path      string
-	Since     int64
-	Until     int64
+	After string
+	Page  int32
+	Limit int32
+	Path  string
+
+	// Since allows to filter for commits since the provided UNIX timestamp - Optional, ignored if value is 0.
+	Since int64
+
+	// Until allows to filter for commits until the provided UNIX timestamp - Optional, ignored if value is 0.
+	Until int64
+
+	// Committer allows to filter for commits based on the committer - Optional, ignored if string is empty.
 	Committer string
 }
 

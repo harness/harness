@@ -84,12 +84,24 @@ func QueryParamOrError(r *http.Request, paramName string) (string, error) {
 	return val, nil
 }
 
-// QueryParamAsID extracts an ID parameter from the url.
-func QueryParamAsID(r *http.Request, paramName string) (int64, error) {
-	return QueryParamAsPositiveInt64(r, paramName)
+// QueryParamAsPositiveInt64 extracts an integer parameter from the request query.
+// If the parameter doesn't exist the provided default value is returned.
+func QueryParamAsPositiveInt64OrDefault(r *http.Request, paramName string, deflt int64) (int64, error) {
+	value, ok := QueryParam(r, paramName)
+	if !ok {
+		return deflt, nil
+	}
+
+	valueInt, err := strconv.ParseInt(value, 10, 64)
+	if err != nil || valueInt <= 0 {
+		return 0, usererror.BadRequestf("Parameter '%s' must be a positive integer.", paramName)
+	}
+
+	return valueInt, nil
 }
 
 // QueryParamAsPositiveInt64 extracts an integer parameter from the request query.
+// If the parameter doesn't exist an error is returned.
 func QueryParamAsPositiveInt64(r *http.Request, paramName string) (int64, error) {
 	value, err := QueryParamOrError(r, paramName)
 	if err != nil {

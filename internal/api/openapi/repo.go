@@ -169,7 +169,7 @@ var queryParameterGitRef = openapi3.ParameterOrRef{
 
 var queryParameterPath = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QueryPath,
+		Name:        request.QueryParamPath,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("Path for which commit information should be retrieved"),
 		Required:    ptr.Bool(false),
@@ -184,7 +184,7 @@ var queryParameterPath = openapi3.ParameterOrRef{
 
 var queryParameterSince = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QuerySince,
+		Name:        request.QueryParamSince,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("Epoch since when commit information should be retrieved."),
 		Required:    ptr.Bool(false),
@@ -198,7 +198,7 @@ var queryParameterSince = openapi3.ParameterOrRef{
 
 var queryParameterUntil = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QueryUntil,
+		Name:        request.QueryParamUntil,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("Epoch until when commit information should be retrieved."),
 		Required:    ptr.Bool(false),
@@ -227,7 +227,7 @@ var queryParameterIncludeCommit = openapi3.ParameterOrRef{
 
 var queryParameterLineFrom = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QueryLineFrom,
+		Name:        request.QueryParamLineFrom,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("Line number from which the file data is considered"),
 		Required:    ptr.Bool(false),
@@ -242,7 +242,7 @@ var queryParameterLineFrom = openapi3.ParameterOrRef{
 
 var queryParameterLineTo = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QueryLineTo,
+		Name:        request.QueryParamLineTo,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("Line number to which the file data is considered"),
 		Required:    ptr.Bool(false),
@@ -353,7 +353,7 @@ var queryParameterAfterCommits = openapi3.ParameterOrRef{
 
 var queryParameterCommitter = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
-		Name:        request.QueryCommitter,
+		Name:        request.QueryParamCommitter,
 		In:          openapi3.ParameterInQuery,
 		Description: ptr.String("Committer pattern for which commit information should be retrieved."),
 		Required:    ptr.Bool(false),
