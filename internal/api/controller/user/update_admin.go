@@ -15,7 +15,7 @@ import (
 )
 
 type UpdateAdminInput struct {
-	admin bool `json:"admin"`
+	Admin bool `json:"admin"`
 }
 
 /*
@@ -33,7 +33,7 @@ func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	user.Admin = request.admin
+	user.Admin = request.Admin
 	user.Updated = time.Now().UnixMilli()
 
 	err = c.principalStore.UpdateUser(ctx, user)
