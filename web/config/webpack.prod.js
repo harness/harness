@@ -30,6 +30,7 @@ const prodConfig = {
   },
   plugins: [
     new MiniCssExtractPlugin({
+      ignoreOrder: true,
       filename: '[name].[contenthash:6].css',
       chunkFilename: '[name].[id].[contenthash:6].css'
     }),
