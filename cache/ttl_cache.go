@@ -18,9 +18,9 @@ import (
 // The TTLCache has no maximum capacity, so the idea is to store objects for short period.
 // The goal of the TTLCache is to reduce database load.
 // Every instance of TTLCache has a background routine that purges stale items.
-type TTLCache[K constraints.Ordered, V Identifiable[K]] struct {
+type TTLCache[K comparable, V any] struct {
 	mx        sync.RWMutex
-	cache     map[K]cacheEntry[K, V]
+	cache     map[K]cacheEntry[V]
 	purgeStop chan struct{}
 	getter    Getter[K, V]
 	maxAge    time.Duration
@@ -34,16 +34,16 @@ type ExtendedTTLCache[K constraints.Ordered, V Identifiable[K]] struct {
 	getter ExtendedGetter[K, V]
 }
 
-type cacheEntry[K constraints.Ordered, V Identifiable[K]] struct {
+type cacheEntry[V any] struct {
 	added time.Time
 	data  V
 }
 
 // New creates a new TTLCache instance and a background routine
 // that periodically purges stale items.
-func New[K constraints.Ordered, V Identifiable[K]](getter Getter[K, V], maxAge time.Duration) *TTLCache[K, V] {
+func New[K comparable, V any](getter Getter[K, V], maxAge time.Duration) *TTLCache[K, V] {
 	c := &TTLCache[K, V]{
-		cache:     make(map[K]cacheEntry[K, V]),
+		cache:     make(map[K]cacheEntry[V]),
 		purgeStop: make(chan struct{}),
 		getter:    getter,
 		maxAge:    maxAge,
@@ -56,11 +56,13 @@ func New[K constraints.Ordered, V Identifiable[K]](getter Getter[K, V], maxAge t
 
 // NewExtended creates a new TTLCacheExtended instance and a background routine
 // that periodically purges stale items.
-func NewExtended[K constraints.Ordered, V Identifiable[K]](getter ExtendedGetter[K, V],
-	maxAge time.Duration) *ExtendedTTLCache[K, V] {
+func NewExtended[K constraints.Ordered, V Identifiable[K]](
+	getter ExtendedGetter[K, V],
+	maxAge time.Duration,
+) *ExtendedTTLCache[K, V] {
 	c := &ExtendedTTLCache[K, V]{
 		TTLCache: TTLCache[K, V]{
-			cache:     make(map[K]cacheEntry[K, V]),
+			cache:     make(map[K]cacheEntry[V]),
 			purgeStop: make(chan struct{}),
 			getter:    getter,
 			maxAge:    maxAge,
@@ -117,7 +119,7 @@ func (c *TTLCache[K, V]) fetch(key K, now time.Time) (V, bool) {
 
 	c.countHit++
 
-	// we deliberately don'V update the `item.added` timestamp for `now` because
+	// we deliberately don't update the `item.added` timestamp for `now` because
 	// we want to cache the items only for a short period.
 
 	return item.data, true
@@ -165,7 +167,7 @@ func (c *ExtendedTTLCache[K, V]) Map(ctx context.Context, keys []K) (map[K]V, er
 	for _, item := range items {
 		id := item.Identifier()
 		m[id] = item
-		c.cache[id] = cacheEntry[K, V]{
+		c.cache[id] = cacheEntry[V]{
 			added: now,
 			data:  item,
 		}
@@ -190,7 +192,7 @@ func (c *TTLCache[K, V]) Get(ctx context.Context, key K) (V, error) {
 	}
 
 	c.mx.Lock()
-	c.cache[key] = cacheEntry[K, V]{
+	c.cache[key] = cacheEntry[V]{
 		added: now,
 		data:  item,
 	}

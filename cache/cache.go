@@ -6,31 +6,29 @@ package cache
 
 import (
 	"context"
-
-	"golang.org/x/exp/constraints"
 )
 
 // Cache is an abstraction of a simple cache.
-type Cache[K constraints.Ordered, V Identifiable[K]] interface {
+type Cache[K any, V any] interface {
 	Stats() (int64, int64)
 	Get(ctx context.Context, key K) (V, error)
 }
 
 // ExtendedCache is an extension of the simple cache abstraction that adds mapping functionality.
-type ExtendedCache[K constraints.Ordered, V Identifiable[K]] interface {
+type ExtendedCache[K comparable, V Identifiable[K]] interface {
 	Cache[K, V]
 	Map(ctx context.Context, keys []K) (map[K]V, error)
 }
 
-type Identifiable[K constraints.Ordered] interface {
+type Identifiable[K comparable] interface {
 	Identifier() K
 }
 
-type Getter[K constraints.Ordered, V Identifiable[K]] interface {
+type Getter[K any, V any] interface {
 	Find(ctx context.Context, key K) (V, error)
 }
 
-type ExtendedGetter[K constraints.Ordered, V Identifiable[K]] interface {
+type ExtendedGetter[K comparable, V Identifiable[K]] interface {
 	Getter[K, V]
 	FindMany(ctx context.Context, keys []K) ([]V, error)
 }
