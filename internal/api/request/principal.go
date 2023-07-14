@@ -14,10 +14,16 @@ import (
 const (
 	PathParamPrincipalUID      = "principal_uid"
 	PathParamUserUID           = "user_uid"
+	PathParamUserID            = "user_id"
 	PathParamServiceAccountUID = "sa_uid"
 
 	QueryParamPrincipalID = "principal_id"
 )
+
+// GetUserIDFromPath returns the user id from the request path.
+func GetUserIDFromPath(r *http.Request) (int64, error) {
+	return PathParamAsPositiveInt64(r, PathParamUserID)
+}
 
 func GetPrincipalUIDFromPath(r *http.Request) (string, error) {
 	return PathParamOrError(r, PathParamPrincipalUID)

@@ -345,7 +345,7 @@ func setupUser(r chi.Router, userCtrl *user.Controller) {
 		r.Use(middlewareprincipal.RestrictTo(enum.PrincipalTypeUser))
 		r.Get("/", handleruser.HandleFind(userCtrl))
 		r.Patch("/", handleruser.HandleUpdate(userCtrl))
-		r.Route(fmt.Sprintf("/{%s}", request.PathParamUserUID), func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamUserID), func(r chi.Router) {
 			r.Patch("/admin", handleruser.HandleUpdateAdmin(userCtrl))
 		})
 

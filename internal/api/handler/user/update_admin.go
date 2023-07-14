@@ -20,7 +20,7 @@ func HandleUpdateAdmin(userCtrl *user.Controller) http.HandlerFunc {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		userID, err := request.GetUserUIDFromPath(r)
+		userID, err := request.GetUserIDFromPath(r)
 		if err != nil {
 			render.BadRequestf(w, "Invalid request: %s.", err)
 			return

@@ -18,12 +18,10 @@ type UpdateAdminInput struct {
 	Admin bool `json:"admin"`
 }
 
-/*
- * UpdateAdmin updates the admin state of a user.
- */
+// UpdateAdmin updates the admin state of a user.
 func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
-	userID string, request *UpdateAdminInput) (*types.User, error) {
-	user, err := findUserFromUID(ctx, c.principalStore, userID)
+	userID int64, request *UpdateAdminInput) (*types.User, error) {
+	user, err := findUserFromID(ctx, c.principalStore, userID)
 	if err != nil {
 		return nil, err
 	}
