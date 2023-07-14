@@ -14,12 +14,16 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+type UpdateAdminInput struct {
+	admin bool `json:"admin"`
+}
+
 /*
  * UpdateAdmin updates the admin state of a user.
  */
 func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
-	userUID string, admin bool) (*types.User, error) {
-	user, err := findUserFromUID(ctx, c.principalStore, userUID)
+	userID string, request *UpdateAdminInput) (*types.User, error) {
+	user, err := findUserFromUID(ctx, c.principalStore, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +33,7 @@ func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
-	user.Admin = admin
+	user.Admin = request.admin
 	user.Updated = time.Now().UnixMilli()
 
 	err = c.principalStore.UpdateUser(ctx, user)

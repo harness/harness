@@ -345,6 +345,9 @@ func setupUser(r chi.Router, userCtrl *user.Controller) {
 		r.Use(middlewareprincipal.RestrictTo(enum.PrincipalTypeUser))
 		r.Get("/", handleruser.HandleFind(userCtrl))
 		r.Patch("/", handleruser.HandleUpdate(userCtrl))
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamUserUID), func(r chi.Router) {
+			r.Patch("/admin", handleruser.HandleUpdateAdmin(userCtrl))
+		})
 
 		// PAT
 		r.Route("/tokens", func(r chi.Router) {
