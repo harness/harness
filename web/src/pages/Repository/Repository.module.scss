@@ -5,7 +5,7 @@
   &.withFileViewer {
     &,
     > div:first-of-type {
-      min-height: var(--page-min-height) !important;
+      min-height: var(--page-min-height, 100vh) !important;
     }
 
     > div:first-of-type {

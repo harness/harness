@@ -1,5 +1,6 @@
 // import { noop } from 'lodash-es'
 import React from 'react'
+import { useMutate } from 'restful-react'
 import {
   Container,
   Layout,
@@ -12,7 +13,6 @@ import {
   IconName,
   useToaster
 } from '@harness/uicore'
-import { useMutate } from 'restful-react'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReq, TypesRepository } from 'services/code'

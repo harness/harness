@@ -9,6 +9,7 @@ public: Public
 private: Private
 cancel: Cancel
 name: Name
+help: help
 search: Search
 description: Description
 repositories: Repositories
@@ -432,4 +433,5 @@ add: Add +
 users: Users
 findAUser: Find a user
 reviewerNotFound: 'Reviewer <strong>{{reviewer}}</strong> not found.'
+spaces: Spaces
 copyBranch: Copy Branch Name

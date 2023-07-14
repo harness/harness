@@ -19,6 +19,7 @@ interface UseFileViewerDecisionResult {
   size: number
   base64Data: string
   rawURL: string
+  isText: boolean
 }
 
 export function useFileContentViewerDecision({
@@ -37,9 +38,10 @@ export function useFileContentViewerDecision({
     const isImage = ImageExtensions.includes(extension.toLowerCase())
     const isAudio = AudioExtensions.includes(extension.toLowerCase())
     const isVideo = VideoExtensions.includes(extension.toLowerCase())
-    const isText =
+    const isText = !!(
       SpecialTextFiles.find(name => name.toLowerCase() === filename?.toLowerCase()) ||
       TextExtensions.includes(extension.toLowerCase())
+    )
     const category = isMarkdown
       ? FileCategory.MARKDOWN
       : isSVG

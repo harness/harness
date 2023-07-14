@@ -25,14 +25,15 @@ export function useGetRepositoryMetadata() {
     refetch,
     response
   } = useGet<TypesRepository>({
-    path: `/api/v1/repos/${space}/${repoName}/+/`
+    path: `/api/v1/repos/${space}/${repoName}/+/`,
+    lazy: !repoName
   })
   const defaultBranch = repoMetadata?.default_branch || ''
 
   return {
     space,
     repoName,
-    repoMetadata: repoMetadata || undefined,
+    repoMetadata: repoName ? repoMetadata || undefined : undefined,
     error: getErrorMessage(error),
     loading,
     refetch,

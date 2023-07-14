@@ -124,7 +124,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
           license: get(formData, 'license', 'none'),
           uid: get(formData, 'name', '').trim(),
           readme: get(formData, 'addReadme', false),
-          parent_id: standalone ? (space as unknown as number) : 0 // TODO: Backend needs to fix parentID: accept string or number
+          parent_id: standalone ? Number(space) : 0 // TODO: Backend needs to fix parentID: accept string or number
         }
         createRepo(payload)
           .then(response => {

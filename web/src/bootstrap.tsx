@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { noop } from 'lodash-es'
 import { routes } from 'RouteDefinitions'
 import { defaultCurrentUser } from 'AppContext'
 import App from './App'
@@ -11,6 +12,15 @@ import './bootstrap.scss'
 window.STRIP_CODE_PREFIX = true
 
 ReactDOM.render(
-  <App standalone routes={routes} hooks={{}} currentUser={defaultCurrentUser} currentUserProfileURL="" routingId="" />,
+  <App
+    standalone
+    routes={routes}
+    hooks={{
+      usePermissionTranslate: noop
+    }}
+    currentUser={defaultCurrentUser}
+    currentUserProfileURL=""
+    routingId=""
+  />,
   document.getElementById('react-root')
 )

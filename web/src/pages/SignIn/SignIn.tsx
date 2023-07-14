@@ -1,18 +1,17 @@
-// import { useHistory } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import React, { useCallback, useState } from 'react'
-// import { get } from 'lodash-es'
 import { Button, Container, Layout, Text, TextInput } from '@harness/uicore'
 import { useStrings } from 'framework/strings'
+import { routes } from 'RouteDefinitions'
 import { useOnLogin } from 'services/code'
-// import routes from 'RouteDefinitions'
-// import { useAPIToken } from 'hooks/useAPIToken'
+import { useAPIToken } from 'hooks/useAPIToken'
 
 export const SignIn: React.FC = () => {
   const { getString } = useStrings()
-  // const history = useHistory()
+  const [, setToken] = useAPIToken()
+  const history = useHistory()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  // const [, setToken] = useAPIToken()
   const { mutate } = useOnLogin({})
   const onLogin = useCallback(() => {
     const formData = new FormData()
@@ -20,17 +19,16 @@ export const SignIn: React.FC = () => {
     formData.append('username', username)
     formData.append('password', password)
 
-    mutate(formData as unknown as void)
-      .then(_ => {
-        // setToken(get(data, 'access_token'))
-        // history.replace(routes.toTestPage1())
+    mutate(formData as unknown as void, { headers: { Authorization: '' } })
+      .then(response => {
+        setToken(response.access_token as string)
+        history.replace(routes.toCODESpaces())
       })
       .catch(error => {
-        // TODO: Use toaster to show error
-        // eslint-disable-next-line no-console
-        console.error({ error })
+        // TODO: Show error message as a toast
+        console.error({ error }) // eslint-disable-line no-console
       })
-  }, [mutate, username, password])
+  }, [mutate, username, password, setToken, history])
 
   return (
     <Layout.Vertical>
@@ -55,7 +53,7 @@ export const SignIn: React.FC = () => {
         </Layout.Horizontal>
       </Container>
       <Container>
-        <Button text={getString('signIn')} onClick={() => onLogin()} />
+        <Button text={getString('signIn')} onClick={onLogin} />
       </Container>
     </Layout.Vertical>
   )

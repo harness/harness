@@ -1,7 +1,6 @@
 const { merge } = require('webpack-merge')
 const HTMLWebpackPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const CircularDependencyPlugin = require('circular-dependency-plugin')
 const { DefinePlugin } = require('webpack')
 
 const commonConfig = require('./webpack.common')
@@ -34,13 +33,10 @@ const prodConfig = {
       filename: '[name].[contenthash:6].css',
       chunkFilename: '[name].[id].[contenthash:6].css'
     }),
-    new CircularDependencyPlugin({
-      exclude: /node_modules/,
-      failOnError: true
-    }),
     new HTMLWebpackPlugin({
       template: 'src/index.html',
       filename: 'index.html',
+      favicon: 'src/favicon.svg',
       minify: false,
       templateParameters: {
         __ON_PREM__: ON_PREM

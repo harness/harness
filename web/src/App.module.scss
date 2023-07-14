@@ -5,6 +5,15 @@
  */
 
 .main {
+  --nav-item-width: var(--main-nav-width, 88px);
+  --nav-item-height: 80px;
+  --nav-menu-width: 184px;
+  --nav-width: calc(var(--nav-item-width) + var(--nav-menu-width));
+
+  &.fullPage {
+    height: 100%;
+  }
+
   :global {
     .Resizer {
       background-color: var(--grey-300);

@@ -44,9 +44,11 @@ export default function MonacoSourceCodeEditor({
   const scrollbar = autoHeight ? 'hidden' : 'auto'
 
   useEffect(() => {
-    monaco.languages.typescript?.typescriptDefaults?.setDiagnosticsOptions?.(diagnosticsOptions)
-    monaco.languages.typescript?.javascriptDefaults?.setDiagnosticsOptions?.(diagnosticsOptions)
-    monaco.languages.typescript?.typescriptDefaults?.setCompilerOptions?.(compilerOptions)
+    if (window.monaco) {
+      monaco.languages.typescript?.typescriptDefaults?.setDiagnosticsOptions?.(diagnosticsOptions)
+      monaco.languages.typescript?.javascriptDefaults?.setDiagnosticsOptions?.(diagnosticsOptions)
+      monaco.languages.typescript?.typescriptDefaults?.setCompilerOptions?.(compilerOptions)
+    }
   }, [])
 
   useEventListener('resize', () => {

@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { RestfulProvider } from 'restful-react'
-import { Container, TooltipContextProvider } from '@harness/uicore'
+import cx from 'classnames'
+import { Container } from '@harness/uicore'
 import { ModalProvider } from '@harness/use-modal'
 import { FocusStyleManager } from '@blueprintjs/core'
-import { tooltipDictionary } from '@harness/ng-tooltip'
 import AppErrorBoundary from 'framework/AppErrorBoundary/AppErrorBoundary'
 import { AppContextProvider, defaultCurrentUser } from 'AppContext'
 import type { AppProps } from 'AppProps'
@@ -32,7 +32,7 @@ const App: React.FC<AppProps> = React.memo(function App({
   currentUserProfileURL = ''
 }: AppProps) {
   const [strings, setStrings] = useState<LanguageRecord>()
-  const token = useAPIToken()
+  const [token] = useAPIToken()
   const getRequestOptions = useCallback(
     (): Partial<RequestInit> => buildResfulReactRequestOptions(hooks?.useGetToken?.() || token),
     [token, hooks]
@@ -44,10 +44,10 @@ const App: React.FC<AppProps> = React.memo(function App({
     languageLoader(lang).then(setStrings)
   }, [lang, setStrings])
 
-  const Wrapper: React.FC = useCallback(
+  const Wrapper: React.FC<{ fullPage: boolean }> = useCallback(
     props => {
       return strings ? (
-        <Container className={css.main}>
+        <Container className={cx(css.main, { [css.fullPage]: standalone && props.fullPage })}>
           <StringsContextProvider initialStrings={strings}>
             <AppErrorBoundary>
               <RestfulProvider
@@ -72,9 +72,7 @@ const App: React.FC<AppProps> = React.memo(function App({
                     currentUser: defaultCurrentUser,
                     currentUserProfileURL
                   }}>
-                  <TooltipContextProvider initialTooltipDictionary={tooltipDictionary}>
-                    <ModalProvider>{props.children ? props.children : <RouteDestinations />}</ModalProvider>
-                  </TooltipContextProvider>
+                  <ModalProvider>{props.children ? props.children : <RouteDestinations />}</ModalProvider>
                 </AppContextProvider>
               </RestfulProvider>
             </AppErrorBoundary>
@@ -86,10 +84,12 @@ const App: React.FC<AppProps> = React.memo(function App({
   )
 
   useEffect(() => {
-    AppWrapper = Wrapper
+    AppWrapper = function _AppWrapper({ children: _children }) {
+      return <Wrapper fullPage={false}>{_children}</Wrapper>
+    }
   }, [Wrapper])
 
-  return <Wrapper>{children}</Wrapper>
+  return <Wrapper fullPage>{children}</Wrapper>
 })
 
 export let AppWrapper: React.FC = () => <Container />

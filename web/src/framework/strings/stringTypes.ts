@@ -148,6 +148,7 @@ export interface StringsMap {
   generateCloneText: string
   getMyCloneTitle: string
   gitIgnore: string
+  help: string
   hideCommitHistory: string
   history: string
   in: string
@@ -332,6 +333,7 @@ export interface StringsMap {
   showEverything: string
   signIn: string
   signUp: string
+  spaces: string
   sslVerificationLabel: string
   status: string
   submitReview: string

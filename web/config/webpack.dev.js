@@ -1,6 +1,7 @@
 const path = require('path')
 const util = require('util')
 const fs = require('fs')
+
 require('dotenv').config()
 
 const { merge } = require('webpack-merge')
@@ -12,30 +13,46 @@ const {
   WatchIgnorePlugin,
   container: { ModuleFederationPlugin }
 } = require('webpack')
+
 const commonConfig = require('./webpack.common')
+const API_URL = process.env.API_URL ?? 'http://localhost:3000'
+const HOST = 'localhost'
+const PORT = process.env.PORT ?? 3020
+const STANDALONE = JSON.parse(process.env.STANDALONE ?? 'true')
 
-const baseUrl = process.env.BASE_URL ?? 'https://qa.harness.io/gateway'
-const targetLocalHost = JSON.parse(process.env.TARGET_LOCALHOST || 'true')
-
-const ON_PREM = `${process.env.ON_PREM}` === 'true'
+console.info(`Starting development build... http://${HOST}:${PORT}`)
+console.info('Environment variables:')
+console.table({ STANDALONE, HOST, PORT, API_URL })
 
 const devConfig = {
   mode: 'development',
+  target: 'web',
   entry: './src/index.tsx',
   devtool: 'cheap-module-source-map',
   cache: { type: 'filesystem' },
   output: {
     filename: '[name].js',
-    chunkFilename: '[name].[id].js'
+    chunkFilename: '[name].[id].js',
+    path: path.resolve(process.cwd(), 'dist'),
+    pathinfo: false
   },
+  ...(STANDALONE
+    ? {
+        optimization: {
+          runtimeChunk: 'single'
+        }
+      }
+    : {}),
   devServer: {
     hot: true,
-    host: 'localhost',
-    historyApiFallback: true,
-    port: 3020,
+    host: HOST,
+    historyApiFallback: {
+      disableDotRule: true
+    },
+    port: PORT,
     proxy: {
       '/api': {
-        target: targetLocalHost ? 'http://localhost:3000' : baseUrl,
+        target: API_URL,
         logLevel: 'debug',
         secure: false,
         changeOrigin: true
@@ -49,12 +66,13 @@ const devConfig = {
       ignoreOrder: true
     }),
     new HTMLWebpackPlugin({
+      publicPath: '/',
       template: 'src/index.html',
       filename: 'index.html',
+      favicon: 'src/favicon.svg',
       minify: false,
       templateParameters: {
-        __DEV__: true,
-        __ON_PREM__: ON_PREM
+        __DEV__: true
       }
     }),
     new DefinePlugin({
@@ -62,10 +80,6 @@ const devConfig = {
       __DEV__: true,
       __ENABLE_CDN__: false
     })
-    // new ForkTsCheckerWebpackPlugin()
-    // new WatchIgnorePlugin({
-    //   paths: [/node_modules(?!\/@wings-software)/, /\.d\.ts$/]
-    // }),
   ],
   module: {
     rules: [
@@ -83,7 +97,5 @@ const devConfig = {
     ]
   }
 }
-
-console.table({ baseUrl, targetLocalHost })
 
 module.exports = merge(commonConfig, devConfig)

@@ -1,0 +1,13 @@
+.main {
+  display: flex;
+  flex-direction: column;
+
+  .pageHeading {
+    height: 73px;
+  }
+
+  .pageContent {
+    background-color: var(--primary-bg) !important;
+    flex-grow: 1;
+  }
+}

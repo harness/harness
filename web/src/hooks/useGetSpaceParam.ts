@@ -13,6 +13,6 @@ import { useAppContext } from 'AppContext'
  */
 export function useGetSpaceParam() {
   const { space: spaceFromParams = '' } = useParams<CODEProps>()
-  const { space = spaceFromParams } = useAppContext()
-  return space
+  const { space } = useAppContext()
+  return space || spaceFromParams
 }

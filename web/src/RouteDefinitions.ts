@@ -31,7 +31,12 @@ export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch'
 
 export interface CODERoutes {
   toSignIn: () => string
-  toSignUp: () => string
+  toRegister: () => string
+
+  toCODEHome: () => string
+  toCODESpaces: () => string
+  toCODEGlobalSettings: () => string
+
   toCODERepositories: (args: Required<Pick<CODEProps, 'space'>>) => string
   toCODERepository: (args: RequiredField<Pick<CODEProps, 'repoPath' | 'gitRef' | 'resourcePath'>, 'repoPath'>) => string
   toCODEFileEdit: (args: Required<Pick<CODEProps, 'repoPath' | 'gitRef' | 'resourcePath'>>) => string
@@ -50,16 +55,26 @@ export interface CODERoutes {
   toCODEWebhookNew: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEWebhookDetails: (args: Required<Pick<CODEProps, 'repoPath' | 'webhookId'>>) => string
   toCODESettings: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
-  toCODECreateWebhook: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
 }
 
 export const routes: CODERoutes = {
   toSignIn: (): string => '/signin',
-  toSignUp: (): string => '/signup',
-  toCODERepositories: ({ space }) => `/${space}`,
+  toRegister: (): string => '/register',
+
+  toCODEHome: () => `/`,
+  toCODESpaces: () => `/spaces`,
+  toCODEGlobalSettings: () => '/settings',
+
+  toCODERepositories: ({ space }) => `/spaces/${space}`,
   toCODERepository: ({ repoPath, gitRef, resourcePath }) =>
-    `/${repoPath}/${gitRef ? '/' + gitRef : ''}${resourcePath ? '/~/' + resourcePath : ''}`,
-  toCODEFileEdit: ({ repoPath, gitRef, resourcePath }) => `/${repoPath}/edit/${gitRef}/~/${resourcePath}`,
+    `/${repoPath}${gitRef ? '/files/' + gitRef : ''}${resourcePath ? '/~/' + resourcePath : ''}`,
+  toCODEFileEdit: ({
+    repoPath,
+    gitRef,
+    resourcePath
+  }: RequiredField<Pick<CODEProps, 'repoPath' | 'gitRef' | 'resourcePath'>, 'repoPath' | 'gitRef'>) =>
+    `/${repoPath}/edit/${gitRef}/~/${resourcePath || ''}`,
+
   toCODECommits: ({ repoPath, commitRef }) => `/${repoPath}/commits/${commitRef}`,
   toCODEPullRequests: ({ repoPath }) => `/${repoPath}/pulls`,
   toCODEPullRequest: ({ repoPath, pullRequestId, pullRequestSection }) =>
@@ -70,6 +85,5 @@ export const routes: CODERoutes = {
   toCODESettings: ({ repoPath }) => `/${repoPath}/settings`,
   toCODEWebhooks: ({ repoPath }) => `/${repoPath}/webhooks`,
   toCODEWebhookNew: ({ repoPath }) => `/${repoPath}/webhooks/new`,
-  toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`,
-  toCODECreateWebhook: ({ repoPath }) => `/${repoPath}/settings/webhook/new`
+  toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`
 }
