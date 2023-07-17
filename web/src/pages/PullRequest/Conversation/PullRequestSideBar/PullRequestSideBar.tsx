@@ -1,4 +1,3 @@
-// import { noop } from 'lodash-es'
 import React from 'react'
 import { useMutate } from 'restful-react'
 import {
@@ -158,7 +157,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                   showError(getErrorMessage(err))
                 })
                 if (refetchReviewers) {
-                  refetchReviewers?.()
+                  refetchReviewers()
                 }
               }}
               repoMetadata={{}}></ReviewerSelect>

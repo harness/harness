@@ -14,6 +14,7 @@ export interface StringsMap {
   all: string
   allBranches: string
   allComments: string
+  alreadyHaveAccount: string
   and: string
   approve: string
   ascending: string
@@ -40,8 +41,10 @@ export interface StringsMap {
   branches: string
   browse: string
   browseFiles: string
+  bySigningIn: string
   cancel: string
   changes: string
+  characterLimit: string
   checkRuns: string
   checkSuites: string
   checks: string
@@ -128,6 +131,7 @@ export interface StringsMap {
   enterRepoName: string
   enterSecret: string
   enterTagPlaceholder: string
+  enterUser: string
   error404Text: string
   existingAccount: string
   failedToCreateBranch: string
@@ -178,6 +182,7 @@ export interface StringsMap {
   newTag: string
   next: string
   noAccount: string
+  'noAccount?': string
   noChanges: string
   noChangesCompare: string
   noChangesPR: string
@@ -276,6 +281,7 @@ export interface StringsMap {
   prefixCompare: string
   prev: string
   preview: string
+  privacyPolicy: string
   private: string
   public: string
   pullMustBeMadeFromBranches: string
@@ -346,6 +352,7 @@ export interface StringsMap {
   tagNotFound: string
   tagger: string
   tags: string
+  termsOfUse: string
   title: string
   tooltipRepoEdit: string
   unrsolvedComment: string
@@ -356,6 +363,7 @@ export interface StringsMap {
   updateFile: string
   updateWebhook: string
   updated: string
+  userId: string
   userName: string
   users: string
   'validation.gitBranchNameInvalid': string

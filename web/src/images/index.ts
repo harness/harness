@@ -6,6 +6,9 @@ import PrDraft from 'images/pull-request-draft.svg'
 import EmptyState from 'images/empty-state.svg'
 import error404 from 'images/404-error.svg'
 import PrUnchecked from 'images/pull-request-unchecked.svg'
+import DarkBackground from 'images/dark-background.png'
+import Signup from 'images/signup.png'
+import Subtract from 'images/Subtract.png'
 
 export const Images = {
   PrOpen,
@@ -15,5 +18,8 @@ export const Images = {
   PrDraft,
   error404,
   EmptyState,
-  PrUnchecked
+  PrUnchecked,
+  DarkBackground,
+  Signup,
+  Subtract
 }

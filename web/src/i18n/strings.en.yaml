@@ -435,3 +435,11 @@ findAUser: Find a user
 reviewerNotFound: 'Reviewer <strong>{{reviewer}}</strong> not found.'
 spaces: Spaces
 copyBranch: Copy Branch Name
+noAccount?: No Account?
+alreadyHaveAccount: Already have an account?
+privacyPolicy: Privacy Policy
+termsOfUse: Terms of Use
+bySigningIn: By signing in, you agree to our {policy} and our {terms}
+userId: User ID
+characterLimit: 6+ characters
+enterUser: Enter user id here ...

@@ -78,7 +78,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
           return (
             <CommitActions
               sha={row.original.commit?.sha as string}
-              href={routes.toCODECommits({
+              href={routes.toCODECommit({
                 repoPath: repoMetadata.path as string,
                 commitRef: row.original.commit?.sha as string
               })}

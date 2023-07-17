@@ -7,5 +7,6 @@ declare const styles: {
   readonly field: string
   readonly actions: string
   readonly logo: string
+  readonly signUpContainer: string
 }
 export default styles

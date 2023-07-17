@@ -54,6 +54,17 @@ export interface RenameDetails {
   old_path: string
 }
 
+export interface LoginForm {
+  username: string
+  password: string
+}
+
+export interface RegisterForm {
+  username: string
+  password: string
+  email: string
+}
+
 export interface SourceCodeEditorProps {
   source: string
   language?: string
