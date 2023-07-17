@@ -14,8 +14,8 @@ import (
 
 type RegisterInput struct {
 	Email       string `json:"email"`
-	DisplayName string `json:"displayname"`
-	Username    string `json:"username"`
+	DisplayName string `json:"display_name"`
+	UID         string `json:"uid"`
 	Password    string `json:"password"`
 }
 
@@ -24,10 +24,15 @@ type RegisterInput struct {
  * This differs from the Create method as it doesn't require auth, but has limited
  * functionalities (unable to create admin user for example).
  */
-func (c *Controller) Register(ctx context.Context, in *CreateInput) (*types.TokenResponse, error) {
+func (c *Controller) Register(ctx context.Context, in *RegisterInput) (*types.TokenResponse, error) {
 	// TODO: allow to configure if open register is allowed.
 
-	user, err := c.CreateNoAuth(ctx, in, false)
+	user, err := c.CreateNoAuth(ctx, &CreateInput{
+		UID:         in.UID,
+		Email:       in.Email,
+		DisplayName: in.DisplayName,
+		Password:    in.Password,
+	}, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}

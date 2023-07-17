@@ -25,12 +25,7 @@ func HandleRegister(userCtrl *user.Controller) http.HandlerFunc {
 			return
 		}
 
-		tokenResponse, err := userCtrl.Register(ctx, &user.CreateInput{
-			UID:         in.Username,
-			Email:       in.Email,
-			DisplayName: in.DisplayName,
-			Password:    in.Password,
-		})
+		tokenResponse, err := userCtrl.Register(ctx, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

@@ -23,8 +23,8 @@ import (
 )
 
 type LoginInput struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	LoginIdentifier string `json:"login_identifier"`
+	Password        string `json:"password"`
 }
 
 /*
@@ -34,15 +34,15 @@ func (c *Controller) Login(ctx context.Context, session *auth.Session,
 	in *LoginInput) (*types.TokenResponse, error) {
 	// no auth check required, password is used for it.
 
-	user, err := findUserFromUID(ctx, c.principalStore, in.Username)
+	user, err := findUserFromUID(ctx, c.principalStore, in.LoginIdentifier)
 	if errors.Is(err, store.ErrResourceNotFound) {
-		user, err = findUserFromEmail(ctx, c.principalStore, in.Username)
+		user, err = findUserFromEmail(ctx, c.principalStore, in.LoginIdentifier)
 	}
 
 	// always return not found for security reasons.
 	if err != nil {
 		log.Ctx(ctx).Debug().Err(err).
-			Str("user_uid", in.Username).
+			Str("user_uid", in.LoginIdentifier).
 			Msgf("failed to retrieve user during login.")
 		return nil, usererror.ErrNotFound
 	}
