@@ -28,6 +28,7 @@ module.exports = {
     './Repository': './src/pages/Repository/Repository.tsx',
     './FileEdit': './src/pages/RepositoryFileEdit/RepositoryFileEdit.tsx',
     './Commits': './src/pages/RepositoryCommits/RepositoryCommits.tsx',
+    './Commit': './src/pages/RepositoryCommit/RepositoryCommit.tsx',
     './Branches': './src/pages/RepositoryBranches/RepositoryBranches.tsx',
     './PullRequests': './src/pages/PullRequests/PullRequests.tsx',
     './Tags': './src/pages/RepositoryTags/RepositoryTags.tsx',
