@@ -22,7 +22,7 @@ func HandleUpdateAdmin(userCtrl *user.Controller) http.HandlerFunc {
 
 		userUID, err := request.GetUserUIDFromPath(r)
 		if err != nil {
-			render.BadRequestf(w, "Invalid request: %s.", err)
+			render.TranslatedUserError(w, err)
 			return
 		}
 
