@@ -17,10 +17,9 @@ import (
 )
 
 type CreateTokenInput struct {
-	UID      string        `json:"uid"`
-	Lifetime time.Duration `json:"lifetime"`
-	// TODO: Added to unblock UI - Depending on product decision remove default value, or remove Grants completely.
-	Grants enum.AccessGrant `json:"grants" default:"9223372036854775807"`
+	UID      string           `json:"uid"`
+	Lifetime time.Duration    `json:"lifetime"`
+	Grants   enum.AccessGrant `json:"grants"`
 }
 
 // CreateToken creates a new service account access token.
@@ -37,7 +36,8 @@ func (c *Controller) CreateToken(ctx context.Context, session *auth.Session,
 	if err = check.TokenLifetime(in.Lifetime); err != nil {
 		return nil, err
 	}
-	if err = check.AccessGrant(in.Grants, false); err != nil {
+	// TODO: Added to unblock UI - Depending on product decision enforce grants, or remove Grants completely.
+	if err = check.AccessGrant(in.Grants, true); err != nil {
 		return nil, err
 	}
 
