@@ -434,4 +434,5 @@ func setupAdmin(r chi.Router, userCtrl *user.Controller) {
 func setupAccount(r chi.Router, userCtrl *user.Controller) {
 	r.Post("/login", account.HandleLogin(userCtrl))
 	r.Post("/register", account.HandleRegister(userCtrl))
+	r.Post("/logout", account.HandleLogout(userCtrl))
 }

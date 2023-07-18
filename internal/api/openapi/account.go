@@ -40,6 +40,16 @@ func buildAccount(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&onLogin, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/login", onLogin)
 
+	opLogout := openapi3.Operation{}
+	opLogout.WithTags("account")
+	opLogout.WithMapOfAnything(map[string]interface{}{"operationId": "opLogout"})
+	_ = reflector.SetRequest(&opLogout, nil, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opLogout, nil, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opLogout, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opLogout, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opLogout, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/logout", opLogout)
+
 	onRegister := openapi3.Operation{}
 	onRegister.WithTags("account")
 	onRegister.WithMapOfAnything(map[string]interface{}{"operationId": "onRegister"})
