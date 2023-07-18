@@ -20,8 +20,8 @@ type UpdateAdminInput struct {
 
 // UpdateAdmin updates the admin state of a user.
 func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
-	userID int64, request *UpdateAdminInput) (*types.User, error) {
-	user, err := findUserFromID(ctx, c.principalStore, userID)
+	userUID string, request *UpdateAdminInput) (*types.User, error) {
+	user, err := findUserFromUID(ctx, c.principalStore, userUID)
 	if err != nil {
 		return nil, err
 	}

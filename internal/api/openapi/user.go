@@ -19,7 +19,7 @@ type createTokenRequest struct {
 }
 
 type updateAdminRequest struct {
-	ID int64 `path:"user_id"`
+	UID string `path:"user_uid"`
 	user.UpdateAdminInput
 }
 
@@ -57,5 +57,5 @@ func buildUser(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdateAdmin, new(types.User), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opUpdateAdmin, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.SetJSONResponse(&opUpdateAdmin, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.Spec.AddOperation(http.MethodPatch, "/user/{user_id}/admin", opUpdateAdmin)
+	_ = reflector.Spec.AddOperation(http.MethodPatch, "/user/{user_uid}/admin", opUpdateAdmin)
 }

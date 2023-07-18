@@ -13,14 +13,14 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 )
 
-// HandleUpdateAdmin returns an http.HandlerFunc that processes an http.Request
+// HandleUpdateAdmin returns a http.HandlerFunc that processes an http.Request
 // to update the current user admin status.
 func HandleUpdateAdmin(userCtrl *user.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		userID, err := request.GetUserIDFromPath(r)
+		userUID, err := request.GetUserUIDFromPath(r)
 		if err != nil {
 			render.BadRequestf(w, "Invalid request: %s.", err)
 			return
@@ -33,7 +33,7 @@ func HandleUpdateAdmin(userCtrl *user.Controller) http.HandlerFunc {
 			return
 		}
 
-		user, err := userCtrl.UpdateAdmin(ctx, session, userID, in)
+		user, err := userCtrl.UpdateAdmin(ctx, session, userUID, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
