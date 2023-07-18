@@ -440,7 +440,6 @@ const TextExtensions = [
   'zsh',
   'zshrc',
   'ics',
-
   'rego',
   'tf',
   'hcl',
@@ -464,7 +463,8 @@ const SpecialTextFiles = [
   'LICENSE',
   'CHANGELOG',
   'Makefile',
-  'Procfile'
+  'Procfile',
+  '.env'
 ]
 
 const ImageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'ico', 'bmp']
