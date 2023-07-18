@@ -49,6 +49,10 @@ func System(config *types.Config, userCtrl *user.Controller,
 
 // AdminUser sets up the admin user based on the config (if provided).
 func AdminUser(ctx context.Context, config *types.Config, userCtrl *user.Controller) error {
+	if config.Principal.Admin.Password == "" {
+		return nil
+	}
+
 	usr, err := userCtrl.FindNoAuth(ctx, config.Principal.Admin.UID)
 	if errors.Is(err, store.ErrResourceNotFound) {
 		usr, err = createAdminUser(ctx, config, userCtrl)
