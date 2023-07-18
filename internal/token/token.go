@@ -15,8 +15,7 @@ import (
 )
 
 const (
-	userTokenLifeTime time.Duration = 24 * time.Hour   // 1 day.
-	oathTokenLifeTime time.Duration = 30 * time.Minute // 30 min.
+	userTokenLifeTime time.Duration = 24 * time.Hour // 1 day.
 )
 
 func CreateUserSession(ctx context.Context, tokenStore store.TokenStore,
@@ -60,21 +59,6 @@ func CreateSAT(ctx context.Context, tokenStore store.TokenStore,
 		createdFor.ToPrincipal(),
 		uid,
 		lifetime,
-		grants,
-	)
-}
-
-func CreateOAuth(ctx context.Context, tokenStore store.TokenStore,
-	createdBy *types.Principal, createdFor *types.User,
-	name string, grants enum.AccessGrant) (*types.Token, string, error) {
-	return Create(
-		ctx,
-		tokenStore,
-		enum.TokenTypeOAuth2,
-		createdBy,
-		createdFor.ToPrincipal(),
-		name,
-		oathTokenLifeTime,
 		grants,
 	)
 }
