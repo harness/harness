@@ -39,6 +39,7 @@ func findUserFromUID(ctx context.Context,
 	principalStore store.PrincipalStore, userUID string) (*types.User, error) {
 	return principalStore.FindUserByUID(ctx, userUID)
 }
+
 func findUserFromEmail(ctx context.Context,
 	principalStore store.PrincipalStore, email string) (*types.User, error) {
 	return principalStore.FindUserByEmail(ctx, email)
