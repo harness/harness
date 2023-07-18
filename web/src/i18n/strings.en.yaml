@@ -3,6 +3,7 @@ signIn: Sign In
 signUp: Sign Up
 email: Email
 password: Password
+confirmPassword: Confirm Password
 noAccount: No Account
 existingAccount: Existing Account
 public: Public
@@ -397,7 +398,7 @@ resolve: Resolve
 reactivate: Reactivate
 generateCloneCred: + Generate Clone Credential
 generateCloneText: 'Please generate clone credential if it’s your first time'
-getMyCloneTitle: Get My Clone Credential
+getMyCloneTitle: Generate Clone Credential
 cloneText: Your clone credentials have been generated. Please make sure to copy and store your password somewhere safe, you won't be able to see it again.
 manageApiToken: Manage Api Token
 userName: User Name
@@ -443,3 +444,10 @@ bySigningIn: By signing in, you agree to our {policy} and our {terms}
 userId: User ID
 characterLimit: 6+ characters
 enterUser: Enter user id here ...
+userNameRequired: Username is required
+passwordRequired: Password is required
+emailRequired: Email is required
+minPassLimit: Password is too short - should be 6 chars minimum.
+confirmPassRequired: Confirm Password is required
+matchPassword: Passwords must match
+userCreated: User was created

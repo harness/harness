@@ -70,6 +70,8 @@ export interface StringsMap {
   confirm: string
   confirmDelete: string
   confirmDeleteWebhook: string
+  confirmPassRequired: string
+  confirmPassword: string
   confirmation: string
   content: string
   contents: string
@@ -120,6 +122,7 @@ export interface StringsMap {
   editNotAllowed: string
   edited: string
   email: string
+  emailRequired: string
   emptyRepoHeader: string
   emptyRepoInclude: string
   enableSSLVerification: string
@@ -165,7 +168,9 @@ export interface StringsMap {
   makeRequired: string
   manageApiToken: string
   manageCredText: string
+  matchPassword: string
   merged: string
+  minPassLimit: string
   missingPerms: string
   missingPermsContent: string
   myComments: string
@@ -210,6 +215,7 @@ export interface StringsMap {
   pageNotFound: string
   password: string
   passwordApi: string
+  passwordRequired: string
   payloadUrl: string
   payloadUrlLabel: string
   pending: string
@@ -363,8 +369,10 @@ export interface StringsMap {
   updateFile: string
   updateWebhook: string
   updated: string
+  userCreated: string
   userId: string
   userName: string
+  userNameRequired: string
   users: string
   'validation.gitBranchNameInvalid': string
   'validation.gitTagNameInvalid': string

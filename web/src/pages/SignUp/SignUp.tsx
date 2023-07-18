@@ -11,6 +11,8 @@ import {
   Text,
   useToaster
 } from '@harness/uicore'
+import * as Yup from 'yup'
+
 import { Link, useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import AuthLayout from 'components/AuthLayout/AuthLayout'
@@ -39,14 +41,14 @@ export const SignUp: React.FC = () => {
       mutate(formData as unknown as void)
         .then(result => {
           setToken(result.access_token as string)
-          showSuccess('User was created')
-          history.replace(routes.toSignIn())
+          showSuccess(getString('userCreated'))
+          history.replace(routes.toCODESpaces())
         })
         .catch(error => {
           showError(getErrorMessage(error))
         })
     },
-    [mutate, setToken, showSuccess, showError, history]
+    [mutate, setToken, showSuccess, showError, history, getString]
   )
 
   const handleSubmit = (data: RegisterForm): void => {
@@ -67,10 +69,18 @@ export const SignUp: React.FC = () => {
       and get ship done.
     </Text> */}
 
-        <Container margin={{ top: 'xxlarge' }}>
+        <Container margin={{ top: 'xlarge' }}>
           <Formik<RegisterForm>
-            initialValues={{ username: '', email: '', password: '' }}
+            initialValues={{ username: '', email: '', password: '', confirmPassword: '' }}
             formName="loginPageForm"
+            validationSchema={Yup.object().shape({
+              username: Yup.string().required(getString('userNameRequired')),
+              email: Yup.string().email().required(getString('emailRequired')),
+              password: Yup.string().min(6, getString('minPassLimit')).required(getString('passwordRequired')),
+              confirmPassword: Yup.string()
+                .required(getString('confirmPassRequired'))
+                .oneOf([Yup.ref('password')], getString('matchPassword'))
+            })}
             onSubmit={handleSubmit}>
             <FormikForm>
               <FormInput.Text
@@ -88,6 +98,14 @@ export const SignUp: React.FC = () => {
                 disabled={false}
                 placeholder={getString('characterLimit')}
               />
+              <FormInput.Text
+                name="confirmPassword"
+                label={getString('confirmPassword')}
+                inputGroup={{ type: 'password' }}
+                disabled={false}
+                placeholder={getString('confirmPassword')}
+              />
+
               <Button type="submit" intent="primary" loading={false} disabled={false} width="100%">
                 {getString('signUp')}
               </Button>
@@ -95,7 +113,7 @@ export const SignUp: React.FC = () => {
           </Formik>
         </Container>
 
-        <Layout.Horizontal margin={{ top: 'xxxlarge' }} spacing="xsmall">
+        <Layout.Horizontal margin={{ top: 'xxlarge' }} spacing="xsmall">
           <Text>
             <StringSubstitute
               str={getString('bySigningIn')}
@@ -103,7 +121,7 @@ export const SignUp: React.FC = () => {
             />
           </Text>
         </Layout.Horizontal>
-        <Layout.Horizontal margin={{ top: 'xxxlarge' }} spacing="xsmall">
+        <Layout.Horizontal margin={{ top: 'xxlarge' }} spacing="xsmall">
           <Text>{getString('alreadyHaveAccount')}</Text>
           <Link to={routes.toSignIn()}>{getString('signIn')}</Link>
         </Layout.Horizontal>
