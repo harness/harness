@@ -18,11 +18,6 @@ type createTokenRequest struct {
 	user.CreateTokenInput
 }
 
-type updateAdminRequest struct {
-	UID string `path:"user_uid"`
-	user.UpdateAdminInput
-}
-
 // helper function that constructs the openapi specification
 // for user account resources.
 func buildUser(reflector *openapi3.Reflector) {
@@ -49,13 +44,4 @@ func buildUser(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opToken, new(types.TokenResponse), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opToken, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/user/token", opToken)
-
-	opUpdateAdmin := openapi3.Operation{}
-	opUpdateAdmin.WithTags("user")
-	opUpdateAdmin.WithMapOfAnything(map[string]interface{}{"operationId": "updateUserAdmin"})
-	_ = reflector.SetRequest(&opUpdateAdmin, new(updateAdminRequest), http.MethodPatch)
-	_ = reflector.SetJSONResponse(&opUpdateAdmin, new(types.User), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opUpdateAdmin, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.SetJSONResponse(&opUpdateAdmin, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.Spec.AddOperation(http.MethodPatch, "/user/{user_uid}/admin", opUpdateAdmin)
 }
