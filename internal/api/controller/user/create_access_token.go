@@ -17,9 +17,10 @@ import (
 )
 
 type CreateTokenInput struct {
-	UID      string           `json:"uid"`
-	Lifetime time.Duration    `json:"lifetime"`
-	Grants   enum.AccessGrant `json:"grants"`
+	UID      string        `json:"uid"`
+	Lifetime time.Duration `json:"lifetime"`
+	// TODO: Added to unblock UI - Depending on product decision remove default value, or remove Grants completely.
+	Grants enum.AccessGrant `json:"grants" default:"9223372036854775807"`
 }
 
 /*
