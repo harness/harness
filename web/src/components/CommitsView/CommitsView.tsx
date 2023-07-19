@@ -187,7 +187,12 @@ export function CommitsView({
             <ThreadSection
               key={date}
               title={
-                <Text icon={CodeIcon.Commit} iconProps={{ size: 20 }} color={Color.GREY_500} className={css.label}>
+                <Text
+                  padding={{ top: 'small', bottom: 'small' }}
+                  icon={CodeIcon.Commit}
+                  iconProps={{ size: 20 }}
+                  color={Color.GREY_500}
+                  className={css.label}>
                   {getString('commitsOn', { date })}
                 </Text>
               }>
