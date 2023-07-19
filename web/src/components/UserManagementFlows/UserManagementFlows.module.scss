@@ -1,0 +1,47 @@
+.dialogCtn {
+  overflow: unset !important;
+
+  button#copyBtn {
+    border-radius: 0 !important;
+    border-left: 1px solid var(--grey-200) !important;
+    margin-left: var(--spacing-small) !important;
+  }
+
+  :global {
+    .bp3-form-group,
+    .TextInput--main {
+      width: 364px;
+    }
+  }
+
+  .passwordCtn {
+    padding: var(--spacing-small) var(--spacing-medium) var(--spacing-xlarge) var(--spacing-medium);
+    border-radius: 4px;
+    margin-left: calc(var(--spacing-medium) * -1);
+
+    .layout {
+      width: 364px;
+      height: 33px;
+      align-items: center;
+      border: 1px solid var(--grey-200);
+      background-color: var(--grey-50) !important;
+      border-radius: 4px;
+      padding-left: var(--spacing-small) !important;
+
+      .text {
+        font-size: var(--font-size-small) !important;
+      }
+    }
+  }
+
+  .formikForm {
+    height: 100%;
+
+    & > div {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+  }
+}

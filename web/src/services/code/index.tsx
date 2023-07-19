@@ -7,11 +7,15 @@ import { getConfig } from '../config'
 export const SPEC_VERSION = '0.0.0'
 export type EnumAccessGrant = number
 
+export type EnumCheckPayloadKind = 'external'
+
+export type EnumCheckStatus = 'error' | 'failure' | 'pending' | 'running' | 'success'
+
 export type EnumContentEncodingType = 'base64' | 'utf8'
 
 export type EnumMergeCheckStatus = string
 
-export type EnumMergeMethod = 'merge' | 'rebase' | 'squash'
+export type EnumMergeMethod = 'merge' | 'squash' | 'rebase'
 
 export type EnumParentResourceType = 'space' | 'repo'
 
@@ -34,6 +38,8 @@ export type EnumPullReqActivityType =
 export type EnumPullReqCommentStatus = 'active' | 'resolved'
 
 export type EnumPullReqReviewDecision = 'approved' | 'changereq' | 'pending' | 'reviewed'
+
+export type EnumPullReqReviewerType = 'assigned' | 'requested' | 'self_assigned'
 
 export type EnumPullReqState = 'closed' | 'merged' | 'open'
 
@@ -60,6 +66,8 @@ export interface FormDataOpenapiLoginRequest {
 }
 
 export interface FormDataOpenapiRegisterRequest {
+  displayname?: string
+  email?: string
   password?: string
   username?: string
 }
@@ -188,6 +196,18 @@ export interface OpenapiCreateSpaceRequest {
   uid?: string
 }
 
+export interface OpenapiCreateTagRequest {
+  message?: string | null
+  name?: string
+  target?: string | null
+}
+
+export interface OpenapiCreateTokenRequest {
+  grants?: EnumAccessGrant
+  lifetime?: TimeDuration
+  uid?: string
+}
+
 export interface OpenapiCreateWebhookRequest {
   description?: string
   display_name?: string
@@ -228,6 +248,14 @@ export interface OpenapiMoveSpaceRequest {
   uid?: string | null
 }
 
+export interface OpenapiReportStatusCheckResultRequest {
+  check_uid?: string
+  link?: string
+  payload?: TypesCheckPayload
+  status?: EnumCheckStatus
+  summary?: string
+}
+
 export interface OpenapiReviewSubmitPullReqRequest {
   commit_sha?: string
   decision?: EnumPullReqReviewDecision
@@ -242,6 +270,10 @@ export interface OpenapiStatePullReqRequest {
   is_draft?: boolean
   message?: string
   state?: EnumPullReqState
+}
+
+export interface OpenapiUpdateAdminRequest {
+  admin?: boolean
 }
 
 export interface OpenapiUpdatePullReqRequest {
@@ -360,6 +392,27 @@ export interface RepoSymlinkContent {
   target?: string
 }
 
+export type TimeDuration = number
+
+export interface TypesCheck {
+  created?: number
+  id?: number
+  link?: string
+  metadata?: {}
+  payload?: TypesCheckPayload
+  reported_by?: TypesPrincipalInfo
+  status?: EnumCheckStatus
+  summary?: string
+  uid?: string
+  updated?: number
+}
+
+export interface TypesCheckPayload {
+  data?: {}
+  kind?: EnumCheckPayloadKind
+  version?: string
+}
+
 export interface TypesCodeCommentFields {
   line_new?: number
   line_old?: number
@@ -387,6 +440,11 @@ export interface TypesDiffStats {
 export interface TypesIdentity {
   email?: string
   name?: string
+}
+
+export interface TypesListCommitResponse {
+  commits?: TypesCommit[] | null
+  rename_details?: TypesRenameDetails[] | null
 }
 
 export interface TypesPath {
@@ -456,11 +514,29 @@ export interface TypesPullReqActivity {
   type?: EnumPullReqActivityType
 }
 
+export interface TypesPullReqReviewer {
+  added_by?: TypesPrincipalInfo
+  created?: number
+  latest_review_id?: number | null
+  review_decision?: EnumPullReqReviewDecision
+  reviewer?: TypesPrincipalInfo
+  sha?: string
+  type?: EnumPullReqReviewerType
+  updated?: number
+}
+
 export interface TypesPullReqStats {
   commits?: number
   conversations?: number
   files_changed?: number
   unresolved_count?: number
+}
+
+export interface TypesRenameDetails {
+  commit_sha_after?: string
+  commit_sha_before?: string
+  new_path?: string
+  old_path?: string
 }
 
 export interface TypesRepository {
@@ -722,35 +798,63 @@ export const useOnLogin = (props: UseOnLoginProps) =>
     ...props
   })
 
-export interface GetPrincipalPathParams {
-  principal_uid: string
+export type OpLogoutProps = Omit<MutateProps<void, UsererrorError, void, void, void>, 'path' | 'verb'>
+
+export const OpLogout = (props: OpLogoutProps) => (
+  <Mutate<void, UsererrorError, void, void, void> verb="POST" path={`/logout`} base={getConfig('code')} {...props} />
+)
+
+export type UseOpLogoutProps = Omit<UseMutateProps<void, UsererrorError, void, void, void>, 'path' | 'verb'>
+
+export const useOpLogout = (props: UseOpLogoutProps) =>
+  useMutate<void, UsererrorError, void, void, void>('POST', `/logout`, { base: getConfig('code'), ...props })
+
+export interface ListPrincipalsQueryParams {
+  /**
+   * The substring by which the principals are filtered.
+   */
+  query?: string
+  /**
+   * The account ID the principals are retrieved for (Not required in standalone).
+   */
+  accountIdentifier?: string
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+  /**
+   * The types of principals to include.
+   */
+  type?: ('service' | 'serviceaccount' | 'user')[]
 }
 
-export type GetPrincipalProps = Omit<
-  GetProps<TypesPrincipalInfo, UsererrorError, void, GetPrincipalPathParams>,
+export type ListPrincipalsProps = Omit<
+  GetProps<TypesPrincipalInfo[], UsererrorError, ListPrincipalsQueryParams, void>,
   'path'
-> &
-  GetPrincipalPathParams
+>
 
-export const GetPrincipal = ({ principal_uid, ...props }: GetPrincipalProps) => (
-  <Get<TypesPrincipalInfo, UsererrorError, void, GetPrincipalPathParams>
-    path={`/principals/${principal_uid}`}
+export const ListPrincipals = (props: ListPrincipalsProps) => (
+  <Get<TypesPrincipalInfo[], UsererrorError, ListPrincipalsQueryParams, void>
+    path={`/principals`}
     base={getConfig('code')}
     {...props}
   />
 )
 
-export type UseGetPrincipalProps = Omit<
-  UseGetProps<TypesPrincipalInfo, UsererrorError, void, GetPrincipalPathParams>,
+export type UseListPrincipalsProps = Omit<
+  UseGetProps<TypesPrincipalInfo[], UsererrorError, ListPrincipalsQueryParams, void>,
   'path'
-> &
-  GetPrincipalPathParams
+>
 
-export const useGetPrincipal = ({ principal_uid, ...props }: UseGetPrincipalProps) =>
-  useGet<TypesPrincipalInfo, UsererrorError, void, GetPrincipalPathParams>(
-    (paramsInPath: GetPrincipalPathParams) => `/principals/${paramsInPath.principal_uid}`,
-    { base: getConfig('code'), pathParams: { principal_uid }, ...props }
-  )
+export const useListPrincipals = (props: UseListPrincipalsProps) =>
+  useGet<TypesPrincipalInfo[], UsererrorError, ListPrincipalsQueryParams, void>(`/principals`, {
+    base: getConfig('code'),
+    ...props
+  })
 
 export type OnRegisterProps = Omit<MutateProps<TypesTokenResponse, UsererrorError, void, void, void>, 'path' | 'verb'>
 
@@ -1072,6 +1176,90 @@ export const useGetBranch = ({ repo_ref, branch_name, ...props }: UseGetBranchPr
     { base: getConfig('code'), pathParams: { repo_ref, branch_name }, ...props }
   )
 
+export interface ListStatusCheckResultsPathParams {
+  repo_ref: string
+  commit_sha: string
+}
+
+export type ListStatusCheckResultsProps = Omit<
+  GetProps<TypesCheck[], UsererrorError, void, ListStatusCheckResultsPathParams>,
+  'path'
+> &
+  ListStatusCheckResultsPathParams
+
+export const ListStatusCheckResults = ({ repo_ref, commit_sha, ...props }: ListStatusCheckResultsProps) => (
+  <Get<TypesCheck[], UsererrorError, void, ListStatusCheckResultsPathParams>
+    path={`/repos/${repo_ref}/checks/commits/${commit_sha}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseListStatusCheckResultsProps = Omit<
+  UseGetProps<TypesCheck[], UsererrorError, void, ListStatusCheckResultsPathParams>,
+  'path'
+> &
+  ListStatusCheckResultsPathParams
+
+export const useListStatusCheckResults = ({ repo_ref, commit_sha, ...props }: UseListStatusCheckResultsProps) =>
+  useGet<TypesCheck[], UsererrorError, void, ListStatusCheckResultsPathParams>(
+    (paramsInPath: ListStatusCheckResultsPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/checks/commits/${paramsInPath.commit_sha}`,
+    { base: getConfig('code'), pathParams: { repo_ref, commit_sha }, ...props }
+  )
+
+export interface ReportStatusCheckResultsPathParams {
+  repo_ref: string
+  commit_sha: string
+}
+
+export type ReportStatusCheckResultsProps = Omit<
+  MutateProps<
+    TypesCheck,
+    UsererrorError,
+    void,
+    OpenapiReportStatusCheckResultRequest,
+    ReportStatusCheckResultsPathParams
+  >,
+  'path' | 'verb'
+> &
+  ReportStatusCheckResultsPathParams
+
+export const ReportStatusCheckResults = ({ repo_ref, commit_sha, ...props }: ReportStatusCheckResultsProps) => (
+  <Mutate<TypesCheck, UsererrorError, void, OpenapiReportStatusCheckResultRequest, ReportStatusCheckResultsPathParams>
+    verb="PUT"
+    path={`/repos/${repo_ref}/checks/commits/${commit_sha}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseReportStatusCheckResultsProps = Omit<
+  UseMutateProps<
+    TypesCheck,
+    UsererrorError,
+    void,
+    OpenapiReportStatusCheckResultRequest,
+    ReportStatusCheckResultsPathParams
+  >,
+  'path' | 'verb'
+> &
+  ReportStatusCheckResultsPathParams
+
+export const useReportStatusCheckResults = ({ repo_ref, commit_sha, ...props }: UseReportStatusCheckResultsProps) =>
+  useMutate<
+    TypesCheck,
+    UsererrorError,
+    void,
+    OpenapiReportStatusCheckResultRequest,
+    ReportStatusCheckResultsPathParams
+  >(
+    'PUT',
+    (paramsInPath: ReportStatusCheckResultsPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/checks/commits/${paramsInPath.commit_sha}`,
+    { base: getConfig('code'), pathParams: { repo_ref, commit_sha }, ...props }
+  )
+
 export interface ListCommitsQueryParams {
   /**
    * The git reference (branch / tag / commitID) that will be used to retrieve the data. If no value is provided the default branch of the repository is used.
@@ -1081,6 +1269,22 @@ export interface ListCommitsQueryParams {
    * The result should only contain commits that occurred after the provided reference.
    */
   after?: string
+  /**
+   * Path for which commit information should be retrieved
+   */
+  path?: string
+  /**
+   * Epoch since when commit information should be retrieved.
+   */
+  since?: number
+  /**
+   * Epoch until when commit information should be retrieved.
+   */
+  until?: number
+  /**
+   * Committer pattern for which commit information should be retrieved.
+   */
+  committer?: string
   /**
    * The page to return.
    */
@@ -1096,13 +1300,13 @@ export interface ListCommitsPathParams {
 }
 
 export type ListCommitsProps = Omit<
-  GetProps<TypesCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>,
+  GetProps<TypesListCommitResponse[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>,
   'path'
 > &
   ListCommitsPathParams
 
 export const ListCommits = ({ repo_ref, ...props }: ListCommitsProps) => (
-  <Get<TypesCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>
+  <Get<TypesListCommitResponse[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>
     path={`/repos/${repo_ref}/commits`}
     base={getConfig('code')}
     {...props}
@@ -1110,13 +1314,13 @@ export const ListCommits = ({ repo_ref, ...props }: ListCommitsProps) => (
 )
 
 export type UseListCommitsProps = Omit<
-  UseGetProps<TypesCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>,
+  UseGetProps<TypesListCommitResponse[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>,
   'path'
 > &
   ListCommitsPathParams
 
 export const useListCommits = ({ repo_ref, ...props }: UseListCommitsProps) =>
-  useGet<TypesCommit[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>(
+  useGet<TypesListCommitResponse[], UsererrorError, ListCommitsQueryParams, ListCommitsPathParams>(
     (paramsInPath: ListCommitsPathParams) => `/repos/${paramsInPath.repo_ref}/commits`,
     { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
@@ -2099,13 +2303,13 @@ export interface ReviewerListPullReqPathParams {
 }
 
 export type ReviewerListPullReqProps = Omit<
-  GetProps<void, UsererrorError, void, ReviewerListPullReqPathParams>,
+  GetProps<TypesPullReqReviewer[], UsererrorError, void, ReviewerListPullReqPathParams>,
   'path'
 > &
   ReviewerListPullReqPathParams
 
 export const ReviewerListPullReq = ({ repo_ref, pullreq_number, ...props }: ReviewerListPullReqProps) => (
-  <Get<void, UsererrorError, void, ReviewerListPullReqPathParams>
+  <Get<TypesPullReqReviewer[], UsererrorError, void, ReviewerListPullReqPathParams>
     path={`/repos/${repo_ref}/pullreq/${pullreq_number}/reviewers`}
     base={getConfig('code')}
     {...props}
@@ -2113,13 +2317,13 @@ export const ReviewerListPullReq = ({ repo_ref, pullreq_number, ...props }: Revi
 )
 
 export type UseReviewerListPullReqProps = Omit<
-  UseGetProps<void, UsererrorError, void, ReviewerListPullReqPathParams>,
+  UseGetProps<TypesPullReqReviewer[], UsererrorError, void, ReviewerListPullReqPathParams>,
   'path'
 > &
   ReviewerListPullReqPathParams
 
 export const useReviewerListPullReq = ({ repo_ref, pullreq_number, ...props }: UseReviewerListPullReqProps) =>
-  useGet<void, UsererrorError, void, ReviewerListPullReqPathParams>(
+  useGet<TypesPullReqReviewer[], UsererrorError, void, ReviewerListPullReqPathParams>(
     (paramsInPath: ReviewerListPullReqPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/reviewers`,
     { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
@@ -2131,13 +2335,19 @@ export interface ReviewerAddPullReqPathParams {
 }
 
 export type ReviewerAddPullReqProps = Omit<
-  MutateProps<void, UsererrorError, void, OpenapiReviewerAddPullReqRequest, ReviewerAddPullReqPathParams>,
+  MutateProps<
+    TypesPullReqReviewer,
+    UsererrorError,
+    void,
+    OpenapiReviewerAddPullReqRequest,
+    ReviewerAddPullReqPathParams
+  >,
   'path' | 'verb'
 > &
   ReviewerAddPullReqPathParams
 
 export const ReviewerAddPullReq = ({ repo_ref, pullreq_number, ...props }: ReviewerAddPullReqProps) => (
-  <Mutate<void, UsererrorError, void, OpenapiReviewerAddPullReqRequest, ReviewerAddPullReqPathParams>
+  <Mutate<TypesPullReqReviewer, UsererrorError, void, OpenapiReviewerAddPullReqRequest, ReviewerAddPullReqPathParams>
     verb="PUT"
     path={`/repos/${repo_ref}/pullreq/${pullreq_number}/reviewers`}
     base={getConfig('code')}
@@ -2146,15 +2356,55 @@ export const ReviewerAddPullReq = ({ repo_ref, pullreq_number, ...props }: Revie
 )
 
 export type UseReviewerAddPullReqProps = Omit<
-  UseMutateProps<void, UsererrorError, void, OpenapiReviewerAddPullReqRequest, ReviewerAddPullReqPathParams>,
+  UseMutateProps<
+    TypesPullReqReviewer,
+    UsererrorError,
+    void,
+    OpenapiReviewerAddPullReqRequest,
+    ReviewerAddPullReqPathParams
+  >,
   'path' | 'verb'
 > &
   ReviewerAddPullReqPathParams
 
 export const useReviewerAddPullReq = ({ repo_ref, pullreq_number, ...props }: UseReviewerAddPullReqProps) =>
-  useMutate<void, UsererrorError, void, OpenapiReviewerAddPullReqRequest, ReviewerAddPullReqPathParams>(
+  useMutate<TypesPullReqReviewer, UsererrorError, void, OpenapiReviewerAddPullReqRequest, ReviewerAddPullReqPathParams>(
     'PUT',
     (paramsInPath: ReviewerAddPullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/reviewers`,
+    { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface ReviewerDeletePullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type ReviewerDeletePullReqProps = Omit<
+  MutateProps<void, UsererrorError, void, number, ReviewerDeletePullReqPathParams>,
+  'path' | 'verb'
+> &
+  ReviewerDeletePullReqPathParams
+
+export const ReviewerDeletePullReq = ({ repo_ref, pullreq_number, ...props }: ReviewerDeletePullReqProps) => (
+  <Mutate<void, UsererrorError, void, number, ReviewerDeletePullReqPathParams>
+    verb="DELETE"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/reviewers`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseReviewerDeletePullReqProps = Omit<
+  UseMutateProps<void, UsererrorError, void, number, ReviewerDeletePullReqPathParams>,
+  'path' | 'verb'
+> &
+  ReviewerDeletePullReqPathParams
+
+export const useReviewerDeletePullReq = ({ repo_ref, pullreq_number, ...props }: UseReviewerDeletePullReqProps) =>
+  useMutate<void, UsererrorError, void, number, ReviewerDeletePullReqPathParams>(
+    'DELETE',
+    (paramsInPath: ReviewerDeletePullReqPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/reviewers`,
     { base: getConfig('code'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
@@ -2343,6 +2593,70 @@ export type UseListTagsProps = Omit<
 export const useListTags = ({ repo_ref, ...props }: UseListTagsProps) =>
   useGet<RepoCommitTag[], UsererrorError, ListTagsQueryParams, ListTagsPathParams>(
     (paramsInPath: ListTagsPathParams) => `/repos/${paramsInPath.repo_ref}/tags`,
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
+  )
+
+export interface CreateTagPathParams {
+  repo_ref: string
+}
+
+export type CreateTagProps = Omit<
+  MutateProps<RepoCommitTag, UsererrorError, void, OpenapiCreateTagRequest, CreateTagPathParams>,
+  'path' | 'verb'
+> &
+  CreateTagPathParams
+
+export const CreateTag = ({ repo_ref, ...props }: CreateTagProps) => (
+  <Mutate<RepoCommitTag, UsererrorError, void, OpenapiCreateTagRequest, CreateTagPathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/tags`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseCreateTagProps = Omit<
+  UseMutateProps<RepoCommitTag, UsererrorError, void, OpenapiCreateTagRequest, CreateTagPathParams>,
+  'path' | 'verb'
+> &
+  CreateTagPathParams
+
+export const useCreateTag = ({ repo_ref, ...props }: UseCreateTagProps) =>
+  useMutate<RepoCommitTag, UsererrorError, void, OpenapiCreateTagRequest, CreateTagPathParams>(
+    'POST',
+    (paramsInPath: CreateTagPathParams) => `/repos/${paramsInPath.repo_ref}/tags`,
+    { base: getConfig('code'), pathParams: { repo_ref }, ...props }
+  )
+
+export interface DeleteTagPathParams {
+  repo_ref: string
+}
+
+export type DeleteTagProps = Omit<
+  MutateProps<void, UsererrorError, void, string, DeleteTagPathParams>,
+  'path' | 'verb'
+> &
+  DeleteTagPathParams
+
+export const DeleteTag = ({ repo_ref, ...props }: DeleteTagProps) => (
+  <Mutate<void, UsererrorError, void, string, DeleteTagPathParams>
+    verb="DELETE"
+    path={`/repos/${repo_ref}/tags`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseDeleteTagProps = Omit<
+  UseMutateProps<void, UsererrorError, void, string, DeleteTagPathParams>,
+  'path' | 'verb'
+> &
+  DeleteTagPathParams
+
+export const useDeleteTag = ({ repo_ref, ...props }: UseDeleteTagProps) =>
+  useMutate<void, UsererrorError, void, string, DeleteTagPathParams>(
+    'DELETE',
+    (paramsInPath: DeleteTagPathParams) => `/repos/${paramsInPath.repo_ref}/tags`,
     { base: getConfig('code'), pathParams: { repo_ref }, ...props }
   )
 
@@ -3061,13 +3375,45 @@ export const useUpdateUser = (props: UseUpdateUserProps) =>
     ...props
   })
 
+export interface UpdateUserAdminPathParams {
+  user_uid: string
+}
+
+export type UpdateUserAdminProps = Omit<
+  MutateProps<TypesUser, UsererrorError, void, OpenapiUpdateAdminRequest, UpdateUserAdminPathParams>,
+  'path' | 'verb'
+> &
+  UpdateUserAdminPathParams
+
+export const UpdateUserAdmin = ({ user_uid, ...props }: UpdateUserAdminProps) => (
+  <Mutate<TypesUser, UsererrorError, void, OpenapiUpdateAdminRequest, UpdateUserAdminPathParams>
+    verb="PATCH"
+    path={`/user/${user_uid}/admin`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseUpdateUserAdminProps = Omit<
+  UseMutateProps<TypesUser, UsererrorError, void, OpenapiUpdateAdminRequest, UpdateUserAdminPathParams>,
+  'path' | 'verb'
+> &
+  UpdateUserAdminPathParams
+
+export const useUpdateUserAdmin = ({ user_uid, ...props }: UseUpdateUserAdminProps) =>
+  useMutate<TypesUser, UsererrorError, void, OpenapiUpdateAdminRequest, UpdateUserAdminPathParams>(
+    'PATCH',
+    (paramsInPath: UpdateUserAdminPathParams) => `/user/${paramsInPath.user_uid}/admin`,
+    { base: getConfig('code'), pathParams: { user_uid }, ...props }
+  )
+
 export type CreateTokenProps = Omit<
-  MutateProps<TypesUser, UsererrorError, void, TypesTokenResponse, void>,
+  MutateProps<TypesTokenResponse, UsererrorError, void, OpenapiCreateTokenRequest, void>,
   'path' | 'verb'
 >
 
 export const CreateToken = (props: CreateTokenProps) => (
-  <Mutate<TypesUser, UsererrorError, void, TypesTokenResponse, void>
+  <Mutate<TypesTokenResponse, UsererrorError, void, OpenapiCreateTokenRequest, void>
     verb="POST"
     path={`/user/token`}
     base={getConfig('code')}
@@ -3076,12 +3422,12 @@ export const CreateToken = (props: CreateTokenProps) => (
 )
 
 export type UseCreateTokenProps = Omit<
-  UseMutateProps<TypesUser, UsererrorError, void, TypesTokenResponse, void>,
+  UseMutateProps<TypesTokenResponse, UsererrorError, void, OpenapiCreateTokenRequest, void>,
   'path' | 'verb'
 >
 
 export const useCreateToken = (props: UseCreateTokenProps) =>
-  useMutate<TypesUser, UsererrorError, void, TypesTokenResponse, void>('POST', `/user/token`, {
+  useMutate<TypesTokenResponse, UsererrorError, void, OpenapiCreateTokenRequest, void>('POST', `/user/token`, {
     base: getConfig('code'),
     ...props
   })

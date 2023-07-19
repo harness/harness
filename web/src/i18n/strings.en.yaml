@@ -83,6 +83,10 @@ validation:
   repoNamePatternIsNotValid: "Name can only contain alphanumerics, '-', '_', '.', and '$'"
   gitBranchNameInvalid: Branch name is invalid.
   gitTagNameInvalid: Tag name is invalid.
+  uidInvalid: User ID can only contain alphanumerics, '-', '_', '.', and '$'
+  emailInvalid: Please input valid email address
+  emailRequired: Email is required
+  uidRequired: User ID is required
 commitMessage: Commit message
 optionalExtendedDescription: Optional extended description
 optional: Optional
@@ -253,6 +257,7 @@ open: Open
 merged: Merged
 enabled: Enabled
 closed: Closed
+close: Close
 reject: Reject
 rejected: Rejected
 yours: Yours
@@ -451,3 +456,32 @@ minPassLimit: Password is too short - should be 6 chars minimum.
 confirmPassRequired: Confirm Password is required
 matchPassword: Passwords must match
 userCreated: User was created
+admin: Admin
+removeAdmin: Remove admin
+setAsAdmin: Set as admin
+addUser: Add User
+editUser: Edit user
+updateUser: Update user
+deleteUser: Delete user
+createNewUser: Create a new user
+displayName: Display Name
+userManagement:
+  text: User Management
+  newUser: New User
+  deleteUser: Delete user
+  deleteUserMsg: Are you sure to delete {avatar} {{displayName}} (user ID:{{userId}})?
+  resetPassword: Reset password
+  resetPasswordMsg: Are you sure you want to reset password for {avatar} {{displayName}} (user ID:{{userId}})?
+  removeAdminMsg: Are you sure you want to remove {avatar} {{displayName}} (user ID:{{userId}}) as an admin?
+  setAsAdminMsg: Are you sure you want to set {avatar} {{displayName}} (user ID:{{userId}}) as an admin?
+newUserModal:
+  uidPlaceholder: 'Enter the user ID here'
+  uidWarning: User ID cannot be changed once created
+  emailPlaceholder: Enter the email here
+  displayNamePlaceholder: Enter the display name here
+  passwordHelptext:
+    Your password has been generated. Please make sure to copy and store your password somewhere safe, you wont be
+    able to see it again.
+  userCreated: User created successfully
+  userUpdated: User updated successfully
+  userDeleted: User '{{name}}' deleted successfully

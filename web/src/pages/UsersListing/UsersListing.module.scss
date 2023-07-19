@@ -1,0 +1,11 @@
+.mainCtn {
+  height: var(--page-min-height, 100%);
+  background-color: var(--primary-bg) !important;
+
+  .adminBadge {
+    padding: var(--spacing-xsmall) 6px;
+    border-radius: 4px;
+    border: 1px solid var(--grey-200);
+    background: var(--grey-50);
+  }
+}

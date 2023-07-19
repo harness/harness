@@ -11,6 +11,7 @@ import { LayoutWithSideMenu, LayoutWithSideNav } from 'layouts/layout'
 import Settings from 'pages/Settings/Settings'
 import { GlobalSettingsMenu } from 'layouts/menu/GlobalSettingsMenu'
 import { RepositoryMenu } from 'layouts/menu/RepositoryMenu'
+import { AdminMenu } from 'layouts/menu/AdminMenu'
 import RepositoryFileEdit from 'pages/RepositoryFileEdit/RepositoryFileEdit'
 import RepositoryCommits from 'pages/RepositoryCommits/RepositoryCommits'
 import RepositoryBranches from 'pages/RepositoryBranches/RepositoryBranches'
@@ -22,6 +23,7 @@ import WebhookNew from 'pages/WebhookNew/WebhookNew'
 import WebhookDetails from 'pages/WebhookDetails/WebhookDetails'
 import Webhooks from 'pages/Webhooks/Webhooks'
 import RepositorySettings from 'pages/RepositorySettings/RepositorySettings'
+import UsersListing from 'pages/UsersListing/UsersListing'
 import Home from 'pages/Home/Home'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
@@ -202,6 +204,11 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           <LayoutWithSideNav>
             <Home />
           </LayoutWithSideNav>
+        </Route>
+        <Route path={routes.toCODEUsers()}>
+          <LayoutWithSideMenu menu={<AdminMenu />}>
+            <UsersListing />
+          </LayoutWithSideMenu>
         </Route>
       </Switch>
     </BrowserRouter>

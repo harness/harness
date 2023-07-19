@@ -4,6 +4,7 @@ import { Render } from 'react-jsx-match'
 import { Link, useRouteMatch } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { routes } from 'RouteDefinitions'
+import { useAppContext } from 'AppContext'
 import { NavEntry } from './NavEntry'
 import css from './layout.module.scss'
 
@@ -20,6 +21,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ type, children, menu }) => {
     [routeMatch]
   )
 
+  const { currentUser } = useAppContext()
+
   if (!type) {
     return <>{children}</>
   }
@@ -32,6 +35,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({ type, children, menu }) => {
             {<NavCodeLogo />}
 
             <NavEntry href={routes.toCODESpaces()} icon="grid" text={getString('spaces')} isSelected={isSpace} />
+
+            {currentUser?.admin ? (
+              <NavEntry href={routes.toCODEUsers()} icon="user-groups" text={getString('admin')} />
+            ) : null}
 
             <li className={css.spacer}></li>
 

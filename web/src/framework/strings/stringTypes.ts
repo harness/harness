@@ -11,6 +11,8 @@ export interface StringsMap {
   addLicense: string
   addNewFile: string
   addReadMe: string
+  addUser: string
+  admin: string
   all: string
   allBranches: string
   allComments: string
@@ -52,6 +54,7 @@ export interface StringsMap {
   clone: string
   cloneHTTPS: string
   cloneText: string
+  close: string
   closed: string
   comment: string
   commentDeleted: string
@@ -86,6 +89,7 @@ export interface StringsMap {
   createBranchFromBranch: string
   createBranchFromTag: string
   createFile: string
+  createNewUser: string
   createPullRequest: string
   createRepo: string
   'createRepoModal.branch': string
@@ -108,6 +112,7 @@ export interface StringsMap {
   deleteRepoTitle: string
   deleteTag: string
   deleteTagConfirm: string
+  deleteUser: string
   deleted: string
   deployKeys: string
   descending: string
@@ -115,11 +120,13 @@ export interface StringsMap {
   diff: string
   disableWebhookContent: string
   disableWebhookTitle: string
+  displayName: string
   download: string
   draft: string
   edit: string
   editFile: string
   editNotAllowed: string
+  editUser: string
   edited: string
   email: string
   emailRequired: string
@@ -185,6 +192,14 @@ export interface StringsMap {
   newPullRequest: string
   newRepo: string
   newTag: string
+  'newUserModal.displayNamePlaceholder': string
+  'newUserModal.emailPlaceholder': string
+  'newUserModal.passwordHelptext': string
+  'newUserModal.uidPlaceholder': string
+  'newUserModal.uidWarning': string
+  'newUserModal.userCreated': string
+  'newUserModal.userDeleted': string
+  'newUserModal.userUpdated': string
   next: string
   noAccount: string
   'noAccount?': string
@@ -301,6 +316,7 @@ export interface StringsMap {
   reject: string
   rejected: string
   remove: string
+  removeAdmin: string
   renameFile: string
   reply: string
   replyAndReactivate: string
@@ -340,6 +356,7 @@ export interface StringsMap {
   secret: string
   selectBranchPlaceHolder: string
   selectToViewMore: string
+  setAsAdmin: string
   settings: string
   showCommitHistory: string
   showEverything: string
@@ -367,16 +384,29 @@ export interface StringsMap {
   'unsavedChanges.stay': string
   'unsavedChanges.title': string
   updateFile: string
+  updateUser: string
   updateWebhook: string
   updated: string
   userCreated: string
   userId: string
+  'userManagement.deleteUser': string
+  'userManagement.deleteUserMsg': string
+  'userManagement.newUser': string
+  'userManagement.removeAdminMsg': string
+  'userManagement.resetPassword': string
+  'userManagement.resetPasswordMsg': string
+  'userManagement.setAsAdminMsg': string
+  'userManagement.text': string
   userName: string
   userNameRequired: string
   users: string
+  'validation.emailInvalid': string
+  'validation.emailRequired': string
   'validation.gitBranchNameInvalid': string
   'validation.gitTagNameInvalid': string
   'validation.repoNamePatternIsNotValid': string
+  'validation.uidInvalid': string
+  'validation.uidRequired': string
   viewAllBranches: string
   viewAllTags: string
   viewCommitDetails: string
