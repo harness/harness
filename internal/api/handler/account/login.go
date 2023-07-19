@@ -5,6 +5,7 @@
 package account
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/user"
@@ -19,10 +20,14 @@ func HandleLogin(userCtrl *user.Controller) http.HandlerFunc {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		username := r.FormValue("username")
-		password := r.FormValue("password")
+		in := new(user.LoginInput)
+		err := json.NewDecoder(r.Body).Decode(in)
+		if err != nil {
+			render.BadRequestf(w, "Invalid request body: %s.", err)
+			return
+		}
 
-		tokenResponse, err := userCtrl.Login(ctx, session, username, password)
+		tokenResponse, err := userCtrl.Login(ctx, session, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

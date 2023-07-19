@@ -22,29 +22,34 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type LoginInput struct {
+	LoginIdentifier string `json:"login_identifier"`
+	Password        string `json:"password"`
+}
+
 /*
  * Login attempts to login as a specific user - returns the session token if successful.
  */
 func (c *Controller) Login(ctx context.Context, session *auth.Session,
-	username string, password string) (*types.TokenResponse, error) {
+	in *LoginInput) (*types.TokenResponse, error) {
 	// no auth check required, password is used for it.
 
-	user, err := findUserFromUID(ctx, c.principalStore, username)
+	user, err := findUserFromUID(ctx, c.principalStore, in.LoginIdentifier)
 	if errors.Is(err, store.ErrResourceNotFound) {
-		user, err = findUserFromEmail(ctx, c.principalStore, username)
+		user, err = findUserFromEmail(ctx, c.principalStore, in.LoginIdentifier)
 	}
 
 	// always return not found for security reasons.
 	if err != nil {
 		log.Ctx(ctx).Debug().Err(err).
-			Str("user_uid", username).
+			Str("user_uid", in.LoginIdentifier).
 			Msgf("failed to retrieve user during login.")
 		return nil, usererror.ErrNotFound
 	}
 
 	err = bcrypt.CompareHashAndPassword(
 		[]byte(user.Password),
-		[]byte(password),
+		[]byte(in.Password),
 	)
 	if err != nil {
 		log.Debug().Err(err).

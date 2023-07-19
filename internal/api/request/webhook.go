@@ -46,6 +46,6 @@ func ParseWebhookExecutionFilter(r *http.Request) *types.WebhookExecutionFilter 
 // ParseSortWebhook extracts the webhook sort parameter from the url.
 func ParseSortWebhook(r *http.Request) enum.WebhookAttr {
 	return enum.ParseWebhookAttr(
-		r.FormValue(QueryParamSort),
+		r.URL.Query().Get(QueryParamSort),
 	)
 }

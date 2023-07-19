@@ -7,6 +7,7 @@ package openapi
 import (
 	"net/http"
 
+	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 
@@ -15,16 +16,12 @@ import (
 
 // request to login to an account.
 type loginRequest struct {
-	Username string `formData:"username"`
-	Password string `formData:"password"`
+	user.LoginInput
 }
 
 // request to register an account.
 type registerRequest struct {
-	Email       string `formData:"email"`
-	DisplayName string `formData:"displayname"`
-	Username    string `formData:"username"`
-	Password    string `formData:"password"`
+	user.RegisterInput
 }
 
 // helper function that constructs the openapi specification
