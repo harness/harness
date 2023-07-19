@@ -20,11 +20,7 @@ export const SignIn: React.FC = () => {
 
   const onLogin = useCallback(
     (data: LoginForm) => {
-      const formData = new FormData()
-      formData.append('username', data.username)
-      formData.append('password', data.password)
-
-      mutate(formData as unknown as void)
+      mutate({ login_identifier: data.username, password: data.password } as unknown as void)
         .then(result => {
           setToken(result.access_token as string)
           history.replace(routes.toCODESpaces())

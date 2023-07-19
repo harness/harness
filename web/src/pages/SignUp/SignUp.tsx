@@ -32,13 +32,12 @@ export const SignUp: React.FC = () => {
   const { mutate } = useOnRegister({})
   const onRegister = useCallback(
     (data: RegisterForm) => {
-      const formData = new FormData()
-      formData.append('username', data.username)
-      formData.append('email', data.username)
-      formData.append('displayname', data.username)
-      formData.append('password', data.password)
-
-      mutate(formData as unknown as void)
+      mutate({
+        display_name: data.username,
+        email: data.email,
+        uid: data.username,
+        password: data.password
+      } as unknown as void)
         .then(result => {
           setToken(result.access_token as string)
           showSuccess(getString('userCreated'))
