@@ -8,7 +8,6 @@ import RepositoriesListing from 'pages/RepositoriesListing/RepositoriesListing'
 import Spaces from 'pages/Spaces/Spaces'
 
 import { LayoutWithSideMenu, LayoutWithSideNav } from 'layouts/layout'
-import Settings from 'pages/Settings/Settings'
 import { GlobalSettingsMenu } from 'layouts/menu/GlobalSettingsMenu'
 import { RepositoryMenu } from 'layouts/menu/RepositoryMenu'
 import { AdminMenu } from 'layouts/menu/AdminMenu'
@@ -25,6 +24,8 @@ import Webhooks from 'pages/Webhooks/Webhooks'
 import RepositorySettings from 'pages/RepositorySettings/RepositorySettings'
 import UsersListing from 'pages/UsersListing/UsersListing'
 import Home from 'pages/Home/Home'
+import UserProfile from 'pages/UserProfile/UserProfile'
+import ChangePassword from 'pages/ChangePassword/ChangePassword'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const repoPath = `${pathProps.space}/${pathProps.repoName}`
@@ -194,12 +195,6 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </LayoutWithSideMenu>
         </Route>
 
-        <Route path={[routes.toCODEGlobalSettings()]} exact>
-          <LayoutWithSideMenu menu={<GlobalSettingsMenu />}>
-            <Settings />
-          </LayoutWithSideMenu>
-        </Route>
-
         <Route path={[routes.toCODEHome()]} exact>
           <LayoutWithSideNav>
             <Home />
@@ -208,6 +203,16 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         <Route path={routes.toCODEUsers()}>
           <LayoutWithSideMenu menu={<AdminMenu />}>
             <UsersListing />
+          </LayoutWithSideMenu>
+        </Route>
+        <Route path={routes.toCODEUserProfile()} exact>
+          <LayoutWithSideMenu menu={<GlobalSettingsMenu />}>
+            <UserProfile />
+          </LayoutWithSideMenu>
+        </Route>
+        <Route path={routes.toCODEUserChangePassword()} exact>
+          <LayoutWithSideMenu menu={<GlobalSettingsMenu />}>
+            <ChangePassword />
           </LayoutWithSideMenu>
         </Route>
       </Switch>

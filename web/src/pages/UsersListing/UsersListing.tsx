@@ -141,8 +141,8 @@ const UsersListing = () => {
                   />
                 </Text>
               ),
-              intent: 'danger',
-              title: getString('userManagement.deleteUser')
+              intent: 'primary',
+              title: getString(row.original.admin ? 'removeAdmin' : 'setAsAdmin')
             })
 
           return (

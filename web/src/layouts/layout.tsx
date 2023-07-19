@@ -44,7 +44,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ type, children, menu }) => {
 
             <NavEntry href="//docs.harness.io" external icon="nav-help" text={getString('help')} />
 
-            <NavEntry href={routes.toCODEGlobalSettings()} icon="code-settings" height="56px" />
+            <NavEntry href={routes.toCODEUserProfile()} icon="code-settings" height="56px" />
           </ol>
         </nav>
 

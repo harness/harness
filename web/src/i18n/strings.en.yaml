@@ -84,9 +84,14 @@ validation:
   gitBranchNameInvalid: Branch name is invalid.
   gitTagNameInvalid: Tag name is invalid.
   uidInvalid: User ID can only contain alphanumerics, '-', '_', '.', and '$'
+  nameInvalid: Name can only contain alphanumerics, '-', '_', '.', and '$'
   emailInvalid: Please input valid email address
   emailRequired: Email is required
   uidRequired: User ID is required
+  nameIsRequired: Name is required
+  expirationDateRequired: Expiration date is required
+  newPasswordRequired: New password is a required field
+  confirmPasswordRequired: Confirm Password is a required field
 commitMessage: Commit message
 optionalExtendedDescription: Optional extended description
 optional: Optional
@@ -465,6 +470,32 @@ updateUser: Update user
 deleteUser: Delete user
 createNewUser: Create a new user
 displayName: Display Name
+accountEmail: Account Email
+changePassword: Change Password
+logoutMsg: Do you want to log out your current account?
+logOut: Log out
+enterNewPassword: Enter the <b>NEW</b> password
+confirmNewPassword: Confirm the <b>NEW</b> password
+accountSetting: Account Setting
+nDays: '{{number}} Days'
+expiration: Expiration
+token: Token
+expired: Expired
+expirationDate: Expiration Date
+created: Created
+changePasswordSuccesfully: Password changed successfully
+applyChanges: Apply Changes
+createNewToken: Create New Token
+newToken:
+  text: New Token
+  namePlaceholder: Enter the name
+  expireOn: Token will expire on {{date}}
+  generateToken: Generate Token
+deleteToken: Delete token
+deleteTokenMsg: Token deleted successfully
+userProfile:
+  deleteTokenMsg: Are you sure you want to delete this token?
+profile: Profile
 userManagement:
   text: User Management
   newUser: New User

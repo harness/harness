@@ -37,6 +37,8 @@ export interface CODERoutes {
   toCODESpaces: () => string
   toCODEGlobalSettings: () => string
   toCODEUsers: () => string
+  toCODEUserProfile: () => string
+  toCODEUserChangePassword: () => string
 
   toCODERepositories: (args: Required<Pick<CODEProps, 'space'>>) => string
   toCODERepository: (args: RequiredField<Pick<CODEProps, 'repoPath' | 'gitRef' | 'resourcePath'>, 'repoPath'>) => string
@@ -67,6 +69,8 @@ export const routes: CODERoutes = {
   toCODESpaces: () => `/spaces`,
   toCODEGlobalSettings: () => '/settings',
   toCODEUsers: () => '/users',
+  toCODEUserProfile: () => '/profile',
+  toCODEUserChangePassword: () => '/change-password',
 
   toCODERepositories: ({ space }) => `/spaces/${space}`,
   toCODERepository: ({ repoPath, gitRef, resourcePath }) =>
