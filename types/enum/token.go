@@ -16,7 +16,4 @@ const (
 
 	// TokenTypeSAT is a service account access token.
 	TokenTypeSAT TokenType = "sat"
-
-	// TokenTypeOAuth2 is the token returned to an oauth client.
-	TokenTypeOAuth2 TokenType = "oauth2"
 )

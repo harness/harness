@@ -3,6 +3,8 @@
  * Use the command `yarn strings` to regenerate this file.
  */
 export interface StringsMap {
+  accountEmail: string
+  accountSetting: string
   active: string
   activeBranches: string
   add: string
@@ -11,11 +13,14 @@ export interface StringsMap {
   addLicense: string
   addNewFile: string
   addReadMe: string
+  addUser: string
+  admin: string
   all: string
   allBranches: string
   allComments: string
   alreadyHaveAccount: string
   and: string
+  applyChanges: string
   approve: string
   ascending: string
   assignPeople: string
@@ -43,6 +48,8 @@ export interface StringsMap {
   browseFiles: string
   bySigningIn: string
   cancel: string
+  changePassword: string
+  changePasswordSuccesfully: string
   changes: string
   characterLimit: string
   checkRuns: string
@@ -52,6 +59,7 @@ export interface StringsMap {
   clone: string
   cloneHTTPS: string
   cloneText: string
+  close: string
   closed: string
   comment: string
   commentDeleted: string
@@ -70,6 +78,9 @@ export interface StringsMap {
   confirm: string
   confirmDelete: string
   confirmDeleteWebhook: string
+  confirmNewPassword: string
+  confirmPassRequired: string
+  confirmPassword: string
   confirmation: string
   content: string
   contents: string
@@ -84,6 +95,8 @@ export interface StringsMap {
   createBranchFromBranch: string
   createBranchFromTag: string
   createFile: string
+  createNewToken: string
+  createNewUser: string
   createPullRequest: string
   createRepo: string
   'createRepoModal.branch': string
@@ -93,6 +106,7 @@ export interface StringsMap {
   createRepoPerms: string
   createTag: string
   createWebhook: string
+  created: string
   creationDate: string
   dangerDeleteRepo: string
   defaultBranch: string
@@ -106,6 +120,9 @@ export interface StringsMap {
   deleteRepoTitle: string
   deleteTag: string
   deleteTagConfirm: string
+  deleteToken: string
+  deleteTokenMsg: string
+  deleteUser: string
   deleted: string
   deployKeys: string
   descending: string
@@ -113,13 +130,16 @@ export interface StringsMap {
   diff: string
   disableWebhookContent: string
   disableWebhookTitle: string
+  displayName: string
   download: string
   draft: string
   edit: string
   editFile: string
   editNotAllowed: string
+  editUser: string
   edited: string
   email: string
+  emailRequired: string
   emptyRepoHeader: string
   emptyRepoInclude: string
   enableSSLVerification: string
@@ -128,12 +148,16 @@ export interface StringsMap {
   enabled: string
   enterDescription: string
   enterNewBranchName: string
+  enterNewPassword: string
   enterRepoName: string
   enterSecret: string
   enterTagPlaceholder: string
   enterUser: string
   error404Text: string
   existingAccount: string
+  expiration: string
+  expirationDate: string
+  expired: string
   failedToCreateBranch: string
   failedToCreateRepo: string
   failedToDeleteBranch: string
@@ -161,14 +185,19 @@ export interface StringsMap {
   license: string
   lineBreaks: string
   loading: string
+  logOut: string
+  logoutMsg: string
   makeOptional: string
   makeRequired: string
   manageApiToken: string
   manageCredText: string
+  matchPassword: string
   merged: string
+  minPassLimit: string
   missingPerms: string
   missingPermsContent: string
   myComments: string
+  nDays: string
   name: string
   nameYourBranch: string
   nameYourFile: string
@@ -180,6 +209,18 @@ export interface StringsMap {
   newPullRequest: string
   newRepo: string
   newTag: string
+  'newToken.expireOn': string
+  'newToken.generateToken': string
+  'newToken.namePlaceholder': string
+  'newToken.text': string
+  'newUserModal.displayNamePlaceholder': string
+  'newUserModal.emailPlaceholder': string
+  'newUserModal.passwordHelptext': string
+  'newUserModal.uidPlaceholder': string
+  'newUserModal.uidWarning': string
+  'newUserModal.userCreated': string
+  'newUserModal.userDeleted': string
+  'newUserModal.userUpdated': string
   next: string
   noAccount: string
   'noAccount?': string
@@ -210,6 +251,7 @@ export interface StringsMap {
   pageNotFound: string
   password: string
   passwordApi: string
+  passwordRequired: string
   payloadUrl: string
   payloadUrlLabel: string
   pending: string
@@ -283,6 +325,7 @@ export interface StringsMap {
   preview: string
   privacyPolicy: string
   private: string
+  profile: string
   public: string
   pullMustBeMadeFromBranches: string
   pullRequestEmpty: string
@@ -295,6 +338,7 @@ export interface StringsMap {
   reject: string
   rejected: string
   remove: string
+  removeAdmin: string
   renameFile: string
   reply: string
   replyAndReactivate: string
@@ -334,6 +378,7 @@ export interface StringsMap {
   secret: string
   selectBranchPlaceHolder: string
   selectToViewMore: string
+  setAsAdmin: string
   settings: string
   showCommitHistory: string
   showEverything: string
@@ -354,6 +399,7 @@ export interface StringsMap {
   tags: string
   termsOfUse: string
   title: string
+  token: string
   tooltipRepoEdit: string
   unrsolvedComment: string
   'unsavedChanges.leave': string
@@ -361,14 +407,35 @@ export interface StringsMap {
   'unsavedChanges.stay': string
   'unsavedChanges.title': string
   updateFile: string
+  updateUser: string
   updateWebhook: string
   updated: string
+  userCreated: string
   userId: string
+  'userManagement.deleteUser': string
+  'userManagement.deleteUserMsg': string
+  'userManagement.newUser': string
+  'userManagement.removeAdminMsg': string
+  'userManagement.resetPassword': string
+  'userManagement.resetPasswordMsg': string
+  'userManagement.setAsAdminMsg': string
+  'userManagement.text': string
   userName: string
+  userNameRequired: string
+  'userProfile.deleteTokenMsg': string
   users: string
+  'validation.confirmPasswordRequired': string
+  'validation.emailInvalid': string
+  'validation.emailRequired': string
+  'validation.expirationDateRequired': string
   'validation.gitBranchNameInvalid': string
   'validation.gitTagNameInvalid': string
+  'validation.nameInvalid': string
+  'validation.nameIsRequired': string
+  'validation.newPasswordRequired': string
   'validation.repoNamePatternIsNotValid': string
+  'validation.uidInvalid': string
+  'validation.uidRequired': string
   viewAllBranches: string
   viewAllTags: string
   viewCommitDetails: string

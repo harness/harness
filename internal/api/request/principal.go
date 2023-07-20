@@ -45,7 +45,7 @@ func GetServiceAccountUIDFromPath(r *http.Request) (string, error) {
 // ParseSortUser extracts the user sort parameter from the url.
 func ParseSortUser(r *http.Request) enum.UserAttr {
 	return enum.ParseUserAttr(
-		r.FormValue(QueryParamSort),
+		r.URL.Query().Get(QueryParamSort),
 	)
 }
 

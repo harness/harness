@@ -75,9 +75,13 @@ func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bo
 		return nil, err
 	}
 
-	// first user will be admin by default.
-	// TODO: move responsibility somewhere else.
-	if user.ID == 1 {
+	uCount, err := c.principalStore.CountUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// first 'user' principal will be admin by default.
+	if uCount == 1 {
 		user.Admin = true
 		err = c.principalStore.UpdateUser(ctx, user)
 		if err != nil {

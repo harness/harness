@@ -22,7 +22,7 @@ func GetPathIDFromPath(r *http.Request) (int64, error) {
 // ParseSortPath extracts the path sort parameter from the url.
 func ParseSortPath(r *http.Request) enum.PathAttr {
 	return enum.ParsePathAttr(
-		r.FormValue(QueryParamSort),
+		r.URL.Query().Get(QueryParamSort),
 	)
 }
 

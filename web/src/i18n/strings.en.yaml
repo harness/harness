@@ -3,6 +3,7 @@ signIn: Sign In
 signUp: Sign Up
 email: Email
 password: Password
+confirmPassword: Confirm Password
 noAccount: No Account
 existingAccount: Existing Account
 public: Public
@@ -82,6 +83,15 @@ validation:
   repoNamePatternIsNotValid: "Name can only contain alphanumerics, '-', '_', '.', and '$'"
   gitBranchNameInvalid: Branch name is invalid.
   gitTagNameInvalid: Tag name is invalid.
+  uidInvalid: User ID can only contain alphanumerics, '-', '_', '.', and '$'
+  nameInvalid: Name can only contain alphanumerics, '-', '_', '.', and '$'
+  emailInvalid: Please input valid email address
+  emailRequired: Email is required
+  uidRequired: User ID is required
+  nameIsRequired: Name is required
+  expirationDateRequired: Expiration date is required
+  newPasswordRequired: New password is a required field
+  confirmPasswordRequired: Confirm Password is a required field
 commitMessage: Commit message
 optionalExtendedDescription: Optional extended description
 optional: Optional
@@ -252,6 +262,7 @@ open: Open
 merged: Merged
 enabled: Enabled
 closed: Closed
+close: Close
 reject: Reject
 rejected: Rejected
 yours: Yours
@@ -397,7 +408,7 @@ resolve: Resolve
 reactivate: Reactivate
 generateCloneCred: + Generate Clone Credential
 generateCloneText: 'Please generate clone credential if it’s your first time'
-getMyCloneTitle: Get My Clone Credential
+getMyCloneTitle: Generate Clone Credential
 cloneText: Your clone credentials have been generated. Please make sure to copy and store your password somewhere safe, you won't be able to see it again.
 manageApiToken: Manage Api Token
 userName: User Name
@@ -443,3 +454,65 @@ bySigningIn: By signing in, you agree to our {policy} and our {terms}
 userId: User ID
 characterLimit: 6+ characters
 enterUser: Enter user id here ...
+userNameRequired: Username is required
+passwordRequired: Password is required
+emailRequired: Email is required
+minPassLimit: Password is too short - should be 6 chars minimum.
+confirmPassRequired: Confirm Password is required
+matchPassword: Passwords must match
+userCreated: User was created
+admin: Admin
+removeAdmin: Remove admin
+setAsAdmin: Set as admin
+addUser: Add User
+editUser: Edit user
+updateUser: Update user
+deleteUser: Delete user
+createNewUser: Create a new user
+displayName: Display Name
+accountEmail: Account Email
+changePassword: Change Password
+logoutMsg: Do you want to log out your current account?
+logOut: Log out
+enterNewPassword: Enter the <b>NEW</b> password
+confirmNewPassword: Confirm the <b>NEW</b> password
+accountSetting: Account Setting
+nDays: '{{number}} Days'
+expiration: Expiration
+token: Token
+expired: Expired
+expirationDate: Expiration Date
+created: Created
+changePasswordSuccesfully: Password changed successfully
+applyChanges: Apply Changes
+createNewToken: Create New Token
+newToken:
+  text: New Token
+  namePlaceholder: Enter the name
+  expireOn: Token will expire on {{date}}
+  generateToken: Generate Token
+deleteToken: Delete token
+deleteTokenMsg: Token deleted successfully
+userProfile:
+  deleteTokenMsg: Are you sure you want to delete this token?
+profile: Profile
+userManagement:
+  text: User Management
+  newUser: New User
+  deleteUser: Delete user
+  deleteUserMsg: Are you sure to delete {avatar} {{displayName}} (user ID:{{userId}})?
+  resetPassword: Reset password
+  resetPasswordMsg: Are you sure you want to reset password for {avatar} {{displayName}} (user ID:{{userId}})?
+  removeAdminMsg: Are you sure you want to remove {avatar} {{displayName}} (user ID:{{userId}}) as an admin?
+  setAsAdminMsg: Are you sure you want to set {avatar} {{displayName}} (user ID:{{userId}}) as an admin?
+newUserModal:
+  uidPlaceholder: 'Enter the user ID here'
+  uidWarning: User ID cannot be changed once created
+  emailPlaceholder: Enter the email here
+  displayNamePlaceholder: Enter the display name here
+  passwordHelptext:
+    Your password has been generated. Please make sure to copy and store your password somewhere safe, you wont be
+    able to see it again.
+  userCreated: User created successfully
+  userUpdated: User updated successfully
+  userDeleted: User '{{name}}' deleted successfully

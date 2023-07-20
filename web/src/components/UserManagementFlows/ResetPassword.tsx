@@ -1,0 +1,106 @@
+import React, { useState } from 'react'
+import {
+  Avatar,
+  Button,
+  ButtonVariation,
+  Dialog,
+  FlexExpander,
+  FontVariation,
+  Layout,
+  StringSubstitute,
+  Text,
+  useToaster
+} from '@harness/uicore'
+import { useModalHook } from '@harness/use-modal'
+import { Else, Match, Truthy } from 'react-jsx-match'
+
+import { useStrings } from 'framework/strings'
+import { TypesUser, useAdminUpdateUser } from 'services/code'
+import { generateAlphaNumericHash, getErrorMessage } from 'utils/Utils'
+
+import { GeneratedPassword } from './AddUserModal'
+
+import css from './UserManagementFlows.module.scss'
+
+const useResetPasswordModal = () => {
+  const { getString } = useStrings()
+  const { showError } = useToaster()
+
+  const [userDetails, setUserDetails] = useState<TypesUser>()
+  const [newPassword, setNewPassword] = useState('')
+
+  const { mutate: updateUser } = useAdminUpdateUser({
+    user_uid: userDetails?.uid || ''
+  })
+
+  const onConfirm = async () => {
+    try {
+      const password = generateAlphaNumericHash(10)
+
+      await updateUser({ password })
+      setNewPassword(password)
+    } catch (error) {
+      showError(getErrorMessage(error))
+    }
+  }
+
+  const onClose = () => {
+    hideModal()
+    setNewPassword('')
+  }
+
+  const [openModal, hideModal] = useModalHook(
+    () => (
+      <Dialog isOpen enforceFocus={false} onClose={onClose} title={'Reset Password'} chidrenClassName={css.dialogCtn}>
+        <Layout.Vertical height="100%">
+          <Match expr={newPassword}>
+            <Truthy>
+              <GeneratedPassword password={newPassword} />
+              <FlexExpander />
+              <div>
+                <Button
+                  margin={{ top: 'xxxlarge' }}
+                  text={getString('close')}
+                  variation={ButtonVariation.TERTIARY}
+                  onClick={onClose}
+                />
+              </div>
+            </Truthy>
+            <Else>
+              <Text font={{ variation: FontVariation.BODY2 }}>
+                <StringSubstitute
+                  str={getString('userManagement.resetPasswordMsg', {
+                    displayName: userDetails?.display_name,
+                    userId: userDetails?.uid
+                  })}
+                  vars={{
+                    avatar: <Avatar name={userDetails?.display_name} />
+                  }}
+                />
+              </Text>
+              <FlexExpander />
+              <div>
+                <Button
+                  margin={{ top: 'xxxlarge' }}
+                  onClick={onConfirm}
+                  text={'Confirm'}
+                  variation={ButtonVariation.PRIMARY}
+                />
+              </div>
+            </Else>
+          </Match>
+        </Layout.Vertical>
+      </Dialog>
+    ),
+    [onConfirm, userDetails, newPassword]
+  )
+
+  return {
+    openModal: ({ userInfo }: { userInfo?: TypesUser }) => {
+      openModal()
+      setUserDetails(userInfo)
+    }
+  }
+}
+
+export default useResetPasswordModal

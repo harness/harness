@@ -4,6 +4,7 @@ import { Render } from 'react-jsx-match'
 import { Link, useRouteMatch } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { routes } from 'RouteDefinitions'
+import { useAppContext } from 'AppContext'
 import { NavEntry } from './NavEntry'
 import css from './layout.module.scss'
 
@@ -20,6 +21,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ type, children, menu }) => {
     [routeMatch]
   )
 
+  const { currentUser } = useAppContext()
+
   if (!type) {
     return <>{children}</>
   }
@@ -33,11 +36,15 @@ const AppLayout: React.FC<AppLayoutProps> = ({ type, children, menu }) => {
 
             <NavEntry href={routes.toCODESpaces()} icon="grid" text={getString('spaces')} isSelected={isSpace} />
 
+            {currentUser?.admin ? (
+              <NavEntry href={routes.toCODEUsers()} icon="user-groups" text={getString('admin')} />
+            ) : null}
+
             <li className={css.spacer}></li>
 
             <NavEntry href="//docs.harness.io" external icon="nav-help" text={getString('help')} />
 
-            <NavEntry href={routes.toCODEGlobalSettings()} icon="code-settings" height="56px" />
+            <NavEntry href={routes.toCODEUserProfile()} icon="code-settings" height="56px" />
           </ol>
         </nav>
 

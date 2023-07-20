@@ -158,12 +158,12 @@ func GetRemainderFromPath(r *http.Request) (string, error) {
 
 // ParseQuery extracts the query parameter from the url.
 func ParseQuery(r *http.Request) string {
-	return r.FormValue(QueryParamQuery)
+	return r.URL.Query().Get(QueryParamQuery)
 }
 
 // ParsePage extracts the page parameter from the url.
 func ParsePage(r *http.Request) int {
-	s := r.FormValue(QueryParamPage)
+	s := r.URL.Query().Get(QueryParamPage)
 	i, _ := strconv.Atoi(s)
 	if i <= 0 {
 		i = 1
@@ -173,7 +173,7 @@ func ParsePage(r *http.Request) int {
 
 // ParseLimit extracts the limit parameter from the url.
 func ParseLimit(r *http.Request) int {
-	s := r.FormValue(QueryParamLimit)
+	s := r.URL.Query().Get(QueryParamLimit)
 	i, _ := strconv.Atoi(s)
 	if i <= 0 {
 		i = PerPageDefault
@@ -186,11 +186,11 @@ func ParseLimit(r *http.Request) int {
 // ParseOrder extracts the order parameter from the url.
 func ParseOrder(r *http.Request) enum.Order {
 	return enum.ParseOrder(
-		r.FormValue(QueryParamOrder),
+		r.URL.Query().Get(QueryParamOrder),
 	)
 }
 
 // ParseSort extracts the sort parameter from the url.
 func ParseSort(r *http.Request) string {
-	return r.FormValue(QueryParamSort)
+	return r.URL.Query().Get(QueryParamSort)
 }

@@ -74,12 +74,12 @@ paths:
             schema:
               $ref: '#/components/schemas/OpenapiAdminUsersCreateRequest'
       responses:
-        '200':
+        '201':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TypesUser'
-          description: OK
+          description: Created
         '400':
           content:
             application/json:
@@ -236,21 +236,86 @@ paths:
           description: Internal Server Error
       tags:
         - account
-  /principals/{principal_uid}:
+  /logout:
+    post:
+      operationId: opLogout
+      responses:
+        '200':
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - account
+  /principals:
     get:
-      operationId: getPrincipal
+      operationId: listPrincipals
       parameters:
-        - in: path
-          name: principal_uid
-          required: true
+        - description: The substring by which the principals are filtered.
+          in: query
+          name: query
+          required: false
           schema:
             type: string
+        - description: The account ID the principals are retrieved for (Not required
+            in standalone).
+          in: query
+          name: accountIdentifier
+          required: false
+          schema:
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: The types of principals to include.
+          in: query
+          name: type
+          required: false
+          schema:
+            items:
+              enum:
+                - service
+                - serviceaccount
+                - user
+              type: string
+            type: array
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TypesPrincipalInfo'
+                items:
+                  $ref: '#/components/schemas/TypesPrincipalInfo'
+                type: array
           description: OK
         '400':
           content:
@@ -783,6 +848,106 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+  /repos/{repo_ref}/checks/commits/{commit_sha}:
+    get:
+      operationId: listStatusCheckResults
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: commit_sha
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesCheck'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - status_checks
+    put:
+      operationId: reportStatusCheckResults
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: commit_sha
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiReportStatusCheckResultRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesCheck'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - status_checks
   /repos/{repo_ref}/commits:
     get:
       operationId: listCommits
@@ -800,6 +965,31 @@ paths:
             provided reference.
           in: query
           name: after
+          required: false
+          schema:
+            type: string
+        - description: Path for which commit information should be retrieved
+          in: query
+          name: path
+          required: false
+          schema:
+            default: ''
+            type: string
+        - description: Epoch since when commit information should be retrieved.
+          in: query
+          name: since
+          required: false
+          schema:
+            type: integer
+        - description: Epoch until when commit information should be retrieved.
+          in: query
+          name: until
+          required: false
+          schema:
+            type: integer
+        - description: Committer pattern for which commit information should be retrieved.
+          in: query
+          name: committer
           required: false
           schema:
             type: string
@@ -831,7 +1021,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/TypesCommit'
+                  $ref: '#/components/schemas/TypesListCommitResponse'
                 type: array
           description: OK
         '401':
@@ -2222,8 +2412,14 @@ paths:
           schema:
             type: integer
       responses:
-        '204':
-          description: No Content
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesPullReqReviewer'
+                type: array
+          description: OK
         '400':
           content:
             application/json:
@@ -2268,6 +2464,58 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/OpenapiReviewerAddPullReqRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPullReqReviewer'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/reviewers/{pullreq_reviewer_id}:
+    delete:
+      operationId: reviewerDeletePullReq
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: pullreq_reviewer_id
+          required: true
+          schema:
+            type: integer
       responses:
         '204':
           description: No Content
@@ -2588,6 +2836,107 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+    post:
+      operationId: createTag
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateTagRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepoCommitTag'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Conflict
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
+  /repos/{repo_ref}/tags/{tag_name}:
+    delete:
+      operationId: deleteTag
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: tag_name
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Conflict
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repo_ref}/webhooks:
     get:
       operationId: listWebhooks
@@ -2692,12 +3041,12 @@ paths:
             schema:
               $ref: '#/components/schemas/OpenapiCreateWebhookRequest'
       responses:
-        '200':
+        '201':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OpenapiWebhookType'
-          description: OK
+          description: Created
         '400':
           content:
             application/json:
@@ -3701,14 +4050,20 @@ paths:
           description: Internal Server Error
       tags:
         - user
-  /user/token:
-    post:
-      operationId: createToken
+  /user/{user_uid}/admin:
+    patch:
+      operationId: updateUserAdmin
+      parameters:
+        - in: path
+          name: user_uid
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TypesTokenResponse'
+              $ref: '#/components/schemas/OpenapiUpdateAdminRequest'
       responses:
         '200':
           content:
@@ -3716,6 +4071,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/TypesUser'
           description: OK
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - user
+  /user/token:
+    post:
+      operationId: createToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateTokenRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesTokenResponse'
+          description: Created
         '500':
           content:
             application/json:
@@ -3728,6 +4112,18 @@ components:
   schemas:
     EnumAccessGrant:
       type: integer
+    EnumCheckPayloadKind:
+      enum:
+        - external
+      type: string
+    EnumCheckStatus:
+      enum:
+        - error
+        - failure
+        - pending
+        - running
+        - success
+      type: string
     EnumContentEncodingType:
       enum:
         - base64
@@ -3738,8 +4134,8 @@ components:
     EnumMergeMethod:
       enum:
         - merge
-        - rebase
         - squash
+        - rebase
       type: string
     EnumParentResourceType:
       enum:
@@ -3783,6 +4179,12 @@ components:
         - pending
         - reviewed
       type: string
+    EnumPullReqReviewerType:
+      enum:
+        - assigned
+        - requested
+        - self_assigned
+      type: string
     EnumPullReqState:
       enum:
         - closed
@@ -3824,6 +4226,10 @@ components:
       type: object
     FormDataOpenapiRegisterRequest:
       properties:
+        displayname:
+          type: string
+        email:
+          type: string
         password:
           type: string
         username:
@@ -4047,6 +4453,26 @@ components:
         uid:
           type: string
       type: object
+    OpenapiCreateTagRequest:
+      properties:
+        message:
+          nullable: true
+          type: string
+        name:
+          type: string
+        target:
+          nullable: true
+          type: string
+      type: object
+    OpenapiCreateTokenRequest:
+      properties:
+        grants:
+          $ref: '#/components/schemas/EnumAccessGrant'
+        lifetime:
+          $ref: '#/components/schemas/TimeDuration'
+        uid:
+          type: string
+      type: object
     OpenapiCreateWebhookRequest:
       properties:
         description:
@@ -4119,6 +4545,19 @@ components:
           nullable: true
           type: string
       type: object
+    OpenapiReportStatusCheckResultRequest:
+      properties:
+        check_uid:
+          type: string
+        link:
+          type: string
+        payload:
+          $ref: '#/components/schemas/TypesCheckPayload'
+        status:
+          $ref: '#/components/schemas/EnumCheckStatus'
+        summary:
+          type: string
+      type: object
     OpenapiReviewSubmitPullReqRequest:
       properties:
         commit_sha:
@@ -4141,6 +4580,11 @@ components:
           type: string
         state:
           $ref: '#/components/schemas/EnumPullReqState'
+      type: object
+    OpenapiUpdateAdminRequest:
+      properties:
+        admin:
+          type: boolean
       type: object
     OpenapiUpdatePullReqRequest:
       properties:
@@ -4337,6 +4781,38 @@ components:
         target:
           type: string
       type: object
+    TimeDuration:
+      type: integer
+    TypesCheck:
+      properties:
+        created:
+          type: integer
+        id:
+          type: integer
+        link:
+          type: string
+        metadata: {}
+        payload:
+          $ref: '#/components/schemas/TypesCheckPayload'
+        reported_by:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        status:
+          $ref: '#/components/schemas/EnumCheckStatus'
+        summary:
+          type: string
+        uid:
+          type: string
+        updated:
+          type: integer
+      type: object
+    TypesCheckPayload:
+      properties:
+        data: {}
+        kind:
+          $ref: '#/components/schemas/EnumCheckPayloadKind'
+        version:
+          type: string
+      type: object
     TypesCodeCommentFields:
       properties:
         line_new:
@@ -4382,6 +4858,19 @@ components:
           type: string
         name:
           type: string
+      type: object
+    TypesListCommitResponse:
+      properties:
+        commits:
+          items:
+            $ref: '#/components/schemas/TypesCommit'
+          nullable: true
+          type: array
+        rename_details:
+          items:
+            $ref: '#/components/schemas/TypesRenameDetails'
+          nullable: true
+          type: array
       type: object
     TypesPath:
       properties:
@@ -4513,6 +5002,26 @@ components:
         type:
           $ref: '#/components/schemas/EnumPullReqActivityType'
       type: object
+    TypesPullReqReviewer:
+      properties:
+        added_by:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        created:
+          type: integer
+        latest_review_id:
+          nullable: true
+          type: integer
+        review_decision:
+          $ref: '#/components/schemas/EnumPullReqReviewDecision'
+        reviewer:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        sha:
+          type: string
+        type:
+          $ref: '#/components/schemas/EnumPullReqReviewerType'
+        updated:
+          type: integer
+      type: object
     TypesPullReqStats:
       properties:
         commits:
@@ -4523,6 +5032,17 @@ components:
           type: integer
         unresolved_count:
           type: integer
+      type: object
+    TypesRenameDetails:
+      properties:
+        commit_sha_after:
+          type: string
+        commit_sha_before:
+          type: string
+        new_path:
+          type: string
+        old_path:
+          type: string
       type: object
     TypesRepository:
       properties:

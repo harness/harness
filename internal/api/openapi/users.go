@@ -39,6 +39,12 @@ type (
 		// include pagination request
 		paginationRequest
 	}
+
+	// updateAdminRequest is the request for updating the admin attribute for the user.
+	updateAdminRequest struct {
+		adminUsersRequest
+		user.UpdateAdminInput
+	}
 )
 
 // helper function that constructs the openapi specification
@@ -83,6 +89,15 @@ func buildAdmin(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPatch, "/admin/users/{user_uid}", opUpdate)
+
+	opUpdateAdmin := openapi3.Operation{}
+	opUpdateAdmin.WithTags("admin")
+	opUpdateAdmin.WithMapOfAnything(map[string]interface{}{"operationId": "updateUserAdmin"})
+	_ = reflector.SetRequest(&opUpdateAdmin, new(updateAdminRequest), http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opUpdateAdmin, new(types.User), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opUpdateAdmin, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&opUpdateAdmin, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodPatch, "/admin/users/{user_uid}/admin", opUpdateAdmin)
 
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("admin")

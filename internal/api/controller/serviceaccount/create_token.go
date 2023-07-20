@@ -36,7 +36,8 @@ func (c *Controller) CreateToken(ctx context.Context, session *auth.Session,
 	if err = check.TokenLifetime(in.Lifetime); err != nil {
 		return nil, err
 	}
-	if err = check.AccessGrant(in.Grants, false); err != nil {
+	// TODO: Added to unblock UI - Depending on product decision enforce grants, or remove Grants completely.
+	if err = check.AccessGrant(in.Grants, true); err != nil {
 		return nil, err
 	}
 

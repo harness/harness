@@ -1,11 +1,12 @@
-import { Container, Layout } from '@harness/uicore'
 import React from 'react'
+import { Container, Layout } from '@harness/uicore'
 
 import { useStrings } from 'framework/strings'
 import { routes } from 'RouteDefinitions'
+
 import { NavMenu } from './NavMenu'
 
-export const GlobalSettingsMenu: React.FC = () => {
+export const AdminMenu: React.FC = () => {
   const { getString } = useStrings()
 
   return (
@@ -17,8 +18,8 @@ export const GlobalSettingsMenu: React.FC = () => {
               size: 12
             }
           }}
-          label={getString('profile')}
-          to={routes.toCODEUserProfile()}
+          label={getString('userManagement.text')}
+          to={routes.toCODEUsers()}
         />
       </Layout.Vertical>
     </Container>

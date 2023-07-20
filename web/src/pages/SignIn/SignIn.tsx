@@ -1,5 +1,7 @@
 import React, { useCallback } from 'react'
 import { Button, Color, Container, FormInput, Formik, FormikForm, Layout, Text, useToaster } from '@harness/uicore'
+import * as Yup from 'yup'
+
 import { Link, useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useOnLogin } from 'services/code'
@@ -18,20 +20,17 @@ export const SignIn: React.FC = () => {
 
   const onLogin = useCallback(
     (data: LoginForm) => {
-      const formData = new FormData()
-      formData.append('username', data.username)
-      formData.append('password', data.password)
-
-      mutate(formData as unknown as void)
+      mutate({ login_identifier: data.username, password: data.password } as unknown as void)
         .then(result => {
           setToken(result.access_token as string)
           history.replace(routes.toCODESpaces())
         })
+
         .catch(error => {
           showError(getErrorMessage(error))
         })
     },
-    [mutate, history, setToken]
+    [mutate, history, setToken, showError]
   )
 
   const handleSubmit = (data: LoginForm): void => {
@@ -50,7 +49,12 @@ export const SignIn: React.FC = () => {
           <Formik<LoginForm>
             initialValues={{ username: '', password: '' }}
             formName="loginPageForm"
-            onSubmit={handleSubmit}>
+            onSubmit={handleSubmit}
+            validationSchema={Yup.object().shape({
+              username: Yup.string().required(getString('userNameRequired')),
+
+              password: Yup.string().min(6).required(getString('passwordRequired'))
+            })}>
             <FormikForm>
               <FormInput.Text name="username" label={getString('email')} disabled={false} />
               <FormInput.Text
