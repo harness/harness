@@ -13,7 +13,7 @@ import (
 )
 
 // HandleRegisterCheck returns an http.HandlerFunc that processes an http.Request
-// and returns a boolean true/false if user registration is allowed or not
+// and returns a boolean true/false if user registration is allowed or not.
 func HandleRegisterCheck(userCtrl *user.Controller, config *types.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

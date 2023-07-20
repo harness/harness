@@ -7,19 +7,17 @@ package user
 import (
 	"context"
 	"fmt"
+
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
 )
 
-/*
- * Register creates a new user and returns a new session token on success.
- * This differs from the Create method as it doesn't require auth, but has limited
- * functionalities (unable to create admin user for example).
- */
+// Register creates a new user and returns a new session token on success.
+// This differs from the Create method as it doesn't require auth, but has limited
+// functionalities (unable to create admin user for example).
 func (c *Controller) Register(ctx context.Context,
 	in *CreateInput, config *types.Config) (*types.TokenResponse, error) {
-
 	signUpFlag := config.AllowSignUp
 	if !signUpFlag {
 		return nil, usererror.BadRequest("User sign-up is disabled.")

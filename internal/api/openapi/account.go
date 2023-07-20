@@ -24,6 +24,10 @@ type registerRequest struct {
 	user.CreateInput
 }
 
+type registrationCheckResponse struct {
+	Allowed bool `json:"allowed"`
+}
+
 // helper function that constructs the openapi specification
 // for the account registration and login endpoints.
 func buildAccount(reflector *openapi3.Reflector) {
@@ -55,4 +59,13 @@ func buildAccount(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&onRegister, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&onRegister, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/register", onRegister)
+
+	onRegistrationCheck := openapi3.Operation{}
+	onRegistrationCheck.WithTags("account")
+	onRegistrationCheck.WithMapOfAnything(map[string]interface{}{"operationId": "onRegistrationCheck"})
+	_ = reflector.SetRequest(&onRegistrationCheck, nil, http.MethodGet)
+	_ = reflector.SetJSONResponse(&onRegistrationCheck, new(registrationCheckResponse), http.StatusOK)
+	_ = reflector.SetJSONResponse(&onRegistrationCheck, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&onRegistrationCheck, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/registration-check", onRegistrationCheck)
 }
