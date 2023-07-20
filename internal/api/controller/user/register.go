@@ -7,7 +7,7 @@ package user
 import (
 	"context"
 	"fmt"
-
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
 )
@@ -18,7 +18,13 @@ import (
  * functionalities (unable to create admin user for example).
  */
 func (c *Controller) Register(ctx context.Context,
-	in *CreateInput) (*types.TokenResponse, error) {
+	in *CreateInput, config *types.Config) (*types.TokenResponse, error) {
+
+	signUpFlag := config.AllowSignUp
+	if !signUpFlag {
+		return nil, usererror.BadRequest("User sign-up is disabled.")
+	}
+
 	user, err := c.CreateNoAuth(ctx, &CreateInput{
 		UID:         in.UID,
 		Email:       in.Email,
