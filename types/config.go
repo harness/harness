@@ -12,10 +12,12 @@ import (
 type Config struct {
 	// InstanceID specifis the ID of the gitness instance.
 	// NOTE: If the value is not provided the hostname of the machine is used.
-	InstanceID string `envconfig:"GITNESS_INSTANCE_ID"`
-	Debug      bool   `envconfig:"GITNESS_DEBUG"`
-	Trace      bool   `envconfig:"GITNESS_TRACE"`
-	Profiler   struct {
+	InstanceID  string `envconfig:"GITNESS_INSTANCE_ID"`
+	Debug       bool   `envconfig:"GITNESS_DEBUG"`
+	Trace       bool   `envconfig:"GITNESS_TRACE"`
+	AllowSignUp bool   `envconfig:"GITNESS_ALLOW_SIGNUP"`
+
+	Profiler struct {
 		Type        string `envconfig:"GITNESS_PROFILER_TYPE"`
 		ServiceName string `envconfig:"GITNESS_PROFILER_SERVICE_NAME" default:"gitness"`
 	}

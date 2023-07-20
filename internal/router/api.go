@@ -46,7 +46,7 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
-// APIHandler is an abstraction of an http handler that handles API calls.
+// APIHandler is an abstraction of a http handler that handles API calls.
 type APIHandler interface {
 	http.Handler
 }
@@ -91,7 +91,7 @@ func NewAPIHandler(
 
 	r.Route("/v1", func(r chi.Router) {
 		setupRoutesV1(r, repoCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
-			saCtrl, userCtrl, principalCtrl, checkCtrl)
+			saCtrl, userCtrl, principalCtrl, checkCtrl, config)
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -121,6 +121,7 @@ func setupRoutesV1(r chi.Router,
 	userCtrl *user.Controller,
 	principalCtrl principal.Controller,
 	checkCtrl *check.Controller,
+	config *types.Config,
 ) {
 	setupSpaces(r, spaceCtrl, repoCtrl)
 	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl, checkCtrl)
@@ -129,7 +130,7 @@ func setupRoutesV1(r chi.Router,
 	setupPrincipals(r, principalCtrl)
 	setupInternal(r, githookCtrl)
 	setupAdmin(r, userCtrl)
-	setupAccount(r, userCtrl)
+	setupAccount(r, userCtrl, config)
 	setupSystem(r)
 	setupResources(r)
 }
@@ -431,8 +432,8 @@ func setupAdmin(r chi.Router, userCtrl *user.Controller) {
 	})
 }
 
-func setupAccount(r chi.Router, userCtrl *user.Controller) {
+func setupAccount(r chi.Router, userCtrl *user.Controller, config *types.Config) {
 	r.Post("/login", account.HandleLogin(userCtrl))
-	r.Post("/register", account.HandleRegister(userCtrl))
+	r.Post("/register", account.HandleRegister(userCtrl, config))
 	r.Post("/logout", account.HandleLogout(userCtrl))
 }

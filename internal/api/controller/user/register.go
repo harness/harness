@@ -17,8 +17,14 @@ import (
  * This differs from the Create method as it doesn't require auth, but has limited
  * functionalities (unable to create admin user for example).
  */
-func (c *Controller) Register(ctx context.Context, in *CreateInput) (*types.TokenResponse, error) {
+func (c *Controller) Register(ctx context.Context, in *CreateInput, config *types.Config) (*types.TokenResponse, error) {
 	// TODO: allow to configure if open register is allowed.
+
+	signUpFlag := config.AllowSignUp
+
+	if !signUpFlag {
+		return nil, fmt.Errorf("user sign-up is disabled")
+	}
 
 	user, err := c.CreateNoAuth(ctx, in, false)
 	if err != nil {
