@@ -6,6 +6,7 @@ package account
 
 import (
 	"encoding/json"
+	"github.com/harness/gitness/types"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/user"
@@ -18,10 +19,16 @@ func HandleRegister(userCtrl *user.Controller, config *types.Config) http.Handle
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		in := new(user.RegisterInput)
+		in := new(user.CreateInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid request body: %s.", err)
+			return
+		}
+
+		signUpFlag := config.AllowSignUp
+		if !signUpFlag {
+			render.BadRequestf(w, "User sign-up is disabled.")
 			return
 		}
 
