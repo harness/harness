@@ -18,8 +18,12 @@ import (
 // functionalities (unable to create admin user for example).
 func (c *Controller) Register(ctx context.Context,
 	in *CreateInput, config *types.Config) (*types.TokenResponse, error) {
-	signUpFlag := config.AllowSignUp
-	if !signUpFlag {
+	signUpAllowed, err := isUserRegistrationAllowed(ctx, c.principalStore, config.AllowSignUp)
+	if err != nil {
+		return nil, err
+	}
+
+	if !*signUpAllowed {
 		return nil, usererror.BadRequest("User sign-up is disabled.")
 	}
 
