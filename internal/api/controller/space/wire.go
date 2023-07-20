@@ -22,6 +22,11 @@ var WireSet = wire.NewSet(
 
 func ProvideController(db *sqlx.DB, urlProvider *url.Provider, uidCheck check.PathUID, authorizer authz.Authorizer,
 	pathStore store.PathStore, spaceStore store.SpaceStore, repoStore store.RepoStore,
-	principalStore store.PrincipalStore, repoCtrl *repo.Controller) *Controller {
-	return NewController(db, urlProvider, uidCheck, authorizer, pathStore, spaceStore, repoStore, principalStore, repoCtrl)
+	principalStore store.PrincipalStore, repoCtrl *repo.Controller,
+	membershipStore store.MembershipStore,
+) *Controller {
+	return NewController(db, urlProvider, uidCheck, authorizer,
+		pathStore, spaceStore, repoStore,
+		principalStore, repoCtrl,
+		membershipStore)
 }

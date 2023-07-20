@@ -15,31 +15,34 @@ import (
 )
 
 type Controller struct {
-	db             *sqlx.DB
-	urlProvider    *url.Provider
-	uidCheck       check.PathUID
-	authorizer     authz.Authorizer
-	pathStore      store.PathStore
-	spaceStore     store.SpaceStore
-	repoStore      store.RepoStore
-	principalStore store.PrincipalStore
-	repoCtrl       *repo.Controller
+	db              *sqlx.DB
+	urlProvider     *url.Provider
+	uidCheck        check.PathUID
+	authorizer      authz.Authorizer
+	pathStore       store.PathStore
+	spaceStore      store.SpaceStore
+	repoStore       store.RepoStore
+	principalStore  store.PrincipalStore
+	repoCtrl        *repo.Controller
+	membershipStore store.MembershipStore
 }
 
 func NewController(db *sqlx.DB, urlProvider *url.Provider,
 	uidCheck check.PathUID, authorizer authz.Authorizer,
 	pathStore store.PathStore, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
+	membershipStore store.MembershipStore,
 ) *Controller {
 	return &Controller{
-		db:             db,
-		urlProvider:    urlProvider,
-		uidCheck:       uidCheck,
-		authorizer:     authorizer,
-		pathStore:      pathStore,
-		spaceStore:     spaceStore,
-		repoStore:      repoStore,
-		principalStore: principalStore,
-		repoCtrl:       repoCtrl,
+		db:              db,
+		urlProvider:     urlProvider,
+		uidCheck:        uidCheck,
+		authorizer:      authorizer,
+		pathStore:       pathStore,
+		spaceStore:      spaceStore,
+		repoStore:       repoStore,
+		principalStore:  principalStore,
+		repoCtrl:        repoCtrl,
+		membershipStore: membershipStore,
 	}
 }

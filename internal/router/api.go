@@ -160,6 +160,15 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller, repoCtrl *repo.Contr
 					r.Delete("/", handlerspace.HandleDeletePath(spaceCtrl))
 				})
 			})
+
+			r.Route("/members", func(r chi.Router) {
+				r.Get("/", handlerspace.HandleMembershipList(spaceCtrl))
+				r.Post("/", handlerspace.HandleMembershipAdd(spaceCtrl))
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamUserUID), func(r chi.Router) {
+					r.Delete("/", handlerspace.HandleMembershipDelete(spaceCtrl))
+					r.Patch("/", handlerspace.HandleMembershipUpdate(spaceCtrl))
+				})
+			})
 		})
 	})
 }

@@ -15,7 +15,8 @@ import (
 func isSQLUniqueConstraintError(original error) bool {
 	var sqliteErr sqlite3.Error
 	if errors.As(original, &sqliteErr) {
-		return errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique)
+		return errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) ||
+			errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintPrimaryKey)
 	}
 
 	return false

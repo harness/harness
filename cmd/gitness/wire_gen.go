@@ -48,12 +48,20 @@ import (
 
 func initSystem(ctx context.Context, config *types.Config) (*server.System, error) {
 	principalUID := check.ProvidePrincipalUIDCheck()
-	authorizer := authz.ProvideAuthorizer()
 	databaseConfig := server.ProvideDatabaseConfig(config)
 	db, err := database.ProvideDatabase(ctx, databaseConfig)
 	if err != nil {
 		return nil, err
 	}
+	pathTransformation := store.ProvidePathTransformation()
+	pathStore := database.ProvidePathStore(db, pathTransformation)
+	pathCache := cache.ProvidePathCache(pathStore, pathTransformation)
+	spaceStore := database.ProvideSpaceStore(db, pathCache)
+	principalInfoView := database.ProvidePrincipalInfoView(db)
+	principalInfoCache := cache.ProvidePrincipalInfoCache(principalInfoView)
+	membershipStore := database.ProvideMembershipStore(db, principalInfoCache)
+	permissionCache := authz.ProvidePermissionCache(spaceStore, membershipStore)
+	authorizer := authz.ProvideAuthorizer(permissionCache)
 	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
 	principalStore := database.ProvidePrincipalStore(db, principalUIDTransformation)
 	tokenStore := database.ProvideTokenStore(db)
@@ -66,11 +74,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	pathUID := check.ProvidePathUIDCheck()
-	pathTransformation := store.ProvidePathTransformation()
-	pathStore := database.ProvidePathStore(db, pathTransformation)
-	pathCache := cache.ProvidePathCache(pathStore, pathTransformation)
 	repoStore := database.ProvideRepoStore(db, pathCache)
-	spaceStore := database.ProvideSpaceStore(db, pathCache)
 	gitrpcConfig, err := server.ProvideGitRPCClientConfig()
 	if err != nil {
 		return nil, err
@@ -80,9 +84,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, principalStore, gitrpcInterface)
-	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, spaceStore, repoStore, principalStore, repoController)
-	principalInfoView := database.ProvidePrincipalInfoView(db)
-	principalInfoCache := cache.ProvidePrincipalInfoCache(principalInfoView)
+	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
 	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
 	codeCommentView := database.ProvideCodeCommentView(db)

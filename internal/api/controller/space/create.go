@@ -13,6 +13,7 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -84,12 +85,30 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			TargetType: enum.PathTargetTypeSpace,
 			TargetID:   space.ID,
 			CreatedBy:  space.CreatedBy,
-			Created:    space.Created,
-			Updated:    space.Updated,
+			Created:    now,
+			Updated:    now,
 		}
 		err = c.pathStore.Create(ctx, path)
 		if err != nil {
 			return fmt.Errorf("failed to create path: %w", err)
+		}
+
+		// add space membership to top level space only (as the user doesn't have inhereted permissions alraedy)
+		if in.ParentID == 0 {
+			membership := &types.Membership{
+				SpaceID:     space.ID,
+				PrincipalID: session.Principal.ID,
+				Role:        enum.MembershipRoleSpaceOwner,
+
+				// membership has been created by the system
+				CreatedBy: bootstrap.NewSystemServiceSession().Principal.ID,
+				Created:   now,
+				Updated:   now,
+			}
+			err = c.membershipStore.Create(ctx, membership)
+			if err != nil {
+				return fmt.Errorf("failed to make user owner of the space: %w", err)
+			}
 		}
 
 		return nil

@@ -223,6 +223,15 @@ type (
 		Find(ctx context.Context, id int64) (*types.RepositoryGitInfo, error)
 	}
 
+	// MembershipStore defines the membership data storage.
+	MembershipStore interface {
+		Find(ctx context.Context, key types.MembershipKey) (*types.Membership, error)
+		Create(ctx context.Context, v *types.Membership) error
+		Update(ctx context.Context, membership *types.Membership) error
+		Delete(ctx context.Context, key types.MembershipKey) error
+		ListForSpace(ctx context.Context, spaceID int64) ([]*types.Membership, error)
+	}
+
 	// TokenStore defines the token data storage.
 	TokenStore interface {
 		// Find finds the token by id
