@@ -17,7 +17,8 @@ import (
  * This differs from the Create method as it doesn't require auth, but has limited
  * functionalities (unable to create admin user for example).
  */
-func (c *Controller) Register(ctx context.Context, in *CreateInput, config *types.Config) (*types.TokenResponse, error) {
+func (c *Controller) Register(ctx context.Context,
+	in *CreateInput) (*types.TokenResponse, error) {
 	user, err := c.CreateNoAuth(ctx, &CreateInput{
 		UID:         in.UID,
 		Email:       in.Email,
