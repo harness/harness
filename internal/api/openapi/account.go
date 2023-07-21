@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/user"
+	"github.com/harness/gitness/internal/api/handler/account"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 
@@ -22,10 +23,6 @@ type loginRequest struct {
 // request to register an account.
 type registerRequest struct {
 	user.CreateInput
-}
-
-type registrationCheckResponse struct {
-	Allowed bool `json:"allowed"`
 }
 
 // helper function that constructs the openapi specification
@@ -60,12 +57,12 @@ func buildAccount(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&onRegister, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/register", onRegister)
 
-	onRegistrationCheck := openapi3.Operation{}
-	onRegistrationCheck.WithTags("account")
-	onRegistrationCheck.WithMapOfAnything(map[string]interface{}{"operationId": "onRegistrationCheck"})
-	_ = reflector.SetRequest(&onRegistrationCheck, nil, http.MethodGet)
-	_ = reflector.SetJSONResponse(&onRegistrationCheck, new(registrationCheckResponse), http.StatusOK)
-	_ = reflector.SetJSONResponse(&onRegistrationCheck, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&onRegistrationCheck, new(usererror.Error), http.StatusBadRequest)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/registration-check", onRegistrationCheck)
+	onListConfigs := openapi3.Operation{}
+	onListConfigs.WithTags("account")
+	onListConfigs.WithMapOfAnything(map[string]interface{}{"operationId": "onListConfigs"})
+	_ = reflector.SetRequest(&onListConfigs, nil, http.MethodGet)
+	_ = reflector.SetJSONResponse(&onListConfigs, new(account.ConfigsOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&onListConfigs, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&onListConfigs, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/configs", onListConfigs)
 }

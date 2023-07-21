@@ -23,7 +23,7 @@ func (c *Controller) Register(ctx context.Context,
 		return nil, err
 	}
 
-	if !*signUpAllowed {
+	if !signUpAllowed {
 		return nil, usererror.BadRequest("User sign-up is disabled.")
 	}
 

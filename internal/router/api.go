@@ -434,5 +434,5 @@ func setupAccount(r chi.Router, userCtrl *user.Controller, config *types.Config)
 	r.Post("/login", account.HandleLogin(userCtrl))
 	r.Post("/register", account.HandleRegister(userCtrl, config))
 	r.Post("/logout", account.HandleLogout(userCtrl))
-	r.Get("/registration-check", account.HandleRegisterCheck(userCtrl, config))
+	r.Get("/configs", account.HandleListConfigs(userCtrl, config))
 }

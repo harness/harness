@@ -49,16 +49,11 @@ func isUserTokenType(tokenType enum.TokenType) bool {
 	return tokenType == enum.TokenTypePAT || tokenType == enum.TokenTypeSession
 }
 func isUserRegistrationAllowed(ctx context.Context, principalStore store.PrincipalStore,
-	allowSignUpFlag bool) (*bool, error) {
+	allowSignUpFlag bool) (bool, error) {
 	usrCount, err := principalStore.CountUsers(ctx)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 
-	check := false
-	if usrCount == 0 || allowSignUpFlag {
-		check = true
-	}
-
-	return &check, nil
+	return usrCount == 0 || allowSignUpFlag, nil
 }

@@ -12,18 +12,23 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-// HandleRegisterCheck returns an http.HandlerFunc that processes an http.Request
-// and returns a boolean true/false if user registration is allowed or not.
-func HandleRegisterCheck(userCtrl *user.Controller, config *types.Config) http.HandlerFunc {
+type ConfigsOutput struct {
+	SignUpAllowed bool `json:"sign_up_allowed"`
+}
+
+// HandleListConfigs returns an http.HandlerFunc that processes an http.Request
+// and returns a struct containing all system configs exposed to the users.
+func HandleListConfigs(userCtrl *user.Controller, config *types.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		check, err := userCtrl.RegisterCheck(ctx, config)
+		signUpAllowedCheck, err := userCtrl.RegisterCheck(ctx, config)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
-
-		render.JSON(w, http.StatusOK, check)
+		render.JSON(w, http.StatusOK, ConfigsOutput{
+			SignUpAllowed: signUpAllowedCheck,
+		})
 	}
 }
