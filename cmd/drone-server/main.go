@@ -24,8 +24,8 @@ import (
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/metric/sink"
 	"github.com/drone/drone/operator/runner"
-	"github.com/drone/drone/service/canceler/reaper"
 	"github.com/drone/drone/server"
+	"github.com/drone/drone/service/canceler/reaper"
 	"github.com/drone/drone/trigger/cron"
 	"github.com/drone/signal"
 
@@ -43,7 +43,7 @@ func main() {
 	flag.StringVar(&envfile, "env-file", ".env", "Read in a file of environment variables")
 	flag.Parse()
 
-	godotenv.Load(envfile)
+	godotenv.Overload(envfile)
 	config, err := config.Environ()
 	if err != nil {
 		logger := logrus.WithError(err)
