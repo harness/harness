@@ -92,9 +92,11 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
     const { mutate: createRepo, loading: submitLoading } = useMutate<TypesRepository>({
       verb: 'POST',
       path: `/api/v1/repos`,
-      queryParams: {
-        space_path: space
-      }
+      queryParams: standalone
+        ? undefined
+        : {
+            space_path: space
+          }
     })
     const {
       data: gitignores,
@@ -124,7 +126,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
           license: get(formData, 'license', 'none'),
           uid: get(formData, 'name', '').trim(),
           readme: get(formData, 'addReadme', false),
-          parent_id: standalone ? Number(space) : 0 // TODO: Backend needs to fix parentID: accept string or number
+          parent_ref: space
         }
         createRepo(payload)
           .then(response => {

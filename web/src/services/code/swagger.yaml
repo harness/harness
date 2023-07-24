@@ -201,14 +201,49 @@ paths:
           description: Internal Server Error
       tags:
         - admin
+  /admin/users/{user_uid}/admin:
+    patch:
+      operationId: updateUserAdmin
+      parameters:
+        - in: path
+          name: user_uid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiUpdateAdminRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesUser'
+          description: OK
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - admin
   /login:
     post:
       operationId: onLogin
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
-              $ref: '#/components/schemas/FormDataOpenapiLoginRequest'
+              $ref: '#/components/schemas/OpenapiLoginRequest'
       responses:
         '200':
           content:
@@ -342,9 +377,9 @@ paths:
       operationId: onRegister
       requestBody:
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
-              $ref: '#/components/schemas/FormDataOpenapiRegisterRequest'
+              $ref: '#/components/schemas/OpenapiRegisterRequest'
       responses:
         '200':
           content:
@@ -3589,6 +3624,198 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/{space_ref}/members:
+    get:
+      operationId: membershipList
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesMembership'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+    post:
+      operationId: membershipAdd
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                role:
+                  $ref: '#/components/schemas/EnumMembershipRole'
+                user_uid:
+                  type: string
+              type: object
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesMembership'
+          description: Created
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+  /spaces/{space_ref}/members/{user_uid}:
+    delete:
+      operationId: membershipDelete
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: user_uid
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
+    patch:
+      operationId: membershipUpdate
+      parameters:
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: user_uid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                role:
+                  $ref: '#/components/schemas/EnumMembershipRole'
+              type: object
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesMembership'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
   /spaces/{space_ref}/move:
     post:
       operationId: moveSpace
@@ -4050,41 +4277,6 @@ paths:
           description: Internal Server Error
       tags:
         - user
-  /user/{user_uid}/admin:
-    patch:
-      operationId: updateUserAdmin
-      parameters:
-        - in: path
-          name: user_uid
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpenapiUpdateAdminRequest'
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TypesUser'
-          description: OK
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - user
   /user/token:
     post:
       operationId: createToken
@@ -4128,6 +4320,13 @@ components:
       enum:
         - base64
         - utf8
+      type: string
+    EnumMembershipRole:
+      enum:
+        - contributor
+        - executor
+        - reader
+        - space_owner
       type: string
     EnumMergeCheckStatus:
       type: string
@@ -4217,24 +4416,6 @@ components:
         - tag_deleted
         - tag_updated
       type: string
-    FormDataOpenapiLoginRequest:
-      properties:
-        password:
-          type: string
-        username:
-          type: string
-      type: object
-    FormDataOpenapiRegisterRequest:
-      properties:
-        displayname:
-          type: string
-        email:
-          type: string
-        password:
-          type: string
-        username:
-          type: string
-      type: object
     GitrpcBlamePart:
       properties:
         commit:
@@ -4435,8 +4616,8 @@ components:
           type: boolean
         license:
           type: string
-        parent_id:
-          type: integer
+        parent_ref:
+          type: string
         readme:
           type: boolean
         uid:
@@ -4448,8 +4629,8 @@ components:
           type: string
         is_public:
           type: boolean
-        parent_id:
-          type: integer
+        parent_ref:
+          type: string
         uid:
           type: string
       type: object
@@ -4516,6 +4697,13 @@ components:
         type:
           $ref: '#/components/schemas/OpenapiContentType'
       type: object
+    OpenapiLoginRequest:
+      properties:
+        login_identifier:
+          type: string
+        password:
+          type: string
+      type: object
     OpenapiMergePullReq:
       properties:
         method:
@@ -4527,9 +4715,9 @@ components:
       properties:
         keep_as_alias:
           type: boolean
-        parent_id:
+        parent_ref:
           nullable: true
-          type: integer
+          type: string
         uid:
           nullable: true
           type: string
@@ -4538,11 +4726,22 @@ components:
       properties:
         keep_as_alias:
           type: boolean
-        parent_id:
+        parent_ref:
           nullable: true
-          type: integer
+          type: string
         uid:
           nullable: true
+          type: string
+      type: object
+    OpenapiRegisterRequest:
+      properties:
+        display_name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        uid:
           type: string
       type: object
     OpenapiReportStatusCheckResultRequest:
@@ -4871,6 +5070,19 @@ components:
             $ref: '#/components/schemas/TypesRenameDetails'
           nullable: true
           type: array
+      type: object
+    TypesMembership:
+      properties:
+        added_by:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        created:
+          type: integer
+        principal:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        role:
+          $ref: '#/components/schemas/EnumMembershipRole'
+        updated:
+          type: integer
       type: object
     TypesPath:
       properties:

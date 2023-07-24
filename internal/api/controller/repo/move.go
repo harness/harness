@@ -7,6 +7,8 @@ package repo
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
@@ -20,13 +22,34 @@ import (
 // MoveInput is used for moving a repo.
 type MoveInput struct {
 	UID         *string `json:"uid"`
-	ParentID    *int64  `json:"parent_id"`
+	ParentRef   *string `json:"parent_ref"`
 	KeepAsAlias bool    `json:"keep_as_alias"`
 }
 
 func (i *MoveInput) hasChanges(repo *types.Repository) bool {
-	return (i.UID != nil && *i.UID != repo.UID) ||
-		(i.ParentID != nil && *i.ParentID != repo.ParentID)
+	if i.UID != nil && *i.UID != repo.UID {
+		return true
+	}
+
+	if i.ParentRef != nil {
+		parentRefAsID, err := strconv.ParseInt(*i.ParentRef, 10, 64)
+		// if parsing was successful, user provided actual space id
+		if err == nil && parentRefAsID != repo.ParentID {
+			return true
+		}
+
+		// if parsing was unsucessful, user provided input as path
+		if err != nil {
+			// repo is an existing entity, assume that path is not empty and thus no error
+			repoParentPath, _, _ := paths.DisectLeaf(repo.Path)
+			parentRefAsPath := *i.ParentRef
+			if parentRefAsPath != repoParentPath {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // Move moves a repository to a new space and/or uid.
@@ -40,15 +63,22 @@ func (c *Controller) Move(ctx context.Context, session *auth.Session,
 	}
 
 	permission := enum.PermissionRepoEdit
-	if in.ParentID != nil && *in.ParentID != repo.ParentID {
+	var inParentSpaceID *int64
+	if in.ParentRef != nil {
 		// ensure user has access to new space (parentId not sanitized!)
-		if err = c.checkAuthRepoCreation(ctx, session, *in.ParentID); err != nil {
+		inParentSpace, err := c.getSpaceCheckAuthRepoCreation(ctx, session, *in.ParentRef)
+		if err != nil {
 			return nil, fmt.Errorf("failed to verify repo creation permissions on new parent space: %w", err)
 		}
 
-		// TODO: what would be correct permissions on repo? (technically we are deleting it from the old space)
-		permission = enum.PermissionRepoDelete
+		inParentSpaceID = &inParentSpace.ID
+
+		if inParentSpace.ID != repo.ParentID {
+			// TODO: what would be correct permissions on repo? (technically we are deleting it from the old space)
+			permission = enum.PermissionRepoDelete
+		}
 	}
+
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, permission, false); err != nil {
 		return nil, err
 	}
@@ -66,8 +96,8 @@ func (c *Controller) Move(ctx context.Context, session *auth.Session,
 			if in.UID != nil {
 				r.UID = *in.UID
 			}
-			if in.ParentID != nil {
-				r.ParentID = *in.ParentID
+			if inParentSpaceID != nil {
+				r.ParentID = *inParentSpaceID
 			}
 			return nil
 		})
@@ -132,9 +162,11 @@ func (c *Controller) sanitizeMoveInput(in *MoveInput) error {
 		}
 	}
 
-	if in.ParentID != nil {
-		if *in.ParentID <= 0 {
+	if in.ParentRef != nil {
+		parentRefAsID, err := strconv.ParseInt(*in.ParentRef, 10, 64)
+		if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(*in.ParentRef)) == 0) {
 			return errRepositoryRequiresParent
+
 		}
 	}
 

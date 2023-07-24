@@ -8,9 +8,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gotidy/ptr"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
@@ -25,13 +27,35 @@ import (
 // MoveInput is used for moving a space.
 type MoveInput struct {
 	UID         *string `json:"uid"`
-	ParentID    *int64  `json:"parent_id"`
+	ParentRef   *string `json:"parent_ref"`
 	KeepAsAlias bool    `json:"keep_as_alias"`
 }
 
 func (i *MoveInput) hasChanges(space *types.Space) bool {
-	return (i.UID != nil && *i.UID != space.UID) ||
-		(i.ParentID != nil && *i.ParentID != space.ParentID)
+	if i.UID != nil && *i.UID != space.UID {
+		return true
+	}
+
+	if i.ParentRef != nil {
+		parentRefAsID, err := strconv.ParseInt(*i.ParentRef, 10, 64)
+		// if parsing was successful, user provided actual space id
+		if err == nil && parentRefAsID != space.ParentID {
+			return true
+		}
+
+		// if parsing was unsucessful, user provided input as path
+		if err != nil {
+			// space is an existing entity, assume that path is not empty and thus no error
+			spaceParentPath, _, _ := paths.DisectLeaf(space.Path)
+			parentRefAsPath := *i.ParentRef
+			if parentRefAsPath != spaceParentPath {
+				return true
+			}
+		}
+	}
+
+	return false
+
 }
 
 // Move moves a space to a new space and/or name.
@@ -44,16 +68,27 @@ func (c *Controller) Move(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
+	var inParentSpaceID *int64
 	permission := enum.PermissionSpaceEdit
-	if in.ParentID != nil && *in.ParentID != space.ParentID {
+	if in.ParentRef != nil {
 		// ensure user has access to new space (parentId not sanitized!)
-		if err = c.checkAuthSpaceCreation(ctx, session, *in.ParentID); err != nil {
+		inParentSpace, err := c.getSpaceCheckAuthSpaceCreation(ctx, session, *in.ParentRef)
+		if err != nil {
 			return nil, fmt.Errorf("failed to verify space creation permissions on new parent space: %w", err)
 		}
 
-		// TODO: what would be correct permissions on space? (technically we are deleting it from the old space)
-		permission = enum.PermissionSpaceDelete
+		if inParentSpace != nil {
+			inParentSpaceID = &inParentSpace.ID
+		} else {
+			inParentSpaceID = ptr.Int64(0)
+		}
+
+		if *inParentSpaceID != space.ParentID {
+			// TODO: what would be correct permissions on space? (technically we are deleting it from the old space)
+			permission = enum.PermissionSpaceDelete
+		}
 	}
+
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, permission, false); err != nil {
 		return nil, err
 	}
@@ -71,9 +106,11 @@ func (c *Controller) Move(ctx context.Context, session *auth.Session,
 			if in.UID != nil {
 				s.UID = *in.UID
 			}
-			if in.ParentID != nil {
-				s.ParentID = *in.ParentID
+
+			if inParentSpaceID != nil {
+				s.ParentID = *inParentSpaceID
 			}
+
 			return nil
 		})
 		if err != nil {
@@ -121,11 +158,16 @@ func (c *Controller) Move(ctx context.Context, session *auth.Session,
 }
 
 func (c *Controller) sanitizeMoveInput(in *MoveInput, isRoot bool) error {
-	if in.ParentID != nil {
-		if *in.ParentID < 0 {
+	if in.ParentRef != nil {
+		parentRefAsID, err := strconv.ParseInt(*in.ParentRef, 10, 64)
+
+		if err == nil && parentRefAsID < 0 {
 			return errParentIDNegative
 		}
-		isRoot = *in.ParentID == 0
+
+		if (err == nil && parentRefAsID == 0) || (len(strings.TrimSpace(*in.ParentRef)) == 0) {
+			isRoot = true
+		}
 	}
 
 	if in.UID != nil {
