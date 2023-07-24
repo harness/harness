@@ -48,12 +48,3 @@ func findUserFromEmail(ctx context.Context,
 func isUserTokenType(tokenType enum.TokenType) bool {
 	return tokenType == enum.TokenTypePAT || tokenType == enum.TokenTypeSession
 }
-func isUserRegistrationAllowed(ctx context.Context, principalStore store.PrincipalStore,
-	allowSignUpFlag bool) (bool, error) {
-	usrCount, err := principalStore.CountUsers(ctx)
-	if err != nil {
-		return false, err
-	}
-
-	return usrCount == 0 || allowSignUpFlag, nil
-}
