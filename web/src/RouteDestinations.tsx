@@ -66,6 +66,30 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </LayoutWithSideNav>
         </Route>
 
+        <Route path={[routes.toCODEHome()]} exact>
+          <LayoutWithSideNav title={getString('pageTitle.home')}>
+            <Home />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODEUsers()}>
+          <LayoutWithSideNav title={getString('pageTitle.users')}>
+            <UsersListing />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODEUserProfile()} exact>
+          <LayoutWithSideNav title={getString('pageTitle.userProfile')}>
+            <UserProfile />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODEUserChangePassword()} exact>
+          <LayoutWithSideNav title={getString('pageTitle.changePassword')}>
+            <ChangePassword />
+          </LayoutWithSideNav>
+        </Route>
+
         <Route
           path={[
             routes.toCODEPullRequest({
@@ -190,30 +214,6 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           ]}>
           <LayoutWithSideNav title={getString('pageTitle.repository')}>
             <Repository />
-          </LayoutWithSideNav>
-        </Route>
-
-        <Route path={[routes.toCODEHome()]} exact>
-          <LayoutWithSideNav title={getString('pageTitle.home')}>
-            <Home />
-          </LayoutWithSideNav>
-        </Route>
-
-        <Route path={routes.toCODEUsers()}>
-          <LayoutWithSideNav title={getString('pageTitle.users')}>
-            <UsersListing />
-          </LayoutWithSideNav>
-        </Route>
-
-        <Route path={routes.toCODEUserProfile()} exact>
-          <LayoutWithSideNav title={getString('pageTitle.userProfile')}>
-            <UserProfile />
-          </LayoutWithSideNav>
-        </Route>
-
-        <Route path={routes.toCODEUserChangePassword()} exact>
-          <LayoutWithSideNav title={getString('pageTitle.changePassword')}>
-            <ChangePassword />
           </LayoutWithSideNav>
         </Route>
       </Switch>
