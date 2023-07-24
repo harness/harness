@@ -18,7 +18,7 @@ export interface CODEQueryProps {
 }
 
 export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch' | 'tags'>> = {
-  space: ':space',
+  space: ':space*',
   repoName: ':repoName',
   gitRef: ':gitRef*',
   resourcePath: ':resourcePath*',

@@ -18,7 +18,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
   const [selectedSpace, setSelectedSpace] = useState<TypesSpace | undefined>()
   const { space } = useGetRepositoryMetadata()
   const [opened, setOpened] = React.useState(false)
-  const { data, error } = useGetSpace({ space_ref: space, lazy: !space })
+  const { data, error } = useGetSpace({ space_ref: encodeURIComponent(space), lazy: !space })
   const selectSpace = useCallback(
     (_space: TypesSpace, isUserAction: boolean) => {
       setSelectedSpace(_space)
@@ -81,6 +81,12 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
               {...ButtonRoleProps}
               onClick={() => selectSpace({ uid: 'root', path: 'root' }, true)}>
               Root Space
+            </Text>
+            <Text
+              className={Classes.POPOVER_DISMISS}
+              {...ButtonRoleProps}
+              onClick={() => selectSpace({ uid: 'rootChild1', path: 'root/rootChild1' }, true)}>
+              Root Child 1 Space
             </Text>
             <Text
               className={Classes.POPOVER_DISMISS}

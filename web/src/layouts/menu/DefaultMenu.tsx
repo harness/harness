@@ -20,7 +20,7 @@ export const DefaultMenu: React.FC = () => {
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
   const routeMatch = useRouteMatch()
   const isFilesSelected = useMemo(
-    () => routeMatch.path === '/:space/:repoName' || routeMatch.path.startsWith('/:space/:repoName/edit'),
+    () => routeMatch.path === '/:space*/:repoName' || routeMatch.path.startsWith('/:space*/:repoName/edit'),
     [routeMatch]
   )
 
@@ -52,7 +52,7 @@ export const DefaultMenu: React.FC = () => {
               }
             }}
             label={getString('repositories')}
-            to={routes.toCODERepositories({ space: selectedSpace?.uid as string })}
+            to={routes.toCODERepositories({ space: selectedSpace?.path as string })}
             isDeselected={!!repoMetadata}
             isHighlighted={!!repoMetadata}
           />
@@ -139,13 +139,13 @@ export const DefaultMenu: React.FC = () => {
           <NavMenuItem
             icon="nav-project"
             label={getString('accessControl')}
-            to={routes.toCODESpaceAccessControl({ space: selectedSpace?.uid as string })}
+            to={routes.toCODESpaceAccessControl({ space: selectedSpace?.path as string })}
           />
 
           <NavMenuItem
             icon="code-settings"
             label={getString('settings')}
-            to={routes.toCODESpaceSettings({ space: selectedSpace?.uid as string })}
+            to={routes.toCODESpaceSettings({ space: selectedSpace?.path as string })}
           />
         </Render>
       </Layout.Vertical>
