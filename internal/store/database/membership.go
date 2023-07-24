@@ -213,7 +213,7 @@ func (s *MembershipStore) mapToMembership(ctx context.Context, m *membership) *t
 		log.Ctx(ctx).Error().Err(err).Msg("failed to load membership creator")
 	}
 	if addedBy != nil {
-		res.AdddedBy = *addedBy
+		res.AddedBy = *addedBy
 	}
 
 	principal, err := s.pCache.Get(ctx, res.PrincipalID)
@@ -245,7 +245,7 @@ func (s *MembershipStore) mapToMemberships(ctx context.Context, ms []*membership
 	for i, m := range ms {
 		res[i] = mapToMembershipNoPrincipalInfo(m)
 		if addedBy, ok := infoMap[m.CreatedBy]; ok {
-			res[i].AdddedBy = *addedBy
+			res[i].AddedBy = *addedBy
 		}
 		if principal, ok := infoMap[m.PrincipalID]; ok {
 			res[i].Principal = *principal

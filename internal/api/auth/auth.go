@@ -25,13 +25,12 @@ var (
 	ErrParentResourceTypeUnknown = errors.New("Unknown parent resource type")
 )
 
-/*
- * Check checks if a resource specific permission is granted for the current auth session in the scope.
- * Returns nil if the permission is granted, otherwise returns an error.
- * NotAuthenticated, NotAuthorized, or any unerlaying error.
- */
+// Check checks if a resource specific permission is granted for the current auth session in the scope.
+// Returns nil if the permission is granted, otherwise returns an error.
+// NotAuthenticated, NotAuthorized, or any underlying error.
 func Check(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
-	scope *types.Scope, resource *types.Resource, permission enum.Permission) error {
+	scope *types.Scope, resource *types.Resource, permission enum.Permission,
+) error {
 	if session == nil {
 		return ErrNotAuthenticated
 	}
@@ -53,12 +52,10 @@ func Check(ctx context.Context, authorizer authz.Authorizer, session *auth.Sessi
 	return nil
 }
 
-/*
- * CheckChild checks if a resource specific permission is granted for the current auth session
- * in the scope of a parent.
- * Returns nil if the permission is granted, otherwise returns an error.
- * NotAuthenticated, NotAuthorized, or any unerlaying error.
- */
+// CheckChild checks if a resource specific permission is granted for the current auth session
+// in the scope of a parent.
+// Returns nil if the permission is granted, otherwise returns an error.
+// NotAuthenticated, NotAuthorized, or any underlying error.
 func CheckChild(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
 	spaceStore store.SpaceStore, repoStore store.RepoStore, parentType enum.ParentResourceType, parentID int64,
 	resourceType enum.ResourceType, resourceName string, permission enum.Permission) error {

@@ -83,7 +83,7 @@ func (c *Controller) MembershipAdd(ctx context.Context,
 		Role:        in.Role,
 
 		Principal: *user.ToPrincipalInfo(),
-		AdddedBy:  *session.Principal.ToPrincipalInfo(),
+		AddedBy:   *session.Principal.ToPrincipalInfo(),
 	}
 
 	err = c.membershipStore.Create(ctx, membership)

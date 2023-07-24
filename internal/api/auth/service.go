@@ -13,14 +13,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
- * CheckService checks if a service specific permission is granted for the current auth session.
- * Returns nil if the permission is granted, otherwise returns an error.
- * NotAuthenticated, NotAuthorized, or any unerlaying error.
- */
+// CheckService checks if a service specific permission is granted for the current auth session.
+// Returns nil if the permission is granted, otherwise returns an error.
+// NotAuthenticated, NotAuthorized, or any underlying error.
 func CheckService(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
-	svc *types.Service, permission enum.Permission) error {
-	// a service exists outside of any scope
+	svc *types.Service, permission enum.Permission,
+) error {
+	// a service exists outside any scope
 	scope := &types.Scope{}
 	resource := &types.Resource{
 		Type: enum.ResourceTypeService,
