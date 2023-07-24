@@ -26,5 +26,5 @@ type Membership struct {
 	Role enum.MembershipRole `json:"role"`
 
 	Principal PrincipalInfo `json:"principal"`
-	AdddedBy  PrincipalInfo `json:"added_by"`
+	AddedBy   PrincipalInfo `json:"added_by"`
 }
