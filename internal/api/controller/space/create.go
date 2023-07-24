@@ -98,7 +98,8 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		}
 
 		// add space membership to top level space only (as the user doesn't have inhereted permissions alraedy)
-		if in.ParentID == 0 {
+		parentRefAsID, err := strconv.ParseInt(in.ParentRef, 10, 64)
+		if (err == nil && parentRefAsID == 0) || (len(strings.TrimSpace(in.ParentRef)) == 0) {
 			membership := &types.Membership{
 				SpaceID:     space.ID,
 				PrincipalID: session.Principal.ID,
