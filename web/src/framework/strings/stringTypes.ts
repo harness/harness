@@ -3,6 +3,7 @@
  * Use the command `yarn strings` to regenerate this file.
  */
 export interface StringsMap {
+  accessControl: string
   accountEmail: string
   accountSetting: string
   active: string
@@ -134,6 +135,7 @@ export interface StringsMap {
   download: string
   draft: string
   edit: string
+  editAsText: string
   editFile: string
   editNotAllowed: string
   editUser: string
@@ -176,6 +178,7 @@ export interface StringsMap {
   generateCloneText: string
   getMyCloneTitle: string
   gitIgnore: string
+  gitness: string
   help: string
   hideCommitHistory: string
   history: string
@@ -249,6 +252,27 @@ export interface StringsMap {
   overview: string
   pageLoading: string
   pageNotFound: string
+  'pageTitle.accessControl': string
+  'pageTitle.branches': string
+  'pageTitle.changePassword': string
+  'pageTitle.commits': string
+  'pageTitle.compare': string
+  'pageTitle.createWebhook': string
+  'pageTitle.editFile': string
+  'pageTitle.home': string
+  'pageTitle.pullRequest': string
+  'pageTitle.pullRequests': string
+  'pageTitle.register': string
+  'pageTitle.repositories': string
+  'pageTitle.repository': string
+  'pageTitle.repositorySettings': string
+  'pageTitle.signin': string
+  'pageTitle.spaceSettings': string
+  'pageTitle.tags': string
+  'pageTitle.userProfile': string
+  'pageTitle.users': string
+  'pageTitle.webhookDetail': string
+  'pageTitle.webhooks': string
   password: string
   passwordApi: string
   passwordRequired: string
@@ -377,6 +401,7 @@ export interface StringsMap {
   searchBranches: string
   secret: string
   selectBranchPlaceHolder: string
+  selectSpace: string
   selectToViewMore: string
   setAsAdmin: string
   settings: string
@@ -384,6 +409,7 @@ export interface StringsMap {
   showEverything: string
   signIn: string
   signUp: string
+  space: string
   spaces: string
   sslVerificationLabel: string
   status: string

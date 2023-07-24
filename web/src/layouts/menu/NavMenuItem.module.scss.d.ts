@@ -3,7 +3,8 @@
 declare const styles: {
   readonly link: string
   readonly subLink: string
-  readonly selected: string
+  readonly highlighted: string
   readonly text: string
+  readonly selected: string
 }
 export default styles

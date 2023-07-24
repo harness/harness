@@ -4,6 +4,7 @@ import { useGet } from 'restful-react'
 import type { AppProps } from 'AppProps'
 import { routes } from 'RouteDefinitions'
 import type { TypesUser } from 'services/code'
+import { useAPIToken } from 'hooks/useAPIToken'
 
 interface AppContextProps extends AppProps {
   setAppContext: (value: Partial<AppProps>) => void
@@ -33,7 +34,11 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(func
   value: initialValue,
   children
 }) {
-  const { data: currentUser = defaultCurrentUser } = useGet({ path: '/api/v1/user' })
+  const [token, setToken] = useAPIToken()
+  const { data: currentUser = defaultCurrentUser, error } = useGet({
+    path: '/api/v1/user',
+    lazy: initialValue.standalone && !token
+  })
   const [appStates, setAppStates] = useState<AppProps>(initialValue)
 
   useEffect(() => {
@@ -41,6 +46,12 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(func
       setAppStates({ ...appStates, ...initialValue })
     }
   }, [initialValue, appStates])
+
+  useEffect(() => {
+    if (initialValue.standalone && error) {
+      setToken('')
+    }
+  }, [initialValue.standalone, error, setToken])
 
   return (
     <AppContext.Provider

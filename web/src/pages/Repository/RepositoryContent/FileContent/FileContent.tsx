@@ -138,6 +138,11 @@ export function FileContent({
     },
     lazy: !repoMetadata
   })
+  const editButtonDisabled = useMemo(() => permsFinal.disabled || !isText, [permsFinal.disabled, isText])
+  const editAsText = useMemo(
+    () => editButtonDisabled && !isFileTooLarge && category === FileCategory.OTHER,
+    [editButtonDisabled, isFileTooLarge, category]
+  )
 
   return (
     <Container className={css.tabsContainer} ref={ref}>
@@ -172,11 +177,11 @@ export function FileContent({
                           size={ButtonSize.SMALL}
                           variation={ButtonVariation.TERTIARY}
                           iconProps={{ size: 16 }}
-                          text={getString('edit')}
+                          text={getString(editAsText ? 'editAsText' : 'edit')}
                           icon="code-edit"
                           tooltipProps={{ isDark: true }}
                           tooltip={permsFinal.tooltip}
-                          disabled={permsFinal.disabled || !isText}
+                          disabled={editButtonDisabled && !editAsText}
                           onClick={() => {
                             history.push(
                               routes.toCODEFileEdit({

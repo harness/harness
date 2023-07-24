@@ -1,3 +1,4 @@
+gitness: Gitness
 pageNotFound: Page Not Found
 signIn: Sign In
 signUp: Sign Up
@@ -43,6 +44,7 @@ on: On
 off: Off
 loading: Loading...
 title: Title
+accessControl: Access Control
 addGitIgnore: Add a .gitignore
 addReadMe: Add a README file
 failedToCreateRepo: Failed to create Repository. Please try again.
@@ -66,6 +68,28 @@ cloneHTTPS: Clone with HTTPS
 nameYourFile: Name your file...
 noResultTitle: Sorry, no result found
 noResultMessage: What you searched was unfortunately not found or doesn’t exist
+pageTitle:
+  signin: Sign In
+  register: Register a new account
+  accessControl: Access Control
+  spaceSettings: Space Settings
+  compare: Pull Request Compare
+  pullRequest: Pull Request
+  pullRequests: Pull Requests
+  createWebhook: Create Webhook
+  webhookDetail: Webhook Detail
+  webhooks: Webhooks
+  repositorySettings: Repository Settings
+  repositories: Repositories
+  commits: Commits
+  branches: Branches
+  tags: Tags
+  editFile: Edit File
+  repository: Repository
+  home: Home
+  users: Users
+  userProfile: User Profile
+  changePassword: Change Password
 repos:
   name: Repo Name
   data: Repo Data
@@ -105,6 +129,7 @@ createABranch: Create a branch
 createATag: Create a tag
 delete: Delete
 edit: Edit
+editAsText: Edit as Text
 branchName: Branch name
 nameYourBranch: Name your branch
 nameYourTag: Name your tag
@@ -445,6 +470,8 @@ users: Users
 findAUser: Find a user
 reviewerNotFound: 'Reviewer <strong>{{reviewer}}</strong> not found.'
 spaces: Spaces
+space: Space
+selectSpace: Select space here
 copyBranch: Copy Branch Name
 noAccount?: No Account?
 alreadyHaveAccount: Already have an account?

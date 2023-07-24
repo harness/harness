@@ -6,7 +6,6 @@ import {
   ButtonVariation,
   Card,
   Container,
-  FlexExpander,
   Layout,
   Page,
   TableV2,
@@ -48,7 +47,7 @@ const UserProfile = () => {
   const { data: userTokens, loading: tokensLoading, refetch: refetchTokens } = useGet({ path: USER_TOKENS_API_PATH })
   const { mutate: deleteToken } = useMutate({ path: USER_TOKENS_API_PATH, verb: 'DELETE' })
 
-  const [_, setToken] = useAPIToken()
+  const [, setToken] = useAPIToken()
 
   const onLogout = async () => {
     await logoutUser()

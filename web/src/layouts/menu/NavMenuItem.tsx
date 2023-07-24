@@ -2,9 +2,9 @@ import React from 'react'
 import cx from 'classnames'
 import { IconName, TextProps, Text } from '@harness/uicore'
 import { NavLink as Link, NavLinkProps } from 'react-router-dom'
-import css from './NavMenu.module.scss'
+import css from './NavMenuItem.module.scss'
 
-interface NavMenuProps extends NavLinkProps {
+interface NavMenuItemProps extends NavLinkProps {
   label: string
   icon?: IconName
   className?: string
@@ -13,9 +13,10 @@ interface NavMenuProps extends NavLinkProps {
   isSubLink?: boolean
   isSelected?: boolean
   isDeselected?: boolean
+  isHighlighted?: boolean
 }
 
-export const NavMenu: React.FC<NavMenuProps> = ({
+export const NavMenuItem: React.FC<NavMenuItemProps> = ({
   label,
   icon,
   rightIcon,
@@ -24,12 +25,19 @@ export const NavMenu: React.FC<NavMenuProps> = ({
   textProps,
   isSelected,
   isDeselected,
+  isHighlighted,
+  children,
   ...others
 }) => (
   <Link
-    className={cx(css.link, className, { [css.subLink]: isSubLink, [css.selected]: isSelected })}
+    className={cx(css.link, className, {
+      [css.subLink]: isSubLink,
+      [css.selected]: isSelected,
+      [css.highlighted]: isHighlighted
+    })}
     activeClassName={isDeselected ? '' : css.selected}
     {...others}>
+    {children}
     <Text icon={icon} rightIcon={rightIcon} className={css.text} {...textProps}>
       {label}
     </Text>

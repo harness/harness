@@ -37,11 +37,11 @@ export const SignUp: React.FC = () => {
         email: data.email,
         uid: data.username,
         password: data.password
-      } as unknown as void)
+      })
         .then(result => {
           setToken(result.access_token as string)
           showSuccess(getString('userCreated'))
-          history.replace(routes.toCODESpaces())
+          history.replace(routes.toCODEHome())
         })
         .catch(error => {
           showError(getErrorMessage(error))

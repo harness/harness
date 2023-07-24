@@ -1,3 +1,5 @@
+import { routes } from 'RouteDefinitions'
+
 /**
  * Handle 401 error from API.
  *
@@ -7,8 +9,7 @@
  * Mostly, the implementation of this function is just a redirection to signin page.
  */
 export function handle401() {
-  // eslint-disable-next-line no-console
-  console.error('TODO: Handle 401 error...')
+  window.location.href = window.location.origin + routes.toSignIn()
 }
 
 /**

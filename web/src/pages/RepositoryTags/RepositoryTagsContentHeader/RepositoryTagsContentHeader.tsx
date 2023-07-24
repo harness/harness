@@ -27,8 +27,8 @@ export function RepositoryTagsContentHeader({
     <Container className={css.main}>
       <Layout.Horizontal spacing="medium">
         <SearchInputWithSpinner
-          spinnerPosition="right"
           loading={loading}
+          spinnerPosition="right"
           query={searchTerm}
           setQuery={value => {
             setSearchTerm(value)

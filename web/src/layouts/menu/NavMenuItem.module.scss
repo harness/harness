@@ -1,0 +1,83 @@
+.link {
+  padding: var(--spacing-small) var(--spacing-small);
+  opacity: 0.8;
+  z-index: 1;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+
+  &[aria-disabled='true'] {
+    cursor: not-allowed !important;
+    opacity: 0.4;
+
+    &:active {
+      pointer-events: none !important;
+    }
+
+    &:hover {
+      background-color: transparent !important;
+    }
+  }
+
+  > p {
+    flex-grow: 1;
+
+    > span {
+      padding-right: var(--spacing-small) !important;
+    }
+  }
+
+  &.subLink {
+    margin-left: var(--spacing-small) !important;
+  }
+
+  &:hover {
+    text-decoration: none;
+    opacity: 1;
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+    background-color: #dbebff;
+  }
+
+  &.highlighted {
+    .text {
+      --text-color: var(--primary-8);
+      font-weight: 600;
+    }
+  }
+
+  &.selected {
+    .text {
+      --text-color: var(--primary-8);
+      font-weight: 600;
+    }
+
+    background-color: #dbebff;
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+    opacity: 1;
+  }
+
+  .text {
+    --text-color: var(--grey-700);
+
+    color: var(--text-color) !important;
+    font-size: 13px !important;
+
+    > span:not([data-icon='code-file']):not([data-icon='code-repo']) {
+      color: var(--text-color) !important;
+
+      svg path {
+        fill: var(--text-color);
+      }
+    }
+
+    > span[data-icon='code-file'],
+    > span[data-icon='code-repo'] {
+      svg path {
+        stroke: var(--text-color);
+      }
+    }
+  }
+}
