@@ -8,6 +8,7 @@ import RepositoriesListing from 'pages/RepositoriesListing/RepositoriesListing'
 import { LayoutWithSideNav, LayoutWithoutSideNav } from 'layouts/layout'
 import RepositoryFileEdit from 'pages/RepositoryFileEdit/RepositoryFileEdit'
 import RepositoryCommits from 'pages/RepositoryCommits/RepositoryCommits'
+import RepositoryCommit from 'pages/RepositoryCommit/RepositoryCommit'
 import RepositoryBranches from 'pages/RepositoryBranches/RepositoryBranches'
 import RepositoryTags from 'pages/RepositoryTags/RepositoryTags'
 import Compare from 'pages/Compare/Compare'
@@ -24,6 +25,7 @@ import ChangePassword from 'pages/ChangePassword/ChangePassword'
 import SpaceAccessControl from 'pages/SpaceAccessControl/SpaceAccessControl'
 import SpaceSettings from 'pages/SpaceSettings/SpaceSettings'
 import { useStrings } from 'framework/strings'
+import { CommitsView } from 'components/CommitsView/CommitsView'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
@@ -145,6 +147,16 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         <Route path={routes.toCODERepositories({ space: pathProps.space })} exact>
           <LayoutWithSideNav title={getString('pageTitle.repositories')}>
             <RepositoriesListing />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route
+          path={routes.toCODECommit({
+            repoPath,
+            commitRef: pathProps.commitRef
+          })}>
+          <LayoutWithSideNav title={getString('pageTitle.commits')}>
+            <RepositoryCommit />
           </LayoutWithSideNav>
         </Route>
 
