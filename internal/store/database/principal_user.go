@@ -224,17 +224,26 @@ func (s *PrincipalStore) ListUsers(ctx context.Context, opts *types.UserFilter) 
 	return s.mapDBUsers(dst), nil
 }
 
-// CountUsers returns a count of users.
-func (s *PrincipalStore) CountUsers(ctx context.Context) (int64, error) {
-	const sqlQuery = `
-		SELECT count(*)
-		FROM principals
-		WHERE principal_type = 'user'`
+// CountUsers returns a count of users matching the given filter.
+func (s *PrincipalStore) CountUsers(ctx context.Context, opts *types.UserFilter) (int64, error) {
+	stmt := database.Builder.
+		Select("count(*)").
+		From("principals").
+		Where("principal_type = 'user'")
+
+	if opts.Admin {
+		stmt = stmt.Where("principal_admin = ?", opts.Admin)
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	var count int64
-	err := db.QueryRowContext(ctx, sqlQuery).Scan(&count)
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
 		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
 	}

@@ -42,6 +42,7 @@ type (
 		Size  int           `json:"size"`
 		Sort  enum.UserAttr `json:"sort"`
 		Order enum.Order    `json:"order"`
+		Admin bool          `json:"admin"`
 	}
 )
 

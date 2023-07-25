@@ -28,7 +28,7 @@ func (c *Controller) List(ctx context.Context, session *auth.Session,
 		return nil, 0, err
 	}
 
-	count, err := c.principalStore.CountUsers(ctx)
+	count, err := c.principalStore.CountUsers(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count users: %w", err)
 	}

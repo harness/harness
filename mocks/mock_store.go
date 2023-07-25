@@ -67,18 +67,18 @@ func (mr *MockPrincipalStoreMockRecorder) CountServices(arg0 interface{}) *gomoc
 }
 
 // CountUsers mocks base method.
-func (m *MockPrincipalStore) CountUsers(arg0 context.Context) (int64, error) {
+func (m *MockPrincipalStore) CountUsers(arg0 context.Context, arg1 *types.UserFilter) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CountUsers", arg0)
+	ret := m.ctrl.Call(m, "CountUsers", arg0, arg1)
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CountUsers indicates an expected call of CountUsers.
-func (mr *MockPrincipalStoreMockRecorder) CountUsers(arg0 interface{}) *gomock.Call {
+func (mr *MockPrincipalStoreMockRecorder) CountUsers(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountUsers", reflect.TypeOf((*MockPrincipalStore)(nil).CountUsers), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CountUsers", reflect.TypeOf((*MockPrincipalStore)(nil).CountUsers), arg0, arg1)
 }
 
 // CreateService mocks base method.

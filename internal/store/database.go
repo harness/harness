@@ -60,8 +60,8 @@ type (
 		// ListUsers returns a list of users.
 		ListUsers(ctx context.Context, params *types.UserFilter) ([]*types.User, error)
 
-		// CountUsers returns a count of users.
-		CountUsers(ctx context.Context) (int64, error)
+		// CountUsers returns a count of users which match the given filter.
+		CountUsers(ctx context.Context, opts *types.UserFilter) (int64, error)
 
 		/*
 		 * SERVICE ACCOUNT RELATED OPERATIONS.
