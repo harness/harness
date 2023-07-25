@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare const __DEV__: boolean
-declare const __ON_PREM__: booelan
 
 declare module '*.png' {
   const value: string

@@ -1,7 +1,9 @@
 import React from 'react'
 import { Avatar, Container, FlexExpander, Layout } from '@harness/uicore'
+import { Render } from 'react-jsx-match'
 import { routes } from 'RouteDefinitions'
 import { useAppContext } from 'AppContext'
+import { useStrings } from 'framework/strings'
 import { useDocumentTitle } from 'hooks/useDocumentTitle'
 import { NavMenuItem } from './menu/NavMenuItem'
 import { GitnessLogo } from '../components/GitnessLogo/GitnessLogo'
@@ -15,6 +17,7 @@ interface LayoutWithSideNavProps {
 
 export const LayoutWithSideNav: React.FC<LayoutWithSideNavProps> = ({ title, children, menu = <DefaultMenu /> }) => {
   const { currentUser } = useAppContext()
+  const { getString } = useStrings()
 
   useDocumentTitle(title)
 
@@ -28,6 +31,12 @@ export const LayoutWithSideNav: React.FC<LayoutWithSideNavProps> = ({ title, chi
           </Layout.Vertical>
 
           <FlexExpander />
+
+          <Render when={currentUser?.admin}>
+            <Container className={css.settings}>
+              <NavMenuItem icon="user-groups" label={getString('userManagement.text')} to={routes.toCODEUsers()} />
+            </Container>
+          </Render>
 
           <Container className={css.profile}>
             <NavMenuItem

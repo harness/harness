@@ -12,10 +12,16 @@
       display: flex;
       flex-direction: column;
 
-      .profile {
+      .settings {
         margin: 0 var(--spacing-medium);
         padding: var(--spacing-small) 0;
         border-top: 1px solid var(--grey-200);
+        border-bottom: 1px solid var(--grey-200);
+      }
+
+      .profile {
+        margin: 0 var(--spacing-medium);
+        padding: var(--spacing-medium) 0;
       }
     }
   }
@@ -23,5 +29,6 @@
   .content {
     flex-grow: 1;
     background-color: var(--page-background);
+    overflow: auto;
   }
 }

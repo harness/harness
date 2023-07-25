@@ -8,6 +8,7 @@ declare const styles: {
   readonly label: string
   readonly spaceLabel: string
   readonly spaceName: string
+  readonly repoLinks: string
   readonly popoverPortal: string
   readonly popoverTarget: string
   readonly popoverContent: string
