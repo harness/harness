@@ -10,12 +10,11 @@ import (
 
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/render"
-	"github.com/harness/gitness/types"
 )
 
 // HandleRegister returns an http.HandlerFunc that processes an http.Request
 // to register the named user account with the system.
-func HandleRegister(userCtrl *user.Controller, config *types.Config) http.HandlerFunc {
+func HandleRegister(userCtrl *user.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -26,7 +25,7 @@ func HandleRegister(userCtrl *user.Controller, config *types.Config) http.Handle
 			return
 		}
 
-		tokenResponse, err := userCtrl.Register(ctx, in, config)
+		tokenResponse, err := userCtrl.Register(ctx, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

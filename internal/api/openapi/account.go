@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/user"
-	"github.com/harness/gitness/internal/api/handler/system"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 
@@ -56,13 +55,4 @@ func buildAccount(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&onRegister, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&onRegister, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/register", onRegister)
-
-	onListConfigs := openapi3.Operation{}
-	onListConfigs.WithTags("account")
-	onListConfigs.WithMapOfAnything(map[string]interface{}{"operationId": "onListConfigs"})
-	_ = reflector.SetRequest(&onListConfigs, nil, http.MethodGet)
-	_ = reflector.SetJSONResponse(&onListConfigs, new(system.ConfigsOutput), http.StatusOK)
-	_ = reflector.SetJSONResponse(&onListConfigs, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&onListConfigs, new(usererror.Error), http.StatusBadRequest)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/configs", onListConfigs)
 }

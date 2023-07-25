@@ -6,6 +6,7 @@ package system
 
 import (
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -15,6 +16,6 @@ var WireSet = wire.NewSet(
 	NewController,
 )
 
-func ProvideController(principalStore store.PrincipalStore) *Controller {
-	return NewController(principalStore)
+func ProvideController(principalStore store.PrincipalStore, config *types.Config) *Controller {
+	return NewController(principalStore, config)
 }

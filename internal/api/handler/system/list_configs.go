@@ -9,20 +9,19 @@ import (
 
 	"github.com/harness/gitness/internal/api/controller/system"
 	"github.com/harness/gitness/internal/api/render"
-	"github.com/harness/gitness/types"
 )
 
 type ConfigsOutput struct {
 	SignUpAllowed bool `json:"sign_up_allowed"`
 }
 
-// HandleListConfigs returns an http.HandlerFunc that processes an http.Request
+// HandleListConfig returns an http.HandlerFunc that processes an http.Request
 // and returns a struct containing all system configs exposed to the users.
-func HandleListConfigs(sysCtrl *system.Controller, config *types.Config) http.HandlerFunc {
+func HandleListConfig(sysCtrl *system.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		signUpAllowedCheck, err := sysCtrl.RegisterCheck(ctx, config)
+		signUpAllowedCheck, err := sysCtrl.RegisterCheck(ctx)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

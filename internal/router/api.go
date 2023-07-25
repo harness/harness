@@ -93,7 +93,7 @@ func NewAPIHandler(
 
 	r.Route("/v1", func(r chi.Router) {
 		setupRoutesV1(r, repoCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
-			saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, config)
+			saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -124,7 +124,6 @@ func setupRoutesV1(r chi.Router,
 	principalCtrl principal.Controller,
 	checkCtrl *check.Controller,
 	sysCtrl *system.Controller,
-	config *types.Config,
 ) {
 	setupSpaces(r, spaceCtrl, repoCtrl)
 	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl, checkCtrl)
@@ -133,8 +132,8 @@ func setupRoutesV1(r chi.Router,
 	setupPrincipals(r, principalCtrl)
 	setupInternal(r, githookCtrl)
 	setupAdmin(r, userCtrl)
-	setupAccount(r, userCtrl, config)
-	setupSystem(r, sysCtrl, config)
+	setupAccount(r, userCtrl)
+	setupSystem(r, sysCtrl)
 	setupResources(r)
 }
 
@@ -396,11 +395,11 @@ func setupServiceAccounts(r chi.Router, saCtrl *serviceaccount.Controller) {
 	})
 }
 
-func setupSystem(r chi.Router, sysCtrl *system.Controller, config *types.Config) {
+func setupSystem(r chi.Router, sysCtrl *system.Controller) {
 	r.Route("/system", func(r chi.Router) {
 		r.Get("/health", handlersystem.HandleHealth)
 		r.Get("/version", handlersystem.HandleVersion)
-		r.Get("/configs", handlersystem.HandleListConfigs(sysCtrl, config))
+		r.Get("/config", handlersystem.HandleListConfig(sysCtrl))
 	})
 }
 
@@ -434,8 +433,8 @@ func setupAdmin(r chi.Router, userCtrl *user.Controller) {
 	})
 }
 
-func setupAccount(r chi.Router, userCtrl *user.Controller, config *types.Config) {
+func setupAccount(r chi.Router, userCtrl *user.Controller) {
 	r.Post("/login", account.HandleLogin(userCtrl))
-	r.Post("/register", account.HandleRegister(userCtrl, config))
+	r.Post("/register", account.HandleRegister(userCtrl))
 	r.Post("/logout", account.HandleLogout(userCtrl))
 }

@@ -21,15 +21,17 @@ type Controller struct {
 	authorizer        authz.Authorizer
 	principalStore    store.PrincipalStore
 	tokenStore        store.TokenStore
+	config            *types.Config
 }
 
 func NewController(principalUIDCheck check.PrincipalUID, authorizer authz.Authorizer,
-	principalStore store.PrincipalStore, tokenStore store.TokenStore) *Controller {
+	principalStore store.PrincipalStore, tokenStore store.TokenStore, config *types.Config) *Controller {
 	return &Controller{
 		principalUIDCheck: principalUIDCheck,
 		authorizer:        authorizer,
 		principalStore:    principalStore,
 		tokenStore:        tokenStore,
+		config:            config,
 	}
 }
 

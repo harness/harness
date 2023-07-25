@@ -8,24 +8,27 @@ import (
 	"context"
 
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 )
 
 type Controller struct {
 	principalStore store.PrincipalStore
+	config         *types.Config
 }
 
-func NewController(principalStore store.PrincipalStore) *Controller {
+func NewController(principalStore store.PrincipalStore, config *types.Config) *Controller {
 	return &Controller{
 		principalStore: principalStore,
+		config:         config,
 	}
 }
 
 func IsUserRegistrationAllowed(ctx context.Context, principalStore store.PrincipalStore,
-	allowSignUpFlag bool) (bool, error) {
+	config *types.Config) (bool, error) {
 	usrCount, err := principalStore.CountUsers(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	return usrCount == 0 || allowSignUpFlag, nil
+	return usrCount == 0 || config.AllowSignUp, nil
 }

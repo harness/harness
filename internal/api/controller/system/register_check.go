@@ -6,16 +6,14 @@ package system
 
 import (
 	"context"
-
-	"github.com/harness/gitness/types"
 )
 
 // RegisterCheck checks the DB and env config flag to return boolean
 // which represents if a user sign-up is allowed or not.
-func (c *Controller) RegisterCheck(ctx context.Context, config *types.Config) (bool, error) {
-	check, err := IsUserRegistrationAllowed(ctx, c.principalStore, config.AllowSignUp)
+func (c *Controller) RegisterCheck(ctx context.Context) (bool, error) {
+	check, err := IsUserRegistrationAllowed(ctx, c.principalStore, c.config)
 	if err != nil {
-		return check, err
+		return false, err
 	}
 
 	return check, nil
