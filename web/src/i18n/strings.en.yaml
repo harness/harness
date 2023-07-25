@@ -518,6 +518,9 @@ newToken:
   namePlaceholder: Enter the name
   expireOn: Token will expire on {{date}}
   generateToken: Generate Token
+  tokenHelptext:
+    Your token has been generated. Please make sure to copy and store your token somewhere safe, you wont be
+    able to see it again.
 deleteToken: Delete token
 deleteTokenMsg: Token deleted successfully
 userProfile:

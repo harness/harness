@@ -218,6 +218,7 @@ export interface StringsMap {
   'newToken.generateToken': string
   'newToken.namePlaceholder': string
   'newToken.text': string
+  'newToken.tokenHelptext': string
   'newUserModal.displayNamePlaceholder': string
   'newUserModal.emailPlaceholder': string
   'newUserModal.passwordHelptext': string

@@ -216,6 +216,7 @@ export const FormInputWithCopyButton: React.FC<
   return (
     <FormInput.Text
       {...props}
+      className={css.inputWrapper}
       inputGroup={{
         ...props.inputGroup,
         rightElement: (
