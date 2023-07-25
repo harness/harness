@@ -1,13 +1,15 @@
 const { merge } = require('webpack-merge')
+const path = require('path')
 const HTMLWebpackPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const { DefinePlugin } = require('webpack')
 
 const commonConfig = require('./webpack.common')
-
-const ON_PREM = `${process.env.ON_PREM}` === 'true'
+const CONTEXT = process.cwd()
 
 const prodConfig = {
+  context: CONTEXT,
+  entry: path.resolve(CONTEXT, '/src/index.tsx'),
   mode: 'production',
   devtool: 'source-map',
   output: {
@@ -39,9 +41,7 @@ const prodConfig = {
       filename: 'index.html',
       favicon: 'src/favicon.svg',
       minify: false,
-      templateParameters: {
-        __ON_PREM__: ON_PREM
-      }
+      templateParameters: {}
     })
   ]
 }

@@ -3,7 +3,6 @@ import { Container, Layout } from '@harness/uicore'
 import { Render } from 'react-jsx-match'
 import { useHistory, useRouteMatch } from 'react-router-dom'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
-import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { routes } from 'RouteDefinitions'
 import type { TypesSpace } from 'services/code'
@@ -16,7 +15,6 @@ export const DefaultMenu: React.FC = () => {
   const [selectedSpace, setSelectedSpace] = useState<TypesSpace | undefined>()
   const { repoMetadata, gitRef, commitRef } = useGetRepositoryMetadata()
   const { getString } = useStrings()
-  const { currentUser } = useAppContext()
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
   const routeMatch = useRouteMatch()
   const isFilesSelected = useMemo(
@@ -59,11 +57,7 @@ export const DefaultMenu: React.FC = () => {
         </Render>
 
         <Render when={repoMetadata}>
-          <Container
-            style={{
-              borderLeft: '1px solid var(--grey-200)',
-              marginLeft: '17px'
-            }}>
+          <Container className={css.repoLinks}>
             <Layout.Vertical spacing="small">
               <NavMenuItem
                 data-code-repo-section="files"
@@ -129,10 +123,6 @@ export const DefaultMenu: React.FC = () => {
               />
             </Layout.Vertical>
           </Container>
-        </Render>
-
-        <Render when={currentUser?.admin}>
-          <NavMenuItem icon="user-groups" label={getString('userManagement.text')} to={routes.toCODEUsers()} />
         </Render>
 
         <Render when={selectedSpace}>

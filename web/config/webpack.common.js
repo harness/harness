@@ -12,9 +12,7 @@ const { RetryChunkLoadPlugin } = require('webpack-retry-chunk-load-plugin')
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 const moduleFederationConfig = require('./moduleFederation.config')
 const CONTEXT = process.cwd()
-
 const DEV = process.env.NODE_ENV === 'development'
-const ON_PREM = `${process.env.ON_PREM}` === 'true'
 
 module.exports = {
   target: 'web',
@@ -159,8 +157,7 @@ module.exports = {
     new ModuleFederationPlugin(moduleFederationConfig),
     new DefinePlugin({
       'process.env': '{}', // required for @blueprintjs/core
-      __DEV__: DEV,
-      __ON_PREM__: ON_PREM
+      __DEV__: DEV
     }),
     new GenerateStringTypesPlugin(),
     new RetryChunkLoadPlugin({
