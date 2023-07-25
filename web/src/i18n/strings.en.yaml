@@ -543,3 +543,14 @@ newUserModal:
   userCreated: User created successfully
   userUpdated: User updated successfully
   userDeleted: User '{{name}}' deleted successfully
+user: User
+role: Role
+newMember: New Member
+addMember: Add member
+spaceMemberships:
+  changeRole: Change Role
+  removeMember: Remove Member
+  removeMembershipMsg: Are you sure you want to remove this member?
+  removeMembershipToast: Member removed successfully
+  memberUpdated: Member updated successfully.
+  memberAdded: Member added successfully.

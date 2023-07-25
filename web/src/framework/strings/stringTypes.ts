@@ -12,6 +12,7 @@ export interface StringsMap {
   addComment: string
   addGitIgnore: string
   addLicense: string
+  addMember: string
   addNewFile: string
   addReadMe: string
   addUser: string
@@ -209,6 +210,7 @@ export interface StringsMap {
   newFile: string
   newFileNotAllowed: string
   newFolder: string
+  newMember: string
   newPullRequest: string
   newRepo: string
   newTag: string
@@ -393,6 +395,7 @@ export interface StringsMap {
   resolvedComments: string
   reviewerNotFound: string
   reviewers: string
+  role: string
   samplePayloadUrl: string
   save: string
   scanAlerts: string
@@ -410,6 +413,12 @@ export interface StringsMap {
   signIn: string
   signUp: string
   space: string
+  'spaceMemberships.changeRole': string
+  'spaceMemberships.memberAdded': string
+  'spaceMemberships.memberUpdated': string
+  'spaceMemberships.removeMember': string
+  'spaceMemberships.removeMembershipMsg': string
+  'spaceMemberships.removeMembershipToast': string
   spaces: string
   sslVerificationLabel: string
   status: string
@@ -436,6 +445,7 @@ export interface StringsMap {
   updateUser: string
   updateWebhook: string
   updated: string
+  user: string
   userCreated: string
   userId: string
   'userManagement.deleteUser': string
