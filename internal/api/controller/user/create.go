@@ -75,7 +75,7 @@ func (c *Controller) CreateNoAuth(ctx context.Context, in *CreateInput, admin bo
 		return nil, err
 	}
 
-	uCount, err := c.principalStore.CountUsers(ctx)
+	uCount, err := c.principalStore.CountUsers(ctx, &types.UserFilter{})
 	if err != nil {
 		return nil, err
 	}
