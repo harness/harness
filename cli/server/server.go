@@ -24,12 +24,6 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const (
-	// GraceFullShutdownTime defines the max time we wait when shutting down a server.
-	// 5min should be enough for most git clones to complete.
-	GraceFullShutdownTime = 300 * time.Second
-)
-
 type command struct {
 	envfile      string
 	enableGitRPC bool
@@ -109,7 +103,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	log.Info().Msg("shutting down gracefully (press Ctrl+C again to force)")
 
 	// shutdown servers gracefully
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), GraceFullShutdownTime)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), config.GracefulShutdownTime)
 	defer cancel()
 
 	if sErr := shutdownHTTP(shutdownCtx); sErr != nil {

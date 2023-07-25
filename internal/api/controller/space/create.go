@@ -35,6 +35,8 @@ type CreateInput struct {
 }
 
 // Create creates a new space.
+//
+//nolint:gocognit // refactor if required
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Space, error) {
 	parentSpace, err := c.getSpaceCheckAuthSpaceCreation(ctx, session, in.ParentRef)
 	if err != nil {
@@ -125,7 +127,11 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	return space, nil
 }
 
-func (c *Controller) getSpaceCheckAuthSpaceCreation(ctx context.Context, session *auth.Session, parentRef string) (*types.Space, error) {
+func (c *Controller) getSpaceCheckAuthSpaceCreation(
+	ctx context.Context,
+	session *auth.Session,
+	parentRef string,
+) (*types.Space, error) {
 	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
 	if (parentRefAsID <= 0 && err == nil) || (len(strings.TrimSpace(parentRef)) == 0) {
 		// TODO: Restrict top level space creation.
@@ -133,6 +139,7 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(ctx context.Context, session
 			return nil, usererror.ErrUnauthorized
 		}
 
+		//nolint:nilnil
 		return nil, nil
 	}
 

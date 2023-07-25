@@ -125,7 +125,11 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	return repo, nil
 }
 
-func (c *Controller) getSpaceCheckAuthRepoCreation(ctx context.Context, session *auth.Session, parentRef string) (*types.Space, error) {
+func (c *Controller) getSpaceCheckAuthRepoCreation(
+	ctx context.Context,
+	session *auth.Session,
+	parentRef string,
+) (*types.Space, error) {
 	space, err := c.spaceStore.FindByRef(ctx, parentRef)
 	if err != nil {
 		return nil, fmt.Errorf("parent space not found: %w", err)

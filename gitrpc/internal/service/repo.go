@@ -440,7 +440,7 @@ func (s RepositoryService) HashRepository(
 
 	res, err := hasher.Hash(source)
 	if err != nil {
-		return nil, ErrInternalf("failed to hash repo refs", err)
+		return nil, processGitErrorf(err, "failed to hash repository")
 	}
 
 	return &rpc.HashRepositoryResponse{

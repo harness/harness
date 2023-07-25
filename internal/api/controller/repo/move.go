@@ -38,7 +38,7 @@ func (i *MoveInput) hasChanges(repo *types.Repository) bool {
 			return true
 		}
 
-		// if parsing was unsucessful, user provided input as path
+		// if parsing was unsuccessful, user provided input as path
 		if err != nil {
 			// repo is an existing entity, assume that path is not empty and thus no error
 			repoParentPath, _, _ := paths.DisectLeaf(repo.Path)
@@ -166,7 +166,6 @@ func (c *Controller) sanitizeMoveInput(in *MoveInput) error {
 		parentRefAsID, err := strconv.ParseInt(*in.ParentRef, 10, 64)
 		if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(*in.ParentRef)) == 0) {
 			return errRepositoryRequiresParent
-
 		}
 	}
 

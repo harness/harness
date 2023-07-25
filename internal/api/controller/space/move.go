@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gotidy/ptr"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
@@ -22,6 +21,8 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/gotidy/ptr"
 )
 
 // MoveInput is used for moving a space.
@@ -43,7 +44,7 @@ func (i *MoveInput) hasChanges(space *types.Space) bool {
 			return true
 		}
 
-		// if parsing was unsucessful, user provided input as path
+		// if parsing was unsuccessful, user provided input as path
 		if err != nil {
 			// space is an existing entity, assume that path is not empty and thus no error
 			spaceParentPath, _, _ := paths.DisectLeaf(space.Path)
@@ -55,7 +56,6 @@ func (i *MoveInput) hasChanges(space *types.Space) bool {
 	}
 
 	return false
-
 }
 
 // Move moves a space to a new space and/or name.

@@ -13,9 +13,15 @@ type Config struct {
 	// InstanceID specifis the ID of the gitness instance.
 	// NOTE: If the value is not provided the hostname of the machine is used.
 	InstanceID string `envconfig:"GITNESS_INSTANCE_ID"`
-	Debug      bool   `envconfig:"GITNESS_DEBUG"`
-	Trace      bool   `envconfig:"GITNESS_TRACE"`
-	Profiler   struct {
+
+	Debug bool `envconfig:"GITNESS_DEBUG"`
+	Trace bool `envconfig:"GITNESS_TRACE"`
+
+	// GracefulShutdownTime defines the max time we wait when shutting down a server.
+	// 5min should be enough for most git clones to complete.
+	GracefulShutdownTime time.Duration `envconfig:"GITNESS_GRACEFUL_SHUTDOWN_TIME" default:"300s"`
+
+	Profiler struct {
 		Type        string `envconfig:"GITNESS_PROFILER_TYPE"`
 		ServiceName string `envconfig:"GITNESS_PROFILER_SERVICE_NAME" default:"gitness"`
 	}
