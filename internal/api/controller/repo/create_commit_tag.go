@@ -7,6 +7,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/harness/gitness/gitrpc"
 	apiauth "github.com/harness/gitness/internal/api/auth"
@@ -14,18 +15,21 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// CreateBranchInput used for branch creation apis.
-type CreateTagInput struct {
+// CreateCommitTagInput used for tag creation apis.
+type CreateCommitTagInput struct {
 	Name string `json:"name"`
-	// Target is the commit (or points to the commit) the new branch will be pointing to.
-	// If no target is provided, the branch points to the same commit as the default branch of the repo.
-	Target  *string `json:"target"`
-	Message *string `json:"message"`
+	// Target is the commit (or points to the commit) the new tag will be pointing to.
+	// If no target is provided, the tag points to the same commit as the default branch of the repo.
+	Target string `json:"target"`
+
+	// Message is the optional message the tag will be created with - if the message is empty
+	// the tag will be lightweight, otherwise it'll be annotated.
+	Message string `json:"message"`
 }
 
-// CreateTag creates a new tag for a repo.
-func (c *Controller) CreateTag(ctx context.Context, session *auth.Session,
-	repoRef string, in *CreateTagInput) (*CommitTag, error) {
+// CreateCommitTag creates a new tag for a repo.
+func (c *Controller) CreateCommitTag(ctx context.Context, session *auth.Session,
+	repoRef string, in *CreateCommitTagInput) (*CommitTag, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
@@ -36,8 +40,8 @@ func (c *Controller) CreateTag(ctx context.Context, session *auth.Session,
 	}
 
 	// set target to default branch in case no branch or commit was provided
-	if in.Target == nil || *in.Target == "" {
-		in.Target = &repo.DefaultBranch
+	if in.Target == "" {
+		in.Target = repo.DefaultBranch
 	}
 
 	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
@@ -45,11 +49,14 @@ func (c *Controller) CreateTag(ctx context.Context, session *auth.Session,
 		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
-	rpcOut, err := c.gitRPCClient.CreateTag(ctx, &gitrpc.CreateTagParams{
+	now := time.Now()
+	rpcOut, err := c.gitRPCClient.CreateCommitTag(ctx, &gitrpc.CreateCommitTagParams{
 		WriteParams: writeParams,
 		Name:        in.Name,
-		SHA:         *in.Target,
-		Message:     *in.Message,
+		Target:      in.Target,
+		Message:     in.Message,
+		Tagger:      rpcIdentityFromPrincipal(session.Principal),
+		TaggerDate:  &now,
 	})
 
 	if err != nil {

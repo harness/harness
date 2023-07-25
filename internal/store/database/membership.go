@@ -14,10 +14,10 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/log"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 var _ store.MembershipStore = (*MembershipStore)(nil)

@@ -62,7 +62,7 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 	}
 
 	// get target commit (as target could be branch/tag/commit, and tag can't be pushed using source:destination syntax)
-	targetCommit, err := sharedRepo.GetCommit(strings.TrimSpace(request.GetTarget()))
+	targetCommit, err := s.adapter.GetCommit(ctx, sharedRepo.tmpPath, strings.TrimSpace(request.GetTarget()))
 	if git.IsErrNotExist(err) {
 		return nil, ErrNotFoundf("target '%s' doesn't exist", request.GetTarget())
 	}
@@ -71,7 +71,7 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 	}
 
 	// push to new branch (all changes should go through push flow for hooks and other safety meassures)
-	err = sharedRepo.PushCommitToBranch(ctx, base, targetCommit.ID.String(), request.GetBranchName())
+	err = sharedRepo.PushCommitToBranch(ctx, base, targetCommit.SHA, request.GetBranchName())
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to push new branch '%s'", request.GetBranchName())
 	}

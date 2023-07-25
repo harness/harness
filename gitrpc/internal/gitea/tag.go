@@ -39,16 +39,38 @@ func (g Adapter) GetAnnotatedTags(ctx context.Context, repoPath string, shas []s
 	return giteaGetAnnotatedTags(ctx, repoPath, shas)
 }
 
-func (g Adapter) CreateAnnotatedTag(
+// CreateTag creates the tag pointing at the provided SHA (could be any type, e.g. commit, tag, blob, ...)
+func (g Adapter) CreateTag(
 	ctx context.Context,
 	repoPath string,
-	request *types.CreateTagRequest,
+	name string,
+	targetSHA string,
+	opts *types.CreateTagOptions,
 ) error {
-	cmd := gitea.NewCommand(ctx, "tag", "-a", "-m", request.Message, "--", request.Name, request.TargetSha)
-	env := []string{
-		"GIT_COMMITTER_NAME=" + request.TaggerName,
-		"GIT_COMMITTER_EMAIL=" + request.TaggerEmail,
+	args := []string{
+		"tag",
 	}
+	env := []string{}
+
+	if opts != nil && opts.Message != "" {
+		args = append(args,
+			"-m",
+			opts.Message,
+		)
+		env = append(env,
+			"GIT_COMMITTER_NAME="+opts.Tagger.Identity.Name,
+			"GIT_COMMITTER_EMAIL="+opts.Tagger.Identity.Email,
+			"GIT_COMMITTER_DATE="+opts.Tagger.When.Format(time.RFC3339),
+		)
+	}
+
+	args = append(args,
+		"--",
+		name,
+		targetSHA,
+	)
+
+	cmd := gitea.NewCommand(ctx, args...)
 	_, _, err := cmd.RunStdString(&gitea.RunOpts{Dir: repoPath, Env: env})
 	if err != nil {
 		return processGiteaErrorf(err, "Service failed to create a tag")

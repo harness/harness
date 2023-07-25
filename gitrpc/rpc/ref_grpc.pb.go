@@ -27,7 +27,7 @@ type ReferenceServiceClient interface {
 	DeleteBranch(ctx context.Context, in *DeleteBranchRequest, opts ...grpc.CallOption) (*DeleteBranchResponse, error)
 	ListBranches(ctx context.Context, in *ListBranchesRequest, opts ...grpc.CallOption) (ReferenceService_ListBranchesClient, error)
 	ListCommitTags(ctx context.Context, in *ListCommitTagsRequest, opts ...grpc.CallOption) (ReferenceService_ListCommitTagsClient, error)
-	CreateTag(ctx context.Context, in *CreateTagRequest, opts ...grpc.CallOption) (*CreateTagResponse, error)
+	CreateCommitTag(ctx context.Context, in *CreateCommitTagRequest, opts ...grpc.CallOption) (*CreateCommitTagResponse, error)
 	DeleteTag(ctx context.Context, in *DeleteTagRequest, opts ...grpc.CallOption) (*UpdateRefResponse, error)
 	GetRef(ctx context.Context, in *GetRefRequest, opts ...grpc.CallOption) (*GetRefResponse, error)
 	UpdateRef(ctx context.Context, in *UpdateRefRequest, opts ...grpc.CallOption) (*UpdateRefResponse, error)
@@ -132,9 +132,9 @@ func (x *referenceServiceListCommitTagsClient) Recv() (*ListCommitTagsResponse, 
 	return m, nil
 }
 
-func (c *referenceServiceClient) CreateTag(ctx context.Context, in *CreateTagRequest, opts ...grpc.CallOption) (*CreateTagResponse, error) {
-	out := new(CreateTagResponse)
-	err := c.cc.Invoke(ctx, "/rpc.ReferenceService/CreateTag", in, out, opts...)
+func (c *referenceServiceClient) CreateCommitTag(ctx context.Context, in *CreateCommitTagRequest, opts ...grpc.CallOption) (*CreateCommitTagResponse, error) {
+	out := new(CreateCommitTagResponse)
+	err := c.cc.Invoke(ctx, "/rpc.ReferenceService/CreateCommitTag", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +177,7 @@ type ReferenceServiceServer interface {
 	DeleteBranch(context.Context, *DeleteBranchRequest) (*DeleteBranchResponse, error)
 	ListBranches(*ListBranchesRequest, ReferenceService_ListBranchesServer) error
 	ListCommitTags(*ListCommitTagsRequest, ReferenceService_ListCommitTagsServer) error
-	CreateTag(context.Context, *CreateTagRequest) (*CreateTagResponse, error)
+	CreateCommitTag(context.Context, *CreateCommitTagRequest) (*CreateCommitTagResponse, error)
 	DeleteTag(context.Context, *DeleteTagRequest) (*UpdateRefResponse, error)
 	GetRef(context.Context, *GetRefRequest) (*GetRefResponse, error)
 	UpdateRef(context.Context, *UpdateRefRequest) (*UpdateRefResponse, error)
@@ -203,8 +203,8 @@ func (UnimplementedReferenceServiceServer) ListBranches(*ListBranchesRequest, Re
 func (UnimplementedReferenceServiceServer) ListCommitTags(*ListCommitTagsRequest, ReferenceService_ListCommitTagsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListCommitTags not implemented")
 }
-func (UnimplementedReferenceServiceServer) CreateTag(context.Context, *CreateTagRequest) (*CreateTagResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateTag not implemented")
+func (UnimplementedReferenceServiceServer) CreateCommitTag(context.Context, *CreateCommitTagRequest) (*CreateCommitTagResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCommitTag not implemented")
 }
 func (UnimplementedReferenceServiceServer) DeleteTag(context.Context, *DeleteTagRequest) (*UpdateRefResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTag not implemented")
@@ -324,20 +324,20 @@ func (x *referenceServiceListCommitTagsServer) Send(m *ListCommitTagsResponse) e
 	return x.ServerStream.SendMsg(m)
 }
 
-func _ReferenceService_CreateTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateTagRequest)
+func _ReferenceService_CreateCommitTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateCommitTagRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ReferenceServiceServer).CreateTag(ctx, in)
+		return srv.(ReferenceServiceServer).CreateCommitTag(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/rpc.ReferenceService/CreateTag",
+		FullMethod: "/rpc.ReferenceService/CreateCommitTag",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ReferenceServiceServer).CreateTag(ctx, req.(*CreateTagRequest))
+		return srv.(ReferenceServiceServer).CreateCommitTag(ctx, req.(*CreateCommitTagRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -416,8 +416,8 @@ var ReferenceService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ReferenceService_DeleteBranch_Handler,
 		},
 		{
-			MethodName: "CreateTag",
-			Handler:    _ReferenceService_CreateTag_Handler,
+			MethodName: "CreateCommitTag",
+			Handler:    _ReferenceService_CreateCommitTag_Handler,
 		},
 		{
 			MethodName: "DeleteTag",

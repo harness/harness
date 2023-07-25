@@ -6,7 +6,10 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -46,31 +49,53 @@ func (s ReferenceService) ListCommitTags(request *rpc.ListCommitTagsRequest,
 		}
 	}
 
+	// populate annotation data for all annotated tags
 	if len(annotatedTagSHAs) > 0 {
-		var gitTags []types.Tag
-		gitTags, err = s.adapter.GetAnnotatedTags(ctx, repoPath, annotatedTagSHAs)
+		var aTags []types.Tag
+		aTags, err = s.adapter.GetAnnotatedTags(ctx, repoPath, annotatedTagSHAs)
 		if err != nil {
 			return processGitErrorf(err, "failed to get annotated tag")
 		}
 
-		ai := 0 // since only some tags are annotated, we need second index
-		for i := range tags {
-			if !tags[i].IsAnnotated {
+		ai := 0 // index for annotated tags
+		ri := 0 // read index for all tags
+		wi := 0 // write index for all tags (as we might remove some non-commit tags)
+		for ; ri < len(tags); ri++ {
+			// always copy the current read element to the latest write position (doesn't mean it's kept)
+			tags[wi] = tags[ri]
+			commitSHAs[wi] = commitSHAs[ri]
+
+			// keep the tag as is if it's not annotated
+			if !tags[ri].IsAnnotated {
+				wi++
+				continue
+			}
+
+			// filter out annotated tags that don't point to commit objects (blobs, trees, nested tags, ...)
+			// we don't actually wanna write it, so keep write index
+			// TODO: Support proper pagination: https://harness.atlassian.net/browse/CODE-669
+			if aTags[ai].TargetType != types.GitObjectTypeCommit {
+				ai++
 				continue
 			}
 
 			// correct the commitSHA for the annotated tag (currently it is the tag sha, not the commit sha)
 			// NOTE: This is required as otherwise gitea will wrongly set the committer to the tagger signature.
-			commitSHAs[i] = gitTags[ai].TargetSha
+			commitSHAs[wi] = aTags[ai].TargetSha
 
 			// update tag information with annotation details
 			// NOTE: we keep the name from the reference and ignore the annotated name (similar to github)
-			tags[i].Message = gitTags[ai].Message
-			tags[i].Title = gitTags[ai].Title
-			tags[i].Tagger = mapGitSignature(gitTags[ai].Tagger)
+			tags[wi].Message = aTags[ai].Message
+			tags[wi].Title = aTags[ai].Title
+			tags[wi].Tagger = mapGitSignature(aTags[ai].Tagger)
 
 			ai++
+			wi++
 		}
+
+		// truncate slices based on what was removed
+		tags = tags[:wi]
+		commitSHAs = commitSHAs[:wi]
 	}
 
 	// get commits if needed (single call for perf savings: 1s-4s vs 5s-20s)
@@ -185,10 +210,10 @@ func listCommitTagsWalkReferencesHandler(tags *[]*rpc.CommitTag) types.WalkRefer
 		return nil
 	}
 }
-func (s ReferenceService) CreateTag(
+func (s ReferenceService) CreateCommitTag(
 	ctx context.Context,
-	request *rpc.CreateTagRequest,
-) (*rpc.CreateTagResponse, error) {
+	request *rpc.CreateCommitTagRequest,
+) (*rpc.CreateCommitTagResponse, error) {
 	base := request.GetBase()
 	if base == nil {
 		return nil, types.ErrBaseCannotBeEmpty
@@ -208,35 +233,87 @@ func (s ReferenceService) CreateTag(
 
 	defer sharedRepo.Close(ctx)
 
+	// clone repo (with HEAD branch - target might be anything)
 	err = sharedRepo.Clone(ctx, "")
 	if err != nil {
-		return nil, processGitErrorf(err, "failed to clone shared repo with branch '%s'", request.GetSha())
+		return nil, processGitErrorf(err, "failed to clone shared repo")
 	}
-	actor := request.GetBase().GetActor()
-	createTagRequest := types.CreateTagRequest{
-		Name:        request.GetTagName(),
-		TargetSha:   request.GetSha(),
-		Message:     request.GetMessage(),
-		TaggerEmail: actor.GetEmail(),
-		TaggerName:  actor.GetName(),
-	}
-	err = s.adapter.CreateAnnotatedTag(ctx, sharedRepo.tmpPath, &createTagRequest)
 
+	// get target commit (as target could be branch/tag/commit, and tag can't be pushed using source:destination syntax)
+	// NOTE: in case the target is an annotated tag, the targetCommit title and message are that of the tag, not the commit
+	targetCommit, err := s.adapter.GetCommit(ctx, sharedRepo.tmpPath, strings.TrimSpace(request.GetTarget()))
+	if git.IsErrNotExist(err) {
+		return nil, ErrNotFoundf("target '%s' doesn't exist", request.GetTarget())
+	}
 	if err != nil {
-		return nil, processGitErrorf(err, "Failed to create tag %s - %s", request.GetTagName(), err.Error())
+		return nil, fmt.Errorf("failed to get commit id for target '%s': %w", request.GetTarget(), err)
+	}
+
+	tagger := base.GetActor()
+	if request.GetTagger() != nil {
+		tagger = request.GetTagger()
+	}
+	taggerDate := time.Now().UTC()
+	if request.GetTaggerDate() != 0 {
+		taggerDate = time.Unix(request.GetTaggerDate(), 0)
+	}
+
+	createTagRequest := &types.CreateTagOptions{
+		Message: request.GetMessage(),
+		Tagger: types.Signature{
+			Identity: types.Identity{
+				Name:  tagger.Name,
+				Email: tagger.Email,
+			},
+			When: taggerDate,
+		},
+	}
+	err = s.adapter.CreateTag(
+		ctx,
+		sharedRepo.tmpPath,
+		request.GetTagName(),
+		targetCommit.SHA,
+		createTagRequest)
+	if errors.Is(err, types.ErrAlreadyExists) {
+		return nil, ErrAlreadyExistsf("tag '%s' already exists", request.GetTagName())
+	}
+	if err != nil {
+		return nil, processGitErrorf(err, "Failed to create tag '%s'", request.GetTagName())
 	}
 
 	if err = sharedRepo.PushTag(ctx, base, request.GetTagName()); err != nil {
-		return nil, processGitErrorf(err, "Failed to push the tag %s to remote", request.GetTagName())
+		return nil, processGitErrorf(err, "Failed to push the tag to remote")
 	}
 
-	tag, err := s.adapter.GetAnnotatedTag(ctx, repoPath, request.GetTagName())
+	var commitTag *rpc.CommitTag
+	if request.GetMessage() != "" {
+		tag, err := s.adapter.GetAnnotatedTag(ctx, repoPath, request.GetTagName())
+		if err != nil {
+			return nil, fmt.Errorf("failed to read annotated tag after creation: %w", err)
+		}
+		commitTag = mapAnnotatedTag(tag)
+	} else {
+		commitTag = &rpc.CommitTag{
+			Name:        request.GetTagName(),
+			IsAnnotated: false,
+			Sha:         targetCommit.SHA,
+		}
+	}
 
+	// gitea overwrites some commit details in case getCommit(ref) was called with ref being a tag
+	// To avoid this issue, let's get the commit again using the actual id of the commit
+	// TODO: can we do this nicer?
+	rawCommit, err := s.adapter.GetCommit(ctx, repoPath, targetCommit.SHA)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get the raw commit '%s' after tag creation: %w", targetCommit.SHA, err)
 	}
-	commitTag := mapCommitTag(tag)
-	return &rpc.CreateTagResponse{Tag: commitTag}, nil
+
+	commitTag.Commit, err = mapGitCommit(rawCommit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map target commit after tag creation: %w", err)
+	}
+
+	return &rpc.CreateCommitTagResponse{Tag: commitTag}, nil
 }
 
 func (s ReferenceService) DeleteTag(
@@ -262,7 +339,8 @@ func (s ReferenceService) DeleteTag(
 
 	defer sharedRepo.Close(ctx)
 
-	err = sharedRepo.Clone(ctx, request.GetTagName())
+	// clone repo (with HEAD branch - tag target might be anything)
+	err = sharedRepo.Clone(ctx, "")
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to clone shared repo with tag '%s'", request.GetTagName())
 	}

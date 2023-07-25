@@ -22,7 +22,7 @@ type CreateBranchInput struct {
 
 	// Target is the commit (or points to the commit) the new branch will be pointing to.
 	// If no target is provided, the branch points to the same commit as the default branch of the repo.
-	Target *string `json:"target"`
+	Target string `json:"target"`
 }
 
 // CreateBranch creates a new branch for a repo.
@@ -38,8 +38,8 @@ func (c *Controller) CreateBranch(ctx context.Context, session *auth.Session,
 	}
 
 	// set target to default branch in case no target was provided
-	if in.Target == nil || *in.Target == "" {
-		in.Target = &repo.DefaultBranch
+	if in.Target == "" {
+		in.Target = repo.DefaultBranch
 	}
 
 	err = checkBranchName(in.Name)
@@ -55,7 +55,7 @@ func (c *Controller) CreateBranch(ctx context.Context, session *auth.Session,
 	rpcOut, err := c.gitRPCClient.CreateBranch(ctx, &gitrpc.CreateBranchParams{
 		WriteParams: writeParams,
 		BranchName:  in.Name,
-		Target:      *in.Target,
+		Target:      in.Target,
 	})
 	if err != nil {
 		return nil, err

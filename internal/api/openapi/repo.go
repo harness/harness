@@ -134,7 +134,7 @@ type deleteBranchRequest struct {
 
 type createTagRequest struct {
 	repoRequest
-	repo.CreateTagInput
+	repo.CreateCommitTagInput
 }
 
 type listTagsRequest struct {

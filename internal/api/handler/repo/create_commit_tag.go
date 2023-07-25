@@ -23,14 +23,14 @@ func HandleCreateCommitTag(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		in := new(repo.CreateTagInput)
+		in := new(repo.CreateCommitTagInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
 		}
 
-		tag, err := repoCtrl.CreateTag(ctx, session, repoRef, in)
+		tag, err := repoCtrl.CreateCommitTag(ctx, session, repoRef, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
