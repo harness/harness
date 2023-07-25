@@ -11,24 +11,25 @@ import (
 	"github.com/harness/gitness/types"
 )
 
+type registrationCheck func(ctx context.Context) (bool, error)
+
 type Controller struct {
-	principalStore store.PrincipalStore
-	config         *types.Config
+	principalStore            store.PrincipalStore
+	config                    *types.Config
+	IsUserRegistrationAllowed registrationCheck
 }
 
 func NewController(principalStore store.PrincipalStore, config *types.Config) *Controller {
 	return &Controller{
 		principalStore: principalStore,
 		config:         config,
-	}
-}
+		IsUserRegistrationAllowed: func(ctx context.Context) (bool, error) {
+			usrCount, err := principalStore.CountUsers(ctx)
+			if err != nil {
+				return false, err
+			}
 
-func IsUserRegistrationAllowed(ctx context.Context, principalStore store.PrincipalStore,
-	config *types.Config) (bool, error) {
-	usrCount, err := principalStore.CountUsers(ctx)
-	if err != nil {
-		return false, err
+			return usrCount == 0 || config.AllowSignUp, nil
+		},
 	}
-
-	return usrCount == 0 || config.AllowSignUp, nil
 }

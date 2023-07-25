@@ -11,7 +11,7 @@ import (
 // RegisterCheck checks the DB and env config flag to return boolean
 // which represents if a user sign-up is allowed or not.
 func (c *Controller) RegisterCheck(ctx context.Context) (bool, error) {
-	check, err := IsUserRegistrationAllowed(ctx, c.principalStore, c.config)
+	check, err := c.IsUserRegistrationAllowed(ctx)
 	if err != nil {
 		return false, err
 	}

@@ -17,9 +17,9 @@ import (
 // Register creates a new user and returns a new session token on success.
 // This differs from the Create method as it doesn't require auth, but has limited
 // functionalities (unable to create admin user for example).
-func (c *Controller) Register(ctx context.Context,
+func (c *Controller) Register(ctx context.Context, sysCtrl *system.Controller,
 	in *CreateInput) (*types.TokenResponse, error) {
-	signUpAllowed, err := system.IsUserRegistrationAllowed(ctx, c.principalStore, c.config)
+	signUpAllowed, err := sysCtrl.IsUserRegistrationAllowed(ctx)
 	if err != nil {
 		return nil, err
 	}
