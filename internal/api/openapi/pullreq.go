@@ -459,17 +459,6 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opListCommits, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq/{pullreq_number}/commits", opListCommits)
 
-	opRawDiff := openapi3.Operation{}
-	opRawDiff.WithTags("pullreq")
-	opRawDiff.WithMapOfAnything(map[string]interface{}{"operationId": "rawPullReqDiff"})
-	_ = reflector.SetRequest(&opRawDiff, new(pullReqRequest), http.MethodGet)
-	_ = reflector.SetStringResponse(&opRawDiff, http.StatusOK, "text/plain")
-	_ = reflector.SetJSONResponse(&opRawDiff, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opRawDiff, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opRawDiff, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.SetJSONResponse(&opRawDiff, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/pullreq/{pullreq_number}/diff", opRawDiff)
-
 	opMetaData := openapi3.Operation{}
 	opMetaData.WithTags("pullreq")
 	opMetaData.WithMapOfAnything(map[string]interface{}{"operationId": "pullReqMetaData"})
