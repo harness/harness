@@ -3,10 +3,10 @@ import { Avatar, Button, ButtonVariation, Container, Layout, Page, TableV2, Text
 import { Color, FontVariation } from '@harness/design-system'
 import type { CellProps, Column } from 'react-table'
 
-import { useStrings } from 'framework/strings'
+import { StringKeys, useStrings } from 'framework/strings'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { TypesMembership, useMembershipDelete, useMembershipList } from 'services/code'
+import { EnumMembershipRole, TypesMembership, useMembershipDelete, useMembershipList } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
@@ -14,6 +14,13 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import useAddNewMember from './AddNewMember/AddNewMember'
 
 import css from './SpaceAccessControl.module.scss'
+
+export const roleStringKeyMap: Record<EnumMembershipRole, StringKeys> = {
+  contributor: 'contributor',
+  executor: 'executor',
+  reader: 'reader',
+  space_owner: 'owner'
+}
 
 const SpaceAccessControl = () => {
   const { getString } = useStrings()
@@ -55,7 +62,13 @@ const SpaceAccessControl = () => {
           width: '30%',
           Cell: ({ row }: CellProps<TypesMembership>) => (
             <Layout.Horizontal style={{ alignItems: 'center' }}>
-              <Avatar name={row.original.principal?.display_name} size="normal" hoverCard={false} />
+              <Avatar
+                name={row.original.principal?.display_name}
+                size="normal"
+                hoverCard={false}
+                color={Color.WHITE}
+                backgroundColor={Color.PRIMARY_7}
+              />
               <Text font={{ variation: FontVariation.SMALL_SEMI }} lineClamp={1}>
                 {row.original.principal?.display_name}
               </Text>
@@ -65,11 +78,15 @@ const SpaceAccessControl = () => {
         {
           Header: getString('role'),
           width: '40%',
-          Cell: ({ row }: CellProps<TypesMembership>) => (
-            <Text font={{ variation: FontVariation.TINY_SEMI }} color={Color.PRIMARY_9} className={css.roleBadge}>
-              {row.original.role}
-            </Text>
-          )
+          Cell: ({ row }: CellProps<TypesMembership>) => {
+            const stringKey = row.original.role ? roleStringKeyMap[row.original.role] : undefined
+
+            return (
+              <Text font={{ variation: FontVariation.TINY_SEMI }} color={Color.PRIMARY_9} className={css.roleBadge}>
+                {stringKey ? getString(stringKey) : row.original.role}
+              </Text>
+            )
+          }
         },
         {
           Header: getString('email'),

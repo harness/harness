@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react'
 import { Button, ButtonVariation, Dialog, FormikForm, FormInput, SelectOption, useToaster } from '@harness/uicore'
 import { useModalHook } from '@harness/use-modal'
 import { Formik } from 'formik'
-import { capitalize } from 'lodash-es'
 
 import * as Yup from 'yup'
 
@@ -17,7 +16,9 @@ import {
 } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 
-const roles = ['contributor', 'executor', 'reader', 'space_owner'] as const
+import { roleStringKeyMap } from '../SpaceAccessControl'
+
+const roles = ['reader', 'executor', 'contributor', 'space_owner'] as const
 
 const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
   const [isEditFlow, setIsEditFlow] = useState(false)
@@ -37,7 +38,7 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
     () =>
       roles.map(role => ({
         value: role,
-        label: capitalize(role)
+        label: getString(roleStringKeyMap[role])
       })),
     []
   )

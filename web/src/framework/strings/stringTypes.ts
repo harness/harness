@@ -86,6 +86,7 @@ export interface StringsMap {
   confirmation: string
   content: string
   contents: string
+  contributor: string
   conversation: string
   copy: string
   copyBranch: string
@@ -161,6 +162,7 @@ export interface StringsMap {
   enterTagPlaceholder: string
   enterUser: string
   error404Text: string
+  executor: string
   existingAccount: string
   expiration: string
   expirationDate: string
@@ -244,6 +246,8 @@ export interface StringsMap {
   noCommits: string
   noCommitsMessage: string
   noCommitsPR: string
+  noExpiration: string
+  noExpirationDate: string
   noOptionalReviewers: string
   noRequiredReviewers: string
   noResultMessage: string
@@ -261,6 +265,7 @@ export interface StringsMap {
   optional: string
   optionalExtendedDescription: string
   overview: string
+  owner: string
   pageLoading: string
   pageNotFound: string
   'pageTitle.accessControl': string
@@ -369,6 +374,7 @@ export interface StringsMap {
   quote: string
   reactivate: string
   readMe: string
+  reader: string
   refresh: string
   reject: string
   rejected: string

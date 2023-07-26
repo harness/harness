@@ -507,6 +507,8 @@ confirmNewPassword: Confirm the <b>NEW</b> password
 accountSetting: Account Setting
 nDays: '{{number}} Days'
 expiration: Expiration
+noExpiration: No Expiration
+noExpirationDate: The token will never expire!
 token: Token
 expired: Expired
 expirationDate: Expiration Date
@@ -571,3 +573,7 @@ deleteSpace: Delete Space
 spaceSetting:
   intentText: This will permanently delete the space named '{{space}}', and everything contained in it.  All repositories in this space will be deleted.
   setting: Space Setting
+contributor: Contributor
+reader: Reader
+executor: Executor
+owner: Owner

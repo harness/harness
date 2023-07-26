@@ -10,6 +10,7 @@ import {
   FormikForm,
   FormInput,
   Layout,
+  SelectOption,
   Text
 } from '@harness/uicore'
 import { useModalHook } from '@harness/use-modal'
@@ -18,8 +19,10 @@ import { useMutate } from 'restful-react'
 import moment from 'moment'
 import * as Yup from 'yup'
 import { Else, Match, Render, Truthy } from 'react-jsx-match'
+import { omit } from 'lodash-es'
 
 import { useStrings } from 'framework/strings'
+import type { OpenapiCreateTokenRequest } from 'services/code'
 import { REGEX_VALID_REPO_NAME } from 'utils/Utils'
 import { CodeIcon } from 'utils/GitUtils'
 import { CopyButton } from 'components/CopyButton/CopyButton'
@@ -34,44 +37,49 @@ const useNewToken = ({ onClose }: { onClose: () => void }) => {
   const [generatedToken, setGeneratedToken] = useState<string>()
   const isTokenGenerated = Boolean(generatedToken)
 
-  const lifeTimeOptions = useMemo(
+  const lifeTimeOptions: SelectOption[] = useMemo(
     () => [
       { label: getString('nDays', { number: 7 }), value: 604800000000000 },
       { label: getString('nDays', { number: 30 }), value: 2592000000000000 },
       { label: getString('nDays', { number: 60 }), value: 5184000000000000 },
-      { label: getString('nDays', { number: 90 }), value: 7776000000000000 }
+      { label: getString('nDays', { number: 90 }), value: 7776000000000000 },
+      { label: getString('noExpiration'), value: Infinity }
     ],
     [getString]
   )
 
   const onModalClose = () => {
+    setGeneratedToken('')
     hideModal()
     onClose()
-    setGeneratedToken()
   }
 
   const [openModal, hideModal] = useModalHook(() => {
     return (
       <Dialog isOpen enforceFocus={false} onClose={onModalClose} title={getString('createNewToken')}>
-        <Formik
+        <Formik<OpenapiCreateTokenRequest>
           initialValues={{
-            uid: '',
-            lifeTime: 0
+            uid: ''
           }}
           validationSchema={Yup.object().shape({
             uid: Yup.string()
               .required(getString('validation.nameIsRequired'))
               .matches(REGEX_VALID_REPO_NAME, getString('validation.nameInvalid')),
-            lifeTime: Yup.number().required(getString('validation.expirationDateRequired'))
+            lifetime: Yup.number().required(getString('validation.expirationDateRequired'))
           })}
           onSubmit={async values => {
-            const res = await mutate(values)
+            let payload = { ...values }
+
+            if (payload.lifetime === Infinity) {
+              payload = omit(payload, 'lifetime')
+            }
+
+            const res = await mutate(payload)
             setGeneratedToken(res?.access_token)
           }}>
           {formikProps => {
-            const expiresAtString = moment(Date.now() + formikProps.values.lifeTime / 1000000).format(
-              'dddd, MMMM DD YYYY'
-            )
+            const lifetime = formikProps.values.lifetime || 0
+            const expiresAtString = moment(Date.now() + lifetime / 1000000).format('dddd, MMMM DD YYYY')
 
             return (
               <FormikForm>
@@ -82,18 +90,20 @@ const useNewToken = ({ onClose }: { onClose: () => void }) => {
                   disabled={isTokenGenerated}
                 />
                 <FormInput.Select
-                  name="lifeTime"
+                  name="lifetime"
                   label={getString('expiration')}
                   items={lifeTimeOptions}
                   usePortal
                   disabled={isTokenGenerated}
                 />
-                {formikProps.values.lifeTime ? (
+                {lifetime ? (
                   <Text
                     font={{ variation: FontVariation.SMALL_SEMI }}
                     color={Color.GREY_400}
                     margin={{ bottom: 'medium' }}>
-                    {getString('newToken.expireOn', { date: expiresAtString })}
+                    {lifetime === Infinity
+                      ? getString('noExpirationDate')
+                      : getString('newToken.expireOn', { date: expiresAtString })}
                   </Text>
                 ) : null}
                 <Render when={isTokenGenerated}>

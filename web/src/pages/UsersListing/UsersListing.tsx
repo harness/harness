@@ -77,7 +77,13 @@ const UsersListing = () => {
         Cell: ({ row }: CellProps<TypesUser>) => {
           return (
             <Layout.Horizontal style={{ alignItems: 'center' }}>
-              <Avatar name={row.original.display_name} size="normal" hoverCard={false} />
+              <Avatar
+                name={row.original.display_name}
+                size="normal"
+                hoverCard={false}
+                color={Color.WHITE}
+                backgroundColor={Color.PRIMARY_7}
+              />
               <Text font={{ variation: FontVariation.SMALL_SEMI }} margin={{ right: 'small' }} lineClamp={1}>
                 {row.original.display_name}
               </Text>
