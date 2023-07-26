@@ -65,7 +65,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
 	principalStore := database.ProvidePrincipalStore(db, principalUIDTransformation)
 	tokenStore := database.ProvideTokenStore(db)
-	controller := user.NewController(principalUID, authorizer, principalStore, tokenStore)
+	controller := user.NewController(principalUID, authorizer, principalStore, tokenStore, membershipStore)
 	serviceController := service.NewController(principalUID, authorizer, principalStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller, serviceController)
 	authenticator := authn.ProvideAuthenticator(principalStore, tokenStore)

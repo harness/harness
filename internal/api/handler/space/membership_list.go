@@ -24,12 +24,15 @@ func HandleMembershipList(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		memberInfos, err := spaceCtrl.MembershipList(ctx, session, spaceRef)
+		filter := request.ParseMembershipFilter(r)
+
+		memberships, membershipsCount, err := spaceCtrl.MembershipList(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, memberInfos)
+		render.Pagination(r, w, filter.Page, filter.Size, int(membershipsCount))
+		render.JSON(w, http.StatusOK, memberships)
 	}
 }

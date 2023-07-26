@@ -42,7 +42,7 @@ func (c *Controller) MembershipUpdate(ctx context.Context,
 	spaceRef string,
 	userUID string,
 	in *MembershipUpdateInput,
-) (*types.Membership, error) {
+) (*types.MembershipUser, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (c *Controller) MembershipUpdate(ctx context.Context,
 		return nil, fmt.Errorf("failed to find user by uid: %w", err)
 	}
 
-	membership, err := c.membershipStore.Find(ctx, types.MembershipKey{
+	membership, err := c.membershipStore.FindUser(ctx, types.MembershipKey{
 		SpaceID:     space.ID,
 		PrincipalID: user.ID,
 	})
@@ -76,7 +76,7 @@ func (c *Controller) MembershipUpdate(ctx context.Context,
 
 	membership.Role = in.Role
 
-	err = c.membershipStore.Update(ctx, membership)
+	err = c.membershipStore.Update(ctx, &membership.Membership)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update membership")
 	}

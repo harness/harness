@@ -354,6 +354,7 @@ func setupUser(r chi.Router, userCtrl *user.Controller) {
 		r.Use(middlewareprincipal.RestrictTo(enum.PrincipalTypeUser))
 		r.Get("/", handleruser.HandleFind(userCtrl))
 		r.Patch("/", handleruser.HandleUpdate(userCtrl))
+		r.Get("/memberships", handleruser.HandleMembershipSpaces(userCtrl))
 
 		// PAT
 		r.Route("/tokens", func(r chi.Router) {

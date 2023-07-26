@@ -50,7 +50,7 @@ func (c *Controller) MembershipAdd(ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
 	in *MembershipAddInput,
-) (*types.Membership, error) {
+) (*types.MembershipUser, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err
@@ -74,22 +74,27 @@ func (c *Controller) MembershipAdd(ctx context.Context,
 
 	now := time.Now().UnixMilli()
 
-	membership := &types.Membership{
-		SpaceID:     space.ID,
-		PrincipalID: user.ID,
-		CreatedBy:   session.Principal.ID,
-		Created:     now,
-		Updated:     now,
-		Role:        in.Role,
-
-		Principal: *user.ToPrincipalInfo(),
-		AddedBy:   *session.Principal.ToPrincipalInfo(),
+	membership := types.Membership{
+		MembershipKey: types.MembershipKey{
+			SpaceID:     space.ID,
+			PrincipalID: user.ID,
+		},
+		CreatedBy: session.Principal.ID,
+		Created:   now,
+		Updated:   now,
+		Role:      in.Role,
 	}
 
-	err = c.membershipStore.Create(ctx, membership)
+	err = c.membershipStore.Create(ctx, &membership)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new membership: %w", err)
 	}
 
-	return membership, nil
+	result := &types.MembershipUser{
+		Membership: membership,
+		Principal:  *user.ToPrincipalInfo(),
+		AddedBy:    *session.Principal.ToPrincipalInfo(),
+	}
+
+	return result, nil
 }

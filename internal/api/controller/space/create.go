@@ -99,13 +99,15 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			return fmt.Errorf("failed to create path: %w", err)
 		}
 
-		// add space membership to top level space only (as the user doesn't have inhereted permissions alraedy)
+		// add space membership to top level space only (as the user doesn't have inherited permissions already)
 		parentRefAsID, err := strconv.ParseInt(in.ParentRef, 10, 64)
 		if (err == nil && parentRefAsID == 0) || (len(strings.TrimSpace(in.ParentRef)) == 0) {
 			membership := &types.Membership{
-				SpaceID:     space.ID,
-				PrincipalID: session.Principal.ID,
-				Role:        enum.MembershipRoleSpaceOwner,
+				MembershipKey: types.MembershipKey{
+					SpaceID:     space.ID,
+					PrincipalID: session.Principal.ID,
+				},
+				Role: enum.MembershipRoleSpaceOwner,
 
 				// membership has been created by the system
 				CreatedBy: bootstrap.NewSystemServiceSession().Principal.ID,

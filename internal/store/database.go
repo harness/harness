@@ -226,10 +226,13 @@ type (
 	// MembershipStore defines the membership data storage.
 	MembershipStore interface {
 		Find(ctx context.Context, key types.MembershipKey) (*types.Membership, error)
-		Create(ctx context.Context, v *types.Membership) error
+		FindUser(ctx context.Context, key types.MembershipKey) (*types.MembershipUser, error)
+		Create(ctx context.Context, membership *types.Membership) error
 		Update(ctx context.Context, membership *types.Membership) error
 		Delete(ctx context.Context, key types.MembershipKey) error
-		ListForSpace(ctx context.Context, spaceID int64) ([]*types.Membership, error)
+		CountUsers(ctx context.Context, spaceID int64, filter types.MembershipFilter) (int64, error)
+		ListUsers(ctx context.Context, spaceID int64, filter types.MembershipFilter) ([]types.MembershipUser, error)
+		ListSpaces(ctx context.Context, userID int64) ([]types.MembershipSpace, error)
 	}
 
 	// TokenStore defines the token data storage.

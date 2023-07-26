@@ -21,27 +21,36 @@ type Controller struct {
 	authorizer        authz.Authorizer
 	principalStore    store.PrincipalStore
 	tokenStore        store.TokenStore
+	membershipStore   store.MembershipStore
 }
 
-func NewController(principalUIDCheck check.PrincipalUID, authorizer authz.Authorizer,
-	principalStore store.PrincipalStore, tokenStore store.TokenStore) *Controller {
+func NewController(
+	principalUIDCheck check.PrincipalUID,
+	authorizer authz.Authorizer,
+	principalStore store.PrincipalStore,
+	tokenStore store.TokenStore,
+	membershipStore store.MembershipStore,
+) *Controller {
 	return &Controller{
 		principalUIDCheck: principalUIDCheck,
 		authorizer:        authorizer,
 		principalStore:    principalStore,
 		tokenStore:        tokenStore,
+		membershipStore:   membershipStore,
 	}
 }
 
 var hashPassword = bcrypt.GenerateFromPassword
 
 func findUserFromUID(ctx context.Context,
-	principalStore store.PrincipalStore, userUID string) (*types.User, error) {
+	principalStore store.PrincipalStore, userUID string,
+) (*types.User, error) {
 	return principalStore.FindUserByUID(ctx, userUID)
 }
 
 func findUserFromEmail(ctx context.Context,
-	principalStore store.PrincipalStore, email string) (*types.User, error) {
+	principalStore store.PrincipalStore, email string,
+) (*types.User, error) {
 	return principalStore.FindUserByEmail(ctx, email)
 }
 

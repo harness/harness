@@ -10,6 +10,7 @@ import (
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -18,20 +19,36 @@ import (
 func (c *Controller) MembershipList(ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-) ([]*types.Membership, error) {
+	opts types.MembershipFilter,
+) ([]types.MembershipUser, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, false); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	memberships, err := c.membershipStore.ListForSpace(ctx, space.ID)
+	var memberships []types.MembershipUser
+	var membershipsCount int64
+
+	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+		memberships, err = c.membershipStore.ListUsers(ctx, space.ID, opts)
+		if err != nil {
+			return fmt.Errorf("failed to list memberships for space: %w", err)
+		}
+
+		membershipsCount, err = c.membershipStore.CountUsers(ctx, space.ID, opts)
+		if err != nil {
+			return fmt.Errorf("failed to count memberships for space: %w", err)
+		}
+
+		return nil
+	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list memberships for space: %w", err)
+		return nil, 0, err
 	}
 
-	return memberships, nil
+	return memberships, membershipsCount, nil
 }
