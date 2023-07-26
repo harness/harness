@@ -12,6 +12,8 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/gotidy/ptr"
 )
 
 const (
@@ -28,14 +30,14 @@ func CreateUserSession(ctx context.Context, tokenStore store.TokenStore,
 		principal,
 		principal,
 		uid,
-		userTokenLifeTime,
+		ptr.Duration(userTokenLifeTime),
 		enum.AccessGrantAll,
 	)
 }
 
 func CreatePAT(ctx context.Context, tokenStore store.TokenStore,
 	createdBy *types.Principal, createdFor *types.User,
-	uid string, lifetime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
+	uid string, lifetime *time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
 	return Create(
 		ctx,
 		tokenStore,
@@ -50,7 +52,7 @@ func CreatePAT(ctx context.Context, tokenStore store.TokenStore,
 
 func CreateSAT(ctx context.Context, tokenStore store.TokenStore,
 	createdBy *types.Principal, createdFor *types.ServiceAccount,
-	uid string, lifetime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
+	uid string, lifetime *time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
 	return Create(
 		ctx,
 		tokenStore,
@@ -65,9 +67,13 @@ func CreateSAT(ctx context.Context, tokenStore store.TokenStore,
 
 func Create(ctx context.Context, tokenStore store.TokenStore,
 	tokenType enum.TokenType, createdBy *types.Principal, createdFor *types.Principal,
-	uid string, lifetime time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
+	uid string, lifetime *time.Duration, grants enum.AccessGrant) (*types.Token, string, error) {
 	issuedAt := time.Now()
-	expiresAt := issuedAt.Add(lifetime)
+
+	var expiresAt *int64
+	if lifetime != nil {
+		expiresAt = ptr.Int64(issuedAt.Add(*lifetime).UnixMilli())
+	}
 
 	// create db entry first so we get the id.
 	token := types.Token{
@@ -75,7 +81,7 @@ func Create(ctx context.Context, tokenStore store.TokenStore,
 		UID:         uid,
 		PrincipalID: createdFor.ID,
 		IssuedAt:    issuedAt.UnixMilli(),
-		ExpiresAt:   expiresAt.UnixMilli(),
+		ExpiresAt:   expiresAt,
 		Grants:      grants,
 		CreatedBy:   createdBy.ID,
 	}

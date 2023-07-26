@@ -59,27 +59,18 @@ func (c *HTTPClient) SetDebug(debug bool) {
 }
 
 // Login authenticates the user and returns a JWT token.
-func (c *HTTPClient) Login(ctx context.Context, username, password string) (*types.TokenResponse, error) {
-	form := &url.Values{}
-	form.Add("username", username)
-	form.Add("password", password)
+func (c *HTTPClient) Login(ctx context.Context, input *user.LoginInput) (*types.TokenResponse, error) {
 	out := new(types.TokenResponse)
 	uri := fmt.Sprintf("%s/api/v1/login", c.base)
-	err := c.post(ctx, uri, true, form, out)
+	err := c.post(ctx, uri, true, input, out)
 	return out, err
 }
 
 // Register registers a new  user and returns a JWT token.
-func (c *HTTPClient) Register(ctx context.Context,
-	username, displayName, email, password string) (*types.TokenResponse, error) {
-	form := &url.Values{}
-	form.Add("username", username)
-	form.Add("displayname", displayName)
-	form.Add("email", email)
-	form.Add("password", password)
+func (c *HTTPClient) Register(ctx context.Context, input *user.RegisterInput) (*types.TokenResponse, error) {
 	out := new(types.TokenResponse)
 	uri := fmt.Sprintf("%s/api/v1/register", c.base)
-	err := c.post(ctx, uri, true, form, out)
+	err := c.post(ctx, uri, true, input, out)
 	return out, err
 }
 
@@ -201,12 +192,7 @@ func (c *HTTPClient) stream(ctx context.Context, rawurl, method string, noToken 
 	var buf io.ReadWriter
 	if in != nil {
 		buf = &bytes.Buffer{}
-		// if posting form data, encode the form values.
-		if form, ok := in.(*url.Values); ok {
-			if _, err = io.WriteString(buf, form.Encode()); err != nil {
-				log.Err(err).Msg("in stream method")
-			}
-		} else if err = json.NewEncoder(buf).Encode(in); err != nil {
+		if err = json.NewEncoder(buf).Encode(in); err != nil {
 			return nil, err
 		}
 	}

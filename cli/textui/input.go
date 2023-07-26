@@ -14,31 +14,41 @@ import (
 	"golang.org/x/term"
 )
 
-// Registration returns the username, name, email and password from stdin.
+// Registration returns the userID, displayName, email and password from stdin.
 func Registration() (string, string, string, string) {
-	return Username(), Name(), Email(), Password()
+	return UserID(), DisplayName(), Email(), Password()
 }
 
-// Credentials returns the username and password from stdin.
+// Credentials returns the login identifier and password from stdin.
 func Credentials() (string, string) {
-	return Username(), Password()
+	return LoginIdentifier(), Password()
 }
 
-// Username returns the username from stdin.
-func Username() string {
+// UserID returns the user ID from stdin.
+func UserID() string {
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Print("Enter Username: ")
-	username, _ := reader.ReadString('\n')
+	fmt.Print("Enter User ID: ")
+	uid, _ := reader.ReadString('\n')
 
-	return strings.TrimSpace(username)
+	return strings.TrimSpace(uid)
 }
 
-// Name returns the name from stdin.
-func Name() string {
+// LoginIdentifier returns the login identifier from stdin.
+func LoginIdentifier() string {
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Print("Enter Name: ")
+	fmt.Print("Enter User ID or Email: ")
+	id, _ := reader.ReadString('\n')
+
+	return strings.TrimSpace(id)
+}
+
+// DisplayName returns the display name from stdin.
+func DisplayName() string {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Enter Display Name: ")
 	name, _ := reader.ReadString('\n')
 
 	return strings.TrimSpace(name)
