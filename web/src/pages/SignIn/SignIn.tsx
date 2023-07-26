@@ -57,7 +57,7 @@ export const SignIn: React.FC = () => {
             validationSchema={Yup.object().shape({
               username: Yup.string().required(getString('userNameRequired')),
 
-              password: Yup.string().min(6).required(getString('passwordRequired'))
+              password: Yup.string().required(getString('passwordRequired'))
             })}>
             <FormikForm>
               <FormInput.Text name="username" label={getString('email')} disabled={false} />

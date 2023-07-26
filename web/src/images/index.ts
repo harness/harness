@@ -9,6 +9,7 @@ import PrUnchecked from 'images/pull-request-unchecked.svg'
 import DarkBackground from 'images/dark-background.png'
 import Signup from 'images/signup.png'
 import Subtract from 'images/Subtract.png'
+import EmptySpace from 'images/no-space.svg'
 
 export const Images = {
   PrOpen,
@@ -21,5 +22,6 @@ export const Images = {
   PrUnchecked,
   DarkBackground,
   Signup,
-  Subtract
+  Subtract,
+  EmptySpace
 }

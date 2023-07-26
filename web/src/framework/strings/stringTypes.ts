@@ -106,6 +106,7 @@ export interface StringsMap {
   'createRepoModal.privateLabel': string
   'createRepoModal.publicLabel': string
   createRepoPerms: string
+  createSpace: string
   createTag: string
   createWebhook: string
   created: string
@@ -120,6 +121,7 @@ export interface StringsMap {
   deleteNotAllowed: string
   deleteRepoText: string
   deleteRepoTitle: string
+  deleteSpace: string
   deleteTag: string
   deleteTagConfirm: string
   deleteToken: string
@@ -145,11 +147,13 @@ export interface StringsMap {
   emailRequired: string
   emptyRepoHeader: string
   emptyRepoInclude: string
+  emptySpaceText: string
   enableSSLVerification: string
   enableWebhookContent: string
   enableWebhookTitle: string
   enabled: string
   enterDescription: string
+  enterName: string
   enterNewBranchName: string
   enterNewPassword: string
   enterRepoName: string
@@ -163,6 +167,7 @@ export interface StringsMap {
   expired: string
   failedToCreateBranch: string
   failedToCreateRepo: string
+  failedToCreateSpace: string
   failedToDeleteBranch: string
   failedToDeleteWebhook: string
   fileDeleted: string
@@ -183,6 +188,8 @@ export interface StringsMap {
   help: string
   hideCommitHistory: string
   history: string
+  'homepage.firstStep': string
+  'homepage.welcomeText': string
   in: string
   inactiveBranches: string
   leaveAComment: string
@@ -213,6 +220,7 @@ export interface StringsMap {
   newMember: string
   newPullRequest: string
   newRepo: string
+  newSpace: string
   newTag: string
   'newToken.expireOn': string
   'newToken.generateToken': string
@@ -406,6 +414,7 @@ export interface StringsMap {
   secret: string
   selectBranchPlaceHolder: string
   selectSpace: string
+  selectSpaceText: string
   selectToViewMore: string
   setAsAdmin: string
   settings: string
@@ -420,6 +429,8 @@ export interface StringsMap {
   'spaceMemberships.removeMember': string
   'spaceMemberships.removeMembershipMsg': string
   'spaceMemberships.removeMembershipToast': string
+  'spaceSetting.intentText': string
+  'spaceSetting.setting': string
   spaces: string
   sslVerificationLabel: string
   status: string
@@ -471,6 +482,7 @@ export interface StringsMap {
   'validation.nameIsRequired': string
   'validation.newPasswordRequired': string
   'validation.repoNamePatternIsNotValid': string
+  'validation.spaceNamePatternIsNotValid': string
   'validation.uidInvalid': string
   'validation.uidRequired': string
   viewAllBranches: string

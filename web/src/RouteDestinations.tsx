@@ -25,7 +25,6 @@ import ChangePassword from 'pages/ChangePassword/ChangePassword'
 import SpaceAccessControl from 'pages/SpaceAccessControl/SpaceAccessControl'
 import SpaceSettings from 'pages/SpaceSettings/SpaceSettings'
 import { useStrings } from 'framework/strings'
-import { CommitsView } from 'components/CommitsView/CommitsView'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
