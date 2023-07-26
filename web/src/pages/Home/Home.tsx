@@ -1,15 +1,14 @@
 import React from 'react'
 import { ButtonVariation, Container, FontVariation, Layout, PageBody, Text } from '@harness/uicore'
-// import { useGet } from 'restful-react'
+import { useGet } from 'restful-react'
 // import type { TypesSpace } from 'services/code'
 import { useStrings } from 'framework/strings'
-import { voidFn } from 'utils/Utils'
 // import { usePageIndex } from 'hooks/usePageIndex'
-import css from './Home.module.scss'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { NewSpaceModalButton } from 'components/NewSpaceModalButton/NewSpaceModalButton'
+import css from './Home.module.scss'
 
 export default function Home() {
   const { getString } = useStrings()
@@ -19,16 +18,9 @@ export default function Home() {
   const { space } = useGetRepositoryMetadata()
 
   const spaces = []
-  // const {
-  //   // data: noSpaceYet,
-  //   // loading,
-  //   refetch
-  //   // response,
-  //   // error
-  // } = useGet<TypesSpace[]>({
-  //   path: `/api/v1/spaces/testspace`,
-  //   queryParams: { page, limit: LIST_FETCHING_LIMIT }
-  // })
+  const { refetch } = useGet({
+    path: '/api/v1/user/memberships'
+  })
   const NewSpaceButton = (
     <NewSpaceModalButton
       space={space}
@@ -38,7 +30,7 @@ export default function Home() {
       icon="plus"
       width={173}
       height={48}
-      // onSubmit={() => {}}
+      onRefetch={refetch}
     />
   )
   return (

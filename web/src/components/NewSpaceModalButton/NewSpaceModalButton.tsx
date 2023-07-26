@@ -53,7 +53,7 @@ export interface NewSpaceModalButtonProps extends Omit<ButtonProps, 'onClick'> {
   modalTitle: string
   submitButtonTitle?: string
   cancelButtonTitle?: string
-  //   onSubmit: (data: TypesRepository) => void
+  onRefetch: () => void
 }
 export interface OpenapiCreateSpaceRequestExtended extends OpenapiCreateSpaceRequest {
   parent_id?: number
@@ -64,7 +64,7 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
   modalTitle,
   submitButtonTitle,
   cancelButtonTitle,
-  //   onSubmit,
+  onRefetch,
   ...props
 }) => {
   const ModalComponent: React.FC = () => {
@@ -90,6 +90,7 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
         createSpace(payload)
           .then(() => {
             hideModal()
+            onRefetch()
           })
           .catch(_error => {
             showError(getErrorMessage(_error), 0, getString('failedToCreateSpace'))

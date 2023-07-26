@@ -14,13 +14,14 @@ import {
 } from '@harness/uicore'
 import cx from 'classnames'
 import Keywords from 'react-keywords'
+import { useGet } from 'restful-react'
 
 import { Classes, Popover, Position } from '@blueprintjs/core'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
-import { ButtonRoleProps, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { ButtonRoleProps } from 'utils/Utils'
 import { useShowRequestError } from 'hooks/useShowRequestError'
-import { TypesRepository, TypesSpace, useGetSpace } from 'services/code'
+import { TypesSpace, useGetSpace } from 'services/code'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { NewSpaceModalButton } from 'components/NewSpaceModalButton/NewSpaceModalButton'
 // import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
@@ -43,74 +44,11 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
   // const [page, setPage] = usePageIndex(1)
 
   const { data, error } = useGetSpace({ space_ref: encodeURIComponent(space), lazy: !space })
-  // const {
-  //   data: t,
-  //   // loading,
-  //   // refetch,
-  //   response
-  // } = useGet<TypesSpace[]>({
-  //   path: `/api/v1/spaces/testspace`,
-  //   queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm }
-  // })
-  const spaces = [
-    {
-      id: 79,
-      parent_id: 11,
-      uid: 'root',
-      path: 'root',
-      description: 'This is a root description',
-      is_public: false,
-      created_by: 6,
-      created: 1687816598981,
-      updated: 1687816598981,
-      default_branch: 'main',
-      fork_id: 0,
-      num_forks: 0,
-      num_pulls: 0,
-      num_closed_pulls: 0,
-      num_open_pulls: 0,
-      num_merged_pulls: 0,
-      git_url: 'test.com/1'
-    },
-    {
-      id: 8,
-      parent_id: 11,
-      uid: 'rootChild1',
-      path: 'root/rootChild1',
-      description: 'This is a rootchild1 description',
-      is_public: false,
-      created_by: 6,
-      created: 1678875305900,
-      updated: 1678875305900,
-      default_branch: 'main',
-      fork_id: 0,
-      num_forks: 0,
-      num_pulls: 0,
-      num_closed_pulls: 0,
-      num_open_pulls: 0,
-      num_merged_pulls: 0,
-      git_url: 'test.com/2'
-    },
-    {
-      id: 80,
-      parent_id: 11,
-      uid: 'home',
-      path: 'home',
-      description: 'This is a home description',
-      is_public: false,
-      created_by: 6,
-      created: 1687816598981,
-      updated: 1687816598981,
-      default_branch: 'main',
-      fork_id: 0,
-      num_forks: 0,
-      num_pulls: 0,
-      num_closed_pulls: 0,
-      num_open_pulls: 0,
-      num_merged_pulls: 0,
-      git_url: 'test.com/3'
-    }
-  ]
+
+  const { data: spaces, refetch } = useGet({
+    path: '/api/v1/user/memberships'
+  })
+
   const selectSpace = useCallback(
     (_space: TypesSpace, isUserAction: boolean) => {
       setSelectedSpace(_space)
@@ -133,15 +71,16 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
       text={getString('newSpace')}
       variation={ButtonVariation.PRIMARY}
       icon="plus"
+      onRefetch={refetch}
     />
   )
 
-  const columns: Column<TypesRepository>[] = useMemo(
+  const columns: Column<{ space: TypesSpace }>[] = useMemo(
     () => [
       {
         Header: getString('spaces'),
         width: 'calc(100% - 180px)',
-        Cell: ({ row }: CellProps<TypesRepository>) => {
+        Cell: ({ row }: CellProps<{ space: TypesSpace }>) => {
           const record = row.original
           return (
             <Container className={css.nameContainer}>
@@ -154,11 +93,11 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
                 />
                 <Layout.Vertical flex className={css.name}>
                   <Text className={css.repoName} lineClamp={2}>
-                    <Keywords value={searchTerm}>{record.uid}</Keywords>
+                    <Keywords value={searchTerm}>{record.space.uid}</Keywords>
                   </Text>
-                  {record.description && (
+                  {record.space.description && (
                     <Text className={css.desc} lineClamp={1}>
-                      {record.description}
+                      {record.space.description}
                     </Text>
                   )}
                 </Layout.Vertical>
@@ -227,17 +166,16 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
         <Container padding={{ left: 'small' }}>
           <Layout.Vertical padding={{ top: 'xxlarge' }} spacing="small">
             {!!spaces?.length && (
-              <Table<TypesRepository>
+              <Table<{ space: TypesSpace }>
                 hideHeaders
                 className={css.table}
                 columns={columns}
                 data={spaces || []}
                 onRowClick={data => {
-                  console.log(data)
                   setOpened(false)
-                  selectSpace({ uid: data?.uid, path: data?.path }, true)
+                  selectSpace({ uid: data?.space?.uid, path: data?.space?.path }, true)
                 }}
-                getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
+                getRowClassName={row => cx(css.row, !row.original.space.description && css.noDesc)}
               />
             )}
             {spaces?.length === 0 && (
@@ -249,7 +187,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
                     text={getString('createSpace')}
                     variation={ButtonVariation.PRIMARY}
                     icon="plus"
-                    // onSubmit={() => {}}
+                    onRefetch={refetch}
                   />
                 }
                 message={<Text font={{ variation: FontVariation.H4 }}> {getString('emptySpaceText')}</Text>}
