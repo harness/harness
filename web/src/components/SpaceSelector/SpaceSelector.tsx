@@ -15,20 +15,20 @@ import {
 import cx from 'classnames'
 import Keywords from 'react-keywords'
 import { useGet } from 'restful-react'
-
+import type { CellProps, Column } from 'react-table'
+import { useHistory } from 'react-router-dom'
 import { Classes, Popover, Position } from '@blueprintjs/core'
+import { routes } from 'RouteDefinitions'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
-import { ButtonRoleProps } from 'utils/Utils'
+import { ButtonRoleProps, voidFn } from 'utils/Utils'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { TypesSpace, useGetSpace } from 'services/code'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { NewSpaceModalButton } from 'components/NewSpaceModalButton/NewSpaceModalButton'
 // import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
-// import { useGet } from 'restful-react'
 
 // import { usePageIndex } from 'hooks/usePageIndex'
-import type { CellProps, Column } from 'react-table'
 import css from './SpaceSelector.module.scss'
 
 interface SpaceSelectorProps {
@@ -37,6 +37,7 @@ interface SpaceSelectorProps {
 
 export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
   const { getString } = useStrings()
+  const history = useHistory()
   const [selectedSpace, setSelectedSpace] = useState<TypesSpace | undefined>()
   const { space } = useGetRepositoryMetadata()
   const [opened, setOpened] = React.useState(false)
@@ -45,7 +46,11 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
 
   const { data, error } = useGetSpace({ space_ref: encodeURIComponent(space), lazy: !space })
 
-  const { data: spaces, refetch } = useGet({
+  const {
+    data: spaces,
+    refetch,
+    response
+  } = useGet({
     path: '/api/v1/user/memberships'
   })
 
@@ -63,6 +68,12 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
     }
   }, [space, selectedSpace, data, onSelect, selectSpace])
 
+  useEffect(() => {
+    if (response?.status === 403) {
+      history.push(routes.toSignIn())
+    }
+  }, [response, history])
+
   useShowRequestError(error)
   const NewSpaceButton = (
     <NewSpaceModalButton
@@ -71,7 +82,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
       text={getString('newSpace')}
       variation={ButtonVariation.PRIMARY}
       icon="plus"
-      onRefetch={refetch}
+      onRefetch={voidFn(refetch)}
     />
   )
 
@@ -187,7 +198,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
                     text={getString('createSpace')}
                     variation={ButtonVariation.PRIMARY}
                     icon="plus"
-                    onRefetch={refetch}
+                    onRefetch={voidFn(refetch)}
                   />
                 }
                 message={<Text font={{ variation: FontVariation.H4 }}> {getString('emptySpaceText')}</Text>}
