@@ -320,7 +320,6 @@ export interface StringsMap {
   'pr.failedToUpdateTitle': string
   'pr.fileDeleted': string
   'pr.fileUnchanged': string
-  'pr.forceMergeWithUnresolvedComment': string
   'pr.mergeOptions.close': string
   'pr.mergeOptions.closeDesc': string
   'pr.mergeOptions.createMergeCommit': string
@@ -332,7 +331,6 @@ export interface StringsMap {
   'pr.mergePR': string
   'pr.metaLine': string
   'pr.modalTitle': string
-  'pr.notMergeableWithUnresolvedComment': string
   'pr.openForReview': string
   'pr.outdated': string
   'pr.prBranchPushInfo': string

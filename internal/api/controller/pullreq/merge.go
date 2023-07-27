@@ -83,12 +83,6 @@ func (c *Controller) Merge(
 		return types.MergeResponse{}, usererror.BadRequest("Pull request must be open")
 	}
 
-	if pr.UnresolvedCount > 0 {
-		return types.MergeResponse{}, usererror.BadRequest(
-			"Pull requests with unresolved comments can't be merged. Resolve all the comments first.",
-		)
-	}
-
 	if pr.IsDraft {
 		return types.MergeResponse{}, usererror.BadRequest(
 			"Draft pull requests can't be merged. Clear the draft flag first.",
