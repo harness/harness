@@ -2,6 +2,7 @@
 // Use of this source code is governed by the Drone Non-Commercial License
 // that can be found in the LICENSE file.
 
+//go:build !oss
 // +build !oss
 
 package template
@@ -16,7 +17,7 @@ import (
 )
 
 // HandleFind returns an http.HandlerFunc that writes json-encoded
-// template details to the the response body.
+// template details to the response body.
 func HandleFind(templateStore core.TemplateStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var (

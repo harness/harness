@@ -29,7 +29,7 @@ import (
 
 // FEATURE FLAG enables a static secret value used to sign
 // incoming requests routed through a proxy. This was implemented
-// based on feedback from @chiraggadasc and and should not be
+// based on feedback from @chiraggadasc and should not be
 // removed until we have a permanent solution in place.
 var staticSigner = os.Getenv("DRONE_FEATURE_SERVER_PROXY_SECRET")
 

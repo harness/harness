@@ -26,7 +26,7 @@ import (
 )
 
 // HandleFind returns an http.HandlerFunc that writes json-encoded
-// user account information to the the response body.
+// user account information to the response body.
 func HandleFind(users core.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		login := chi.URLParam(r, "user")
