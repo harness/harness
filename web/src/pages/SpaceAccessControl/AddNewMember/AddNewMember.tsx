@@ -11,10 +11,11 @@ import {
   MembershipAddRequestBody,
   TypesMembership,
   TypesPrincipalInfo,
+  useListPrincipals,
   useMembershipAdd,
   useMembershipUpdate
 } from 'services/code'
-import { getErrorMessage } from 'utils/Utils'
+import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 
 import { roleStringKeyMap } from '../SpaceAccessControl'
 
@@ -23,6 +24,7 @@ const roles = ['reader', 'executor', 'contributor', 'space_owner'] as const
 const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
   const [isEditFlow, setIsEditFlow] = useState(false)
   const [membershipDetails, setMembershipDetails] = useState<TypesMembership>()
+  const [searchTerm, setSearchTerm] = useState('')
 
   const space = useGetSpaceParam()
   const { getString } = useStrings()
@@ -34,6 +36,16 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
     user_uid: membershipDetails?.principal?.uid || ''
   })
 
+  const { data: users, loading: fetchingUsers } = useListPrincipals({
+    queryParams: {
+      query: searchTerm,
+      page: 1,
+      limit: LIST_FETCHING_LIMIT,
+      type: ['user']
+    },
+    debounce: 500
+  })
+
   const roleOptions: SelectOption[] = useMemo(
     () =>
       roles.map(role => ({
@@ -43,12 +55,26 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
     []
   )
 
+  const userOptions: SelectOption[] = useMemo(
+    () =>
+      users?.map(user => ({
+        value: user.uid as string,
+        label: (user.display_name || user.email) as string
+      })) || [],
+    [users]
+  )
+
+  const handleClose = () => {
+    setSearchTerm('')
+    hideModal()
+  }
+
   const [openModal, hideModal] = useModalHook(() => {
     return (
       <Dialog
         isOpen
         enforceFocus={false}
-        onClose={hideModal}
+        onClose={handleClose}
         title={isEditFlow ? getString('changeRole') : getString('spaceMemberships.addMember')}>
         <Formik<MembershipAddRequestBody>
           initialValues={{
@@ -68,18 +94,29 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
                 showSuccess(getString('spaceMemberships.memberAdded'))
               }
 
-              hideModal()
+              handleClose()
               onClose()
             } catch (error) {
               showError(getErrorMessage(error))
             }
           }}>
           <FormikForm>
-            <FormInput.Text
+            <FormInput.Select
+              usePortal
               name="user_uid"
-              label={getString('userId')}
-              placeholder={getString('newUserModal.uidPlaceholder')}
+              label={getString('user')}
+              items={userOptions}
+              value={
+                isEditFlow
+                  ? {
+                      label: membershipDetails?.principal?.display_name as string,
+                      value: membershipDetails?.principal?.uid as string
+                    }
+                  : undefined
+              }
               disabled={isEditFlow}
+              onQueryChange={setSearchTerm}
+              selectProps={{ loadingItems: fetchingUsers }}
             />
             <FormInput.Select name="role" label={getString('role')} items={roleOptions} usePortal />
             <Button
@@ -92,7 +129,7 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
         </Formik>
       </Dialog>
     )
-  }, [isEditFlow, membershipDetails])
+  }, [isEditFlow, membershipDetails, userOptions])
 
   return {
     openModal: (isEditing?: boolean, memberInfo?: TypesPrincipalInfo) => {
