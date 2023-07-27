@@ -38,14 +38,16 @@ export const LayoutWithSideNav: React.FC<LayoutWithSideNavProps> = ({ title, chi
             </Container>
           </Render>
 
-          <Container className={css.profile}>
-            <NavMenuItem
-              label={currentUser?.display_name || currentUser?.email}
-              to={routes.toCODEUserProfile()}
-              textProps={{ tag: 'span' }}>
-              <Avatar name={currentUser?.display_name || currentUser?.email} size="small" hoverCard={false} />
-            </NavMenuItem>
-          </Container>
+          <Render when={currentUser?.uid}>
+            <Container className={css.profile}>
+              <NavMenuItem
+                label={currentUser?.display_name || currentUser?.email}
+                to={routes.toCODEUserProfile()}
+                textProps={{ tag: 'span' }}>
+                <Avatar name={currentUser?.display_name || currentUser?.email} size="small" hoverCard={false} />
+              </NavMenuItem>
+            </Container>
+          </Render>
         </Container>
 
         <Container className={css.content}>{children}</Container>

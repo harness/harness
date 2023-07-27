@@ -11,7 +11,7 @@ const prodConfig = {
   context: CONTEXT,
   entry: path.resolve(CONTEXT, '/src/index.tsx'),
   mode: 'production',
-  devtool: 'source-map',
+  devtool: process.env.ENABLE_SOURCE_MAP ? 'source-map' : false,
   output: {
     filename: '[name].[contenthash:6].js',
     chunkFilename: '[name].[id].[contenthash:6].js'
