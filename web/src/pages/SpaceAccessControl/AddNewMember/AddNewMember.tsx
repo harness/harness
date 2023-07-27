@@ -45,7 +45,11 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
 
   const [openModal, hideModal] = useModalHook(() => {
     return (
-      <Dialog isOpen enforceFocus={false} onClose={hideModal} title={isEditFlow ? 'Change role' : 'Add new member'}>
+      <Dialog
+        isOpen
+        enforceFocus={false}
+        onClose={hideModal}
+        title={isEditFlow ? getString('changeRole') : getString('spaceMemberships.addMember')}>
         <Formik<MembershipAddRequestBody>
           initialValues={{
             user_uid: membershipDetails?.principal?.uid || '',

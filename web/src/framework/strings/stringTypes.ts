@@ -52,6 +52,7 @@ export interface StringsMap {
   cancel: string
   changePassword: string
   changePasswordSuccesfully: string
+  changeRole: string
   changes: string
   characterLimit: string
   checkRuns: string
@@ -429,6 +430,7 @@ export interface StringsMap {
   signIn: string
   signUp: string
   space: string
+  'spaceMemberships.addMember': string
   'spaceMemberships.changeRole': string
   'spaceMemberships.memberAdded': string
   'spaceMemberships.memberUpdated': string

@@ -172,6 +172,11 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
                 <Button icon={'small-cross'} variation={ButtonVariation.ICON} className={Classes.POPOVER_DISMISS} />
               </Layout.Horizontal>
             )}
+            {spaces?.length === 0 && (
+              <Container flex={{ alignItems: 'self-end' }}>
+                <Button icon={'small-cross'} variation={ButtonVariation.ICON} className={Classes.POPOVER_DISMISS} />
+              </Container>
+            )}
           </Layout.Horizontal>
         </Heading>
         <Container padding={{ left: 'small' }}>

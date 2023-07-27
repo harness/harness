@@ -555,6 +555,7 @@ role: Role
 newMember: New Member
 addMember: Add member
 spaceMemberships:
+  addMember: Add a new member
   changeRole: Change Role
   removeMember: Remove Member
   removeMembershipMsg: Are you sure you want to remove this member?
@@ -568,12 +569,13 @@ newSpace: New Space
 emptySpaceText: "It's empty now, please create a new space"
 homepage:
   welcomeText: Welcome {{currentUser}}, let's get you started with Gitness!
-  firstStep: Create a space is the first step; where you can contain repositories and other features
+  firstStep: Get started by creating a space.  Organize and manage your repositories and pipelines with spaces
 deleteSpace: Delete Space
 spaceSetting:
   intentText: This will permanently delete the space named '{{space}}', and everything contained in it.  All repositories in this space will be deleted.
-  setting: Space Setting
+  setting: Setting
 contributor: Contributor
 reader: Reader
 executor: Executor
 owner: Owner
+changeRole: Change role
