@@ -187,7 +187,7 @@ type (
 		Count(ctx context.Context, id int64, opts *types.SpaceFilter) (int64, error)
 
 		// List returns a list of child spaces in a space.
-		List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error)
+		List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]types.Space, error)
 	}
 
 	// RepoStore defines the repository data storage.

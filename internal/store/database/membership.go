@@ -399,7 +399,7 @@ func (s *MembershipStore) mapToMembershipSpaces(ctx context.Context,
 	res := make([]types.MembershipSpace, len(ms))
 	for i, m := range ms {
 		res[i].Membership = mapToMembership(&m.membership)
-		res[i].Space = *mapToSpace(&m.space)
+		res[i].Space = mapToSpace(&m.space)
 		if addedBy, ok := infoMap[m.membership.CreatedBy]; ok {
 			res[i].AddedBy = *addedBy
 		}
