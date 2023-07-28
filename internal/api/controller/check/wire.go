@@ -18,11 +18,18 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(db *sqlx.DB, authorizer authz.Authorizer,
+func ProvideController(
+	db *sqlx.DB,
+	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
+	checkStore store.CheckStore,
 	rpcClient gitrpc.Interface,
 ) *Controller {
-	return NewController(db, authorizer,
+	return NewController(
+		db,
+		authorizer,
 		repoStore,
-		rpcClient)
+		checkStore,
+		rpcClient,
+	)
 }

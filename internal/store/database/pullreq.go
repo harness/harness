@@ -335,8 +335,14 @@ func (s *PullReqStore) UpdateActivitySeq(ctx context.Context, pr *types.PullReq)
 	})
 }
 
-// UpdateMergeCheckStatus updates the pull request's mergeability status for all pr which target branch points to targetBranch.
-func (s *PullReqStore) UpdateMergeCheckStatus(ctx context.Context, targetRepo int64, targetBranch string, status enum.MergeCheckStatus) error {
+// UpdateMergeCheckStatus updates the pull request's mergeability status
+// for all pr which target branch points to targetBranch.
+func (s *PullReqStore) UpdateMergeCheckStatus(
+	ctx context.Context,
+	targetRepo int64,
+	targetBranch string,
+	status enum.MergeCheckStatus,
+) error {
 	const query = `
 	UPDATE pullreqs
 	SET
