@@ -37,7 +37,8 @@ module.exports = {
     './Settings': './src/pages/RepositorySettings/RepositorySettings.tsx',
     './Webhooks': './src/pages/Webhooks/Webhooks.tsx',
     './WebhookNew': './src/pages/WebhookNew/WebhookNew.tsx',
-    './WebhookDetails': './src/pages/WebhookDetails/WebhookDetails.tsx'
+    './WebhookDetails': './src/pages/WebhookDetails/WebhookDetails.tsx',
+    './NewRepoModalButton': './src/components/NewRepoModalButton/NewRepoModalButton.tsx'
   },
   shared: {
     formik: packageJSON.dependencies['formik'],
