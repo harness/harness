@@ -24,6 +24,21 @@ import (
 func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 	event *events.Event[*gitevents.BranchUpdatedPayload],
 ) error {
+	// we should always update PR mergeable status check when target branch is updated.
+	// - main
+	//    |- develop
+	//         |- feature1
+	//         |- feature2
+	// when feature2 merge changes into develop branch then feature1 branch is not consistent anymore
+	// and need to run mergeable check even nothing was changed on feature1, same applies to main if someone
+	// push new commit to main then develop should merge status should be unchecked.
+	if branch, err := getBranchFromRef(event.Payload.Ref); err == nil {
+		err = s.pullreqStore.UpdateMergeCheckStatus(ctx, event.Payload.RepoID, branch, enum.MergeCheckStatusUnchecked)
+		if err != nil {
+			return err
+		}
+	}
+
 	// TODO: This function is currently executed directly on branch update event.
 	// TODO: But it should be executed after the PR's head ref has been updated.
 	// TODO: This is to make sure the commit exists on the target repository for forked repositories.
@@ -148,17 +163,11 @@ func (s *Service) forEveryOpenPR(ctx context.Context,
 	repoID int64, ref string,
 	fn func(pr *types.PullReq) error,
 ) {
-	const refPrefix = "refs/heads/"
 	const largeLimit = 1000000
 
-	if !strings.HasPrefix(ref, refPrefix) {
-		log.Ctx(ctx).Error().Msg("failed to get branch name from branch ref")
-		return
-	}
-
-	branch := ref[len(refPrefix):]
+	branch, err := getBranchFromRef(ref)
 	if len(branch) == 0 {
-		log.Ctx(ctx).Error().Msg("got an empty branch name from branch ref")
+		log.Ctx(ctx).Err(err).Send()
 		return
 	}
 
@@ -181,4 +190,17 @@ func (s *Service) forEveryOpenPR(ctx context.Context,
 			log.Ctx(ctx).Err(err).Msg("failed to process pull req")
 		}
 	}
+}
+
+func getBranchFromRef(ref string) (string, error) {
+	const refPrefix = "refs/heads/"
+	if !strings.HasPrefix(ref, refPrefix) {
+		return "", fmt.Errorf("failed to get branch name from branch ref %s", ref)
+	}
+
+	branch := ref[len(refPrefix):]
+	if len(branch) == 0 {
+		return "", fmt.Errorf("got an empty branch name from branch ref %s", ref)
+	}
+	return branch, nil
 }

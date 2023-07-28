@@ -285,6 +285,9 @@ type (
 		// It will set new values to the ActivitySeq, Version and Updated fields.
 		UpdateActivitySeq(ctx context.Context, pr *types.PullReq) (*types.PullReq, error)
 
+		// Update all PR where target branch points to new SHA
+		UpdateMergeCheckStatus(ctx context.Context, targetRepo int64, targetBranch string, status enum.MergeCheckStatus) error
+
 		// Delete the pull request.
 		Delete(ctx context.Context, id int64) error
 
