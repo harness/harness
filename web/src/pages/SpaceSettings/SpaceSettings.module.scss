@@ -26,6 +26,11 @@
   justify-content: space-between;
 }
 
+.deleteBtn {
+  white-space: nowrap !important;
+  min-width: auto !important;
+}
+
 .saveBtn {
   margin-left: var(--spacing-medium) !important;
 }
@@ -48,6 +53,7 @@
 .yellowContainer {
   background: #fcf4e3 !important;
   padding: var(--spacing-medium) var(--spacing-small);
+  margin: 0 var(--spacing-large) 0 0 !important;
   border-radius: 4px;
 }
 

@@ -17,9 +17,11 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { ACCESS_MODES, voidFn } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import css from './SpaceSettings.module.scss'
+import useDeleteSpaceModal from './DeleteSpaceModal/DeleteSpaceModal'
 
 export default function SpaceSettings() {
   const { space } = useGetRepositoryMetadata()
+  const { openModal: openDeleteSpaceModal } = useDeleteSpaceModal()
   const { data } = useGetSpace({ space_ref: encodeURIComponent(space), lazy: !space })
   const [editName, setEditName] = useState(ACCESS_MODES.VIEW)
 
@@ -161,11 +163,13 @@ export default function SpaceSettings() {
                         <Text icon="main-trash" color={Color.GREY_600} font={{ size: 'small' }}>
                           {getString('dangerDeleteRepo')}
                         </Text>
-                        <Layout.Horizontal padding={{ top: 'medium' }} flex={{ justifyContent: 'space-between' }}>
+                        <Layout.Horizontal
+                          padding={{ top: 'medium', left: 'medium' }}
+                          flex={{ justifyContent: 'space-between' }}>
                           <Container className={css.yellowContainer}>
                             <Text
                               icon="main-issue"
-                              iconProps={{ size: 16, color: Color.ORANGE_700 }}
+                              iconProps={{ size: 16, color: Color.ORANGE_700, margin: { right: 'small' } }}
                               padding={{ left: 'large', right: 'large', top: 'small', bottom: 'small' }}
                               color={Color.WARNING}>
                               {getString('spaceSetting.intentText', {
@@ -174,10 +178,12 @@ export default function SpaceSettings() {
                             </Text>
                           </Container>
                           <Button
-                            disabled={true} // TODO: Disable until backend has soft delete
+                            className={css.deleteBtn}
+                            margin={{ right: 'medium' }}
+                            disabled={false}
                             intent={Intent.DANGER}
                             onClick={() => {
-                              // confirmDeleteBranch()
+                              openDeleteSpaceModal()
                             }}
                             variation={ButtonVariation.SECONDARY}
                             text={getString('deleteSpace')}

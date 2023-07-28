@@ -6,6 +6,7 @@ declare const styles: {
   readonly label: string
   readonly content: string
   readonly deleteContainer: string
+  readonly deleteBtn: string
   readonly saveBtn: string
   readonly textContainer: string
   readonly buttonContainer: string
