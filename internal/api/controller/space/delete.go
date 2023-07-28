@@ -36,7 +36,7 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef
 func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, spaceID int64) error {
 	filter := &types.SpaceFilter{
 		Page:  1,
-		Size:  int(math.MaxInt),
+		Size:  math.MaxInt,
 		Query: "",
 		Order: enum.OrderAsc,
 		Sort:  enum.SpaceAttrNone,

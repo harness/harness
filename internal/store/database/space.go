@@ -86,7 +86,9 @@ func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find space")
 	}
 
-	return mapToSpace(dst), nil
+	result := mapToSpace(dst)
+
+	return &result, nil
 }
 
 // FindByRef finds the space using the spaceRef as either the id or the space path.
@@ -113,6 +115,10 @@ func (s *SpaceStore) FindByRef(ctx context.Context, spaceRef string) (*types.Spa
 
 // Create a new space.
 func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
+	if space == nil {
+		return errors.New("space is nil")
+	}
+
 	const sqlQuery = `
 		INSERT INTO spaces (
 			space_version
@@ -134,14 +140,9 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 			,:space_updated
 		) RETURNING space_id`
 
-	dbSpace, err := mapToInternalSpace(space)
-	if err != nil {
-		return fmt.Errorf("failed to map space: %w", err)
-	}
-
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	query, args, err := db.BindNamed(sqlQuery, dbSpace)
+	query, args, err := db.BindNamed(sqlQuery, mapToInternalSpace(space))
 	if err != nil {
 		return database.ProcessSQLErrorf(err, "Failed to bind space object")
 	}
@@ -153,8 +154,12 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 	return nil
 }
 
-// Updates the space details.
+// Update updates the space details.
 func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
+	if space == nil {
+		return errors.New("space is nil")
+	}
+
 	const sqlQuery = `
 		UPDATE spaces
 		SET
@@ -166,10 +171,7 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 			,space_is_public	= :space_is_public
 		WHERE space_id = :space_id AND space_version = :space_version - 1`
 
-	dbSpace, err := mapToInternalSpace(space)
-	if err != nil {
-		return fmt.Errorf("failed to map space: %w", err)
-	}
+	dbSpace := mapToInternalSpace(space)
 
 	// update Version (used for optimistic locking) and Updated time
 	dbSpace.Version++
@@ -205,7 +207,8 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 // UpdateOptLock updates the space using the optimistic locking mechanism.
 func (s *SpaceStore) UpdateOptLock(ctx context.Context,
 	space *types.Space,
-	mutateFn func(space *types.Space) error) (*types.Space, error) {
+	mutateFn func(space *types.Space) error,
+) (*types.Space, error) {
 	for {
 		dup := *space
 
@@ -229,7 +232,7 @@ func (s *SpaceStore) UpdateOptLock(ctx context.Context,
 	}
 }
 
-// Deletes the space.
+// Delete deletes a space.
 func (s *SpaceStore) Delete(ctx context.Context, id int64) error {
 	const sqlQuery = `
 		DELETE FROM spaces
@@ -271,7 +274,7 @@ func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilte
 }
 
 // List returns a list of spaces under the parent space.
-func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error) {
+func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]types.Space, error) {
 	stmt := database.Builder.
 		Select(spaceColumnsForJoin).
 		From("spaces").
@@ -310,7 +313,7 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := []*space{}
+	var dst []*space
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}
@@ -318,8 +321,8 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 	return mapToSpaces(dst), nil
 }
 
-func mapToSpace(s *space) *types.Space {
-	res := &types.Space{
+func mapToSpace(s *space) types.Space {
+	res := types.Space{
 		ID:          s.ID,
 		Version:     s.Version,
 		UID:         s.UID,
@@ -339,21 +342,16 @@ func mapToSpace(s *space) *types.Space {
 	return res
 }
 
-func mapToSpaces(spaces []*space) []*types.Space {
-	res := make([]*types.Space, len(spaces))
+func mapToSpaces(spaces []*space) []types.Space {
+	res := make([]types.Space, len(spaces))
 	for i := range spaces {
 		res[i] = mapToSpace(spaces[i])
 	}
 	return res
 }
 
-func mapToInternalSpace(s *types.Space) (*space, error) {
-	// space comes from outside.
-	if s == nil {
-		return nil, fmt.Errorf("space is nil")
-	}
-
-	res := &space{
+func mapToInternalSpace(s *types.Space) space {
+	res := space{
 		ID:          s.ID,
 		Version:     s.Version,
 		UID:         s.UID,
@@ -371,5 +369,5 @@ func mapToInternalSpace(s *types.Space) (*space, error) {
 		res.ParentID = null.IntFrom(s.ParentID)
 	}
 
-	return res, nil
+	return res
 }

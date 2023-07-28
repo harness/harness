@@ -11,7 +11,7 @@ func TestParseUserAttr(t *testing.T) {
 		text string
 		want UserAttr
 	}{
-		{"id", UserAttrUID},
+		{"uid", UserAttrUID},
 		{"name", UserAttrName},
 		{"email", UserAttrEmail},
 		{"created", UserAttrCreated},
