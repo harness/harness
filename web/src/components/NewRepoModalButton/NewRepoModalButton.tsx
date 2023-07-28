@@ -353,3 +353,5 @@ const BranchName: React.FC<BranchNameProps> = ({ currentBranchName, onSelect }) 
     </Container>
   )
 }
+
+export default NewRepoModalButton
