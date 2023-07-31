@@ -115,6 +115,36 @@ var queryParameterQuerySpace = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterSpaceMembers = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring by which the space members are filtered."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterSortSpaceMembers = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSort,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The field by which the space members are sorted."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(enum.MembershipSortName),
+				Enum:    enum.MembershipSort("").Enum(),
+			},
+		},
+	},
+}
+
 //nolint:funlen // api spec generation no need for checking func complexity
 func spaceOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
@@ -252,7 +282,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 		spaceRequest
 		space.MembershipAddInput
 	}{}, http.MethodPost)
-	_ = reflector.SetJSONResponse(&opMembershipAdd, &types.Membership{}, http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opMembershipAdd, &types.MembershipUser{}, http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opMembershipAdd, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opMembershipAdd, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opMembershipAdd, new(usererror.Error), http.StatusForbidden)
@@ -281,7 +311,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 		UserUID string `path:"user_uid"`
 		space.MembershipUpdateInput
 	}{}, http.MethodPatch)
-	_ = reflector.SetJSONResponse(&opMembershipUpdate, &types.Membership{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMembershipUpdate, &types.MembershipUser{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opMembershipUpdate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opMembershipUpdate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opMembershipUpdate, new(usererror.Error), http.StatusForbidden)
@@ -291,10 +321,14 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opMembershipList := openapi3.Operation{}
 	opMembershipList.WithTags("space")
 	opMembershipList.WithMapOfAnything(map[string]interface{}{"operationId": "membershipList"})
+	opMembershipList.WithParameters(
+		queryParameterSpaceMembers,
+		queryParameterOrder, queryParameterSortSpaceMembers,
+		queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opMembershipList, &struct {
 		spaceRequest
 	}{}, http.MethodGet)
-	_ = reflector.SetJSONResponse(&opMembershipList, []types.Membership{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMembershipList, []types.MembershipUser{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opMembershipList, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opMembershipList, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opMembershipList, new(usererror.Error), http.StatusForbidden)
