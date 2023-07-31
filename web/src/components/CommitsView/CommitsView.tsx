@@ -62,7 +62,13 @@ export function CommitsView({
           return (
             <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }} style={{ display: 'inline-flex' }}>
               <Avatar hoverCard={false} size="small" name={row.original.author?.identity?.name || ''} />
-              <Text icon="code-tag" iconProps={{ size: 22 }} className={css.rowText} color={Color.BLACK}>
+              <Text
+                lineClamp={1}
+                padding={{ right: 'small' }}
+                icon="code-tag"
+                iconProps={{ size: 22 }}
+                className={css.rowText}
+                color={Color.BLACK}>
                 {row.original.author?.identity?.name}
               </Text>
             </Layout.Horizontal>

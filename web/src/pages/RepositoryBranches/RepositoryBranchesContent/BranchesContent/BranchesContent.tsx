@@ -137,6 +137,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
 
           return (
             <OptionsMenuButton
+              isDark
               width="100px"
               items={[
                 {
