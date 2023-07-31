@@ -439,6 +439,7 @@ export interface StringsMap {
   'spaceSetting.deleteConfirm2': string
   'spaceSetting.deleteConfirmButton1': string
   'spaceSetting.deleteConfirmButton2': string
+  'spaceSetting.deleteToastSuccess': string
   'spaceSetting.deleteWarning': string
   'spaceSetting.intentText': string
   'spaceSetting.setting': string

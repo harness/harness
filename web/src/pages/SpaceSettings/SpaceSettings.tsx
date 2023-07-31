@@ -16,8 +16,8 @@ import { useGetSpace } from 'services/code'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { ACCESS_MODES, voidFn } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
-import css from './SpaceSettings.module.scss'
 import useDeleteSpaceModal from './DeleteSpaceModal/DeleteSpaceModal'
+import css from './SpaceSettings.module.scss'
 
 export default function SpaceSettings() {
   const { space } = useGetRepositoryMetadata()

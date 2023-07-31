@@ -1,20 +1,32 @@
 import React, { useState } from 'react'
-import { Button, ButtonVariation, Dialog, Icon, Layout, Text, Container, Color, TextInput } from '@harness/uicore'
+import {
+  Button,
+  ButtonVariation,
+  Dialog,
+  Icon,
+  Layout,
+  Text,
+  Container,
+  Color,
+  TextInput,
+  useToaster
+} from '@harness/uicore'
 import { useModalHook } from '@harness/use-modal'
 
 import { Divider } from '@blueprintjs/core'
+import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-// import { useDeleteSpace } from 'services/code'
+import { useDeleteSpace } from 'services/code'
 
 const useDeleteSpaceModal = () => {
   const space = useGetSpaceParam()
   const { getString } = useStrings()
 
   // this isn't implemented in the backend yet
-  // const { mutate: deleteSpace, loading } = useDeleteSpace({})
-  // temporary loading state until backend is implemented
-  const loading = false
+  const { mutate: deleteSpace, loading, error: deleteError } = useDeleteSpace({})
+  const { showSuccess, showError } = useToaster()
+  const history = useHistory()
 
   const [showConfirmPage, setShowConfirmPage] = useState(false)
   const [deleteConfirmString, setDeleteConfirmString] = useState('')
@@ -86,12 +98,18 @@ const useDeleteSpaceModal = () => {
               loading
               disabled={deleteConfirmString !== space || loading}
               margin={{ top: 'small' }}
-              onClick={() => {
-                // this isn't implemented in the backend yet
-                // deleteSpace(encodeURIComponent(space))
-                setShowConfirmPage(false)
-                setDeleteConfirmString('')
-                hideModal()
+              onClick={async () => {
+                try {
+                  // this isn't implemented in the backend yet
+                  await deleteSpace(encodeURIComponent(space))
+                  setShowConfirmPage(false)
+                  setDeleteConfirmString('')
+                  hideModal()
+                  history.push('/')
+                  showSuccess(getString('spaceSetting.deleteToastSuccess'))
+                } catch (e) {
+                  showError(deleteError?.message)
+                }
               }}
               width="100%"
               text={getString('spaceSetting.deleteConfirmButton2')}></Button>
