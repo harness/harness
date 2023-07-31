@@ -419,8 +419,11 @@ type (
 		// Upsert creates new or updates an existing status check result.
 		Upsert(ctx context.Context, check *types.Check) error
 
+		// Count counts status check results for a specific commit in a repo.
+		Count(ctx context.Context, repoID int64, commitSHA string, opts types.CheckListOptions) (int, error)
+
 		// List returns a list of status check results for a specific commit in a repo.
-		List(ctx context.Context, repoID int64, commitSHA string) ([]*types.Check, error)
+		List(ctx context.Context, repoID int64, commitSHA string, opts types.CheckListOptions) ([]types.Check, error)
 
 		// ListRecent returns a list of recently executed status checks in a repository.
 		ListRecent(ctx context.Context, repoID int64, since time.Time) ([]string, error)
