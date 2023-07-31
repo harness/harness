@@ -187,9 +187,9 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
                 className={css.table}
                 columns={columns}
                 data={spaces || []}
-                onRowClick={data => {
+                onRowClick={spaceData => {
                   setOpened(false)
-                  selectSpace({ uid: data?.space?.uid, path: data?.space?.path }, true)
+                  selectSpace({ uid: spaceData?.space?.uid, path: spaceData?.space?.path }, true)
                 }}
                 getRowClassName={row => cx(css.row, !row.original.space.description && css.noDesc)}
               />

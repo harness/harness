@@ -52,7 +52,7 @@ export const SignUp: React.FC = () => {
           showError(getErrorMessage(error))
         })
     },
-    [mutate, setToken, showSuccess, showError, history, getString]
+    [mutate, setToken, showSuccess, showError, getString]
   )
 
   const handleSubmit = (data: RegisterForm): void => {

@@ -182,3 +182,8 @@
     color: var(--orange-300);
   }
 }
+
+.commitLink {
+  text-decoration: underline;
+  color: var(--primary-7) !important;
+}

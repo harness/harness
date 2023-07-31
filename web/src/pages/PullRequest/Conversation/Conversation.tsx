@@ -202,6 +202,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                               key={`system-${threadId}`}
                               pullRequestMetadata={pullRequestMetadata}
                               commentItems={commentItems}
+                              repoMetadataPath={repoMetadata.path}
                             />
                           }></ThreadSection>
                       )

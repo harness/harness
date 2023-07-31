@@ -24,5 +24,6 @@ declare const styles: {
   readonly bp3Icon: string
   readonly repeatBtn: string
   readonly bp3ButtonText: string
+  readonly commitLink: string
 }
 export default styles

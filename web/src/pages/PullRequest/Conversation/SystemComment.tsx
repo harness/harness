@@ -12,6 +12,7 @@ import {
 } from '@harness/uicore'
 import ReactTimeago from 'react-timeago'
 import { Render } from 'react-jsx-match'
+import { Link } from 'react-router-dom'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
@@ -19,16 +20,23 @@ import type { TypesPullReqActivity } from 'services/code'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
 import { formatDate, formatTime } from 'utils/Utils'
 import { CommentType } from 'components/DiffViewer/DiffViewerUtils'
+import { useAppContext } from 'AppContext'
 import css from './Conversation.module.scss'
 
 interface SystemCommentProps extends Pick<GitInfoProps, 'pullRequestMetadata'> {
   commentItems: CommentItem<TypesPullReqActivity>[]
+  repoMetadataPath?: string
 }
 
-export const SystemComment: React.FC<SystemCommentProps> = ({ pullRequestMetadata, commentItems }) => {
+export const SystemComment: React.FC<SystemCommentProps> = ({
+  pullRequestMetadata,
+  commentItems,
+  repoMetadataPath
+}) => {
   const { getString } = useStrings()
   const payload = commentItems[0].payload
   const type = payload?.type
+  const { routes } = useAppContext()
 
   switch (type) {
     case CommentType.MERGE: {
@@ -92,7 +100,16 @@ export const SystemComment: React.FC<SystemCommentProps> = ({ pullRequestMetadat
                 str={getString('pr.prBranchPushInfo')}
                 vars={{
                   user: <strong>{payload?.author?.display_name}</strong>,
-                  commit: <strong>{(payload?.payload as Unknown)?.new}</strong>
+                  commit: (
+                    <Link
+                      className={css.commitLink}
+                      to={routes.toCODECommit({
+                        repoPath: repoMetadataPath as string,
+                        commitRef: (payload?.payload as Unknown)?.new
+                      })}>
+                      {(payload?.payload as Unknown)?.new.substring(0, 6)}
+                    </Link>
+                  )
                 }}
               />
             </Text>
