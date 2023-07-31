@@ -435,6 +435,12 @@ export interface StringsMap {
   'spaceMemberships.removeMember': string
   'spaceMemberships.removeMembershipMsg': string
   'spaceMemberships.removeMembershipToast': string
+  'spaceSetting.deleteConfirm1': string
+  'spaceSetting.deleteConfirm2': string
+  'spaceSetting.deleteConfirmButton1': string
+  'spaceSetting.deleteConfirmButton2': string
+  'spaceSetting.deleteToastSuccess': string
+  'spaceSetting.deleteWarning': string
   'spaceSetting.intentText': string
   'spaceSetting.setting': string
   spaces: string
