@@ -37,6 +37,8 @@ export interface CODERoutes {
 
   toCODESpaceAccessControl: (args: Required<Pick<CODEProps, 'space'>>) => string
   toCODESpaceSettings: (args: Required<Pick<CODEProps, 'space'>>) => string
+  toCODEPipelines: (args: Required<Pick<CODEProps, 'space'>>) => string
+  toCODESecrets: (args: Required<Pick<CODEProps, 'space'>>) => string
 
   toCODEGlobalSettings: () => string
   toCODEUsers: () => string
@@ -72,6 +74,8 @@ export const routes: CODERoutes = {
 
   toCODESpaceAccessControl: ({ space }) => `/access-control/${space}`,
   toCODESpaceSettings: ({ space }) => `/settings/${space}`,
+  toCODEPipelines: ({ space }) => `/pipelines/${space}`,
+  toCODESecrets: ({ space }) => `/secrets/${space}`,
 
   toCODEGlobalSettings: () => '/settings',
   toCODEUsers: () => '/users',

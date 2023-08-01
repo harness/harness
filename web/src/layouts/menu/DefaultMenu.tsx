@@ -7,6 +7,7 @@ import { useStrings } from 'framework/strings'
 import { routes } from 'RouteDefinitions'
 import type { TypesSpace } from 'services/code'
 import { SpaceSelector } from 'components/SpaceSelector/SpaceSelector'
+import { useFeatureFlag } from 'hooks/useFeatureFlag'
 import { NavMenuItem } from './NavMenuItem'
 import css from './DefaultMenu.module.scss'
 
@@ -21,6 +22,8 @@ export const DefaultMenu: React.FC = () => {
     () => routeMatch.path === '/:space*/:repoName' || routeMatch.path.startsWith('/:space*/:repoName/edit'),
     [routeMatch]
   )
+
+  const { OPEN_SOURCE_PIPELINES, OPEN_SOURCE_SECRETS } = useFeatureFlag()
 
   return (
     <Container className={css.main}>
@@ -124,6 +127,28 @@ export const DefaultMenu: React.FC = () => {
             </Layout.Vertical>
           </Container>
         </Render>
+
+        {OPEN_SOURCE_PIPELINES && (
+          <Render when={selectedSpace}>
+            {/* icon is placeholder */}
+            <NavMenuItem
+              icon="pipeline"
+              label={getString('pageTitle.pipelines')}
+              to={routes.toCODEPipelines({ space: selectedSpace?.path as string })}
+            />
+          </Render>
+        )}
+
+        {OPEN_SOURCE_SECRETS && (
+          <Render when={selectedSpace}>
+            {/* icon is placeholder */}
+            <NavMenuItem
+              icon="lock"
+              label={getString('pageTitle.secrets')}
+              to={routes.toCODESecrets({ space: selectedSpace?.path as string })}
+            />
+          </Render>
+        )}
 
         <Render when={selectedSpace}>
           <NavMenuItem

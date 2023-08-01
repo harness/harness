@@ -90,6 +90,8 @@ pageTitle:
   users: Users
   userProfile: User Profile
   changePassword: Change Password
+  pipelines: Pipelines
+  secrets: Secrets
 repos:
   name: Repo Name
   data: Repo Data
