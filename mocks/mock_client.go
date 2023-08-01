@@ -52,7 +52,7 @@ func (mr *MockClientMockRecorder) Login(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // Register mocks base method.
-func (m *MockClient) Register(arg0 context.Context, arg1 *user.RegisterInput) (*types.TokenResponse, error) {
+func (m *MockClient) Register(arg0 context.Context, arg1 *user.CreateInput) (*types.TokenResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Register", arg0, arg1)
 	ret0, _ := ret[0].(*types.TokenResponse)

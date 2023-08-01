@@ -24,7 +24,7 @@ func NewController(principalStore store.PrincipalStore, config *types.Config) *C
 }
 
 func (c *Controller) IsUserRegistrationAllowed(ctx context.Context) (bool, error) {
-	usrCount, err := c.principalStore.CountUsers(ctx)
+	usrCount, err := c.principalStore.CountUsers(ctx, &types.UserFilter{})
 	if err != nil {
 		return false, err
 	}

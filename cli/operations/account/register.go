@@ -35,7 +35,7 @@ func (c *registerCommand) run(*kingpin.ParseContext) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	input := &user.RegisterInput{
+	input := &user.CreateInput{
 		UID:         uid,
 		Email:       email,
 		DisplayName: displayName,
