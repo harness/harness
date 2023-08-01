@@ -235,7 +235,6 @@ func (s *MembershipStore) ListUsers(ctx context.Context,
 		stmt = stmt.OrderBy("principal_display_name " + order.String())
 	case enum.MembershipSortCreated:
 		stmt = stmt.OrderBy("membership_created " + order.String())
-	case enum.MembershipSortNone:
 	}
 
 	sql, args, err := stmt.ToSql()
