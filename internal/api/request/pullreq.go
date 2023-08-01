@@ -37,7 +37,7 @@ func ParseSortPullReq(r *http.Request) enum.PullReqSort {
 
 // parsePullReqStates extracts the pull request states from the url.
 func parsePullReqStates(r *http.Request) []enum.PullReqState {
-	strStates := r.Form[QueryParamState]
+	strStates, _ := QueryParamList(r, QueryParamState)
 	m := make(map[enum.PullReqState]struct{}) // use map to eliminate duplicates
 	for _, s := range strStates {
 		if state, ok := enum.PullReqState(s).Sanitize(); ok {
