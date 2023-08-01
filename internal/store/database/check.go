@@ -132,13 +132,47 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 	return nil
 }
 
+// Count counts status check results for a specific commit in a repo.
+func (s *CheckStore) Count(ctx context.Context,
+	repoID int64,
+	commitSHA string,
+	_ types.CheckListOptions,
+) (int, error) {
+	stmt := database.Builder.
+		Select("count(*)").
+		From("checks").
+		Where("check_repo_id = ?", repoID).
+		Where("check_commit_sha = ?", commitSHA)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(err, "Failed to execute count status checks query")
+	}
+
+	return count, nil
+}
+
 // List returns a list of status check results for a specific commit in a repo.
-func (s *CheckStore) List(ctx context.Context, repoID int64, commitSHA string) ([]*types.Check, error) {
+func (s *CheckStore) List(ctx context.Context,
+	repoID int64,
+	commitSHA string,
+	opts types.CheckListOptions,
+) ([]types.Check, error) {
 	stmt := database.Builder.
 		Select(checkColumns).
 		From("checks").
 		Where("check_repo_id = ?", repoID).
 		Where("check_commit_sha = ?", commitSHA).
+		Limit(database.Limit(opts.Size)).
+		Offset(database.Offset(opts.Page, opts.Size)).
 		OrderBy("check_updated desc")
 
 	sql, args, err := stmt.ToSql()
@@ -208,8 +242,8 @@ func mapInternalCheck(c *types.Check) *check {
 	return m
 }
 
-func mapCheck(c *check) *types.Check {
-	return &types.Check{
+func mapCheck(c *check) types.Check {
+	return types.Check{
 		ID:        c.ID,
 		CreatedBy: c.CreatedBy,
 		Created:   c.Created,
@@ -230,7 +264,7 @@ func mapCheck(c *check) *types.Check {
 	}
 }
 
-func (s *CheckStore) mapSliceCheck(ctx context.Context, checks []*check) ([]*types.Check, error) {
+func (s *CheckStore) mapSliceCheck(ctx context.Context, checks []*check) ([]types.Check, error) {
 	// collect all principal IDs
 	ids := make([]int64, len(checks))
 	for i, req := range checks {
@@ -244,7 +278,7 @@ func (s *CheckStore) mapSliceCheck(ctx context.Context, checks []*check) ([]*typ
 	}
 
 	// attach the principal infos back to the slice items
-	m := make([]*types.Check, len(checks))
+	m := make([]types.Check, len(checks))
 	for i, c := range checks {
 		m[i] = mapCheck(c)
 		if reportedBy, ok := infoMap[c.CreatedBy]; ok {

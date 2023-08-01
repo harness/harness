@@ -14,24 +14,17 @@ import (
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
-type reportStatusCheckResultRequest struct {
-	repoRequest
-	CommitSHA string `path:"commit_sha"`
-	check.ReportInput
-}
-
-type listStatusCheckResultsRequest struct {
-	repoRequest
-	CommitSHA string `path:"commit_sha"`
-}
-
 func checkOperations(reflector *openapi3.Reflector) {
 	const tag = "status_checks"
 
 	reportStatusCheckResults := openapi3.Operation{}
 	reportStatusCheckResults.WithTags(tag)
 	reportStatusCheckResults.WithMapOfAnything(map[string]interface{}{"operationId": "reportStatusCheckResults"})
-	_ = reflector.SetRequest(&reportStatusCheckResults, new(reportStatusCheckResultRequest), http.MethodPut)
+	_ = reflector.SetRequest(&reportStatusCheckResults, struct {
+		repoRequest
+		CommitSHA string `path:"commit_sha"`
+		check.ReportInput
+	}{}, http.MethodPut)
 	_ = reflector.SetJSONResponse(&reportStatusCheckResults, new(types.Check), http.StatusOK)
 	_ = reflector.SetJSONResponse(&reportStatusCheckResults, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&reportStatusCheckResults, new(usererror.Error), http.StatusInternalServerError)
@@ -42,8 +35,13 @@ func checkOperations(reflector *openapi3.Reflector) {
 
 	listStatusCheckResults := openapi3.Operation{}
 	listStatusCheckResults.WithTags(tag)
+	listStatusCheckResults.WithParameters(
+		queryParameterPage, queryParameterLimit)
 	listStatusCheckResults.WithMapOfAnything(map[string]interface{}{"operationId": "listStatusCheckResults"})
-	_ = reflector.SetRequest(&listStatusCheckResults, new(listStatusCheckResultsRequest), http.MethodGet)
+	_ = reflector.SetRequest(&listStatusCheckResults, struct {
+		repoRequest
+		CommitSHA string `path:"commit_sha"`
+	}{}, http.MethodGet)
 	_ = reflector.SetJSONResponse(&listStatusCheckResults, new([]types.Check), http.StatusOK)
 	_ = reflector.SetJSONResponse(&listStatusCheckResults, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&listStatusCheckResults, new(usererror.Error), http.StatusInternalServerError)
