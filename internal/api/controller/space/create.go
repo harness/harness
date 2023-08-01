@@ -7,12 +7,14 @@ package space
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -26,15 +28,18 @@ var (
 )
 
 type CreateInput struct {
-	ParentID    int64  `json:"parent_id"`
+	ParentRef   string `json:"parent_ref"`
 	UID         string `json:"uid"`
 	Description string `json:"description"`
 	IsPublic    bool   `json:"is_public"`
 }
 
 // Create creates a new space.
+//
+//nolint:gocognit // refactor if required
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Space, error) {
-	if err := c.checkAuthSpaceCreation(ctx, session, in.ParentID); err != nil {
+	parentSpace, err := c.getSpaceCheckAuthSpaceCreation(ctx, session, in.ParentRef)
+	if err != nil {
 		return nil, err
 	}
 
@@ -43,11 +48,13 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	var space *types.Space
-	err := dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
 		spacePath := in.UID
-		if in.ParentID > 0 {
+		parentSpaceID := int64(0)
+		if parentSpace != nil {
+			parentSpaceID = parentSpace.ID
 			// lock parent space path to ensure it doesn't get updated while we setup new space
-			parentPath, err := c.pathStore.FindPrimaryWithLock(ctx, enum.PathTargetTypeSpace, in.ParentID)
+			parentPath, err := c.pathStore.FindPrimaryWithLock(ctx, enum.PathTargetTypeSpace, parentSpaceID)
 			if err != nil {
 				return usererror.BadRequest("Parent not found")
 			}
@@ -63,7 +70,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		now := time.Now().UnixMilli()
 		space = &types.Space{
 			Version:     0,
-			ParentID:    in.ParentID,
+			ParentID:    parentSpaceID,
 			UID:         in.UID,
 			Path:        spacePath,
 			Description: in.Description,
@@ -72,7 +79,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			Created:     now,
 			Updated:     now,
 		}
-		err := c.spaceStore.Create(ctx, space)
+		err = c.spaceStore.Create(ctx, space)
 		if err != nil {
 			return fmt.Errorf("space creation failed: %w", err)
 		}
@@ -84,12 +91,33 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			TargetType: enum.PathTargetTypeSpace,
 			TargetID:   space.ID,
 			CreatedBy:  space.CreatedBy,
-			Created:    space.Created,
-			Updated:    space.Updated,
+			Created:    now,
+			Updated:    now,
 		}
 		err = c.pathStore.Create(ctx, path)
 		if err != nil {
 			return fmt.Errorf("failed to create path: %w", err)
+		}
+
+		// add space membership to top level space only (as the user doesn't have inherited permissions already)
+		parentRefAsID, err := strconv.ParseInt(in.ParentRef, 10, 64)
+		if (err == nil && parentRefAsID == 0) || (len(strings.TrimSpace(in.ParentRef)) == 0) {
+			membership := &types.Membership{
+				MembershipKey: types.MembershipKey{
+					SpaceID:     space.ID,
+					PrincipalID: session.Principal.ID,
+				},
+				Role: enum.MembershipRoleSpaceOwner,
+
+				// membership has been created by the system
+				CreatedBy: bootstrap.NewSystemServiceSession().Principal.ID,
+				Created:   now,
+				Updated:   now,
+			}
+			err = c.membershipStore.Create(ctx, membership)
+			if err != nil {
+				return fmt.Errorf("failed to make user owner of the space: %w", err)
+			}
 		}
 
 		return nil
@@ -101,19 +129,25 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	return space, nil
 }
 
-func (c *Controller) checkAuthSpaceCreation(ctx context.Context, session *auth.Session, parentID int64) error {
-	if parentID <= 0 {
+func (c *Controller) getSpaceCheckAuthSpaceCreation(
+	ctx context.Context,
+	session *auth.Session,
+	parentRef string,
+) (*types.Space, error) {
+	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
+	if (parentRefAsID <= 0 && err == nil) || (len(strings.TrimSpace(parentRef)) == 0) {
 		// TODO: Restrict top level space creation.
 		if session == nil {
-			return usererror.ErrUnauthorized
+			return nil, usererror.ErrUnauthorized
 		}
 
-		return nil
+		//nolint:nilnil
+		return nil, nil
 	}
 
-	parentSpace, err := c.spaceStore.Find(ctx, parentID)
+	parentSpace, err := c.spaceStore.FindByRef(ctx, parentRef)
 	if err != nil {
-		return fmt.Errorf("failed to get parent space: %w", err)
+		return nil, fmt.Errorf("failed to get parent space: %w", err)
 	}
 
 	// create is a special case - check permission without specific resource
@@ -123,18 +157,25 @@ func (c *Controller) checkAuthSpaceCreation(ctx context.Context, session *auth.S
 		Name: "",
 	}
 	if err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionSpaceCreate); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return parentSpace, nil
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
-	if in.ParentID < 0 {
+	parentRefAsID, err := strconv.ParseInt(in.ParentRef, 10, 64)
+
+	if err == nil && parentRefAsID < 0 {
 		return errParentIDNegative
 	}
 
-	if err := c.uidCheck(in.UID, in.ParentID == 0); err != nil {
+	isRoot := false
+	if (err == nil && parentRefAsID == 0) || (len(strings.TrimSpace(in.ParentRef)) == 0) {
+		isRoot = true
+	}
+
+	if err := c.uidCheck(in.UID, isRoot); err != nil {
 		return err
 	}
 

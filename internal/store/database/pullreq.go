@@ -335,6 +335,36 @@ func (s *PullReqStore) UpdateActivitySeq(ctx context.Context, pr *types.PullReq)
 	})
 }
 
+// UpdateMergeCheckStatus updates the pull request's mergeability status
+// for all pr which target branch points to targetBranch.
+func (s *PullReqStore) UpdateMergeCheckStatus(
+	ctx context.Context,
+	targetRepo int64,
+	targetBranch string,
+	status enum.MergeCheckStatus,
+) error {
+	const query = `
+	UPDATE pullreqs
+	SET
+		 pullreq_updated = $1
+		,pullreq_merge_check_status = $2
+	WHERE pullreq_target_repo_id = $3 AND
+		  pullreq_target_branch = $4 AND
+		  pullreq_state not in ($5, $6)`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	updatedAt := time.Now()
+
+	_, err := db.ExecContext(ctx, query, updatedAt, status, targetRepo, targetBranch,
+		enum.PullReqStateClosed, enum.PullReqStateClosed)
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "Failed to update mergeable status check %s in pull requests", status)
+	}
+
+	return nil
+}
+
 // Delete the pull request.
 func (s *PullReqStore) Delete(ctx context.Context, id int64) error {
 	const pullReqDelete = `DELETE FROM pullreqs WHERE pullreq_id = $1`

@@ -6,6 +6,7 @@ package server
 
 import (
 	"errors"
+	"time"
 )
 
 // Config represents the configuration for the gitrpc server.
@@ -22,6 +23,8 @@ type Config struct {
 	HTTP struct {
 		Bind string `envconfig:"GITRPC_SERVER_HTTP_BIND" default:":4001"`
 	}
+	MaxConnAge      time.Duration `envconfig:"GITRPC_SERVER_MAX_CONN_AGE" default:"630720000s"`
+	MaxConnAgeGrace time.Duration `envconfig:"GITRPC_SERVER_MAX_CONN_AGE_GRACE" default:"630720000s"`
 }
 
 func (c *Config) Validate() error {
@@ -36,6 +39,12 @@ func (c *Config) Validate() error {
 	}
 	if c.GitHookPath == "" {
 		return errors.New("config.GitHookPath is required")
+	}
+	if c.MaxConnAge == 0 {
+		return errors.New("config.MaxConnAge is required")
+	}
+	if c.MaxConnAgeGrace == 0 {
+		return errors.New("config.MaxConnAgeGrace is required")
 	}
 
 	return nil

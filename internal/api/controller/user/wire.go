@@ -7,7 +7,6 @@ package user
 import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
@@ -18,7 +17,17 @@ var WireSet = wire.NewSet(
 	NewController,
 )
 
-func ProvideController(principalUIDCheck check.PrincipalUID, authorizer authz.Authorizer,
-	principalStore store.PrincipalStore, tokenStore store.TokenStore, config *types.Config) *Controller {
-	return NewController(principalUIDCheck, authorizer, principalStore, tokenStore, config)
+func ProvideController(
+	principalUIDCheck check.PrincipalUID,
+	authorizer authz.Authorizer,
+	principalStore store.PrincipalStore,
+	tokenStore store.TokenStore,
+	membershipStore store.MembershipStore,
+) *Controller {
+	return NewController(
+		principalUIDCheck,
+		authorizer,
+		principalStore,
+		tokenStore,
+		membershipStore)
 }

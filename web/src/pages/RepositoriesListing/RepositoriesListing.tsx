@@ -41,7 +41,6 @@ export default function RepositoriesListing() {
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const { routes } = useAppContext()
   const { updateQueryParams } = useUpdateQueryParams()
-
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)

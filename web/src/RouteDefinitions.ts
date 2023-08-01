@@ -18,7 +18,7 @@ export interface CODEQueryProps {
 }
 
 export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch' | 'tags'>> = {
-  space: ':space',
+  space: ':space*',
   repoName: ':repoName',
   gitRef: ':gitRef*',
   resourcePath: ':resourcePath*',
@@ -34,7 +34,10 @@ export interface CODERoutes {
   toRegister: () => string
 
   toCODEHome: () => string
-  toCODESpaces: () => string
+
+  toCODESpaceAccessControl: (args: Required<Pick<CODEProps, 'space'>>) => string
+  toCODESpaceSettings: (args: Required<Pick<CODEProps, 'space'>>) => string
+
   toCODEGlobalSettings: () => string
   toCODEUsers: () => string
   toCODEUserProfile: () => string
@@ -66,7 +69,10 @@ export const routes: CODERoutes = {
   toRegister: (): string => '/register',
 
   toCODEHome: () => `/`,
-  toCODESpaces: () => `/spaces`,
+
+  toCODESpaceAccessControl: ({ space }) => `/access-control/${space}`,
+  toCODESpaceSettings: ({ space }) => `/settings/${space}`,
+
   toCODEGlobalSettings: () => '/settings',
   toCODEUsers: () => '/users',
   toCODEUserProfile: () => '/profile',

@@ -13,6 +13,8 @@ export type EnumCheckStatus = 'error' | 'failure' | 'pending' | 'running' | 'suc
 
 export type EnumContentEncodingType = 'base64' | 'utf8'
 
+export type EnumMembershipRole = 'contributor' | 'executor' | 'reader' | 'space_owner'
+
 export type EnumMergeCheckStatus = string
 
 export type EnumMergeMethod = 'merge' | 'squash' | 'rebase'
@@ -59,18 +61,6 @@ export type EnumWebhookTrigger =
   | 'tag_created'
   | 'tag_deleted'
   | 'tag_updated'
-
-export interface FormDataOpenapiLoginRequest {
-  password?: string
-  username?: string
-}
-
-export interface FormDataOpenapiRegisterRequest {
-  displayname?: string
-  email?: string
-  password?: string
-  username?: string
-}
 
 export interface GitrpcBlamePart {
   commit?: GitrpcCommit
@@ -184,7 +174,7 @@ export interface OpenapiCreateRepositoryRequest {
   git_ignore?: string
   is_public?: boolean
   license?: string
-  parent_id?: number
+  parent_ref?: string
   readme?: boolean
   uid?: string
 }
@@ -192,7 +182,7 @@ export interface OpenapiCreateRepositoryRequest {
 export interface OpenapiCreateSpaceRequest {
   description?: string
   is_public?: boolean
-  parent_id?: number
+  parent_ref?: string
   uid?: string
 }
 
@@ -231,6 +221,11 @@ export interface OpenapiGetContentOutput {
   type?: OpenapiContentType
 }
 
+export interface OpenapiLoginRequest {
+  login_identifier?: string
+  password?: string
+}
+
 export interface OpenapiMergePullReq {
   method?: EnumMergeMethod
   source_sha?: string
@@ -238,14 +233,21 @@ export interface OpenapiMergePullReq {
 
 export interface OpenapiMoveRepoRequest {
   keep_as_alias?: boolean
-  parent_id?: number | null
+  parent_ref?: string | null
   uid?: string | null
 }
 
 export interface OpenapiMoveSpaceRequest {
   keep_as_alias?: boolean
-  parent_id?: number | null
+  parent_ref?: string | null
   uid?: string | null
+}
+
+export interface OpenapiRegisterRequest {
+  display_name?: string
+  email?: string
+  password?: string
+  uid?: string
 }
 
 export interface OpenapiReportStatusCheckResultRequest {
@@ -445,6 +447,14 @@ export interface TypesIdentity {
 export interface TypesListCommitResponse {
   commits?: TypesCommit[] | null
   rename_details?: TypesRenameDetails[] | null
+}
+
+export interface TypesMembership {
+  added_by?: TypesPrincipalInfo
+  created?: number
+  principal?: TypesPrincipalInfo
+  role?: EnumMembershipRole
+  updated?: number
 }
 
 export interface TypesPath {
@@ -776,10 +786,45 @@ export const useAdminUpdateUser = ({ user_uid, ...props }: UseAdminUpdateUserPro
     { base: getConfig('code'), pathParams: { user_uid }, ...props }
   )
 
-export type OnLoginProps = Omit<MutateProps<TypesTokenResponse, UsererrorError, void, void, void>, 'path' | 'verb'>
+export interface UpdateUserAdminPathParams {
+  user_uid: string
+}
+
+export type UpdateUserAdminProps = Omit<
+  MutateProps<TypesUser, UsererrorError, void, OpenapiUpdateAdminRequest, UpdateUserAdminPathParams>,
+  'path' | 'verb'
+> &
+  UpdateUserAdminPathParams
+
+export const UpdateUserAdmin = ({ user_uid, ...props }: UpdateUserAdminProps) => (
+  <Mutate<TypesUser, UsererrorError, void, OpenapiUpdateAdminRequest, UpdateUserAdminPathParams>
+    verb="PATCH"
+    path={`/admin/users/${user_uid}/admin`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseUpdateUserAdminProps = Omit<
+  UseMutateProps<TypesUser, UsererrorError, void, OpenapiUpdateAdminRequest, UpdateUserAdminPathParams>,
+  'path' | 'verb'
+> &
+  UpdateUserAdminPathParams
+
+export const useUpdateUserAdmin = ({ user_uid, ...props }: UseUpdateUserAdminProps) =>
+  useMutate<TypesUser, UsererrorError, void, OpenapiUpdateAdminRequest, UpdateUserAdminPathParams>(
+    'PATCH',
+    (paramsInPath: UpdateUserAdminPathParams) => `/admin/users/${paramsInPath.user_uid}/admin`,
+    { base: getConfig('code'), pathParams: { user_uid }, ...props }
+  )
+
+export type OnLoginProps = Omit<
+  MutateProps<TypesTokenResponse, UsererrorError, void, OpenapiLoginRequest, void>,
+  'path' | 'verb'
+>
 
 export const OnLogin = (props: OnLoginProps) => (
-  <Mutate<TypesTokenResponse, UsererrorError, void, void, void>
+  <Mutate<TypesTokenResponse, UsererrorError, void, OpenapiLoginRequest, void>
     verb="POST"
     path={`/login`}
     base={getConfig('code')}
@@ -788,12 +833,12 @@ export const OnLogin = (props: OnLoginProps) => (
 )
 
 export type UseOnLoginProps = Omit<
-  UseMutateProps<TypesTokenResponse, UsererrorError, void, void, void>,
+  UseMutateProps<TypesTokenResponse, UsererrorError, void, OpenapiLoginRequest, void>,
   'path' | 'verb'
 >
 
 export const useOnLogin = (props: UseOnLoginProps) =>
-  useMutate<TypesTokenResponse, UsererrorError, void, void, void>('POST', `/login`, {
+  useMutate<TypesTokenResponse, UsererrorError, void, OpenapiLoginRequest, void>('POST', `/login`, {
     base: getConfig('code'),
     ...props
   })
@@ -856,10 +901,13 @@ export const useListPrincipals = (props: UseListPrincipalsProps) =>
     ...props
   })
 
-export type OnRegisterProps = Omit<MutateProps<TypesTokenResponse, UsererrorError, void, void, void>, 'path' | 'verb'>
+export type OnRegisterProps = Omit<
+  MutateProps<TypesTokenResponse, UsererrorError, void, OpenapiRegisterRequest, void>,
+  'path' | 'verb'
+>
 
 export const OnRegister = (props: OnRegisterProps) => (
-  <Mutate<TypesTokenResponse, UsererrorError, void, void, void>
+  <Mutate<TypesTokenResponse, UsererrorError, void, OpenapiRegisterRequest, void>
     verb="POST"
     path={`/register`}
     base={getConfig('code')}
@@ -868,12 +916,12 @@ export const OnRegister = (props: OnRegisterProps) => (
 )
 
 export type UseOnRegisterProps = Omit<
-  UseMutateProps<TypesTokenResponse, UsererrorError, void, void, void>,
+  UseMutateProps<TypesTokenResponse, UsererrorError, void, OpenapiRegisterRequest, void>,
   'path' | 'verb'
 >
 
 export const useOnRegister = (props: UseOnRegisterProps) =>
-  useMutate<TypesTokenResponse, UsererrorError, void, void, void>('POST', `/register`, {
+  useMutate<TypesTokenResponse, UsererrorError, void, OpenapiRegisterRequest, void>('POST', `/register`, {
     base: getConfig('code'),
     ...props
   })
@@ -3069,6 +3117,142 @@ export const useUpdateSpace = ({ space_ref, ...props }: UseUpdateSpaceProps) =>
     { base: getConfig('code'), pathParams: { space_ref }, ...props }
   )
 
+export interface MembershipListPathParams {
+  space_ref: string
+}
+
+export type MembershipListProps = Omit<
+  GetProps<TypesMembership[], UsererrorError, void, MembershipListPathParams>,
+  'path'
+> &
+  MembershipListPathParams
+
+export const MembershipList = ({ space_ref, ...props }: MembershipListProps) => (
+  <Get<TypesMembership[], UsererrorError, void, MembershipListPathParams>
+    path={`/spaces/${space_ref}/members`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseMembershipListProps = Omit<
+  UseGetProps<TypesMembership[], UsererrorError, void, MembershipListPathParams>,
+  'path'
+> &
+  MembershipListPathParams
+
+export const useMembershipList = ({ space_ref, ...props }: UseMembershipListProps) =>
+  useGet<TypesMembership[], UsererrorError, void, MembershipListPathParams>(
+    (paramsInPath: MembershipListPathParams) => `/spaces/${paramsInPath.space_ref}/members`,
+    { base: getConfig('code'), pathParams: { space_ref }, ...props }
+  )
+
+export interface MembershipAddPathParams {
+  space_ref: string
+}
+
+export interface MembershipAddRequestBody {
+  role?: EnumMembershipRole
+  user_uid?: string
+}
+
+export type MembershipAddProps = Omit<
+  MutateProps<TypesMembership, UsererrorError, void, MembershipAddRequestBody, MembershipAddPathParams>,
+  'path' | 'verb'
+> &
+  MembershipAddPathParams
+
+export const MembershipAdd = ({ space_ref, ...props }: MembershipAddProps) => (
+  <Mutate<TypesMembership, UsererrorError, void, MembershipAddRequestBody, MembershipAddPathParams>
+    verb="POST"
+    path={`/spaces/${space_ref}/members`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseMembershipAddProps = Omit<
+  UseMutateProps<TypesMembership, UsererrorError, void, MembershipAddRequestBody, MembershipAddPathParams>,
+  'path' | 'verb'
+> &
+  MembershipAddPathParams
+
+export const useMembershipAdd = ({ space_ref, ...props }: UseMembershipAddProps) =>
+  useMutate<TypesMembership, UsererrorError, void, MembershipAddRequestBody, MembershipAddPathParams>(
+    'POST',
+    (paramsInPath: MembershipAddPathParams) => `/spaces/${paramsInPath.space_ref}/members`,
+    { base: getConfig('code'), pathParams: { space_ref }, ...props }
+  )
+
+export interface MembershipDeletePathParams {
+  space_ref: string
+}
+
+export type MembershipDeleteProps = Omit<
+  MutateProps<void, UsererrorError, void, string, MembershipDeletePathParams>,
+  'path' | 'verb'
+> &
+  MembershipDeletePathParams
+
+export const MembershipDelete = ({ space_ref, ...props }: MembershipDeleteProps) => (
+  <Mutate<void, UsererrorError, void, string, MembershipDeletePathParams>
+    verb="DELETE"
+    path={`/spaces/${space_ref}/members`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseMembershipDeleteProps = Omit<
+  UseMutateProps<void, UsererrorError, void, string, MembershipDeletePathParams>,
+  'path' | 'verb'
+> &
+  MembershipDeletePathParams
+
+export const useMembershipDelete = ({ space_ref, ...props }: UseMembershipDeleteProps) =>
+  useMutate<void, UsererrorError, void, string, MembershipDeletePathParams>(
+    'DELETE',
+    (paramsInPath: MembershipDeletePathParams) => `/spaces/${paramsInPath.space_ref}/members`,
+    { base: getConfig('code'), pathParams: { space_ref }, ...props }
+  )
+
+export interface MembershipUpdatePathParams {
+  space_ref: string
+  user_uid: string
+}
+
+export interface MembershipUpdateRequestBody {
+  role?: EnumMembershipRole
+}
+
+export type MembershipUpdateProps = Omit<
+  MutateProps<TypesMembership, UsererrorError, void, MembershipUpdateRequestBody, MembershipUpdatePathParams>,
+  'path' | 'verb'
+> &
+  MembershipUpdatePathParams
+
+export const MembershipUpdate = ({ space_ref, user_uid, ...props }: MembershipUpdateProps) => (
+  <Mutate<TypesMembership, UsererrorError, void, MembershipUpdateRequestBody, MembershipUpdatePathParams>
+    verb="PATCH"
+    path={`/spaces/${space_ref}/members/${user_uid}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseMembershipUpdateProps = Omit<
+  UseMutateProps<TypesMembership, UsererrorError, void, MembershipUpdateRequestBody, MembershipUpdatePathParams>,
+  'path' | 'verb'
+> &
+  MembershipUpdatePathParams
+
+export const useMembershipUpdate = ({ space_ref, user_uid, ...props }: UseMembershipUpdateProps) =>
+  useMutate<TypesMembership, UsererrorError, void, MembershipUpdateRequestBody, MembershipUpdatePathParams>(
+    'PATCH',
+    (paramsInPath: MembershipUpdatePathParams) => `/spaces/${paramsInPath.space_ref}/members/${paramsInPath.user_uid}`,
+    { base: getConfig('code'), pathParams: { space_ref, user_uid }, ...props }
+  )
+
 export interface MoveSpacePathParams {
   space_ref: string
 }
@@ -3374,38 +3558,6 @@ export const useUpdateUser = (props: UseUpdateUserProps) =>
     base: getConfig('code'),
     ...props
   })
-
-export interface UpdateUserAdminPathParams {
-  user_uid: string
-}
-
-export type UpdateUserAdminProps = Omit<
-  MutateProps<TypesUser, UsererrorError, void, OpenapiUpdateAdminRequest, UpdateUserAdminPathParams>,
-  'path' | 'verb'
-> &
-  UpdateUserAdminPathParams
-
-export const UpdateUserAdmin = ({ user_uid, ...props }: UpdateUserAdminProps) => (
-  <Mutate<TypesUser, UsererrorError, void, OpenapiUpdateAdminRequest, UpdateUserAdminPathParams>
-    verb="PATCH"
-    path={`/user/${user_uid}/admin`}
-    base={getConfig('code')}
-    {...props}
-  />
-)
-
-export type UseUpdateUserAdminProps = Omit<
-  UseMutateProps<TypesUser, UsererrorError, void, OpenapiUpdateAdminRequest, UpdateUserAdminPathParams>,
-  'path' | 'verb'
-> &
-  UpdateUserAdminPathParams
-
-export const useUpdateUserAdmin = ({ user_uid, ...props }: UseUpdateUserAdminProps) =>
-  useMutate<TypesUser, UsererrorError, void, OpenapiUpdateAdminRequest, UpdateUserAdminPathParams>(
-    'PATCH',
-    (paramsInPath: UpdateUserAdminPathParams) => `/user/${paramsInPath.user_uid}/admin`,
-    { base: getConfig('code'), pathParams: { user_uid }, ...props }
-  )
 
 export type CreateTokenProps = Omit<
   MutateProps<TypesTokenResponse, UsererrorError, void, OpenapiCreateTokenRequest, void>,

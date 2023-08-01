@@ -2,7 +2,7 @@ import React, { useCallback } from 'react'
 import { Button, Color, Container, FormInput, Formik, FormikForm, Layout, Text, useToaster } from '@harness/uicore'
 import * as Yup from 'yup'
 
-import { Link, useHistory } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useOnLogin } from 'services/code'
 import AuthLayout from 'components/AuthLayout/AuthLayout'
@@ -13,24 +13,28 @@ import css from './SignIn.module.scss'
 
 export const SignIn: React.FC = () => {
   const { getString } = useStrings()
-  const history = useHistory()
   const [, setToken] = useAPIToken()
   const { mutate } = useOnLogin({})
   const { showError } = useToaster()
 
   const onLogin = useCallback(
     (data: LoginForm) => {
-      mutate({ login_identifier: data.username, password: data.password } as unknown as void)
+      mutate(
+        { login_identifier: data.username, password: data.password },
+        {
+          headers: { Authorization: '' }
+        }
+      )
         .then(result => {
           setToken(result.access_token as string)
-          history.replace(routes.toCODESpaces())
+          window.location.replace(window.location.origin + routes.toCODEHome())
         })
 
         .catch(error => {
           showError(getErrorMessage(error))
         })
     },
-    [mutate, history, setToken, showError]
+    [mutate, setToken, showError]
   )
 
   const handleSubmit = (data: LoginForm): void => {
@@ -53,7 +57,7 @@ export const SignIn: React.FC = () => {
             validationSchema={Yup.object().shape({
               username: Yup.string().required(getString('userNameRequired')),
 
-              password: Yup.string().min(6).required(getString('passwordRequired'))
+              password: Yup.string().required(getString('passwordRequired'))
             })}>
             <FormikForm>
               <FormInput.Text name="username" label={getString('email')} disabled={false} />

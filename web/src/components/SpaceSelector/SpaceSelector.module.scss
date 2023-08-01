@@ -1,0 +1,171 @@
+.spaceSelector {
+  border-radius: 4px;
+  padding: 6px 10px !important;
+  border: 1px solid var(--grey-200);
+  background: var(--white) !important;
+  margin-bottom: var(--spacing-medium) !important;
+
+  &.selected,
+  &:hover {
+    background: var(--primary-1) !important;
+    border-radius: 4px;
+    border: 1px solid var(--primary-3);
+    box-shadow: 0px 2px 4px 0px rgba(96, 97, 112, 0.16), 0px 0px 1px 0px rgba(40, 41, 61, 0.04);
+
+    .icon {
+      svg path {
+        fill: var(--primary-7);
+      }
+    }
+  }
+
+  .label {
+    flex-grow: 1;
+  }
+
+  .spaceLabel {
+    color: var(--gray-500);
+    font-size: 8px !important;
+    font-weight: 600 !important;
+    line-height: 17px !important;
+  }
+
+  .spaceName {
+    color: var(--black);
+    font-size: 13px !important;
+    line-height: 20px !important;
+    padding-left: 17px !important;
+  }
+
+  .icon {
+    display: flex;
+    align-items: center;
+    padding-top: 3px;
+  }
+}
+
+.popoverPortal {
+  width: min(calc(100vw - var(--nav-menu-width)), 840px) !important;
+  height: 100vh;
+  position: fixed;
+  left: 5px;
+  top: -5px;
+
+  > div {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.popoverTarget {
+  display: block !important;
+}
+
+.popoverContent {
+  position: relative;
+  height: 100%;
+  width: min(calc(100vw - var(--nav-menu-width)), 840px) !important;
+  border-radius: 0;
+  box-shadow: none;
+  filter: drop-shadow(0px 2px 4px rgba(96, 97, 112, 0.16)) drop-shadow(0px 0px 1px rgba(40, 41, 61, 0.04));
+
+  &::before {
+    position: fixed;
+    content: '';
+    top: 0;
+    left: var(--nav-menu-width);
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(26, 26, 26, 0.4);
+  }
+
+  > div {
+    height: 100%;
+    width: 100%;
+    max-width: inherit !important;
+    border-radius: 0 !important;
+
+    &::before {
+      box-shadow: none !important;
+      filter: drop-shadow(0px 2px 4px rgba(96, 97, 112, 0.16)) drop-shadow(0px 0px 1px rgba(40, 41, 61, 0.04));
+    }
+  }
+}
+
+.nameContainer {
+  position: relative;
+
+  .name {
+    flex-grow: 1;
+    align-items: baseline !important;
+    width: calc(100% - 100px) !important;
+
+    > span {
+      width: 100%;
+      > span {
+        width: 100%;
+      }
+    }
+
+    & + span:last-of-type {
+      align-self: center;
+    }
+  }
+
+  .pinned {
+    transform: rotate(-90deg);
+    position: absolute;
+    top: 7px;
+    left: -43px;
+    font-size: var(--font-size-xsmall) !important;
+    padding: 6px 14px;
+  }
+
+  .repoName {
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    line-height: 24px !important;
+    color: var(--grey-800);
+
+    .repoScope {
+      color: var(--grey-400);
+      padding: 2px 6px;
+      font-size: var(--font-size-xsmall) !important;
+      border-radius: 4px;
+      border: 1px solid var(--grey-200);
+      display: inline-block;
+      margin-left: var(--spacing-medium);
+      text-transform: uppercase;
+      line-height: 16px;
+    }
+  }
+
+  .desc {
+    color: var(--grey-500);
+    font-size: var(--font-size-small);
+    padding-top: var(--spacing-xsmall) !important;
+  }
+}
+
+.table {
+  [class*='TableV2--header'] [class*='variation-table-headers'] {
+    text-transform: none;
+    color: var(--grey-400);
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  .row {
+    height: 80px;
+    box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+    overflow: hidden;
+
+    &.noDesc > div {
+      height: 44px;
+    }
+  }
+}
+
+.iconContainer {
+  padding-top: var(--spacing-4) !important;
+}

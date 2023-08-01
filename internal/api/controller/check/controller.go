@@ -23,8 +23,8 @@ import (
 type Controller struct {
 	db           *sqlx.DB
 	authorizer   authz.Authorizer
-	checkStore   store.CheckStore
 	repoStore    store.RepoStore
+	checkStore   store.CheckStore
 	gitRPCClient gitrpc.Interface
 }
 
@@ -32,12 +32,14 @@ func NewController(
 	db *sqlx.DB,
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
+	checkStore store.CheckStore,
 	gitRPCClient gitrpc.Interface,
 ) *Controller {
 	return &Controller{
 		db:           db,
 		authorizer:   authorizer,
 		repoStore:    repoStore,
+		checkStore:   checkStore,
 		gitRPCClient: gitRPCClient,
 	}
 }

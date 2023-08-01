@@ -16,14 +16,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-/*
- * CheckSpace checks if a space specific permission is granted for the current auth session
- * in the scope of its parent.
- * Returns nil if the permission is granted, otherwise returns an error.
- * NotAuthenticated, NotAuthorized, or any unerlaying error.
- */
+// CheckSpace checks if a space specific permission is granted for the current auth session
+// in the scope of its parent.
+// Returns nil if the permission is granted, otherwise returns an error.
+// NotAuthenticated, NotAuthorized, or any underlying error.
 func CheckSpace(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
-	space *types.Space, permission enum.Permission, orPublic bool) error {
+	space *types.Space, permission enum.Permission, orPublic bool,
+) error {
 	if orPublic && space.IsPublic {
 		return nil
 	}

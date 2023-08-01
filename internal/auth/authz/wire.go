@@ -5,14 +5,27 @@
 package authz
 
 import (
+	"time"
+
+	"github.com/harness/gitness/internal/store"
+
 	"github.com/google/wire"
 )
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
 	ProvideAuthorizer,
+	ProvidePermissionCache,
 )
 
-func ProvideAuthorizer() Authorizer {
-	return NewUnsafeAuthorizer()
+func ProvideAuthorizer(pCache PermissionCache) Authorizer {
+	return NewMembershipAuthorizer(pCache)
+}
+
+func ProvidePermissionCache(
+	spaceStore store.SpaceStore,
+	membershipStore store.MembershipStore,
+) PermissionCache {
+	const permissionCacheTimeout = time.Second * 15
+	return NewPermissionCache(spaceStore, membershipStore, permissionCacheTimeout)
 }

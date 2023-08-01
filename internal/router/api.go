@@ -125,7 +125,7 @@ func setupRoutesV1(r chi.Router,
 	checkCtrl *check.Controller,
 	sysCtrl *system.Controller,
 ) {
-	setupSpaces(r, spaceCtrl, repoCtrl)
+	setupSpaces(r, spaceCtrl)
 	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl, checkCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
@@ -137,7 +137,7 @@ func setupRoutesV1(r chi.Router,
 	setupResources(r)
 }
 
-func setupSpaces(r chi.Router, spaceCtrl *space.Controller, repoCtrl *repo.Controller) {
+func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 	r.Route("/spaces", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerspace.HandleCreate(spaceCtrl))
@@ -146,7 +146,7 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller, repoCtrl *repo.Contr
 			// space operations
 			r.Get("/", handlerspace.HandleFind(spaceCtrl))
 			r.Patch("/", handlerspace.HandleUpdate(spaceCtrl))
-			r.Delete("/", handlerspace.HandleDelete(spaceCtrl, repoCtrl))
+			r.Delete("/", handlerspace.HandleDelete(spaceCtrl))
 
 			r.Post("/move", handlerspace.HandleMove(spaceCtrl))
 			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))
@@ -161,6 +161,15 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller, repoCtrl *repo.Contr
 				// per path operations
 				r.Route(fmt.Sprintf("/{%s}", request.PathParamPathID), func(r chi.Router) {
 					r.Delete("/", handlerspace.HandleDeletePath(spaceCtrl))
+				})
+			})
+
+			r.Route("/members", func(r chi.Router) {
+				r.Get("/", handlerspace.HandleMembershipList(spaceCtrl))
+				r.Post("/", handlerspace.HandleMembershipAdd(spaceCtrl))
+				r.Route(fmt.Sprintf("/{%s}", request.PathParamUserUID), func(r chi.Router) {
+					r.Delete("/", handlerspace.HandleMembershipDelete(spaceCtrl))
+					r.Patch("/", handlerspace.HandleMembershipUpdate(spaceCtrl))
 				})
 			})
 		})
@@ -304,7 +313,6 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 				r.Post("/", handlerpullreq.HandleReviewSubmit(pullreqCtrl))
 			})
 			r.Post("/merge", handlerpullreq.HandleMerge(pullreqCtrl))
-			r.Get("/diff", handlerpullreq.HandleRawDiff(pullreqCtrl))
 			r.Get("/commits", handlerpullreq.HandleCommits(pullreqCtrl))
 			r.Get("/metadata", handlerpullreq.HandleMetadata(pullreqCtrl))
 		})
@@ -348,6 +356,7 @@ func setupUser(r chi.Router, userCtrl *user.Controller) {
 		r.Use(middlewareprincipal.RestrictTo(enum.PrincipalTypeUser))
 		r.Get("/", handleruser.HandleFind(userCtrl))
 		r.Patch("/", handleruser.HandleUpdate(userCtrl))
+		r.Get("/memberships", handleruser.HandleMembershipSpaces(userCtrl))
 
 		// PAT
 		r.Route("/tokens", func(r chi.Router) {

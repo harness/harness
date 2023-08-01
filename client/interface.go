@@ -14,10 +14,10 @@ import (
 // Client to access the remote APIs.
 type Client interface {
 	// Login authenticates the user and returns a JWT token.
-	Login(ctx context.Context, username, password string) (*types.TokenResponse, error)
+	Login(ctx context.Context, input *user.LoginInput) (*types.TokenResponse, error)
 
 	// Register registers a new  user and returns a JWT token.
-	Register(ctx context.Context, username, name, email, password string) (*types.TokenResponse, error)
+	Register(ctx context.Context, input *user.RegisterInput) (*types.TokenResponse, error)
 
 	// Self returns the currently authenticated user.
 	Self(ctx context.Context) (*types.User, error)

@@ -24,6 +24,7 @@ var WireSet = wire.NewSet(
 	ProvideSpaceStore,
 	ProvideRepoStore,
 	ProvideRepoGitInfoView,
+	ProvideMembershipStore,
 	ProvideTokenStore,
 	ProvidePullReqStore,
 	ProvidePullReqActivityStore,
@@ -36,7 +37,7 @@ var WireSet = wire.NewSet(
 	ProvideReqCheckStore,
 )
 
-// helper function to setup the database by performing automated
+// migrator is helper function to set up the database by performing automated
 // database migration steps.
 func migrator(ctx context.Context, db *sqlx.DB) error {
 	return migrate.Migrate(ctx, db)
@@ -82,6 +83,13 @@ func ProvideRepoGitInfoView(db *sqlx.DB) store.RepoGitInfoView {
 	return NewRepoGitInfoView(db)
 }
 
+func ProvideMembershipStore(
+	db *sqlx.DB,
+	principalInfoCache store.PrincipalInfoCache,
+) store.MembershipStore {
+	return NewMembershipStore(db, principalInfoCache)
+}
+
 // ProvideTokenStore provides a token store.
 func ProvideTokenStore(db *sqlx.DB) store.TokenStore {
 	return NewTokenStore(db)
@@ -89,13 +97,15 @@ func ProvideTokenStore(db *sqlx.DB) store.TokenStore {
 
 // ProvidePullReqStore provides a pull request store.
 func ProvidePullReqStore(db *sqlx.DB,
-	principalInfoCache store.PrincipalInfoCache) store.PullReqStore {
+	principalInfoCache store.PrincipalInfoCache,
+) store.PullReqStore {
 	return NewPullReqStore(db, principalInfoCache)
 }
 
 // ProvidePullReqActivityStore provides a pull request activity store.
 func ProvidePullReqActivityStore(db *sqlx.DB,
-	principalInfoCache store.PrincipalInfoCache) store.PullReqActivityStore {
+	principalInfoCache store.PrincipalInfoCache,
+) store.PullReqActivityStore {
 	return NewPullReqActivityStore(db, principalInfoCache)
 }
 
@@ -111,7 +121,8 @@ func ProvidePullReqReviewStore(db *sqlx.DB) store.PullReqReviewStore {
 
 // ProvidePullReqReviewerStore provides a pull request reviewer store.
 func ProvidePullReqReviewerStore(db *sqlx.DB,
-	principalInfoCache store.PrincipalInfoCache) store.PullReqReviewerStore {
+	principalInfoCache store.PrincipalInfoCache,
+) store.PullReqReviewerStore {
 	return NewPullReqReviewerStore(db, principalInfoCache)
 }
 

@@ -1,3 +1,9 @@
+html[class=''] {
+  .button:focus {
+    --border: 1px solid var(--primary-7) !important;
+  }
+}
+
 .button {
   --border: 1px solid var(--grey-200) !important;
   --background-color-active: var(--white) !important;

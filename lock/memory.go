@@ -69,7 +69,7 @@ func (m *InMemory) NewMutex(key string, options ...Option) (Mutex, error) {
 	// https://github.com/go-redsync/redsync/blob/e1e5da6654c81a2069d6a360f1a31c21f05cd22d/mutex.go#LL81C4-L81C100
 	waitTime := config.Expiry
 	if config.TimeoutFactor > 0 {
-		waitTime *= time.Duration(int64(float64(config.Expiry) * config.TimeoutFactor))
+		waitTime = time.Duration(int64(float64(config.Expiry) * config.TimeoutFactor))
 	}
 
 	lock := inMemMutex{

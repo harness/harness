@@ -6,10 +6,12 @@ package gitrpc
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/harness/gitness/gitrpc/rpc"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -34,12 +36,25 @@ func New(config Config) (*Client, error) {
 
 	// preparate all grpc options
 	grpcOpts := []grpc.DialOption{
+		grpc.WithDefaultServiceConfig(fmt.Sprintf(`{"loadBalancingPolicy":"%s"}`, config.LoadBalancingPolicy)),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithChainUnaryInterceptor(
 			logIntc.UnaryClientInterceptor(),
 		),
 		grpc.WithChainStreamInterceptor(
 			logIntc.StreamClientInterceptor(),
+		),
+		grpc.WithConnectParams(
+			grpc.ConnectParams{
+				// This config optimizes for connection recovery instead of load reduction.
+				// NOTE: we only expect limited number of internal clients, thus low number of connections.
+				Backoff: backoff.Config{
+					BaseDelay:  100 * time.Millisecond,
+					Multiplier: 1.6, // same as default
+					Jitter:     0.2, // same as default
+					MaxDelay:   time.Second,
+				},
+			},
 		),
 	}
 

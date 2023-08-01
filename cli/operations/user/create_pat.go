@@ -16,6 +16,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/drone/funcmap"
+	"github.com/gotidy/ptr"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -38,9 +39,14 @@ func (c *createPATCommand) run(*kingpin.ParseContext) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
+	var lifeTime *time.Duration
+	if c.lifetimeInS > 0 {
+		lifeTime = ptr.Duration(time.Duration(int64(time.Second) * c.lifetimeInS))
+	}
+
 	in := user.CreateTokenInput{
 		UID:      c.uid,
-		Lifetime: time.Duration(int64(time.Second) * c.lifetimeInS),
+		Lifetime: lifeTime,
 		Grants:   enum.AccessGrantAll,
 	}
 
@@ -71,7 +77,7 @@ func registerCreatePAT(app *kingpin.CmdClause) {
 		Required().StringVar(&c.uid)
 
 	cmd.Arg("lifetime", "the lifetime of the token in seconds").
-		Required().Int64Var(&c.lifetimeInS)
+		Int64Var(&c.lifetimeInS)
 
 	cmd.Flag("json", "json encode the output").
 		BoolVar(&c.json)

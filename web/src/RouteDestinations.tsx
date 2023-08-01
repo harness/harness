@@ -5,14 +5,10 @@ import { SignUp } from 'pages/SignUp/SignUp'
 import Repository from 'pages/Repository/Repository'
 import { routes, pathProps } from 'RouteDefinitions'
 import RepositoriesListing from 'pages/RepositoriesListing/RepositoriesListing'
-import Spaces from 'pages/Spaces/Spaces'
-
-import { LayoutWithSideMenu, LayoutWithSideNav } from 'layouts/layout'
-import { GlobalSettingsMenu } from 'layouts/menu/GlobalSettingsMenu'
-import { RepositoryMenu } from 'layouts/menu/RepositoryMenu'
-import { AdminMenu } from 'layouts/menu/AdminMenu'
+import { LayoutWithSideNav, LayoutWithoutSideNav } from 'layouts/layout'
 import RepositoryFileEdit from 'pages/RepositoryFileEdit/RepositoryFileEdit'
 import RepositoryCommits from 'pages/RepositoryCommits/RepositoryCommits'
+import RepositoryCommit from 'pages/RepositoryCommit/RepositoryCommit'
 import RepositoryBranches from 'pages/RepositoryBranches/RepositoryBranches'
 import RepositoryTags from 'pages/RepositoryTags/RepositoryTags'
 import Compare from 'pages/Compare/Compare'
@@ -26,24 +22,38 @@ import UsersListing from 'pages/UsersListing/UsersListing'
 import Home from 'pages/Home/Home'
 import UserProfile from 'pages/UserProfile/UserProfile'
 import ChangePassword from 'pages/ChangePassword/ChangePassword'
+import SpaceAccessControl from 'pages/SpaceAccessControl/SpaceAccessControl'
+import SpaceSettings from 'pages/SpaceSettings/SpaceSettings'
+import { useStrings } from 'framework/strings'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
+  const { getString } = useStrings()
   const repoPath = `${pathProps.space}/${pathProps.repoName}`
 
   return (
     <BrowserRouter>
       <Switch>
         <Route path={routes.toSignIn()}>
-          <SignIn />
+          <LayoutWithoutSideNav title={getString('pageTitle.signin')}>
+            <SignIn />
+          </LayoutWithoutSideNav>
         </Route>
 
         <Route path={routes.toRegister()}>
-          <SignUp />
+          <LayoutWithoutSideNav title={getString('pageTitle.register')}>
+            <SignUp />
+          </LayoutWithoutSideNav>
         </Route>
 
-        <Route path={routes.toCODESpaces()} exact>
-          <LayoutWithSideNav>
-            <Spaces />
+        <Route path={routes.toCODESpaceAccessControl({ space: pathProps.space })} exact>
+          <LayoutWithSideNav title={getString('pageTitle.accessControl')}>
+            <SpaceAccessControl />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODESpaceSettings({ space: pathProps.space })} exact>
+          <LayoutWithSideNav title={getString('pageTitle.spaceSettings')}>
+            <SpaceSettings />
           </LayoutWithSideNav>
         </Route>
 
@@ -52,9 +62,33 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             repoPath,
             diffRefs: pathProps.diffRefs
           })}>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
+          <LayoutWithSideNav title={getString('pageTitle.compare')}>
             <Compare />
-          </LayoutWithSideMenu>
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={[routes.toCODEHome()]} exact>
+          <LayoutWithSideNav title={getString('pageTitle.home')}>
+            <Home />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODEUsers()}>
+          <LayoutWithSideNav title={getString('pageTitle.users')}>
+            <UsersListing />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODEUserProfile()} exact>
+          <LayoutWithSideNav title={getString('pageTitle.userProfile')}>
+            <UserProfile />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODEUserChangePassword()} exact>
+          <LayoutWithSideNav title={getString('pageTitle.changePassword')}>
+            <ChangePassword />
+          </LayoutWithSideNav>
         </Route>
 
         <Route
@@ -70,21 +104,21 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             })
           ]}
           exact>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
+          <LayoutWithSideNav title={getString('pageTitle.pullRequest')}>
             <PullRequest />
-          </LayoutWithSideMenu>
+          </LayoutWithSideNav>
         </Route>
 
         <Route path={routes.toCODEPullRequests({ repoPath })} exact>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
+          <LayoutWithSideNav title={getString('pageTitle.pullRequests')}>
             <PullRequests />
-          </LayoutWithSideMenu>
+          </LayoutWithSideNav>
         </Route>
 
         <Route path={routes.toCODEWebhookNew({ repoPath })} exact>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
+          <LayoutWithSideNav title={getString('pageTitle.createWebhook')}>
             <WebhookNew />
-          </LayoutWithSideMenu>
+          </LayoutWithSideNav>
         </Route>
 
         <Route
@@ -92,27 +126,37 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             repoPath,
             webhookId: pathProps.webhookId
           })}>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
+          <LayoutWithSideNav title={getString('pageTitle.webhookDetail')}>
             <WebhookDetails />
-          </LayoutWithSideMenu>
+          </LayoutWithSideNav>
         </Route>
 
         <Route path={routes.toCODEWebhooks({ repoPath })} exact>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
+          <LayoutWithSideNav title={getString('pageTitle.webhooks')}>
             <Webhooks />
-          </LayoutWithSideMenu>
+          </LayoutWithSideNav>
         </Route>
 
         <Route path={routes.toCODESettings({ repoPath })} exact>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
+          <LayoutWithSideNav title={getString('pageTitle.repositorySettings')}>
             <RepositorySettings />
-          </LayoutWithSideMenu>
+          </LayoutWithSideNav>
         </Route>
 
         <Route path={routes.toCODERepositories({ space: pathProps.space })} exact>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
+          <LayoutWithSideNav title={getString('pageTitle.repositories')}>
             <RepositoriesListing />
-          </LayoutWithSideMenu>
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route
+          path={routes.toCODECommit({
+            repoPath,
+            commitRef: pathProps.commitRef
+          })}>
+          <LayoutWithSideNav title={getString('pageTitle.commits')}>
+            <RepositoryCommit />
+          </LayoutWithSideNav>
         </Route>
 
         <Route
@@ -120,100 +164,68 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             repoPath,
             commitRef: pathProps.commitRef
           })}>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
+          <LayoutWithSideNav title={getString('pageTitle.commits')}>
             <RepositoryCommits />
-          </LayoutWithSideMenu>
+          </LayoutWithSideNav>
         </Route>
 
         <Route path={routes.toCODEBranches({ repoPath })} exact>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
+          <LayoutWithSideNav title={getString('pageTitle.branches')}>
             <RepositoryBranches />
-          </LayoutWithSideMenu>
+          </LayoutWithSideNav>
         </Route>
 
         <Route path={routes.toCODETags({ repoPath })} exact>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
+          <LayoutWithSideNav title={getString('pageTitle.tags')}>
             <RepositoryTags />
-          </LayoutWithSideMenu>
-        </Route>
-
-        <Route
-          path={routes.toCODEFileEdit({
-            repoPath,
-            gitRef: pathProps.gitRef,
-            resourcePath: pathProps.resourcePath
-          })}>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
-            <RepositoryFileEdit />
-          </LayoutWithSideMenu>
-        </Route>
-
-        <Route
-          path={[
-            routes.toCODERepository({
-              repoPath,
-              gitRef: pathProps.gitRef,
-              resourcePath: pathProps.resourcePath
-            }),
-            routes.toCODERepository({
-              repoPath,
-              gitRef: pathProps.gitRef
-            }),
-            routes.toCODERepository({ repoPath })
-          ]}>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
-            <Repository />
-          </LayoutWithSideMenu>
-        </Route>
-
-        <Route
-          path={routes.toCODEFileEdit({
-            repoPath,
-            gitRef: pathProps.gitRef,
-            resourcePath: pathProps.resourcePath
-          })}>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
-            <RepositoryFileEdit />
-          </LayoutWithSideMenu>
-        </Route>
-
-        <Route
-          path={[
-            routes.toCODERepository({
-              repoPath,
-              gitRef: pathProps.gitRef,
-              resourcePath: pathProps.resourcePath
-            }),
-            routes.toCODERepository({
-              repoPath,
-              gitRef: pathProps.gitRef
-            }),
-            routes.toCODERepository({ repoPath })
-          ]}>
-          <LayoutWithSideMenu menu={<RepositoryMenu />}>
-            <Repository />
-          </LayoutWithSideMenu>
-        </Route>
-
-        <Route path={[routes.toCODEHome()]} exact>
-          <LayoutWithSideNav>
-            <Home />
           </LayoutWithSideNav>
         </Route>
-        <Route path={routes.toCODEUsers()}>
-          <LayoutWithSideMenu menu={<AdminMenu />}>
-            <UsersListing />
-          </LayoutWithSideMenu>
+
+        <Route
+          path={routes.toCODEFileEdit({
+            repoPath,
+            gitRef: pathProps.gitRef,
+            resourcePath: pathProps.resourcePath
+          })}>
+          <LayoutWithSideNav title={getString('pageTitle.editFile')}>
+            <RepositoryFileEdit />
+          </LayoutWithSideNav>
         </Route>
-        <Route path={routes.toCODEUserProfile()} exact>
-          <LayoutWithSideMenu menu={<GlobalSettingsMenu />}>
-            <UserProfile />
-          </LayoutWithSideMenu>
+
+        <Route
+          path={[
+            routes.toCODERepository({
+              repoPath,
+              gitRef: pathProps.gitRef,
+              resourcePath: pathProps.resourcePath
+            }),
+            routes.toCODERepository({
+              repoPath,
+              gitRef: pathProps.gitRef
+            }),
+            routes.toCODERepository({ repoPath })
+          ]}>
+          <LayoutWithSideNav title={getString('pageTitle.repository')}>
+            <Repository />
+          </LayoutWithSideNav>
         </Route>
-        <Route path={routes.toCODEUserChangePassword()} exact>
-          <LayoutWithSideMenu menu={<GlobalSettingsMenu />}>
-            <ChangePassword />
-          </LayoutWithSideMenu>
+
+        <Route
+          path={[
+            routes.toCODERepository({
+              repoPath,
+              gitRef: pathProps.gitRef,
+              resourcePath: pathProps.resourcePath
+            }),
+            routes.toCODERepository({
+              repoPath,
+              gitRef: pathProps.gitRef
+            }),
+            routes.toCODERepository({ repoPath })
+          ]}>
+          <LayoutWithSideNav title={getString('pageTitle.repository')}>
+            <Repository />
+          </LayoutWithSideNav>
         </Route>
       </Switch>
     </BrowserRouter>

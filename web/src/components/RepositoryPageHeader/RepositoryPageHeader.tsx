@@ -1,9 +1,10 @@
 import React, { Fragment } from 'react'
 import { Container, Layout, Text, Color, Icon, FontVariation, PageHeader } from '@harness/uicore'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import type { CODEProps } from 'RouteDefinitions'
 import type { GitInfoProps } from 'utils/GitUtils'
 import css from './RepositoryPageHeader.module.scss'
 
@@ -24,6 +25,7 @@ export function RepositoryPageHeader({
   dataTooltipId,
   extraBreadcrumbLinks = []
 }: RepositoryPageHeaderProps) {
+  const { gitRef } = useParams<CODEProps>()
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { routes } = useAppContext()
@@ -40,7 +42,9 @@ export function RepositoryPageHeader({
           <Layout.Horizontal spacing="small" className={css.breadcrumb}>
             <Link to={routes.toCODERepositories({ space })}>{getString('repositories')}</Link>
             <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
-            <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string })}>{repoMetadata.uid}</Link>
+            <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef })}>
+              {repoMetadata.uid}
+            </Link>
             {extraBreadcrumbLinks.map(link => (
               <Fragment key={link.url}>
                 <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />

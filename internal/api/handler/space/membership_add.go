@@ -2,40 +2,42 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package repo
+package space
 
 import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 )
 
-func HandleCreateCommitTag(repoCtrl *repo.Controller) http.HandlerFunc {
+// HandleMembershipAdd handles API that adds a new membership to a space.
+func HandleMembershipAdd(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		repoRef, err := request.GetRepoRefFromPath(r)
+
+		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		in := new(repo.CreateTagInput)
+		in := new(space.MembershipAddInput)
 		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
-			render.BadRequestf(w, "Invalid request body: %s.", err)
+			render.BadRequestf(w, "Invalid Request Body: %s.", err)
 			return
 		}
 
-		tag, err := repoCtrl.CreateTag(ctx, session, repoRef, in)
+		memberInfo, err := spaceCtrl.MembershipAdd(ctx, session, spaceRef, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusCreated, tag)
+		render.JSON(w, http.StatusCreated, memberInfo)
 	}
 }

@@ -6,7 +6,6 @@ import {
   ButtonVariation,
   Card,
   Container,
-  FlexExpander,
   Layout,
   Page,
   TableV2,
@@ -48,7 +47,7 @@ const UserProfile = () => {
   const { data: userTokens, loading: tokensLoading, refetch: refetchTokens } = useGet({ path: USER_TOKENS_API_PATH })
   const { mutate: deleteToken } = useMutate({ path: USER_TOKENS_API_PATH, verb: 'DELETE' })
 
-  const [_, setToken] = useAPIToken()
+  const [, setToken] = useAPIToken()
 
   const onLogout = async () => {
     await logoutUser()
@@ -92,7 +91,7 @@ const UserProfile = () => {
         Header: getString('status'),
         width: '20%',
         Cell: ({ row }: CellProps<TypesToken>) => {
-          const isActive = +Date.now() < Number(row.original.expires_at)
+          const isActive = !row.original.expires_at || +Date.now() < Number(row.original.expires_at)
 
           return (
             <Text
@@ -112,7 +111,9 @@ const UserProfile = () => {
         Cell: ({ row }: CellProps<TypesToken>) => {
           return (
             <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500} lineClamp={1}>
-              {moment(row.original.expires_at).format('MMM Do, YYYY h:mm:ss a')}
+              {row.original.expires_at
+                ? moment(row.original.expires_at).format('MMM Do, YYYY h:mm:ss a')
+                : getString('noExpiration')}
             </Text>
           )
         }
@@ -164,7 +165,14 @@ const UserProfile = () => {
       <Page.Body>
         <Container className={css.pageCtn}>
           <Card className={css.profileCard}>
-            <Avatar name={currentUser?.display_name} size="large" hoverCard={false} />
+            <Avatar
+              name={currentUser?.display_name}
+              size="large"
+              hoverCard={false}
+              color={Color.WHITE}
+              backgroundColor={Color.PRIMARY_7}
+              borderColor={Color.PRIMARY_8}
+            />
             <Container className={css.detailsCtn}>
               <Layout.Horizontal className={css.detailField}>
                 <Text width={150} font={{ variation: FontVariation.SMALL }} color={Color.GREY_600}>

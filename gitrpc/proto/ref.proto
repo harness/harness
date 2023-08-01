@@ -11,21 +11,22 @@ service ReferenceService {
   rpc DeleteBranch(DeleteBranchRequest) returns (DeleteBranchResponse);
   rpc ListBranches(ListBranchesRequest) returns (stream ListBranchesResponse);
   rpc ListCommitTags(ListCommitTagsRequest) returns (stream ListCommitTagsResponse);
-  rpc CreateTag(CreateTagRequest) returns (CreateTagResponse);
+  rpc CreateCommitTag(CreateCommitTagRequest) returns (CreateCommitTagResponse);
   rpc DeleteTag(DeleteTagRequest) returns (UpdateRefResponse);
   rpc GetRef(GetRefRequest) returns (GetRefResponse);
   rpc UpdateRef(UpdateRefRequest) returns (UpdateRefResponse);
 }
 
-message CreateTagRequest {
+message CreateCommitTagRequest {
   WriteRequest base  = 1;
-  string sha         = 2;
-  string tag_name    = 3;
+  string tag_name    = 2;
+  string target      = 3;
   string message     = 4;
-
+  Identity tagger    = 5;
+  int64 taggerDate   = 6;
 }
 
-message CreateTagResponse {
+message CreateCommitTagResponse {
   CommitTag tag = 1;
 }
 

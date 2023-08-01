@@ -27,12 +27,17 @@ type JWTClaims struct {
 
 // GenerateJWTForToken generates a jwt for a given token.
 func GenerateJWTForToken(token *types.Token, secret string) (string, error) {
+	var expiresAt int64
+	if token.ExpiresAt != nil {
+		expiresAt = *token.ExpiresAt
+	}
+
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, JWTClaims{
 		jwt.StandardClaims{
 			Issuer: issuer,
 			// times required to be in sec not millisec
 			IssuedAt:  token.IssuedAt / 1000,
-			ExpiresAt: token.ExpiresAt / 1000,
+			ExpiresAt: expiresAt / 1000,
 		},
 		token.Type,
 		token.ID,

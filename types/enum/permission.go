@@ -47,7 +47,7 @@ const (
 	PermissionUserView      Permission = "user_view"
 	PermissionUserEdit      Permission = "user_edit"
 	PermissionUserDelete    Permission = "user_delete"
-	PermissionUserEditAdmin Permission = "user_editadmin"
+	PermissionUserEditAdmin Permission = "user_editAdmin"
 )
 
 const (
@@ -68,7 +68,7 @@ const (
 	PermissionServiceView      Permission = "service_view"
 	PermissionServiceEdit      Permission = "service_edit"
 	PermissionServiceDelete    Permission = "service_delete"
-	PermissionServiceEditAdmin Permission = "service_editadmin"
+	PermissionServiceEditAdmin Permission = "service_editAdmin"
 )
 
 const (

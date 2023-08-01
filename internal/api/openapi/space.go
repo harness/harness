@@ -244,4 +244,60 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodDelete, "/spaces/{space_ref}/paths/{path_id}", onDeletePath)
+
+	opMembershipAdd := openapi3.Operation{}
+	opMembershipAdd.WithTags("space")
+	opMembershipAdd.WithMapOfAnything(map[string]interface{}{"operationId": "membershipAdd"})
+	_ = reflector.SetRequest(&opMembershipAdd, struct {
+		spaceRequest
+		space.MembershipAddInput
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opMembershipAdd, &types.Membership{}, http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opMembershipAdd, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opMembershipAdd, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opMembershipAdd, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opMembershipAdd, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/{space_ref}/members", opMembershipAdd)
+
+	opMembershipDelete := openapi3.Operation{}
+	opMembershipDelete.WithTags("space")
+	opMembershipDelete.WithMapOfAnything(map[string]interface{}{"operationId": "membershipDelete"})
+	_ = reflector.SetRequest(&opMembershipDelete, struct {
+		spaceRequest
+		UserUID string `path:"user_uid"`
+	}{}, http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opMembershipDelete, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opMembershipDelete, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opMembershipDelete, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opMembershipDelete, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opMembershipDelete, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/spaces/{space_ref}/members/{user_uid}", opMembershipDelete)
+
+	opMembershipUpdate := openapi3.Operation{}
+	opMembershipUpdate.WithTags("space")
+	opMembershipUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "membershipUpdate"})
+	_ = reflector.SetRequest(&opMembershipUpdate, &struct {
+		spaceRequest
+		UserUID string `path:"user_uid"`
+		space.MembershipUpdateInput
+	}{}, http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opMembershipUpdate, &types.Membership{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMembershipUpdate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opMembershipUpdate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opMembershipUpdate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opMembershipUpdate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPatch, "/spaces/{space_ref}/members/{user_uid}", opMembershipUpdate)
+
+	opMembershipList := openapi3.Operation{}
+	opMembershipList.WithTags("space")
+	opMembershipList.WithMapOfAnything(map[string]interface{}{"operationId": "membershipList"})
+	_ = reflector.SetRequest(&opMembershipList, &struct {
+		spaceRequest
+	}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&opMembershipList, []types.Membership{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMembershipList, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opMembershipList, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opMembershipList, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opMembershipList, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/members", opMembershipList)
 }

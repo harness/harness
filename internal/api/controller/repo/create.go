@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -34,7 +35,7 @@ var (
 )
 
 type CreateInput struct {
-	ParentID      int64  `json:"parent_id"`
+	ParentRef     string `json:"parent_ref"`
 	UID           string `json:"uid"`
 	DefaultBranch string `json:"default_branch"`
 	Description   string `json:"description"`
@@ -47,7 +48,8 @@ type CreateInput struct {
 
 // Create creates a new repository.
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Repository, error) {
-	if err := c.checkAuthRepoCreation(ctx, session, in.ParentID); err != nil {
+	parentSpace, err := c.getSpaceCheckAuthRepoCreation(ctx, session, in.ParentRef)
+	if err != nil {
 		return nil, err
 	}
 
@@ -64,7 +66,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
 		// lock parent space path to ensure it doesn't get updated while we setup new repo
 		var spacePath *types.Path
-		spacePath, err = c.pathStore.FindPrimaryWithLock(ctx, enum.PathTargetTypeSpace, in.ParentID)
+		spacePath, err = c.pathStore.FindPrimaryWithLock(ctx, enum.PathTargetTypeSpace, parentSpace.ID)
 		if err != nil {
 			return usererror.BadRequest("Parent not found'")
 		}
@@ -72,7 +74,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		now := time.Now().UnixMilli()
 		repo = &types.Repository{
 			Version:       0,
-			ParentID:      in.ParentID,
+			ParentID:      parentSpace.ID,
 			UID:           in.UID,
 			GitUID:        gitRPCResp.UID,
 			Path:          paths.Concatinate(spacePath.Value, in.UID),
@@ -123,10 +125,14 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	return repo, nil
 }
 
-func (c *Controller) checkAuthRepoCreation(ctx context.Context, session *auth.Session, parentID int64) error {
-	space, err := c.spaceStore.Find(ctx, parentID)
+func (c *Controller) getSpaceCheckAuthRepoCreation(
+	ctx context.Context,
+	session *auth.Session,
+	parentRef string,
+) (*types.Space, error) {
+	space, err := c.spaceStore.FindByRef(ctx, parentRef)
 	if err != nil {
-		return fmt.Errorf("parent space not found: %w", err)
+		return nil, fmt.Errorf("parent space not found: %w", err)
 	}
 
 	// create is a special case - check permission without specific resource
@@ -138,14 +144,16 @@ func (c *Controller) checkAuthRepoCreation(ctx context.Context, session *auth.Se
 
 	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionRepoEdit)
 	if err != nil {
-		return fmt.Errorf("auth check failed: %w", err)
+		return nil, fmt.Errorf("auth check failed: %w", err)
 	}
 
-	return nil
+	return space, nil
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
-	if in.ParentID <= 0 {
+	parentRefAsID, err := strconv.ParseInt(in.ParentRef, 10, 64)
+
+	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(in.ParentRef)) == 0) {
 		return errRepositoryRequiresParent
 	}
 

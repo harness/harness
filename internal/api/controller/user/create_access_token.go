@@ -18,7 +18,7 @@ import (
 
 type CreateTokenInput struct {
 	UID      string           `json:"uid"`
-	Lifetime time.Duration    `json:"lifetime"`
+	Lifetime *time.Duration   `json:"lifetime"`
 	Grants   enum.AccessGrant `json:"grants"`
 }
 
@@ -40,7 +40,7 @@ func (c *Controller) CreateAccessToken(ctx context.Context, session *auth.Sessio
 	if err = check.UID(in.UID); err != nil {
 		return nil, err
 	}
-	if err = check.TokenLifetime(in.Lifetime); err != nil {
+	if err = check.TokenLifetime(in.Lifetime, true); err != nil {
 		return nil, err
 	}
 	// TODO: Added to unblock UI - Depending on product decision enforce grants, or remove Grants completely.

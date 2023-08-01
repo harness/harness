@@ -11,6 +11,7 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -32,14 +33,24 @@ type PrincipalInfoView struct {
 
 const (
 	principalInfoCommonColumns = `
-		principal_id,
-		principal_uid,
-		principal_email,
-		principal_display_name,
-		principal_type,
-		principal_created,
-		principal_updated`
+		 principal_id
+		,principal_uid
+		,principal_email
+		,principal_display_name
+		,principal_type
+		,principal_created
+		,principal_updated`
 )
+
+type principalInfo struct {
+	ID          int64              `db:"principal_id"`
+	UID         string             `db:"principal_uid"`
+	DisplayName string             `db:"principal_display_name"`
+	Email       string             `db:"principal_email"`
+	Type        enum.PrincipalType `db:"principal_type"`
+	Created     int64              `db:"principal_created"`
+	Updated     int64              `db:"principal_updated"`
+}
 
 // Find returns a single principal info object by id from the `principals` database table.
 func (s *PrincipalInfoView) Find(ctx context.Context, id int64) (*types.PrincipalInfo, error) {
@@ -106,4 +117,16 @@ func (s *PrincipalInfoView) FindMany(ctx context.Context, ids []int64) ([]*types
 	}
 
 	return result, nil
+}
+
+func mapToPrincipalInfo(p *principalInfo) types.PrincipalInfo {
+	return types.PrincipalInfo{
+		ID:          p.ID,
+		UID:         p.UID,
+		DisplayName: p.DisplayName,
+		Email:       p.Email,
+		Type:        p.Type,
+		Created:     p.Created,
+		Updated:     p.Updated,
+	}
 }

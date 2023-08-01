@@ -34,13 +34,17 @@ type CreateRepositoryParams struct {
 	DefaultBranch string
 	Files         []File
 
-	// Committer overwrites the git committer used for committing the files (optional, default: actor)
+	// Committer overwrites the git committer used for committing the files
+	// (optional, default: actor)
 	Committer *Identity
-	// CommitterDate overwrites the git committer date used for committing the files (optional, default: current time)
+	// CommitterDate overwrites the git committer date used for committing the files
+	// (optional, default: current time on server)
 	CommitterDate *time.Time
-	// Author overwrites the git author used for committing the files (optional, default: committer)
+	// Author overwrites the git author used for committing the files
+	// (optional, default: committer)
 	Author *Identity
-	// AuthorDate overwrites the git author date used for committing the files (optional, default: committer date)
+	// AuthorDate overwrites the git author date used for committing the files
+	// (optional, default: committer date)
 	AuthorDate *time.Time
 }
 

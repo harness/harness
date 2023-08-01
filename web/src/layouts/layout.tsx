@@ -1,56 +1,54 @@
-import React, { useMemo } from 'react'
-import { Container, Icon, Layout } from '@harness/uicore'
+import React from 'react'
+import { Avatar, Container, FlexExpander, Layout } from '@harness/uicore'
 import { Render } from 'react-jsx-match'
-import { Link, useRouteMatch } from 'react-router-dom'
-import { useStrings } from 'framework/strings'
 import { routes } from 'RouteDefinitions'
 import { useAppContext } from 'AppContext'
-import { NavEntry } from './NavEntry'
+import { useStrings } from 'framework/strings'
+import { useDocumentTitle } from 'hooks/useDocumentTitle'
+import { NavMenuItem } from './menu/NavMenuItem'
+import { GitnessLogo } from '../components/GitnessLogo/GitnessLogo'
+import { DefaultMenu } from './menu/DefaultMenu'
 import css from './layout.module.scss'
 
-interface AppLayoutProps {
-  type?: 'with-nav' | 'with-menu'
+interface LayoutWithSideNavProps {
+  title: string
   menu?: React.ReactNode
 }
 
-const AppLayout: React.FC<AppLayoutProps> = ({ type, children, menu }) => {
-  const { getString } = useStrings()
-  const routeMatch = useRouteMatch()
-  const isSpace = useMemo(
-    () => routeMatch.path.startsWith('/:space') || routeMatch.path.endsWith('/:space'),
-    [routeMatch]
-  )
-
+export const LayoutWithSideNav: React.FC<LayoutWithSideNavProps> = ({ title, children, menu = <DefaultMenu /> }) => {
   const { currentUser } = useAppContext()
+  const { getString } = useStrings()
 
-  if (!type) {
-    return <>{children}</>
-  }
+  useDocumentTitle(title)
 
   return (
     <Container className={css.main}>
       <Layout.Horizontal className={css.layout}>
-        <nav className={css.nav}>
-          <ol>
-            {<NavCodeLogo />}
+        <Container className={css.menu}>
+          <Layout.Vertical spacing="small">
+            <GitnessLogo />
+            <Container>{menu}</Container>
+          </Layout.Vertical>
 
-            <NavEntry href={routes.toCODESpaces()} icon="grid" text={getString('spaces')} isSelected={isSpace} />
+          <FlexExpander />
 
-            {currentUser?.admin ? (
-              <NavEntry href={routes.toCODEUsers()} icon="user-groups" text={getString('admin')} />
-            ) : null}
+          <Render when={currentUser?.admin}>
+            <Container className={css.settings}>
+              <NavMenuItem icon="user-groups" label={getString('userManagement.text')} to={routes.toCODEUsers()} />
+            </Container>
+          </Render>
 
-            <li className={css.spacer}></li>
-
-            <NavEntry href="//docs.harness.io" external icon="nav-help" text={getString('help')} />
-
-            <NavEntry href={routes.toCODEUserProfile()} icon="code-settings" height="56px" />
-          </ol>
-        </nav>
-
-        <Render when={type === 'with-menu'}>
-          <Container className={css.menu}>{menu}</Container>
-        </Render>
+          <Render when={currentUser?.uid}>
+            <Container className={css.profile}>
+              <NavMenuItem
+                label={currentUser?.display_name || currentUser?.email}
+                to={routes.toCODEUserProfile()}
+                textProps={{ tag: 'span' }}>
+                <Avatar name={currentUser?.display_name || currentUser?.email} size="small" hoverCard={false} />
+              </NavMenuItem>
+            </Container>
+          </Render>
+        </Container>
 
         <Container className={css.content}>{children}</Container>
       </Layout.Horizontal>
@@ -58,18 +56,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ type, children, menu }) => {
   )
 }
 
-const NavCodeLogo: React.FC = () => (
-  <li>
-    <Link to="/">
-      <Icon name="code" size={34} />
-    </Link>
-  </li>
-)
-
-export const LayoutWithSideNav: React.FC = ({ children }) => <AppLayout type="with-nav">{children}</AppLayout>
-
-export const LayoutWithSideMenu: React.FC<Required<Pick<AppLayoutProps, 'menu'>>> = ({ children, menu }) => (
-  <AppLayout type="with-menu" menu={menu}>
-    {children}
-  </AppLayout>
-)
+export const LayoutWithoutSideNav: React.FC<{ title: string }> = ({ title, children }) => {
+  useDocumentTitle(title)
+  return <>{children}</>
+}

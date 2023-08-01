@@ -1,3 +1,4 @@
+gitness: Gitness
 pageNotFound: Page Not Found
 signIn: Sign In
 signUp: Sign Up
@@ -43,6 +44,7 @@ on: On
 off: Off
 loading: Loading...
 title: Title
+accessControl: Access Control
 addGitIgnore: Add a .gitignore
 addReadMe: Add a README file
 failedToCreateRepo: Failed to create Repository. Please try again.
@@ -66,6 +68,28 @@ cloneHTTPS: Clone with HTTPS
 nameYourFile: Name your file...
 noResultTitle: Sorry, no result found
 noResultMessage: What you searched was unfortunately not found or doesn’t exist
+pageTitle:
+  signin: Sign In
+  register: Register a new account
+  accessControl: Access Control
+  spaceSettings: Space Settings
+  compare: Pull Request Compare
+  pullRequest: Pull Request
+  pullRequests: Pull Requests
+  createWebhook: Create Webhook
+  webhookDetail: Webhook Detail
+  webhooks: Webhooks
+  repositorySettings: Repository Settings
+  repositories: Repositories
+  commits: Commits
+  branches: Branches
+  tags: Tags
+  editFile: Edit File
+  repository: Repository
+  home: Home
+  users: Users
+  userProfile: User Profile
+  changePassword: Change Password
 repos:
   name: Repo Name
   data: Repo Data
@@ -92,6 +116,7 @@ validation:
   expirationDateRequired: Expiration date is required
   newPasswordRequired: New password is a required field
   confirmPasswordRequired: Confirm Password is a required field
+  spaceNamePatternIsNotValid: "Name can only contain alphanumerics, '-', '_', '.', and '$'"
 commitMessage: Commit message
 optionalExtendedDescription: Optional extended description
 optional: Optional
@@ -105,6 +130,7 @@ createABranch: Create a branch
 createATag: Create a tag
 delete: Delete
 edit: Edit
+editAsText: Edit as Text
 branchName: Branch name
 nameYourBranch: Name your branch
 nameYourTag: Name your tag
@@ -244,8 +270,6 @@ pr:
     rebaseAndMergeDesc: All commits from this branch will be rebased and added to the base branch.
     close: Close pull request
     closeDesc: Close this pull request. You can still re-open the request after closing.
-  forceMergeWithUnresolvedComment: This pull request has {unrsolvedComment} unresolved {unrsolvedComment|1:comment,comments}. As an administrator, you can still merge it.\nAre you sure you want to force merge it?
-  notMergeableWithUnresolvedComment: This pull request has {unrsolvedComment} unresolved {unrsolvedComment|1:comment,comments}. Please resolve them before merging.
   outdated: Outdated
   titleIsRequired: Pull Request title is required.
   descIsRequired: Pull Request description is required.
@@ -445,6 +469,8 @@ users: Users
 findAUser: Find a user
 reviewerNotFound: 'Reviewer <strong>{{reviewer}}</strong> not found.'
 spaces: Spaces
+space: Space
+selectSpace: Select space here
 copyBranch: Copy Branch Name
 noAccount?: No Account?
 alreadyHaveAccount: Already have an account?
@@ -479,6 +505,8 @@ confirmNewPassword: Confirm the <b>NEW</b> password
 accountSetting: Account Setting
 nDays: '{{number}} Days'
 expiration: Expiration
+noExpiration: No Expiration
+noExpirationDate: The token will never expire!
 token: Token
 expired: Expired
 expirationDate: Expiration Date
@@ -491,6 +519,9 @@ newToken:
   namePlaceholder: Enter the name
   expireOn: Token will expire on {{date}}
   generateToken: Generate Token
+  tokenHelptext:
+    Your token has been generated. Please make sure to copy and store your token somewhere safe, you wont be
+    able to see it again.
 deleteToken: Delete token
 deleteTokenMsg: Token deleted successfully
 userProfile:
@@ -516,3 +547,33 @@ newUserModal:
   userCreated: User created successfully
   userUpdated: User updated successfully
   userDeleted: User '{{name}}' deleted successfully
+selectSpaceText: 'Select a Space'
+user: User
+role: Role
+newMember: New Member
+addMember: Add member
+spaceMemberships:
+  addMember: Add a new member
+  changeRole: Change Role
+  removeMember: Remove Member
+  removeMembershipMsg: Are you sure you want to remove this member?
+  removeMembershipToast: Member removed successfully
+  memberUpdated: Member updated successfully.
+  memberAdded: Member added successfully.
+failedToCreateSpace: Failed to create Space. Please try again.
+enterName: Enter the name
+createSpace: Create Space
+newSpace: New Space
+emptySpaceText: "It's empty now, please create a new space"
+homepage:
+  welcomeText: Welcome {{currentUser}}, let's get you started with Gitness!
+  firstStep: Get started by creating a space.  Organize and manage your repositories and pipelines with spaces
+deleteSpace: Delete Space
+spaceSetting:
+  intentText: This will permanently delete the space named '{{space}}', and everything contained in it.  All repositories in this space will be deleted.
+  setting: Setting
+contributor: Contributor
+reader: Reader
+executor: Executor
+owner: Owner
+changeRole: Change role

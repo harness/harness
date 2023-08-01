@@ -156,10 +156,11 @@ func mapRenameDetails(renameDetails []types.PathRenameDetails) []*rpc.RenameDeta
 	return renameDetailsList
 }
 
-func mapCommitTag(tag *types.Tag) *rpc.CommitTag {
+func mapAnnotatedTag(tag *types.Tag) *rpc.CommitTag {
 	return &rpc.CommitTag{
 		Name:        tag.Name,
 		Sha:         tag.Sha,
+		Title:       tag.Title,
 		Message:     tag.Message,
 		Tagger:      mapGitSignature(tag.Tagger),
 		IsAnnotated: true,

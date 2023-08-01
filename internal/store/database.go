@@ -60,8 +60,8 @@ type (
 		// ListUsers returns a list of users.
 		ListUsers(ctx context.Context, params *types.UserFilter) ([]*types.User, error)
 
-		// CountUsers returns a count of users.
-		CountUsers(ctx context.Context) (int64, error)
+		// CountUsers returns a count of users which match the given filter.
+		CountUsers(ctx context.Context, opts *types.UserFilter) (int64, error)
 
 		/*
 		 * SERVICE ACCOUNT RELATED OPERATIONS.
@@ -187,7 +187,7 @@ type (
 		Count(ctx context.Context, id int64, opts *types.SpaceFilter) (int64, error)
 
 		// List returns a list of child spaces in a space.
-		List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error)
+		List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]types.Space, error)
 	}
 
 	// RepoStore defines the repository data storage.
@@ -221,6 +221,18 @@ type (
 	// RepoGitInfoView defines the repository GitUID view.
 	RepoGitInfoView interface {
 		Find(ctx context.Context, id int64) (*types.RepositoryGitInfo, error)
+	}
+
+	// MembershipStore defines the membership data storage.
+	MembershipStore interface {
+		Find(ctx context.Context, key types.MembershipKey) (*types.Membership, error)
+		FindUser(ctx context.Context, key types.MembershipKey) (*types.MembershipUser, error)
+		Create(ctx context.Context, membership *types.Membership) error
+		Update(ctx context.Context, membership *types.Membership) error
+		Delete(ctx context.Context, key types.MembershipKey) error
+		CountUsers(ctx context.Context, spaceID int64, filter types.MembershipFilter) (int64, error)
+		ListUsers(ctx context.Context, spaceID int64, filter types.MembershipFilter) ([]types.MembershipUser, error)
+		ListSpaces(ctx context.Context, userID int64) ([]types.MembershipSpace, error)
 	}
 
 	// TokenStore defines the token data storage.
@@ -272,6 +284,9 @@ type (
 		// UpdateActivitySeq the pull request's activity sequence number.
 		// It will set new values to the ActivitySeq, Version and Updated fields.
 		UpdateActivitySeq(ctx context.Context, pr *types.PullReq) (*types.PullReq, error)
+
+		// Update all PR where target branch points to new SHA
+		UpdateMergeCheckStatus(ctx context.Context, targetRepo int64, targetBranch string, status enum.MergeCheckStatus) error
 
 		// Delete the pull request.
 		Delete(ctx context.Context, id int64) error

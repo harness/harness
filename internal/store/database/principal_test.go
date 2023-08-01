@@ -104,7 +104,7 @@ func testUserDuplicate(store store.PrincipalStore) func(t *testing.T) {
 // and compares to the expected count.
 func testUserCount(store store.PrincipalStore) func(t *testing.T) {
 	return func(t *testing.T) {
-		got, err := store.CountUsers(context.Background())
+		got, err := store.CountUsers(context.Background(), &types.UserFilter{})
 		if err != nil {
 			t.Error(err)
 			return

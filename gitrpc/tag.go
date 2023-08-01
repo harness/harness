@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/harness/gitness/gitrpc/rpc"
 
@@ -47,14 +48,26 @@ type CommitTag struct {
 	Commit      *Commit
 }
 
-type CreateTagParams struct {
+type CreateCommitTagParams struct {
 	WriteParams
-	Name    string
-	SHA     string
+	Name string
+
+	// Target is the commit (or points to the commit) the new tag will be pointing to.
+	Target string
+
+	// Message is the optional message the tag will be created with - if the message is empty
+	// the tag will be lightweight, otherwise it'll be annotated
 	Message string
+
+	// Tagger overwrites the git author used in case the tag is annotated
+	// (optional, default: actor)
+	Tagger *Identity
+	// TaggerDate overwrites the git author date used in case the tag is annotated
+	// (optional, default: current time on server)
+	TaggerDate *time.Time
 }
 
-func (p *CreateTagParams) Validate() error {
+func (p *CreateCommitTagParams) Validate() error {
 	if p == nil {
 		return ErrNoParamsProvided
 	}
@@ -62,16 +75,14 @@ func (p *CreateTagParams) Validate() error {
 	if p.Name == "" {
 		return errors.New("tag name cannot be empty")
 	}
-	if p.SHA == "" {
+	if p.Target == "" {
 		return errors.New("target cannot be empty")
 	}
-	if p.Message == "" {
-		return errors.New("message cannot be empty")
-	}
+
 	return nil
 }
 
-type CreateTagOutput struct {
+type CreateCommitTagOutput struct {
 	CommitTag
 }
 
@@ -139,18 +150,20 @@ func (c *Client) ListCommitTags(ctx context.Context, params *ListCommitTagsParam
 
 	return output, nil
 }
-func (c *Client) CreateTag(ctx context.Context, params *CreateTagParams) (*CreateTagOutput, error) {
+func (c *Client) CreateCommitTag(ctx context.Context, params *CreateCommitTagParams) (*CreateCommitTagOutput, error) {
 	err := params.Validate()
 
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := c.refService.CreateTag(ctx, &rpc.CreateTagRequest{
-		Base:    mapToRPCWriteRequest(params.WriteParams),
-		Sha:     params.SHA,
-		TagName: params.Name,
-		Message: params.Message,
+	resp, err := c.refService.CreateCommitTag(ctx, &rpc.CreateCommitTagRequest{
+		Base:       mapToRPCWriteRequest(params.WriteParams),
+		Target:     params.Target,
+		TagName:    params.Name,
+		Message:    params.Message,
+		Tagger:     mapToRPCIdentityOptional(params.Tagger),
+		TaggerDate: mapToRPCTimeOptional(params.TaggerDate),
 	})
 
 	if err != nil {
@@ -163,7 +176,7 @@ func (c *Client) CreateTag(ctx context.Context, params *CreateTagParams) (*Creat
 		return nil, fmt.Errorf("failed to map rpc tag: %w", err)
 	}
 
-	return &CreateTagOutput{
+	return &CreateCommitTagOutput{
 		CommitTag: *commitTag,
 	}, nil
 }

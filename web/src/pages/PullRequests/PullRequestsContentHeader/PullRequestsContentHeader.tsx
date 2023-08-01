@@ -60,6 +60,16 @@ export function PullRequestsContentHeader({
   return (
     <Container className={css.main} padding="xlarge">
       <Layout.Horizontal spacing="medium">
+        <SearchInputWithSpinner
+          loading={loading}
+          spinnerPosition="right"
+          query={searchTerm}
+          setQuery={value => {
+            setSearchTerm(value)
+            onSearchTermChanged(value)
+          }}
+        />
+        <FlexExpander />
         <DropDown
           value={filterOption}
           items={items}
@@ -69,16 +79,6 @@ export function PullRequestsContentHeader({
           }}
           popoverClassName={css.branchDropdown}
         />
-        <SearchInputWithSpinner
-          loading={loading}
-          query={searchTerm}
-          setQuery={value => {
-            setSearchTerm(value)
-            onSearchTermChanged(value)
-          }}
-          spinnerPosition="right"
-        />
-        <FlexExpander />
         <Button
           variation={ButtonVariation.PRIMARY}
           text={getString('newPullRequest')}

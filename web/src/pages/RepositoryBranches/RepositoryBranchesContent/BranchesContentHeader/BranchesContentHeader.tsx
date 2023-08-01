@@ -47,15 +47,16 @@ export function BranchesContentHeader({
           }}
           popoverClassName={css.branchDropdown}
         /> */}
-        <FlexExpander />
         <SearchInputWithSpinner
           loading={loading}
+          spinnerPosition="right"
           query={searchTerm}
           setQuery={value => {
             setSearchTerm(value)
             onSearchTermChanged(value)
           }}
         />
+        <FlexExpander />
         <CreateBranchModalButton
           text={getString('createBranch')}
           icon={CodeIcon.Add}

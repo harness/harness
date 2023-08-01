@@ -11,7 +11,6 @@ import {
   StringSubstitute,
   Text,
   useToaster,
-  stringSubstitute
 } from '@harness/uicore'
 import { useMutate } from 'restful-react'
 import { Case, Else, Match, Render, Truthy } from 'react-jsx-match'
@@ -28,7 +27,6 @@ import type {
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, PullRequestFilterOption, PullRequestState } from 'utils/GitUtils'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useAppContext } from 'AppContext'
 import { Images } from 'images'
 import { getErrorMessage, MergeCheckStatus, permissionProps } from 'utils/Utils'
@@ -123,16 +121,6 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
       desc: getString('pr.mergeOptions.closeDesc')
     }
   ]
-  const confirmAct = useConfirmAct()
-  const permEditResult = hooks?.usePermissionTranslate?.(
-    {
-      resource: {
-        resourceType: 'CODE_REPOSITORY'
-      },
-      permissions: ['code_repo_edit']
-    },
-    [space]
-  )
 
   const [mergeOption, setMergeOption] = useUserPreference<PRMergeOption>(
     UserPreference.PULL_REQUEST_MERGE_STRATEGY,
@@ -311,37 +299,9 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                             onClick={async () => {
                               if (mergeOption.method !== 'close') {
                                 const payload: OpenapiMergePullReq = { method: mergeOption.method }
-                                let prMergeable = true
-                                const unrsolvedComment = pullRequestMetadata.stats?.unresolved_count || 0
-
-                                // TODO: Verify if permEditResult is enough to be an admin
-                                if (unrsolvedComment > 0) {
-                                  if (permEditResult === true) {
-                                    prMergeable = false
-                                    await confirmAct({
-                                      message: stringSubstitute(getString('pr.forceMergeWithUnresolvedComment'), {
-                                        unrsolvedComment
-                                      }),
-                                      action: async () => {
-                                        prMergeable = true
-                                      }
-                                    })
-                                  } else {
-                                    prMergeable = false
-                                    showError(
-                                      stringSubstitute(getString('pr.notMergeableWithUnresolvedComment'), {
-                                        unrsolvedComment
-                                      }),
-                                      0
-                                    )
-                                  }
-                                }
-
-                                if (prMergeable) {
-                                  mergePR(payload)
-                                    .then(onPRStateChanged)
-                                    .catch(exception => showError(getErrorMessage(exception)))
-                                }
+                                mergePR(payload)
+                                  .then(onPRStateChanged)
+                                  .catch(exception => showError(getErrorMessage(exception)))
                               } else {
                                 updatePRState({ state: 'closed' })
                                   .then(onPRStateChanged)

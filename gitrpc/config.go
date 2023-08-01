@@ -10,7 +10,8 @@ import (
 
 // Config represents the config for the gitrpc client.
 type Config struct {
-	Addr string `envconfig:"GITRPC_CLIENT_ADDR" default:"127.0.0.1:3001"`
+	Addr                string `envconfig:"GITRPC_CLIENT_ADDR" default:"127.0.0.1:3001"`
+	LoadBalancingPolicy string `envconfig:"GITRPC_CLIENT_LOAD_BALANCING_POLICY" default:"pick_first"`
 }
 
 func (c *Config) Validate() error {

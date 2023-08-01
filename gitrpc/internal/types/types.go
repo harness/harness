@@ -150,12 +150,13 @@ type Tag struct {
 	Tagger     Signature
 }
 
-type CreateTagRequest struct {
-	Name        string
-	TargetSha   string
-	Message     string
-	TaggerName  string
-	TaggerEmail string
+type CreateTagOptions struct {
+	// Message is the optional message the tag will be created with - if the message is empty
+	// the tag will be lightweight, otherwise it'll be annotated.
+	Message string
+
+	// Tagger is the information used in case the tag is annotated (Message is provided).
+	Tagger Signature
 }
 
 // Signature represents the Author or Committer information.

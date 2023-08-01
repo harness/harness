@@ -1,3 +1,5 @@
+@import 'src/utils/vars';
+
 /*
  * NOTE: Styles in this file are loaded in both standalone and embedded
  * versions. Be careful! Don't introduce global states that could be conflict
@@ -5,10 +7,7 @@
  */
 
 .main {
-  --nav-item-width: var(--main-nav-width, 88px);
-  --nav-item-height: 80px;
-  --nav-menu-width: 184px;
-  --nav-width: calc(var(--nav-item-width) + var(--nav-menu-width));
+  @include vars;
 
   &.fullPage {
     height: 100%;
@@ -58,6 +57,10 @@
 
     .Resizer.disabled:hover {
       border-color: transparent;
+    }
+
+    div[data-testid='page-body'] > div[data-testid='page-error'] {
+      height: 80vh !important;
     }
   }
 }

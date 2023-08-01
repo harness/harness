@@ -10,6 +10,7 @@ import (
 
 	"github.com/harness/gitness/cli/provide"
 	"github.com/harness/gitness/cli/textui"
+	"github.com/harness/gitness/internal/api/controller/user"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -21,19 +22,25 @@ type loginCommand struct {
 func (c *loginCommand) run(*kingpin.ParseContext) error {
 	ss := provide.NewSession()
 
-	username, password := textui.Credentials()
+	loginIdentifier, password := textui.Credentials()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	ts, err := provide.OpenClient(c.server).Login(ctx, username, password)
+	in := &user.LoginInput{
+		LoginIdentifier: loginIdentifier,
+		Password:        password,
+	}
+
+	ts, err := provide.OpenClient(c.server).Login(ctx, in)
 	if err != nil {
 		return err
 	}
 
 	return ss.
 		SetURI(c.server).
-		SetExpiresAt(ts.Token.ExpiresAt).
+		// login token always has an expiry date
+		SetExpiresAt(*ts.Token.ExpiresAt).
 		SetAccessToken(ts.AccessToken).
 		Store()
 }

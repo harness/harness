@@ -1,0 +1,12 @@
+.main {
+  min-height: var(--page-min-height, 100%);
+  background-color: var(--primary-bg) !important;
+}
+.container {
+  height: 100vh;
+}
+
+.spaceContainer {
+  height: 100vh;
+  padding-top: 26% !important;
+}

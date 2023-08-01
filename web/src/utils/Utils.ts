@@ -4,6 +4,11 @@ import { get } from 'lodash-es'
 import moment from 'moment'
 import langMap from 'lang-map'
 
+export enum ACCESS_MODES {
+  VIEW,
+  EDIT
+}
+
 export const LIST_FETCHING_LIMIT = 20
 export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY hh:mm a'
 export const DEFAULT_BRANCH_NAME = 'main'

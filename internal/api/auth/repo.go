@@ -16,14 +16,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-/*
- * CheckRepo checks if a repo specific permission is granted for the current auth session
- * in the scope of its parent.
- * Returns nil if the permission is granted, otherwise returns an error.
- * NotAuthenticated, NotAuthorized, or any unerlaying error.
- */
+// CheckRepo checks if a repo specific permission is granted for the current auth session
+// in the scope of its parent.
+// Returns nil if the permission is granted, otherwise returns an error.
+// NotAuthenticated, NotAuthorized, or any underlying error.
 func CheckRepo(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
-	repo *types.Repository, permission enum.Permission, orPublic bool) error {
+	repo *types.Repository, permission enum.Permission, orPublic bool,
+) error {
 	if orPublic && repo.IsPublic {
 		return nil
 	}

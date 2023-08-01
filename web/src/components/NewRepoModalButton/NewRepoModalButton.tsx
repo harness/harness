@@ -1,10 +1,3 @@
-/*
- * Copyright 2021 Harness Inc. All rights reserved.
- * Use of this source code is governed by the PolyForm Shield 1.0.0 license
- * that can be found in the licenses directory at the root of this repository, also available at
- * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
- */
-
 import React, { useEffect, useMemo, useState } from 'react'
 import { Icon as BPIcon, Classes, Dialog, Intent, Menu, MenuDivider, MenuItem } from '@blueprintjs/core'
 import * as yup from 'yup'
@@ -84,7 +77,6 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
   ...props
 }) => {
   const ModalComponent: React.FC = () => {
-    const { standalone } = useAppContext()
     const { getString } = useStrings()
     const [branchName, setBranchName] = useState(DEFAULT_BRANCH_NAME)
     const { showError } = useToaster()
@@ -92,9 +84,11 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
     const { mutate: createRepo, loading: submitLoading } = useMutate<TypesRepository>({
       verb: 'POST',
       path: `/api/v1/repos`,
-      queryParams: {
-        space_path: space
-      }
+      queryParams: standalone
+        ? undefined
+        : {
+            space_path: space
+          }
     })
     const {
       data: gitignores,
@@ -124,7 +118,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
           license: get(formData, 'license', 'none'),
           uid: get(formData, 'name', '').trim(),
           readme: get(formData, 'addReadme', false),
-          parent_id: standalone ? Number(space) : 0 // TODO: Backend needs to fix parentID: accept string or number
+          parent_ref: space
         }
         createRepo(payload)
           .then(response => {
@@ -359,3 +353,5 @@ const BranchName: React.FC<BranchNameProps> = ({ currentBranchName, onSelect }) 
     </Container>
   )
 }
+
+export default NewRepoModalButton

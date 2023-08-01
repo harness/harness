@@ -2,7 +2,7 @@
 // this is an auto-generated file
 declare const styles: {
   readonly main: string
-  readonly pageHeading: string
-  readonly pageContent: string
+  readonly container: string
+  readonly spaceContainer: string
 }
 export default styles

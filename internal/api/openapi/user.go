@@ -44,4 +44,12 @@ func buildUser(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opToken, new(types.TokenResponse), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opToken, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/user/token", opToken)
+
+	opMemberSpaces := openapi3.Operation{}
+	opMemberSpaces.WithTags("user")
+	opMemberSpaces.WithMapOfAnything(map[string]interface{}{"operationId": "membershipSpaces"})
+	_ = reflector.SetRequest(&opMemberSpaces, struct{}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&opMemberSpaces, new([]types.MembershipSpace), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opMemberSpaces, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/user/memberships", opMemberSpaces)
 }

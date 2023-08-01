@@ -3,6 +3,7 @@
  * Use the command `yarn strings` to regenerate this file.
  */
 export interface StringsMap {
+  accessControl: string
   accountEmail: string
   accountSetting: string
   active: string
@@ -11,6 +12,7 @@ export interface StringsMap {
   addComment: string
   addGitIgnore: string
   addLicense: string
+  addMember: string
   addNewFile: string
   addReadMe: string
   addUser: string
@@ -50,6 +52,7 @@ export interface StringsMap {
   cancel: string
   changePassword: string
   changePasswordSuccesfully: string
+  changeRole: string
   changes: string
   characterLimit: string
   checkRuns: string
@@ -84,6 +87,7 @@ export interface StringsMap {
   confirmation: string
   content: string
   contents: string
+  contributor: string
   conversation: string
   copy: string
   copyBranch: string
@@ -104,6 +108,7 @@ export interface StringsMap {
   'createRepoModal.privateLabel': string
   'createRepoModal.publicLabel': string
   createRepoPerms: string
+  createSpace: string
   createTag: string
   createWebhook: string
   created: string
@@ -118,6 +123,7 @@ export interface StringsMap {
   deleteNotAllowed: string
   deleteRepoText: string
   deleteRepoTitle: string
+  deleteSpace: string
   deleteTag: string
   deleteTagConfirm: string
   deleteToken: string
@@ -134,6 +140,7 @@ export interface StringsMap {
   download: string
   draft: string
   edit: string
+  editAsText: string
   editFile: string
   editNotAllowed: string
   editUser: string
@@ -142,11 +149,13 @@ export interface StringsMap {
   emailRequired: string
   emptyRepoHeader: string
   emptyRepoInclude: string
+  emptySpaceText: string
   enableSSLVerification: string
   enableWebhookContent: string
   enableWebhookTitle: string
   enabled: string
   enterDescription: string
+  enterName: string
   enterNewBranchName: string
   enterNewPassword: string
   enterRepoName: string
@@ -154,12 +163,14 @@ export interface StringsMap {
   enterTagPlaceholder: string
   enterUser: string
   error404Text: string
+  executor: string
   existingAccount: string
   expiration: string
   expirationDate: string
   expired: string
   failedToCreateBranch: string
   failedToCreateRepo: string
+  failedToCreateSpace: string
   failedToDeleteBranch: string
   failedToDeleteWebhook: string
   fileDeleted: string
@@ -176,9 +187,12 @@ export interface StringsMap {
   generateCloneText: string
   getMyCloneTitle: string
   gitIgnore: string
+  gitness: string
   help: string
   hideCommitHistory: string
   history: string
+  'homepage.firstStep': string
+  'homepage.welcomeText': string
   in: string
   inactiveBranches: string
   leaveAComment: string
@@ -206,13 +220,16 @@ export interface StringsMap {
   newFile: string
   newFileNotAllowed: string
   newFolder: string
+  newMember: string
   newPullRequest: string
   newRepo: string
+  newSpace: string
   newTag: string
   'newToken.expireOn': string
   'newToken.generateToken': string
   'newToken.namePlaceholder': string
   'newToken.text': string
+  'newToken.tokenHelptext': string
   'newUserModal.displayNamePlaceholder': string
   'newUserModal.emailPlaceholder': string
   'newUserModal.passwordHelptext': string
@@ -230,6 +247,8 @@ export interface StringsMap {
   noCommits: string
   noCommitsMessage: string
   noCommitsPR: string
+  noExpiration: string
+  noExpirationDate: string
   noOptionalReviewers: string
   noRequiredReviewers: string
   noResultMessage: string
@@ -247,8 +266,30 @@ export interface StringsMap {
   optional: string
   optionalExtendedDescription: string
   overview: string
+  owner: string
   pageLoading: string
   pageNotFound: string
+  'pageTitle.accessControl': string
+  'pageTitle.branches': string
+  'pageTitle.changePassword': string
+  'pageTitle.commits': string
+  'pageTitle.compare': string
+  'pageTitle.createWebhook': string
+  'pageTitle.editFile': string
+  'pageTitle.home': string
+  'pageTitle.pullRequest': string
+  'pageTitle.pullRequests': string
+  'pageTitle.register': string
+  'pageTitle.repositories': string
+  'pageTitle.repository': string
+  'pageTitle.repositorySettings': string
+  'pageTitle.signin': string
+  'pageTitle.spaceSettings': string
+  'pageTitle.tags': string
+  'pageTitle.userProfile': string
+  'pageTitle.users': string
+  'pageTitle.webhookDetail': string
+  'pageTitle.webhooks': string
   password: string
   passwordApi: string
   passwordRequired: string
@@ -279,7 +320,6 @@ export interface StringsMap {
   'pr.failedToUpdateTitle': string
   'pr.fileDeleted': string
   'pr.fileUnchanged': string
-  'pr.forceMergeWithUnresolvedComment': string
   'pr.mergeOptions.close': string
   'pr.mergeOptions.closeDesc': string
   'pr.mergeOptions.createMergeCommit': string
@@ -291,7 +331,6 @@ export interface StringsMap {
   'pr.mergePR': string
   'pr.metaLine': string
   'pr.modalTitle': string
-  'pr.notMergeableWithUnresolvedComment': string
   'pr.openForReview': string
   'pr.outdated': string
   'pr.prBranchPushInfo': string
@@ -334,6 +373,7 @@ export interface StringsMap {
   quote: string
   reactivate: string
   readMe: string
+  reader: string
   refresh: string
   reject: string
   rejected: string
@@ -369,6 +409,7 @@ export interface StringsMap {
   resolvedComments: string
   reviewerNotFound: string
   reviewers: string
+  role: string
   samplePayloadUrl: string
   save: string
   scanAlerts: string
@@ -377,6 +418,8 @@ export interface StringsMap {
   searchBranches: string
   secret: string
   selectBranchPlaceHolder: string
+  selectSpace: string
+  selectSpaceText: string
   selectToViewMore: string
   setAsAdmin: string
   settings: string
@@ -384,6 +427,16 @@ export interface StringsMap {
   showEverything: string
   signIn: string
   signUp: string
+  space: string
+  'spaceMemberships.addMember': string
+  'spaceMemberships.changeRole': string
+  'spaceMemberships.memberAdded': string
+  'spaceMemberships.memberUpdated': string
+  'spaceMemberships.removeMember': string
+  'spaceMemberships.removeMembershipMsg': string
+  'spaceMemberships.removeMembershipToast': string
+  'spaceSetting.intentText': string
+  'spaceSetting.setting': string
   spaces: string
   sslVerificationLabel: string
   status: string
@@ -410,6 +463,7 @@ export interface StringsMap {
   updateUser: string
   updateWebhook: string
   updated: string
+  user: string
   userCreated: string
   userId: string
   'userManagement.deleteUser': string
@@ -434,6 +488,7 @@ export interface StringsMap {
   'validation.nameIsRequired': string
   'validation.newPasswordRequired': string
   'validation.repoNamePatternIsNotValid': string
+  'validation.spaceNamePatternIsNotValid': string
   'validation.uidInvalid': string
   'validation.uidRequired': string
   viewAllBranches: string

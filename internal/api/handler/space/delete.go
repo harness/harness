@@ -7,16 +7,13 @@ package space
 import (
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 )
 
-/*
- * Deletes a space.
- */
-func HandleDelete(spaceCtrl *space.Controller, repoCtrl *repo.Controller) http.HandlerFunc {
+// HandleDelete handles the delete space HTTP API.
+func HandleDelete(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)

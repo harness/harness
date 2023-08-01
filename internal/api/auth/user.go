@@ -13,14 +13,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
- * CheckUser checks if a user specific permission is granted for the current auth session.
- * Returns nil if the permission is granted, otherwise returns an error.
- * NotAuthenticated, NotAuthorized, or any unerlaying error.
- */
+// CheckUser checks if a user specific permission is granted for the current auth session.
+// Returns nil if the permission is granted, otherwise returns an error.
+// NotAuthenticated, NotAuthorized, or any underlying error.
 func CheckUser(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
-	user *types.User, permission enum.Permission) error {
-	// a user exists outside of any scope
+	user *types.User, permission enum.Permission,
+) error {
+	// a user exists outside any scope
 	scope := &types.Scope{}
 	resource := &types.Resource{
 		Type: enum.ResourceTypeUser,

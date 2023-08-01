@@ -1,12 +1,6 @@
 .dialogCtn {
   overflow: unset !important;
 
-  button#copyBtn {
-    border-radius: 0 !important;
-    border-left: 1px solid var(--grey-200) !important;
-    margin-left: var(--spacing-small) !important;
-  }
-
   :global {
     .bp3-form-group,
     .TextInput--main {
@@ -43,5 +37,13 @@
       flex-direction: column;
       justify-content: space-between;
     }
+  }
+}
+
+.inputWrapper {
+  button#copyBtn {
+    border-radius: 0 !important;
+    border-left: 1px solid var(--grey-200) !important;
+    margin-left: var(--spacing-small) !important;
   }
 }

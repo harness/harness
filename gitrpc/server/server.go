@@ -19,6 +19,7 @@ import (
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 )
 
 const (
@@ -58,6 +59,10 @@ func NewServer(config Config, adapter service.GitAdapter) (*GRPCServer, error) {
 			logIntc.StreamInterceptor(),
 			errIntc.StreamInterceptor(),
 		)),
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			MaxConnectionAge:      config.MaxConnAge,
+			MaxConnectionAgeGrace: config.MaxConnAgeGrace,
+		}),
 	)
 	store := storage.NewLocalStore()
 	// create a temp dir for deleted repositories
