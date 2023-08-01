@@ -40,7 +40,7 @@ func (s BlameService) Blame(request *rpc.BlameRequest, stream rpc.BlameService_B
 	for {
 		part, errRead := reader.NextPart()
 
-		errStream := s.streamBlamePart(part, stream)
+		errStream := streamBlamePart(part, stream)
 		if errStream != nil {
 			return errStream
 		}
@@ -54,7 +54,7 @@ func (s BlameService) Blame(request *rpc.BlameRequest, stream rpc.BlameService_B
 	}
 }
 
-func (s BlameService) streamBlamePart(
+func streamBlamePart(
 	part *types.BlamePart, stream rpc.BlameService_BlameServer,
 ) error {
 	if part == nil {
@@ -66,9 +66,14 @@ func (s BlameService) streamBlamePart(
 		return fmt.Errorf("failed to map git commit: %w", errMap)
 	}
 
+	lines := make([][]byte, len(part.Lines))
+	for i, line := range part.Lines {
+		lines[i] = []byte(line)
+	}
+
 	pack := &rpc.BlamePart{
 		Commit: commit,
-		Lines:  part.Lines,
+		Lines:  lines,
 	}
 
 	if errStream := stream.Send(pack); errStream != nil {

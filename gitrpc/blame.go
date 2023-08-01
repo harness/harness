@@ -111,7 +111,12 @@ func (c *Client) Blame(ctx context.Context, params *BlameParams) (<-chan *BlameP
 				return
 			}
 
-			ch <- &BlamePart{Commit: commit, Lines: part.Lines}
+			lines := make([]string, len(part.Lines))
+			for i, line := range part.Lines {
+				lines[i] = string(line)
+			}
+
+			ch <- &BlamePart{Commit: commit, Lines: lines}
 		}
 	}()
 
