@@ -60,6 +60,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         Cell: ({ row }: CellProps<RepoBranch>) => {
           return (
             <Text
+              lineClamp={1}
               className={cx(css.rowText, row.original?.name === repoMetadata.default_branch ? css.defaultBranch : '')}
               color={Color.BLACK}>
               <Link
@@ -101,7 +102,7 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
         width: '200px',
         Cell: ({ row }: CellProps<RepoBranch>) => {
           return (
-            <Text className={css.rowText} color={Color.BLACK} tag="div">
+            <Text lineClamp={1} className={css.rowText} color={Color.BLACK} tag="div">
               <Avatar hoverCard={false} size="small" name={row.original.commit?.author?.identity?.name || ''} />
               <span className={css.spacer} />
               {formatDate(row.original.commit?.author?.when as string)}

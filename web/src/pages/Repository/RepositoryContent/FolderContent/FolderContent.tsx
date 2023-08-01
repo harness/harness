@@ -27,6 +27,7 @@ export function FolderContent({
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
             <Text
+              lineClamp={1}
               className={css.rowText}
               color={Color.BLACK}
               icon={isFile(row.original) ? CodeIcon.File : CodeIcon.Folder}
@@ -47,6 +48,7 @@ export function FolderContent({
                 role="button"
                 color={Color.BLACK}
                 lineClamp={1}
+                padding={{ right: 'small' }}
                 className={css.rowText}
                 onClick={() => {
                   history.push(
