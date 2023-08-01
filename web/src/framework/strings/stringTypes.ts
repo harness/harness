@@ -277,12 +277,14 @@ export interface StringsMap {
   'pageTitle.createWebhook': string
   'pageTitle.editFile': string
   'pageTitle.home': string
+  'pageTitle.pipelines': string
   'pageTitle.pullRequest': string
   'pageTitle.pullRequests': string
   'pageTitle.register': string
   'pageTitle.repositories': string
   'pageTitle.repository': string
   'pageTitle.repositorySettings': string
+  'pageTitle.secrets': string
   'pageTitle.signin': string
   'pageTitle.spaceSettings': string
   'pageTitle.tags': string
