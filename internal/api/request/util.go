@@ -62,6 +62,16 @@ func QueryParam(r *http.Request, paramName string) (string, bool) {
 	return query.Get(paramName), true
 }
 
+// QueryParamList returns list of the parameter values if they exist.
+func QueryParamList(r *http.Request, paramName string) ([]string, bool) {
+	query := r.URL.Query()
+	if !query.Has(paramName) {
+		return nil, false
+	}
+
+	return query[paramName], true
+}
+
 // QueryParamOrDefault retrieves the parameter from the query and
 // returns the parameter if it exists, otherwise returns the provided default value.
 func QueryParamOrDefault(r *http.Request, paramName string, deflt string) string {
