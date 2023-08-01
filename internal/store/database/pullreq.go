@@ -357,7 +357,7 @@ func (s *PullReqStore) UpdateMergeCheckStatus(
 	now := time.Now().UnixMilli()
 
 	_, err := db.ExecContext(ctx, query, now, status, targetRepo, targetBranch,
-		enum.PullReqStateClosed, enum.PullReqStateClosed)
+		enum.PullReqStateClosed, enum.PullReqStateMerged)
 	if err != nil {
 		return database.ProcessSQLErrorf(err, "Failed to update mergeable status check %s in pull requests", status)
 	}
