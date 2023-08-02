@@ -9,6 +9,7 @@ web/node_modules
 web/dist/files
 release
 .idea
+.vscode/settings.json
 coverage.out
 gitness.session.sql
 

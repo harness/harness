@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path"
 
 	"github.com/harness/gitness/gitrpc/internal/streamio"
 	"github.com/harness/gitness/gitrpc/internal/types"
@@ -19,9 +20,10 @@ import (
 
 type DiffParams struct {
 	ReadParams
-	BaseRef   string
-	HeadRef   string
-	MergeBase bool
+	BaseRef      string
+	HeadRef      string
+	MergeBase    bool
+	IncludePatch bool
 }
 
 func (p DiffParams) Validate() error {
@@ -30,7 +32,7 @@ func (p DiffParams) Validate() error {
 	}
 
 	if p.HeadRef == "" {
-		return errors.New("head ref cannot be empty")
+		return ErrInvalidArgumentf("head ref cannot be empty")
 	}
 	return nil
 }
@@ -273,4 +275,74 @@ func (c *Client) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOut
 		MergeBaseSHA:    result.MergeBaseSha,
 		LatestSourceSHA: result.LatestSourceSha,
 	}, nil
+}
+
+type FileDiff struct {
+	SHA         string `json:"sha"`
+	OldSHA      string `json:"old_sha,omitempty"`
+	Path        string `json:"path"`
+	OldPath     string `json:"old_path,omitempty"`
+	Status      string `json:"status"`
+	Additions   int64  `json:"additions"`
+	Deletions   int64  `json:"deletions"`
+	Changes     int64  `json:"changes"`
+	ContentURL  string `json:"content_url"`
+	Patch       []byte `json:"patch,omitempty"`
+	IsBinary    bool   `json:"is_binary"`
+	IsSubmodule bool   `json:"is_submodule"`
+}
+
+func (c *Client) Diff(ctx context.Context, params *DiffParams, baseURL string) (<-chan *FileDiff, <-chan error) {
+	ch := make(chan *FileDiff)
+	// needs to be buffered so it is not blocking on receiver side when all data is sent
+	cherr := make(chan error, 1)
+
+	go func() {
+		defer close(ch)
+		defer close(cherr)
+
+		if err := params.Validate(); err != nil {
+			cherr <- err
+			return
+		}
+
+		stream, err := c.diffService.Diff(ctx, &rpc.DiffRequest{
+			Base:         mapToRPCReadRequest(params.ReadParams),
+			BaseRef:      params.BaseRef,
+			HeadRef:      params.HeadRef,
+			MergeBase:    params.MergeBase,
+			IncludePatch: params.IncludePatch,
+		})
+		if err != nil {
+			return
+		}
+
+		for {
+			resp, err := stream.Recv()
+			if err != nil {
+				if errors.Is(err, io.EOF) {
+					break
+				}
+				cherr <- processRPCErrorf(err, "failed to get git diff file from stream")
+				return
+			}
+
+			ch <- &FileDiff{
+				SHA:         resp.Sha,
+				OldSHA:      resp.OldSha,
+				Path:        resp.Path,
+				OldPath:     resp.OldPath,
+				Status:      resp.Status.String(),
+				Additions:   int64(resp.Additions),
+				Deletions:   int64(resp.Deletions),
+				Changes:     int64(resp.Changes),
+				ContentURL:  path.Join(baseURL, resp.Path),
+				Patch:       resp.Patch,
+				IsBinary:    resp.IsBinary,
+				IsSubmodule: resp.IsSubmodule,
+			}
+		}
+	}()
+
+	return ch, cherr
 }

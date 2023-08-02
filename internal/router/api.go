@@ -31,6 +31,7 @@ import (
 	handleruser "github.com/harness/gitness/internal/api/handler/user"
 	"github.com/harness/gitness/internal/api/handler/users"
 	handlerwebhook "github.com/harness/gitness/internal/api/handler/webhook"
+	"github.com/harness/gitness/internal/api/middleware/address"
 	middlewareauthn "github.com/harness/gitness/internal/api/middleware/authn"
 	"github.com/harness/gitness/internal/api/middleware/encode"
 	"github.com/harness/gitness/internal/api/middleware/logging"
@@ -82,6 +83,7 @@ func NewAPIHandler(
 	r.Use(hlog.MethodHandler("http.method"))
 	r.Use(logging.HLogRequestIDHandler())
 	r.Use(logging.HLogAccessLogHandler())
+	r.Use(address.Handler("", ""))
 
 	// configure cors middleware
 	r.Use(corsHandler(config))
@@ -248,14 +250,11 @@ func setupRepos(r chi.Router,
 			})
 
 			// diffs
-			r.Route("/compare", func(r chi.Router) {
-				r.Get("/*", handlerrepo.HandleRawDiff(repoCtrl))
+			r.Route("/diff", func(r chi.Router) {
+				r.Get("/*", handlerrepo.HandleDiff(repoCtrl))
 			})
 			r.Route("/merge-check", func(r chi.Router) {
 				r.Post("/*", handlerrepo.HandleMergeCheck(repoCtrl))
-			})
-			r.Route("/diff-stats", func(r chi.Router) {
-				r.Get("/*", handlerrepo.HandleDiffStats(repoCtrl))
 			})
 
 			SetupPullReq(r, pullreqCtrl)

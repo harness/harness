@@ -640,15 +640,16 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/commits", opCommitFiles)
 
-	opRawDiff := openapi3.Operation{}
-	opRawDiff.WithTags("repository")
-	opRawDiff.WithMapOfAnything(map[string]interface{}{"operationId": "rawDiff"})
-	_ = reflector.SetRequest(&opRawDiff, new(getRawDiffRequest), http.MethodGet)
-	_ = reflector.SetStringResponse(&opRawDiff, http.StatusOK, "text/plain")
-	_ = reflector.SetJSONResponse(&opRawDiff, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opRawDiff, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opRawDiff, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/compare/{range}", opRawDiff)
+	opDiff := openapi3.Operation{}
+	opDiff.WithTags("repository")
+	opDiff.WithMapOfAnything(map[string]interface{}{"operationId": "rawDiff"})
+	_ = reflector.SetRequest(&opDiff, new(getRawDiffRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opDiff, new(types.DiffStats), http.StatusOK)
+	_ = reflector.SetStringResponse(&opDiff, http.StatusOK, "text/plain")
+	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/diff/{range}", opDiff)
 
 	opMergeCheck := openapi3.Operation{}
 	opMergeCheck.WithTags("repository")
@@ -659,14 +660,4 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/merge-check/{range}", opMergeCheck)
-
-	opDiffStats := openapi3.Operation{}
-	opDiffStats.WithTags("repository")
-	opDiffStats.WithMapOfAnything(map[string]interface{}{"operationId": "diffStats"})
-	_ = reflector.SetRequest(&opDiffStats, new(getRawDiffRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opDiffStats, new(types.DiffStats), http.StatusOK)
-	_ = reflector.SetJSONResponse(&opDiffStats, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opDiffStats, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opDiffStats, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/diff-stats/{range}", opDiffStats)
 }

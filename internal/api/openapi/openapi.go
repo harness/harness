@@ -5,6 +5,7 @@
 package openapi
 
 import (
+	"github.com/harness/gitness/internal/config"
 	"github.com/harness/gitness/version"
 
 	"github.com/swaggest/openapi-go/openapi3"
@@ -27,7 +28,7 @@ func Generate() *openapi3.Spec {
 		WithTitle("API Specification").
 		WithVersion(version.Version.String())
 	reflector.Spec.Servers = []openapi3.Server{{
-		URL: "/api/v1/",
+		URL: config.ApiURL,
 	}}
 
 	//
