@@ -23,5 +23,5 @@ message LineRange {
 
 message BlamePart {
   Commit commit = 1;
-  repeated string lines = 2;
+  repeated bytes lines = 2;
 }
