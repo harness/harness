@@ -577,7 +577,7 @@ spaceSetting:
   deleteConfirm1: This will permanently delete the "{{space}}" space and everything contained in it.  All repositories in this space, all sub-spaces and repositories they contain will be deleted.
   deleteConfirmButton1: I want to delete this space
   deleteConfirm2: To confirm, type "{{space}}" in the box below
-  deleteConfirmButton2: Delete this repository
+  deleteConfirmButton2: Delete this space
   deleteToastSuccess: Space deleted successfully
   setting: Setting
 contributor: Contributor
@@ -585,3 +585,10 @@ reader: Reader
 executor: Executor
 owner: Owner
 changeRole: Change role
+repoDelete:
+  title: Delete Repository
+  deleteConfirm1: This will permanently delete the "{{repo}}" repository, wiki, issues, comments, packages, secrets, workflow runs, and remove all collaborator associations.
+  deleteConfirmButton1: I want to delete this repository
+  deleteConfirm2: To confirm, type "{{repo}}" in the box below
+  deleteToastSuccess: Repository deleted successfully
+  deleteConfirmButton2: Delete this repository

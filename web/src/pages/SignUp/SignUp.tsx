@@ -25,7 +25,6 @@ import css from './SignUp.module.scss'
 // Renders the Register page.
 export const SignUp: React.FC = () => {
   const { getString } = useStrings()
-  const history = useHistory()
   const { showError, showSuccess } = useToaster()
   const [, setToken] = useAPIToken()
 

@@ -10,23 +10,16 @@ import {
   FormInput,
   Formik,
   useToaster,
-  ButtonSize,
-  StringSubstitute
+  ButtonSize
 } from '@harness/uicore'
-import { useHistory } from 'react-router-dom'
 import { useMutate } from 'restful-react'
-import { getErrorMessage, permissionProps, voidFn } from 'utils/Utils'
+import { ACCESS_MODES, permissionProps, voidFn } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import type { TypesRepository } from 'services/code'
-import { useConfirmAction } from 'hooks/useConfirmAction'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import useDeleteRepoModal from './DeleteRepoModal/DeleteRepoModal'
 import css from '../RepositorySettings.module.scss'
-
-enum ACCESS_MODES {
-  VIEW,
-  EDIT
-}
 
 interface GeneralSettingsProps {
   repoMetadata: TypesRepository | undefined
@@ -35,10 +28,11 @@ interface GeneralSettingsProps {
 
 const GeneralSettingsContent = (props: GeneralSettingsProps) => {
   const { repoMetadata, refetch } = props
+  const { openModal: openDeleteRepoModal } = useDeleteRepoModal()
+
   const [editDesc, setEditDesc] = useState(ACCESS_MODES.VIEW)
   const { showError, showSuccess } = useToaster()
-  const history = useHistory()
-  const { routes } = useAppContext()
+
   const space = useGetSpaceParam()
   const { standalone } = useAppContext()
   const { hooks } = useAppContext()
@@ -47,37 +41,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
     verb: 'PATCH',
     path: `/api/v1/repos/${repoMetadata?.path}/+/`
   })
-  const { mutate: deleteRepo } = useMutate({
-    verb: 'DELETE',
-    path: `/api/v1/repos/${repoMetadata?.path}/+/`
-  })
-  const contentText = () => (
-    <Text>
-      {' '}
-      <StringSubstitute
-        str={getString('deleteRepoText')}
-        vars={{
-          REPONAME: <strong>{repoMetadata?.uid}</strong>
-        }}
-      />
-    </Text>
-  )
-  const confirmDeleteBranch = useConfirmAction({
-    title: getString('deleteRepoTitle'),
-    confirmText: getString('confirm'),
-    intent: Intent.DANGER,
-    message: contentText(),
-    action: async () => {
-      deleteRepo({})
-        .then(() => {
-          showSuccess(getString('repoDeleted', { repo: repoMetadata?.uid }), 5000)
-          history.push(routes.toCODERepositories({ space }))
-        })
-        .catch((error: Unknown) => {
-          showError(getErrorMessage(error), 0, 'failedToDeleteBranch')
-        })
-    }
-  })
+
   const permEditResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
@@ -184,10 +148,9 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                   {getString('dangerDeleteRepo')}
                 </Text>
                 <Button
-                  disabled={true} // TODO: Disable until backend has soft delete
                   intent={Intent.DANGER}
                   onClick={() => {
-                    confirmDeleteBranch()
+                    openDeleteRepoModal()
                   }}
                   variation={ButtonVariation.SECONDARY}
                   text={getString('delete')}

@@ -388,6 +388,12 @@ export interface StringsMap {
   replyHere: string
   repoCloneHeader: string
   repoCloneLabel: string
+  'repoDelete.deleteConfirm1': string
+  'repoDelete.deleteConfirm2': string
+  'repoDelete.deleteConfirmButton1': string
+  'repoDelete.deleteConfirmButton2': string
+  'repoDelete.deleteToastSuccess': string
+  'repoDelete.title': string
   repoDeleted: string
   repoEmptyMarkdown: string
   repoEmptyMarkdownClone: string
