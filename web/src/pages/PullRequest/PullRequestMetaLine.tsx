@@ -47,7 +47,7 @@ export const PullRequestMetaLine: React.FC<TypesPullReq & Pick<GitInfoProps, 're
     <Container padding={{ left: 'xlarge' }} className={css.main}>
       <Layout.Horizontal spacing="small" className={css.layout}>
         <PullRequestStateLabel data={{ is_draft, state }} />
-        <Text className={css.metaline}>
+        <Text tag="div" className={css.metaline}>
           <StringSubstitute str={getString('pr.metaLine')} vars={vars} />
         </Text>
 
