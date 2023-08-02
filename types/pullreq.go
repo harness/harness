@@ -115,5 +115,6 @@ type PullReqReviewer struct {
 }
 
 type MergeResponse struct {
-	SHA string
+	SHA           string   `json:"sha,omitempty"`
+	ConflictFiles []string `json:"conflict_files,omitempty"`
 }
