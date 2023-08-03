@@ -5,6 +5,7 @@
 package check
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -54,15 +55,56 @@ func (in *ReportInput) Validate() error {
 	switch in.Payload.Kind {
 	case enum.CheckPayloadKindExternal:
 		// the default external type does not support payload: clear it here
-		in.Payload.Version = ""
-		in.Payload.Data = []byte{'{', '}'}
+
+		var err error
 
 		if in.Link == "" { // the link is mandatory for the external
 			return usererror.BadRequest("Link is missing")
 		}
+
+		if in.Payload.Version != "" {
+			return usererror.BadRequest("Payload version must be empty")
+		}
+
+		in.Payload.Data, err = sanitizeJsonPayload(in.Payload.Data, &struct {
+			Details string `json:"details"`
+		}{})
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+func sanitizeJsonPayload(source json.RawMessage, data any) (json.RawMessage, error) {
+	if len(source) == 0 {
+		return json.Marshal(data) // marshal the empty object
+	}
+
+	decoder := json.NewDecoder(bytes.NewReader(source))
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&data); err != nil {
+		return nil, usererror.BadRequestf("Payload data doesn't match the required format: %s", err.Error())
+	}
+
+	buffer := bytes.NewBuffer(nil)
+	buffer.Grow(512)
+
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(data); err != nil {
+		return nil, fmt.Errorf("failed to sanitize json payload: %w", err)
+	}
+
+	result := buffer.Bytes()
+
+	if result[len(result)-1] == '\n' {
+		result = result[:len(result)-1]
+	}
+
+	return result, nil
 }
 
 // Report modifies an existing or creates a new (if none yet exists) status check report for a specific commit.
