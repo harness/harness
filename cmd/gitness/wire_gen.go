@@ -14,7 +14,9 @@ import (
 	server3 "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/gitrpc/server/cron"
 	check2 "github.com/harness/gitness/internal/api/controller/check"
+	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/githook"
+	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -84,7 +86,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, principalStore, gitrpcInterface)
+	executionStore := database.ProvideExecutionStore(db)
+	executionController := execution.ProvideController(db, authorizer, executionStore, repoStore, spaceStore)
 	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
+	pipelineStore := database.ProvidePipelineStore(db)
+	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore, spaceStore)
 	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
 	codeCommentView := database.ProvideCodeCommentView(db)
@@ -138,7 +144,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	principalController := principal.ProvideController(principalStore)
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	checkController := check2.ProvideController(db, authorizer, repoStore, checkStore, gitrpcInterface)
-	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, spaceController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController)
+	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, spaceController, pipelineController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController)
 	gitHandler := router.ProvideGitHandler(config, provider, repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(config, apiHandler, gitHandler, webHandler)

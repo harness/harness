@@ -10,7 +10,9 @@ import (
 
 	"github.com/harness/gitness/githook"
 	"github.com/harness/gitness/internal/api/controller/check"
+	"github.com/harness/gitness/internal/api/controller/execution"
 	controllergithook "github.com/harness/gitness/internal/api/controller/githook"
+	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -21,6 +23,7 @@ import (
 	"github.com/harness/gitness/internal/api/handler/account"
 	handlercheck "github.com/harness/gitness/internal/api/handler/check"
 	handlergithook "github.com/harness/gitness/internal/api/handler/githook"
+	handlerpipeline "github.com/harness/gitness/internal/api/handler/pipeline"
 	handlerprincipal "github.com/harness/gitness/internal/api/handler/principal"
 	handlerpullreq "github.com/harness/gitness/internal/api/handler/pullreq"
 	handlerrepo "github.com/harness/gitness/internal/api/handler/repo"
@@ -62,7 +65,9 @@ func NewAPIHandler(
 	config *types.Config,
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
+	executionCtrl *execution.Controller,
 	spaceCtrl *space.Controller,
+	pipelineCtrl *pipeline.Controller,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
 	githookCtrl *controllergithook.Controller,
@@ -92,7 +97,7 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator, authn.SourceRouterAPI))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, repoCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
+		setupRoutesV1(r, config, repoCtrl, executionCtrl, pipelineCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
 			saCtrl, userCtrl, principalCtrl, checkCtrl)
 	})
 
@@ -114,7 +119,10 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 }
 
 func setupRoutesV1(r chi.Router,
+	config *types.Config,
 	repoCtrl *repo.Controller,
+	executionCtrl *execution.Controller,
+	pipelineCtrl *pipeline.Controller,
 	spaceCtrl *space.Controller,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
@@ -126,6 +134,7 @@ func setupRoutesV1(r chi.Router,
 ) {
 	setupSpaces(r, spaceCtrl)
 	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl, checkCtrl)
+	setupPipelines(r, pipelineCtrl, executionCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
 	setupPrincipals(r, principalCtrl)
@@ -262,6 +271,20 @@ func setupRepos(r chi.Router,
 			SetupWebhook(r, webhookCtrl)
 
 			SetupChecks(r, checkCtrl)
+		})
+	})
+}
+
+func setupPipelines(r chi.Router, pipelineCtrl *pipeline.Controller, executionCtrl *execution.Controller) {
+	r.Route("/pipelines", func(r chi.Router) {
+		// Create takes path and parentId via body, not uri
+		r.Post("/", handlerpipeline.HandleCreate(pipelineCtrl))
+		r.Route(fmt.Sprintf("/{%s}", request.PipelinePathRef), func(r chi.Router) {
+			r.Get("/", handlerpipeline.HandleFind(pipelineCtrl))
+			r.Patch("/", handlerpipeline.HandleUpdate(pipelineCtrl))
+			r.Delete("/", handlerpipeline.HandleDelete(pipelineCtrl))
+			// TODO: setup executions here
+			// SetupExecutions(r, executionCtrl)
 		})
 	})
 }

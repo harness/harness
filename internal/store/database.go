@@ -439,4 +439,85 @@ type (
 		// Delete removes a required status checks for a repo.
 		Delete(ctx context.Context, repoID, reqCheckID int64) error
 	}
+	PipelineStore interface {
+		// Find returns a pipeline given a pipeline ID from the datastore.
+		Find(context.Context, int64) (*types.Pipeline, error)
+
+		// FindByUID returns a pipeline with a given UID in a space
+		FindByUID(context.Context, int64, string) (*types.Pipeline, error)
+
+		// Create creates a new pipeline in the datastore.
+		Create(context.Context, *types.Pipeline) error
+
+		// Update tries to update a pipeline in the datastore with optimistic locking.
+		Update(context.Context, *types.Pipeline) (*types.Pipeline, error)
+
+		// List lists the pipelines present in a parent space ID in the datastore.
+		List(context.Context, int64, *types.PipelineFilter) ([]*types.Pipeline, error)
+
+		// Delete deletes a pipeline ID from the datastore.
+		Delete(context.Context, int64) error
+	}
+
+	// TODO: Implement the execution store interface
+	ExecutionStore interface {
+		// Find returns a build from the datastore.
+		// Find(context.Context, int64) (*types.Execution, error)
+
+		// FindNumber returns a build from the datastore by build number.
+		// FindNumber(context.Context, int64, int64) (*types.Execution, error)
+
+		// FindLast returns the last build from the datastore by ref.
+		// FindRef(context.Context, int64, string) (*types.Execution, error)
+
+		// List returns a list of builds from the datastore by repository id.
+		// List(context.Context, int64, int, int) ([]*types.Execution, error)
+
+		// ListRef returns a list of builds from the datastore by ref.
+		// ListRef(context.Context, int64, string, int, int) ([]*types.Execution, error)
+
+		// LatestBranches returns the latest builds from the
+		// datastore by branch.
+		// LatestBranches(context.Context, int64) ([]*types.Execution, error)
+
+		// LatestPulls returns the latest builds from the
+		// datastore by pull request.
+		// LatestPulls(context.Context, int64) ([]*types.Execution, error)
+
+		// LatestDeploys returns the latest builds from the
+		// datastore by deployment target.
+		// LatestDeploys(context.Context, int64) ([]*types.Execution, error)
+
+		// Pending returns a list of pending builds from the
+		// datastore by repository id (DEPRECATED).
+		// Pending(context.Context) ([]*types.Execution, error)
+
+		// Running returns a list of running builds from the
+		// datastore by repository id (DEPRECATED).
+		// Running(context.Context) ([]*types.Execution, error)
+
+		// Create persists a build to the datastore.
+		// Create(context.Context, *types.Execution, []*Stage) error
+
+		// Update updates a build in the datastore.
+		// Update(context.Context, *types.Execution) error
+
+		// // Delete deletes a build from the datastore.
+		// Delete(context.Context, *types.Execution) error
+
+		// // DeletePull deletes a pull request index from the datastore.
+		// DeletePull(context.Context, int64, int) error
+
+		// // DeleteBranch deletes a branch index from the datastore.
+		// DeleteBranch(context.Context, int64, string) error
+
+		// // DeleteDeploy deletes a deploy index from the datastore.
+		// DeleteDeploy(context.Context, int64, string) error
+
+		// // Purge deletes builds from the database where the build number is less than n.
+		// Purge(context.Context, int64, int64) error
+
+		// // Count returns a count of builds.
+		// Count(context.Context) (int64, error)
+	}
 )

@@ -16,7 +16,9 @@ import (
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
 	gitrpccron "github.com/harness/gitness/gitrpc/server/cron"
 	checkcontroller "github.com/harness/gitness/internal/api/controller/check"
+	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/githook"
+	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -90,6 +92,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		codecomments.WireSet,
 		gitrpccron.WireSet,
 		checkcontroller.WireSet,
+		execution.WireSet,
+		pipeline.WireSet,
 	)
 	return &cliserver.System{}, nil
 }
