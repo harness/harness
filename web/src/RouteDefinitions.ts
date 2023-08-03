@@ -11,14 +11,16 @@ export interface CODEProps {
   pullRequestId?: string
   pullRequestSection?: string
   webhookId?: string
+  pipeline?: string
+  execution?: string
 }
 
 export interface CODEQueryProps {
   query?: string
 }
 
-export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch' | 'tags'>> = {
-  space: ':space*',
+export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch' | 'tags' | 'pipelinePath'>> = {
+  space: ':space',
   repoName: ':repoName',
   gitRef: ':gitRef*',
   resourcePath: ':resourcePath*',
@@ -26,7 +28,9 @@ export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch'
   diffRefs: ':diffRefs*',
   pullRequestId: ':pullRequestId',
   pullRequestSection: ':pullRequestSection*',
-  webhookId: ':webhookId'
+  webhookId: ':webhookId',
+  pipeline: ':pipeline',
+  execution: ':execution'
 }
 
 export interface CODERoutes {
@@ -64,6 +68,9 @@ export interface CODERoutes {
   toCODEWebhookNew: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEWebhookDetails: (args: Required<Pick<CODEProps, 'repoPath' | 'webhookId'>>) => string
   toCODESettings: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+
+  toCODEExecutions: (args: Required<Pick<CODEProps, 'space' | 'pipeline'>>) => string
+  toCODEExecution: (args: Required<Pick<CODEProps, 'space' | 'pipeline' | 'execution'>>) => string
 }
 
 export const routes: CODERoutes = {
@@ -103,5 +110,8 @@ export const routes: CODERoutes = {
   toCODESettings: ({ repoPath }) => `/${repoPath}/settings`,
   toCODEWebhooks: ({ repoPath }) => `/${repoPath}/webhooks`,
   toCODEWebhookNew: ({ repoPath }) => `/${repoPath}/webhooks/new`,
-  toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`
+  toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`,
+
+  toCODEExecutions: ({ space, pipeline }) => `/pipelines/${space}/${pipeline}`,
+  toCODEExecution: ({ space, pipeline, execution }) => `/pipelines/${space}/${pipeline}/${execution}`
 }

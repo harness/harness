@@ -163,6 +163,9 @@ export interface StringsMap {
   enterTagPlaceholder: string
   enterUser: string
   error404Text: string
+  'executions.name': string
+  'executions.newExecutionButton': string
+  'executions.noData': string
   executor: string
   existingAccount: string
   expiration: string
@@ -276,6 +279,7 @@ export interface StringsMap {
   'pageTitle.compare': string
   'pageTitle.createWebhook': string
   'pageTitle.editFile': string
+  'pageTitle.executions': string
   'pageTitle.home': string
   'pageTitle.pipelines': string
   'pageTitle.pullRequest': string
@@ -298,6 +302,9 @@ export interface StringsMap {
   payloadUrl: string
   payloadUrlLabel: string
   pending: string
+  'pipelines.name': string
+  'pipelines.newPipelineButton': string
+  'pipelines.noData': string
   'pr.ableToMerge': string
   'pr.authorCommentedPR': string
   'pr.branchHasNoConflicts': string

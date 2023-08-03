@@ -19,9 +19,10 @@ export const DefaultMenu: React.FC = () => {
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
   const routeMatch = useRouteMatch()
   const isFilesSelected = useMemo(
-    () => routeMatch.path === '/:space*/:repoName' || routeMatch.path.startsWith('/:space*/:repoName/edit'),
+    () => routeMatch.path === '/:space/:repoName' || routeMatch.path.startsWith('/:space/:repoName/edit'),
     [routeMatch]
   )
+  const isPipelineSelected = routeMatch.path.startsWith('/pipelines/:space/:pipeline')
 
   const { OPEN_SOURCE_PIPELINES, OPEN_SOURCE_SECRETS } = useFeatureFlag()
 
@@ -135,7 +136,35 @@ export const DefaultMenu: React.FC = () => {
               icon="pipeline"
               label={getString('pageTitle.pipelines')}
               to={routes.toCODEPipelines({ space: selectedSpace?.path as string })}
+              rightIcon={isPipelineSelected ? 'main-chevron-down' : 'main-chevron-right'}
+              textProps={{
+                rightIconProps: {
+                  size: 10,
+                  style: {
+                    flexGrow: 1,
+                    justifyContent: 'end',
+                    display: 'flex'
+                  }
+                }
+              }}
+              isDeselected={isPipelineSelected}
+              isHighlighted={isPipelineSelected}
             />
+          </Render>
+        )}
+
+        {OPEN_SOURCE_PIPELINES && (
+          <Render when={isPipelineSelected}>
+            <Container className={css.repoLinks}>
+              <Layout.Vertical spacing="small">
+                <NavMenuItem
+                  isSubLink
+                  isSelected={isPipelineSelected}
+                  label={getString('pageTitle.executions')}
+                  to={routes.toCODERepository({ repoPath, gitRef: commitRef || gitRef })}
+                />
+              </Layout.Vertical>
+            </Container>
           </Render>
         )}
 

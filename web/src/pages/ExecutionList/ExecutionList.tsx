@@ -22,66 +22,74 @@ import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/Search
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { formatDate } from 'utils/Utils'
 import { routes } from 'RouteDefinitions'
-import noPipelineImage from '../RepositoriesListing/no-repo.svg'
-import css from './PipelineList.module.scss'
+import noExecutionImage from '../RepositoriesListing/no-repo.svg'
+import css from './ExecutionList.module.scss'
 
-interface Pipeline {
+interface Execution {
   id: number
   uid: string
   name: string
   updated: number
   description?: string
   isPublic?: boolean
+  spaceUid: string
+  pipelineUid: string
 }
 
-const pipelines: Pipeline[] = [
+const executions: Execution[] = [
   {
     id: 1,
-    uid: 'pipeline-1',
-    name: 'Pipeline 1',
+    uid: '1',
+    name: 'Exec 1',
     updated: 1687234800,
     description: 'This is a description',
-    isPublic: true
+    isPublic: true,
+    spaceUid: 'root',
+    pipelineUid: 'pipeline-1'
   },
   {
     id: 2,
-    uid: 'pipeline-2',
-    name: 'Pipeline 2',
+    uid: '2',
+    name: 'Exec 2',
     updated: 1730275200,
     description: 'This is a description',
-    isPublic: true
+    isPublic: true,
+    spaceUid: 'root',
+    pipelineUid: 'pipeline-2'
   },
   {
     id: 3,
-    uid: 'pipeline-3',
-    name: 'Pipeline 3',
+    uid: '3',
+    name: 'Exec 3',
     updated: 1773315600,
     description: 'This is a description',
-    isPublic: false
+    isPublic: false,
+    spaceUid: 'root',
+    pipelineUid: 'pipeline-3'
   }
 ]
 
 const loading = false
 
-const PipelineList = () => {
+const ExecutionList = () => {
   const history = useHistory()
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
 
-  const NewPipelineButton = (
+  const NewExecutionButton = (
     <Button
-      text={getString('pipelines.newPipelineButton')}
+      text={getString('executions.newExecutionButton')}
       variation={ButtonVariation.PRIMARY}
       disabled={true}
       icon="plus"></Button>
   )
 
-  const columns: Column<Pipeline>[] = useMemo(
+  const columns: Column<Execution>[] = useMemo(
     () => [
       {
-        Header: getString('pipelines.name'),
+        Header: getString('repos.name'),
         width: 'calc(100% - 180px)',
-        Cell: ({ row }: CellProps<Pipeline>) => {
+        Cell: ({ row }: CellProps<Execution>) => {
           const record = row.original
           return (
             <Container className={css.nameContainer}>
@@ -100,7 +108,7 @@ const PipelineList = () => {
       {
         Header: getString('repos.updated'),
         width: '180px',
-        Cell: ({ row }: CellProps<Pipeline>) => {
+        Cell: ({ row }: CellProps<Execution>) => {
           return (
             <Layout.Horizontal style={{ alignItems: 'center' }}>
               <Text color={Color.BLACK} lineClamp={1} rightIconProps={{ size: 10 }} width={120}>
@@ -118,37 +126,43 @@ const PipelineList = () => {
 
   return (
     <Container className={css.main}>
-      <PageHeader title={getString('pageTitle.pipelines')} />
+      <PageHeader title={getString('pageTitle.executions')} />
       <PageBody
         noData={{
-          when: () => pipelines.length === 0,
-          image: noPipelineImage,
-          message: getString('pipelines.noData'),
-          button: NewPipelineButton
+          when: () => executions.length === 0,
+          image: noExecutionImage,
+          message: getString('executions.noData'),
+          button: NewExecutionButton
         }}>
         <LoadingSpinner visible={loading && !searchTerm} />
 
         <Container padding="xlarge">
           <Layout.Horizontal spacing="large" className={css.layout}>
-            {NewPipelineButton}
+            {NewExecutionButton}
             <FlexExpander />
             <SearchInputWithSpinner loading={loading} query={searchTerm} setQuery={setSearchTerm} />
           </Layout.Horizontal>
 
           <Container margin={{ top: 'medium' }}>
-            {!!pipelines?.length && (
-              <Table<Pipeline>
+            {!!executions?.length && (
+              <Table<Execution>
                 className={css.table}
                 columns={columns}
-                data={pipelines || []}
+                data={executions || []}
                 onRowClick={pipelineInfo =>
-                  history.push(routes.toCODEExecutions({ space: 'root', pipeline: pipelineInfo.uid as string }))
+                  history.push(
+                    routes.toCODEExecution({
+                      space: pipelineInfo.spaceUid,
+                      pipeline: pipelineInfo.pipelineUid,
+                      execution: pipelineInfo.uid
+                    })
+                  )
                 }
                 getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
               />
             )}
 
-            <NoResultCard showWhen={() => !!pipelines.length && !!searchTerm?.length} forSearch={true} />
+            <NoResultCard showWhen={() => !!executions.length && !!searchTerm?.length} forSearch={true} />
           </Container>
           {/* <ResourceListingPagination response={response} page={page} setPage={setPage} /> */}
         </Container>
@@ -157,4 +171,4 @@ const PipelineList = () => {
   )
 }
 
-export default PipelineList
+export default ExecutionList

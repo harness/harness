@@ -28,6 +28,8 @@ import SpaceAccessControl from 'pages/SpaceAccessControl/SpaceAccessControl'
 import SpaceSettings from 'pages/SpaceSettings/SpaceSettings'
 import { useStrings } from 'framework/strings'
 import { useFeatureFlag } from 'hooks/useFeatureFlag'
+import ExecutionList from 'pages/ExecutionList/ExecutionList'
+import Execution from 'pages/Execution/Execution'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
@@ -158,6 +160,28 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           <Route path={routes.toCODEPipelines({ space: pathProps.space })} exact>
             <LayoutWithSideNav title={getString('pageTitle.pipelines')}>
               <PipelineList />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {OPEN_SOURCE_PIPELINES && (
+          <Route path={routes.toCODEExecutions({ space: pathProps.space, pipeline: pathProps.pipeline })} exact>
+            <LayoutWithSideNav title={getString('pageTitle.executions')}>
+              <ExecutionList />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {OPEN_SOURCE_PIPELINES && (
+          <Route
+            path={routes.toCODEExecution({
+              space: pathProps.space,
+              pipeline: pathProps.pipeline,
+              execution: pathProps.execution
+            })}
+            exact>
+            <LayoutWithSideNav title={getString('pageTitle.executions')}>
+              <Execution />
             </LayoutWithSideNav>
           </Route>
         )}
