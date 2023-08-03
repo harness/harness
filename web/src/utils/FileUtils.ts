@@ -464,7 +464,8 @@ const SpecialTextFiles = [
   'CHANGELOG',
   'Makefile',
   'Procfile',
-  '.env'
+  '.env',
+  '.alpine'
 ]
 
 const ImageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'ico', 'bmp']
