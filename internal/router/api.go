@@ -283,7 +283,6 @@ func setupPipelines(r chi.Router, pipelineCtrl *pipeline.Controller, executionCt
 			r.Get("/", handlerpipeline.HandleFind(pipelineCtrl))
 			r.Patch("/", handlerpipeline.HandleUpdate(pipelineCtrl))
 			r.Delete("/", handlerpipeline.HandleDelete(pipelineCtrl))
-			// TODO: setup executions here
 			setupExecutions(r, executionCtrl)
 		})
 	})
@@ -291,7 +290,7 @@ func setupPipelines(r chi.Router, pipelineCtrl *pipeline.Controller, executionCt
 
 func setupExecutions(r chi.Router, executionCtrl *execution.Controller) {
 	r.Route("/executions", func(r chi.Router) {
-		r.Post("/")
+
 	})
 }
 
