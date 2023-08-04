@@ -235,7 +235,7 @@ func (s *pipelineStore) Delete(ctx context.Context, id int64) error {
 func (s *pipelineStore) DeleteByUID(ctx context.Context, spaceID int64, uid string) error {
 	const pipelineDeleteStmt = `
 	DELETE FROM pipelines
-	WHERE pipeline_parent_id = $1 AND pipeline_uid = $1`
+	WHERE pipeline_parent_id = $1 AND pipeline_uid = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 

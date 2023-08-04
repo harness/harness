@@ -230,6 +230,19 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/repos", opRepos)
 
+	opPipelines := openapi3.Operation{}
+	opPipelines.WithTags("space")
+	opPipelines.WithMapOfAnything(map[string]interface{}{"operationId": "listPipelines"})
+	opPipelines.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterOrder,
+		queryParameterPage, queryParameterLimit)
+	_ = reflector.SetRequest(&opPipelines, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opPipelines, []types.Pipeline{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/pipelines", opPipelines)
+
 	opServiceAccounts := openapi3.Operation{}
 	opServiceAccounts.WithTags("space")
 	opServiceAccounts.WithMapOfAnything(map[string]interface{}{"operationId": "listServiceAccounts"})
