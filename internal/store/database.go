@@ -453,10 +453,13 @@ type (
 		Update(context.Context, *types.Pipeline) (*types.Pipeline, error)
 
 		// List lists the pipelines present in a parent space ID in the datastore.
-		List(context.Context, int64, *types.PipelineFilter) ([]*types.Pipeline, error)
+		List(context.Context, int64, *types.PipelineFilter) ([]types.Pipeline, error)
 
 		// Delete deletes a pipeline ID from the datastore.
 		Delete(context.Context, int64) error
+
+		// DeleteByUID deletes a pipeline with a given UID in a space
+		DeleteByUID(context.Context, int64, string) error
 	}
 
 	// TODO: Implement the execution store interface

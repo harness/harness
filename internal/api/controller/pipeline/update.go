@@ -18,9 +18,13 @@ type UpdateInput struct {
 	ConfigPath  string `json:"config_path"`
 }
 
-// Update updates a repository.
-func (c *Controller) Update(ctx context.Context, session *auth.Session,
-	spaceRef string, uid string, in *UpdateInput) (*types.Pipeline, error) {
+// Update updates a pipeline.
+func (c *Controller) Update(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	uid string,
+	in *UpdateInput) (*types.Pipeline, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err

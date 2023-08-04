@@ -14,7 +14,7 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 )
 
-// HandleFind writes json-encoded repository information to the http response body.
+// HandleFind finds a pipeline from the database.
 func HandleFind(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

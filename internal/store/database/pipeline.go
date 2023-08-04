@@ -188,7 +188,7 @@ func (s *pipelineStore) Update(ctx context.Context, pipeline *types.Pipeline) (*
 }
 
 // List lists all the pipelines present in a space
-func (s *pipelineStore) List(ctx context.Context, parentID int64, opts *types.PipelineFilter) ([]*types.Pipeline, error) {
+func (s *pipelineStore) List(ctx context.Context, parentID int64, opts *types.PipelineFilter) ([]types.Pipeline, error) {
 	stmt := database.Builder.
 		Select(pipelineColumns).
 		From("pipelines").
@@ -208,7 +208,7 @@ func (s *pipelineStore) List(ctx context.Context, parentID int64, opts *types.Pi
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := []*types.Pipeline{}
+	dst := []types.Pipeline{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}
@@ -225,6 +225,21 @@ func (s *pipelineStore) Delete(ctx context.Context, id int64) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	if _, err := db.ExecContext(ctx, pipelineDeleteStmt, id); err != nil {
+		return database.ProcessSQLErrorf(err, "Could not delete pipeline")
+	}
+
+	return nil
+}
+
+// DeleteByUID deletes a pipeline with a given UID in a space
+func (s *pipelineStore) DeleteByUID(ctx context.Context, spaceID int64, uid string) error {
+	const pipelineDeleteStmt = `
+	DELETE FROM pipelines
+	WHERE pipeline_parent_id = $1 AND pipeline_uid = $1`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if _, err := db.ExecContext(ctx, pipelineDeleteStmt, spaceID, uid); err != nil {
 		return database.ProcessSQLErrorf(err, "Could not delete pipeline")
 	}
 

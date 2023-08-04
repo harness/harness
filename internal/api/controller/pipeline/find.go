@@ -11,7 +11,7 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-// Find finds a repo.
+// Find finds a pipeline.
 func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string, uid string) (*types.Pipeline, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
