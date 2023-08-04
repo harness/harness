@@ -348,6 +348,7 @@ func (s *PullReqStore) UpdateMergeCheckStatus(
 	SET
 		 pullreq_updated = $1
 		,pullreq_merge_check_status = $2
+		,pullreq_version = pullreq_version + 1
 	WHERE pullreq_target_repo_id = $3 AND
 		  pullreq_target_branch = $4 AND
 		  pullreq_state not in ($5, $6)`
