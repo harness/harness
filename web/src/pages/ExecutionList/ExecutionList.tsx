@@ -149,12 +149,12 @@ const ExecutionList = () => {
                 className={css.table}
                 columns={columns}
                 data={executions || []}
-                onRowClick={pipelineInfo =>
+                onRowClick={executionInfo =>
                   history.push(
                     routes.toCODEExecution({
-                      space: pipelineInfo.spaceUid,
-                      pipeline: pipelineInfo.pipelineUid,
-                      execution: pipelineInfo.uid
+                      space: executionInfo.spaceUid,
+                      pipeline: executionInfo.pipelineUid,
+                      execution: executionInfo.uid
                     })
                   )
                 }

@@ -32,6 +32,7 @@ interface Pipeline {
   updated: number
   description?: string
   isPublic?: boolean
+  spaceUid: string
 }
 
 const pipelines: Pipeline[] = [
@@ -41,7 +42,8 @@ const pipelines: Pipeline[] = [
     name: 'Pipeline 1',
     updated: 1687234800,
     description: 'This is a description',
-    isPublic: true
+    isPublic: true,
+    spaceUid: 'root'
   },
   {
     id: 2,
@@ -49,7 +51,8 @@ const pipelines: Pipeline[] = [
     name: 'Pipeline 2',
     updated: 1730275200,
     description: 'This is a description',
-    isPublic: true
+    isPublic: true,
+    spaceUid: 'root'
   },
   {
     id: 3,
@@ -57,7 +60,8 @@ const pipelines: Pipeline[] = [
     name: 'Pipeline 3',
     updated: 1773315600,
     description: 'This is a description',
-    isPublic: false
+    isPublic: false,
+    spaceUid: 'root'
   }
 ]
 
@@ -142,7 +146,7 @@ const PipelineList = () => {
                 columns={columns}
                 data={pipelines || []}
                 onRowClick={pipelineInfo =>
-                  history.push(routes.toCODEExecutions({ space: 'root', pipeline: pipelineInfo.uid as string }))
+                  history.push(routes.toCODEExecutions({ space: pipelineInfo.spaceUid, pipeline: pipelineInfo.uid }))
                 }
                 getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
               />

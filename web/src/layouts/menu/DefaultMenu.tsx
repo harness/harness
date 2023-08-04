@@ -1,18 +1,20 @@
 import React, { useMemo, useState } from 'react'
 import { Container, Layout } from '@harness/uicore'
 import { Render } from 'react-jsx-match'
-import { useHistory, useRouteMatch } from 'react-router-dom'
+import { useHistory, useRouteMatch, useParams } from 'react-router-dom'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { routes } from 'RouteDefinitions'
 import type { TypesSpace } from 'services/code'
 import { SpaceSelector } from 'components/SpaceSelector/SpaceSelector'
 import { useFeatureFlag } from 'hooks/useFeatureFlag'
+import type { CODEProps } from 'RouteDefinitions'
 import { NavMenuItem } from './NavMenuItem'
 import css from './DefaultMenu.module.scss'
 
 export const DefaultMenu: React.FC = () => {
   const history = useHistory()
+  const params = useParams<CODEProps>()
   const [selectedSpace, setSelectedSpace] = useState<TypesSpace | undefined>()
   const { repoMetadata, gitRef, commitRef } = useGetRepositoryMetadata()
   const { getString } = useStrings()
@@ -22,7 +24,7 @@ export const DefaultMenu: React.FC = () => {
     () => routeMatch.path === '/:space/:repoName' || routeMatch.path.startsWith('/:space/:repoName/edit'),
     [routeMatch]
   )
-  const isPipelineSelected = routeMatch.path.startsWith('/pipelines/:space/:pipeline')
+  const isPipelineSelected = routeMatch.path.startsWith('/pipelines/:space*/pipeline/:pipeline')
 
   const { OPEN_SOURCE_PIPELINES, OPEN_SOURCE_SECRETS } = useFeatureFlag()
 
@@ -161,7 +163,10 @@ export const DefaultMenu: React.FC = () => {
                   isSubLink
                   isSelected={isPipelineSelected}
                   label={getString('pageTitle.executions')}
-                  to={routes.toCODERepository({ repoPath, gitRef: commitRef || gitRef })}
+                  to={routes.toCODEExecutions({
+                    space: selectedSpace?.path as string,
+                    pipeline: params?.pipeline || ''
+                  })}
                 />
               </Layout.Vertical>
             </Container>

@@ -12,18 +12,14 @@ export interface CODEProps {
   pullRequestSection?: string
   webhookId?: string
   pipeline?: string
-  pipelinePath?: string
   execution?: string
-  executionPath?: string
 }
 
 export interface CODEQueryProps {
   query?: string
 }
 
-export const pathProps: Readonly<
-  Omit<Required<CODEProps>, 'repoPath' | 'branch' | 'tags' | 'pipelinePath' | 'executionPath'>
-> = {
+export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch' | 'tags'>> = {
   space: ':space*',
   repoName: ':repoName',
   gitRef: ':gitRef*',
@@ -73,8 +69,8 @@ export interface CODERoutes {
   toCODEWebhookDetails: (args: Required<Pick<CODEProps, 'repoPath' | 'webhookId'>>) => string
   toCODESettings: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
 
-  toCODEExecutions: (args: Required<Pick<CODEProps, 'pipelinePath'>>) => string
-  toCODEExecution: (args: Required<Pick<CODEProps, 'executionPath'>>) => string
+  toCODEExecutions: (args: Required<Pick<CODEProps, 'space' | 'pipeline'>>) => string
+  toCODEExecution: (args: Required<Pick<CODEProps, 'space' | 'pipeline' | 'execution'>>) => string
 }
 
 export const routes: CODERoutes = {
@@ -116,6 +112,6 @@ export const routes: CODERoutes = {
   toCODEWebhookNew: ({ repoPath }) => `/${repoPath}/webhooks/new`,
   toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`,
 
-  toCODEExecutions: ({ pipelinePath }) => `/pipelines/${pipelinePath}`,
-  toCODEExecution: ({ executionPath }) => `/pipelines/${executionPath}`
+  toCODEExecutions: ({ space, pipeline }) => `/pipelines/${space}/pipeline/${pipeline}`,
+  toCODEExecution: ({ space, pipeline, execution }) => `/pipelines/${space}/pipeline/${pipeline}/execution/${execution}`
 }
