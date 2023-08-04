@@ -34,8 +34,6 @@ import Execution from 'pages/Execution/Execution'
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
   const repoPath = `${pathProps.space}/${pathProps.repoName}`
-  const pipelinePath = `${pathProps.space}/${pathProps.pipeline}`
-  const executionPath = `${pathProps.space}/${pathProps.pipeline}/${pathProps.execution}`
 
   const { OPEN_SOURCE_PIPELINES, OPEN_SOURCE_SECRETS } = useFeatureFlag()
 
@@ -159,15 +157,21 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         </Route>
 
         {OPEN_SOURCE_PIPELINES && (
-          <Route path={routes.toCODEPipelines({ space: pathProps.space })} exact>
-            <LayoutWithSideNav title={getString('pageTitle.pipelines')}>
-              <PipelineList />
+          <Route
+            path={routes.toCODEExecution({
+              space: pathProps.space,
+              pipeline: pathProps.pipeline,
+              execution: pathProps.execution
+            })}
+            exact>
+            <LayoutWithSideNav title={getString('pageTitle.executions')}>
+              <Execution />
             </LayoutWithSideNav>
           </Route>
         )}
 
         {OPEN_SOURCE_PIPELINES && (
-          <Route path={routes.toCODEExecutions({ pipelinePath })} exact>
+          <Route path={routes.toCODEExecutions({ space: pathProps.space, pipeline: pathProps.pipeline })} exact>
             <LayoutWithSideNav title={getString('pageTitle.executions')}>
               <ExecutionList />
             </LayoutWithSideNav>
@@ -175,13 +179,9 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         )}
 
         {OPEN_SOURCE_PIPELINES && (
-          <Route
-            path={routes.toCODEExecution({
-              executionPath
-            })}
-            exact>
-            <LayoutWithSideNav title={getString('pageTitle.executions')}>
-              <Execution />
+          <Route path={routes.toCODEPipelines({ space: pathProps.space })} exact>
+            <LayoutWithSideNav title={getString('pageTitle.pipelines')}>
+              <PipelineList />
             </LayoutWithSideNav>
           </Route>
         )}
