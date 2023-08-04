@@ -52,7 +52,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   const showSpinner = useMemo(() => loading && !activities, [loading, activities])
   const { data: reviewers, refetch: refetchReviewers } = useGet<Unknown[]>({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`,
-    debounce: 1000
+    debounce: 500
   })
   const { showError } = useToaster()
   const [dateOrderSort, setDateOrderSort] = useState<boolean | 'desc' | 'asc'>(orderSortDate.ASC)

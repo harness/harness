@@ -57,9 +57,17 @@
     min-height: 50px;
     max-height: 300px;
     overflow-y: auto;
+
+    .menuItem:hover {
+      background: var(--primary-5);
+    }
   }
 
   .newBtnText {
     font-weight: normal;
   }
+}
+
+.avatar {
+  padding: var(--spacing-small) 0;
 }

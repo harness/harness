@@ -9,6 +9,8 @@ declare const styles: {
   readonly branchesOnly: string
   readonly popover: string
   readonly listContainer: string
+  readonly menuItem: string
   readonly newBtnText: string
+  readonly avatar: string
 }
 export default styles
