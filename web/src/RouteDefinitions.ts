@@ -12,18 +12,14 @@ export interface CODEProps {
   pullRequestSection?: string
   webhookId?: string
   pipeline?: string
-  pipelinePath?: string
   execution?: string
-  executionPath?: string
 }
 
 export interface CODEQueryProps {
   query?: string
 }
 
-export const pathProps: Readonly<
-  Omit<Required<CODEProps>, 'repoPath' | 'branch' | 'tags' | 'pipelinePath' | 'executionPath'>
-> = {
+export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch' | 'tags'>> = {
   space: ':space*',
   repoName: ':repoName',
   gitRef: ':gitRef*',
