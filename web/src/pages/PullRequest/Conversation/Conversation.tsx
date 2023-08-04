@@ -51,7 +51,8 @@ export const Conversation: React.FC<ConversationProps> = ({
   })
   const showSpinner = useMemo(() => loading && !activities, [loading, activities])
   const { data: reviewers, refetch: refetchReviewers } = useGet<Unknown[]>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`,
+    debounce: 1000
   })
   const { showError } = useToaster()
   const [dateOrderSort, setDateOrderSort] = useState<boolean | 'desc' | 'asc'>(orderSortDate.ASC)
@@ -133,7 +134,7 @@ export const Conversation: React.FC<ConversationProps> = ({
     if (prHasChanged) {
       refetchActivities()
     }
-  }, [prHasChanged, refetchActivities])
+  }, [prHasChanged, refetchActivities, refetchReviewers])
 
   return (
     <PullRequestTabContentWrapper loading={showSpinner} error={error} onRetry={refetchActivities}>
@@ -349,14 +350,13 @@ export const Conversation: React.FC<ConversationProps> = ({
                   />
                 </Layout.Vertical>
               </Container>
-              {repoMetadata ? (
-                <PullRequestSideBar
-                  reviewers={reviewers}
-                  repoMetadata={repoMetadata}
-                  pullRequestMetadata={pullRequestMetadata}
-                  refetchReviewers={refetchReviewers}
-                />
-              ) : null}
+
+              <PullRequestSideBar
+                reviewers={reviewers}
+                repoMetadata={repoMetadata}
+                pullRequestMetadata={pullRequestMetadata}
+                refetchReviewers={refetchReviewers}
+              />
             </Layout.Horizontal>
           </Container>
         </Layout.Vertical>
