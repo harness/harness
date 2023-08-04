@@ -92,6 +92,7 @@ pageTitle:
   changePassword: Change Password
   pipelines: Pipelines
   secrets: Secrets
+  executions: Executions
 repos:
   name: Repo Name
   data: Repo Data
@@ -592,3 +593,11 @@ repoDelete:
   deleteConfirm2: To confirm, type "{{repo}}" in the box below
   deleteToastSuccess: Repository deleted successfully
   deleteConfirmButton2: Delete this repository
+pipelines:
+  noData: There are no pipelines :(
+  newPipelineButton: New Pipeline
+  name: Pipeline Name
+executions:
+  noData: There are no executions :(
+  newExecutionButton: New Execution
+  name: Execution Name
