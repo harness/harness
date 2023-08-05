@@ -64,8 +64,7 @@
     overflow-y: auto;
 
     .menuItem:hover {
-      background: unset;
-      border: 1px solid var(--primary-7);
+      background: rgba(0, 146, 228, 0.0392156863) !important;
       border-radius: 4px;
     }
   }
