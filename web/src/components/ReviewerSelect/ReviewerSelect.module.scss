@@ -15,6 +15,11 @@
     font-weight: normal;
   }
 }
+.layout {
+  > .TextInput--main {
+    margin-bottom: var(--spacing-1) !important;
+  }
+}
 
 .main {
   .input {
@@ -59,7 +64,9 @@
     overflow-y: auto;
 
     .menuItem:hover {
-      background: var(--primary-5);
+      background: unset;
+      border: 1px solid var(--primary-7);
+      border-radius: 4px;
     }
   }
 

@@ -88,7 +88,7 @@ const PopoverContent: React.FC<ReviewerSelectProps> = ({ repoMetadata, gitRef, o
 
   return (
     <Container padding="medium" className={css.main}>
-      <Layout.Vertical spacing="small">
+      <Layout.Vertical className={css.layout}>
         <TextInput
           className={css.input}
           inputRef={ref => (inputRef.current = ref)}
@@ -154,7 +154,7 @@ function GitRefList({
       )}
 
       {!!data?.length && (
-        <Container className={css.listContainer} padding={{ top: 'small', bottom: 'small' }}>
+        <Container className={css.listContainer}>
           <Menu>
             {data.map(({ display_name, email, id }) => (
               <MenuItem
