@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS pipelines (
     pipeline_repo_type TEXT NOT NULL,
     pipeline_repo_name TEXT,
     pipeline_default_branch TEXT,
-    pipeline_config_path TEXT,
+    pipeline_config_path TEXT NOT NULL,
     pipeline_created INTEGER,
     pipeline_updated INTEGER,
     pipeline_version INTEGER,

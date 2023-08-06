@@ -462,8 +462,22 @@ type (
 		DeleteByUID(context.Context, int64, string) error
 	}
 
-	// TODO: Implement the execution store interface
 	ExecutionStore interface {
+		// Find returns a execution given a pipeline and an execution number
+		Find(context.Context, int64, int64) (*types.Execution, error)
+
+		// Create creates a new execution in the datastore.
+		Create(context.Context, *types.Execution) error
+
+		// Update tries to update an execution in the datastore with optimistic locking.
+		Update(context.Context, *types.Execution) (*types.Execution, error)
+
+		// List lists the executions for a given pipeline ID
+		List(context.Context, int64, *types.ExecutionFilter) ([]types.Execution, error)
+
+		// Delete deletes an execution given a pipeline ID and an execution number
+		Delete(context.Context, int64, int64) error
+
 		// Find returns a build from the datastore.
 		// Find(context.Context, int64) (*types.Execution, error)
 

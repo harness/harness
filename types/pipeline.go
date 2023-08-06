@@ -22,8 +22,17 @@ type Pipeline struct {
 	Version       int64        `db:"pipeline_version"         json:"version"`
 }
 
-// RepoFilter stores repo query parameters.
+// PipelineFilter stores pipeline query parameters.
 type PipelineFilter struct {
+	Page  int        `json:"page"`
+	Size  int        `json:"size"`
+	Query string     `json:"query"`
+	Order enum.Order `json:"order"`
+}
+
+// TODO: Move this into separate file
+// ExecutionFilter stores execution query parameters.
+type ExecutionFilter struct {
 	Page  int        `json:"page"`
 	Size  int        `json:"size"`
 	Query string     `json:"query"`

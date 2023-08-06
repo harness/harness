@@ -39,6 +39,8 @@ func HandleFind(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 	}
 }
 
+// SplitRef splits apart a ref into two parts, otherwise returns an error
+// For example: path/to/space/uid will get split into path/to/space and uid
 func SplitRef(ref string) (string, string, error) {
 	lastIndex := strings.LastIndex(ref, "/")
 	if lastIndex == -1 {
