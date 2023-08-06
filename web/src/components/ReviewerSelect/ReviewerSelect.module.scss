@@ -15,6 +15,11 @@
     font-weight: normal;
   }
 }
+.layout {
+  > .TextInput--main {
+    margin-bottom: var(--spacing-1) !important;
+  }
+}
 
 .main {
   .input {
@@ -57,9 +62,18 @@
     min-height: 50px;
     max-height: 300px;
     overflow-y: auto;
+
+    .menuItem:hover {
+      background: rgba(0, 146, 228, 0.0392156863) !important;
+      border-radius: 4px;
+    }
   }
 
   .newBtnText {
     font-weight: normal;
   }
+}
+
+.avatar {
+  padding: var(--spacing-small) 0;
 }
