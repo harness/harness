@@ -183,7 +183,7 @@ func (s *pipelineStore) Update(ctx context.Context, pipeline *types.Pipeline) (*
 		return nil, gitness_store.ErrVersionConflict
 	}
 
-	return s.Find(ctx, pipeline.ID)
+	return pipeline, nil
 
 }
 

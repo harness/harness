@@ -11,7 +11,6 @@ import (
 
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 )
 
@@ -43,34 +42,30 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, spaceRef
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	var execution *types.Execution
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
-		now := time.Now().UnixMilli()
-		pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
-		if err != nil {
-			return err
-		}
-		fmt.Println("seq before: ", pipeline.Seq)
-		pipeline, err = c.pipelineStore.Increment(ctx, pipeline)
-		if err != nil {
-			return err
-		}
-		fmt.Println("seq after: ", pipeline.Seq)
-		execution = &types.Execution{
-			Number:     pipeline.Seq,
-			Status:     in.Status,
-			RepoID:     pipeline.RepoID,
-			PipelineID: pipeline.ID,
-			Created:    now,
-			Updated:    now,
-			Version:    0,
-		}
-		err = c.executionStore.Create(ctx, execution)
-		if err != nil {
-			return fmt.Errorf("execution creation failed: %w", err)
-		}
-		return nil
-	})
+	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	pipeline, err = c.pipelineStore.Increment(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now().UnixMilli()
+	execution := &types.Execution{
+		Number:     pipeline.Seq,
+		Status:     in.Status,
+		RepoID:     pipeline.RepoID,
+		PipelineID: pipeline.ID,
+		Created:    now,
+		Updated:    now,
+		Version:    0,
+	}
+	err = c.executionStore.Create(ctx, execution)
+	if err != nil {
+		return nil, fmt.Errorf("execution creation failed: %w", err)
+	}
 
 	return execution, nil
 }

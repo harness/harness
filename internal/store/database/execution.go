@@ -280,7 +280,7 @@ func (s *executionStore) Update(ctx context.Context, execution *types.Execution)
 		return nil, gitness_store.ErrVersionConflict
 	}
 
-	return s.Find(ctx, execution.PipelineID, execution.Number)
+	return execution, nil
 }
 
 // List lists the executions for a given pipeline ID
