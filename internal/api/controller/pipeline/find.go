@@ -7,8 +7,10 @@ package pipeline
 import (
 	"context"
 
+	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 // Find finds a pipeline.
@@ -17,10 +19,9 @@ func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef s
 	if err != nil {
 		return nil, err
 	}
-	// TODO: Add auth
-	// if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceDelete, false); err != nil {
-	// 	return err
-	// }
-	// TODO: uncomment when soft delete is implemented
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, uid, enum.PermissionPipelineView)
+	if err != nil {
+		return nil, err
+	}
 	return c.pipelineStore.FindByUID(ctx, space.ID, uid)
 }

@@ -8,7 +8,9 @@ import (
 	"context"
 	"fmt"
 
+	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/types/enum"
 )
 
 // Delete deletes a pipeline.
@@ -17,12 +19,13 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef
 	if err != nil {
 		return err
 	}
-	// TODO: Add auth
-	// if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceDelete, false); err != nil {
-	// 	return err
-	// }
+
 	// TODO: uncomment when soft delete is implemented
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
+	if err != nil {
+		return err
+	}
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineDelete)
 	if err != nil {
 		return err
 	}

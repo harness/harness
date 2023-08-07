@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/store/database/dbtx"
@@ -37,16 +38,16 @@ type CreateInput struct {
 
 // Create creates a new pipeline
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Pipeline, error) {
-	// TODO: Add auth
-	// parentSpace, err := c.getSpaceCheckAuthRepoCreation(ctx, session, in.ParentRef)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	parentSpace, err := c.spaceStore.FindByRef(ctx, in.ParentRef)
 	if err != nil {
 		return nil, fmt.Errorf("could not find parent by ref: %w", err)
 	}
+
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, parentSpace.Path, in.UID, enum.PermissionPipelineEdit)
+	if err != nil {
+		return nil, err
+	}
+
 	var repoID int64
 
 	if in.RepoType == enum.ScmTypeGitness {
@@ -91,6 +92,31 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	})
 
 	return pipeline, nil
+}
+
+func (c *Controller) getSpaceCheckAuthRepoCreation(
+	ctx context.Context,
+	session *auth.Session,
+	parentRef string,
+) (*types.Space, error) {
+	space, err := c.spaceStore.FindByRef(ctx, parentRef)
+	if err != nil {
+		return nil, fmt.Errorf("parent space not found: %w", err)
+	}
+
+	// create is a special case - check permission without specific resource
+	scope := &types.Scope{SpacePath: space.Path}
+	resource := &types.Resource{
+		Type: enum.ResourceTypeRepo,
+		Name: "",
+	}
+
+	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionRepoEdit)
+	if err != nil {
+		return nil, fmt.Errorf("auth check failed: %w", err)
+	}
+
+	return space, nil
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {

@@ -9,9 +9,11 @@ import (
 	"fmt"
 	"time"
 
+	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 var (
@@ -27,12 +29,6 @@ type CreateInput struct {
 
 // Create creates a new execution
 func (c *Controller) Create(ctx context.Context, session *auth.Session, spaceRef string, uid string, in *CreateInput) (*types.Execution, error) {
-	// TODO: Add auth
-	// parentSpace, err := c.getSpaceCheckAuthRepoCreation(ctx, session, in.ParentRef)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("could not find space: %w", err)
@@ -43,6 +39,11 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, spaceRef
 	}
 
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineExecute)
 	if err != nil {
 		return nil, err
 	}

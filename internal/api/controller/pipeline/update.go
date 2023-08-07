@@ -7,8 +7,10 @@ package pipeline
 import (
 	"context"
 
+	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 // UpdateInput is used for updating a repo.
@@ -30,6 +32,11 @@ func (c *Controller) Update(
 		return nil, err
 	}
 
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, uid, enum.PermissionPipelineEdit)
+	if err != nil {
+		return nil, err
+	}
+
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
 	if err != nil {
 		return nil, err
@@ -44,11 +51,6 @@ func (c *Controller) Update(
 	if in.ConfigPath != "" {
 		pipeline.ConfigPath = in.ConfigPath
 	}
-
-	// TODO: Add auth
-	// if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoEdit, false); err != nil {
-	// 	return nil, err
-	// }
 
 	return c.pipelineStore.Update(ctx, pipeline)
 }

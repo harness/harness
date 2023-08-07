@@ -6,12 +6,13 @@ package execution
 import (
 	"context"
 
+	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-// ListRepositories lists the repositories of a space.
-// TODO: move to different file
+// List lists the executions in a pipeline.
 func (c *Controller) List(
 	ctx context.Context,
 	session *auth.Session,
@@ -27,10 +28,11 @@ func (c *Controller) List(
 		return nil, 0, err
 	}
 
-	// TODO: Add auth
-	// if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionRepoView, true); err != nil {
-	// 	return nil, 0, err
-	// }
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineView)
+	if err != nil {
+		return nil, 0, err
+	}
+
 	executions, err := c.executionStore.List(ctx, pipeline.ID, filter)
 	if err != nil {
 		return nil, 0, err

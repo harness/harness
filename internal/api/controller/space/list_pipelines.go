@@ -6,12 +6,13 @@ package space
 import (
 	"context"
 
+	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
-// ListRepositories lists the repositories of a space.
-// TODO: move to different file
+// ListPipelines lists the pipelines in a space.
 func (c *Controller) ListPipelines(ctx context.Context, session *auth.Session,
 	spaceRef string, filter *types.PipelineFilter) ([]types.Pipeline, int, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
@@ -19,10 +20,10 @@ func (c *Controller) ListPipelines(ctx context.Context, session *auth.Session,
 		return nil, 0, err
 	}
 
-	// TODO: Add auth
-	// if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionRepoView, true); err != nil {
-	// 	return nil, 0, err
-	// }
+	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, true)
+	if err != nil {
+		return nil, 0, err
+	}
 	pipelines, err := c.pipelineStore.List(ctx, space.ID, filter)
 	if err != nil {
 		return nil, 0, err
