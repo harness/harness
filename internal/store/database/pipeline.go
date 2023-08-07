@@ -245,3 +245,22 @@ func (s *pipelineStore) DeleteByUID(ctx context.Context, spaceID int64, uid stri
 
 	return nil
 }
+
+// Increment increments the pipeline sequence number. It will keep retrying in case
+// of optimistic lock errors.
+func (s *pipelineStore) Increment(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error) {
+	for {
+		pipeline.Seq++
+		pipeline, err := s.Update(ctx, pipeline)
+		if err == nil {
+			return pipeline, nil
+		}
+		if err != nil && err != gitness_store.ErrVersionConflict {
+			return pipeline, err
+		}
+		pipeline, err = s.Find(ctx, pipeline.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+}

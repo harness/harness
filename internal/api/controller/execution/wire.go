@@ -20,9 +20,9 @@ func ProvideController(db *sqlx.DB,
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
 	repoStore store.RepoStore,
+	pipelineStore store.PipelineStore,
 	spaceStore store.SpaceStore,
 ) *Controller {
 	return NewController(db, authorizer, executionStore,
-		repoStore,
-		spaceStore)
+		repoStore, pipelineStore, spaceStore)
 }

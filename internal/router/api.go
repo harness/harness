@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/api/handler/account"
 	handlercheck "github.com/harness/gitness/internal/api/handler/check"
+	handlerexecution "github.com/harness/gitness/internal/api/handler/execution"
 	handlergithook "github.com/harness/gitness/internal/api/handler/githook"
 	handlerpipeline "github.com/harness/gitness/internal/api/handler/pipeline"
 	handlerprincipal "github.com/harness/gitness/internal/api/handler/principal"
@@ -284,14 +285,20 @@ func setupPipelines(r chi.Router, pipelineCtrl *pipeline.Controller, executionCt
 			r.Get("/", handlerpipeline.HandleFind(pipelineCtrl))
 			r.Patch("/", handlerpipeline.HandleUpdate(pipelineCtrl))
 			r.Delete("/", handlerpipeline.HandleDelete(pipelineCtrl))
-			setupExecutions(r, executionCtrl)
+			setupExecutions(r, pipelineCtrl, executionCtrl)
 		})
 	})
 }
 
-func setupExecutions(r chi.Router, executionCtrl *execution.Controller) {
+func setupExecutions(r chi.Router, pipelineCtrl *pipeline.Controller, executionCtrl *execution.Controller) {
 	r.Route("/executions", func(r chi.Router) {
-
+		r.Get("/", handlerexecution.HandleList(executionCtrl))
+		r.Post("/", handlerexecution.HandleCreate(executionCtrl))
+		r.Route(fmt.Sprintf("/{%s}", request.ExecutionNumber), func(r chi.Router) {
+			r.Get("/", handlerexecution.HandleFind(executionCtrl))
+			r.Patch("/", handlerexecution.HandleUpdate(executionCtrl))
+			r.Delete("/", handlerexecution.HandleDelete(executionCtrl))
+		})
 	})
 }
 

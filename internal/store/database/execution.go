@@ -110,9 +110,8 @@ const (
 		execution_version
 	`
 
-	executionInsterStmt = `
+	executionInsertStmt = `
 	INSERT INTO executions (
-		execution_id,
 		execution_pipeline_id,
 		execution_repo_id,
 		execution_trigger,
@@ -148,7 +147,6 @@ const (
 		execution_updated,
 		execution_version
 	) VALUES (
-		:execution_id,
 		:execution_pipeline_id,
 		:execution_repo_id,
 		:execution_trigger,
@@ -242,7 +240,7 @@ func (s *executionStore) Find(ctx context.Context, parentID int64, n int64) (*ty
 func (s *executionStore) Create(ctx context.Context, execution *types.Execution) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	query, arg, err := db.BindNamed(executionInsterStmt, execution)
+	query, arg, err := db.BindNamed(executionInsertStmt, execution)
 	if err != nil {
 		return database.ProcessSQLErrorf(err, "Failed to bind execution object")
 	}
@@ -282,7 +280,7 @@ func (s *executionStore) Update(ctx context.Context, execution *types.Execution)
 		return nil, gitness_store.ErrVersionConflict
 	}
 
-	return s.Find(ctx, execution.Parent, execution.Number)
+	return s.Find(ctx, execution.PipelineID, execution.Number)
 }
 
 // List lists the executions for a given pipeline ID

@@ -7,11 +7,13 @@ package request
 import (
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 const (
 	PipelinePathRef = "pipeline_ref"
 	PipelineUID     = "pipeline_uid"
+	ExecutionNumber = "execution_number"
 )
 
 func GetPipelinePathRefFromPath(r *http.Request) (string, error) {
@@ -22,6 +24,22 @@ func GetPipelinePathRefFromPath(r *http.Request) (string, error) {
 
 	// paths are unescaped
 	return url.PathUnescape(rawRef)
+}
+
+// TODO: Move into separate execution folder
+func GetExecutionNumberFromPath(r *http.Request) (int64, error) {
+	rawRef, err := PathParamOrError(r, ExecutionNumber)
+	if err != nil {
+		return 0, err
+	}
+
+	n, err := strconv.Atoi(rawRef)
+	if err != nil {
+		return 0, err
+	}
+
+	// paths are unescaped
+	return int64(n), nil
 }
 
 func GetPipelineUIDFromPath(r *http.Request) (string, error) {

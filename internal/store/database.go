@@ -460,6 +460,9 @@ type (
 
 		// DeleteByUID deletes a pipeline with a given UID in a space
 		DeleteByUID(context.Context, int64, string) error
+
+		// Incremenet increments the sequence number of the pipeline
+		Increment(context.Context, *types.Pipeline) (*types.Pipeline, error)
 	}
 
 	ExecutionStore interface {
