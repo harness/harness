@@ -10,8 +10,6 @@ import (
 	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
 // HandleListRepos writes json-encoded list of repos in the request body.
@@ -30,13 +28,9 @@ func HandleList(executionCtrl *execution.Controller) http.HandlerFunc {
 			return
 		}
 
-		// TODO: Use execution filter
-		filter := request.ParseRepoFilter(r)
-		if filter.Order == enum.OrderDefault {
-			filter.Order = enum.OrderAsc
-		}
+		filter := request.ParseExecutionFilter(r)
 
-		repos, totalCount, err := executionCtrl.List(ctx, session, spaceRef, pipelineUID, &types.ExecutionFilter{})
+		repos, totalCount, err := executionCtrl.List(ctx, session, spaceRef, pipelineUID, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

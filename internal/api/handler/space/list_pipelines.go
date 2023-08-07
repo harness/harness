@@ -10,8 +10,6 @@ import (
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
 // HandleListRepos writes json-encoded list of repos in the request body.
@@ -25,13 +23,8 @@ func HandleListPipelines(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		// TODO: Use pipeline filter
-		filter := request.ParseRepoFilter(r)
-		if filter.Order == enum.OrderDefault {
-			filter.Order = enum.OrderAsc
-		}
-
-		repos, totalCount, err := spaceCtrl.ListPipelines(ctx, session, spaceRef, &types.PipelineFilter{})
+		filter := request.ParsePipelineFilter(r)
+		repos, totalCount, err := spaceCtrl.ListPipelines(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

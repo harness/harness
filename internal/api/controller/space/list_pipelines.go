@@ -28,5 +28,6 @@ func (c *Controller) ListPipelines(ctx context.Context, session *auth.Session,
 	if err != nil {
 		return nil, 0, err
 	}
+	// TODO: This should be total count, not returned count
 	return pipelines, len(pipelines), nil
 }

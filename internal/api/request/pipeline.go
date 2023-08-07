@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/harness/gitness/types"
 )
 
 const (
@@ -26,7 +28,6 @@ func GetPipelinePathRefFromPath(r *http.Request) (string, error) {
 	return url.PathUnescape(rawRef)
 }
 
-// TODO: Move into separate execution folder
 func GetExecutionNumberFromPath(r *http.Request) (int64, error) {
 	rawRef, err := PathParamOrError(r, ExecutionNumber)
 	if err != nil {
@@ -52,21 +53,19 @@ func GetPipelineUIDFromPath(r *http.Request) (string, error) {
 	return url.PathUnescape(rawRef)
 }
 
-// TODO: Add list filters
-// // ParseSortRepo extracts the repo sort parameter from the url.
-// func ParseSortRepo(r *http.Request) enum.RepoAttr {
-// 	return enum.ParseRepoAtrr(
-// 		r.URL.Query().Get(QueryParamSort),
-// 	)
-// }
+// ParsePipelineFilter extracts the pipeline filter from the url.
+func ParsePipelineFilter(r *http.Request) *types.PipelineFilter {
+	return &types.PipelineFilter{
+		Query: ParseQuery(r),
+		Page:  ParsePage(r),
+		Size:  ParseLimit(r),
+	}
+}
 
-// // ParseRepoFilter extracts the repository filter from the url.
-// func ParseRepoFilter(r *http.Request) *types.RepoFilter {
-// 	return &types.RepoFilter{
-// 		Query: ParseQuery(r),
-// 		Order: ParseOrder(r),
-// 		Page:  ParsePage(r),
-// 		Sort:  ParseSortRepo(r),
-// 		Size:  ParseLimit(r),
-// 	}
-// }
+// ParseExecutionFilter extracts the execution filter from the url.
+func ParseExecutionFilter(r *http.Request) *types.ExecutionFilter {
+	return &types.ExecutionFilter{
+		Page: ParsePage(r),
+		Size: ParseLimit(r),
+	}
+}
