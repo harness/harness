@@ -76,7 +76,7 @@ export const Changes: React.FC<ChangesProps> = ({
     refetch,
     response
   } = useGet<string>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/compare/${
+    path: `/api/v1/repos/${repoMetadata?.path}/+/diff/${
       pullRequestMetadata ? `${pullRequestMetadata.merge_base_sha}...${pullRequestMetadata.source_sha}` : `${targetBranch}...${sourceBranch}`
     }`,
     requestOptions: {

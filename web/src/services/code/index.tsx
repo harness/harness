@@ -1496,7 +1496,7 @@ export type RawDiffProps = Omit<GetProps<void, UsererrorError, void, RawDiffPath
 
 export const RawDiff = ({ repo_ref, range, ...props }: RawDiffProps) => (
   <Get<void, UsererrorError, void, RawDiffPathParams>
-    path={`/repos/${repo_ref}/compare/${range}`}
+    path={`/repos/${repo_ref}/diff/${range}`}
     base={getConfig('code')}
     {...props}
   />
@@ -1507,7 +1507,7 @@ export type UseRawDiffProps = Omit<UseGetProps<void, UsererrorError, void, RawDi
 
 export const useRawDiff = ({ repo_ref, range, ...props }: UseRawDiffProps) =>
   useGet<void, UsererrorError, void, RawDiffPathParams>(
-    (paramsInPath: RawDiffPathParams) => `/repos/${paramsInPath.repo_ref}/compare/${paramsInPath.range}`,
+    (paramsInPath: RawDiffPathParams) => `/repos/${paramsInPath.repo_ref}/diff/${paramsInPath.range}`,
     { base: getConfig('code'), pathParams: { repo_ref, range }, ...props }
   )
 
