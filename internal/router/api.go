@@ -58,7 +58,7 @@ type APIHandler interface {
 
 var (
 	// terminatedPathPrefixesAPI is the list of prefixes that will require resolving terminated paths.
-	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/"}
+	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/", "/v1/pipelines/"}
 )
 
 // NewAPIHandler returns a new APIHandler.
