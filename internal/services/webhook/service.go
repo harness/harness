@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"time"
 
@@ -105,6 +106,7 @@ func NewService(ctx context.Context, config Config,
 
 		config: config,
 	}
+	log.Ctx(ctx).Info().Msgf("Whitelisted internal URL patterns are %v", config.WhitelistedInternalUrlPattern)
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
 		func(r *gitevents.Reader) error {
