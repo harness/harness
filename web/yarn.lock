@@ -6891,6 +6891,11 @@ ibm-openapi-validator@^0.16.0:
     validator "^11.0.0"
     yaml-js "^0.2.3"
 
+iconoir-react@^6.11.0:
+  version "6.11.0"
+  resolved "https://registry.npmjs.org/iconoir-react/-/iconoir-react-6.11.0.tgz#a88d896148c8389138ec931ce7367f3abc6a7144"
+  integrity sha512-+1RgmEWh/9H0aYR2e8sDL5elDUYnkyOXO0E+RnwhkjhJY36Lge6r/9nv1n1FvDXoeFY48omkPUl8s/ciA0XOAg==
+
 iconv-lite@0.4.24, iconv-lite@^0.4.24:
   version "0.4.24"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.24.tgz#2022b4b25fbddc21d2f524974a474aafe733908b"

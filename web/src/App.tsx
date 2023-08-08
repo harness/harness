@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { RestfulProvider } from 'restful-react'
+import { IconoirProvider } from 'iconoir-react'
 import cx from 'classnames'
 import { Container } from '@harness/uicore'
 import { ModalProvider } from '@harness/use-modal'
@@ -72,7 +73,14 @@ const App: React.FC<AppProps> = React.memo(function App({
                     currentUser: defaultCurrentUser,
                     currentUserProfileURL
                   }}>
-                  <ModalProvider>{props.children ? props.children : <RouteDestinations />}</ModalProvider>
+                  <IconoirProvider
+                    iconProps={{
+                      strokeWidth: 1,
+                      width: '16px',
+                      height: '16px'
+                    }}>
+                    <ModalProvider>{props.children ? props.children : <RouteDestinations />}</ModalProvider>
+                  </IconoirProvider>
                 </AppContextProvider>
               </RestfulProvider>
             </AppErrorBoundary>

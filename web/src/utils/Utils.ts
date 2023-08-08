@@ -97,6 +97,21 @@ export const displayDateTime = (value: number): string | null => {
   return value ? moment.unix(value / 1000).format(DEFAULT_DATE_FORMAT) : null
 }
 
+export const timeDistance = (date1 = 0, date2 = 0) => {
+  let distance = Math.abs(date1 - date2)
+
+  if (!distance) {
+    return ''
+  }
+
+  const hours = Math.floor(distance / 3600000)
+  distance -= hours * 3600000
+  const minutes = Math.floor(distance / 60000)
+  distance -= minutes * 60000
+  const seconds = Math.floor(distance / 1000)
+  return `${hours ? hours + 'h ' : ''}${minutes ? minutes + 'm' : hours ? '0m' : ''} ${seconds}s`
+}
+
 const LOCALE = Intl.NumberFormat().resolvedOptions?.().locale || 'en-US'
 
 /**
@@ -275,6 +290,13 @@ export enum MergeCheckStatus {
   CONFLICT = 'conflict'
 }
 
+export enum PullRequestSection {
+  CONVERSATION = 'conversation',
+  COMMITS = 'commits',
+  FILES_CHANGED = 'changes',
+  CHECKS = 'checks'
+}
+
 /**
  * Convert number of bytes into human readable format
  *
@@ -292,4 +314,9 @@ export function formatBytes(bytes: number, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k))
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+}
+
+export enum PullRequestCheckType {
+  EXTERNAL = 'external',
+  PIPELINE = 'pipeline' // TODO: This is not yet supported by backend
 }

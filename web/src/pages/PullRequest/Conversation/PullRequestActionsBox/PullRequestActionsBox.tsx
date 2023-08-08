@@ -10,7 +10,7 @@ import {
   SplitButton,
   StringSubstitute,
   Text,
-  useToaster,
+  useToaster
 } from '@harness/uicore'
 import { useMutate } from 'restful-react'
 import { Case, Else, Match, Render, Truthy } from 'react-jsx-match'

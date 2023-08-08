@@ -162,6 +162,7 @@ export interface StringsMap {
   enterSecret: string
   enterTagPlaceholder: string
   enterUser: string
+  error: string
   error404Text: string
   'executions.name': string
   'executions.newExecutionButton': string
@@ -171,6 +172,7 @@ export interface StringsMap {
   expiration: string
   expirationDate: string
   expired: string
+  failed: string
   failedToCreateBranch: string
   failedToCreateRepo: string
   failedToCreateSpace: string
@@ -311,6 +313,8 @@ export interface StringsMap {
   'pr.cantBeMerged': string
   'pr.cantMerge': string
   'pr.checkingToMerge': string
+  'pr.checks': string
+  'pr.checksFailure': string
   'pr.createDraftPR': string
   'pr.descIsRequired': string
   'pr.descriptionPlaceHolder': string
@@ -357,12 +361,20 @@ export interface StringsMap {
   'pr.showLink': string
   'pr.split': string
   'pr.state': string
+  'pr.status': string
   'pr.statusLine': string
   'pr.titleChanged': string
   'pr.titleChangedTable': string
   'pr.titleIsRequired': string
   'pr.titlePlaceHolder': string
   'pr.unified': string
+  'prChecks.error': string
+  'prChecks.failure': string
+  'prChecks.notFound': string
+  'prChecks.pending': string
+  'prChecks.running': string
+  'prChecks.success': string
+  'prChecks.viewExternal': string
   prMustSelectSourceAndTargetBranches: string
   prSourceAndTargetMustBeDifferent: string
   'prState.draftDesc': string
@@ -425,6 +437,7 @@ export interface StringsMap {
   reviewerNotFound: string
   reviewers: string
   role: string
+  running: string
   samplePayloadUrl: string
   save: string
   scanAlerts: string
@@ -440,6 +453,8 @@ export interface StringsMap {
   settings: string
   showCommitHistory: string
   showEverything: string
+  showLess: string
+  showMore: string
   signIn: string
   signUp: string
   space: string
@@ -462,6 +477,7 @@ export interface StringsMap {
   sslVerificationLabel: string
   status: string
   submitReview: string
+  success: string
   switchBranchesTags: string
   tag: string
   tagCreated: string

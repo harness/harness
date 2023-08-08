@@ -85,7 +85,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   const [diffRenderer, setDiffRenderer] = useState<Diff2HtmlUI>()
   const { ref: inViewRef, inView } = useInView({ rootMargin: '100px 0px' })
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const { currentUser } = useAppContext()
+  const { currentUser, standalone } = useAppContext()
   const { showError } = useToaster()
   const confirmAct = useConfirmAct()
   const path = useMemo(
@@ -551,7 +551,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           </Layout.Horizontal>
         </Container>
 
-        <Container id={diff.contentId} className={css.diffContent} ref={contentRef}>
+        <Container
+          id={diff.contentId}
+          className={cx(css.diffContent, { [css.standalone]: standalone })}
+          ref={contentRef}>
           <Render when={renderCustomContent}>
             <Container>
               <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>

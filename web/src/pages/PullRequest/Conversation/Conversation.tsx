@@ -15,11 +15,13 @@ import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/CodeCommentStatusSelect'
 import { CodeCommentStatusButton } from 'components/CodeCommentStatusButton/CodeCommentStatusButton'
 import { CodeCommentSecondarySaveButton } from 'components/CodeCommentSecondarySaveButton/CodeCommentSecondarySaveButton'
+import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { DescriptionBox } from './DescriptionBox'
 import { PullRequestActionsBox } from './PullRequestActionsBox/PullRequestActionsBox'
 import PullRequestSideBar from './PullRequestSideBar/PullRequestSideBar'
 import { isCodeComment, isComment, isSystemComment } from '../PullRequestUtils'
+import { ChecksOverview } from '../Checks/ChecksOverview'
 import { CodeCommentHeader } from './CodeCommentHeader'
 import { SystemComment } from './SystemComment'
 import css from './Conversation.module.scss'
@@ -29,6 +31,7 @@ export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | '
   prHasChanged?: boolean
   showEditDescription?: boolean
   onCancelEditDescription: () => void
+  prChecksDecisionResult?: PRChecksDecisionResult
 }
 
 export const Conversation: React.FC<ConversationProps> = ({
@@ -37,7 +40,8 @@ export const Conversation: React.FC<ConversationProps> = ({
   onCommentUpdate,
   prHasChanged,
   showEditDescription,
-  onCancelEditDescription
+  onCancelEditDescription,
+  prChecksDecisionResult
 }) => {
   const { getString } = useStrings()
   const { currentUser } = useAppContext()
@@ -150,6 +154,14 @@ export const Conversation: React.FC<ConversationProps> = ({
             <Layout.Horizontal>
               <Container width={`70%`}>
                 <Layout.Vertical spacing="xlarge">
+                  {prChecksDecisionResult && (
+                    <ChecksOverview
+                      repoMetadata={repoMetadata}
+                      pullRequestMetadata={pullRequestMetadata}
+                      prChecksDecisionResult={prChecksDecisionResult}
+                    />
+                  )}
+
                   {(hasDescription || showEditDescription) && (
                     <DescriptionBox
                       repoMetadata={repoMetadata}
@@ -158,6 +170,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                       onCancelEditDescription={onCancelEditDescription}
                     />
                   )}
+
                   <Layout.Horizontal
                     className={css.sortContainer}
                     padding={{ top: hasDescription || showEditDescription ? 'xxlarge' : undefined, bottom: 'medium' }}>

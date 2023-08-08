@@ -39,3 +39,30 @@
 .changes {
   padding: 0 var(--spacing-xlarge) var(--spacing-xlarge) !important;
 }
+
+.checksCount {
+  border: 1px solid var(--grey-100);
+  background-color: var(--grey-50) !important;
+  display: inline-flex;
+  margin-left: 8px !important;
+  border-radius: 4px;
+  padding: 2px 5px 0 !important;
+
+  .checksCountLayout {
+    display: inline-flex;
+    height: 18px;
+    align-items: center;
+    justify-content: center;
+
+    > span {
+      padding: 0 !important;
+      margin: 0 !important;
+      align-self: flex-start;
+      line-height: 16px !important;
+
+      &:last-of-type {
+        padding-left: 5px !important;
+      }
+    }
+  }
+}

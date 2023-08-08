@@ -77,11 +77,13 @@ export const Changes: React.FC<ChangesProps> = ({
     response
   } = useGet<string>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/diff/${
-      pullRequestMetadata ? `${pullRequestMetadata.merge_base_sha}...${pullRequestMetadata.source_sha}` : `${targetBranch}...${sourceBranch}`
+      pullRequestMetadata
+        ? `${pullRequestMetadata.merge_base_sha}...${pullRequestMetadata.source_sha}`
+        : `${targetBranch}...${sourceBranch}`
     }`,
     requestOptions: {
       headers: {
-        'Accept': 'text/plain'
+        Accept: 'text/plain'
       }
     },
     lazy: !targetBranch || !sourceBranch

@@ -13,9 +13,10 @@ interface MarkdownViewerProps {
   source: string
   className?: string
   maxHeight?: string | number
+  darkMode?: boolean
 }
 
-export function MarkdownViewer({ source, className, maxHeight }: MarkdownViewerProps) {
+export function MarkdownViewer({ source, className, maxHeight, darkMode }: MarkdownViewerProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false)
   const history = useHistory()
   const [zoomLevel, setZoomLevel] = useState(INITIAL_ZOOM_LEVEL)
@@ -72,7 +73,7 @@ export function MarkdownViewer({ source, className, maxHeight }: MarkdownViewerP
       <MarkdownPreview
         source={source}
         skipHtml={true}
-        warpperElement={{ 'data-color-mode': 'light' }}
+        warpperElement={{ 'data-color-mode': darkMode ? 'dark' : 'light' }}
         rehypeRewrite={(node, _index, parent) => {
           if ((node as unknown as HTMLDivElement).tagName === 'a') {
             if (parent && /^h(1|2|3|4|5|6)/.test((parent as unknown as HTMLDivElement).tagName)) {

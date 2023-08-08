@@ -279,9 +279,20 @@ pr:
   draftOpenForReview:
     title: Ready for review
     desc: Open this pull request for review.
+  status: Pull Request Checks Status
+  checks: Checks
+  checksFailure: '{failedCount}/{total} checks failed'
 prState:
   draftHeading: This pull request is still a work in progress
   draftDesc: Draft pull requests cannot be merged.
+prChecks:
+  error: '{count}/{total} {count|1:check,checks} errored out.'
+  failure: '{count}/{total} {count|1:check,checks} failed.'
+  running: '{count}/{total} {count|1:check,checks} running.'
+  pending: '{count}/{total} {count|1:check,checks} pending.'
+  success: '{count}/{total} {count|1:check,checks} succeeded.'
+  notFound: No pipelines or external checks found for this repository.
+  viewExternal: View Details
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'
@@ -411,7 +422,7 @@ descending: Descending
 active: Active
 pending: Pending
 resolved: Resolved
-showEverything: Show everything
+showEverything: Everything
 allComments: All comments
 whatsNew: What's new
 myComments: My comments/replies
@@ -516,6 +527,8 @@ expirationDate: Expiration Date
 created: Created
 changePasswordSuccesfully: Password changed successfully
 applyChanges: Apply Changes
+showMore: View more
+showLess: View less
 createNewToken: Create New Token
 newToken:
   text: New Token
@@ -586,6 +599,10 @@ reader: Reader
 executor: Executor
 owner: Owner
 changeRole: Change role
+running: Running
+success: Success
+failed: Failed
+error: Error
 repoDelete:
   title: Delete Repository
   deleteConfirm1: This will permanently delete the "{{repo}}" repository, wiki, issues, comments, packages, secrets, workflow runs, and remove all collaborator associations.

@@ -13,7 +13,7 @@ import {
 } from '@harness/uicore'
 import * as Yup from 'yup'
 
-import { Link, useHistory } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import AuthLayout from 'components/AuthLayout/AuthLayout'
 import { routes } from 'RouteDefinitions'

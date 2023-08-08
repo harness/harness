@@ -60,6 +60,7 @@
     "github-markdown-css": "^5.1.0",
     "highcharts": "9.1.0",
     "highcharts-react-official": "3.0.0",
+    "iconoir-react": "^6.11.0",
     "immer": "^9.0.6",
     "lang-map": "^0.4.0",
     "lodash-es": "^4.17.15",

@@ -8,5 +8,6 @@ declare const styles: {
   readonly diffContent: string
   readonly fname: string
   readonly viewLabel: string
+  readonly standalone: string
 }
 export default styles
