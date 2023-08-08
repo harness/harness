@@ -468,6 +468,29 @@ type (
 		Increment(context.Context, *types.Pipeline) (*types.Pipeline, error)
 	}
 
+	SecretStore interface {
+		// Find returns a secret given an ID
+		Find(context.Context, int64) (*types.Secret, error)
+
+		// FindByUID returns a secret given a space ID and a UID
+		FindByUID(context.Context, int64, string) (*types.Secret, error)
+
+		// Create creates a new secret
+		Create(context.Context, *types.Secret) error
+
+		// Update tries to update an execution in the datastore with optimistic locking.
+		Update(context.Context, *types.Secret) (*types.Secret, error)
+
+		// Delete deletes an execution given a pipeline ID and an execution number
+		Delete(context.Context, int64) error
+
+		// Delete deletes an execution given a pipeline ID and an execution number
+		DeleteByUID(context.Context, int64, string) error
+
+		// List lists the executions for a given pipeline ID
+		List(context.Context, int64, *types.SecretFilter) ([]types.Secret, error)
+	}
+
 	ExecutionStore interface {
 		// Find returns a execution given a pipeline and an execution number
 		Find(context.Context, int64, int64) (*types.Execution, error)

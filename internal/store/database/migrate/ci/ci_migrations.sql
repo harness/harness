@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS pipelines (
         ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS executions (
+CREATE TABLE IF NOT EXISTS secrets (
     execution_id INTEGER PRIMARY KEY AUTOINCREMENT,
     execution_pipeline_id INTEGER NOT NULL,
     execution_repo_id INTEGER,
@@ -72,6 +72,26 @@ CREATE TABLE IF NOT EXISTS executions (
     -- Foreign key to pipelines table
     CONSTRAINT fk_execution_pipeline_id FOREIGN KEY (execution_pipeline_id)
         REFERENCES pipelines (pipeline_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS secrets (
+    secret_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    secret_uid TEXT NOT NULL,
+    secret_parent_id INTEGER NOT NULL,
+    secret_description TEXT NOT NULL,
+    secret_data BLOB NOT NULL,
+    secret_created INTEGER,
+    secret_updated INTEGER,
+    secret_version INTEGER,
+
+    -- Ensure unique combination of space ID and UID
+    UNIQUE (secret_parent_id, secret_uid),
+
+    -- Foreign key to spaces table
+    CONSTRAINT fk_secret_parent_id FOREIGN KEY (secret_parent_id)
+        REFERENCES spaces (space_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 );
