@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"time"
 
@@ -66,7 +65,7 @@ type CommitFilesResponse struct {
 func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesParams) (CommitFilesResponse, error) {
 	stream, err := c.commitFilesService.CommitFiles(ctx)
 	if err != nil {
-		return CommitFilesResponse{}, err
+		return CommitFilesResponse{}, processRPCErrorf(err, "failed to open file stream")
 	}
 
 	if err = stream.Send(&rpc.CommitFilesRequest{
@@ -84,7 +83,7 @@ func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesParams) (Co
 			},
 		},
 	}); err != nil {
-		return CommitFilesResponse{}, err
+		return CommitFilesResponse{}, processRPCErrorf(err, "failed to send file headers")
 	}
 
 	for _, action := range params.Actions {
@@ -103,7 +102,7 @@ func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesParams) (Co
 				},
 			},
 		}); err != nil {
-			return CommitFilesResponse{}, err
+			return CommitFilesResponse{}, processRPCErrorf(err, "failed to send file action to the stream")
 		}
 
 		// send file content
@@ -115,7 +114,7 @@ func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesParams) (Co
 				break
 			}
 			if err != nil {
-				return CommitFilesResponse{}, fmt.Errorf("cannot read buffer: %w", err)
+				return CommitFilesResponse{}, processRPCErrorf(err, "cannot read buffer")
 			}
 
 			if err = stream.Send(&rpc.CommitFilesRequest{
@@ -127,14 +126,14 @@ func (c *Client) CommitFiles(ctx context.Context, params *CommitFilesParams) (Co
 					},
 				},
 			}); err != nil {
-				return CommitFilesResponse{}, err
+				return CommitFilesResponse{}, processRPCErrorf(err, "failed to send file to the stream")
 			}
 		}
 	}
 
 	recv, err := stream.CloseAndRecv()
 	if err != nil {
-		return CommitFilesResponse{}, err
+		return CommitFilesResponse{}, processRPCErrorf(err, "failed to close the stream")
 	}
 
 	return CommitFilesResponse{
