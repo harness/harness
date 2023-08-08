@@ -5,6 +5,7 @@ package execution
 
 import (
 	"context"
+	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -18,7 +19,7 @@ func (c *Controller) List(
 	session *auth.Session,
 	spaceRef string,
 	pipelineUID string,
-	filter *types.ExecutionFilter) ([]types.Execution, int, error) {
+	filter *types.ExecutionFilter) ([]types.Execution, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, err
@@ -33,10 +34,15 @@ func (c *Controller) List(
 		return nil, 0, err
 	}
 
+	count, err := c.executionStore.Count(ctx, pipeline.ID, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count child executions: %w", err)
+	}
+
 	executions, err := c.executionStore.List(ctx, pipeline.ID, filter)
 	if err != nil {
 		return nil, 0, err
 	}
-	// TODO: This should be total count, not returned count
-	return executions, len(executions), nil
+
+	return executions, count, nil
 }

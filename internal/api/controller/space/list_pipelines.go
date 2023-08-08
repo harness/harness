@@ -5,6 +5,7 @@ package space
 
 import (
 	"context"
+	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -14,10 +15,15 @@ import (
 
 // ListPipelines lists the pipelines in a space.
 func (c *Controller) ListPipelines(ctx context.Context, session *auth.Session,
-	spaceRef string, filter *types.PipelineFilter) ([]types.Pipeline, int, error) {
+	spaceRef string, filter *types.PipelineFilter) ([]types.Pipeline, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, err
+	}
+
+	count, err := c.pipelineStore.Count(ctx, space.ID, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count child pipelnes: %w", err)
 	}
 
 	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, true)
@@ -28,6 +34,6 @@ func (c *Controller) ListPipelines(ctx context.Context, session *auth.Session,
 	if err != nil {
 		return nil, 0, err
 	}
-	// TODO: This should be total count, not returned count
-	return pipelines, len(pipelines), nil
+
+	return pipelines, count, nil
 }

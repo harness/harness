@@ -308,6 +308,28 @@ func (s *executionStore) List(ctx context.Context, pipelineID int64, opts *types
 	return dst, nil
 }
 
+// Count of executions in a space.
+func (s *executionStore) Count(ctx context.Context, pipelineID int64, opts *types.ExecutionFilter) (int64, error) {
+	stmt := database.Builder.
+		Select("count(*)").
+		From("executions").
+		Where("execution_pipeline_id = ?", pipelineID)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+	}
+	return count, nil
+}
+
 // Delete deletes an execution given a pipeline ID and an execution number
 func (s *executionStore) Delete(ctx context.Context, pipelineID int64, n int64) error {
 	const executionDeleteStmt = `

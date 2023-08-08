@@ -458,6 +458,9 @@ type (
 		// Delete deletes a pipeline ID from the datastore.
 		Delete(context.Context, int64) error
 
+		// Count the number of pipelines in a space matching the given filter.
+		Count(ctx context.Context, parentID int64, opts *types.PipelineFilter) (int64, error)
+
 		// DeleteByUID deletes a pipeline with a given UID in a space
 		DeleteByUID(context.Context, int64, string) error
 
@@ -480,6 +483,9 @@ type (
 
 		// Delete deletes an execution given a pipeline ID and an execution number
 		Delete(context.Context, int64, int64) error
+
+		// Count the number of executions in a space matching the given filter.
+		Count(ctx context.Context, parentID int64, opts *types.ExecutionFilter) (int64, error)
 
 		// Find returns a build from the datastore.
 		// Find(context.Context, int64) (*types.Execution, error)

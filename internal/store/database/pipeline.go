@@ -216,6 +216,32 @@ func (s *pipelineStore) List(ctx context.Context, parentID int64, opts *types.Pi
 	return dst, nil
 }
 
+// Count of pipelines in a space.
+func (s *pipelineStore) Count(ctx context.Context, parentID int64, opts *types.PipelineFilter) (int64, error) {
+	stmt := database.Builder.
+		Select("count(*)").
+		From("pipelines").
+		Where("pipeline_parent_id = ?", parentID)
+
+	if opts.Query != "" {
+		stmt = stmt.Where("pipeline_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+	}
+	return count, nil
+}
+
 // Delete deletes a pipeline given a pipeline ID
 func (s *pipelineStore) Delete(ctx context.Context, id int64) error {
 	const pipelineDeleteStmt = `
