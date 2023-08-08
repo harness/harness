@@ -216,8 +216,8 @@ export default function PullRequest() {
                         <Changes
                           repoMetadata={repoMetadata as TypesRepository}
                           pullRequestMetadata={prData as TypesPullReq}
-                          targetBranch={prData?.target_branch}
-                          sourceBranch={prData?.source_branch}
+                          targetRef={prData?.target_branch}
+                          sourceRef={prData?.source_branch}
                           emptyTitle={getString('noChanges')}
                           emptyMessage={getString('noChangesPR')}
                           onCommentUpdate={voidFn(refetchPullRequest)}

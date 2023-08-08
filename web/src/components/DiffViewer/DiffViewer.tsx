@@ -54,8 +54,8 @@ interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
   readOnly?: boolean
   pullRequestMetadata?: TypesPullReq
   onCommentUpdate: () => void
-  mergeBaseSHA?: string
-  sourceSHA?: string
+  targetRef?: string
+  sourceRef?: string
 }
 
 //
@@ -71,8 +71,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   repoMetadata,
   pullRequestMetadata,
   onCommentUpdate,
-  mergeBaseSHA,
-  sourceSHA
+  targetRef,
+  sourceRef
 }) => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
@@ -345,8 +345,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                           line_start_new: !comment.left,
                           line_end_new: !comment.left,
                           path: diff.filePath,
-                          source_commit_sha: sourceSHA,
-                          target_commit_sha: mergeBaseSHA,
+                          source_commit_sha: sourceRef,
+                          target_commit_sha: targetRef,
                           text: value
                         }
 
@@ -471,8 +471,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       deleteComment,
       confirmAct,
       onCommentUpdate,
-      mergeBaseSHA,
-      sourceSHA,
+      targetRef,
+      sourceRef,
       pullRequestMetadata,
       repoMetadata
     ]

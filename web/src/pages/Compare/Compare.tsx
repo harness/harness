@@ -151,8 +151,8 @@ export default function Compare() {
           <Changes
             readOnly
             repoMetadata={repoMetadata}
-            targetBranch={targetGitRef}
-            sourceBranch={sourceGitRef}
+            targetRef={targetGitRef}
+            sourceRef={sourceGitRef}
             emptyTitle={getString('noChanges')}
             emptyMessage={getString('noChangesCompare')}
             onCommentUpdate={noop}

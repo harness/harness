@@ -38,8 +38,8 @@ const STICKY_HEADER_HEIGHT = 150
 const changedFileId = (collection: Unknown[]) => collection.filter(Boolean).join('::::')
 
 interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
-  targetBranch?: string
-  sourceBranch?: string
+  targetRef?: string
+  sourceRef?: string
   readOnly?: boolean
   emptyTitle: string
   emptyMessage: string
@@ -52,8 +52,8 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
 
 export const Changes: React.FC<ChangesProps> = ({
   repoMetadata,
-  targetBranch,
-  sourceBranch,
+  targetRef,
+  sourceRef,
   readOnly,
   emptyTitle,
   emptyMessage,
@@ -73,21 +73,21 @@ export const Changes: React.FC<ChangesProps> = ({
     data: rawDiff,
     error,
     loading,
-    refetch,
-    response
+    refetch
   } = useGet<string>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/diff/${
       pullRequestMetadata
         ? `${pullRequestMetadata.merge_base_sha}...${pullRequestMetadata.source_sha}`
-        : `${targetBranch}...${sourceBranch}`
+        : `${targetRef}...${sourceRef}`
     }`,
     requestOptions: {
       headers: {
         Accept: 'text/plain'
       }
     },
-    lazy: !targetBranch || !sourceBranch
+    lazy: !targetRef || !sourceRef
   })
+
   const {
     data: prActivities,
     loading: loadingActivities,
@@ -258,8 +258,8 @@ export const Changes: React.FC<ChangesProps> = ({
                     repoMetadata={repoMetadata}
                     pullRequestMetadata={pullRequestMetadata}
                     onCommentUpdate={onCommentUpdate}
-                    mergeBaseSHA={response?.headers?.get('x-merge-base-sha') || ''}
-                    sourceSHA={response?.headers?.get('x-source-sha') || ''}
+                    targetRef={pullRequestMetadata ? pullRequestMetadata.merge_base_sha : targetRef}
+                    sourceRef={pullRequestMetadata ? pullRequestMetadata.source_sha : sourceRef}
                   />
                 ))}
               </Layout.Vertical>
