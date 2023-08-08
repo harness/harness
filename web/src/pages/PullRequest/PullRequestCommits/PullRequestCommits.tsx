@@ -49,6 +49,7 @@ export const PullRequestCommits: React.FC<CommitProps> = ({
         emptyMessage={getString('noCommitsPR')}
         prHasChanged={prHasChanged}
         handleRefresh={voidFn(handleRefresh)}
+        pullRequestMetadata={pullRequestMetadata}
       />
 
       <ResourceListingPagination response={response} page={page} setPage={setPage} />

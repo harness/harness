@@ -103,6 +103,12 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             routes.toCODEPullRequest({
               repoPath,
               pullRequestId: pathProps.pullRequestId,
+              pullRequestSection: pathProps.pullRequestSection,
+              commitSHA: pathProps.commitSHA
+            }),
+            routes.toCODEPullRequest({
+              repoPath,
+              pullRequestId: pathProps.pullRequestId,
               pullRequestSection: pathProps.pullRequestSection
             }),
             routes.toCODEPullRequest({

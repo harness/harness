@@ -3,6 +3,7 @@ import { Container, FontVariation, Layout, PageBody, Tabs, Text } from '@harness
 import { useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
+import { compact } from 'lodash-es'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
@@ -32,7 +33,8 @@ export default function PullRequest() {
     loading,
     refetch,
     pullRequestId,
-    pullRequestSection = PullRequestSection.CONVERSATION
+    pullRequestSection = PullRequestSection.CONVERSATION,
+    commitSHA
   } = useGetRepositoryMetadata()
   const path = useMemo(
     () => `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestId}`,
@@ -216,6 +218,7 @@ export default function PullRequest() {
                         <Changes
                           repoMetadata={repoMetadata as TypesRepository}
                           pullRequestMetadata={prData as TypesPullReq}
+                          defaultCommitRange={compact(commitSHA?.split(/~1\.\.\.|\.\.\./g))}
                           targetRef={prData?.target_branch}
                           sourceRef={prData?.source_branch}
                           emptyTitle={getString('noChanges')}

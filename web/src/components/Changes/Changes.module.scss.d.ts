@@ -18,5 +18,6 @@ declare const styles: {
   readonly reviewButton: string
   readonly hide: string
   readonly disabled: string
+  readonly commitsDropdown: string
 }
 export default styles

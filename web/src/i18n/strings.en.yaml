@@ -618,3 +618,5 @@ executions:
   noData: There are no executions :(
   newExecutionButton: New Execution
   name: Execution Name
+selectRange: Shift-click to select a range
+allCommits: All Commits

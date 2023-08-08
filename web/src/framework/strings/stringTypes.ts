@@ -20,6 +20,7 @@ export interface StringsMap {
   all: string
   allBranches: string
   allComments: string
+  allCommits: string
   alreadyHaveAccount: string
   and: string
   applyChanges: string
@@ -446,6 +447,7 @@ export interface StringsMap {
   searchBranches: string
   secret: string
   selectBranchPlaceHolder: string
+  selectRange: string
   selectSpace: string
   selectSpaceText: string
   selectToViewMore: string

@@ -18,7 +18,7 @@ import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReqActivity } from 'services/code'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
-import { formatDate, formatTime } from 'utils/Utils'
+import { formatDate, formatTime, PullRequestSection } from 'utils/Utils'
 import { CommentType } from 'components/DiffViewer/DiffViewerUtils'
 import { useAppContext } from 'AppContext'
 import css from './Conversation.module.scss'
@@ -103,9 +103,11 @@ export const SystemComment: React.FC<SystemCommentProps> = ({
                   commit: (
                     <Link
                       className={css.commitLink}
-                      to={routes.toCODECommit({
+                      to={routes.toCODEPullRequest({
                         repoPath: repoMetadataPath as string,
-                        commitRef: (payload?.payload as Unknown)?.new
+                        pullRequestSection: PullRequestSection.FILES_CHANGED,
+                        pullRequestId: String(pullRequestMetadata.number),
+                        commitSHA: (payload?.payload as Unknown)?.new as string
                       })}>
                       {(payload?.payload as Unknown)?.new.substring(0, 6)}
                     </Link>

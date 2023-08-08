@@ -7,6 +7,7 @@
   top: 0;
   padding: var(--spacing-medium) 0 !important;
   z-index: 2;
+  width: 100%;
 
   &.stickied {
     background-color: var(--primary-bg) !important;
@@ -112,4 +113,11 @@
     pointer-events: none;
     opacity: 0.5;
   }
+}
+
+.commitsDropdown {
+  cursor: pointer;
+  background-color: var(--grey-100) !important;
+  border-radius: 4px;
+  padding: var(--spacing-xsmall) var(--spacing-4) !important;
 }

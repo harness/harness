@@ -9,6 +9,13 @@ export enum ACCESS_MODES {
   EDIT
 }
 
+export enum PullRequestSection {
+  CONVERSATION = 'conversation',
+  COMMITS = 'commits',
+  FILES_CHANGED = 'changes',
+  CHECKS = 'checks'
+}
+
 export const LIST_FETCHING_LIMIT = 20
 export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY hh:mm a'
 export const DEFAULT_BRANCH_NAME = 'main'
