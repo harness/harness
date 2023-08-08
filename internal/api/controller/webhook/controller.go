@@ -21,8 +21,9 @@ import (
 )
 
 type Controller struct {
-	allowLoopback       bool
-	allowPrivateNetwork bool
+	allowLoopback                 bool
+	allowPrivateNetwork           bool
+	whitelistedInternalUrlPattern []string
 
 	db                    *sqlx.DB
 	authorizer            authz.Authorizer
@@ -35,6 +36,7 @@ type Controller struct {
 func NewController(
 	allowLoopback bool,
 	allowPrivateNetwork bool,
+	whitelistedInternalUrlPattern []string,
 	db *sqlx.DB,
 	authorizer authz.Authorizer,
 	webhookStore store.WebhookStore,
@@ -43,15 +45,15 @@ func NewController(
 	webhookService *webhook.Service,
 ) *Controller {
 	return &Controller{
-		allowLoopback:       allowLoopback,
-		allowPrivateNetwork: allowPrivateNetwork,
-
-		db:                    db,
-		authorizer:            authorizer,
-		webhookStore:          webhookStore,
-		webhookExecutionStore: webhookExecutionStore,
-		repoStore:             repoStore,
-		webhookService:        webhookService,
+		allowLoopback:                 allowLoopback,
+		allowPrivateNetwork:           allowPrivateNetwork,
+		whitelistedInternalUrlPattern: whitelistedInternalUrlPattern,
+		db:                            db,
+		authorizer:                    authorizer,
+		webhookStore:                  webhookStore,
+		webhookExecutionStore:         webhookExecutionStore,
+		repoStore:                     repoStore,
+		webhookService:                webhookService,
 	}
 }
 

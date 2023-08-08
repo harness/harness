@@ -7,6 +7,7 @@ package webhook
 import (
 	"net"
 	"net/url"
+	"strings"
 
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -20,7 +21,7 @@ const (
 )
 
 // checkURL validates the url of a webhook.
-func checkURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool) error {
+func checkURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool, whitelistedInternalUrlPattern []string) error {
 	// check URL
 	if len(rawURL) > webhookMaxURLLength {
 		return check.NewValidationErrorf("The URL of a webhook can be at most %d characters long.",
@@ -49,7 +50,7 @@ func checkURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool) error
 			return check.NewValidationError("Loopback IP addresses are not allowed.")
 		}
 
-		if !allowPrivateNetwork && ip.IsPrivate() {
+		if !allowPrivateNetwork && ip.IsPrivate() && !checkWhitelistedUrl(rawURL, whitelistedInternalUrlPattern) {
 			return check.NewValidationError("Private IP addresses are not allowed.")
 		}
 	}
@@ -59,6 +60,15 @@ func checkURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool) error
 	}
 
 	return nil
+}
+
+func checkWhitelistedUrl(URL string, whitelistedInternalUrlPattern []string) bool {
+	for _, urlPattern := range whitelistedInternalUrlPattern {
+		if strings.ContainsAny(URL, urlPattern) {
+			return true
+		}
+	}
+	return false
 }
 
 // checkSecret validates the secret of a webhook.

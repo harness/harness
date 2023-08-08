@@ -33,11 +33,12 @@ type Config struct {
 	HeaderIdentity string `envconfig:"GITNESS_WEBHOOK_HEADER_IDENTITY"`
 	// EventReaderName is the name used to read events from stream.
 	// Note: this should be different for every running instance.
-	EventReaderName     string `envconfig:"GITNESS_WEBHOOK_EVENT_READER_NAME"`
-	Concurrency         int    `envconfig:"GITNESS_WEBHOOK_CONCURRENCY" default:"4"`
-	MaxRetries          int    `envconfig:"GITNESS_WEBHOOK_MAX_RETRIES" default:"3"`
-	AllowPrivateNetwork bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_PRIVATE_NETWORK" default:"false"`
-	AllowLoopback       bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_LOOPBACK" default:"false"`
+	EventReaderName               string   `envconfig:"GITNESS_WEBHOOK_EVENT_READER_NAME"`
+	Concurrency                   int      `envconfig:"GITNESS_WEBHOOK_CONCURRENCY" default:"4"`
+	MaxRetries                    int      `envconfig:"GITNESS_WEBHOOK_MAX_RETRIES" default:"3"`
+	AllowPrivateNetwork           bool     `envconfig:"GITNESS_WEBHOOK_ALLOW_PRIVATE_NETWORK" default:"false"`
+	AllowLoopback                 bool     `envconfig:"GITNESS_WEBHOOK_ALLOW_LOOPBACK" default:"false"`
+	WhitelistedInternalUrlPattern []string `envconfig:"GITNESS_WEBHOOK_WHITELISTED_INTERNAL_URL_PATTERNS"`
 }
 
 func (c *Config) Prepare() error {
@@ -99,8 +100,8 @@ func NewService(ctx context.Context, config Config,
 		principalStore:        principalStore,
 		gitRPCClient:          gitRPCClient,
 
-		secureHTTPClient:   newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),
-		insecureHTTPClient: newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true),
+		secureHTTPClient:   newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false, config.WhitelistedInternalUrlPattern),
+		insecureHTTPClient: newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true, config.WhitelistedInternalUrlPattern),
 
 		config: config,
 	}

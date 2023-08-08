@@ -21,6 +21,6 @@ var WireSet = wire.NewSet(
 func ProvideController(config webhook.Config, db *sqlx.DB, authorizer authz.Authorizer,
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
 	repoStore store.RepoStore, webhookService *webhook.Service) *Controller {
-	return NewController(config.AllowLoopback, config.AllowPrivateNetwork,
+	return NewController(config.AllowLoopback, config.AllowPrivateNetwork, config.WhitelistedInternalUrlPattern,
 		db, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService)
 }

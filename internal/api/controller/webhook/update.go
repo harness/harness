@@ -43,7 +43,7 @@ func (c *Controller) Update(
 	}
 
 	// validate input
-	if err = checkUpdateInput(in, c.allowLoopback, c.allowPrivateNetwork); err != nil {
+	if err = checkUpdateInput(in, c.allowLoopback, c.allowPrivateNetwork, c.whitelistedInternalUrlPattern); err != nil {
 		return nil, err
 	}
 
@@ -77,7 +77,7 @@ func (c *Controller) Update(
 	return hook, nil
 }
 
-func checkUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwork bool) error {
+func checkUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwork bool, whitelistedInternalUrlPattern []string) error {
 	if in.DisplayName != nil {
 		if err := check.DisplayName(*in.DisplayName); err != nil {
 			return err
@@ -89,7 +89,7 @@ func checkUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwork b
 		}
 	}
 	if in.URL != nil {
-		if err := checkURL(*in.URL, allowLoopback, allowPrivateNetwork); err != nil {
+		if err := checkURL(*in.URL, allowLoopback, allowPrivateNetwork, whitelistedInternalUrlPattern); err != nil {
 			return err
 		}
 	}

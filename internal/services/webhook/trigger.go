@@ -357,6 +357,7 @@ func handleWebhookResponse(execution *types.WebhookExecution, resp *http.Respons
 	// store status (handle status later - want to first read body)
 	execution.Response.StatusCode = resp.StatusCode
 	execution.Response.Status = resp.Status
+	log.Error().Msgf("resp nav %v: %v", execution, resp)
 
 	// store response headers
 	hBuff := &bytes.Buffer{}

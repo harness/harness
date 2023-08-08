@@ -39,7 +39,7 @@ func (c *Controller) Create(
 	}
 
 	// validate input
-	err = checkCreateInput(in, c.allowLoopback, c.allowPrivateNetwork)
+	err = checkCreateInput(in, c.allowLoopback, c.allowPrivateNetwork, c.whitelistedInternalUrlPattern)
 	if err != nil {
 		return nil, err
 	}
@@ -73,14 +73,14 @@ func (c *Controller) Create(
 	return hook, nil
 }
 
-func checkCreateInput(in *CreateInput, allowLoopback bool, allowPrivateNetwork bool) error {
+func checkCreateInput(in *CreateInput, allowLoopback bool, allowPrivateNetwork bool, whitelistedInternalUrlPattern []string) error {
 	if err := check.DisplayName(in.DisplayName); err != nil {
 		return err
 	}
 	if err := check.Description(in.Description); err != nil {
 		return err
 	}
-	if err := checkURL(in.URL, allowLoopback, allowPrivateNetwork); err != nil {
+	if err := checkURL(in.URL, allowLoopback, allowPrivateNetwork, whitelistedInternalUrlPattern); err != nil {
 		return err
 	}
 	if err := checkSecret(in.Secret); err != nil {
