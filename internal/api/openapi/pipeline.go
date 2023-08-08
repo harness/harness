@@ -20,6 +20,11 @@ type createExecutionRequest struct {
 	execution.CreateInput
 }
 
+type createPipelineRequest struct {
+	Ref string `path:"pipeline_ref"`
+	pipeline.CreateInput
+}
+
 type getExecutionRequest struct {
 	Ref    string `path:"pipeline_ref"`
 	Number string `path:"execution_number"`
@@ -44,7 +49,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
 	opCreate.WithTags("pipeline")
 	opCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createPipeline"})
-	_ = reflector.SetRequest(&opCreate, new(pipeline.CreateInput), http.MethodPost)
+	_ = reflector.SetRequest(&opCreate, new(createPipelineRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&opCreate, new(types.Pipeline), http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opCreate, new(usererror.Error), http.StatusInternalServerError)
