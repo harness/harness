@@ -53,7 +53,7 @@ func (c *Controller) List(
 		return dbErr
 	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
-		return executions, count, err
+		return executions, count, fmt.Errorf("failed to fetch list: %w", err)
 	}
 
 	return executions, count, nil
