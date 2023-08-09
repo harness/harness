@@ -25,7 +25,7 @@ import (
 )
 
 // HandleFind returns an http.HandlerFunc that writes json-encoded
-// build details to the the response body.
+// build details to the response body.
 func HandleFind(
 	repos core.RepositoryStore,
 	builds core.BuildStore,

@@ -47,7 +47,7 @@ type (
 	}
 
 	// StatusService sends the commit status to an external
-	// external source code management service (e.g. GitHub).
+	// source code management service (e.g. GitHub).
 	StatusService interface {
 		Send(ctx context.Context, user *User, req *StatusInput) error
 	}
