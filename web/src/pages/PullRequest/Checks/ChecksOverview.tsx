@@ -18,7 +18,7 @@ import { PRCheckExecutionStatus, PRCheckExecutionState } from 'components/PRChec
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import type { TypesCheck } from 'services/code'
 import { useAppContext } from 'AppContext'
-import { PullRequestCheckType, PullRequestSection, timeDistance } from 'utils/Utils'
+import { PullRequestSection, timeDistance } from 'utils/Utils'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import css from './ChecksOverview.module.scss'
 
@@ -28,7 +28,7 @@ interface ChecksOverviewProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullR
 
 export function ChecksOverview({ repoMetadata, pullRequestMetadata, prChecksDecisionResult }: ChecksOverviewProps) {
   const { getString } = useStrings()
-  const [isExpanded, toggleExpanded] = useToggle(true)
+  const [isExpanded, toggleExpanded] = useToggle(false)
   const { data, overallStatus, error, color, message } = prChecksDecisionResult
 
   useShowRequestError(error)
@@ -42,12 +42,12 @@ export function ChecksOverview({ repoMetadata, pullRequestMetadata, prChecksDeci
         <Truthy>
           <Container className={css.checks}>
             <Layout.Vertical spacing="medium">
-              <CheckSection
+              {/* <CheckSection
                 repoMetadata={repoMetadata}
                 pullRequestMetadata={pullRequestMetadata}
                 data={data}
                 isPipeline
-              />
+              /> */}
               <CheckSection
                 repoMetadata={repoMetadata}
                 pullRequestMetadata={pullRequestMetadata}
@@ -88,11 +88,8 @@ interface CheckSectionProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullReq
 const CheckSection: React.FC<CheckSectionProps> = ({ repoMetadata, pullRequestMetadata, data, isPipeline }) => {
   const { getString } = useStrings()
   const { routes } = useAppContext()
-  const _data = data.filter(
-    check => check.payload?.kind === (isPipeline ? PullRequestCheckType.PIPELINE : PullRequestCheckType.EXTERNAL)
-  )
 
-  return _data.length ? (
+  return data.length ? (
     <Container>
       <Layout.Vertical spacing="small">
         <Text
@@ -102,7 +99,7 @@ const CheckSection: React.FC<CheckSectionProps> = ({ repoMetadata, pullRequestMe
           {getString(isPipeline ? 'pageTitle.pipelines' : 'checks')}
         </Text>
         <Container className={css.table}>
-          {_data.map(({ uid, status, summary, created, updated }) => (
+          {data.map(({ uid, status, summary, created, updated }) => (
             <Container className={css.row} key={uid}>
               <Layout.Horizontal className={css.rowLayout}>
                 <Container className={css.status}>

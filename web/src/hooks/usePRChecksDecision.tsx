@@ -70,6 +70,8 @@ export function usePRChecksDecision({
       }
 
       setComplete(!_count.pending && !_count.running)
+    } else {
+      setComplete(false)
     }
 
     return _status

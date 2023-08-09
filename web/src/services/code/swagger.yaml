@@ -3,7 +3,7 @@ info:
   title: API Specification
   version: 0.0.0
 servers:
-  - url: /api/v1/
+  - url: /api/v1
 security:
   - bearerAuth: []
 paths:
@@ -887,6 +887,23 @@ paths:
     get:
       operationId: listStatusCheckResults
       parameters:
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
         - in: path
           name: repo_ref
           required: true
@@ -949,7 +966,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OpenapiReportStatusCheckResultRequest'
+              properties:
+                check_uid:
+                  type: string
+                link:
+                  type: string
+                payload:
+                  $ref: '#/components/schemas/TypesCheckPayload'
+                status:
+                  $ref: '#/components/schemas/EnumCheckStatus'
+                summary:
+                  type: string
+              type: object
       responses:
         '200':
           content:
@@ -1233,48 +1261,6 @@ paths:
           description: Internal Server Error
       tags:
         - repository
-  /repos/{repo_ref}/compare/{range}:
-    get:
-      operationId: rawDiff
-      parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: range
-          required: true
-          schema:
-            example: main..dev
-            type: string
-      responses:
-        '200':
-          content:
-            text/plain:
-              schema:
-                type: string
-          description: OK
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - repository
   /repos/{repo_ref}/content/{path}:
     get:
       operationId: getContent
@@ -1339,9 +1325,9 @@ paths:
           description: Internal Server Error
       tags:
         - repository
-  /repos/{repo_ref}/diff-stats/{range}:
+  /repos/{repo_ref}/diff/{range}:
     get:
-      operationId: diffStats
+      operationId: rawDiff
       parameters:
         - in: path
           name: repo_ref
@@ -1360,6 +1346,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TypesDiffStats'
+            text/plain:
+              schema:
+                type: string
           description: OK
         '401':
           content:
@@ -2272,53 +2261,6 @@ paths:
           description: Internal Server Error
       tags:
         - pullreq
-  /repos/{repo_ref}/pullreq/{pullreq_number}/diff:
-    get:
-      operationId: rawPullReqDiff
-      parameters:
-        - in: path
-          name: repo_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: pullreq_number
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          content:
-            text/plain:
-              schema:
-                type: string
-          description: OK
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}/merge:
     post:
       operationId: mergePullReqOp
@@ -2340,6 +2282,10 @@ paths:
               $ref: '#/components/schemas/OpenapiMergePullReq'
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesMergeResponse'
           description: OK
         '400':
           content:
@@ -3628,6 +3574,49 @@ paths:
     get:
       operationId: membershipList
       parameters:
+        - description: The substring by which the space members are filtered.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The order of the output.
+          in: query
+          name: order
+          required: false
+          schema:
+            default: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: The field by which the space members are sorted.
+          in: query
+          name: sort
+          required: false
+          schema:
+            default: name
+            enum:
+              - created
+              - name
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
         - in: path
           name: space_ref
           required: true
@@ -3639,7 +3628,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/TypesMembership'
+                  $ref: '#/components/schemas/TypesMembershipUser'
                 type: array
           description: OK
         '401':
@@ -3691,7 +3680,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TypesMembership'
+                $ref: '#/components/schemas/TypesMembershipUser'
           description: Created
         '401':
           content:
@@ -3788,7 +3777,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TypesMembership'
+                $ref: '#/components/schemas/TypesMembershipUser'
           description: OK
         '401':
           content:
@@ -4277,6 +4266,26 @@ paths:
           description: Internal Server Error
       tags:
         - user
+  /user/memberships:
+    get:
+      operationId: membershipSpaces
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesMembershipSpace'
+                type: array
+          description: OK
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - user
   /user/token:
     post:
       operationId: createToken
@@ -4306,7 +4315,9 @@ components:
       type: integer
     EnumCheckPayloadKind:
       enum:
-        - external
+        - ''
+        - markdown
+        - raw
       type: string
     EnumCheckStatus:
       enum:
@@ -4574,7 +4585,6 @@ components:
         name:
           type: string
         target:
-          nullable: true
           type: string
       type: object
     OpenapiCreatePathRequest:
@@ -4637,12 +4647,10 @@ components:
     OpenapiCreateTagRequest:
       properties:
         message:
-          nullable: true
           type: string
         name:
           type: string
         target:
-          nullable: true
           type: string
       type: object
     OpenapiCreateTokenRequest:
@@ -4742,19 +4750,6 @@ components:
         password:
           type: string
         uid:
-          type: string
-      type: object
-    OpenapiReportStatusCheckResultRequest:
-      properties:
-        check_uid:
-          type: string
-        link:
-          type: string
-        payload:
-          $ref: '#/components/schemas/TypesCheckPayload'
-        status:
-          $ref: '#/components/schemas/EnumCheckStatus'
-        summary:
           type: string
       type: object
     OpenapiReviewSubmitPullReqRequest:
@@ -4981,6 +4976,7 @@ components:
           type: string
       type: object
     TimeDuration:
+      nullable: true
       type: integer
     TypesCheck:
       properties:
@@ -5071,7 +5067,20 @@ components:
           nullable: true
           type: array
       type: object
-    TypesMembership:
+    TypesMembershipSpace:
+      properties:
+        added_by:
+          $ref: '#/components/schemas/TypesPrincipalInfo'
+        created:
+          type: integer
+        role:
+          $ref: '#/components/schemas/EnumMembershipRole'
+        space:
+          $ref: '#/components/schemas/TypesSpace'
+        updated:
+          type: integer
+      type: object
+    TypesMembershipUser:
       properties:
         added_by:
           $ref: '#/components/schemas/TypesPrincipalInfo'
@@ -5083,6 +5092,15 @@ components:
           $ref: '#/components/schemas/EnumMembershipRole'
         updated:
           type: integer
+      type: object
+    TypesMergeResponse:
+      properties:
+        conflict_files:
+          items:
+            type: string
+          type: array
+        sha:
+          type: string
       type: object
     TypesPath:
       properties:
@@ -5348,6 +5366,7 @@ components:
         created_by:
           type: integer
         expires_at:
+          nullable: true
           type: integer
         grants:
           $ref: '#/components/schemas/EnumAccessGrant'

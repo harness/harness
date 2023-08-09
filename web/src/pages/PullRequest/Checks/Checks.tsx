@@ -40,8 +40,8 @@ export const Checks: React.FC<ChecksProps> = props => {
   const termRefs = useRef<TermRefs>()
   const onSplitPaneResized = useCallback(() => termRefs.current?.fitAddon?.fit(), [])
   const [selectedItemData, setSelectedItemData] = useState<TypesCheck>()
-  const shouldRenderMarkdown = useMemo(
-    () => selectedItemData?.payload?.kind === PullRequestCheckType.EXTERNAL,
+  const isCheckDataMarkdown = useMemo(
+    () => selectedItemData?.payload?.kind === PullRequestCheckType.MARKDOWN,
     [selectedItemData?.payload?.kind]
   )
   const logContent = useMemo(
@@ -64,11 +64,16 @@ export const Checks: React.FC<ChecksProps> = props => {
             maxSize="calc(100% - 900px)"
             onDragFinished={onSplitPaneResized}
             primary="second">
-            <ChecksMenu {...props} onDataItemChanged={setSelectedItemData} />
+            <ChecksMenu
+              {...props}
+              onDataItemChanged={data => {
+                setTimeout(() => setSelectedItemData(data), 0)
+              }}
+            />
             <Container
               className={cx(css.content, {
-                [css.markdown]: shouldRenderMarkdown,
-                [css.terminal]: !shouldRenderMarkdown
+                [css.markdown]: isCheckDataMarkdown,
+                [css.terminal]: !isCheckDataMarkdown
               })}>
               <Render when={selectedItemData}>
                 <Container className={css.header}>
@@ -101,14 +106,16 @@ export const Checks: React.FC<ChecksProps> = props => {
                   </Layout.Horizontal>
                 </Container>
               </Render>
-              <Match expr={shouldRenderMarkdown}>
+              <Match expr={isCheckDataMarkdown}>
                 <Truthy>
-                  <Container padding={{ top: 'medium' }}>
+                  <Container className={css.markdownContainer}>
                     <MarkdownViewer darkMode source={logContent} />
                   </Container>
                 </Truthy>
                 <Falsy>
-                  <LogViewer termRefs={termRefs} content={`...`} />
+                  <Container className={css.terminalContainer}>
+                    <LogViewer termRefs={termRefs} content={logContent} />
+                  </Container>
                 </Falsy>
               </Match>
             </Container>
@@ -164,6 +171,7 @@ const ChecksMenu: React.FC<ChecksMenuProps> = ({
         prChecksDecisionResult?.data?.[0]
 
       if (defaultSelectedItem) {
+        onDataItemChanged(defaultSelectedItem)
         setSelectedUID(defaultSelectedItem.uid)
         history.replace(
           routes.toCODEPullRequest({
@@ -174,7 +182,16 @@ const ChecksMenu: React.FC<ChecksMenuProps> = ({
         )
       }
     }
-  }, [uid, prChecksDecisionResult?.data, selectedUID, history, routes, repoMetadata.path, pullRequestMetadata.number])
+  }, [
+    uid,
+    prChecksDecisionResult?.data,
+    selectedUID,
+    history,
+    routes,
+    repoMetadata.path,
+    pullRequestMetadata.number,
+    onDataItemChanged
+  ])
 
   return (
     <Container className={css.menu}>
@@ -185,7 +202,7 @@ const ChecksMenu: React.FC<ChecksMenuProps> = ({
           prChecksDecisionResult={prChecksDecisionResult}
           key={itemData.uid}
           itemData={itemData}
-          expandable={itemData.payload?.kind !== PullRequestCheckType.EXTERNAL /* || itemData.uid === 'build'*/}
+          expandable={false}
           isSelected={itemData.uid === selectedUID}
           onClick={() => {
             history.replace(
@@ -242,6 +259,7 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({ expandable, isSelected = 
         <Text color={Color.GREY_300} font={{ variation: FontVariation.SMALL }} className={css.noShrink}>
           {timeDistance(itemData.updated, itemData.created)}
         </Text>
+
         <PRCheckExecutionStatus
           className={cx(css.status, css.noShrink)}
           status={itemData.status as PRCheckExecutionState}

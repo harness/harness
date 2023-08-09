@@ -6,7 +6,7 @@ import type { CellProps, Column } from 'react-table'
 import { StringKeys, useStrings } from 'framework/strings'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { EnumMembershipRole, TypesMembership, useMembershipDelete, useMembershipList } from 'services/code'
+import { EnumMembershipRole, TypesMembershipUser, useMembershipDelete, useMembershipList } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
@@ -60,7 +60,7 @@ const SpaceAccessControl = () => {
         {
           Header: getString('user'),
           width: '30%',
-          Cell: ({ row }: CellProps<TypesMembership>) => (
+          Cell: ({ row }: CellProps<TypesMembershipUser>) => (
             <Layout.Horizontal style={{ alignItems: 'center' }}>
               <Avatar
                 name={row.original.principal?.display_name}
@@ -78,7 +78,7 @@ const SpaceAccessControl = () => {
         {
           Header: getString('role'),
           width: '40%',
-          Cell: ({ row }: CellProps<TypesMembership>) => {
+          Cell: ({ row }: CellProps<TypesMembershipUser>) => {
             const stringKey = row.original.role ? roleStringKeyMap[row.original.role] : undefined
 
             return (
@@ -91,7 +91,7 @@ const SpaceAccessControl = () => {
         {
           Header: getString('email'),
           width: '25%',
-          Cell: ({ row }: CellProps<TypesMembership>) => (
+          Cell: ({ row }: CellProps<TypesMembershipUser>) => (
             <Text font={{ variation: FontVariation.SMALL_SEMI }} lineClamp={1}>
               {row.original.principal?.email}
             </Text>
@@ -100,7 +100,7 @@ const SpaceAccessControl = () => {
         {
           accessor: 'action',
           width: '5%',
-          Cell: ({ row }: CellProps<TypesMembership>) => {
+          Cell: ({ row }: CellProps<TypesMembershipUser>) => {
             return (
               <OptionsMenuButton
                 tooltipProps={{ isDark: true }}
@@ -118,7 +118,7 @@ const SpaceAccessControl = () => {
             )
           }
         }
-      ] as Column<TypesMembership>[],
+      ] as Column<TypesMembershipUser>[],
     []
   )
 

@@ -297,13 +297,6 @@ export enum MergeCheckStatus {
   CONFLICT = 'conflict'
 }
 
-export enum PullRequestSection {
-  CONVERSATION = 'conversation',
-  COMMITS = 'commits',
-  FILES_CHANGED = 'changes',
-  CHECKS = 'checks'
-}
-
 /**
  * Convert number of bytes into human readable format
  *
@@ -324,6 +317,7 @@ export function formatBytes(bytes: number, decimals = 2) {
 }
 
 export enum PullRequestCheckType {
-  EXTERNAL = 'external',
-  PIPELINE = 'pipeline' // TODO: This is not yet supported by backend
+  EMPTY = '',
+  RAW = 'raw',
+  MARKDOWN = 'markdown'
 }

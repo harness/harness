@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { Container } from '@harness/uicore'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
@@ -6,8 +6,9 @@ import { CanvasAddon } from 'xterm-addon-canvas'
 import { SearchAddon } from 'xterm-addon-search'
 import { WebLinksAddon } from 'xterm-addon-web-links'
 import 'xterm/css/xterm.css'
+import { useEventListener } from 'hooks/useEventListener'
 
-const DEFAULT_SCROLLBACK_LINES = 1000
+const DEFAULT_SCROLLBACK_LINES = 100000
 
 export type TermRefs = { term: Terminal; fitAddon: FitAddon } | undefined
 
@@ -18,7 +19,7 @@ export interface LogViewerProps {
   /** Number of scrollback lines */
   scrollbackLines?: number
 
-  /** Log content as string. Note that we can support streaming easily if backend has it */
+  /** Log content as string */
   content: string
 
   termRefs?: React.MutableRefObject<TermRefs>
@@ -26,8 +27,8 @@ export interface LogViewerProps {
 
 export const LogViewer: React.FC<LogViewerProps> = ({ scrollbackLines, content, termRefs }) => {
   const ref = useRef<HTMLDivElement | null>(null)
-  const lines = content.split(/\r?\n/)
-  const term = useRef<Terminal>()
+  const lines = useMemo(() => content.split(/\r?\n/), [content])
+  const term = useRef<{ term: Terminal; fitAddon: FitAddon }>()
 
   useEffect(() => {
     if (!term.current) {
@@ -45,13 +46,12 @@ export const LogViewer: React.FC<LogViewerProps> = ({ scrollbackLines, content, 
       const searchAddon = new SearchAddon()
       const fitAddon = new FitAddon()
       const webLinksAddon = new WebLinksAddon()
+
       _term.loadAddon(searchAddon)
       _term.loadAddon(fitAddon)
-
       _term.loadAddon(webLinksAddon)
       _term.loadAddon(new CanvasAddon())
 
-      _term.clear()
       _term.open(ref?.current as HTMLDivElement)
 
       fitAddon.fit()
@@ -59,14 +59,22 @@ export const LogViewer: React.FC<LogViewerProps> = ({ scrollbackLines, content, 
 
       _term.write('\x1b[?25l') // disable cursor
 
-      lines.forEach((line, _index) => _term.writeln(line))
+      term.current = { term: _term, fitAddon }
 
-      term.current = _term
       if (termRefs) {
-        termRefs.current = { term: _term, fitAddon }
+        termRefs.current = term.current
       }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    term.current?.term?.clear()
+    lines.forEach(line => term.current?.term?.writeln(line))
+  }, [lines])
+
+  useEventListener('resize', () => {
+    term.current?.fitAddon?.fit()
+  })
 
   return <Container ref={ref} width="100%" height="100%" />
 }

@@ -1,6 +1,5 @@
 .main {
-  min-height: var(--page-min-height, 100%);
-  background-color: var(--white) !important;
+  min-height: var(--page-height);
 
   > div[class*='PageHeader'] {
     border-bottom: none !important;

@@ -1,10 +1,11 @@
 .main {
-  --stage-title-height: 46px;
-  --stage-detail-section-height: 40px;
+  --stage-title-height: 54px;
+  --stage-detail-section-height: 48px;
+  --log-content-header-height: 64px;
 
   background-color: var(--white) !important;
   min-height: calc(var(--page-min-height) - 156px);
-  height: calc(100vh - 156px);
+  height: calc(var(--page-height) - 156px);
   overflow: hidden;
 
   > div {
@@ -97,26 +98,21 @@
           }
         }
 
-        overflow: auto;
         padding: 0 var(--spacing-large) var(--spacing-medium);
+        overflow: auto;
       }
 
       &.terminal {
         overflow: hidden;
 
+        .header {
+          padding: var(--spacing-medium) var(--spacing-large) 0;
+        }
+
         :global {
           .terminal.xterm {
-            padding: var(--spacing-medium);
+            padding: var(--spacing-small) var(--spacing-large) 0;
           }
-
-          // .terminal-container {
-          //   overflow: hidden;
-          // }
-
-          // .xterm .xterm-viewport {
-          //   /* see : https://github.com/xtermjs/xterm.js/issues/3564#issuecomment-1004417440 */
-          //   width: initial !important;
-          // }
         }
       }
 
@@ -125,12 +121,21 @@
         position: sticky;
         top: 0;
         background-color: var(--black);
+        height: var(--log-content-header-height);
 
         .headerLayout {
           border-bottom: 1px solid var(--grey-800);
           padding-bottom: var(--spacing-medium);
           align-items: center;
         }
+      }
+
+      .markdownContainer {
+        padding-top: var(--spacing-medium);
+      }
+
+      .terminalContainer {
+        height: calc(100% - var(--log-content-header-height));
       }
     }
   }

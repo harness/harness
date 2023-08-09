@@ -112,22 +112,19 @@ const CommitRangeDropdown: React.FC<CommitRangeDropdownProps> = ({
             margin={{ bottom: 'small' }}
           />
           <Divider />
-          <Container margin={{ top: 'small', bottom: 'small' }}>
+          <Container margin={{ top: 'small', bottom: 'small' }} style={{ maxHeight: '40vh', overflow: 'auto' }}>
             {allCommits?.map((prCommit, index) => {
               const isSelected = selectedCommits.includes(prCommit.sha || '')
 
               return (
                 <Layout.Horizontal
+                  key={prCommit.sha}
                   style={{ alignItems: 'center', cursor: 'pointer' }}
                   padding={{ top: 'xsmall', bottom: 'xsmall' }}
                   onClick={e => handleCheckboxClick(e, prCommit.sha as string)}>
-                  <Checkbox
-                    key={prCommit.sha}
-                    checked={isSelected}
-                    onClick={e => handleCheckboxClick(e, prCommit.sha as string)}
-                  />
+                  <Checkbox checked={isSelected} onClick={e => handleCheckboxClick(e, prCommit.sha as string)} />
                   <Text font={{ variation: FontVariation.SMALL_SEMI }} lineClamp={1} padding={{ right: 'small' }}>
-                    {allCommits.length - index} {prCommit.title}
+                    {`${allCommits.length - index} ${prCommit.title}`}
                   </Text>
                   <FlexExpander />
                   <Text font={{ variation: FontVariation.SMALL_SEMI }} style={{ whiteSpace: 'nowrap' }}>

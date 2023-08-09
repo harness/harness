@@ -144,7 +144,7 @@ export default function PullRequest() {
         <Render when={repoMetadata && prData}>
           <>
             <PullRequestMetaLine repoMetadata={repoMetadata as TypesRepository} {...prData} />
-            <Container className={tabContainerCSS.tabsContainer} style={{ minHeight: 'calc(100vh - 97px)' }}>
+            <Container className={tabContainerCSS.tabsContainer}>
               <Tabs
                 id="prTabs"
                 defaultSelectedTabId={activeTab}

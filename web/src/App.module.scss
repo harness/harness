@@ -4,12 +4,16 @@
   @include vars;
 
   &.fullPage {
-    height: 100%;
+    height: var(--page-height);
   }
 
   :global {
     div[data-testid='page-body'] > div[data-testid='page-error'] {
-      height: 80vh !important;
+      height: 70vh !important;
+    }
+
+    .PageBody--pageBody {
+      min-height: calc(var(--page-height) - var(--page-header-height, 64px));
     }
   }
 }

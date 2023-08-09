@@ -227,7 +227,7 @@ export const Changes: React.FC<ChangesProps> = ({
       <Render when={error}>
         <PageError message={getErrorMessage(error || errorActivities)} onClick={voidFn(refetch)} />
       </Render>
-      <Render when={!error}>
+      <Render when={!error && !loading}>
         <Container className={cx(css.header, { [css.stickied]: isSticky })}>
           <Layout.Horizontal>
             <Container flex={{ alignItems: 'center' }}>

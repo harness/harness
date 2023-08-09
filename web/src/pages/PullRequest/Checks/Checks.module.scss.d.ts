@@ -17,6 +17,8 @@ declare const styles: {
   readonly terminal: string
   readonly header: string
   readonly headerLayout: string
+  readonly markdownContainer: string
+  readonly terminalContainer: string
   readonly status: string
   readonly invert: string
   readonly noShrink: string

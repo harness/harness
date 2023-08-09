@@ -9,7 +9,7 @@ import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import {
   MembershipAddRequestBody,
-  TypesMembership,
+  TypesMembershipUser,
   TypesPrincipalInfo,
   useListPrincipals,
   useMembershipAdd,
@@ -23,7 +23,7 @@ const roles = ['reader', 'executor', 'contributor', 'space_owner'] as const
 
 const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
   const [isEditFlow, setIsEditFlow] = useState(false)
-  const [membershipDetails, setMembershipDetails] = useState<TypesMembership>()
+  const [membershipDetails, setMembershipDetails] = useState<TypesMembershipUser>()
   const [searchTerm, setSearchTerm] = useState('')
 
   const space = useGetSpaceParam()

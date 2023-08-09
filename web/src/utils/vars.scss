@@ -5,4 +5,6 @@
   --nav-menu-width: 232px;
   --nav-background: #f2f6fb;
   --page-background: #fbfcfd;
+
+  --page-height: var(--page-min-height, max(100vh, 800px));
 }

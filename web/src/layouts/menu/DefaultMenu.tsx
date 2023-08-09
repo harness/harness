@@ -21,7 +21,7 @@ export const DefaultMenu: React.FC = () => {
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
   const routeMatch = useRouteMatch()
   const isFilesSelected = useMemo(
-    () => routeMatch.path === '/:space/:repoName' || routeMatch.path.startsWith('/:space/:repoName/edit'),
+    () => routeMatch.path === '/:space*/:repoName' || routeMatch.path.startsWith('/:space*/:repoName/edit'),
     [routeMatch]
   )
   const isPipelineSelected = routeMatch.path.startsWith('/pipelines/:space*/pipeline/:pipeline')
