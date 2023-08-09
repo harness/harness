@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build oss
 // +build oss
 
 package queue
 
 import (
+	"context"
+
 	"github.com/drone/drone/core"
 	"github.com/drone/drone/service/redisdb"
 )
@@ -24,7 +27,7 @@ import (
 // New creates a new scheduler.
 func New(store core.StageStore, r redisdb.RedisDB) core.Scheduler {
 	return scheduler{
-		queue:     newQueue(store),
+		queue:     newQueue(context.Background(), store),
 		canceller: newCanceller(),
 	}
 }

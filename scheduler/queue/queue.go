@@ -39,14 +39,14 @@ type queue struct {
 }
 
 // newQueue returns a new Queue backed by the build datastore.
-func newQueue(store core.StageStore) *queue {
+func newQueue(ctx context.Context, store core.StageStore) *queue {
 	q := &queue{
 		store:    store,
 		globMx:   redisdb.LockErrNoOp{},
 		ready:    make(chan struct{}, 1),
 		workers:  map[*worker]struct{}{},
 		interval: time.Minute,
-		ctx:      context.Background(),
+		ctx:      ctx,
 	}
 	go q.start()
 	return q
@@ -87,6 +87,8 @@ func (q *queue) Resume(ctx context.Context) error {
 }
 
 func (q *queue) Request(ctx context.Context, params core.Filter) (*core.Stage, error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	w := &worker{
 		kind:    params.Kind,
 		typ:     params.Type,
@@ -96,6 +98,7 @@ func (q *queue) Request(ctx context.Context, params core.Filter) (*core.Stage, e
 		variant: params.Variant,
 		labels:  params.Labels,
 		channel: make(chan *core.Stage),
+		done:    ctx.Done(),
 	}
 	q.Lock()
 	q.workers[w] = struct{}{}
@@ -209,8 +212,20 @@ func (q *queue) signal(ctx context.Context) error {
 			// 		Msg("cannot update queue item")
 			// 	continue
 			// }
-			select {
-			case w.channel <- item:
+
+			// TODO: refactor to its own unexported method
+			sendWork := func() bool {
+				select {
+				case w.channel <- item:
+					return true
+				case <-w.done:
+					// Worker will exit when we call the deferred q.Unlock()
+				case <-time.After(q.interval):
+					// Worker failed to ack before timeout
+				}
+				return false
+			}
+			if sendWork() {
 				delete(q.workers, w)
 				break loop
 			}
@@ -241,6 +256,7 @@ type worker struct {
 	variant string
 	labels  map[string]string
 	channel chan *core.Stage
+	done    <-chan struct{}
 }
 
 type counter struct {
