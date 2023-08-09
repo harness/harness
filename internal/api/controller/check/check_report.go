@@ -51,27 +51,29 @@ func (in *ReportInput) Validate() error {
 	}
 	in.Payload.Kind = payloadKind
 
-	//nolint:gocritic // more values to follow on the enum (we want linter warning in case it is missed)
 	switch in.Payload.Kind {
-	case enum.CheckPayloadKindExternal:
-		// the default external type does not support payload: clear it here
+	case enum.CheckPayloadKindEmpty:
+		// the default payload kind (empty) does not support the payload data: clear it here
+		in.Payload.Version = ""
+		in.Payload.Data = []byte("{}")
 
-		var err error
-
-		if in.Link == "" { // the link is mandatory for the external
+		if in.Link == "" { // the link is mandatory as there is nothing in the payload
 			return usererror.BadRequest("Link is missing")
 		}
 
+	case enum.CheckPayloadKindRaw, enum.CheckPayloadKindMarkdown:
+		// the text payload kinds (raw and markdown) do not support the version
 		if in.Payload.Version != "" {
-			return usererror.BadRequest("Payload version must be empty")
+			return usererror.BadRequestf("Payload version must be empty for the payload kind '%s'",
+				in.Payload.Kind)
 		}
 
-		in.Payload.Data, err = sanitizeJsonPayload(in.Payload.Data, &struct {
-			Details string `json:"details"`
-		}{})
+		payloadDataJSON, err := sanitizeJsonPayload(in.Payload.Data, &types.CheckPayloadText{})
 		if err != nil {
 			return err
 		}
+
+		in.Payload.Data = payloadDataJSON
 	}
 
 	return nil
