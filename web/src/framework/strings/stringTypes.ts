@@ -351,6 +351,7 @@ export interface StringsMap {
   'pr.prCanBeMerged': string
   'pr.prClosed': string
   'pr.prMerged': string
+  'pr.prMergedBannerInfo': string
   'pr.prMergedInfo': string
   'pr.prReviewSubmit': string
   'pr.prStateChanged': string

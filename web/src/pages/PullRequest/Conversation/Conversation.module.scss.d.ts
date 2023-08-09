@@ -25,5 +25,6 @@ declare const styles: {
   readonly repeatBtn: string
   readonly bp3ButtonText: string
   readonly commitLink: string
+  readonly commitContainer: string
 }
 export default styles
