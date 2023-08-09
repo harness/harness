@@ -14,7 +14,6 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// List lists the executions in a pipeline.
 func (c *Controller) List(
 	ctx context.Context,
 	session *auth.Session,
@@ -41,7 +40,7 @@ func (c *Controller) List(
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
 		var dbErr error
-		count, dbErr = c.executionStore.Count(ctx, pipeline.ID, filter)
+		count, dbErr = c.executionStore.Count(ctx, pipeline.ID)
 		if dbErr != nil {
 			return fmt.Errorf("failed to count child executions: %w", err)
 		}

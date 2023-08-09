@@ -35,7 +35,6 @@ type CreateInput struct {
 	ConfigPath    string       `json:"config_path"`
 }
 
-// Create creates a new pipeline
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Pipeline, error) {
 	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {

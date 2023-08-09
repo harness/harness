@@ -14,7 +14,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string, pipelineUID string, executionNum int64) (*types.Execution, error) {
+func (c *Controller) Find(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	pipelineUID string,
+	executionNum int64,
+) (*types.Execution, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("could not find parent space: %w", err)

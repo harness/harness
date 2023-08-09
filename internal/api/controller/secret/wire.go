@@ -5,10 +5,11 @@
 package secret
 
 import (
-	"github.com/google/wire"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/check"
+
+	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
 )
 

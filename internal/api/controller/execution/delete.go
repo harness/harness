@@ -13,7 +13,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef string, pipelineUID string, executionNum int64) error {
+func (c *Controller) Delete(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	pipelineUID string,
+	executionNum int64,
+) error {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return fmt.Errorf("could not find parent space: %w", err)

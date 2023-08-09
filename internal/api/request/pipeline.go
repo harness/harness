@@ -29,7 +29,6 @@ func GetPipelineRefFromPath(r *http.Request) (string, error) {
 
 func GetExecutionNumberFromPath(r *http.Request) (int64, error) {
 	return PathParamAsPositiveInt64(r, ExecutionNumber)
-
 }
 
 // ParsePipelineFilter extracts the pipeline filter from the url.

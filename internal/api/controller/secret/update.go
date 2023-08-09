@@ -20,7 +20,6 @@ type UpdateInput struct {
 	Data        string `json:"data"`
 }
 
-// Update updates a secret.
 func (c *Controller) Update(
 	ctx context.Context,
 	session *auth.Session,

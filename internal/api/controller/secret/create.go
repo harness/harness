@@ -33,7 +33,6 @@ type CreateInput struct {
 	Data        string `json:"data"`
 }
 
-// Create creates a new pipeline
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Secret, error) {
 	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
@@ -73,6 +72,9 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		}
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return secret, nil
 }

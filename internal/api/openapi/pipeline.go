@@ -95,7 +95,8 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opUpdate, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodPatch, "/pipelines/{pipeline_ref}", opUpdate)
+	_ = reflector.Spec.AddOperation(http.MethodPatch,
+		"/pipelines/{pipeline_ref}", opUpdate)
 
 	executionCreate := openapi3.Operation{}
 	executionCreate.WithTags("pipeline")
@@ -106,7 +107,8 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionCreate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&executionCreate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&executionCreate, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodPost, "/pipelines/{pipeline_ref}/executions", executionCreate)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/pipelines/{pipeline_ref}/executions", executionCreate)
 
 	executionFind := openapi3.Operation{}
 	executionFind.WithTags("pipeline")
@@ -117,7 +119,8 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionFind, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&executionFind, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&executionFind, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/pipelines/{pipeline_ref}/executions/{execution_number}", executionFind)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/pipelines/{pipeline_ref}/executions/{execution_number}", executionFind)
 
 	executionDelete := openapi3.Operation{}
 	executionDelete.WithTags("pipeline")
@@ -128,7 +131,8 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionDelete, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&executionDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&executionDelete, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodDelete, "/pipelines/{pipeline_ref}/executions/{execution_number}", executionDelete)
+	_ = reflector.Spec.AddOperation(http.MethodDelete,
+		"/pipelines/{pipeline_ref}/executions/{execution_number}", executionDelete)
 
 	executionUpdate := openapi3.Operation{}
 	executionUpdate.WithTags("pipeline")
@@ -140,7 +144,8 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionUpdate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&executionUpdate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&executionUpdate, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodPatch, "/pipelines/{pipeline_ref}/executions/{execution_number}", executionUpdate)
+	_ = reflector.Spec.AddOperation(http.MethodPatch,
+		"/pipelines/{pipeline_ref}/executions/{execution_number}", executionUpdate)
 
 	executionList := openapi3.Operation{}
 	executionList.WithTags("pipeline")
@@ -152,5 +157,6 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionList, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&executionList, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&executionList, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/pipelines/{pipeline_ref}/executions", executionList)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/pipelines/{pipeline_ref}/executions", executionList)
 }

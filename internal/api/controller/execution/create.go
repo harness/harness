@@ -15,13 +15,18 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// TODO: Add more as needed
+// TODO: Add more as needed.
 type CreateInput struct {
 	Status string `json:"status"`
 }
 
-// Create creates a new execution
-func (c *Controller) Create(ctx context.Context, session *auth.Session, spaceRef string, uid string, in *CreateInput) (*types.Execution, error) {
+func (c *Controller) Create(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	uid string,
+	in *CreateInput,
+) (*types.Execution, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("could not find space: %w", err)

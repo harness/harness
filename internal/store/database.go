@@ -510,7 +510,7 @@ type (
 		// Delete deletes an execution given a pipeline ID and an execution number
 		Delete(ctx context.Context, pipelineID int64, num int64) error
 
-		// Count the number of executions in a space matching the given filter.
-		Count(ctx context.Context, parentID int64, opts *types.ExecutionFilter) (int64, error)
+		// Count the number of executions in a space
+		Count(ctx context.Context, parentID int64) (int64, error)
 	}
 )

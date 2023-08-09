@@ -14,6 +14,7 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -183,7 +184,7 @@ const (
 	WHERE execution_id = :execution_id AND execution_version = :execution_version - 1`
 )
 
-// Find returns an execution given a pipeline ID and an execution number
+// Find returns an execution given a pipeline ID and an execution number.
 func (s *executionStore) Find(ctx context.Context, pipelineID int64, executionNum int64) (*types.Execution, error) {
 	const findQueryStmt = executionQueryBase + `
 		WHERE execution_pipeline_id = $1 AND execution_number = $2`
@@ -243,8 +244,12 @@ func (s *executionStore) Update(ctx context.Context, execution *types.Execution)
 	return execution, nil
 }
 
-// List lists the executions for a given pipeline ID
-func (s *executionStore) List(ctx context.Context, pipelineID int64, opts *types.ExecutionFilter) ([]types.Execution, error) {
+// List lists the executions for a given pipeline ID.
+func (s *executionStore) List(
+	ctx context.Context,
+	pipelineID int64,
+	opts *types.ExecutionFilter,
+) ([]types.Execution, error) {
 	stmt := database.Builder.
 		Select(executionColumns).
 		From("executions").
@@ -269,7 +274,7 @@ func (s *executionStore) List(ctx context.Context, pipelineID int64, opts *types
 }
 
 // Count of executions in a space.
-func (s *executionStore) Count(ctx context.Context, pipelineID int64, opts *types.ExecutionFilter) (int64, error) {
+func (s *executionStore) Count(ctx context.Context, pipelineID int64) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
 		From("executions").
@@ -290,7 +295,7 @@ func (s *executionStore) Count(ctx context.Context, pipelineID int64, opts *type
 	return count, nil
 }
 
-// Delete deletes an execution given a pipeline ID and an execution number
+// Delete deletes an execution given a pipeline ID and an execution number.
 func (s *executionStore) Delete(ctx context.Context, pipelineID int64, executionNum int64) error {
 	const executionDeleteStmt = `
 		DELETE FROM executions

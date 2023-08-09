@@ -16,6 +16,7 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -82,7 +83,7 @@ type secretStore struct {
 	enc encrypt.Encrypter
 }
 
-// Find returns a secret given a secret ID
+// Find returns a secret given a secret ID.
 func (s *secretStore) Find(ctx context.Context, id int64) (*types.Secret, error) {
 	const findQueryStmt = secretQueryBase + `
 		WHERE secret_id = $1`
@@ -95,7 +96,7 @@ func (s *secretStore) Find(ctx context.Context, id int64) (*types.Secret, error)
 	return dec(s.enc, dst)
 }
 
-// FindByUID returns a secret in a given space with a given UID
+// FindByUID returns a secret in a given space with a given UID.
 func (s *secretStore) FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Secret, error) {
 	const findQueryStmt = secretQueryBase + `
 		WHERE secret_space_id = $1 AND secret_uid = $2`
@@ -108,7 +109,7 @@ func (s *secretStore) FindByUID(ctx context.Context, spaceID int64, uid string) 
 	return dec(s.enc, dst)
 }
 
-// Create creates a secret
+// Create creates a secret.
 func (s *secretStore) Create(ctx context.Context, secret *types.Secret) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -162,10 +163,9 @@ func (s *secretStore) Update(ctx context.Context, secret *types.Secret) (*types.
 	}
 
 	return secret, nil
-
 }
 
-// List lists all the secrets present in a space
+// List lists all the secrets present in a space.
 func (s *secretStore) List(ctx context.Context, parentID int64, opts *types.SecretFilter) ([]types.Secret, error) {
 	stmt := database.Builder.
 		Select(secretColumns).
@@ -194,7 +194,7 @@ func (s *secretStore) List(ctx context.Context, parentID int64, opts *types.Secr
 	return dst, nil
 }
 
-// Delete deletes a secret given a secret ID
+// Delete deletes a secret given a secret ID.
 func (s *secretStore) Delete(ctx context.Context, id int64) error {
 	const secretDeleteStmt = `
 		DELETE FROM secrets
@@ -209,7 +209,7 @@ func (s *secretStore) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// DeleteByUID deletes a secret with a given UID in a space
+// DeleteByUID deletes a secret with a given UID in a space.
 func (s *secretStore) DeleteByUID(ctx context.Context, spaceID int64, uid string) error {
 	const secretDeleteStmt = `
 	DELETE FROM secrets
@@ -250,7 +250,7 @@ func (s *secretStore) Count(ctx context.Context, parentID int64, opts *types.Sec
 	return count, nil
 }
 
-// helper function returns the same secret with encrypted data
+// helper function returns the same secret with encrypted data.
 func enc(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error) {
 	s := *secret
 	ciphertext, err := encrypt.Encrypt(secret.Data)
@@ -261,13 +261,13 @@ func enc(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error)
 	return &s, nil
 }
 
-// helper function returns the same secret with decrypted data
+// helper function returns the same secret with decrypted data.
 func dec(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error) {
 	s := *secret
 	plaintext, err := encrypt.Decrypt([]byte(secret.Data))
 	if err != nil {
 		return nil, err
 	}
-	s.Data = string(plaintext)
+	s.Data = plaintext
 	return &s, nil
 }

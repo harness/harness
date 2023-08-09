@@ -13,7 +13,6 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// Delete deletes a secret.
 func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef string, uid string) error {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {

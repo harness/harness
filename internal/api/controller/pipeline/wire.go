@@ -5,12 +5,12 @@
 package pipeline
 
 import (
-	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/check"
+
+	"github.com/google/wire"
+	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.

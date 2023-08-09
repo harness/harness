@@ -4,7 +4,7 @@
 
 package types
 
-// Execution represents an instance of a pipeline execution
+// Execution represents an instance of a pipeline execution.
 type Execution struct {
 	ID           int64  `db:"execution_id"             json:"id"`
 	PipelineID   int64  `db:"execution_pipeline_id"    json:"pipeline_id"`

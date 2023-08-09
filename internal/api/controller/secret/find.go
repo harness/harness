@@ -13,8 +13,12 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// Find finds a secret.
-func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string, uid string) (*types.Secret, error) {
+func (c *Controller) Find(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	uid string,
+) (*types.Secret, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, err

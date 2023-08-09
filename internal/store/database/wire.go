@@ -63,7 +63,7 @@ func ProvidePrincipalStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTran
 	return NewPrincipalStore(db, uidTransformation)
 }
 
-// ProvideEncryptor provides an encryptor implementation
+// ProvideEncryptor provides an encryptor implementation.
 func ProvideEncryptor(config database.Config) (encrypt.Encrypter, error) {
 	enc, err := encrypt.New(config.Secret)
 	// mixed-content mode should be set to true if the database
@@ -104,12 +104,12 @@ func ProvidePipelineStore(db *sqlx.DB) store.PipelineStore {
 	return NewPipelineStore(db)
 }
 
-// ProvidePipelineStore provides a pipeline store.
+// ProvideSecretStore provides a secret store.
 func ProvideSecretStore(enc encrypt.Encrypter, db *sqlx.DB) store.SecretStore {
 	return NewSecretStore(enc, db)
 }
 
-// ProvideExecutionStore provides a build store
+// ProvideExecutionStore provides an execution store.
 func ProvideExecutionStore(db *sqlx.DB) store.ExecutionStore {
 	return NewExecutionStore(db)
 }

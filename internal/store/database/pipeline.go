@@ -101,7 +101,7 @@ type pipelineStore struct {
 	db *sqlx.DB
 }
 
-// Find returns a pipeline given a pipeline ID
+// Find returns a pipeline given a pipeline ID.
 func (s *pipelineStore) Find(ctx context.Context, id int64) (*types.Pipeline, error) {
 	const findQueryStmt = pipelineQueryBase + `
 		WHERE pipeline_id = $1`
@@ -114,7 +114,7 @@ func (s *pipelineStore) Find(ctx context.Context, id int64) (*types.Pipeline, er
 	return dst, nil
 }
 
-// FindByUID returns a pipeline in a given space with a given UID
+// FindByUID returns a pipeline in a given space with a given UID.
 func (s *pipelineStore) FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Pipeline, error) {
 	const findQueryStmt = pipelineQueryBase + `
 		WHERE pipeline_space_id = $1 AND pipeline_uid = $2`
@@ -127,7 +127,7 @@ func (s *pipelineStore) FindByUID(ctx context.Context, spaceID int64, uid string
 	return dst, nil
 }
 
-// Create creates a pipeline
+// Create creates a pipeline.
 func (s *pipelineStore) Create(ctx context.Context, pipeline *types.Pipeline) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -143,6 +143,7 @@ func (s *pipelineStore) Create(ctx context.Context, pipeline *types.Pipeline) er
 	return nil
 }
 
+// Update updates a pipeline.
 func (s *pipelineStore) Update(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error) {
 	updatedAt := time.Now()
 
@@ -171,11 +172,14 @@ func (s *pipelineStore) Update(ctx context.Context, pipeline *types.Pipeline) (*
 	}
 
 	return pipeline, nil
-
 }
 
-// List lists all the pipelines present in a space
-func (s *pipelineStore) List(ctx context.Context, parentID int64, opts *types.PipelineFilter) ([]types.Pipeline, error) {
+// List lists all the pipelines present in a space.
+func (s *pipelineStore) List(
+	ctx context.Context,
+	parentID int64,
+	opts *types.PipelineFilter,
+) ([]types.Pipeline, error) {
 	stmt := database.Builder.
 		Select(pipelineColumns).
 		From("pipelines").
@@ -229,7 +233,7 @@ func (s *pipelineStore) Count(ctx context.Context, parentID int64, opts *types.P
 	return count, nil
 }
 
-// Delete deletes a pipeline given a pipeline ID
+// Delete deletes a pipeline given a pipeline ID.
 func (s *pipelineStore) Delete(ctx context.Context, id int64) error {
 	const pipelineDeleteStmt = `
 		DELETE FROM pipelines
@@ -244,7 +248,7 @@ func (s *pipelineStore) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// DeleteByUID deletes a pipeline with a given UID in a space
+// DeleteByUID deletes a pipeline with a given UID in a space.
 func (s *pipelineStore) DeleteByUID(ctx context.Context, spaceID int64, uid string) error {
 	const pipelineDeleteStmt = `
 	DELETE FROM pipelines
@@ -263,12 +267,12 @@ func (s *pipelineStore) DeleteByUID(ctx context.Context, spaceID int64, uid stri
 // of optimistic lock errors.
 func (s *pipelineStore) IncrementSeqNum(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error) {
 	for {
+		var err error
 		pipeline.Seq++
-		pipeline, err := s.Update(ctx, pipeline)
+		pipeline, err = s.Update(ctx, pipeline)
 		if err == nil {
 			return pipeline, nil
-		}
-		if err != nil && err != gitness_store.ErrVersionConflict {
+		} else if !errors.Is(err, gitness_store.ErrVersionConflict) {
 			return pipeline, errors.Wrap(err, "could not increment pipeline sequence number")
 		}
 		pipeline, err = s.Find(ctx, pipeline.ID)
