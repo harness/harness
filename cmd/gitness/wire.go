@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/controller/secret"
 	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
@@ -94,6 +95,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		checkcontroller.WireSet,
 		execution.WireSet,
 		pipeline.WireSet,
+		secret.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

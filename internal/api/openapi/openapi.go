@@ -42,6 +42,7 @@ func Generate() *openapi3.Spec {
 	spaceOperations(&reflector)
 	repoOperations(&reflector)
 	pipelineOperations(&reflector)
+	secretOperations(&reflector)
 	resourceOperations(&reflector)
 	pullReqOperations(&reflector)
 	webhookOperations(&reflector)

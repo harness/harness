@@ -66,6 +66,9 @@ func (a *MembershipAuthorizer) Check(
 	case enum.ResourceTypePipeline:
 		spaceRef = scope.SpacePath
 
+	case enum.ResourceTypeSecret:
+		spaceRef = scope.SpacePath
+
 	case enum.ResourceTypeUser:
 		// a user is allowed to view / edit themselves
 		if resource.Name == session.Principal.UID &&

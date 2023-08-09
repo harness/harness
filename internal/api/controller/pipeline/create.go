@@ -14,23 +14,22 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
 var (
-	// errRepositoryRequiresParent if the user tries to create a repo without a parent space.
+	// errPipelineRequiresParent if the user tries to create a pipeline without a parent space.
 	errPipelineRequiresParent = usererror.BadRequest(
 		"Parent space required - standalone pipelines are not supported.")
 )
 
 type CreateInput struct {
 	Description   string       `json:"description"`
-	ParentRef     string       `json:"parent_ref"` // Ref of the parent space
+	SpaceRef      string       `json:"space_ref"`
 	UID           string       `json:"uid"`
-	RepoRef       string       `json:"repo_ref"` // null if repo_type != gitness
+	RepoRef       string       `json:"repo_ref"` // empty if repo_type != gitness
 	RepoType      enum.ScmType `json:"repo_type"`
 	DefaultBranch string       `json:"default_branch"`
 	ConfigPath    string       `json:"config_path"`
@@ -38,7 +37,7 @@ type CreateInput struct {
 
 // Create creates a new pipeline
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Pipeline, error) {
-	parentSpace, err := c.spaceStore.FindByRef(ctx, in.ParentRef)
+	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("could not find parent by ref: %w", err)
 	}
@@ -62,67 +61,33 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
+	fmt.Println("parent space: ", parentSpace.ID)
 	var pipeline *types.Pipeline
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
-		// lock parent space path to ensure it doesn't get updated while we setup new pipeline
-		_, err := c.pathStore.FindPrimaryWithLock(ctx, enum.PathTargetTypeSpace, parentSpace.ID)
-		if err != nil {
-			return usererror.BadRequest("Parent not found")
-		}
-
-		now := time.Now().UnixMilli()
-		pipeline = &types.Pipeline{
-			Description:   in.Description,
-			ParentID:      parentSpace.ID,
-			UID:           in.UID,
-			Seq:           0,
-			RepoID:        repoID,
-			RepoType:      in.RepoType,
-			DefaultBranch: in.DefaultBranch,
-			ConfigPath:    in.ConfigPath,
-			Created:       now,
-			Updated:       now,
-			Version:       0,
-		}
-		err = c.pipelineStore.Create(ctx, pipeline)
-		if err != nil {
-			return fmt.Errorf("pipeline creation failed: %w", err)
-		}
-		return nil
-	})
+	now := time.Now().UnixMilli()
+	pipeline = &types.Pipeline{
+		Description:   in.Description,
+		SpaceID:       parentSpace.ID,
+		UID:           in.UID,
+		Seq:           0,
+		RepoID:        repoID,
+		RepoType:      in.RepoType,
+		DefaultBranch: in.DefaultBranch,
+		ConfigPath:    in.ConfigPath,
+		Created:       now,
+		Updated:       now,
+		Version:       0,
+	}
+	err = c.pipelineStore.Create(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("pipeline creation failed: %w", err)
+	}
 
 	return pipeline, nil
 }
 
-func (c *Controller) getSpaceCheckAuthRepoCreation(
-	ctx context.Context,
-	session *auth.Session,
-	parentRef string,
-) (*types.Space, error) {
-	space, err := c.spaceStore.FindByRef(ctx, parentRef)
-	if err != nil {
-		return nil, fmt.Errorf("parent space not found: %w", err)
-	}
-
-	// create is a special case - check permission without specific resource
-	scope := &types.Scope{SpacePath: space.Path}
-	resource := &types.Resource{
-		Type: enum.ResourceTypeRepo,
-		Name: "",
-	}
-
-	err = apiauth.Check(ctx, c.authorizer, session, scope, resource, enum.PermissionRepoEdit)
-	if err != nil {
-		return nil, fmt.Errorf("auth check failed: %w", err)
-	}
-
-	return space, nil
-}
-
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
-	parentRefAsID, err := strconv.ParseInt(in.ParentRef, 10, 64)
-
-	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(in.ParentRef)) == 0) {
+	parentRefAsID, err := strconv.ParseInt(in.SpaceRef, 10, 64)
+	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(in.SpaceRef)) == 0) {
 		return errPipelineRequiresParent
 	}
 

@@ -6,7 +6,9 @@ package database
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/database/migrate"
 	"github.com/harness/gitness/store/database"
@@ -25,6 +27,8 @@ var WireSet = wire.NewSet(
 	ProvideRepoStore,
 	ProvideExecutionStore,
 	ProvidePipelineStore,
+	ProvideSecretStore,
+	ProvideEncryptor,
 	ProvideRepoGitInfoView,
 	ProvideMembershipStore,
 	ProvideTokenStore,
@@ -60,6 +64,23 @@ func ProvidePrincipalStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTran
 	return NewPrincipalStore(db, uidTransformation)
 }
 
+// ProvideEncryptor provides an encryptor implementation
+func ProvideEncryptor(config database.Config) (encrypt.Encrypter, error) {
+	fmt.Println("secret: ", config.Secret)
+	enc, err := encrypt.New(config.Secret)
+	// mixed-content mode should be set to true if the database
+	// originally had encryption disabled and therefore has
+	// plaintext entries. This prevents gitness from returning an
+	// error if decryption fails; on failure, the ciphertext is
+	// returned as-is and the error is ignored.
+	if aesgcm, ok := enc.(*encrypt.Aesgcm); ok {
+		if config.EncryptMixedContent {
+			aesgcm.Compat = true
+		}
+	}
+	return enc, err
+}
+
 // ProvidePrincipalInfoView provides a principal info store.
 func ProvidePrincipalInfoView(db *sqlx.DB) store.PrincipalInfoView {
 	return NewPrincipalInfoView(db)
@@ -83,6 +104,11 @@ func ProvideRepoStore(db *sqlx.DB, pathCache store.PathCache) store.RepoStore {
 // ProvidePipelineStore provides a pipeline store.
 func ProvidePipelineStore(db *sqlx.DB) store.PipelineStore {
 	return NewPipelineStore(db)
+}
+
+// ProvidePipelineStore provides a pipeline store.
+func ProvideSecretStore(enc encrypt.Encrypter, db *sqlx.DB) store.SecretStore {
+	return NewSecretStore(enc, db)
 }
 
 // ProvideExecutionStore provides a build store

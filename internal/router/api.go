@@ -16,6 +16,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/controller/secret"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/user"
@@ -29,6 +30,7 @@ import (
 	handlerpullreq "github.com/harness/gitness/internal/api/handler/pullreq"
 	handlerrepo "github.com/harness/gitness/internal/api/handler/repo"
 	"github.com/harness/gitness/internal/api/handler/resource"
+	handlersecret "github.com/harness/gitness/internal/api/handler/secret"
 	handlerserviceaccount "github.com/harness/gitness/internal/api/handler/serviceaccount"
 	handlerspace "github.com/harness/gitness/internal/api/handler/space"
 	"github.com/harness/gitness/internal/api/handler/system"
@@ -58,7 +60,7 @@ type APIHandler interface {
 
 var (
 	// terminatedPathPrefixesAPI is the list of prefixes that will require resolving terminated paths.
-	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/", "/v1/pipelines/"}
+	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/", "/v1/pipelines/", "/v1/secrets/"}
 )
 
 // NewAPIHandler returns a new APIHandler.
@@ -69,6 +71,7 @@ func NewAPIHandler(
 	executionCtrl *execution.Controller,
 	spaceCtrl *space.Controller,
 	pipelineCtrl *pipeline.Controller,
+	secretCtrl *secret.Controller,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
 	githookCtrl *controllergithook.Controller,
@@ -98,7 +101,7 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator, authn.SourceRouterAPI))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, config, repoCtrl, executionCtrl, pipelineCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
+		setupRoutesV1(r, repoCtrl, executionCtrl, pipelineCtrl, secretCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
 			saCtrl, userCtrl, principalCtrl, checkCtrl)
 	})
 
@@ -120,10 +123,10 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 }
 
 func setupRoutesV1(r chi.Router,
-	config *types.Config,
 	repoCtrl *repo.Controller,
 	executionCtrl *execution.Controller,
 	pipelineCtrl *pipeline.Controller,
+	secretCtrl *secret.Controller,
 	spaceCtrl *space.Controller,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
@@ -136,6 +139,7 @@ func setupRoutesV1(r chi.Router,
 	setupSpaces(r, spaceCtrl)
 	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl, checkCtrl)
 	setupPipelines(r, pipelineCtrl, executionCtrl)
+	setupSecrets(r, secretCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
 	setupPrincipals(r, principalCtrl)
@@ -286,6 +290,18 @@ func setupPipelines(r chi.Router, pipelineCtrl *pipeline.Controller, executionCt
 			r.Patch("/", handlerpipeline.HandleUpdate(pipelineCtrl))
 			r.Delete("/", handlerpipeline.HandleDelete(pipelineCtrl))
 			setupExecutions(r, pipelineCtrl, executionCtrl)
+		})
+	})
+}
+
+func setupSecrets(r chi.Router, secretCtrl *secret.Controller) {
+	r.Route("/secrets", func(r chi.Router) {
+		// Create takes path and parentId via body, not uri
+		r.Post("/", handlersecret.HandleCreate(secretCtrl))
+		r.Route(fmt.Sprintf("/{%s}", request.SecretRef), func(r chi.Router) {
+			r.Get("/", handlersecret.HandleFind(secretCtrl))
+			r.Patch("/", handlersecret.HandleUpdate(secretCtrl))
+			r.Delete("/", handlersecret.HandleDelete(secretCtrl))
 		})
 	})
 }

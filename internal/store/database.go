@@ -441,132 +441,73 @@ type (
 	}
 	PipelineStore interface {
 		// Find returns a pipeline given a pipeline ID from the datastore.
-		Find(context.Context, int64) (*types.Pipeline, error)
+		Find(ctx context.Context, id int64) (*types.Pipeline, error)
 
 		// FindByUID returns a pipeline with a given UID in a space
-		FindByUID(context.Context, int64, string) (*types.Pipeline, error)
+		FindByUID(ctx context.Context, id int64, uid string) (*types.Pipeline, error)
 
 		// Create creates a new pipeline in the datastore.
-		Create(context.Context, *types.Pipeline) error
+		Create(ctx context.Context, pipeline *types.Pipeline) error
 
 		// Update tries to update a pipeline in the datastore with optimistic locking.
-		Update(context.Context, *types.Pipeline) (*types.Pipeline, error)
+		Update(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error)
 
 		// List lists the pipelines present in a parent space ID in the datastore.
-		List(context.Context, int64, *types.PipelineFilter) ([]types.Pipeline, error)
+		List(ctx context.Context, spaceID int64, filter *types.PipelineFilter) ([]types.Pipeline, error)
 
 		// Delete deletes a pipeline ID from the datastore.
-		Delete(context.Context, int64) error
+		Delete(ctx context.Context, id int64) error
 
 		// Count the number of pipelines in a space matching the given filter.
-		Count(ctx context.Context, parentID int64, opts *types.PipelineFilter) (int64, error)
+		Count(ctx context.Context, spaceID int64, filter *types.PipelineFilter) (int64, error)
 
 		// DeleteByUID deletes a pipeline with a given UID in a space
-		DeleteByUID(context.Context, int64, string) error
+		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
 
 		// Incremenet increments the sequence number of the pipeline
-		Increment(context.Context, *types.Pipeline) (*types.Pipeline, error)
+		Increment(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error)
 	}
 
 	SecretStore interface {
 		// Find returns a secret given an ID
-		Find(context.Context, int64) (*types.Secret, error)
+		Find(ctx context.Context, id int64) (*types.Secret, error)
 
 		// FindByUID returns a secret given a space ID and a UID
-		FindByUID(context.Context, int64, string) (*types.Secret, error)
+		FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Secret, error)
 
 		// Create creates a new secret
-		Create(context.Context, *types.Secret) error
+		Create(ctx context.Context, secret *types.Secret) error
 
-		// Update tries to update an execution in the datastore with optimistic locking.
-		Update(context.Context, *types.Secret) (*types.Secret, error)
+		// Update tries to update a secret.
+		Update(ctx context.Context, secret *types.Secret) (*types.Secret, error)
 
-		// Delete deletes an execution given a pipeline ID and an execution number
-		Delete(context.Context, int64) error
+		// Delete deletes a secret given an ID.
+		Delete(ctx context.Context, id int64) error
 
-		// Delete deletes an execution given a pipeline ID and an execution number
-		DeleteByUID(context.Context, int64, string) error
+		// DeleteByUID deletes a secret given a space ID and a uid
+		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
 
-		// List lists the executions for a given pipeline ID
-		List(context.Context, int64, *types.SecretFilter) ([]types.Secret, error)
+		// List lists the secrets in a given space
+		List(ctx context.Context, spaceID int64, filter *types.SecretFilter) ([]types.Secret, error)
 	}
 
 	ExecutionStore interface {
 		// Find returns a execution given a pipeline and an execution number
-		Find(context.Context, int64, int64) (*types.Execution, error)
+		Find(ctx context.Context, pipelineID int64, num int64) (*types.Execution, error)
 
 		// Create creates a new execution in the datastore.
-		Create(context.Context, *types.Execution) error
+		Create(ctx context.Context, execution *types.Execution) error
 
 		// Update tries to update an execution in the datastore with optimistic locking.
-		Update(context.Context, *types.Execution) (*types.Execution, error)
+		Update(ctx context.Context, execution *types.Execution) (*types.Execution, error)
 
 		// List lists the executions for a given pipeline ID
-		List(context.Context, int64, *types.ExecutionFilter) ([]types.Execution, error)
+		List(ctx context.Context, pipelineID int64, filter *types.ExecutionFilter) ([]types.Execution, error)
 
 		// Delete deletes an execution given a pipeline ID and an execution number
-		Delete(context.Context, int64, int64) error
+		Delete(ctx context.Context, pipelineID int64, num int64) error
 
 		// Count the number of executions in a space matching the given filter.
 		Count(ctx context.Context, parentID int64, opts *types.ExecutionFilter) (int64, error)
-
-		// Find returns a build from the datastore.
-		// Find(context.Context, int64) (*types.Execution, error)
-
-		// FindNumber returns a build from the datastore by build number.
-		// FindNumber(context.Context, int64, int64) (*types.Execution, error)
-
-		// FindLast returns the last build from the datastore by ref.
-		// FindRef(context.Context, int64, string) (*types.Execution, error)
-
-		// List returns a list of builds from the datastore by repository id.
-		// List(context.Context, int64, int, int) ([]*types.Execution, error)
-
-		// ListRef returns a list of builds from the datastore by ref.
-		// ListRef(context.Context, int64, string, int, int) ([]*types.Execution, error)
-
-		// LatestBranches returns the latest builds from the
-		// datastore by branch.
-		// LatestBranches(context.Context, int64) ([]*types.Execution, error)
-
-		// LatestPulls returns the latest builds from the
-		// datastore by pull request.
-		// LatestPulls(context.Context, int64) ([]*types.Execution, error)
-
-		// LatestDeploys returns the latest builds from the
-		// datastore by deployment target.
-		// LatestDeploys(context.Context, int64) ([]*types.Execution, error)
-
-		// Pending returns a list of pending builds from the
-		// datastore by repository id (DEPRECATED).
-		// Pending(context.Context) ([]*types.Execution, error)
-
-		// Running returns a list of running builds from the
-		// datastore by repository id (DEPRECATED).
-		// Running(context.Context) ([]*types.Execution, error)
-
-		// Create persists a build to the datastore.
-		// Create(context.Context, *types.Execution, []*Stage) error
-
-		// Update updates a build in the datastore.
-		// Update(context.Context, *types.Execution) error
-
-		// // Delete deletes a build from the datastore.
-		// Delete(context.Context, *types.Execution) error
-
-		// // DeletePull deletes a pull request index from the datastore.
-		// DeletePull(context.Context, int64, int) error
-
-		// // DeleteBranch deletes a branch index from the datastore.
-		// DeleteBranch(context.Context, int64, string) error
-
-		// // DeleteDeploy deletes a deploy index from the datastore.
-		// DeleteDeploy(context.Context, int64, string) error
-
-		// // Purge deletes builds from the database where the build number is less than n.
-		// Purge(context.Context, int64, int64) error
-
-		// // Count returns a count of builds.
-		// Count(context.Context) (int64, error)
 	}
 )

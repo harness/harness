@@ -15,6 +15,7 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -23,56 +24,43 @@ var _ store.PipelineStore = (*pipelineStore)(nil)
 
 const (
 	pipelineQueryBase = `
-		SELECT
-		pipeline_id,
-		pipeline_description,
-		pipeline_parent_id,
-		pipeline_uid,
-		pipeline_seq,
-		pipeline_repo_id,
-		pipeline_repo_type,
-		pipeline_repo_name,
-		pipeline_default_branch,
-		pipeline_config_path,
-		pipeline_created,
-		pipeline_updated,
-		pipeline_version
-		FROM pipelines
-		`
+		SELECT` +
+		pipelineColumns + `
+		FROM pipelines`
 
 	pipelineColumns = `
-	pipeline_id,
-	pipeline_description,
-	pipeline_parent_id,
-	pipeline_uid,
-	pipeline_seq,
-	pipeline_repo_id,
-	pipeline_repo_type,
-	pipeline_repo_name,
-	pipeline_default_branch,
-	pipeline_config_path,
-	pipeline_created,
-	pipeline_updated,
-	pipeline_version
+	pipeline_id
+	,pipeline_description
+	,pipeline_space_id
+	,pipeline_uid
+	,pipeline_seq
+	,pipeline_repo_id
+	,pipeline_repo_type
+	,pipeline_repo_name
+	,pipeline_default_branch
+	,pipeline_config_path
+	,pipeline_created
+	,pipeline_updated
+	,pipeline_version
 	`
 
 	pipelineInsertStmt = `
 	INSERT INTO pipelines (
-		pipeline_description,
-		pipeline_parent_id,
-		pipeline_uid,
-		pipeline_seq,
-		pipeline_repo_id,
-		pipeline_repo_type,
-		pipeline_repo_name,
-		pipeline_default_branch,
-		pipeline_config_path,
-		pipeline_created,
-		pipeline_updated,
-		pipeline_version
+		pipeline_description
+		,pipeline_space_id
+		,pipeline_uid
+		,pipeline_seq
+		,pipeline_repo_id
+		,pipeline_repo_type
+		,pipeline_repo_name
+		,pipeline_default_branch
+		,pipeline_config_path
+		,pipeline_created
+		,pipeline_updated
+		,pipeline_version
 	) VALUES (
 		:pipeline_description,
-		:pipeline_parent_id,
+		:pipeline_space_id,
 		:pipeline_uid,
 		:pipeline_seq,
 		:pipeline_repo_id,
@@ -89,7 +77,7 @@ const (
 	UPDATE pipelines
 	SET
 		pipeline_description = :pipeline_description,
-		pipeline_parent_id = :pipeline_parent_id,
+		pipeline_space_id = :pipeline_space_id,
 		pipeline_uid = :pipeline_uid,
 		pipeline_seq = :pipeline_seq,
 		pipeline_repo_id = :pipeline_repo_id,
@@ -130,7 +118,7 @@ func (s *pipelineStore) Find(ctx context.Context, id int64) (*types.Pipeline, er
 // FindByUID returns a pipeline in a given space with a given UID
 func (s *pipelineStore) FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Pipeline, error) {
 	const findQueryStmt = pipelineQueryBase + `
-		WHERE pipeline_parent_id = $1 AND pipeline_uid = $2`
+		WHERE pipeline_space_id = $1 AND pipeline_uid = $2`
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(types.Pipeline)
@@ -192,7 +180,7 @@ func (s *pipelineStore) List(ctx context.Context, parentID int64, opts *types.Pi
 	stmt := database.Builder.
 		Select(pipelineColumns).
 		From("pipelines").
-		Where("pipeline_parent_id = ?", fmt.Sprint(parentID))
+		Where("pipeline_space_id = ?", fmt.Sprint(parentID))
 
 	if opts.Query != "" {
 		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
@@ -221,7 +209,7 @@ func (s *pipelineStore) Count(ctx context.Context, parentID int64, opts *types.P
 	stmt := database.Builder.
 		Select("count(*)").
 		From("pipelines").
-		Where("pipeline_parent_id = ?", parentID)
+		Where("pipeline_space_id = ?", parentID)
 
 	if opts.Query != "" {
 		stmt = stmt.Where("pipeline_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
@@ -261,7 +249,7 @@ func (s *pipelineStore) Delete(ctx context.Context, id int64) error {
 func (s *pipelineStore) DeleteByUID(ctx context.Context, spaceID int64, uid string) error {
 	const pipelineDeleteStmt = `
 	DELETE FROM pipelines
-	WHERE pipeline_parent_id = $1 AND pipeline_uid = $2`
+	WHERE pipeline_space_id = $1 AND pipeline_uid = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 

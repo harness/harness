@@ -10,11 +10,9 @@ import (
 	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/paths"
 )
 
-/*
- * Deletes an execution
- */
 func HandleDelete(executionCtrl *execution.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -24,7 +22,7 @@ func HandleDelete(executionCtrl *execution.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, pipelineUID, err := SplitRef(pipelineRef)
+		spaceRef, pipelineUID, err := paths.DisectLeaf(pipelineRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

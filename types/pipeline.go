@@ -9,7 +9,7 @@ import "github.com/harness/gitness/types/enum"
 type Pipeline struct {
 	ID            int64        `db:"pipeline_id"              json:"id"`
 	Description   string       `db:"pipeline_description"     json:"description"`
-	ParentID      int64        `db:"pipeline_parent_id"       json:"parent_id"` // ID of the parent space
+	SpaceID       int64        `db:"pipeline_space_id"        json:"space_id"`
 	UID           string       `db:"pipeline_uid"             json:"uid"`
 	Seq           int64        `db:"pipeline_seq"             json:"seq"`     // last execution number for this pipeline
 	RepoID        int64        `db:"pipeline_repo_id"         json:"repo_id"` // null if repo_type != gitness

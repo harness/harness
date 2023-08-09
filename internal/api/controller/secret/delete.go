@@ -2,7 +2,7 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package pipeline
+package secret
 
 import (
 	"context"
@@ -13,20 +13,20 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// Delete deletes a pipeline.
+// Delete deletes a secret.
 func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef string, uid string) error {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return fmt.Errorf("could not find parent space: %w", err)
+		return err
 	}
 
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, uid, enum.PermissionPipelineDelete)
+	err = apiauth.CheckSecret(ctx, c.authorizer, session, space.Path, uid, enum.PermissionSecretDelete)
 	if err != nil {
-		return fmt.Errorf("could not authorize: %w", err)
+		return err
 	}
-	err = c.pipelineStore.DeleteByUID(ctx, space.ID, uid)
+	err = c.secretStore.DeleteByUID(ctx, space.ID, uid)
 	if err != nil {
-		return fmt.Errorf("could not delete pipeline: %w", err)
+		return fmt.Errorf("could not delete secret: %w", err)
 	}
 	return nil
 }

@@ -9,6 +9,7 @@ import (
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -19,29 +20,41 @@ func (c *Controller) List(
 	session *auth.Session,
 	spaceRef string,
 	pipelineUID string,
-	filter *types.ExecutionFilter) ([]types.Execution, int64, error) {
+	filter *types.ExecutionFilter,
+) ([]types.Execution, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("failed to find parent space: %w", err)
 	}
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineView)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	count, err := c.executionStore.Count(ctx, pipeline.ID, filter)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count child executions: %w", err)
-	}
+	var count int64
+	var executions []types.Execution
 
-	executions, err := c.executionStore.List(ctx, pipeline.ID, filter)
+	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
+		var dbErr error
+		count, dbErr = c.executionStore.Count(ctx, pipeline.ID, filter)
+		if dbErr != nil {
+			return fmt.Errorf("failed to count child executions: %w", err)
+		}
+
+		executions, dbErr = c.executionStore.List(ctx, pipeline.ID, filter)
+		if dbErr != nil {
+			return fmt.Errorf("failed to list child executions: %w", err)
+		}
+
+		return dbErr
+	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
-		return nil, 0, err
+		return executions, count, err
 	}
 
 	return executions, count, nil

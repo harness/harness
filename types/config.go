@@ -75,6 +75,9 @@ type Config struct {
 	Database struct {
 		Driver     string `envconfig:"GITNESS_DATABASE_DRIVER" default:"sqlite3"`
 		Datasource string `envconfig:"GITNESS_DATABASE_DATASOURCE" default:"database.sqlite3"`
+		// secret used for encryption/decryption in the DB
+		Secret              string `envconfig:"GITNESS_DATABASE_SECRET"`
+		EncryptMixedContent bool   `envconfig:"GITNESS_ENCRYPT_MIXED_CONTENT"`
 	}
 
 	// Token defines token configuration parameters.

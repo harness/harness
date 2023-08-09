@@ -233,8 +233,7 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opPipelines := openapi3.Operation{}
 	opPipelines.WithTags("space")
 	opPipelines.WithMapOfAnything(map[string]interface{}{"operationId": "listPipelines"})
-	opPipelines.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterOrder,
-		queryParameterPage, queryParameterLimit)
+	opPipelines.WithParameters(queryParameterQueryRepo, queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opPipelines, new(spaceRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opPipelines, []types.Pipeline{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusInternalServerError)

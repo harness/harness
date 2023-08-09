@@ -14,6 +14,7 @@ const (
 	ResourceTypeServiceAccount ResourceType = "SERVICEACCOUNT"
 	ResourceTypeService        ResourceType = "SERVICE"
 	ResourceTypePipeline       ResourceType = "PIPELINE"
+	ResourceTypeSecret         ResourceType = "SECRET"
 	//   ResourceType_Branch ResourceType = "BRANCH"
 )
 
@@ -80,6 +81,16 @@ const (
 	PermissionPipelineEdit    Permission = "pipeline_edit"
 	PermissionPipelineDelete  Permission = "pipeline_delete"
 	PermissionPipelineExecute Permission = "pipeline_execute"
+)
+
+const (
+	/*
+		----- SECRET -----
+	*/
+	PermissionSecretView   Permission = "secret_view"
+	PermissionSecretEdit   Permission = "secret_edit"
+	PermissionSecretDelete Permission = "secret_delete"
+	PermissionSecretAccess Permission = "secret_access"
 )
 
 const (

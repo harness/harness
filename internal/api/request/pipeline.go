@@ -7,7 +7,6 @@ package request
 import (
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/harness/gitness/types"
 )
@@ -29,18 +28,8 @@ func GetPipelinePathRefFromPath(r *http.Request) (string, error) {
 }
 
 func GetExecutionNumberFromPath(r *http.Request) (int64, error) {
-	rawRef, err := PathParamOrError(r, ExecutionNumber)
-	if err != nil {
-		return 0, err
-	}
+	return PathParamAsPositiveInt64(r, ExecutionNumber)
 
-	n, err := strconv.Atoi(rawRef)
-	if err != nil {
-		return 0, err
-	}
-
-	// paths are unescaped
-	return int64(n), nil
 }
 
 func GetPipelineUIDFromPath(r *http.Request) (string, error) {

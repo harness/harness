@@ -166,6 +166,26 @@ func GetRemainderFromPath(r *http.Request) (string, error) {
 	return PathParamOrError(r, PathParamRemainder)
 }
 
+// PipelineFilter stores pipeline query parameters.
+type Pagination struct {
+	Page  int        `json:"page"`
+	Size  int        `json:"size"`
+	Query string     `json:"query"`
+	Sort  string     `json:"sort"`
+	Order enum.Order `json:"order"`
+}
+
+// ParseExecutionFilter extracts the execution filter from the url.
+func ParseFilterFromRequest(r *http.Request) Pagination {
+	return Pagination{
+		Page:  ParsePage(r),
+		Size:  ParseLimit(r),
+		Query: ParseQuery(r),
+		Sort:  ParseSort(r),
+		Order: ParseOrder(r),
+	}
+}
+
 // ParseQuery extracts the query parameter from the url.
 func ParseQuery(r *http.Request) string {
 	return r.URL.Query().Get(QueryParamQuery)

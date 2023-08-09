@@ -27,7 +27,7 @@ const (
 		SELECT
 		secret_id,
 		secret_description,
-		secret_parent_id,
+		secret_space_id,
 		secret_uid,
 		secret_data,
 		secret_created,
@@ -39,7 +39,7 @@ const (
 	secretColumns = `
 	secret_id,
 	secret_description,
-	secret_parent_id,
+	secret_space_id,
 	secret_uid,
 	secret_data,
 	secret_created,
@@ -50,7 +50,7 @@ const (
 	secretInsertStmt = `
 	INSERT INTO secrets (
 		secret_description,
-		secret_parent_id,
+		secret_space_id,
 		secret_uid,
 		secret_data,
 		secret_created,
@@ -58,7 +58,7 @@ const (
 		secret_version
 	) VALUES (
 		:secret_description,
-		:secret_parent_id,
+		:secret_space_id,
 		:secret_uid,
 		:secret_data,
 		:secret_created,
@@ -70,7 +70,7 @@ const (
 	UPDATE secrets
 	SET
 		secret_description = :secret_description,
-		secret_parent_id = :secret_parent_id,
+		secret_space_id = :secret_space_id,
 		secret_uid = :secret_uid,
 		secret_data = :secret_data,
 		secret_created = :secret_created,
@@ -80,7 +80,7 @@ const (
 )
 
 // NewSecretStore returns a new SecretStore.
-func NewSecretStore(db *sqlx.DB, enc encrypt.Encrypter) *secretStore {
+func NewSecretStore(enc encrypt.Encrypter, db *sqlx.DB) *secretStore {
 	return &secretStore{
 		db:  db,
 		enc: enc,
@@ -108,7 +108,7 @@ func (s *secretStore) Find(ctx context.Context, id int64) (*types.Secret, error)
 // FindByUID returns a secret in a given space with a given UID
 func (s *secretStore) FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Secret, error) {
 	const findQueryStmt = secretQueryBase + `
-		WHERE secret_parent_id = $1 AND secret_uid = $2`
+		WHERE secret_space_id = $1 AND secret_uid = $2`
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(types.Secret)
@@ -180,7 +180,7 @@ func (s *secretStore) List(ctx context.Context, parentID int64, opts *types.Secr
 	stmt := database.Builder.
 		Select(secretColumns).
 		From("secrets").
-		Where("secret_parent_id = ?", fmt.Sprint(parentID))
+		Where("secret_space_id = ?", fmt.Sprint(parentID))
 
 	if opts.Query != "" {
 		stmt = stmt.Where("LOWER(secret_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
@@ -223,7 +223,7 @@ func (s *secretStore) Delete(ctx context.Context, id int64) error {
 func (s *secretStore) DeleteByUID(ctx context.Context, spaceID int64, uid string) error {
 	const secretDeleteStmt = `
 	DELETE FROM secrets
-	WHERE secret_parent_id = $1 AND secret_uid = $2`
+	WHERE secret_space_id = $1 AND secret_uid = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 

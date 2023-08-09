@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pipelines (
     pipeline_id INTEGER PRIMARY KEY AUTOINCREMENT,
     pipeline_description TEXT,
-    pipeline_parent_id INTEGER NOT NULL,
+    pipeline_space_id INTEGER NOT NULL,
     pipeline_uid TEXT NOT NULL,
     pipeline_seq INTEGER NOT NULL DEFAULT 0,
     pipeline_repo_id INTEGER,
@@ -9,27 +9,27 @@ CREATE TABLE IF NOT EXISTS pipelines (
     pipeline_repo_name TEXT,
     pipeline_default_branch TEXT,
     pipeline_config_path TEXT NOT NULL,
-    pipeline_created INTEGER,
-    pipeline_updated INTEGER,
-    pipeline_version INTEGER,
+    pipeline_created INTEGER NOT NULL,
+    pipeline_updated INTEGER NOT NULL,
+    pipeline_version INTEGER NOT NULL,
 
     -- Ensure unique combination of UID and ParentID
-    UNIQUE (pipeline_parent_id, pipeline_uid),
+    UNIQUE (pipeline_space_id, pipeline_uid),
 
     -- Foreign key to spaces table
-    CONSTRAINT fk_pipeline_parent_id FOREIGN KEY (pipeline_parent_id)
+    CONSTRAINT fk_pipeline_space_id FOREIGN KEY (pipeline_space_id)
         REFERENCES spaces (space_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 
     -- Foreign key to repositories table
-    CONSTRAINT fk_pipeline_repo_id FOREIGN KEY (pipeline_repo_id)
+    CONSTRAINT fk_pipelines_repo_id FOREIGN KEY (pipeline_repo_id)
         REFERENCES repositories (repo_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS secrets (
+CREATE TABLE IF NOT EXISTS executions (
     execution_id INTEGER PRIMARY KEY AUTOINCREMENT,
     execution_pipeline_id INTEGER NOT NULL,
     execution_repo_id INTEGER,
@@ -62,16 +62,22 @@ CREATE TABLE IF NOT EXISTS secrets (
     execution_debug BOOLEAN NOT NULL DEFAULT 0,
     execution_started INTEGER,
     execution_finished INTEGER,
-    execution_created INTEGER,
-    execution_updated INTEGER,
-    execution_version INTEGER,
+    execution_created INTEGER NOT NULL,
+    execution_updated INTEGER NOT NULL,
+    execution_version INTEGER NOT NULL,
 
     -- Ensure unique combination of pipeline ID and number
     UNIQUE (execution_pipeline_id, execution_number),
 
     -- Foreign key to pipelines table
-    CONSTRAINT fk_execution_pipeline_id FOREIGN KEY (execution_pipeline_id)
+    CONSTRAINT fk_executions_pipeline_id FOREIGN KEY (execution_pipeline_id)
         REFERENCES pipelines (pipeline_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+
+    -- Foreign key to repositories table
+    CONSTRAINT fk_executions_repo_id FOREIGN KEY (execution_repo_id)
+        REFERENCES repositories (repo_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 );
@@ -79,18 +85,18 @@ CREATE TABLE IF NOT EXISTS secrets (
 CREATE TABLE IF NOT EXISTS secrets (
     secret_id INTEGER PRIMARY KEY AUTOINCREMENT,
     secret_uid TEXT NOT NULL,
-    secret_parent_id INTEGER NOT NULL,
-    secret_description TEXT NOT NULL,
+    secret_space_id INTEGER NOT NULL,
+    secret_description TEXT,
     secret_data BLOB NOT NULL,
-    secret_created INTEGER,
-    secret_updated INTEGER,
-    secret_version INTEGER,
+    secret_created INTEGER NOT NULL,
+    secret_updated INTEGER NOT NULL,
+    secret_version INTEGER NOT NULL,
 
     -- Ensure unique combination of space ID and UID
-    UNIQUE (secret_parent_id, secret_uid),
+    UNIQUE (secret_space_id, secret_uid),
 
     -- Foreign key to spaces table
-    CONSTRAINT fk_secret_parent_id FOREIGN KEY (secret_parent_id)
+    CONSTRAINT fk_secrets_space_id FOREIGN KEY (secret_space_id)
         REFERENCES spaces (space_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE

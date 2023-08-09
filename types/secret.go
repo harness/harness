@@ -7,7 +7,7 @@ package types
 type Secret struct {
 	ID          int64  `db:"secret_id"              json:"id"`
 	Description string `db:"secret_description"     json:"description"`
-	ParentID    int64  `db:"secret_parent_id"       json:"parent_id"` // ID of the parent space
+	SpaceID     int64  `db:"secret_space_id"        json:"space_id"`
 	UID         string `db:"secret_uid"             json:"uid"`
 	Data        string `db:"secret_data"            json:"data"`
 	Created     int64  `db:"secret_created"         json:"created"`
@@ -28,7 +28,7 @@ func (s *Secret) Copy() *Secret {
 		ID:          s.ID,
 		Description: s.Description,
 		UID:         s.UID,
-		ParentID:    s.ParentID,
+		SpaceID:     s.SpaceID,
 		Created:     s.Created,
 		Updated:     s.Updated,
 		Version:     s.Version,

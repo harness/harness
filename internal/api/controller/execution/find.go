@@ -6,6 +6,7 @@ package execution
 
 import (
 	"context"
+	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -13,22 +14,21 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// Find finds a pipeline.
-func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string, uid string, n int64) (*types.Execution, error) {
+func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string, pipelineUID string, executionNum int64) (*types.Execution, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not find parent space: %w", err)
 	}
 
-	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
+	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not find pipeline: %w", err)
 	}
 
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineView)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not authorize: %w", err)
 	}
 
-	return c.executionStore.Find(ctx, pipeline.ID, n)
+	return c.executionStore.Find(ctx, pipeline.ID, executionNum)
 }

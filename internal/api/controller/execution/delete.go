@@ -13,23 +13,21 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// Delete deletes a pipeline.
-func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef string, uid string, n int64) error {
+func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef string, pipelineUID string, executionNum int64) error {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not find parent space: %w", err)
 	}
 
-	// TODO: uncomment when soft delete is implemented
-	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
+	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not find pipeline: %w", err)
 	}
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineDelete)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not authorize: %w", err)
 	}
-	err = c.executionStore.Delete(ctx, pipeline.ID, n)
+	err = c.executionStore.Delete(ctx, pipeline.ID, executionNum)
 	if err != nil {
 		return fmt.Errorf("could not delete execution: %w", err)
 	}

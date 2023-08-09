@@ -6,6 +6,7 @@ package execution
 
 import (
 	"context"
+	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -13,12 +14,10 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// UpdateInput is used for updating a repo.
 type UpdateInput struct {
 	Status string `json:"status"`
 }
 
-// Update updates an execution.
 func (c *Controller) Update(
 	ctx context.Context,
 	session *auth.Session,
@@ -28,22 +27,22 @@ func (c *Controller) Update(
 	in *UpdateInput) (*types.Execution, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not find space: %w", err)
 	}
 
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, uid, enum.PermissionPipelineEdit)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to check auth: %w", err)
 	}
 
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
 	execution, err := c.executionStore.Find(ctx, pipeline.ID, n)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find execution: %w", err)
 	}
 
 	if in.Status != "" {

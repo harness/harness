@@ -5,16 +5,14 @@
 package pipeline
 
 import (
-	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
+	"github.com/harness/gitness/internal/paths"
 )
 
-// HandleFind finds a pipeline from the database.
 func HandleFind(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -24,9 +22,10 @@ func HandleFind(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, pipelineUID, err := SplitRef(pipelineRef)
+		spaceRef, pipelineUID, err := paths.DisectLeaf(pipelineRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+			return
 		}
 
 		pipeline, err := pipelineCtrl.Find(ctx, session, spaceRef, pipelineUID)
@@ -37,19 +36,4 @@ func HandleFind(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 
 		render.JSON(w, http.StatusOK, pipeline)
 	}
-}
-
-// SplitRef splits apart a ref into two parts, otherwise returns an error
-// For example: path/to/space/uid will get split into path/to/space and uid
-func SplitRef(ref string) (string, string, error) {
-	lastIndex := strings.LastIndex(ref, "/")
-	if lastIndex == -1 {
-		// The input string does not contain a "/".
-		return "", "", errors.New("could not split ref")
-	}
-
-	spaceRef := ref[:lastIndex]
-	uid := ref[lastIndex+1:]
-
-	return spaceRef, uid, nil
 }

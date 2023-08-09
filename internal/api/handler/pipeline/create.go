@@ -13,7 +13,6 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 )
 
-// HandleCreate returns a http.HandlerFunc that creates a new pipelinesitory.
 func HandleCreate(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

@@ -2,11 +2,10 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package pipeline
+package secret
 
 import (
 	"context"
-	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -14,15 +13,15 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// Find finds a pipeline.
-func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string, uid string) (*types.Pipeline, error) {
+// Find finds a secret.
+func (c *Controller) Find(ctx context.Context, session *auth.Session, spaceRef string, uid string) (*types.Secret, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find parent space: %w", err)
+		return nil, err
 	}
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, uid, enum.PermissionPipelineView)
+	err = apiauth.CheckSecret(ctx, c.authorizer, session, space.Path, uid, enum.PermissionSecretView)
 	if err != nil {
-		return nil, fmt.Errorf("could not authorize: %w", err)
+		return nil, err
 	}
-	return c.pipelineStore.FindByUID(ctx, space.ID, uid)
+	return c.secretStore.FindByUID(ctx, space.ID, uid)
 }

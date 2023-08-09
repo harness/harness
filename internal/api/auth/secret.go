@@ -13,15 +13,15 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// CheckPipeline checks if a repo specific permission is granted for the current auth session
+// CheckSecret checks if a repo specific permission is granted for the current auth session
 // in the scope of its parent.
 // Returns nil if the permission is granted, otherwise returns an error.
 // NotAuthenticated, NotAuthorized, or any underlying error.
-func CheckPipeline(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
+func CheckSecret(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
 	parentPath, uid string, permission enum.Permission) error {
 	scope := &types.Scope{SpacePath: parentPath}
 	resource := &types.Resource{
-		Type: enum.ResourceTypePipeline,
+		Type: enum.ResourceTypeSecret,
 		Name: uid,
 	}
 

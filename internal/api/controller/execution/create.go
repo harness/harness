@@ -10,16 +10,9 @@ import (
 	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
-	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-)
-
-var (
-	// errRepositoryRequiresParent if the user tries to create a repo without a parent space.
-	errPipelineRequiresParent = usererror.BadRequest(
-		"Parent space required - standalone pipelines are not supported.")
 )
 
 // TODO: Add more as needed
@@ -34,23 +27,19 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, spaceRef
 		return nil, fmt.Errorf("could not find space: %w", err)
 	}
 
-	if err := c.sanitizeCreateInput(in); err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
-	}
-
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not find pipeline: %w", err)
 	}
 
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineExecute)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 
 	pipeline, err = c.pipelineStore.Increment(ctx, pipeline)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to increment sequence number: %w", err)
 	}
 
 	now := time.Now().UnixMilli()
@@ -69,8 +58,4 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, spaceRef
 	}
 
 	return execution, nil
-}
-
-func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
-	return nil
 }

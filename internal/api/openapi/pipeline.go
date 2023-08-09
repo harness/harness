@@ -15,29 +15,35 @@ import (
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
-type createExecutionRequest struct {
+type pipelineRequest struct {
 	Ref string `path:"pipeline_ref"`
+}
+
+type executionRequest struct {
+	pipelineRequest
+	Number string `path:"execution_number"`
+}
+
+type createExecutionRequest struct {
+	pipelineRequest
 	execution.CreateInput
 }
 
 type createPipelineRequest struct {
-	Ref string `path:"pipeline_ref"`
 	pipeline.CreateInput
 }
 
 type getExecutionRequest struct {
-	Ref    string `path:"pipeline_ref"`
-	Number string `path:"execution_number"`
+	executionRequest
+}
+
+type getPipelineRequest struct {
+	pipelineRequest
 }
 
 type updateExecutionRequest struct {
-	Ref    string `path:"pipeline_ref"`
-	Number string `path:"execution_number"`
+	executionRequest
 	execution.UpdateInput
-}
-
-type pipelineRequest struct {
-	Ref string `path:"pipeline_ref"`
 }
 
 type updatePipelineRequest struct {
@@ -60,7 +66,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	opFind := openapi3.Operation{}
 	opFind.WithTags("pipeline")
 	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "findPipeline"})
-	_ = reflector.SetRequest(&opFind, new(pipelineRequest), http.MethodGet)
+	_ = reflector.SetRequest(&opFind, new(getPipelineRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opFind, new(types.Pipeline), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opFind, new(usererror.Error), http.StatusUnauthorized)
@@ -71,7 +77,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	opDelete := openapi3.Operation{}
 	opDelete.WithTags("pipeline")
 	opDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deletePipeline"})
-	_ = reflector.SetRequest(&opDelete, new(pipelineRequest), http.MethodDelete)
+	_ = reflector.SetRequest(&opDelete, new(getPipelineRequest), http.MethodDelete)
 	_ = reflector.SetJSONResponse(&opDelete, nil, http.StatusNoContent)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opDelete, new(usererror.Error), http.StatusUnauthorized)
@@ -139,8 +145,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	executionList := openapi3.Operation{}
 	executionList.WithTags("pipeline")
 	executionList.WithMapOfAnything(map[string]interface{}{"operationId": "listExecutions"})
-	executionList.WithParameters(queryParameterQueryRepo, queryParameterSortRepo, queryParameterOrder,
-		queryParameterPage, queryParameterLimit)
+	executionList.WithParameters(queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&executionList, new(pipelineRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&executionList, []types.Execution{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&executionList, new(usererror.Error), http.StatusInternalServerError)

@@ -2,15 +2,14 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package pipeline
+package secret
 
 import (
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/check"
+	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
@@ -21,10 +20,9 @@ var WireSet = wire.NewSet(
 func ProvideController(db *sqlx.DB,
 	uidCheck check.PathUID,
 	pathStore store.PathStore,
-	repoStore store.RepoStore,
+	secretStore store.SecretStore,
 	authorizer authz.Authorizer,
-	pipelineStore store.PipelineStore,
 	spaceStore store.SpaceStore,
 ) *Controller {
-	return NewController(db, uidCheck, authorizer, pathStore, repoStore, pipelineStore, spaceStore)
+	return NewController(db, uidCheck, authorizer, pathStore, secretStore, spaceStore)
 }
