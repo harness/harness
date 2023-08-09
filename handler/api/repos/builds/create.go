@@ -41,6 +41,7 @@ func HandleCreate(
 			sha       = r.FormValue("commit")
 			branch    = r.FormValue("branch")
 			message   = r.FormValue("message")
+			action    = r.FormValue("action")
 			user, _   = request.UserFrom(ctx)
 		)
 
@@ -96,6 +97,9 @@ func HandleCreate(
 		}
 		if len(message) > 0 {
 			hook.Message = message
+		}
+		if len(action) > 0 {
+			hook.Action = action
 		}
 
 		for key, value := range r.URL.Query() {
