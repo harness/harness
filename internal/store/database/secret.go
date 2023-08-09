@@ -234,6 +234,32 @@ func (s *secretStore) DeleteByUID(ctx context.Context, spaceID int64, uid string
 	return nil
 }
 
+// Count of secrets in a space.
+func (s *secretStore) Count(ctx context.Context, parentID int64, opts *types.SecretFilter) (int64, error) {
+	stmt := database.Builder.
+		Select("count(*)").
+		From("secrets").
+		Where("secret_space_id = ?", parentID)
+
+	if opts.Query != "" {
+		stmt = stmt.Where("secret_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+	}
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
+	}
+	return count, nil
+}
+
 // helper function returns the same secret with encrypted data
 func enc(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error) {
 	s := *secret

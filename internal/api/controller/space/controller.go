@@ -21,6 +21,7 @@ type Controller struct {
 	authorizer      authz.Authorizer
 	pathStore       store.PathStore
 	pipelineStore   store.PipelineStore
+	secretStore     store.SecretStore
 	spaceStore      store.SpaceStore
 	repoStore       store.RepoStore
 	principalStore  store.PrincipalStore
@@ -30,9 +31,9 @@ type Controller struct {
 
 func NewController(db *sqlx.DB, urlProvider *url.Provider,
 	uidCheck check.PathUID, authorizer authz.Authorizer,
-	pathStore store.PathStore, pipelineStore store.PipelineStore, spaceStore store.SpaceStore,
-	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
-	membershipStore store.MembershipStore,
+	pathStore store.PathStore, pipelineStore store.PipelineStore, secretStore store.SecretStore,
+	spaceStore store.SpaceStore, repoStore store.RepoStore, principalStore store.PrincipalStore,
+	repoCtrl *repo.Controller, membershipStore store.MembershipStore,
 ) *Controller {
 	return &Controller{
 		db:              db,
@@ -41,6 +42,7 @@ func NewController(db *sqlx.DB, urlProvider *url.Provider,
 		authorizer:      authorizer,
 		pathStore:       pathStore,
 		pipelineStore:   pipelineStore,
+		secretStore:     secretStore,
 		spaceStore:      spaceStore,
 		repoStore:       repoStore,
 		principalStore:  principalStore,

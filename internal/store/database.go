@@ -478,6 +478,9 @@ type (
 		// Create creates a new secret
 		Create(ctx context.Context, secret *types.Secret) error
 
+		// Count the number of secrets in a space matching the given filter.
+		Count(ctx context.Context, spaceID int64, filter *types.SecretFilter) (int64, error)
+
 		// Update tries to update a secret.
 		Update(ctx context.Context, secret *types.Secret) (*types.Secret, error)
 

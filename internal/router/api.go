@@ -166,6 +166,7 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 			r.Get("/repos", handlerspace.HandleListRepos(spaceCtrl))
 			r.Get("/service-accounts", handlerspace.HandleListServiceAccounts(spaceCtrl))
 			r.Get("/pipelines", handlerspace.HandleListPipelines(spaceCtrl))
+			r.Get("/secrets", handlerspace.HandleListSecrets(spaceCtrl))
 
 			// Child collections
 			r.Route("/paths", func(r chi.Router) {
