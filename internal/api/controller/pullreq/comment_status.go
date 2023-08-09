@@ -73,11 +73,10 @@ func (c *Controller) CommentStatus(
 			return nil
 		}
 
-		now := time.Now().UnixMilli()
-		act.Edited = now
-
 		act.Resolved = nil
 		act.ResolvedBy = nil
+
+		now := time.Now().UnixMilli()
 
 		if in.Status != enum.PullReqCommentStatusActive {
 			// In the future if we add more comment resolved statuses
