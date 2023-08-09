@@ -44,9 +44,3 @@ type Execution struct {
 	// TODO: (Vistaar) Add stages
 	// Stages       []*Stage          `db:"-"                    json:"stages,omitempty"`
 }
-
-// ExecutionFilter stores execution query parameters.
-type ExecutionFilter struct {
-	Page int `json:"page"`
-	Size int `json:"size"`
-}

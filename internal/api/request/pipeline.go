@@ -7,8 +7,6 @@ package request
 import (
 	"net/http"
 	"net/url"
-
-	"github.com/harness/gitness/types"
 )
 
 const (
@@ -29,21 +27,4 @@ func GetPipelineRefFromPath(r *http.Request) (string, error) {
 
 func GetExecutionNumberFromPath(r *http.Request) (int64, error) {
 	return PathParamAsPositiveInt64(r, ExecutionNumber)
-}
-
-// ParsePipelineFilter extracts the pipeline filter from the url.
-func ParsePipelineFilter(r *http.Request) *types.PipelineFilter {
-	return &types.PipelineFilter{
-		Query: ParseQuery(r),
-		Page:  ParsePage(r),
-		Size:  ParseLimit(r),
-	}
-}
-
-// ParseExecutionFilter extracts the execution filter from the url.
-func ParseExecutionFilter(r *http.Request) *types.ExecutionFilter {
-	return &types.ExecutionFilter{
-		Page: ParsePage(r),
-		Size: ParseLimit(r),
-	}
 }

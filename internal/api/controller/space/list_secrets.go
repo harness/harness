@@ -15,8 +15,12 @@ import (
 )
 
 // ListSecrets lists the secrets in a space.
-func (c *Controller) ListSecrets(ctx context.Context, session *auth.Session,
-	spaceRef string, filter *types.SecretFilter) ([]types.Secret, int64, error) {
+func (c *Controller) ListSecrets(
+	ctx context.Context,
+	session *auth.Session,
+	spaceRef string,
+	pagination types.Pagination,
+) ([]types.Secret, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find parent space: %w", err)
@@ -32,12 +36,12 @@ func (c *Controller) ListSecrets(ctx context.Context, session *auth.Session,
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
 		var dbErr error
-		count, dbErr = c.secretStore.Count(ctx, space.ID, filter)
+		count, dbErr = c.secretStore.Count(ctx, space.ID, pagination)
 		if dbErr != nil {
 			return fmt.Errorf("failed to count child executions: %w", err)
 		}
 
-		secrets, dbErr = c.secretStore.List(ctx, space.ID, filter)
+		secrets, dbErr = c.secretStore.List(ctx, space.ID, pagination)
 		if dbErr != nil {
 			return fmt.Errorf("failed to list child executions: %w", err)
 		}

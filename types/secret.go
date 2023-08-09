@@ -15,13 +15,6 @@ type Secret struct {
 	Version     int64  `db:"secret_version"         json:"version"`
 }
 
-// SecretFilter stores secret query parameters.
-type SecretFilter struct {
-	Page  int    `json:"page"`
-	Size  int    `json:"size"`
-	Query string `json:"query"`
-}
-
 // Copy makes a copy of the secret without the value.
 func (s *Secret) CopyWithoutData() *Secret {
 	return &Secret{

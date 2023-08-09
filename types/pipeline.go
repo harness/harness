@@ -21,10 +21,3 @@ type Pipeline struct {
 	Updated       int64        `db:"pipeline_updated"         json:"updated"`
 	Version       int64        `db:"pipeline_version"         json:"version"`
 }
-
-// PipelineFilter stores pipeline query parameters.
-type PipelineFilter struct {
-	Page  int    `json:"page"`
-	Size  int    `json:"size"`
-	Query string `json:"query"`
-}

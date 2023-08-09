@@ -7,8 +7,6 @@ package request
 import (
 	"net/http"
 	"net/url"
-
-	"github.com/harness/gitness/types"
 )
 
 const (
@@ -23,12 +21,4 @@ func GetSecretRefFromPath(r *http.Request) (string, error) {
 
 	// paths are unescaped
 	return url.PathUnescape(rawRef)
-}
-
-// ParseExecutionFilter extracts the execution filter from the url.
-func ParseSecretFilter(r *http.Request) *types.SecretFilter {
-	return &types.SecretFilter{
-		Page: ParsePage(r),
-		Size: ParseLimit(r),
-	}
 }

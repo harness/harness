@@ -165,19 +165,46 @@ func (s *secretStore) Update(ctx context.Context, secret *types.Secret) (*types.
 	return secret, nil
 }
 
+// UpdateOptLock updates the pipeline using the optimistic locking mechanism.
+func (s *secretStore) UpdateOptLock(ctx context.Context,
+	secret *types.Secret,
+	mutateFn func(secret *types.Secret) error) (*types.Secret, error) {
+	for {
+		dup := *secret
+
+		err := mutateFn(&dup)
+		if err != nil {
+			return nil, err
+		}
+
+		secret, err = s.Update(ctx, &dup)
+		if err == nil {
+			return &dup, nil
+		}
+		if !errors.Is(err, gitness_store.ErrVersionConflict) {
+			return nil, err
+		}
+
+		secret, err = s.Find(ctx, secret.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+}
+
 // List lists all the secrets present in a space.
-func (s *secretStore) List(ctx context.Context, parentID int64, opts *types.SecretFilter) ([]types.Secret, error) {
+func (s *secretStore) List(ctx context.Context, parentID int64, pagination types.Pagination) ([]types.Secret, error) {
 	stmt := database.Builder.
 		Select(secretColumns).
 		From("secrets").
 		Where("secret_space_id = ?", fmt.Sprint(parentID))
 
-	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(secret_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+	if pagination.Query != "" {
+		stmt = stmt.Where("LOWER(secret_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(pagination.Query)))
 	}
 
-	stmt = stmt.Limit(database.Limit(opts.Size))
-	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
+	stmt = stmt.Limit(database.Limit(pagination.Size))
+	stmt = stmt.Offset(database.Offset(pagination.Page, pagination.Size))
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -225,14 +252,14 @@ func (s *secretStore) DeleteByUID(ctx context.Context, spaceID int64, uid string
 }
 
 // Count of secrets in a space.
-func (s *secretStore) Count(ctx context.Context, parentID int64, opts *types.SecretFilter) (int64, error) {
+func (s *secretStore) Count(ctx context.Context, parentID int64, filter types.Pagination) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
 		From("secrets").
 		Where("secret_space_id = ?", parentID)
 
-	if opts.Query != "" {
-		stmt = stmt.Where("secret_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+	if filter.Query != "" {
+		stmt = stmt.Where("secret_uid LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -252,6 +279,9 @@ func (s *secretStore) Count(ctx context.Context, parentID int64, opts *types.Sec
 
 // helper function returns the same secret with encrypted data.
 func enc(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error) {
+	if secret == nil {
+		return nil, fmt.Errorf("cannot encrypt a nil secret")
+	}
 	s := *secret
 	ciphertext, err := encrypt.Encrypt(secret.Data)
 	if err != nil {
@@ -263,6 +293,9 @@ func enc(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error)
 
 // helper function returns the same secret with decrypted data.
 func dec(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error) {
+	if secret == nil {
+		return nil, fmt.Errorf("cannot decrypt a nil secret")
+	}
 	s := *secret
 	plaintext, err := encrypt.Decrypt([]byte(secret.Data))
 	if err != nil {

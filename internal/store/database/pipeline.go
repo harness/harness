@@ -178,19 +178,19 @@ func (s *pipelineStore) Update(ctx context.Context, pipeline *types.Pipeline) (*
 func (s *pipelineStore) List(
 	ctx context.Context,
 	parentID int64,
-	opts *types.PipelineFilter,
+	pagination types.Pagination,
 ) ([]types.Pipeline, error) {
 	stmt := database.Builder.
 		Select(pipelineColumns).
 		From("pipelines").
 		Where("pipeline_space_id = ?", fmt.Sprint(parentID))
 
-	if opts.Query != "" {
-		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+	if pagination.Query != "" {
+		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(pagination.Query)))
 	}
 
-	stmt = stmt.Limit(database.Limit(opts.Size))
-	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
+	stmt = stmt.Limit(database.Limit(pagination.Size))
+	stmt = stmt.Offset(database.Offset(pagination.Page, pagination.Size))
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -207,15 +207,42 @@ func (s *pipelineStore) List(
 	return dst, nil
 }
 
+// UpdateOptLock updates the pipeline using the optimistic locking mechanism.
+func (s *pipelineStore) UpdateOptLock(ctx context.Context,
+	pipeline *types.Pipeline,
+	mutateFn func(pipeline *types.Pipeline) error) (*types.Pipeline, error) {
+	for {
+		dup := *pipeline
+
+		err := mutateFn(&dup)
+		if err != nil {
+			return nil, err
+		}
+
+		pipeline, err = s.Update(ctx, &dup)
+		if err == nil {
+			return &dup, nil
+		}
+		if !errors.Is(err, gitness_store.ErrVersionConflict) {
+			return nil, err
+		}
+
+		pipeline, err = s.Find(ctx, pipeline.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
+}
+
 // Count of pipelines in a space.
-func (s *pipelineStore) Count(ctx context.Context, parentID int64, opts *types.PipelineFilter) (int64, error) {
+func (s *pipelineStore) Count(ctx context.Context, parentID int64, filter types.Pagination) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
 		From("pipelines").
 		Where("pipeline_space_id = ?", parentID)
 
-	if opts.Query != "" {
-		stmt = stmt.Where("pipeline_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+	if filter.Query != "" {
+		stmt = stmt.Where("pipeline_uid LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
 	}
 
 	sql, args, err := stmt.ToSql()

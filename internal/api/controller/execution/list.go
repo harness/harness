@@ -19,7 +19,7 @@ func (c *Controller) List(
 	session *auth.Session,
 	spaceRef string,
 	pipelineUID string,
-	filter *types.ExecutionFilter,
+	pagination types.Pagination,
 ) ([]types.Execution, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
@@ -45,7 +45,7 @@ func (c *Controller) List(
 			return fmt.Errorf("failed to count child executions: %w", err)
 		}
 
-		executions, dbErr = c.executionStore.List(ctx, pipeline.ID, filter)
+		executions, dbErr = c.executionStore.List(ctx, pipeline.ID, pagination)
 		if dbErr != nil {
 			return fmt.Errorf("failed to list child executions: %w", err)
 		}

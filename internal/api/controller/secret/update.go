@@ -41,15 +41,17 @@ func (c *Controller) Update(
 		return nil, err
 	}
 
-	if in.Description != "" {
-		secret.Description = in.Description
-	}
-	if in.Data != "" {
-		secret.Data = in.Data // will get encrypted at db layer
-	}
-	if in.UID != "" {
-		secret.UID = in.UID
-	}
+	return c.secretStore.UpdateOptLock(ctx, secret, func(original *types.Secret) error {
+		if in.Description != "" {
+			original.Description = in.Description
+		}
+		if in.Data != "" {
+			original.Data = in.Data // will get encrypted at db layer
+		}
+		if in.UID != "" {
+			original.UID = in.UID
+		}
 
-	return c.secretStore.Update(ctx, secret)
+		return nil
+	})
 }

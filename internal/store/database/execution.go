@@ -151,36 +151,36 @@ const (
 	executionUpdateStmt = `
 	UPDATE executions
 	SET
-		execution_trigger = :execution_trigger,
-		execution_parent = :execution_parent,
-		execution_status = :execution_status,
-		execution_error = :execution_error,
-		execution_event = :execution_event,
-		execution_action = :execution_action,
-		execution_link = :execution_link,
-		execution_timestamp = :execution_timestamp,
-		execution_title = :execution_title,
-		execution_message = :execution_message,
-		execution_before = :execution_before,
-		execution_after = :execution_after,
-		execution_ref = :execution_ref,
-		execution_source_repo = :execution_source_repo,
-		execution_source = :execution_source,
-		execution_target = :execution_target,
-		execution_author = :execution_author,
-		execution_author_name = :execution_author_name,
-		execution_author_email = :execution_author_email,
-		execution_author_avatar = :execution_author_avatar,
-		execution_sender = :execution_sender,
-		execution_params = :execution_params,
-		execution_cron = :execution_cron,
-		execution_deploy = :execution_deploy,
-		execution_deploy_id = :execution_deploy_id,
-		execution_debug = :execution_debug,
-		execution_started = :execution_started,
-		execution_finished = :execution_finished,
-		execution_updated = :execution_updated,
-		execution_version = :execution_version
+		execution_trigger = :execution_trigger
+		,execution_parent = :execution_parent
+		,execution_status = :execution_status
+		,execution_error = :execution_error
+		,execution_event = :execution_event
+		,execution_action = :execution_action
+		,execution_link = :execution_link
+		,execution_timestamp = :execution_timestamp
+		,execution_title = :execution_title
+		,execution_message = :execution_message
+		,execution_before = :execution_before
+		,execution_after = :execution_after
+		,execution_ref = :execution_ref
+		,execution_source_repo = :execution_source_repo
+		,execution_source = :execution_source
+		,execution_target = :execution_target
+		,execution_author = :execution_author
+		,execution_author_name = :execution_author_name
+		,execution_author_email = :execution_author_email
+		,execution_author_avatar = :execution_author_avatar
+		,execution_sender = :execution_sender
+		,execution_params = :execution_params
+		,execution_cron = :execution_cron
+		,execution_deploy = :execution_deploy
+		,execution_deploy_id = :execution_deploy_id
+		,execution_debug = :execution_debug
+		,execution_started = :execution_started
+		,execution_finished = :execution_finished
+		,execution_updated = :execution_updated
+		,execution_version = :execution_version
 	WHERE execution_id = :execution_id AND execution_version = :execution_version - 1`
 )
 
@@ -244,19 +244,50 @@ func (s *executionStore) Update(ctx context.Context, execution *types.Execution)
 	return execution, nil
 }
 
+// UpdateOptLock updates the pipeline using the optimistic locking mechanism.
+func (s *executionStore) UpdateOptLock(ctx context.Context,
+	execution *types.Execution,
+	mutateFn func(execution *types.Execution) error) (*types.Execution, error) {
+	for {
+		dup := *execution
+
+		fmt.Println(dup.Status)
+
+		err := mutateFn(&dup)
+		if err != nil {
+			return nil, err
+		}
+
+		fmt.Println("dup.Status after: ", dup.Status)
+
+		execution, err = s.Update(ctx, &dup)
+		if err == nil {
+			return &dup, nil
+		}
+		if !errors.Is(err, gitness_store.ErrVersionConflict) {
+			return nil, err
+		}
+
+		execution, err = s.Find(ctx, execution.PipelineID, execution.Number)
+		if err != nil {
+			return nil, err
+		}
+	}
+}
+
 // List lists the executions for a given pipeline ID.
 func (s *executionStore) List(
 	ctx context.Context,
 	pipelineID int64,
-	opts *types.ExecutionFilter,
+	pagination types.Pagination,
 ) ([]types.Execution, error) {
 	stmt := database.Builder.
 		Select(executionColumns).
 		From("executions").
 		Where("execution_pipeline_id = ?", fmt.Sprint(pipelineID))
 
-	stmt = stmt.Limit(database.Limit(opts.Size))
-	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
+	stmt = stmt.Limit(database.Limit(pagination.Size))
+	stmt = stmt.Offset(database.Offset(pagination.Page, pagination.Size))
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {

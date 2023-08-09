@@ -45,9 +45,13 @@ func (c *Controller) Update(
 		return nil, fmt.Errorf("failed to find execution: %w", err)
 	}
 
-	if in.Status != "" {
-		execution.Status = in.Status
-	}
+	return c.executionStore.UpdateOptLock(ctx,
+		execution, func(original *types.Execution) error {
+			// update values only if provided
+			if in.Status != "" {
+				original.Status = in.Status
+			}
 
-	return c.executionStore.Update(ctx, execution)
+			return nil
+		})
 }

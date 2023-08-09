@@ -28,15 +28,15 @@ func HandleList(executionCtrl *execution.Controller) http.HandlerFunc {
 			return
 		}
 
-		filter := request.ParseExecutionFilter(r)
+		pagination := request.ParsePaginationFromRequest(r)
 
-		repos, totalCount, err := executionCtrl.List(ctx, session, spaceRef, pipelineUID, filter)
+		repos, totalCount, err := executionCtrl.List(ctx, session, spaceRef, pipelineUID, pagination)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
+		render.Pagination(r, w, pagination.Page, pagination.Size, int(totalCount))
 		render.JSON(w, http.StatusOK, repos)
 	}
 }

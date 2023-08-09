@@ -449,17 +449,21 @@ type (
 		// Create creates a new pipeline in the datastore.
 		Create(ctx context.Context, pipeline *types.Pipeline) error
 
-		// Update tries to update a pipeline in the datastore with optimistic locking.
+		// Update tries to update a pipeline in the datastore
 		Update(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error)
 
 		// List lists the pipelines present in a parent space ID in the datastore.
-		List(ctx context.Context, spaceID int64, filter *types.PipelineFilter) ([]types.Pipeline, error)
+		List(ctx context.Context, spaceID int64, pagination types.Pagination) ([]types.Pipeline, error)
+
+		// UpdateOptLock updates the pipeline using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, pipeline *types.Pipeline,
+			mutateFn func(pipeline *types.Pipeline) error) (*types.Pipeline, error)
 
 		// Delete deletes a pipeline ID from the datastore.
 		Delete(ctx context.Context, id int64) error
 
 		// Count the number of pipelines in a space matching the given filter.
-		Count(ctx context.Context, spaceID int64, filter *types.PipelineFilter) (int64, error)
+		Count(ctx context.Context, spaceID int64, filter types.Pagination) (int64, error)
 
 		// DeleteByUID deletes a pipeline with a given UID in a space
 		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
@@ -479,7 +483,11 @@ type (
 		Create(ctx context.Context, secret *types.Secret) error
 
 		// Count the number of secrets in a space matching the given filter.
-		Count(ctx context.Context, spaceID int64, filter *types.SecretFilter) (int64, error)
+		Count(ctx context.Context, spaceID int64, pagination types.Pagination) (int64, error)
+
+		// UpdateOptLock updates the secret using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, secret *types.Secret,
+			mutateFn func(secret *types.Secret) error) (*types.Secret, error)
 
 		// Update tries to update a secret.
 		Update(ctx context.Context, secret *types.Secret) (*types.Secret, error)
@@ -491,7 +499,7 @@ type (
 		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
 
 		// List lists the secrets in a given space
-		List(ctx context.Context, spaceID int64, filter *types.SecretFilter) ([]types.Secret, error)
+		List(ctx context.Context, spaceID int64, filter types.Pagination) ([]types.Secret, error)
 	}
 
 	ExecutionStore interface {
@@ -501,11 +509,15 @@ type (
 		// Create creates a new execution in the datastore.
 		Create(ctx context.Context, execution *types.Execution) error
 
-		// Update tries to update an execution in the datastore with optimistic locking.
+		// Update tries to update an execution.
 		Update(ctx context.Context, execution *types.Execution) (*types.Execution, error)
 
+		// UpdateOptLock updates the execution using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, exectuion *types.Execution,
+			mutateFn func(execution *types.Execution) error) (*types.Execution, error)
+
 		// List lists the executions for a given pipeline ID
-		List(ctx context.Context, pipelineID int64, filter *types.ExecutionFilter) ([]types.Execution, error)
+		List(ctx context.Context, pipelineID int64, pagination types.Pagination) ([]types.Execution, error)
 
 		// Delete deletes an execution given a pipeline ID and an execution number
 		Delete(ctx context.Context, pipelineID int64, num int64) error

@@ -42,15 +42,17 @@ func (c *Controller) Update(
 		return nil, fmt.Errorf("could not find pipeline: %w", err)
 	}
 
-	if in.Description != "" {
-		pipeline.Description = in.Description
-	}
-	if in.UID != "" {
-		pipeline.UID = in.UID
-	}
-	if in.ConfigPath != "" {
-		pipeline.ConfigPath = in.ConfigPath
-	}
+	return c.pipelineStore.UpdateOptLock(ctx, pipeline, func(pipeline *types.Pipeline) error {
+		if in.Description != "" {
+			pipeline.Description = in.Description
+		}
+		if in.UID != "" {
+			pipeline.UID = in.UID
+		}
+		if in.ConfigPath != "" {
+			pipeline.ConfigPath = in.ConfigPath
+		}
 
-	return c.pipelineStore.Update(ctx, pipeline)
+		return nil
+	})
 }
