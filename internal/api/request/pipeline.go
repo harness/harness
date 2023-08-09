@@ -17,7 +17,7 @@ const (
 	ExecutionNumber = "execution_number"
 )
 
-func GetPipelinePathRefFromPath(r *http.Request) (string, error) {
+func GetPipelineRefFromPath(r *http.Request) (string, error) {
 	rawRef, err := PathParamOrError(r, PipelinePathRef)
 	if err != nil {
 		return "", err
@@ -30,16 +30,6 @@ func GetPipelinePathRefFromPath(r *http.Request) (string, error) {
 func GetExecutionNumberFromPath(r *http.Request) (int64, error) {
 	return PathParamAsPositiveInt64(r, ExecutionNumber)
 
-}
-
-func GetPipelineUIDFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PipelineUID)
-	if err != nil {
-		return "", err
-	}
-
-	// paths are unescaped
-	return url.PathUnescape(rawRef)
 }
 
 // ParsePipelineFilter extracts the pipeline filter from the url.

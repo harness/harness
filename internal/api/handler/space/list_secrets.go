@@ -33,7 +33,7 @@ func HandleListSecrets(spaceCtrl *space.Controller) http.HandlerFunc {
 		// Strip out data in the returned value
 		secrets := []types.Secret{}
 		for _, s := range ret {
-			secrets = append(secrets, *s.Copy())
+			secrets = append(secrets, *s.CopyWithoutData())
 		}
 
 		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))

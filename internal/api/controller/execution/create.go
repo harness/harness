@@ -37,7 +37,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, spaceRef
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	pipeline, err = c.pipelineStore.Increment(ctx, pipeline)
+	pipeline, err = c.pipelineStore.IncrementSeqNum(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("failed to increment sequence number: %w", err)
 	}

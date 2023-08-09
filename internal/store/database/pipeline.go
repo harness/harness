@@ -85,7 +85,6 @@ const (
 		pipeline_repo_name = :pipeline_repo_name,
 		pipeline_default_branch = :pipeline_default_branch,
 		pipeline_config_path = :pipeline_config_path,
-		pipeline_created = :pipeline_created,
 		pipeline_updated = :pipeline_updated,
 		pipeline_version = :pipeline_version
 	WHERE pipeline_id = :pipeline_id AND pipeline_version = :pipeline_version - 1`
@@ -262,7 +261,7 @@ func (s *pipelineStore) DeleteByUID(ctx context.Context, spaceID int64, uid stri
 
 // Increment increments the pipeline sequence number. It will keep retrying in case
 // of optimistic lock errors.
-func (s *pipelineStore) Increment(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error) {
+func (s *pipelineStore) IncrementSeqNum(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error) {
 	for {
 		pipeline.Seq++
 		pipeline, err := s.Update(ctx, pipeline)
@@ -270,11 +269,11 @@ func (s *pipelineStore) Increment(ctx context.Context, pipeline *types.Pipeline)
 			return pipeline, nil
 		}
 		if err != nil && err != gitness_store.ErrVersionConflict {
-			return pipeline, err
+			return pipeline, errors.Wrap(err, "could not increment pipeline sequence number")
 		}
 		pipeline, err = s.Find(ctx, pipeline.ID)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "could not increment pipeline sequence number")
 		}
 	}
 }

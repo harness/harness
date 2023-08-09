@@ -20,7 +20,7 @@ import (
 
 var _ store.ExecutionStore = (*executionStore)(nil)
 
-// NewSpaceStore returns a new PathStore.
+// NewExecutionStore returns a new ExecutionStore.
 func NewExecutionStore(db *sqlx.DB) *executionStore {
 	return &executionStore{
 		db: db,
@@ -150,10 +150,7 @@ const (
 	executionUpdateStmt = `
 	UPDATE executions
 	SET
-		execution_pipeline_id = :execution_pipeline_id,
-		execution_repo_id = :execution_repo_id,
 		execution_trigger = :execution_trigger,
-		execution_number = :execution_number,
 		execution_parent = :execution_parent,
 		execution_status = :execution_status,
 		execution_error = :execution_error,
@@ -181,20 +178,19 @@ const (
 		execution_debug = :execution_debug,
 		execution_started = :execution_started,
 		execution_finished = :execution_finished,
-		execution_created = :execution_created,
 		execution_updated = :execution_updated,
 		execution_version = :execution_version
 	WHERE execution_id = :execution_id AND execution_version = :execution_version - 1`
 )
 
 // Find returns an execution given a pipeline ID and an execution number
-func (s *executionStore) Find(ctx context.Context, parentID int64, n int64) (*types.Execution, error) {
+func (s *executionStore) Find(ctx context.Context, pipelineID int64, executionNum int64) (*types.Execution, error) {
 	const findQueryStmt = executionQueryBase + `
 		WHERE execution_pipeline_id = $1 AND execution_number = $2`
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(types.Execution)
-	if err := db.GetContext(ctx, dst, findQueryStmt, parentID, n); err != nil {
+	if err := db.GetContext(ctx, dst, findQueryStmt, pipelineID, executionNum); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find execution")
 	}
 	return dst, nil
@@ -295,14 +291,14 @@ func (s *executionStore) Count(ctx context.Context, pipelineID int64, opts *type
 }
 
 // Delete deletes an execution given a pipeline ID and an execution number
-func (s *executionStore) Delete(ctx context.Context, pipelineID int64, n int64) error {
+func (s *executionStore) Delete(ctx context.Context, pipelineID int64, executionNum int64) error {
 	const executionDeleteStmt = `
 		DELETE FROM executions
 		WHERE execution_pipeline_id = $1 AND execution_number = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	if _, err := db.ExecContext(ctx, executionDeleteStmt, pipelineID, n); err != nil {
+	if _, err := db.ExecContext(ctx, executionDeleteStmt, pipelineID, executionNum); err != nil {
 		return database.ProcessSQLErrorf(err, "Could not delete execution")
 	}
 

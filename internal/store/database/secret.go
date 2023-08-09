@@ -24,17 +24,8 @@ var _ store.SecretStore = (*secretStore)(nil)
 
 const (
 	secretQueryBase = `
-		SELECT
-		secret_id,
-		secret_description,
-		secret_space_id,
-		secret_uid,
-		secret_data,
-		secret_created,
-		secret_updated,
-		secret_version
-		FROM secrets
-		`
+		SELECT` + secretColumns + `
+		FROM secrets`
 
 	secretColumns = `
 	secret_id,
@@ -73,7 +64,6 @@ const (
 		secret_space_id = :secret_space_id,
 		secret_uid = :secret_uid,
 		secret_data = :secret_data,
-		secret_created = :secret_created,
 		secret_updated = :secret_updated,
 		secret_version = :secret_version
 	WHERE secret_id = :secret_id AND secret_version = :secret_version - 1`

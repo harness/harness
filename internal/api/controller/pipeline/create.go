@@ -61,7 +61,6 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	fmt.Println("parent space: ", parentSpace.ID)
 	var pipeline *types.Pipeline
 	now := time.Now().UnixMilli()
 	pipeline = &types.Pipeline{

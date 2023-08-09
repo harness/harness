@@ -26,7 +26,7 @@ func HandleUpdate(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 			return
 		}
 
-		pipelineRef, err := request.GetPipelinePathRefFromPath(r)
+		pipelineRef, err := request.GetPipelineRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

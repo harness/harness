@@ -22,25 +22,25 @@ func (c *Controller) Update(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	uid string,
-	n int64,
+	pipelineUID string,
+	executionNum int64,
 	in *UpdateInput) (*types.Execution, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("could not find space: %w", err)
 	}
 
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, uid, enum.PermissionPipelineEdit)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipelineUID, enum.PermissionPipelineEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check auth: %w", err)
 	}
 
-	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
+	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
-	execution, err := c.executionStore.Find(ctx, pipeline.ID, n)
+	execution, err := c.executionStore.Find(ctx, pipeline.ID, executionNum)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find execution: %w", err)
 	}

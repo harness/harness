@@ -464,8 +464,8 @@ type (
 		// DeleteByUID deletes a pipeline with a given UID in a space
 		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
 
-		// Incremenet increments the sequence number of the pipeline
-		Increment(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error)
+		// IncrementSeqNum increments the sequence number of the pipeline
+		IncrementSeqNum(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error)
 	}
 
 	SecretStore interface {

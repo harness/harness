@@ -23,7 +23,7 @@ type SecretFilter struct {
 }
 
 // Copy makes a copy of the secret without the value.
-func (s *Secret) Copy() *Secret {
+func (s *Secret) CopyWithoutData() *Secret {
 	return &Secret{
 		ID:          s.ID,
 		Description: s.Description,

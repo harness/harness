@@ -6,7 +6,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/internal/store"
@@ -66,7 +65,6 @@ func ProvidePrincipalStore(db *sqlx.DB, uidTransformation store.PrincipalUIDTran
 
 // ProvideEncryptor provides an encryptor implementation
 func ProvideEncryptor(config database.Config) (encrypt.Encrypter, error) {
-	fmt.Println("secret: ", config.Secret)
 	enc, err := encrypt.New(config.Secret)
 	// mixed-content mode should be set to true if the database
 	// originally had encryption disabled and therefore has

@@ -45,6 +45,6 @@ func HandleUpdate(secretCtrl *secret.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusOK, secret.Copy())
+		render.JSON(w, http.StatusOK, secret.CopyWithoutData())
 	}
 }

@@ -32,6 +32,6 @@ func HandleCreate(secretCtrl *secret.Controller) http.HandlerFunc {
 			return
 		}
 
-		render.JSON(w, http.StatusCreated, secret.Copy())
+		render.JSON(w, http.StatusCreated, secret.CopyWithoutData())
 	}
 }
