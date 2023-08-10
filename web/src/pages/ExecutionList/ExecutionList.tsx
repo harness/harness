@@ -18,10 +18,10 @@ import Keywords from 'react-keywords'
 import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
+import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { formatDate } from 'utils/Utils'
-import { routes } from 'RouteDefinitions'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './ExecutionList.module.scss'
 
@@ -72,6 +72,7 @@ const executions: Execution[] = [
 const loading = false
 
 const ExecutionList = () => {
+  const { routes } = useAppContext()
   const history = useHistory()
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()

@@ -38,7 +38,7 @@ export function LatestCommitForFolder({ repoMetadata, latestCommit, standaloneSt
           </Link>
           <FlexExpander />
           <CommitActions sha={latestCommit?.sha as string} href={commitURL} />
-          <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
+          <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400} className={css.time}>
             <ReactTimeago date={latestCommit?.author?.when as string} />
           </Text>
         </Layout.Horizontal>

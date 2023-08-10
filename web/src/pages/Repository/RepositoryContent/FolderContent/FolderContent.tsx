@@ -1,10 +1,21 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Container, Color, TableV2 as Table, Text, Utils } from '@harness/uicore'
+import {
+  Container,
+  Color,
+  TableV2 as Table,
+  Text,
+  Utils,
+  StringSubstitute,
+  Layout,
+  TextProps,
+  Icon
+} from '@harness/uicore'
+import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import { Render } from 'react-jsx-match'
 import { chunk, clone, sortBy, throttle } from 'lodash-es'
 import { useMutate } from 'restful-react'
-import { useHistory } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiDirContent, TypesCommit } from 'services/code'
 import { formatDate, LIST_FETCHING_LIMIT } from 'utils/Utils'
@@ -15,58 +26,40 @@ import { Readme } from './Readme'
 import repositoryCSS from '../../Repository.module.scss'
 import css from './FolderContent.module.scss'
 
-export function FolderContent({
-  repoMetadata,
-  resourceContent,
-  gitRef
-}: Pick<GitInfoProps, 'repoMetadata' | 'resourceContent' | 'gitRef'>) {
+type FolderContentProps = Pick<GitInfoProps, 'repoMetadata' | 'resourceContent' | 'gitRef'>
+
+export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderContentProps) {
   const history = useHistory()
   const { routes, standalone } = useAppContext()
   const columns: Column<OpenapiContentInfo>[] = useMemo(
     () => [
       {
         id: 'name',
-        width: '40%',
-        Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
-          return (
-            <Text
-              data-resource-path={row.original.path}
-              lineClamp={1}
-              className={css.rowText}
-              color={Color.BLACK}
-              icon={isFile(row.original) ? CodeIcon.File : CodeIcon.Folder}
-              iconProps={{ margin: { right: 'xsmall' } }}>
-              {row.original.name}
-            </Text>
-          )
-        }
+        width: '30%',
+        Cell: ({ row }: CellProps<OpenapiContentInfo>) => (
+          <Container>
+            <Layout.Horizontal spacing="small">
+              <Icon name={isFile(row.original) ? CodeIcon.File : CodeIcon.Folder} />
+              <ListingItemLink
+                url={routes.toCODERepository({
+                  repoPath: repoMetadata.path as string,
+                  gitRef,
+                  resourcePath: row.original.path
+                })}
+                text={row.original.name as string}
+                data-resource-path={row.original.path}
+                lineClamp={1}
+              />
+            </Layout.Horizontal>
+          </Container>
+        )
       },
       {
         id: 'message',
-        width: 'calc(60% - 100px)',
-        Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
-          return (
-            <Container onClick={Utils.stopEvent}>
-              <Text
-                tag="a"
-                role="button"
-                color={Color.BLACK}
-                lineClamp={1}
-                padding={{ right: 'small' }}
-                className={css.rowText}
-                onClick={() => {
-                  history.push(
-                    routes.toCODECommit({
-                      repoPath: repoMetadata.path as string,
-                      commitRef: row.original.latest_commit?.sha as string
-                    })
-                  )
-                }}>
-                {row.original.latest_commit?.title}
-              </Text>
-            </Container>
-          )
-        }
+        width: 'calc(70% - 100px)',
+        Cell: ({ row }: CellProps<OpenapiContentInfo>) => (
+          <CommitMessageLinks repoMetadata={repoMetadata} rowData={row.original} />
+        )
       },
       {
         id: 'when',
@@ -98,7 +91,11 @@ export function FolderContent({
   })
   const [lastCommitMapping, setLastCommitMapping] = useState<Record<string, TypesCommit>>({})
   const mergedContentEntries = useMemo(
-    () => resourceEntries.map(entry => ({ ...entry, latest_commit: lastCommitMapping[entry.path as string] })),
+    () =>
+      resourceEntries.map(entry => ({
+        ...entry,
+        latest_commit: lastCommitMapping[entry.path as string] || entry.latest_commit
+      })),
     [resourceEntries, lastCommitMapping]
   )
 
@@ -222,3 +219,78 @@ type PathsChunks = Array<{
   loading: boolean
   failed: boolean
 }>
+
+interface CommitMessageLinksProps extends Pick<GitInfoProps, 'repoMetadata'> {
+  rowData: OpenapiContentInfo
+}
+
+const CommitMessageLinks: React.FC<CommitMessageLinksProps> = ({ repoMetadata, rowData }) => {
+  const { routes } = useAppContext()
+  let title: string | JSX.Element = (rowData.latest_commit?.title || '') as string
+  const match = title.match(/\(#\d+\)$/)
+
+  if (match?.length) {
+    const titleWithoutPullRequestId = title.replace(match[0], '')
+    const pullRequestId = match[0].replace('(#', '').replace(')', '')
+
+    title = (
+      <StringSubstitute
+        str="{COMMIT_URL}&nbsp;({PR_URL})"
+        vars={{
+          COMMIT_URL: (
+            <ListingItemLink
+              url={routes.toCODECommit({
+                repoPath: repoMetadata.path as string,
+                commitRef: rowData.latest_commit?.sha as string
+              })}
+              text={titleWithoutPullRequestId}
+            />
+          ),
+          PR_URL: (
+            <ListingItemLink
+              url={routes.toCODEPullRequest({
+                repoPath: repoMetadata.path as string,
+                pullRequestId
+              })}
+              text={`#${pullRequestId}`}
+              className={css.hightlight}
+              wrapperClassName={css.noShrink}
+            />
+          )
+        }}
+      />
+    )
+  } else {
+    title = (
+      <ListingItemLink
+        url={routes.toCODECommit({
+          repoPath: repoMetadata.path as string,
+          commitRef: rowData.latest_commit?.sha as string
+        })}
+        text={title}
+      />
+    )
+  }
+
+  return (
+    <Container>
+      <Layout.Horizontal className={css.commitMsgLayout}>{title}</Layout.Horizontal>
+    </Container>
+  )
+}
+
+interface ListingItemLinkProps extends TextProps {
+  url: string
+  text: string
+  wrapperClassName?: string
+}
+
+const ListingItemLink: React.FC<ListingItemLinkProps> = ({ url, text, className, wrapperClassName, ...props }) => (
+  <Container onClick={Utils.stopEvent} className={cx(css.linkContainer, wrapperClassName)}>
+    <Link className={css.link} to={url}>
+      <Text tag="span" color={Color.BLACK} lineClamp={1} className={cx(css.text, className)} {...props}>
+        {text.trim()}
+      </Text>
+    </Link>
+  </Container>
+)

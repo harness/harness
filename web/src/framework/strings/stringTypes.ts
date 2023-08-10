@@ -309,6 +309,7 @@ export interface StringsMap {
   'pipelines.newPipelineButton': string
   'pipelines.noData': string
   'pr.ableToMerge': string
+  'pr.addDescription': string
   'pr.authorCommentedPR': string
   'pr.branchHasNoConflicts': string
   'pr.cantBeMerged': string

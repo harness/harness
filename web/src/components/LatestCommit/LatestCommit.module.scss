@@ -31,4 +31,8 @@
     font-size: var(--font-size-small);
     color: var(--primary-8);
   }
+
+  .time {
+    flex-shrink: inherit;
+  }
 }

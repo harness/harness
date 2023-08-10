@@ -283,6 +283,7 @@ pr:
   status: Pull Request Checks Status
   checks: Checks
   checksFailure: '{failedCount}/{total} checks failed'
+  addDescription: Add Description
 prState:
   draftHeading: This pull request is still a work in progress
   draftDesc: Draft pull requests cannot be merged.

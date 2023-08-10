@@ -75,6 +75,15 @@ export interface CODERoutes {
   toCODEExecution: (args: Required<Pick<CODEProps, 'space' | 'pipeline' | 'execution'>>) => string
 }
 
+/**
+ * NOTE: NEVER IMPORT AND USE THIS ROUTES EXPORT DIRECTLY IN CODE.
+ *
+ * routes is used to created URLs in standalone version. Instead, use
+ * the `routes` from AppContext which is mapped to this export in standalone
+ * version or Harness Platform routes which is passed from Harness Platform UI.
+ *
+ * Correct usage: const { routes } = useAppContext()
+ */
 export const routes: CODERoutes = {
   toSignIn: (): string => '/signin',
   toRegister: (): string => '/register',

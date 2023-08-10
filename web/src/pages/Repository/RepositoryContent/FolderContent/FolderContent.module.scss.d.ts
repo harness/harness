@@ -8,5 +8,11 @@ declare const styles: {
   readonly readmeContainer: string
   readonly heading: string
   readonly readmeContent: string
+  readonly commitMsgLayout: string
+  readonly linkContainer: string
+  readonly noShrink: string
+  readonly link: string
+  readonly text: string
+  readonly hightlight: string
 }
 export default styles

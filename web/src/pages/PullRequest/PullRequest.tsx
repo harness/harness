@@ -74,7 +74,14 @@ export default function PullRequest() {
   }, [prData?.stats, stats])
   const onAddDescriptionClick = useCallback(() => {
     setShowEditDescription(true)
-  }, [])
+    history.replace(
+      routes.toCODEPullRequest({
+        repoPath: repoMetadata?.path as string,
+        pullRequestId,
+        pullRequestSection: PullRequestSection.CONVERSATION
+      })
+    )
+  }, [history, routes, repoMetadata?.path, pullRequestId])
 
   useEffect(
     function setStatsIfNotSet() {

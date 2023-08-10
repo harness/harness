@@ -4,9 +4,9 @@ import { Render } from 'react-jsx-match'
 import { useHistory, useRouteMatch, useParams } from 'react-router-dom'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
-import { routes } from 'RouteDefinitions'
 import type { TypesSpace } from 'services/code'
 import { SpaceSelector } from 'components/SpaceSelector/SpaceSelector'
+import { useAppContext } from 'AppContext'
 import { useFeatureFlag } from 'hooks/useFeatureFlag'
 import type { CODEProps } from 'RouteDefinitions'
 import { NavMenuItem } from './NavMenuItem'
@@ -14,6 +14,7 @@ import css from './DefaultMenu.module.scss'
 
 export const DefaultMenu: React.FC = () => {
   const history = useHistory()
+  const { routes } = useAppContext()
   const params = useParams<CODEProps>()
   const [selectedSpace, setSelectedSpace] = useState<TypesSpace | undefined>()
   const { repoMetadata, gitRef, commitRef } = useGetRepositoryMetadata()
