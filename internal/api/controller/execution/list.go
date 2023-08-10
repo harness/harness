@@ -20,7 +20,7 @@ func (c *Controller) List(
 	spaceRef string,
 	pipelineUID string,
 	pagination types.Pagination,
-) ([]types.Execution, int64, error) {
+) ([]*types.Execution, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find parent space: %w", err)
@@ -36,7 +36,7 @@ func (c *Controller) List(
 	}
 
 	var count int64
-	var executions []types.Execution
+	var executions []*types.Execution
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
 		var dbErr error

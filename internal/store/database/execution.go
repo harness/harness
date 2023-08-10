@@ -249,7 +249,7 @@ func (s *executionStore) List(
 	ctx context.Context,
 	pipelineID int64,
 	pagination types.Pagination,
-) ([]types.Execution, error) {
+) ([]*types.Execution, error) {
 	stmt := database.Builder.
 		Select(executionColumns).
 		From("executions").
@@ -265,7 +265,7 @@ func (s *executionStore) List(
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := []types.Execution{}
+	dst := []*types.Execution{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}

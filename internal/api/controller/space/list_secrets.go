@@ -20,7 +20,7 @@ func (c *Controller) ListSecrets(
 	session *auth.Session,
 	spaceRef string,
 	pagination types.Pagination,
-) ([]types.Secret, int64, error) {
+) ([]*types.Secret, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find parent space: %w", err)
@@ -32,7 +32,7 @@ func (c *Controller) ListSecrets(
 	}
 
 	var count int64
-	var secrets []types.Secret
+	var secrets []*types.Secret
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
 		count, err = c.secretStore.Count(ctx, space.ID, pagination)

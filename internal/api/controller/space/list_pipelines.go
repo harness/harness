@@ -20,7 +20,7 @@ func (c *Controller) ListPipelines(
 	session *auth.Session,
 	spaceRef string,
 	pagination types.Pagination,
-) ([]types.Pipeline, int64, error) {
+) ([]*types.Pipeline, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find parent space: %w", err)
@@ -32,7 +32,7 @@ func (c *Controller) ListPipelines(
 	}
 
 	var count int64
-	var pipelines []types.Pipeline
+	var pipelines []*types.Pipeline
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
 		count, err = c.pipelineStore.Count(ctx, space.ID, pagination)

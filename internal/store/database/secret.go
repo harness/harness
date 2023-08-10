@@ -152,7 +152,8 @@ func (s *secretStore) Update(ctx context.Context, secret *types.Secret) error {
 // UpdateOptLock updates the pipeline using the optimistic locking mechanism.
 func (s *secretStore) UpdateOptLock(ctx context.Context,
 	secret *types.Secret,
-	mutateFn func(secret *types.Secret) error) (*types.Secret, error) {
+	mutateFn func(secret *types.Secret) error,
+) (*types.Secret, error) {
 	for {
 		dup := *secret
 
@@ -177,7 +178,7 @@ func (s *secretStore) UpdateOptLock(ctx context.Context,
 }
 
 // List lists all the secrets present in a space.
-func (s *secretStore) List(ctx context.Context, parentID int64, pagination types.Pagination) ([]types.Secret, error) {
+func (s *secretStore) List(ctx context.Context, parentID int64, pagination types.Pagination) ([]*types.Secret, error) {
 	stmt := database.Builder.
 		Select(secretColumns).
 		From("secrets").
@@ -197,7 +198,7 @@ func (s *secretStore) List(ctx context.Context, parentID int64, pagination types
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := []types.Secret{}
+	dst := []*types.Secret{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}

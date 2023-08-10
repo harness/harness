@@ -173,7 +173,7 @@ func (s *pipelineStore) List(
 	ctx context.Context,
 	parentID int64,
 	pagination types.Pagination,
-) ([]types.Pipeline, error) {
+) ([]*types.Pipeline, error) {
 	stmt := database.Builder.
 		Select(pipelineColumns).
 		From("pipelines").
@@ -193,7 +193,7 @@ func (s *pipelineStore) List(
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := []types.Pipeline{}
+	dst := []*types.Pipeline{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}
