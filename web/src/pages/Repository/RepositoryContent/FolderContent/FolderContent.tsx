@@ -67,7 +67,7 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
             <Text lineClamp={1} color={Color.GREY_500} className={css.rowText}>
-                {!!row.original.latest_commit?.author?.when ? formatDate(row.original.latest_commit?.author?.when as string) : ""}
+              {formatDate(row.original.latest_commit?.author?.when as string)}
             </Text>
           )
         }

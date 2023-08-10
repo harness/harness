@@ -35,7 +35,7 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { GitRefLink } from 'components/GitRefLink/GitRefLink'
 import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequestStateLabel'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
-import { ExecutionStatusLabel } from 'components/ExecutionStatusLabel/ExecutionStatusLabel'
+// import { ExecutionStatusLabel } from 'components/ExecutionStatusLabel/ExecutionStatusLabel'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
 import css from './PullRequests.module.scss'
 
@@ -166,7 +166,7 @@ export default function PullRequests() {
               </Container>
               <FlexExpander />
               {/* TODO: Pass proper state when check api is fully implemented */}
-              <ExecutionStatusLabel data={{ state: 'success' }} />
+              {/* <ExecutionStatusLabel data={{ state: 'success' }} /> */}
             </Layout.Horizontal>
           )
         }
