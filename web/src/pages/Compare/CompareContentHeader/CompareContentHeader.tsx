@@ -63,7 +63,7 @@ export function CompareContentHeader({
           onSelect={onTargetGitRefChanged}
           labelPrefix={getString('prefixBase')}
           placeHolder={getString('selectBranchPlaceHolder')}
-          style={{ '--background-color': 'var(--white)' } as React.CSSProperties}
+          className={css.branchTagDropdown}
         />
         <Icon name="arrow-left" size={14} />
         <BranchTagSelect
@@ -74,7 +74,7 @@ export function CompareContentHeader({
           onSelect={onSourceGitRefChanged}
           labelPrefix={getString('prefixCompare')}
           placeHolder={getString('selectBranchPlaceHolder')}
-          style={{ '--background-color': 'var(--white)' } as React.CSSProperties}
+          className={css.branchTagDropdown}
         />
         {!!targetGitRef && !!sourceGitRef && (
           <MergeableLabel repoMetadata={repoMetadata} targetGitRef={targetGitRef} sourceGitRef={sourceGitRef} />
@@ -146,7 +146,7 @@ const MergeableLabel: React.FC<Pick<CompareContentHeaderProps, 'repoMetadata' | 
     <Text
       className={css.mergeText}
       icon={loading ? 'spinner' : mergeable === true ? 'command-artifact-check' : 'cross'}
-      iconProps={{ color }}
+      iconProps={{ color, margin: { right: 'xsmall' } }}
       color={color}>
       {loading ? '' : error ? getErrorMessage(error) : getString(mergeable ? 'pr.ableToMerge' : 'pr.cantMerge')}
     </Text>

@@ -42,6 +42,7 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
   forBranchesOnly,
   labelPrefix,
   placeHolder,
+  className,
   ...props
 }) => {
   const [query, onQuery] = useState('')
@@ -50,7 +51,7 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
 
   return (
     <Button
-      className={css.button}
+      className={cx(css.button, className)}
       text={
         text ? (
           labelPrefix ? (

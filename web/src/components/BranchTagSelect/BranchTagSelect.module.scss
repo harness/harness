@@ -8,6 +8,7 @@ html[class=''] {
   --border: 1px solid var(--grey-200) !important;
   --background-color-active: var(--white) !important;
   --box-shadow: none !important;
+  white-space: nowrap !important;
 
   &:active,
   &:hover,

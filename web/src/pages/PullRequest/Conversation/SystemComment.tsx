@@ -12,7 +12,6 @@ import {
 } from '@harness/uicore'
 import ReactTimeago from 'react-timeago'
 import { Render } from 'react-jsx-match'
-import { Link } from 'react-router-dom'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
@@ -21,9 +20,9 @@ import type { CommentItem } from 'components/CommentBox/CommentBox'
 import { formatDate, formatTime, PullRequestSection } from 'utils/Utils'
 import { CommentType } from 'components/DiffViewer/DiffViewerUtils'
 import { useAppContext } from 'AppContext'
-import css from './Conversation.module.scss'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
+import css from './Conversation.module.scss'
 
 interface SystemCommentProps extends Pick<GitInfoProps, 'pullRequestMetadata'> {
   commentItems: CommentItem<TypesPullReqActivity>[]
