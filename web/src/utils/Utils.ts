@@ -127,11 +127,13 @@ const LOCALE = Intl.NumberFormat().resolvedOptions?.().locale || 'en-US'
  * @param timeStyle Optional DateTimeFormat's `timeStyle` option.
  */
 export function formatTime(timestamp: number | string, timeStyle = 'short'): string {
-  return new Intl.DateTimeFormat(LOCALE, {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: TS built-in type for DateTimeFormat is not correct
-    timeStyle
-  }).format(new Date(timestamp))
+  return timestamp
+    ? new Intl.DateTimeFormat(LOCALE, {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: TS built-in type for DateTimeFormat is not correct
+        timeStyle
+      }).format(new Date(timestamp))
+    : ''
 }
 
 /**
@@ -140,11 +142,13 @@ export function formatTime(timestamp: number | string, timeStyle = 'short'): str
  * @param dateStyle Optional DateTimeFormat's `dateStyle` option.
  */
 export function formatDate(timestamp: number | string, dateStyle = 'medium'): string {
-  return new Intl.DateTimeFormat(LOCALE, {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: TS built-in type for DateTimeFormat is not correct
-    dateStyle
-  }).format(new Date(timestamp))
+  return timestamp
+    ? new Intl.DateTimeFormat(LOCALE, {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: TS built-in type for DateTimeFormat is not correct
+        dateStyle
+      }).format(new Date(timestamp))
+    : ''
 }
 
 /**
@@ -153,7 +157,7 @@ export function formatDate(timestamp: number | string, dateStyle = 'medium'): st
  * @returns Formatted string.
  */
 export function formatNumber(num: number | bigint): string {
-  return new Intl.NumberFormat(LOCALE).format(num)
+  return num ? new Intl.NumberFormat(LOCALE).format(num) : ''
 }
 
 /**
