@@ -108,9 +108,9 @@ export function FolderContent({
   const scrollCallback = useCallback(
     throttle(() => {
       pathsChunks.forEach(pathsChunk => {
-        const { paths, loaded, loading } = pathsChunk
+        const { paths, loaded, loading, failed } = pathsChunk
 
-        if (!loaded && !loading) {
+        if (!loaded && !loading && !failed) {
           for (let i = 0; i < paths.length; i++) {
             const element = document.querySelector(`[data-resource-path="${paths[i]}"]`)
 
@@ -134,6 +134,7 @@ export function FolderContent({
                 .catch(error => {
                   pathsChunk.loaded = false
                   pathsChunk.loading = false
+                  pathsChunk.failed = true
                   setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
                   console.log('Failed to fetch path commit details', error) // eslint-disable-line no-console
                 })
@@ -153,7 +154,8 @@ export function FolderContent({
       chunk(resourceEntries.map(entry => entry.path as string) || [], LIST_FETCHING_LIMIT).map(paths => ({
         paths,
         loaded: false,
-        loading: false
+        loading: false,
+        failed: false
       }))
     )
   }, [resourceEntries])
@@ -207,8 +209,16 @@ function isInViewport(element: Element) {
   )
 }
 
-interface PathDetails {
-  details: Array<{ path: string; last_commit: TypesCommit }>
+type PathDetails = {
+  details: Array<{
+    path: string
+    last_commit: TypesCommit
+  }>
 }
 
-type PathsChunks = Array<{ paths: string[]; loaded: boolean; loading: boolean }>
+type PathsChunks = Array<{
+  paths: string[]
+  loaded: boolean
+  loading: boolean
+  failed: boolean
+}>
