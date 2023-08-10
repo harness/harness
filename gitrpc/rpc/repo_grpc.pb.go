@@ -25,6 +25,7 @@ type RepositoryServiceClient interface {
 	CreateRepository(ctx context.Context, opts ...grpc.CallOption) (RepositoryService_CreateRepositoryClient, error)
 	GetTreeNode(ctx context.Context, in *GetTreeNodeRequest, opts ...grpc.CallOption) (*GetTreeNodeResponse, error)
 	ListTreeNodes(ctx context.Context, in *ListTreeNodesRequest, opts ...grpc.CallOption) (RepositoryService_ListTreeNodesClient, error)
+	PathsDetails(ctx context.Context, in *PathsDetailsRequest, opts ...grpc.CallOption) (*PathsDetailsResponse, error)
 	GetSubmodule(ctx context.Context, in *GetSubmoduleRequest, opts ...grpc.CallOption) (*GetSubmoduleResponse, error)
 	GetBlob(ctx context.Context, in *GetBlobRequest, opts ...grpc.CallOption) (RepositoryService_GetBlobClient, error)
 	ListCommits(ctx context.Context, in *ListCommitsRequest, opts ...grpc.CallOption) (RepositoryService_ListCommitsClient, error)
@@ -117,6 +118,15 @@ func (x *repositoryServiceListTreeNodesClient) Recv() (*ListTreeNodesResponse, e
 		return nil, err
 	}
 	return m, nil
+}
+
+func (c *repositoryServiceClient) PathsDetails(ctx context.Context, in *PathsDetailsRequest, opts ...grpc.CallOption) (*PathsDetailsResponse, error) {
+	out := new(PathsDetailsResponse)
+	err := c.cc.Invoke(ctx, "/rpc.RepositoryService/PathsDetails", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *repositoryServiceClient) GetSubmodule(ctx context.Context, in *GetSubmoduleRequest, opts ...grpc.CallOption) (*GetSubmoduleResponse, error) {
@@ -253,6 +263,7 @@ type RepositoryServiceServer interface {
 	CreateRepository(RepositoryService_CreateRepositoryServer) error
 	GetTreeNode(context.Context, *GetTreeNodeRequest) (*GetTreeNodeResponse, error)
 	ListTreeNodes(*ListTreeNodesRequest, RepositoryService_ListTreeNodesServer) error
+	PathsDetails(context.Context, *PathsDetailsRequest) (*PathsDetailsResponse, error)
 	GetSubmodule(context.Context, *GetSubmoduleRequest) (*GetSubmoduleResponse, error)
 	GetBlob(*GetBlobRequest, RepositoryService_GetBlobServer) error
 	ListCommits(*ListCommitsRequest, RepositoryService_ListCommitsServer) error
@@ -277,6 +288,9 @@ func (UnimplementedRepositoryServiceServer) GetTreeNode(context.Context, *GetTre
 }
 func (UnimplementedRepositoryServiceServer) ListTreeNodes(*ListTreeNodesRequest, RepositoryService_ListTreeNodesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListTreeNodes not implemented")
+}
+func (UnimplementedRepositoryServiceServer) PathsDetails(context.Context, *PathsDetailsRequest) (*PathsDetailsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PathsDetails not implemented")
 }
 func (UnimplementedRepositoryServiceServer) GetSubmodule(context.Context, *GetSubmoduleRequest) (*GetSubmoduleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubmodule not implemented")
@@ -381,6 +395,24 @@ type repositoryServiceListTreeNodesServer struct {
 
 func (x *repositoryServiceListTreeNodesServer) Send(m *ListTreeNodesResponse) error {
 	return x.ServerStream.SendMsg(m)
+}
+
+func _RepositoryService_PathsDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PathsDetailsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepositoryServiceServer).PathsDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.RepositoryService/PathsDetails",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepositoryServiceServer).PathsDetails(ctx, req.(*PathsDetailsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _RepositoryService_GetSubmodule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -561,6 +593,10 @@ var RepositoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTreeNode",
 			Handler:    _RepositoryService_GetTreeNode_Handler,
+		},
+		{
+			MethodName: "PathsDetails",
+			Handler:    _RepositoryService_PathsDetails_Handler,
 		},
 		{
 			MethodName: "GetSubmodule",

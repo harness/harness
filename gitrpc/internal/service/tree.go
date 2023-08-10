@@ -6,6 +6,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -15,8 +16,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s RepositoryService) ListTreeNodes(request *rpc.ListTreeNodesRequest,
-	stream rpc.RepositoryService_ListTreeNodesServer) error {
+func (s RepositoryService) ListTreeNodes(
+	request *rpc.ListTreeNodesRequest,
+	stream rpc.RepositoryService_ListTreeNodesServer,
+) error {
 	ctx := stream.Context()
 	base := request.GetBase()
 	if base == nil {
@@ -26,7 +29,7 @@ func (s RepositoryService) ListTreeNodes(request *rpc.ListTreeNodesRequest,
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
 	gitNodes, err := s.adapter.ListTreeNodes(ctx, repoPath,
-		request.GetGitRef(), request.GetPath(), request.GetRecursive(), request.GetIncludeLatestCommit())
+		request.GetGitRef(), request.GetPath())
 	if err != nil {
 		return processGitErrorf(err, "failed to list tree nodes")
 	}
@@ -34,14 +37,6 @@ func (s RepositoryService) ListTreeNodes(request *rpc.ListTreeNodesRequest,
 	log.Ctx(ctx).Trace().Msgf("git adapter returned %d nodes", len(gitNodes))
 
 	for _, gitNode := range gitNodes {
-		var commit *rpc.Commit
-		if request.GetIncludeLatestCommit() {
-			commit, err = mapGitCommit(gitNode.Commit)
-			if err != nil {
-				return status.Errorf(codes.Internal, "failed to map git commit: %v", err)
-			}
-		}
-
 		err = stream.Send(&rpc.ListTreeNodesResponse{
 			Node: &rpc.TreeNode{
 				Type: mapGitNodeType(gitNode.NodeType),
@@ -50,7 +45,6 @@ func (s RepositoryService) ListTreeNodes(request *rpc.ListTreeNodesRequest,
 				Name: gitNode.Name,
 				Path: gitNode.Path,
 			},
-			Commit: commit,
 		})
 		if err != nil {
 			return status.Errorf(codes.Internal, "failed to send node: %v", err)
@@ -61,15 +55,16 @@ func (s RepositoryService) ListTreeNodes(request *rpc.ListTreeNodesRequest,
 }
 
 func (s RepositoryService) GetTreeNode(ctx context.Context,
-	request *rpc.GetTreeNodeRequest) (*rpc.GetTreeNodeResponse, error) {
+	request *rpc.GetTreeNodeRequest,
+) (*rpc.GetTreeNodeResponse, error) {
 	base := request.GetBase()
 	if base == nil {
 		return nil, types.ErrBaseCannotBeEmpty
 	}
 
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
-	// TODO: do we need to validate request for nil?
-	gitNode, err := s.adapter.GetTreeNode(ctx, repoPath, request.GetGitRef(), request.GetPath())
+
+	gitNode, err := s.adapter.GetTreeNode(ctx, repoPath, request.GitRef, request.Path)
 	if err != nil {
 		return nil, processGitErrorf(err, "no such path '%s' in '%s'", request.Path, request.GetGitRef())
 	}
@@ -84,15 +79,61 @@ func (s RepositoryService) GetTreeNode(ctx context.Context,
 		},
 	}
 
-	// TODO: improve performance, could be done in lower layer?
 	if request.GetIncludeLatestCommit() {
-		var commit *rpc.Commit
-		commit, err = s.getLatestCommit(ctx, repoPath, request.GetGitRef(), request.GetPath())
+		pathDetails, err := s.adapter.PathsDetails(ctx, repoPath, request.GitRef, []string{request.Path})
 		if err != nil {
 			return nil, err
 		}
-		res.Commit = commit
+
+		if len(pathDetails) != 1 {
+			return nil, fmt.Errorf("failed to get details for the path %s", request.Path)
+		}
+
+		if pathDetails[0].LastCommit != nil {
+			res.Commit, err = mapGitCommit(pathDetails[0].LastCommit)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	return res, nil
+}
+
+func (s RepositoryService) PathsDetails(ctx context.Context,
+	request *rpc.PathsDetailsRequest,
+) (*rpc.PathsDetailsResponse, error) {
+	base := request.GetBase()
+	if base == nil {
+		return nil, types.ErrBaseCannotBeEmpty
+	}
+
+	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
+
+	pathsDetails, err := s.adapter.PathsDetails(ctx, repoPath, request.GetGitRef(), request.GetPaths())
+	if err != nil {
+		return nil, processGitErrorf(err, "failed to get path details in '%s'", request.GetGitRef())
+	}
+
+	details := make([]*rpc.PathDetails, len(pathsDetails))
+	for i, pathDetails := range pathsDetails {
+		var lastCommit *rpc.Commit
+
+		if pathDetails.LastCommit != nil {
+			lastCommit, err = mapGitCommit(pathDetails.LastCommit)
+			if err != nil {
+				return nil, fmt.Errorf("failed to map commit: %w", err)
+			}
+		}
+
+		details[i] = &rpc.PathDetails{
+			Path:       pathDetails.Path,
+			LastCommit: lastCommit,
+			Size:       pathDetails.Size,
+		}
+	}
+
+	return &rpc.PathsDetailsResponse{
+		PathDetails: details,
+	}, nil
 }

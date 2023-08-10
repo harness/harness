@@ -25,8 +25,8 @@ type GitAdapter interface {
 	Push(ctx context.Context, repoPath string, opts types.PushOptions) error
 	ReadTree(ctx context.Context, repoPath, ref string, w io.Writer, args ...string) error
 	GetTreeNode(ctx context.Context, repoPath string, ref string, treePath string) (*types.TreeNode, error)
-	ListTreeNodes(ctx context.Context, repoPath string, ref string, treePath string,
-		recursive bool, includeLatestCommit bool) ([]types.TreeNodeWithCommit, error)
+	ListTreeNodes(ctx context.Context, repoPath string, ref string, treePath string) ([]types.TreeNode, error)
+	PathsDetails(ctx context.Context, repoPath string, ref string, paths []string) ([]types.PathDetails, error)
 	GetSubmodule(ctx context.Context, repoPath string, ref string, treePath string) (*types.Submodule, error)
 	GetBlob(ctx context.Context, repoPath string, sha string, sizeLimit int64) (*types.BlobReader, error)
 	WalkReferences(ctx context.Context, repoPath string, handler types.WalkReferencesHandler,

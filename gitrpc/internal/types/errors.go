@@ -15,6 +15,7 @@ var (
 	ErrAlreadyExists               = errors.New("already exists")
 	ErrInvalidArgument             = errors.New("invalid argument")
 	ErrNotFound                    = errors.New("not found")
+	ErrPathNotFound                = errors.New("path not found")
 	ErrInvalidPath                 = errors.New("path is invalid")
 	ErrUndefinedAction             = errors.New("undefined action")
 	ErrActionNotAllowedOnEmptyRepo = errors.New("action not allowed on empty repository")

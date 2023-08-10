@@ -10,6 +10,7 @@ service RepositoryService {
   rpc CreateRepository(stream CreateRepositoryRequest) returns (CreateRepositoryResponse);
   rpc GetTreeNode(GetTreeNodeRequest) returns (GetTreeNodeResponse);
   rpc ListTreeNodes(ListTreeNodesRequest) returns (stream ListTreeNodesResponse);
+  rpc PathsDetails(PathsDetailsRequest) returns (PathsDetailsResponse);
   rpc GetSubmodule(GetSubmoduleRequest) returns (GetSubmoduleResponse);
   rpc GetBlob(GetBlobRequest) returns (stream GetBlobResponse);
   rpc ListCommits(ListCommitsRequest) returns (stream ListCommitsResponse);
@@ -55,13 +56,10 @@ message ListTreeNodesRequest {
   ReadRequest base           = 1;
   string git_ref             = 2;
   string path                = 3;
-  bool include_latest_commit = 4;
-  bool recursive             = 5;
 }
 
 message ListTreeNodesResponse {
   TreeNode node = 1;
-  Commit commit = 2;
 }
 
 message TreeNode {
@@ -84,6 +82,22 @@ enum TreeNodeMode {
   TreeNodeModeExec = 2;
   TreeNodeModeTree = 3;
   TreeNodeModeCommit = 4;
+}
+
+message PathsDetailsRequest {
+  ReadRequest base = 1;
+  string git_ref = 2;
+  repeated string paths = 3;
+}
+
+message PathsDetailsResponse {
+  repeated PathDetails path_details = 1;
+}
+
+message PathDetails {
+  string path = 1;
+  Commit last_commit = 2;
+  int64 size = 3;
 }
 
 message GetCommitRequest {

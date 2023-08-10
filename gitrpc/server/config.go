@@ -25,6 +25,16 @@ type Config struct {
 	}
 	MaxConnAge      time.Duration `envconfig:"GITRPC_SERVER_MAX_CONN_AGE" default:"630720000s"`
 	MaxConnAgeGrace time.Duration `envconfig:"GITRPC_SERVER_MAX_CONN_AGE_GRACE" default:"630720000s"`
+
+	// LastCommitCacheSeconds defines cache duration in seconds of last commit, default=12h
+	LastCommitCacheSeconds int `envconfig:"GITRPC_LAST_COMMIT_CACHE_SECONDS" default:"43200"`
+
+	Redis struct {
+		Endpoint           string `envconfig:"GITRPC_REDIS_ENDPOINT"             default:"localhost:6379"`
+		MaxRetries         int    `envconfig:"GITRPC_REDIS_MAX_RETRIES"          default:"3"`
+		MinIdleConnections int    `envconfig:"GITRPC_REDIS_MIN_IDLE_CONNECTIONS" default:"0"`
+		Password           string `envconfig:"GITRPC_REDIS_PASSWORD"`
+	}
 }
 
 func (c *Config) Validate() error {

@@ -80,13 +80,15 @@ type SubmoduleContent struct {
 
 func (c *SubmoduleContent) isContent() {}
 
-/*
- * GetContent finds the content of the repo at the given path.
- * If no gitRef is provided, the content is retrieved from the default branch.
- * If includeLatestCommit is enabled, the response contains information of the latest commit that changed the object.
- */
-func (c *Controller) GetContent(ctx context.Context, session *auth.Session, repoRef string,
-	gitRef string, repoPath string, includeLatestCommit bool) (*GetContentOutput, error) {
+// GetContent finds the content of the repo at the given path.
+// If no gitRef is provided, the content is retrieved from the default branch.
+func (c *Controller) GetContent(ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	gitRef string,
+	repoPath string,
+	includeLatestCommit bool,
+) (*GetContentOutput, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
@@ -114,7 +116,7 @@ func (c *Controller) GetContent(ctx context.Context, session *auth.Session, repo
 		return nil, err
 	}
 
-	info, err := mapToContentInfo(&treeNodeOutput.Node, treeNodeOutput.Commit)
+	info, err := mapToContentInfo(treeNodeOutput.Node, treeNodeOutput.Commit, includeLatestCommit)
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +124,7 @@ func (c *Controller) GetContent(ctx context.Context, session *auth.Session, repo
 	var content Content
 	switch info.Type {
 	case ContentTypeDir:
-		// for getContent we don't want any recursiveness for dir content.
-		content, err = c.getDirContent(ctx, readParams, gitRef, repoPath, includeLatestCommit, false)
+		content, err = c.getDirContent(ctx, readParams, gitRef, repoPath, includeLatestCommit)
 	case ContentTypeFile:
 		content, err = c.getFileContent(ctx, readParams, info.SHA)
 	case ContentTypeSymlink:
@@ -139,13 +140,17 @@ func (c *Controller) GetContent(ctx context.Context, session *auth.Session, repo
 	}
 
 	return &GetContentOutput{
-		ContentInfo: *info,
+		ContentInfo: info,
 		Content:     content,
 	}, nil
 }
 
-func (c *Controller) getSubmoduleContent(ctx context.Context, readParams gitrpc.ReadParams, gitRef string,
-	repoPath string, commitSHA string) (*SubmoduleContent, error) {
+func (c *Controller) getSubmoduleContent(ctx context.Context,
+	readParams gitrpc.ReadParams,
+	gitRef string,
+	repoPath string,
+	commitSHA string,
+) (*SubmoduleContent, error) {
 	output, err := c.gitRPCClient.GetSubmodule(ctx, &gitrpc.GetSubmoduleParams{
 		ReadParams: readParams,
 		GitREF:     gitRef,
@@ -163,8 +168,10 @@ func (c *Controller) getSubmoduleContent(ctx context.Context, readParams gitrpc.
 	}, nil
 }
 
-func (c *Controller) getFileContent(ctx context.Context, readParams gitrpc.ReadParams,
-	blobSHA string) (*FileContent, error) {
+func (c *Controller) getFileContent(ctx context.Context,
+	readParams gitrpc.ReadParams,
+	blobSHA string,
+) (*FileContent, error) {
 	output, err := c.gitRPCClient.GetBlob(ctx, &gitrpc.GetBlobParams{
 		ReadParams: readParams,
 		SHA:        blobSHA,
@@ -187,8 +194,10 @@ func (c *Controller) getFileContent(ctx context.Context, readParams gitrpc.ReadP
 	}, nil
 }
 
-func (c *Controller) getSymlinkContent(ctx context.Context, readParams gitrpc.ReadParams,
-	blobSHA string) (*SymlinkContent, error) {
+func (c *Controller) getSymlinkContent(ctx context.Context,
+	readParams gitrpc.ReadParams,
+	blobSHA string,
+) (*SymlinkContent, error) {
 	output, err := c.gitRPCClient.GetBlob(ctx, &gitrpc.GetBlobParams{
 		ReadParams: readParams,
 		SHA:        blobSHA,
@@ -211,14 +220,17 @@ func (c *Controller) getSymlinkContent(ctx context.Context, readParams gitrpc.Re
 	}, nil
 }
 
-func (c *Controller) getDirContent(ctx context.Context, readParams gitrpc.ReadParams, gitRef string,
-	repoPath string, includeLatestCommit bool, recursive bool) (*DirContent, error) {
+func (c *Controller) getDirContent(ctx context.Context,
+	readParams gitrpc.ReadParams,
+	gitRef string,
+	repoPath string,
+	includeLatestCommit bool,
+) (*DirContent, error) {
 	output, err := c.gitRPCClient.ListTreeNodes(ctx, &gitrpc.ListTreeNodeParams{
 		ReadParams:          readParams,
 		GitREF:              gitRef,
 		Path:                repoPath,
 		IncludeLatestCommit: includeLatestCommit,
-		Recursive:           recursive,
 	})
 	if err != nil {
 		// TODO: handle not found error
@@ -227,15 +239,11 @@ func (c *Controller) getDirContent(ctx context.Context, readParams gitrpc.ReadPa
 	}
 
 	entries := make([]ContentInfo, len(output.Nodes))
-	for i := range output.Nodes {
-		node := output.Nodes[i]
-
-		var entry *ContentInfo
-		entry, err = mapToContentInfo(&node.TreeNode, node.Commit)
+	for i, node := range output.Nodes {
+		entries[i], err = mapToContentInfo(node, nil, false)
 		if err != nil {
 			return nil, err
 		}
-		entries[i] = *entry
 	}
 
 	return &DirContent{
@@ -243,17 +251,13 @@ func (c *Controller) getDirContent(ctx context.Context, readParams gitrpc.ReadPa
 	}, nil
 }
 
-func mapToContentInfo(node *gitrpc.TreeNode, commit *gitrpc.Commit) (*ContentInfo, error) {
-	// node data is expected
-	if node == nil {
-		return nil, fmt.Errorf("node can't be nil")
-	}
+func mapToContentInfo(node gitrpc.TreeNode, commit *gitrpc.Commit, includeLatestCommit bool) (ContentInfo, error) {
 	typ, err := mapNodeModeToContentType(node.Mode)
 	if err != nil {
-		return nil, err
+		return ContentInfo{}, err
 	}
 
-	res := &ContentInfo{
+	res := ContentInfo{
 		Type: typ,
 		SHA:  node.SHA,
 		Name: node.Name,
@@ -261,10 +265,10 @@ func mapToContentInfo(node *gitrpc.TreeNode, commit *gitrpc.Commit) (*ContentInf
 	}
 
 	// parse commit only if available
-	if commit != nil {
+	if commit != nil && includeLatestCommit {
 		res.LatestCommit, err = controller.MapCommit(commit)
 		if err != nil {
-			return nil, err
+			return ContentInfo{}, err
 		}
 	}
 

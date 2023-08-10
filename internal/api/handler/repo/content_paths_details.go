@@ -5,6 +5,7 @@
 package repo
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -12,10 +13,8 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 )
 
-/*
- * Writes json-encoded content information to the http response body.
- */
-func HandleGetContent(repoCtrl *repo.Controller) http.HandlerFunc {
+// HandlePathsDetails handles get file or directory details HTTP API.
+func HandlePathsDetails(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -27,15 +26,14 @@ func HandleGetContent(repoCtrl *repo.Controller) http.HandlerFunc {
 
 		gitRef := request.GetGitRefFromQueryOrDefault(r, "")
 
-		includeCommit, err := request.GetIncludeCommitFromQueryOrDefault(r, false)
+		var in repo.PathsDetailsInput
+		err = json.NewDecoder(r.Body).Decode(&in)
 		if err != nil {
-			render.TranslatedUserError(w, err)
+			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
 		}
 
-		repoPath := request.GetOptionalRemainderFromPath(r)
-
-		resp, err := repoCtrl.GetContent(ctx, session, repoRef, gitRef, repoPath, includeCommit)
+		resp, err := repoCtrl.PathsDetails(ctx, session, repoRef, gitRef, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

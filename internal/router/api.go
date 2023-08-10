@@ -200,6 +200,8 @@ func setupRepos(r chi.Router,
 				r.Get("/*", handlerrepo.HandleGetContent(repoCtrl))
 			})
 
+			r.Post("/path-details", handlerrepo.HandlePathsDetails(repoCtrl))
+
 			r.Route("/blame", func(r chi.Router) {
 				r.Get("/*", handlerrepo.HandleBlame(repoCtrl))
 			})

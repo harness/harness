@@ -86,16 +86,6 @@ func (s RepositoryService) ListCommits(request *rpc.ListCommitsRequest,
 	return nil
 }
 
-func (s RepositoryService) getLatestCommit(ctx context.Context, repoPath string,
-	ref string, path string) (*rpc.Commit, error) {
-	gitCommit, err := s.adapter.GetLatestCommit(ctx, repoPath, ref, path)
-	if err != nil {
-		return nil, processGitErrorf(err, "failed to get latest commit")
-	}
-
-	return mapGitCommit(gitCommit)
-}
-
 func (s RepositoryService) GetCommitDivergences(ctx context.Context,
 	request *rpc.GetCommitDivergencesRequest) (*rpc.GetCommitDivergencesResponse, error) {
 	base := request.GetBase()
