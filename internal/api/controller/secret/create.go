@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/encrypt"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
@@ -66,6 +67,10 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 			Updated:     now,
 			Version:     0,
 		}
+		secret, err = enc(c.encrypter, secret)
+		if err != nil {
+			return fmt.Errorf("could not encrypt secret: %w", err)
+		}
 		err = c.secretStore.Create(ctx, secret)
 		if err != nil {
 			return fmt.Errorf("secret creation failed: %w", err)
@@ -96,4 +101,32 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	}
 
 	return nil
+}
+
+// helper function returns the same secret with encrypted data.
+func enc(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error) {
+	if secret == nil {
+		return nil, fmt.Errorf("cannot encrypt a nil secret")
+	}
+	s := *secret
+	ciphertext, err := encrypt.Encrypt(secret.Data)
+	if err != nil {
+		return nil, err
+	}
+	s.Data = string(ciphertext)
+	return &s, nil
+}
+
+// helper function returns the same secret with decrypted data.
+func dec(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error) {
+	if secret == nil {
+		return nil, fmt.Errorf("cannot decrypt a nil secret")
+	}
+	s := *secret
+	plaintext, err := encrypt.Decrypt([]byte(secret.Data))
+	if err != nil {
+		return nil, err
+	}
+	s.Data = plaintext
+	return &s, nil
 }

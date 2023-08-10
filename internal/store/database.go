@@ -450,7 +450,7 @@ type (
 		Create(ctx context.Context, pipeline *types.Pipeline) error
 
 		// Update tries to update a pipeline in the datastore
-		Update(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error)
+		Update(ctx context.Context, pipeline *types.Pipeline) error
 
 		// List lists the pipelines present in a parent space ID in the datastore.
 		List(ctx context.Context, spaceID int64, pagination types.Pagination) ([]types.Pipeline, error)
@@ -490,7 +490,7 @@ type (
 			mutateFn func(secret *types.Secret) error) (*types.Secret, error)
 
 		// Update tries to update a secret.
-		Update(ctx context.Context, secret *types.Secret) (*types.Secret, error)
+		Update(ctx context.Context, secret *types.Secret) error
 
 		// Delete deletes a secret given an ID.
 		Delete(ctx context.Context, id int64) error
@@ -510,7 +510,7 @@ type (
 		Create(ctx context.Context, execution *types.Execution) error
 
 		// Update tries to update an execution.
-		Update(ctx context.Context, execution *types.Execution) (*types.Execution, error)
+		Update(ctx context.Context, execution *types.Execution) error
 
 		// UpdateOptLock updates the execution using the optimistic locking mechanism.
 		UpdateOptLock(ctx context.Context, exectuion *types.Execution,

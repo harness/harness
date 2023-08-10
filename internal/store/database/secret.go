@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/internal/store"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database"
@@ -38,8 +37,48 @@ const (
 	secret_updated,
 	secret_version
 	`
+)
 
-	secretInsertStmt = `
+// NewSecretStore returns a new SecretStore.
+func NewSecretStore(db *sqlx.DB) *secretStore {
+	return &secretStore{
+		db: db,
+	}
+}
+
+type secretStore struct {
+	db *sqlx.DB
+}
+
+// Find returns a secret given a secret ID.
+func (s *secretStore) Find(ctx context.Context, id int64) (*types.Secret, error) {
+	const findQueryStmt = secretQueryBase + `
+		WHERE secret_id = $1`
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := new(types.Secret)
+	if err := db.GetContext(ctx, dst, findQueryStmt, id); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed to find secret")
+	}
+	return dst, nil
+}
+
+// FindByUID returns a secret in a given space with a given UID.
+func (s *secretStore) FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Secret, error) {
+	const findQueryStmt = secretQueryBase + `
+		WHERE secret_space_id = $1 AND secret_uid = $2`
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := new(types.Secret)
+	if err := db.GetContext(ctx, dst, findQueryStmt, spaceID, uid); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed to find secret")
+	}
+	return dst, nil
+}
+
+// Create creates a secret.
+func (s *secretStore) Create(ctx context.Context, secret *types.Secret) error {
+	const secretInsertStmt = `
 	INSERT INTO secrets (
 		secret_description,
 		secret_space_id,
@@ -57,66 +96,7 @@ const (
 		:secret_updated,
 		:secret_version
 	) RETURNING secret_id`
-
-	secretUpdateStmt = `
-	UPDATE secrets
-	SET
-		secret_description = :secret_description,
-		secret_space_id = :secret_space_id,
-		secret_uid = :secret_uid,
-		secret_data = :secret_data,
-		secret_updated = :secret_updated,
-		secret_version = :secret_version
-	WHERE secret_id = :secret_id AND secret_version = :secret_version - 1`
-)
-
-// NewSecretStore returns a new SecretStore.
-func NewSecretStore(enc encrypt.Encrypter, db *sqlx.DB) *secretStore {
-	return &secretStore{
-		db:  db,
-		enc: enc,
-	}
-}
-
-type secretStore struct {
-	db  *sqlx.DB
-	enc encrypt.Encrypter
-}
-
-// Find returns a secret given a secret ID.
-func (s *secretStore) Find(ctx context.Context, id int64) (*types.Secret, error) {
-	const findQueryStmt = secretQueryBase + `
-		WHERE secret_id = $1`
 	db := dbtx.GetAccessor(ctx, s.db)
-
-	dst := new(types.Secret)
-	if err := db.GetContext(ctx, dst, findQueryStmt, id); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find secret")
-	}
-	return dec(s.enc, dst)
-}
-
-// FindByUID returns a secret in a given space with a given UID.
-func (s *secretStore) FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Secret, error) {
-	const findQueryStmt = secretQueryBase + `
-		WHERE secret_space_id = $1 AND secret_uid = $2`
-	db := dbtx.GetAccessor(ctx, s.db)
-
-	dst := new(types.Secret)
-	if err := db.GetContext(ctx, dst, findQueryStmt, spaceID, uid); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find secret")
-	}
-	return dec(s.enc, dst)
-}
-
-// Create creates a secret.
-func (s *secretStore) Create(ctx context.Context, secret *types.Secret) error {
-	db := dbtx.GetAccessor(ctx, s.db)
-
-	secret, err := enc(s.enc, secret)
-	if err != nil {
-		return err
-	}
 
 	query, arg, err := db.BindNamed(secretInsertStmt, secret)
 	if err != nil {
@@ -130,7 +110,16 @@ func (s *secretStore) Create(ctx context.Context, secret *types.Secret) error {
 	return nil
 }
 
-func (s *secretStore) Update(ctx context.Context, secret *types.Secret) (*types.Secret, error) {
+func (s *secretStore) Update(ctx context.Context, secret *types.Secret) error {
+	const secretUpdateStmt = `
+	UPDATE secrets
+	SET
+		secret_description = :secret_description,
+		secret_uid = :secret_uid,
+		secret_data = :secret_data,
+		secret_updated = :secret_updated,
+		secret_version = :secret_version
+	WHERE secret_id = :secret_id AND secret_version = :secret_version - 1`
 	updatedAt := time.Now()
 
 	secret.Version++
@@ -138,31 +127,26 @@ func (s *secretStore) Update(ctx context.Context, secret *types.Secret) (*types.
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	secret, err := enc(s.enc, secret)
-	if err != nil {
-		return nil, err
-	}
-
 	query, arg, err := db.BindNamed(secretUpdateStmt, secret)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to bind secret object")
+		return database.ProcessSQLErrorf(err, "Failed to bind secret object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to update secret")
+		return database.ProcessSQLErrorf(err, "Failed to update secret")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
-		return nil, gitness_store.ErrVersionConflict
+		return gitness_store.ErrVersionConflict
 	}
 
-	return secret, nil
+	return nil
 }
 
 // UpdateOptLock updates the pipeline using the optimistic locking mechanism.
@@ -177,7 +161,7 @@ func (s *secretStore) UpdateOptLock(ctx context.Context,
 			return nil, err
 		}
 
-		secret, err = s.Update(ctx, &dup)
+		err = s.Update(ctx, &dup)
 		if err == nil {
 			return &dup, nil
 		}
@@ -275,32 +259,4 @@ func (s *secretStore) Count(ctx context.Context, parentID int64, filter types.Pa
 		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
 	}
 	return count, nil
-}
-
-// helper function returns the same secret with encrypted data.
-func enc(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error) {
-	if secret == nil {
-		return nil, fmt.Errorf("cannot encrypt a nil secret")
-	}
-	s := *secret
-	ciphertext, err := encrypt.Encrypt(secret.Data)
-	if err != nil {
-		return nil, err
-	}
-	s.Data = string(ciphertext)
-	return &s, nil
-}
-
-// helper function returns the same secret with decrypted data.
-func dec(encrypt encrypt.Encrypter, secret *types.Secret) (*types.Secret, error) {
-	if secret == nil {
-		return nil, fmt.Errorf("cannot decrypt a nil secret")
-	}
-	s := *secret
-	plaintext, err := encrypt.Decrypt([]byte(secret.Data))
-	if err != nil {
-		return nil, err
-	}
-	s.Data = plaintext
-	return &s, nil
 }

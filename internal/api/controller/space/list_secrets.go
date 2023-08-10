@@ -35,21 +35,21 @@ func (c *Controller) ListSecrets(
 	var secrets []types.Secret
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
-		var dbErr error
-		count, dbErr = c.secretStore.Count(ctx, space.ID, pagination)
-		if dbErr != nil {
-			return fmt.Errorf("failed to count child executions: %w", err)
+		count, err = c.secretStore.Count(ctx, space.ID, pagination)
+		if err != nil {
+			err = fmt.Errorf("failed to count child executions: %w", err)
+			return
 		}
 
-		secrets, dbErr = c.secretStore.List(ctx, space.ID, pagination)
-		if dbErr != nil {
-			return fmt.Errorf("failed to list child executions: %w", err)
+		secrets, err = c.secretStore.List(ctx, space.ID, pagination)
+		if err != nil {
+			err = fmt.Errorf("failed to list child executions: %w", err)
+			return
 		}
-
-		return dbErr
+		return
 	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
-		return secrets, count, err
+		return secrets, count, fmt.Errorf("failed to list secrets: %w", err)
 	}
 
 	return secrets, count, nil

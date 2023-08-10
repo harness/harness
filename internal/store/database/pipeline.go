@@ -43,51 +43,6 @@ const (
 	,pipeline_updated
 	,pipeline_version
 	`
-
-	pipelineInsertStmt = `
-	INSERT INTO pipelines (
-		pipeline_description
-		,pipeline_space_id
-		,pipeline_uid
-		,pipeline_seq
-		,pipeline_repo_id
-		,pipeline_repo_type
-		,pipeline_repo_name
-		,pipeline_default_branch
-		,pipeline_config_path
-		,pipeline_created
-		,pipeline_updated
-		,pipeline_version
-	) VALUES (
-		:pipeline_description,
-		:pipeline_space_id,
-		:pipeline_uid,
-		:pipeline_seq,
-		:pipeline_repo_id,
-		:pipeline_repo_type,
-		:pipeline_repo_name,
-		:pipeline_default_branch,
-		:pipeline_config_path,
-		:pipeline_created,
-		:pipeline_updated,
-		:pipeline_version
-	) RETURNING pipeline_id`
-
-	pipelineUpdateStmt = `
-	UPDATE pipelines
-	SET
-		pipeline_description = :pipeline_description,
-		pipeline_space_id = :pipeline_space_id,
-		pipeline_uid = :pipeline_uid,
-		pipeline_seq = :pipeline_seq,
-		pipeline_repo_id = :pipeline_repo_id,
-		pipeline_repo_type = :pipeline_repo_type,
-		pipeline_repo_name = :pipeline_repo_name,
-		pipeline_default_branch = :pipeline_default_branch,
-		pipeline_config_path = :pipeline_config_path,
-		pipeline_updated = :pipeline_updated,
-		pipeline_version = :pipeline_version
-	WHERE pipeline_id = :pipeline_id AND pipeline_version = :pipeline_version - 1`
 )
 
 // NewPipelineStore returns a new PipelineStore.
@@ -129,6 +84,34 @@ func (s *pipelineStore) FindByUID(ctx context.Context, spaceID int64, uid string
 
 // Create creates a pipeline.
 func (s *pipelineStore) Create(ctx context.Context, pipeline *types.Pipeline) error {
+	const pipelineInsertStmt = `
+	INSERT INTO pipelines (
+		pipeline_description
+		,pipeline_space_id
+		,pipeline_uid
+		,pipeline_seq
+		,pipeline_repo_id
+		,pipeline_repo_type
+		,pipeline_repo_name
+		,pipeline_default_branch
+		,pipeline_config_path
+		,pipeline_created
+		,pipeline_updated
+		,pipeline_version
+	) VALUES (
+		:pipeline_description,
+		:pipeline_space_id,
+		:pipeline_uid,
+		:pipeline_seq,
+		:pipeline_repo_id,
+		:pipeline_repo_type,
+		:pipeline_repo_name,
+		:pipeline_default_branch,
+		:pipeline_config_path,
+		:pipeline_created,
+		:pipeline_updated,
+		:pipeline_version
+	) RETURNING pipeline_id`
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	query, arg, err := db.BindNamed(pipelineInsertStmt, pipeline)
@@ -144,7 +127,18 @@ func (s *pipelineStore) Create(ctx context.Context, pipeline *types.Pipeline) er
 }
 
 // Update updates a pipeline.
-func (s *pipelineStore) Update(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error) {
+func (s *pipelineStore) Update(ctx context.Context, pipeline *types.Pipeline) error {
+	const pipelineUpdateStmt = `
+	UPDATE pipelines
+	SET
+		pipeline_description = :pipeline_description,
+		pipeline_uid = :pipeline_uid,
+		pipeline_seq = :pipeline_seq,
+		pipeline_default_branch = :pipeline_default_branch,
+		pipeline_config_path = :pipeline_config_path,
+		pipeline_updated = :pipeline_updated,
+		pipeline_version = :pipeline_version
+	WHERE pipeline_id = :pipeline_id AND pipeline_version = :pipeline_version - 1`
 	updatedAt := time.Now()
 
 	pipeline.Version++
@@ -154,24 +148,24 @@ func (s *pipelineStore) Update(ctx context.Context, pipeline *types.Pipeline) (*
 
 	query, arg, err := db.BindNamed(pipelineUpdateStmt, pipeline)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to bind pipeline object")
+		return database.ProcessSQLErrorf(err, "Failed to bind pipeline object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to update pipeline")
+		return database.ProcessSQLErrorf(err, "Failed to update pipeline")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
-		return nil, gitness_store.ErrVersionConflict
+		return gitness_store.ErrVersionConflict
 	}
 
-	return pipeline, nil
+	return nil
 }
 
 // List lists all the pipelines present in a space.
@@ -219,7 +213,7 @@ func (s *pipelineStore) UpdateOptLock(ctx context.Context,
 			return nil, err
 		}
 
-		pipeline, err = s.Update(ctx, &dup)
+		err = s.Update(ctx, &dup)
 		if err == nil {
 			return &dup, nil
 		}
@@ -296,7 +290,7 @@ func (s *pipelineStore) IncrementSeqNum(ctx context.Context, pipeline *types.Pip
 	for {
 		var err error
 		pipeline.Seq++
-		pipeline, err = s.Update(ctx, pipeline)
+		err = s.Update(ctx, pipeline)
 		if err == nil {
 			return pipeline, nil
 		} else if !errors.Is(err, gitness_store.ErrVersionConflict) {

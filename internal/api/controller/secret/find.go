@@ -6,6 +6,7 @@ package secret
 
 import (
 	"context"
+	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -21,11 +22,19 @@ func (c *Controller) Find(
 ) (*types.Secret, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not find space: %w", err)
 	}
 	err = apiauth.CheckSecret(ctx, c.authorizer, session, space.Path, uid, enum.PermissionSecretView)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
-	return c.secretStore.FindByUID(ctx, space.ID, uid)
+	secret, err := c.secretStore.FindByUID(ctx, space.ID, uid)
+	if err != nil {
+		return nil, fmt.Errorf("could not find secret: %w", err)
+	}
+	secret, err = dec(c.encrypter, secret)
+	if err != nil {
+		return nil, fmt.Errorf("could not decrypt secret: %w", err)
+	}
+	return secret, nil
 }

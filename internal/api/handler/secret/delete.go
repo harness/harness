@@ -13,9 +13,6 @@ import (
 	"github.com/harness/gitness/internal/paths"
 )
 
-/*
- * Deletes a secret.
- */
 func HandleDelete(secretCtrl *secret.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

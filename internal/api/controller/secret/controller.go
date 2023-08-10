@@ -5,6 +5,7 @@
 package secret
 
 import (
+	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/check"
@@ -16,6 +17,7 @@ type Controller struct {
 	db          *sqlx.DB
 	uidCheck    check.PathUID
 	pathStore   store.PathStore
+	encrypter   encrypt.Encrypter
 	secretStore store.SecretStore
 	authorizer  authz.Authorizer
 	spaceStore  store.SpaceStore
@@ -26,6 +28,7 @@ func NewController(
 	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
 	pathStore store.PathStore,
+	encrypter encrypt.Encrypter,
 	secretStore store.SecretStore,
 	spaceStore store.SpaceStore,
 ) *Controller {
@@ -33,6 +36,7 @@ func NewController(
 		db:          db,
 		uidCheck:    uidCheck,
 		pathStore:   pathStore,
+		encrypter:   encrypter,
 		secretStore: secretStore,
 		authorizer:  authorizer,
 		spaceStore:  spaceStore,

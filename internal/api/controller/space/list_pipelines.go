@@ -35,21 +35,21 @@ func (c *Controller) ListPipelines(
 	var pipelines []types.Pipeline
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
-		var dbErr error
-		count, dbErr = c.pipelineStore.Count(ctx, space.ID, pagination)
-		if dbErr != nil {
-			return fmt.Errorf("failed to count child executions: %w", err)
+		count, err = c.pipelineStore.Count(ctx, space.ID, pagination)
+		if err != nil {
+			err = fmt.Errorf("failed to count child executions: %w", err)
+			return
 		}
 
-		pipelines, dbErr = c.pipelineStore.List(ctx, space.ID, pagination)
-		if dbErr != nil {
-			return fmt.Errorf("failed to list child executions: %w", err)
+		pipelines, err = c.pipelineStore.List(ctx, space.ID, pagination)
+		if err != nil {
+			err = fmt.Errorf("failed to count child executions: %w", err)
+			return
 		}
-
-		return dbErr
+		return
 	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
-		return pipelines, count, err
+		return pipelines, count, fmt.Errorf("failed to list pipelines: %w", err)
 	}
 
 	return pipelines, count, nil

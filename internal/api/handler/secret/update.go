@@ -14,9 +14,6 @@ import (
 	"github.com/harness/gitness/internal/paths"
 )
 
-/*
- * Updates an existing secret.
- */
 func HandleUpdate(secretCtrl *secret.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

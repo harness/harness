@@ -33,10 +33,6 @@ type executionStore struct {
 }
 
 const (
-	executionQueryBase = `
-		SELECT` + executionColumns + `
-		FROM executions`
-
 	executionColumns = `
 		execution_id
 		,execution_pipeline_id
@@ -74,8 +70,26 @@ const (
 		,execution_updated
 		,execution_version
 	`
+)
 
-	executionInsertStmt = `
+// Find returns an execution given a pipeline ID and an execution number.
+func (s *executionStore) Find(ctx context.Context, pipelineID int64, executionNum int64) (*types.Execution, error) {
+	const findQueryStmt = `
+	SELECT` + executionColumns + `
+	FROM executions
+	WHERE execution_pipeline_id = $1 AND execution_number = $2`
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := new(types.Execution)
+	if err := db.GetContext(ctx, dst, findQueryStmt, pipelineID, executionNum); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed to find execution")
+	}
+	return dst, nil
+}
+
+// Create creates a new execution in the datastore.
+func (s *executionStore) Create(ctx context.Context, execution *types.Execution) error {
+	const executionInsertStmt = `
 	INSERT INTO executions (
 		execution_pipeline_id
 		,execution_repo_id
@@ -147,58 +161,6 @@ const (
 		,:execution_updated
 		,:execution_version
 	) RETURNING execution_id`
-
-	executionUpdateStmt = `
-	UPDATE executions
-	SET
-		execution_trigger = :execution_trigger
-		,execution_parent = :execution_parent
-		,execution_status = :execution_status
-		,execution_error = :execution_error
-		,execution_event = :execution_event
-		,execution_action = :execution_action
-		,execution_link = :execution_link
-		,execution_timestamp = :execution_timestamp
-		,execution_title = :execution_title
-		,execution_message = :execution_message
-		,execution_before = :execution_before
-		,execution_after = :execution_after
-		,execution_ref = :execution_ref
-		,execution_source_repo = :execution_source_repo
-		,execution_source = :execution_source
-		,execution_target = :execution_target
-		,execution_author = :execution_author
-		,execution_author_name = :execution_author_name
-		,execution_author_email = :execution_author_email
-		,execution_author_avatar = :execution_author_avatar
-		,execution_sender = :execution_sender
-		,execution_params = :execution_params
-		,execution_cron = :execution_cron
-		,execution_deploy = :execution_deploy
-		,execution_deploy_id = :execution_deploy_id
-		,execution_debug = :execution_debug
-		,execution_started = :execution_started
-		,execution_finished = :execution_finished
-		,execution_updated = :execution_updated
-		,execution_version = :execution_version
-	WHERE execution_id = :execution_id AND execution_version = :execution_version - 1`
-)
-
-// Find returns an execution given a pipeline ID and an execution number.
-func (s *executionStore) Find(ctx context.Context, pipelineID int64, executionNum int64) (*types.Execution, error) {
-	const findQueryStmt = executionQueryBase + `
-		WHERE execution_pipeline_id = $1 AND execution_number = $2`
-	db := dbtx.GetAccessor(ctx, s.db)
-
-	dst := new(types.Execution)
-	if err := db.GetContext(ctx, dst, findQueryStmt, pipelineID, executionNum); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find execution")
-	}
-	return dst, nil
-}
-
-// Create creates a new execution in the datastore.
-func (s *executionStore) Create(ctx context.Context, execution *types.Execution) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	query, arg, err := db.BindNamed(executionInsertStmt, execution)
@@ -214,7 +176,18 @@ func (s *executionStore) Create(ctx context.Context, execution *types.Execution)
 }
 
 // Update tries to update an execution in the datastore with optimistic locking.
-func (s *executionStore) Update(ctx context.Context, execution *types.Execution) (*types.Execution, error) {
+func (s *executionStore) Update(ctx context.Context, execution *types.Execution) error {
+	const executionUpdateStmt = `
+	UPDATE executions
+	SET
+		,execution_status = :execution_status
+		,execution_error = :execution_error
+		,execution_event = :execution_event
+		,execution_started = :execution_started
+		,execution_finished = :execution_finished
+		,execution_updated = :execution_updated
+		,execution_version = :execution_version
+	WHERE execution_id = :execution_id AND execution_version = :execution_version - 1`
 	updatedAt := time.Now()
 
 	execution.Version++
@@ -224,24 +197,24 @@ func (s *executionStore) Update(ctx context.Context, execution *types.Execution)
 
 	query, arg, err := db.BindNamed(executionUpdateStmt, execution)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to bind execution object")
+		return database.ProcessSQLErrorf(err, "Failed to bind execution object")
 	}
 
 	result, err := db.ExecContext(ctx, query, arg...)
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to update execution")
+		return database.ProcessSQLErrorf(err, "Failed to update execution")
 	}
 
 	count, err := result.RowsAffected()
 	if err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
 	}
 
 	if count == 0 {
-		return nil, gitness_store.ErrVersionConflict
+		return gitness_store.ErrVersionConflict
 	}
 
-	return execution, nil
+	return nil
 }
 
 // UpdateOptLock updates the pipeline using the optimistic locking mechanism.
@@ -251,16 +224,12 @@ func (s *executionStore) UpdateOptLock(ctx context.Context,
 	for {
 		dup := *execution
 
-		fmt.Println(dup.Status)
-
 		err := mutateFn(&dup)
 		if err != nil {
 			return nil, err
 		}
 
-		fmt.Println("dup.Status after: ", dup.Status)
-
-		execution, err = s.Update(ctx, &dup)
+		err = s.Update(ctx, &dup)
 		if err == nil {
 			return &dup, nil
 		}

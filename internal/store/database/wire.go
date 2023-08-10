@@ -105,8 +105,8 @@ func ProvidePipelineStore(db *sqlx.DB) store.PipelineStore {
 }
 
 // ProvideSecretStore provides a secret store.
-func ProvideSecretStore(enc encrypt.Encrypter, db *sqlx.DB) store.SecretStore {
-	return NewSecretStore(enc, db)
+func ProvideSecretStore(db *sqlx.DB) store.SecretStore {
+	return NewSecretStore(db)
 }
 
 // ProvideExecutionStore provides an execution store.

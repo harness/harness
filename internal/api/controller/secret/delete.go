@@ -16,12 +16,12 @@ import (
 func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef string, uid string) error {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not find space: %w", err)
 	}
 
 	err = apiauth.CheckSecret(ctx, c.authorizer, session, space.Path, uid, enum.PermissionSecretDelete)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to authorize: %w", err)
 	}
 	err = c.secretStore.DeleteByUID(ctx, space.ID, uid)
 	if err != nil {

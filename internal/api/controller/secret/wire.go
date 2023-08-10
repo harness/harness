@@ -5,6 +5,7 @@
 package secret
 
 import (
+	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types/check"
@@ -21,9 +22,10 @@ var WireSet = wire.NewSet(
 func ProvideController(db *sqlx.DB,
 	uidCheck check.PathUID,
 	pathStore store.PathStore,
+	encrypter encrypt.Encrypter,
 	secretStore store.SecretStore,
 	authorizer authz.Authorizer,
 	spaceStore store.SpaceStore,
 ) *Controller {
-	return NewController(db, uidCheck, authorizer, pathStore, secretStore, spaceStore)
+	return NewController(db, uidCheck, authorizer, pathStore, encrypter, secretStore, spaceStore)
 }

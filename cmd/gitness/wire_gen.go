@@ -91,14 +91,14 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	executionStore := database.ProvideExecutionStore(db)
 	pipelineStore := database.ProvidePipelineStore(db)
 	executionController := execution.ProvideController(db, authorizer, executionStore, pipelineStore, spaceStore)
+	secretStore := database.ProvideSecretStore(db)
+	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, pipelineStore, secretStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
+	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore, spaceStore)
 	encrypter, err := database.ProvideEncryptor(databaseConfig)
 	if err != nil {
 		return nil, err
 	}
-	secretStore := database.ProvideSecretStore(encrypter, db)
-	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, pipelineStore, secretStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
-	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore, spaceStore)
-	secretController := secret.ProvideController(db, pathUID, pathStore, secretStore, authorizer, spaceStore)
+	secretController := secret.ProvideController(db, pathUID, pathStore, encrypter, secretStore, authorizer, spaceStore)
 	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
 	codeCommentView := database.ProvideCodeCommentView(db)
