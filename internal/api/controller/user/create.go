@@ -20,6 +20,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type RegisterInput struct {
+	Email string `json:"email"`
+
+	DisplayName string `json:"display_name"`
+	UID         string `json:"uid"`
+	Password    string `json:"password"`
+}
+
 // CreateInput is the input used for create operations.
 // On purpose don't expose admin, has to be enabled explicitly.
 type CreateInput struct {

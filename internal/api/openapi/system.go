@@ -16,12 +16,12 @@ import (
 // helper function that constructs the openapi specification
 // for the system registration config endpoints.
 func buildSystem(reflector *openapi3.Reflector) {
-	onListConfigs := openapi3.Operation{}
-	onListConfigs.WithTags("system")
-	onListConfigs.WithMapOfAnything(map[string]interface{}{"operationId": "onListConfigs"})
-	_ = reflector.SetRequest(&onListConfigs, nil, http.MethodGet)
-	_ = reflector.SetJSONResponse(&onListConfigs, new(system.ConfigsOutput), http.StatusOK)
-	_ = reflector.SetJSONResponse(&onListConfigs, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&onListConfigs, new(usererror.Error), http.StatusBadRequest)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/system/config", onListConfigs)
+	onGetConfig := openapi3.Operation{}
+	onGetConfig.WithTags("system")
+	onGetConfig.WithMapOfAnything(map[string]interface{}{"operationId": "getSystemConfig"})
+	_ = reflector.SetRequest(&onGetConfig, nil, http.MethodGet)
+	_ = reflector.SetJSONResponse(&onGetConfig, new(system.ConfigOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&onGetConfig, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&onGetConfig, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/system/config", onGetConfig)
 }

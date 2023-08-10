@@ -408,7 +408,7 @@ func setupSystem(r chi.Router, sysCtrl *system.Controller) {
 	r.Route("/system", func(r chi.Router) {
 		r.Get("/health", handlersystem.HandleHealth)
 		r.Get("/version", handlersystem.HandleVersion)
-		r.Get("/config", handlersystem.HandleListConfig(sysCtrl))
+		r.Get("/config", handlersystem.HandleGetConfig(sysCtrl))
 	})
 }
 

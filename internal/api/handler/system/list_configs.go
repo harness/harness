@@ -11,13 +11,13 @@ import (
 	"github.com/harness/gitness/internal/api/render"
 )
 
-type ConfigsOutput struct {
+type ConfigOutput struct {
 	SignUpAllowed bool `json:"sign_up_allowed"`
 }
 
-// HandleListConfig returns an http.HandlerFunc that processes an http.Request
+// HandleGetConfig returns an http.HandlerFunc that processes an http.Request
 // and returns a struct containing all system configs exposed to the users.
-func HandleListConfig(sysCtrl *system.Controller) http.HandlerFunc {
+func HandleGetConfig(sysCtrl *system.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -26,7 +26,7 @@ func HandleListConfig(sysCtrl *system.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		render.JSON(w, http.StatusOK, ConfigsOutput{
+		render.JSON(w, http.StatusOK, ConfigOutput{
 			SignUpAllowed: signUpAllowedCheck,
 		})
 	}

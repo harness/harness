@@ -18,7 +18,7 @@ import (
 // This differs from the Create method as it doesn't require auth, but has limited
 // functionalities (unable to create admin user for example).
 func (c *Controller) Register(ctx context.Context, sysCtrl *system.Controller,
-	in *CreateInput) (*types.TokenResponse, error) {
+	in *RegisterInput) (*types.TokenResponse, error) {
 	signUpAllowed, err := sysCtrl.IsUserRegistrationAllowed(ctx)
 	if err != nil {
 		return nil, err

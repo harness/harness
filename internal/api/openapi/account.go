@@ -21,7 +21,7 @@ type loginRequest struct {
 
 // request to register an account.
 type registerRequest struct {
-	user.CreateInput
+	user.RegisterInput
 }
 
 // helper function that constructs the openapi specification

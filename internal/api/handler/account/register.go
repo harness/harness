@@ -19,7 +19,7 @@ func HandleRegister(userCtrl *user.Controller, sysCtrl *system.Controller) http.
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		in := new(user.CreateInput)
+		in := new(user.RegisterInput)
 		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid request body: %s.", err)
