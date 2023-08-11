@@ -6,12 +6,14 @@ package service
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -65,7 +67,27 @@ func (s RepositoryService) ListCommits(request *rpc.ListCommitsRequest,
 		return processGitErrorf(err, "failed to get list of commits")
 	}
 
+	// try to get total commits between gitref and After refs
+	totalCommits := 0
+	if request.Page == 1 && len(gitCommits) < int(request.Limit) {
+		totalCommits = len(gitCommits)
+	} else if request.After != "" && request.GitRef != request.After {
+		div, err := s.adapter.GetCommitDivergences(ctx, repoPath, []types.CommitDivergenceRequest{
+			{From: request.GitRef, To: request.After},
+		}, 0)
+		if err != nil {
+			return processGitErrorf(err, "failed to get total commits")
+		}
+		if len(div) > 0 {
+			totalCommits = int(div[0].Ahead)
+		}
+	}
+
 	log.Ctx(ctx).Trace().Msgf("git adapter returned %d commits", len(gitCommits))
+	header := metadata.New(map[string]string{"total-commits": strconv.Itoa(totalCommits)})
+	if err := stream.SendHeader(header); err != nil {
+		return ErrInternalf("unable to send 'total-commits' header", err)
+	}
 
 	for i := range gitCommits {
 		var commit *rpc.Commit

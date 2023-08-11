@@ -74,4 +74,5 @@ type RenameDetails struct {
 type ListCommitResponse struct {
 	Commits       []Commit        `json:"commits"`
 	RenameDetails []RenameDetails `json:"rename_details"`
+	TotalCommits  int             `json:"total_commits,omitempty"`
 }

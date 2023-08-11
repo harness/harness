@@ -7,17 +7,18 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import { useStrings } from 'framework/strings'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { CommitsView } from 'components/CommitsView/CommitsView'
-import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
+import { TabContentWrapper } from 'components/TabContentWrapper/TabContentWrapper'
 
-interface CommitProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
-  prHasChanged: boolean
+interface CommitProps extends Pick<GitInfoProps, 'repoMetadata'> {
+    sourceSha? :string
+    targetSha? :string
   handleRefresh: () => void
 }
 
-export const PullRequestCommits: React.FC<CommitProps> = ({
+export const CompareCommits: React.FC<CommitProps> = ({
   repoMetadata,
-  pullRequestMetadata,
-  prHasChanged,
+  sourceSha,
+  targetSha,
   handleRefresh
 }) => {
   const limit = LIST_FETCHING_LIMIT
@@ -36,25 +37,22 @@ export const PullRequestCommits: React.FC<CommitProps> = ({
     queryParams: {
       limit,
       page,
-      git_ref: pullRequestMetadata.source_sha,
-      after: pullRequestMetadata.merge_base_sha
+      git_ref: sourceSha,
+      after: targetSha
     },
     lazy: !repoMetadata
   })
 
   return (
-    <PullRequestTabContentWrapper loading={loading} error={error} onRetry={voidFn(refetch)}>
+    <TabContentWrapper loading={loading} error={error} onRetry={voidFn(refetch)}>
       <CommitsView
         commits={data?.commits || []}
         repoMetadata={repoMetadata}
-        emptyTitle={getString('noCommits')}
-        emptyMessage={getString('noCommitsPR')}
-        prHasChanged={prHasChanged}
+        emptyTitle={getString('compareEmptyDiffTitle')}
+        emptyMessage={getString('compareEmptyDiffMessage')}
         handleRefresh={voidFn(handleRefresh)}
-        pullRequestMetadata={pullRequestMetadata}
       />
-
       <ResourceListingPagination response={response} page={page} setPage={setPage} />
-    </PullRequestTabContentWrapper>
+    </TabContentWrapper>
   )
 }

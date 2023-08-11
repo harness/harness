@@ -10,7 +10,6 @@ import (
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/types"
 )
 
 /*
@@ -34,20 +33,15 @@ func HandleListCommits(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		commits, renameDetails, err := repoCtrl.ListCommits(ctx, session, repoRef, gitRef, filter)
+		list, err := repoCtrl.ListCommits(ctx, session, repoRef, gitRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		commitsResponse := types.ListCommitResponse{
-			Commits:       commits,
-			RenameDetails: renameDetails,
-		}
-
 		// TODO: get last page indicator explicitly - current check is wrong in case len % limit == 0
-		isLastPage := len(commits) < filter.Limit
+		isLastPage := len(list.Commits) < filter.Limit
 		render.PaginationNoTotal(r, w, filter.Page, filter.Limit, isLastPage)
-		render.JSON(w, http.StatusOK, commitsResponse)
+		render.JSON(w, http.StatusOK, list)
 	}
 }

@@ -43,3 +43,26 @@ func HandleDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 		render.JSONArrayDynamic(ctx, w, stream)
 	}
 }
+
+// HandleDiffStats how diff statistics of two commits, branches or tags.
+func HandleDiffStats(repoCtrl *repo.Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+		repoRef, err := request.GetRepoRefFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		path := request.GetOptionalRemainderFromPath(r)
+
+		output, err := repoCtrl.DiffStats(ctx, session, repoRef, path)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		render.JSON(w, http.StatusOK, output)
+	}
+}

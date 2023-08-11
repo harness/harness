@@ -76,11 +76,13 @@ export const Changes: React.FC<ChangesProps> = ({
   const [commitRange, setCommitRange] = useState<string[]>(defaultCommitRange || [])
   const { routes } = useAppContext()
 
-  const { data: prCommits } = useGet<TypesCommit[]>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestMetadata?.number}/commits`,
+  const { data: prCommits } = useGet<{
+    commits: TypesCommit[]
+  }>({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
-      git_ref: pullRequestMetadata?.source_branch,
-      after: pullRequestMetadata?.target_branch
+      git_ref: sourceRef,
+      after: targetRef
     },
     lazy: !pullRequestMetadata?.number
   })
@@ -118,8 +120,6 @@ export const Changes: React.FC<ChangesProps> = ({
     path: `/api/v1/repos/${repoMetadata?.path}/+/diff/${
       commitRangePath
         ? commitRangePath
-        : pullRequestMetadata
-        ? `${pullRequestMetadata.merge_base_sha}...${pullRequestMetadata.source_sha}`
         : `${targetRef}...${sourceRef}`
     }`,
     requestOptions: {
@@ -233,7 +233,7 @@ export const Changes: React.FC<ChangesProps> = ({
             <Container flex={{ alignItems: 'center' }}>
               <Render when={pullRequestMetadata?.number}>
                 <CommitRangeDropdown
-                  allCommits={prCommits || []}
+                  allCommits={prCommits?.commits || []}
                   selectedCommits={commitRange}
                   setSelectedCommits={setCommitRange}
                 />
@@ -309,8 +309,8 @@ export const Changes: React.FC<ChangesProps> = ({
                     repoMetadata={repoMetadata}
                     pullRequestMetadata={pullRequestMetadata}
                     onCommentUpdate={onCommentUpdate}
-                    targetRef={pullRequestMetadata ? pullRequestMetadata.merge_base_sha : targetRef}
-                    sourceRef={pullRequestMetadata ? pullRequestMetadata.source_sha : sourceRef}
+                    targetRef={targetRef}
+                    sourceRef={sourceRef}
                   />
                 ))}
               </Layout.Vertical>
