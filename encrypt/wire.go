@@ -15,5 +15,5 @@ func ProvideEncrypter(config *types.Config) (Encrypter, error) {
 	if config.Encrypter.Secret == "" {
 		return &none{}, nil
 	}
-	return New(config.Encrypter.Secret, config.Encrypter.EncryptMixedContent)
+	return New(config.Encrypter.Secret, config.Encrypter.MixedContent)
 }
