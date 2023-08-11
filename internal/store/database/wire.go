@@ -23,6 +23,9 @@ var WireSet = wire.NewSet(
 	ProvidePathStore,
 	ProvideSpaceStore,
 	ProvideRepoStore,
+	ProvideExecutionStore,
+	ProvidePipelineStore,
+	ProvideSecretStore,
 	ProvideRepoGitInfoView,
 	ProvideMembershipStore,
 	ProvideTokenStore,
@@ -76,6 +79,21 @@ func ProvideSpaceStore(db *sqlx.DB, pathCache store.PathCache) store.SpaceStore 
 // ProvideRepoStore provides a repo store.
 func ProvideRepoStore(db *sqlx.DB, pathCache store.PathCache) store.RepoStore {
 	return NewRepoStore(db, pathCache)
+}
+
+// ProvidePipelineStore provides a pipeline store.
+func ProvidePipelineStore(db *sqlx.DB) store.PipelineStore {
+	return NewPipelineStore(db)
+}
+
+// ProvideSecretStore provides a secret store.
+func ProvideSecretStore(db *sqlx.DB) store.SecretStore {
+	return NewSecretStore(db)
+}
+
+// ProvideExecutionStore provides an execution store.
+func ProvideExecutionStore(db *sqlx.DB) store.ExecutionStore {
+	return NewExecutionStore(db)
 }
 
 // ProvideRepoGitInfoView provides a repo git UID view.

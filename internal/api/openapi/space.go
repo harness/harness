@@ -230,6 +230,30 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opRepos, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/repos", opRepos)
 
+	opPipelines := openapi3.Operation{}
+	opPipelines.WithTags("space")
+	opPipelines.WithMapOfAnything(map[string]interface{}{"operationId": "listPipelines"})
+	opPipelines.WithParameters(queryParameterQueryRepo, queryParameterPage, queryParameterLimit)
+	_ = reflector.SetRequest(&opPipelines, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opPipelines, []types.Pipeline{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/pipelines", opPipelines)
+
+	opSecrets := openapi3.Operation{}
+	opSecrets.WithTags("space")
+	opSecrets.WithMapOfAnything(map[string]interface{}{"operationId": "listSecrets"})
+	opSecrets.WithParameters(queryParameterQueryRepo, queryParameterPage, queryParameterLimit)
+	_ = reflector.SetRequest(&opSecrets, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opSecrets, []types.Secret{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opSecrets, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opSecrets, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opSecrets, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opSecrets, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/secrets", opSecrets)
+
 	opServiceAccounts := openapi3.Operation{}
 	opServiceAccounts.WithTags("space")
 	opServiceAccounts.WithMapOfAnything(map[string]interface{}{"operationId": "listServiceAccounts"})

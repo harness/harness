@@ -52,6 +52,12 @@ type Config struct {
 		DefaultBranch string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
 	}
 
+	// Encrypter defines the parameters for the encrypter
+	Encrypter struct {
+		Secret       string `envconfig:"GITNESS_ENCRYPTER_SECRET"` // key used for encryption
+		MixedContent bool   `envconfig:"GITNESS_ENCRYPTER_MIXED_CONTENT"`
+	}
+
 	// Server defines the server configuration parameters.
 	Server struct {
 		// HTTP defines the http configuration parameters
