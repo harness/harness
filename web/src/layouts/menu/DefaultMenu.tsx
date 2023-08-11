@@ -25,10 +25,10 @@ export const DefaultMenu: React.FC = () => {
     () => routeMatch.path === '/:space*/:repoName' || routeMatch.path.startsWith('/:space*/:repoName/edit'),
     [routeMatch]
   )
+  const isCommitSelected = useMemo(() => routeMatch.path === '/:space*/:repoName/commit/:commitRef*', [routeMatch])
   const isPipelineSelected = routeMatch.path.startsWith('/pipelines/:space*/pipeline/:pipeline')
 
   const { OPEN_SOURCE_PIPELINES, OPEN_SOURCE_SECRETS } = useFeatureFlag()
-
   return (
     <Container className={css.main}>
       <Layout.Vertical spacing="small">
@@ -76,6 +76,7 @@ export const DefaultMenu: React.FC = () => {
 
               <NavMenuItem
                 data-code-repo-section="commits"
+                isSelected={isCommitSelected}
                 isSubLink
                 label={getString('commits')}
                 to={routes.toCODECommits({
