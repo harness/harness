@@ -19,14 +19,14 @@ func (c *Controller) ListPipelines(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	pagination types.Pagination,
+	filter types.ListQueryFilter,
 ) ([]*types.Pipeline, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to find parent space: %w", err)
 	}
 
-	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, true)
+	err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionPipelineView, false)
 	if err != nil {
 		return nil, 0, fmt.Errorf("could not authorize: %w", err)
 	}
@@ -35,16 +35,14 @@ func (c *Controller) ListPipelines(
 	var pipelines []*types.Pipeline
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
-		count, err = c.pipelineStore.Count(ctx, space.ID, pagination)
+		count, err = c.pipelineStore.Count(ctx, space.ID, filter)
 		if err != nil {
-			err = fmt.Errorf("failed to count child executions: %w", err)
-			return
+			return fmt.Errorf("failed to count child executions: %w", err)
 		}
 
-		pipelines, err = c.pipelineStore.List(ctx, space.ID, pagination)
+		pipelines, err = c.pipelineStore.List(ctx, space.ID, filter)
 		if err != nil {
-			err = fmt.Errorf("failed to count child executions: %w", err)
-			return
+			return fmt.Errorf("failed to count child executions: %w", err)
 		}
 		return
 	}, dbtx.TxDefaultReadOnly)

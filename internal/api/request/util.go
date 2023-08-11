@@ -205,13 +205,18 @@ func ParseSort(r *http.Request) string {
 	return r.URL.Query().Get(QueryParamSort)
 }
 
-// ParsePaginationFromRequest extracts the pagination info from the url.
+// ParsePaginationFromRequest parses pagination related info from the url.
 func ParsePaginationFromRequest(r *http.Request) types.Pagination {
 	return types.Pagination{
-		Page:  ParsePage(r),
-		Size:  ParseLimit(r),
-		Query: ParseQuery(r),
-		Sort:  ParseSort(r),
-		Order: ParseOrder(r),
+		Page: ParsePage(r),
+		Size: ParseLimit(r),
+	}
+}
+
+// ParseListQueryFilterFromRequest parses pagination and query related info from the url.
+func ParseListQueryFilterFromRequest(r *http.Request) types.ListQueryFilter {
+	return types.ListQueryFilter{
+		Query:      ParseQuery(r),
+		Pagination: ParsePaginationFromRequest(r),
 	}
 }

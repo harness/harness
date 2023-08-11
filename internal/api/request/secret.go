@@ -10,11 +10,11 @@ import (
 )
 
 const (
-	SecretRef = "secret_ref"
+	PathParamSecretRef = "secret_ref"
 )
 
 func GetSecretRefFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, SecretRef)
+	rawRef, err := PathParamOrError(r, PathParamSecretRef)
 	if err != nil {
 		return "", err
 	}

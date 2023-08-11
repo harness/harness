@@ -52,6 +52,12 @@ type Config struct {
 		DefaultBranch string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
 	}
 
+	// Encrypter defines the parameters for the encrypter
+	Encrypter struct {
+		Secret              string `envconfig:"GITNESS_ENCRYPTER_SECRET"` // key used for encryption
+		EncryptMixedContent bool   `envconfig:"GITNESS_ENCRYPT_MIXED_CONTENT"`
+	}
+
 	// Server defines the server configuration parameters.
 	Server struct {
 		// HTTP defines the http configuration parameters
@@ -75,9 +81,6 @@ type Config struct {
 	Database struct {
 		Driver     string `envconfig:"GITNESS_DATABASE_DRIVER" default:"sqlite3"`
 		Datasource string `envconfig:"GITNESS_DATABASE_DATASOURCE" default:"database.sqlite3"`
-		// secret used for encryption/decryption in the DB
-		Secret              string `envconfig:"GITNESS_DATABASE_SECRET"`
-		EncryptMixedContent bool   `envconfig:"GITNESS_ENCRYPT_MIXED_CONTENT"`
 	}
 
 	// Token defines token configuration parameters.

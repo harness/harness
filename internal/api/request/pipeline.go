@@ -10,13 +10,12 @@ import (
 )
 
 const (
-	PipelinePathRef = "pipeline_ref"
-	PipelineUID     = "pipeline_uid"
-	ExecutionNumber = "execution_number"
+	PathParamPipelineRef     = "pipeline_ref"
+	PathParamExecutionNumber = "execution_number"
 )
 
 func GetPipelineRefFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PipelinePathRef)
+	rawRef, err := PathParamOrError(r, PathParamPipelineRef)
 	if err != nil {
 		return "", err
 	}
@@ -26,5 +25,5 @@ func GetPipelineRefFromPath(r *http.Request) (string, error) {
 }
 
 func GetExecutionNumberFromPath(r *http.Request) (int64, error) {
-	return PathParamAsPositiveInt64(r, ExecutionNumber)
+	return PathParamAsPositiveInt64(r, PathParamExecutionNumber)
 }

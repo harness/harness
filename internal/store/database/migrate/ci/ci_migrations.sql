@@ -14,16 +14,16 @@ CREATE TABLE IF NOT EXISTS pipelines (
     ,pipeline_version INTEGER NOT NULL
 
     -- Ensure unique combination of UID and ParentID
-    UNIQUE (pipeline_space_id, pipeline_uid),
+    ,UNIQUE (pipeline_space_id, pipeline_uid)
 
     -- Foreign key to spaces table
-    CONSTRAINT fk_pipeline_space_id FOREIGN KEY (pipeline_space_id)
+    ,CONSTRAINT fk_pipeline_space_id FOREIGN KEY (pipeline_space_id)
         REFERENCES spaces (space_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 
     -- Foreign key to repositories table
-    CONSTRAINT fk_pipelines_repo_id FOREIGN KEY (pipeline_repo_id)
+    ,CONSTRAINT fk_pipelines_repo_id FOREIGN KEY (pipeline_repo_id)
         REFERENCES repositories (repo_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
@@ -67,16 +67,16 @@ CREATE TABLE IF NOT EXISTS executions (
     ,execution_version INTEGER NOT NULL
 
     -- Ensure unique combination of pipeline ID and number
-    UNIQUE (execution_pipeline_id, execution_number),
+    ,UNIQUE (execution_pipeline_id, execution_number)
 
     -- Foreign key to pipelines table
-    CONSTRAINT fk_executions_pipeline_id FOREIGN KEY (,execution_pipeline_id)
+    ,CONSTRAINT fk_executions_pipeline_id FOREIGN KEY (execution_pipeline_id)
         REFERENCES pipelines (pipeline_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 
     -- Foreign key to repositories table
-    CONSTRAINT fk_executions_repo_id FOREIGN KEY (,execution_repo_id)
+    ,CONSTRAINT fk_executions_repo_id FOREIGN KEY (execution_repo_id)
         REFERENCES repositories (repo_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
@@ -93,10 +93,10 @@ CREATE TABLE IF NOT EXISTS secrets (
     ,secret_version INTEGER NOT NULL
 
     -- Ensure unique combination of space ID and UID
-    UNIQUE (secret_space_id, secret_uid),
+    ,UNIQUE (secret_space_id, secret_uid)
 
     -- Foreign key to spaces table
-    CONSTRAINT fk_secrets_space_id FOREIGN KEY (secret_space_id)
+    ,CONSTRAINT fk_secrets_space_id FOREIGN KEY (secret_space_id)
         REFERENCES spaces (space_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE

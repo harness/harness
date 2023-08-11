@@ -39,18 +39,17 @@ func (c *Controller) List(
 	var executions []*types.Execution
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
-		var dbErr error
-		count, dbErr = c.executionStore.Count(ctx, pipeline.ID)
-		if dbErr != nil {
+		count, err = c.executionStore.Count(ctx, pipeline.ID)
+		if err != nil {
 			return fmt.Errorf("failed to count child executions: %w", err)
 		}
 
-		executions, dbErr = c.executionStore.List(ctx, pipeline.ID, pagination)
-		if dbErr != nil {
+		executions, err = c.executionStore.List(ctx, pipeline.ID, pagination)
+		if err != nil {
 			return fmt.Errorf("failed to list child executions: %w", err)
 		}
 
-		return dbErr
+		return
 	}, dbtx.TxDefaultReadOnly)
 	if err != nil {
 		return executions, count, fmt.Errorf("failed to fetch list: %w", err)

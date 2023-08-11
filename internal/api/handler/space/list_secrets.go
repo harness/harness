@@ -23,8 +23,8 @@ func HandleListSecrets(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		pagination := request.ParsePaginationFromRequest(r)
-		ret, totalCount, err := spaceCtrl.ListSecrets(ctx, session, spaceRef, pagination)
+		filter := request.ParseListQueryFilterFromRequest(r)
+		ret, totalCount, err := spaceCtrl.ListSecrets(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -36,7 +36,7 @@ func HandleListSecrets(spaceCtrl *space.Controller) http.HandlerFunc {
 			secrets = append(secrets, *s.CopyWithoutData())
 		}
 
-		render.Pagination(r, w, pagination.Page, pagination.Size, int(totalCount))
+		render.Pagination(r, w, filter.Page, filter.Size, int(totalCount))
 		render.JSON(w, http.StatusOK, secrets)
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"context"
 
 	"github.com/harness/gitness/cli/server"
+	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	server3 "github.com/harness/gitness/gitrpc/server"
@@ -94,7 +95,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	secretStore := database.ProvideSecretStore(db)
 	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, pipelineStore, secretStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
 	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore, spaceStore)
-	encrypter, err := database.ProvideEncryptor(databaseConfig)
+	encrypter, err := encrypt.ProvideEncrypter(config)
 	if err != nil {
 		return nil, err
 	}

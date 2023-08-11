@@ -286,7 +286,7 @@ func setupPipelines(r chi.Router, pipelineCtrl *pipeline.Controller, executionCt
 	r.Route("/pipelines", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerpipeline.HandleCreate(pipelineCtrl))
-		r.Route(fmt.Sprintf("/{%s}", request.PipelinePathRef), func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamPipelineRef), func(r chi.Router) {
 			r.Get("/", handlerpipeline.HandleFind(pipelineCtrl))
 			r.Patch("/", handlerpipeline.HandleUpdate(pipelineCtrl))
 			r.Delete("/", handlerpipeline.HandleDelete(pipelineCtrl))
@@ -299,7 +299,7 @@ func setupSecrets(r chi.Router, secretCtrl *secret.Controller) {
 	r.Route("/secrets", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlersecret.HandleCreate(secretCtrl))
-		r.Route(fmt.Sprintf("/{%s}", request.SecretRef), func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamSecretRef), func(r chi.Router) {
 			r.Get("/", handlersecret.HandleFind(secretCtrl))
 			r.Patch("/", handlersecret.HandleUpdate(secretCtrl))
 			r.Delete("/", handlersecret.HandleDelete(secretCtrl))
@@ -311,7 +311,7 @@ func setupExecutions(r chi.Router, pipelineCtrl *pipeline.Controller, executionC
 	r.Route("/executions", func(r chi.Router) {
 		r.Get("/", handlerexecution.HandleList(executionCtrl))
 		r.Post("/", handlerexecution.HandleCreate(executionCtrl))
-		r.Route(fmt.Sprintf("/{%s}", request.ExecutionNumber), func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamExecutionNumber), func(r chi.Router) {
 			r.Get("/", handlerexecution.HandleFind(executionCtrl))
 			r.Patch("/", handlerexecution.HandleUpdate(executionCtrl))
 			r.Delete("/", handlerexecution.HandleDelete(executionCtrl))

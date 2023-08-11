@@ -15,7 +15,6 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -50,33 +49,24 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	var secret *types.Secret
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
-		// lock parent space path to ensure it doesn't get updated while we setup new pipeline
-		_, err := c.pathStore.FindPrimaryWithLock(ctx, enum.PathTargetTypeSpace, parentSpace.ID)
-		if err != nil {
-			return usererror.BadRequest("Parent not found")
-		}
-
-		now := time.Now().UnixMilli()
-		secret = &types.Secret{
-			Description: in.Description,
-			Data:        in.Data,
-			SpaceID:     parentSpace.ID,
-			UID:         in.UID,
-			Created:     now,
-			Updated:     now,
-			Version:     0,
-		}
-		secret, err = enc(c.encrypter, secret)
-		if err != nil {
-			return fmt.Errorf("could not encrypt secret: %w", err)
-		}
-		err = c.secretStore.Create(ctx, secret)
-		if err != nil {
-			return fmt.Errorf("secret creation failed: %w", err)
-		}
-		return nil
-	})
+	now := time.Now().UnixMilli()
+	secret = &types.Secret{
+		Description: in.Description,
+		Data:        in.Data,
+		SpaceID:     parentSpace.ID,
+		UID:         in.UID,
+		Created:     now,
+		Updated:     now,
+		Version:     0,
+	}
+	secret, err = enc(c.encrypter, secret)
+	if err != nil {
+		return nil, fmt.Errorf("could not encrypt secret: %w", err)
+	}
+	err = c.secretStore.Create(ctx, secret)
+	if err != nil {
+		return nil, fmt.Errorf("secret creation failed: %w", err)
+	}
 	if err != nil {
 		return nil, err
 	}

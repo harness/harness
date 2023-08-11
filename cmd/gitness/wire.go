@@ -11,6 +11,7 @@ import (
 	"context"
 
 	cliserver "github.com/harness/gitness/cli/server"
+	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
@@ -82,6 +83,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		gitrpc.WireSet,
 		store.WireSet,
 		check.WireSet,
+		encrypt.WireSet,
 		cliserver.ProvideEventsConfig,
 		events.WireSet,
 		cliserver.ProvideWebhookConfig,

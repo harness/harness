@@ -110,7 +110,7 @@ func (s *secretStore) Create(ctx context.Context, secret *types.Secret) error {
 	return nil
 }
 
-func (s *secretStore) Update(ctx context.Context, secret *types.Secret) error {
+func (s *secretStore) Update(ctx context.Context, p *types.Secret) error {
 	const secretUpdateStmt = `
 	UPDATE secrets
 	SET
@@ -121,6 +121,7 @@ func (s *secretStore) Update(ctx context.Context, secret *types.Secret) error {
 		secret_version = :secret_version
 	WHERE secret_id = :secret_id AND secret_version = :secret_version - 1`
 	updatedAt := time.Now()
+	secret := *p
 
 	secret.Version++
 	secret.Updated = updatedAt.UnixMilli()
@@ -146,6 +147,8 @@ func (s *secretStore) Update(ctx context.Context, secret *types.Secret) error {
 		return gitness_store.ErrVersionConflict
 	}
 
+	p.Version = secret.Version
+	p.Updated = secret.Updated
 	return nil
 }
 
@@ -178,18 +181,18 @@ func (s *secretStore) UpdateOptLock(ctx context.Context,
 }
 
 // List lists all the secrets present in a space.
-func (s *secretStore) List(ctx context.Context, parentID int64, pagination types.Pagination) ([]*types.Secret, error) {
+func (s *secretStore) List(ctx context.Context, parentID int64, filter types.ListQueryFilter) ([]*types.Secret, error) {
 	stmt := database.Builder.
 		Select(secretColumns).
 		From("secrets").
 		Where("secret_space_id = ?", fmt.Sprint(parentID))
 
-	if pagination.Query != "" {
-		stmt = stmt.Where("LOWER(secret_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(pagination.Query)))
+	if filter.Query != "" {
+		stmt = stmt.Where("LOWER(secret_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
 	}
 
-	stmt = stmt.Limit(database.Limit(pagination.Size))
-	stmt = stmt.Offset(database.Offset(pagination.Page, pagination.Size))
+	stmt = stmt.Limit(database.Limit(filter.Size))
+	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -237,7 +240,7 @@ func (s *secretStore) DeleteByUID(ctx context.Context, spaceID int64, uid string
 }
 
 // Count of secrets in a space.
-func (s *secretStore) Count(ctx context.Context, parentID int64, filter types.Pagination) (int64, error) {
+func (s *secretStore) Count(ctx context.Context, parentID int64, filter types.ListQueryFilter) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
 		From("secrets").

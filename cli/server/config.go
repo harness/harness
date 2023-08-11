@@ -90,10 +90,8 @@ func getSanitizedMachineName() (string, error) {
 // ProvideDatabaseConfig loads the database config from the main config.
 func ProvideDatabaseConfig(config *types.Config) database.Config {
 	return database.Config{
-		Driver:              config.Database.Driver,
-		Datasource:          config.Database.Datasource,
-		Secret:              config.Database.Secret,
-		EncryptMixedContent: config.Database.EncryptMixedContent,
+		Driver:     config.Database.Driver,
+		Datasource: config.Database.Datasource,
 	}
 }
 

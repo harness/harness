@@ -127,7 +127,7 @@ func (s *pipelineStore) Create(ctx context.Context, pipeline *types.Pipeline) er
 }
 
 // Update updates a pipeline.
-func (s *pipelineStore) Update(ctx context.Context, pipeline *types.Pipeline) error {
+func (s *pipelineStore) Update(ctx context.Context, p *types.Pipeline) error {
 	const pipelineUpdateStmt = `
 	UPDATE pipelines
 	SET
@@ -140,6 +140,7 @@ func (s *pipelineStore) Update(ctx context.Context, pipeline *types.Pipeline) er
 		pipeline_version = :pipeline_version
 	WHERE pipeline_id = :pipeline_id AND pipeline_version = :pipeline_version - 1`
 	updatedAt := time.Now()
+	pipeline := *p
 
 	pipeline.Version++
 	pipeline.Updated = updatedAt.UnixMilli()
@@ -165,6 +166,8 @@ func (s *pipelineStore) Update(ctx context.Context, pipeline *types.Pipeline) er
 		return gitness_store.ErrVersionConflict
 	}
 
+	p.Updated = pipeline.Updated
+	p.Version = pipeline.Version
 	return nil
 }
 
@@ -172,19 +175,19 @@ func (s *pipelineStore) Update(ctx context.Context, pipeline *types.Pipeline) er
 func (s *pipelineStore) List(
 	ctx context.Context,
 	parentID int64,
-	pagination types.Pagination,
+	filter types.ListQueryFilter,
 ) ([]*types.Pipeline, error) {
 	stmt := database.Builder.
 		Select(pipelineColumns).
 		From("pipelines").
 		Where("pipeline_space_id = ?", fmt.Sprint(parentID))
 
-	if pagination.Query != "" {
-		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(pagination.Query)))
+	if filter.Query != "" {
+		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
 	}
 
-	stmt = stmt.Limit(database.Limit(pagination.Size))
-	stmt = stmt.Offset(database.Offset(pagination.Page, pagination.Size))
+	stmt = stmt.Limit(database.Limit(filter.Size))
+	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -229,7 +232,7 @@ func (s *pipelineStore) UpdateOptLock(ctx context.Context,
 }
 
 // Count of pipelines in a space.
-func (s *pipelineStore) Count(ctx context.Context, parentID int64, filter types.Pagination) (int64, error) {
+func (s *pipelineStore) Count(ctx context.Context, parentID int64, filter types.ListQueryFilter) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
 		From("pipelines").

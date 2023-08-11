@@ -176,7 +176,7 @@ func (s *executionStore) Create(ctx context.Context, execution *types.Execution)
 }
 
 // Update tries to update an execution in the datastore with optimistic locking.
-func (s *executionStore) Update(ctx context.Context, execution *types.Execution) error {
+func (s *executionStore) Update(ctx context.Context, e *types.Execution) error {
 	const executionUpdateStmt = `
 	UPDATE executions
 	SET
@@ -189,6 +189,8 @@ func (s *executionStore) Update(ctx context.Context, execution *types.Execution)
 		,execution_version = :execution_version
 	WHERE execution_id = :execution_id AND execution_version = :execution_version - 1`
 	updatedAt := time.Now()
+
+	execution := *e
 
 	execution.Version++
 	execution.Updated = updatedAt.UnixMilli()
@@ -214,6 +216,8 @@ func (s *executionStore) Update(ctx context.Context, execution *types.Execution)
 		return gitness_store.ErrVersionConflict
 	}
 
+	e.Version = execution.Version
+	e.Updated = execution.Updated
 	return nil
 }
 

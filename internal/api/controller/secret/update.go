@@ -50,7 +50,7 @@ func (c *Controller) Update(
 		if in.Data != "" {
 			data, err := c.encrypter.Encrypt(original.Data)
 			if err != nil {
-				return err
+				return fmt.Errorf("could not encrypt secret: %w", err)
 			}
 			original.Data = string(data)
 		}
