@@ -19,7 +19,6 @@ export function useGetRepositoryMetadata() {
     diffRefs,
     ...otherPathParams
   } = useParams<CODEProps>()
-
   const {
     data: repoMetadata,
     error,

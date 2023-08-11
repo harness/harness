@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Container,
   Color,
@@ -8,17 +8,18 @@ import {
   StringSubstitute,
   Layout,
   TextProps,
-  Icon
+  Icon,
+  useIsMounted
 } from '@harness/uicore'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import { Render } from 'react-jsx-match'
-import { chunk, clone, sortBy, throttle } from 'lodash-es'
+import { chunk, sortBy, throttle } from 'lodash-es'
 import { useMutate } from 'restful-react'
 import { Link, useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiDirContent, TypesCommit } from 'services/code'
-import { formatDate, LIST_FETCHING_LIMIT } from 'utils/Utils'
+import { formatDate, isInViewport, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { findReadmeInfo, CodeIcon, GitInfoProps, isFile } from 'utils/GitUtils'
 import { LatestCommitForFolder } from 'components/LatestCommit/LatestCommit'
 import { useEventListener } from 'hooks/useEventListener'
@@ -76,7 +77,7 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
     [] // eslint-disable-line react-hooks/exhaustive-deps
   )
   const readmeInfo = useMemo(() => findReadmeInfo(resourceContent), [resourceContent])
-  const scrollElement = useMemo(
+  const scrollDOMElement = useMemo(
     () => (standalone ? document.querySelector(`.${repositoryCSS.main}`)?.parentElement : window) as HTMLElement,
     [standalone]
   )
@@ -87,62 +88,73 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
   const [pathsChunks, setPathsChunks] = useState<PathsChunks>([])
   const { mutate: fetchLastCommitsForPaths } = useMutate<PathDetails>({
     verb: 'POST',
-    path: `/api/v1/repos/${encodeURIComponent(repoMetadata.path as string)}/path-details`
+    path: `/api/v1/repos/${encodeURIComponent(repoMetadata.path as string)}/path-details`,
+    queryParams: {
+      git_ref: gitRef
+    }
   })
-  const [lastCommitMapping, setLastCommitMapping] = useState<Record<string, TypesCommit>>({})
+  const lastCommitMapping = useRef<Record<string, TypesCommit>>({})
   const mergedContentEntries = useMemo(
     () =>
       resourceEntries.map(entry => ({
         ...entry,
-        latest_commit: lastCommitMapping[entry.path as string] || entry.latest_commit
+        latest_commit: lastCommitMapping.current[entry.path as string] || entry.latest_commit
       })),
-    [resourceEntries, lastCommitMapping]
+    [resourceEntries, pathsChunks] // eslint-disable-line react-hooks/exhaustive-deps
   )
+  const isMounted = useIsMounted()
 
   // The idea is to fetch last commit details for chunks that has atleast one path which is
   // rendered in the viewport
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const scrollCallback = useCallback(
     throttle(() => {
-      pathsChunks.forEach(pathsChunk => {
-        const { paths, loaded, loading, failed } = pathsChunk
+      if (isMounted.current) {
+        for (const pathsChunk of pathsChunks) {
+          const { paths, loaded, loading, failed } = pathsChunk
 
-        if (!loaded && !loading && !failed) {
-          for (let i = 0; i < paths.length; i++) {
-            const element = document.querySelector(`[data-resource-path="${paths[i]}"]`)
+          if (!loaded && !loading && !failed) {
+            for (let i = 0; i < paths.length; i++) {
+              const element = document.querySelector(`[data-resource-path="${paths[i]}"]`)
 
-            if (element && isInViewport(element)) {
-              pathsChunk.loading = true
+              if (element && isInViewport(element)) {
+                pathsChunk.loading = true
 
-              setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
-
-              fetchLastCommitsForPaths({ paths })
-                .then(response => {
-                  const pathMapping: Record<string, TypesCommit> = clone(lastCommitMapping)
-
-                  pathsChunk.loaded = true
+                if (isMounted.current) {
                   setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
 
-                  response?.details?.forEach(({ path, last_commit }) => {
-                    pathMapping[path] = last_commit
-                  })
-                  setLastCommitMapping(pathMapping)
-                })
-                .catch(error => {
-                  pathsChunk.loaded = false
-                  pathsChunk.loading = false
-                  pathsChunk.failed = true
-                  setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
-                  console.log('Failed to fetch path commit details', error) // eslint-disable-line no-console
-                })
+                  fetchLastCommitsForPaths({ paths })
+                    .then(response => {
+                      pathsChunk.loaded = true
 
-              break
+                      if (isMounted.current) {
+                        response?.details?.forEach(({ path, last_commit }) => {
+                          lastCommitMapping.current[path] = last_commit
+                        })
+
+                        setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
+                      }
+                    })
+                    .catch(error => {
+                      pathsChunk.loaded = false
+                      pathsChunk.loading = false
+                      pathsChunk.failed = true
+
+                      if (isMounted.current) {
+                        setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
+                      }
+
+                      console.log('Failed to fetch path commit details', error) // eslint-disable-line no-console
+                    })
+                }
+                break
+              }
             }
           }
         }
-      })
-    }, 100),
-    [pathsChunks, lastCommitMapping]
+      }
+    }, 50),
+    [pathsChunks, setPathsChunks]
   )
 
   // Group all resourceEntries paths into chunks, each has LIST_FETCHING_LIMIT paths
@@ -155,17 +167,15 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
         failed: false
       }))
     )
+    lastCommitMapping.current = {}
   }, [resourceEntries])
 
-  useEventListener('scroll', scrollCallback, scrollElement)
+  useEventListener('scroll', scrollCallback, scrollDOMElement)
 
   // Trigger scroll event callback on mount and cancel it on unmount
   useEffect(() => {
     scrollCallback()
-
-    return () => {
-      scrollCallback.cancel()
-    }
+    return () => scrollCallback.cancel()
   }, [scrollCallback])
 
   return (
@@ -193,16 +203,6 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
         <Readme metadata={repoMetadata} readmeInfo={readmeInfo as OpenapiContentInfo} gitRef={gitRef} />
       </Render>
     </Container>
-  )
-}
-
-function isInViewport(element: Element) {
-  const rect = element.getBoundingClientRect()
-  return (
-    rect.top >= 0 &&
-    rect.left >= 0 &&
-    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
   )
 }
 
