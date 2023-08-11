@@ -54,8 +54,8 @@ type Config struct {
 
 	// Encrypter defines the parameters for the encrypter
 	Encrypter struct {
-		Secret              string `envconfig:"GITNESS_ENCRYPTER_SECRET"` // key used for encryption
-		EncryptMixedContent bool   `envconfig:"GITNESS_ENCRYPT_MIXED_CONTENT"`
+		Secret       string `envconfig:"GITNESS_ENCRYPTER_SECRET"` // key used for encryption
+		MixedContent bool   `envconfig:"GITNESS_ENCRYPTER_MIXED_CONTENT"`
 	}
 
 	// Server defines the server configuration parameters.
