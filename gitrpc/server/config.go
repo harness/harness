@@ -34,6 +34,9 @@ type Config struct {
 		MaxRetries         int    `envconfig:"GITRPC_REDIS_MAX_RETRIES"          default:"3"`
 		MinIdleConnections int    `envconfig:"GITRPC_REDIS_MIN_IDLE_CONNECTIONS" default:"0"`
 		Password           string `envconfig:"GITRPC_REDIS_PASSWORD"`
+		SentinelMode       bool   `envconfig:"GITRPC_REDIS_USE_SENTINEL"         default:"false"`
+		SentinelMaster     string `envconfig:"GITRPC_REDIS_SENTINEL_MASTER"`
+		SentinelEndpoint   string `envconfig:"GITRPC_REDIS_SENTINEL_ENDPOINT"`
 	}
 }
 
