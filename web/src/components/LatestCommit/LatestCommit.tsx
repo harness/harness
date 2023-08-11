@@ -33,8 +33,10 @@ export function LatestCommitForFolder({ repoMetadata, latestCommit, standaloneSt
           <Text font={{ variation: FontVariation.SMALL_BOLD }}>
             {latestCommit?.author?.identity?.name || latestCommit?.author?.identity?.email}
           </Text>
-          <Link to={commitURL} className={css.commitLink}>
-            {latestCommit?.title}
+          <Link to={commitURL}>
+            <Text className={css.commitLink} lineClamp={1}>
+              {latestCommit?.title}
+            </Text>
           </Link>
           <FlexExpander />
           <CommitActions sha={latestCommit?.sha as string} href={commitURL} />

@@ -30,6 +30,7 @@ export interface BranchTagSelectProps extends Omit<ButtonProps, 'onSelect'>, Pic
   forBranchesOnly?: boolean
   labelPrefix?: string
   placeHolder?: string
+  popoverClassname?: string
 }
 
 export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
@@ -43,6 +44,7 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
   labelPrefix,
   placeHolder,
   className,
+  popoverClassname,
   ...props
 }) => {
   const [query, onQuery] = useState('')
@@ -90,7 +92,7 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
         interactionKind: 'click',
         usePortal: true,
         position: PopoverPosition.BOTTOM_LEFT,
-        popoverClassName: css.popover
+        popoverClassName: cx(css.popover, popoverClassname)
       }}
       tabIndex={0}
       {...props}

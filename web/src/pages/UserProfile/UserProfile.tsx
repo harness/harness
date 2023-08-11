@@ -147,7 +147,7 @@ const UserProfile = () => {
         }
       }
     ],
-    []
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   const onEditField = async (field: keyof TypesUser, value: string) => {

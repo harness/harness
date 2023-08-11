@@ -119,7 +119,7 @@ const SpaceAccessControl = () => {
           }
         }
       ] as Column<TypesMembershipUser>[],
-    []
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   return (

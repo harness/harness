@@ -155,6 +155,7 @@ export interface StringsMap {
   enableWebhookContent: string
   enableWebhookTitle: string
   enabled: string
+  enterBranchPlaceholder: string
   enterDescription: string
   enterName: string
   enterNewBranchName: string

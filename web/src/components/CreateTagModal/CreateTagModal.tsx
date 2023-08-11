@@ -94,12 +94,12 @@ export function useCreateTagModal({
         enforceFocus={false}
         onClose={hideModal}
         title={''}
-        style={{ width: 700, maxHeight: '95vh', overflow: 'auto' }}>
+        style={{ width: 585, maxHeight: '95vh', overflow: 'auto' }}>
         <Layout.Vertical padding={{ left: 'xxlarge' }} style={{ height: '100%' }} className={css.main}>
           <Heading className={css.title} font={{ variation: FontVariation.H3 }} margin={{ bottom: 'xlarge' }}>
             {getString('createATag')}
           </Heading>
-          <Container margin={{ right: 'xxlarge' }}>
+          <Container className={css.container} margin={{ right: 'xxlarge' }}>
             <Formik<FormData>
               initialValues={{
                 name: branchName,
@@ -135,13 +135,15 @@ export function useCreateTagModal({
                 <Container margin={{ top: 'medium', bottom: 'medium' }}>
                   <Label className={css.label}>{getString('basedOn')}</Label>
                   {/* <Text className={css.branchSourceDesc}>{getString('branchSourceDesc')}</Text> */}
-                  <Layout.Horizontal spacing="medium" padding={{ top: 'xsmall' }}>
+                  <Layout.Horizontal className={css.selectContainer} padding={{ top: 'xsmall' }}>
                     <BranchTagSelect
+                      className={css.branchTagSelect}
                       repoMetadata={repoMetadata}
                       disableBranchCreation
                       disableViewAllBranches
                       gitRef={sourceBranch}
                       onSelect={setSourceBranch}
+                      popoverClassname={css.popoverContainer}
                     />
                     <FlexExpander />
                   </Layout.Horizontal>
@@ -155,7 +157,7 @@ export function useCreateTagModal({
 
                 <Layout.Horizontal
                   spacing="small"
-                  padding={{ right: 'xxlarge', top: 'xxxlarge', bottom: 'large' }}
+                  padding={{ right: 'xxlarge', top: 'xxlarge', bottom: 'large' }}
                   style={{ alignItems: 'center' }}>
                   <Button
                     type="submit"

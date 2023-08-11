@@ -52,7 +52,7 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
         value: role,
         label: getString(roleStringKeyMap[role])
       })),
-    []
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   const userOptions: SelectOption[] = useMemo(

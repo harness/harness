@@ -1,4 +1,5 @@
 .main {
+  padding-left: var(--spacing-10) !important;
   .title {
     --typography-size: 20px !important;
   }
@@ -7,6 +8,10 @@
     color: var(--grey-600) !important;
     font-size: var(--form-input-font-size) !important;
     font-weight: 500 !important;
+  }
+
+  .container {
+    margin-right: var(--spacing-10) !important;
   }
 
   // .branchSourceDesc {
@@ -19,4 +24,29 @@
 
 .maxContainer {
   max-width: 250px;
+}
+
+.branchTagSelect {
+  width: 100% !important;
+}
+
+.selectContainer {
+  :global {
+    .bp3-popover-wrapper {
+      width: 100% !important;
+      .bp3-popover-target {
+        width: 100% !important;
+      }
+    }
+    .bp3-button {
+      justify-content: start;
+    }
+    .bp3-icon-chevron-down {
+      margin-left: auto;
+    }
+  }
+}
+
+.popoverContainer {
+  width: 489px;
 }

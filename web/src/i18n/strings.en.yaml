@@ -135,6 +135,7 @@ delete: Delete
 edit: Edit
 editAsText: Edit as Text
 branchName: Branch name
+enterBranchPlaceholder: Enter the branch name here
 nameYourBranch: Name your branch
 nameYourTag: Name your tag
 enterTagPlaceholder: Enter the tag name here
