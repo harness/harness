@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS pipelines (
     ,pipeline_uid TEXT NOT NULL
     ,pipeline_seq INTEGER NOT NULL DEFAULT 0
     ,pipeline_repo_id INTEGER
+    ,pipeline_connector_id INTEGER
     ,pipeline_repo_type TEXT NOT NULL
     ,pipeline_repo_name TEXT
     ,pipeline_default_branch TEXT
@@ -25,6 +26,12 @@ CREATE TABLE IF NOT EXISTS pipelines (
     -- Foreign key to repositories table
     ,CONSTRAINT fk_pipelines_repo_id FOREIGN KEY (pipeline_repo_id)
         REFERENCES repositories (repo_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+    
+    -- Foreign key to connectors table
+    ,CONSTRAINT fk_pipelines_connector_id FOREIGN KEY (connector_id)
+        REFERENCES connectors (connector_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 );
@@ -98,6 +105,109 @@ CREATE TABLE IF NOT EXISTS secrets (
     -- Foreign key to spaces table
     ,CONSTRAINT fk_secrets_space_id FOREIGN KEY (secret_space_id)
         REFERENCES spaces (space_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS stages (
+    stage_id          INTEGER PRIMARY KEY AUTOINCREMENT
+    ,stage_pipeline_id     INTEGER
+    ,stage_execution_id    INTEGER
+    ,stage_number      INTEGER
+    ,stage_kind        TEXT
+    ,stage_type        TEXT
+    ,stage_name        TEXT
+    ,stage_status      TEXT
+    ,stage_error       TEXT
+    ,stage_errignore   BOOLEAN
+    ,stage_exit_code   INTEGER
+    ,stage_limit       INTEGER
+    ,stage_os          TEXT
+    ,stage_arch        TEXT
+    ,stage_variant     TEXT
+    ,stage_kernel      TEXT
+    ,stage_machine     TEXT
+    ,stage_started     INTEGER
+    ,stage_stopped     INTEGER
+    ,stage_created     INTEGER
+    ,stage_updated     INTEGER
+    ,stage_version     INTEGER
+    ,stage_on_success  BOOLEAN
+    ,stage_on_failure  BOOLEAN
+    ,stage_depends_on  TEXT
+    ,stage_labels      TEXT
+    ,stage_limit_repo INTEGER NOT NULL DEFAULT 0
+
+    -- Ensure unique combination of stage execution ID and stage number
+    ,UNIQUE(stage_execution_id, stage_number)
+
+    -- Foreign key to executions table
+    ,CONSTRAINT fk_stages_execution_id FOREIGN KEY (stage_execution_id)
+        REFERENCES executions (execution_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+-- name: create-index-stages-build
+
+CREATE INDEX IF NOT EXISTS ix_stages_build ON stages (stage_execution_id);
+
+-- name: create-index-stages-status
+
+CREATE INDEX IF NOT EXISTS ix_stage_in_progress ON stages (stage_status)
+WHERE stage_status IN ('pending', 'running');
+
+
+CREATE TABLE IF NOT EXISTS steps (
+    step_id          INTEGER PRIMARY KEY AUTOINCREMENT
+    ,step_stage_id    INTEGER
+    ,step_number      INTEGER
+    ,step_name        VARCHAR(100)
+    ,step_status      VARCHAR(50)
+    ,step_error       VARCHAR(500)
+    ,step_errignore   BOOLEAN
+    ,step_exit_code   INTEGER
+    ,step_started     INTEGER
+    ,step_stopped     INTEGER
+    ,step_version     INTEGER
+
+    -- Ensure unique comination of stage ID and step number
+    ,UNIQUE(step_stage_id, step_number)
+
+    -- Foreign key to stages table
+    ,CONSTRAINT fk_steps_stage_id FOREIGN KEY (step_stage_id)
+        REFERENCES stages (stage_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE 
+);
+
+CREATE TABLE IF NOT EXISTS connectors (
+    connector_id INTEGER PRIMARY KEY AUTOINCREMENT
+    ,connector_type TEXT NOT NULL
+    ,connector_uid TEXT NOT NULL
+    ,connector_space_id INTEGER NOT NULL
+    ,connector_created INTEGER NOT NULL
+    ,connector_updated INTEGER NOT NULL
+    ,connector_version INTEGER NOT NULL
+
+    -- Foreign key to spaces table
+    ,CONSTRAINT fk_connectors_space_id FOREIGN KEY (connector_space_id)
+        REFERENCES spaces (space_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+
+    -- Ensure unique combination of space ID and connector UID
+    ,UNIQUE (connector_space_id, connector_uid)
+)
+
+
+CREATE TABLE IF NOT EXISTS logs (
+    log_id INTEGER PRIMARY KEY
+    ,log_data BLOB NOT NULL
+
+    -- Foreign key to steps table
+    ,CONSTRAINT fk_logs_id FOREIGN KEY (log_id)
+        REFERENCES steps (step_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 );
