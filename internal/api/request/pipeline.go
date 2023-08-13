@@ -12,6 +12,8 @@ import (
 const (
 	PathParamPipelineRef     = "pipeline_ref"
 	PathParamExecutionNumber = "execution_number"
+	PathParamStageNumber     = "stage_number"
+	PathParamStepNumber      = "step_number"
 )
 
 func GetPipelineRefFromPath(r *http.Request) (string, error) {
@@ -26,4 +28,12 @@ func GetPipelineRefFromPath(r *http.Request) (string, error) {
 
 func GetExecutionNumberFromPath(r *http.Request) (int64, error) {
 	return PathParamAsPositiveInt64(r, PathParamExecutionNumber)
+}
+
+func GetStageNumberFromPath(r *http.Request) (int64, error) {
+	return PathParamAsPositiveInt64(r, PathParamStageNumber)
+}
+
+func GetStepNumberFromPath(r *http.Request) (int64, error) {
+	return PathParamAsPositiveInt64(r, PathParamStepNumber)
 }

@@ -323,6 +323,11 @@ func setupExecutions(r chi.Router, pipelineCtrl *pipeline.Controller, executionC
 			r.Get("/", handlerexecution.HandleFind(executionCtrl))
 			r.Patch("/", handlerexecution.HandleUpdate(executionCtrl))
 			r.Delete("/", handlerexecution.HandleDelete(executionCtrl))
+			r.Get(
+				fmt.Sprintf("/logs/{%s}/{%s}",
+					request.PathParamStageNumber,
+					request.PathParamStepNumber,
+				), handlerexecution.HandleFindLogs(executionCtrl))
 		})
 	})
 }
