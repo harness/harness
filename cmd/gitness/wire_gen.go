@@ -43,6 +43,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/cache"
 	"github.com/harness/gitness/internal/store/database"
+	"github.com/harness/gitness/internal/store/logs"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
@@ -91,8 +92,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, principalStore, gitrpcInterface)
 	executionStore := database.ProvideExecutionStore(db)
+	logStore := logs.ProvideLogStore(db, config)
 	pipelineStore := database.ProvidePipelineStore(db)
-	executionController := execution.ProvideController(db, authorizer, executionStore, pipelineStore, spaceStore)
+	executionController := execution.ProvideController(db, authorizer, executionStore, logStore, pipelineStore, spaceStore)
 	secretStore := database.ProvideSecretStore(db)
 	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, pipelineStore, secretStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
 	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore, spaceStore)

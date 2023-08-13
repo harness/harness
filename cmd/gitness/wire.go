@@ -44,6 +44,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/cache"
 	"github.com/harness/gitness/internal/store/database"
+	"github.com/harness/gitness/internal/store/logs"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
@@ -99,6 +100,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		checkcontroller.WireSet,
 		execution.WireSet,
 		pipeline.WireSet,
+		logs.WireSet,
 		secret.WireSet,
 	)
 	return &cliserver.System{}, nil
