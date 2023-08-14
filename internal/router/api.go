@@ -341,6 +341,12 @@ func setupExecutions(
 					request.PathParamStageNumber,
 					request.PathParamStepNumber,
 				), handlerlogs.HandleFind(logCtrl))
+			// TODO: Decide whether API should be /stream/logs/{}/{} or /logs/{}/{}/stream
+			r.Get(
+				fmt.Sprintf("/logs/{%s}/{%s}/stream",
+					request.PathParamStageNumber,
+					request.PathParamStepNumber,
+				), handlerlogs.HandleTail(logCtrl))
 		})
 	})
 }
