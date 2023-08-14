@@ -81,13 +81,13 @@ func (c *Client) CreateBranch(ctx context.Context, params *CreateBranchParams) (
 		BranchName: params.BranchName,
 	})
 	if err != nil {
-		return nil, processRPCErrorf(err, "failed to create branch on server")
+		return nil, processRPCErrorf(err, "failed to create '%s' branch on server", params.BranchName)
 	}
 
 	var branch *Branch
-	branch, err = mapRPCBranch(resp.GetBranch())
+	branch, err = mapRPCBranch(resp.Branch)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map rpc branch: %w", err)
+		return nil, processRPCErrorf(err, "failed to map rpc branch %v", resp.Branch)
 	}
 
 	return &CreateBranchOutput{

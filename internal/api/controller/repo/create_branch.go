@@ -9,10 +9,10 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/gitrpc/check"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -42,9 +42,9 @@ func (c *Controller) CreateBranch(ctx context.Context, session *auth.Session,
 		in.Target = repo.DefaultBranch
 	}
 
-	err = checkBranchName(in.Name)
+	err = check.BranchName(in.Name)
 	if err != nil {
-		return nil, fmt.Errorf("branch name failed check: %w", err)
+		return nil, usererror.BadRequest(err.Error())
 	}
 
 	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
@@ -67,16 +67,4 @@ func (c *Controller) CreateBranch(ctx context.Context, session *auth.Session,
 	}
 
 	return &branch, nil
-}
-
-// checkBranchName does some basic branch validation
-// We only ensure there are no control characters, the rest is up to git.
-// TODO: Do we need some more validation here?
-func checkBranchName(name string) error {
-	// fail fast on missing name
-	if len(name) == 0 {
-		return usererror.ErrBadRequest
-	}
-
-	return check.ForControlCharacters(name)
 }

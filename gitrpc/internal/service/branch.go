@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/harness/gitness/gitrpc/check"
 	"github.com/harness/gitness/gitrpc/internal/gitea"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -21,8 +22,14 @@ import (
 
 var listBranchesRefFields = []types.GitReferenceField{types.GitReferenceFieldRefName, types.GitReferenceFieldObjectName}
 
-func (s ReferenceService) CreateBranch(ctx context.Context,
-	request *rpc.CreateBranchRequest) (*rpc.CreateBranchResponse, error) {
+func (s ReferenceService) CreateBranch(
+	ctx context.Context,
+	request *rpc.CreateBranchRequest,
+) (*rpc.CreateBranchResponse, error) {
+	if err := check.BranchName(request.BranchName); err != nil {
+		return nil, ErrInvalidArgument(err)
+	}
+
 	base := request.GetBase()
 	if base == nil {
 		return nil, types.ErrBaseCannotBeEmpty
@@ -58,7 +65,7 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 		return nil, ErrAlreadyExistsf("branch '%s' already exists", request.GetBranchName())
 	}
 	if !git.IsErrNotExist(err) {
-		return nil, fmt.Errorf("branch creation of '%s' failed: %w", request.GetBranchName(), err)
+		return nil, processGitErrorf(err, "branch creation of '%s' failed", request.GetBranchName())
 	}
 
 	// get target commit (as target could be branch/tag/commit, and tag can't be pushed using source:destination syntax)
@@ -67,7 +74,7 @@ func (s ReferenceService) CreateBranch(ctx context.Context,
 		return nil, ErrNotFoundf("target '%s' doesn't exist", request.GetTarget())
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to get commit id for target '%s': %w", request.GetTarget(), err)
+		return nil, processGitErrorf(err, "failed to get commit id for target '%s'", request.GetTarget())
 	}
 
 	// push to new branch (all changes should go through push flow for hooks and other safety meassures)
