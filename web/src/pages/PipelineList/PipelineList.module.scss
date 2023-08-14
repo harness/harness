@@ -7,6 +7,10 @@
   }
 }
 
+.withError {
+  display: grid;
+}
+
 .table {
   [class*='TableV2--header'] [class*='variation-table-headers'] {
     text-transform: none;

@@ -11,6 +11,7 @@ public: Public
 private: Private
 cancel: Cancel
 name: Name
+value: Value
 help: help
 search: Search
 description: Description
@@ -580,6 +581,7 @@ spaceMemberships:
   memberUpdated: Member updated successfully.
   memberAdded: Member added successfully.
 failedToCreateSpace: Failed to create Space. Please try again.
+failedToCreatePipeline: Failed to create Pipeline. Please try again.
 enterName: Enter the name
 createSpace: Create Space
 newSpace: New Space
@@ -623,3 +625,11 @@ executions:
   name: Execution Name
 selectRange: Shift-click to select a range
 allCommits: All Commits
+secrets:
+  noData: There are no secrets :(
+  newSecretButton: New Secret
+  name: Secret Name
+  failedToCreate: Failed to create Secret. Please try again.
+  enterSecretName: Enter Secret name
+  value: Secret Value
+  createSecret: Create Secret

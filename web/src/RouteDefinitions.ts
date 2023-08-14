@@ -14,6 +14,7 @@ export interface CODEProps {
   pipeline?: string
   execution?: string
   commitSHA?: string
+  secret?: string
 }
 
 export interface CODEQueryProps {
@@ -32,7 +33,8 @@ export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch'
   webhookId: ':webhookId',
   pipeline: ':pipeline',
   execution: ':execution',
-  commitSHA: ':commitSHA'
+  commitSHA: ':commitSHA',
+  secret: ':secret'
 }
 
 export interface CODERoutes {
@@ -73,6 +75,7 @@ export interface CODERoutes {
 
   toCODEExecutions: (args: Required<Pick<CODEProps, 'space' | 'pipeline'>>) => string
   toCODEExecution: (args: Required<Pick<CODEProps, 'space' | 'pipeline' | 'execution'>>) => string
+  toCODESecret: (args: Required<Pick<CODEProps, 'space' | 'secret'>>) => string
 }
 
 /**
@@ -126,5 +129,7 @@ export const routes: CODERoutes = {
   toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`,
 
   toCODEExecutions: ({ space, pipeline }) => `/pipelines/${space}/pipeline/${pipeline}`,
-  toCODEExecution: ({ space, pipeline, execution }) => `/pipelines/${space}/pipeline/${pipeline}/execution/${execution}`
+  toCODEExecution: ({ space, pipeline, execution }) =>
+    `/pipelines/${space}/pipeline/${pipeline}/execution/${execution}`,
+  toCODESecret: ({ space, secret }) => `/secrets/${space}/secret/${secret}`
 }
