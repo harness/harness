@@ -46,7 +46,7 @@ func HandleFind(logCtrl *logs.Controller) http.HandlerFunc {
 
 		rc, err := logCtrl.Find(
 			ctx, session, spaceRef, pipelineUID,
-			executionNum, stageNum, stepNum)
+			executionNum, int(stageNum), int(stepNum))
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

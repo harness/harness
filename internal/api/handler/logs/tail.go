@@ -62,7 +62,7 @@ func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 
 		linec, errc, err := logCtrl.Tail(
 			ctx, session, spaceRef, pipelineUID,
-			executionNum, stageNum, stepNum)
+			executionNum, int(stageNum), int(stepNum))
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

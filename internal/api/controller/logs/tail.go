@@ -20,8 +20,8 @@ func (c *Controller) Tail(
 	spaceRef string,
 	pipelineUID string,
 	executionNum int64,
-	stageNum int64,
-	stepNum int64,
+	stageNum int,
+	stepNum int,
 ) (<-chan *livelog.Line, <-chan error, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
@@ -38,9 +38,21 @@ func (c *Controller) Tail(
 		return nil, nil, fmt.Errorf("could not authorize: %w", err)
 	}
 
-	// TODO: Figure out step ID by querying stages and steps tables
-	var id int64
+	execution, err := c.executionStore.Find(ctx, pipeline.ID, executionNum)
+	if err != nil {
+		return nil, nil, fmt.Errorf("could not find execution: %w", err)
+	}
 
-	linec, errc := c.logStream.Tail(ctx, id)
+	stage, err := c.stageStore.FindNumber(ctx, execution.ID, stageNum)
+	if err != nil {
+		return nil, nil, fmt.Errorf("could not find stage: %w", err)
+	}
+
+	step, err := c.stepStore.FindNumber(ctx, stage.ID, int(stepNum))
+	if err != nil {
+		return nil, nil, fmt.Errorf("could not find step: %w", err)
+	}
+
+	linec, errc := c.logStream.Tail(ctx, step.ID)
 	return linec, errc, nil
 }

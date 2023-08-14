@@ -525,4 +525,50 @@ type (
 		// Count the number of executions in a space
 		Count(ctx context.Context, parentID int64) (int64, error)
 	}
+
+	StageStore interface {
+		// // List returns a build stage list from the datastore.
+		// List(context.Context, int64) ([]*types.Stage, error)
+
+		// // List returns a build stage list from the datastore
+		// // where the stage is incomplete (pending or running).
+		// ListIncomplete(ctx context.Context) ([]*types.Stage, error)
+
+		// // ListSteps returns a build stage list from the datastore,
+		// // with the individual steps included.
+		// ListSteps(context.Context, int64) ([]*types.Stage, error)
+
+		// // ListState returns a build stage list from the database
+		// // across all repositories.
+		// ListState(context.Context, string) ([]*types.Stage, error)
+
+		// // Find returns a build stage from the datastore by ID.
+		// Find(context.Context, int64) (*types.Stage, error)
+
+		// FindNumber returns a stage from the datastore by number.
+		FindNumber(ctx context.Context, executionID int64, stageNum int) (*types.Stage, error)
+
+		// // Create persists a new stage to the datastore.
+		// Create(context.Context, *types.Stage) error
+
+		// // Update persists an updated stage to the datastore.
+		// Update(context.Context, *types.Stage) error
+	}
+
+	StepStore interface {
+		// // List returns a build stage list from the datastore.
+		// List(context.Context, int64) ([]*types.Step, error)
+
+		// // Find returns a build stage from the datastore by ID.
+		// Find(context.Context, int64) (*types.Step, error)
+
+		// FindNumber returns a step from the datastore by number.
+		FindNumber(ctx context.Context, stageID int64, stepNum int) (*types.Step, error)
+
+		// // Create persists a new stage to the datastore.
+		// Create(context.Context, *types.Step) error
+
+		// // Update persists an updated stage to the datastore.
+		// Update(context.Context, *types.Step) error
+	}
 )

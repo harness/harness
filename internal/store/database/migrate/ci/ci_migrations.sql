@@ -111,7 +111,6 @@ CREATE TABLE IF NOT EXISTS secrets (
 
 CREATE TABLE IF NOT EXISTS stages (
     stage_id          INTEGER PRIMARY KEY AUTOINCREMENT
-    ,stage_pipeline_id     INTEGER
     ,stage_execution_id    INTEGER
     ,stage_number      INTEGER
     ,stage_kind        TEXT
@@ -170,6 +169,10 @@ CREATE TABLE IF NOT EXISTS steps (
     ,step_started     INTEGER
     ,step_stopped     INTEGER
     ,step_version     INTEGER
+    ,step_depends_on  TEXT
+    ,step_image       TEXT
+    ,step_detached    BOOLEAN
+    ,step_schema      TEXT
 
     -- Ensure unique comination of stage ID and step number
     ,UNIQUE(step_stage_id, step_number)

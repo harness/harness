@@ -17,6 +17,8 @@ type Controller struct {
 	authorizer     authz.Authorizer
 	executionStore store.ExecutionStore
 	pipelineStore  store.PipelineStore
+	stageStore     store.StageStore
+	stepStore      store.StepStore
 	logStore       store.LogStore
 	logStream      livelog.LogStream
 	spaceStore     store.SpaceStore
@@ -27,6 +29,8 @@ func NewController(
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
 	pipelineStore store.PipelineStore,
+	stageStore store.StageStore,
+	stepStore store.StepStore,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
 	spaceStore store.SpaceStore,
@@ -36,6 +40,8 @@ func NewController(
 		authorizer:     authorizer,
 		executionStore: executionStore,
 		pipelineStore:  pipelineStore,
+		stageStore:     stageStore,
+		stepStore:      stepStore,
 		logStore:       logStore,
 		logStream:      logStream,
 		spaceStore:     spaceStore,
