@@ -218,6 +218,6 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 	case errors.Is(err, types.ErrFailedToConnect):
 		return ErrInvalidArgumentf(format, args...)
 	default:
-		return Errorf(codes.Unknown, format, args...)
+		return ErrInternalf(format, args...)
 	}
 }
