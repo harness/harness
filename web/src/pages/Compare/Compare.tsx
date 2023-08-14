@@ -1,5 +1,5 @@
 import { noop } from 'lodash-es'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import {
   Container,
   PageBody,
@@ -20,19 +20,17 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { voidFn, getErrorMessage, LIST_FETCHING_LIMIT, showToaster } from 'utils/Utils'
+import { getErrorMessage, showToaster } from 'utils/Utils'
 import { Images } from 'images'
 import { CodeIcon, isRefATag, makeDiffRefs } from 'utils/GitUtils'
-import { CommitsView } from 'components/CommitsView/CommitsView'
 import { Changes } from 'components/Changes/Changes'
-import type { OpenapiCreatePullReqRequest, TypesCommit, TypesPullReq } from 'services/code'
+import type { OpenapiCreatePullReqRequest, TypesDiffStats, TypesPullReq, TypesRepository } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
-import { usePageIndex } from 'hooks/usePageIndex'
-import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
-import type { DiffFileEntry } from 'utils/types'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
+import { TabContentWrapper } from 'components/TabContentWrapper/TabContentWrapper'
 import { CompareContentHeader, PRCreationType } from './CompareContentHeader/CompareContentHeader'
+import { CompareCommits } from './CompareCommits'
 import css from './Compare.module.scss'
 
 export default function Compare() {
@@ -42,29 +40,16 @@ export default function Compare() {
   const { repoMetadata, error, loading, diffRefs } = useGetRepositoryMetadata()
   const [sourceGitRef, setSourceGitRef] = useState(diffRefs.sourceGitRef)
   const [targetGitRef, setTargetGitRef] = useState(diffRefs.targetGitRef)
-  const [page, setPage] = usePageIndex()
-  const limit = LIST_FETCHING_LIMIT
-  const {
-    data: commits,
-    error: commitsError,
-    refetch,
-    response
-  } = useGet<{
-    commits: TypesCommit[]
-  }>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
-    queryParams: {
-      limit,
-      page,
-      git_ref: sourceGitRef,
-      after: targetGitRef
-    },
-    lazy: !repoMetadata
-  })
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [diffs, setDiffs] = useState<DiffFileEntry[]>([])
   const { showError } = useToaster()
+  const {
+    data,
+    error: errorStats
+  } = useGet<TypesDiffStats>({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/diff-stats/${targetGitRef}...${sourceGitRef}`,
+    lazy: !repoMetadata
+  })
   const { mutate: createPullRequest, loading: creatingInProgress } = useMutate<TypesPullReq>({
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq`
@@ -144,30 +129,6 @@ export default function Compare() {
       repoMetadata
     ]
   )
-  const ChangesTab = useMemo(() => {
-    if (repoMetadata) {
-      return (
-        <Container className={css.changesContainer}>
-          <Changes
-            readOnly
-            repoMetadata={repoMetadata}
-            targetRef={targetGitRef}
-            sourceRef={sourceGitRef}
-            emptyTitle={getString('noChanges')}
-            emptyMessage={getString('noChangesCompare')}
-            onCommentUpdate={noop}
-            onDataReady={setDiffs}
-          />
-        </Container>
-      )
-    }
-  }, [repoMetadata, sourceGitRef, targetGitRef, getString])
-
-  useEffect(() => {
-    if (commits?.commits?.length) {
-      setTitle(commits.commits[0].title as string)
-    }
-  }, [commits?.commits])
 
   return (
     <Container className={css.main}>
@@ -176,7 +137,7 @@ export default function Compare() {
         title={getString('comparingChanges')}
         dataTooltipId="comparingChanges"
       />
-      <PageBody error={getErrorMessage(error || commitsError)} retryOnError={voidFn(refetch)} className={css.pageBody}>
+      <PageBody error={getErrorMessage(error || errorStats)} className={css.pageBody}>
         <LoadingSpinner visible={loading} />
 
         {repoMetadata && (
@@ -219,7 +180,6 @@ export default function Compare() {
               id="prComparing"
               defaultSelectedTabId="general"
               large={false}
-              onChange={() => setPage(1)}
               tabList={[
                 {
                   id: 'general',
@@ -259,8 +219,6 @@ export default function Compare() {
                           </Layout.Vertical>
                         </Container>
                       </Layout.Vertical>
-                      {/** Fake rendering Changes Tab to get changes count - no API has it now */}
-                      <Container style={{ display: 'none' }}>{ChangesTab}</Container>
                     </Container>
                   )
                 },
@@ -270,21 +228,17 @@ export default function Compare() {
                     <TabTitleWithCount
                       icon={CodeIcon.Commit}
                       title={getString('commits')}
-                      count={commits?.commits?.length || 0}
+                      count={data?.commits}
                       padding={{ left: 'medium' }}
                     />
                   ),
-                  panel: (
-                    <Container padding="xlarge">
-                      <CommitsView
-                        commits={commits?.commits || []}
-                        repoMetadata={repoMetadata}
-                        emptyTitle={getString('compareEmptyDiffTitle')}
-                        emptyMessage={getString('compareEmptyDiffMessage')}
-                      />
-                      <ResourceListingPagination response={response} page={page} setPage={setPage} />
-                    </Container>
-                  )
+                  panel:
+                    <CompareCommits
+                        repoMetadata={repoMetadata as TypesRepository}
+                        sourceSha={sourceGitRef}
+                        targetSha={targetGitRef}
+                        handleRefresh={()=>{}} // TODO: when to refresh
+                    />
                 },
                 {
                   id: 'diff',
@@ -292,11 +246,22 @@ export default function Compare() {
                     <TabTitleWithCount
                       icon={CodeIcon.File}
                       title={getString('filesChanged')}
-                      count={diffs?.length || 0}
+                      count={data?.files_changed || 0}
                       padding={{ left: 'medium' }}
                     />
                   ),
-                  panel: ChangesTab
+                  panel:
+                  <TabContentWrapper loading={loading} error={error} onRetry={()=>{}} className={css.changesContainer}>
+                    <Changes
+                      readOnly
+                      repoMetadata={repoMetadata}
+                      targetRef={targetGitRef}
+                      sourceRef={sourceGitRef}
+                      emptyTitle={getString('noChanges')}
+                      emptyMessage={getString('noChangesCompare')}
+                      onCommentUpdate={noop}
+                    />
+                  </TabContentWrapper>
                 }
               ]}
             />

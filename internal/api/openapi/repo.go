@@ -661,12 +661,22 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opDiff.WithTags("repository")
 	opDiff.WithMapOfAnything(map[string]interface{}{"operationId": "rawDiff"})
 	_ = reflector.SetRequest(&opDiff, new(getRawDiffRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opDiff, new(types.DiffStats), http.StatusOK)
 	_ = reflector.SetStringResponse(&opDiff, http.StatusOK, "text/plain")
+	_ = reflector.SetJSONResponse(&opDiff, []gitrpc.FileDiff{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/diff/{range}", opDiff)
+
+	opDiffStats := openapi3.Operation{}
+	opDiffStats.WithTags("repository")
+	opDiffStats.WithMapOfAnything(map[string]interface{}{"operationId": "diffStats"})
+	_ = reflector.SetRequest(&opDiffStats, new(getRawDiffRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opDiffStats, new(types.DiffStats), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opDiffStats, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opDiffStats, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opDiffStats, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/diff-stats/{range}", opDiffStats)
 
 	opMergeCheck := openapi3.Operation{}
 	opMergeCheck.WithTags("repository")

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -97,6 +98,7 @@ type RenameDetails struct {
 type ListCommitsOutput struct {
 	Commits       []Commit
 	RenameDetails []*RenameDetails
+	TotalCommits  int
 }
 
 func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*ListCommitsOutput, error) {
@@ -120,6 +122,21 @@ func (c *Client) ListCommits(ctx context.Context, params *ListCommitsParams) (*L
 	// NOTE: don't use PageSize as initial slice capacity - as that theoretically could be MaxInt
 	output := &ListCommitsOutput{
 		Commits: make([]Commit, 0, 16),
+	}
+
+	// check for list commits header
+	header, err := stream.Header()
+	if err != nil {
+		return nil, processRPCErrorf(err, "failed to read list commits header from stream")
+	}
+
+	values := header.Get("total-commits")
+	if len(values) > 0 && values[0] != "" {
+		total, err := strconv.ParseInt(values[0], 10, 32)
+		if err != nil {
+			return nil, processRPCErrorf(err, "failed to convert header total-commits")
+		}
+		output.TotalCommits = int(total)
 	}
 
 	for {

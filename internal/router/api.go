@@ -271,6 +271,9 @@ func setupRepos(r chi.Router,
 			r.Route("/diff", func(r chi.Router) {
 				r.Get("/*", handlerrepo.HandleDiff(repoCtrl))
 			})
+			r.Route("/diff-stats", func(r chi.Router) {
+				r.Get("/*", handlerrepo.HandleDiffStats(repoCtrl))
+			})
 			r.Route("/merge-check", func(r chi.Router) {
 				r.Post("/*", handlerrepo.HandleMergeCheck(repoCtrl))
 			})

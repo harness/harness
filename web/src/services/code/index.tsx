@@ -530,6 +530,7 @@ export interface TypesIdentity {
 export interface TypesListCommitResponse {
   commits?: TypesCommit[] | null
   rename_details?: TypesRenameDetails[] | null
+  total_commits?: number
 }
 
 export interface TypesMembershipSpace {

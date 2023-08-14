@@ -226,8 +226,8 @@ export default function PullRequest() {
                           repoMetadata={repoMetadata as TypesRepository}
                           pullRequestMetadata={prData as TypesPullReq}
                           defaultCommitRange={compact(commitSHA?.split(/~1\.\.\.|\.\.\./g))}
-                          targetRef={prData?.target_branch}
-                          sourceRef={prData?.source_branch}
+                          targetRef={prData?.merge_base_sha}
+                          sourceRef={prData?.source_sha}
                           emptyTitle={getString('noChanges')}
                           emptyMessage={getString('noChangesPR')}
                           onCommentUpdate={voidFn(refetchPullRequest)}
