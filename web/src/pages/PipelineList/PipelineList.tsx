@@ -5,7 +5,6 @@ import {
   Color,
   Container,
   FlexExpander,
-  Icon,
   Layout,
   PageBody,
   PageHeader,
@@ -16,62 +15,41 @@ import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
 import { useHistory } from 'react-router-dom'
+import { useGet } from 'restful-react'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
-import { useAppContext } from 'AppContext'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
-import { formatDate } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT, PageBrowserProps, formatDate, getErrorMessage, voidFn } from 'utils/Utils'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import type { TypesPipeline } from 'services/code'
+import { useQueryParams } from 'hooks/useQueryParams'
+import { usePageIndex } from 'hooks/usePageIndex'
+import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
+import { useAppContext } from 'AppContext'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
 
-interface Pipeline {
-  id: number
-  uid: string
-  name: string
-  updated: number
-  description?: string
-  isPublic?: boolean
-  spaceUid: string
-}
-
-const pipelines: Pipeline[] = [
-  {
-    id: 1,
-    uid: 'pipeline-1',
-    name: 'Pipeline 1',
-    updated: 1687234800,
-    description: 'This is a description',
-    isPublic: true,
-    spaceUid: 'root'
-  },
-  {
-    id: 2,
-    uid: 'pipeline-2',
-    name: 'Pipeline 2',
-    updated: 1730275200,
-    description: 'This is a description',
-    isPublic: true,
-    spaceUid: 'root'
-  },
-  {
-    id: 3,
-    uid: 'pipeline-3',
-    name: 'Pipeline 3',
-    updated: 1773315600,
-    description: 'This is a description',
-    isPublic: false,
-    spaceUid: 'root'
-  }
-]
-
-const loading = false
-
 const PipelineList = () => {
   const { routes } = useAppContext()
+  const space = useGetSpaceParam()
   const history = useHistory()
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
+  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
+  const [page, setPage] = usePageIndex(pageInit)
+
+  const {
+    data: pipelines,
+    error,
+    loading,
+    refetch,
+    response
+  } = useGet<TypesPipeline[]>({
+    path: `/api/v1/spaces/${space}/pipelines`,
+    queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm }
+  })
 
   const NewPipelineButton = (
     <Button
@@ -81,12 +59,12 @@ const PipelineList = () => {
       icon="plus"></Button>
   )
 
-  const columns: Column<Pipeline>[] = useMemo(
+  const columns: Column<TypesPipeline>[] = useMemo(
     () => [
       {
         Header: getString('pipelines.name'),
         width: 'calc(100% - 180px)',
-        Cell: ({ row }: CellProps<Pipeline>) => {
+        Cell: ({ row }: CellProps<TypesPipeline>) => {
           const record = row.original
           return (
             <Container className={css.nameContainer}>
@@ -105,13 +83,12 @@ const PipelineList = () => {
       {
         Header: getString('repos.updated'),
         width: '180px',
-        Cell: ({ row }: CellProps<Pipeline>) => {
+        Cell: ({ row }: CellProps<TypesPipeline>) => {
           return (
             <Layout.Horizontal style={{ alignItems: 'center' }}>
               <Text color={Color.BLACK} lineClamp={1} rightIconProps={{ size: 10 }} width={120}>
                 {formatDate(row.original.updated as number)}
               </Text>
-              {row.original.isPublic === false ? <Icon name="lock" size={10} /> : undefined}
             </Layout.Horizontal>
           )
         },
@@ -125,8 +102,11 @@ const PipelineList = () => {
     <Container className={css.main}>
       <PageHeader title={getString('pageTitle.pipelines')} />
       <PageBody
+        className={cx({ [css.withError]: !!error })}
+        error={error ? getErrorMessage(error) : null}
+        retryOnError={voidFn(refetch)}
         noData={{
-          when: () => pipelines.length === 0,
+          when: () => pipelines?.length === 0 && searchTerm === undefined,
           image: noPipelineImage,
           message: getString('pipelines.noData'),
           button: NewPipelineButton
@@ -142,20 +122,23 @@ const PipelineList = () => {
 
           <Container margin={{ top: 'medium' }}>
             {!!pipelines?.length && (
-              <Table<Pipeline>
+              <Table<TypesPipeline>
                 className={css.table}
                 columns={columns}
                 data={pipelines || []}
                 onRowClick={pipelineInfo =>
-                  history.push(routes.toCODEExecutions({ space: pipelineInfo.spaceUid, pipeline: pipelineInfo.uid }))
+                  history.push(routes.toCODEExecutions({ space, pipeline: pipelineInfo.uid as string }))
                 }
                 getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
               />
             )}
 
-            <NoResultCard showWhen={() => !!pipelines.length && !!searchTerm?.length} forSearch={true} />
+            <NoResultCard
+              showWhen={() => !!pipelines && pipelines?.length === 0 && !!searchTerm?.length}
+              forSearch={true}
+            />
           </Container>
-          {/* <ResourceListingPagination response={response} page={page} setPage={setPage} /> */}
+          <ResourceListingPagination response={response} page={page} setPage={setPage} />
         </Container>
       </PageBody>
     </Container>

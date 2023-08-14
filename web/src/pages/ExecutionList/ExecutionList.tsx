@@ -1,11 +1,10 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import {
   Button,
   ButtonVariation,
   Color,
   Container,
   FlexExpander,
-  Icon,
   Layout,
   PageBody,
   PageHeader,
@@ -14,68 +13,42 @@ import {
 } from '@harness/uicore'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
-import Keywords from 'react-keywords'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
+import { useGet } from 'restful-react'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useAppContext } from 'AppContext'
-import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
-import { formatDate } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT, PageBrowserProps, formatDate, getErrorMessage, voidFn } from 'utils/Utils'
+import type { CODEProps } from 'RouteDefinitions'
+import type { TypesExecution } from 'services/code'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { useQueryParams } from 'hooks/useQueryParams'
+import { usePageIndex } from 'hooks/usePageIndex'
+import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './ExecutionList.module.scss'
 
-interface Execution {
-  id: number
-  uid: string
-  name: string
-  updated: number
-  description?: string
-  isPublic?: boolean
-  spaceUid: string
-  pipelineUid: string
-}
-
-const executions: Execution[] = [
-  {
-    id: 1,
-    uid: '1',
-    name: 'Exec 1',
-    updated: 1687234800,
-    description: 'This is a description',
-    isPublic: true,
-    spaceUid: 'root',
-    pipelineUid: 'pipeline-1'
-  },
-  {
-    id: 2,
-    uid: '2',
-    name: 'Exec 2',
-    updated: 1730275200,
-    description: 'This is a description',
-    isPublic: true,
-    spaceUid: 'root',
-    pipelineUid: 'pipeline-2'
-  },
-  {
-    id: 3,
-    uid: '3',
-    name: 'Exec 3',
-    updated: 1773315600,
-    description: 'This is a description',
-    isPublic: false,
-    spaceUid: 'root',
-    pipelineUid: 'pipeline-3'
-  }
-]
-
-const loading = false
-
 const ExecutionList = () => {
   const { routes } = useAppContext()
+  const space = useGetSpaceParam()
+  const { pipeline } = useParams<CODEProps>()
   const history = useHistory()
   const { getString } = useStrings()
-  const [searchTerm, setSearchTerm] = useState<string | undefined>()
+  const pageBrowser = useQueryParams<PageBrowserProps>()
+  const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
+  const [page, setPage] = usePageIndex(pageInit)
+
+  const {
+    data: executions,
+    error,
+    loading,
+    refetch,
+    response
+  } = useGet<TypesExecution[]>({
+    path: `/api/v1/pipelines/${space}/${pipeline}/+/executions`,
+    queryParams: { page, limit: LIST_FETCHING_LIMIT }
+  })
 
   const NewExecutionButton = (
     <Button
@@ -85,21 +58,19 @@ const ExecutionList = () => {
       icon="plus"></Button>
   )
 
-  const columns: Column<Execution>[] = useMemo(
+  const columns: Column<TypesExecution>[] = useMemo(
     () => [
       {
         Header: getString('repos.name'),
         width: 'calc(100% - 180px)',
-        Cell: ({ row }: CellProps<Execution>) => {
+        Cell: ({ row }: CellProps<TypesExecution>) => {
           const record = row.original
           return (
             <Container className={css.nameContainer}>
               <Layout.Horizontal spacing="small" style={{ flexGrow: 1 }}>
                 <Layout.Vertical flex className={css.name}>
-                  <Text className={css.repoName}>
-                    <Keywords value={searchTerm}>{record.uid}</Keywords>
-                  </Text>
-                  {record.description && <Text className={css.desc}>{record.description}</Text>}
+                  <Text className={css.repoName}>{record.number}</Text>
+                  {record.status && <Text className={css.desc}>{record.status}</Text>}
                 </Layout.Vertical>
               </Layout.Horizontal>
             </Container>
@@ -109,63 +80,64 @@ const ExecutionList = () => {
       {
         Header: getString('repos.updated'),
         width: '180px',
-        Cell: ({ row }: CellProps<Execution>) => {
+        Cell: ({ row }: CellProps<TypesExecution>) => {
           return (
             <Layout.Horizontal style={{ alignItems: 'center' }}>
               <Text color={Color.BLACK} lineClamp={1} rightIconProps={{ size: 10 }} width={120}>
                 {formatDate(row.original.updated as number)}
               </Text>
-              {row.original.isPublic === false ? <Icon name="lock" size={10} /> : undefined}
             </Layout.Horizontal>
           )
         },
         disableSortBy: true
       }
     ],
-    [getString, searchTerm]
+    [getString]
   )
 
   return (
     <Container className={css.main}>
       <PageHeader title={getString('pageTitle.executions')} />
       <PageBody
+        className={cx({ [css.withError]: !!error })}
+        error={error ? getErrorMessage(error) : null}
+        retryOnError={voidFn(refetch)}
         noData={{
-          when: () => executions.length === 0,
+          when: () => executions?.length === 0,
           image: noExecutionImage,
           message: getString('executions.noData'),
           button: NewExecutionButton
         }}>
-        <LoadingSpinner visible={loading && !searchTerm} />
+        <LoadingSpinner visible={loading} />
 
         <Container padding="xlarge">
           <Layout.Horizontal spacing="large" className={css.layout}>
             {NewExecutionButton}
             <FlexExpander />
-            <SearchInputWithSpinner loading={loading} query={searchTerm} setQuery={setSearchTerm} />
           </Layout.Horizontal>
 
           <Container margin={{ top: 'medium' }}>
             {!!executions?.length && (
-              <Table<Execution>
+              <Table<TypesExecution>
                 className={css.table}
                 columns={columns}
                 data={executions || []}
                 onRowClick={executionInfo =>
                   history.push(
                     routes.toCODEExecution({
-                      space: executionInfo.spaceUid,
-                      pipeline: executionInfo.pipelineUid,
-                      execution: executionInfo.uid
+                      space,
+                      pipeline: pipeline as string,
+                      execution: String(executionInfo.id)
                     })
                   )
                 }
-                getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
+                getRowClassName={row => cx(css.row, !row.original.number && css.noDesc)}
               />
             )}
 
-            <NoResultCard showWhen={() => !!executions.length && !!searchTerm?.length} forSearch={true} />
+            <NoResultCard showWhen={() => !!executions && executions.length === 0} forSearch={true} />
           </Container>
-          {/* <ResourceListingPagination response={response} page={page} setPage={setPage} /> */}
+          <ResourceListingPagination response={response} page={page} setPage={setPage} />
         </Container>
       </PageBody>
     </Container>

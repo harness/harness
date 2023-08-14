@@ -176,6 +176,7 @@ export interface StringsMap {
   expired: string
   failed: string
   failedToCreateBranch: string
+  failedToCreatePipeline: string
   failedToCreateRepo: string
   failedToCreateSpace: string
   failedToDeleteBranch: string
@@ -449,6 +450,13 @@ export interface StringsMap {
   search: string
   searchBranches: string
   secret: string
+  'secrets.createSecret': string
+  'secrets.enterSecretName': string
+  'secrets.failedToCreate': string
+  'secrets.name': string
+  'secrets.newSecretButton': string
+  'secrets.noData': string
+  'secrets.value': string
   selectBranchPlaceHolder: string
   selectRange: string
   selectSpace: string
@@ -533,6 +541,7 @@ export interface StringsMap {
   'validation.spaceNamePatternIsNotValid': string
   'validation.uidInvalid': string
   'validation.uidRequired': string
+  value: string
   viewAllBranches: string
   viewAllTags: string
   viewCommitDetails: string

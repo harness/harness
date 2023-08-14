@@ -6,6 +6,7 @@ declare const styles: {
   readonly table: string
   readonly row: string
   readonly noDesc: string
+  readonly withError: string
   readonly nameContainer: string
   readonly name: string
   readonly pinned: string
