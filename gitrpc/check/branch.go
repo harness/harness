@@ -79,7 +79,7 @@ out:
 	if branch[0] == '.' {
 		return fmt.Errorf("branch '%s' cannot start with '.'", branch)
 	}
-	if len(branch) >= len(lock) && strings.HasSuffix(branch, lock) {
+	if strings.HasSuffix(branch, lock) {
 		return fmt.Errorf("branch '%s' cannot ends with '%s'", branch, lock)
 	}
 	return nil
