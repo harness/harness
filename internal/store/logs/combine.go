@@ -7,13 +7,15 @@ package logs
 import (
 	"context"
 	"io"
+
+	"github.com/harness/gitness/internal/store"
 )
 
 // NewCombined returns a new combined log store that will fallback
 // to a secondary log store when necessary. This can be useful when
 // migrating from database logs to s3, where logs for older builds
 // are still being stored in the database, and newer logs in s3.
-func NewCombined(primary, secondary LogStore) LogStore {
+func NewCombined(primary, secondary store.LogStore) store.LogStore {
 	return &combined{
 		primary:   primary,
 		secondary: secondary,
@@ -21,7 +23,7 @@ func NewCombined(primary, secondary LogStore) LogStore {
 }
 
 type combined struct {
-	primary, secondary LogStore
+	primary, secondary store.LogStore
 }
 
 func (s *combined) Find(ctx context.Context, step int64) (io.ReadCloser, error) {

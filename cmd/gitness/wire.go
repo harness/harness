@@ -20,6 +20,7 @@ import (
 	checkcontroller "github.com/harness/gitness/internal/api/controller/check"
 	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/githook"
+	controllerlogs "github.com/harness/gitness/internal/api/controller/logs"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
@@ -46,6 +47,7 @@ import (
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/store/logs"
 	"github.com/harness/gitness/internal/url"
+	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
@@ -101,6 +103,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		execution.WireSet,
 		pipeline.WireSet,
 		logs.WireSet,
+		livelog.WireSet,
+		controllerlogs.WireSet,
 		secret.WireSet,
 	)
 	return &cliserver.System{}, nil

@@ -7,7 +7,6 @@ package store
 
 import (
 	"context"
-	"io"
 	"time"
 
 	"github.com/harness/gitness/types"
@@ -525,19 +524,5 @@ type (
 
 		// Count the number of executions in a space
 		Count(ctx context.Context, parentID int64) (int64, error)
-	}
-
-	LogStore interface {
-		// Find returns a log stream from the datastore.
-		Find(ctx context.Context, stepID int64) (io.ReadCloser, error)
-
-		// Create writes copies the log stream from Reader r to the datastore.
-		Create(ctx context.Context, stepID int64, r io.Reader) error
-
-		// Update copies the log stream from Reader r to the datastore.
-		Update(ctx context.Context, stepID int64, r io.Reader) error
-
-		// Delete purges the log stream from the datastore.
-		Delete(ctx context.Context, stepID int64) error
 	}
 )

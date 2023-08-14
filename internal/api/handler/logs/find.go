@@ -8,13 +8,13 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/controller/execution"
+	"github.com/harness/gitness/internal/api/controller/logs"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/paths"
 )
 
-func HandleFindLogs(executionCtrl *execution.Controller) http.HandlerFunc {
+func HandleFind(logCtrl *logs.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -44,7 +44,7 @@ func HandleFindLogs(executionCtrl *execution.Controller) http.HandlerFunc {
 			return
 		}
 
-		rc, err := executionCtrl.FindLogs(
+		rc, err := logCtrl.Find(
 			ctx, session, spaceRef, pipelineUID,
 			executionNum, stageNum, stepNum)
 		if err != nil {

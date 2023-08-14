@@ -18,6 +18,7 @@ import (
 	check2 "github.com/harness/gitness/internal/api/controller/check"
 	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/githook"
+	logs2 "github.com/harness/gitness/internal/api/controller/logs"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
@@ -45,6 +46,7 @@ import (
 	"github.com/harness/gitness/internal/store/database"
 	"github.com/harness/gitness/internal/store/logs"
 	"github.com/harness/gitness/internal/url"
+	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
@@ -92,9 +94,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, principalStore, gitrpcInterface)
 	executionStore := database.ProvideExecutionStore(db)
-	logStore := logs.ProvideLogStore(db, config)
 	pipelineStore := database.ProvidePipelineStore(db)
-	executionController := execution.ProvideController(db, authorizer, executionStore, logStore, pipelineStore, spaceStore)
+	executionController := execution.ProvideController(db, authorizer, executionStore, pipelineStore, spaceStore)
+	logStore := logs.ProvideLogStore(db, config)
+	logStream := livelog.ProvideLogStream(config)
+	logsController := logs2.ProvideController(db, authorizer, executionStore, pipelineStore, logStore, logStream, spaceStore)
 	secretStore := database.ProvideSecretStore(db)
 	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, pipelineStore, secretStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
 	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore, spaceStore)
@@ -157,7 +161,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	checkController := check2.ProvideController(db, authorizer, repoStore, checkStore, gitrpcInterface)
 	systemController := system.NewController(principalStore, config)
-	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, spaceController, pipelineController, secretController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController)
+	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, logsController, spaceController, pipelineController, secretController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController)
 	gitHandler := router.ProvideGitHandler(config, provider, repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(config, apiHandler, gitHandler, webHandler)

@@ -2,35 +2,29 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package execution
+package logs
 
 import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/livelog"
 
+	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
 )
 
-type Controller struct {
-	db             *sqlx.DB
-	authorizer     authz.Authorizer
-	executionStore store.ExecutionStore
-	pipelineStore  store.PipelineStore
-	spaceStore     store.SpaceStore
-}
+// WireSet provides a wire set for this package.
+var WireSet = wire.NewSet(
+	ProvideController,
+)
 
-func NewController(
-	db *sqlx.DB,
+func ProvideController(db *sqlx.DB,
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
 	pipelineStore store.PipelineStore,
+	logStore store.LogStore,
+	logStream livelog.LogStream,
 	spaceStore store.SpaceStore,
 ) *Controller {
-	return &Controller{
-		db:             db,
-		authorizer:     authorizer,
-		executionStore: executionStore,
-		pipelineStore:  pipelineStore,
-		spaceStore:     spaceStore,
-	}
+	return NewController(db, authorizer, executionStore, pipelineStore, logStore, logStream, spaceStore)
 }

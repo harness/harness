@@ -12,6 +12,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/check"
 	"github.com/harness/gitness/internal/api/controller/execution"
 	controllergithook "github.com/harness/gitness/internal/api/controller/githook"
+	"github.com/harness/gitness/internal/api/controller/logs"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
@@ -26,6 +27,7 @@ import (
 	handlercheck "github.com/harness/gitness/internal/api/handler/check"
 	handlerexecution "github.com/harness/gitness/internal/api/handler/execution"
 	handlergithook "github.com/harness/gitness/internal/api/handler/githook"
+	handlerlogs "github.com/harness/gitness/internal/api/handler/logs"
 	handlerpipeline "github.com/harness/gitness/internal/api/handler/pipeline"
 	handlerprincipal "github.com/harness/gitness/internal/api/handler/principal"
 	handlerpullreq "github.com/harness/gitness/internal/api/handler/pullreq"
@@ -70,6 +72,7 @@ func NewAPIHandler(
 	authenticator authn.Authenticator,
 	repoCtrl *repo.Controller,
 	executionCtrl *execution.Controller,
+	logCtrl *logs.Controller,
 	spaceCtrl *space.Controller,
 	pipelineCtrl *pipeline.Controller,
 	secretCtrl *secret.Controller,
@@ -103,7 +106,7 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator, authn.SourceRouterAPI))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, repoCtrl, executionCtrl, pipelineCtrl, secretCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
+		setupRoutesV1(r, repoCtrl, executionCtrl, logCtrl, pipelineCtrl, secretCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
 			saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
 	})
 
@@ -127,6 +130,7 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 func setupRoutesV1(r chi.Router,
 	repoCtrl *repo.Controller,
 	executionCtrl *execution.Controller,
+	logCtrl *logs.Controller,
 	pipelineCtrl *pipeline.Controller,
 	secretCtrl *secret.Controller,
 	spaceCtrl *space.Controller,
@@ -141,7 +145,7 @@ func setupRoutesV1(r chi.Router,
 ) {
 	setupSpaces(r, spaceCtrl)
 	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl, checkCtrl)
-	setupPipelines(r, pipelineCtrl, executionCtrl)
+	setupPipelines(r, pipelineCtrl, executionCtrl, logCtrl)
 	setupSecrets(r, secretCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
@@ -290,7 +294,11 @@ func setupRepos(r chi.Router,
 	})
 }
 
-func setupPipelines(r chi.Router, pipelineCtrl *pipeline.Controller, executionCtrl *execution.Controller) {
+func setupPipelines(
+	r chi.Router,
+	pipelineCtrl *pipeline.Controller,
+	executionCtrl *execution.Controller,
+	logCtrl *logs.Controller) {
 	r.Route("/pipelines", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerpipeline.HandleCreate(pipelineCtrl))
@@ -298,7 +306,7 @@ func setupPipelines(r chi.Router, pipelineCtrl *pipeline.Controller, executionCt
 			r.Get("/", handlerpipeline.HandleFind(pipelineCtrl))
 			r.Patch("/", handlerpipeline.HandleUpdate(pipelineCtrl))
 			r.Delete("/", handlerpipeline.HandleDelete(pipelineCtrl))
-			setupExecutions(r, pipelineCtrl, executionCtrl)
+			setupExecutions(r, pipelineCtrl, executionCtrl, logCtrl)
 		})
 	})
 }
@@ -315,7 +323,12 @@ func setupSecrets(r chi.Router, secretCtrl *secret.Controller) {
 	})
 }
 
-func setupExecutions(r chi.Router, pipelineCtrl *pipeline.Controller, executionCtrl *execution.Controller) {
+func setupExecutions(
+	r chi.Router,
+	pipelineCtrl *pipeline.Controller,
+	executionCtrl *execution.Controller,
+	logCtrl *logs.Controller,
+) {
 	r.Route("/executions", func(r chi.Router) {
 		r.Get("/", handlerexecution.HandleList(executionCtrl))
 		r.Post("/", handlerexecution.HandleCreate(executionCtrl))
@@ -327,7 +340,7 @@ func setupExecutions(r chi.Router, pipelineCtrl *pipeline.Controller, executionC
 				fmt.Sprintf("/logs/{%s}/{%s}",
 					request.PathParamStageNumber,
 					request.PathParamStepNumber,
-				), handlerexecution.HandleFindLogs(executionCtrl))
+				), handlerlogs.HandleFind(logCtrl))
 		})
 	})
 }

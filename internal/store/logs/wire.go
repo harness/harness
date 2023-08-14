@@ -5,6 +5,7 @@
 package logs
 
 import (
+	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -16,7 +17,7 @@ var WireSet = wire.NewSet(
 	ProvideLogStore,
 )
 
-func ProvideLogStore(db *sqlx.DB, config *types.Config) LogStore {
+func ProvideLogStore(db *sqlx.DB, config *types.Config) store.LogStore {
 	s := NewDatabaseLogStore(db)
 	if config.S3.Bucket != "" {
 		p := NewS3LogStore(

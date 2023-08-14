@@ -11,6 +11,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/harness/gitness/internal/store"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -18,7 +20,7 @@ import (
 )
 
 // NewS3Env returns a new S3 log store.
-func NewS3LogStore(bucket, prefix, endpoint string, pathStyle bool) LogStore {
+func NewS3LogStore(bucket, prefix, endpoint string, pathStyle bool) store.LogStore {
 	disableSSL := false
 
 	if endpoint != "" {

@@ -2,7 +2,7 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package execution
+package logs
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-func (c *Controller) FindLogs(
+func (c *Controller) Find(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
