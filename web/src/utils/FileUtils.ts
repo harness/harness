@@ -61,7 +61,6 @@ export function useFileContentViewerDecision({
     const resourceData = resourceContent?.content as RepoFileContent
     const isFileTooLarge = resourceData?.size !== resourceData?.data_size
     const rawURL = `/code/api/v1/repos/${repoMetadata?.path}/+/raw/${resourcePath}?routingId=${routingId}&git_ref=${gitRef}`
-
     return {
       category,
 
@@ -77,21 +76,7 @@ export function useFileContentViewerDecision({
       base64Data: resourceData?.data || '',
       rawURL
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    switch (metadata.category) {
-      case FileCategory.SVG:
-      case FileCategory.PDF:
-      case FileCategory.IMAGE:
-      case FileCategory.AUDIO:
-      case FileCategory.VIDEO:
-      case FileCategory.TEXT:
-        break
-      default:
-        break
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [resourceContent.content]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return metadata
 }
