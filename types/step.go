@@ -15,8 +15,6 @@ type Step struct {
 	ExitCode  int      `json:"exit_code" db:"step_exit_code"`
 	Started   int64    `json:"started,omitempty" db:"step_started"`
 	Stopped   int64    `json:"stopped,omitempty" db:"step_stopped"`
-	Created   int64    `json:"created" db:"step_created"`
-	Updated   int64    `json:"updated" db:"step_updated"`
 	Version   int64    `json:"version" db:"step_version"`
 	DependsOn []string `json:"depends_on,omitempty" db:"step_depends_on"`
 	Image     string   `json:"image,omitempty" db:"step_image"`

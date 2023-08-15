@@ -32,6 +32,45 @@ type executionStore struct {
 	db *sqlx.DB
 }
 
+// exection represents an execution object stored in the database
+type execution struct {
+	ID           int64  `db:"execution_id"`
+	PipelineID   int64  `db:"execution_pipeline_id"`
+	RepoID       int64  `db:"execution_repo_id"`
+	Trigger      string `db:"execution_trigger"`
+	Number       int64  `db:"execution_number"`
+	Parent       int64  `db:"execution_parent"`
+	Status       string `db:"execution_status"`
+	Error        string `db:"execution_error"`
+	Event        string `db:"execution_event"`
+	Action       string `db:"execution_action"`
+	Link         string `db:"execution_link"`
+	Timestamp    int64  `db:"execution_timestamp"`
+	Title        string `db:"execution_title"`
+	Message      string `db:"execution_message"`
+	Before       string `db:"execution_before"`
+	After        string `db:"execution_after"`
+	Ref          string `db:"execution_ref"`
+	Fork         string `db:"execution_source_repo"`
+	Source       string `db:"execution_source"`
+	Target       string `db:"execution_target"`
+	Author       string `db:"execution_author"`
+	AuthorName   string `db:"execution_author_name"`
+	AuthorEmail  string `db:"execution_author_email"`
+	AuthorAvatar string `db:"execution_author_avatar"`
+	Sender       string `db:"execution_sender"`
+	Params       string `db:"execution_params"`
+	Cron         string `db:"execution_cron"`
+	Deploy       string `db:"execution_deploy"`
+	DeployID     int64  `db:"execution_deploy_id"`
+	Debug        bool   `db:"execution_debug"`
+	Started      int64  `db:"execution_started"`
+	Finished     int64  `db:"execution_finished"`
+	Created      int64  `db:"execution_created"`
+	Updated      int64  `db:"execution_updated"`
+	Version      int64  `db:"execution_version"`
+}
+
 const (
 	executionColumns = `
 		execution_id

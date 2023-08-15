@@ -534,9 +534,9 @@ type (
 		// // where the stage is incomplete (pending or running).
 		// ListIncomplete(ctx context.Context) ([]*types.Stage, error)
 
-		// // ListSteps returns a build stage list from the datastore,
-		// // with the individual steps included.
-		// ListSteps(context.Context, int64) ([]*types.Stage, error)
+		// ListSteps returns a stage list from the datastore corresponding to an execution,
+		// with the individual steps included.
+		ListSteps(ctx context.Context, executionID int64) ([]*types.Stage, error)
 
 		// // ListState returns a build stage list from the database
 		// // across all repositories.

@@ -8,7 +8,6 @@ package main
 
 import (
 	"context"
-
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
@@ -94,9 +93,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, principalStore, gitrpcInterface)
 	executionStore := database.ProvideExecutionStore(db)
-	pipelineStore := database.ProvidePipelineStore(db)
-	executionController := execution.ProvideController(db, authorizer, executionStore, pipelineStore, spaceStore)
 	stageStore := database.ProvideStageStore(db)
+	pipelineStore := database.ProvidePipelineStore(db)
+	executionController := execution.ProvideController(db, authorizer, executionStore, stageStore, pipelineStore, spaceStore)
 	stepStore := database.ProvideStepStore(db)
 	logStore := logs.ProvideLogStore(db, config)
 	logStream := livelog.ProvideLogStream(config)

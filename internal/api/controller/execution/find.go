@@ -36,5 +36,20 @@ func (c *Controller) Find(
 		return nil, fmt.Errorf("could not authorize: %w", err)
 	}
 
-	return c.executionStore.Find(ctx, pipeline.ID, executionNum)
+	execution, err := c.executionStore.Find(ctx, pipeline.ID, executionNum)
+	if err != nil {
+		return nil, fmt.Errorf("could not find execution: %w", err)
+	}
+
+	stages, err := c.stageStore.ListSteps(ctx, execution.ID)
+	if err != nil {
+		return nil, fmt.Errorf("could not query stage information: %w", err)
+	}
+
+	fmt.Printf("stages: %+v", stages)
+
+	// Add stages information to the execution
+	execution.Stages = stages
+
+	return execution, nil
 }
