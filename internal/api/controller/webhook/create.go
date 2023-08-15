@@ -38,6 +38,10 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
+	err = c.checkProtectedURLs(session, &in.URL)
+	if err != nil {
+		return nil, err
+	}
 	// validate input
 	err = checkCreateInput(in, c.allowLoopback, c.allowPrivateNetwork, c.whitelistedInternalUrlPattern)
 	if err != nil {

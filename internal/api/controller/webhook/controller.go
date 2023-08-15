@@ -7,6 +7,7 @@ package webhook
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
@@ -73,4 +74,16 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	}
 
 	return repo, nil
+}
+
+func (c *Controller) checkProtectedURLs(session *auth.Session, webhookURL *string) error {
+	for _, urlPattern := range c.whitelistedInternalUrlPattern {
+		if strings.Contains(strings.ToLower(*webhookURL), strings.ToLower(urlPattern)) {
+			if session.Principal.Type != enum.PrincipalTypeService {
+				return usererror.BadRequest("An internal URL provided")
+			}
+			break
+		}
+	}
+	return nil
 }
