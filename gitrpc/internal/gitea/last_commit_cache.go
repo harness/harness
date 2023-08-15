@@ -51,6 +51,12 @@ func NewRedisLastCommitCache(
 		cacheDuration)
 }
 
+func NoLastCommitCache(
+	repoCache cache.Cache[string, *RepoEntryValue],
+) cache.Cache[CommitEntryKey, *types.Commit] {
+	return cache.NewNoCache[CommitEntryKey, *types.Commit](commitEntryGetter{repoCache: repoCache})
+}
+
 type CommitEntryKey string
 
 const commitEntryKeySeparator = "\x00"

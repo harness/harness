@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+const (
+	ModeInMemory = "inmemory"
+	ModeRedis    = "redis"
+	ModeNone     = "none"
+)
+
 // Config represents the configuration for the gitrpc server.
 type Config struct {
 	// Bind specifies the addr used to bind the grpc server.
@@ -26,8 +32,14 @@ type Config struct {
 	MaxConnAge      time.Duration `envconfig:"GITRPC_SERVER_MAX_CONN_AGE" default:"630720000s"`
 	MaxConnAgeGrace time.Duration `envconfig:"GITRPC_SERVER_MAX_CONN_AGE_GRACE" default:"630720000s"`
 
-	// LastCommitCacheSeconds defines cache duration in seconds of last commit, default=12h
-	LastCommitCacheSeconds int `envconfig:"GITRPC_LAST_COMMIT_CACHE_SECONDS" default:"43200"`
+	// LastCommitCache holds configuration options for the last commit cache.
+	LastCommitCache struct {
+		// Mode determines where the cache will be. Valid values are "inmemory" (default), "redis" or "none".
+		Mode string `envconfig:"GITRPC_LAST_COMMIT_CACHE_MODE" default:"inmemory"`
+
+		// DurationSeconds defines cache duration in seconds of last commit, default=12h.
+		DurationSeconds int `envconfig:"GITRPC_LAST_COMMIT_CACHE_SECONDS" default:"43200"`
+	}
 
 	Redis struct {
 		Endpoint           string `envconfig:"GITRPC_REDIS_ENDPOINT"             default:"localhost:6379"`
@@ -58,6 +70,9 @@ func (c *Config) Validate() error {
 	}
 	if c.MaxConnAgeGrace == 0 {
 		return errors.New("config.MaxConnAgeGrace is required")
+	}
+	if m := c.LastCommitCache.Mode; m != "" && m != ModeInMemory && m != ModeRedis && m != ModeNone {
+		return errors.New("config.LastCommitCache.Mode has unsupported value")
 	}
 
 	return nil
