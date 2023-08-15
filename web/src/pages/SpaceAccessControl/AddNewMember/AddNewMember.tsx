@@ -6,12 +6,12 @@ import { Formik } from 'formik'
 import * as Yup from 'yup'
 
 import { useStrings } from 'framework/strings'
+import { useGet } from 'restful-react'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import {
   MembershipAddRequestBody,
   TypesMembershipUser,
   TypesPrincipalInfo,
-  useListPrincipals,
   useMembershipAdd,
   useMembershipUpdate
 } from 'services/code'
@@ -36,15 +36,17 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
     user_uid: membershipDetails?.principal?.uid || ''
   })
 
-  const { data: users, loading: fetchingUsers } = useListPrincipals({
+  const { data: users, loading: fetchingUsers }  = useGet<TypesPrincipalInfo[]>({
+    path: `/api/v1/principals`,
     queryParams: {
       query: searchTerm,
       page: 1,
       limit: LIST_FETCHING_LIMIT,
-      type: ['user']
+      type: 'user'
     },
     debounce: 500
   })
+
 
   const roleOptions: SelectOption[] = useMemo(
     () =>

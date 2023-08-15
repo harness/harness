@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import { pdfjs } from 'react-pdf'
 import { useAppContext } from 'AppContext'
 import type { RepoFileContent } from 'services/code'
