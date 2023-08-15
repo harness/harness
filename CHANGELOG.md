@@ -1,5 +1,33 @@
 # Changelog
 
+## [v2.19.0](https://github.com/harness/drone/tree/v2.19.0) (2023-08-15)
+
+[Full Changelog](https://github.com/harness/drone/compare/scheduler_experiment...v2.19.0)
+
+**Implemented enhancements:**
+
+- Support arbitrary action value from parameter in query string [\#3341](https://github.com/harness/drone/pull/3341) ([filippopisano](https://github.com/filippopisano))
+
+**Fixed bugs:**
+
+- bump drone-ui to 2.11.5 [\#3350](https://github.com/harness/drone/pull/3350) ([d1wilko](https://github.com/d1wilko))
+- bump drone-ui to 2.11.4 [\#3349](https://github.com/harness/drone/pull/3349) ([d1wilko](https://github.com/d1wilko))
+- \(fix\) prevent scheduler deadlock [\#3344](https://github.com/harness/drone/pull/3344) ([tphoney](https://github.com/tphoney))
+- bump drone-ui to 2.11.3 [\#3337](https://github.com/harness/drone/pull/3337) ([d1wilko](https://github.com/d1wilko))
+
+**Merged pull requests:**
+
+- remove repetitive words [\#3342](https://github.com/harness/drone/pull/3342) ([cuishuang](https://github.com/cuishuang))
+- Revert "fix scheduler queue deadlock" [\#3331](https://github.com/harness/drone/pull/3331) ([tphoney](https://github.com/tphoney))
+
+## [scheduler_experiment](https://github.com/harness/drone/tree/scheduler_experiment) (2023-07-05)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.18.0...scheduler_experiment)
+
+**Fixed bugs:**
+
+- fix scheduler queue deadlock [\#3330](https://github.com/harness/drone/pull/3330) ([tphoney](https://github.com/tphoney))
+
 ## [v2.18.0](https://github.com/harness/drone/tree/v2.18.0) (2023-07-04)
 
 [Full Changelog](https://github.com/harness/drone/compare/v2.17.0...v2.18.0)
@@ -12,6 +40,10 @@
 
 - bump drone-ui to 2.11.2 [\#3327](https://github.com/harness/drone/pull/3327) ([d1wilko](https://github.com/d1wilko))
 - Fix comment errors [\#3302](https://github.com/harness/drone/pull/3302) ([weidongkl](https://github.com/weidongkl))
+
+**Merged pull requests:**
+
+- v2.18.0 release prep [\#3328](https://github.com/harness/drone/pull/3328) ([tphoney](https://github.com/tphoney))
 
 ## [v2.17.0](https://github.com/harness/drone/tree/v2.17.0) (2023-04-25)
 
