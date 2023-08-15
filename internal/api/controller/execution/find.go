@@ -46,8 +46,6 @@ func (c *Controller) Find(
 		return nil, fmt.Errorf("could not query stage information: %w", err)
 	}
 
-	fmt.Printf("stages: %+v", stages)
-
 	// Add stages information to the execution
 	execution.Stages = stages
 

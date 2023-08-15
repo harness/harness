@@ -13,11 +13,11 @@ type Stage struct {
 	Type        string            `json:"type,omitempty"`
 	Status      string            `json:"status"`
 	Error       string            `json:"error,omitempty"`
-	ErrIgnore   bool              `json:"errignore"`
+	ErrIgnore   bool              `json:"errignore,omitempty"`
 	ExitCode    int               `json:"exit_code"`
 	Machine     string            `json:"machine,omitempty"`
-	OS          string            `json:"os"`
-	Arch        string            `json:"arch"`
+	OS          string            `json:"os,omitempty"`
+	Arch        string            `json:"arch,omitempty"`
 	Variant     string            `json:"variant,omitempty"`
 	Kernel      string            `json:"kernel,omitempty"`
 	Limit       int               `json:"limit,omitempty"`
@@ -27,9 +27,9 @@ type Stage struct {
 	Created     int64             `json:"-"`
 	Updated     int64             `json:"-"`
 	Version     int64             `json:"-"`
-	OnSuccess   bool              `json:"on_success,omitempty"`
-	OnFailure   bool              `json:"on_failure,omitempty"`
-	DependsOn   []string          `json:"depends_on,omitempty"`
+	OnSuccess   bool              `json:"on_success"`
+	OnFailure   bool              `json:"on_failure"`
+	DependsOn   []string          `json:"depends_on"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Steps       []*Step           `json:"steps,omitempty"`
 }

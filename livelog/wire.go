@@ -15,8 +15,7 @@ var WireSet = wire.NewSet(
 	ProvideLogStream,
 )
 
-// ProvideLogStream provides an implementation of a logs streamer
-// TODO: Implement Redis backend once implemented and add the check in config
+// ProvideLogStream provides an implementation of a logs streamer.
 func ProvideLogStream(config *types.Config) LogStream {
 	return NewMemory()
 }

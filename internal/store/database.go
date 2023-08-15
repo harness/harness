@@ -514,7 +514,7 @@ type (
 		Update(ctx context.Context, execution *types.Execution) error
 
 		// UpdateOptLock updates the execution using the optimistic locking mechanism.
-		UpdateOptLock(ctx context.Context, exectuion *types.Execution,
+		UpdateOptLock(ctx context.Context, execution *types.Execution,
 			mutateFn func(execution *types.Execution) error) (*types.Execution, error)
 
 		// List lists the executions for a given pipeline ID

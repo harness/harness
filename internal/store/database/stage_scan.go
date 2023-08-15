@@ -7,23 +7,23 @@ package database
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
+
+	sqlxtypes "github.com/jmoiron/sqlx/types"
+	"github.com/pkg/errors"
 
 	"github.com/harness/gitness/types"
-	sqlxtypes "github.com/jmoiron/sqlx/types"
 )
 
 func mapInternalToStage(in *stage) (*types.Stage, error) {
 	var dependsOn []string
 	err := json.Unmarshal(in.DependsOn, &dependsOn)
 	if err != nil {
-		fmt.Println("COULD NOT MAP: ", err)
-		return nil, err
+		return nil, errors.Wrap(err, "could not unmarshal stage.depends_on")
 	}
 	var labels map[string]string
 	err = json.Unmarshal(in.Labels, &labels)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "could not unmarshal stage.labels")
 	}
 	return &types.Stage{
 		ID:          in.ID,

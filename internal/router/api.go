@@ -106,7 +106,8 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator, authn.SourceRouterAPI))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, repoCtrl, executionCtrl, logCtrl, pipelineCtrl, secretCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
+		setupRoutesV1(r, repoCtrl, executionCtrl, logCtrl, pipelineCtrl,
+			secretCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
 			saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
 	})
 

@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS stages (
     ,stage_name        TEXT NOT NULL
     ,stage_status      TEXT NOT NULL
     ,stage_error       TEXT NOT NULL
+    ,stage_parent_group_id INTEGER NOT NULL
     ,stage_errignore   BOOLEAN NOT NULL
     ,stage_exit_code   INTEGER NOT NULL
     ,stage_limit       INTEGER NOT NULL
@@ -162,6 +163,7 @@ CREATE TABLE IF NOT EXISTS steps (
     ,step_name        VARCHAR(100) NOT NULL
     ,step_status      VARCHAR(50) NOT NULL
     ,step_error       VARCHAR(500) NOT NULL
+    ,step_parent_group_id INTEGER NOT NULL
     ,step_errignore   BOOLEAN NOT NULL
     ,step_exit_code   INTEGER NOT NULL
     ,step_started     INTEGER NOT NULL
@@ -295,11 +297,12 @@ INSERT INTO executions (
 );
 
 -- Insert some stages
-INSERT INTO stages (stage_id, stage_execution_id, stage_number, stage_kind, stage_type, stage_name, stage_status, stage_error, stage_errignore, stage_exit_code, stage_limit, stage_os, stage_arch, stage_variant, stage_kernel, stage_machine, stage_started, stage_stopped, stage_created, stage_updated, stage_version, stage_on_success, stage_on_failure, stage_depends_on, stage_labels, stage_limit_repo)
+INSERT INTO stages (stage_id, stage_execution_id, stage_number, stage_parent_group_id, stage_kind, stage_type, stage_name, stage_status, stage_error, stage_errignore, stage_exit_code, stage_limit, stage_os, stage_arch, stage_variant, stage_kernel, stage_machine, stage_started, stage_stopped, stage_created, stage_updated, stage_version, stage_on_success, stage_on_failure, stage_depends_on, stage_labels, stage_limit_repo)
 VALUES (
     1,                        -- stage_id
     1,                        -- stage_execution_id
     1,                        -- stage_number
+    0,                        -- stage_parent_group_id
     'build',                  -- stage_kind
     'docker',                 -- stage_type
     'Build Stage',            -- stage_name
@@ -320,17 +323,18 @@ VALUES (
     1,                        -- stage_version
     1,                        -- stage_on_success
     0,                        -- stage_on_failure
-    '[]',                       -- stage_depends_on
+    '["1"]',                       -- stage_depends_on
     '{}',          -- stage_labels
     1                         -- stage_limit_repo
 );
 
 -- Sample 2
-INSERT INTO stages (stage_id, stage_execution_id, stage_number, stage_kind, stage_type, stage_name, stage_status, stage_error, stage_errignore, stage_exit_code, stage_limit, stage_os, stage_arch, stage_variant, stage_kernel, stage_machine, stage_started, stage_stopped, stage_created, stage_updated, stage_version, stage_on_success, stage_on_failure, stage_depends_on, stage_labels, stage_limit_repo)
+INSERT INTO stages (stage_id, stage_execution_id, stage_number, stage_parent_group_id, stage_kind, stage_type, stage_name, stage_status, stage_error, stage_errignore, stage_exit_code, stage_limit, stage_os, stage_arch, stage_variant, stage_kernel, stage_machine, stage_started, stage_stopped, stage_created, stage_updated, stage_version, stage_on_success, stage_on_failure, stage_depends_on, stage_labels, stage_limit_repo)
 VALUES (
     2,                        -- stage_id
     1,                        -- stage_execution_id
     2,                        -- stage_number
+    0,                        -- stage_parent_group_id
     'test',                   -- stage_kind
     'pytest',                 -- stage_type
     'Test Stage',             -- stage_name
@@ -351,16 +355,17 @@ VALUES (
     1,                        -- stage_version
     1,                        -- stage_on_success
     1,                        -- stage_on_failure
-    '[1]',                      -- stage_depends_on (referring to the first stage)
+    '["1"]',                      -- stage_depends_on (referring to the first stage)
     '{}',          -- stage_labels
     0                         -- stage_limit_repo (using default value)
 );
 
-INSERT INTO steps (step_id, step_stage_id, step_number, step_name, step_status, step_error, step_errignore, step_exit_code, step_started, step_stopped, step_version, step_depends_on, step_image, step_detached, step_schema)
+INSERT INTO steps (step_id, step_stage_id, step_number, step_parent_group_id, step_name, step_status, step_error, step_errignore, step_exit_code, step_started, step_stopped, step_version, step_depends_on, step_image, step_detached, step_schema)
 VALUES (
     1,                    -- step_id
     1,                    -- step_stage_id
     1,                    -- step_number
+    0,                    -- step_parent_group_id
     'stage1step1',        -- step_name
     'Pending',            -- step_status
     '',                   -- step_error
@@ -369,17 +374,18 @@ VALUES (
     0,                    -- step_started
     0,                    -- step_stopped
     1,                    -- step_version
-    '[]',                   -- step_depends_on
+    '["1"]',              -- step_depends_on
     'sample_image',       -- step_image
     0,                    -- step_detached
     'sample_schema'       -- step_schema
 );
 
-INSERT INTO steps (step_id, step_stage_id, step_number, step_name, step_status, step_error, step_errignore, step_exit_code, step_started, step_stopped, step_version, step_depends_on, step_image, step_detached, step_schema)
+INSERT INTO steps (step_id, step_stage_id, step_number, step_parent_group_id, step_name, step_status, step_error, step_errignore, step_exit_code, step_started, step_stopped, step_version, step_depends_on, step_image, step_detached, step_schema)
 VALUES (
     2,                    -- step_id
     1,                    -- step_stage_id
     2,                    -- step_number
+    0,                    -- step_parent_group_id
     'stage1step2',        -- step_name
     'Success',            -- step_status
     '',                   -- step_error
@@ -388,17 +394,18 @@ VALUES (
     0,                    -- step_started
     0,                    -- step_stopped
     1,                    -- step_version
-    '[]',                   -- step_depends_on
+    '["1"]',                   -- step_depends_on
     'sample_image',       -- step_image
     0,                    -- step_detached
     'sample_schema'       -- step_schema
 );
 
-INSERT INTO steps (step_id, step_stage_id, step_number, step_name, step_status, step_error, step_errignore, step_exit_code, step_started, step_stopped, step_version, step_depends_on, step_image, step_detached, step_schema)
+INSERT INTO steps (step_id, step_stage_id, step_number, step_parent_group_id, step_name, step_status, step_error, step_errignore, step_exit_code, step_started, step_stopped, step_version, step_depends_on, step_image, step_detached, step_schema)
 VALUES (
     3,                    -- step_id
     2,                    -- step_stage_id
     1,                    -- step_number
+    0,                    -- step_parent_group_id
     'stage2step1',        -- step_name
     'Success',            -- step_status
     '',                   -- step_error
@@ -407,17 +414,18 @@ VALUES (
     0,                    -- step_started
     0,                    -- step_stopped
     1,                    -- step_version
-    '[]',                   -- step_depends_on
+    '["1"]',                   -- step_depends_on
     'sample_image',       -- step_image
     0,                    -- step_detached
     'sample_schema'       -- step_schema
 );
 
-INSERT INTO steps (step_id, step_stage_id, step_number, step_name, step_status, step_error, step_errignore, step_exit_code, step_started, step_stopped, step_version, step_depends_on, step_image, step_detached, step_schema)
+INSERT INTO steps (step_id, step_stage_id, step_number, step_parent_group_id, step_name, step_status, step_error, step_errignore, step_exit_code, step_started, step_stopped, step_version, step_depends_on, step_image, step_detached, step_schema)
 VALUES (
     4,                    -- step_id
     2,                    -- step_stage_id
     2,                    -- step_number
+    0,                    -- step_parent_group_id
     'stage2step2',        -- step_name
     'Success',            -- step_status
     '',                   -- step_error
@@ -426,7 +434,7 @@ VALUES (
     0,                    -- step_started
     0,                    -- step_stopped
     1,                    -- step_version
-    '[]',                   -- step_depends_on
+    '["1"]',                   -- step_depends_on
     'sample_image',       -- step_image
     0,                    -- step_detached
     'sample_schema'       -- step_schema

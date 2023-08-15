@@ -7,13 +7,13 @@ package database
 import (
 	"context"
 
+	"github.com/jmoiron/sqlx"
+	sqlxtypes "github.com/jmoiron/sqlx/types"
+
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
-
-	"github.com/jmoiron/sqlx"
-	sqlxtypes "github.com/jmoiron/sqlx/types"
 )
 
 var _ store.StageStore = (*stageStore)(nil)
@@ -104,7 +104,7 @@ func (s *stageStore) FindNumber(ctx context.Context, executionID int64, stageNum
 	return mapInternalToStage(dst)
 }
 
-// ListSteps returns a stage with information about all its containing steps
+// ListSteps returns a stage with information about all its containing steps.
 func (s *stageStore) ListSteps(ctx context.Context, executionID int64) ([]*types.Stage, error) {
 	const queryNumberWithSteps = `
 	SELECT` + stageColumns + "," + stepColumns + `
@@ -142,7 +142,8 @@ func (s *stageStore) Find(ctx context.Context, stageID int64) (*types.Stage, err
 }
 
 // ListIncomplete returns a list of stages with a pending status
-// TODO: Check whether mysql needs a separate syntax ref: https://github.com/harness/drone/blob/master/store/stage/stage.go#L110
+// TODO: Check whether mysql needs a separate syntax
+// ref: https://github.com/harness/drone/blob/master/store/stage/stage.go#L110.
 func (s *stageStore) ListIncomplete(ctx context.Context) ([]*types.Stage, error) {
 	const queryListIncomplete = `
 	SELECT` + stageColumns + `

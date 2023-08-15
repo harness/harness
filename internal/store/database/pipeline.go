@@ -71,8 +71,6 @@ func (s *pipelineStore) Find(ctx context.Context, id int64) (*types.Pipeline, er
 
 // FindByUID returns a pipeline in a given space with a given UID.
 func (s *pipelineStore) FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Pipeline, error) {
-	fmt.Println("space id: ", spaceID)
-	fmt.Println("uid: ", uid)
 	const findQueryStmt = pipelineQueryBase + `
 		WHERE pipeline_space_id = $1 AND pipeline_uid = $2`
 	db := dbtx.GetAccessor(ctx, s.db)

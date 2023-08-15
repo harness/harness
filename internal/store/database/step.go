@@ -7,23 +7,18 @@ package database
 import (
 	"context"
 
+	"github.com/jmoiron/sqlx"
+	sqlxtypes "github.com/jmoiron/sqlx/types"
+
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
-
-	"github.com/jmoiron/sqlx"
-	sqlxtypes "github.com/jmoiron/sqlx/types"
 )
 
 var _ store.StepStore = (*stepStore)(nil)
 
 const (
-	stepQueryBase = `
-		SELECT` +
-		stepColumns + `
-		FROM steps`
-
 	stepColumns = `
 	step_id
 	,step_stage_id

@@ -5,15 +5,18 @@
 package database
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/harness/gitness/types"
 )
 
 func mapInternalToStep(in *step) (*types.Step, error) {
 	var dependsOn []string
-	in.DependsOn.Unmarshal(&dependsOn)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("could not unmarshal stage.DependsOn: %w", err)
-	// }
+	err := json.Unmarshal(in.DependsOn, &dependsOn)
+	if err != nil {
+		return nil, fmt.Errorf("could not unmarshal step.DependsOn: %w", err)
+	}
 	return &types.Step{
 		ID:        in.ID,
 		StageID:   in.StageID,

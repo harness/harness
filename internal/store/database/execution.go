@@ -129,7 +129,6 @@ func (s *executionStore) Find(ctx context.Context, pipelineID int64, executionNu
 
 // Create creates a new execution in the datastore.
 func (s *executionStore) Create(ctx context.Context, execution *types.Execution) error {
-	fmt.Println("num: ", execution.Number)
 	const executionInsertStmt = `
 	INSERT INTO executions (
 		execution_pipeline_id
@@ -210,7 +209,6 @@ func (s *executionStore) Create(ctx context.Context, execution *types.Execution)
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&execution.ID); err != nil {
-		fmt.Println("err: ", err)
 		return database.ProcessSQLErrorf(err, "Execution query failed")
 	}
 
