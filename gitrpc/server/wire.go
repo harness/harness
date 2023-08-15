@@ -34,13 +34,17 @@ func ProvideLastCommitCache(
 	redisClient redis.UniversalClient,
 	repoCache cache.Cache[string, *gitea.RepoEntryValue],
 ) cache.Cache[gitea.CommitEntryKey, *types.Commit] {
-	cacheDuration := time.Duration(config.LastCommitCacheSeconds) * time.Second
+	cacheDuration := time.Duration(config.LastCommitCache.DurationSeconds) * time.Second
 
-	if redisClient == nil {
-		return gitea.NewInMemoryLastCommitCache(cacheDuration, repoCache)
+	if config.LastCommitCache.Mode == ModeNone || cacheDuration < time.Second {
+		return gitea.NoLastCommitCache(repoCache)
 	}
 
-	return gitea.NewRedisLastCommitCache(redisClient, cacheDuration, repoCache)
+	if config.LastCommitCache.Mode == ModeRedis && redisClient != nil {
+		return gitea.NewRedisLastCommitCache(redisClient, cacheDuration, repoCache)
+	}
+
+	return gitea.NewInMemoryLastCommitCache(cacheDuration, repoCache)
 }
 
 func ProvideGITAdapter(
