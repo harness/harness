@@ -32,11 +32,11 @@ var refnameDisposition = [256]byte{
 }
 
 func BranchName(branch string) error {
-	lock := ".lock"
-	last := '\x00'
+	const lock = ".lock"
+	last := byte('\x00')
 
-	for i, c := range branch {
-		ch := c & 255
+	for i := 0; i < len(branch); i++ {
+		ch := branch[i] & 255
 		disp := refnameDisposition[ch]
 
 		switch disp {
@@ -80,7 +80,7 @@ out:
 		return fmt.Errorf("branch '%s' cannot start with '.'", branch)
 	}
 	if strings.HasSuffix(branch, lock) {
-		return fmt.Errorf("branch '%s' cannot ends with '%s'", branch, lock)
+		return fmt.Errorf("branch '%s' cannot end with '%s'", branch, lock)
 	}
 	return nil
 }

@@ -30,6 +30,13 @@ func TestBranchName(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "happy path, test utf-8 chars",
+			args: args{
+				branch: "eb/new\u2318branch",
+			},
+			wantErr: false,
+		},
+		{
 			name: "branch name empty should return error",
 			args: args{
 				branch: "",

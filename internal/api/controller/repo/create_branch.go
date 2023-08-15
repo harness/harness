@@ -9,9 +9,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
-	"github.com/harness/gitness/gitrpc/check"
 	apiauth "github.com/harness/gitness/internal/api/auth"
-	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types/enum"
 )
@@ -40,11 +38,6 @@ func (c *Controller) CreateBranch(ctx context.Context, session *auth.Session,
 	// set target to default branch in case no target was provided
 	if in.Target == "" {
 		in.Target = repo.DefaultBranch
-	}
-
-	err = check.BranchName(in.Name)
-	if err != nil {
-		return nil, usererror.BadRequest(err.Error())
 	}
 
 	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)

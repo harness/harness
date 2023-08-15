@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/harness/gitness/gitrpc/check"
 	"github.com/harness/gitness/gitrpc/rpc"
 
 	"github.com/rs/zerolog/log"
@@ -75,6 +76,11 @@ func (c *Client) CreateBranch(ctx context.Context, params *CreateBranchParams) (
 	if params == nil {
 		return nil, ErrNoParamsProvided
 	}
+
+	if err := check.BranchName(params.BranchName); err != nil {
+		return nil, ErrInvalidArgumentf(err.Error())
+	}
+
 	resp, err := c.refService.CreateBranch(ctx, &rpc.CreateBranchRequest{
 		Base:       mapToRPCWriteRequest(params.WriteParams),
 		Target:     params.Target,
