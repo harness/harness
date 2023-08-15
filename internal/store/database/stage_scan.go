@@ -15,10 +15,16 @@ import (
 
 func mapInternalToStage(in *stage) (*types.Stage, error) {
 	var dependsOn []string
-	fmt.Println("in.DependsOn: ", in.DependsOn)
-	json.Unmarshal(in.DependsOn, &dependsOn)
+	err := json.Unmarshal(in.DependsOn, &dependsOn)
+	if err != nil {
+		fmt.Println("COULD NOT MAP: ", err)
+		return nil, err
+	}
 	var labels map[string]string
-	json.Unmarshal(in.Labels, &labels)
+	err = json.Unmarshal(in.Labels, &labels)
+	if err != nil {
+		return nil, err
+	}
 	return &types.Stage{
 		ID:          in.ID,
 		ExecutionID: in.ExecutionID,
@@ -80,9 +86,20 @@ func mapStageToInternal(in *types.Stage) *stage {
 	}
 }
 
+func mapInternalToStageList(in []*stage) ([]*types.Stage, error) {
+	stages := make([]*types.Stage, len(in))
+	for i, k := range in {
+		s, err := mapInternalToStage(k)
+		if err != nil {
+			return nil, err
+		}
+		stages[i] = s
+	}
+	return stages, nil
+}
+
 // helper function scans the sql.Row and copies the column
 // values to the destination object.
-// TODO: Use a nullstep instead to make sure values are not null
 func scanRowsWithSteps(rows *sql.Rows) ([]*types.Stage, error) {
 	defer rows.Close()
 

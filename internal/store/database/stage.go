@@ -6,7 +6,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/store/database"
@@ -117,20 +116,46 @@ func (s *stageStore) ListSteps(ctx context.Context, executionID int64) ([]*types
 	stage_id ASC
 	,step_id ASC
 	`
-	fmt.Println(queryNumberWithSteps)
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := []*types.Stage{}
 	rows, err := db.QueryContext(ctx, queryNumberWithSteps, executionID)
 	if err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to query stages and steps")
 	}
-	stages, err := scanRowsWithSteps(rows)
-	if err != nil {
+	return scanRowsWithSteps(rows)
+}
+
+// Find returns a stage given the stage ID
+func (s *stageStore) Find(ctx context.Context, stageID int64) (*types.Stage, error) {
+	const queryFind = `
+	SELECT` + stageColumns + `
+	FROM stages
+	WHERE stage_id = $1
+	`
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := new(stage)
+	if err := db.GetContext(ctx, dst, queryFind, stageID); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find stage")
 	}
-	for _, k := range dst {
-		fmt.Printf("stage is: %+v", k)
+	return mapInternalToStage(dst)
+}
+
+// ListIncomplete returns a list of stages with a pending status
+// TODO: Check whether mysql needs a separate syntax ref: https://github.com/harness/drone/blob/master/store/stage/stage.go#L110
+func (s *stageStore) ListIncomplete(ctx context.Context) ([]*types.Stage, error) {
+	const queryListIncomplete = `
+	SELECT` + stageColumns + `
+	FROM stages
+	WHERE stage_status IN ('pending','running')
+	ORDER BY stage_id ASC
+	`
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*stage{}
+	if err := db.GetContext(ctx, dst, queryListIncomplete); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed to find stage")
 	}
-	return stages, nil
+	// map stages list
+	return mapInternalToStageList(dst)
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/harness/gitness/types"
 
 	"github.com/jmoiron/sqlx"
+	sqlxtypes "github.com/jmoiron/sqlx/types"
 	"github.com/pkg/errors"
 )
 
@@ -34,41 +35,41 @@ type executionStore struct {
 
 // exection represents an execution object stored in the database
 type execution struct {
-	ID           int64  `db:"execution_id"`
-	PipelineID   int64  `db:"execution_pipeline_id"`
-	RepoID       int64  `db:"execution_repo_id"`
-	Trigger      string `db:"execution_trigger"`
-	Number       int64  `db:"execution_number"`
-	Parent       int64  `db:"execution_parent"`
-	Status       string `db:"execution_status"`
-	Error        string `db:"execution_error"`
-	Event        string `db:"execution_event"`
-	Action       string `db:"execution_action"`
-	Link         string `db:"execution_link"`
-	Timestamp    int64  `db:"execution_timestamp"`
-	Title        string `db:"execution_title"`
-	Message      string `db:"execution_message"`
-	Before       string `db:"execution_before"`
-	After        string `db:"execution_after"`
-	Ref          string `db:"execution_ref"`
-	Fork         string `db:"execution_source_repo"`
-	Source       string `db:"execution_source"`
-	Target       string `db:"execution_target"`
-	Author       string `db:"execution_author"`
-	AuthorName   string `db:"execution_author_name"`
-	AuthorEmail  string `db:"execution_author_email"`
-	AuthorAvatar string `db:"execution_author_avatar"`
-	Sender       string `db:"execution_sender"`
-	Params       string `db:"execution_params"`
-	Cron         string `db:"execution_cron"`
-	Deploy       string `db:"execution_deploy"`
-	DeployID     int64  `db:"execution_deploy_id"`
-	Debug        bool   `db:"execution_debug"`
-	Started      int64  `db:"execution_started"`
-	Finished     int64  `db:"execution_finished"`
-	Created      int64  `db:"execution_created"`
-	Updated      int64  `db:"execution_updated"`
-	Version      int64  `db:"execution_version"`
+	ID           int64              `db:"execution_id"`
+	PipelineID   int64              `db:"execution_pipeline_id"`
+	RepoID       int64              `db:"execution_repo_id"`
+	Trigger      string             `db:"execution_trigger"`
+	Number       int64              `db:"execution_number"`
+	Parent       int64              `db:"execution_parent"`
+	Status       string             `db:"execution_status"`
+	Error        string             `db:"execution_error"`
+	Event        string             `db:"execution_event"`
+	Action       string             `db:"execution_action"`
+	Link         string             `db:"execution_link"`
+	Timestamp    int64              `db:"execution_timestamp"`
+	Title        string             `db:"execution_title"`
+	Message      string             `db:"execution_message"`
+	Before       string             `db:"execution_before"`
+	After        string             `db:"execution_after"`
+	Ref          string             `db:"execution_ref"`
+	Fork         string             `db:"execution_source_repo"`
+	Source       string             `db:"execution_source"`
+	Target       string             `db:"execution_target"`
+	Author       string             `db:"execution_author"`
+	AuthorName   string             `db:"execution_author_name"`
+	AuthorEmail  string             `db:"execution_author_email"`
+	AuthorAvatar string             `db:"execution_author_avatar"`
+	Sender       string             `db:"execution_sender"`
+	Params       sqlxtypes.JSONText `db:"execution_params"`
+	Cron         string             `db:"execution_cron"`
+	Deploy       string             `db:"execution_deploy"`
+	DeployID     int64              `db:"execution_deploy_id"`
+	Debug        bool               `db:"execution_debug"`
+	Started      int64              `db:"execution_started"`
+	Finished     int64              `db:"execution_finished"`
+	Created      int64              `db:"execution_created"`
+	Updated      int64              `db:"execution_updated"`
+	Version      int64              `db:"execution_version"`
 }
 
 const (
@@ -119,15 +120,16 @@ func (s *executionStore) Find(ctx context.Context, pipelineID int64, executionNu
 	WHERE execution_pipeline_id = $1 AND execution_number = $2`
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := new(types.Execution)
+	dst := new(execution)
 	if err := db.GetContext(ctx, dst, findQueryStmt, pipelineID, executionNum); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find execution")
 	}
-	return dst, nil
+	return mapInternalToExecution(dst)
 }
 
 // Create creates a new execution in the datastore.
 func (s *executionStore) Create(ctx context.Context, execution *types.Execution) error {
+	fmt.Println("num: ", execution.Number)
 	const executionInsertStmt = `
 	INSERT INTO executions (
 		execution_pipeline_id
@@ -202,12 +204,13 @@ func (s *executionStore) Create(ctx context.Context, execution *types.Execution)
 	) RETURNING execution_id`
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	query, arg, err := db.BindNamed(executionInsertStmt, execution)
+	query, arg, err := db.BindNamed(executionInsertStmt, mapExecutionToInternal(execution))
 	if err != nil {
 		return database.ProcessSQLErrorf(err, "Failed to bind execution object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&execution.ID); err != nil {
+		fmt.Println("err: ", err)
 		return database.ProcessSQLErrorf(err, "Execution query failed")
 	}
 
@@ -219,7 +222,7 @@ func (s *executionStore) Update(ctx context.Context, e *types.Execution) error {
 	const executionUpdateStmt = `
 	UPDATE executions
 	SET
-		,execution_status = :execution_status
+		execution_status = :execution_status
 		,execution_error = :execution_error
 		,execution_event = :execution_event
 		,execution_started = :execution_started
@@ -229,7 +232,7 @@ func (s *executionStore) Update(ctx context.Context, e *types.Execution) error {
 	WHERE execution_id = :execution_id AND execution_version = :execution_version - 1`
 	updatedAt := time.Now()
 
-	execution := *e
+	execution := mapExecutionToInternal(e)
 
 	execution.Version++
 	execution.Updated = updatedAt.UnixMilli()
@@ -255,6 +258,11 @@ func (s *executionStore) Update(ctx context.Context, e *types.Execution) error {
 		return gitness_store.ErrVersionConflict
 	}
 
+	m, err := mapInternalToExecution(execution)
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "Could not map execution object")
+	}
+	*e = *m
 	e.Version = execution.Version
 	e.Updated = execution.Updated
 	return nil
@@ -308,12 +316,12 @@ func (s *executionStore) List(
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := []*types.Execution{}
+	dst := []*execution{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}
 
-	return dst, nil
+	return mapInternalToExecutionList(dst)
 }
 
 // Count of executions in a space.
