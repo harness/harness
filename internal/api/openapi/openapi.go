@@ -35,6 +35,7 @@ func Generate() *openapi3.Spec {
 	// register endpoints
 	//
 
+	buildSystem(&reflector)
 	buildAccount(&reflector)
 	buildUser(&reflector)
 	buildAdmin(&reflector)

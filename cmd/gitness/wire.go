@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	"github.com/harness/gitness/internal/api/controller/system"
 
 	cliserver "github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
@@ -73,6 +74,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		user.WireSet,
 		service.WireSet,
 		principal.WireSet,
+		system.WireSet,
 		authn.WireSet,
 		authz.WireSet,
 		gitevents.WireSet,

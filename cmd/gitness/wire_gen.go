@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
+	"github.com/harness/gitness/internal/api/controller/system"
 	"github.com/harness/gitness/internal/api/controller/user"
 	webhook2 "github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/auth/authn"
@@ -113,11 +114,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	system, err := events.ProvideSystem(eventsConfig, universalClient)
+	eventsSystem, err := events.ProvideSystem(eventsConfig, universalClient)
 	if err != nil {
 		return nil, err
 	}
-	reporter, err := events2.ProvideReporter(system)
+	reporter, err := events2.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -131,11 +132,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
-	readerFactory, err := events3.ProvideReaderFactory(system)
+	readerFactory, err := events3.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
-	eventsReaderFactory, err := events2.ProvideReaderFactory(system)
+	eventsReaderFactory, err := events2.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +145,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	webhookController := webhook2.ProvideController(webhookConfig, db, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService)
-	eventsReporter, err := events3.ProvideReporter(system)
+	eventsReporter, err := events3.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +154,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	principalController := principal.ProvideController(principalStore)
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	checkController := check2.ProvideController(db, authorizer, repoStore, checkStore, gitrpcInterface)
-	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, spaceController, pipelineController, secretController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController)
+	systemController := system.NewController(principalStore, config)
+	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, spaceController, pipelineController, secretController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController)
 	gitHandler := router.ProvideGitHandler(config, provider, repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(config, apiHandler, gitHandler, webHandler)

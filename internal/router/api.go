@@ -19,6 +19,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/secret"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
+	"github.com/harness/gitness/internal/api/controller/system"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/api/handler/account"
@@ -33,7 +34,7 @@ import (
 	handlersecret "github.com/harness/gitness/internal/api/handler/secret"
 	handlerserviceaccount "github.com/harness/gitness/internal/api/handler/serviceaccount"
 	handlerspace "github.com/harness/gitness/internal/api/handler/space"
-	"github.com/harness/gitness/internal/api/handler/system"
+	handlersystem "github.com/harness/gitness/internal/api/handler/system"
 	handleruser "github.com/harness/gitness/internal/api/handler/user"
 	"github.com/harness/gitness/internal/api/handler/users"
 	handlerwebhook "github.com/harness/gitness/internal/api/handler/webhook"
@@ -53,7 +54,7 @@ import (
 	"github.com/rs/zerolog/hlog"
 )
 
-// APIHandler is an abstraction of an http handler that handles API calls.
+// APIHandler is an abstraction of a http handler that handles API calls.
 type APIHandler interface {
 	http.Handler
 }
@@ -79,6 +80,7 @@ func NewAPIHandler(
 	userCtrl *user.Controller,
 	principalCtrl principal.Controller,
 	checkCtrl *check.Controller,
+	sysCtrl *system.Controller,
 ) APIHandler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
@@ -102,7 +104,7 @@ func NewAPIHandler(
 
 	r.Route("/v1", func(r chi.Router) {
 		setupRoutesV1(r, repoCtrl, executionCtrl, pipelineCtrl, secretCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
-			saCtrl, userCtrl, principalCtrl, checkCtrl)
+			saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -135,6 +137,7 @@ func setupRoutesV1(r chi.Router,
 	userCtrl *user.Controller,
 	principalCtrl principal.Controller,
 	checkCtrl *check.Controller,
+	sysCtrl *system.Controller,
 ) {
 	setupSpaces(r, spaceCtrl)
 	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl, checkCtrl)
@@ -145,8 +148,8 @@ func setupRoutesV1(r chi.Router,
 	setupPrincipals(r, principalCtrl)
 	setupInternal(r, githookCtrl)
 	setupAdmin(r, userCtrl)
-	setupAccount(r, userCtrl)
-	setupSystem(r)
+	setupAccount(r, userCtrl, sysCtrl)
+	setupSystem(r, sysCtrl)
 	setupResources(r)
 }
 
@@ -458,10 +461,11 @@ func setupServiceAccounts(r chi.Router, saCtrl *serviceaccount.Controller) {
 	})
 }
 
-func setupSystem(r chi.Router) {
+func setupSystem(r chi.Router, sysCtrl *system.Controller) {
 	r.Route("/system", func(r chi.Router) {
-		r.Get("/health", system.HandleHealth)
-		r.Get("/version", system.HandleVersion)
+		r.Get("/health", handlersystem.HandleHealth)
+		r.Get("/version", handlersystem.HandleVersion)
+		r.Get("/config", handlersystem.HandleGetConfig(sysCtrl))
 	})
 }
 
@@ -495,8 +499,8 @@ func setupAdmin(r chi.Router, userCtrl *user.Controller) {
 	})
 }
 
-func setupAccount(r chi.Router, userCtrl *user.Controller) {
+func setupAccount(r chi.Router, userCtrl *user.Controller, sysCtrl *system.Controller) {
 	r.Post("/login", account.HandleLogin(userCtrl))
-	r.Post("/register", account.HandleRegister(userCtrl))
+	r.Post("/register", account.HandleRegister(userCtrl, sysCtrl))
 	r.Post("/logout", account.HandleLogout(userCtrl))
 }
