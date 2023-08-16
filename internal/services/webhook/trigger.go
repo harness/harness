@@ -221,10 +221,12 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 	var resp *http.Response
 	if webhook.Internal {
 		resp, err = s.secureHTTPClientInternal.Do(req)
-	} else if webhook.Insecure {
-		resp, err = s.insecureHTTPClient.Do(req)
 	} else {
-		resp, err = s.secureHTTPClient.Do(req)
+		if webhook.Insecure {
+			resp, err = s.insecureHTTPClient.Do(req)
+		} else {
+			resp, err = s.secureHTTPClient.Do(req)
+		}
 	}
 
 	// always close the body!

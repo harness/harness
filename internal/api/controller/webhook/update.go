@@ -21,7 +21,6 @@ type UpdateInput struct {
 	Enabled     *bool                 `json:"enabled"`
 	Insecure    *bool                 `json:"insecure"`
 	Triggers    []enum.WebhookTrigger `json:"triggers"`
-	Internal    *bool                 `json:"internal"`
 }
 
 // Update updates an existing webhook.
@@ -44,7 +43,7 @@ func (c *Controller) Update(
 	}
 
 	// validate input
-	if err = checkUpdateInput(in, c.allowLoopback, c.allowPrivateNetwork || *in.Internal); err != nil {
+	if err = checkUpdateInput(in, c.allowLoopback, c.allowPrivateNetwork); err != nil {
 		return nil, err
 	}
 
