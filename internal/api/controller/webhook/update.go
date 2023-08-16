@@ -47,9 +47,6 @@ func (c *Controller) Update(
 		return nil, err
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	// update webhook struct (only for values that are provided)
 	if in.DisplayName != nil {
 		hook.DisplayName = *in.DisplayName
