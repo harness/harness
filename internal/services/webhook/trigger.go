@@ -221,8 +221,8 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 	var resp *http.Response
 	switch {
 	case webhook.Internal && webhook.Insecure:
-		err = errors.New("insecure internal webhook not supported")
-	case webhook.Internal && !webhook.Insecure:
+		resp, err = s.insecureHTTPClientInternal.Do(req)
+	case webhook.Internal:
 		resp, err = s.secureHTTPClientInternal.Do(req)
 	case webhook.Insecure:
 		resp, err = s.insecureHTTPClient.Do(req)

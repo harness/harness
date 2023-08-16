@@ -78,7 +78,8 @@ type Service struct {
 	secureHTTPClient   *http.Client
 	insecureHTTPClient *http.Client
 
-	secureHTTPClientInternal *http.Client
+	secureHTTPClientInternal   *http.Client
+	insecureHTTPClientInternal *http.Client
 
 	config Config
 }
@@ -101,9 +102,11 @@ func NewService(ctx context.Context, config Config,
 		principalStore:        principalStore,
 		gitRPCClient:          gitRPCClient,
 
-		secureHTTPClient:         newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),
-		insecureHTTPClient:       newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true),
-		secureHTTPClientInternal: newHTTPClient(config.AllowLoopback, true, false),
+		secureHTTPClient:   newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),
+		insecureHTTPClient: newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true),
+
+		secureHTTPClientInternal:   newHTTPClient(config.AllowLoopback, true, false),
+		insecureHTTPClientInternal: newHTTPClient(config.AllowLoopback, true, true),
 
 		config: config,
 	}
