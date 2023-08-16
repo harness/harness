@@ -22,7 +22,6 @@ type CreateInput struct {
 	Enabled     bool                  `json:"enabled"`
 	Insecure    bool                  `json:"insecure"`
 	Triggers    []enum.WebhookTrigger `json:"triggers"`
-	Internal    bool                  `json:"internal"`
 }
 
 // Create creates a new webhook.
@@ -31,6 +30,7 @@ func (c *Controller) Create(
 	session *auth.Session,
 	repoRef string,
 	in *CreateInput,
+	internal bool,
 ) (*types.Webhook, error) {
 	now := time.Now().UnixMilli()
 
@@ -40,7 +40,7 @@ func (c *Controller) Create(
 	}
 
 	// validate input
-	err = checkCreateInput(in, c.allowLoopback, c.allowPrivateNetwork || in.Internal)
+	err = checkCreateInput(in, c.allowLoopback, c.allowPrivateNetwork || internal)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (c *Controller) Create(
 		Updated:    now,
 		ParentID:   repo.ID,
 		ParentType: enum.WebhookParentRepo,
-		Internal:   in.Internal,
+		Internal:   internal,
 
 		// user input
 		DisplayName:           in.DisplayName,
@@ -82,10 +82,8 @@ func checkCreateInput(in *CreateInput, allowLoopback bool, allowPrivateNetwork b
 	if err := check.Description(in.Description); err != nil {
 		return err
 	}
-	if !in.Internal {
-		if err := checkURL(in.URL, allowLoopback, allowPrivateNetwork); err != nil {
-			return err
-		}
+	if err := checkURL(in.URL, allowLoopback, allowPrivateNetwork); err != nil {
+		return err
 	}
 	if err := checkSecret(in.Secret); err != nil {
 		return err
