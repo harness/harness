@@ -98,15 +98,14 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
               />
             </Layout.Horizontal>
           </Container>
-          {standalone ? null : (
-            <Button
-              onClick={() => {
-                setFlag(true)
-              }}
-              variation={ButtonVariation.SECONDARY}>
-              {getString('generateCloneCred')}
-            </Button>
-          )}
+
+          <Button
+            onClick={() => {
+              setFlag(true)
+            }}
+            variation={ButtonVariation.SECONDARY}>
+            {getString('generateCloneCred')}
+          </Button>
         </Layout.Horizontal>
         <Text font={{ variation: FontVariation.BODY, size: 'small' }}>
           <StringSubstitute
