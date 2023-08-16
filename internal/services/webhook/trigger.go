@@ -219,14 +219,15 @@ func (s *Service) executeWebhook(ctx context.Context, webhook *types.Webhook, tr
 
 	// Execute HTTP Request (insecure if requested)
 	var resp *http.Response
-	if webhook.Internal {
+	switch {
+	case webhook.Internal && webhook.Insecure:
+		err = errors.New("insecure internal webhook not supported")
+	case webhook.Internal && !webhook.Insecure:
 		resp, err = s.secureHTTPClientInternal.Do(req)
-	} else {
-		if webhook.Insecure {
-			resp, err = s.insecureHTTPClient.Do(req)
-		} else {
-			resp, err = s.secureHTTPClient.Do(req)
-		}
+	case webhook.Insecure:
+		resp, err = s.insecureHTTPClient.Do(req)
+	default:
+		resp, err = s.secureHTTPClient.Do(req)
 	}
 
 	// always close the body!
