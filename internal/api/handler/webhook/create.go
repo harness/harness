@@ -32,7 +32,7 @@ func HandleCreate(webhookCtrl *webhook.Controller) http.HandlerFunc {
 			return
 		}
 
-		hook, err := webhookCtrl.Create(ctx, session, repoRef, in)
+		hook, err := webhookCtrl.Create(ctx, session, repoRef, in, false)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
