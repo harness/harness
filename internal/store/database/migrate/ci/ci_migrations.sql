@@ -3,7 +3,7 @@ DROP TABLE executions;
 DROP TABLE stages;
 DROP TABLE steps;
 DROP TABLE logs;
-CREATE TABLE IF NOT EXISTS pipelines (
+CREATE TABLE pipelines (
     pipeline_id INTEGER PRIMARY KEY AUTOINCREMENT
     ,pipeline_description TEXT NOT NULL
     ,pipeline_space_id INTEGER NOT NULL
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS pipelines (
         ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS executions (
+CREATE TABLE executions (
     execution_id INTEGER PRIMARY KEY AUTOINCREMENT
     ,execution_pipeline_id INTEGER NOT NULL
     ,execution_repo_id INTEGER NOT NULL
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS executions (
         ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS secrets (
+CREATE TABLE secrets (
     secret_id INTEGER PRIMARY KEY AUTOINCREMENT
     ,secret_uid TEXT NOT NULL
     ,secret_space_id INTEGER NOT NULL
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS secrets (
         ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS stages (
+CREATE TABLE stages (
     stage_id          INTEGER PRIMARY KEY AUTOINCREMENT
     ,stage_execution_id    INTEGER NOT NULL
     ,stage_number      INTEGER NOT NULL
@@ -146,17 +146,13 @@ CREATE TABLE IF NOT EXISTS stages (
         ON DELETE CASCADE
 );
 
--- name: create-index-stages-build
-
-CREATE INDEX IF NOT EXISTS ix_stages_build ON stages (stage_execution_id);
-
 -- name: create-index-stages-status
 
-CREATE INDEX IF NOT EXISTS ix_stage_in_progress ON stages (stage_status)
+CREATE INDEX ix_stage_in_progress ON stages (stage_status)
 WHERE stage_status IN ('pending', 'running');
 
 
-CREATE TABLE IF NOT EXISTS steps (
+CREATE TABLE steps (
     step_id          INTEGER PRIMARY KEY AUTOINCREMENT
     ,step_stage_id    INTEGER NOT NULL
     ,step_number      INTEGER NOT NULL
@@ -185,7 +181,7 @@ CREATE TABLE IF NOT EXISTS steps (
 );
 
 
-CREATE TABLE IF NOT EXISTS logs (
+CREATE TABLE logs (
     log_id INTEGER PRIMARY KEY
     ,log_data BLOB NOT NULL
 

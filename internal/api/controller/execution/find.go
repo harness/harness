@@ -38,12 +38,13 @@ func (c *Controller) Find(
 
 	execution, err := c.executionStore.Find(ctx, pipeline.ID, executionNum)
 	if err != nil {
-		return nil, fmt.Errorf("could not find execution: %w", err)
+		return nil, fmt.Errorf("could not find execution %d: %w", executionNum, err)
 	}
 
-	stages, err := c.stageStore.ListSteps(ctx, execution.ID)
+	stages, err := c.stageStore.ListWithSteps(ctx, execution.ID)
 	if err != nil {
-		return nil, fmt.Errorf("could not query stage information: %w", err)
+		return nil, fmt.Errorf("could not query stage information for execution %d: %w",
+			executionNum, err)
 	}
 
 	// Add stages information to the execution

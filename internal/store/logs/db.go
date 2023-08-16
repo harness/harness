@@ -7,6 +7,7 @@ package logs
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/harness/gitness/internal/store"
@@ -14,7 +15,6 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 var _ store.LogStore = (*logStore)(nil)
@@ -66,7 +66,7 @@ func (s *logStore) Create(ctx context.Context, stepID int64, r io.Reader) error 
 			,:log_data`
 	data, err := io.ReadAll(r)
 	if err != nil {
-		return errors.Wrap(err, "could not read log data")
+		return fmt.Errorf("could not read log data: %w", err)
 	}
 	params := &logs{
 		ID:   stepID,
@@ -80,7 +80,7 @@ func (s *logStore) Create(ctx context.Context, stepID int64, r io.Reader) error 
 		return database.ProcessSQLErrorf(err, "Failed to bind log object")
 	}
 
-	if err = db.QueryRowContext(ctx, query, arg...).Scan(&params.ID); err != nil {
+	if _, err := db.ExecContext(ctx, query, arg...); err != nil {
 		return database.ProcessSQLErrorf(err, "log query failed")
 	}
 
@@ -96,7 +96,7 @@ func (s *logStore) Update(ctx context.Context, stepID int64, r io.Reader) error 
 	WHERE log_id = :log_id`
 	data, err := io.ReadAll(r)
 	if err != nil {
-		return errors.Wrap(err, "could not read log data")
+		return fmt.Errorf("could not read log data: %w", err)
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)

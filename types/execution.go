@@ -38,8 +38,8 @@ type Execution struct {
 	Debug        bool              `json:"debug,omitempty"`
 	Started      int64             `json:"started,omitempty"`
 	Finished     int64             `json:"finished,omitempty"`
-	Created      int64             `json:"-"`
-	Updated      int64             `json:"-"`
+	Created      int64             `json:"created"`
+	Updated      int64             `json:"updated"`
 	Version      int64             `json:"-"`
 	Stages       []*Stage          `json:"stages,omitempty"`
 }

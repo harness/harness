@@ -78,7 +78,7 @@ func mapExecutionToInternal(in *types.Execution) *execution {
 		AuthorEmail:  in.AuthorEmail,
 		AuthorAvatar: in.AuthorAvatar,
 		Sender:       in.Sender,
-		Params:       EncodeToJSON(in.Params),
+		Params:       EncodeToSQLXJSON(in.Params),
 		Cron:         in.Cron,
 		Deploy:       in.Deploy,
 		DeployID:     in.DeployID,

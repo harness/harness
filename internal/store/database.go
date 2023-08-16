@@ -532,19 +532,19 @@ type (
 		// where the stage is incomplete (pending or running).
 		ListIncomplete(ctx context.Context) ([]*types.Stage, error)
 
-		// ListSteps returns a stage list from the datastore corresponding to an execution,
+		// ListWithSteps returns a stage list from the datastore corresponding to an execution,
 		// with the individual steps included.
-		ListSteps(ctx context.Context, executionID int64) ([]*types.Stage, error)
+		ListWithSteps(ctx context.Context, executionID int64) ([]*types.Stage, error)
 
 		// Find returns a build stage from the datastore by ID.
 		Find(ctx context.Context, stageID int64) (*types.Stage, error)
 
-		// FindNumber returns a stage from the datastore by number.
-		FindNumber(ctx context.Context, executionID int64, stageNum int) (*types.Stage, error)
+		// FindByNumber returns a stage from the datastore by number.
+		FindByNumber(ctx context.Context, executionID int64, stageNum int) (*types.Stage, error)
 	}
 
 	StepStore interface {
-		// FindNumber returns a step from the datastore by number.
-		FindNumber(ctx context.Context, stageID int64, stepNum int) (*types.Step, error)
+		// FindByNumber returns a step from the datastore by number.
+		FindByNumber(ctx context.Context, stageID int64, stepNum int) (*types.Step, error)
 	}
 )

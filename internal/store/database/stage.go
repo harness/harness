@@ -89,8 +89,8 @@ type stageStore struct {
 	db *sqlx.DB
 }
 
-// FindNumbers returns a stage given an execution ID and a stage number.
-func (s *stageStore) FindNumber(ctx context.Context, executionID int64, stageNum int) (*types.Stage, error) {
+// FindByNumber returns a stage given an execution ID and a stage number.
+func (s *stageStore) FindByNumber(ctx context.Context, executionID int64, stageNum int) (*types.Stage, error) {
 	const findQueryStmt = `
 		SELECT` + stageColumns + `
 		FROM stages
@@ -104,8 +104,8 @@ func (s *stageStore) FindNumber(ctx context.Context, executionID int64, stageNum
 	return mapInternalToStage(dst)
 }
 
-// ListSteps returns a stage with information about all its containing steps.
-func (s *stageStore) ListSteps(ctx context.Context, executionID int64) ([]*types.Stage, error) {
+// ListWithSteps returns a stage with information about all its containing steps.
+func (s *stageStore) ListWithSteps(ctx context.Context, executionID int64) ([]*types.Stage, error) {
 	const queryNumberWithSteps = `
 	SELECT` + stageColumns + "," + stepColumns + `
 	FROM stages
@@ -142,8 +142,6 @@ func (s *stageStore) Find(ctx context.Context, stageID int64) (*types.Stage, err
 }
 
 // ListIncomplete returns a list of stages with a pending status
-// TODO: Check whether mysql needs a separate syntax
-// ref: https://github.com/harness/drone/blob/master/store/stage/stage.go#L110.
 func (s *stageStore) ListIncomplete(ctx context.Context) ([]*types.Stage, error) {
 	const queryListIncomplete = `
 	SELECT` + stageColumns + `
@@ -155,7 +153,7 @@ func (s *stageStore) ListIncomplete(ctx context.Context) ([]*types.Stage, error)
 
 	dst := []*stage{}
 	if err := db.GetContext(ctx, dst, queryListIncomplete); err != nil {
-		return nil, database.ProcessSQLErrorf(err, "Failed to find stage")
+		return nil, database.ProcessSQLErrorf(err, "Failed to find incomplete stages")
 	}
 	// map stages list
 	return mapInternalToStageList(dst)

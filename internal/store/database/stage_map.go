@@ -81,8 +81,8 @@ func mapStageToInternal(in *types.Stage) *stage {
 		Version:     in.Version,
 		OnSuccess:   in.OnSuccess,
 		OnFailure:   in.OnFailure,
-		DependsOn:   EncodeToJSON(in.DependsOn),
-		Labels:      EncodeToJSON(in.Labels),
+		DependsOn:   EncodeToSQLXJSON(in.DependsOn),
+		Labels:      EncodeToSQLXJSON(in.Labels),
 	}
 }
 

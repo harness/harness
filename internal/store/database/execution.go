@@ -258,7 +258,7 @@ func (s *executionStore) Update(ctx context.Context, e *types.Execution) error {
 
 	m, err := mapInternalToExecution(execution)
 	if err != nil {
-		return database.ProcessSQLErrorf(err, "Could not map execution object")
+		return fmt.Errorf("Could not map execution object: %w", err)
 	}
 	*e = *m
 	e.Version = execution.Version

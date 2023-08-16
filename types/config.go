@@ -90,7 +90,7 @@ type Config struct {
 		Expire time.Duration `envconfig:"GITNESS_TOKEN_EXPIRE" default:"720h"`
 	}
 
-	// S3 provides optional storage option for logs
+	// S3 provides optional storage option for logs.
 	S3 struct {
 		Bucket    string `envconfig:"GITNESS_S3_BUCKET"`
 		Prefix    string `envconfig:"GITNESS_S3_PREFIX"`

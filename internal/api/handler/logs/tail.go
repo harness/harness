@@ -15,6 +15,7 @@ import (
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/paths"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -54,6 +55,8 @@ func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 
 		f, ok := w.(http.Flusher)
 		if !ok {
+			log.Error().Msg("http writer type assertion failed")
+			render.InternalError(w)
 			return
 		}
 
@@ -81,12 +84,11 @@ func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 		h.Set("X-Accel-Buffering", "no")
 		h.Set("Access-Control-Allow-Origin", "*")
 
-		ctx, cancel := context.WithCancel(r.Context())
+		ctx, cancel := context.WithTimeout(r.Context(), tailMaxTime)
 		defer cancel()
 
 		enc := json.NewEncoder(w)
 
-		tailMaxTimeTimer := time.After(tailMaxTime)
 		msgDelayTimer := time.NewTimer(pingInterval) // if time b/w messages takes longer, send a ping
 		defer msgDelayTimer.Stop()
 	L:
@@ -96,8 +98,6 @@ func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 			case <-ctx.Done():
 				break L
 			case <-errc:
-				break L
-			case <-tailMaxTimeTimer:
 				break L
 			case <-msgDelayTimer.C:
 				io.WriteString(w, ": ping\n\n")

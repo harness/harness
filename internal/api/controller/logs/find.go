@@ -43,12 +43,12 @@ func (c *Controller) Find(
 		return nil, fmt.Errorf("could not find execution: %w", err)
 	}
 
-	stage, err := c.stageStore.FindNumber(ctx, execution.ID, stageNum)
+	stage, err := c.stageStore.FindByNumber(ctx, execution.ID, stageNum)
 	if err != nil {
 		return nil, fmt.Errorf("could not find stage: %w", err)
 	}
 
-	step, err := c.stepStore.FindNumber(ctx, stage.ID, stepNum)
+	step, err := c.stepStore.FindByNumber(ctx, stage.ID, stepNum)
 	if err != nil {
 		return nil, fmt.Errorf("could not find step: %w", err)
 	}

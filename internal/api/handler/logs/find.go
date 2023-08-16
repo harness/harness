@@ -51,9 +51,9 @@ func HandleFind(logCtrl *logs.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
+		defer rc.Close()
 
 		w.Header().Set("Content-Type", "application/json")
 		io.Copy(w, rc)
-		rc.Close()
 	}
 }

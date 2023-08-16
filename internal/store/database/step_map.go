@@ -49,7 +49,7 @@ func mapStepToInternal(in *types.Step) *step {
 		Started:   in.Started,
 		Stopped:   in.Stopped,
 		Version:   in.Version,
-		DependsOn: EncodeToJSON(in.DependsOn),
+		DependsOn: EncodeToSQLXJSON(in.DependsOn),
 		Image:     in.Image,
 		Detached:  in.Detached,
 		Schema:    in.Schema,

@@ -67,8 +67,8 @@ type stepStore struct {
 	db *sqlx.DB
 }
 
-// FindNumber returns a step given a stage ID and a step number.
-func (s *stepStore) FindNumber(ctx context.Context, stageID int64, stepNum int) (*types.Step, error) {
+// FindByNumber returns a step given a stage ID and a step number.
+func (s *stepStore) FindByNumber(ctx context.Context, stageID int64, stepNum int) (*types.Step, error) {
 	const findQueryStmt = `
 		SELECT` + stepColumns + `
 		FROM steps
