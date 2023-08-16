@@ -5,10 +5,11 @@
 package webhook
 
 import (
-	"github.com/harness/gitness/types/check"
-	"github.com/harness/gitness/types/enum"
 	"net"
 	"net/url"
+
+	"github.com/harness/gitness/types/check"
+	"github.com/harness/gitness/types/enum"
 )
 
 const (
