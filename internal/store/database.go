@@ -419,8 +419,11 @@ type (
 		// Upsert creates new or updates an existing status check result.
 		Upsert(ctx context.Context, check *types.Check) error
 
+		// Count counts status check results for a specific commit in a repo.
+		Count(ctx context.Context, repoID int64, commitSHA string, opts types.CheckListOptions) (int, error)
+
 		// List returns a list of status check results for a specific commit in a repo.
-		List(ctx context.Context, repoID int64, commitSHA string) ([]*types.Check, error)
+		List(ctx context.Context, repoID int64, commitSHA string, opts types.CheckListOptions) ([]types.Check, error)
 
 		// ListRecent returns a list of recently executed status checks in a repository.
 		ListRecent(ctx context.Context, repoID int64, since time.Time) ([]string, error)
@@ -435,5 +438,91 @@ type (
 
 		// Delete removes a required status checks for a repo.
 		Delete(ctx context.Context, repoID, reqCheckID int64) error
+	}
+	PipelineStore interface {
+		// Find returns a pipeline given a pipeline ID from the datastore.
+		Find(ctx context.Context, id int64) (*types.Pipeline, error)
+
+		// FindByUID returns a pipeline with a given UID in a space
+		FindByUID(ctx context.Context, id int64, uid string) (*types.Pipeline, error)
+
+		// Create creates a new pipeline in the datastore.
+		Create(ctx context.Context, pipeline *types.Pipeline) error
+
+		// Update tries to update a pipeline in the datastore
+		Update(ctx context.Context, pipeline *types.Pipeline) error
+
+		// List lists the pipelines present in a parent space ID in the datastore.
+		List(ctx context.Context, spaceID int64, pagination types.ListQueryFilter) ([]*types.Pipeline, error)
+
+		// UpdateOptLock updates the pipeline using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, pipeline *types.Pipeline,
+			mutateFn func(pipeline *types.Pipeline) error) (*types.Pipeline, error)
+
+		// Delete deletes a pipeline ID from the datastore.
+		Delete(ctx context.Context, id int64) error
+
+		// Count the number of pipelines in a space matching the given filter.
+		Count(ctx context.Context, spaceID int64, filter types.ListQueryFilter) (int64, error)
+
+		// DeleteByUID deletes a pipeline with a given UID in a space
+		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
+
+		// IncrementSeqNum increments the sequence number of the pipeline
+		IncrementSeqNum(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error)
+	}
+
+	SecretStore interface {
+		// Find returns a secret given an ID
+		Find(ctx context.Context, id int64) (*types.Secret, error)
+
+		// FindByUID returns a secret given a space ID and a UID
+		FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Secret, error)
+
+		// Create creates a new secret
+		Create(ctx context.Context, secret *types.Secret) error
+
+		// Count the number of secrets in a space matching the given filter.
+		Count(ctx context.Context, spaceID int64, pagination types.ListQueryFilter) (int64, error)
+
+		// UpdateOptLock updates the secret using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, secret *types.Secret,
+			mutateFn func(secret *types.Secret) error) (*types.Secret, error)
+
+		// Update tries to update a secret.
+		Update(ctx context.Context, secret *types.Secret) error
+
+		// Delete deletes a secret given an ID.
+		Delete(ctx context.Context, id int64) error
+
+		// DeleteByUID deletes a secret given a space ID and a uid
+		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
+
+		// List lists the secrets in a given space
+		List(ctx context.Context, spaceID int64, filter types.ListQueryFilter) ([]*types.Secret, error)
+	}
+
+	ExecutionStore interface {
+		// Find returns a execution given a pipeline and an execution number
+		Find(ctx context.Context, pipelineID int64, num int64) (*types.Execution, error)
+
+		// Create creates a new execution in the datastore.
+		Create(ctx context.Context, execution *types.Execution) error
+
+		// Update tries to update an execution.
+		Update(ctx context.Context, execution *types.Execution) error
+
+		// UpdateOptLock updates the execution using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, exectuion *types.Execution,
+			mutateFn func(execution *types.Execution) error) (*types.Execution, error)
+
+		// List lists the executions for a given pipeline ID
+		List(ctx context.Context, pipelineID int64, pagination types.Pagination) ([]*types.Execution, error)
+
+		// Delete deletes an execution given a pipeline ID and an execution number
+		Delete(ctx context.Context, pipelineID int64, num int64) error
+
+		// Count the number of executions in a space
+		Count(ctx context.Context, parentID int64) (int64, error)
 	}
 )

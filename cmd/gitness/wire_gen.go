@@ -8,16 +8,21 @@ package main
 
 import (
 	"context"
+
 	"github.com/harness/gitness/cli/server"
+	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	server3 "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/gitrpc/server/cron"
 	check2 "github.com/harness/gitness/internal/api/controller/check"
+	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/githook"
+	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/controller/secret"
 	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
@@ -85,7 +90,17 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, principalStore, gitrpcInterface)
-	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
+	executionStore := database.ProvideExecutionStore(db)
+	pipelineStore := database.ProvidePipelineStore(db)
+	executionController := execution.ProvideController(db, authorizer, executionStore, pipelineStore, spaceStore)
+	secretStore := database.ProvideSecretStore(db)
+	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, pipelineStore, secretStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
+	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore, spaceStore)
+	encrypter, err := encrypt.ProvideEncrypter(config)
+	if err != nil {
+		return nil, err
+	}
+	secretController := secret.ProvideController(db, pathUID, pathStore, encrypter, secretStore, authorizer, spaceStore)
 	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
 	codeCommentView := database.ProvideCodeCommentView(db)
@@ -140,7 +155,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	checkController := check2.ProvideController(db, authorizer, repoStore, checkStore, gitrpcInterface)
 	systemController := system.NewController(principalStore, config)
-	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, spaceController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController)
+	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, spaceController, pipelineController, secretController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController)
 	gitHandler := router.ProvideGitHandler(config, provider, repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(config, apiHandler, gitHandler, webHandler)
@@ -149,7 +164,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	gitAdapter, err := server3.ProvideGITAdapter()
+	cacheCache := server3.ProvideGoGitRepoCache()
+	cache2 := server3.ProvideLastCommitCache(serverConfig, universalClient, cacheCache)
+	gitAdapter, err := server3.ProvideGITAdapter(cacheCache, cache2)
 	if err != nil {
 		return nil, err
 	}

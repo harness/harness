@@ -13,38 +13,24 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-// pathCacheEntry is used to return the proper transformed value as identifier when storing a path in cache.
-type pathCacheEntry struct {
-	inner       *types.Path
-	valueUnique string
-}
-
-func (e *pathCacheEntry) Identifier() string {
-	return e.valueUnique
-}
-
 // pathCacheGetter is used to hook a PathStore as source of a pathCache.
 // IMPORTANT: It assumes that the pathCache already transformed the key.
 type pathCacheGetter struct {
 	pathStore store.PathStore
 }
 
-func (g *pathCacheGetter) Find(ctx context.Context, key string) (*pathCacheEntry, error) {
+func (g *pathCacheGetter) Find(ctx context.Context, key string) (*types.Path, error) {
 	path, err := g.pathStore.FindValue(ctx, key)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pathCacheEntry{
-		inner: path,
-		// key is already transformed - pathCache transforms the path before calling the inner cache.
-		valueUnique: key,
-	}, nil
+	return path, nil
 }
 
 // pathCache is a decorator of a Cache required to handle path transformations.
 type pathCache struct {
-	inner              cache.Cache[string, *pathCacheEntry]
+	inner              cache.Cache[string, *types.Path]
 	pathTransformation store.PathTransformation
 }
 
@@ -54,12 +40,12 @@ func (c *pathCache) Get(ctx context.Context, key string) (*types.Path, error) {
 		return nil, fmt.Errorf("failed to transform path: %w", err)
 	}
 
-	cacheEntry, err := c.inner.Get(ctx, uniqueKey)
+	path, err := c.inner.Get(ctx, uniqueKey)
 	if err != nil {
 		return nil, err
 	}
 
-	return cacheEntry.inner, nil
+	return path, nil
 }
 
 func (c *pathCache) Stats() (int64, int64) {

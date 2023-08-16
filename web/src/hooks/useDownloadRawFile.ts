@@ -26,9 +26,12 @@ export function useDownloadRawFile() {
 
       document.body.appendChild(anchor)
       anchor.click()
-      document.body.removeChild(anchor)
-
-      URL.revokeObjectURL(imageURL)
+      // Cleaning up requires a timeout to work under Firefox
+      setTimeout(() => {
+        document.body.removeChild(anchor)
+        URL.revokeObjectURL(imageURL)
+      }, 100)
+      return { status: true }
     }
   }, [name, response])
 

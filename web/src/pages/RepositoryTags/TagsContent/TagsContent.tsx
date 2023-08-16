@@ -93,7 +93,7 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
         width: '15%',
         Cell: ({ row }: CellProps<RepoCommitTag>) => {
           return (
-            <Text className={css.rowText} color={Color.BLACK} tag="div">
+            <Text lineClamp={1} className={css.rowText} color={Color.BLACK} tag="div">
               {row.original.tagger?.identity?.name ? (
                 <Avatar hoverCard={false} size="small" name={row.original.tagger?.identity?.name || ''} />
               ) : (

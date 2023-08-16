@@ -20,4 +20,5 @@ var (
 		"cyclic depdency")
 	ErrSpaceWithChildsCantBeDeleted = errors.New("the space can't be deleted as it still contains " +
 		"spaces or repos")
+	ErrPreConditionFailed = errors.New("precondition failed")
 )

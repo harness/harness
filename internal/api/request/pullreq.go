@@ -37,7 +37,7 @@ func ParseSortPullReq(r *http.Request) enum.PullReqSort {
 
 // parsePullReqStates extracts the pull request states from the url.
 func parsePullReqStates(r *http.Request) []enum.PullReqState {
-	strStates := r.Form[QueryParamState]
+	strStates, _ := QueryParamList(r, QueryParamState)
 	m := make(map[enum.PullReqState]struct{}) // use map to eliminate duplicates
 	for _, s := range strStates {
 		if state, ok := enum.PullReqState(s).Sanitize(); ok {
@@ -102,7 +102,7 @@ func ParsePullReqActivityFilter(r *http.Request) (*types.PullReqActivityFilter, 
 
 // parsePullReqActivityKinds extracts the pull request activity kinds from the url.
 func parsePullReqActivityKinds(r *http.Request) []enum.PullReqActivityKind {
-	strKinds := r.Form[QueryParamKind]
+	strKinds := r.URL.Query()[QueryParamKind]
 	m := make(map[enum.PullReqActivityKind]struct{}) // use map to eliminate duplicates
 	for _, s := range strKinds {
 		if kind, ok := enum.PullReqActivityKind(s).Sanitize(); ok {
@@ -124,7 +124,7 @@ func parsePullReqActivityKinds(r *http.Request) []enum.PullReqActivityKind {
 
 // parsePullReqActivityTypes extracts the pull request activity types from the url.
 func parsePullReqActivityTypes(r *http.Request) []enum.PullReqActivityType {
-	strType := r.Form[QueryParamType]
+	strType := r.URL.Query()[QueryParamType]
 	m := make(map[enum.PullReqActivityType]struct{}) // use map to eliminate duplicates
 	for _, s := range strType {
 		if t, ok := enum.PullReqActivityType(s).Sanitize(); ok {

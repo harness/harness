@@ -24,18 +24,20 @@ export const PullRequestCommits: React.FC<CommitProps> = ({
   const [page, setPage] = usePageIndex()
   const { getString } = useStrings()
   const {
-    data: commits,
+    data,
     error,
     loading,
     refetch,
     response
-  } = useGet<TypesCommit[]>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestMetadata.number}/commits`,
+  } = useGet<{
+    commits: TypesCommit[]
+  }>({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
       limit,
       page,
-      git_ref: pullRequestMetadata.source_branch,
-      after: pullRequestMetadata.target_branch
+      git_ref: pullRequestMetadata.source_sha,
+      after: pullRequestMetadata.merge_base_sha
     },
     lazy: !repoMetadata
   })
@@ -43,12 +45,13 @@ export const PullRequestCommits: React.FC<CommitProps> = ({
   return (
     <PullRequestTabContentWrapper loading={loading} error={error} onRetry={voidFn(refetch)}>
       <CommitsView
-        commits={commits}
+        commits={data?.commits || []}
         repoMetadata={repoMetadata}
         emptyTitle={getString('noCommits')}
         emptyMessage={getString('noCommitsPR')}
         prHasChanged={prHasChanged}
         handleRefresh={voidFn(handleRefresh)}
+        pullRequestMetadata={pullRequestMetadata}
       />
 
       <ResourceListingPagination response={response} page={page} setPage={setPage} />

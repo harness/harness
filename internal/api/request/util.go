@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/harness/gitness/internal/api/usererror"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/go-chi/chi"
@@ -17,11 +18,10 @@ import (
 const (
 	PathParamRemainder = "*"
 
-	QueryParamSort  = "sort"
-	QueryParamOrder = "order"
-	QueryParamQuery = "query"
-
 	QueryParamCreatedBy = "created_by"
+	QueryParamSort      = "sort"
+	QueryParamOrder     = "order"
+	QueryParamQuery     = "query"
 
 	QueryParamState = "state"
 	QueryParamKind  = "kind"
@@ -60,6 +60,16 @@ func QueryParam(r *http.Request, paramName string) (string, bool) {
 	}
 
 	return query.Get(paramName), true
+}
+
+// QueryParamList returns list of the parameter values if they exist.
+func QueryParamList(r *http.Request, paramName string) ([]string, bool) {
+	query := r.URL.Query()
+	if !query.Has(paramName) {
+		return nil, false
+	}
+
+	return query[paramName], true
 }
 
 // QueryParamOrDefault retrieves the parameter from the query and
@@ -193,4 +203,20 @@ func ParseOrder(r *http.Request) enum.Order {
 // ParseSort extracts the sort parameter from the url.
 func ParseSort(r *http.Request) string {
 	return r.URL.Query().Get(QueryParamSort)
+}
+
+// ParsePaginationFromRequest parses pagination related info from the url.
+func ParsePaginationFromRequest(r *http.Request) types.Pagination {
+	return types.Pagination{
+		Page: ParsePage(r),
+		Size: ParseLimit(r),
+	}
+}
+
+// ParseListQueryFilterFromRequest parses pagination and query related info from the url.
+func ParseListQueryFilterFromRequest(r *http.Request) types.ListQueryFilter {
+	return types.ListQueryFilter{
+		Query:      ParseQuery(r),
+		Pagination: ParsePaginationFromRequest(r),
+	}
 }

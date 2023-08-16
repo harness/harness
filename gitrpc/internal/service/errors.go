@@ -199,7 +199,8 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 	switch {
 	case errors.Is(err, types.ErrNotFound),
 		errors.Is(err, types.ErrSHADoesNotMatch),
-		errors.Is(err, types.ErrHunkNotFound):
+		errors.Is(err, types.ErrHunkNotFound),
+		errors.Is(err, types.ErrPathNotFound):
 		return ErrNotFoundf(format, args...)
 	case errors.Is(err, types.ErrAlreadyExists):
 		return ErrAlreadyExistsf(format, args...)
@@ -217,6 +218,6 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 	case errors.Is(err, types.ErrFailedToConnect):
 		return ErrInvalidArgumentf(format, args...)
 	default:
-		return Errorf(codes.Unknown, format, args...)
+		return ErrInternalf(format, args...)
 	}
 }

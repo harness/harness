@@ -98,15 +98,14 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
               />
             </Layout.Horizontal>
           </Container>
-          {standalone ? null : (
-            <Button
-              onClick={() => {
-                setFlag(true)
-              }}
-              variation={ButtonVariation.SECONDARY}>
-              {getString('generateCloneCred')}
-            </Button>
-          )}
+
+          <Button
+            onClick={() => {
+              setFlag(true)
+            }}
+            variation={ButtonVariation.SECONDARY}>
+            {getString('generateCloneCred')}
+          </Button>
         </Layout.Horizontal>
         <Text font={{ variation: FontVariation.BODY, size: 'small' }}>
           <StringSubstitute
@@ -115,7 +114,7 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
               URL: (
                 <a
                   onClick={() => {
-                    history.push(currentUserProfileURL)
+                    history.push(standalone ? routes.toCODEUserProfile() : currentUserProfileURL)
                   }}>
                   here
                 </a>
@@ -142,7 +141,7 @@ export const EmptyRepositoryInfo: React.FC<Pick<GitInfoProps, 'repoMetadata'>> =
           source={getString('repoEmptyMarkdownExisting')
             .replace(/REPO_URL/g, repoMetadata.git_url || '')
             .replace(/REPO_NAME/g, repoMetadata.uid || '')
-            .replace(/CREATE_API_TOKEN_URL/g, currentUserProfileURL || '')
+            .replace(/CREATE_API_TOKEN_URL/g, standalone ? routes.toCODEUserProfile() : currentUserProfileURL || '')
             .replace(/DEFAULT_BRANCH/g, repoMetadata.default_branch || '')}
         />
       </Container>

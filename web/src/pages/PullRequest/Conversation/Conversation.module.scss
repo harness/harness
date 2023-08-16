@@ -46,7 +46,7 @@
 }
 
 .timeText {
-  padding-left: var(--spacing-xxlarge);
+  margin-left: 8px !important;
   color: var(--grey-400);
   font-size: var(--font-size-small);
 }
@@ -181,4 +181,13 @@
   .bp3-button-text {
     color: var(--orange-300);
   }
+}
+
+.commitLink {
+  text-decoration: underline;
+  color: var(--primary-7) !important;
+}
+
+.commitContainer {
+  padding-top: 1px;
 }

@@ -1,7 +1,6 @@
 import React from 'react'
 import { Avatar, Container, FlexExpander, Layout } from '@harness/uicore'
 import { Render } from 'react-jsx-match'
-import { routes } from 'RouteDefinitions'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { useDocumentTitle } from 'hooks/useDocumentTitle'
@@ -16,6 +15,7 @@ interface LayoutWithSideNavProps {
 }
 
 export const LayoutWithSideNav: React.FC<LayoutWithSideNavProps> = ({ title, children, menu = <DefaultMenu /> }) => {
+  const { routes } = useAppContext()
   const { currentUser } = useAppContext()
   const { getString } = useStrings()
 

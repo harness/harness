@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { Container, Color, Layout, FlexExpander, ButtonVariation, Heading, Icon, ButtonSize } from '@harness/uicore'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
@@ -26,21 +26,31 @@ interface FolderContentProps {
 function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: FolderContentProps) {
   const { getString } = useStrings()
   const history = useHistory()
-  const { routes } = useAppContext()
-
-  const { data, error, loading } = useGet<OpenapiGetContentOutput>({
+  const { routes, standalone, hooks } = useAppContext()
+  const space = useGetSpaceParam()
+  const { data, error, loading, refetch } = useGet<OpenapiGetContentOutput>({
     path: `/api/v1/repos/${metadata.path}/+/content/${readmeInfo?.path}`,
     queryParams: {
       include_commit: false,
       git_ref: gitRef
-    }
+    },
+    lazy: true
   })
+  const ref = useRef(gitRef as string)
 
   useShowRequestError(error)
 
-  const { standalone } = useAppContext()
-  const { hooks } = useAppContext()
-  const space = useGetSpaceParam()
+  // Fix an issue where readmeInfo is old (its new data is being fetched) but gitRef is
+  // changed, causing README fetching to be incorrect. An example of this issue is to have
+  // two branches, one has README.md and the other has README. If you switch between the two
+  // branches, the README fetch will be incorrect (404).
+  useEffect(() => {
+    if (gitRef === ref.current) {
+      refetch()
+    } else {
+      ref.current = gitRef as string
+    }
+  }, [refetch, gitRef])
 
   const permPushResult = hooks?.usePermissionTranslate?.(
     {

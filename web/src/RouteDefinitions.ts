@@ -11,6 +11,10 @@ export interface CODEProps {
   pullRequestId?: string
   pullRequestSection?: string
   webhookId?: string
+  pipeline?: string
+  execution?: string
+  commitSHA?: string
+  secret?: string
 }
 
 export interface CODEQueryProps {
@@ -25,8 +29,12 @@ export const pathProps: Readonly<Omit<Required<CODEProps>, 'repoPath' | 'branch'
   commitRef: ':commitRef*',
   diffRefs: ':diffRefs*',
   pullRequestId: ':pullRequestId',
-  pullRequestSection: ':pullRequestSection*',
-  webhookId: ':webhookId'
+  pullRequestSection: ':pullRequestSection',
+  webhookId: ':webhookId',
+  pipeline: ':pipeline',
+  execution: ':execution',
+  commitSHA: ':commitSHA',
+  secret: ':secret'
 }
 
 export interface CODERoutes {
@@ -37,6 +45,8 @@ export interface CODERoutes {
 
   toCODESpaceAccessControl: (args: Required<Pick<CODEProps, 'space'>>) => string
   toCODESpaceSettings: (args: Required<Pick<CODEProps, 'space'>>) => string
+  toCODEPipelines: (args: Required<Pick<CODEProps, 'space'>>) => string
+  toCODESecrets: (args: Required<Pick<CODEProps, 'space'>>) => string
 
   toCODEGlobalSettings: () => string
   toCODEUsers: () => string
@@ -51,7 +61,7 @@ export interface CODERoutes {
   toCODEPullRequests: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEPullRequest: (
     args: RequiredField<
-      Pick<CODEProps, 'repoPath' | 'pullRequestId' | 'pullRequestSection'>,
+      Pick<CODEProps, 'repoPath' | 'pullRequestId' | 'pullRequestSection' | 'commitSHA'>,
       'repoPath' | 'pullRequestId'
     >
   ) => string
@@ -62,8 +72,21 @@ export interface CODERoutes {
   toCODEWebhookNew: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEWebhookDetails: (args: Required<Pick<CODEProps, 'repoPath' | 'webhookId'>>) => string
   toCODESettings: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
+
+  toCODEExecutions: (args: Required<Pick<CODEProps, 'space' | 'pipeline'>>) => string
+  toCODEExecution: (args: Required<Pick<CODEProps, 'space' | 'pipeline' | 'execution'>>) => string
+  toCODESecret: (args: Required<Pick<CODEProps, 'space' | 'secret'>>) => string
 }
 
+/**
+ * NOTE: NEVER IMPORT AND USE THIS ROUTES EXPORT DIRECTLY IN CODE.
+ *
+ * routes is used to created URLs in standalone version. Instead, use
+ * the `routes` from AppContext which is mapped to this export in standalone
+ * version or Harness Platform routes which is passed from Harness Platform UI.
+ *
+ * Correct usage: const { routes } = useAppContext()
+ */
 export const routes: CODERoutes = {
   toSignIn: (): string => '/signin',
   toRegister: (): string => '/register',
@@ -72,6 +95,8 @@ export const routes: CODERoutes = {
 
   toCODESpaceAccessControl: ({ space }) => `/access-control/${space}`,
   toCODESpaceSettings: ({ space }) => `/settings/${space}`,
+  toCODEPipelines: ({ space }) => `/pipelines/${space}`,
+  toCODESecrets: ({ space }) => `/secrets/${space}`,
 
   toCODEGlobalSettings: () => '/settings',
   toCODEUsers: () => '/users',
@@ -91,13 +116,20 @@ export const routes: CODERoutes = {
   toCODECommits: ({ repoPath, commitRef }) => `/${repoPath}/commits/${commitRef}`,
   toCODECommit: ({ repoPath, commitRef }) => `/${repoPath}/commit/${commitRef}`,
   toCODEPullRequests: ({ repoPath }) => `/${repoPath}/pulls`,
-  toCODEPullRequest: ({ repoPath, pullRequestId, pullRequestSection }) =>
-    `/${repoPath}/pulls/${pullRequestId}${pullRequestSection ? '/' + pullRequestSection : ''}`,
+  toCODEPullRequest: ({ repoPath, pullRequestId, pullRequestSection, commitSHA }) =>
+    `/${repoPath}/pulls/${pullRequestId}${pullRequestSection ? '/' + pullRequestSection : ''}${
+      commitSHA ? '/' + commitSHA : ''
+    }`,
   toCODECompare: ({ repoPath, diffRefs }) => `/${repoPath}/pulls/compare/${diffRefs}`,
   toCODEBranches: ({ repoPath }) => `/${repoPath}/branches`,
   toCODETags: ({ repoPath }) => `/${repoPath}/tags`,
   toCODESettings: ({ repoPath }) => `/${repoPath}/settings`,
   toCODEWebhooks: ({ repoPath }) => `/${repoPath}/webhooks`,
   toCODEWebhookNew: ({ repoPath }) => `/${repoPath}/webhooks/new`,
-  toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`
+  toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`,
+
+  toCODEExecutions: ({ space, pipeline }) => `/pipelines/${space}/pipeline/${pipeline}`,
+  toCODEExecution: ({ space, pipeline, execution }) =>
+    `/pipelines/${space}/pipeline/${pipeline}/execution/${execution}`,
+  toCODESecret: ({ space, secret }) => `/secrets/${space}/secret/${secret}`
 }

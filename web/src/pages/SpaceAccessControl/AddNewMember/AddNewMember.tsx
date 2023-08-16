@@ -6,12 +6,12 @@ import { Formik } from 'formik'
 import * as Yup from 'yup'
 
 import { useStrings } from 'framework/strings'
+import { useGet } from 'restful-react'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import {
   MembershipAddRequestBody,
-  TypesMembership,
+  TypesMembershipUser,
   TypesPrincipalInfo,
-  useListPrincipals,
   useMembershipAdd,
   useMembershipUpdate
 } from 'services/code'
@@ -23,7 +23,7 @@ const roles = ['reader', 'executor', 'contributor', 'space_owner'] as const
 
 const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
   const [isEditFlow, setIsEditFlow] = useState(false)
-  const [membershipDetails, setMembershipDetails] = useState<TypesMembership>()
+  const [membershipDetails, setMembershipDetails] = useState<TypesMembershipUser>()
   const [searchTerm, setSearchTerm] = useState('')
 
   const space = useGetSpaceParam()
@@ -36,15 +36,17 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
     user_uid: membershipDetails?.principal?.uid || ''
   })
 
-  const { data: users, loading: fetchingUsers } = useListPrincipals({
+  const { data: users, loading: fetchingUsers }  = useGet<TypesPrincipalInfo[]>({
+    path: `/api/v1/principals`,
     queryParams: {
       query: searchTerm,
       page: 1,
       limit: LIST_FETCHING_LIMIT,
-      type: ['user']
+      type: 'user'
     },
     debounce: 500
   })
+
 
   const roleOptions: SelectOption[] = useMemo(
     () =>
@@ -52,7 +54,7 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
         value: role,
         label: getString(roleStringKeyMap[role])
       })),
-    []
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   const userOptions: SelectOption[] = useMemo(

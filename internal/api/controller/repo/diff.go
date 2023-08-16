@@ -13,6 +13,7 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/config"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -100,4 +101,36 @@ func (c *Controller) DiffStats(
 		Commits:      output.Commits,
 		FilesChanged: output.FilesChanged,
 	}, nil
+}
+
+func (c *Controller) Diff(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	path string,
+	includePatch bool,
+) (types.Stream[*gitrpc.FileDiff], error) {
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
+		return nil, err
+	}
+
+	info, err := parseDiffPath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	reader := gitrpc.NewStreamReader(c.gitRPCClient.Diff(ctx, &gitrpc.DiffParams{
+		ReadParams:   gitrpc.CreateRPCReadParams(repo),
+		BaseRef:      info.BaseRef,
+		HeadRef:      info.HeadRef,
+		MergeBase:    info.MergeBase,
+		IncludePatch: includePatch,
+	}, config.ApiURL))
+
+	return reader, nil
 }

@@ -91,7 +91,7 @@ func (migrator *Migrator) migrate(
 		return
 	}
 
-	commitMap := mapCodeComments(comments, getSHA)
+	commitMap, initialValuesMap := mapCodeComments(comments, getSHA)
 
 	for commentSHA, fileMap := range commitMap {
 		// get all hunk headers for the diff between the SHA that's stored in the comment and the new SHA.
@@ -144,7 +144,7 @@ func (migrator *Migrator) migrate(
 				continue
 			}
 
-			// Handle new files - shouldn't happen because code comments should exist for a non-existing file.
+			// Handle new files - shouldn't happen because no code comments should exist for a non-existing file.
 			if _, isAdded := file.FileHeader.Extensions[gitrpcenum.DiffExtHeaderNewFileMode]; isAdded {
 				for _, codeComment := range codeComments {
 					codeComment.Outdated = true
@@ -154,9 +154,18 @@ func (migrator *Migrator) migrate(
 
 			for _, hunk := range file.HunkHeaders {
 				for _, cc := range codeComments {
+					if cc.Outdated {
+						continue
+					}
+
 					ccStart, ccEnd := getCommentStartEnd(cc)
 					outdated, moveDelta := processCodeComment(ccStart, ccEnd, hunk)
-					cc.Outdated = outdated
+					if outdated {
+						cc.CodeCommentFields = initialValuesMap[cc.ID] // revert the CC to the original values
+						cc.Outdated = true
+						continue
+					}
+
 					updateCommentLine(cc, moveDelta)
 				}
 			}
@@ -178,8 +187,10 @@ func (migrator *Migrator) migrate(
 func mapCodeComments(
 	comments []*types.CodeComment,
 	extractSHA func(*types.CodeComment) string,
-) map[string]map[string][]*types.CodeComment {
+) (map[string]map[string][]*types.CodeComment, map[int64]types.CodeCommentFields) {
 	commitMap := map[string]map[string][]*types.CodeComment{}
+	originalComments := make(map[int64]types.CodeCommentFields, len(comments))
+
 	for _, comment := range comments {
 		commitSHA := extractSHA(comment)
 
@@ -193,16 +204,22 @@ func mapCodeComments(
 		fileMap[comment.Path] = fileComments
 
 		commitMap[commitSHA] = fileMap
+
+		originalComments[comment.ID] = comment.CodeCommentFields
 	}
 
-	return commitMap
+	return commitMap, originalComments
 }
 
 func processCodeComment(ccStart, ccEnd int, h gitrpc.HunkHeader) (outdated bool, moveDelta int) {
-	// it's outdated if code is changed (old code) inside the code comment or
-	// if there are added lines inside the code comment, don't care about how many (NewSpan).
-	outdated = (h.OldSpan > 0 && ccEnd >= h.OldLine && ccStart <= h.OldLine+h.OldSpan-1) ||
-		(h.NewSpan > 0 && h.NewLine > ccStart && h.NewLine <= ccEnd)
+	// A code comment is marked as outdated if:
+	// * The code lines covered by the code comment are changed
+	//   (the range given by the OldLine/OldSpan overlaps the code comment's code range)
+	// * There are new lines inside the line range covered by the code comment, don't care about how many
+	//   (the NewLine is between the CC start and CC end; the value of the NewSpan is unimportant).
+	outdated =
+		(h.OldSpan > 0 && ccEnd >= h.OldLine && ccStart <= h.OldLine+h.OldSpan-1) || // code comment's code is changed
+			(h.NewSpan > 0 && h.NewLine > ccStart && h.NewLine <= ccEnd) // lines are added inside the code comment
 
 	if outdated {
 		return // outdated comments aren't moved

@@ -22,7 +22,7 @@ import { get } from 'lodash-es'
 import { useModalHook } from '@harness/use-modal'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
-import { CodeIcon, GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
+import { GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import type { RepoBranch } from 'services/code'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -94,12 +94,12 @@ export function useCreateBranchModal({
         enforceFocus={false}
         onClose={hideModal}
         title={''}
-        style={{ width: 700, maxHeight: '95vh', overflow: 'auto' }}>
-        <Layout.Vertical padding={{ left: 'xxlarge' }} style={{ height: '100%' }} className={css.main}>
+        style={{ width: 585, maxHeight: '95vh', overflow: 'auto' }}>
+        <Layout.Vertical style={{ height: '100%' }} className={css.main}>
           <Heading className={css.title} font={{ variation: FontVariation.H3 }} margin={{ bottom: 'xlarge' }}>
-            <Icon name={CodeIcon.Branch} size={22} /> {getString('createABranch')}
+            {getString('createABranch')}
           </Heading>
-          <Container margin={{ right: 'xxlarge' }}>
+          <Container className={css.container}>
             <Formik<FormData>
               initialValues={{
                 name: branchName,
@@ -123,32 +123,33 @@ export function useCreateBranchModal({
               <FormikForm>
                 <FormInput.Text
                   name="name"
-                  label={getString('branchName')}
-                  placeholder={getString('nameYourBranch')}
+                  label={getString('name')}
+                  placeholder={getString('enterBranchPlaceholder')}
                   tooltipProps={{
                     dataTooltipId: 'repositoryBranchTextField'
                   }}
                   inputGroup={{ autoFocus: true }}
                 />
-                <Container margin={{ top: 'medium', bottom: 'medium' }}>
+                <Container margin={{ top: 'medium' }}>
                   <Label className={css.label}>{getString('basedOn')}</Label>
                   {/* <Text className={css.branchSourceDesc}>{getString('branchSourceDesc')}</Text> */}
-                  <Layout.Horizontal spacing="medium" padding={{ top: 'xsmall' }}>
+                  <Layout.Horizontal className={css.selectContainer} padding={{ top: 'xsmall' }}>
                     <BranchTagSelect
+                      className={css.branchTagSelect}
                       repoMetadata={repoMetadata}
                       disableBranchCreation
                       disableViewAllBranches
                       forBranchesOnly={showBranchTag}
                       gitRef={refIsATag ? `refs/tags/${sourceBranch}` : sourceBranch}
                       onSelect={setSourceBranch}
+                      popoverClassname={css.popoverContainer}
                     />
-                    <FlexExpander />
                   </Layout.Horizontal>
                 </Container>
 
                 <Layout.Horizontal
                   spacing="small"
-                  padding={{ right: 'xxlarge', top: 'xxxlarge', bottom: 'large' }}
+                  padding={{ right: 'xxlarge', top: 'xxlarge', bottom: 'large' }}
                   style={{ alignItems: 'center' }}>
                   <Button
                     type="submit"

@@ -7,6 +7,7 @@ package gitea
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"path"
@@ -16,6 +17,9 @@ import (
 	"github.com/harness/gitness/gitrpc/internal/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
+	gogitplumbing "github.com/go-git/go-git/v5/plumbing"
+	gogitfilemode "github.com/go-git/go-git/v5/plumbing/filemode"
+	gogitobject "github.com/go-git/go-git/v5/plumbing/object"
 )
 
 func cleanTreePath(treePath string) string {
@@ -24,30 +28,53 @@ func cleanTreePath(treePath string) string {
 
 // GetTreeNode returns the tree node at the given path as found for the provided reference.
 // Note: ref can be Branch / Tag / CommitSHA.
-func (g Adapter) GetTreeNode(ctx context.Context, repoPath string,
-	ref string, treePath string) (*types.TreeNode, error) {
+func (g Adapter) GetTreeNode(ctx context.Context,
+	repoPath string,
+	ref string,
+	treePath string,
+) (*types.TreeNode, error) {
 	treePath = cleanTreePath(treePath)
 
-	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
+	repoEntry, err := g.repoCache.Get(ctx, repoPath)
 	if err != nil {
 		return nil, processGiteaErrorf(err, "failed to open repository")
 	}
-	defer giteaRepo.Close()
 
-	// Get the giteaCommit object for the ref
-	giteaCommit, err := giteaRepo.GetCommit(ref)
-	if err != nil {
-		return nil, processGiteaErrorf(err, "error getting commit for ref '%s'", ref)
+	repo := repoEntry.Repo()
+
+	refSHA, err := repo.ResolveRevision(gogitplumbing.Revision(ref))
+	if errors.Is(err, gogitplumbing.ErrReferenceNotFound) {
+		return nil, types.ErrNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to resolve revision %s: %w", ref, err)
 	}
 
-	// TODO: handle ErrNotExist :)
-	giteaTreeEntry, err := giteaCommit.GetTreeEntryByPath(treePath)
+	refCommit, err := repo.CommitObject(*refSHA)
 	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to get tree entry for commit '%s' at path '%s'",
-			giteaCommit.ID.String(), treePath)
+		return nil, fmt.Errorf("failed to load commit data: %w", err)
 	}
 
-	nodeType, mode, err := mapGiteaNodeToTreeNodeModeAndType(giteaTreeEntry.Mode())
+	rootEntry := gogitobject.TreeEntry{
+		Name: "",
+		Mode: gogitfilemode.Dir,
+		Hash: refCommit.TreeHash,
+	}
+
+	treeEntry := &rootEntry
+
+	if len(treePath) > 0 {
+		tree, err := refCommit.Tree()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get tree for the commit: %w", err)
+		}
+
+		treeEntry, err = tree.FindEntry(treePath)
+		if err != nil {
+			return nil, fmt.Errorf("can't find path entry %s: %w", treePath, types.ErrPathNotFound)
+		}
+	}
+
+	nodeType, mode, err := mapGogitNodeToTreeNodeModeAndType(treeEntry.Mode)
 	if err != nil {
 		return nil, err
 	}
@@ -55,106 +82,74 @@ func (g Adapter) GetTreeNode(ctx context.Context, repoPath string,
 	return &types.TreeNode{
 		Mode:     mode,
 		NodeType: nodeType,
-		Sha:      giteaTreeEntry.ID.String(),
-		Name:     giteaTreeEntry.Name(),
+		Sha:      treeEntry.Hash.String(),
+		Name:     treeEntry.Name,
 		Path:     treePath,
 	}, nil
 }
 
 // ListTreeNodes lists the child nodes of a tree reachable from ref via the specified path
 // and includes the latest commit for all nodes if requested.
-// IMPORTANT: recursive and includeLatestCommit can't be used together.
 // Note: ref can be Branch / Tag / CommitSHA.
 //
 //nolint:gocognit // refactor if needed
-func (g Adapter) ListTreeNodes(ctx context.Context, repoPath string,
-	ref string, treePath string, recursive bool, includeLatestCommit bool) ([]types.TreeNodeWithCommit, error) {
-	if recursive && includeLatestCommit {
-		// To avoid potential performance catastrophe, block recursive with includeLatestCommit
-		// TODO: this should return bad error to caller if needed?
-		// TODO: should this be refactored in two methods?
-		return nil, fmt.Errorf("latest commit with recursive query is not supported")
-	}
-
+func (g Adapter) ListTreeNodes(ctx context.Context,
+	repoPath string,
+	ref string,
+	treePath string,
+) ([]types.TreeNode, error) {
 	treePath = cleanTreePath(treePath)
 
-	giteaRepo, err := gitea.OpenRepository(ctx, repoPath)
+	repoEntry, err := g.repoCache.Get(ctx, repoPath)
 	if err != nil {
 		return nil, processGiteaErrorf(err, "failed to open repository")
 	}
-	defer giteaRepo.Close()
 
-	// Get the giteaCommit object for the ref
-	giteaCommit, err := giteaRepo.GetCommit(ref)
+	repo := repoEntry.Repo()
+
+	refSHA, err := repo.ResolveRevision(gogitplumbing.Revision(ref))
+	if errors.Is(err, gogitplumbing.ErrReferenceNotFound) {
+		return nil, types.ErrNotFound
+	} else if err != nil {
+		return nil, fmt.Errorf("failed to resolve revision %s: %w", ref, err)
+	}
+
+	refCommit, err := repo.CommitObject(*refSHA)
 	if err != nil {
-		return nil, processGiteaErrorf(err, "error getting commit for ref '%s'", ref)
+		return nil, fmt.Errorf("failed to load commit data: %w", err)
 	}
 
-	// Get the giteaTree object for the ref
-	giteaTree, err := giteaCommit.SubTree(treePath)
+	tree, err := refCommit.Tree()
 	if err != nil {
-		return nil, processGiteaErrorf(err, "error getting tree for '%s'", treePath)
+		return nil, fmt.Errorf("failed to get tree for the commit: %w", err)
 	}
 
-	var giteaEntries gitea.Entries
-	if recursive {
-		giteaEntries, err = giteaTree.ListEntriesRecursive()
-	} else {
-		giteaEntries, err = giteaTree.ListEntries()
-	}
-	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to list entries for tree '%s'", treePath)
-	}
-
-	var latestCommits []gitea.CommitInfo
-	if includeLatestCommit {
-		// TODO: can be speed up with latestCommitCache (currently nil)
-		latestCommits, _, err = giteaEntries.GetCommitsInfo(ctx, giteaCommit, treePath, nil)
-		if err != nil {
-			return nil, processGiteaErrorf(err, "failed to get latest commits for entries")
-		}
-
-		if len(latestCommits) != len(giteaEntries) {
-			return nil, fmt.Errorf("latest commit info doesn't match tree node info - count differs")
+	if len(treePath) > 0 {
+		tree, err = tree.Tree(treePath)
+		if errors.Is(err, gogitobject.ErrDirectoryNotFound) || errors.Is(err, gogitobject.ErrEntryNotFound) {
+			return nil, types.ErrPathNotFound
+		} else if err != nil {
+			return nil, fmt.Errorf("can't find path entry %s: %w", treePath, err)
 		}
 	}
 
-	nodes := make([]types.TreeNodeWithCommit, len(giteaEntries))
-	for i := range giteaEntries {
-		giteaEntry := giteaEntries[i]
-
-		var nodeType types.TreeNodeType
-		var mode types.TreeNodeMode
-		nodeType, mode, err = mapGiteaNodeToTreeNodeModeAndType(giteaEntry.Mode())
+	treeNodes := make([]types.TreeNode, len(tree.Entries))
+	for i, treeEntry := range tree.Entries {
+		nodeType, mode, err := mapGogitNodeToTreeNodeModeAndType(treeEntry.Mode)
 		if err != nil {
 			return nil, err
 		}
 
-		// giteaNode.Name() returns the path of the node relative to the tree.
-		relPath := giteaEntry.Name()
-		name := filepath.Base(relPath)
-
-		var commit *types.Commit
-		if includeLatestCommit {
-			commit, err = mapGiteaCommit(latestCommits[i].Commit)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		nodes[i] = types.TreeNodeWithCommit{
-			TreeNode: types.TreeNode{
-				NodeType: nodeType,
-				Mode:     mode,
-				Sha:      giteaEntry.ID.String(),
-				Name:     name,
-				Path:     filepath.Join(treePath, relPath),
-			},
-			Commit: commit,
+		treeNodes[i] = types.TreeNode{
+			NodeType: nodeType,
+			Mode:     mode,
+			Sha:      treeEntry.Hash.String(),
+			Name:     treeEntry.Name,
+			Path:     filepath.Join(treePath, treeEntry.Name),
 		}
 	}
 
-	return nodes, nil
+	return treeNodes, nil
 }
 
 func (g Adapter) ReadTree(ctx context.Context, repoPath, ref string, w io.Writer, args ...string) error {

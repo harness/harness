@@ -61,7 +61,7 @@ func ParseUserFilter(r *http.Request) *types.UserFilter {
 
 // ParsePrincipalTypes extracts the principal types from the url.
 func ParsePrincipalTypes(r *http.Request) []enum.PrincipalType {
-	pTypesRaw := r.Form[QueryParamType]
+	pTypesRaw := r.URL.Query()[QueryParamType]
 	m := make(map[enum.PrincipalType]struct{}) // use map to eliminate duplicates
 	for _, pTypeRaw := range pTypesRaw {
 		if pType, ok := enum.PrincipalType(pTypeRaw).Sanitize(); ok {

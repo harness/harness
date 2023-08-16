@@ -9,14 +9,24 @@ import (
 )
 
 // MembershipSort represents membership sort order.
-type MembershipSort int
+type MembershipSort string
 
 // Order enumeration.
 const (
-	MembershipSortNone MembershipSort = iota
-	MembershipSortName
-	MembershipSortCreated
+	MembershipSortName    = name
+	MembershipSortCreated = created
 )
+
+var membershipSorts = sortEnum([]MembershipSort{
+	MembershipSortName,
+	MembershipSortCreated,
+})
+
+func (MembershipSort) Enum() []interface{}                { return toInterfaceSlice(membershipSorts) }
+func (s MembershipSort) Sanitize() (MembershipSort, bool) { return Sanitize(s, GetAllMembershipSorts) }
+func GetAllMembershipSorts() ([]MembershipSort, MembershipSort) {
+	return membershipSorts, MembershipSortName
+}
 
 // ParseMembershipSort parses the membership sort attribute string
 // and returns the equivalent enumeration.
@@ -27,19 +37,17 @@ func ParseMembershipSort(s string) MembershipSort {
 	case created, createdAt:
 		return MembershipSortCreated
 	default:
-		return MembershipSortNone
+		return MembershipSortName
 	}
 }
 
 // String returns the string representation of the attribute.
-func (a MembershipSort) String() string {
-	switch a {
+func (s MembershipSort) String() string {
+	switch s {
 	case MembershipSortName:
 		return name
 	case MembershipSortCreated:
 		return created
-	case MembershipSortNone:
-		return ""
 	default:
 		return undefined
 	}

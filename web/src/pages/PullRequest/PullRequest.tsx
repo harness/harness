@@ -1,17 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Container, PageBody, Tabs } from '@harness/uicore'
+import { Container, FontVariation, Layout, PageBody, Tabs, Text } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
+import { compact } from 'lodash-es'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { voidFn, getErrorMessage } from 'utils/Utils'
+import { voidFn, getErrorMessage, PullRequestSection } from 'utils/Utils'
 import { CodeIcon } from 'utils/GitUtils'
 import type { TypesPullReq, TypesPullReqStats, TypesRepository } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
+import { usePRChecksDecision } from 'hooks/usePRChecksDecision'
+import { PRCheckExecutionStatus } from 'components/PRCheckExecutionStatus/PRCheckExecutionStatus'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
 import { Checks } from './Checks/Checks'
@@ -30,7 +33,8 @@ export default function PullRequest() {
     loading,
     refetch,
     pullRequestId,
-    pullRequestSection = PullRequestSection.CONVERSATION
+    pullRequestSection = PullRequestSection.CONVERSATION,
+    commitSHA
   } = useGetRepositoryMetadata()
   const path = useMemo(
     () => `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestId}`,
@@ -46,6 +50,10 @@ export default function PullRequest() {
     lazy: !repoMetadata
   })
   const [prData, setPrData] = useState<TypesPullReq>()
+  const prChecksDecisionResult = usePRChecksDecision({
+    repoMetadata,
+    pullRequestMetadata: prData
+  })
   const showSpinner = useMemo(() => {
     return loading || (prLoading && !prData)
   }, [loading, prLoading, prData])
@@ -66,7 +74,14 @@ export default function PullRequest() {
   }, [prData?.stats, stats])
   const onAddDescriptionClick = useCallback(() => {
     setShowEditDescription(true)
-  }, [])
+    history.replace(
+      routes.toCODEPullRequest({
+        repoPath: repoMetadata?.path as string,
+        pullRequestId,
+        pullRequestSection: PullRequestSection.CONVERSATION
+      })
+    )
+  }, [history, routes, repoMetadata?.path, pullRequestId])
 
   useEffect(
     function setStatsIfNotSet() {
@@ -136,10 +151,11 @@ export default function PullRequest() {
         <Render when={repoMetadata && prData}>
           <>
             <PullRequestMetaLine repoMetadata={repoMetadata as TypesRepository} {...prData} />
-            <Container className={tabContainerCSS.tabsContainer} style={{ minHeight: 'calc(100vh - 97px)' }}>
+            <Container className={tabContainerCSS.tabsContainer}>
               <Tabs
                 id="prTabs"
                 defaultSelectedTabId={activeTab}
+                selectedTabId={activeTab}
                 large={false}
                 onChange={tabId => {
                   history.replace(
@@ -164,6 +180,7 @@ export default function PullRequest() {
                       <Conversation
                         repoMetadata={repoMetadata as TypesRepository}
                         pullRequestMetadata={prData as TypesPullReq}
+                        prChecksDecisionResult={prChecksDecisionResult}
                         onCommentUpdate={() => {
                           setShowEditDescription(false)
                           refetchPullRequest()
@@ -208,8 +225,9 @@ export default function PullRequest() {
                         <Changes
                           repoMetadata={repoMetadata as TypesRepository}
                           pullRequestMetadata={prData as TypesPullReq}
-                          targetBranch={prData?.target_branch}
-                          sourceBranch={prData?.source_branch}
+                          defaultCommitRange={compact(commitSHA?.split(/~1\.\.\.|\.\.\./g))}
+                          targetRef={prData?.merge_base_sha}
+                          sourceRef={prData?.source_sha}
                           emptyTitle={getString('noChanges')}
                           emptyMessage={getString('noChangesPR')}
                           onCommentUpdate={voidFn(refetchPullRequest)}
@@ -220,16 +238,44 @@ export default function PullRequest() {
                   },
                   {
                     id: PullRequestSection.CHECKS,
-                    disabled: window.location.hostname !== 'localhost', // TODO: Remove when API supports checks
                     title: (
                       <TabTitleWithCount
-                        icon={CodeIcon.ChecksSuccess}
+                        icon="main-search"
+                        iconSize={14}
                         title={getString('checks')}
-                        count={0} // TODO: Count for checks when API supports it
+                        countElement={
+                          prChecksDecisionResult?.overallStatus ? (
+                            <Container className={css.checksCount}>
+                              <Layout.Horizontal className={css.checksCountLayout}>
+                                <PRCheckExecutionStatus
+                                  status={prChecksDecisionResult?.overallStatus}
+                                  noBackground
+                                  iconOnly
+                                  iconSize={15}
+                                />
+
+                                <Text
+                                  color={prChecksDecisionResult?.color}
+                                  padding={{ left: 'xsmall' }}
+                                  tag="span"
+                                  font={{ variation: FontVariation.FORM_MESSAGE_WARNING }}>
+                                  {prChecksDecisionResult?.count[prChecksDecisionResult?.overallStatus]}
+                                </Text>
+                              </Layout.Horizontal>
+                            </Container>
+                          ) : null
+                        }
+                        count={prChecksDecisionResult?.count?.failure || 0}
                         padding={{ left: 'medium' }}
                       />
                     ),
-                    panel: <Checks />
+                    panel: (
+                      <Checks
+                        repoMetadata={repoMetadata as TypesRepository}
+                        pullRequestMetadata={prData as TypesPullReq}
+                        prChecksDecisionResult={prChecksDecisionResult}
+                      />
+                    )
                   }
                 ]}
               />
@@ -239,13 +285,6 @@ export default function PullRequest() {
       </PageBody>
     </Container>
   )
-}
-
-enum PullRequestSection {
-  CONVERSATION = 'conversation',
-  COMMITS = 'commits',
-  FILES_CHANGED = 'changes',
-  CHECKS = 'checks'
 }
 
 const PR_POLLING_INTERVAL = 10000

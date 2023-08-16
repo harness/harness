@@ -9,6 +9,7 @@ import "shared.proto";
 // introduced between a set of commits.
 service DiffService {
   rpc RawDiff(DiffRequest) returns (stream RawDiffResponse) {}
+  rpc Diff(DiffRequest) returns (stream DiffResponse) {}
   rpc DiffShortStat(DiffRequest) returns (DiffShortStatResponse) {}
   rpc GetDiffHunkHeaders(GetDiffHunkHeadersRequest) returns (GetDiffHunkHeadersResponse) {}
   rpc DiffCut(DiffCutRequest) returns (DiffCutResponse) {}
@@ -23,6 +24,8 @@ message DiffRequest {
   // merge_base used only in branch comparison, if merge_base is true
   // it will show diff from the commit where branch is created and head branch
   bool merge_base = 4;
+  // include_patch
+  bool include_patch = 5;
 }
 
 message RawDiffResponse {
@@ -83,4 +86,43 @@ message DiffCutResponse {
   repeated string lines = 3;
   string merge_base_sha = 4;
   string latest_source_sha = 5;
+}
+
+message DiffResponse {
+  // A list of different file statuses
+  enum FileStatus {
+    // undefined
+    UNDEFINED = 0;
+    // file has been added
+    ADDED = 1;
+    // file has been changed
+    MODIFIED = 2;
+    // file has been deleted
+    DELETED = 3;
+    // the file has been renamed
+    RENAMED = 4;
+  }
+  // The path and name of the file
+  string path = 1;
+  // The old path and name of the file
+  string old_path = 2;
+  // sha (SHA1 hash) of the file. For a changed/new file, it is the new SHA,
+	// and for a deleted file it becomes "000000".
+  string sha = 3;
+  // old_sha is the old index (SHA1 hash) of the file.
+  string old_sha = 4;
+  // status of the file.
+  FileStatus status = 5;
+  // total number of additions in the file
+  int32 additions = 6;
+  // total number of deletions in the file
+  int32 deletions = 7;
+  // number of changes in the file
+  int32 changes = 8;
+  // patch from the file diff
+  bytes patch = 9;
+  // is binary file
+  bool is_binary = 10;
+  // is submodule
+  bool is_submodule = 11;
 }

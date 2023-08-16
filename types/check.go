@@ -33,6 +33,12 @@ type CheckPayload struct {
 	Data    json.RawMessage       `json:"data"`
 }
 
+// CheckListOptions holds check list query parameters.
+type CheckListOptions struct {
+	Page int `json:"page"`
+	Size int `json:"size"`
+}
+
 type ReqCheck struct {
 	ID            int64  `json:"id"`
 	CreatedBy     int64  `json:"-"` // clients will use "added_by"
@@ -42,4 +48,8 @@ type ReqCheck struct {
 	CheckUID      string `json:"check_uid"`
 
 	AddedBy PrincipalInfo `json:"added_by"`
+}
+
+type CheckPayloadText struct {
+	Details string `json:"details"`
 }

@@ -12,15 +12,19 @@ import (
 	"github.com/harness/gitness/internal/api/controller/system"
 
 	cliserver "github.com/harness/gitness/cli/server"
+	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
 	gitrpccron "github.com/harness/gitness/gitrpc/server/cron"
 	checkcontroller "github.com/harness/gitness/internal/api/controller/check"
+	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/githook"
+	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/api/controller/secret"
 	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
@@ -81,6 +85,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		gitrpc.WireSet,
 		store.WireSet,
 		check.WireSet,
+		encrypt.WireSet,
 		cliserver.ProvideEventsConfig,
 		events.WireSet,
 		cliserver.ProvideWebhookConfig,
@@ -92,6 +97,9 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		codecomments.WireSet,
 		gitrpccron.WireSet,
 		checkcontroller.WireSet,
+		execution.WireSet,
+		pipeline.WireSet,
+		secret.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

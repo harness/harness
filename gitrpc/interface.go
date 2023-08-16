@@ -23,6 +23,7 @@ type Interface interface {
 	DeleteBranch(ctx context.Context, params *DeleteBranchParams) error
 	ListBranches(ctx context.Context, params *ListBranchesParams) (*ListBranchesOutput, error)
 	GetRef(ctx context.Context, params GetRefParams) (GetRefResponse, error)
+	PathsDetails(ctx context.Context, params PathsDetailsParams) (PathsDetailsOutput, error)
 
 	// UpdateRef creates, updates or deletes a git ref. If the OldValue is defined it must match the reference value
 	// prior to the call. To remove a ref use the zero ref as the NewValue. To require the creation of a new one and
@@ -49,6 +50,7 @@ type Interface interface {
 	 * Diff services
 	 */
 	RawDiff(ctx context.Context, in *DiffParams, w io.Writer) error
+	Diff(ctx context.Context, in *DiffParams, baseURL string) (<-chan *FileDiff, <-chan error)
 	DiffShortStat(ctx context.Context, params *DiffParams) (DiffShortStatOutput, error)
 	DiffStats(ctx context.Context, params *DiffParams) (DiffStatsOutput, error)
 

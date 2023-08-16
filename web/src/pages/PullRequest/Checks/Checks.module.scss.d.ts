@@ -2,15 +2,25 @@
 // this is an auto-generated file
 declare const styles: {
   readonly main: string
-  readonly stagesContainer: string
-  readonly terminalContainer: string
-  readonly stagesHeader: string
-  readonly stageSection: string
+  readonly menu: string
+  readonly content: string
+  readonly menuItem: string
+  readonly layout: string
   readonly expanded: string
   readonly chevron: string
-  readonly sectionName: string
-  readonly stageSectionDetails: string
+  readonly selected: string
+  readonly uid: string
+  readonly subMenu: string
   readonly text: string
   readonly active: string
+  readonly markdown: string
+  readonly terminal: string
+  readonly header: string
+  readonly headerLayout: string
+  readonly markdownContainer: string
+  readonly terminalContainer: string
+  readonly status: string
+  readonly invert: string
+  readonly noShrink: string
 }
 export default styles

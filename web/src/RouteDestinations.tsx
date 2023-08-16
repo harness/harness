@@ -5,6 +5,8 @@ import { SignUp } from 'pages/SignUp/SignUp'
 import Repository from 'pages/Repository/Repository'
 import { routes, pathProps } from 'RouteDefinitions'
 import RepositoriesListing from 'pages/RepositoriesListing/RepositoriesListing'
+import PipelineList from 'pages/PipelineList/PipelineList'
+import SecretList from 'pages/SecretList/SecretList'
 import { LayoutWithSideNav, LayoutWithoutSideNav } from 'layouts/layout'
 import RepositoryFileEdit from 'pages/RepositoryFileEdit/RepositoryFileEdit'
 import RepositoryCommits from 'pages/RepositoryCommits/RepositoryCommits'
@@ -25,10 +27,16 @@ import ChangePassword from 'pages/ChangePassword/ChangePassword'
 import SpaceAccessControl from 'pages/SpaceAccessControl/SpaceAccessControl'
 import SpaceSettings from 'pages/SpaceSettings/SpaceSettings'
 import { useStrings } from 'framework/strings'
+import { useFeatureFlag } from 'hooks/useFeatureFlag'
+import ExecutionList from 'pages/ExecutionList/ExecutionList'
+import Execution from 'pages/Execution/Execution'
+import Secret from 'pages/Secret/Secret'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
   const repoPath = `${pathProps.space}/${pathProps.repoName}`
+
+  const { OPEN_SOURCE_PIPELINES, OPEN_SOURCE_SECRETS } = useFeatureFlag()
 
   return (
     <BrowserRouter>
@@ -96,6 +104,12 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
             routes.toCODEPullRequest({
               repoPath,
               pullRequestId: pathProps.pullRequestId,
+              pullRequestSection: pathProps.pullRequestSection,
+              commitSHA: pathProps.commitSHA
+            }),
+            routes.toCODEPullRequest({
+              repoPath,
+              pullRequestId: pathProps.pullRequestId,
               pullRequestSection: pathProps.pullRequestSection
             }),
             routes.toCODEPullRequest({
@@ -143,11 +157,57 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </LayoutWithSideNav>
         </Route>
 
-        <Route path={routes.toCODERepositories({ space: pathProps.space })} exact>
+        <Route path={routes.toCODERepositories({ space: pathProps.space })}>
           <LayoutWithSideNav title={getString('pageTitle.repositories')}>
             <RepositoriesListing />
           </LayoutWithSideNav>
         </Route>
+
+        {OPEN_SOURCE_PIPELINES && (
+          <Route
+            path={routes.toCODEExecution({
+              space: pathProps.space,
+              pipeline: pathProps.pipeline,
+              execution: pathProps.execution
+            })}
+            exact>
+            <LayoutWithSideNav title={getString('pageTitle.executions')}>
+              <Execution />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {OPEN_SOURCE_PIPELINES && (
+          <Route path={routes.toCODEExecutions({ space: pathProps.space, pipeline: pathProps.pipeline })} exact>
+            <LayoutWithSideNav title={getString('pageTitle.executions')}>
+              <ExecutionList />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {OPEN_SOURCE_PIPELINES && (
+          <Route path={routes.toCODEPipelines({ space: pathProps.space })} exact>
+            <LayoutWithSideNav title={getString('pageTitle.pipelines')}>
+              <PipelineList />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {OPEN_SOURCE_SECRETS && (
+          <Route path={routes.toCODESecret({ space: pathProps.space, secret: pathProps.secret })} exact>
+            <LayoutWithSideNav title={getString('pageTitle.secrets')}>
+              <Secret />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {OPEN_SOURCE_SECRETS && (
+          <Route path={routes.toCODESecrets({ space: pathProps.space })} exact>
+            <LayoutWithSideNav title={getString('pageTitle.secrets')}>
+              <SecretList />
+            </LayoutWithSideNav>
+          </Route>
+        )}
 
         <Route
           path={routes.toCODECommit({

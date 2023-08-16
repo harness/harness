@@ -320,3 +320,9 @@ type TempRepository struct {
 	BaseSHA string
 	HeadSHA string
 }
+
+type PathDetails struct {
+	Path       string
+	LastCommit *Commit
+	Size       int64
+}

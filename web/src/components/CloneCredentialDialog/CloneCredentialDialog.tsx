@@ -10,6 +10,7 @@ import {
   Text,
   useToaster
 } from '@harness/uicore'
+import { useMutate } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { CopyButton } from 'components/CopyButton/CopyButton'
@@ -27,20 +28,31 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
   const { setFlag, flag } = props
   const history = useHistory()
   const { getString } = useStrings()
-  const { hooks, currentUser, currentUserProfileURL } = useAppContext()
+  const { hooks, currentUser, currentUserProfileURL, standalone, routes } = useAppContext()
   const [token, setToken] = useState('')
   const { showError } = useToaster()
   const hash = generateAlphaNumericHash(6)
-
-  const tokenData = hooks?.useGenerateToken?.(hash, currentUser.uid, flag)
+  const { mutate } = useMutate({ path: '/api/v1/user/tokens', verb: 'POST' })
+  const genToken = async (props: { uid: string }) => {
+    const res = await mutate({ uid: props.uid })
+    try {
+      setToken(res?.access_token)
+    } catch {
+      showError(res?.data?.message || res?.message)
+    }
+    return res
+  }
+  const tokenData = standalone ? false : hooks?.useGenerateToken?.(hash, currentUser.uid, flag)
   useEffect(() => {
     if (tokenData) {
       if (tokenData && tokenData?.status !== 400) {
         setToken(tokenData?.data)
       } else if (tokenData?.status === 400 && flag) {
-        setToken('N/A')
         showError(tokenData?.data?.message || tokenData?.message)
       }
+    } else if (!tokenData && standalone && flag) {
+      let payload = { uid: `code_token_${hash}` }
+      genToken(payload)
     }
   }, [flag, tokenData, showError])
   return (
@@ -88,7 +100,7 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
         </Text>
         <Button
           onClick={() => {
-            history.push(currentUserProfileURL)
+            history.push(standalone ? routes.toCODEUserProfile() : currentUserProfileURL)
           }}
           variation={ButtonVariation.TERTIARY}
           text={getString('manageApiToken')}

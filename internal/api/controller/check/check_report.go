@@ -5,6 +5,7 @@
 package check
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -50,19 +51,62 @@ func (in *ReportInput) Validate() error {
 	}
 	in.Payload.Kind = payloadKind
 
-	//nolint:gocritic // more values to follow on the enum (we want linter warning in case it is missed)
 	switch in.Payload.Kind {
-	case enum.CheckPayloadKindExternal:
-		// the default external type does not support payload: clear it here
+	case enum.CheckPayloadKindEmpty:
+		// the default payload kind (empty) does not support the payload data: clear it here
 		in.Payload.Version = ""
-		in.Payload.Data = []byte{'{', '}'}
+		in.Payload.Data = []byte("{}")
 
-		if in.Link == "" { // the link is mandatory for the external
+		if in.Link == "" { // the link is mandatory as there is nothing in the payload
 			return usererror.BadRequest("Link is missing")
 		}
+
+	case enum.CheckPayloadKindRaw, enum.CheckPayloadKindMarkdown:
+		// the text payload kinds (raw and markdown) do not support the version
+		if in.Payload.Version != "" {
+			return usererror.BadRequestf("Payload version must be empty for the payload kind '%s'",
+				in.Payload.Kind)
+		}
+
+		payloadDataJSON, err := sanitizeJsonPayload(in.Payload.Data, &types.CheckPayloadText{})
+		if err != nil {
+			return err
+		}
+
+		in.Payload.Data = payloadDataJSON
 	}
 
 	return nil
+}
+
+func sanitizeJsonPayload(source json.RawMessage, data any) (json.RawMessage, error) {
+	if len(source) == 0 {
+		return json.Marshal(data) // marshal the empty object
+	}
+
+	decoder := json.NewDecoder(bytes.NewReader(source))
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(&data); err != nil {
+		return nil, usererror.BadRequestf("Payload data doesn't match the required format: %s", err.Error())
+	}
+
+	buffer := bytes.NewBuffer(nil)
+	buffer.Grow(512)
+
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(data); err != nil {
+		return nil, fmt.Errorf("failed to sanitize json payload: %w", err)
+	}
+
+	result := buffer.Bytes()
+
+	if result[len(result)-1] == '\n' {
+		result = result[:len(result)-1]
+	}
+
+	return result, nil
 }
 
 // Report modifies an existing or creates a new (if none yet exists) status check report for a specific commit.

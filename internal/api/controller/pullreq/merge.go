@@ -143,7 +143,12 @@ func (c *Controller) Merge(
 		Method:          gitrpcenum.MergeMethod(in.Method),
 	})
 	if err != nil {
-		return types.MergeResponse{}, err
+		if gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable {
+			return types.MergeResponse{
+				ConflictFiles: gitrpc.AsConflictFilesError(err),
+			}, nil
+		}
+		return types.MergeResponse{}, fmt.Errorf("merge check execution failed: %w", err)
 	}
 
 	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {

@@ -30,12 +30,15 @@ func HandleCheckList(checkCtrl *check.Controller) http.HandlerFunc {
 			return
 		}
 
-		list, err := checkCtrl.ListChecks(ctx, session, repoRef, commitSHA)
+		opts := request.ParseCheckListOptions(r)
+
+		checks, count, err := checkCtrl.ListChecks(ctx, session, repoRef, commitSHA, opts)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusOK, list)
+		render.Pagination(r, w, opts.Page, opts.Size, count)
+		render.JSON(w, http.StatusOK, checks)
 	}
 }

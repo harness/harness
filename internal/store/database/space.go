@@ -270,6 +270,7 @@ func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilte
 	if err != nil {
 		return 0, database.ProcessSQLErrorf(err, "Failed executing count query")
 	}
+
 	return count, nil
 }
 

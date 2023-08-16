@@ -35,15 +35,13 @@ export function CloneButtonTooltip({ httpsURL }: CloneButtonTooltipProps) {
             <CopyButton content={httpsURL} id={css.cloneCopyButton} icon={CodeIcon.Copy} iconProps={{ size: 14 }} />
           </Layout.Horizontal>
         </Container>
-        {standalone ? null : (
-          <Button
-            onClick={() => {
-              setFlag(true)
-            }}
-            variation={ButtonVariation.SECONDARY}>
-            {getString('generateCloneCred')}
-          </Button>
-        )}
+        <Button
+          onClick={() => {
+            setFlag(true)
+          }}
+          variation={ButtonVariation.SECONDARY}>
+          {getString('generateCloneCred')}
+        </Button>
       </Layout.Vertical>
       <CloneCredentialDialog flag={flag} setFlag={setFlag} />
     </Container>

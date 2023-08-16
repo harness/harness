@@ -5,9 +5,14 @@
 package server
 
 import (
+	"time"
+
+	"github.com/harness/gitness/cache"
 	"github.com/harness/gitness/gitrpc/internal/gitea"
 	"github.com/harness/gitness/gitrpc/internal/service"
+	"github.com/harness/gitness/gitrpc/internal/types"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/google/wire"
 )
 
@@ -16,10 +21,37 @@ var WireSet = wire.NewSet(
 	ProvideServer,
 	ProvideHTTPServer,
 	ProvideGITAdapter,
+	ProvideGoGitRepoCache,
+	ProvideLastCommitCache,
 )
 
-func ProvideGITAdapter() (service.GitAdapter, error) {
-	return gitea.New()
+func ProvideGoGitRepoCache() cache.Cache[string, *gitea.RepoEntryValue] {
+	return gitea.NewRepoCache()
+}
+
+func ProvideLastCommitCache(
+	config Config,
+	redisClient redis.UniversalClient,
+	repoCache cache.Cache[string, *gitea.RepoEntryValue],
+) cache.Cache[gitea.CommitEntryKey, *types.Commit] {
+	cacheDuration := time.Duration(config.LastCommitCache.DurationSeconds) * time.Second
+
+	if config.LastCommitCache.Mode == ModeNone || cacheDuration < time.Second {
+		return gitea.NoLastCommitCache(repoCache)
+	}
+
+	if config.LastCommitCache.Mode == ModeRedis && redisClient != nil {
+		return gitea.NewRedisLastCommitCache(redisClient, cacheDuration, repoCache)
+	}
+
+	return gitea.NewInMemoryLastCommitCache(cacheDuration, repoCache)
+}
+
+func ProvideGITAdapter(
+	repoCache cache.Cache[string, *gitea.RepoEntryValue],
+	lastCommitCache cache.Cache[gitea.CommitEntryKey, *types.Commit],
+) (service.GitAdapter, error) {
+	return gitea.New(repoCache, lastCommitCache)
 }
 
 func ProvideServer(config Config, adapter service.GitAdapter) (*GRPCServer, error) {

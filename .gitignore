@@ -6,9 +6,12 @@ _research
 *.sqlite
 *.sqlite3
 web/node_modules
-web/dist/files
+web/dist
+web/coverage
+yarn-error*
 release
 .idea
+.vscode/settings.json
 coverage.out
 gitness.session.sql
 

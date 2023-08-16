@@ -13,10 +13,10 @@ import {
 } from '@harness/uicore'
 import * as Yup from 'yup'
 
-import { Link, useHistory } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import AuthLayout from 'components/AuthLayout/AuthLayout'
-import { routes } from 'RouteDefinitions'
+import { useAppContext } from 'AppContext'
 import { getErrorMessage, type RegisterForm } from 'utils/Utils'
 import { useOnRegister } from 'services/code'
 import { useAPIToken } from 'hooks/useAPIToken'
@@ -24,8 +24,8 @@ import css from './SignUp.module.scss'
 
 // Renders the Register page.
 export const SignUp: React.FC = () => {
+  const { routes } = useAppContext()
   const { getString } = useStrings()
-  const history = useHistory()
   const { showError, showSuccess } = useToaster()
   const [, setToken] = useAPIToken()
 
@@ -52,7 +52,7 @@ export const SignUp: React.FC = () => {
           showError(getErrorMessage(error))
         })
     },
-    [mutate, setToken, showSuccess, showError, history, getString]
+    [mutate, setToken, showSuccess, showError, getString]
   )
 
   const handleSubmit = (data: RegisterForm): void => {

@@ -1,93 +1,282 @@
-import React, { useCallback, useRef } from 'react'
-import { Render } from 'react-jsx-match'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Falsy, Match, Render, Truthy } from 'react-jsx-match'
+import { CheckCircle, NavArrowRight } from 'iconoir-react'
 import SplitPane from 'react-split-pane'
+import { get } from 'lodash-es'
 import cx from 'classnames'
-import { Container, Layout, Text, Color, FlexExpander, Icon, useToggle } from '@harness/uicore'
+import { useHistory } from 'react-router-dom'
+import {
+  Container,
+  Layout,
+  Text,
+  Color,
+  FlexExpander,
+  Icon,
+  useToggle,
+  FontVariation,
+  Utils,
+  Button,
+  ButtonVariation,
+  ButtonSize
+} from '@harness/uicore'
 import { LogViewer, TermRefs } from 'components/LogViewer/LogViewer'
-import { ButtonRoleProps } from 'utils/Utils'
+import { ButtonRoleProps, PullRequestCheckType, PullRequestSection, timeDistance } from 'utils/Utils'
+import type { GitInfoProps } from 'utils/GitUtils'
+import { useAppContext } from 'AppContext'
+import { useQueryParams } from 'hooks/useQueryParams'
+import { useStrings } from 'framework/strings'
+import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
+import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
+import type { TypesCheck } from 'services/code'
+import { PRCheckExecutionState, PRCheckExecutionStatus } from 'components/PRCheckExecutionStatus/PRCheckExecutionStatus'
 import css from './Checks.module.scss'
 
-// interface ChecksProps {}
+interface ChecksProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+  prChecksDecisionResult?: PRChecksDecisionResult
+}
 
-export function Checks() {
+export const Checks: React.FC<ChecksProps> = props => {
+  const { getString } = useStrings()
   const termRefs = useRef<TermRefs>()
   const onSplitPaneResized = useCallback(() => termRefs.current?.fitAddon?.fit(), [])
+  const [selectedItemData, setSelectedItemData] = useState<TypesCheck>()
+  const isCheckDataMarkdown = useMemo(
+    () => selectedItemData?.payload?.kind === PullRequestCheckType.MARKDOWN,
+    [selectedItemData?.payload?.kind]
+  )
+  const logContent = useMemo(
+    () => get(selectedItemData, 'payload.data.details', selectedItemData?.summary || ''),
+    [selectedItemData]
+  )
+
+  if (!props.prChecksDecisionResult) {
+    return null
+  }
 
   return (
     <Container className={css.main}>
-      <SplitPane
-        split="vertical"
-        size="calc(100% - 400px)"
-        minSize={800}
-        maxSize="calc(100% - 900px)"
-        onDragFinished={onSplitPaneResized}
-        primary="second">
-        <StagesContainer />
-        <Container className={css.terminalContainer}>
-          <LogViewer termRefs={termRefs} content={`...`} />
-        </Container>
-      </SplitPane>
-    </Container>
-  )
-}
-
-const StagesContainer: React.FC = () => {
-  return (
-    <Container className={css.stagesContainer}>
-      <Container>
-        <Layout.Horizontal className={css.stagesHeader}>
-          <Container>
-            <Layout.Horizontal spacing="xsmall">
-              <span data-stage-state="success" />
-              <span data-stage-state="failed" />
-              <span data-stage-state="success" />
-              <span data-stage-state="running" />
-              <span data-stage-state="pending" />
-            </Layout.Horizontal>
+      <Match expr={props.prChecksDecisionResult?.overallStatus}>
+        <Truthy>
+          <SplitPane
+            split="vertical"
+            size="calc(100% - 400px)"
+            minSize={800}
+            maxSize="calc(100% - 900px)"
+            onDragFinished={onSplitPaneResized}
+            primary="second">
+            <ChecksMenu
+              {...props}
+              onDataItemChanged={data => {
+                setTimeout(() => setSelectedItemData(data), 0)
+              }}
+            />
+            <Container
+              className={cx(css.content, {
+                [css.markdown]: isCheckDataMarkdown,
+                [css.terminal]: !isCheckDataMarkdown
+              })}>
+              <Render when={selectedItemData}>
+                <Container className={css.header}>
+                  <Layout.Horizontal className={css.headerLayout} spacing="small">
+                    <PRCheckExecutionStatus
+                      className={cx(css.status, {
+                        [css.invert]: selectedItemData?.status === PRCheckExecutionState.PENDING
+                      })}
+                      status={selectedItemData?.status as PRCheckExecutionState}
+                      iconSize={20}
+                      noBackground
+                      iconOnly
+                    />
+                    <Text font={{ variation: FontVariation.BODY1 }} color={Color.WHITE}>
+                      {selectedItemData?.uid}
+                    </Text>
+                    <FlexExpander />
+                    <Render when={selectedItemData?.link}>
+                      <Button
+                        className={css.noShrink}
+                        text={getString('prChecks.viewExternal')}
+                        rightIcon="chevron-right"
+                        variation={ButtonVariation.SECONDARY}
+                        size={ButtonSize.SMALL}
+                        onClick={() => {
+                          window.open(selectedItemData?.link, '_blank')
+                        }}
+                      />
+                    </Render>
+                  </Layout.Horizontal>
+                </Container>
+              </Render>
+              <Match expr={isCheckDataMarkdown}>
+                <Truthy>
+                  <Container className={css.markdownContainer}>
+                    <MarkdownViewer darkMode source={logContent} />
+                  </Container>
+                </Truthy>
+                <Falsy>
+                  <Container className={css.terminalContainer}>
+                    <LogViewer termRefs={termRefs} content={logContent} />
+                  </Container>
+                </Falsy>
+              </Match>
+            </Container>
+          </SplitPane>
+        </Truthy>
+        <Falsy>
+          <Container flex={{ align: 'center-center' }} height="90%">
+            <Text font={{ variation: FontVariation.BODY1 }}>{getString('prChecks.notFound')}</Text>
           </Container>
-          <FlexExpander />
-          <Text color={Color.GREY_400}>5 stages</Text>
-        </Layout.Horizontal>
-      </Container>
-      <Container>
-        {['Mandatory PreRequisite', 'JiraCreateApprove', 'ui', 'JiraClosure'].map(title => (
-          <StageSection key={title} title={title} isExpanded={title === 'ui' || title === 'Mandatory PreRequisite'} />
-        ))}
-      </Container>
+        </Falsy>
+      </Match>
     </Container>
   )
 }
 
-interface StageSectionProps {
-  title: string
-  isExpanded?: boolean
+interface ChecksMenuProps extends ChecksProps {
+  onDataItemChanged: (itemData: TypesCheck) => void
 }
 
-const StageSection: React.FC<StageSectionProps> = ({ title, isExpanded = false }) => {
-  const [expanded, toogleExpanded] = useToggle(isExpanded)
+const ChecksMenu: React.FC<ChecksMenuProps> = ({
+  repoMetadata,
+  pullRequestMetadata,
+  prChecksDecisionResult,
+  onDataItemChanged
+}) => {
+  const { routes } = useAppContext()
+  const history = useHistory()
+  const { uid } = useQueryParams<{ uid: string }>()
+  const [selectedUID, setSelectedUID] = React.useState<string | undefined>()
+
+  useMemo(() => {
+    if (selectedUID) {
+      const selectedDataItem = prChecksDecisionResult?.data?.find(item => item.uid === selectedUID)
+      if (selectedDataItem) {
+        onDataItemChanged(selectedDataItem)
+      }
+    }
+  }, [selectedUID, prChecksDecisionResult?.data, onDataItemChanged])
+
+  useEffect(() => {
+    if (uid) {
+      if (uid !== selectedUID && prChecksDecisionResult?.data?.find(item => item.uid === uid)) {
+        setSelectedUID(uid)
+      }
+    } else {
+      // Find and set a default selected item. Order: Error, Failure, Running, Success, Pending
+      const defaultSelectedItem =
+        prChecksDecisionResult?.data?.find(({ status }) => status === PRCheckExecutionState.ERROR) ||
+        prChecksDecisionResult?.data?.find(({ status }) => status === PRCheckExecutionState.FAILURE) ||
+        prChecksDecisionResult?.data?.find(({ status }) => status === PRCheckExecutionState.RUNNING) ||
+        prChecksDecisionResult?.data?.find(({ status }) => status === PRCheckExecutionState.SUCCESS) ||
+        prChecksDecisionResult?.data?.find(({ status }) => status === PRCheckExecutionState.PENDING) ||
+        prChecksDecisionResult?.data?.[0]
+
+      if (defaultSelectedItem) {
+        onDataItemChanged(defaultSelectedItem)
+        setSelectedUID(defaultSelectedItem.uid)
+        history.replace(
+          routes.toCODEPullRequest({
+            repoPath: repoMetadata.path as string,
+            pullRequestId: String(pullRequestMetadata.number),
+            pullRequestSection: PullRequestSection.CHECKS
+          }) + `?uid=${defaultSelectedItem.uid}`
+        )
+      }
+    }
+  }, [
+    uid,
+    prChecksDecisionResult?.data,
+    selectedUID,
+    history,
+    routes,
+    repoMetadata.path,
+    pullRequestMetadata.number,
+    onDataItemChanged
+  ])
 
   return (
-    <Container key={title} className={cx(css.stageSection, { [css.expanded]: expanded })}>
-      <Layout.Horizontal spacing="small" className={css.sectionName} {...ButtonRoleProps} onClick={toogleExpanded}>
-        <Icon className={css.chevron} name="chevron-right" size={16} color={Color.GREY_800} />
-        <Icon name="tick-circle" size={16} color={Color.GREEN_500} />
-        <Text color={Color.GREY_800}>
-          <strong>{title}</strong>
+    <Container className={css.menu}>
+      {prChecksDecisionResult?.data?.map(itemData => (
+        <CheckMenuItem
+          repoMetadata={repoMetadata}
+          pullRequestMetadata={pullRequestMetadata}
+          prChecksDecisionResult={prChecksDecisionResult}
+          key={itemData.uid}
+          itemData={itemData}
+          expandable={false}
+          isSelected={itemData.uid === selectedUID}
+          onClick={() => {
+            history.replace(
+              routes.toCODEPullRequest({
+                repoPath: repoMetadata.path as string,
+                pullRequestId: String(pullRequestMetadata.number),
+                pullRequestSection: PullRequestSection.CHECKS
+              }) + `?uid=${itemData.uid}`
+            )
+            setSelectedUID(itemData.uid)
+          }}
+        />
+      ))}
+    </Container>
+  )
+}
+
+interface CheckMenuItemProps extends ChecksProps {
+  expandable?: boolean
+  isSelected?: boolean
+  itemData: TypesCheck
+  onClick: () => void
+}
+
+const CheckMenuItem: React.FC<CheckMenuItemProps> = ({ expandable, isSelected = false, itemData, onClick }) => {
+  const [expanded, toogleExpanded] = useToggle(isSelected)
+
+  return (
+    <Container className={css.menuItem}>
+      <Layout.Horizontal
+        spacing="small"
+        className={cx(css.layout, { [css.expanded]: expanded, [css.selected]: isSelected })}
+        {...ButtonRoleProps}
+        onClick={expandable ? toogleExpanded : onClick}>
+        <Render when={expandable}>
+          <NavArrowRight color={Utils.getRealCSSColor(Color.GREY_500)} className={cx(css.noShrink, css.chevron)} />
+        </Render>
+
+        <Match expr={expandable}>
+          <Truthy>
+            <Icon name="ci-main" size={16} />
+          </Truthy>
+          <Falsy>
+            <CheckCircle color={Utils.getRealCSSColor(Color.GREY_500)} className={css.noShrink} />
+          </Falsy>
+        </Match>
+
+        <Text className={css.uid} lineClamp={1}>
+          {itemData.uid}
         </Text>
+
         <FlexExpander />
-        <Text color={Color.GREY_400}>1:20</Text>
+
+        <Text color={Color.GREY_300} font={{ variation: FontVariation.SMALL }} className={css.noShrink}>
+          {timeDistance(itemData.updated, itemData.created)}
+        </Text>
+
+        <PRCheckExecutionStatus
+          className={cx(css.status, css.noShrink)}
+          status={itemData.status as PRCheckExecutionState}
+          iconSize={16}
+          noBackground
+          iconOnly
+        />
       </Layout.Horizontal>
-      <Render when={expanded && title === 'Mandatory PreRequisite'}>
-        {['Skip UAT for Ingress Upgrade', 'Change List', 'Manager Approval'].map(name => (
-          <Layout.Horizontal spacing="small" key={name} className={css.stageSectionDetails} {...ButtonRoleProps}>
-            <Icon name="tick-circle" size={16} color={Color.GREEN_500} />
-            <Text color={Color.GREY_800} className={css.text}>
-              {name}
-            </Text>
-          </Layout.Horizontal>
-        ))}
-      </Render>
-      <Render when={expanded && title === 'ui'}>
+
+      {/*
+        TODO: This is reserved for future Pipeline implementation reference. Needs
+        a couple of things:
+          - persist selected pipeline stage in URL
+          - onClick back to the Menu
+          - Custom rendering for pipeline stages
+       */}
+      {/* <Render when={expanded && itemData.payload?.kind === PullRequestCheckType.PIPELINE}>
         {[
           'Service',
           'Infrastructure',
@@ -98,18 +287,14 @@ const StageSection: React.FC<StageSectionProps> = ({ title, isExpanded = false }
           'Slack_Notify',
           'Failover'
         ].map(name => (
-          <Layout.Horizontal
-            spacing="small"
-            key={name}
-            className={cx(css.stageSectionDetails, { [css.active]: name === 'Failover' })}
-            {...ButtonRoleProps}>
+          <Layout.Horizontal spacing="small" key={name} className={css.subMenu} {...ButtonRoleProps}>
             <Icon name="tick-circle" size={16} color={Color.GREEN_500} />
             <Text color={Color.GREY_800} className={css.text}>
               {name}
             </Text>
           </Layout.Horizontal>
         ))}
-      </Render>
+      </Render> */}
     </Container>
   )
 }

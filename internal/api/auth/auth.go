@@ -23,6 +23,7 @@ var (
 	ErrNotAuthenticated          = errors.New("not authenticated")
 	ErrNotAuthorized             = errors.New("not authorized")
 	ErrParentResourceTypeUnknown = errors.New("Unknown parent resource type")
+	ErrPrincipalTypeUnknown      = errors.New("Unknown principal type")
 )
 
 // Check checks if a resource specific permission is granted for the current auth session in the scope.

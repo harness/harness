@@ -23,7 +23,7 @@ import type { TypesCommit } from 'services/code'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
-import { FileSection, formatDate } from 'utils/Utils'
+import { FileSection, formatDate, PullRequestSection } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import type { CODERoutes } from 'RouteDefinitions'
 import css from './CommitsView.module.scss'
@@ -37,6 +37,7 @@ interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
   showFileHistoryIcons?: boolean
   resourcePath?: string
   setActiveTab?: React.Dispatch<React.SetStateAction<string>>
+  pullRequestMetadata?: GitInfoProps['pullRequestMetadata']
 }
 
 export function CommitsView({
@@ -48,7 +49,8 @@ export function CommitsView({
   prHasChanged,
   showFileHistoryIcons = false,
   resourcePath = '',
-  setActiveTab
+  setActiveTab,
+  pullRequestMetadata
 }: CommitsViewProps) {
   const history = useHistory()
   const { getString } = useStrings()
@@ -62,7 +64,13 @@ export function CommitsView({
           return (
             <Layout.Horizontal spacing="small" flex={{ alignItems: 'center' }} style={{ display: 'inline-flex' }}>
               <Avatar hoverCard={false} size="small" name={row.original.author?.identity?.name || ''} />
-              <Text icon="code-tag" iconProps={{ size: 22 }} className={css.rowText} color={Color.BLACK}>
+              <Text
+                lineClamp={1}
+                padding={{ right: 'small' }}
+                icon="code-tag"
+                iconProps={{ size: 22 }}
+                className={css.rowText}
+                color={Color.BLACK}>
                 {row.original.author?.identity?.name}
               </Text>
             </Layout.Horizontal>
@@ -87,10 +95,19 @@ export function CommitsView({
           return (
             <CommitActions
               sha={row.original.sha as string}
-              href={routes.toCODECommit({
-                repoPath: repoMetadata.path as string,
-                commitRef: row.original.sha as string
-              })}
+              href={
+                pullRequestMetadata?.number
+                  ? routes.toCODEPullRequest({
+                      repoPath: repoMetadata.path as string,
+                      pullRequestId: String(pullRequestMetadata.number),
+                      pullRequestSection: PullRequestSection.FILES_CHANGED,
+                      commitSHA: row.original.sha
+                    })
+                  : routes.toCODECommit({
+                      repoPath: repoMetadata.path as string,
+                      commitRef: row.original.sha as string
+                    })
+              }
               enableCopy
             />
           )

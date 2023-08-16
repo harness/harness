@@ -54,8 +54,8 @@ interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
   readOnly?: boolean
   pullRequestMetadata?: TypesPullReq
   onCommentUpdate: () => void
-  mergeBaseSHA?: string
-  sourceSHA?: string
+  targetRef?: string
+  sourceRef?: string
 }
 
 //
@@ -71,8 +71,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   repoMetadata,
   pullRequestMetadata,
   onCommentUpdate,
-  mergeBaseSHA,
-  sourceSHA
+  targetRef,
+  sourceRef
 }) => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
@@ -85,7 +85,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   const [diffRenderer, setDiffRenderer] = useState<Diff2HtmlUI>()
   const { ref: inViewRef, inView } = useInView({ rootMargin: '100px 0px' })
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const { currentUser } = useAppContext()
+  const { currentUser, standalone } = useAppContext()
   const { showError } = useToaster()
   const confirmAct = useConfirmAct()
   const path = useMemo(
@@ -345,8 +345,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                           line_start_new: !comment.left,
                           line_end_new: !comment.left,
                           path: diff.filePath,
-                          source_commit_sha: sourceSHA,
-                          target_commit_sha: mergeBaseSHA,
+                          source_commit_sha: sourceRef,
+                          target_commit_sha: targetRef,
                           text: value
                         }
 
@@ -471,8 +471,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       deleteComment,
       confirmAct,
       onCommentUpdate,
-      mergeBaseSHA,
-      sourceSHA,
+      targetRef,
+      sourceRef,
       pullRequestMetadata,
       repoMetadata
     ]
@@ -551,7 +551,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           </Layout.Horizontal>
         </Container>
 
-        <Container id={diff.contentId} className={css.diffContent} ref={contentRef}>
+        <Container
+          id={diff.contentId}
+          className={cx(css.diffContent, { [css.standalone]: standalone })}
+          ref={contentRef}>
           <Render when={renderCustomContent}>
             <Container>
               <Layout.Vertical padding="xlarge" style={{ alignItems: 'center' }}>

@@ -10,7 +10,7 @@ import {
   SplitButton,
   StringSubstitute,
   Text,
-  useToaster,
+  useToaster
 } from '@harness/uicore'
 import { useMutate } from 'restful-react'
 import { Case, Else, Match, Render, Truthy } from 'react-jsx-match'
@@ -351,7 +351,7 @@ const MergeInfo: React.FC<{ pullRequestMetadata: TypesPullReq }> = ({ pullReques
         </Container>
         <Text className={cx(css.sub, css.merged)}>
           <StringSubstitute
-            str={getString('pr.prMergedInfo')}
+            str={getString('pr.prMergedBannerInfo')}
             vars={{
               user: <strong>{pullRequestMetadata.merger?.display_name}</strong>,
               source: <strong>{pullRequestMetadata.source_branch}</strong>,

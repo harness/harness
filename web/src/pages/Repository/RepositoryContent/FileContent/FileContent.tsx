@@ -199,13 +199,13 @@ export function FileContent({
                           style={{ padding: '5px' }}
                           width="145px"
                           items={[
-                            {
-                              hasIcon: true,
-                              iconName: 'arrow-right',
-                              text: getString('viewRaw'),
-                              onClick: () => window.open(rawURL, '_blank') // TODO: This is still not working due to token is not stored in cookies
-                            },
-                            '-',
+                            // {
+                            //   hasIcon: true,
+                            //   iconName: 'arrow-right',
+                            //   text: getString('viewRaw'),
+                            //   onClick: () => window.open(rawURL, '_blank') // TODO: This is still not working due to token is not stored in cookies
+                            // },
+                            // '-',
                             {
                               hasIcon: true,
                               iconName: 'cloud-download',

@@ -5,8 +5,6 @@
 package gitrpc
 
 import (
-	"errors"
-
 	"github.com/harness/gitness/gitrpc/rpc"
 )
 
@@ -17,7 +15,7 @@ type ReadParams struct {
 
 func (p ReadParams) Validate() error {
 	if p.RepoUID == "" {
-		return errors.New("repository id cannot be empty")
+		return ErrInvalidArgumentf("repository id cannot be empty")
 	}
 	return nil
 }

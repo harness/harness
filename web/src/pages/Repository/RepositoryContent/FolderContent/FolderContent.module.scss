@@ -45,4 +45,36 @@
       padding: var(--spacing-xxlarge) !important;
     }
   }
+
+  .commitMsgLayout {
+    align-items: center;
+    padding-right: var(--spacing-large);
+  }
+
+  .linkContainer {
+    display: inline-block;
+
+    &.noShrink {
+      flex-shrink: inherit;
+    }
+
+    .link {
+      color: var(--primary-7) !important;
+
+      &,
+      .text {
+        font-size: 13px;
+        font-weight: 400;
+        cursor: pointer !important;
+      }
+
+      .text:hover {
+        color: var(--primary-7) !important;
+      }
+
+      .text.hightlight {
+        color: var(--primary-7) !important;
+      }
+    }
+  }
 }

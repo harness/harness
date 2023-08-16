@@ -25,8 +25,8 @@ type GitAdapter interface {
 	Push(ctx context.Context, repoPath string, opts types.PushOptions) error
 	ReadTree(ctx context.Context, repoPath, ref string, w io.Writer, args ...string) error
 	GetTreeNode(ctx context.Context, repoPath string, ref string, treePath string) (*types.TreeNode, error)
-	ListTreeNodes(ctx context.Context, repoPath string, ref string, treePath string,
-		recursive bool, includeLatestCommit bool) ([]types.TreeNodeWithCommit, error)
+	ListTreeNodes(ctx context.Context, repoPath string, ref string, treePath string) ([]types.TreeNode, error)
+	PathsDetails(ctx context.Context, repoPath string, ref string, paths []string) ([]types.PathDetails, error)
 	GetSubmodule(ctx context.Context, repoPath string, ref string, treePath string) (*types.Submodule, error)
 	GetBlob(ctx context.Context, repoPath string, sha string, sizeLimit int64) (*types.BlobReader, error)
 	WalkReferences(ctx context.Context, repoPath string, handler types.WalkReferencesHandler,
@@ -52,13 +52,40 @@ type GitAdapter interface {
 	Merge(ctx context.Context, pr *types.PullRequest, mergeMethod enum.MergeMethod, baseBranch, trackingBranch string,
 		tmpBasePath string, mergeMsg string, env []string, identity *types.Identity) error
 	GetMergeBase(ctx context.Context, repoPath, remote, base, head string) (string, string, error)
-	GetDiffTree(ctx context.Context, repoPath, baseBranch, headBranch string) (string, error)
-	RawDiff(ctx context.Context, repoPath, base, head string, w io.Writer, args ...string) error
-	DiffShortStat(ctx context.Context, repoPath string,
-		baseRef string, headRef string, direct bool) (types.DiffShortStat, error)
-	GetDiffHunkHeaders(ctx context.Context, repoPath, targetRef, sourceRef string) ([]*types.DiffFileHunkHeaders, error)
-	DiffCut(ctx context.Context, repoPath, targetRef, sourceRef, path string,
-		params types.DiffCutParams) (types.HunkHeader, types.Hunk, error)
 	Blame(ctx context.Context, repoPath, rev, file string, lineFrom, lineTo int) types.BlameReader
 	Sync(ctx context.Context, repoPath string, source string) error
+
+	//
+	// Diff operations
+	//
+
+	GetDiffTree(ctx context.Context,
+		repoPath,
+		baseBranch,
+		headBranch string) (string, error)
+
+	RawDiff(ctx context.Context,
+		repoPath,
+		base,
+		head string,
+		w io.Writer,
+		args ...string) error
+
+	DiffShortStat(ctx context.Context,
+		repoPath string,
+		baseRef string,
+		headRef string,
+		direct bool) (types.DiffShortStat, error)
+
+	GetDiffHunkHeaders(ctx context.Context,
+		repoPath string,
+		targetRef string,
+		sourceRef string) ([]*types.DiffFileHunkHeaders, error)
+
+	DiffCut(ctx context.Context,
+		repoPath string,
+		targetRef string,
+		sourceRef string,
+		path string,
+		params types.DiffCutParams) (types.HunkHeader, types.Hunk, error)
 }
