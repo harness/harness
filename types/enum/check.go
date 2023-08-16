@@ -36,14 +36,18 @@ func (s CheckPayloadKind) Sanitize() (CheckPayloadKind, bool) {
 	return Sanitize(s, GetAllCheckPayloadTypes)
 }
 func GetAllCheckPayloadTypes() ([]CheckPayloadKind, CheckPayloadKind) {
-	return checkPayloadTypes, CheckPayloadKindExternal
+	return checkPayloadTypes, CheckPayloadKindEmpty
 }
 
 // CheckPayloadKind enumeration.
 const (
-	CheckPayloadKindExternal CheckPayloadKind = "external"
+	CheckPayloadKindEmpty    CheckPayloadKind = ""
+	CheckPayloadKindRaw      CheckPayloadKind = "raw"
+	CheckPayloadKindMarkdown CheckPayloadKind = "markdown"
 )
 
 var checkPayloadTypes = sortEnum([]CheckPayloadKind{
-	CheckPayloadKindExternal,
+	CheckPayloadKindEmpty,
+	CheckPayloadKindRaw,
+	CheckPayloadKindMarkdown,
 })

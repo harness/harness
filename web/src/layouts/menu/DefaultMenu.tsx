@@ -4,9 +4,9 @@ import { Render } from 'react-jsx-match'
 import { useHistory, useRouteMatch, useParams } from 'react-router-dom'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
-import { routes } from 'RouteDefinitions'
 import type { TypesSpace } from 'services/code'
 import { SpaceSelector } from 'components/SpaceSelector/SpaceSelector'
+import { useAppContext } from 'AppContext'
 import { useFeatureFlag } from 'hooks/useFeatureFlag'
 import type { CODEProps } from 'RouteDefinitions'
 import { NavMenuItem } from './NavMenuItem'
@@ -14,6 +14,7 @@ import css from './DefaultMenu.module.scss'
 
 export const DefaultMenu: React.FC = () => {
   const history = useHistory()
+  const { routes } = useAppContext()
   const params = useParams<CODEProps>()
   const [selectedSpace, setSelectedSpace] = useState<TypesSpace | undefined>()
   const { repoMetadata, gitRef, commitRef } = useGetRepositoryMetadata()
@@ -21,13 +22,13 @@ export const DefaultMenu: React.FC = () => {
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
   const routeMatch = useRouteMatch()
   const isFilesSelected = useMemo(
-    () => routeMatch.path === '/:space/:repoName' || routeMatch.path.startsWith('/:space/:repoName/edit'),
+    () => routeMatch.path === '/:space*/:repoName' || routeMatch.path.startsWith('/:space*/:repoName/edit'),
     [routeMatch]
   )
+  const isCommitSelected = useMemo(() => routeMatch.path === '/:space*/:repoName/commit/:commitRef*', [routeMatch])
   const isPipelineSelected = routeMatch.path.startsWith('/pipelines/:space*/pipeline/:pipeline')
 
   const { OPEN_SOURCE_PIPELINES, OPEN_SOURCE_SECRETS } = useFeatureFlag()
-
   return (
     <Container className={css.main}>
       <Layout.Vertical spacing="small">
@@ -75,6 +76,7 @@ export const DefaultMenu: React.FC = () => {
 
               <NavMenuItem
                 data-code-repo-section="commits"
+                isSelected={isCommitSelected}
                 isSubLink
                 label={getString('commits')}
                 to={routes.toCODECommits({

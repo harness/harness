@@ -30,6 +30,7 @@ import { useStrings } from 'framework/strings'
 import { useFeatureFlag } from 'hooks/useFeatureFlag'
 import ExecutionList from 'pages/ExecutionList/ExecutionList'
 import Execution from 'pages/Execution/Execution'
+import Secret from 'pages/Secret/Secret'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
@@ -100,6 +101,12 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
 
         <Route
           path={[
+            routes.toCODEPullRequest({
+              repoPath,
+              pullRequestId: pathProps.pullRequestId,
+              pullRequestSection: pathProps.pullRequestSection,
+              commitSHA: pathProps.commitSHA
+            }),
             routes.toCODEPullRequest({
               repoPath,
               pullRequestId: pathProps.pullRequestId,
@@ -182,6 +189,14 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           <Route path={routes.toCODEPipelines({ space: pathProps.space })} exact>
             <LayoutWithSideNav title={getString('pageTitle.pipelines')}>
               <PipelineList />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {OPEN_SOURCE_SECRETS && (
+          <Route path={routes.toCODESecret({ space: pathProps.space, secret: pathProps.secret })} exact>
+            <LayoutWithSideNav title={getString('pageTitle.secrets')}>
+              <Secret />
             </LayoutWithSideNav>
           </Route>
         )}

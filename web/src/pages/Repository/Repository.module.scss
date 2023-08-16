@@ -1,11 +1,11 @@
 .main {
-  min-height: var(--page-min-height, 100%);
+  min-height: var(--page-height);
   background-color: var(--white) !important;
 
   &.withFileViewer {
     &,
     > div:first-of-type {
-      min-height: var(--page-min-height, 100vh) !important;
+      min-height: var(--page-height) !important;
     }
 
     > div:first-of-type {

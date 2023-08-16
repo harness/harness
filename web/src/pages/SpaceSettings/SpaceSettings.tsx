@@ -39,7 +39,9 @@ export default function SpaceSettings() {
               name: data?.uid,
               desc: data?.description
             }}
-            onSubmit={voidFn(() => {})}>
+            onSubmit={voidFn(() => {
+              // @typescript-eslint/no-empty-function
+            })}>
             {formik => {
               return (
                 <Layout.Vertical padding={{ top: 'medium' }}>

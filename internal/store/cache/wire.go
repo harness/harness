@@ -29,7 +29,7 @@ func ProvidePrincipalInfoCache(getter store.PrincipalInfoView) store.PrincipalIn
 // ProvidePathCache provides a cache for storing routing paths and their types.Path objects.
 func ProvidePathCache(pathStore store.PathStore, pathTransformation store.PathTransformation) store.PathCache {
 	return &pathCache{
-		inner: cache.New[string, *pathCacheEntry](
+		inner: cache.New[string, *types.Path](
 			&pathCacheGetter{
 				pathStore: pathStore,
 			},

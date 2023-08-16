@@ -51,16 +51,10 @@ type ListTreeNodeParams struct {
 	GitREF              string
 	Path                string
 	IncludeLatestCommit bool
-	Recursive           bool
 }
 
 type ListTreeNodeOutput struct {
-	Nodes []TreeNodeWithCommit
-}
-
-type TreeNodeWithCommit struct {
-	TreeNode
-	Commit *Commit
+	Nodes []TreeNode
 }
 
 type GetTreeNodeParams struct {
@@ -94,6 +88,7 @@ func (c *Client) GetTreeNode(ctx context.Context, params *GetTreeNodeParams) (*G
 	if err != nil {
 		return nil, fmt.Errorf("failed to map rpc node: %w", err)
 	}
+
 	var commit *Commit
 	if resp.GetCommit() != nil {
 		commit, err = mapRPCCommit(resp.GetCommit())
@@ -113,17 +108,15 @@ func (c *Client) ListTreeNodes(ctx context.Context, params *ListTreeNodeParams) 
 		return nil, ErrNoParamsProvided
 	}
 	stream, err := c.repoService.ListTreeNodes(ctx, &rpc.ListTreeNodesRequest{
-		Base:                mapToRPCReadRequest(params.ReadParams),
-		GitRef:              params.GitREF,
-		Path:                params.Path,
-		IncludeLatestCommit: params.IncludeLatestCommit,
-		Recursive:           params.Recursive,
+		Base:   mapToRPCReadRequest(params.ReadParams),
+		GitRef: params.GitREF,
+		Path:   params.Path,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to start stream for tree nodes: %w", err)
 	}
 
-	nodes := make([]TreeNodeWithCommit, 0, 16)
+	nodes := make([]TreeNode, 0, 16)
 	for {
 		var next *rpc.ListTreeNodesResponse
 		next, err = stream.Recv()
@@ -140,21 +133,60 @@ func (c *Client) ListTreeNodes(ctx context.Context, params *ListTreeNodeParams) 
 		if err != nil {
 			return nil, fmt.Errorf("failed to map rpc node: %w", err)
 		}
-		var commit *Commit
-		if next.GetCommit() != nil {
-			commit, err = mapRPCCommit(next.GetCommit())
-			if err != nil {
-				return nil, fmt.Errorf("failed to map rpc commit: %w", err)
-			}
-		}
 
-		nodes = append(nodes, TreeNodeWithCommit{
-			TreeNode: node,
-			Commit:   commit,
-		})
+		nodes = append(nodes, node)
 	}
 
 	return &ListTreeNodeOutput{
 		Nodes: nodes,
+	}, nil
+}
+
+type PathsDetailsParams struct {
+	ReadParams
+	GitREF string
+	Paths  []string
+}
+
+type PathsDetailsOutput struct {
+	Details []PathDetails
+}
+
+type PathDetails struct {
+	Path       string  `json:"path"`
+	LastCommit *Commit `json:"last_commit,omitempty"`
+	Size       int64   `json:"size,omitempty"`
+}
+
+func (c *Client) PathsDetails(ctx context.Context, params PathsDetailsParams) (PathsDetailsOutput, error) {
+	response, err := c.repoService.PathsDetails(ctx, &rpc.PathsDetailsRequest{
+		Base:   mapToRPCReadRequest(params.ReadParams),
+		GitRef: params.GitREF,
+		Paths:  params.Paths,
+	})
+	if err != nil {
+		return PathsDetailsOutput{}, processRPCErrorf(err, "failed to get paths details")
+	}
+
+	details := make([]PathDetails, len(response.PathDetails))
+	for i, pathDetail := range response.PathDetails {
+		var lastCommit *Commit
+
+		if pathDetail.LastCommit != nil {
+			lastCommit, err = mapRPCCommit(pathDetail.LastCommit)
+			if err != nil {
+				return PathsDetailsOutput{}, fmt.Errorf("failed to map last commit: %w", err)
+			}
+		}
+
+		details[i] = PathDetails{
+			Path:       pathDetail.Path,
+			Size:       pathDetail.Size,
+			LastCommit: lastCommit,
+		}
+	}
+
+	return PathsDetailsOutput{
+		Details: details,
 	}, nil
 }

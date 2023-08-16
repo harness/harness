@@ -11,6 +11,7 @@ public: Public
 private: Private
 cancel: Cancel
 name: Name
+value: Value
 help: help
 search: Search
 description: Description
@@ -135,6 +136,7 @@ delete: Delete
 edit: Edit
 editAsText: Edit as Text
 branchName: Branch name
+enterBranchPlaceholder: Enter the branch name here
 nameYourBranch: Name your branch
 nameYourTag: Name your tag
 enterTagPlaceholder: Enter the tag name here
@@ -251,9 +253,10 @@ pr:
   prMerged: This Pull Request was merged
   prClosed: This Pull Request was closed.
   reviewSubmitted: Review submitted.
-  prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested changes to, reviewed} the pull request. {time}'
-  prMergedInfo: '{user} merged branch {source} into {target} {time}.'
-  prBranchPushInfo: '{user} pushed a new commit {commit}.'
+  prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested changes to, reviewed} the pull request.  {time}'
+  prMergedBannerInfo: '{user} merged branch {source} into {target} {time}.'
+  prMergedInfo: '{user} merged branch {source} into {target}. {time}'
+  prBranchPushInfo: '{user} pushed a new commit {commit}'
   prStateChanged: '{user} changed pull request state from {old} to {new}.'
   prStateChangedDraft: '{user} opened pull request for review.'
   titleChanged: '{user} changed title from {old} to {new}.'
@@ -279,9 +282,21 @@ pr:
   draftOpenForReview:
     title: Ready for review
     desc: Open this pull request for review.
+  status: Pull Request Checks Status
+  checks: Checks
+  checksFailure: '{failedCount}/{total} checks failed'
+  addDescription: Add Description
 prState:
   draftHeading: This pull request is still a work in progress
   draftDesc: Draft pull requests cannot be merged.
+prChecks:
+  error: '{count}/{total} {count|1:check,checks} errored out.'
+  failure: '{count}/{total} {count|1:check,checks} failed.'
+  running: '{count}/{total} {count|1:check,checks} running.'
+  pending: '{count}/{total} {count|1:check,checks} pending.'
+  success: '{count}/{total} {count|1:check,checks} succeeded.'
+  notFound: No pipelines or external checks found for this repository.
+  viewExternal: View Details
 webhookListingContent: 'create,delete,deployment ...'
 general: 'General'
 webhooks: 'Webhooks'
@@ -411,7 +426,7 @@ descending: Descending
 active: Active
 pending: Pending
 resolved: Resolved
-showEverything: Show everything
+showEverything: Show Everything
 allComments: All comments
 whatsNew: What's new
 myComments: My comments/replies
@@ -516,6 +531,8 @@ expirationDate: Expiration Date
 created: Created
 changePasswordSuccesfully: Password changed successfully
 applyChanges: Apply Changes
+showMore: View more
+showLess: View less
 createNewToken: Create New Token
 newToken:
   text: New Token
@@ -564,6 +581,7 @@ spaceMemberships:
   memberUpdated: Member updated successfully.
   memberAdded: Member added successfully.
 failedToCreateSpace: Failed to create Space. Please try again.
+failedToCreatePipeline: Failed to create Pipeline. Please try again.
 enterName: Enter the name
 createSpace: Create Space
 newSpace: New Space
@@ -586,6 +604,10 @@ reader: Reader
 executor: Executor
 owner: Owner
 changeRole: Change role
+running: Running
+success: Success
+failed: Failed
+error: Error
 repoDelete:
   title: Delete Repository
   deleteConfirm1: This will permanently delete the "{{repo}}" repository, wiki, issues, comments, packages, secrets, workflow runs, and remove all collaborator associations.
@@ -601,3 +623,13 @@ executions:
   noData: There are no executions :(
   newExecutionButton: New Execution
   name: Execution Name
+selectRange: Shift-click to select a range
+allCommits: All Commits
+secrets:
+  noData: There are no secrets :(
+  newSecretButton: New Secret
+  name: Secret Name
+  failedToCreate: Failed to create Secret. Please try again.
+  enterSecretName: Enter Secret name
+  value: Secret Value
+  createSecret: Create Secret

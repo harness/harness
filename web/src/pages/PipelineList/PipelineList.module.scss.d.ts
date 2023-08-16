@@ -3,6 +3,7 @@
 declare const styles: {
   readonly main: string
   readonly layout: string
+  readonly withError: string
   readonly table: string
   readonly row: string
   readonly noDesc: string

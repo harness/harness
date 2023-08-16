@@ -1,4 +1,6 @@
 .main {
+  padding-left: var(--spacing-10) !important;
+
   .title {
     --typography-size: 20px !important;
   }
@@ -8,8 +10,41 @@
     font-size: var(--form-input-font-size) !important;
     font-weight: 500 !important;
   }
+
+  .container {
+    margin-right: var(--spacing-10) !important;
+  }
 }
 
 .extendedDescription textarea {
-  height: 100px !important;
+  height: 73px !important;
+}
+
+.branchTagSelect {
+  width: 100% !important;
+}
+
+.selectContainer {
+  :global {
+    .bp3-popover-wrapper {
+      width: 100% !important;
+      .bp3-popover-target {
+        width: 100% !important;
+      }
+    }
+    .bp3-button {
+      justify-content: start;
+    }
+    .bp3-icon-chevron-down {
+      margin-left: auto;
+    }
+  }
+}
+
+.popoverContainer {
+  width: 489px;
+}
+
+.extendedDescription {
+  margin: unset !important;
 }

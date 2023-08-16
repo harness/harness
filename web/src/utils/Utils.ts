@@ -9,6 +9,13 @@ export enum ACCESS_MODES {
   EDIT
 }
 
+export enum PullRequestSection {
+  CONVERSATION = 'conversation',
+  COMMITS = 'commits',
+  FILES_CHANGED = 'changes',
+  CHECKS = 'checks'
+}
+
 export const LIST_FETCHING_LIMIT = 20
 export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY hh:mm a'
 export const DEFAULT_BRANCH_NAME = 'main'
@@ -97,6 +104,21 @@ export const displayDateTime = (value: number): string | null => {
   return value ? moment.unix(value / 1000).format(DEFAULT_DATE_FORMAT) : null
 }
 
+export const timeDistance = (date1 = 0, date2 = 0) => {
+  let distance = Math.abs(date1 - date2)
+
+  if (!distance) {
+    return ''
+  }
+
+  const hours = Math.floor(distance / 3600000)
+  distance -= hours * 3600000
+  const minutes = Math.floor(distance / 60000)
+  distance -= minutes * 60000
+  const seconds = Math.floor(distance / 1000)
+  return `${hours ? hours + 'h ' : ''}${minutes ? minutes + 'm' : hours ? '0m' : ''} ${seconds}s`
+}
+
 const LOCALE = Intl.NumberFormat().resolvedOptions?.().locale || 'en-US'
 
 /**
@@ -105,11 +127,13 @@ const LOCALE = Intl.NumberFormat().resolvedOptions?.().locale || 'en-US'
  * @param timeStyle Optional DateTimeFormat's `timeStyle` option.
  */
 export function formatTime(timestamp: number | string, timeStyle = 'short'): string {
-  return new Intl.DateTimeFormat(LOCALE, {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: TS built-in type for DateTimeFormat is not correct
-    timeStyle
-  }).format(new Date(timestamp))
+  return timestamp
+    ? new Intl.DateTimeFormat(LOCALE, {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: TS built-in type for DateTimeFormat is not correct
+        timeStyle
+      }).format(new Date(timestamp))
+    : ''
 }
 
 /**
@@ -118,11 +142,13 @@ export function formatTime(timestamp: number | string, timeStyle = 'short'): str
  * @param dateStyle Optional DateTimeFormat's `dateStyle` option.
  */
 export function formatDate(timestamp: number | string, dateStyle = 'medium'): string {
-  return new Intl.DateTimeFormat(LOCALE, {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: TS built-in type for DateTimeFormat is not correct
-    dateStyle
-  }).format(new Date(timestamp))
+  return timestamp
+    ? new Intl.DateTimeFormat(LOCALE, {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: TS built-in type for DateTimeFormat is not correct
+        dateStyle
+      }).format(new Date(timestamp))
+    : ''
 }
 
 /**
@@ -131,7 +157,7 @@ export function formatDate(timestamp: number | string, dateStyle = 'medium'): st
  * @returns Formatted string.
  */
 export function formatNumber(num: number | bigint): string {
-  return new Intl.NumberFormat(LOCALE).format(num)
+  return num ? new Intl.NumberFormat(LOCALE).format(num) : ''
 }
 
 /**
@@ -292,4 +318,20 @@ export function formatBytes(bytes: number, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k))
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+}
+
+export enum PullRequestCheckType {
+  EMPTY = '',
+  RAW = 'raw',
+  MARKDOWN = 'markdown'
+}
+
+export function isInViewport(element: Element) {
+  const rect = element.getBoundingClientRect()
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+  )
 }

@@ -5,10 +5,14 @@
   > div {
     align-items: center;
   }
+
+  button {
+    white-space: nowrap !important;
+  }
 }
 
-.branchDropdown {
-  background-color: var(--white);
+.branchTagDropdown {
+  --background-color: var(--white) !important;
 }
 
 .mergeText {

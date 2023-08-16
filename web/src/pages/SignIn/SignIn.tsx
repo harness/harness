@@ -6,12 +6,13 @@ import { Link } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useOnLogin } from 'services/code'
 import AuthLayout from 'components/AuthLayout/AuthLayout'
-import { routes } from 'RouteDefinitions'
+import { useAppContext } from 'AppContext'
 import { useAPIToken } from 'hooks/useAPIToken'
 import { getErrorMessage, type LoginForm } from 'utils/Utils'
 import css from './SignIn.module.scss'
 
 export const SignIn: React.FC = () => {
+  const { routes } = useAppContext()
   const { getString } = useStrings()
   const [, setToken] = useAPIToken()
   const { mutate } = useOnLogin({})

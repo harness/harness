@@ -5,15 +5,31 @@
 package server
 
 import (
+	"strings"
+
 	"github.com/harness/gitness/types"
 
 	"github.com/go-redis/redis/v8"
 )
 
 // ProvideRedis provides a redis client based on the configuration.
-// TODO: add support for sentinal / cluster
 // TODO: add support for TLS
 func ProvideRedis(config *types.Config) (redis.UniversalClient, error) {
+	if config.Redis.SentinelMode {
+		addrs := strings.Split(config.Redis.SentinelEndpoint, ",")
+
+		failoverOptions := &redis.FailoverOptions{
+			MasterName:    config.Redis.SentinelMaster,
+			SentinelAddrs: addrs,
+			MaxRetries:    config.Redis.MaxRetries,
+			MinIdleConns:  config.Redis.MinIdleConnections,
+		}
+		if config.Redis.Password != "" {
+			failoverOptions.Password = config.Redis.Password
+		}
+		return redis.NewFailoverClient(failoverOptions), nil
+	}
+
 	options := &redis.Options{
 		Addr:         config.Redis.Endpoint,
 		MaxRetries:   config.Redis.MaxRetries,

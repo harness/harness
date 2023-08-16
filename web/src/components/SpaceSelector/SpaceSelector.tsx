@@ -18,14 +18,14 @@ import { useGet } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import { useHistory } from 'react-router-dom'
 import { Classes, Popover, Position } from '@blueprintjs/core'
-import { routes } from 'RouteDefinitions'
-import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { ButtonRoleProps, voidFn } from 'utils/Utils'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { TypesSpace, useGetSpace } from 'services/code'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { NewSpaceModalButton } from 'components/NewSpaceModalButton/NewSpaceModalButton'
+import { useAppContext } from 'AppContext'
 // import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 
 // import { usePageIndex } from 'hooks/usePageIndex'
@@ -36,10 +36,11 @@ interface SpaceSelectorProps {
 }
 
 export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
+  const { routes } = useAppContext()
   const { getString } = useStrings()
   const history = useHistory()
   const [selectedSpace, setSelectedSpace] = useState<TypesSpace | undefined>()
-  const { space } = useGetRepositoryMetadata()
+  const space = useGetSpaceParam()
   const [opened, setOpened] = React.useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   // const [page, setPage] = usePageIndex(1)

@@ -26,13 +26,7 @@ export default function Repository() {
   const [fileNotExist, setFileNotExist] = useState(false)
   const { getString } = useStrings()
 
-  useEffect(() => {
-    if (resourceError?.status === 404) {
-      setFileNotExist(true)
-    } else {
-      setFileNotExist(false)
-    }
-  }, [resourceError])
+  useEffect(() => setFileNotExist(resourceError?.status === 404), [resourceError])
 
   return (
     <Container className={cx(css.main, !!resourceContent && css.withFileViewer)}>

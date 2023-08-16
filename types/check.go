@@ -49,3 +49,7 @@ type ReqCheck struct {
 
 	AddedBy PrincipalInfo `json:"added_by"`
 }
+
+type CheckPayloadText struct {
+	Details string `json:"details"`
+}

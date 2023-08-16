@@ -52,6 +52,12 @@ type Config struct {
 		DefaultBranch string `envconfig:"GITNESS_GIT_DEFAULTBRANCH" default:"main"`
 	}
 
+	// Encrypter defines the parameters for the encrypter
+	Encrypter struct {
+		Secret       string `envconfig:"GITNESS_ENCRYPTER_SECRET"` // key used for encryption
+		MixedContent bool   `envconfig:"GITNESS_ENCRYPTER_MIXED_CONTENT"`
+	}
+
 	// Server defines the server configuration parameters.
 	Server struct {
 		// HTTP defines the http configuration parameters
@@ -128,10 +134,13 @@ type Config struct {
 	}
 
 	Redis struct {
-		Endpoint           string `envconfig:"GITNESS_REDIS_ENDPOINT"             default:"localhost:6379"`
-		MaxRetries         int    `envconfig:"GITNESS_REDIS_MAX_RETRIES"          default:"3"`
-		MinIdleConnections int    `envconfig:"GITNESS_REDIS_MIN_IDLE_CONNECTIONS" default:"0"`
+		Endpoint           string `envconfig:"GITNESS_REDIS_ENDPOINT"              default:"localhost:6379"`
+		MaxRetries         int    `envconfig:"GITNESS_REDIS_MAX_RETRIES"           default:"3"`
+		MinIdleConnections int    `envconfig:"GITNESS_REDIS_MIN_IDLE_CONNECTIONS"  default:"0"`
 		Password           string `envconfig:"GITNESS_REDIS_PASSWORD"`
+		SentinelMode       bool   `envconfig:"GITNESS_REDIS_USE_SENTINEL"          default:"false"`
+		SentinelMaster     string `envconfig:"GITNESS_REDIS_SENTINEL_MASTER"`
+		SentinelEndpoint   string `envconfig:"GITNESS_REDIS_SENTINEL_ENDPOINT"`
 	}
 
 	Lock struct {

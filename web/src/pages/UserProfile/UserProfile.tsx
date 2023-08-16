@@ -21,10 +21,10 @@ import moment from 'moment'
 
 import { useStrings } from 'framework/strings'
 import { useAPIToken } from 'hooks/useAPIToken'
-import { routes } from 'RouteDefinitions'
 import { TypesToken, TypesUser, useGetUser, useOpLogout, useUpdateUser } from 'services/code'
 import { ButtonRoleProps, getErrorMessage } from 'utils/Utils'
 import { useConfirmAct } from 'hooks/useConfirmAction'
+import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 
@@ -39,6 +39,7 @@ const UserProfile = () => {
   const history = useHistory()
   const { getString } = useStrings()
   const { showSuccess, showError } = useToaster()
+  const { routes } = useAppContext()
 
   const { data: currentUser, loading: currentUserLoading, refetch: refetchCurrentUser } = useGetUser({})
   const { mutate: updateUser } = useUpdateUser({})
@@ -146,7 +147,7 @@ const UserProfile = () => {
         }
       }
     ],
-    []
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   const onEditField = async (field: keyof TypesUser, value: string) => {

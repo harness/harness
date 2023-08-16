@@ -12,15 +12,16 @@ import {
 } from '@harness/uicore'
 import ReactTimeago from 'react-timeago'
 import { Render } from 'react-jsx-match'
-import { Link } from 'react-router-dom'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReqActivity } from 'services/code'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
-import { formatDate, formatTime } from 'utils/Utils'
+import { formatDate, formatTime, PullRequestSection } from 'utils/Utils'
 import { CommentType } from 'components/DiffViewer/DiffViewerUtils'
 import { useAppContext } from 'AppContext'
+import { CommitActions } from 'components/CommitActions/CommitActions'
+import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import css from './Conversation.module.scss'
 
 interface SystemCommentProps extends Pick<GitInfoProps, 'pullRequestMetadata'> {
@@ -54,8 +55,13 @@ export const SystemComment: React.FC<SystemCommentProps> = ({
                 vars={{
                   user: <strong>{pullRequestMetadata.merger?.display_name}</strong>,
                   source: <strong>{pullRequestMetadata.source_branch}</strong>,
-                  target: <strong>{pullRequestMetadata.target_branch} </strong>,
-                  time: <ReactTimeago date={pullRequestMetadata.merged as number} />
+                  target: <strong>{pullRequestMetadata.target_branch}</strong>,
+                  time: (
+                    <Text inline margin={{ left: 'xsmall' }}>
+                      <PipeSeparator height={9} />
+                      <ReactTimeago className={css.timeText} date={pullRequestMetadata.merged as number} />
+                    </Text>
+                  )
                 }}
               />
             </Text>
@@ -80,8 +86,13 @@ export const SystemComment: React.FC<SystemCommentProps> = ({
                 str={getString('pr.prReviewSubmit')}
                 vars={{
                   user: <strong>{payload?.author?.display_name}</strong>,
-                  state: (payload?.payload as Unknown)?.decision,
-                  time: <ReactTimeago className={css.timeText} date={payload?.created as number} />
+                  state: <Text margin={{ right: 'xsmall' }}>{(payload?.payload as Unknown)?.decision}</Text>,
+                  time: (
+                    <Text inline margin={{ left: 'xsmall' }}>
+                      <PipeSeparator height={9} />
+                      <ReactTimeago className={css.timeText} date={payload?.created as number} />
+                    </Text>
+                  )
                 }}
               />
             </Text>
@@ -95,30 +106,34 @@ export const SystemComment: React.FC<SystemCommentProps> = ({
         <Container>
           <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
             <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
-            <Text>
+            <Text flex>
               <StringSubstitute
                 str={getString('pr.prBranchPushInfo')}
                 vars={{
-                  user: <strong>{payload?.author?.display_name}</strong>,
+                  user: (
+                    <Text padding={{ right: 'small' }}>
+                      <strong>{payload?.author?.display_name}</strong>
+                    </Text>
+                  ),
                   commit: (
-                    <Link
-                      className={css.commitLink}
-                      to={routes.toCODECommit({
-                        repoPath: repoMetadataPath as string,
-                        commitRef: (payload?.payload as Unknown)?.new
-                      })}>
-                      {(payload?.payload as Unknown)?.new.substring(0, 6)}
-                    </Link>
+                    <Container className={css.commitContainer} padding={{ left: 'small' }}>
+                      <CommitActions
+                        enableCopy
+                        sha={(payload?.payload as Unknown)?.new}
+                        href={routes.toCODEPullRequest({
+                          repoPath: repoMetadataPath as string,
+                          pullRequestSection: PullRequestSection.FILES_CHANGED,
+                          pullRequestId: String(pullRequestMetadata.number),
+                          commitSHA: (payload?.payload as Unknown)?.new as string
+                        })}
+                      />
+                    </Container>
                   )
                 }}
               />
             </Text>
-            <Text
-              inline
-              font={{ variation: FontVariation.SMALL }}
-              color={Color.GREY_400}
-              width={100}
-              style={{ textAlign: 'right' }}>
+            <PipeSeparator height={9} />
+            <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400} width={100}>
               <ReactTimeago date={payload?.created as number} />
             </Text>
           </Layout.Horizontal>
@@ -144,13 +159,8 @@ export const SystemComment: React.FC<SystemCommentProps> = ({
                 }}
               />
             </Text>
-
-            <Text
-              inline
-              font={{ variation: FontVariation.SMALL }}
-              color={Color.GREY_400}
-              width={100}
-              style={{ textAlign: 'right' }}>
+            <PipeSeparator height={9} />
+            <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400} width={100}>
               <ReactTimeago date={payload?.created as number} />
             </Text>
           </Layout.Horizontal>
@@ -177,13 +187,9 @@ export const SystemComment: React.FC<SystemCommentProps> = ({
                 }}
               />
             </Text>
+            <PipeSeparator height={9} />
 
-            <Text
-              inline
-              font={{ variation: FontVariation.SMALL }}
-              color={Color.GREY_400}
-              width={100}
-              style={{ textAlign: 'right' }}>
+            <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400} width={100}>
               <ReactTimeago date={payload?.created as number} />
             </Text>
           </Layout.Horizontal>

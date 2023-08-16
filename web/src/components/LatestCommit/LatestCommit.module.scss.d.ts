@@ -6,5 +6,6 @@ declare const styles: {
   readonly forFile: string
   readonly shaBtn: string
   readonly commitLink: string
+  readonly time: string
 }
 export default styles

@@ -1,5 +1,5 @@
 .main {
-  min-height: var(--page-min-height, 100%);
+  min-height: var(--page-height);
   background-color: var(--primary-bg) !important;
 
   div[class*='NoDataCard'] {

@@ -1,5 +1,6 @@
 import React from 'react'
 import { useMutate } from 'restful-react'
+import { omit } from 'lodash-es'
 import {
   Container,
   Layout,
@@ -175,7 +176,10 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                 (reviewer: { reviewer: { display_name: string; id: number }; review_decision: string }): Unknown => {
                   return (
                     <Layout.Horizontal key={reviewer.reviewer.id}>
-                      <Icon className={css.reviewerPadding} {...generateReviewDecisionIcon(reviewer.review_decision)} />
+                      <Icon
+                        className={css.reviewerPadding}
+                        {...omit(generateReviewDecisionIcon(reviewer.review_decision), 'iconProps')}
+                      />
                       <Avatar
                         className={css.reviewerAvatar}
                         name={reviewer.reviewer.display_name}

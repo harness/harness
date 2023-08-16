@@ -15,11 +15,13 @@ import { ThreadSection } from 'components/ThreadSection/ThreadSection'
 import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/CodeCommentStatusSelect'
 import { CodeCommentStatusButton } from 'components/CodeCommentStatusButton/CodeCommentStatusButton'
 import { CodeCommentSecondarySaveButton } from 'components/CodeCommentSecondarySaveButton/CodeCommentSecondarySaveButton'
+import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { DescriptionBox } from './DescriptionBox'
 import { PullRequestActionsBox } from './PullRequestActionsBox/PullRequestActionsBox'
 import PullRequestSideBar from './PullRequestSideBar/PullRequestSideBar'
 import { isCodeComment, isComment, isSystemComment } from '../PullRequestUtils'
+import { ChecksOverview } from '../Checks/ChecksOverview'
 import { CodeCommentHeader } from './CodeCommentHeader'
 import { SystemComment } from './SystemComment'
 import css from './Conversation.module.scss'
@@ -29,6 +31,7 @@ export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | '
   prHasChanged?: boolean
   showEditDescription?: boolean
   onCancelEditDescription: () => void
+  prChecksDecisionResult?: PRChecksDecisionResult
 }
 
 export const Conversation: React.FC<ConversationProps> = ({
@@ -37,7 +40,8 @@ export const Conversation: React.FC<ConversationProps> = ({
   onCommentUpdate,
   prHasChanged,
   showEditDescription,
-  onCancelEditDescription
+  onCancelEditDescription,
+  prChecksDecisionResult
 }) => {
   const { getString } = useStrings()
   const { currentUser } = useAppContext()
@@ -51,7 +55,8 @@ export const Conversation: React.FC<ConversationProps> = ({
   })
   const showSpinner = useMemo(() => loading && !activities, [loading, activities])
   const { data: reviewers, refetch: refetchReviewers } = useGet<Unknown[]>({
-    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/reviewers`,
+    debounce: 500
   })
   const { showError } = useToaster()
   const [dateOrderSort, setDateOrderSort] = useState<boolean | 'desc' | 'asc'>(orderSortDate.ASC)
@@ -133,7 +138,7 @@ export const Conversation: React.FC<ConversationProps> = ({
     if (prHasChanged) {
       refetchActivities()
     }
-  }, [prHasChanged, refetchActivities])
+  }, [prHasChanged, refetchActivities, refetchReviewers])
 
   return (
     <PullRequestTabContentWrapper loading={showSpinner} error={error} onRetry={refetchActivities}>
@@ -149,6 +154,14 @@ export const Conversation: React.FC<ConversationProps> = ({
             <Layout.Horizontal>
               <Container width={`70%`}>
                 <Layout.Vertical spacing="xlarge">
+                  {prChecksDecisionResult && (
+                    <ChecksOverview
+                      repoMetadata={repoMetadata}
+                      pullRequestMetadata={pullRequestMetadata}
+                      prChecksDecisionResult={prChecksDecisionResult}
+                    />
+                  )}
+
                   {(hasDescription || showEditDescription) && (
                     <DescriptionBox
                       repoMetadata={repoMetadata}
@@ -157,6 +170,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                       onCancelEditDescription={onCancelEditDescription}
                     />
                   )}
+
                   <Layout.Horizontal
                     className={css.sortContainer}
                     padding={{ top: hasDescription || showEditDescription ? 'xxlarge' : undefined, bottom: 'medium' }}>
@@ -349,14 +363,13 @@ export const Conversation: React.FC<ConversationProps> = ({
                   />
                 </Layout.Vertical>
               </Container>
-              {repoMetadata ? (
-                <PullRequestSideBar
-                  reviewers={reviewers}
-                  repoMetadata={repoMetadata}
-                  pullRequestMetadata={pullRequestMetadata}
-                  refetchReviewers={refetchReviewers}
-                />
-              ) : null}
+
+              <PullRequestSideBar
+                reviewers={reviewers}
+                repoMetadata={repoMetadata}
+                pullRequestMetadata={pullRequestMetadata}
+                refetchReviewers={refetchReviewers}
+              />
             </Layout.Horizontal>
           </Container>
         </Layout.Vertical>

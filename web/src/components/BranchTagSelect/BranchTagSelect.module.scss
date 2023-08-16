@@ -8,6 +8,7 @@ html[class=''] {
   --border: 1px solid var(--grey-200) !important;
   --background-color-active: var(--white) !important;
   --box-shadow: none !important;
+  white-space: nowrap !important;
 
   &:active,
   &:hover,
@@ -60,8 +61,15 @@ html[class=''] {
 
   .listContainer {
     min-height: 50px;
-    max-height: 300px;
+    max-height: 200px;
     overflow-y: auto;
+
+    :global {
+      a.bp3-menu-item:hover {
+        background: var(--primary-1) !important;
+        color: var(--grey-1000) !important;
+      }
+    }
   }
 
   .newBtnText {

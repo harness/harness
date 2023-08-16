@@ -38,8 +38,8 @@ export default function RepositoryCommits() {
           <Changes
             readOnly
             repoMetadata={repoMetadata}
-            targetBranch={`${commitRef}~1`}
-            sourceBranch={commitRef}
+            targetRef={`${commitRef}~1`}
+            sourceRef={commitRef}
             emptyTitle={getString('noChanges')}
             emptyMessage={getString('noChangesCompare')}
             onCommentUpdate={noop}

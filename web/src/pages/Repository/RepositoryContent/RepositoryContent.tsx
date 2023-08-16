@@ -13,9 +13,7 @@ export function RepositoryContent({
   resourceContent,
   commitRef
 }: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent' | 'commitRef'>) {
-  useEffect(() => {
-    window.scroll({ top: 0 })
-  }, [gitRef, resourcePath])
+  useEffect(() => window.scroll({ top: 0 }), [gitRef, resourcePath])
 
   return (
     <Container className={css.resourceContent}>
