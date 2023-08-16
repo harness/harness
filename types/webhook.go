@@ -19,6 +19,7 @@ type Webhook struct {
 	CreatedBy  int64              `json:"created_by"`
 	Created    int64              `json:"created"`
 	Updated    int64              `json:"updated"`
+	Internal   bool               `json:"internal"`
 
 	DisplayName           string                       `json:"display_name"`
 	Description           string                       `json:"description"`

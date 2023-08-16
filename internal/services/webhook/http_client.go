@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -21,7 +20,7 @@ var (
 	errPrivateNetworkNotAllowed = errors.New("private network not allowed")
 )
 
-func newHTTPClient(allowLoopback bool, allowPrivateNetwork bool, disableSSLVerification bool, whitelistedInternalUrlPattern []string) *http.Client {
+func newHTTPClient(allowLoopback bool, allowPrivateNetwork bool, disableSSLVerification bool) *http.Client {
 	// no customizations? use default client
 	if allowLoopback && allowPrivateNetwork && !disableSSLVerification {
 		return http.DefaultClient
@@ -77,7 +76,7 @@ func newHTTPClient(allowLoopback bool, allowPrivateNetwork bool, disableSSLVerif
 			return nil, errLoopbackNotAllowed
 		}
 
-		if !allowPrivateNetwork && tcpAddr.IP.IsPrivate() && !checkWhitelistedUrl(addr, whitelistedInternalUrlPattern) {
+		if !allowPrivateNetwork && tcpAddr.IP.IsPrivate() {
 			return nil, errPrivateNetworkNotAllowed
 		}
 
@@ -89,14 +88,4 @@ func newHTTPClient(allowLoopback bool, allowPrivateNetwork bool, disableSSLVerif
 
 	// httpClient is similar to http.DefaultClient, just with custom http.Transport
 	return &http.Client{Transport: tr}
-}
-
-func checkWhitelistedUrl(URL string, whitelistedInternalUrlPattern []string) bool {
-	log.Error().Msgf("url is %s", URL)
-	for _, urlPattern := range whitelistedInternalUrlPattern {
-		if strings.ContainsAny(URL, urlPattern) {
-			return true
-		}
-	}
-	return false
 }

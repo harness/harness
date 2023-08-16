@@ -7,8 +7,6 @@ package webhook
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
@@ -22,9 +20,8 @@ import (
 )
 
 type Controller struct {
-	allowLoopback                 bool
-	allowPrivateNetwork           bool
-	whitelistedInternalUrlPattern []string
+	allowLoopback       bool
+	allowPrivateNetwork bool
 
 	db                    *sqlx.DB
 	authorizer            authz.Authorizer
@@ -37,7 +34,6 @@ type Controller struct {
 func NewController(
 	allowLoopback bool,
 	allowPrivateNetwork bool,
-	whitelistedInternalUrlPattern []string,
 	db *sqlx.DB,
 	authorizer authz.Authorizer,
 	webhookStore store.WebhookStore,
@@ -46,15 +42,14 @@ func NewController(
 	webhookService *webhook.Service,
 ) *Controller {
 	return &Controller{
-		allowLoopback:                 allowLoopback,
-		allowPrivateNetwork:           allowPrivateNetwork,
-		whitelistedInternalUrlPattern: whitelistedInternalUrlPattern,
-		db:                            db,
-		authorizer:                    authorizer,
-		webhookStore:                  webhookStore,
-		webhookExecutionStore:         webhookExecutionStore,
-		repoStore:                     repoStore,
-		webhookService:                webhookService,
+		allowLoopback:         allowLoopback,
+		allowPrivateNetwork:   allowPrivateNetwork,
+		db:                    db,
+		authorizer:            authorizer,
+		webhookStore:          webhookStore,
+		webhookExecutionStore: webhookExecutionStore,
+		repoStore:             repoStore,
+		webhookService:        webhookService,
 	}
 }
 
@@ -74,16 +69,4 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 	}
 
 	return repo, nil
-}
-
-func (c *Controller) checkProtectedURLs(session *auth.Session, webhookURL *string) error {
-	for _, urlPattern := range c.whitelistedInternalUrlPattern {
-		if strings.Contains(strings.ToLower(*webhookURL), strings.ToLower(urlPattern)) {
-			if session.Principal.Type != enum.PrincipalTypeService {
-				return usererror.BadRequest("An internal URL provided")
-			}
-			break
-		}
-	}
-	return nil
 }

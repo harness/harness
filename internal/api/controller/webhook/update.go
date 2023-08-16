@@ -21,6 +21,7 @@ type UpdateInput struct {
 	Enabled     *bool                 `json:"enabled"`
 	Insecure    *bool                 `json:"insecure"`
 	Triggers    []enum.WebhookTrigger `json:"triggers"`
+	Internal    *bool                 `json:"internal"`
 }
 
 // Update updates an existing webhook.
@@ -43,11 +44,10 @@ func (c *Controller) Update(
 	}
 
 	// validate input
-	if err = checkUpdateInput(in, c.allowLoopback, c.allowPrivateNetwork, c.whitelistedInternalUrlPattern); err != nil {
+	if err = checkUpdateInput(in, c.allowLoopback, c.allowPrivateNetwork || *in.Internal); err != nil {
 		return nil, err
 	}
 
-	err = c.checkProtectedURLs(session, in.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (c *Controller) Update(
 	return hook, nil
 }
 
-func checkUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwork bool, whitelistedInternalUrlPattern []string) error {
+func checkUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwork bool) error {
 	if in.DisplayName != nil {
 		if err := check.DisplayName(*in.DisplayName); err != nil {
 			return err
@@ -93,7 +93,7 @@ func checkUpdateInput(in *UpdateInput, allowLoopback bool, allowPrivateNetwork b
 		}
 	}
 	if in.URL != nil {
-		if err := checkURL(*in.URL, allowLoopback, allowPrivateNetwork, whitelistedInternalUrlPattern); err != nil {
+		if err := checkURL(*in.URL, allowLoopback, allowPrivateNetwork); err != nil {
 			return err
 		}
 	}

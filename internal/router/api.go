@@ -259,7 +259,7 @@ func setupRepos(r chi.Router,
 
 			SetupPullReq(r, pullreqCtrl)
 
-			SetupWebhook(r, webhookCtrl)
+			setupWebhook(r, webhookCtrl)
 
 			SetupChecks(r, checkCtrl)
 		})
@@ -315,7 +315,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 	})
 }
 
-func SetupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
+func setupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
 	r.Route("/webhooks", func(r chi.Router) {
 		r.Post("/", handlerwebhook.HandleCreate(webhookCtrl))
 		r.Get("/", handlerwebhook.HandleList(webhookCtrl))
