@@ -1,0 +1,7 @@
+kind: template
+load: with-two-pipeline.template.yaml
+data:
+  chart_name: test
+  chart_version: 0.1.1
+  service_name: test-service-name
+  jdk_image: openjdk-11

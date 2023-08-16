@@ -73,7 +73,7 @@ func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 
 	buf := new(bytes.Buffer)
 	rawTemplates := strings.Split(req.Config.Data, "---")
-	for _, rawTemplate := range rawTemplates {
+	for idx, rawTemplate := range rawTemplates {
 		// map to templateArgs
 		var templateArgs core.TemplateArgs
 		err := yaml.Unmarshal([]byte(rawTemplate), &templateArgs)
@@ -107,7 +107,7 @@ func (p *templatePlugin) Convert(ctx context.Context, req *core.ConvertArgs) (*c
 		}
 
 		ext := filepath.Ext(templateArgs.Load)
-		if ext == ".yml" || ext == ".yaml" {
+		if ext == ".yml" || ext == ".yaml" && idx < len(rawTemplates)-1 {
 			buf.WriteString("\n")
 			buf.WriteString("---")
 			buf.WriteString("\n")

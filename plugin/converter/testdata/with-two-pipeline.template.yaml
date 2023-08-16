@@ -1,0 +1,72 @@
+kind: pipeline
+name: {{ .input.service_name }}
+
+trigger:
+  event:
+    exclude:
+      - promote
+
+volumes:
+  - name: docker
+    host:
+      path: /var/run/docker.sock
+
+anchors:
+  - &mvn-step
+    image: {{ .input.jdk_image }}
+    privileged: true
+    volumes:
+      - name: m2-cache
+        path: /root/.m2
+      - name: docker
+        path: /var/run/docker.sock
+    environment:
+      SONAR_PROJECT_NAME: {{ .input.service_name }}
+      GIT_PUSH_SSH_KEY:
+        from_secret: git_ssh_key
+
+steps:
+  - name: build-and-test
+    <<: *mvn-step
+    commands:
+      - mvn package -U -B
+    when:
+      branch:
+        exclude:
+          - master
+---
+
+kind: pipeline
+name: {{ .input.service_name }}-um
+
+trigger:
+  event:
+    - promote
+  target:
+    - um-prod
+    - um-dev
+
+volumes:
+  - name: docker
+    host:
+      path: /var/run/docker.sock
+
+anchors:
+  - &mvn-step
+    image: {{ .input.jdk_image}}
+    privileged: true
+    volumes:
+      - name: m2-cache
+        path: /root/.m2
+      - name: docker
+        path: /var/run/docker.sock
+    environment:
+      SONAR_PROJECT_NAME: {{ .input.service_name }}
+      GIT_PUSH_SSH_KEY:
+        from_secret: git_ssh_key
+
+steps:
+  - name: build-and-test
+    <<: *mvn-step
+    commands:
+      - mvn package -U -B
