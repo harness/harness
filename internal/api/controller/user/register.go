@@ -14,9 +14,15 @@ import (
 	"github.com/harness/gitness/types"
 )
 
+type RegisterInput struct {
+	Email       string `json:"email"`
+	DisplayName string `json:"display_name"`
+	UID         string `json:"uid"`
+	Password    string `json:"password"`
+}
+
 // Register creates a new user and returns a new session token on success.
-// This differs from the Create method as it doesn't require auth, but has limited
-// functionalities (unable to create admin user for example).
+// This doesn't require auth, but has limited functionalities (unable to create admin user for example).
 func (c *Controller) Register(ctx context.Context, sysCtrl *system.Controller,
 	in *RegisterInput) (*types.TokenResponse, error) {
 	signUpAllowed, err := sysCtrl.IsUserRegistrationAllowed(ctx)
