@@ -21,7 +21,7 @@ func HandleGetConfig(sysCtrl *system.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		signUpAllowedCheck, err := sysCtrl.RegisterCheck(ctx)
+		signUpAllowedCheck, err := sysCtrl.IsUserRegistrationAllowed(ctx)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
