@@ -201,11 +201,11 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 		errors.Is(err, types.ErrSHADoesNotMatch),
 		errors.Is(err, types.ErrHunkNotFound),
 		errors.Is(err, types.ErrPathNotFound):
-		return ErrNotFoundf(format, args...)
+		return ErrNotFound(err)
 	case errors.Is(err, types.ErrAlreadyExists):
-		return ErrAlreadyExistsf(format, args...)
+		return ErrAlreadyExists(err)
 	case errors.Is(err, types.ErrInvalidArgument):
-		return ErrInvalidArgumentf(format, args...)
+		return ErrInvalidArgument(err)
 	case errors.As(err, &cferr):
 		stdout := strings.Trim(cferr.StdOut, nl)
 		conflictingFiles := strings.Split(stdout, nl)
@@ -214,9 +214,9 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 		}
 		return ErrFailedPreconditionf("merging failed due to conflicting changes with the target branch", files, err)
 	case types.IsMergeUnrelatedHistoriesError(err):
-		return ErrFailedPreconditionf(format, args...)
+		return ErrFailedPrecondition(err)
 	case errors.Is(err, types.ErrFailedToConnect):
-		return ErrInvalidArgumentf(format, args...)
+		return ErrInvalidArgument(err)
 	default:
 		return ErrInternalf(format, args...)
 	}

@@ -64,7 +64,7 @@ func (s MergeService) Merge(
 	// Clone base repo.
 	tmpRepo, err := s.adapter.CreateTemporaryRepoForPR(ctx, s.reposTempDir, pr, baseBranch, trackingBranch)
 	if err != nil {
-		return nil, err
+		return nil, processGitErrorf(err, "failed to initialize temporary repo")
 	}
 	defer func() {
 		rmErr := tempdir.RemoveTemporaryPath(tmpRepo.Path)

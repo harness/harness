@@ -219,7 +219,7 @@ func (c *Client) GetCommitDivergences(ctx context.Context,
 
 	divergences := resp.GetDivergences()
 	if divergences == nil {
-		return nil, fmt.Errorf("server response divergences were nil")
+		return nil, NewError(StatusInternal, "server response divergences were nil")
 	}
 
 	// build output
@@ -228,7 +228,7 @@ func (c *Client) GetCommitDivergences(ctx context.Context,
 	}
 	for i := range divergences {
 		if divergences[i] == nil {
-			return nil, fmt.Errorf("server returned nil divergence")
+			return nil, NewError(StatusInternal, "server returned nil divergence")
 		}
 
 		output.Divergences[i] = CommitDivergence{

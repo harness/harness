@@ -82,7 +82,8 @@ func (c *Client) DiffShortStat(ctx context.Context, params *DiffParams) (DiffSho
 		MergeBase: params.MergeBase,
 	})
 	if err != nil {
-		return DiffShortStatOutput{}, err
+		return DiffShortStatOutput{}, processRPCErrorf(err, "failed to get diff data between '%s' and '%s'",
+			params.BaseRef, params.HeadRef)
 	}
 	return DiffShortStatOutput{
 		Files:     int(stat.GetFiles()),
@@ -122,7 +123,8 @@ func (c *Client) DiffStats(ctx context.Context, params *DiffParams) (DiffStatsOu
 
 		rpcOutput, err := c.GetCommitDivergences(groupCtx, options)
 		if err != nil {
-			return fmt.Errorf("failed to count pull request commits: %w", err)
+			return processRPCErrorf(err, "failed to count pull request commits between '%s' and '%s'",
+				params.BaseRef, params.HeadRef)
 		}
 		if len(rpcOutput.Divergences) > 0 {
 			totalCommits = int(rpcOutput.Divergences[0].Ahead)
@@ -139,7 +141,7 @@ func (c *Client) DiffStats(ctx context.Context, params *DiffParams) (DiffStatsOu
 			MergeBase:  true, // must be true, because commitDivergences use tripple dot notation
 		})
 		if err != nil {
-			return fmt.Errorf("failed to count pull request file changes: %w", err)
+			return err
 		}
 		totalFiles = stat.Files
 		return nil

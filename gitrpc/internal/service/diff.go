@@ -77,8 +77,7 @@ func validateDiffRequest(in *rpc.DiffRequest) error {
 func (s DiffService) DiffShortStat(ctx context.Context, r *rpc.DiffRequest) (*rpc.DiffShortStatResponse, error) {
 	err := validateDiffRequest(r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate request for short diff statistic "+
-			"between %s and %s with err: %w", r.GetBaseRef(), r.GetHeadRef(), err)
+		return nil, fmt.Errorf("failed to validate request for short diff statistic, error: %v", err)
 	}
 
 	base := r.GetBase()
@@ -91,8 +90,8 @@ func (s DiffService) DiffShortStat(ctx context.Context, r *rpc.DiffRequest) (*rp
 
 	stat, err := s.adapter.DiffShortStat(ctx, repoPath, r.GetBaseRef(), r.GetHeadRef(), direct)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch short statistics "+
-			"between %s and %s with err: %w", r.GetBaseRef(), r.GetHeadRef(), err)
+		return nil, processGitErrorf(err, "failed to fetch short statistics "+
+			"between %s and %s", r.GetBaseRef(), r.GetHeadRef())
 	}
 
 	return &rpc.DiffShortStatResponse{
