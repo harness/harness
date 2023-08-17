@@ -64,8 +64,8 @@ func (g Adapter) DiffShortStat(
 	}
 	numFiles, totalAdditions, totalDeletions, err := git.GetDiffShortStat(ctx, repoPath, shortstatArgs...)
 	if err != nil {
-		return types.DiffShortStat{}, fmt.Errorf("failed to get diff short stat between %s and %s with err: %w",
-			baseRef, headRef, err)
+		return types.DiffShortStat{}, processGiteaErrorf(err, "failed to get diff short stat between %s and %s",
+			baseRef, headRef)
 	}
 	return types.DiffShortStat{
 		Files:     numFiles,

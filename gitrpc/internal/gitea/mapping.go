@@ -63,7 +63,16 @@ func mapGiteaRunStdError(err gitea.RunStdError, fallback error) error {
 
 	// exit status 128 - fatal: ambiguous argument 'branch1...branch2': unknown revision or path not in the working tree.
 	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "unknown revision"):
-		return types.ErrNotFound
+		msg := "unknown revision or path not in the working tree"
+		// parse the error response from git output
+		lines := strings.Split(err.Error(), "\n")
+		if len(lines) > 0 {
+			cols := strings.Split(lines[0], ": ")
+			if len(cols) >= 2 {
+				msg = cols[1] + ", " + cols[2]
+			}
+		}
+		return fmt.Errorf("%v err: %w", msg, types.ErrNotFound)
 
 	// exit status 128 - fatal: couldn't find remote ref v1.
 	case err.IsExitCode(128) && strings.Contains(err.Stderr(), "couldn't find"):

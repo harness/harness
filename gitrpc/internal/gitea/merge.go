@@ -106,7 +106,7 @@ func (g Adapter) CreateTemporaryRepoForPR(
 	// Fetch base branch
 	baseCommit, err := g.GetCommit(ctx, pr.BaseRepoPath, pr.BaseBranch)
 	if err != nil {
-		return types.TempRepository{}, fmt.Errorf("failed to get commit of %s branch: %w", baseBranch, err)
+		return types.TempRepository{}, fmt.Errorf("failed to get commit of base branch '%s', error: %w", pr.BaseBranch, err)
 	}
 	baseID := baseCommit.SHA
 	if err = git.NewCommand(ctx, "fetch", "origin", "--no-tags", "--",
@@ -162,7 +162,7 @@ func (g Adapter) CreateTemporaryRepoForPR(
 
 	headCommit, err := g.GetCommit(ctx, pr.HeadRepoPath, pr.HeadBranch)
 	if err != nil {
-		return types.TempRepository{}, fmt.Errorf("failed to get commit of %s branch: %w", trackingBranch, err)
+		return types.TempRepository{}, fmt.Errorf("failed to get commit of head branch '%s', error: %w", pr.HeadBranch, err)
 	}
 	headID := headCommit.SHA
 	if err = git.NewCommand(ctx, "fetch", "--no-tags", remoteRepoName, headID+":"+trackingBranch).

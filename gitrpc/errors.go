@@ -127,6 +127,9 @@ func ErrInvalidArgumentf(format string, args ...interface{}) *Error {
 }
 
 func processRPCErrorf(err error, format string, args ...interface{}) error {
+	if errors.Is(err, &Error{}) {
+		return err
+	}
 	// create fallback error returned if we can't map it
 	fallbackMsg := fmt.Sprintf(format, args...)
 	fallbackErr := NewError(StatusInternal, fallbackMsg)
