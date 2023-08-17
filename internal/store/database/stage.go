@@ -52,7 +52,7 @@ const (
 type stage struct {
 	ID          int64              `db:"stage_id"`
 	ExecutionID int64              `db:"stage_execution_id"`
-	Number      int                `db:"stage_number"`
+	Number      int64              `db:"stage_number"`
 	Name        string             `db:"stage_name"`
 	Kind        string             `db:"stage_kind"`
 	Type        string             `db:"stage_type"`

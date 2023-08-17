@@ -90,12 +90,14 @@ type Config struct {
 		Expire time.Duration `envconfig:"GITNESS_TOKEN_EXPIRE" default:"720h"`
 	}
 
-	// S3 provides optional storage option for logs.
-	S3 struct {
-		Bucket    string `envconfig:"GITNESS_S3_BUCKET"`
-		Prefix    string `envconfig:"GITNESS_S3_PREFIX"`
-		Endpoint  string `envconfig:"GITNESS_S3_ENDPOINT"`
-		PathStyle bool   `envconfig:"GITNESS_S3_PATH_STYLE"`
+	Logs struct {
+		// S3 provides optional storage option for logs.
+		S3 struct {
+			Bucket    string `envconfig:"GITNESS_LOGS_S3_BUCKET"`
+			Prefix    string `envconfig:"GITNESS_LOGS_S3_PREFIX"`
+			Endpoint  string `envconfig:"GITNESS_LOGS_S3_ENDPOINT"`
+			PathStyle bool   `envconfig:"GITNESS_LOGS_S3_PATH_STYLE"`
+		}
 	}
 
 	// Cors defines http cors parameters

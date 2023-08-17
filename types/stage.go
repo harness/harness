@@ -7,7 +7,7 @@ package types
 type Stage struct {
 	ID          int64             `json:"-"`
 	ExecutionID int64             `json:"execution_id"`
-	Number      int               `json:"number"`
+	Number      int64             `json:"number"`
 	Name        string            `json:"name"`
 	Kind        string            `json:"kind,omitempty"`
 	Type        string            `json:"type,omitempty"`

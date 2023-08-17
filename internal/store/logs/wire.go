@@ -19,12 +19,12 @@ var WireSet = wire.NewSet(
 
 func ProvideLogStore(db *sqlx.DB, config *types.Config) store.LogStore {
 	s := NewDatabaseLogStore(db)
-	if config.S3.Bucket != "" {
+	if config.Logs.S3.Bucket != "" {
 		p := NewS3LogStore(
-			config.S3.Bucket,
-			config.S3.Prefix,
-			config.S3.Endpoint,
-			config.S3.PathStyle,
+			config.Logs.S3.Bucket,
+			config.Logs.S3.Prefix,
+			config.Logs.S3.Endpoint,
+			config.Logs.S3.PathStyle,
 		)
 		return NewCombined(p, s)
 	}

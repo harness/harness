@@ -25,7 +25,7 @@ func (c *Controller) Tail(
 ) (<-chan *livelog.Line, <-chan error, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, nil, fmt.Errorf("could not find parent space: %w", err)
+		return nil, nil, fmt.Errorf("failed to find parent space: %w", err)
 	}
 
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)

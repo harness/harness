@@ -97,7 +97,8 @@ func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 			select {
 			case <-ctx.Done():
 				break L
-			case <-errc:
+			case err := <-errc:
+				log.Err(err).Msg("received error in the tail channel")
 				break L
 			case <-msgDelayTimer.C:
 				io.WriteString(w, ": ping\n\n")

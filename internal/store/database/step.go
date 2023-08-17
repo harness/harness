@@ -41,7 +41,7 @@ const (
 type step struct {
 	ID        int64              `db:"step_id"`
 	StageID   int64              `db:"step_stage_id"`
-	Number    int                `db:"step_number"`
+	Number    int64              `db:"step_number"`
 	Name      string             `db:"step_name"`
 	Status    string             `db:"step_status"`
 	Error     string             `db:"step_error"`

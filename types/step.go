@@ -7,7 +7,7 @@ package types
 type Step struct {
 	ID        int64    `json:"-"`
 	StageID   int64    `json:"-"`
-	Number    int      `json:"number"`
+	Number    int64    `json:"number"`
 	Name      string   `json:"name"`
 	Status    string   `json:"status"`
 	Error     string   `json:"error,omitempty"`
