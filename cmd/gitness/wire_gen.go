@@ -41,6 +41,7 @@ import (
 	server2 "github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/codecomments"
+	"github.com/harness/gitness/internal/services/job"
 	pullreq2 "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
@@ -199,7 +200,13 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService)
+	jobStore := database.ProvideJobStore(db)
+	executor := job.ProvideExecutor(jobStore, pubSub)
+	scheduler, err := job.ProvideScheduler(jobStore, executor, mutexManager, pubSub, config)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(webhookService, pullreqService, executor, scheduler)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, grpcServer, manager, servicesServices)
 	return serverSystem, nil
 }

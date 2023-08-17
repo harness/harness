@@ -23,6 +23,7 @@ var WireSet = wire.NewSet(
 	ProvidePathStore,
 	ProvideSpaceStore,
 	ProvideRepoStore,
+	ProvideJobStore,
 	ProvideExecutionStore,
 	ProvidePipelineStore,
 	ProvideStageStore,
@@ -84,6 +85,11 @@ func ProvideSpaceStore(db *sqlx.DB, pathCache store.PathCache) store.SpaceStore 
 // ProvideRepoStore provides a repo store.
 func ProvideRepoStore(db *sqlx.DB, pathCache store.PathCache) store.RepoStore {
 	return NewRepoStore(db, pathCache)
+}
+
+// ProvideJobStore provides a job store.
+func ProvideJobStore(db *sqlx.DB) store.JobStore {
+	return NewJobStore(db)
 }
 
 // ProvidePipelineStore provides a pipeline store.

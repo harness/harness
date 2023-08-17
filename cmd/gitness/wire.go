@@ -43,6 +43,7 @@ import (
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/codecomments"
+	"github.com/harness/gitness/internal/services/job"
 	pullreqservice "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
@@ -101,6 +102,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		lock.WireSet,
 		pubsub.WireSet,
 		codecomments.WireSet,
+		job.WireSet,
 		gitrpccron.WireSet,
 		checkcontroller.WireSet,
 		execution.WireSet,
