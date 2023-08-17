@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Icon, Text } from '@harness/uicore'
+import { Icon, Text, StringSubstitute } from '@harness/uicore'
 import { useGet } from 'restful-react'
 import cx from 'classnames'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'
@@ -55,6 +55,9 @@ const SingleFileRenameHistory = (props: {
   const commitsData = commits?.commits
   const showCommitHistory = isFileShown && commitsData && commitsData.length > 0
 
+  const vars = {
+    file: details.old_path
+  }
   return (
     <ThreadSection
       hideGutter
@@ -62,9 +65,11 @@ const SingleFileRenameHistory = (props: {
       contentClassName={css.contentSection}
       title={
         <Text padding={{ top: 'large' }} className={cx(css.hideText, css.lineDiv)} onClick={toggleCommitHistory}>
-          {showCommitHistory
-            ? getString('hideCommitHistory', { file: details.old_path })
-            : getString('showCommitHistory', { file: details.old_path })}
+          <StringSubstitute
+            str={showCommitHistory ? getString('hideCommitHistory') : getString('showCommitHistory')}
+            vars={vars}
+          />
+
           {showCommitHistory ? (
             <Icon padding={'xsmall'} name={'main-chevron-up'} size={8}></Icon>
           ) : (

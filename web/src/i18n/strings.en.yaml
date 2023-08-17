@@ -185,7 +185,7 @@ editNotAllowed: You must be on a branch to edit this file
 newFileNotAllowed: You must be on a branch to create a new file
 fileDeleted: '__path__ successfully deleted.'
 newPullRequest: New Pull Request
-pullRequestEmpty: Here is no Pull Request. Try to
+pullRequestEmpty: There are no pull requests in your project. Click the button below to create a pull request.
 comparingChanges: Comparing Changes
 selectToViewMore: Select branch to view more here.
 createPullRequest: Create pull request
@@ -388,7 +388,7 @@ repoEmptyMarkdownExisting: |
   ```
 
   You might need [to create an API token](CREATE_API_TOKEN_URL) in order to pull from or push into this repository.
-webhookEmpty: Here is no WebHooks. Try to
+webhookEmpty: There are no webhooks in your project. Click the button below to create a webhook.
 compareEmptyDiffTitle: There isn't anything to compare
 compareEmptyDiffMessage: Two branches are identical.
 noCommits: There is no commits
@@ -475,15 +475,15 @@ creationDate: Creation Date
 viewFiles: View Files
 tagger: Tagger
 confirmDelete: Confirm delete
-tagEmpty: Here is no Tag. Try to
+tagEmpty: There are no tags in your project. Click the button below to create a tag.
 newTag: New Tag
 overview: Overview
 fileTooLarge: File is too large to open. {download}
 clickHereToDownload: Click here to download.
 viewFile: View the file at this point in the history
 viewRepo: View the repository at this point in the history
-hideCommitHistory: Renamed from {{file}} - Hide History
-showCommitHistory: Renamed from {{file}} - Show History
+hideCommitHistory: Renamed from {file} - Hide History
+showCommitHistory: Renamed from {file} - Show History
 noReviewers: No Reviewers
 assignPeople: Assign people
 add: Add +
