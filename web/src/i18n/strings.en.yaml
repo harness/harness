@@ -30,6 +30,7 @@ newFolder: New Folder
 content: Content
 history: History
 newRepo: New Repository
+createARepo: Create a repository
 createRepo: Create Repository
 enterRepoName: Enter Repository Name
 enterDescription: Enter a description (optional)
@@ -59,6 +60,7 @@ activeBranches: Active Branches
 inactiveBranches: Inactive Branches
 yourBranches: Your Branches
 allBranches: All Branches
+newBranch: New Branch
 createBranch: Create Branch
 createTag: Create Tag
 tagDescription: Enter tag description here
@@ -212,6 +214,8 @@ botAlerts: 'Dependabot alerts'
 deployKeys: 'Deploy keys'
 sslVerificationLabel: 'SSL verification'
 enableSSLVerification: 'Enable SSL verification'
+newWebhook: New Webhook
+createAWebhook: Create a Webhook
 createWebhook: Create Webhook
 webhook: Webhook
 diff: Diff
@@ -508,11 +512,11 @@ userCreated: User was created
 admin: Admin
 removeAdmin: Remove admin
 setAsAdmin: Set as admin
-addUser: Add User
+createUser: Create User
 editUser: Edit user
 updateUser: Update user
 deleteUser: Delete user
-createNewUser: Create a new user
+createNewUser: Create a user
 displayName: Display Name
 accountEmail: Account Email
 changePassword: Change Password
@@ -533,7 +537,7 @@ changePasswordSuccesfully: Password changed successfully
 applyChanges: Apply Changes
 showMore: View more
 showLess: View less
-createNewToken: Create New Token
+createNewToken: Create a token
 newToken:
   text: New Token
   namePlaceholder: Enter the name
@@ -573,7 +577,7 @@ role: Role
 newMember: New Member
 addMember: Add member
 spaceMemberships:
-  addMember: Add a new member
+  addMember: Add a member
   changeRole: Change Role
   removeMember: Remove Member
   removeMembershipMsg: Are you sure you want to remove this member?
@@ -583,6 +587,7 @@ spaceMemberships:
 failedToCreateSpace: Failed to create Space. Please try again.
 failedToCreatePipeline: Failed to create Pipeline. Please try again.
 enterName: Enter the name
+createASpace: Create a space
 createSpace: Create Space
 newSpace: New Space
 emptySpaceText: "It's empty now, please create a new space"

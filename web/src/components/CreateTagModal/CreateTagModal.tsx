@@ -161,7 +161,7 @@ export function useCreateTagModal({
                   style={{ alignItems: 'center' }}>
                   <Button
                     type="submit"
-                    text={getString('create')}
+                    text={getString('createTag')}
                     variation={ButtonVariation.PRIMARY}
                     disabled={loading}
                   />

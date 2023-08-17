@@ -159,7 +159,7 @@ const useAddUserModal = ({ onClose }: { onClose: () => Promise<void> }) => {
                     <Else>
                       <Button
                         type="submit"
-                        text={isEditMode ? getString('save') : getString('addUser')}
+                        text={isEditMode ? getString('save') : getString('createUser')}
                         variation={ButtonVariation.PRIMARY}
                       />
                     </Else>

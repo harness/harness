@@ -114,7 +114,7 @@ export default function RepositoriesListing() {
   const NewRepoButton = (
     <NewRepoModalButton
       space={space}
-      modalTitle={getString('newRepo')}
+      modalTitle={getString('createARepo')}
       text={getString('newRepo')}
       variation={ButtonVariation.PRIMARY}
       icon="plus"

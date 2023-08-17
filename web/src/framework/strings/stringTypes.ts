@@ -15,7 +15,6 @@ export interface StringsMap {
   addMember: string
   addNewFile: string
   addReadMe: string
-  addUser: string
   admin: string
   all: string
   allBranches: string
@@ -95,7 +94,10 @@ export interface StringsMap {
   copyCommitSHA: string
   create: string
   createABranch: string
+  createARepo: string
+  createASpace: string
   createATag: string
+  createAWebhook: string
   createBranch: string
   createBranchFromBranch: string
   createBranchFromTag: string
@@ -111,6 +113,7 @@ export interface StringsMap {
   createRepoPerms: string
   createSpace: string
   createTag: string
+  createUser: string
   createWebhook: string
   created: string
   creationDate: string
@@ -225,6 +228,7 @@ export interface StringsMap {
   nameYourFile: string
   nameYourTag: string
   nameYourWebhook: string
+  newBranch: string
   newFile: string
   newFileNotAllowed: string
   newFolder: string
@@ -246,6 +250,7 @@ export interface StringsMap {
   'newUserModal.userCreated': string
   'newUserModal.userDeleted': string
   'newUserModal.userUpdated': string
+  newWebhook: string
   next: string
   noAccount: string
   'noAccount?': string

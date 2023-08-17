@@ -16,7 +16,7 @@ export default function WebhookNew() {
     <Container>
       <RepositoryPageHeader
         repoMetadata={repoMetadata}
-        title={getString('createWebhook')}
+        title={getString('createAWebhook')}
         dataTooltipId="webhooks"
         extraBreadcrumbLinks={
           repoMetadata && [

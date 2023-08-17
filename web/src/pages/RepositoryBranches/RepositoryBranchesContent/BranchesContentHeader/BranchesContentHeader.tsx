@@ -58,7 +58,7 @@ export function BranchesContentHeader({
         />
         <FlexExpander />
         <CreateBranchModalButton
-          text={getString('createBranch')}
+          text={getString('newBranch')}
           icon={CodeIcon.Add}
           variation={ButtonVariation.PRIMARY}
           repoMetadata={repoMetadata}

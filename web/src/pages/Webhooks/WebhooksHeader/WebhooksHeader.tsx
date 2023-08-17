@@ -33,7 +33,7 @@ export function WebhooksHeader({ repoMetadata, loading, onSearchTermChanged }: W
         <FlexExpander />
         <Button
           variation={ButtonVariation.PRIMARY}
-          text={getString('createWebhook')}
+          text={getString('newWebhook')}
           icon={CodeIcon.Add}
           onClick={() => history.push(routes.toCODEWebhookNew({ repoPath: repoMetadata?.path as string }))}
         />

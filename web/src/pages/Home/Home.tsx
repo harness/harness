@@ -24,8 +24,8 @@ export default function Home() {
   const NewSpaceButton = (
     <NewSpaceModalButton
       space={space}
-      modalTitle={getString('createSpace')}
-      text={getString('createSpace')}
+      modalTitle={getString('createASpace')}
+      text={getString('newSpace')}
       variation={ButtonVariation.PRIMARY}
       icon="plus"
       width={173}
