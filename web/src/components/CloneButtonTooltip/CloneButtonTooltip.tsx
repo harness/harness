@@ -4,7 +4,6 @@ import { useStrings } from 'framework/strings'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { CodeIcon } from 'utils/GitUtils'
 import CloneCredentialDialog from 'components/CloneCredentialDialog/CloneCredentialDialog'
-import { useAppContext } from 'AppContext'
 import css from './CloneButtonTooltip.module.scss'
 
 interface CloneButtonTooltipProps {
@@ -14,7 +13,6 @@ interface CloneButtonTooltipProps {
 export function CloneButtonTooltip({ httpsURL }: CloneButtonTooltipProps) {
   const { getString } = useStrings()
   const [flag, setFlag] = useState(false)
-  const { standalone } = useAppContext()
 
   return (
     <Container className={css.container} padding="xlarge">

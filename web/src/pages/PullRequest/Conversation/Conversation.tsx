@@ -16,6 +16,7 @@ import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/Code
 import { CodeCommentStatusButton } from 'components/CodeCommentStatusButton/CodeCommentStatusButton'
 import { CodeCommentSecondarySaveButton } from 'components/CodeCommentSecondarySaveButton/CodeCommentSecondarySaveButton'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
+import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 import { DescriptionBox } from './DescriptionBox'
 import { PullRequestActionsBox } from './PullRequestActionsBox/PullRequestActionsBox'
@@ -59,9 +60,16 @@ export const Conversation: React.FC<ConversationProps> = ({
     debounce: 500
   })
   const { showError } = useToaster()
-  const [dateOrderSort, setDateOrderSort] = useState<boolean | 'desc' | 'asc'>(orderSortDate.ASC)
+  const [dateOrderSort, setDateOrderSort] = useUserPreference<orderSortDate.ASC | orderSortDate.DESC>(
+    UserPreference.PULL_REQUEST_ACTIVITY_ORDER,
+    orderSortDate.ASC
+    )
   const activityFilters = useActivityFilters()
-  const [activityFilter, setActivityFilter] = useState<SelectOption>(activityFilters[0] as SelectOption)
+  const [activityFilter, setActivityFilter] = useUserPreference<SelectOption>(
+    UserPreference.PULL_REQUEST_ACTIVITY_FILTER,
+    activityFilters[0] as SelectOption
+    )
+
   const activityBlocks = useMemo(() => {
     // Each block may have one or more activities which are grouped into it. For example, one comment block
     // contains a parent comment and multiple replied comments
