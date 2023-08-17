@@ -64,6 +64,10 @@ build-githook: generate ## Build the githook binary for gitness
 	@echo "Building gitness GitHook Binary"
 	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./gitness-githook ./cmd/gitness-githook
 
+build-githa: generate ## Build the githa server binary
+	@echo "Building GitHA Server"
+	go build -ldflags=${LDFLAGS} -o ./githaserver ./cmd/githaserver
+
 build-githa-githook: generate ## Build the githook binary for githa
 	@echo "Building githa GitHook Binary"
 	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./githa-githook ./cmd/githa-githook
@@ -137,17 +141,21 @@ generate: $(mocks) wire mocks/mock_client.go proto
 mocks: $(mocks)
 	@echo "Generating Test Mocks"
 
-wire: cmd/gitness/wire_gen.go cmd/gitrpcserver/wire_gen.go
+wire: cmd/gitness/wire_gen.go cmd/gitrpcserver/wire_gen.go cmd/githaserver/wire_gen.go
 
 force-wire: ## Force wire code generation
 	@sh ./scripts/wire/server/standalone.sh
 	@sh ./scripts/wire/gitrpcserver/wire.sh
+	@sh ./scripts/wire/githaserver/wire.sh
 
 cmd/gitness/wire_gen.go: cmd/gitness/wire.go
 	@sh ./scripts/wire/server/standalone.sh
 
 cmd/gitrpcserver/wire_gen.go: cmd/gitrpcserver/wire.go
 	@sh ./scripts/wire/gitrpcserver/wire.sh
+
+cmd/githaserver/wire_gen.go: cmd/githaserver/wire.go
+	@sh ./scripts/wire/githaserver/wire.sh
 
 mocks/mock_client.go: internal/store/database.go client/client.go
 	go generate mocks/mock.go

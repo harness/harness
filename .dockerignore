@@ -10,4 +10,5 @@ coverage.out
 /gitness
 /gitrpcserver
 /gitness-githook
+/githaserver
 /githa-githook

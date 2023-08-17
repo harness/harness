@@ -19,4 +19,5 @@ gitness.session.sql
 /gitness
 /gitrpcserver
 /gitness-githook
+/githaserver
 /githa-githook
