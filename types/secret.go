@@ -12,7 +12,7 @@ type Secret struct {
 	Data        string `db:"secret_data"            json:"-"`
 	Created     int64  `db:"secret_created"         json:"created"`
 	Updated     int64  `db:"secret_updated"         json:"updated"`
-	Version     int64  `db:"secret_version"         json:"version"`
+	Version     int64  `db:"secret_version"         json:"-"`
 }
 
 // Copy makes a copy of the secret without the value.

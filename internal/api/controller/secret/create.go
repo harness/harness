@@ -67,9 +67,6 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	if err != nil {
 		return nil, fmt.Errorf("secret creation failed: %w", err)
 	}
-	if err != nil {
-		return nil, err
-	}
 
 	return secret, nil
 }
@@ -86,11 +83,8 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	}
 
 	in.Description = strings.TrimSpace(in.Description)
-	if err := check.Description(in.Description); err != nil {
-		return err
-	}
+	return check.Description(in.Description)
 
-	return nil
 }
 
 // helper function returns the same secret with encrypted data.

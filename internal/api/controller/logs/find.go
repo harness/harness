@@ -2,15 +2,15 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package execution
+package logs
 
 import (
 	"context"
 	"fmt"
+	"io"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -20,10 +20,12 @@ func (c *Controller) Find(
 	spaceRef string,
 	pipelineUID string,
 	executionNum int64,
-) (*types.Execution, error) {
+	stageNum int,
+	stepNum int,
+) (io.ReadCloser, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find parent space: %w", err)
+		return nil, fmt.Errorf("failed to find parent space: %w", err)
 	}
 
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)
@@ -38,17 +40,18 @@ func (c *Controller) Find(
 
 	execution, err := c.executionStore.Find(ctx, pipeline.ID, executionNum)
 	if err != nil {
-		return nil, fmt.Errorf("could not find execution %d: %w", executionNum, err)
+		return nil, fmt.Errorf("could not find execution: %w", err)
 	}
 
-	stages, err := c.stageStore.ListWithSteps(ctx, execution.ID)
+	stage, err := c.stageStore.FindByNumber(ctx, execution.ID, stageNum)
 	if err != nil {
-		return nil, fmt.Errorf("could not query stage information for execution %d: %w",
-			executionNum, err)
+		return nil, fmt.Errorf("could not find stage: %w", err)
 	}
 
-	// Add stages information to the execution
-	execution.Stages = stages
+	step, err := c.stepStore.FindByNumber(ctx, stage.ID, stepNum)
+	if err != nil {
+		return nil, fmt.Errorf("could not find step: %w", err)
+	}
 
-	return execution, nil
+	return c.logStore.Find(ctx, step.ID)
 }

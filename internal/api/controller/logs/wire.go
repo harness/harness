@@ -2,11 +2,12 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package execution
+package logs
 
 import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/livelog"
 
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
@@ -20,10 +21,13 @@ var WireSet = wire.NewSet(
 func ProvideController(db *sqlx.DB,
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
-	stageStore store.StageStore,
 	pipelineStore store.PipelineStore,
+	stageStore store.StageStore,
+	stepStore store.StepStore,
+	logStore store.LogStore,
+	logStream livelog.LogStream,
 	spaceStore store.SpaceStore,
 ) *Controller {
-	return NewController(db, authorizer, executionStore, stageStore,
-		pipelineStore, spaceStore)
+	return NewController(db, authorizer, executionStore,
+		pipelineStore, stageStore, stepStore, logStore, logStream, spaceStore)
 }

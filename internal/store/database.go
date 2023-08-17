@@ -439,6 +439,7 @@ type (
 		// Delete removes a required status checks for a repo.
 		Delete(ctx context.Context, repoID, reqCheckID int64) error
 	}
+
 	PipelineStore interface {
 		// Find returns a pipeline given a pipeline ID from the datastore.
 		Find(ctx context.Context, id int64) (*types.Pipeline, error)
@@ -513,7 +514,7 @@ type (
 		Update(ctx context.Context, execution *types.Execution) error
 
 		// UpdateOptLock updates the execution using the optimistic locking mechanism.
-		UpdateOptLock(ctx context.Context, exectuion *types.Execution,
+		UpdateOptLock(ctx context.Context, execution *types.Execution,
 			mutateFn func(execution *types.Execution) error) (*types.Execution, error)
 
 		// List lists the executions for a given pipeline ID
@@ -524,5 +525,26 @@ type (
 
 		// Count the number of executions in a space
 		Count(ctx context.Context, parentID int64) (int64, error)
+	}
+
+	StageStore interface {
+		// List returns a build stage list from the datastore
+		// where the stage is incomplete (pending or running).
+		ListIncomplete(ctx context.Context) ([]*types.Stage, error)
+
+		// ListWithSteps returns a stage list from the datastore corresponding to an execution,
+		// with the individual steps included.
+		ListWithSteps(ctx context.Context, executionID int64) ([]*types.Stage, error)
+
+		// Find returns a build stage from the datastore by ID.
+		Find(ctx context.Context, stageID int64) (*types.Stage, error)
+
+		// FindByNumber returns a stage from the datastore by number.
+		FindByNumber(ctx context.Context, executionID int64, stageNum int) (*types.Stage, error)
+	}
+
+	StepStore interface {
+		// FindByNumber returns a step from the datastore by number.
+		FindByNumber(ctx context.Context, stageID int64, stepNum int) (*types.Step, error)
 	}
 )
