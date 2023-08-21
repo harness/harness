@@ -24,6 +24,12 @@ type executionRequest struct {
 	Number string `path:"execution_number"`
 }
 
+type logRequest struct {
+	executionRequest
+	StageNum string `path:"stage_number"`
+	StepNum  string `path:"step_number"`
+}
+
 type createExecutionRequest struct {
 	pipelineRequest
 	execution.CreateInput
@@ -159,4 +165,16 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionList, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
 		"/pipelines/{pipeline_ref}/executions", executionList)
+
+	logView := openapi3.Operation{}
+	logView.WithTags("pipeline")
+	logView.WithMapOfAnything(map[string]interface{}{"operationId": "viewLogs"})
+	_ = reflector.SetRequest(&logView, new(logRequest), http.MethodGet)
+	_ = reflector.SetStringResponse(&logView, http.StatusOK, "text/plain")
+	_ = reflector.SetJSONResponse(&logView, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&logView, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&logView, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&logView, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/pipelines/{pipeline_ref}/executions/{execution_number}/logs/{stage_number}/{step_number}", logView)
 }
