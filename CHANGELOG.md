@@ -1,5 +1,17 @@
 # Changelog
 
+## [v2.20.0](https://github.com/harness/drone/tree/v2.20.0) (2023-08-21)
+
+[Full Changelog](https://github.com/harness/drone/compare/v2.19.0...v2.20.0)
+
+**Implemented enhancements:**
+
+- + sync gitea redirecturl config from gitee for customize login redire… [\#3319](https://github.com/harness/drone/pull/3319) ([fireinice](https://github.com/fireinice))
+
+**Fixed bugs:**
+
+- \(CI-8780\) set approved stages to waiting, if they have stage  depende… [\#3355](https://github.com/harness/drone/pull/3355) ([tphoney](https://github.com/tphoney))
+
 ## [v2.19.0](https://github.com/harness/drone/tree/v2.19.0) (2023-08-15)
 
 [Full Changelog](https://github.com/harness/drone/compare/scheduler_experiment...v2.19.0)
@@ -17,6 +29,7 @@
 
 **Merged pull requests:**
 
+- \(maint\) prep for v2.19.0 [\#3352](https://github.com/harness/drone/pull/3352) ([tphoney](https://github.com/tphoney))
 - remove repetitive words [\#3342](https://github.com/harness/drone/pull/3342) ([cuishuang](https://github.com/cuishuang))
 - Revert "fix scheduler queue deadlock" [\#3331](https://github.com/harness/drone/pull/3331) ([tphoney](https://github.com/tphoney))
 
