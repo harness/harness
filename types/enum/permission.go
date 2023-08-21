@@ -15,6 +15,8 @@ const (
 	ResourceTypeService        ResourceType = "SERVICE"
 	ResourceTypePipeline       ResourceType = "PIPELINE"
 	ResourceTypeSecret         ResourceType = "SECRET"
+	ResourceTypeConnector      ResourceType = "CONNECTOR"
+	ResourceTypeTemplate       ResourceType = "TEMPLATE"
 	//   ResourceType_Branch ResourceType = "BRANCH"
 )
 
@@ -91,6 +93,26 @@ const (
 	PermissionSecretEdit   Permission = "secret_edit"
 	PermissionSecretDelete Permission = "secret_delete"
 	PermissionSecretAccess Permission = "secret_access"
+)
+
+const (
+	/*
+		----- CONNECTOR -----
+	*/
+	PermissionConnectorView   Permission = "connector_view"
+	PermissionConnectorEdit   Permission = "connector_edit"
+	PermissionConnectorDelete Permission = "connector_delete"
+	PermissionConnectorAccess Permission = "connector_access"
+)
+
+const (
+	/*
+		----- TEMPLATE -----
+	*/
+	PermissionTemplateView   Permission = "template_view"
+	PermissionTemplateEdit   Permission = "template_edit"
+	PermissionTemplateDelete Permission = "template_delete"
+	PermissionTemplateAccess Permission = "template_access"
 )
 
 const (
