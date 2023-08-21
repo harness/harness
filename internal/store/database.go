@@ -547,4 +547,88 @@ type (
 		// FindByNumber returns a step from the datastore by number.
 		FindByNumber(ctx context.Context, stageID int64, stepNum int) (*types.Step, error)
 	}
+
+	ConnectorStore interface {
+		// Find returns a connector given an ID.
+		Find(ctx context.Context, id int64) (*types.Connector, error)
+
+		// FindByUID returns a connector given a space ID and a UID.
+		FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Connector, error)
+
+		// Create creates a new connector.
+		Create(ctx context.Context, connector *types.Connector) error
+
+		// Count the number of connectors in a space matching the given filter.
+		Count(ctx context.Context, spaceID int64, pagination types.ListQueryFilter) (int64, error)
+
+		// UpdateOptLock updates the connector using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, connector *types.Connector,
+			mutateFn func(connector *types.Connector) error) (*types.Connector, error)
+
+		// Update tries to update a connector.
+		Update(ctx context.Context, connector *types.Connector) error
+
+		// Delete deletes a connector given an ID.
+		Delete(ctx context.Context, id int64) error
+
+		// DeleteByUID deletes a connector given a space ID and a uid.
+		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
+
+		// List lists the connectors in a given space.
+		List(ctx context.Context, spaceID int64, filter types.ListQueryFilter) ([]*types.Connector, error)
+	}
+
+	TemplateStore interface {
+		// Find returns a template given an ID.
+		Find(ctx context.Context, id int64) (*types.Template, error)
+
+		// FindByUID returns a template given a space ID and a UID.
+		FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Template, error)
+
+		// Create creates a new template.
+		Create(ctx context.Context, template *types.Template) error
+
+		// Count the number of templates in a space matching the given filter.
+		Count(ctx context.Context, spaceID int64, pagination types.ListQueryFilter) (int64, error)
+
+		// UpdateOptLock updates the template using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, template *types.Template,
+			mutateFn func(template *types.Template) error) (*types.Template, error)
+
+		// Update tries to update a template.
+		Update(ctx context.Context, template *types.Template) error
+
+		// Delete deletes a template given an ID.
+		Delete(ctx context.Context, id int64) error
+
+		// DeleteByUID deletes a template given a space ID and a uid.
+		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
+
+		// List lists the templates in a given space.
+		List(ctx context.Context, spaceID int64, filter types.ListQueryFilter) ([]*types.Template, error)
+	}
+
+	TriggerStore interface {
+		// FindByUID returns a trigger given a pipeline and a trigger UID.
+		FindByUID(ctx context.Context, pipelineID int64, uid string) (*types.Trigger, error)
+
+		// Create creates a new trigger in the datastore.
+		Create(ctx context.Context, trigger *types.Trigger) error
+
+		// Update tries to update an trigger.
+		Update(ctx context.Context, trigger *types.Trigger) error
+
+		// UpdateOptLock updates the trigger using the optimistic locking mechanism.
+		UpdateOptLock(ctx context.Context, trigger *types.Trigger,
+			mutateFn func(trigger *types.Trigger) error) (*types.Trigger, error)
+
+		// List lists the triggers for a given pipeline ID.
+		List(ctx context.Context, pipelineID int64, filter types.ListQueryFilter) ([]*types.Trigger, error)
+
+		// Delete deletes an trigger given a pipeline ID and a trigger UID.
+		DeleteByUID(ctx context.Context, pipelineID int64, uid string) error
+
+		// Count the number of triggers in a pipeline.
+		Count(ctx context.Context, pipelineID int64, filter types.ListQueryFilter) (int64, error)
+	}
 )
