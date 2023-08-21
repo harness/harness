@@ -30,6 +30,7 @@ func (c *Controller) Create(
 	session *auth.Session,
 	repoRef string,
 	in *CreateInput,
+	internal bool,
 ) (*types.Webhook, error) {
 	now := time.Now().UnixMilli()
 
@@ -39,7 +40,7 @@ func (c *Controller) Create(
 	}
 
 	// validate input
-	err = checkCreateInput(in, c.allowLoopback, c.allowPrivateNetwork)
+	err = checkCreateInput(in, c.allowLoopback, c.allowPrivateNetwork || internal)
 	if err != nil {
 		return nil, err
 	}
@@ -53,6 +54,7 @@ func (c *Controller) Create(
 		Updated:    now,
 		ParentID:   repo.ID,
 		ParentType: enum.WebhookParentRepo,
+		Internal:   internal,
 
 		// user input
 		DisplayName:           in.DisplayName,

@@ -45,6 +45,7 @@ type webhook struct {
 	CreatedBy int64    `db:"webhook_created_by"`
 	Created   int64    `db:"webhook_created"`
 	Updated   int64    `db:"webhook_updated"`
+	Internal  bool     `db:"webhook_internal"`
 
 	DisplayName           string      `db:"webhook_display_name"`
 	Description           string      `db:"webhook_description"`
@@ -72,7 +73,8 @@ const (
 		,webhook_enabled
 		,webhook_insecure
 		,webhook_triggers
-		,webhook_latest_execution_result`
+		,webhook_latest_execution_result
+		,webhook_internal`
 
 	webhookSelectBase = `
 	SELECT` + webhookColumns + `
@@ -116,6 +118,7 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 			,webhook_insecure
 			,webhook_triggers
 			,webhook_latest_execution_result
+			,webhook_internal
 		) values (
 			:webhook_repo_id
 			,:webhook_space_id
@@ -130,6 +133,7 @@ func (s *WebhookStore) Create(ctx context.Context, hook *types.Webhook) error {
 			,:webhook_insecure
 			,:webhook_triggers
 			,:webhook_latest_execution_result
+			,:webhook_internal
 		) RETURNING webhook_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -166,6 +170,7 @@ func (s *WebhookStore) Update(ctx context.Context, hook *types.Webhook) error {
 			,webhook_insecure = :webhook_insecure
 			,webhook_triggers = :webhook_triggers
 			,webhook_latest_execution_result = :webhook_latest_execution_result
+			,webhook_internal = :webhook_internal
 		WHERE webhook_id = :webhook_id and webhook_version = :webhook_version - 1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
