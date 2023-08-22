@@ -7,13 +7,13 @@ package database
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
-	sqlxtypes "github.com/jmoiron/sqlx/types"
-
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+
+	"github.com/jmoiron/sqlx"
+	sqlxtypes "github.com/jmoiron/sqlx/types"
 )
 
 var _ store.StageStore = (*stageStore)(nil)
@@ -125,7 +125,7 @@ func (s *stageStore) ListWithSteps(ctx context.Context, executionID int64) ([]*t
 	return scanRowsWithSteps(rows)
 }
 
-// Find returns a stage given the stage ID
+// Find returns a stage given the stage ID.
 func (s *stageStore) Find(ctx context.Context, stageID int64) (*types.Stage, error) {
 	const queryFind = `
 	SELECT` + stageColumns + `
@@ -141,7 +141,7 @@ func (s *stageStore) Find(ctx context.Context, stageID int64) (*types.Stage, err
 	return mapInternalToStage(dst)
 }
 
-// ListIncomplete returns a list of stages with a pending status
+// ListIncomplete returns a list of stages with a pending status.
 func (s *stageStore) ListIncomplete(ctx context.Context) ([]*types.Stage, error) {
 	const queryListIncomplete = `
 	SELECT` + stageColumns + `

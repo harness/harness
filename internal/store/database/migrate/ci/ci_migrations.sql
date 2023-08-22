@@ -1,8 +1,11 @@
-DROP TABLE pipelines;
-DROP TABLE executions;
-DROP TABLE stages;
-DROP TABLE steps;
-DROP TABLE logs;
+DROP TABLE IF exists pipelines;
+DROP TABLE IF exists executions;
+DROP TABLE IF exists stages;
+DROP TABLE IF exists steps;
+DROP TABLE IF exists logs;
+DROP TABLE IF exists connectors;
+DROP TABLE IF exists templates;
+DROP TABLE IF exists triggers;
 CREATE TABLE pipelines (
     pipeline_id INTEGER PRIMARY KEY AUTOINCREMENT
     ,pipeline_description TEXT NOT NULL
@@ -451,3 +454,63 @@ INSERT INTO logs (log_id, log_data) VALUES (3,
 INSERT INTO logs (log_id, log_data) VALUES (4,
 '{"pos": 0, "out": "+git init", "time": 0}
 {"pos": 0, "out": "echo Hi", "time": 2}');
+
+CREATE TABLE connectors (
+    connector_id INTEGER PRIMARY KEY AUTOINCREMENT
+    ,connector_uid TEXT NOT NULL
+    ,connector_description TEXT NOT NULL
+    ,connector_type TEXT NOT NULL
+    ,connector_space_id INTEGER NOT NULL
+    ,connector_data TEXT NOT NULL
+    ,connector_created INTEGER NOT NULL
+    ,connector_updated INTEGER NOT NULL
+    ,connector_version INTEGER NOT NULL
+
+    -- Ensure unique combination of space ID and UID
+    ,UNIQUE (connector_space_id, connector_uid)
+
+    -- Foreign key to spaces table
+    ,CONSTRAINT fk_connectors_space_id FOREIGN KEY (connector_space_id)
+        REFERENCES spaces (space_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+CREATE TABLE templates (
+    template_id INTEGER PRIMARY KEY AUTOINCREMENT
+    ,template_uid TEXT NOT NULL
+    ,template_description TEXT NOT NULL
+    ,template_space_id INTEGER NOT NULL
+    ,template_data TEXT NOT NULL
+    ,template_created INTEGER NOT NULL
+    ,template_updated INTEGER NOT NULL
+    ,template_version INTEGER NOT NULL
+
+    -- Ensure unique combination of space ID and UID
+    ,UNIQUE (template_space_id, template_uid)
+
+    -- Foreign key to spaces table
+    ,CONSTRAINT fk_templates_space_id FOREIGN KEY (template_space_id)
+        REFERENCES spaces (space_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);
+
+CREATE TABLE triggers (
+    trigger_id INTEGER PRIMARY KEY AUTOINCREMENT
+    ,trigger_uid TEXT NOT NULL
+    ,trigger_description TEXT NOT NULL
+    ,trigger_pipeline_id INTEGER NOT NULL
+    ,trigger_created INTEGER NOT NULL
+    ,trigger_updated INTEGER NOT NULL
+    ,trigger_version INTEGER NOT NULL
+
+    -- Ensure unique combination of pipeline ID and UID
+    ,UNIQUE (trigger_pipeline_id, trigger_uid)
+
+    -- Foreign key to spaces table
+    ,CONSTRAINT fk_triggers_pipeline_id FOREIGN KEY (trigger_pipeline_id)
+        REFERENCES pipelines (pipeline_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+);

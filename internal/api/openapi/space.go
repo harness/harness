@@ -242,6 +242,30 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/pipelines", opPipelines)
 
+	opTemplates := openapi3.Operation{}
+	opTemplates.WithTags("space")
+	opTemplates.WithMapOfAnything(map[string]interface{}{"operationId": "listTemplates"})
+	opTemplates.WithParameters(queryParameterQueryRepo, queryParameterPage, queryParameterLimit)
+	_ = reflector.SetRequest(&opTemplates, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opTemplates, []types.Template{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opTemplates, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opTemplates, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opTemplates, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opTemplates, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/templates", opTemplates)
+
+	opConnectors := openapi3.Operation{}
+	opConnectors.WithTags("space")
+	opConnectors.WithMapOfAnything(map[string]interface{}{"operationId": "listConnectors"})
+	opConnectors.WithParameters(queryParameterQueryRepo, queryParameterPage, queryParameterLimit)
+	_ = reflector.SetRequest(&opConnectors, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opConnectors, []types.Connector{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opConnectors, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opConnectors, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opConnectors, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opConnectors, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/connectors", opConnectors)
+
 	opSecrets := openapi3.Operation{}
 	opSecrets.WithTags("space")
 	opSecrets.WithMapOfAnything(map[string]interface{}{"operationId": "listSecrets"})

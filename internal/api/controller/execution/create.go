@@ -29,12 +29,12 @@ func (c *Controller) Create(
 ) (*types.Execution, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find space: %w", err)
+		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
 
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
 	if err != nil {
-		return nil, fmt.Errorf("could not find pipeline: %w", err)
+		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineExecute)

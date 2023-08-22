@@ -36,7 +36,7 @@ type CreateInput struct {
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Secret, error) {
 	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find parent by ref: %w", err)
+		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
 
 	err = apiauth.CheckSecret(ctx, c.authorizer, session, parentSpace.Path, in.UID, enum.PermissionSecretEdit)
@@ -84,7 +84,6 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 
 	in.Description = strings.TrimSpace(in.Description)
 	return check.Description(in.Description)
-
 }
 
 // helper function returns the same secret with encrypted data.

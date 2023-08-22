@@ -9,7 +9,6 @@ package main
 
 import (
 	"context"
-	"github.com/harness/gitness/internal/api/controller/system"
 
 	cliserver "github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
@@ -18,6 +17,7 @@ import (
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
 	gitrpccron "github.com/harness/gitness/gitrpc/server/cron"
 	checkcontroller "github.com/harness/gitness/internal/api/controller/check"
+	"github.com/harness/gitness/internal/api/controller/connector"
 	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/githook"
 	controllerlogs "github.com/harness/gitness/internal/api/controller/logs"
@@ -29,6 +29,9 @@ import (
 	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
+	"github.com/harness/gitness/internal/api/controller/system"
+	"github.com/harness/gitness/internal/api/controller/template"
+	"github.com/harness/gitness/internal/api/controller/trigger"
 	"github.com/harness/gitness/internal/api/controller/user"
 	controllerwebhook "github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/auth/authn"
@@ -106,6 +109,9 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		livelog.WireSet,
 		controllerlogs.WireSet,
 		secret.WireSet,
+		connector.WireSet,
+		template.WireSet,
+		trigger.WireSet,
 	)
 	return &cliserver.System{}, nil
 }
