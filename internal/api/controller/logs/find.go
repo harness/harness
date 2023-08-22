@@ -30,7 +30,7 @@ func (c *Controller) Find(
 
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)
 	if err != nil {
-		return nil, fmt.Errorf("could not find pipeline: %w", err)
+		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineView)
@@ -40,17 +40,17 @@ func (c *Controller) Find(
 
 	execution, err := c.executionStore.Find(ctx, pipeline.ID, executionNum)
 	if err != nil {
-		return nil, fmt.Errorf("could not find execution: %w", err)
+		return nil, fmt.Errorf("failed to find execution: %w", err)
 	}
 
 	stage, err := c.stageStore.FindByNumber(ctx, execution.ID, stageNum)
 	if err != nil {
-		return nil, fmt.Errorf("could not find stage: %w", err)
+		return nil, fmt.Errorf("failed to find stage: %w", err)
 	}
 
 	step, err := c.stepStore.FindByNumber(ctx, stage.ID, stepNum)
 	if err != nil {
-		return nil, fmt.Errorf("could not find step: %w", err)
+		return nil, fmt.Errorf("failed to find step: %w", err)
 	}
 
 	return c.logStore.Find(ctx, step.ID)

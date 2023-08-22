@@ -29,7 +29,7 @@ func (c *Controller) Update(
 ) (*types.Pipeline, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find parent space: %w", err)
+		return nil, fmt.Errorf("failed to find parent space: %w", err)
 	}
 
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, uid, enum.PermissionPipelineEdit)
@@ -39,7 +39,7 @@ func (c *Controller) Update(
 
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
 	if err != nil {
-		return nil, fmt.Errorf("could not find pipeline: %w", err)
+		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
 	return c.pipelineStore.UpdateOptLock(ctx, pipeline, func(pipeline *types.Pipeline) error {

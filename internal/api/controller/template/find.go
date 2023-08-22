@@ -22,7 +22,7 @@ func (c *Controller) Find(
 ) (*types.Template, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find space: %w", err)
+		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
 	err = apiauth.CheckTemplate(ctx, c.authorizer, session, space.Path, uid, enum.PermissionTemplateView)
 	if err != nil {
@@ -30,7 +30,7 @@ func (c *Controller) Find(
 	}
 	template, err := c.templateStore.FindByUID(ctx, space.ID, uid)
 	if err != nil {
-		return nil, fmt.Errorf("could not find template: %w", err)
+		return nil, fmt.Errorf("failed to find template: %w", err)
 	}
 	return template, nil
 }

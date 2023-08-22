@@ -30,7 +30,7 @@ func (c *Controller) Update(
 ) (*types.Connector, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find space: %w", err)
+		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
 
 	err = apiauth.CheckConnector(ctx, c.authorizer, session, space.Path, uid, enum.PermissionConnectorEdit)
@@ -40,7 +40,7 @@ func (c *Controller) Update(
 
 	connector, err := c.connectorStore.FindByUID(ctx, space.ID, uid)
 	if err != nil {
-		return nil, fmt.Errorf("could not find connector: %w", err)
+		return nil, fmt.Errorf("failed to find connector: %w", err)
 	}
 
 	return c.connectorStore.UpdateOptLock(ctx, connector, func(original *types.Connector) error {

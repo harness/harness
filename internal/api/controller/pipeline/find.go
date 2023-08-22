@@ -22,7 +22,7 @@ func (c *Controller) Find(
 ) (*types.Pipeline, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find parent space: %w", err)
+		return nil, fmt.Errorf("failed to find parent space: %w", err)
 	}
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, uid, enum.PermissionPipelineView)
 	if err != nil {

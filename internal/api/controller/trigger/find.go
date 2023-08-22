@@ -23,12 +23,12 @@ func (c *Controller) Find(
 ) (*types.Trigger, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find parent space: %w", err)
+		return nil, fmt.Errorf("failed to find parent space: %w", err)
 	}
 
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)
 	if err != nil {
-		return nil, fmt.Errorf("could not find pipeline: %w", err)
+		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineView)
@@ -38,7 +38,7 @@ func (c *Controller) Find(
 
 	trigger, err := c.triggerStore.FindByUID(ctx, pipeline.ID, triggerUID)
 	if err != nil {
-		return nil, fmt.Errorf("could not find trigger %s: %w", triggerUID, err)
+		return nil, fmt.Errorf("failed to find trigger %s: %w", triggerUID, err)
 	}
 
 	return trigger, nil

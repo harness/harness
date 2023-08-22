@@ -30,7 +30,7 @@ func (c *Controller) Update(
 ) (*types.Template, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find space: %w", err)
+		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
 
 	err = apiauth.CheckTemplate(ctx, c.authorizer, session, space.Path, uid, enum.PermissionTemplateEdit)
@@ -40,7 +40,7 @@ func (c *Controller) Update(
 
 	template, err := c.templateStore.FindByUID(ctx, space.ID, uid)
 	if err != nil {
-		return nil, fmt.Errorf("could not find template: %w", err)
+		return nil, fmt.Errorf("failed to find template: %w", err)
 	}
 
 	return c.templateStore.UpdateOptLock(ctx, template, func(original *types.Template) error {

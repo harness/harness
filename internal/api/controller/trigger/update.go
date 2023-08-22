@@ -29,7 +29,7 @@ func (c *Controller) Update(
 	in *UpdateInput) (*types.Trigger, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find space: %w", err)
+		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
 
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipelineUID, enum.PermissionPipelineEdit)

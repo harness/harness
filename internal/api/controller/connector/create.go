@@ -36,7 +36,7 @@ type CreateInput struct {
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Connector, error) {
 	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find parent by ref: %w", err)
+		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
 
 	err = apiauth.CheckConnector(ctx, c.authorizer, session, parentSpace.Path, in.UID, enum.PermissionConnectorEdit)

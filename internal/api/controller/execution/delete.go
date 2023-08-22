@@ -22,12 +22,12 @@ func (c *Controller) Delete(
 ) error {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return fmt.Errorf("could not find parent space: %w", err)
+		return fmt.Errorf("failed to find parent space: %w", err)
 	}
 
 	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)
 	if err != nil {
-		return fmt.Errorf("could not find pipeline: %w", err)
+		return fmt.Errorf("failed to find pipeline: %w", err)
 	}
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineDelete)
 	if err != nil {
