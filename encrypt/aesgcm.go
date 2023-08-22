@@ -70,7 +70,7 @@ func (e *Aesgcm) Decrypt(ciphertext []byte) (string, error) {
 	return string(plaintext), err
 }
 
-// New provides a new aesgcm encrypter
+// New provides a new aesgcm encrypter.
 func New(key string, compat bool) (Encrypter, error) {
 	if len(key) != 32 {
 		return nil, errKeySize

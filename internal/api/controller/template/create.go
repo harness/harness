@@ -80,5 +80,4 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 
 	in.Description = strings.TrimSpace(in.Description)
 	return check.Description(in.Description)
-
 }

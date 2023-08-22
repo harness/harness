@@ -8,7 +8,6 @@ package main
 
 import (
 	"context"
-
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
@@ -117,7 +116,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	triggerStore := database.ProvideTriggerStore(db)
 	triggerController := trigger.ProvideController(db, authorizer, triggerStore, pipelineStore, spaceStore)
 	connectorController := connector.ProvideController(db, pathUID, connectorStore, authorizer, spaceStore)
-	templateController := template.ProvideController(db, pathUID, pathStore, templateStore, authorizer, spaceStore)
+	templateController := template.ProvideController(db, pathUID, templateStore, authorizer, spaceStore)
 	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
 	codeCommentView := database.ProvideCodeCommentView(db)

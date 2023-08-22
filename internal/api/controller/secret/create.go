@@ -84,7 +84,6 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 
 	in.Description = strings.TrimSpace(in.Description)
 	return check.Description(in.Description)
-
 }
 
 // helper function returns the same secret with encrypted data.

@@ -33,7 +33,7 @@ type executionStore struct {
 	db *sqlx.DB
 }
 
-// exection represents an execution object stored in the database
+// exection represents an execution object stored in the database.
 type execution struct {
 	ID           int64              `db:"execution_id"`
 	PipelineID   int64              `db:"execution_pipeline_id"`

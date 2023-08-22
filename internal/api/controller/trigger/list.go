@@ -36,12 +36,12 @@ func (c *Controller) List(
 
 	count, err := c.triggerStore.Count(ctx, pipeline.ID, filter)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count child triggers: %w", err)
+		return nil, 0, fmt.Errorf("failed to count triggers in space: %w", err)
 	}
 
 	triggers, err := c.triggerStore.List(ctx, pipeline.ID, filter)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to list child triggers: %w", err)
+		return nil, 0, fmt.Errorf("failed to list triggers: %w", err)
 	}
 
 	return triggers, count, nil

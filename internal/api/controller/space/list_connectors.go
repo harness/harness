@@ -32,12 +32,12 @@ func (c *Controller) ListConnectors(
 
 	count, err := c.connectorStore.Count(ctx, space.ID, filter)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count child executions: %w", err)
+		return nil, 0, fmt.Errorf("failed to count connectors in space: %w", err)
 	}
 
 	connectors, err := c.connectorStore.List(ctx, space.ID, filter)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to list child executions: %w", err)
+		return nil, 0, fmt.Errorf("failed to list connectors: %w", err)
 	}
 
 	return connectors, count, nil
