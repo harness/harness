@@ -239,7 +239,7 @@ func (s *pipelineStore) Count(ctx context.Context, parentID int64, filter types.
 		Where("pipeline_space_id = ?", parentID)
 
 	if filter.Query != "" {
-		stmt = stmt.Where("pipeline_uid LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
+		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
 	}
 
 	sql, args, err := stmt.ToSql()

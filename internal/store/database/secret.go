@@ -247,7 +247,7 @@ func (s *secretStore) Count(ctx context.Context, parentID int64, filter types.Li
 		Where("secret_space_id = ?", parentID)
 
 	if filter.Query != "" {
-		stmt = stmt.Where("secret_uid LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
+		stmt = stmt.Where("LOWER(secret_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
 	}
 
 	sql, args, err := stmt.ToSql()
