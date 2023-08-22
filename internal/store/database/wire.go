@@ -40,6 +40,9 @@ var WireSet = wire.NewSet(
 	ProvideWebhookExecutionStore,
 	ProvideCheckStore,
 	ProvideReqCheckStore,
+	ProvideConnectorStore,
+	ProvideTemplateStore,
+	ProvideTriggerStore,
 )
 
 // migrator is helper function to set up the database by performing automated
@@ -101,6 +104,21 @@ func ProvideStepStore(db *sqlx.DB) store.StepStore {
 // ProvideSecretStore provides a secret store.
 func ProvideSecretStore(db *sqlx.DB) store.SecretStore {
 	return NewSecretStore(db)
+}
+
+// ProvideConnectorStore provides a connector store.
+func ProvideConnectorStore(db *sqlx.DB) store.ConnectorStore {
+	return NewConnectorStore(db)
+}
+
+// ProvideTemplateStore provides a template store.
+func ProvideTemplateStore(db *sqlx.DB) store.TemplateStore {
+	return NewTemplateStore(db)
+}
+
+// ProvideTriggerStore provides a trigger store.
+func ProvideTriggerStore(db *sqlx.DB) store.TriggerStore {
+	return NewTriggerStore(db)
 }
 
 // ProvideExecutionStore provides an execution store.

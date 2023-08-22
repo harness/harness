@@ -2,12 +2,11 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package connector
+package trigger
 
 import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
@@ -19,10 +18,10 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(db *sqlx.DB,
-	uidCheck check.PathUID,
-	connectorStore store.ConnectorStore,
 	authorizer authz.Authorizer,
+	triggerStore store.TriggerStore,
+	pipelineStore store.PipelineStore,
 	spaceStore store.SpaceStore,
 ) *Controller {
-	return NewController(db, uidCheck, authorizer, connectorStore, spaceStore)
+	return NewController(db, authorizer, triggerStore, pipelineStore, spaceStore)
 }

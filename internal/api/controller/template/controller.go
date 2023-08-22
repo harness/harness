@@ -25,14 +25,12 @@ func NewController(
 	db *sqlx.DB,
 	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
-	pathStore store.PathStore,
 	templateStore store.TemplateStore,
 	spaceStore store.SpaceStore,
 ) *Controller {
 	return &Controller{
 		db:            db,
 		uidCheck:      uidCheck,
-		pathStore:     pathStore,
 		templateStore: templateStore,
 		authorizer:    authorizer,
 		spaceStore:    spaceStore,
