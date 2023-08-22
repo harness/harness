@@ -53,7 +53,7 @@ func HandleFind(logCtrl *logs.Controller) http.HandlerFunc {
 		}
 		defer rc.Close()
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Type", "text/plain")
 		io.Copy(w, rc)
 	}
 }
