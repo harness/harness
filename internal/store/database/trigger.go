@@ -64,14 +64,14 @@ func (s *triggerStore) FindByUID(ctx context.Context, pipelineID int64, uid stri
 func (s *triggerStore) Create(ctx context.Context, trigger *types.Trigger) error {
 	const triggerInsertStmt = `
 	INSERT INTO triggers (
-		,trigger_uid
+		trigger_uid
 		,trigger_description
 		,trigger_pipeline_id
 		,trigger_created
 		,trigger_updated
 		,trigger_version
 	) VALUES (
-		,:trigger_uid
+		:trigger_uid
 		,:trigger_description
 		,:trigger_pipeline_id
 		,:trigger_created

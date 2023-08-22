@@ -19,7 +19,6 @@ import (
 type CreateInput struct {
 	Description string `json:"description"`
 	UID         string `json:"uid"`
-	Data        string `json:"data"`
 }
 
 func (c *Controller) Create(

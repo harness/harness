@@ -23,7 +23,7 @@ func HandleListConnectors(spaceCtrl *space.Controller) http.HandlerFunc {
 		}
 
 		filter := request.ParseListQueryFilterFromRequest(r)
-		ret, totalCount, err := spaceCtrl.ListSecrets(ctx, session, spaceRef, filter)
+		ret, totalCount, err := spaceCtrl.ListConnectors(ctx, session, spaceRef, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

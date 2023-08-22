@@ -9,6 +9,7 @@ import (
 
 	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
+	"github.com/harness/gitness/internal/api/controller/trigger"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 
@@ -24,6 +25,11 @@ type executionRequest struct {
 	Number string `path:"execution_number"`
 }
 
+type triggerRequest struct {
+	pipelineRequest
+	Ref string `path:"trigger_ref"`
+}
+
 type logRequest struct {
 	executionRequest
 	StageNum string `path:"stage_number"`
@@ -35,12 +41,21 @@ type createExecutionRequest struct {
 	execution.CreateInput
 }
 
+type createTriggerRequest struct {
+	pipelineRequest
+	trigger.CreateInput
+}
+
 type createPipelineRequest struct {
 	pipeline.CreateInput
 }
 
 type getExecutionRequest struct {
 	executionRequest
+}
+
+type getTriggerRequest struct {
+	triggerRequest
 }
 
 type getPipelineRequest struct {
@@ -50,6 +65,11 @@ type getPipelineRequest struct {
 type updateExecutionRequest struct {
 	executionRequest
 	execution.UpdateInput
+}
+
+type updateTriggerRequest struct {
+	triggerRequest
+	trigger.UpdateInput
 }
 
 type updatePipelineRequest struct {
@@ -165,6 +185,55 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionList, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
 		"/pipelines/{pipeline_ref}/executions", executionList)
+
+	triggerCreate := openapi3.Operation{}
+	triggerCreate.WithTags("pipeline")
+	triggerCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createTrigger"})
+	_ = reflector.SetRequest(&triggerCreate, new(createTriggerRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&triggerCreate, new(types.Trigger), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&triggerCreate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&triggerCreate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&triggerCreate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&triggerCreate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/pipelines/{pipeline_ref}/triggers", triggerCreate)
+
+	triggerFind := openapi3.Operation{}
+	triggerFind.WithTags("pipeline")
+	triggerFind.WithMapOfAnything(map[string]interface{}{"operationId": "findTrigger"})
+	_ = reflector.SetRequest(&triggerFind, new(getTriggerRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&triggerFind, new(types.Trigger), http.StatusOK)
+	_ = reflector.SetJSONResponse(&triggerFind, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&triggerFind, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&triggerFind, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&triggerFind, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/pipelines/{pipeline_ref}/triggers/{trigger_ref}", triggerFind)
+
+	triggerDelete := openapi3.Operation{}
+	triggerDelete.WithTags("pipeline")
+	triggerDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deleteTrigger"})
+	_ = reflector.SetRequest(&triggerDelete, new(getTriggerRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&triggerDelete, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&triggerDelete, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&triggerDelete, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&triggerDelete, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&triggerDelete, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodDelete,
+		"/pipelines/{pipeline_ref}/triggers/{trigger_ref}", triggerDelete)
+
+	triggerUpdate := openapi3.Operation{}
+	triggerUpdate.WithTags("pipeline")
+	triggerUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateTrigger"})
+	_ = reflector.SetRequest(&triggerUpdate, new(updateTriggerRequest), http.MethodPatch)
+	_ = reflector.SetJSONResponse(&triggerUpdate, new(types.Trigger), http.StatusOK)
+	_ = reflector.SetJSONResponse(&triggerUpdate, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&triggerUpdate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&triggerUpdate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&triggerUpdate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&triggerUpdate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPatch,
+		"/pipelines/{pipeline_ref}/triggers/{trigger_ref}", triggerUpdate)
 
 	triggerList := openapi3.Operation{}
 	triggerList.WithTags("pipeline")

@@ -80,21 +80,23 @@ func (s *connectorStore) FindByUID(ctx context.Context, spaceID int64, uid strin
 func (s *connectorStore) Create(ctx context.Context, connector *types.Connector) error {
 	const connectorInsertStmt = `
 	INSERT INTO connectors (
-		connector_description,
-		connector_space_id,
-		connector_uid,
-		connector_data,
-		connector_created,
-		connector_updated,
-		connector_version
+		connector_description
+		,connector_type
+		,connector_space_id
+		,connector_uid
+		,connector_data
+		,connector_created
+		,connector_updated
+		,connector_version
 	) VALUES (
-		:connector_description,
-		:connector_space_id,
-		:connector_uid,
-		:connector_data,
-		:connector_created,
-		:connector_updated,
-		:connector_version
+		:connector_description
+		,:connector_type
+		,:connector_space_id
+		,:connector_uid
+		,:connector_data
+		,:connector_created
+		,:connector_updated
+		,:connector_version
 	) RETURNING connector_id`
 	db := dbtx.GetAccessor(ctx, s.db)
 

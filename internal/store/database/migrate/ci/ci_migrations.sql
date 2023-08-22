@@ -464,6 +464,7 @@ CREATE TABLE connectors (
     ,connector_data TEXT NOT NULL
     ,connector_created INTEGER NOT NULL
     ,connector_updated INTEGER NOT NULL
+    ,connector_version INTEGER NOT NULL
 
     -- Ensure unique combination of space ID and UID
     ,UNIQUE (connector_space_id, connector_uid)
