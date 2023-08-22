@@ -22,6 +22,7 @@ import type { OpenapiContentInfo, OpenapiDirContent, TypesCommit } from 'service
 import { formatDate, isInViewport, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { findReadmeInfo, CodeIcon, GitInfoProps, isFile } from 'utils/GitUtils'
 import { LatestCommitForFolder } from 'components/LatestCommit/LatestCommit'
+import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useEventListener } from 'hooks/useEventListener'
 import { Readme } from './Readme'
 import repositoryCSS from '../../Repository.module.scss'
@@ -35,6 +36,7 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
   const columns: Column<OpenapiContentInfo>[] = useMemo(
     () => [
       {
+        Header: 'Files',
         id: 'name',
         width: '30%',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => (
@@ -56,15 +58,9 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
         )
       },
       {
-        id: 'message',
-        width: 'calc(70% - 100px)',
-        Cell: ({ row }: CellProps<OpenapiContentInfo>) => (
-          <CommitMessageLinks repoMetadata={repoMetadata} rowData={row.original} />
-        )
-      },
-      {
+        Header: 'Date',
         id: 'when',
-        width: '100px',
+        width: '150px',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => {
           return (
             <Text lineClamp={1} color={Color.GREY_500} className={css.rowText}>
@@ -72,6 +68,14 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
             </Text>
           )
         }
+      },
+      {
+        Header: 'Commits',
+        id: 'message',
+        width: 'calc(70% - 150px)',
+        Cell: ({ row }: CellProps<OpenapiContentInfo>) => (
+          <CommitMessageLinks repoMetadata={repoMetadata} rowData={row.original} />
+        )
       }
     ],
     [] // eslint-disable-line react-hooks/exhaustive-deps
@@ -184,7 +188,6 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
 
       <Table<OpenapiContentInfo>
         className={css.table}
-        hideHeaders
         columns={columns}
         data={mergedContentEntries}
         onRowClick={entry => {
@@ -274,7 +277,23 @@ const CommitMessageLinks: React.FC<CommitMessageLinksProps> = ({ repoMetadata, r
 
   return (
     <Container>
-      <Layout.Horizontal className={css.commitMsgLayout}>{title}</Layout.Horizontal>
+      <Layout.Horizontal>
+        {rowData.latest_commit?.sha && (
+          <Container onClick={Utils.stopEvent}>
+            <CommitActions
+              href={routes.toCODECommit({
+                repoPath: repoMetadata.path as string,
+                commitRef: rowData.latest_commit?.sha as string
+              })}
+              sha={rowData.latest_commit?.sha as string}
+              enableCopy
+            />
+          </Container>
+        )}
+        <Layout.Horizontal padding={{ left: 'large' }} className={css.commitMsgLayout}>
+          {title}
+        </Layout.Horizontal>
+      </Layout.Horizontal>
     </Container>
   )
 }
