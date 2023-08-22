@@ -17,8 +17,14 @@ import (
 // in the scope of its parent.
 // Returns nil if the permission is granted, otherwise returns an error.
 // NotAuthenticated, NotAuthorized, or any underlying error.
-func CheckConnector(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
-	parentPath, uid string, permission enum.Permission) error {
+func CheckConnector(
+	ctx context.Context,
+	authorizer authz.Authorizer,
+	session *auth.Session,
+	parentPath,
+	uid string,
+	permission enum.Permission,
+) error {
 	scope := &types.Scope{SpacePath: parentPath}
 	resource := &types.Resource{
 		Type: enum.ResourceTypeConnector,

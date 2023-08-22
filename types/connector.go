@@ -9,7 +9,7 @@ type Connector struct {
 	Description string `db:"connector_description"     json:"description"`
 	SpaceID     int64  `db:"connector_space_id"        json:"space_id"`
 	UID         string `db:"connector_uid"             json:"uid"`
-	Type        string `db:"connector_type"             json:"type"`
+	Type        string `db:"connector_type"            json:"type"`
 	Data        string `db:"connector_data"            json:"data"`
 	Created     int64  `db:"connector_created"         json:"created"`
 	Updated     int64  `db:"connector_updated"         json:"updated"`

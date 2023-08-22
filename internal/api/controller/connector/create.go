@@ -33,7 +33,14 @@ type CreateInput struct {
 	Data        string `json:"data"`
 }
 
-func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Connector, error) {
+func (c *Controller) Create(
+	ctx context.Context,
+	session *auth.Session,
+	in *CreateInput,
+) (*types.Connector, error) {
+	if err := c.sanitizeCreateInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
 	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
@@ -44,13 +51,8 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, err
 	}
 
-	if err := c.sanitizeCreateInput(in); err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
-	}
-
-	var connector *types.Connector
 	now := time.Now().UnixMilli()
-	connector = &types.Connector{
+	connector := &types.Connector{
 		Description: in.Description,
 		Data:        in.Data,
 		Type:        in.Type,
@@ -69,9 +71,9 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
-	parentRefAsID, err := strconv.ParseInt(in.SpaceRef, 10, 64)
+	parentRefAsID, _ := strconv.ParseInt(in.SpaceRef, 10, 64)
 
-	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(in.SpaceRef)) == 0) {
+	if parentRefAsID <= 0 || len(strings.TrimSpace(in.SpaceRef)) == 0 {
 		return errConnectorRequiresParent
 	}
 

@@ -34,6 +34,10 @@ type CreateInput struct {
 }
 
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Template, error) {
+	if err := c.sanitizeCreateInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
+
 	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
@@ -42,10 +46,6 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	err = apiauth.CheckTemplate(ctx, c.authorizer, session, parentSpace.Path, in.UID, enum.PermissionTemplateEdit)
 	if err != nil {
 		return nil, err
-	}
-
-	if err := c.sanitizeCreateInput(in); err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
 	var template *types.Template
