@@ -79,6 +79,21 @@ export interface GitrpcCommit {
 
 export type GitrpcFileAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE'
 
+export interface GitrpcFileDiff {
+  additions?: number
+  changes?: number
+  content_url?: string
+  deletions?: number
+  is_binary?: boolean
+  is_submodule?: boolean
+  old_path?: string
+  old_sha?: string
+  patch?: number[]
+  path?: string
+  sha?: string
+  status?: string
+}
+
 export interface GitrpcIdentity {
   email?: string
   name?: string
@@ -439,6 +454,10 @@ export interface RepoSymlinkContent {
   target?: string
 }
 
+export interface SystemConfigOutput {
+  sign_up_allowed?: boolean
+}
+
 export type TimeDuration = number | null
 
 export interface TypesCheck {
@@ -500,11 +519,12 @@ export interface TypesExecution {
   error?: string
   event?: string
   finished?: number
-  id?: number
   link?: string
   message?: string
   number?: number
-  params?: string
+  params?: {
+    [key: string]: string
+  }
   parent?: number
   pipeline_id?: number
   ref?: string
@@ -512,6 +532,7 @@ export interface TypesExecution {
   sender?: string
   source?: string
   source_repo?: string
+  stages?: TypesStage[]
   started?: number
   status?: string
   target?: string
@@ -519,7 +540,6 @@ export interface TypesExecution {
   title?: string
   trigger?: string
   updated?: number
-  version?: number
 }
 
 export interface TypesIdentity {
@@ -689,7 +709,6 @@ export interface TypesSecret {
   space_id?: number
   uid?: string
   updated?: number
-  version?: number
 }
 
 export interface TypesServiceAccount {
@@ -719,6 +738,49 @@ export interface TypesSpace {
   path?: string
   uid?: string
   updated?: number
+}
+
+export interface TypesStage {
+  arch?: string
+  depends_on?: string[] | null
+  errignore?: boolean
+  error?: string
+  execution_id?: number
+  exit_code?: number
+  kernel?: string
+  kind?: string
+  labels?: {
+    [key: string]: string
+  }
+  limit?: number
+  machine?: string
+  name?: string
+  number?: number
+  on_failure?: boolean
+  on_success?: boolean
+  os?: string
+  started?: number
+  status?: string
+  steps?: TypesStep[]
+  stopped?: number
+  throttle?: number
+  type?: string
+  variant?: string
+}
+
+export interface TypesStep {
+  depends_on?: string[] | null
+  detached?: boolean
+  errignore?: boolean
+  error?: string
+  exit_code?: number
+  image?: string
+  name?: string
+  number?: number
+  schema?: string
+  started?: number
+  status?: string
+  stopped?: number
 }
 
 export interface TypesToken {
@@ -1243,6 +1305,39 @@ export const useUpdateExecution = ({ pipeline_ref, execution_number, ...props }:
     (paramsInPath: UpdateExecutionPathParams) =>
       `/pipelines/${paramsInPath.pipeline_ref}/executions/${paramsInPath.execution_number}`,
     { base: getConfig('code'), pathParams: { pipeline_ref, execution_number }, ...props }
+  )
+
+export interface ViewLogsPathParams {
+  pipeline_ref: string
+  execution_number: string
+  stage_number: string
+  step_number: string
+}
+
+export type ViewLogsProps = Omit<GetProps<void, UsererrorError, void, ViewLogsPathParams>, 'path'> & ViewLogsPathParams
+
+export const ViewLogs = ({ pipeline_ref, execution_number, stage_number, step_number, ...props }: ViewLogsProps) => (
+  <Get<void, UsererrorError, void, ViewLogsPathParams>
+    path={`/pipelines/${pipeline_ref}/executions/${execution_number}/logs/${stage_number}/${step_number}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseViewLogsProps = Omit<UseGetProps<void, UsererrorError, void, ViewLogsPathParams>, 'path'> &
+  ViewLogsPathParams
+
+export const useViewLogs = ({
+  pipeline_ref,
+  execution_number,
+  stage_number,
+  step_number,
+  ...props
+}: UseViewLogsProps) =>
+  useGet<void, UsererrorError, void, ViewLogsPathParams>(
+    (paramsInPath: ViewLogsPathParams) =>
+      `/pipelines/${paramsInPath.pipeline_ref}/executions/${paramsInPath.execution_number}/logs/${paramsInPath.stage_number}/${paramsInPath.step_number}`,
+    { base: getConfig('code'), pathParams: { pipeline_ref, execution_number, stage_number, step_number }, ...props }
   )
 
 export interface ListPrincipalsQueryParams {
@@ -1933,27 +2028,52 @@ export const useGetContent = ({ repo_ref, path, ...props }: UseGetContentProps) 
     { base: getConfig('code'), pathParams: { repo_ref, path }, ...props }
   )
 
+export interface DiffStatsPathParams {
+  repo_ref: string
+  range: string
+}
+
+export type DiffStatsProps = Omit<GetProps<TypesDiffStats, UsererrorError, void, DiffStatsPathParams>, 'path'> &
+  DiffStatsPathParams
+
+export const DiffStats = ({ repo_ref, range, ...props }: DiffStatsProps) => (
+  <Get<TypesDiffStats, UsererrorError, void, DiffStatsPathParams>
+    path={`/repos/${repo_ref}/diff-stats/${range}`}
+    base={getConfig('code')}
+    {...props}
+  />
+)
+
+export type UseDiffStatsProps = Omit<UseGetProps<TypesDiffStats, UsererrorError, void, DiffStatsPathParams>, 'path'> &
+  DiffStatsPathParams
+
+export const useDiffStats = ({ repo_ref, range, ...props }: UseDiffStatsProps) =>
+  useGet<TypesDiffStats, UsererrorError, void, DiffStatsPathParams>(
+    (paramsInPath: DiffStatsPathParams) => `/repos/${paramsInPath.repo_ref}/diff-stats/${paramsInPath.range}`,
+    { base: getConfig('code'), pathParams: { repo_ref, range }, ...props }
+  )
+
 export interface RawDiffPathParams {
   repo_ref: string
   range: string
 }
 
-export type RawDiffProps = Omit<GetProps<TypesDiffStats, UsererrorError, void, RawDiffPathParams>, 'path'> &
+export type RawDiffProps = Omit<GetProps<GitrpcFileDiff[], UsererrorError, void, RawDiffPathParams>, 'path'> &
   RawDiffPathParams
 
 export const RawDiff = ({ repo_ref, range, ...props }: RawDiffProps) => (
-  <Get<TypesDiffStats, UsererrorError, void, RawDiffPathParams>
+  <Get<GitrpcFileDiff[], UsererrorError, void, RawDiffPathParams>
     path={`/repos/${repo_ref}/diff/${range}`}
     base={getConfig('code')}
     {...props}
   />
 )
 
-export type UseRawDiffProps = Omit<UseGetProps<TypesDiffStats, UsererrorError, void, RawDiffPathParams>, 'path'> &
+export type UseRawDiffProps = Omit<UseGetProps<GitrpcFileDiff[], UsererrorError, void, RawDiffPathParams>, 'path'> &
   RawDiffPathParams
 
 export const useRawDiff = ({ repo_ref, range, ...props }: UseRawDiffProps) =>
-  useGet<TypesDiffStats, UsererrorError, void, RawDiffPathParams>(
+  useGet<GitrpcFileDiff[], UsererrorError, void, RawDiffPathParams>(
     (paramsInPath: RawDiffPathParams) => `/repos/${paramsInPath.repo_ref}/diff/${paramsInPath.range}`,
     { base: getConfig('code'), pathParams: { repo_ref, range }, ...props }
   )
@@ -4152,6 +4272,17 @@ export const useListSpaces = ({ space_ref, ...props }: UseListSpacesProps) =>
     (paramsInPath: ListSpacesPathParams) => `/spaces/${paramsInPath.space_ref}/spaces`,
     { base: getConfig('code'), pathParams: { space_ref }, ...props }
   )
+
+export type GetSystemConfigProps = Omit<GetProps<SystemConfigOutput, UsererrorError, void, void>, 'path'>
+
+export const GetSystemConfig = (props: GetSystemConfigProps) => (
+  <Get<SystemConfigOutput, UsererrorError, void, void> path={`/system/config`} base={getConfig('code')} {...props} />
+)
+
+export type UseGetSystemConfigProps = Omit<UseGetProps<SystemConfigOutput, UsererrorError, void, void>, 'path'>
+
+export const useGetSystemConfig = (props: UseGetSystemConfigProps) =>
+  useGet<SystemConfigOutput, UsererrorError, void, void>(`/system/config`, { base: getConfig('code'), ...props })
 
 export type GetUserProps = Omit<GetProps<TypesUser, UsererrorError, void, void>, 'path'>
 

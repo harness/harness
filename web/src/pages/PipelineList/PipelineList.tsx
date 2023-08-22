@@ -47,7 +47,7 @@ const PipelineList = () => {
     refetch,
     response
   } = useGet<TypesPipeline[]>({
-    path: `/api/v1/spaces/${space}/pipelines`,
+    path: `/api/v1/spaces/${space}/+/pipelines`,
     queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm }
   })
 
@@ -55,8 +55,10 @@ const PipelineList = () => {
     <Button
       text={getString('pipelines.newPipelineButton')}
       variation={ButtonVariation.PRIMARY}
-      disabled={true}
-      icon="plus"></Button>
+      icon="plus"
+      onClick={() => {
+        history.push(routes.toCODEPipelinesNew({ space }))
+      }}></Button>
   )
 
   const columns: Column<TypesPipeline>[] = useMemo(

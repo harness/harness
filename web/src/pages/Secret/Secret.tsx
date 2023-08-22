@@ -18,7 +18,7 @@ const Execution = () => {
     // refetch
     // response
   } = useGet<TypesSecret>({
-    path: `/api/v1/secrets/${space}/${secretName}/+`
+    path: `/api/v1/secrets/${space}/+/${secretName}`
   })
 
   return (

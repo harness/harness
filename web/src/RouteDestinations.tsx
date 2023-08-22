@@ -31,6 +31,7 @@ import { useFeatureFlag } from 'hooks/useFeatureFlag'
 import ExecutionList from 'pages/ExecutionList/ExecutionList'
 import Execution from 'pages/Execution/Execution'
 import Secret from 'pages/Secret/Secret'
+import NewPipeline from 'pages/NewPipeline/NewPipeline'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
@@ -181,6 +182,14 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           <Route path={routes.toCODEExecutions({ space: pathProps.space, pipeline: pathProps.pipeline })} exact>
             <LayoutWithSideNav title={getString('pageTitle.executions')}>
               <ExecutionList />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {OPEN_SOURCE_PIPELINES && (
+          <Route path={routes.toCODEPipelinesNew({ space: pathProps.space })} exact>
+            <LayoutWithSideNav title={getString('pageTitle.pipelines')}>
+              <NewPipeline />
             </LayoutWithSideNav>
           </Route>
         )}

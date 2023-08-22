@@ -47,7 +47,7 @@ const SecretList = () => {
     refetch,
     response
   } = useGet<TypesSecret[]>({
-    path: `/api/v1/spaces/${space}/secrets`,
+    path: `/api/v1/spaces/${space}/+/secrets`,
     queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm }
   })
 
