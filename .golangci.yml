@@ -286,7 +286,7 @@ issues:
   max-same-issues: 50
 
   exclude-rules:
-    - text: 'shadow: declaration of "err" shadows declaration at'
+    - text: 'shadow: declaration of "(err|ctx)" shadows declaration at'
       linters: [ govet ]
     - source: "^//\\s*go:generate\\s"
       linters: [ lll ]
