@@ -7,6 +7,7 @@ package webhook
 import (
 	"context"
 	"fmt"
+
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"

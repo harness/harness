@@ -9,7 +9,6 @@ package main
 
 import (
 	"context"
-	"github.com/harness/gitness/internal/api/controller/system"
 
 	cliserver "github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
@@ -30,6 +29,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/service"
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
+	"github.com/harness/gitness/internal/api/controller/system"
 	"github.com/harness/gitness/internal/api/controller/template"
 	"github.com/harness/gitness/internal/api/controller/trigger"
 	"github.com/harness/gitness/internal/api/controller/user"

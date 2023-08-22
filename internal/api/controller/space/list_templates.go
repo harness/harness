@@ -30,15 +30,12 @@ func (c *Controller) ListTemplates(
 		return nil, 0, fmt.Errorf("could not authorize: %w", err)
 	}
 
-	var count int64
-	var templates []*types.Template
-
-	count, err = c.templateStore.Count(ctx, space.ID, filter)
+	count, err := c.templateStore.Count(ctx, space.ID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count templates in the space: %w", err)
 	}
 
-	templates, err = c.templateStore.List(ctx, space.ID, filter)
+	templates, err := c.templateStore.List(ctx, space.ID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list templates: %w", err)
 	}

@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"

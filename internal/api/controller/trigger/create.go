@@ -43,11 +43,6 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	pipeline, err = c.pipelineStore.IncrementSeqNum(ctx, pipeline)
-	if err != nil {
-		return nil, fmt.Errorf("failed to increment sequence number: %w", err)
-	}
-
 	now := time.Now().UnixMilli()
 	trigger := &types.Trigger{
 		Description: in.Description,

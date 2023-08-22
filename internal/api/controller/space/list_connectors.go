@@ -13,7 +13,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// ListSecrets lists the  connectors in a space.
+// ListConnectors lists the  connectors in a space.
 func (c *Controller) ListConnectors(
 	ctx context.Context,
 	session *auth.Session,
@@ -30,21 +30,14 @@ func (c *Controller) ListConnectors(
 		return nil, 0, fmt.Errorf("could not authorize: %w", err)
 	}
 
-	var count int64
-	var connectors []*types.Connector
-
-	count, err = c.connectorStore.Count(ctx, space.ID, filter)
+	count, err := c.connectorStore.Count(ctx, space.ID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count child executions: %w", err)
 	}
 
-	connectors, err = c.connectorStore.List(ctx, space.ID, filter)
+	connectors, err := c.connectorStore.List(ctx, space.ID, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list child executions: %w", err)
-	}
-
-	if err != nil {
-		return connectors, count, fmt.Errorf("failed to list  connectors: %w", err)
 	}
 
 	return connectors, count, nil
