@@ -7,7 +7,6 @@ import { queryByAttribute } from '@testing-library/react'
 import { compile } from 'path-to-regexp'
 import { createMemoryHistory } from 'history'
 import { Router, Route, Switch, useLocation, useHistory } from 'react-router-dom'
-import { ModalProvider } from '@harness/use-modal'
 import qs from 'qs'
 import { enableMapSet } from 'immer'
 import { StringsContext } from 'framework/strings'
@@ -108,20 +107,18 @@ export const TestWrapper: React.FC<TestWrapperProps> = props => {
   return (
     <StringsContext.Provider value={{ data: stringsData as UnknownType, getString }}>
       <Router history={history}>
-        <ModalProvider>
-          <RestfulProvider base="/">
-            <BrowserView enable={props.enableBrowserView}>
-              <Switch>
-                <Route exact path={path}>
-                  {props.children}
-                </Route>
-                <Route>
-                  <CurrentLocation />
-                </Route>
-              </Switch>
-            </BrowserView>
-          </RestfulProvider>
-        </ModalProvider>
+        <RestfulProvider base="/">
+          <BrowserView enable={props.enableBrowserView}>
+            <Switch>
+              <Route exact path={path}>
+                {props.children}
+              </Route>
+              <Route>
+                <CurrentLocation />
+              </Route>
+            </Switch>
+          </BrowserView>
+        </RestfulProvider>
       </Router>
     </StringsContext.Provider>
   )

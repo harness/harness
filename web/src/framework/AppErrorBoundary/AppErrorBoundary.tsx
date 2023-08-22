@@ -1,5 +1,5 @@
 import React from 'react'
-import { Text, Layout, Container } from '@harness/uicore'
+import { Text, Layout, Container } from '@harnessio/uicore'
 import i18n from './AppErrorBoundary.i18n.json'
 
 interface AppErrorBoundaryState {

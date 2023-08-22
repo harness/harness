@@ -3,13 +3,13 @@ import {
   Container,
   FlexExpander,
   Layout,
-  Color,
   Text,
   StringSubstitute,
   ButtonSize,
   ButtonVariation,
   Avatar
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 import React, { useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'

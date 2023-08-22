@@ -1,15 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import {
-  Button,
-  ButtonVariation,
-  Container,
-  Dialog,
-  FlexExpander,
-  FontVariation,
-  Layout,
-  Text,
-  useToaster
-} from '@harness/uicore'
+import { Button, ButtonVariation, Container, Dialog, FlexExpander, Layout, Text, useToaster } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
@@ -33,8 +24,8 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
   const { showError } = useToaster()
   const hash = generateAlphaNumericHash(6)
   const { mutate } = useMutate({ path: '/api/v1/user/tokens', verb: 'POST' })
-  const genToken = async (props: { uid: string }) => {
-    const res = await mutate({ uid: props.uid })
+  const genToken = async (_props: { uid: string }) => {
+    const res = await mutate({ uid: _props.uid })
     try {
       setToken(res?.access_token)
     } catch {
@@ -51,8 +42,7 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
         showError(tokenData?.data?.message || tokenData?.message)
       }
     } else if (!tokenData && standalone && flag) {
-      let payload = { uid: `code_token_${hash}` }
-      genToken(payload)
+      genToken({ uid: `code_token_${hash}` })
     }
   }, [flag, tokenData, showError])
   return (

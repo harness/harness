@@ -1,5 +1,6 @@
 import React from 'react'
-import { Container, Layout, Text, Color } from '@harness/uicore'
+import { Container, Layout, Text } from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 
 export function RepoMetadata() {
   return (

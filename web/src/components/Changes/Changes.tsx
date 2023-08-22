@@ -8,7 +8,7 @@ import {
   StringSubstitute,
   Button,
   PageError
-} from '@harness/uicore'
+} from '@harnessio/uicore'
 import { Match, Case, Render } from 'react-jsx-match'
 import * as Diff2Html from 'diff2html'
 import cx from 'classnames'
@@ -118,9 +118,7 @@ export const Changes: React.FC<ChangesProps> = ({
     refetch
   } = useGet<string>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/diff/${
-      commitRangePath
-        ? commitRangePath
-        : `${targetRef}...${sourceRef}`
+      commitRangePath ? commitRangePath : `${targetRef}...${sourceRef}`
     }`,
     requestOptions: {
       headers: {

@@ -1,18 +1,9 @@
 import React from 'react'
 import { useMutate } from 'restful-react'
 import { omit } from 'lodash-es'
-import {
-  Container,
-  Layout,
-  Text,
-  FontVariation,
-  Icon,
-  Avatar,
-  FlexExpander,
-  Color,
-  IconName,
-  useToaster
-} from '@harness/uicore'
+import { Container, Layout, Text, Avatar, FlexExpander, useToaster } from '@harnessio/uicore'
+import { Icon, IconName } from '@harnessio/icons'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { useStrings } from 'framework/strings'
 import type { TypesPullReq, TypesRepository } from 'services/code'

@@ -7,17 +7,17 @@ import {
   Container,
   Layout,
   FlexExpander,
-  Icon,
   Formik,
   FormikForm,
   Heading,
   useToaster,
   FormInput
-} from '@harness/uicore'
-import { FontVariation } from '@harness/design-system'
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { get } from 'lodash-es'
-import { useModalHook } from '@harness/use-modal'
+import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage, REGEX_VALID_REPO_NAME } from 'utils/Utils'
 import type { TypesSpace, OpenapiCreateSpaceRequest } from 'services/code'
@@ -157,7 +157,7 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
                   <Button text={cancelButtonTitle || getString('cancel')} minimal onClick={hideModal} />
                   <FlexExpander />
 
-                  {loading && <Icon intent={Intent.PRIMARY} name="spinner" size={16} />}
+                  {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
                 </Layout.Horizontal>
               </FormikForm>
             </Formik>

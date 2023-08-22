@@ -1,5 +1,6 @@
 import React from 'react'
-import { Container, Layout, Text, FontVariation, FlexExpander } from '@harness/uicore'
+import { Container, Layout, Text, FlexExpander } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import { ButtonGroup, Button as BButton, Classes } from '@blueprintjs/core'
 import cx from 'classnames'
 import { useStrings } from 'framework/strings'

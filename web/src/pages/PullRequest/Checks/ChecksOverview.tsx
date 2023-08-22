@@ -1,16 +1,7 @@
 import React from 'react'
 import { Falsy, Match, Truthy } from 'react-jsx-match'
-import {
-  Container,
-  Layout,
-  Text,
-  useToggle,
-  FontVariation,
-  Button,
-  ButtonVariation,
-  ButtonSize,
-  Utils
-} from '@harness/uicore'
+import { Container, Layout, Text, useToggle, Button, ButtonVariation, ButtonSize, Utils } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import { Link } from 'react-router-dom'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'

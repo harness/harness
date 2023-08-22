@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Container, useToaster } from '@harness/uicore'
+import { Container, useToaster } from '@harnessio/uicore'
 import cx from 'classnames'
 import { useMutate } from 'restful-react'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'

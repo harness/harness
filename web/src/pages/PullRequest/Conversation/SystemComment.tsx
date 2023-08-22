@@ -1,15 +1,7 @@
 import React from 'react'
-import {
-  Avatar,
-  Color,
-  Container,
-  FontVariation,
-  Icon,
-  IconName,
-  Layout,
-  StringSubstitute,
-  Text
-} from '@harness/uicore'
+import { Avatar, Container, Layout, StringSubstitute, Text } from '@harnessio/uicore'
+import { Icon, IconName } from '@harnessio/icons'
+import { Color, FontVariation } from '@harnessio/design-system'
 import ReactTimeago from 'react-timeago'
 import { Render } from 'react-jsx-match'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Container, FontVariation, Layout, PageBody, Tabs, Text } from '@harness/uicore'
+import { Container, Layout, PageBody, Tabs, Text } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import { useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'

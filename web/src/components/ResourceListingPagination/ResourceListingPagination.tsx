@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react'
 import cx from 'classnames'
-import { Button, ButtonSize, Container, Layout, Pagination } from '@harness/uicore'
+import { Button, ButtonSize, Container, Layout, Pagination } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
 import css from './ResourceListingPagination.module.scss'

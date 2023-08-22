@@ -8,7 +8,6 @@ const ExactSharedPackages = [
   'react-dom',
   'react',
   'react-router-dom',
-  '@harness/use-modal',
   '@blueprintjs/core',
   '@blueprintjs/select',
   '@blueprintjs/datetime',

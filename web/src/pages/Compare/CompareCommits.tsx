@@ -10,27 +10,16 @@ import { CommitsView } from 'components/CommitsView/CommitsView'
 import { TabContentWrapper } from 'components/TabContentWrapper/TabContentWrapper'
 
 interface CommitProps extends Pick<GitInfoProps, 'repoMetadata'> {
-    sourceSha? :string
-    targetSha? :string
+  sourceSha?: string
+  targetSha?: string
   handleRefresh: () => void
 }
 
-export const CompareCommits: React.FC<CommitProps> = ({
-  repoMetadata,
-  sourceSha,
-  targetSha,
-  handleRefresh
-}) => {
+export const CompareCommits: React.FC<CommitProps> = ({ repoMetadata, sourceSha, targetSha, handleRefresh }) => {
   const limit = LIST_FETCHING_LIMIT
   const [page, setPage] = usePageIndex()
   const { getString } = useStrings()
-  const {
-    data,
-    error,
-    loading,
-    refetch,
-    response
-  } = useGet<{
+  const { data, error, loading, refetch, response } = useGet<{
     commits: TypesCommit[]
   }>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,

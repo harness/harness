@@ -2,7 +2,7 @@
 // https://github.com/vweevers/is-git-branch-name-valid (MIT, © Vincent Weevers)
 // Last updated for git 2.29.0.
 
-import type { IconName } from '@harness/icons'
+import type { IconName } from '@harnessio/icons'
 import type {
   OpenapiContentInfo,
   OpenapiDirContent,
@@ -94,7 +94,7 @@ export const CodeIcon = {
   Repo: 'code-repo' as IconName,
   Settings: 'code-settings' as IconName,
   Webhook: 'code-webhook' as IconName,
-  InputSpinner: 'spinner' as IconName,
+  InputSpinner: 'steps-spinne' as IconName,
   InputSearch: 'search' as IconName,
   Chat: 'code-chat' as IconName,
   Checks: 'main-tick' as IconName,

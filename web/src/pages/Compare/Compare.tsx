@@ -8,11 +8,10 @@ import {
   Layout,
   TextInput,
   Text,
-  FontVariation,
   useToaster,
-  Color,
   StringSubstitute
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
@@ -101,11 +100,11 @@ export default function Compare() {
 
       try {
         createPullRequest(payload)
-          .then(data => {
+          .then(_data => {
             history.replace(
               routes.toCODEPullRequest({
                 repoPath: repoMetadata?.path as string,
-                pullRequestId: String(data.number)
+                pullRequestId: String(_data.number)
               })
             )
           })
@@ -261,7 +260,7 @@ export default function Compare() {
                       repoMetadata={repoMetadata as TypesRepository}
                       sourceSha={sourceGitRef}
                       targetSha={targetGitRef}
-                      handleRefresh={() => {}} // TODO: when to refresh
+                      handleRefresh={noop} // TODO: when to refresh
                     />
                   )
                 },
@@ -276,11 +275,7 @@ export default function Compare() {
                     />
                   ),
                   panel: (
-                    <TabContentWrapper
-                      loading={loading}
-                      error={error}
-                      onRetry={() => {}}
-                      className={css.changesContainer}>
+                    <TabContentWrapper loading={loading} error={error} onRetry={noop} className={css.changesContainer}>
                       <Changes
                         readOnly
                         repoMetadata={repoMetadata}

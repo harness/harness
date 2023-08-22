@@ -1,16 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Container,
-  Color,
   TableV2 as Table,
   Text,
   Utils,
   StringSubstitute,
   Layout,
   TextProps,
-  Icon,
   useIsMounted
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import { Render } from 'react-jsx-match'

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useToaster } from '@harness/uicore'
+import { useToaster } from '@harnessio/uicore'
 import { useGet } from 'restful-react'
 import { getErrorMessage } from 'utils/Utils'
 import type { GitInfoProps } from 'utils/GitUtils'

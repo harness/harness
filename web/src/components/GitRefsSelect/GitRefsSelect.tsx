@@ -1,5 +1,6 @@
 import React from 'react'
-import { Container, Layout, Icon, Button, ButtonVariation } from '@harness/uicore'
+import { Container, Layout, Button, ButtonVariation } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
 import { Popover, PopoverInteractionKind, Position } from '@blueprintjs/core'
 
 export function GitRefsSelect() {

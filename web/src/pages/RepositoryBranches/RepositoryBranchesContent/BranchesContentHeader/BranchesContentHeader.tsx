@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Container, Layout, FlexExpander, ButtonVariation } from '@harness/uicore'
+import { Container, Layout, FlexExpander, ButtonVariation } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import { GitBranchType, CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'

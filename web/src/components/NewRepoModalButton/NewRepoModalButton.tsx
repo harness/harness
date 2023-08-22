@@ -7,7 +7,6 @@ import {
   Container,
   Layout,
   FlexExpander,
-  Icon,
   Formik,
   FormikForm,
   Heading,
@@ -17,11 +16,12 @@ import {
   ButtonVariation,
   ButtonSize,
   TextInput
-} from '@harness/uicore'
-import { FontVariation } from '@harness/design-system'
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { FontVariation } from '@harnessio/design-system'
 import { useGet, useMutate } from 'restful-react'
 import { get } from 'lodash-es'
-import { useModalHook } from '@harness/use-modal'
+import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import {
   DEFAULT_BRANCH_NAME,
@@ -275,7 +275,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
                   <Button text={cancelButtonTitle || getString('cancel')} minimal onClick={hideModal} />
                   <FlexExpander />
 
-                  {loading && <Icon intent={Intent.PRIMARY} name="spinner" size={16} />}
+                  {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
                 </Layout.Horizontal>
               </FormikForm>
             </Formik>

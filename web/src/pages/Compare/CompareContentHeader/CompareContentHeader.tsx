@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useMutate } from 'restful-react'
-import { Container, Layout, FlexExpander, ButtonVariation, Icon, Text, Color, SplitButton } from '@harness/uicore'
+import { Container, Layout, FlexExpander, ButtonVariation, Text, SplitButton } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
 import type { RepoMergeCheck } from 'services/code'
 import { useStrings } from 'framework/strings'
@@ -145,7 +147,7 @@ const MergeableLabel: React.FC<Pick<CompareContentHeaderProps, 'repoMetadata' | 
   return (
     <Text
       className={css.mergeText}
-      icon={loading ? 'spinner' : mergeable === true ? 'command-artifact-check' : 'cross'}
+      icon={loading ? 'steps-spinner' : mergeable === true ? 'command-artifact-check' : 'cross'}
       iconProps={{ color, margin: { right: 'xsmall' } }}
       color={color}>
       {loading ? '' : error ? getErrorMessage(error) : getString(mergeable ? 'pr.ableToMerge' : 'pr.cantMerge')}

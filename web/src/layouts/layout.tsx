@@ -1,5 +1,5 @@
 import React from 'react'
-import { Avatar, Container, FlexExpander, Layout } from '@harness/uicore'
+import { Avatar, Container, FlexExpander, Layout } from '@harnessio/uicore'
 import { Render } from 'react-jsx-match'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'

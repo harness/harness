@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Container, Layout, PageBody, StringSubstitute, Text } from '@harness/uicore'
+import { Container, Layout, PageBody, StringSubstitute, Text } from '@harnessio/uicore'
 import { Falsy, Match, Truthy } from 'react-jsx-match'
 import cx from 'classnames'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'

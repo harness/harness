@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react'
-import { Button, Color, Container, FormInput, Formik, FormikForm, Layout, Text, useToaster } from '@harness/uicore'
+import { Button, Container, FormInput, Formik, FormikForm, Layout, Text, useToaster } from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 import * as Yup from 'yup'
-
 import { Link } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useOnLogin } from 'services/code'

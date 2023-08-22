@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, Layout } from '@harness/uicore'
+import { Container, Layout } from '@harnessio/uicore'
 import cx from 'classnames'
 import { Images } from 'images'
 import css from './AuthLayout.module.scss'

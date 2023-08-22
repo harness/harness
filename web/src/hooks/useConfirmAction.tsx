@@ -2,8 +2,9 @@ import React from 'react'
 import { Intent } from '@blueprintjs/core'
 import { useCallback, useRef, useState } from 'react'
 import { noop } from 'lodash-es'
-import { useConfirmationDialog, Text } from '@harness/uicore'
+import { Text } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
+import { useConfirmationDialog } from './useConfirmationDialog'
 
 export interface UseConfirmActionDialogProps {
   message: React.ReactElement

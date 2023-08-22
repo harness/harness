@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, PageError } from '@harness/uicore'
+import { Container, PageError } from '@harnessio/uicore'
 import { getErrorMessage } from 'utils/Utils'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 

@@ -1,18 +1,7 @@
 import React, { useState } from 'react'
-import {
-  Button,
-  ButtonSize,
-  ButtonVariation,
-  Color,
-  Container,
-  FontVariation,
-  Layout,
-  Text,
-  TextInput
-} from '@harness/uicore'
-
+import { Button, ButtonSize, ButtonVariation, Container, Layout, Text, TextInput } from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
-
 import css from './UserProfile.module.scss'
 
 enum ACCESS_MODES {

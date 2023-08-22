@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Container } from '@harness/uicore'
+import { Container } from '@harnessio/uicore'
 import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import type { RepoBranch } from 'services/code'

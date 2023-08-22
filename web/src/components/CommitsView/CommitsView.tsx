@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react'
 import {
   Container,
-  Color,
   TableV2 as Table,
   Text,
   Avatar,
@@ -11,9 +10,10 @@ import {
   Button,
   FlexExpander,
   StringSubstitute,
-  Icon,
   Popover
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 import { noop, orderBy } from 'lodash-es'
 import { Link, useHistory } from 'react-router-dom'

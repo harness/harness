@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Container, FlexExpander, Layout, PageBody } from '@harness/uicore'
+import { Container, FlexExpander, Layout, PageBody } from '@harnessio/uicore'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'

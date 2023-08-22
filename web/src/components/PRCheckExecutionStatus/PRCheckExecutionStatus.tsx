@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
-import { Text, IconName } from '@harness/uicore'
+import { Text } from '@harnessio/uicore'
+import type { IconName } from '@harnessio/icons'
 import cx from 'classnames'
 import { useStrings } from 'framework/strings'
 import css from './PRCheckExecutionStatus.module.scss'

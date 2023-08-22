@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Container, Layout } from '@harness/uicore'
+import { Container, Layout } from '@harnessio/uicore'
 import { Render } from 'react-jsx-match'
 import { useHistory, useRouteMatch, useParams } from 'react-router-dom'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'

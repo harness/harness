@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Utils, Color, ButtonProps, ButtonVariation } from '@harness/uicore'
+import { Button, Utils, ButtonProps, ButtonVariation } from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 
 interface CopyButtonProps extends ButtonProps {
   content: string

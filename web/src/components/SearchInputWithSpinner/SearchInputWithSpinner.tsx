@@ -1,7 +1,9 @@
 import React from 'react'
 import { Render } from 'react-jsx-match'
 import cx from 'classnames'
-import { Color, Container, Icon, IconName, Layout, TextInput } from '@harness/uicore'
+import { Container, Layout, TextInput } from '@harnessio/uicore'
+import { Icon, IconName } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import css from './SearchInputWithSpinner.module.scss'
 
@@ -23,7 +25,7 @@ export const SearchInputWithSpinner: React.FC<SearchInputWithSpinnerProps> = ({
   width = 250,
   placeholder,
   icon = 'search',
-  spinnerIcon = 'spinner',
+  spinnerIcon = 'steps-spinner',
   spinnerPosition = 'left'
 }) => {
   const { getString } = useStrings()

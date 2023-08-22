@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { PageBody, Container, Tabs } from '@harness/uicore'
+import { PageBody, Container, Tabs } from '@harnessio/uicore'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 

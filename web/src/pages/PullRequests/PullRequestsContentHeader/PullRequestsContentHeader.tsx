@@ -1,6 +1,6 @@
 import { useHistory } from 'react-router-dom'
 import React, { useMemo, useState } from 'react'
-import { Container, Layout, FlexExpander, DropDown, ButtonVariation, Button } from '@harness/uicore'
+import { Container, Layout, FlexExpander, DropDown, ButtonVariation, Button } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps, makeDiffRefs, PullRequestFilterOption } from 'utils/GitUtils'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'

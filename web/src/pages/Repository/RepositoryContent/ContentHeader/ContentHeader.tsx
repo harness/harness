@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react'
-import { Container, Layout, Button, FlexExpander, ButtonVariation, Text, Icon, Color } from '@harness/uicore'
+import { Container, Layout, Button, FlexExpander, ButtonVariation, Text } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import { Breadcrumbs, IBreadcrumbProps } from '@blueprintjs/core'
 import { Link, useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'

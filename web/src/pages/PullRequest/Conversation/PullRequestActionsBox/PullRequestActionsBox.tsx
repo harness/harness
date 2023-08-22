@@ -2,16 +2,16 @@ import React, { useMemo, useState } from 'react'
 import {
   Button,
   ButtonVariation,
-  Color,
   Container,
   FlexExpander,
-  Icon,
   Layout,
   SplitButton,
   StringSubstitute,
   Text,
   useToaster
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { Case, Else, Match, Render, Truthy } from 'react-jsx-match'
 import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'

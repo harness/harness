@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
-import { Avatar, Button, ButtonVariation, Container, Layout, Page, TableV2, Text, useToaster } from '@harness/uicore'
-import { Color, FontVariation } from '@harness/design-system'
+import { Avatar, Button, ButtonVariation, Container, Layout, Page, TableV2, Text, useToaster } from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 
 import { StringKeys, useStrings } from 'framework/strings'

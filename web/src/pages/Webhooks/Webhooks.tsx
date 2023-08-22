@@ -3,19 +3,17 @@ import {
   Container,
   PageBody,
   Text,
-  Color,
   TableV2,
   Layout,
   Utils,
   useToaster,
-  IconName,
   Toggle,
   Popover,
   Button,
-  ButtonVariation,
-  FontVariation,
-  Icon
-} from '@harness/uicore'
+  ButtonVariation
+} from '@harnessio/uicore'
+import { Icon, IconName } from '@harnessio/icons'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
 import cx from 'classnames'
 import { Position } from '@blueprintjs/core'

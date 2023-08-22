@@ -1,5 +1,6 @@
 import React from 'react'
-import { Button, Container, ButtonVariation, NoDataCard, IconName } from '@harness/uicore'
+import { Button, Container, ButtonVariation, NoDataCard } from '@harnessio/uicore'
+import type { IconName } from '@harnessio/icons'
 import { noop } from 'lodash-es'
 import { CodeIcon } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'

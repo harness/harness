@@ -7,19 +7,19 @@ import {
   Container,
   Layout,
   FlexExpander,
-  Icon,
   Formik,
   FormikForm,
   Heading,
   useToaster,
   FormInput,
   ButtonVariation
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
 import cx from 'classnames'
-import { FontVariation } from '@harness/design-system'
+import { FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { get } from 'lodash-es'
-import { useModalHook } from '@harness/use-modal'
+import { useModalHook } from 'hooks/useModalHook'
 import { String, useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
 import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse } from 'services/code'
@@ -209,7 +209,7 @@ export function useCommitModal({
                   <Button text={getString('cancel')} variation={ButtonVariation.LINK} onClick={hideModal} />
                   <FlexExpander />
 
-                  {loading && <Icon intent={Intent.PRIMARY} name="spinner" size={16} />}
+                  {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
                 </Layout.Horizontal>
               </FormikForm>
             </Formik>

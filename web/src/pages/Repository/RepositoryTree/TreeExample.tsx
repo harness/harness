@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { FocusStyleManager } from '@blueprintjs/core'
 import { StaticTreeDataProvider, Tree, UncontrolledTreeEnvironment } from 'react-complex-tree'
-import { Container } from '@harness/uicore'
+import { Container } from '@harnessio/uicore'
 import { renderers } from './renderers'
 import { sampleTree } from './demodata'
 

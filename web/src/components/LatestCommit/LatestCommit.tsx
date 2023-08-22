@@ -1,5 +1,6 @@
 import React from 'react'
-import { Container, Color, Layout, FlexExpander, Text, FontVariation, Avatar } from '@harness/uicore'
+import { Container, Layout, FlexExpander, Text, Avatar } from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { Link } from 'react-router-dom'
 import { Render } from 'react-jsx-match'
 import ReactTimeago from 'react-timeago'

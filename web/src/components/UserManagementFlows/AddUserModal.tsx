@@ -2,24 +2,22 @@ import React, { useState } from 'react'
 import {
   Button,
   ButtonVariation,
-  Color,
   Container,
   Dialog,
   FlexExpander,
-  FontVariation,
   FormikForm,
   FormInput,
-  Icon,
   Layout,
   Text,
   useToaster
-} from '@harness/uicore'
-import { useModalHook } from '@harness/use-modal'
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { Formik, FormikHelpers, useFormikContext } from 'formik'
 import { get } from 'lodash-es'
 import { Else, Match, Render, Truthy } from 'react-jsx-match'
 import * as Yup from 'yup'
-
+import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { OpenapiAdminUsersCreateRequest, TypesUser, useAdminCreateUser, useAdminUpdateUser } from 'services/code'
 import { generateAlphaNumericHash, getErrorMessage, REGEX_VALID_REPO_NAME } from 'utils/Utils'

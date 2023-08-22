@@ -1,6 +1,6 @@
 import { useHistory } from 'react-router-dom'
 import React, { useState } from 'react'
-import { Container, Layout, FlexExpander, ButtonVariation, Button } from '@harness/uicore'
+import { Container, Layout, FlexExpander, ButtonVariation, Button } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'

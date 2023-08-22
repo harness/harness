@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import {
   Button,
-  Color,
   Text,
   Container,
   FormInput,
@@ -9,9 +8,9 @@ import {
   Layout,
   Page,
   ButtonVariation,
-  ButtonSize,
-  Intent
-} from '@harness/uicore'
+  ButtonSize
+} from '@harnessio/uicore'
+import { Intent, Color } from '@harnessio/design-system'
 import { useGetSpace } from 'services/code'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { ACCESS_MODES, voidFn } from 'utils/Utils'

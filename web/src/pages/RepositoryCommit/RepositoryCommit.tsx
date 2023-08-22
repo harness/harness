@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Container, FlexExpander, Layout, PageBody } from '@harness/uicore'
+import { Container, FlexExpander, Layout, PageBody } from '@harnessio/uicore'
 import { useGet } from 'restful-react'
 import { noop } from 'lodash-es'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'

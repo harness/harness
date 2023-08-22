@@ -1,15 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useHistory } from 'react-router-dom'
-import {
-  Button,
-  ButtonVariation,
-  Container,
-  FlexExpander,
-  FontVariation,
-  Layout,
-  StringSubstitute,
-  Text
-} from '@harness/uicore'
+import { Button, ButtonVariation, Container, FlexExpander, Layout, StringSubstitute, Text } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import { permissionProps } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'

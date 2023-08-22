@@ -2,16 +2,16 @@ import React, { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState }
 import {
   Button,
   ButtonVariation,
-  Color,
   Container,
   FlexExpander,
-  Icon,
   Layout,
   Text,
   TextInput,
   VisualYamlSelectedView,
   VisualYamlToggle
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import { Link, useHistory } from 'react-router-dom'
 import { Breadcrumbs, IBreadcrumbProps } from '@blueprintjs/core'
 import cx from 'classnames'

@@ -2,25 +2,23 @@ import React, { useMemo, useState } from 'react'
 import {
   Button,
   ButtonVariation,
-  Color,
   Container,
   Dialog,
   FlexExpander,
-  FontVariation,
   FormikForm,
   FormInput,
   Layout,
   SelectOption,
   Text
-} from '@harness/uicore'
-import { useModalHook } from '@harness/use-modal'
+} from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { Formik } from 'formik'
 import { useMutate } from 'restful-react'
 import moment from 'moment'
 import * as Yup from 'yup'
 import { Else, Match, Render, Truthy } from 'react-jsx-match'
 import { omit } from 'lodash-es'
-
+import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import type { OpenapiCreateTokenRequest } from 'services/code'
 import { REGEX_VALID_REPO_NAME } from 'utils/Utils'

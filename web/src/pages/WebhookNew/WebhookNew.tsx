@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, PageBody } from '@harness/uicore'
+import { Container, PageBody } from '@harnessio/uicore'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'

@@ -1,5 +1,6 @@
 import React from 'react'
-import { Text, StringSubstitute, IconName } from '@harness/uicore'
+import { Text, StringSubstitute } from '@harnessio/uicore'
+import type { IconName } from '@harnessio/icons'
 import cx from 'classnames'
 import { CodeIcon } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'

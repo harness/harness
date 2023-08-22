@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Button, ButtonVariation, Color, Container, FontVariation, Layout, Text } from '@harness/uicore'
+import { Button, ButtonVariation, Container, Layout, Text } from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { CodeIcon } from 'utils/GitUtils'

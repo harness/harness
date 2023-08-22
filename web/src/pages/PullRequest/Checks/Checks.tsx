@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Falsy, Match, Render, Truthy } from 'react-jsx-match'
-import { CheckCircle, NavArrowRight } from 'iconoir-react'
+import { /*CheckCircle,*/ NavArrowRight } from 'iconoir-react'
 import SplitPane from 'react-split-pane'
 import { get } from 'lodash-es'
 import cx from 'classnames'
@@ -9,16 +9,15 @@ import {
   Container,
   Layout,
   Text,
-  Color,
   FlexExpander,
-  Icon,
   useToggle,
-  FontVariation,
   Utils,
   Button,
   ButtonVariation,
   ButtonSize
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+// import { Icon } from '@harnessio/icons'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { LogViewer, TermRefs } from 'components/LogViewer/LogViewer'
 import { ButtonRoleProps, PullRequestCheckType, PullRequestSection, timeDistance } from 'utils/Utils'
 import type { GitInfoProps } from 'utils/GitUtils'
@@ -241,7 +240,14 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({ expandable, isSelected = 
           <NavArrowRight color={Utils.getRealCSSColor(Color.GREY_500)} className={cx(css.noShrink, css.chevron)} />
         </Render>
 
-        <Match expr={expandable}>
+        {/*
+        TODO: This is reserved for future Pipeline implementation reference. Needs
+        a couple of things:
+          - persist selected pipeline stage in URL
+          - onClick back to the Menu
+          - Custom rendering for pipeline stages
+       */}
+        {/* <Match expr={expandable}>
           <Truthy>
             <Icon name="ci-main" size={16} />
           </Truthy>
@@ -249,7 +255,7 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({ expandable, isSelected = 
             <CheckCircle color={Utils.getRealCSSColor(Color.GREY_500)} className={css.noShrink} />
           </Falsy>
         </Match>
-
+ */}
         <Text className={css.uid} lineClamp={1}>
           {itemData.uid}
         </Text>

@@ -1,5 +1,7 @@
 import React from 'react'
-import { Container, Layout, Text, Color, Icon, FontVariation } from '@harness/uicore'
+import { Container, Layout, Text } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { Link } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'

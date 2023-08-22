@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
-import { Container, Color, TableV2 as Table, Text, Avatar, Intent, useToaster } from '@harness/uicore'
+import { Container, TableV2 as Table, Text, Avatar, useToaster } from '@harnessio/uicore'
+import { Color, Intent } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 import { Link, useHistory } from 'react-router-dom'
 import cx from 'classnames'

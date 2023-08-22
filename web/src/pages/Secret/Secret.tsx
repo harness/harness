@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, PageHeader } from '@harness/uicore'
+import { Container, PageHeader } from '@harnessio/uicore'
 import { useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import type { CODEProps } from 'RouteDefinitions'

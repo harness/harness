@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, Text, Layout, StringSubstitute } from '@harness/uicore'
+import { Container, Text, Layout, StringSubstitute } from '@harnessio/uicore'
 import cx from 'classnames'
 import ReactTimeago from 'react-timeago'
 import type { GitInfoProps } from 'utils/GitUtils'

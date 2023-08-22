@@ -1,5 +1,7 @@
 import React, { Fragment } from 'react'
-import { Container, Layout, Text, Color, Icon, FontVariation, PageHeader } from '@harness/uicore'
+import { Container, Layout, Text, PageHeader } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { Link, useParams } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'

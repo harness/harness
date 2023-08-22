@@ -11,8 +11,8 @@ import {
   TableV2,
   Text,
   useToaster
-} from '@harness/uicore'
-import { Color, FontVariation } from '@harness/design-system'
+} from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
 import type { CellProps, Column } from 'react-table'

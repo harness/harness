@@ -1,12 +1,9 @@
 import React, { useMemo, useState } from 'react'
-import { Button, ButtonVariation, Dialog, FormikForm, FormInput, SelectOption, useToaster } from '@harness/uicore'
-import { useModalHook } from '@harness/use-modal'
+import { Button, ButtonVariation, Dialog, FormikForm, FormInput, SelectOption, useToaster } from '@harnessio/uicore'
 import { Formik } from 'formik'
-
 import * as Yup from 'yup'
-
-import { useStrings } from 'framework/strings'
 import { useGet } from 'restful-react'
+import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import {
   MembershipAddRequestBody,
@@ -16,7 +13,7 @@ import {
   useMembershipUpdate
 } from 'services/code'
 import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
-
+import { useModalHook } from 'hooks/useModalHook'
 import { roleStringKeyMap } from '../SpaceAccessControl'
 
 const roles = ['reader', 'executor', 'contributor', 'space_owner'] as const
@@ -36,7 +33,7 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
     user_uid: membershipDetails?.principal?.uid || ''
   })
 
-  const { data: users, loading: fetchingUsers }  = useGet<TypesPrincipalInfo[]>({
+  const { data: users, loading: fetchingUsers } = useGet<TypesPrincipalInfo[]>({
     path: `/api/v1/principals`,
     queryParams: {
       query: searchTerm,
@@ -46,7 +43,6 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
     },
     debounce: 500
   })
-
 
   const roleOptions: SelectOption[] = useMemo(
     () =>

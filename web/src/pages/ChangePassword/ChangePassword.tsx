@@ -10,8 +10,8 @@ import {
   Page,
   Text,
   useToaster
-} from '@harness/uicore'
-import { FontVariation } from '@harness/design-system'
+} from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
 import { Formik } from 'formik'
 import * as Yup from 'yup'

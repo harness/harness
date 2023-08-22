@@ -1,16 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Classes, Icon as BPIcon, Menu, MenuItem, PopoverPosition } from '@blueprintjs/core'
-import {
-  Button,
-  ButtonProps,
-  Container,
-  Layout,
-  ButtonVariation,
-  TextInput,
-  Tabs,
-  FontVariation,
-  Text
-} from '@harness/uicore'
+import { Button, ButtonProps, Container, Layout, ButtonVariation, TextInput, Tabs, Text } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import { Link } from 'react-router-dom'
 import cx from 'classnames'
 import { useGet } from 'restful-react'

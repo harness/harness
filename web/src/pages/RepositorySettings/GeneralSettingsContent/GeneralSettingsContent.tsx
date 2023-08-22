@@ -1,17 +1,16 @@
 import React, { useState } from 'react'
 import {
-  Color,
   Container,
   Layout,
   Text,
   Button,
   ButtonVariation,
-  Intent,
   FormInput,
   Formik,
   useToaster,
   ButtonSize
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Color, Intent } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { ACCESS_MODES, permissionProps, voidFn } from 'utils/Utils'
 import { useStrings } from 'framework/strings'

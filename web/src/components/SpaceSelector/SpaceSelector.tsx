@@ -2,16 +2,15 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Button,
   ButtonVariation,
-  Color,
   Container,
-  FontVariation,
   Heading,
-  Icon,
   Layout,
   NoDataCard,
   TableV2 as Table,
   Text
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import Keywords from 'react-keywords'
 import { useGet } from 'restful-react'

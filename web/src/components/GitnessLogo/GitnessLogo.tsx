@@ -1,8 +1,9 @@
 import React from 'react'
-import { Container, Icon, Layout, Text } from '@harness/uicore'
+import { Container, Layout, Text } from '@harnessio/uicore'
 import { Link } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
+import gitness from './gitness.svg'
 import css from './GitnessLogo.module.scss'
 
 export const GitnessLogo: React.FC = () => {
@@ -13,7 +14,7 @@ export const GitnessLogo: React.FC = () => {
     <Container className={css.main}>
       <Link to={routes.toCODEHome()}>
         <Layout.Horizontal spacing="small" className={css.layout}>
-          <Icon name="code" size={34} />
+          <img src={gitness} width={34} height={34} />
           <Text className={css.text}>{getString('gitness')}</Text>
         </Layout.Horizontal>
       </Link>

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Divider, PopoverInteractionKind, Position } from '@blueprintjs/core'
-import { Checkbox, Container, FlexExpander, Layout, Popover, Text } from '@harness/uicore'
-import { Color, FontVariation } from '@harness/design-system'
+import { Checkbox, Container, FlexExpander, Layout, Popover, Text } from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 import ReactTimeago from 'react-timeago'
 
 import { useStrings } from 'framework/strings'

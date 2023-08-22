@@ -1,6 +1,7 @@
 import React from 'react'
 import cx from 'classnames'
-import { IconName, TextProps, Text } from '@harness/uicore'
+import { TextProps, Text } from '@harnessio/uicore'
+import type { IconName } from '@harnessio/icons'
 import { NavLink as Link, NavLinkProps } from 'react-router-dom'
 import css from './NavMenuItem.module.scss'
 

@@ -1,6 +1,6 @@
 import { useHistory } from 'react-router-dom'
 import React, { useCallback, useMemo, useRef, useState } from 'react'
-import { Container } from '@harness/uicore'
+import { Container } from '@harnessio/uicore'
 import cx from 'classnames'
 import MarkdownPreview from '@uiw/react-markdown-preview'
 import rehypeVideo from 'rehype-video'

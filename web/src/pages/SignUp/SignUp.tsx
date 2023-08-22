@@ -1,7 +1,6 @@
 import React, { useCallback } from 'react'
 import {
   Button,
-  Color,
   Container,
   FormInput,
   Formik,
@@ -10,9 +9,9 @@ import {
   StringSubstitute,
   Text,
   useToaster
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 import * as Yup from 'yup'
-
 import { Link } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import AuthLayout from 'components/AuthLayout/AuthLayout'

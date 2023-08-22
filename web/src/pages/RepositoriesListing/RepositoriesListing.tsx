@@ -7,10 +7,10 @@ import {
   PageBody,
   PageHeader,
   TableV2 as Table,
-  Text,
-  Color,
-  Icon
-} from '@harness/uicore'
+  Text
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
 import cx from 'classnames'

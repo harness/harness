@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ButtonGroup, ButtonVariation, Button, Container, Dialog, Carousel } from '@harness/uicore'
+import { ButtonGroup, ButtonVariation, Button, Container, Dialog, Carousel } from '@harnessio/uicore'
 import { ZOOM_INC_DEC_LEVEL } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import css from './ImageCarousel.module.scss'

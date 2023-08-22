@@ -5,15 +5,14 @@ import {
   ButtonVariation,
   Dialog,
   FlexExpander,
-  FontVariation,
   Layout,
   StringSubstitute,
   Text,
   useToaster
-} from '@harness/uicore'
-import { useModalHook } from '@harness/use-modal'
+} from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import { Else, Match, Truthy } from 'react-jsx-match'
-
+import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { TypesUser, useAdminUpdateUser } from 'services/code'
 import { generateAlphaNumericHash, getErrorMessage } from 'utils/Utils'

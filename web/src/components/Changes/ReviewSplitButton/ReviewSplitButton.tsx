@@ -1,15 +1,6 @@
-import {
-  ButtonVariation,
-  Color,
-  Container,
-  Icon,
-  IconName,
-  SplitButton,
-  useToaster,
-  Text,
-  FontVariation,
-  Layout
-} from '@harness/uicore'
+import { ButtonVariation, Container, SplitButton, useToaster, Text, Layout } from '@harnessio/uicore'
+import { Icon, IconName } from '@harnessio/icons'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { Menu, PopoverPosition } from '@blueprintjs/core'
 import cx from 'classnames'
 import { useMutate } from 'restful-react'

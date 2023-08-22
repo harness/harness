@@ -3,16 +3,16 @@ import { useGet } from 'restful-react'
 import {
   ButtonSize,
   ButtonVariation,
-  Color,
   Container,
   FlexExpander,
   Heading,
-  Icon,
   Layout,
   StringSubstitute,
   Tabs,
   Utils
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { Render, Match, Truthy, Falsy, Case, Else } from 'react-jsx-match'
 import { Link, useHistory } from 'react-router-dom'

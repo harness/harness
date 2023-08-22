@@ -1,5 +1,7 @@
 import React from 'react'
-import { Container, ButtonVariation, Layout, Text, StringSubstitute, Button, Icon, Color } from '@harness/uicore'
+import { Container, ButtonVariation, Layout, Text, StringSubstitute, Button } from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
+import { Icon } from '@harnessio/icons'
 import { Menu, MenuItem } from '@blueprintjs/core'
 import { useStrings } from 'framework/strings'
 import { CodeIcon } from 'utils/GitUtils'

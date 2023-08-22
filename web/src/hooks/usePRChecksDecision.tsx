@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Color, stringSubstitute } from '@harness/uicore'
+import { stringSubstitute } from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { useListStatusCheckResults } from 'services/code'

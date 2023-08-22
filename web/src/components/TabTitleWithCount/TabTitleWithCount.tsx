@@ -1,5 +1,7 @@
 import React from 'react'
-import { Text, IconName, HarnessIcons, Spacing, PaddingProps } from '@harness/uicore'
+import { Text } from '@harnessio/uicore'
+import { IconName, HarnessIcons } from '@harnessio/icons'
+import type { Spacing, PaddingProps } from '@harnessio/design-system'
 import { Falsy, Match, Render, Truthy } from 'react-jsx-match'
 import css from './TabTitleWithCount.module.scss'
 

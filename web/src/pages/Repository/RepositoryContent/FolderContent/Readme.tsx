@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react'
-import { Container, Color, Layout, FlexExpander, ButtonVariation, Heading, Icon, ButtonSize } from '@harness/uicore'
+import { Container, Layout, FlexExpander, ButtonVariation, Heading, ButtonSize } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
@@ -85,7 +87,7 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
         <Layout.Horizontal padding="small" className={css.heading}>
           <Heading level={5}>{readmeInfo.name}</Heading>
           <FlexExpander />
-          {loading && <Icon name="spinner" color={Color.PRIMARY_7} />}
+          {loading && <Icon name="steps-spinner" color={Color.PRIMARY_7} />}
           <PlainButton
             withoutCurrentColor
             size={ButtonSize.SMALL}

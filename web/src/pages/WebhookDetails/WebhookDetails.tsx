@@ -1,5 +1,5 @@
 import React from 'react'
-import { Container, PageBody } from '@harness/uicore'
+import { Container, PageBody } from '@harnessio/uicore'
 import { useGet } from 'restful-react'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import type { OpenapiWebhookType } from 'services/code'

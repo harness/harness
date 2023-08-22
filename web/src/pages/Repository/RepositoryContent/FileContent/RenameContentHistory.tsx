@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Icon, Text, StringSubstitute } from '@harness/uicore'
+import { Text, StringSubstitute } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
 import { useGet } from 'restful-react'
 import cx from 'classnames'
 import { ThreadSection } from 'components/ThreadSection/ThreadSection'

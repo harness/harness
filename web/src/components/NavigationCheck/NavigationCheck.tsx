@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Prompt, useHistory } from 'react-router-dom'
-import { useConfirmationDialog } from '@harness/uicore'
-import { Intent } from '@harness/design-system'
+import { Intent } from '@harnessio/design-system'
 import type * as History from 'history'
 import { useStrings } from 'framework/strings'
+import { useConfirmationDialog } from 'hooks/useConfirmationDialog'
 import css from './NavigationCheck.module.scss'
 
 interface NavigationCheckProps {

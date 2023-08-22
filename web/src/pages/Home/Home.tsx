@@ -1,5 +1,6 @@
 import React from 'react'
-import { ButtonVariation, Container, FontVariation, Layout, PageBody, Text } from '@harness/uicore'
+import { ButtonVariation, Container, Layout, PageBody, Text } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import { useGet } from 'restful-react'
 // import type { TypesSpace } from 'services/code'
 import { useStrings } from 'framework/strings'

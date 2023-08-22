@@ -1,5 +1,7 @@
 import React from 'react'
-import { Layout, Text, Icon, FontVariation } from '@harness/uicore'
+import { Layout, Text } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { FontVariation } from '@harnessio/design-system'
 // import { PopoverInteractionKind } from '@blueprintjs/core'
 // import { ButtonRoleProps } from 'utils/Utils'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'

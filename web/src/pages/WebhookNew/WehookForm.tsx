@@ -8,9 +8,9 @@ import {
   FormInput,
   Layout,
   Text,
-  FontVariation,
   useToaster
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { FormGroup } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'

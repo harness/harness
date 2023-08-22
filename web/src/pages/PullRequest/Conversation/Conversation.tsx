@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { ButtonProps, Container, FlexExpander, Layout, Select, SelectOption, Text, useToaster } from '@harness/uicore'
+import { ButtonProps, Container, FlexExpander, Layout, Select, SelectOption, Text, useToaster } from '@harnessio/uicore'
 import { useGet, useMutate } from 'restful-react'
 import { orderBy } from 'lodash-es'
 import type { GitInfoProps } from 'utils/GitUtils'
@@ -63,12 +63,12 @@ export const Conversation: React.FC<ConversationProps> = ({
   const [dateOrderSort, setDateOrderSort] = useUserPreference<orderSortDate.ASC | orderSortDate.DESC>(
     UserPreference.PULL_REQUEST_ACTIVITY_ORDER,
     orderSortDate.ASC
-    )
+  )
   const activityFilters = useActivityFilters()
   const [activityFilter, setActivityFilter] = useUserPreference<SelectOption>(
     UserPreference.PULL_REQUEST_ACTIVITY_FILTER,
     activityFilters[0] as SelectOption
-    )
+  )
 
   const activityBlocks = useMemo(() => {
     // Each block may have one or more activities which are grouped into it. For example, one comment block

@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { Button, Container, ButtonVariation, Layout, Color, ButtonSize, IconName } from '@harness/uicore'
+import { Button, Container, ButtonVariation, Layout, ButtonSize } from '@harnessio/uicore'
+import type { IconName } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { EditorView } from '@codemirror/view'
 import { EditorSelection } from '@codemirror/state'

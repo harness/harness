@@ -1,15 +1,6 @@
 import React, { useCallback, useState } from 'react'
-import {
-  Container,
-  Text,
-  FontVariation,
-  Layout,
-  Button,
-  ButtonVariation,
-  ButtonSize,
-  TextInput,
-  useToaster
-} from '@harness/uicore'
+import { Container, Text, Layout, Button, ButtonVariation, ButtonSize, TextInput, useToaster } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { Match, Truthy, Else } from 'react-jsx-match'
 import { useStrings } from 'framework/strings'

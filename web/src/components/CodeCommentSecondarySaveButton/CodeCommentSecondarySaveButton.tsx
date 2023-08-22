@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { useMutate } from 'restful-react'
-import { useToaster, Button, ButtonVariation, ButtonSize, ButtonProps, useIsMounted } from '@harness/uicore'
+import { useToaster, Button, ButtonVariation, ButtonSize, ButtonProps, useIsMounted } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import type { GitInfoProps } from 'utils/GitUtils'
 import type { TypesPullReqActivity } from 'services/code'

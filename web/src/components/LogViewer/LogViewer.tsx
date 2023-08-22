@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react'
-import { Container } from '@harness/uicore'
+import { Container } from '@harnessio/uicore'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import { CanvasAddon } from 'xterm-addon-canvas'

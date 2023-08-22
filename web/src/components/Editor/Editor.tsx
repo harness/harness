@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react'
-import { Container } from '@harness/uicore'
+import { Container } from '@harnessio/uicore'
 import { LanguageDescription } from '@codemirror/language'
 import { indentWithTab } from '@codemirror/commands'
 import cx from 'classnames'

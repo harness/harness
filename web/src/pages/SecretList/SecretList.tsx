@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import {
   ButtonVariation,
-  Color,
   Container,
   FlexExpander,
   Layout,
@@ -9,7 +8,8 @@ import {
   PageHeader,
   TableV2 as Table,
   Text
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Container, Layout, Text } from '@harness/uicore'
+import { Container, Layout, Text } from '@harnessio/uicore'
 import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
 import * as Diff2Html from 'diff2html'
 import { get } from 'lodash-es'

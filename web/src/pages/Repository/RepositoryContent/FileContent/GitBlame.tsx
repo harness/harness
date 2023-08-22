@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Avatar, Container, FontVariation, Layout, StringSubstitute, Text } from '@harness/uicore'
+import { Avatar, Container, Layout, StringSubstitute, Text } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import type { ViewUpdate } from '@codemirror/view'
 import { EditorView, gutter, GutterMarker, WidgetType } from '@codemirror/view'
 import { Compartment } from '@codemirror/state'

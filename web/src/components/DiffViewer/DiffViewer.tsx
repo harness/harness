@@ -4,7 +4,6 @@ import ReactDOM from 'react-dom'
 import { useInView } from 'react-intersection-observer'
 import {
   Button,
-  Color,
   Container,
   FlexExpander,
   ButtonVariation,
@@ -13,7 +12,8 @@ import {
   ButtonSize,
   useToaster,
   ButtonProps
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
 import { Render } from 'react-jsx-match'
 import { Link } from 'react-router-dom'

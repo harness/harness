@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Color, Layout } from '@harness/uicore'
+import { Layout } from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { useStrings } from 'framework/strings'
 import { CodeIcon } from 'utils/GitUtils'

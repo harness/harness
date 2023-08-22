@@ -1,4 +1,5 @@
-import { Color, Text } from '@harness/uicore'
+import { Text } from '@harnessio/uicore'
+import { Color } from '@harnessio/design-system'
 import React from 'react'
 
 export const PipeSeparator: React.FC<{ height?: number }> = ({ height }) => (

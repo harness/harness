@@ -7,7 +7,6 @@ import {
   Container,
   Layout,
   FlexExpander,
-  Icon,
   Formik,
   FormikForm,
   Heading,
@@ -15,11 +14,12 @@ import {
   FormInput,
   Label,
   ButtonVariation
-} from '@harness/uicore'
-import { FontVariation } from '@harness/design-system'
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { get } from 'lodash-es'
-import { useModalHook } from '@harness/use-modal'
+import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
 import { GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
@@ -168,7 +168,7 @@ export function useCreateTagModal({
                   <Button text={getString('cancel')} variation={ButtonVariation.LINK} onClick={hideModal} />
                   <FlexExpander />
 
-                  {loading && <Icon intent={Intent.PRIMARY} name="spinner" size={16} />}
+                  {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
                 </Layout.Horizontal>
               </FormikForm>
             </Formik>

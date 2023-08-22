@@ -2,8 +2,9 @@ import React, { ReactElement } from 'react'
 import cx from 'classnames'
 import { omit } from 'lodash-es'
 import { Classes, IconName, IMenuItemProps, Menu } from '@blueprintjs/core'
-import { Button, ButtonProps, Icon } from '@harness/uicore'
-import type { PopoverProps } from '@harness/uicore/dist/components/Popover/Popover'
+import { Button, ButtonProps } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import type { PopoverProps } from '@harnessio/uicore/dist/components/Popover/Popover'
 import css from './OptionsMenuButton.module.scss'
 
 export const MenuDivider = '-' as const

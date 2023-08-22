@@ -1,5 +1,5 @@
 import React, { CSSProperties } from 'react'
-import { Container, Popover, StringSubstitute, Text } from '@harness/uicore'
+import { Container, Popover, StringSubstitute, Text } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import css from './CommitDivergence.module.scss'
 

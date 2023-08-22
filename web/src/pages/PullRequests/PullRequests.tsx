@@ -1,17 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  Container,
-  PageBody,
-  Text,
-  Color,
-  TableV2,
-  Layout,
-  StringSubstitute,
-  Icon,
-  FontVariation,
-  FlexExpander,
-  Utils
-} from '@harness/uicore'
+import { Container, PageBody, Text, TableV2, Layout, StringSubstitute, FlexExpander, Utils } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import type { CellProps, Column } from 'react-table'

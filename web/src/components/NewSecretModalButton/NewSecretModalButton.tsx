@@ -5,19 +5,18 @@ import {
   Dialog,
   Layout,
   Heading,
-  FontVariation,
   Container,
   Formik,
   FormikForm,
   FormInput,
-  Intent,
-  FlexExpander,
-  Icon
-} from '@harness/uicore'
-import { useModalHook } from '@harness/use-modal'
+  FlexExpander
+} from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Intent, FontVariation } from '@harnessio/design-system'
 import React from 'react'
 import { useMutate } from 'restful-react'
 import * as yup from 'yup'
+import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import type { OpenapiCreateSecretRequest, TypesSecret } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
@@ -143,7 +142,7 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
                   />
                   <Button text={cancelButtonTitle || getString('cancel')} minimal onClick={hideModal} />
                   <FlexExpander />
-                  {loading && <Icon intent={Intent.PRIMARY} name="spinner" size={16} />}
+                  {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
                 </Layout.Horizontal>
               </FormikForm>
             </Formik>

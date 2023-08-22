@@ -10,8 +10,8 @@ import {
   TableV2,
   Text,
   useToaster
-} from '@harness/uicore'
-import { Color, FontVariation } from '@harness/design-system'
+} from '@harnessio/uicore'
+import { Color, FontVariation } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 import { Render } from 'react-jsx-match'
 

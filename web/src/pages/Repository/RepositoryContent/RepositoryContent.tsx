@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Container } from '@harness/uicore'
+import { Container } from '@harnessio/uicore'
 import { GitInfoProps, isDir } from 'utils/GitUtils'
 import { ContentHeader } from './ContentHeader/ContentHeader'
 import { FolderContent } from './FolderContent/FolderContent'

@@ -7,11 +7,11 @@ import {
   Layout,
   ButtonVariation,
   TextInput,
-  FontVariation,
   Text,
   ButtonSize,
   Avatar
-} from '@harness/uicore'
+} from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
 import { String, useStrings } from 'framework/strings'

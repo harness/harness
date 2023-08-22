@@ -1,20 +1,10 @@
 import React, { useState } from 'react'
-import {
-  Button,
-  ButtonVariation,
-  Dialog,
-  Icon,
-  Layout,
-  Text,
-  Container,
-  Color,
-  TextInput,
-  useToaster
-} from '@harness/uicore'
-import { useModalHook } from '@harness/use-modal'
-
+import { Button, ButtonVariation, Dialog, Layout, Text, Container, TextInput, useToaster } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import { Divider } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
+import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useDeleteSpace } from 'services/code'

@@ -1,4 +1,4 @@
-import { useToaster } from '@harness/uicore'
+import { useToaster } from '@harnessio/uicore'
 import { useEffect } from 'react'
 import type { GetDataError } from 'restful-react'
 import { getErrorMessage } from 'utils/Utils'
