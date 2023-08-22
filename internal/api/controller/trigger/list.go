@@ -9,7 +9,6 @@ import (
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -35,24 +34,14 @@ func (c *Controller) List(
 		return nil, 0, fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	var count int64
-	var triggers []*types.Trigger
-
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
-		count, err = c.triggerStore.Count(ctx, pipeline.ID, filter)
-		if err != nil {
-			return fmt.Errorf("failed to count child triggers: %w", err)
-		}
-
-		triggers, err = c.triggerStore.List(ctx, pipeline.ID, filter)
-		if err != nil {
-			return fmt.Errorf("failed to list child triggers: %w", err)
-		}
-
-		return
-	}, dbtx.TxDefaultReadOnly)
+	count, err := c.triggerStore.Count(ctx, pipeline.ID, filter)
 	if err != nil {
-		return triggers, count, fmt.Errorf("failed to fetch list: %w", err)
+		return nil, 0, fmt.Errorf("failed to count child triggers: %w", err)
+	}
+
+	triggers, err := c.triggerStore.List(ctx, pipeline.ID, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list child triggers: %w", err)
 	}
 
 	return triggers, count, nil

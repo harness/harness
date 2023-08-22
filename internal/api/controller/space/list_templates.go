@@ -9,7 +9,6 @@ import (
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -34,20 +33,14 @@ func (c *Controller) ListTemplates(
 	var count int64
 	var templates []*types.Template
 
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
-		count, err = c.templateStore.Count(ctx, space.ID, filter)
-		if err != nil {
-			return fmt.Errorf("failed to count child executions: %w", err)
-		}
-
-		templates, err = c.templateStore.List(ctx, space.ID, filter)
-		if err != nil {
-			return fmt.Errorf("failed to list child executions: %w", err)
-		}
-		return
-	}, dbtx.TxDefaultReadOnly)
+	count, err = c.templateStore.Count(ctx, space.ID, filter)
 	if err != nil {
-		return templates, count, fmt.Errorf("failed to list templates: %w", err)
+		return nil, 0, fmt.Errorf("failed to count templates in the space: %w", err)
+	}
+
+	templates, err = c.templateStore.List(ctx, space.ID, filter)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list templates: %w", err)
 	}
 
 	return templates, count, nil
