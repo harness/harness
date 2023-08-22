@@ -166,6 +166,19 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.Spec.AddOperation(http.MethodGet,
 		"/pipelines/{pipeline_ref}/executions", executionList)
 
+	triggerList := openapi3.Operation{}
+	triggerList.WithTags("pipeline")
+	triggerList.WithMapOfAnything(map[string]interface{}{"operationId": "listTriggers"})
+	triggerList.WithParameters(queryParameterQueryRepo, queryParameterPage, queryParameterLimit)
+	_ = reflector.SetRequest(&triggerList, new(pipelineRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&triggerList, []types.Trigger{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&triggerList, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&triggerList, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&triggerList, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&triggerList, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/pipelines/{pipeline_ref}/triggers", triggerList)
+
 	logView := openapi3.Operation{}
 	logView.WithTags("pipeline")
 	logView.WithMapOfAnything(map[string]interface{}{"operationId": "viewLogs"})
