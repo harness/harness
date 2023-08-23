@@ -10,7 +10,7 @@ module.exports = {
     file: 'src/services/code/swagger.yaml',
     customImport: `import { getConfig } from "../config";`,
     customProps: {
-      base: `{getConfig("code")}`
+      base: `{getConfig("code/api/v1")}`
     }
   }
 }
