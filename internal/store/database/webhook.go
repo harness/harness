@@ -264,6 +264,10 @@ func (s *WebhookStore) Count(ctx context.Context, parentType enum.WebhookParent,
 		return 0, fmt.Errorf("webhook parent type '%s' is not supported", parentType)
 	}
 
+	if opts.Query != "" {
+		stmt = stmt.Where("LOWER(webhook_display_name) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+	}
+
 	sql, args, err := stmt.ToSql()
 	if err != nil {
 		return 0, fmt.Errorf("failed to convert query to sql: %w", err)
