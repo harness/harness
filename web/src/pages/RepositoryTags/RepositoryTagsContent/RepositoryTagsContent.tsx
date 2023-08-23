@@ -50,7 +50,8 @@ export function RepositoryTagsContent({ repoMetadata }: Pick<GitInfoProps, 'repo
       sort: 'date',
       order: 'desc',
       include_commit: true,
-      query: searchTerm
+      query: searchTerm,
+      debounce: 500
     }
   })
 

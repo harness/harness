@@ -64,6 +64,7 @@ export default function Webhooks() {
       order: 'desc',
       query: searchTerm
     },
+    debounce: 500,
     lazy: !repoMetadata
   })
   useEffect(() => {

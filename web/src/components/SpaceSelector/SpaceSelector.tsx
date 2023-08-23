@@ -51,7 +51,8 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
     refetch,
     response
   } = useGet({
-    path: '/api/v1/user/memberships'
+    path: '/api/v1/user/memberships',
+    debounce: 500
   })
 
   const selectSpace = useCallback(

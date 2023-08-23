@@ -67,6 +67,7 @@ export default function PullRequests() {
       query: searchTerm,
       state: filter == PullRequestFilterOption.ALL ? '' : filter
     },
+    debounce: 500,
     lazy: !repoMetadata
   })
 
