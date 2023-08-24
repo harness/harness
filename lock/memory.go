@@ -41,8 +41,10 @@ func (m *InMemory) NewMutex(key string, options ...Option) (Mutex, error) {
 	config := m.config
 
 	// set default delayFunc
-	config.DelayFunc = func(i int) time.Duration {
-		return config.RetryDelay
+	if config.DelayFunc == nil {
+		config.DelayFunc = func(i int) time.Duration {
+			return config.RetryDelay
+		}
 	}
 
 	// override config with custom options
@@ -158,13 +160,18 @@ func (l *inMemMutex) Lock(ctx context.Context) error {
 	timeout := time.NewTimer(l.waitTime)
 	defer timeout.Stop()
 
+	delayTimer := time.NewTimer(time.Hour)
+	delayTimer.Stop()
+	defer delayTimer.Stop()
+
 	for i := 1; i <= l.tries; i++ {
+		delayTimer.Reset(l.delayFunc(i))
 		select {
 		case <-ctx.Done():
 			return NewError(Context, l.key, ctx.Err())
 		case <-timeout.C:
 			return NewError(CannotLock, l.key, nil)
-		case <-time.After(l.delayFunc(i)):
+		case <-delayTimer.C:
 			if l.provider.acquire(l.key, l.token, l.expiry) {
 				l.isHeld = true
 				return nil
