@@ -26,6 +26,7 @@ import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useEventListener } from 'hooks/useEventListener'
 import { Readme } from './Readme'
 import repositoryCSS from '../../Repository.module.scss'
+import CodeFile from '../../../../icons/CodeFileFill.svg'
 import css from './FolderContent.module.scss'
 
 type FolderContentProps = Pick<GitInfoProps, 'repoMetadata' | 'resourceContent' | 'gitRef'>
@@ -42,7 +43,7 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => (
           <Container>
             <Layout.Horizontal spacing="small">
-              <Icon name={isFile(row.original) ? CodeIcon.File : CodeIcon.Folder} />
+              {isFile(row.original) ? <Icon name={CodeIcon.File} /> : <img width={16} height={16} src={CodeFile} />}
               <ListingItemLink
                 url={routes.toCODERepository({
                   repoPath: repoMetadata.path as string,
