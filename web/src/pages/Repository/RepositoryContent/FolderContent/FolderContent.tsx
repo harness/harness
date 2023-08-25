@@ -93,7 +93,7 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
   const [pathsChunks, setPathsChunks] = useState<PathsChunks>([])
   const { mutate: fetchLastCommitsForPaths } = useMutate<PathDetails>({
     verb: 'POST',
-    path: `/api/v1/repos/${encodeURIComponent(repoMetadata.path as string)}/path-details`,
+    path: `/api/v1/repos/${repoMetadata.path as string}/+/path-details`,
     queryParams: {
       git_ref: gitRef
     }
