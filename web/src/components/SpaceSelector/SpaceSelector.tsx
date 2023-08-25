@@ -185,7 +185,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
             {!!spaces?.length && (
               <Table<{ space: TypesSpace }>
                 hideHeaders
-                className={css.table}
+                className={cx(css.table, css.tableContainer)}
                 columns={columns}
                 data={spaces || []}
                 onRowClick={spaceData => {

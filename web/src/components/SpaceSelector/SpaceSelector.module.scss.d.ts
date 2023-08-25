@@ -20,5 +20,6 @@ declare const styles: {
   readonly row: string
   readonly noDesc: string
   readonly iconContainer: string
+  readonly tableContainer: string
 }
 export default styles
