@@ -39,6 +39,11 @@ func (c *Controller) MembershipList(ctx context.Context,
 			return fmt.Errorf("failed to list memberships for space: %w", err)
 		}
 
+		if opts.Page == 1 && len(memberships) < opts.Size {
+			membershipsCount = int64(len(memberships))
+			return nil
+		}
+
 		membershipsCount, err = c.membershipStore.CountUsers(ctx, space.ID, opts)
 		if err != nil {
 			return fmt.Errorf("failed to count memberships for space: %w", err)
