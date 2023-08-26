@@ -75,7 +75,9 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
         id: 'message',
         width: 'calc(70% - 150px)',
         Cell: ({ row }: CellProps<OpenapiContentInfo>) => (
-          <CommitMessageLinks repoMetadata={repoMetadata} rowData={row.original} />
+          <Container className={css.commitContainer}>
+            <CommitMessageLinks repoMetadata={repoMetadata} rowData={row.original} />
+          </Container>
         )
       }
     ],
