@@ -27,13 +27,13 @@ func HandleDelete(triggerCtrl *trigger.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		n, err := request.GetTriggerUIDFromPath(r)
+		triggerUID, err := request.GetTriggerUIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		err = triggerCtrl.Delete(ctx, session, spaceRef, pipelineUID, n)
+		err = triggerCtrl.Delete(ctx, session, spaceRef, pipelineUID, triggerUID)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

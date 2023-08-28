@@ -41,6 +41,7 @@ func Generate() *openapi3.Spec {
 	buildAdmin(&reflector)
 	buildPrincipals(&reflector)
 	spaceOperations(&reflector)
+	pluginOperations(&reflector)
 	repoOperations(&reflector)
 	pipelineOperations(&reflector)
 	connectorOperations(&reflector)

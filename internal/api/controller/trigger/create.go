@@ -25,7 +25,7 @@ func (c *Controller) Create(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	uid string,
+	pipelineUID string,
 	in *CreateInput,
 ) (*types.Trigger, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
@@ -33,12 +33,14 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to find space: %w", err)
 	}
 
-	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
+	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineExecute)
+	// Trigger permissions are associated with pipeline permissions. If a user has permissions
+	// to edit the pipeline, they will have permissions to create a trigger as well.
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineEdit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}

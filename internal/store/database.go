@@ -632,4 +632,16 @@ type (
 		// Count the number of triggers in a pipeline.
 		Count(ctx context.Context, pipelineID int64, filter types.ListQueryFilter) (int64, error)
 	}
+
+	PluginStore interface {
+		// List returns back the list of plugins matching the given filter
+		// along with their associated schemas.
+		List(ctx context.Context, filter types.ListQueryFilter) ([]*types.Plugin, error)
+
+		// Create creates a new entry in the plugin datastore.
+		Create(ctx context.Context, plugin *types.Plugin) error
+
+		// Count counts the number of plugins matching the given filter.
+		Count(ctx context.Context, filter types.ListQueryFilter) (int64, error)
+	}
 )

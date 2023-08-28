@@ -34,6 +34,7 @@ func HandleUpdate(connectorCtrl *connector.Controller) http.HandlerFunc {
 		spaceRef, connectorUID, err := paths.DisectLeaf(connectorRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+			return
 		}
 
 		connector, err := connectorCtrl.Update(ctx, session, spaceRef, connectorUID, in)

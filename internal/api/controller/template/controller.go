@@ -15,7 +15,6 @@ import (
 type Controller struct {
 	db            *sqlx.DB
 	uidCheck      check.PathUID
-	pathStore     store.PathStore
 	templateStore store.TemplateStore
 	authorizer    authz.Authorizer
 	spaceStore    store.SpaceStore

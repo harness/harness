@@ -202,7 +202,7 @@ func (s *triggerStore) Count(ctx context.Context, pipelineID int64, filter types
 		Where("trigger_pipeline_id = ?", pipelineID)
 
 	if filter.Query != "" {
-		stmt = stmt.Where("trigger_uid LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
+		stmt = stmt.Where("LOWER(trigger_uid) LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
 	}
 
 	sql, args, err := stmt.ToSql()

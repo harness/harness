@@ -247,7 +247,7 @@ func (s *templateStore) Count(ctx context.Context, parentID int64, filter types.
 		Where("template_space_id = ?", parentID)
 
 	if filter.Query != "" {
-		stmt = stmt.Where("template_uid LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
+		stmt = stmt.Where("LOWER(template_uid) LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
 	}
 
 	sql, args, err := stmt.ToSql()

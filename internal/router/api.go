@@ -15,6 +15,7 @@ import (
 	controllergithook "github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/logs"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
+	"github.com/harness/gitness/internal/api/controller/plugin"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -33,6 +34,7 @@ import (
 	handlergithook "github.com/harness/gitness/internal/api/handler/githook"
 	handlerlogs "github.com/harness/gitness/internal/api/handler/logs"
 	handlerpipeline "github.com/harness/gitness/internal/api/handler/pipeline"
+	handlerplugin "github.com/harness/gitness/internal/api/handler/plugin"
 	handlerprincipal "github.com/harness/gitness/internal/api/handler/principal"
 	handlerpullreq "github.com/harness/gitness/internal/api/handler/pullreq"
 	handlerrepo "github.com/harness/gitness/internal/api/handler/repo"
@@ -86,6 +88,7 @@ func NewAPIHandler(
 	triggerCtrl *trigger.Controller,
 	connectorCtrl *connector.Controller,
 	templateCtrl *template.Controller,
+	pluginCtrl *plugin.Controller,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
 	githookCtrl *controllergithook.Controller,
@@ -117,7 +120,7 @@ func NewAPIHandler(
 
 	r.Route("/v1", func(r chi.Router) {
 		setupRoutesV1(r, repoCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
-			connectorCtrl, templateCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
+			connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 			webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
 	})
 
@@ -146,6 +149,7 @@ func setupRoutesV1(r chi.Router,
 	pipelineCtrl *pipeline.Controller,
 	connectorCtrl *connector.Controller,
 	templateCtrl *template.Controller,
+	pluginCtrl *plugin.Controller,
 	secretCtrl *secret.Controller,
 	spaceCtrl *space.Controller,
 	pullreqCtrl *pullreq.Controller,
@@ -171,6 +175,7 @@ func setupRoutesV1(r chi.Router,
 	setupAccount(r, userCtrl, sysCtrl)
 	setupSystem(r, sysCtrl)
 	setupResources(r)
+	setupPlugins(r, pluginCtrl)
 }
 
 func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
@@ -373,6 +378,12 @@ func setupSecrets(r chi.Router, secretCtrl *secret.Controller) {
 	})
 }
 
+func setupPlugins(r chi.Router, pluginCtrl *plugin.Controller) {
+	r.Route("/plugins", func(r chi.Router) {
+		r.Get("/", handlerplugin.HandleList(pluginCtrl))
+	})
+}
+
 func setupExecutions(
 	r chi.Router,
 	executionCtrl *execution.Controller,
@@ -407,7 +418,7 @@ func setupTriggers(
 	r.Route("/triggers", func(r chi.Router) {
 		r.Get("/", handlertrigger.HandleList(triggerCtrl))
 		r.Post("/", handlertrigger.HandleCreate(triggerCtrl))
-		r.Route(fmt.Sprintf("/{%s}", request.PathParamTriggerRef), func(r chi.Router) {
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamTriggerUID), func(r chi.Router) {
 			r.Get("/", handlertrigger.HandleFind(triggerCtrl))
 			r.Patch("/", handlertrigger.HandleUpdate(triggerCtrl))
 			r.Delete("/", handlertrigger.HandleDelete(triggerCtrl))

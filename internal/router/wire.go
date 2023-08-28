@@ -12,6 +12,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/logs"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
+	"github.com/harness/gitness/internal/api/controller/plugin"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -73,6 +74,7 @@ func ProvideAPIHandler(
 	triggerCtrl *trigger.Controller,
 	connectorCtrl *connector.Controller,
 	templateCtrl *template.Controller,
+	pluginCtrl *plugin.Controller,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
 	githookCtrl *githook.Controller,
@@ -83,8 +85,8 @@ func ProvideAPIHandler(
 	sysCtrl *system.Controller,
 ) APIHandler {
 	return NewAPIHandler(config, authenticator, repoCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
-		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
-		saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
+		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pluginCtrl, pullreqCtrl, webhookCtrl,
+		githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
 }
 
 func ProvideWebHandler(config *types.Config) WebHandler {

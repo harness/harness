@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/githook"
 	controllerlogs "github.com/harness/gitness/internal/api/controller/logs"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
+	"github.com/harness/gitness/internal/api/controller/plugin"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -112,6 +113,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		connector.WireSet,
 		template.WireSet,
 		trigger.WireSet,
+		plugin.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

@@ -26,6 +26,7 @@ func HandleFind(templateCtrl *template.Controller) http.HandlerFunc {
 		spaceRef, templateUID, err := paths.DisectLeaf(templateRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+			return
 		}
 
 		template, err := templateCtrl.Find(ctx, session, spaceRef, templateUID)

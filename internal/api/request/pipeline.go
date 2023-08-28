@@ -14,7 +14,7 @@ const (
 	PathParamExecutionNumber = "execution_number"
 	PathParamStageNumber     = "stage_number"
 	PathParamStepNumber      = "step_number"
-	PathParamTriggerRef      = "trigger_ref"
+	PathParamTriggerUID      = "trigger_uid"
 )
 
 func GetPipelineRefFromPath(r *http.Request) (string, error) {
@@ -40,7 +40,7 @@ func GetStepNumberFromPath(r *http.Request) (int64, error) {
 }
 
 func GetTriggerUIDFromPath(r *http.Request) (string, error) {
-	rawRef, err := PathParamOrError(r, PathParamTriggerRef)
+	rawRef, err := PathParamOrError(r, PathParamTriggerUID)
 	if err != nil {
 		return "", err
 	}

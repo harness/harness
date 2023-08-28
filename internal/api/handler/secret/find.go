@@ -26,6 +26,7 @@ func HandleFind(secretCtrl *secret.Controller) http.HandlerFunc {
 		spaceRef, secretUID, err := paths.DisectLeaf(secretRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+			return
 		}
 
 		secret, err := secretCtrl.Find(ctx, session, spaceRef, secretUID)

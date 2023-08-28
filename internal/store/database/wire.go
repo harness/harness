@@ -43,6 +43,7 @@ var WireSet = wire.NewSet(
 	ProvideConnectorStore,
 	ProvideTemplateStore,
 	ProvideTriggerStore,
+	ProvidePluginStore,
 )
 
 // migrator is helper function to set up the database by performing automated
@@ -124,6 +125,11 @@ func ProvideTriggerStore(db *sqlx.DB) store.TriggerStore {
 // ProvideExecutionStore provides an execution store.
 func ProvideExecutionStore(db *sqlx.DB) store.ExecutionStore {
 	return NewExecutionStore(db)
+}
+
+// ProvidePluginStore provides a plugin store.
+func ProvidePluginStore(db *sqlx.DB) store.PluginStore {
+	return NewPluginStore(db)
 }
 
 // ProvideRepoGitInfoView provides a repo git UID view.

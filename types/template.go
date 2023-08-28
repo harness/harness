@@ -9,7 +9,7 @@ type Template struct {
 	Description string `db:"template_description"     json:"description"`
 	SpaceID     int64  `db:"template_space_id"        json:"space_id"`
 	UID         string `db:"template_uid"             json:"uid"`
-	Data        string `db:"template_data"            json:"-"`
+	Data        string `db:"template_data"            json:"data"`
 	Created     int64  `db:"template_created"         json:"created"`
 	Updated     int64  `db:"template_updated"         json:"updated"`
 	Version     int64  `db:"template_version"         json:"-"`

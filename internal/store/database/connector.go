@@ -123,11 +123,10 @@ func (s *connectorStore) Update(ctx context.Context, p *types.Connector) error {
 		,connector_updated = :connector_updated
 		,connector_version = :connector_version
 	WHERE connector_id = :connector_id AND connector_version = :connector_version - 1`
-	updatedAt := time.Now()
 	connector := *p
 
 	connector.Version++
-	connector.Updated = updatedAt.UnixMilli()
+	connector.Updated = time.Now().UnixMilli()
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
@@ -155,7 +154,7 @@ func (s *connectorStore) Update(ctx context.Context, p *types.Connector) error {
 	return nil
 }
 
-// UpdateOptLock updates the pipeline using the optimistic locking mechanism.
+// UpdateOptLock updates the connector using the optimistic locking mechanism.
 func (s *connectorStore) UpdateOptLock(ctx context.Context,
 	connector *types.Connector,
 	mutateFn func(connector *types.Connector) error,
@@ -250,7 +249,7 @@ func (s *connectorStore) Count(ctx context.Context, parentID int64, filter types
 		Where("connector_space_id = ?", parentID)
 
 	if filter.Query != "" {
-		stmt = stmt.Where("connector_uid LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
+		stmt = stmt.Where("LOWER(connector_uid) LIKE ?", fmt.Sprintf("%%%s%%", filter.Query))
 	}
 
 	sql, args, err := stmt.ToSql()

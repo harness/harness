@@ -27,7 +27,7 @@ type executionRequest struct {
 
 type triggerRequest struct {
 	pipelineRequest
-	Ref string `path:"trigger_ref"`
+	UID string `path:"trigger_uid"`
 }
 
 type logRequest struct {
@@ -208,7 +208,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&triggerFind, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&triggerFind, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet,
-		"/pipelines/{pipeline_ref}/triggers/{trigger_ref}", triggerFind)
+		"/pipelines/{pipeline_ref}/triggers/{trigger_uid}", triggerFind)
 
 	triggerDelete := openapi3.Operation{}
 	triggerDelete.WithTags("pipeline")
@@ -220,7 +220,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&triggerDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&triggerDelete, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
-		"/pipelines/{pipeline_ref}/triggers/{trigger_ref}", triggerDelete)
+		"/pipelines/{pipeline_ref}/triggers/{trigger_uid}", triggerDelete)
 
 	triggerUpdate := openapi3.Operation{}
 	triggerUpdate.WithTags("pipeline")
@@ -233,7 +233,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&triggerUpdate, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&triggerUpdate, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodPatch,
-		"/pipelines/{pipeline_ref}/triggers/{trigger_ref}", triggerUpdate)
+		"/pipelines/{pipeline_ref}/triggers/{trigger_uid}", triggerUpdate)
 
 	triggerList := openapi3.Operation{}
 	triggerList.WithTags("pipeline")

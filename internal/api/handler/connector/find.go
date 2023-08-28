@@ -26,6 +26,7 @@ func HandleFind(connectorCtrl *connector.Controller) http.HandlerFunc {
 		spaceRef, connectorUID, err := paths.DisectLeaf(connectorRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+			return
 		}
 
 		connector, err := connectorCtrl.Find(ctx, session, spaceRef, connectorUID)

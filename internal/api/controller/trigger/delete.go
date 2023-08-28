@@ -29,7 +29,10 @@ func (c *Controller) Delete(
 	if err != nil {
 		return fmt.Errorf("failed to find pipeline: %w", err)
 	}
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineDelete)
+
+	// Trigger permissions are associated with pipeline permissions. If a user has permissions
+	// to delete the pipeline, they will have permissions to remove a trigger as well.
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineEdit)
 	if err != nil {
 		return fmt.Errorf("could not authorize: %w", err)
 	}

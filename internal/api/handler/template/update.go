@@ -34,6 +34,7 @@ func HandleUpdate(templateCtrl *template.Controller) http.HandlerFunc {
 		spaceRef, templateUID, err := paths.DisectLeaf(templateRef)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+			return
 		}
 
 		template, err := templateCtrl.Update(ctx, session, spaceRef, templateUID, in)

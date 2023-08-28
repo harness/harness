@@ -3,6 +3,7 @@ DROP TABLE IF exists executions;
 DROP TABLE IF exists stages;
 DROP TABLE IF exists steps;
 DROP TABLE IF exists logs;
+DROP TABLE IF exists plugins;
 DROP TABLE IF exists connectors;
 DROP TABLE IF exists templates;
 DROP TABLE IF exists triggers;
@@ -514,3 +515,29 @@ CREATE TABLE triggers (
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 );
+
+CREATE TABLE plugins (
+    plugin_uid TEXT NOT NULL
+    ,plugin_description TEXT NOT NULL
+    ,plugin_logo TEXT NOT NULL
+    ,plugin_spec BLOB NOT NULL
+
+    -- Ensure unique plugin names
+    ,UNIQUE(plugin_uid)
+);
+
+INSERT INTO plugins (plugin_uid, plugin_description, plugin_logo, plugin_spec)
+VALUES
+    ('plugins/slack', 'A sample slack plugin', 'slack.png',
+    'inputs:
+        channel:
+          type: string
+        token:
+          type: string
+
+     steps:
+     - type: script
+       spec:
+          image: plugins/slack
+       envs:
+          PLUGIN_CHANNEL: <+ inputs.channel >');
