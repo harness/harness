@@ -115,7 +115,7 @@ var queryParameterQuerySpace = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterSpaceMembers = openapi3.ParameterOrRef{
+var queryParameterMembershipUsers = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
 		In:          openapi3.ParameterInQuery,
@@ -129,7 +129,7 @@ var queryParameterSpaceMembers = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterSortSpaceMembers = openapi3.ParameterOrRef{
+var queryParameterSortMembershipUsers = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamSort,
 		In:          openapi3.ParameterInQuery,
@@ -138,8 +138,8 @@ var queryParameterSortSpaceMembers = openapi3.ParameterOrRef{
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeString),
-				Default: ptrptr(enum.MembershipSortName),
-				Enum:    enum.MembershipSort("").Enum(),
+				Default: ptrptr(enum.MembershipUserSortName),
+				Enum:    enum.MembershipUserSort("").Enum(),
 			},
 		},
 	},
@@ -370,8 +370,8 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opMembershipList.WithTags("space")
 	opMembershipList.WithMapOfAnything(map[string]interface{}{"operationId": "membershipList"})
 	opMembershipList.WithParameters(
-		queryParameterSpaceMembers,
-		queryParameterOrder, queryParameterSortSpaceMembers,
+		queryParameterMembershipUsers,
+		queryParameterOrder, queryParameterSortMembershipUsers,
 		queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opMembershipList, &struct {
 		spaceRequest

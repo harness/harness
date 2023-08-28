@@ -32,6 +32,13 @@ type MembershipUser struct {
 	AddedBy   PrincipalInfo `json:"added_by"`
 }
 
+// MembershipUserFilter holds membership user query parameters.
+type MembershipUserFilter struct {
+	ListQueryFilter
+	Sort  enum.MembershipUserSort `json:"sort"`
+	Order enum.Order              `json:"order"`
+}
+
 // MembershipSpace adds space info to the Membership data.
 type MembershipSpace struct {
 	Membership
@@ -39,11 +46,9 @@ type MembershipSpace struct {
 	AddedBy PrincipalInfo `json:"added_by"`
 }
 
-// MembershipFilter holds membership query parameters.
-type MembershipFilter struct {
-	Page  int                 `json:"page"`
-	Size  int                 `json:"size"`
-	Query string              `json:"query"`
-	Sort  enum.MembershipSort `json:"sort"`
-	Order enum.Order          `json:"order"`
+// MembershipSpaceFilter holds membership space query parameters.
+type MembershipSpaceFilter struct {
+	ListQueryFilter
+	Sort  enum.MembershipSpaceSort `json:"sort"`
+	Order enum.Order               `json:"order"`
 }
