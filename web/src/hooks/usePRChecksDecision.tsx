@@ -11,7 +11,7 @@ export function usePRChecksDecision({
   pullRequestMetadata
 }: Partial<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>>) {
   const { data, error, refetch } = useListStatusCheckResults({
-    repo_ref: encodeURIComponent(repoMetadata?.path as string),
+    repo_ref: `${repoMetadata?.path as string}/+`,
     commit_sha: pullRequestMetadata?.source_sha as string,
     lazy: !repoMetadata?.path || !pullRequestMetadata?.source_sha
   })
