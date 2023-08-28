@@ -95,7 +95,7 @@ const useDeleteRepoModal = () => {
               onClick={async () => {
                 try {
                   // this isn't implemented in the backend yet
-                  await deleteRepo(encodeURIComponent(repoMetadata?.uid as string))
+                  await deleteRepo(`${repoMetadata?.path as string}/+/`)
                   setShowConfirmPage(false)
                   setDeleteConfirmString('')
                   hideModal()
