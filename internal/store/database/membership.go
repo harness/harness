@@ -183,7 +183,7 @@ func (s *MembershipStore) Delete(ctx context.Context, key types.MembershipKey) e
 // CountUsers returns a number of users memberships that matches the provided filter.
 func (s *MembershipStore) CountUsers(ctx context.Context,
 	spaceID int64,
-	filter types.MembershipFilter,
+	filter types.MembershipUserFilter,
 ) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
@@ -191,11 +191,11 @@ func (s *MembershipStore) CountUsers(ctx context.Context,
 		InnerJoin("principals ON membership_principal_id = principal_id").
 		Where("membership_space_id = ?", spaceID)
 
-	stmt = prepareMembershipListUsersStmt(stmt, filter)
+	stmt = applyMembershipUserFilter(stmt, filter)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return 0, fmt.Errorf("failed to convert membership count query to sql: %w", err)
+		return 0, fmt.Errorf("failed to convert membership users count query to sql: %w", err)
 	}
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -203,7 +203,7 @@ func (s *MembershipStore) CountUsers(ctx context.Context,
 	var count int64
 	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return 0, database.ProcessSQLErrorf(err, "Failed executing membership count query")
+		return 0, database.ProcessSQLErrorf(err, "Failed executing membership users count query")
 	}
 
 	return count, nil
@@ -212,7 +212,7 @@ func (s *MembershipStore) CountUsers(ctx context.Context,
 // ListUsers returns a list of memberships for a space or a user.
 func (s *MembershipStore) ListUsers(ctx context.Context,
 	spaceID int64,
-	filter types.MembershipFilter,
+	filter types.MembershipUserFilter,
 ) ([]types.MembershipUser, error) {
 	const columns = membershipColumns + "," + principalInfoCommonColumns
 	stmt := database.Builder.
@@ -221,7 +221,7 @@ func (s *MembershipStore) ListUsers(ctx context.Context,
 		InnerJoin("principals ON membership_principal_id = principal_id").
 		Where("membership_space_id = ?", spaceID)
 
-	stmt = prepareMembershipListUsersStmt(stmt, filter)
+	stmt = applyMembershipUserFilter(stmt, filter)
 	stmt = stmt.Limit(database.Limit(filter.Size))
 	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
 
@@ -231,9 +231,9 @@ func (s *MembershipStore) ListUsers(ctx context.Context,
 	}
 
 	switch filter.Sort {
-	case enum.MembershipSortName:
+	case enum.MembershipUserSortName:
 		stmt = stmt.OrderBy("principal_display_name " + order.String())
-	case enum.MembershipSortCreated:
+	case enum.MembershipUserSortCreated:
 		stmt = stmt.OrderBy("membership_created " + order.String())
 	}
 
@@ -258,9 +258,9 @@ func (s *MembershipStore) ListUsers(ctx context.Context,
 	return result, nil
 }
 
-func prepareMembershipListUsersStmt(
+func applyMembershipUserFilter(
 	stmt squirrel.SelectBuilder,
-	opts types.MembershipFilter,
+	opts types.MembershipUserFilter,
 ) squirrel.SelectBuilder {
 	if opts.Query != "" {
 		searchTerm := "%%" + strings.ToLower(opts.Query) + "%%"
@@ -270,9 +270,38 @@ func prepareMembershipListUsersStmt(
 	return stmt
 }
 
+func (s *MembershipStore) CountSpaces(ctx context.Context,
+	userID int64,
+	filter types.MembershipSpaceFilter,
+) (int64, error) {
+	stmt := database.Builder.
+		Select("count(*)").
+		From("memberships").
+		InnerJoin("spaces ON spaces.space_id = membership_space_id").
+		Where("membership_principal_id = ?", userID)
+
+	stmt = applyMembershipSpaceFilter(stmt, filter)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert membership spaces count query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	var count int64
+	err = db.QueryRowContext(ctx, sql, args...).Scan(&count)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(err, "Failed executing membership spaces count query")
+	}
+
+	return count, nil
+}
+
 // ListSpaces returns a list of spaces in which the provided user is a member.
 func (s *MembershipStore) ListSpaces(ctx context.Context,
 	userID int64,
+	filter types.MembershipSpaceFilter,
 ) ([]types.MembershipSpace, error) {
 	const columns = membershipColumns + "," + spaceColumnsForJoin
 	stmt := database.Builder.
@@ -280,8 +309,25 @@ func (s *MembershipStore) ListSpaces(ctx context.Context,
 		From("memberships").
 		InnerJoin("spaces ON spaces.space_id = membership_space_id").
 		InnerJoin(`paths ON spaces.space_id=paths.path_space_id AND paths.path_is_primary=true`).
-		Where("membership_principal_id = ?", userID).
-		OrderBy("space_path asc")
+		Where("membership_principal_id = ?", userID)
+
+	stmt = applyMembershipSpaceFilter(stmt, filter)
+	stmt = stmt.Limit(database.Limit(filter.Size))
+	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
+
+	order := filter.Order
+	if order == enum.OrderDefault {
+		order = enum.OrderAsc
+	}
+
+	switch filter.Sort {
+	case enum.MembershipSpaceSortUID:
+		stmt = stmt.OrderBy("space_uid " + order.String())
+	case enum.MembershipSpaceSortPath:
+		stmt = stmt.OrderBy("space_path " + order.String())
+	case enum.MembershipSpaceSortCreated:
+		stmt = stmt.OrderBy("membership_created " + order.String())
+	}
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -301,6 +347,18 @@ func (s *MembershipStore) ListSpaces(ctx context.Context,
 	}
 
 	return result, nil
+}
+
+func applyMembershipSpaceFilter(
+	stmt squirrel.SelectBuilder,
+	opts types.MembershipSpaceFilter,
+) squirrel.SelectBuilder {
+	if opts.Query != "" {
+		searchTerm := "%%" + strings.ToLower(opts.Query) + "%%"
+		stmt = stmt.Where("LOWER(space_uid) LIKE ?", searchTerm)
+	}
+
+	return stmt
 }
 
 func mapToMembership(m *membership) types.Membership {

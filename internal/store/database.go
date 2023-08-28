@@ -230,9 +230,10 @@ type (
 		Create(ctx context.Context, membership *types.Membership) error
 		Update(ctx context.Context, membership *types.Membership) error
 		Delete(ctx context.Context, key types.MembershipKey) error
-		CountUsers(ctx context.Context, spaceID int64, filter types.MembershipFilter) (int64, error)
-		ListUsers(ctx context.Context, spaceID int64, filter types.MembershipFilter) ([]types.MembershipUser, error)
-		ListSpaces(ctx context.Context, userID int64) ([]types.MembershipSpace, error)
+		CountUsers(ctx context.Context, spaceID int64, filter types.MembershipUserFilter) (int64, error)
+		ListUsers(ctx context.Context, spaceID int64, filter types.MembershipUserFilter) ([]types.MembershipUser, error)
+		CountSpaces(ctx context.Context, userID int64, filter types.MembershipSpaceFilter) (int64, error)
+		ListSpaces(ctx context.Context, userID int64, filter types.MembershipSpaceFilter) ([]types.MembershipSpace, error)
 	}
 
 	// TokenStore defines the token data storage.

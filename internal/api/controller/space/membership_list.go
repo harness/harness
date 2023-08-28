@@ -19,7 +19,7 @@ import (
 func (c *Controller) MembershipList(ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	opts types.MembershipFilter,
+	filter types.MembershipUserFilter,
 ) ([]types.MembershipUser, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
@@ -34,17 +34,17 @@ func (c *Controller) MembershipList(ctx context.Context,
 	var membershipsCount int64
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
-		memberships, err = c.membershipStore.ListUsers(ctx, space.ID, opts)
+		memberships, err = c.membershipStore.ListUsers(ctx, space.ID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to list memberships for space: %w", err)
 		}
 
-		if opts.Page == 1 && len(memberships) < opts.Size {
+		if filter.Page == 1 && len(memberships) < filter.Size {
 			membershipsCount = int64(len(memberships))
 			return nil
 		}
 
-		membershipsCount, err = c.membershipStore.CountUsers(ctx, space.ID, opts)
+		membershipsCount, err = c.membershipStore.CountUsers(ctx, space.ID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to count memberships for space: %w", err)
 		}

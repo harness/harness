@@ -18,12 +18,15 @@ func HandleMembershipSpaces(userCtrl *user.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 		userUID := session.Principal.UID
 
-		membershipSpaces, err := userCtrl.MembershipSpaces(ctx, session, userUID)
+		filter := request.ParseMembershipSpaceFilter(r)
+
+		membershipSpaces, membershipSpaceCount, err := userCtrl.MembershipSpaces(ctx, session, userUID, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
+		render.Pagination(r, w, filter.Page, filter.Size, int(membershipSpaceCount))
 		render.JSON(w, http.StatusOK, membershipSpaces)
 	}
 }

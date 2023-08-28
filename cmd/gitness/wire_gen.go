@@ -58,12 +58,12 @@ import (
 // Injectors from wire.go:
 
 func initSystem(ctx context.Context, config *types.Config) (*server.System, error) {
-	principalUID := check.ProvidePrincipalUIDCheck()
 	databaseConfig := server.ProvideDatabaseConfig(config)
 	db, err := database.ProvideDatabase(ctx, databaseConfig)
 	if err != nil {
 		return nil, err
 	}
+	principalUID := check.ProvidePrincipalUIDCheck()
 	pathTransformation := store.ProvidePathTransformation()
 	pathStore := database.ProvidePathStore(db, pathTransformation)
 	pathCache := cache.ProvidePathCache(pathStore, pathTransformation)
@@ -76,7 +76,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
 	principalStore := database.ProvidePrincipalStore(db, principalUIDTransformation)
 	tokenStore := database.ProvideTokenStore(db)
-	controller := user.NewController(principalUID, authorizer, principalStore, tokenStore, membershipStore)
+	controller := user.ProvideController(db, principalUID, authorizer, principalStore, tokenStore, membershipStore)
 	serviceController := service.NewController(principalUID, authorizer, principalStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller, serviceController)
 	authenticator := authn.ProvideAuthenticator(principalStore, tokenStore)
