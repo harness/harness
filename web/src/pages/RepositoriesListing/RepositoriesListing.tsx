@@ -53,7 +53,8 @@ export default function RepositoriesListing() {
     response
   } = useGet<TypesRepository[]>({
     path: `/api/v1/spaces/${space}/+/repos`,
-    queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm }
+    queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm },
+    debounce: 500
   })
 
   useEffect(() => {

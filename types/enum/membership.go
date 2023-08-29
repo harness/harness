@@ -8,45 +8,100 @@ import (
 	"strings"
 )
 
-// MembershipSort represents membership sort order.
-type MembershipSort string
+// MembershipUserSort represents membership user sort order.
+type MembershipUserSort string
 
-// Order enumeration.
+// MembershipUserSort enumeration.
 const (
-	MembershipSortName    = name
-	MembershipSortCreated = created
+	MembershipUserSortName    MembershipUserSort = name
+	MembershipUserSortCreated MembershipUserSort = created
 )
 
-var membershipSorts = sortEnum([]MembershipSort{
-	MembershipSortName,
-	MembershipSortCreated,
+var membershipUserSorts = sortEnum([]MembershipUserSort{
+	MembershipUserSortName,
+	MembershipUserSortCreated,
 })
 
-func (MembershipSort) Enum() []interface{}                { return toInterfaceSlice(membershipSorts) }
-func (s MembershipSort) Sanitize() (MembershipSort, bool) { return Sanitize(s, GetAllMembershipSorts) }
-func GetAllMembershipSorts() ([]MembershipSort, MembershipSort) {
-	return membershipSorts, MembershipSortName
+func (MembershipUserSort) Enum() []interface{} { return toInterfaceSlice(membershipUserSorts) }
+func (s MembershipUserSort) Sanitize() (MembershipUserSort, bool) {
+	return Sanitize(s, GetAllMembershipUserSorts)
+}
+func GetAllMembershipUserSorts() ([]MembershipUserSort, MembershipUserSort) {
+	return membershipUserSorts, MembershipUserSortName
 }
 
-// ParseMembershipSort parses the membership sort attribute string
+// ParseMembershipUserSort parses the membership user sort attribute string
 // and returns the equivalent enumeration.
-func ParseMembershipSort(s string) MembershipSort {
+func ParseMembershipUserSort(s string) MembershipUserSort {
 	switch strings.ToLower(s) {
 	case name:
-		return MembershipSortName
+		return MembershipUserSortName
 	case created, createdAt:
-		return MembershipSortCreated
+		return MembershipUserSortCreated
 	default:
-		return MembershipSortName
+		return MembershipUserSortName
 	}
 }
 
 // String returns the string representation of the attribute.
-func (s MembershipSort) String() string {
+func (s MembershipUserSort) String() string {
 	switch s {
-	case MembershipSortName:
+	case MembershipUserSortName:
 		return name
-	case MembershipSortCreated:
+	case MembershipUserSortCreated:
+		return created
+	default:
+		return undefined
+	}
+}
+
+// MembershipSpaceSort represents membership space sort order.
+type MembershipSpaceSort string
+
+// MembershipSpaceSort enumeration.
+const (
+	MembershipSpaceSortUID     MembershipSpaceSort = uid
+	MembershipSpaceSortPath    MembershipSpaceSort = path
+	MembershipSpaceSortCreated MembershipSpaceSort = created
+)
+
+var membershipSpaceSorts = sortEnum([]MembershipSpaceSort{
+	MembershipSpaceSortUID,
+	MembershipSpaceSortPath,
+	MembershipSpaceSortCreated,
+})
+
+func (MembershipSpaceSort) Enum() []interface{} { return toInterfaceSlice(membershipSpaceSorts) }
+func (s MembershipSpaceSort) Sanitize() (MembershipSpaceSort, bool) {
+	return Sanitize(s, GetAllMembershipSpaceSorts)
+}
+func GetAllMembershipSpaceSorts() ([]MembershipSpaceSort, MembershipSpaceSort) {
+	return membershipSpaceSorts, MembershipSpaceSortPath
+}
+
+// ParseMembershipSpaceSort parses the membership space sort attribute string
+// and returns the equivalent enumeration.
+func ParseMembershipSpaceSort(s string) MembershipSpaceSort {
+	switch strings.ToLower(s) {
+	case name:
+		return MembershipSpaceSortUID
+	case path:
+		return MembershipSpaceSortPath
+	case created, createdAt:
+		return MembershipSpaceSortCreated
+	default:
+		return MembershipSpaceSortUID
+	}
+}
+
+// String returns the string representation of the attribute.
+func (s MembershipSpaceSort) String() string {
+	switch s {
+	case MembershipSpaceSortUID:
+		return uid
+	case MembershipSpaceSortPath:
+		return path
+	case MembershipSpaceSortCreated:
 		return created
 	default:
 		return undefined

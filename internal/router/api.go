@@ -10,10 +10,12 @@ import (
 
 	"github.com/harness/gitness/githook"
 	"github.com/harness/gitness/internal/api/controller/check"
+	"github.com/harness/gitness/internal/api/controller/connector"
 	"github.com/harness/gitness/internal/api/controller/execution"
 	controllergithook "github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/logs"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
+	"github.com/harness/gitness/internal/api/controller/plugin"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -21,14 +23,18 @@ import (
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/system"
+	"github.com/harness/gitness/internal/api/controller/template"
+	"github.com/harness/gitness/internal/api/controller/trigger"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/api/handler/account"
 	handlercheck "github.com/harness/gitness/internal/api/handler/check"
+	handlerconnector "github.com/harness/gitness/internal/api/handler/connector"
 	handlerexecution "github.com/harness/gitness/internal/api/handler/execution"
 	handlergithook "github.com/harness/gitness/internal/api/handler/githook"
 	handlerlogs "github.com/harness/gitness/internal/api/handler/logs"
 	handlerpipeline "github.com/harness/gitness/internal/api/handler/pipeline"
+	handlerplugin "github.com/harness/gitness/internal/api/handler/plugin"
 	handlerprincipal "github.com/harness/gitness/internal/api/handler/principal"
 	handlerpullreq "github.com/harness/gitness/internal/api/handler/pullreq"
 	handlerrepo "github.com/harness/gitness/internal/api/handler/repo"
@@ -37,6 +43,8 @@ import (
 	handlerserviceaccount "github.com/harness/gitness/internal/api/handler/serviceaccount"
 	handlerspace "github.com/harness/gitness/internal/api/handler/space"
 	handlersystem "github.com/harness/gitness/internal/api/handler/system"
+	handlertemplate "github.com/harness/gitness/internal/api/handler/template"
+	handlertrigger "github.com/harness/gitness/internal/api/handler/trigger"
 	handleruser "github.com/harness/gitness/internal/api/handler/user"
 	"github.com/harness/gitness/internal/api/handler/users"
 	handlerwebhook "github.com/harness/gitness/internal/api/handler/webhook"
@@ -63,7 +71,8 @@ type APIHandler interface {
 
 var (
 	// terminatedPathPrefixesAPI is the list of prefixes that will require resolving terminated paths.
-	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/", "/v1/pipelines/", "/v1/secrets/"}
+	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/", "/v1/pipelines/",
+		"/v1/secrets/", "/v1/connectors", "/v1/templates"}
 )
 
 // NewAPIHandler returns a new APIHandler.
@@ -76,6 +85,10 @@ func NewAPIHandler(
 	spaceCtrl *space.Controller,
 	pipelineCtrl *pipeline.Controller,
 	secretCtrl *secret.Controller,
+	triggerCtrl *trigger.Controller,
+	connectorCtrl *connector.Controller,
+	templateCtrl *template.Controller,
+	pluginCtrl *plugin.Controller,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
 	githookCtrl *controllergithook.Controller,
@@ -106,9 +119,9 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator, authn.SourceRouterAPI))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, repoCtrl, executionCtrl, logCtrl, pipelineCtrl,
-			secretCtrl, spaceCtrl, pullreqCtrl, webhookCtrl, githookCtrl,
-			saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
+		setupRoutesV1(r, repoCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
+			connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
+			webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -131,8 +144,12 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 func setupRoutesV1(r chi.Router,
 	repoCtrl *repo.Controller,
 	executionCtrl *execution.Controller,
+	triggerCtrl *trigger.Controller,
 	logCtrl *logs.Controller,
 	pipelineCtrl *pipeline.Controller,
+	connectorCtrl *connector.Controller,
+	templateCtrl *template.Controller,
+	pluginCtrl *plugin.Controller,
 	secretCtrl *secret.Controller,
 	spaceCtrl *space.Controller,
 	pullreqCtrl *pullreq.Controller,
@@ -146,7 +163,9 @@ func setupRoutesV1(r chi.Router,
 ) {
 	setupSpaces(r, spaceCtrl)
 	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl, checkCtrl)
-	setupPipelines(r, pipelineCtrl, executionCtrl, logCtrl)
+	setupPipelines(r, pipelineCtrl, executionCtrl, triggerCtrl, logCtrl)
+	setupConnectors(r, connectorCtrl)
+	setupTemplates(r, templateCtrl)
 	setupSecrets(r, secretCtrl)
 	setupUser(r, userCtrl)
 	setupServiceAccounts(r, saCtrl)
@@ -156,6 +175,7 @@ func setupRoutesV1(r chi.Router,
 	setupAccount(r, userCtrl, sysCtrl)
 	setupSystem(r, sysCtrl)
 	setupResources(r)
+	setupPlugins(r, pluginCtrl)
 }
 
 func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
@@ -175,6 +195,8 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 			r.Get("/service-accounts", handlerspace.HandleListServiceAccounts(spaceCtrl))
 			r.Get("/pipelines", handlerspace.HandleListPipelines(spaceCtrl))
 			r.Get("/secrets", handlerspace.HandleListSecrets(spaceCtrl))
+			r.Get("/connectors", handlerspace.HandleListConnectors(spaceCtrl))
+			r.Get("/templates", handlerspace.HandleListTemplates(spaceCtrl))
 
 			// Child collections
 			r.Route("/paths", func(r chi.Router) {
@@ -299,6 +321,7 @@ func setupPipelines(
 	r chi.Router,
 	pipelineCtrl *pipeline.Controller,
 	executionCtrl *execution.Controller,
+	triggerCtrl *trigger.Controller,
 	logCtrl *logs.Controller) {
 	r.Route("/pipelines", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
@@ -307,7 +330,38 @@ func setupPipelines(
 			r.Get("/", handlerpipeline.HandleFind(pipelineCtrl))
 			r.Patch("/", handlerpipeline.HandleUpdate(pipelineCtrl))
 			r.Delete("/", handlerpipeline.HandleDelete(pipelineCtrl))
-			setupExecutions(r, pipelineCtrl, executionCtrl, logCtrl)
+			setupExecutions(r, executionCtrl, logCtrl)
+			setupTriggers(r, triggerCtrl)
+		})
+	})
+}
+
+func setupConnectors(
+	r chi.Router,
+	connectorCtrl *connector.Controller,
+) {
+	r.Route("/connectors", func(r chi.Router) {
+		// Create takes path and parentId via body, not uri
+		r.Post("/", handlerconnector.HandleCreate(connectorCtrl))
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamConnectorRef), func(r chi.Router) {
+			r.Get("/", handlerconnector.HandleFind(connectorCtrl))
+			r.Patch("/", handlerconnector.HandleUpdate(connectorCtrl))
+			r.Delete("/", handlerconnector.HandleDelete(connectorCtrl))
+		})
+	})
+}
+
+func setupTemplates(
+	r chi.Router,
+	templateCtrl *template.Controller,
+) {
+	r.Route("/templates", func(r chi.Router) {
+		// Create takes path and parentId via body, not uri
+		r.Post("/", handlertemplate.HandleCreate(templateCtrl))
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamTemplateRef), func(r chi.Router) {
+			r.Get("/", handlertemplate.HandleFind(templateCtrl))
+			r.Patch("/", handlertemplate.HandleUpdate(templateCtrl))
+			r.Delete("/", handlertemplate.HandleDelete(templateCtrl))
 		})
 	})
 }
@@ -324,9 +378,14 @@ func setupSecrets(r chi.Router, secretCtrl *secret.Controller) {
 	})
 }
 
+func setupPlugins(r chi.Router, pluginCtrl *plugin.Controller) {
+	r.Route("/plugins", func(r chi.Router) {
+		r.Get("/", handlerplugin.HandleList(pluginCtrl))
+	})
+}
+
 func setupExecutions(
 	r chi.Router,
-	pipelineCtrl *pipeline.Controller,
 	executionCtrl *execution.Controller,
 	logCtrl *logs.Controller,
 ) {
@@ -348,6 +407,21 @@ func setupExecutions(
 					request.PathParamStageNumber,
 					request.PathParamStepNumber,
 				), handlerlogs.HandleTail(logCtrl))
+		})
+	})
+}
+
+func setupTriggers(
+	r chi.Router,
+	triggerCtrl *trigger.Controller,
+) {
+	r.Route("/triggers", func(r chi.Router) {
+		r.Get("/", handlertrigger.HandleList(triggerCtrl))
+		r.Post("/", handlertrigger.HandleCreate(triggerCtrl))
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamTriggerUID), func(r chi.Router) {
+			r.Get("/", handlertrigger.HandleFind(triggerCtrl))
+			r.Patch("/", handlertrigger.HandleUpdate(triggerCtrl))
+			r.Delete("/", handlertrigger.HandleDelete(triggerCtrl))
 		})
 	})
 }

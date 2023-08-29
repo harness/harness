@@ -78,3 +78,12 @@
     }
   }
 }
+.commitContainer {
+  :global {
+    .bp3-popover-target {
+      .StyledProps--font {
+        color: var(--grey-600) !important;
+      }
+    }
+  }
+}

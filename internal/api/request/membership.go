@@ -11,20 +11,34 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// ParseMembershipSort extracts the membership sort parameter from the url.
-func ParseMembershipSort(r *http.Request) enum.MembershipSort {
-	return enum.ParseMembershipSort(
+// ParseMembershipUserSort extracts the membership sort parameter from the url.
+func ParseMembershipUserSort(r *http.Request) enum.MembershipUserSort {
+	return enum.ParseMembershipUserSort(
 		r.URL.Query().Get(QueryParamSort),
 	)
 }
 
-// ParseMembershipFilter extracts the membership filter from the url.
-func ParseMembershipFilter(r *http.Request) types.MembershipFilter {
-	return types.MembershipFilter{
-		Page:  ParsePage(r),
-		Size:  ParseLimit(r),
-		Query: ParseQuery(r),
-		Sort:  ParseMembershipSort(r),
-		Order: ParseOrder(r),
+// ParseMembershipUserFilter extracts the membership filter from the url.
+func ParseMembershipUserFilter(r *http.Request) types.MembershipUserFilter {
+	return types.MembershipUserFilter{
+		ListQueryFilter: ParseListQueryFilterFromRequest(r),
+		Sort:            ParseMembershipUserSort(r),
+		Order:           ParseOrder(r),
+	}
+}
+
+// ParseMembershipSpaceSort extracts the membership space sort parameter from the url.
+func ParseMembershipSpaceSort(r *http.Request) enum.MembershipSpaceSort {
+	return enum.ParseMembershipSpaceSort(
+		r.URL.Query().Get(QueryParamSort),
+	)
+}
+
+// ParseMembershipSpaceFilter extracts the membership space filter from the url.
+func ParseMembershipSpaceFilter(r *http.Request) types.MembershipSpaceFilter {
+	return types.MembershipSpaceFilter{
+		ListQueryFilter: ParseListQueryFilterFromRequest(r),
+		Sort:            ParseMembershipSpaceSort(r),
+		Order:           ParseOrder(r),
 	}
 }

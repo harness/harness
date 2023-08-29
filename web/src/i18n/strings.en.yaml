@@ -638,3 +638,4 @@ secrets:
   enterSecretName: Enter Secret name
   value: Secret Value
   createSecret: Create Secret
+userUpdateSuccess: 'User updated successfully'

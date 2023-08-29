@@ -8,7 +8,6 @@ package main
 
 import (
 	"context"
-	
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
@@ -16,10 +15,12 @@ import (
 	server3 "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/gitrpc/server/cron"
 	check2 "github.com/harness/gitness/internal/api/controller/check"
+	"github.com/harness/gitness/internal/api/controller/connector"
 	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/githook"
 	logs2 "github.com/harness/gitness/internal/api/controller/logs"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
+	"github.com/harness/gitness/internal/api/controller/plugin"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -28,6 +29,8 @@ import (
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/system"
+	"github.com/harness/gitness/internal/api/controller/template"
+	"github.com/harness/gitness/internal/api/controller/trigger"
 	"github.com/harness/gitness/internal/api/controller/user"
 	webhook2 "github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/auth/authn"
@@ -56,12 +59,12 @@ import (
 // Injectors from wire.go:
 
 func initSystem(ctx context.Context, config *types.Config) (*server.System, error) {
-	principalUID := check.ProvidePrincipalUIDCheck()
 	databaseConfig := server.ProvideDatabaseConfig(config)
 	db, err := database.ProvideDatabase(ctx, databaseConfig)
 	if err != nil {
 		return nil, err
 	}
+	principalUID := check.ProvidePrincipalUIDCheck()
 	pathTransformation := store.ProvidePathTransformation()
 	pathStore := database.ProvidePathStore(db, pathTransformation)
 	pathCache := cache.ProvidePathCache(pathStore, pathTransformation)
@@ -74,7 +77,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
 	principalStore := database.ProvidePrincipalStore(db, principalUIDTransformation)
 	tokenStore := database.ProvideTokenStore(db)
-	controller := user.NewController(principalUID, authorizer, principalStore, tokenStore, membershipStore)
+	controller := user.ProvideController(db, principalUID, authorizer, principalStore, tokenStore, membershipStore)
 	serviceController := service.NewController(principalUID, authorizer, principalStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller, serviceController)
 	authenticator := authn.ProvideAuthenticator(principalStore, tokenStore)
@@ -102,13 +105,21 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	logStream := livelog.ProvideLogStream(config)
 	logsController := logs2.ProvideController(db, authorizer, executionStore, pipelineStore, stageStore, stepStore, logStore, logStream, spaceStore)
 	secretStore := database.ProvideSecretStore(db)
-	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, pipelineStore, secretStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
+	connectorStore := database.ProvideConnectorStore(db)
+	templateStore := database.ProvideTemplateStore(db)
+	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
 	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore, spaceStore)
 	encrypter, err := encrypt.ProvideEncrypter(config)
 	if err != nil {
 		return nil, err
 	}
 	secretController := secret.ProvideController(db, pathUID, pathStore, encrypter, secretStore, authorizer, spaceStore)
+	triggerStore := database.ProvideTriggerStore(db)
+	triggerController := trigger.ProvideController(db, authorizer, triggerStore, pipelineStore, spaceStore)
+	connectorController := connector.ProvideController(db, pathUID, connectorStore, authorizer, spaceStore)
+	templateController := template.ProvideController(db, pathUID, templateStore, authorizer, spaceStore)
+	pluginStore := database.ProvidePluginStore(db)
+	pluginController := plugin.ProvideController(db, pluginStore)
 	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
 	codeCommentView := database.ProvideCodeCommentView(db)
@@ -163,7 +174,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	checkController := check2.ProvideController(db, authorizer, repoStore, checkStore, gitrpcInterface)
 	systemController := system.NewController(principalStore, config)
-	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, logsController, spaceController, pipelineController, secretController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController)
+	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController)
 	gitHandler := router.ProvideGitHandler(config, provider, repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(config, apiHandler, gitHandler, webHandler)

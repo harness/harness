@@ -38,7 +38,7 @@ type CreateInput struct {
 func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Pipeline, error) {
 	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err != nil {
-		return nil, fmt.Errorf("could not find parent by ref: %w", err)
+		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
 	}
 
 	err = apiauth.CheckPipeline(ctx, c.authorizer, session, parentSpace.Path, in.UID, enum.PermissionPipelineEdit)
@@ -51,7 +51,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	if in.RepoType == enum.ScmTypeGitness {
 		repo, err := c.repoStore.FindByRef(ctx, in.RepoRef)
 		if err != nil {
-			return nil, fmt.Errorf("could not find repo by ref: %w", err)
+			return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 		}
 		repoID = repo.ID
 	}

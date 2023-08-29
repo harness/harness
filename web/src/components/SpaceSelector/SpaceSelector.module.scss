@@ -169,3 +169,8 @@
 .iconContainer {
   padding-top: var(--spacing-4) !important;
 }
+
+.tableContainer {
+  overflow-y: scroll !important;
+  height: calc(100vh - 100px) !important;
+}

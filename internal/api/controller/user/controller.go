@@ -13,10 +13,12 @@ import (
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Controller struct {
+	db                *sqlx.DB
 	principalUIDCheck check.PrincipalUID
 	authorizer        authz.Authorizer
 	principalStore    store.PrincipalStore
@@ -25,6 +27,7 @@ type Controller struct {
 }
 
 func NewController(
+	db *sqlx.DB,
 	principalUIDCheck check.PrincipalUID,
 	authorizer authz.Authorizer,
 	principalStore store.PrincipalStore,
@@ -32,6 +35,7 @@ func NewController(
 	membershipStore store.MembershipStore,
 ) *Controller {
 	return &Controller{
+		db:                db,
 		principalUIDCheck: principalUIDCheck,
 		authorizer:        authorizer,
 		principalStore:    principalStore,

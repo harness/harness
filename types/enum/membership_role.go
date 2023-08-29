@@ -26,12 +26,16 @@ var membershipRoleReaderPermissions = slices.Clip(slices.Insert([]Permission{}, 
 	PermissionServiceAccountView,
 	PermissionPipelineView,
 	PermissionSecretView,
+	PermissionConnectorView,
+	PermissionTemplateView,
 ))
 
 var membershipRoleExecutorPermissions = slices.Clip(slices.Insert(membershipRoleReaderPermissions, 0,
 	PermissionCommitCheckReport,
 	PermissionPipelineExecute,
 	PermissionSecretAccess,
+	PermissionConnectorAccess,
+	PermissionTemplateAccess,
 ))
 
 var membershipRoleContributorPermissions = slices.Clip(slices.Insert(membershipRoleReaderPermissions, 0,
@@ -61,6 +65,16 @@ var membershipRoleSpaceOwnerPermissions = slices.Clip(slices.Insert(membershipRo
 	PermissionSecretDelete,
 	PermissionSecretEdit,
 	PermissionSecretView,
+
+	PermissionConnectorAccess,
+	PermissionConnectorDelete,
+	PermissionConnectorEdit,
+	PermissionConnectorView,
+
+	PermissionTemplateAccess,
+	PermissionTemplateDelete,
+	PermissionTemplateEdit,
+	PermissionTemplateView,
 ))
 
 func init() {

@@ -257,7 +257,7 @@ func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoF
 		Where("repo_parent_id = ?", parentID)
 
 	if opts.Query != "" {
-		stmt = stmt.Where("repo_uid LIKE ?", fmt.Sprintf("%%%s%%", opts.Query))
+		stmt = stmt.Where("LOWER(repo_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
 	sql, args, err := stmt.ToSql()

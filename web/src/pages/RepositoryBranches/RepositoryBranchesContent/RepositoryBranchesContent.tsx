@@ -40,7 +40,8 @@ export function RepositoryBranchesContent({ repoMetadata }: Pick<GitInfoProps, '
       order: 'desc',
       include_commit: true,
       query: searchTerm
-    }
+    },
+    debounce: 500
   })
 
   useEffect(() => {

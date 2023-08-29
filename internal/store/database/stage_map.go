@@ -8,10 +8,10 @@ import (
 	"database/sql"
 	"encoding/json"
 
+	"github.com/harness/gitness/types"
+
 	sqlxtypes "github.com/jmoiron/sqlx/types"
 	"github.com/pkg/errors"
-
-	"github.com/harness/gitness/types"
 )
 
 func mapInternalToStage(in *stage) (*types.Stage, error) {

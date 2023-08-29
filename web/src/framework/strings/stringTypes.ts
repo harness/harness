@@ -532,6 +532,7 @@ export interface StringsMap {
   userName: string
   userNameRequired: string
   'userProfile.deleteTokenMsg': string
+  userUpdateSuccess: string
   users: string
   'validation.confirmPasswordRequired': string
   'validation.emailInvalid': string

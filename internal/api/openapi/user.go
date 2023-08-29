@@ -8,14 +8,47 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/user"
+	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
+	"github.com/gotidy/ptr"
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
 type createTokenRequest struct {
 	user.CreateTokenInput
+}
+
+var queryParameterMembershipSpaces = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring by which the spaces the users is a member of are filtered."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterSortMembershipSpaces = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSort,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The field by which the spaces the user is a member of are sorted."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(enum.MembershipSpaceSortUID),
+				Enum:    enum.MembershipSpaceSort("").Enum(),
+			},
+		},
+	},
 }
 
 // helper function that constructs the openapi specification
@@ -48,6 +81,10 @@ func buildUser(reflector *openapi3.Reflector) {
 	opMemberSpaces := openapi3.Operation{}
 	opMemberSpaces.WithTags("user")
 	opMemberSpaces.WithMapOfAnything(map[string]interface{}{"operationId": "membershipSpaces"})
+	opMemberSpaces.WithParameters(
+		queryParameterMembershipSpaces,
+		queryParameterOrder, queryParameterSortMembershipSpaces,
+		queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opMemberSpaces, struct{}{}, http.MethodGet)
 	_ = reflector.SetJSONResponse(&opMemberSpaces, new([]types.MembershipSpace), http.StatusOK)
 	_ = reflector.SetJSONResponse(&opMemberSpaces, new(usererror.Error), http.StatusInternalServerError)

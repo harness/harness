@@ -24,7 +24,7 @@ func HandleMembershipList(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		filter := request.ParseMembershipFilter(r)
+		filter := request.ParseMembershipUserFilter(r)
 
 		memberships, membershipsCount, err := spaceCtrl.MembershipList(ctx, session, spaceRef, filter)
 		if err != nil {

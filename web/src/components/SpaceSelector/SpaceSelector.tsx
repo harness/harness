@@ -51,7 +51,8 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
     refetch,
     response
   } = useGet({
-    path: '/api/v1/user/memberships'
+    path: '/api/v1/user/memberships',
+    debounce: 500
   })
 
   const selectSpace = useCallback(
@@ -184,7 +185,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
             {!!spaces?.length && (
               <Table<{ space: TypesSpace }>
                 hideHeaders
-                className={css.table}
+                className={cx(css.table, css.tableContainer)}
                 columns={columns}
                 data={spaces || []}
                 onRowClick={spaceData => {

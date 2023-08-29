@@ -115,7 +115,7 @@ var queryParameterQuerySpace = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterSpaceMembers = openapi3.ParameterOrRef{
+var queryParameterMembershipUsers = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
 		In:          openapi3.ParameterInQuery,
@@ -129,7 +129,7 @@ var queryParameterSpaceMembers = openapi3.ParameterOrRef{
 	},
 }
 
-var queryParameterSortSpaceMembers = openapi3.ParameterOrRef{
+var queryParameterSortMembershipUsers = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamSort,
 		In:          openapi3.ParameterInQuery,
@@ -138,8 +138,8 @@ var queryParameterSortSpaceMembers = openapi3.ParameterOrRef{
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type:    ptrSchemaType(openapi3.SchemaTypeString),
-				Default: ptrptr(enum.MembershipSortName),
-				Enum:    enum.MembershipSort("").Enum(),
+				Default: ptrptr(enum.MembershipUserSortName),
+				Enum:    enum.MembershipUserSort("").Enum(),
 			},
 		},
 	},
@@ -241,6 +241,30 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/pipelines", opPipelines)
+
+	opTemplates := openapi3.Operation{}
+	opTemplates.WithTags("space")
+	opTemplates.WithMapOfAnything(map[string]interface{}{"operationId": "listTemplates"})
+	opTemplates.WithParameters(queryParameterQueryRepo, queryParameterPage, queryParameterLimit)
+	_ = reflector.SetRequest(&opTemplates, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opTemplates, []types.Template{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opTemplates, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opTemplates, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opTemplates, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opTemplates, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/templates", opTemplates)
+
+	opConnectors := openapi3.Operation{}
+	opConnectors.WithTags("space")
+	opConnectors.WithMapOfAnything(map[string]interface{}{"operationId": "listConnectors"})
+	opConnectors.WithParameters(queryParameterQueryRepo, queryParameterPage, queryParameterLimit)
+	_ = reflector.SetRequest(&opConnectors, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opConnectors, []types.Connector{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opConnectors, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opConnectors, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opConnectors, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opConnectors, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/connectors", opConnectors)
 
 	opSecrets := openapi3.Operation{}
 	opSecrets.WithTags("space")
@@ -346,8 +370,8 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opMembershipList.WithTags("space")
 	opMembershipList.WithMapOfAnything(map[string]interface{}{"operationId": "membershipList"})
 	opMembershipList.WithParameters(
-		queryParameterSpaceMembers,
-		queryParameterOrder, queryParameterSortSpaceMembers,
+		queryParameterMembershipUsers,
+		queryParameterOrder, queryParameterSortMembershipUsers,
 		queryParameterPage, queryParameterLimit)
 	_ = reflector.SetRequest(&opMembershipList, &struct {
 		spaceRequest

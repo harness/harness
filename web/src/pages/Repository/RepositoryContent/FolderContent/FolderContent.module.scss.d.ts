@@ -14,5 +14,6 @@ declare const styles: {
   readonly link: string
   readonly text: string
   readonly hightlight: string
+  readonly commitContainer: string
 }
 export default styles

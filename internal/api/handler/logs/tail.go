@@ -15,6 +15,7 @@ import (
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/paths"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -89,18 +90,27 @@ func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 
 		enc := json.NewEncoder(w)
 
-		msgDelayTimer := time.NewTimer(pingInterval) // if time b/w messages takes longer, send a ping
-		defer msgDelayTimer.Stop()
+		pingTimer := time.NewTimer(pingInterval)
+		defer pingTimer.Stop()
 	L:
 		for {
-			msgDelayTimer.Reset(pingInterval)
+			// ensure timer is stopped before resetting (see documentation)
+			if !pingTimer.Stop() {
+				// in this specific case the timer's channel could be both, empty or full
+				select {
+				case <-pingTimer.C:
+				default:
+				}
+			}
+			pingTimer.Reset(pingInterval)
 			select {
 			case <-ctx.Done():
 				break L
 			case err := <-errc:
 				log.Err(err).Msg("received error in the tail channel")
 				break L
-			case <-msgDelayTimer.C:
+			case <-pingTimer.C:
+				// if time b/w messages takes longer, send a ping
 				io.WriteString(w, ": ping\n\n")
 				f.Flush()
 			case line := <-linec:

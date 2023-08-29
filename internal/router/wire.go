@@ -7,10 +7,12 @@ package router
 import (
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/api/controller/check"
+	"github.com/harness/gitness/internal/api/controller/connector"
 	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/githook"
 	"github.com/harness/gitness/internal/api/controller/logs"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
+	"github.com/harness/gitness/internal/api/controller/plugin"
 	"github.com/harness/gitness/internal/api/controller/principal"
 	"github.com/harness/gitness/internal/api/controller/pullreq"
 	"github.com/harness/gitness/internal/api/controller/repo"
@@ -18,6 +20,8 @@ import (
 	"github.com/harness/gitness/internal/api/controller/serviceaccount"
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/system"
+	"github.com/harness/gitness/internal/api/controller/template"
+	"github.com/harness/gitness/internal/api/controller/trigger"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/auth/authn"
@@ -67,6 +71,10 @@ func ProvideAPIHandler(
 	spaceCtrl *space.Controller,
 	pipelineCtrl *pipeline.Controller,
 	secretCtrl *secret.Controller,
+	triggerCtrl *trigger.Controller,
+	connectorCtrl *connector.Controller,
+	templateCtrl *template.Controller,
+	pluginCtrl *plugin.Controller,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
 	githookCtrl *githook.Controller,
@@ -76,8 +84,9 @@ func ProvideAPIHandler(
 	checkCtrl *check.Controller,
 	sysCtrl *system.Controller,
 ) APIHandler {
-	return NewAPIHandler(config, authenticator, repoCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl, secretCtrl,
-		pullreqCtrl, webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
+	return NewAPIHandler(config, authenticator, repoCtrl, executionCtrl, logCtrl, spaceCtrl, pipelineCtrl,
+		secretCtrl, triggerCtrl, connectorCtrl, templateCtrl, pluginCtrl, pullreqCtrl, webhookCtrl,
+		githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
 }
 
 func ProvideWebHandler(config *types.Config) WebHandler {

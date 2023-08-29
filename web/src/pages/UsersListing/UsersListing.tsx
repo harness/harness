@@ -128,6 +128,7 @@ const UsersListing = () => {
               action: async () => {
                 try {
                   await updateAdmin({ admin: !row.original.admin })
+                  showSuccess(getString('userUpdateSuccess'))
                   refetch()
                 } catch (error) {
                   showError(getErrorMessage(error))

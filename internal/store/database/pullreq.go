@@ -407,6 +407,10 @@ func (s *PullReqStore) Count(ctx context.Context, opts *types.PullReqFilter) (in
 		stmt = stmt.Where("pullreq_target_branch = ?", opts.TargetBranch)
 	}
 
+	if opts.Query != "" {
+		stmt = stmt.Where("LOWER(pullreq_title) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
+	}
+
 	if opts.CreatedBy != 0 {
 		stmt = stmt.Where("pullreq_created_by = ?", opts.CreatedBy)
 	}
@@ -459,7 +463,7 @@ func (s *PullReqStore) List(ctx context.Context, opts *types.PullReqFilter) ([]*
 		stmt = stmt.Where("LOWER(pullreq_title) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
 	}
 
-	if opts.CreatedBy > 0 {
+	if opts.CreatedBy != 0 {
 		stmt = stmt.Where("pullreq_created_by = ?", opts.CreatedBy)
 	}
 

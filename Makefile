@@ -66,7 +66,7 @@ build-githook: generate ## Build the githook binary for gitness
 
 build-githa: generate ## Build the githa server binary
 	@echo "Building GitHA Server"
-	go build -ldflags=${LDFLAGS} -o ./githaserver ./cmd/githaserver
+	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./githaserver ./cmd/githaserver
 
 build-githa-githook: generate ## Build the githook binary for githa
 	@echo "Building githa GitHook Binary"
