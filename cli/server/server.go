@@ -73,6 +73,10 @@ func (c *command) run(*kingpin.ParseContext) error {
 	// - ctx is canceled
 	g, gCtx := errgroup.WithContext(ctx)
 
+	g.Go(func() error {
+		return system.services.JobScheduler.Run(gCtx)
+	})
+
 	// start server
 	gHTTP, shutdownHTTP := system.server.ListenAndServe()
 	g.Go(gHTTP.Wait)
@@ -115,6 +119,8 @@ func (c *command) run(*kingpin.ParseContext) error {
 			log.Err(rpcErr).Msg("failed to shutdown grpc server gracefully")
 		}
 	}
+
+	system.services.JobScheduler.WaitJobsDone(shutdownCtx)
 
 	log.Info().Msg("wait for subroutines to complete")
 	err = g.Wait()
