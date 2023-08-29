@@ -1,42 +1,56 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 import { useHistory } from 'react-router-dom'
 import { useMutate } from 'restful-react'
-import { Button, ButtonVariation, Dialog, Layout } from '@harnessio/uicore'
+import * as yup from 'yup'
+import { Button, ButtonVariation, Dialog, FormInput, Formik, FormikForm, Layout, useToaster } from '@harnessio/uicore'
 import { useModalHook } from 'hooks/useModalHook'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { OpenapiCreatePipelineRequest, TypesPipeline } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
+import { getErrorMessage } from 'utils/Utils'
+
+interface FormData {
+  name: string
+  branch: string
+  yamlPath: string
+}
 
 const useNewPipelineModal = () => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const history = useHistory()
+  const { showError } = useToaster()
 
   const { mutate: savePipeline } = useMutate<TypesPipeline>({
     verb: 'POST',
     path: `/api/v1/pipelines`
   })
 
-  const handleSavePipeline = useCallback(async (): Promise<void> => {
-    const randomToken = (Math.random() + 1).toString(36).substring(7)
-
-    const payload: OpenapiCreatePipelineRequest = {
-      config_path: `config_path_${randomToken}`,
-      default_branch: 'main',
-      space_ref: 'test-space',
-      repo_ref: 'test-space/vb-repo',
-      repo_type: 'GITNESS',
-      uid: `pipeline_uid_${randomToken}`
+  const handleCreatePipeline = (formData: FormData): void => {
+    const { name, branch, yamlPath } = formData
+    try {
+      const payload: OpenapiCreatePipelineRequest = {
+        config_path: yamlPath,
+        default_branch: branch,
+        space_ref: space,
+        repo_ref: `${space}/vb-repo`,
+        repo_type: 'GITNESS',
+        uid: name
+      }
+      savePipeline(payload)
+        .then(() => {
+          history.push(routes.toCODEPipelinesNew({ space }))
+          hideModal()
+        })
+        .catch(_error => {
+          showError(getErrorMessage(_error), 0, 'pipelines.failedToCreatePipeline')
+        })
+    } catch (exception) {
+      showError(getErrorMessage(exception), 0, 'pipelines.failedToCreatePipeline')
     }
-    await savePipeline(payload)
-      .then(() => {
-        history.push(routes.toCODEPipelinesNew({ space }))
-        hideModal()
-      })
-      .catch(() => hideModal())
-  }, [])
+  }
 
   const [openModal, hideModal] = useModalHook(() => {
     const onClose = () => {
@@ -44,12 +58,50 @@ const useNewPipelineModal = () => {
     }
     return (
       <Dialog isOpen enforceFocus={false} onClose={onClose} title={getString('pipelines.createNewPipeline')}>
-        <Layout.Vertical flex={{ justifyContent: 'center' }}>
-          <Layout.Horizontal spacing="medium" flex={{ justifyContent: 'flex-start' }} width="100%">
-            <Button variation={ButtonVariation.PRIMARY} text={getString('create')} onClick={handleSavePipeline} />
-            <Button variation={ButtonVariation.SECONDARY} text={getString('cancel')} onClick={onClose} />
-          </Layout.Horizontal>
-        </Layout.Vertical>
+        <Formik<FormData>
+          initialValues={{ name: '', branch: '', yamlPath: '' }}
+          formName="createNewPipeline"
+          enableReinitialize={true}
+          validationSchema={yup.object().shape({
+            name: yup
+              .string()
+              .trim()
+              .required(`${getString('name')} ${getString('isRequired')}`),
+            branch: yup
+              .string()
+              .trim()
+              .required(`${getString('branch')} ${getString('isRequired')}`),
+            yamlPath: yup
+              .string()
+              .trim()
+              .required(`${getString('pipelines.yamlPath')} ${getString('isRequired')}`)
+          })}
+          validateOnChange
+          validateOnBlur
+          onSubmit={handleCreatePipeline}>
+          <FormikForm>
+            <Layout.Vertical spacing="small">
+              <Layout.Vertical spacing="small">
+                <FormInput.Text
+                  name="name"
+                  label={getString('name')}
+                  placeholder={getString('pipelines.enterPipelineName')}
+                  inputGroup={{ autoFocus: true }}
+                />
+                <FormInput.Text name="branch" label={getString('pipelines.basedOn')} />
+                <FormInput.Text
+                  name="yamlPath"
+                  label={getString('pipelines.yamlPath')}
+                  placeholder={getString('pipelines.enterYAMLPath')}
+                />
+              </Layout.Vertical>
+              <Layout.Horizontal spacing="medium" width="100%">
+                <Button variation={ButtonVariation.PRIMARY} text={getString('create')} type="submit" />
+                <Button variation={ButtonVariation.SECONDARY} text={getString('cancel')} onClick={onClose} />
+              </Layout.Horizontal>
+            </Layout.Vertical>
+          </FormikForm>
+        </Formik>
       </Dialog>
     )
   }, [])

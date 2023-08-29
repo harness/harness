@@ -416,6 +416,7 @@ makeRequired: Make Required
 makeOptional: Make Optional
 remove: Remove
 required: Required
+isRequired: is required
 noneYet: None Yet
 noOptionalReviewers: No Optional Reviewers
 noRequiredReviewers: No Required Reviewers
@@ -625,6 +626,11 @@ pipelines:
   newPipelineButton: New Pipeline
   name: Pipeline Name
   createNewPipeline: Create New Pipeline
+  enterPipelineName: Enter pipeline name
+  basedOn: Based On
+  yamlPath: YAML Path
+  enterYAMLPath: Enter YAML path
+  failedToCreatePipeline: Failed to create pipeline
 executions:
   noData: There are no executions :(
   newExecutionButton: New Execution

@@ -206,6 +206,7 @@ export interface StringsMap {
   'homepage.welcomeText': string
   in: string
   inactiveBranches: string
+  isRequired: string
   leaveAComment: string
   license: string
   lineBreaks: string
@@ -312,10 +313,15 @@ export interface StringsMap {
   payloadUrl: string
   payloadUrlLabel: string
   pending: string
+  'pipelines.basedOn': string
   'pipelines.createNewPipeline': string
+  'pipelines.enterPipelineName': string
+  'pipelines.enterYAMLPath': string
+  'pipelines.failedToCreatePipeline': string
   'pipelines.name': string
   'pipelines.newPipelineButton': string
   'pipelines.noData': string
+  'pipelines.yamlPath': string
   'pr.ableToMerge': string
   'pr.addDescription': string
   'pr.authorCommentedPR': string
