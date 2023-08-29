@@ -81,7 +81,7 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
         )
       }
     ],
-    [] // eslint-disable-line react-hooks/exhaustive-deps
+    [gitRef] // eslint-disable-line react-hooks/exhaustive-deps
   )
   const readmeInfo = useMemo(() => findReadmeInfo(resourceContent), [resourceContent])
   const scrollDOMElement = useMemo(
