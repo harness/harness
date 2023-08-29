@@ -1,8 +1,11 @@
 /* eslint-disable */
 // this is an auto-generated file
 declare const styles: {
-  readonly main: string
   readonly container: string
-  readonly withError: string
+  readonly menu: string
+  readonly menuItem: string
+  readonly layout: string
+  readonly selected: string
+  readonly uid: string
 }
 export default styles

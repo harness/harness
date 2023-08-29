@@ -61,7 +61,7 @@ const ExecutionList = () => {
   const columns: Column<TypesExecution>[] = useMemo(
     () => [
       {
-        Header: getString('repos.name'),
+        Header: getString('executions.name'),
         width: 'calc(100% - 180px)',
         Cell: ({ row }: CellProps<TypesExecution>) => {
           const record = row.original
@@ -127,7 +127,7 @@ const ExecutionList = () => {
                     routes.toCODEExecution({
                       space,
                       pipeline: pipeline as string,
-                      execution: String(executionInfo.id)
+                      execution: String(executionInfo.number)
                     })
                   )
                 }
