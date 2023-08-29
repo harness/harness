@@ -312,6 +312,7 @@ export interface StringsMap {
   payloadUrl: string
   payloadUrlLabel: string
   pending: string
+  'pipelines.createNewPipeline': string
   'pipelines.name': string
   'pipelines.newPipelineButton': string
   'pipelines.noData': string

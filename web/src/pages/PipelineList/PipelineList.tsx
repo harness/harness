@@ -29,6 +29,7 @@ import { ResourceListingPagination } from 'components/ResourceListingPagination/
 import { useAppContext } from 'AppContext'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
+import useNewPipelineModal from 'pages/NewPipeline/NewPipelineModal'
 
 const PipelineList = () => {
   const { routes } = useAppContext()
@@ -51,14 +52,17 @@ const PipelineList = () => {
     queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm }
   })
 
+  const { openModal } = useNewPipelineModal()
+
   const NewPipelineButton = (
     <Button
       text={getString('pipelines.newPipelineButton')}
       variation={ButtonVariation.PRIMARY}
       icon="plus"
       onClick={() => {
-        history.push(routes.toCODEPipelinesNew({ space }))
-      }}></Button>
+        openModal()
+      }}
+    />
   )
 
   const columns: Column<TypesPipeline>[] = useMemo(

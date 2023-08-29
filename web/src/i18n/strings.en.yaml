@@ -624,6 +624,7 @@ pipelines:
   noData: There are no pipelines :(
   newPipelineButton: New Pipeline
   name: Pipeline Name
+  createNewPipeline: Create New Pipeline
 executions:
   noData: There are no executions :(
   newExecutionButton: New Execution
