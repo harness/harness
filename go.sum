@@ -267,8 +267,8 @@ github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0/go.mod h1:8NvIoxWQoOIhqOTXgf
 github.com/grpc-ecosystem/grpc-gateway v1.9.5/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
 github.com/guregu/null v4.0.0+incompatible h1:4zw0ckM7ECd6FNNddc3Fu4aty9nTlpkkzH7dPn4/4Gw=
 github.com/guregu/null v4.0.0+incompatible/go.mod h1:ePGpQaN9cw0tj45IR5E5ehMvsFlLlQZAkkOXZurJ3NM=
-github.com/harness/go-rbac v0.0.0-20230409233212-ca97fe90aac8 h1:sQzaA/ithB9mCXTC5VeC4XTWmQ531Tefbgxr1X4y7WU=
-github.com/harness/go-rbac v0.0.0-20230409233212-ca97fe90aac8/go.mod h1:uGgBgSZPgyygG5rWzoYsKIQ8TM4zt5yQq9nreznWvOI=
+github.com/harness/go-rbac v0.0.0-20230829014129-c9b217856ea2 h1:M1Jd2uEKl4YW9g/6vzN1qo06d5dshYYdwxlhOTUSnh4=
+github.com/harness/go-rbac v0.0.0-20230829014129-c9b217856ea2/go.mod h1:uGgBgSZPgyygG5rWzoYsKIQ8TM4zt5yQq9nreznWvOI=
 github.com/hashicorp/consul/api v1.3.0/go.mod h1:MmDNSzIMUjNpY/mQ398R4bk2FnqQLoPndWW5VkKPlCE=
 github.com/hashicorp/consul/sdk v0.3.0/go.mod h1:VKf9jXwCTEY1QZP2MOLRhb5i/I/ssyNV1vwHyQBF0x8=
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
