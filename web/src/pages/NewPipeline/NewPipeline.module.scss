@@ -1,8 +1,14 @@
 .main {
+  --header-height: 96px;
+  --heading-height: 58px;
   min-height: var(--page-height);
   background-color: var(--primary-bg) !important;
 
   .layout {
     align-items: center;
   }
+}
+
+.editorContainer {
+  height: calc(100vh - var(--header-height) - var(--heading-height)) !important;
 }
