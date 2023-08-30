@@ -8,10 +8,11 @@ import { Color } from '@harnessio/design-system'
 import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
+import MonacoSourceCodeEditor from 'components/SourceCodeEditor/MonacoSourceCodeEditor'
 import { useAppContext } from 'AppContext'
 import type { CODEProps } from 'RouteDefinitions'
 import { getErrorMessage } from 'utils/Utils'
+import pipelineSchema from './schema/pipeline-schema.json'
 
 import css from './NewPipeline.module.scss'
 
@@ -26,7 +27,7 @@ const NewPipeline = (): JSX.Element => {
 
   const { mutate, loading } = useMutate<RepoCommitFilesResponse>({
     verb: 'POST',
-    path: `/api/v1/repos/test-space/vb-repo/+/commits`
+    path: `/api/v1/repos/${space}/vb-repo/+/commits`
   })
 
   const handleSaveAndRun = (): void => {
@@ -90,8 +91,9 @@ const NewPipeline = (): JSX.Element => {
         />
         <PageBody>
           <Container className={css.editorContainer}>
-            <SourceCodeEditor
+            <MonacoSourceCodeEditor
               language={'yaml'}
+              schema={pipelineSchema}
               source={
                 'stages:\n- type: ci\n  spec:\n    steps:\n    - type: script\n      spec:\n        run: echo hello world'
               }

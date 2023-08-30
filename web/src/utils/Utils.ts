@@ -88,6 +88,7 @@ export interface SourceCodeEditorProps {
   autoHeight?: boolean
   wordWrap?: boolean
   onChange?: (value: string) => void
+  schema?: Record<string, any>
 }
 
 // Monaco editor has a bug where when its value is set, the value

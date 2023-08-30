@@ -38,7 +38,8 @@ export default function MonacoSourceCodeEditor({
   height,
   autoHeight,
   wordWrap = true,
-  onChange = noop
+  onChange = noop,
+  schema
 }: SourceCodeEditorProps) {
   const [editor, setEditor] = useState<monacoEditor.editor.IStandaloneCodeEditor>()
   const scrollbar = autoHeight ? 'hidden' : 'auto'
@@ -50,6 +51,23 @@ export default function MonacoSourceCodeEditor({
       monaco.languages.typescript?.typescriptDefaults?.setCompilerOptions?.(compilerOptions)
     }
   }, [])
+
+  useEffect(() => {
+    if (window.monaco && language === 'yaml' && schema) {
+      monaco.languages.yaml?.yamlDefaults?.setDiagnosticsOptions?.({
+        validate: true,
+        enableSchemaRequest: false,
+        hover: true,
+        completion: true,
+        schemas: [
+          {
+            fileMatch: ['*'],
+            schema
+          }
+        ]
+      })
+    }
+  }, [language, schema])
 
   useEventListener('resize', () => {
     editor?.layout({ width: 0, height: 0 })
