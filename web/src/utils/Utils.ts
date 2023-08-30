@@ -111,12 +111,17 @@ export const timeDistance = (date1 = 0, date2 = 0) => {
     return ''
   }
 
+  const days = Math.floor(distance / (24 * 3600000)) // 24 hours * 60 minutes * 60 seconds * 1000 milliseconds
+  distance -= days * 24 * 3600000
   const hours = Math.floor(distance / 3600000)
   distance -= hours * 3600000
   const minutes = Math.floor(distance / 60000)
   distance -= minutes * 60000
   const seconds = Math.floor(distance / 1000)
-  return `${hours ? hours + 'h ' : ''}${minutes ? minutes + 'm' : hours ? '0m' : ''} ${seconds}s`
+
+  return `${days ? days + 'd ' : ''}${hours ? hours + 'h ' : ''}${
+    minutes ? minutes + 'm' : hours || days ? '0m' : ''
+  } ${seconds}s`
 }
 
 const LOCALE = Intl.NumberFormat().resolvedOptions?.().locale || 'en-US'

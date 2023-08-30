@@ -10,8 +10,11 @@ declare const styles: {
   readonly nameContainer: string
   readonly name: string
   readonly pinned: string
-  readonly repoName: string
-  readonly repoScope: string
+  readonly number: string
   readonly desc: string
+  readonly author: string
+  readonly hash: string
+  readonly triggerLayout: string
+  readonly divider: string
 }
 export default styles

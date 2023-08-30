@@ -626,8 +626,10 @@ pipelines:
   name: Pipeline Name
 executions:
   noData: There are no executions :(
-  newExecutionButton: New Execution
+  newExecutionButton: Run Pipeline
   name: Execution Name
+  description: Description
+  time: Time
 selectRange: Shift-click to select a range
 allCommits: All Commits
 secrets:

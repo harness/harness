@@ -29,17 +29,19 @@ const Execution = () => {
     path: `/api/v1/pipelines/${space}/${pipeline}/+/executions/${executionNum}`
   })
 
-  const [selectedStage, setSelectedStage] = useState<number | null>(null)
+  const [selectedStage, setSelectedStage] = useState<number | null>(1)
 
   return (
     <Container className={css.main}>
-      <PageHeader title={execution?.title} />
+      <PageHeader title={execution?.title}>
+        <div>hello</div>
+      </PageHeader>
       <PageBody
         className={cx({ [css.withError]: !!error })}
         error={error ? getErrorMessage(error) : null}
         retryOnError={voidFn(refetch)}
         noData={{
-          when: () => !execution,
+          when: () => !execution && !loading,
           image: noExecutionImage,
           message: getString('executions.noData')
           // button: NewExecutionButton

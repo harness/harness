@@ -6,6 +6,7 @@ import { Text } from '@harnessio/uicore'
 import type { TypesStep } from 'services/code'
 import { timeDistance } from 'utils/Utils'
 import ConsoleLogs from 'components/ConsoleLogs/ConsoleLogs'
+import { useStrings } from 'framework/strings'
 import css from './ConsoleStep.module.scss'
 
 interface ConsoleStepProps {
@@ -17,6 +18,8 @@ interface ConsoleStepProps {
 }
 
 const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, spaceName, pipelineName, executionNumber }) => {
+  const { getString } = useStrings()
+
   const [isOpened, setIsOpened] = React.useState(false)
 
   const { data, error, loading, refetch } = useGet<string>({
@@ -50,7 +53,7 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, spaceName, pipel
 
       {isOpened ? (
         loading ? (
-          <div>Loading...</div>
+          <div className={css.loading}>{getString('loading')}</div>
         ) : error ? (
           <div>Error: {error}</div>
         ) : data ? (
