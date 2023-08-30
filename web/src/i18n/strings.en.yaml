@@ -587,6 +587,7 @@ spaceMemberships:
   memberAdded: Member added successfully.
 failedToCreateSpace: Failed to create Space. Please try again.
 failedToCreatePipeline: Failed to create Pipeline. Please try again.
+failedToSavePipeline: Failed to save Pipeline. Please try again.
 enterName: Enter the name
 createASpace: Create a space
 createSpace: Create Space
@@ -633,6 +634,7 @@ pipelines:
   failedToCreatePipeline: Failed to create pipeline
   saveAndRun: Save and Run
   editPipeline: Edit pipeline {{pipeline}}
+  run: Run pipeline
 executions:
   noData: There are no executions :(
   newExecutionButton: New Execution
@@ -648,3 +650,4 @@ secrets:
   value: Secret Value
   createSecret: Create Secret
 userUpdateSuccess: 'User updated successfully'
+run: Run

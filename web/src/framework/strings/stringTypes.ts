@@ -184,6 +184,7 @@ export interface StringsMap {
   failedToCreateSpace: string
   failedToDeleteBranch: string
   failedToDeleteWebhook: string
+  failedToSavePipeline: string
   fileDeleted: string
   fileTooLarge: string
   files: string
@@ -322,6 +323,7 @@ export interface StringsMap {
   'pipelines.name': string
   'pipelines.newPipelineButton': string
   'pipelines.noData': string
+  'pipelines.run': string
   'pipelines.saveAndRun': string
   'pipelines.yamlPath': string
   'pr.ableToMerge': string
@@ -456,6 +458,7 @@ export interface StringsMap {
   reviewerNotFound: string
   reviewers: string
   role: string
+  run: string
   running: string
   samplePayloadUrl: string
   save: string

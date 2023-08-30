@@ -46,8 +46,8 @@ const useNewPipelineModal = () => {
           history.push(routes.toCODEPipelineEdit({ space, pipeline: name }))
           hideModal()
         })
-        .catch(_error => {
-          showError(getErrorMessage(_error), 0, 'pipelines.failedToCreatePipeline')
+        .catch(error => {
+          showError(getErrorMessage(error), 0, 'pipelines.failedToCreatePipeline')
         })
     } catch (exception) {
       showError(getErrorMessage(exception), 0, 'pipelines.failedToCreatePipeline')
