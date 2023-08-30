@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import { Classes, Menu, MenuItem, Popover, Position } from '@blueprintjs/core'
 import {
   Button,
   ButtonVariation,
@@ -69,7 +70,7 @@ const PipelineList = () => {
     () => [
       {
         Header: getString('pipelines.name'),
-        width: 'calc(100% - 180px)',
+        width: 'calc(100% - 210px)',
         Cell: ({ row }: CellProps<TypesPipeline>) => {
           const record = row.original
           return (
@@ -99,6 +100,44 @@ const PipelineList = () => {
           )
         },
         disableSortBy: true
+      },
+      {
+        Header: ' ',
+        width: '30px',
+        Cell: ({ row }: CellProps<TypesPipeline>) => {
+          const [menuOpen, setMenuOpen] = useState(false)
+          const record = row.original
+          const { uid } = record
+          return (
+            <Popover
+              isOpen={menuOpen}
+              onInteraction={nextOpenState => {
+                setMenuOpen(nextOpenState)
+              }}
+              className={Classes.DARK}
+              position={Position.BOTTOM_RIGHT}>
+              <Button
+                variation={ButtonVariation.ICON}
+                icon="Options"
+                data-testid={`menu-${record.uid}`}
+                onClick={e => {
+                  e.stopPropagation()
+                  setMenuOpen(true)
+                }}
+              />
+              <Menu>
+                <MenuItem
+                  icon="edit"
+                  text={getString('edit')}
+                  onClick={e => {
+                    e.stopPropagation()
+                    history.push(routes.toCODEPipelineEdit({ space, pipeline: uid as string }))
+                  }}
+                />
+              </Menu>
+            </Popover>
+          )
+        }
       }
     ],
     [getString, searchTerm]
