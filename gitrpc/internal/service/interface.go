@@ -75,7 +75,7 @@ type GitAdapter interface {
 		repoPath string,
 		baseRef string,
 		headRef string,
-		direct bool) (types.DiffShortStat, error)
+		useMergeBase bool) (types.DiffShortStat, error)
 
 	GetDiffHunkHeaders(ctx context.Context,
 		repoPath string,

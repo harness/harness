@@ -83,12 +83,7 @@ func (s DiffService) DiffShortStat(ctx context.Context, r *rpc.DiffRequest) (*rp
 	base := r.GetBase()
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
-	// direct comparison
-	// when direct is false then its like you use --merge-base
-	// to find best common ancestor(s) between two refs
-	direct := !r.GetMergeBase()
-
-	stat, err := s.adapter.DiffShortStat(ctx, repoPath, r.GetBaseRef(), r.GetHeadRef(), direct)
+	stat, err := s.adapter.DiffShortStat(ctx, repoPath, r.GetBaseRef(), r.GetHeadRef(), r.GetMergeBase())
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to fetch short statistics "+
 			"between %s and %s", r.GetBaseRef(), r.GetHeadRef())
