@@ -631,6 +631,8 @@ pipelines:
   yamlPath: YAML Path
   enterYAMLPath: Enter YAML path
   failedToCreatePipeline: Failed to create pipeline
+  saveAndRun: Save and Run
+  editPipeline: Edit pipeline {{pipeline}}
 executions:
   noData: There are no executions :(
   newExecutionButton: New Execution

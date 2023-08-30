@@ -315,12 +315,14 @@ export interface StringsMap {
   pending: string
   'pipelines.basedOn': string
   'pipelines.createNewPipeline': string
+  'pipelines.editPipeline': string
   'pipelines.enterPipelineName': string
   'pipelines.enterYAMLPath': string
   'pipelines.failedToCreatePipeline': string
   'pipelines.name': string
   'pipelines.newPipelineButton': string
   'pipelines.noData': string
+  'pipelines.saveAndRun': string
   'pipelines.yamlPath': string
   'pr.ableToMerge': string
   'pr.addDescription': string

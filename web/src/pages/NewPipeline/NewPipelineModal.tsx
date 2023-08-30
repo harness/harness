@@ -5,7 +5,7 @@ import * as yup from 'yup'
 import { Button, ButtonVariation, Dialog, FormInput, Formik, FormikForm, Layout, useToaster } from '@harnessio/uicore'
 import { useModalHook } from 'hooks/useModalHook'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import type { OpenapiCreatePipelineRequest, TypesPipeline } from 'services/code'
+import type { OpenapiCreatePipelineRequest, TypesPipeline, TypesRepository } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
@@ -23,6 +23,8 @@ const useNewPipelineModal = () => {
   const history = useHistory()
   const { showError } = useToaster()
 
+  const repoMetadata: TypesRepository = { path: `${space}/vb-repo`, default_branch: 'main' }
+
   const { mutate: savePipeline } = useMutate<TypesPipeline>({
     verb: 'POST',
     path: `/api/v1/pipelines`
@@ -35,13 +37,13 @@ const useNewPipelineModal = () => {
         config_path: yamlPath,
         default_branch: branch,
         space_ref: space,
-        repo_ref: `${space}/vb-repo`,
+        repo_ref: repoMetadata.path,
         repo_type: 'GITNESS',
         uid: name
       }
       savePipeline(payload)
         .then(() => {
-          history.push(routes.toCODEPipelinesNew({ space }))
+          history.push(routes.toCODEPipelineEdit({ space, pipeline: name }))
           hideModal()
         })
         .catch(_error => {
@@ -59,7 +61,7 @@ const useNewPipelineModal = () => {
     return (
       <Dialog isOpen enforceFocus={false} onClose={onClose} title={getString('pipelines.createNewPipeline')}>
         <Formik<FormData>
-          initialValues={{ name: '', branch: '', yamlPath: '' }}
+          initialValues={{ name: '', branch: repoMetadata.default_branch || '', yamlPath: '' }}
           formName="createNewPipeline"
           enableReinitialize={true}
           validationSchema={yup.object().shape({
