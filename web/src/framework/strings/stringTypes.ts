@@ -169,9 +169,11 @@ export interface StringsMap {
   enterUser: string
   error: string
   error404Text: string
+  'executions.description': string
   'executions.name': string
   'executions.newExecutionButton': string
   'executions.noData': string
+  'executions.time': string
   executor: string
   existingAccount: string
   expiration: string

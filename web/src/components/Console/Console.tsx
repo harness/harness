@@ -6,6 +6,7 @@ import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { CODEProps } from 'RouteDefinitions'
 import type { TypesStage } from 'services/code'
 import ConsoleStep from 'components/ConsoleStep/ConsoleStep'
+import { timeDistance } from 'utils/Utils'
 import css from './Console.module.scss'
 
 interface ConsoleProps {
@@ -23,10 +24,12 @@ const Console: FC<ConsoleProps> = ({ stage }) => {
           <Text font={{ variation: FontVariation.H4 }} color={Color.WHITE} padding={{ left: 'large', right: 'large' }}>
             {stage?.name}
           </Text>
-          <Text font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
-            {/* this needs fixed */}
-            Success in 5 mins
-          </Text>
+          {stage?.started && stage?.stopped && (
+            <Text font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
+              {/* this needs fixed */}
+              {timeDistance(stage?.started, stage?.stopped)}
+            </Text>
+          )}
         </Layout.Horizontal>
       </Container>
       <Layout.Vertical className={css.steps} spacing="small">

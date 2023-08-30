@@ -50,7 +50,7 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, spaceName, pipel
 
       {isOpened ? (
         loading ? (
-          <div>Loading...</div>
+          <div className={css.loading}>Loading...</div>
         ) : error ? (
           <div>Error: {error}</div>
         ) : data ? (
