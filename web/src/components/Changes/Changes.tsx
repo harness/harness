@@ -244,7 +244,7 @@ export const Changes: React.FC<ChangesProps> = ({
                   vars={{
                     changedFilesLink: <ChangesDropdown diffs={diffs} />,
                     addedLines: formatNumber(diffStats.addedLines),
-                    deletedLines: formatNumber(diffStats.deletedLines),
+                    deletedLines: diffStats.deletedLines ? formatNumber(diffStats.deletedLines) : '0',
                     configuration: (
                       <DiffViewConfiguration
                         viewStyle={viewStyle}
