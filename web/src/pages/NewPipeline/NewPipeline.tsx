@@ -1,23 +1,29 @@
 import React, { useState } from 'react'
 import { useMutate } from 'restful-react'
-import { useParams } from 'react-router-dom'
-import { Container, PageHeader, PageBody } from '@harnessio/uicore'
-import { Button, Layout, ButtonVariation } from '@harnessio/uicore'
+import { Link, useParams } from 'react-router-dom'
+import { Container, PageHeader, PageBody, Button, Layout, ButtonVariation, Text } from '@harnessio/uicore'
+import { Icon } from '@harnessio/icons'
+import { Color } from '@harnessio/design-system'
 import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse } from 'services/code'
 import { useStrings } from 'framework/strings'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
+import { useAppContext } from 'AppContext'
 import type { CODEProps } from 'RouteDefinitions'
 
 import css from './NewPipeline.module.scss'
 
 const NewPipeline = (): JSX.Element => {
+  const { routes } = useAppContext()
   const { getString } = useStrings()
   const { pipeline } = useParams<CODEProps>()
+  const space = useGetSpaceParam()
+  const [pipelineAsYAML, setPipelineAsYaml] = useState<string>('')
+
   const { mutate, loading } = useMutate<RepoCommitFilesResponse>({
     verb: 'POST',
     path: `/api/v1/repos/test-space/vb-repo/+/commits`
   })
-  const [pipelineAsYAML, setPipelineAsYaml] = useState<string>('')
 
   const handleSaveAndRun = (): void => {
     const data: OpenapiCommitFilesRequest = {
@@ -37,6 +43,15 @@ const NewPipeline = (): JSX.Element => {
     <Container className={css.main}>
       <PageHeader
         title={getString('pipelines.editPipeline', { pipeline })}
+        breadcrumbs={
+          <Container className={css.header}>
+            <Layout.Horizontal spacing="small" className={css.breadcrumb}>
+              <Link to={routes.toCODEPipelines({ space })}>{getString('pageTitle.pipelines')}</Link>
+              <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
+              <Text font={{ size: 'small' }}>{pipeline}</Text>
+            </Layout.Horizontal>
+          </Container>
+        }
         content={
           <Layout.Horizontal flex={{ justifyContent: 'space-between' }}>
             <Button

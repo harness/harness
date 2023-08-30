@@ -4,5 +4,7 @@ declare const styles: {
   readonly main: string
   readonly layout: string
   readonly editorContainer: string
+  readonly header: string
+  readonly breadcrumb: string
 }
 export default styles
