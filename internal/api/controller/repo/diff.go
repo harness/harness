@@ -92,6 +92,7 @@ func (c *Controller) DiffStats(
 		ReadParams: gitrpc.CreateRPCReadParams(repo),
 		BaseRef:    info.BaseRef,
 		HeadRef:    info.HeadRef,
+		MergeBase:  info.MergeBase,
 	})
 	if err != nil {
 		return types.DiffStats{}, err
