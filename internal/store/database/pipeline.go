@@ -195,6 +195,78 @@ func (s *pipelineStore) List(
 	return dst, nil
 }
 
+// ListLatest lists all the pipelines under a repository with information
+// about the latest build if available.
+func (s *pipelineStore) ListLatest(
+	ctx context.Context,
+	repoID int64,
+	filter types.ListQueryFilter,
+) ([]*types.Pipeline, error) {
+	const pipelineExecutionColumns = pipelineColumns + `
+	,executions.execution_id
+	,executions.execution_pipeline_id
+	,execution_repo_id
+	,execution_trigger
+	,execution_number
+	,execution_status
+	,execution_error
+	,execution_link
+	,execution_timestamp
+	,execution_title
+	,execution_author
+	,execution_author_name
+	,execution_author_email
+	,execution_author_avatar
+	,execution_source
+	,execution_target
+	,execution_source_repo
+	,execution_started
+	,execution_finished
+	,execution_created
+	,execution_updated
+	`
+	// Create a subquery to get max execution IDs for each unique execution pipeline ID.
+	subquery := database.Builder.
+		Select("execution_pipeline_id, execution_id, MAX(execution_number)").
+		From("executions").
+		Where("execution_repo_id = ?").
+		GroupBy("execution_pipeline_id")
+
+	// Convert the subquery to SQL.
+	subquerySQL, _, err := subquery.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	// Left join the previous table with executions and pipelines table.
+	stmt := database.Builder.
+		Select(pipelineExecutionColumns).
+		From("pipelines").
+		LeftJoin("("+subquerySQL+") AS max_executions ON pipelines.pipeline_id = max_executions.execution_pipeline_id").
+		LeftJoin("executions ON executions.execution_id = max_executions.execution_id").
+		Where("pipeline_repo_id = ?", fmt.Sprint(repoID))
+
+	if filter.Query != "" {
+		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))
+	}
+	stmt = stmt.Limit(database.Limit(filter.Size))
+	stmt = stmt.Offset(database.Offset(filter.Page, filter.Size))
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*pipelineExecutionJoin{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+	}
+
+	return convert(dst), nil
+}
+
 // UpdateOptLock updates the pipeline using the optimistic locking mechanism.
 func (s *pipelineStore) UpdateOptLock(ctx context.Context,
 	pipeline *types.Pipeline,

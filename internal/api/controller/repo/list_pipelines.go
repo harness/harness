@@ -19,6 +19,7 @@ func (c *Controller) ListPipelines(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
+	latest bool,
 	filter types.ListQueryFilter,
 ) ([]*types.Pipeline, int64, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
@@ -40,10 +41,18 @@ func (c *Controller) ListPipelines(
 			return fmt.Errorf("failed to count child executions: %w", err)
 		}
 
-		pipelines, err = c.pipelineStore.List(ctx, repo.ID, filter)
-		if err != nil {
-			return fmt.Errorf("failed to count child executions: %w", err)
+		if !latest {
+			pipelines, err = c.pipelineStore.List(ctx, repo.ID, filter)
+			if err != nil {
+				return fmt.Errorf("failed to list pipelines: %w", err)
+			}
+		} else {
+			pipelines, err = c.pipelineStore.ListLatest(ctx, repo.ID, filter)
+			if err != nil {
+				return fmt.Errorf("failed to list latest pipelines: %w", err)
+			}
 		}
+
 		return
 	}, dbtx.TxDefaultReadOnly)
 	if err != nil {

@@ -1,14 +1,12 @@
 package database
 
 import (
-	"encoding/json"
-
 	"github.com/harness/gitness/types"
 )
 
 func mapInternalToExecution(in *execution) (*types.Execution, error) {
 	var params map[string]string
-	err := json.Unmarshal(in.Params, &params)
+	err := in.Params.Unmarshal(&params)
 	if err != nil {
 		return nil, err
 	}

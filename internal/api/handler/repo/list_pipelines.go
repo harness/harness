@@ -23,7 +23,8 @@ func HandleListPipelines(repoCtrl *repo.Controller) http.HandlerFunc {
 		}
 
 		filter := request.ParseListQueryFilterFromRequest(r)
-		repos, totalCount, err := repoCtrl.ListPipelines(ctx, session, repoRef, filter)
+		latest := request.GetLatestFromPath(r)
+		repos, totalCount, err := repoCtrl.ListPipelines(ctx, session, repoRef, latest, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

@@ -15,6 +15,7 @@ const (
 	PathParamStageNumber     = "stage_number"
 	PathParamStepNumber      = "step_number"
 	PathParamTriggerUID      = "trigger_uid"
+	QueryParamLatest         = "latest"
 )
 
 func GetPipelineUIDFromPath(r *http.Request) (string, error) {
@@ -37,6 +38,14 @@ func GetStageNumberFromPath(r *http.Request) (int64, error) {
 
 func GetStepNumberFromPath(r *http.Request) (int64, error) {
 	return PathParamAsPositiveInt64(r, PathParamStepNumber)
+}
+
+func GetLatestFromPath(r *http.Request) bool {
+	v, _ := QueryParam(r, QueryParamLatest)
+	if v == "true" {
+		return true
+	}
+	return false
 }
 
 func GetTriggerUIDFromPath(r *http.Request) (string, error) {

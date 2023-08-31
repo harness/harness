@@ -490,8 +490,12 @@ type (
 		// Update tries to update a pipeline in the datastore
 		Update(ctx context.Context, pipeline *types.Pipeline) error
 
-		// List lists the pipelines present in a parent space ID in the datastore.
-		List(ctx context.Context, spaceID int64, pagination types.ListQueryFilter) ([]*types.Pipeline, error)
+		// List lists the pipelines present in a repository in the datastore.
+		List(ctx context.Context, repoID int64, pagination types.ListQueryFilter) ([]*types.Pipeline, error)
+
+		// ListLatest lists the pipelines present in a repository in the datastore.
+		// It also returns latest build information for all the returned entries.
+		ListLatest(ctx context.Context, repoID int64, pagination types.ListQueryFilter) ([]*types.Pipeline, error)
 
 		// UpdateOptLock updates the pipeline using the optimistic locking mechanism.
 		UpdateOptLock(ctx context.Context, pipeline *types.Pipeline,
@@ -500,11 +504,11 @@ type (
 		// Delete deletes a pipeline ID from the datastore.
 		Delete(ctx context.Context, id int64) error
 
-		// Count the number of pipelines in a space matching the given filter.
-		Count(ctx context.Context, spaceID int64, filter types.ListQueryFilter) (int64, error)
+		// Count the number of pipelines in a repository matching the given filter.
+		Count(ctx context.Context, repoID int64, filter types.ListQueryFilter) (int64, error)
 
-		// DeleteByUID deletes a pipeline with a given UID in a space
-		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
+		// DeleteByUID deletes a pipeline with a given UID under a repo.
+		DeleteByUID(ctx context.Context, repoID int64, uid string) error
 
 		// IncrementSeqNum increments the sequence number of the pipeline
 		IncrementSeqNum(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error)

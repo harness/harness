@@ -7,9 +7,11 @@ package openapi
 import (
 	"net/http"
 
+	"github.com/gotidy/ptr"
 	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/controller/trigger"
+	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 
@@ -79,6 +81,20 @@ type updatePipelineRequest struct {
 	pipeline.UpdateInput
 }
 
+var queryParameterLatest = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamLatest,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Whether to fetch latest build information for each pipeline."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeBoolean),
+			},
+		},
+	},
+}
+
 func pipelineOperations(reflector *openapi3.Reflector) {
 	opCreate := openapi3.Operation{}
 	opCreate.WithTags("pipeline")
@@ -92,9 +108,9 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/pipelines", opCreate)
 
 	opPipelines := openapi3.Operation{}
-	opPipelines.WithTags("repos")
+	opPipelines.WithTags("pipeline")
 	opPipelines.WithMapOfAnything(map[string]interface{}{"operationId": "listPipelines"})
-	opPipelines.WithParameters(queryParameterQueryRepo, queryParameterPage, queryParameterLimit)
+	opPipelines.WithParameters(queryParameterQueryRepo, queryParameterPage, queryParameterLimit, queryParameterLatest)
 	_ = reflector.SetRequest(&opPipelines, new(repoRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opPipelines, []types.Pipeline{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opPipelines, new(usererror.Error), http.StatusInternalServerError)
