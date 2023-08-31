@@ -21,13 +21,13 @@ var WireSet = wire.NewSet(
 func ProvideController(db *sqlx.DB,
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
+	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,
 	stageStore store.StageStore,
 	stepStore store.StepStore,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
-	spaceStore store.SpaceStore,
 ) *Controller {
-	return NewController(db, authorizer, executionStore,
-		pipelineStore, stageStore, stepStore, logStore, logStream, spaceStore)
+	return NewController(db, authorizer, executionStore, repoStore,
+		pipelineStore, stageStore, stepStore, logStore, logStream)
 }

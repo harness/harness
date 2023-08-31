@@ -29,6 +29,7 @@ type Controller struct {
 	pathStore      store.PathStore
 	repoStore      store.RepoStore
 	spaceStore     store.SpaceStore
+	pipelineStore  store.PipelineStore
 	principalStore store.PrincipalStore
 	gitRPCClient   gitrpc.Interface
 }
@@ -42,6 +43,7 @@ func NewController(
 	pathStore store.PathStore,
 	repoStore store.RepoStore,
 	spaceStore store.SpaceStore,
+	pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore,
 	gitRPCClient gitrpc.Interface,
 ) *Controller {
@@ -54,6 +56,7 @@ func NewController(
 		pathStore:      pathStore,
 		repoStore:      repoStore,
 		spaceStore:     spaceStore,
+		pipelineStore:  pipelineStore,
 		principalStore: principalStore,
 		gitRPCClient:   gitRPCClient,
 	}

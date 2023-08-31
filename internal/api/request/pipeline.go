@@ -10,14 +10,14 @@ import (
 )
 
 const (
-	PathParamPipelineRef     = "pipeline_ref"
+	PathParamPipelineRef     = "pipeline_uid"
 	PathParamExecutionNumber = "execution_number"
 	PathParamStageNumber     = "stage_number"
 	PathParamStepNumber      = "step_number"
 	PathParamTriggerUID      = "trigger_uid"
 )
 
-func GetPipelineRefFromPath(r *http.Request) (string, error) {
+func GetPipelineUIDFromPath(r *http.Request) (string, error) {
 	rawRef, err := PathParamOrError(r, PathParamPipelineRef)
 	if err != nil {
 		return "", err

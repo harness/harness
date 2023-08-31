@@ -71,7 +71,7 @@ type APIHandler interface {
 
 var (
 	// terminatedPathPrefixesAPI is the list of prefixes that will require resolving terminated paths.
-	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/", "/v1/pipelines/",
+	terminatedPathPrefixesAPI = []string{"/v1/spaces/", "/v1/repos/",
 		"/v1/secrets/", "/v1/connectors", "/v1/templates"}
 )
 
@@ -162,8 +162,7 @@ func setupRoutesV1(r chi.Router,
 	sysCtrl *system.Controller,
 ) {
 	setupSpaces(r, spaceCtrl)
-	setupRepos(r, repoCtrl, pullreqCtrl, webhookCtrl, checkCtrl)
-	setupPipelines(r, pipelineCtrl, executionCtrl, triggerCtrl, logCtrl)
+	setupRepos(r, repoCtrl, pipelineCtrl, executionCtrl, triggerCtrl, logCtrl, pullreqCtrl, webhookCtrl, checkCtrl)
 	setupConnectors(r, connectorCtrl)
 	setupTemplates(r, templateCtrl)
 	setupSecrets(r, secretCtrl)
@@ -193,7 +192,6 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))
 			r.Get("/repos", handlerspace.HandleListRepos(spaceCtrl))
 			r.Get("/service-accounts", handlerspace.HandleListServiceAccounts(spaceCtrl))
-			r.Get("/pipelines", handlerspace.HandleListPipelines(spaceCtrl))
 			r.Get("/secrets", handlerspace.HandleListSecrets(spaceCtrl))
 			r.Get("/connectors", handlerspace.HandleListConnectors(spaceCtrl))
 			r.Get("/templates", handlerspace.HandleListTemplates(spaceCtrl))
@@ -223,6 +221,10 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 
 func setupRepos(r chi.Router,
 	repoCtrl *repo.Controller,
+	pipelineCtrl *pipeline.Controller,
+	executionCtrl *execution.Controller,
+	triggerCtrl *trigger.Controller,
+	logCtrl *logs.Controller,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
 	checkCtrl *check.Controller,
@@ -312,6 +314,8 @@ func setupRepos(r chi.Router,
 
 			setupWebhook(r, webhookCtrl)
 
+			setupPipelines(r, repoCtrl, pipelineCtrl, executionCtrl, triggerCtrl, logCtrl)
+
 			SetupChecks(r, checkCtrl)
 		})
 	})
@@ -319,11 +323,13 @@ func setupRepos(r chi.Router,
 
 func setupPipelines(
 	r chi.Router,
+	repoCtrl *repo.Controller,
 	pipelineCtrl *pipeline.Controller,
 	executionCtrl *execution.Controller,
 	triggerCtrl *trigger.Controller,
 	logCtrl *logs.Controller) {
 	r.Route("/pipelines", func(r chi.Router) {
+		r.Get("/", handlerrepo.HandleListPipelines(repoCtrl))
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerpipeline.HandleCreate(pipelineCtrl))
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamPipelineRef), func(r chi.Router) {

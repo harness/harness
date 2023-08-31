@@ -10,14 +10,13 @@ import (
 	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/paths"
 )
 
 func HandleFind(executionCtrl *execution.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		pipelineRef, err := request.GetPipelineRefFromPath(r)
+		pipelineUID, err := request.GetPipelineUIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -27,13 +26,13 @@ func HandleFind(executionCtrl *execution.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, pipelineUID, err := paths.DisectLeaf(pipelineRef)
+		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		execution, err := executionCtrl.Find(ctx, session, spaceRef, pipelineUID, n)
+		execution, err := executionCtrl.Find(ctx, session, repoRef, pipelineUID, n)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

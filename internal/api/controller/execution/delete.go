@@ -16,22 +16,22 @@ import (
 func (c *Controller) Delete(
 	ctx context.Context,
 	session *auth.Session,
-	spaceRef string,
+	repoRef string,
 	pipelineUID string,
 	executionNum int64,
 ) error {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
-		return fmt.Errorf("failed to find parent space: %w", err)
+		return fmt.Errorf("failed to find repo by ref: %w", err)
+	}
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineUID, enum.PermissionPipelineDelete)
+	if err != nil {
+		return fmt.Errorf("failed to authorize: %w", err)
 	}
 
-	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)
+	pipeline, err := c.pipelineStore.FindByUID(ctx, repo.ID, pipelineUID)
 	if err != nil {
 		return fmt.Errorf("failed to find pipeline: %w", err)
-	}
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineDelete)
-	if err != nil {
-		return fmt.Errorf("could not authorize: %w", err)
 	}
 	err = c.executionStore.Delete(ctx, pipeline.ID, executionNum)
 	if err != nil {

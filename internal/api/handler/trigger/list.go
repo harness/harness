@@ -10,19 +10,18 @@ import (
 	"github.com/harness/gitness/internal/api/controller/trigger"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/paths"
 )
 
 func HandleList(triggerCtrl *trigger.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		pipelineRef, err := request.GetPipelineRefFromPath(r)
+		pipelineUID, err := request.GetPipelineUIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, pipelineUID, err := paths.DisectLeaf(pipelineRef)
+		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -30,7 +29,7 @@ func HandleList(triggerCtrl *trigger.Controller) http.HandlerFunc {
 
 		filter := request.ParseListQueryFilterFromRequest(r)
 
-		repos, totalCount, err := triggerCtrl.List(ctx, session, spaceRef, pipelineUID, filter)
+		repos, totalCount, err := triggerCtrl.List(ctx, session, repoRef, pipelineUID, filter)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

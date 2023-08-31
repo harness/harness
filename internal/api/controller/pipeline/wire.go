@@ -24,7 +24,6 @@ func ProvideController(db *sqlx.DB,
 	repoStore store.RepoStore,
 	authorizer authz.Authorizer,
 	pipelineStore store.PipelineStore,
-	spaceStore store.SpaceStore,
 ) *Controller {
-	return NewController(db, uidCheck, authorizer, pathStore, repoStore, pipelineStore, spaceStore)
+	return NewController(db, uidCheck, authorizer, pathStore, repoStore, pipelineStore)
 }

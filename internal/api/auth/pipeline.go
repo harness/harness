@@ -9,21 +9,26 @@ import (
 
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/pkg/errors"
 )
 
-// CheckPipeline checks if a repo specific permission is granted for the current auth session
-// in the scope of its parent.
+// CheckPipeline checks if a pipeline specific permission is granted for the current auth session
+// in the scope of the parent.
 // Returns nil if the permission is granted, otherwise returns an error.
 // NotAuthenticated, NotAuthorized, or any underlying error.
 func CheckPipeline(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
-	parentPath, uid string, permission enum.Permission) error {
-	scope := &types.Scope{SpacePath: parentPath}
+	repoPath string, pipelineUID string, permission enum.Permission) error {
+	spacePath, repoName, err := paths.DisectLeaf(repoPath)
+	if err != nil {
+		return errors.Wrapf(err, "Failed to disect path '%s'", repoPath)
+	}
+	scope := &types.Scope{SpacePath: spacePath, Repo: repoName}
 	resource := &types.Resource{
 		Type: enum.ResourceTypePipeline,
-		Name: uid,
+		Name: pipelineUID,
 	}
-
 	return Check(ctx, authorizer, session, scope, resource, permission)
 }

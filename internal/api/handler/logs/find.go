@@ -11,14 +11,18 @@ import (
 	"github.com/harness/gitness/internal/api/controller/logs"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/paths"
 )
 
 func HandleFind(logCtrl *logs.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
-		pipelineRef, err := request.GetPipelineRefFromPath(r)
+		repoRef, err := request.GetRepoRefFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+		pipelineUID, err := request.GetPipelineUIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
@@ -38,14 +42,8 @@ func HandleFind(logCtrl *logs.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, pipelineUID, err := paths.DisectLeaf(pipelineRef)
-		if err != nil {
-			render.TranslatedUserError(w, err)
-			return
-		}
-
 		rc, err := logCtrl.Find(
-			ctx, session, spaceRef, pipelineUID,
+			ctx, session, repoRef, pipelineUID,
 			executionNum, int(stageNum), int(stepNum))
 		if err != nil {
 			render.TranslatedUserError(w, err)

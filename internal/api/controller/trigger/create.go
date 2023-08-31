@@ -24,25 +24,24 @@ type CreateInput struct {
 func (c *Controller) Create(
 	ctx context.Context,
 	session *auth.Session,
-	spaceRef string,
+	repoRef string,
 	pipelineUID string,
 	in *CreateInput,
 ) (*types.Trigger, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find space: %w", err)
+		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
-
-	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find pipeline: %w", err)
-	}
-
 	// Trigger permissions are associated with pipeline permissions. If a user has permissions
 	// to edit the pipeline, they will have permissions to create a trigger as well.
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineEdit)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineUID, enum.PermissionPipelineEdit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to authorize: %w", err)
+		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
+	}
+
+	pipeline, err := c.pipelineStore.FindByUID(ctx, repo.ID, pipelineUID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
 	now := time.Now().UnixMilli()

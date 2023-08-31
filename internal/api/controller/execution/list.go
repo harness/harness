@@ -17,22 +17,23 @@ import (
 func (c *Controller) List(
 	ctx context.Context,
 	session *auth.Session,
-	spaceRef string,
+	repoRef string,
 	pipelineUID string,
 	pagination types.Pagination,
 ) ([]*types.Execution, int64, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to find parent space: %w", err)
-	}
-	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, pipelineUID)
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to find pipeline: %w", err)
+		return nil, 0, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
 
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, pipeline.UID, enum.PermissionPipelineView)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineUID, enum.PermissionPipelineView)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to authorize: %w", err)
+	}
+
+	pipeline, err := c.pipelineStore.FindByUID(ctx, repo.ID, pipelineUID)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
 	var count int64

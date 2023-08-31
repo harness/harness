@@ -16,34 +16,34 @@ type Controller struct {
 	db             *sqlx.DB
 	authorizer     authz.Authorizer
 	executionStore store.ExecutionStore
+	repoStore      store.RepoStore
 	pipelineStore  store.PipelineStore
 	stageStore     store.StageStore
 	stepStore      store.StepStore
 	logStore       store.LogStore
 	logStream      livelog.LogStream
-	spaceStore     store.SpaceStore
 }
 
 func NewController(
 	db *sqlx.DB,
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
+	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,
 	stageStore store.StageStore,
 	stepStore store.StepStore,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
-	spaceStore store.SpaceStore,
 ) *Controller {
 	return &Controller{
 		db:             db,
 		authorizer:     authorizer,
 		executionStore: executionStore,
+		repoStore:      repoStore,
 		pipelineStore:  pipelineStore,
 		stageStore:     stageStore,
 		stepStore:      stepStore,
 		logStore:       logStore,
 		logStream:      logStream,
-		spaceStore:     spaceStore,
 	}
 }
