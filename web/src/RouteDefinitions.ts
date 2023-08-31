@@ -45,7 +45,7 @@ export interface CODERoutes {
 
   toCODESpaceAccessControl: (args: Required<Pick<CODEProps, 'space'>>) => string
   toCODESpaceSettings: (args: Required<Pick<CODEProps, 'space'>>) => string
-  toCODEPipelines: (args: Required<Pick<CODEProps, 'space'>>) => string
+  toCODEPipelines: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEPipelinesNew: (args: Required<Pick<CODEProps, 'space'>>) => string
   toCODESecrets: (args: Required<Pick<CODEProps, 'space'>>) => string
 
@@ -74,8 +74,8 @@ export interface CODERoutes {
   toCODEWebhookDetails: (args: Required<Pick<CODEProps, 'repoPath' | 'webhookId'>>) => string
   toCODESettings: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
 
-  toCODEExecutions: (args: Required<Pick<CODEProps, 'space' | 'pipeline'>>) => string
-  toCODEExecution: (args: Required<Pick<CODEProps, 'space' | 'pipeline' | 'execution'>>) => string
+  toCODEExecutions: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline'>>) => string
+  toCODEExecution: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline' | 'execution'>>) => string
   toCODESecret: (args: Required<Pick<CODEProps, 'space' | 'secret'>>) => string
 }
 
@@ -96,7 +96,7 @@ export const routes: CODERoutes = {
 
   toCODESpaceAccessControl: ({ space }) => `/access-control/${space}`,
   toCODESpaceSettings: ({ space }) => `/settings/${space}`,
-  toCODEPipelines: ({ space }) => `/pipelines/${space}`,
+  toCODEPipelines: ({ repoPath }) => `/${repoPath}/pipelines`,
   toCODEPipelinesNew: ({ space }) => `/pipelines/${space}/new`,
   toCODESecrets: ({ space }) => `/secrets/${space}`,
 
@@ -130,8 +130,7 @@ export const routes: CODERoutes = {
   toCODEWebhookNew: ({ repoPath }) => `/${repoPath}/webhooks/new`,
   toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`,
 
-  toCODEExecutions: ({ space, pipeline }) => `/pipelines/${space}/pipeline/${pipeline}`,
-  toCODEExecution: ({ space, pipeline, execution }) =>
-    `/pipelines/${space}/pipeline/${pipeline}/execution/${execution}`,
+  toCODEExecutions: ({ repoPath, pipeline }) => `/${repoPath}/pipelines/${pipeline}`,
+  toCODEExecution: ({ repoPath, pipeline, execution }) => `/${repoPath}/pipelines/${pipeline}/execution/${execution}`,
   toCODESecret: ({ space, secret }) => `/secrets/${space}/secret/${secret}`
 }

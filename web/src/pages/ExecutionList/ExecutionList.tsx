@@ -7,7 +7,6 @@ import {
   FlexExpander,
   Layout,
   PageBody,
-  PageHeader,
   TableV2 as Table,
   Text,
   Utils
@@ -26,16 +25,16 @@ import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { LIST_FETCHING_LIMIT, PageBrowserProps, getErrorMessage, timeDistance, voidFn } from 'utils/Utils'
 import type { CODEProps } from 'RouteDefinitions'
 import type { TypesExecution } from 'services/code'
-import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
+import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './ExecutionList.module.scss'
 
 const ExecutionList = () => {
   const { routes } = useAppContext()
-  const space = useGetSpaceParam()
   const { pipeline } = useParams<CODEProps>()
   const history = useHistory()
   const { getString } = useStrings()
@@ -43,15 +42,17 @@ const ExecutionList = () => {
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
 
+  const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
+
   const {
     data: executions,
-    error,
-    loading,
-    refetch,
+    error: executionsError,
+    loading: executionsLoading,
     response
   } = useGet<TypesExecution[]>({
-    path: `/api/v1/pipelines/${space}/${pipeline}/+/executions`,
-    queryParams: { page, limit: LIST_FETCHING_LIMIT }
+    path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines/${pipeline}/executions`,
+    queryParams: { page, limit: LIST_FETCHING_LIMIT },
+    lazy: !repoMetadata
   })
 
   const NewExecutionButton = (
@@ -123,10 +124,23 @@ const ExecutionList = () => {
 
   return (
     <Container className={css.main}>
-      <PageHeader title={getString('pageTitle.executions')} />
+      {/* <PageHeader title={getString('pageTitle.executions')} /> */}
+      <RepositoryPageHeader
+        repoMetadata={repoMetadata}
+        title={getString('pageTitle.executions')}
+        dataTooltipId="repositoryExecutions"
+        extraBreadcrumbLinks={
+          repoMetadata && [
+            {
+              label: getString('pageTitle.pipelines'),
+              url: routes.toCODEPipelines({ repoPath: repoMetadata.path as string })
+            }
+          ]
+        }
+      />
       <PageBody
         className={cx({ [css.withError]: !!error })}
-        error={error ? getErrorMessage(error) : null}
+        error={error ? getErrorMessage(error || executionsError) : null}
         retryOnError={voidFn(refetch)}
         noData={{
           when: () => executions?.length === 0,
@@ -134,7 +148,7 @@ const ExecutionList = () => {
           message: getString('executions.noData'),
           button: NewExecutionButton
         }}>
-        <LoadingSpinner visible={loading} />
+        <LoadingSpinner visible={loading || executionsLoading} withBorder={!!executions && executionsLoading} />
 
         <Container padding="xlarge">
           <Layout.Horizontal spacing="large" className={css.layout}>
@@ -151,7 +165,7 @@ const ExecutionList = () => {
                 onRowClick={executionInfo =>
                   history.push(
                     routes.toCODEExecution({
-                      space,
+                      repoPath: repoMetadata?.path as string,
                       pipeline: pipeline as string,
                       execution: String(executionInfo.number)
                     })

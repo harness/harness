@@ -14,12 +14,15 @@
     margin: 0.5rem 0 0.5rem 1rem !important;
     cursor: pointer;
 
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--grey-100);
+    }
+
     .layout {
       display: flex;
       align-items: center;
       min-height: var(--stage-title-height);
       padding: 0 var(--spacing-medium) 0 var(--spacing-medium);
-      border-radius: 10px 0 0 10px !important;
 
       &.selected {
         background-color: var(--primary-1);

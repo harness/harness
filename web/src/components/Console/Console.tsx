@@ -2,19 +2,20 @@ import React, { FC } from 'react'
 import { useParams } from 'react-router-dom'
 import { Container, Layout, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { CODEProps } from 'RouteDefinitions'
 import type { TypesStage } from 'services/code'
 import ConsoleStep from 'components/ConsoleStep/ConsoleStep'
 import { timeDistance } from 'utils/Utils'
+// import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import css from './Console.module.scss'
 
 interface ConsoleProps {
   stage: TypesStage | undefined
+  repoPath: string
 }
 
-const Console: FC<ConsoleProps> = ({ stage }) => {
-  const space = useGetSpaceParam()
+const Console: FC<ConsoleProps> = ({ stage, repoPath }) => {
+  // const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const { pipeline, execution: executionNum } = useParams<CODEProps>()
 
   return (
@@ -39,7 +40,7 @@ const Console: FC<ConsoleProps> = ({ stage }) => {
             step={step}
             executionNumber={Number(executionNum)}
             pipelineName={pipeline}
-            spaceName={space}
+            repoPath={repoPath}
             stageNumber={stage.number}
           />
         ))}
