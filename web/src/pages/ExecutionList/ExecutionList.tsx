@@ -124,7 +124,6 @@ const ExecutionList = () => {
 
   return (
     <Container className={css.main}>
-      {/* <PageHeader title={getString('pageTitle.executions')} /> */}
       <RepositoryPageHeader
         repoMetadata={repoMetadata}
         title={getString('pageTitle.executions')}

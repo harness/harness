@@ -15,7 +15,6 @@ interface ConsoleProps {
 }
 
 const Console: FC<ConsoleProps> = ({ stage, repoPath }) => {
-  // const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
   const { pipeline, execution: executionNum } = useParams<CODEProps>()
 
   return (
