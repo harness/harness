@@ -12,18 +12,18 @@ import css from './ConsoleStep.module.scss'
 interface ConsoleStepProps {
   step: TypesStep | undefined
   stageNumber: number | undefined
-  spaceName: string
+  repoPath: string
   pipelineName: string | undefined
   executionNumber: number
 }
 
-const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, spaceName, pipelineName, executionNumber }) => {
+const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipelineName, executionNumber }) => {
   const { getString } = useStrings()
 
   const [isOpened, setIsOpened] = React.useState(false)
 
   const { data, error, loading, refetch } = useGet<string>({
-    path: `/api/v1/pipelines/${spaceName}/${pipelineName}/+/executions/${executionNumber}/logs/${String(
+    path: `/api/v1/repos/${repoPath}/+/pipelines/${pipelineName}/executions/${executionNumber}/logs/${String(
       stageNumber
     )}/${String(step?.number)}`,
     lazy: true

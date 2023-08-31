@@ -18,7 +18,7 @@ interface ExecutionStageProps {
   setSelectedStage: (selectedStage: number | null) => void
 }
 
-const ExecutionStage: FC<ExecutionStageProps> = ({ stage, isSelected = false, setSelectedStage = () => {} }) => {
+const ExecutionStage: FC<ExecutionStageProps> = ({ stage, isSelected = false, setSelectedStage }) => {
   return (
     <Container
       className={css.menuItem}

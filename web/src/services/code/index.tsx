@@ -45,8 +45,6 @@ export type EnumPullReqReviewerType = 'assigned' | 'requested' | 'self_assigned'
 
 export type EnumPullReqState = 'closed' | 'merged' | 'open'
 
-export type EnumScmType = 'GITNESS' | 'GITHUB' | 'GITLAB' | 'UNKNOWN'
-
 export type EnumTokenType = string
 
 export type EnumWebhookExecutionResult = 'fatal_error' | 'retriable_error' | 'success' | null
@@ -173,6 +171,14 @@ export interface OpenapiCreateBranchRequest {
   target?: string
 }
 
+export interface OpenapiCreateConnectorRequest {
+  data?: string
+  description?: string
+  space_ref?: string
+  type?: string
+  uid?: string
+}
+
 export interface OpenapiCreateExecutionRequest {
   status?: string
 }
@@ -185,9 +191,6 @@ export interface OpenapiCreatePipelineRequest {
   config_path?: string
   default_branch?: string
   description?: string
-  repo_ref?: string
-  repo_type?: EnumScmType
-  space_ref?: string
   uid?: string
 }
 
@@ -236,9 +239,22 @@ export interface OpenapiCreateTagRequest {
   target?: string
 }
 
+export interface OpenapiCreateTemplateRequest {
+  data?: string
+  description?: string
+  space_ref?: string
+  type?: string
+  uid?: string
+}
+
 export interface OpenapiCreateTokenRequest {
   grants?: EnumAccessGrant
   lifetime?: TimeDuration
+  uid?: string
+}
+
+export interface OpenapiCreateTriggerRequest {
+  description?: string
   uid?: string
 }
 
@@ -318,6 +334,12 @@ export interface OpenapiUpdateAdminRequest {
   admin?: boolean
 }
 
+export interface OpenapiUpdateConnectorRequest {
+  data?: string
+  description?: string
+  uid?: string
+}
+
 export interface OpenapiUpdateExecutionRequest {
   status?: string
 }
@@ -347,6 +369,17 @@ export interface OpenapiUpdateSecretRequest {
 export interface OpenapiUpdateSpaceRequest {
   description?: string | null
   is_public?: boolean | null
+}
+
+export interface OpenapiUpdateTemplateRequest {
+  data?: string
+  description?: string
+  uid?: string
+}
+
+export interface OpenapiUpdateTriggerRequest {
+  description?: string
+  uid?: string
 }
 
 export interface OpenapiUpdateWebhookRequest {
@@ -498,6 +531,17 @@ export interface TypesCommit {
   title?: string
 }
 
+export interface TypesConnector {
+  created?: number
+  data?: string
+  description?: string
+  id?: number
+  space_id?: number
+  type?: string
+  uid?: string
+  updated?: number
+}
+
 export interface TypesDiffStats {
   commits?: number
   files_changed?: number
@@ -592,13 +636,17 @@ export interface TypesPipeline {
   description?: string
   id?: number
   repo_id?: number
-  repo_name?: string
-  repo_type?: EnumScmType
   seq?: number
-  space_id?: number
   uid?: string
   updated?: number
   version?: number
+}
+
+export interface TypesPlugin {
+  description?: string
+  logo?: string
+  spec?: string
+  uid?: string
 }
 
 export interface TypesPrincipalInfo {
@@ -783,6 +831,16 @@ export interface TypesStep {
   stopped?: number
 }
 
+export interface TypesTemplate {
+  created?: number
+  data?: string
+  description?: string
+  id?: number
+  space_id?: number
+  uid?: string
+  updated?: number
+}
+
 export interface TypesToken {
   created_by?: number
   expires_at?: number | null
@@ -796,6 +854,15 @@ export interface TypesToken {
 export interface TypesTokenResponse {
   access_token?: string
   token?: TypesToken
+}
+
+export interface TypesTrigger {
+  created?: number
+  description?: string
+  id?: number
+  pipeline_id?: number
+  uid?: string
+  updated?: number
 }
 
 export interface TypesUser {
@@ -1006,6 +1073,109 @@ export const useUpdateUserAdmin = ({ user_uid, ...props }: UseUpdateUserAdminPro
     { base: getConfig('code/api/v1'), pathParams: { user_uid }, ...props }
   )
 
+export type CreateConnectorProps = Omit<
+  MutateProps<TypesConnector, UsererrorError, void, OpenapiCreateConnectorRequest, void>,
+  'path' | 'verb'
+>
+
+export const CreateConnector = (props: CreateConnectorProps) => (
+  <Mutate<TypesConnector, UsererrorError, void, OpenapiCreateConnectorRequest, void>
+    verb="POST"
+    path={`/connectors`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseCreateConnectorProps = Omit<
+  UseMutateProps<TypesConnector, UsererrorError, void, OpenapiCreateConnectorRequest, void>,
+  'path' | 'verb'
+>
+
+export const useCreateConnector = (props: UseCreateConnectorProps) =>
+  useMutate<TypesConnector, UsererrorError, void, OpenapiCreateConnectorRequest, void>('POST', `/connectors`, {
+    base: getConfig('code/api/v1'),
+    ...props
+  })
+
+export type DeleteConnectorProps = Omit<MutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
+
+export const DeleteConnector = (props: DeleteConnectorProps) => (
+  <Mutate<void, UsererrorError, void, string, void>
+    verb="DELETE"
+    path={`/connectors`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeleteConnectorProps = Omit<UseMutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
+
+export const useDeleteConnector = (props: UseDeleteConnectorProps) =>
+  useMutate<void, UsererrorError, void, string, void>('DELETE', `/connectors`, {
+    base: getConfig('code/api/v1'),
+    ...props
+  })
+
+export interface FindConnectorPathParams {
+  connector_ref: string
+}
+
+export type FindConnectorProps = Omit<GetProps<TypesConnector, UsererrorError, void, FindConnectorPathParams>, 'path'> &
+  FindConnectorPathParams
+
+export const FindConnector = ({ connector_ref, ...props }: FindConnectorProps) => (
+  <Get<TypesConnector, UsererrorError, void, FindConnectorPathParams>
+    path={`/connectors/${connector_ref}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseFindConnectorProps = Omit<
+  UseGetProps<TypesConnector, UsererrorError, void, FindConnectorPathParams>,
+  'path'
+> &
+  FindConnectorPathParams
+
+export const useFindConnector = ({ connector_ref, ...props }: UseFindConnectorProps) =>
+  useGet<TypesConnector, UsererrorError, void, FindConnectorPathParams>(
+    (paramsInPath: FindConnectorPathParams) => `/connectors/${paramsInPath.connector_ref}`,
+    { base: getConfig('code/api/v1'), pathParams: { connector_ref }, ...props }
+  )
+
+export interface UpdateConnectorPathParams {
+  connector_ref: string
+}
+
+export type UpdateConnectorProps = Omit<
+  MutateProps<TypesConnector, UsererrorError, void, OpenapiUpdateConnectorRequest, UpdateConnectorPathParams>,
+  'path' | 'verb'
+> &
+  UpdateConnectorPathParams
+
+export const UpdateConnector = ({ connector_ref, ...props }: UpdateConnectorProps) => (
+  <Mutate<TypesConnector, UsererrorError, void, OpenapiUpdateConnectorRequest, UpdateConnectorPathParams>
+    verb="PATCH"
+    path={`/connectors/${connector_ref}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdateConnectorProps = Omit<
+  UseMutateProps<TypesConnector, UsererrorError, void, OpenapiUpdateConnectorRequest, UpdateConnectorPathParams>,
+  'path' | 'verb'
+> &
+  UpdateConnectorPathParams
+
+export const useUpdateConnector = ({ connector_ref, ...props }: UseUpdateConnectorProps) =>
+  useMutate<TypesConnector, UsererrorError, void, OpenapiUpdateConnectorRequest, UpdateConnectorPathParams>(
+    'PATCH',
+    (paramsInPath: UpdateConnectorPathParams) => `/connectors/${paramsInPath.connector_ref}`,
+    { base: getConfig('code/api/v1'), pathParams: { connector_ref }, ...props }
+  )
+
 export type OnLoginProps = Omit<
   MutateProps<TypesTokenResponse, UsererrorError, void, OpenapiLoginRequest, void>,
   'path' | 'verb'
@@ -1047,110 +1217,7 @@ export type UseOpLogoutProps = Omit<UseMutateProps<void, UsererrorError, void, v
 export const useOpLogout = (props: UseOpLogoutProps) =>
   useMutate<void, UsererrorError, void, void, void>('POST', `/logout`, { base: getConfig('code/api/v1'), ...props })
 
-export type CreatePipelineProps = Omit<
-  MutateProps<TypesPipeline, UsererrorError, void, OpenapiCreatePipelineRequest, void>,
-  'path' | 'verb'
->
-
-export const CreatePipeline = (props: CreatePipelineProps) => (
-  <Mutate<TypesPipeline, UsererrorError, void, OpenapiCreatePipelineRequest, void>
-    verb="POST"
-    path={`/pipelines`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseCreatePipelineProps = Omit<
-  UseMutateProps<TypesPipeline, UsererrorError, void, OpenapiCreatePipelineRequest, void>,
-  'path' | 'verb'
->
-
-export const useCreatePipeline = (props: UseCreatePipelineProps) =>
-  useMutate<TypesPipeline, UsererrorError, void, OpenapiCreatePipelineRequest, void>('POST', `/pipelines`, {
-    base: getConfig('code/api/v1'),
-    ...props
-  })
-
-export type DeletePipelineProps = Omit<MutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
-
-export const DeletePipeline = (props: DeletePipelineProps) => (
-  <Mutate<void, UsererrorError, void, string, void>
-    verb="DELETE"
-    path={`/pipelines`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseDeletePipelineProps = Omit<UseMutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
-
-export const useDeletePipeline = (props: UseDeletePipelineProps) =>
-  useMutate<void, UsererrorError, void, string, void>('DELETE', `/pipelines`, {
-    base: getConfig('code/api/v1'),
-    ...props
-  })
-
-export interface FindPipelinePathParams {
-  pipeline_ref: string
-}
-
-export type FindPipelineProps = Omit<GetProps<TypesPipeline, UsererrorError, void, FindPipelinePathParams>, 'path'> &
-  FindPipelinePathParams
-
-export const FindPipeline = ({ pipeline_ref, ...props }: FindPipelineProps) => (
-  <Get<TypesPipeline, UsererrorError, void, FindPipelinePathParams>
-    path={`/pipelines/${pipeline_ref}`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseFindPipelineProps = Omit<
-  UseGetProps<TypesPipeline, UsererrorError, void, FindPipelinePathParams>,
-  'path'
-> &
-  FindPipelinePathParams
-
-export const useFindPipeline = ({ pipeline_ref, ...props }: UseFindPipelineProps) =>
-  useGet<TypesPipeline, UsererrorError, void, FindPipelinePathParams>(
-    (paramsInPath: FindPipelinePathParams) => `/pipelines/${paramsInPath.pipeline_ref}`,
-    { base: getConfig('code/api/v1'), pathParams: { pipeline_ref }, ...props }
-  )
-
-export interface UpdatePipelinePathParams {
-  pipeline_ref: string
-}
-
-export type UpdatePipelineProps = Omit<
-  MutateProps<TypesPipeline, UsererrorError, void, OpenapiUpdatePipelineRequest, UpdatePipelinePathParams>,
-  'path' | 'verb'
-> &
-  UpdatePipelinePathParams
-
-export const UpdatePipeline = ({ pipeline_ref, ...props }: UpdatePipelineProps) => (
-  <Mutate<TypesPipeline, UsererrorError, void, OpenapiUpdatePipelineRequest, UpdatePipelinePathParams>
-    verb="PATCH"
-    path={`/pipelines/${pipeline_ref}`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseUpdatePipelineProps = Omit<
-  UseMutateProps<TypesPipeline, UsererrorError, void, OpenapiUpdatePipelineRequest, UpdatePipelinePathParams>,
-  'path' | 'verb'
-> &
-  UpdatePipelinePathParams
-
-export const useUpdatePipeline = ({ pipeline_ref, ...props }: UseUpdatePipelineProps) =>
-  useMutate<TypesPipeline, UsererrorError, void, OpenapiUpdatePipelineRequest, UpdatePipelinePathParams>(
-    'PATCH',
-    (paramsInPath: UpdatePipelinePathParams) => `/pipelines/${paramsInPath.pipeline_ref}`,
-    { base: getConfig('code/api/v1'), pathParams: { pipeline_ref }, ...props }
-  )
-
-export interface ListExecutionsQueryParams {
+export interface ListPluginsQueryParams {
   /**
    * The page to return.
    */
@@ -1159,201 +1226,29 @@ export interface ListExecutionsQueryParams {
    * The maximum number of results to return.
    */
   limit?: number
+  /**
+   * The substring which is used to filter the plugins by their name.
+   */
+  query?: string
 }
 
-export interface ListExecutionsPathParams {
-  pipeline_ref: string
-}
+export type ListPluginsProps = Omit<GetProps<TypesPlugin[], UsererrorError, ListPluginsQueryParams, void>, 'path'>
 
-export type ListExecutionsProps = Omit<
-  GetProps<TypesExecution[], UsererrorError, ListExecutionsQueryParams, ListExecutionsPathParams>,
-  'path'
-> &
-  ListExecutionsPathParams
-
-export const ListExecutions = ({ pipeline_ref, ...props }: ListExecutionsProps) => (
-  <Get<TypesExecution[], UsererrorError, ListExecutionsQueryParams, ListExecutionsPathParams>
-    path={`/pipelines/${pipeline_ref}/executions`}
+export const ListPlugins = (props: ListPluginsProps) => (
+  <Get<TypesPlugin[], UsererrorError, ListPluginsQueryParams, void>
+    path={`/plugins`}
     base={getConfig('code/api/v1')}
     {...props}
   />
 )
 
-export type UseListExecutionsProps = Omit<
-  UseGetProps<TypesExecution[], UsererrorError, ListExecutionsQueryParams, ListExecutionsPathParams>,
-  'path'
-> &
-  ListExecutionsPathParams
+export type UseListPluginsProps = Omit<UseGetProps<TypesPlugin[], UsererrorError, ListPluginsQueryParams, void>, 'path'>
 
-export const useListExecutions = ({ pipeline_ref, ...props }: UseListExecutionsProps) =>
-  useGet<TypesExecution[], UsererrorError, ListExecutionsQueryParams, ListExecutionsPathParams>(
-    (paramsInPath: ListExecutionsPathParams) => `/pipelines/${paramsInPath.pipeline_ref}/executions`,
-    { base: getConfig('code/api/v1'), pathParams: { pipeline_ref }, ...props }
-  )
-
-export interface CreateExecutionPathParams {
-  pipeline_ref: string
-}
-
-export type CreateExecutionProps = Omit<
-  MutateProps<TypesExecution, UsererrorError, void, OpenapiCreateExecutionRequest, CreateExecutionPathParams>,
-  'path' | 'verb'
-> &
-  CreateExecutionPathParams
-
-export const CreateExecution = ({ pipeline_ref, ...props }: CreateExecutionProps) => (
-  <Mutate<TypesExecution, UsererrorError, void, OpenapiCreateExecutionRequest, CreateExecutionPathParams>
-    verb="POST"
-    path={`/pipelines/${pipeline_ref}/executions`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseCreateExecutionProps = Omit<
-  UseMutateProps<TypesExecution, UsererrorError, void, OpenapiCreateExecutionRequest, CreateExecutionPathParams>,
-  'path' | 'verb'
-> &
-  CreateExecutionPathParams
-
-export const useCreateExecution = ({ pipeline_ref, ...props }: UseCreateExecutionProps) =>
-  useMutate<TypesExecution, UsererrorError, void, OpenapiCreateExecutionRequest, CreateExecutionPathParams>(
-    'POST',
-    (paramsInPath: CreateExecutionPathParams) => `/pipelines/${paramsInPath.pipeline_ref}/executions`,
-    { base: getConfig('code/api/v1'), pathParams: { pipeline_ref }, ...props }
-  )
-
-export interface DeleteExecutionPathParams {
-  pipeline_ref: string
-}
-
-export type DeleteExecutionProps = Omit<
-  MutateProps<void, UsererrorError, void, string, DeleteExecutionPathParams>,
-  'path' | 'verb'
-> &
-  DeleteExecutionPathParams
-
-export const DeleteExecution = ({ pipeline_ref, ...props }: DeleteExecutionProps) => (
-  <Mutate<void, UsererrorError, void, string, DeleteExecutionPathParams>
-    verb="DELETE"
-    path={`/pipelines/${pipeline_ref}/executions`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseDeleteExecutionProps = Omit<
-  UseMutateProps<void, UsererrorError, void, string, DeleteExecutionPathParams>,
-  'path' | 'verb'
-> &
-  DeleteExecutionPathParams
-
-export const useDeleteExecution = ({ pipeline_ref, ...props }: UseDeleteExecutionProps) =>
-  useMutate<void, UsererrorError, void, string, DeleteExecutionPathParams>(
-    'DELETE',
-    (paramsInPath: DeleteExecutionPathParams) => `/pipelines/${paramsInPath.pipeline_ref}/executions`,
-    { base: getConfig('code/api/v1'), pathParams: { pipeline_ref }, ...props }
-  )
-
-export interface FindExecutionPathParams {
-  pipeline_ref: string
-  execution_number: string
-}
-
-export type FindExecutionProps = Omit<GetProps<TypesExecution, UsererrorError, void, FindExecutionPathParams>, 'path'> &
-  FindExecutionPathParams
-
-export const FindExecution = ({ pipeline_ref, execution_number, ...props }: FindExecutionProps) => (
-  <Get<TypesExecution, UsererrorError, void, FindExecutionPathParams>
-    path={`/pipelines/${pipeline_ref}/executions/${execution_number}`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseFindExecutionProps = Omit<
-  UseGetProps<TypesExecution, UsererrorError, void, FindExecutionPathParams>,
-  'path'
-> &
-  FindExecutionPathParams
-
-export const useFindExecution = ({ pipeline_ref, execution_number, ...props }: UseFindExecutionProps) =>
-  useGet<TypesExecution, UsererrorError, void, FindExecutionPathParams>(
-    (paramsInPath: FindExecutionPathParams) =>
-      `/pipelines/${paramsInPath.pipeline_ref}/executions/${paramsInPath.execution_number}`,
-    { base: getConfig('code/api/v1'), pathParams: { pipeline_ref, execution_number }, ...props }
-  )
-
-export interface UpdateExecutionPathParams {
-  pipeline_ref: string
-  execution_number: string
-}
-
-export type UpdateExecutionProps = Omit<
-  MutateProps<TypesExecution, UsererrorError, void, OpenapiUpdateExecutionRequest, UpdateExecutionPathParams>,
-  'path' | 'verb'
-> &
-  UpdateExecutionPathParams
-
-export const UpdateExecution = ({ pipeline_ref, execution_number, ...props }: UpdateExecutionProps) => (
-  <Mutate<TypesExecution, UsererrorError, void, OpenapiUpdateExecutionRequest, UpdateExecutionPathParams>
-    verb="PATCH"
-    path={`/pipelines/${pipeline_ref}/executions/${execution_number}`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseUpdateExecutionProps = Omit<
-  UseMutateProps<TypesExecution, UsererrorError, void, OpenapiUpdateExecutionRequest, UpdateExecutionPathParams>,
-  'path' | 'verb'
-> &
-  UpdateExecutionPathParams
-
-export const useUpdateExecution = ({ pipeline_ref, execution_number, ...props }: UseUpdateExecutionProps) =>
-  useMutate<TypesExecution, UsererrorError, void, OpenapiUpdateExecutionRequest, UpdateExecutionPathParams>(
-    'PATCH',
-    (paramsInPath: UpdateExecutionPathParams) =>
-      `/pipelines/${paramsInPath.pipeline_ref}/executions/${paramsInPath.execution_number}`,
-    { base: getConfig('code/api/v1'), pathParams: { pipeline_ref, execution_number }, ...props }
-  )
-
-export interface ViewLogsPathParams {
-  pipeline_ref: string
-  execution_number: string
-  stage_number: string
-  step_number: string
-}
-
-export type ViewLogsProps = Omit<GetProps<void, UsererrorError, void, ViewLogsPathParams>, 'path'> & ViewLogsPathParams
-
-export const ViewLogs = ({ pipeline_ref, execution_number, stage_number, step_number, ...props }: ViewLogsProps) => (
-  <Get<void, UsererrorError, void, ViewLogsPathParams>
-    path={`/pipelines/${pipeline_ref}/executions/${execution_number}/logs/${stage_number}/${step_number}`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseViewLogsProps = Omit<UseGetProps<void, UsererrorError, void, ViewLogsPathParams>, 'path'> &
-  ViewLogsPathParams
-
-export const useViewLogs = ({
-  pipeline_ref,
-  execution_number,
-  stage_number,
-  step_number,
-  ...props
-}: UseViewLogsProps) =>
-  useGet<void, UsererrorError, void, ViewLogsPathParams>(
-    (paramsInPath: ViewLogsPathParams) =>
-      `/pipelines/${paramsInPath.pipeline_ref}/executions/${paramsInPath.execution_number}/logs/${paramsInPath.stage_number}/${paramsInPath.step_number}`,
-    {
-      base: getConfig('code/api/v1'),
-      pathParams: { pipeline_ref, execution_number, stage_number, step_number },
-      ...props
-    }
-  )
+export const useListPlugins = (props: UseListPluginsProps) =>
+  useGet<TypesPlugin[], UsererrorError, ListPluginsQueryParams, void>(`/plugins`, {
+    base: getConfig('code/api/v1'),
+    ...props
+  })
 
 export interface ListPrincipalsQueryParams {
   /**
@@ -2329,6 +2224,576 @@ export const useDeleteRepositoryPath = ({ repo_ref, ...props }: UseDeleteReposit
     'DELETE',
     (paramsInPath: DeleteRepositoryPathPathParams) => `/repos/${paramsInPath.repo_ref}/paths`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
+  )
+
+export interface ListPipelinesQueryParams {
+  /**
+   * The substring which is used to filter the repositories by their path name.
+   */
+  query?: string
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+}
+
+export interface ListPipelinesPathParams {
+  repo_ref: string
+}
+
+export type ListPipelinesProps = Omit<
+  GetProps<TypesPipeline[], UsererrorError, ListPipelinesQueryParams, ListPipelinesPathParams>,
+  'path'
+> &
+  ListPipelinesPathParams
+
+export const ListPipelines = ({ repo_ref, ...props }: ListPipelinesProps) => (
+  <Get<TypesPipeline[], UsererrorError, ListPipelinesQueryParams, ListPipelinesPathParams>
+    path={`/repos/${repo_ref}/pipelines`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListPipelinesProps = Omit<
+  UseGetProps<TypesPipeline[], UsererrorError, ListPipelinesQueryParams, ListPipelinesPathParams>,
+  'path'
+> &
+  ListPipelinesPathParams
+
+export const useListPipelines = ({ repo_ref, ...props }: UseListPipelinesProps) =>
+  useGet<TypesPipeline[], UsererrorError, ListPipelinesQueryParams, ListPipelinesPathParams>(
+    (paramsInPath: ListPipelinesPathParams) => `/repos/${paramsInPath.repo_ref}/pipelines`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
+  )
+
+export interface CreatePipelinePathParams {
+  repo_ref: string
+}
+
+export type CreatePipelineProps = Omit<
+  MutateProps<TypesPipeline, UsererrorError, void, OpenapiCreatePipelineRequest, CreatePipelinePathParams>,
+  'path' | 'verb'
+> &
+  CreatePipelinePathParams
+
+export const CreatePipeline = ({ repo_ref, ...props }: CreatePipelineProps) => (
+  <Mutate<TypesPipeline, UsererrorError, void, OpenapiCreatePipelineRequest, CreatePipelinePathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/pipelines`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseCreatePipelineProps = Omit<
+  UseMutateProps<TypesPipeline, UsererrorError, void, OpenapiCreatePipelineRequest, CreatePipelinePathParams>,
+  'path' | 'verb'
+> &
+  CreatePipelinePathParams
+
+export const useCreatePipeline = ({ repo_ref, ...props }: UseCreatePipelineProps) =>
+  useMutate<TypesPipeline, UsererrorError, void, OpenapiCreatePipelineRequest, CreatePipelinePathParams>(
+    'POST',
+    (paramsInPath: CreatePipelinePathParams) => `/repos/${paramsInPath.repo_ref}/pipelines`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
+  )
+
+export interface DeletePipelinePathParams {
+  repo_ref: string
+}
+
+export type DeletePipelineProps = Omit<
+  MutateProps<void, UsererrorError, void, string, DeletePipelinePathParams>,
+  'path' | 'verb'
+> &
+  DeletePipelinePathParams
+
+export const DeletePipeline = ({ repo_ref, ...props }: DeletePipelineProps) => (
+  <Mutate<void, UsererrorError, void, string, DeletePipelinePathParams>
+    verb="DELETE"
+    path={`/repos/${repo_ref}/pipelines`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeletePipelineProps = Omit<
+  UseMutateProps<void, UsererrorError, void, string, DeletePipelinePathParams>,
+  'path' | 'verb'
+> &
+  DeletePipelinePathParams
+
+export const useDeletePipeline = ({ repo_ref, ...props }: UseDeletePipelineProps) =>
+  useMutate<void, UsererrorError, void, string, DeletePipelinePathParams>(
+    'DELETE',
+    (paramsInPath: DeletePipelinePathParams) => `/repos/${paramsInPath.repo_ref}/pipelines`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
+  )
+
+export interface FindPipelinePathParams {
+  repo_ref: string
+  pipeline_uid: string
+}
+
+export type FindPipelineProps = Omit<GetProps<TypesPipeline, UsererrorError, void, FindPipelinePathParams>, 'path'> &
+  FindPipelinePathParams
+
+export const FindPipeline = ({ repo_ref, pipeline_uid, ...props }: FindPipelineProps) => (
+  <Get<TypesPipeline, UsererrorError, void, FindPipelinePathParams>
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseFindPipelineProps = Omit<
+  UseGetProps<TypesPipeline, UsererrorError, void, FindPipelinePathParams>,
+  'path'
+> &
+  FindPipelinePathParams
+
+export const useFindPipeline = ({ repo_ref, pipeline_uid, ...props }: UseFindPipelineProps) =>
+  useGet<TypesPipeline, UsererrorError, void, FindPipelinePathParams>(
+    (paramsInPath: FindPipelinePathParams) => `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid }, ...props }
+  )
+
+export interface UpdatePipelinePathParams {
+  repo_ref: string
+  pipeline_uid: string
+}
+
+export type UpdatePipelineProps = Omit<
+  MutateProps<TypesPipeline, UsererrorError, void, OpenapiUpdatePipelineRequest, UpdatePipelinePathParams>,
+  'path' | 'verb'
+> &
+  UpdatePipelinePathParams
+
+export const UpdatePipeline = ({ repo_ref, pipeline_uid, ...props }: UpdatePipelineProps) => (
+  <Mutate<TypesPipeline, UsererrorError, void, OpenapiUpdatePipelineRequest, UpdatePipelinePathParams>
+    verb="PATCH"
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdatePipelineProps = Omit<
+  UseMutateProps<TypesPipeline, UsererrorError, void, OpenapiUpdatePipelineRequest, UpdatePipelinePathParams>,
+  'path' | 'verb'
+> &
+  UpdatePipelinePathParams
+
+export const useUpdatePipeline = ({ repo_ref, pipeline_uid, ...props }: UseUpdatePipelineProps) =>
+  useMutate<TypesPipeline, UsererrorError, void, OpenapiUpdatePipelineRequest, UpdatePipelinePathParams>(
+    'PATCH',
+    (paramsInPath: UpdatePipelinePathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid }, ...props }
+  )
+
+export interface ListExecutionsQueryParams {
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+}
+
+export interface ListExecutionsPathParams {
+  repo_ref: string
+  pipeline_uid: string
+}
+
+export type ListExecutionsProps = Omit<
+  GetProps<TypesExecution[], UsererrorError, ListExecutionsQueryParams, ListExecutionsPathParams>,
+  'path'
+> &
+  ListExecutionsPathParams
+
+export const ListExecutions = ({ repo_ref, pipeline_uid, ...props }: ListExecutionsProps) => (
+  <Get<TypesExecution[], UsererrorError, ListExecutionsQueryParams, ListExecutionsPathParams>
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/executions`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListExecutionsProps = Omit<
+  UseGetProps<TypesExecution[], UsererrorError, ListExecutionsQueryParams, ListExecutionsPathParams>,
+  'path'
+> &
+  ListExecutionsPathParams
+
+export const useListExecutions = ({ repo_ref, pipeline_uid, ...props }: UseListExecutionsProps) =>
+  useGet<TypesExecution[], UsererrorError, ListExecutionsQueryParams, ListExecutionsPathParams>(
+    (paramsInPath: ListExecutionsPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/executions`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid }, ...props }
+  )
+
+export interface CreateExecutionPathParams {
+  repo_ref: string
+  pipeline_uid: string
+}
+
+export type CreateExecutionProps = Omit<
+  MutateProps<TypesExecution, UsererrorError, void, OpenapiCreateExecutionRequest, CreateExecutionPathParams>,
+  'path' | 'verb'
+> &
+  CreateExecutionPathParams
+
+export const CreateExecution = ({ repo_ref, pipeline_uid, ...props }: CreateExecutionProps) => (
+  <Mutate<TypesExecution, UsererrorError, void, OpenapiCreateExecutionRequest, CreateExecutionPathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/executions`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseCreateExecutionProps = Omit<
+  UseMutateProps<TypesExecution, UsererrorError, void, OpenapiCreateExecutionRequest, CreateExecutionPathParams>,
+  'path' | 'verb'
+> &
+  CreateExecutionPathParams
+
+export const useCreateExecution = ({ repo_ref, pipeline_uid, ...props }: UseCreateExecutionProps) =>
+  useMutate<TypesExecution, UsererrorError, void, OpenapiCreateExecutionRequest, CreateExecutionPathParams>(
+    'POST',
+    (paramsInPath: CreateExecutionPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/executions`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid }, ...props }
+  )
+
+export interface DeleteExecutionPathParams {
+  repo_ref: string
+  pipeline_uid: string
+}
+
+export type DeleteExecutionProps = Omit<
+  MutateProps<void, UsererrorError, void, string, DeleteExecutionPathParams>,
+  'path' | 'verb'
+> &
+  DeleteExecutionPathParams
+
+export const DeleteExecution = ({ repo_ref, pipeline_uid, ...props }: DeleteExecutionProps) => (
+  <Mutate<void, UsererrorError, void, string, DeleteExecutionPathParams>
+    verb="DELETE"
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/executions`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeleteExecutionProps = Omit<
+  UseMutateProps<void, UsererrorError, void, string, DeleteExecutionPathParams>,
+  'path' | 'verb'
+> &
+  DeleteExecutionPathParams
+
+export const useDeleteExecution = ({ repo_ref, pipeline_uid, ...props }: UseDeleteExecutionProps) =>
+  useMutate<void, UsererrorError, void, string, DeleteExecutionPathParams>(
+    'DELETE',
+    (paramsInPath: DeleteExecutionPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/executions`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid }, ...props }
+  )
+
+export interface FindExecutionPathParams {
+  repo_ref: string
+  pipeline_uid: string
+  execution_number: string
+}
+
+export type FindExecutionProps = Omit<GetProps<TypesExecution, UsererrorError, void, FindExecutionPathParams>, 'path'> &
+  FindExecutionPathParams
+
+export const FindExecution = ({ repo_ref, pipeline_uid, execution_number, ...props }: FindExecutionProps) => (
+  <Get<TypesExecution, UsererrorError, void, FindExecutionPathParams>
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/executions/${execution_number}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseFindExecutionProps = Omit<
+  UseGetProps<TypesExecution, UsererrorError, void, FindExecutionPathParams>,
+  'path'
+> &
+  FindExecutionPathParams
+
+export const useFindExecution = ({ repo_ref, pipeline_uid, execution_number, ...props }: UseFindExecutionProps) =>
+  useGet<TypesExecution, UsererrorError, void, FindExecutionPathParams>(
+    (paramsInPath: FindExecutionPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/executions/${paramsInPath.execution_number}`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid, execution_number }, ...props }
+  )
+
+export interface UpdateExecutionPathParams {
+  repo_ref: string
+  pipeline_uid: string
+  execution_number: string
+}
+
+export type UpdateExecutionProps = Omit<
+  MutateProps<TypesExecution, UsererrorError, void, OpenapiUpdateExecutionRequest, UpdateExecutionPathParams>,
+  'path' | 'verb'
+> &
+  UpdateExecutionPathParams
+
+export const UpdateExecution = ({ repo_ref, pipeline_uid, execution_number, ...props }: UpdateExecutionProps) => (
+  <Mutate<TypesExecution, UsererrorError, void, OpenapiUpdateExecutionRequest, UpdateExecutionPathParams>
+    verb="PATCH"
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/executions/${execution_number}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdateExecutionProps = Omit<
+  UseMutateProps<TypesExecution, UsererrorError, void, OpenapiUpdateExecutionRequest, UpdateExecutionPathParams>,
+  'path' | 'verb'
+> &
+  UpdateExecutionPathParams
+
+export const useUpdateExecution = ({ repo_ref, pipeline_uid, execution_number, ...props }: UseUpdateExecutionProps) =>
+  useMutate<TypesExecution, UsererrorError, void, OpenapiUpdateExecutionRequest, UpdateExecutionPathParams>(
+    'PATCH',
+    (paramsInPath: UpdateExecutionPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/executions/${paramsInPath.execution_number}`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid, execution_number }, ...props }
+  )
+
+export interface ViewLogsPathParams {
+  repo_ref: string
+  pipeline_uid: string
+  execution_number: string
+  stage_number: string
+  step_number: string
+}
+
+export type ViewLogsProps = Omit<GetProps<void, UsererrorError, void, ViewLogsPathParams>, 'path'> & ViewLogsPathParams
+
+export const ViewLogs = ({
+  repo_ref,
+  pipeline_uid,
+  execution_number,
+  stage_number,
+  step_number,
+  ...props
+}: ViewLogsProps) => (
+  <Get<void, UsererrorError, void, ViewLogsPathParams>
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/executions/${execution_number}/logs/${stage_number}/${step_number}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseViewLogsProps = Omit<UseGetProps<void, UsererrorError, void, ViewLogsPathParams>, 'path'> &
+  ViewLogsPathParams
+
+export const useViewLogs = ({
+  repo_ref,
+  pipeline_uid,
+  execution_number,
+  stage_number,
+  step_number,
+  ...props
+}: UseViewLogsProps) =>
+  useGet<void, UsererrorError, void, ViewLogsPathParams>(
+    (paramsInPath: ViewLogsPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/executions/${paramsInPath.execution_number}/logs/${paramsInPath.stage_number}/${paramsInPath.step_number}`,
+    {
+      base: getConfig('code/api/v1'),
+      pathParams: { repo_ref, pipeline_uid, execution_number, stage_number, step_number },
+      ...props
+    }
+  )
+
+export interface ListTriggersQueryParams {
+  /**
+   * The substring which is used to filter the repositories by their path name.
+   */
+  query?: string
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+}
+
+export interface ListTriggersPathParams {
+  repo_ref: string
+  pipeline_uid: string
+}
+
+export type ListTriggersProps = Omit<
+  GetProps<TypesTrigger[], UsererrorError, ListTriggersQueryParams, ListTriggersPathParams>,
+  'path'
+> &
+  ListTriggersPathParams
+
+export const ListTriggers = ({ repo_ref, pipeline_uid, ...props }: ListTriggersProps) => (
+  <Get<TypesTrigger[], UsererrorError, ListTriggersQueryParams, ListTriggersPathParams>
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/triggers`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListTriggersProps = Omit<
+  UseGetProps<TypesTrigger[], UsererrorError, ListTriggersQueryParams, ListTriggersPathParams>,
+  'path'
+> &
+  ListTriggersPathParams
+
+export const useListTriggers = ({ repo_ref, pipeline_uid, ...props }: UseListTriggersProps) =>
+  useGet<TypesTrigger[], UsererrorError, ListTriggersQueryParams, ListTriggersPathParams>(
+    (paramsInPath: ListTriggersPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/triggers`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid }, ...props }
+  )
+
+export interface CreateTriggerPathParams {
+  repo_ref: string
+  pipeline_uid: string
+}
+
+export type CreateTriggerProps = Omit<
+  MutateProps<TypesTrigger, UsererrorError, void, OpenapiCreateTriggerRequest, CreateTriggerPathParams>,
+  'path' | 'verb'
+> &
+  CreateTriggerPathParams
+
+export const CreateTrigger = ({ repo_ref, pipeline_uid, ...props }: CreateTriggerProps) => (
+  <Mutate<TypesTrigger, UsererrorError, void, OpenapiCreateTriggerRequest, CreateTriggerPathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/triggers`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseCreateTriggerProps = Omit<
+  UseMutateProps<TypesTrigger, UsererrorError, void, OpenapiCreateTriggerRequest, CreateTriggerPathParams>,
+  'path' | 'verb'
+> &
+  CreateTriggerPathParams
+
+export const useCreateTrigger = ({ repo_ref, pipeline_uid, ...props }: UseCreateTriggerProps) =>
+  useMutate<TypesTrigger, UsererrorError, void, OpenapiCreateTriggerRequest, CreateTriggerPathParams>(
+    'POST',
+    (paramsInPath: CreateTriggerPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/triggers`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid }, ...props }
+  )
+
+export interface DeleteTriggerPathParams {
+  repo_ref: string
+  pipeline_uid: string
+}
+
+export type DeleteTriggerProps = Omit<
+  MutateProps<void, UsererrorError, void, string, DeleteTriggerPathParams>,
+  'path' | 'verb'
+> &
+  DeleteTriggerPathParams
+
+export const DeleteTrigger = ({ repo_ref, pipeline_uid, ...props }: DeleteTriggerProps) => (
+  <Mutate<void, UsererrorError, void, string, DeleteTriggerPathParams>
+    verb="DELETE"
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/triggers`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeleteTriggerProps = Omit<
+  UseMutateProps<void, UsererrorError, void, string, DeleteTriggerPathParams>,
+  'path' | 'verb'
+> &
+  DeleteTriggerPathParams
+
+export const useDeleteTrigger = ({ repo_ref, pipeline_uid, ...props }: UseDeleteTriggerProps) =>
+  useMutate<void, UsererrorError, void, string, DeleteTriggerPathParams>(
+    'DELETE',
+    (paramsInPath: DeleteTriggerPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/triggers`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid }, ...props }
+  )
+
+export interface FindTriggerPathParams {
+  repo_ref: string
+  pipeline_uid: string
+  trigger_uid: string
+}
+
+export type FindTriggerProps = Omit<GetProps<TypesTrigger, UsererrorError, void, FindTriggerPathParams>, 'path'> &
+  FindTriggerPathParams
+
+export const FindTrigger = ({ repo_ref, pipeline_uid, trigger_uid, ...props }: FindTriggerProps) => (
+  <Get<TypesTrigger, UsererrorError, void, FindTriggerPathParams>
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/triggers/${trigger_uid}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseFindTriggerProps = Omit<UseGetProps<TypesTrigger, UsererrorError, void, FindTriggerPathParams>, 'path'> &
+  FindTriggerPathParams
+
+export const useFindTrigger = ({ repo_ref, pipeline_uid, trigger_uid, ...props }: UseFindTriggerProps) =>
+  useGet<TypesTrigger, UsererrorError, void, FindTriggerPathParams>(
+    (paramsInPath: FindTriggerPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/triggers/${paramsInPath.trigger_uid}`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid, trigger_uid }, ...props }
+  )
+
+export interface UpdateTriggerPathParams {
+  repo_ref: string
+  pipeline_uid: string
+  trigger_uid: string
+}
+
+export type UpdateTriggerProps = Omit<
+  MutateProps<TypesTrigger, UsererrorError, void, OpenapiUpdateTriggerRequest, UpdateTriggerPathParams>,
+  'path' | 'verb'
+> &
+  UpdateTriggerPathParams
+
+export const UpdateTrigger = ({ repo_ref, pipeline_uid, trigger_uid, ...props }: UpdateTriggerProps) => (
+  <Mutate<TypesTrigger, UsererrorError, void, OpenapiUpdateTriggerRequest, UpdateTriggerPathParams>
+    verb="PATCH"
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/triggers/${trigger_uid}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdateTriggerProps = Omit<
+  UseMutateProps<TypesTrigger, UsererrorError, void, OpenapiUpdateTriggerRequest, UpdateTriggerPathParams>,
+  'path' | 'verb'
+> &
+  UpdateTriggerPathParams
+
+export const useUpdateTrigger = ({ repo_ref, pipeline_uid, trigger_uid, ...props }: UseUpdateTriggerProps) =>
+  useMutate<TypesTrigger, UsererrorError, void, OpenapiUpdateTriggerRequest, UpdateTriggerPathParams>(
+    'PATCH',
+    (paramsInPath: UpdateTriggerPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/triggers/${paramsInPath.trigger_uid}`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid, trigger_uid }, ...props }
   )
 
 export interface ListPullReqQueryParams {
@@ -3777,6 +4242,51 @@ export const useUpdateSpace = ({ space_ref, ...props }: UseUpdateSpaceProps) =>
     { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
   )
 
+export interface ListConnectorsQueryParams {
+  /**
+   * The substring which is used to filter the repositories by their path name.
+   */
+  query?: string
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+}
+
+export interface ListConnectorsPathParams {
+  space_ref: string
+}
+
+export type ListConnectorsProps = Omit<
+  GetProps<TypesConnector[], UsererrorError, ListConnectorsQueryParams, ListConnectorsPathParams>,
+  'path'
+> &
+  ListConnectorsPathParams
+
+export const ListConnectors = ({ space_ref, ...props }: ListConnectorsProps) => (
+  <Get<TypesConnector[], UsererrorError, ListConnectorsQueryParams, ListConnectorsPathParams>
+    path={`/spaces/${space_ref}/connectors`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListConnectorsProps = Omit<
+  UseGetProps<TypesConnector[], UsererrorError, ListConnectorsQueryParams, ListConnectorsPathParams>,
+  'path'
+> &
+  ListConnectorsPathParams
+
+export const useListConnectors = ({ space_ref, ...props }: UseListConnectorsProps) =>
+  useGet<TypesConnector[], UsererrorError, ListConnectorsQueryParams, ListConnectorsPathParams>(
+    (paramsInPath: ListConnectorsPathParams) => `/spaces/${paramsInPath.space_ref}/connectors`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
+  )
+
 export interface MembershipListQueryParams {
   /**
    * The substring by which the space members are filtered.
@@ -4073,51 +4583,6 @@ export const useDeletePath = ({ space_ref, ...props }: UseDeletePathProps) =>
     { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
   )
 
-export interface ListPipelinesQueryParams {
-  /**
-   * The substring which is used to filter the repositories by their path name.
-   */
-  query?: string
-  /**
-   * The page to return.
-   */
-  page?: number
-  /**
-   * The maximum number of results to return.
-   */
-  limit?: number
-}
-
-export interface ListPipelinesPathParams {
-  space_ref: string
-}
-
-export type ListPipelinesProps = Omit<
-  GetProps<TypesPipeline[], UsererrorError, ListPipelinesQueryParams, ListPipelinesPathParams>,
-  'path'
-> &
-  ListPipelinesPathParams
-
-export const ListPipelines = ({ space_ref, ...props }: ListPipelinesProps) => (
-  <Get<TypesPipeline[], UsererrorError, ListPipelinesQueryParams, ListPipelinesPathParams>
-    path={`/spaces/${space_ref}/pipelines`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseListPipelinesProps = Omit<
-  UseGetProps<TypesPipeline[], UsererrorError, ListPipelinesQueryParams, ListPipelinesPathParams>,
-  'path'
-> &
-  ListPipelinesPathParams
-
-export const useListPipelines = ({ space_ref, ...props }: UseListPipelinesProps) =>
-  useGet<TypesPipeline[], UsererrorError, ListPipelinesQueryParams, ListPipelinesPathParams>(
-    (paramsInPath: ListPipelinesPathParams) => `/spaces/${paramsInPath.space_ref}/pipelines`,
-    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
-  )
-
 export interface ListReposQueryParams {
   /**
    * The substring which is used to filter the repositories by their path name.
@@ -4299,6 +4764,51 @@ export const useListSpaces = ({ space_ref, ...props }: UseListSpacesProps) =>
     { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
   )
 
+export interface ListTemplatesQueryParams {
+  /**
+   * The substring which is used to filter the repositories by their path name.
+   */
+  query?: string
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+}
+
+export interface ListTemplatesPathParams {
+  space_ref: string
+}
+
+export type ListTemplatesProps = Omit<
+  GetProps<TypesTemplate[], UsererrorError, ListTemplatesQueryParams, ListTemplatesPathParams>,
+  'path'
+> &
+  ListTemplatesPathParams
+
+export const ListTemplates = ({ space_ref, ...props }: ListTemplatesProps) => (
+  <Get<TypesTemplate[], UsererrorError, ListTemplatesQueryParams, ListTemplatesPathParams>
+    path={`/spaces/${space_ref}/templates`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseListTemplatesProps = Omit<
+  UseGetProps<TypesTemplate[], UsererrorError, ListTemplatesQueryParams, ListTemplatesPathParams>,
+  'path'
+> &
+  ListTemplatesPathParams
+
+export const useListTemplates = ({ space_ref, ...props }: UseListTemplatesProps) =>
+  useGet<TypesTemplate[], UsererrorError, ListTemplatesQueryParams, ListTemplatesPathParams>(
+    (paramsInPath: ListTemplatesPathParams) => `/spaces/${paramsInPath.space_ref}/templates`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
+  )
+
 export type GetSystemConfigProps = Omit<GetProps<SystemConfigOutput, UsererrorError, void, void>, 'path'>
 
 export const GetSystemConfig = (props: GetSystemConfigProps) => (
@@ -4313,6 +4823,109 @@ export type UseGetSystemConfigProps = Omit<UseGetProps<SystemConfigOutput, Usere
 
 export const useGetSystemConfig = (props: UseGetSystemConfigProps) =>
   useGet<SystemConfigOutput, UsererrorError, void, void>(`/system/config`, { base: getConfig('code/api/v1'), ...props })
+
+export type CreateTemplateProps = Omit<
+  MutateProps<TypesTemplate, UsererrorError, void, OpenapiCreateTemplateRequest, void>,
+  'path' | 'verb'
+>
+
+export const CreateTemplate = (props: CreateTemplateProps) => (
+  <Mutate<TypesTemplate, UsererrorError, void, OpenapiCreateTemplateRequest, void>
+    verb="POST"
+    path={`/templates`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseCreateTemplateProps = Omit<
+  UseMutateProps<TypesTemplate, UsererrorError, void, OpenapiCreateTemplateRequest, void>,
+  'path' | 'verb'
+>
+
+export const useCreateTemplate = (props: UseCreateTemplateProps) =>
+  useMutate<TypesTemplate, UsererrorError, void, OpenapiCreateTemplateRequest, void>('POST', `/templates`, {
+    base: getConfig('code/api/v1'),
+    ...props
+  })
+
+export type DeleteTemplateProps = Omit<MutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
+
+export const DeleteTemplate = (props: DeleteTemplateProps) => (
+  <Mutate<void, UsererrorError, void, string, void>
+    verb="DELETE"
+    path={`/templates`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseDeleteTemplateProps = Omit<UseMutateProps<void, UsererrorError, void, string, void>, 'path' | 'verb'>
+
+export const useDeleteTemplate = (props: UseDeleteTemplateProps) =>
+  useMutate<void, UsererrorError, void, string, void>('DELETE', `/templates`, {
+    base: getConfig('code/api/v1'),
+    ...props
+  })
+
+export interface FindTemplatePathParams {
+  template_ref: string
+}
+
+export type FindTemplateProps = Omit<GetProps<TypesTemplate, UsererrorError, void, FindTemplatePathParams>, 'path'> &
+  FindTemplatePathParams
+
+export const FindTemplate = ({ template_ref, ...props }: FindTemplateProps) => (
+  <Get<TypesTemplate, UsererrorError, void, FindTemplatePathParams>
+    path={`/templates/${template_ref}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseFindTemplateProps = Omit<
+  UseGetProps<TypesTemplate, UsererrorError, void, FindTemplatePathParams>,
+  'path'
+> &
+  FindTemplatePathParams
+
+export const useFindTemplate = ({ template_ref, ...props }: UseFindTemplateProps) =>
+  useGet<TypesTemplate, UsererrorError, void, FindTemplatePathParams>(
+    (paramsInPath: FindTemplatePathParams) => `/templates/${paramsInPath.template_ref}`,
+    { base: getConfig('code/api/v1'), pathParams: { template_ref }, ...props }
+  )
+
+export interface UpdateTemplatePathParams {
+  template_ref: string
+}
+
+export type UpdateTemplateProps = Omit<
+  MutateProps<TypesTemplate, UsererrorError, void, OpenapiUpdateTemplateRequest, UpdateTemplatePathParams>,
+  'path' | 'verb'
+> &
+  UpdateTemplatePathParams
+
+export const UpdateTemplate = ({ template_ref, ...props }: UpdateTemplateProps) => (
+  <Mutate<TypesTemplate, UsererrorError, void, OpenapiUpdateTemplateRequest, UpdateTemplatePathParams>
+    verb="PATCH"
+    path={`/templates/${template_ref}`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseUpdateTemplateProps = Omit<
+  UseMutateProps<TypesTemplate, UsererrorError, void, OpenapiUpdateTemplateRequest, UpdateTemplatePathParams>,
+  'path' | 'verb'
+> &
+  UpdateTemplatePathParams
+
+export const useUpdateTemplate = ({ template_ref, ...props }: UseUpdateTemplateProps) =>
+  useMutate<TypesTemplate, UsererrorError, void, OpenapiUpdateTemplateRequest, UpdateTemplatePathParams>(
+    'PATCH',
+    (paramsInPath: UpdateTemplatePathParams) => `/templates/${paramsInPath.template_ref}`,
+    { base: getConfig('code/api/v1'), pathParams: { template_ref }, ...props }
+  )
 
 export type GetUserProps = Omit<GetProps<TypesUser, UsererrorError, void, void>, 'path'>
 
@@ -4347,20 +4960,49 @@ export const useUpdateUser = (props: UseUpdateUserProps) =>
     ...props
   })
 
-export type MembershipSpacesProps = Omit<GetProps<TypesMembershipSpace[], UsererrorError, void, void>, 'path'>
+export interface MembershipSpacesQueryParams {
+  /**
+   * The substring by which the spaces the users is a member of are filtered.
+   */
+  query?: string
+  /**
+   * The order of the output.
+   */
+  order?: 'asc' | 'desc'
+  /**
+   * The field by which the spaces the user is a member of are sorted.
+   */
+  sort?: 'created' | 'path' | 'uid'
+  /**
+   * The page to return.
+   */
+  page?: number
+  /**
+   * The maximum number of results to return.
+   */
+  limit?: number
+}
+
+export type MembershipSpacesProps = Omit<
+  GetProps<TypesMembershipSpace[], UsererrorError, MembershipSpacesQueryParams, void>,
+  'path'
+>
 
 export const MembershipSpaces = (props: MembershipSpacesProps) => (
-  <Get<TypesMembershipSpace[], UsererrorError, void, void>
+  <Get<TypesMembershipSpace[], UsererrorError, MembershipSpacesQueryParams, void>
     path={`/user/memberships`}
     base={getConfig('code/api/v1')}
     {...props}
   />
 )
 
-export type UseMembershipSpacesProps = Omit<UseGetProps<TypesMembershipSpace[], UsererrorError, void, void>, 'path'>
+export type UseMembershipSpacesProps = Omit<
+  UseGetProps<TypesMembershipSpace[], UsererrorError, MembershipSpacesQueryParams, void>,
+  'path'
+>
 
 export const useMembershipSpaces = (props: UseMembershipSpacesProps) =>
-  useGet<TypesMembershipSpace[], UsererrorError, void, void>(`/user/memberships`, {
+  useGet<TypesMembershipSpace[], UsererrorError, MembershipSpacesQueryParams, void>(`/user/memberships`, {
     base: getConfig('code/api/v1'),
     ...props
   })
