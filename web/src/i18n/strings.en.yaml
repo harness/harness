@@ -146,7 +146,7 @@ branchSource: Branch source
 branchSourceDesc: Choose a source branch
 basedOn: Based on
 failedToCreateBranch: Failed to create Branch. Please try again.
-branchCreated: Branch {{branch}} created.
+branchCreated: Branch {branch} created.
 tagCreated: Tag {{tag}} created.
 confirmation: Confirmation
 deleteBranch: Delete Branches
@@ -158,8 +158,8 @@ browseFiles: Browse Files
 compare: Compare
 commitString: 'Commit  {commit}'
 repoDeleted: Repository {{repo}} deleted.
-branchDeleted: Branch {{branch}} deleted.
-tagDeleted: Tag {{tag}} deleted.
+branchDeleted: Branch {branch} deleted.
+tagDeleted: Tag {tag} deleted.
 failedToDeleteBranch: Failed to delete Branch. Please try again.
 createFile: Create __path__
 updateFile: Update __path__

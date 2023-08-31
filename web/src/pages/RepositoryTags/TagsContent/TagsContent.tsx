@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { Container, TableV2 as Table, Text, Avatar, useToaster } from '@harnessio/uicore'
+import { Container, TableV2 as Table, Text, Avatar, useToaster, StringSubstitute } from '@harnessio/uicore'
 import { Color, Intent } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 import { Link, useHistory } from 'react-router-dom'
@@ -137,7 +137,15 @@ export function TagsContent({ repoMetadata, searchTerm = '', branches, onDeleteS
             action: async () => {
               deleteBranch({})
                 .then(() => {
-                  showSuccess(getString('tagDeleted', { branch: row.original.name }), 5000)
+                  showSuccess(
+                    <StringSubstitute
+                      str={getString('tagDeleted')}
+                      vars={{
+                        tag: row.original.name
+                      }}
+                    />,
+                    5000
+                  )
                   onDeleteSuccess()
                 })
                 .catch(error => {

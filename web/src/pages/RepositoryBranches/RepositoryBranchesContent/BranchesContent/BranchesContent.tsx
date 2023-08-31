@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Container, TableV2 as Table, Text, Avatar, Tag, useToaster } from '@harnessio/uicore'
+import { Container, TableV2 as Table, Text, Avatar, Tag, useToaster, StringSubstitute } from '@harnessio/uicore'
 import { Color, Intent } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 import { Link, useHistory } from 'react-router-dom'
@@ -128,7 +128,15 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
             action: async () => {
               deleteBranch({})
                 .then(() => {
-                  showSuccess(getString('branchDeleted', { branch: row.original.name }), 5000)
+                  showSuccess(
+                    <StringSubstitute
+                      str={getString('branchDeleted')}
+                      vars={{
+                        branch: row.original.name
+                      }}
+                    />,
+                    5000
+                  )
                   onDeleteSuccess()
                 })
                 .catch(error => {
