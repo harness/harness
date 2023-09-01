@@ -39,7 +39,7 @@ func checkURL(rawURL string, allowLoopback bool, allowPrivateNetwork bool) error
 
 	// basic validation for loopback / private network addresses (only sanitary to give user an early error)
 	// IMPORTANT: during webook execution loopback / private network addresses are blocked (handles DNS resolution)
-	//
+
 	if host == "localhost" {
 		return check.NewValidationError("localhost is not allowed.")
 	}
