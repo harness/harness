@@ -17,7 +17,6 @@ const (
 	ResourceTypeSecret         ResourceType = "SECRET"
 	ResourceTypeConnector      ResourceType = "CONNECTOR"
 	ResourceTypeTemplate       ResourceType = "TEMPLATE"
-	//   ResourceType_Branch ResourceType = "BRANCH"
 )
 
 // Permission represents the different types of permissions a principal can have.
@@ -37,10 +36,11 @@ const (
 	/*
 		----- REPOSITORY -----
 	*/
-	PermissionRepoView   Permission = "repo_view"
-	PermissionRepoEdit   Permission = "repo_edit"
-	PermissionRepoDelete Permission = "repo_delete"
-	PermissionRepoPush   Permission = "repo_push"
+	PermissionRepoView              Permission = "repo_view"
+	PermissionRepoEdit              Permission = "repo_edit"
+	PermissionRepoDelete            Permission = "repo_delete"
+	PermissionRepoPush              Permission = "repo_push"
+	PermissionRepoReportCommitCheck Permission = "repo_reportCommitCheck"
 )
 
 const (
@@ -113,11 +113,4 @@ const (
 	PermissionTemplateEdit   Permission = "template_edit"
 	PermissionTemplateDelete Permission = "template_delete"
 	PermissionTemplateAccess Permission = "template_access"
-)
-
-const (
-	/*
-		----- COMMIT CHECK -----
-	*/
-	PermissionCommitCheckReport Permission = "commitCheck_report"
 )
