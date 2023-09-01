@@ -10,7 +10,12 @@
 }
 
 .editorContainer {
-  height: calc(100vh - var(--header-height) - var(--heading-height)) !important;
+  width: calc(100% - 30vw);
+  height: calc(100vh - var(--header-height)) !important;
+}
+
+.pluginsContainer {
+  width: 30vw;
 }
 
 .header {

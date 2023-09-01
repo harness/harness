@@ -326,6 +326,7 @@ export interface StringsMap {
   'pipelines.run': string
   'pipelines.saveAndRun': string
   'pipelines.yamlPath': string
+  'plugins.title': string
   'pr.ableToMerge': string
   'pr.addDescription': string
   'pr.authorCommentedPR': string

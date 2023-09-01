@@ -9,6 +9,7 @@ import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse } from 'service
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import MonacoSourceCodeEditor from 'components/SourceCodeEditor/MonacoSourceCodeEditor'
+import { PluginsPanel } from 'components/PluginsPanel/PluginsPanel'
 import { useAppContext } from 'AppContext'
 import type { CODEProps } from 'RouteDefinitions'
 import { getErrorMessage } from 'utils/Utils'
@@ -90,17 +91,21 @@ const NewPipeline = (): JSX.Element => {
           }
         />
         <PageBody>
-          <Container className={css.editorContainer}>
-            <MonacoSourceCodeEditor
-              language={'yaml'}
-              schema={pipelineSchema}
-              source={
-                'stages:\n- type: ci\n  spec:\n    steps:\n    - type: script\n      spec:\n        run: echo hello world'
-              }
-              onChange={(value: string) => setPipelineAsYaml(value)}
-              autoHeight
-            />
-          </Container>
+          <Layout.Horizontal>
+            <Container className={css.editorContainer}>
+              <MonacoSourceCodeEditor
+                language={'yaml'}
+                schema={pipelineSchema}
+                source={
+                  'stages:\n- type: ci\n  spec:\n    steps:\n    - type: script\n      spec:\n        run: echo hello world'
+                }
+                onChange={(value: string) => setPipelineAsYaml(value)}
+              />
+            </Container>
+            <Container className={css.pluginsContainer}>
+              <PluginsPanel />
+            </Container>
+          </Layout.Horizontal>
         </PageBody>
       </Container>
     </>

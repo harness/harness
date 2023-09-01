@@ -1,0 +1,30 @@
+.main {
+  height: 100%;
+}
+
+.tabs {
+  width: 100%;
+}
+
+.mainTabPanel {
+  &:global(.bp3-tab-panel[role='tabpanel']) {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+.pluginDetailsPanel {
+  border-top: 1px solid var(--grey-100);
+}
+
+.pluginIcon {
+  background: var(--teal-200) !important;
+  border-radius: 5px;
+}
+
+.plugin {
+  border: 1px solid var(--grey-100);
+  &:hover {
+    cursor: pointer;
+  }
+}

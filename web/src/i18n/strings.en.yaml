@@ -651,3 +651,5 @@ secrets:
   createSecret: Create Secret
 userUpdateSuccess: 'User updated successfully'
 run: Run
+plugins:
+  title: Plugins
