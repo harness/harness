@@ -357,6 +357,7 @@ func mapToWebhook(hook *webhook) (*types.Webhook, error) {
 		Insecure:              hook.Insecure,
 		Triggers:              triggersFromString(hook.Triggers),
 		LatestExecutionResult: (*enum.WebhookExecutionResult)(hook.LatestExecutionResult.Ptr()),
+		Internal:              hook.Internal,
 	}
 
 	switch {
@@ -390,6 +391,7 @@ func mapToInternalWebhook(hook *types.Webhook) (*webhook, error) {
 		Insecure:              hook.Insecure,
 		Triggers:              triggersToString(hook.Triggers),
 		LatestExecutionResult: null.StringFromPtr((*string)(hook.LatestExecutionResult)),
+		Internal:              hook.Internal,
 	}
 
 	switch hook.ParentType {
