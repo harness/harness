@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import {
+  Avatar,
   Button,
   ButtonVariation,
   Container,
@@ -7,7 +8,8 @@ import {
   Layout,
   PageBody,
   TableV2 as Table,
-  Text
+  Text,
+  Utils
 } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
@@ -15,11 +17,13 @@ import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
+import { Icon } from '@harnessio/icons'
+import { Calendar, Timer, GitFork } from 'iconoir-react'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
-import { LIST_FETCHING_LIMIT, PageBrowserProps, formatDate, getErrorMessage, voidFn } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT, PageBrowserProps, getErrorMessage, timeDistance, voidFn } from 'utils/Utils'
 import type { TypesPipeline } from 'services/code'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { usePageIndex } from 'hooks/usePageIndex'
@@ -48,7 +52,7 @@ const PipelineList = () => {
     response
   } = useGet<TypesPipeline[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines`,
-    queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm },
+    queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm, latest: true },
     lazy: !repoMetadata
   })
 
@@ -66,33 +70,83 @@ const PipelineList = () => {
     () => [
       {
         Header: getString('pipelines.name'),
-        width: 'calc(100% - 180px)',
+        width: 'calc(50% - 90px)',
         Cell: ({ row }: CellProps<TypesPipeline>) => {
           const record = row.original
           return (
-            <Container className={css.nameContainer}>
-              <Layout.Horizontal spacing="small" style={{ flexGrow: 1 }}>
-                <Layout.Vertical flex className={css.name}>
-                  <Text className={css.repoName}>
-                    <Keywords value={searchTerm}>{record.uid}</Keywords>
-                  </Text>
-                  {record.description && <Text className={css.desc}>{record.description}</Text>}
-                </Layout.Vertical>
-              </Layout.Horizontal>
-            </Container>
+            <Layout.Horizontal spacing="small" className={css.nameContainer}>
+              {/* TODO this icon need to depend on the status */}
+              <Icon name="success-tick" size={24} />
+              <Text className={css.repoName}>
+                <Keywords value={searchTerm}>{record.uid}</Keywords>
+              </Text>
+            </Layout.Horizontal>
           )
         }
       },
       {
-        Header: getString('repos.updated'),
+        Header: getString('pipelines.lastExecution'),
+        width: 'calc(50% - 90px)',
+        Cell: ({ row }: CellProps<TypesPipeline>) => {
+          const record = row.original.execution
+
+          return record ? (
+            <Layout.Vertical className={css.executionContainer}>
+              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
+                {/* TODO this icon need to depend on the status */}
+                <Text className={css.desc}>{`#${record.number}`}</Text>
+                <Text className={css.divider}>{`|`}</Text>
+                <Text className={css.desc}>{record.title}</Text>
+              </Layout.Horizontal>
+              <Layout.Horizontal spacing={'xsmall'} style={{ alignItems: 'center' }}>
+                <Avatar
+                  email={record.author_email}
+                  name={record.author_name}
+                  size="small"
+                  hoverCard={false}
+                  className={css.avatar}
+                />
+                {/* TODO need logic here for different trigger types */}
+                <Text className={css.author}>{record.author_name}</Text>
+                <Text className={css.divider}>{`|`}</Text>
+                <GitFork height={12} width={12} color={Utils.getRealCSSColor(Color.GREY_500)} />
+                <Text className={css.author}>{record.source}</Text>
+                <Text className={css.divider}>{`|`}</Text>
+                {/* TODO Will need to replace this with commit component - wont match Yifan designs */}
+                <a rel="noreferrer noopener" className={css.hash}>
+                  {/* {record.after} */}
+                  hardcoded
+                </a>
+              </Layout.Horizontal>
+            </Layout.Vertical>
+          ) : (
+            <div className={css.spacer} />
+          )
+        }
+      },
+      {
+        Header: getString('pipelines.time'),
         width: '180px',
         Cell: ({ row }: CellProps<TypesPipeline>) => {
-          return (
-            <Layout.Horizontal style={{ alignItems: 'center' }}>
-              <Text color={Color.BLACK} lineClamp={1} rightIconProps={{ size: 10 }} width={120}>
-                {formatDate(row.original.updated as number)}
-              </Text>
-            </Layout.Horizontal>
+          const record = row.original.execution
+
+          return record ? (
+            <Layout.Vertical spacing={'small'}>
+              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
+                <Timer color={Utils.getRealCSSColor(Color.GREY_500)} />
+                <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
+                  {timeDistance(record.started, record.finished)}
+                </Text>
+              </Layout.Horizontal>
+              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
+                <Calendar color={Utils.getRealCSSColor(Color.GREY_500)} />
+                <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
+                  {timeDistance(record.finished, Date.now())} ago
+                </Text>
+              </Layout.Horizontal>
+            </Layout.Vertical>
+          ) : (
+            <div className={css.spacer} />
           )
         },
         disableSortBy: true

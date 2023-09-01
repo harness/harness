@@ -80,8 +80,8 @@
   .hash {
     color: var(--primary-7) !important;
     font-family: Roboto Mono !important;
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
   }
 
   .triggerLayout {

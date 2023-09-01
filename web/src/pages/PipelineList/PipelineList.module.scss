@@ -31,56 +31,56 @@
 }
 
 .nameContainer {
-  position: relative;
+  display: flex;
+  align-items: center;
+  height: 3rem !important;
+}
 
-  .name {
-    flex-grow: 1;
-    align-items: baseline !important;
-    width: calc(100% - 100px) !important;
+.repoName {
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  color: var(--grey-700) !important;
+}
 
-    > span {
-      width: 100%;
-      > span {
-        width: 100%;
-      }
-    }
+.nameContainer {
+  // display: flex;
+  // align-items: center;
+  // height: 3rem !important;
+}
 
-    & + span:last-of-type {
-      align-self: center;
-    }
-  }
+.desc {
+  color: var(--grey-700) !important;
+  font-size: 0.75rem !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+}
 
-  .pinned {
-    transform: rotate(-90deg);
-    position: absolute;
-    top: 7px;
-    left: -43px;
-    font-size: var(--font-size-xsmall) !important;
-    padding: 6px 14px;
-  }
+.avatar {
+  margin: 0 0 0 -3px !important;
+}
 
-  .repoName {
-    font-weight: 600 !important;
-    font-size: 16px !important;
-    line-height: 24px !important;
-    color: var(--grey-800);
+.author {
+  color: var(--grey500) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+}
 
-    .repoScope {
-      color: var(--grey-400);
-      padding: 2px 6px;
-      font-size: var(--font-size-xsmall) !important;
-      border-radius: 4px;
-      border: 1px solid var(--grey-200);
-      display: inline-block;
-      margin-left: var(--spacing-medium);
-      text-transform: uppercase;
-      line-height: 16px;
-    }
-  }
+.hash {
+  color: var(--primary-7) !important;
+  font-family: Roboto Mono !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+}
 
-  .desc {
-    color: var(--grey-500);
-    font-size: var(--font-size-small);
-    padding-top: var(--spacing-xsmall) !important;
-  }
+.triggerLayout {
+  align-items: center !important;
+}
+
+.spacer {
+  width: 180px;
+}
+
+.divider {
+  color: var(--grey-300) !important;
+  font-size: 0.5rem !important;
 }

@@ -71,26 +71,24 @@ const ExecutionList = () => {
         Cell: ({ row }: CellProps<TypesExecution>) => {
           const record = row.original
           return (
-            <Container className={css.nameContainer}>
-              <Layout.Vertical>
-                <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
-                  {/* TODO this icon need to depend on the status */}
-                  <Icon name="success-tick" size={18} />
-                  <Text className={css.number}>{`#${record.number}.`}</Text>
-                  <Text className={css.desc}>{record.title}</Text>
-                </Layout.Horizontal>
-                <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center', marginLeft: '1.2rem' }}>
-                  <Avatar email={record.author_email} name={record.author_name} size="small" hoverCard={false} />
-                  {/* TODO need logic here for different trigger types */}
-                  <Text className={css.author}>{`${record.author_name} triggered manually`}</Text>
-                  <Text className={css.divider}>{`|`}</Text>
-                  {/* TODO Will need to replace this with commit action - wont match Yifan designs */}
-                  <a rel="noreferrer noopener" className={css.hash}>
-                    {record.after}
-                  </a>
-                </Layout.Horizontal>
-              </Layout.Vertical>
-            </Container>
+            <Layout.Vertical className={css.nameContainer}>
+              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
+                {/* TODO this icon need to depend on the status */}
+                <Icon name="success-tick" size={20} />
+                <Text className={css.number}>{`#${record.number}.`}</Text>
+                <Text className={css.desc}>{record.title}</Text>
+              </Layout.Horizontal>
+              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center', marginLeft: '1.2rem' }}>
+                <Avatar email={record.author_email} name={record.author_name} size="small" hoverCard={false} />
+                {/* TODO need logic here for different trigger types */}
+                <Text className={css.author}>{`${record.author_name} triggered manually`}</Text>
+                <Text className={css.divider}>{`|`}</Text>
+                {/* TODO Will need to replace this with commit component - wont match Yifan designs */}
+                <a rel="noreferrer noopener" className={css.hash}>
+                  {record.after}
+                </a>
+              </Layout.Horizontal>
+            </Layout.Vertical>
           )
         }
       },
