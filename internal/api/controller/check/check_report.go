@@ -68,7 +68,7 @@ func (in *ReportInput) Validate() error {
 				in.Payload.Kind)
 		}
 
-		payloadDataJSON, err := sanitizeJsonPayload(in.Payload.Data, &types.CheckPayloadText{})
+		payloadDataJSON, err := sanitizeJSONPayload(in.Payload.Data, &types.CheckPayloadText{})
 		if err != nil {
 			return err
 		}
@@ -79,7 +79,7 @@ func (in *ReportInput) Validate() error {
 	return nil
 }
 
-func sanitizeJsonPayload(source json.RawMessage, data any) (json.RawMessage, error) {
+func sanitizeJSONPayload(source json.RawMessage, data any) (json.RawMessage, error) {
 	if len(source) == 0 {
 		return json.Marshal(data) // marshal the empty object
 	}
@@ -118,7 +118,7 @@ func (c *Controller) Report(
 	in *ReportInput,
 	metadata map[string]string,
 ) (*types.Check, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionCommitCheckReport)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoReportCommitCheck)
 	if err != nil {
 		return nil, fmt.Errorf("failed to acquire access access to repo: %w", err)
 	}

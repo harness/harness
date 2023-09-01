@@ -93,7 +93,6 @@ $ ./gitness register
 
 > NOTE: A user `admin` (pw: `changeit`) gets created by default.
 
-
 Login to the application:
 
 ```bash

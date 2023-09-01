@@ -20,7 +20,6 @@ type Controller struct {
 	repoStore     store.RepoStore
 	authorizer    authz.Authorizer
 	pipelineStore store.PipelineStore
-	spaceStore    store.SpaceStore
 }
 
 func NewController(
@@ -30,7 +29,6 @@ func NewController(
 	pathStore store.PathStore,
 	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,
-	spaceStore store.SpaceStore,
 ) *Controller {
 	return &Controller{
 		db:            db,
@@ -39,6 +37,5 @@ func NewController(
 		repoStore:     repoStore,
 		authorizer:    authorizer,
 		pipelineStore: pipelineStore,
-		spaceStore:    spaceStore,
 	}
 }

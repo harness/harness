@@ -35,7 +35,7 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { PlainButton } from 'components/PlainButton/PlainButton'
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import { FileCategory, useFileContentViewerDecision } from 'utils/FileUtils'
+import { FileCategory, RepoContentExtended, useFileContentViewerDecision } from 'utils/FileUtils'
 import { useDownloadRawFile } from 'hooks/useDownloadRawFile'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { Readme } from '../FolderContent/Readme'
@@ -233,7 +233,12 @@ export function FileContent({
                       </Layout.Horizontal>
                     </Layout.Horizontal>
 
-                    <Render when={(resourceContent?.content as RepoFileContent)?.data}>
+                    <Render
+                      when={
+                        (resourceContent?.content as RepoFileContent)?.data ||
+                        (resourceContent?.content as RepoContentExtended)?.target ||
+                        (resourceContent?.content as RepoContentExtended)?.url
+                      }>
                       <Container className={css.content}>
                         <Match expr={isViewable}>
                           <Falsy>
@@ -370,6 +375,18 @@ export function FileContent({
                                           </video>
                                         </Case>
                                         <Case val={FileCategory.TEXT}>
+                                          <SourceCodeViewer
+                                            language={filenameToLanguage(filename)}
+                                            source={decodeGitContent(base64Data)}
+                                          />
+                                        </Case>
+                                        <Case val={FileCategory.SUBMODULE}>
+                                          <SourceCodeViewer
+                                            language={filenameToLanguage(filename)}
+                                            source={decodeGitContent(base64Data)}
+                                          />
+                                        </Case>
+                                        <Case val={FileCategory.SYMLINK}>
                                           <SourceCodeViewer
                                             language={filenameToLanguage(filename)}
                                             source={decodeGitContent(base64Data)}

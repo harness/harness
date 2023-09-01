@@ -1,6 +1,7 @@
 DROP TABLE IF exists pipelines;
 DROP TABLE IF exists executions;
 DROP TABLE IF exists stages;
+DROP TABLE IF exists secrets;
 DROP TABLE IF exists steps;
 DROP TABLE IF exists logs;
 DROP TABLE IF exists plugins;
@@ -10,26 +11,17 @@ DROP TABLE IF exists triggers;
 CREATE TABLE pipelines (
     pipeline_id INTEGER PRIMARY KEY AUTOINCREMENT
     ,pipeline_description TEXT NOT NULL
-    ,pipeline_space_id INTEGER NOT NULL
     ,pipeline_uid TEXT NOT NULL
     ,pipeline_seq INTEGER NOT NULL DEFAULT 0
     ,pipeline_repo_id INTEGER NOT NULL
-    ,pipeline_repo_type TEXT NOT NULL
-    ,pipeline_repo_name TEXT NOT NULL
     ,pipeline_default_branch TEXT NOT NULL
     ,pipeline_config_path TEXT NOT NULL
     ,pipeline_created INTEGER NOT NULL
     ,pipeline_updated INTEGER NOT NULL
     ,pipeline_version INTEGER NOT NULL
 
-    -- Ensure unique combination of UID and ParentID
-    ,UNIQUE (pipeline_space_id, pipeline_uid)
-
-    -- Foreign key to spaces table
-    ,CONSTRAINT fk_pipeline_space_id FOREIGN KEY (pipeline_space_id)
-        REFERENCES spaces (space_id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE CASCADE
+    -- Ensure unique combination of UID and repo ID
+    ,UNIQUE (pipeline_repo_id, pipeline_uid)
 
     -- Foreign key to repositories table
     ,CONSTRAINT fk_pipelines_repo_id FOREIGN KEY (pipeline_repo_id)
@@ -198,21 +190,30 @@ CREATE TABLE logs (
 
 -- Insert some pipelines
 INSERT INTO pipelines (
-    pipeline_id, pipeline_description, pipeline_space_id, pipeline_uid, pipeline_seq,
-    pipeline_repo_id, pipeline_repo_type, pipeline_repo_name, pipeline_default_branch,
+    pipeline_id, pipeline_description, pipeline_uid, pipeline_seq,
+    pipeline_repo_id, pipeline_default_branch,
     pipeline_config_path, pipeline_created, pipeline_updated, pipeline_version
 ) VALUES (
-    1, 'Sample Pipeline 1', 1, 'pipeline_uid_1', 2, 1, 'git', 'sample_repo_1',
+    1, 'Sample Pipeline 1', 'pipeline_uid_1', 2, 1,
     'main', 'config_path_1', 1678932000, 1678932100, 1
 );
 
 INSERT INTO pipelines (
-    pipeline_id, pipeline_description, pipeline_space_id, pipeline_uid, pipeline_seq,
-    pipeline_repo_id, pipeline_repo_type, pipeline_repo_name, pipeline_default_branch,
+    pipeline_id, pipeline_description, pipeline_uid, pipeline_seq,
+    pipeline_repo_id, pipeline_default_branch,
     pipeline_config_path, pipeline_created, pipeline_updated, pipeline_version
 ) VALUES (
-    2, 'Sample Pipeline 2', 1, 'pipeline_uid_2', 0, 1, 'git', 'sample_repo_2',
+    2, 'Sample Pipeline 2', 'pipeline_uid_2', 0, 1,
     'develop', 'config_path_2', 1678932200, 1678932300, 1
+);
+
+INSERT INTO pipelines (
+    pipeline_id, pipeline_description, pipeline_uid, pipeline_seq,
+    pipeline_repo_id, pipeline_default_branch,
+    pipeline_config_path, pipeline_created, pipeline_updated, pipeline_version
+) VALUES (
+    3, 'Sample Pipeline 3', 'pipeline_uid_3', 0, 1,
+    'develop', 'config_path_2', 1678932200000, 1678932300000, 1
 );
 
 -- Insert some executions
@@ -288,6 +289,26 @@ INSERT INTO executions (
     execution_finished, execution_created, execution_updated, execution_version
 ) VALUES (
     4, 2, 1, 'manual', 2, 0, 'running', '', 'push', 'created', 
+    'https://example.com/pipelines/1', 1678932400, 'Pipeline Execution 1', 
+    'Pipeline execution message...', 'commit_hash_before', 'commit_hash_after', 
+    'refs/heads/main', 'source_repo_name', 'source_branch', 'target_branch', 
+    'author_login', 'Author Name', 'author@example.com', 'https://example.com/avatar.jpg', 
+    'sender_username', '{"param1": "value1", "param2": "value2"}', '0 0 * * *', 
+    'production', 5, 0, 1678932500, 1678932600, 1678932700, 1678932800, 1
+);
+
+INSERT INTO executions (
+    execution_id, execution_pipeline_id, execution_repo_id, execution_trigger,
+    execution_number, execution_parent, execution_status, execution_error,
+    execution_event, execution_action, execution_link, execution_timestamp,
+    execution_title, execution_message, execution_before, execution_after,
+    execution_ref, execution_source_repo, execution_source, execution_target,
+    execution_author, execution_author_name, execution_author_email,
+    execution_author_avatar, execution_sender, execution_params, execution_cron,
+    execution_deploy, execution_deploy_id, execution_debug, execution_started,
+    execution_finished, execution_created, execution_updated, execution_version
+) VALUES (
+    5, 2, 1, 'manual', 3, 0, 'running', '', 'push', 'created', 
     'https://example.com/pipelines/1', 1678932400, 'Pipeline Execution 1', 
     'Pipeline execution message...', 'commit_hash_before', 'commit_hash_after', 
     'refs/heads/main', 'source_repo_name', 'source_branch', 'target_branch', 

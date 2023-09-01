@@ -1,0 +1,32 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  background-color: black;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.log {
+  color: white;
+  font-family: Inconsolata, monospace;
+  font-size: 2rem;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  background-color: var(--black);
+  height: var(--log-content-header-height);
+
+  .headerLayout {
+    display: flex;
+    align-items: baseline;
+    border-bottom: 1px solid var(--grey-800);
+    padding: var(--spacing-medium) 0;
+    font-weight: 600;
+  }
+}
+
+.steps {
+  padding: var(--spacing-medium) !important;
+}

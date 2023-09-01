@@ -236,6 +236,178 @@ paths:
           description: Internal Server Error
       tags:
         - admin
+  /connectors:
+    post:
+      operationId: createConnector
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateConnectorRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesConnector'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - connector
+  /connectors/{connector_ref}:
+    delete:
+      operationId: deleteConnector
+      parameters:
+        - in: path
+          name: connector_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - connector
+    get:
+      operationId: findConnector
+      parameters:
+        - in: path
+          name: connector_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesConnector'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - connector
+    patch:
+      operationId: updateConnector
+      parameters:
+        - in: path
+          name: connector_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiUpdateConnectorRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesConnector'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - connector
   /login:
     post:
       operationId: onLogin
@@ -297,181 +469,9 @@ paths:
           description: Internal Server Error
       tags:
         - account
-  /pipelines:
-    post:
-      operationId: createPipeline
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpenapiCreatePipelineRequest'
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TypesPipeline'
-          description: Created
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Bad Request
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - pipeline
-  /pipelines/{pipeline_ref}:
-    delete:
-      operationId: deletePipeline
-      parameters:
-        - in: path
-          name: pipeline_ref
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: No Content
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - pipeline
+  /plugins:
     get:
-      operationId: findPipeline
-      parameters:
-        - in: path
-          name: pipeline_ref
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TypesPipeline'
-          description: OK
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - pipeline
-    patch:
-      operationId: updatePipeline
-      parameters:
-        - in: path
-          name: pipeline_ref
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpenapiUpdatePipelineRequest'
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TypesPipeline'
-          description: OK
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Bad Request
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - pipeline
-  /pipelines/{pipeline_ref}/executions:
-    get:
-      operationId: listExecutions
+      operationId: listPlugins
       parameters:
         - description: The page to return.
           in: query
@@ -490,9 +490,10 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
-        - in: path
-          name: pipeline_ref
-          required: true
+        - description: The substring which is used to filter the plugins by their name.
+          in: query
+          name: query
+          required: false
           schema:
             type: string
       responses:
@@ -501,7 +502,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/TypesExecution'
+                  $ref: '#/components/schemas/TypesPlugin'
                 type: array
           description: OK
         '401':
@@ -529,256 +530,7 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - pipeline
-    post:
-      operationId: createExecution
-      parameters:
-        - in: path
-          name: pipeline_ref
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpenapiCreateExecutionRequest'
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TypesExecution'
-          description: Created
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Bad Request
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - pipeline
-  /pipelines/{pipeline_ref}/executions/{execution_number}:
-    delete:
-      operationId: deleteExecution
-      parameters:
-        - in: path
-          name: pipeline_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: execution_number
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: No Content
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - pipeline
-    get:
-      operationId: findExecution
-      parameters:
-        - in: path
-          name: pipeline_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: execution_number
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TypesExecution'
-          description: OK
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - pipeline
-    patch:
-      operationId: updateExecution
-      parameters:
-        - in: path
-          name: pipeline_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: execution_number
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpenapiUpdateExecutionRequest'
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TypesExecution'
-          description: OK
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Bad Request
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - pipeline
-  /pipelines/{pipeline_ref}/executions/{execution_number}/logs/{stage_number}/{step_number}:
-    get:
-      operationId: viewLogs
-      parameters:
-        - in: path
-          name: pipeline_ref
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: execution_number
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: stage_number
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: step_number
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          content:
-            text/plain:
-              schema:
-                type: string
-          description: OK
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - pipeline
+        - plugins
   /principals:
     get:
       operationId: listPrincipals
@@ -2191,6 +1943,891 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+  /repos/{repo_ref}/pipelines:
+    get:
+      operationId: listPipelines
+      parameters:
+        - description: The substring which is used to filter the repositories by their
+            path name.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesPipeline'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repos
+    post:
+      operationId: createPipeline
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreatePipelineRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPipeline'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+  /repos/{repo_ref}/pipelines/{pipeline_uid}:
+    delete:
+      operationId: deletePipeline
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+    get:
+      operationId: findPipeline
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPipeline'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+    patch:
+      operationId: updatePipeline
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiUpdatePipelineRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPipeline'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+  /repos/{repo_ref}/pipelines/{pipeline_uid}/executions:
+    get:
+      operationId: listExecutions
+      parameters:
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesExecution'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+    post:
+      operationId: createExecution
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateExecutionRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesExecution'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+  /repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}:
+    delete:
+      operationId: deleteExecution
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: execution_number
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+    get:
+      operationId: findExecution
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: execution_number
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesExecution'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+    patch:
+      operationId: updateExecution
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: execution_number
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiUpdateExecutionRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesExecution'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+  /repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/logs/{stage_number}/{step_number}:
+    get:
+      operationId: viewLogs
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: execution_number
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: stage_number
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: step_number
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+  /repos/{repo_ref}/pipelines/{pipeline_uid}/triggers:
+    get:
+      operationId: listTriggers
+      parameters:
+        - description: The substring which is used to filter the repositories by their
+            path name.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesTrigger'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+    post:
+      operationId: createTrigger
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateTriggerRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesTrigger'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+  /repos/{repo_ref}/pipelines/{pipeline_uid}/triggers/{trigger_uid}:
+    delete:
+      operationId: deleteTrigger
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: trigger_uid
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+    get:
+      operationId: findTrigger
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: trigger_uid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesTrigger'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
+    patch:
+      operationId: updateTrigger
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pipeline_uid
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: trigger_uid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiUpdateTriggerRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesTrigger'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pipeline
   /repos/{repo_ref}/pullreq:
     get:
       operationId: listPullReq
@@ -4324,6 +4961,74 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/{space_ref}/connectors:
+    get:
+      operationId: listConnectors
+      parameters:
+        - description: The substring which is used to filter the repositories by their
+            path name.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesConnector'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
   /spaces/{space_ref}/members:
     get:
       operationId: membershipList
@@ -4756,74 +5461,6 @@ paths:
           description: Internal Server Error
       tags:
         - space
-  /spaces/{space_ref}/pipelines:
-    get:
-      operationId: listPipelines
-      parameters:
-        - description: The substring which is used to filter the repositories by their
-            path name.
-          in: query
-          name: query
-          required: false
-          schema:
-            type: string
-        - description: The page to return.
-          in: query
-          name: page
-          required: false
-          schema:
-            default: 1
-            minimum: 1
-            type: integer
-        - description: The maximum number of results to return.
-          in: query
-          name: limit
-          required: false
-          schema:
-            default: 30
-            maximum: 100
-            minimum: 1
-            type: integer
-        - in: path
-          name: space_ref
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: '#/components/schemas/TypesPipeline'
-                type: array
-          description: OK
-        '401':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Unauthorized
-        '403':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Forbidden
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Not Found
-        '500':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Internal Server Error
-      tags:
-        - space
   /spaces/{space_ref}/repos:
     get:
       operationId: listRepos
@@ -5116,6 +5753,74 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/{space_ref}/templates:
+    get:
+      operationId: listTemplates
+      parameters:
+        - description: The substring which is used to filter the repositories by their
+            path name.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
+        - in: path
+          name: space_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesTemplate'
+                type: array
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
   /system/config:
     get:
       operationId: getSystemConfig
@@ -5140,6 +5845,178 @@ paths:
           description: Internal Server Error
       tags:
         - system
+  /templates:
+    post:
+      operationId: createTemplate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiCreateTemplateRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesTemplate'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - template
+  /templates/{template_ref}:
+    delete:
+      operationId: deleteTemplate
+      parameters:
+        - in: path
+          name: template_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - template
+    get:
+      operationId: findTemplate
+      parameters:
+        - in: path
+          name: template_ref
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesTemplate'
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - template
+    patch:
+      operationId: updateTemplate
+      parameters:
+        - in: path
+          name: template_ref
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiUpdateTemplateRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesTemplate'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - template
   /user:
     get:
       operationId: getUser
@@ -5183,6 +6060,52 @@ paths:
   /user/memberships:
     get:
       operationId: membershipSpaces
+      parameters:
+        - description: The substring by which the spaces the users is a member of are
+            filtered.
+          in: query
+          name: query
+          required: false
+          schema:
+            type: string
+        - description: The order of the output.
+          in: query
+          name: order
+          required: false
+          schema:
+            default: asc
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: The field by which the spaces the user is a member of are sorted.
+          in: query
+          name: sort
+          required: false
+          schema:
+            default: uid
+            enum:
+              - created
+              - path
+              - uid
+            type: string
+        - description: The page to return.
+          in: query
+          name: page
+          required: false
+          schema:
+            default: 1
+            minimum: 1
+            type: integer
+        - description: The maximum number of results to return.
+          in: query
+          name: limit
+          required: false
+          schema:
+            default: 30
+            maximum: 100
+            minimum: 1
+            type: integer
       responses:
         '200':
           content:
@@ -5314,13 +6237,6 @@ components:
         - closed
         - merged
         - open
-      type: string
-    EnumScmType:
-      enum:
-        - GITNESS
-        - GITHUB
-        - GITLAB
-        - UNKNOWN
       type: string
     EnumTokenType:
       type: string
@@ -5546,6 +6462,19 @@ components:
         target:
           type: string
       type: object
+    OpenapiCreateConnectorRequest:
+      properties:
+        data:
+          type: string
+        description:
+          type: string
+        space_ref:
+          type: string
+        type:
+          type: string
+        uid:
+          type: string
+      type: object
     OpenapiCreateExecutionRequest:
       properties:
         status:
@@ -5563,12 +6492,6 @@ components:
         default_branch:
           type: string
         description:
-          type: string
-        repo_ref:
-          type: string
-        repo_type:
-          $ref: '#/components/schemas/EnumScmType'
-        space_ref:
           type: string
         uid:
           type: string
@@ -5645,12 +6568,32 @@ components:
         target:
           type: string
       type: object
+    OpenapiCreateTemplateRequest:
+      properties:
+        data:
+          type: string
+        description:
+          type: string
+        space_ref:
+          type: string
+        type:
+          type: string
+        uid:
+          type: string
+      type: object
     OpenapiCreateTokenRequest:
       properties:
         grants:
           $ref: '#/components/schemas/EnumAccessGrant'
         lifetime:
           $ref: '#/components/schemas/TimeDuration'
+        uid:
+          type: string
+      type: object
+    OpenapiCreateTriggerRequest:
+      properties:
+        description:
+          type: string
         uid:
           type: string
       type: object
@@ -5780,6 +6723,15 @@ components:
         admin:
           type: boolean
       type: object
+    OpenapiUpdateConnectorRequest:
+      properties:
+        data:
+          type: string
+        description:
+          type: string
+        uid:
+          type: string
+      type: object
     OpenapiUpdateExecutionRequest:
       properties:
         status:
@@ -5827,6 +6779,22 @@ components:
         is_public:
           nullable: true
           type: boolean
+      type: object
+    OpenapiUpdateTemplateRequest:
+      properties:
+        data:
+          type: string
+        description:
+          type: string
+        uid:
+          type: string
+      type: object
+    OpenapiUpdateTriggerRequest:
+      properties:
+        description:
+          type: string
+        uid:
+          type: string
       type: object
     OpenapiUpdateWebhookRequest:
       properties:
@@ -6076,6 +7044,25 @@ components:
         title:
           type: string
       type: object
+    TypesConnector:
+      properties:
+        created:
+          type: integer
+        data:
+          type: string
+        description:
+          type: string
+        id:
+          type: integer
+        space_id:
+          type: integer
+        type:
+          type: string
+        uid:
+          type: string
+        updated:
+          type: integer
+      type: object
     TypesDiffStats:
       properties:
         commits:
@@ -6248,13 +7235,7 @@ components:
           type: integer
         repo_id:
           type: integer
-        repo_name:
-          type: string
-        repo_type:
-          $ref: '#/components/schemas/EnumScmType'
         seq:
-          type: integer
-        space_id:
           type: integer
         uid:
           type: string
@@ -6262,6 +7243,17 @@ components:
           type: integer
         version:
           type: integer
+      type: object
+    TypesPlugin:
+      properties:
+        description:
+          type: string
+        logo:
+          type: string
+        spec:
+          type: string
+        uid:
+          type: string
       type: object
     TypesPrincipalInfo:
       properties:
@@ -6604,6 +7596,23 @@ components:
         stopped:
           type: integer
       type: object
+    TypesTemplate:
+      properties:
+        created:
+          type: integer
+        data:
+          type: string
+        description:
+          type: string
+        id:
+          type: integer
+        space_id:
+          type: integer
+        uid:
+          type: string
+        updated:
+          type: integer
+      type: object
     TypesToken:
       properties:
         created_by:
@@ -6628,6 +7637,21 @@ components:
           type: string
         token:
           $ref: '#/components/schemas/TypesToken'
+      type: object
+    TypesTrigger:
+      properties:
+        created:
+          type: integer
+        description:
+          type: string
+        id:
+          type: integer
+        pipeline_id:
+          type: integer
+        uid:
+          type: string
+        updated:
+          type: integer
       type: object
     TypesUser:
       properties:

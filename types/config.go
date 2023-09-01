@@ -180,4 +180,13 @@ type Config struct {
 		SendTimeout      time.Duration `envconfig:"GITNESS_PUBSUB_SEND_TIMEOUT"      default:"60s"`
 		ChannelSize      int           `envconfig:"GITNESS_PUBSUB_CHANNEL_SIZE"      default:"100"`
 	}
+
+	BackgroundJobs struct {
+		// MaxRunning is maximum number of jobs that can be running at once.
+		MaxRunning int `envconfig:"GITNESS_JOBS_MAX_RUNNING" default:"10"`
+
+		// PurgeFinishedOlderThan is duration after non-recurring,
+		// finished and failed jobs will be purged from the DB.
+		PurgeFinishedOlderThan time.Duration `envconfig:"GITNESS_JOBS_PURGE_FINISHED_OLDER_THAN" default:"120h"`
+	}
 }

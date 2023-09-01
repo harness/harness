@@ -7,7 +7,6 @@ import {
   FlexExpander,
   Layout,
   PageBody,
-  PageHeader,
   TableV2 as Table,
   Text
 } from '@harnessio/uicore'
@@ -22,19 +21,19 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { LIST_FETCHING_LIMIT, PageBrowserProps, formatDate, getErrorMessage, voidFn } from 'utils/Utils'
-import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { TypesPipeline } from 'services/code'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { useAppContext } from 'AppContext'
+import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
 import useNewPipelineModal from 'pages/NewPipeline/NewPipelineModal'
 
 const PipelineList = () => {
   const { routes } = useAppContext()
-  const space = useGetSpaceParam()
   const history = useHistory()
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
@@ -42,15 +41,17 @@ const PipelineList = () => {
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
 
+  const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
+
   const {
     data: pipelines,
-    error,
-    loading,
-    refetch,
+    error: pipelinesError,
+    loading: pipelinesLoading,
     response
   } = useGet<TypesPipeline[]>({
-    path: `/api/v1/spaces/${space}/+/pipelines`,
-    queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm }
+    path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines`,
+    queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm },
+    lazy: !repoMetadata
   })
 
   const { openModal } = useNewPipelineModal()
@@ -145,10 +146,14 @@ const PipelineList = () => {
 
   return (
     <Container className={css.main}>
-      <PageHeader title={getString('pageTitle.pipelines')} />
+      <RepositoryPageHeader
+        repoMetadata={repoMetadata}
+        title={getString('pageTitle.pipelines')}
+        dataTooltipId="repositoryPipelines"
+      />
       <PageBody
         className={cx({ [css.withError]: !!error })}
-        error={error ? getErrorMessage(error) : null}
+        error={error ? getErrorMessage(error || pipelinesError) : null}
         retryOnError={voidFn(refetch)}
         noData={{
           when: () => pipelines?.length === 0 && searchTerm === undefined,
@@ -156,7 +161,10 @@ const PipelineList = () => {
           message: getString('pipelines.noData'),
           button: NewPipelineButton
         }}>
-        <LoadingSpinner visible={loading && !searchTerm} />
+        <LoadingSpinner
+          visible={(loading || pipelinesLoading) && !searchTerm}
+          withBorder={!!pipelines && pipelinesLoading}
+        />
 
         <Container padding="xlarge">
           <Layout.Horizontal spacing="large" className={css.layout}>
@@ -172,7 +180,12 @@ const PipelineList = () => {
                 columns={columns}
                 data={pipelines || []}
                 onRowClick={pipelineInfo =>
-                  history.push(routes.toCODEExecutions({ space, pipeline: pipelineInfo.uid as string }))
+                  history.push(
+                    routes.toCODEExecutions({
+                      repoPath: repoMetadata?.path as string,
+                      pipeline: pipelineInfo.uid as string
+                    })
+                  )
                 }
                 getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
               />

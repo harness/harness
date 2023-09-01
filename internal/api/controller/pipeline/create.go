@@ -7,7 +7,6 @@ package pipeline
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -26,34 +25,26 @@ var (
 )
 
 type CreateInput struct {
-	Description   string       `json:"description"`
-	SpaceRef      string       `json:"space_ref"`
-	UID           string       `json:"uid"`
-	RepoRef       string       `json:"repo_ref"` // empty if repo_type != gitness
-	RepoType      enum.ScmType `json:"repo_type"`
-	DefaultBranch string       `json:"default_branch"`
-	ConfigPath    string       `json:"config_path"`
+	Description   string `json:"description"`
+	UID           string `json:"uid"`
+	DefaultBranch string `json:"default_branch"`
+	ConfigPath    string `json:"config_path"`
 }
 
-func (c *Controller) Create(ctx context.Context, session *auth.Session, in *CreateInput) (*types.Pipeline, error) {
-	parentSpace, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
+func (c *Controller) Create(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	in *CreateInput,
+) (*types.Pipeline, error) {
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find parent by ref: %w", err)
+		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
 
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, parentSpace.Path, in.UID, enum.PermissionPipelineEdit)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, "", enum.PermissionPipelineEdit)
 	if err != nil {
-		return nil, err
-	}
-
-	var repoID int64
-
-	if in.RepoType == enum.ScmTypeGitness {
-		repo, err := c.repoStore.FindByRef(ctx, in.RepoRef)
-		if err != nil {
-			return nil, fmt.Errorf("failed to find repo by ref: %w", err)
-		}
-		repoID = repo.ID
+		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
 
 	if err := c.sanitizeCreateInput(in); err != nil {
@@ -64,11 +55,9 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	now := time.Now().UnixMilli()
 	pipeline = &types.Pipeline{
 		Description:   in.Description,
-		SpaceID:       parentSpace.ID,
+		RepoID:        repo.ID,
 		UID:           in.UID,
 		Seq:           0,
-		RepoID:        repoID,
-		RepoType:      in.RepoType,
 		DefaultBranch: in.DefaultBranch,
 		ConfigPath:    in.ConfigPath,
 		Created:       now,
@@ -84,11 +73,6 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
-	parentRefAsID, err := strconv.ParseInt(in.SpaceRef, 10, 64)
-	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(in.SpaceRef)) == 0) {
-		return errPipelineRequiresParent
-	}
-
 	if err := c.uidCheck(in.UID, false); err != nil {
 		return err
 	}

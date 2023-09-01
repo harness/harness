@@ -1,21 +1,19 @@
 import React, { useMemo, useState } from 'react'
 import { Container, Layout } from '@harnessio/uicore'
 import { Render } from 'react-jsx-match'
-import { useHistory, useRouteMatch, useParams } from 'react-router-dom'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import type { TypesSpace } from 'services/code'
 import { SpaceSelector } from 'components/SpaceSelector/SpaceSelector'
 import { useAppContext } from 'AppContext'
 import { useFeatureFlag } from 'hooks/useFeatureFlag'
-import type { CODEProps } from 'RouteDefinitions'
 import { NavMenuItem } from './NavMenuItem'
 import css from './DefaultMenu.module.scss'
 
 export const DefaultMenu: React.FC = () => {
   const history = useHistory()
   const { routes } = useAppContext()
-  const params = useParams<CODEProps>()
   const [selectedSpace, setSelectedSpace] = useState<TypesSpace | undefined>()
   const { repoMetadata, gitRef, commitRef } = useGetRepositoryMetadata()
   const { getString } = useStrings()
@@ -26,7 +24,6 @@ export const DefaultMenu: React.FC = () => {
     [routeMatch]
   )
   const isCommitSelected = useMemo(() => routeMatch.path === '/:space*/:repoName/commit/:commitRef*', [routeMatch])
-  const isPipelineSelected = routeMatch.path.startsWith('/pipelines/:space*/pipeline/:pipeline')
 
   const { OPEN_SOURCE_PIPELINES, OPEN_SOURCE_SECRETS } = useFeatureFlag()
   return (
@@ -121,6 +118,17 @@ export const DefaultMenu: React.FC = () => {
                 })}
               />
 
+              {OPEN_SOURCE_PIPELINES && (
+                <NavMenuItem
+                  data-code-repo-section="pipelines"
+                  isSubLink
+                  label={getString('pageTitle.pipelines')}
+                  to={routes.toCODEPipelines({
+                    repoPath
+                  })}
+                />
+              )}
+
               <NavMenuItem
                 data-code-repo-section="settings"
                 isSubLink
@@ -132,48 +140,6 @@ export const DefaultMenu: React.FC = () => {
             </Layout.Vertical>
           </Container>
         </Render>
-
-        {OPEN_SOURCE_PIPELINES && (
-          <Render when={selectedSpace}>
-            {/* icon is placeholder */}
-            <NavMenuItem
-              icon="pipeline"
-              label={getString('pageTitle.pipelines')}
-              to={routes.toCODEPipelines({ space: selectedSpace?.path as string })}
-              rightIcon={isPipelineSelected ? 'main-chevron-down' : 'main-chevron-right'}
-              textProps={{
-                rightIconProps: {
-                  size: 10,
-                  style: {
-                    flexGrow: 1,
-                    justifyContent: 'end',
-                    display: 'flex'
-                  }
-                }
-              }}
-              isDeselected={isPipelineSelected}
-              isHighlighted={isPipelineSelected}
-            />
-          </Render>
-        )}
-
-        {OPEN_SOURCE_PIPELINES && (
-          <Render when={isPipelineSelected}>
-            <Container className={css.repoLinks}>
-              <Layout.Vertical spacing="small">
-                <NavMenuItem
-                  isSubLink
-                  isSelected={isPipelineSelected}
-                  label={getString('pageTitle.executions')}
-                  to={routes.toCODEExecutions({
-                    space: selectedSpace?.path as string,
-                    pipeline: params?.pipeline || ''
-                  })}
-                />
-              </Layout.Vertical>
-            </Container>
-          </Render>
-        )}
 
         {OPEN_SOURCE_SECRETS && (
           <Render when={selectedSpace}>

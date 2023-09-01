@@ -167,7 +167,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         {OPEN_SOURCE_PIPELINES && (
           <Route
             path={routes.toCODEExecution({
-              space: pathProps.space,
+              repoPath,
               pipeline: pathProps.pipeline,
               execution: pathProps.execution
             })}
@@ -179,7 +179,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         )}
 
         {OPEN_SOURCE_PIPELINES && (
-          <Route path={routes.toCODEExecutions({ space: pathProps.space, pipeline: pathProps.pipeline })} exact>
+          <Route path={routes.toCODEExecutions({ repoPath, pipeline: pathProps.pipeline })} exact>
             <LayoutWithSideNav title={getString('pageTitle.executions')}>
               <ExecutionList />
             </LayoutWithSideNav>
@@ -195,7 +195,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         )}
 
         {OPEN_SOURCE_PIPELINES && (
-          <Route path={routes.toCODEPipelines({ space: pathProps.space })} exact>
+          <Route path={routes.toCODEPipelines({ repoPath })} exact>
             <LayoutWithSideNav title={getString('pageTitle.pipelines')}>
               <PipelineList />
             </LayoutWithSideNav>

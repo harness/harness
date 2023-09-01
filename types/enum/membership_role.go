@@ -31,7 +31,7 @@ var membershipRoleReaderPermissions = slices.Clip(slices.Insert([]Permission{}, 
 ))
 
 var membershipRoleExecutorPermissions = slices.Clip(slices.Insert(membershipRoleReaderPermissions, 0,
-	PermissionCommitCheckReport,
+	PermissionRepoReportCommitCheck,
 	PermissionPipelineExecute,
 	PermissionSecretAccess,
 	PermissionConnectorAccess,
@@ -46,7 +46,7 @@ var membershipRoleSpaceOwnerPermissions = slices.Clip(slices.Insert(membershipRo
 	PermissionRepoEdit,
 	PermissionRepoDelete,
 	PermissionRepoPush,
-	PermissionCommitCheckReport,
+	PermissionRepoReportCommitCheck,
 
 	PermissionSpaceEdit,
 	PermissionSpaceCreate,

@@ -1,0 +1,42 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.menu {
+  --stage-title-height: 54px;
+
+  width: 100%;
+  height: 100%;
+
+  .menuItem {
+    margin: 0.5rem 0 0.5rem 1rem !important;
+    cursor: pointer;
+
+    &:not(:last-child) {
+      border-bottom: 1px solid var(--grey-100);
+    }
+
+    .layout {
+      display: flex;
+      align-items: center;
+      min-height: var(--stage-title-height);
+      padding: 0 var(--spacing-medium) 0 var(--spacing-medium);
+
+      &.selected {
+        background-color: var(--primary-1);
+
+        .uid {
+          color: var(--primary-7) !important;
+        }
+      }
+
+      .uid {
+        color: var(--grey-700) !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+      }
+    }
+  }
+}

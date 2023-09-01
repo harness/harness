@@ -1,29 +1,81 @@
-import React from 'react'
-import { Container, PageHeader } from '@harnessio/uicore'
+import { Container, PageBody } from '@harnessio/uicore'
+import React, { useState } from 'react'
+import cx from 'classnames'
 import { useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
-import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import type { CODEProps } from 'RouteDefinitions'
+import SplitPane from 'react-split-pane'
+import { routes, type CODEProps } from 'RouteDefinitions'
 import type { TypesExecution } from 'services/code'
+import ExecutionStageList from 'components/ExecutionStageList/ExecutionStageList'
+import Console from 'components/Console/Console'
+import { getErrorMessage, voidFn } from 'utils/Utils'
+import { useStrings } from 'framework/strings'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
+import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './Execution.module.scss'
 
 const Execution = () => {
-  const space = useGetSpaceParam()
   const { pipeline, execution: executionNum } = useParams<CODEProps>()
+  const { getString } = useStrings()
+
+  const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
 
   const {
-    data: execution
-    // error,
-    // loading,
-    // refetch
-    // response
+    data: execution,
+    error: executionError,
+    loading: executionLoading
   } = useGet<TypesExecution>({
-    path: `/api/v1/pipelines/${space}/${pipeline}/+/executions/${executionNum}`
+    path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines/${pipeline}/executions/${executionNum}`,
+    lazy: !repoMetadata
   })
+
+  const [selectedStage, setSelectedStage] = useState<number | null>(1)
 
   return (
     <Container className={css.main}>
-      <PageHeader title={`EXECUTION STATUS = ${execution?.status}`} />
+      <RepositoryPageHeader
+        repoMetadata={repoMetadata}
+        title={execution?.title as string}
+        dataTooltipId="repositoryExecution"
+        extraBreadcrumbLinks={
+          repoMetadata && [
+            {
+              label: getString('pageTitle.pipelines'),
+              url: routes.toCODEPipelines({ repoPath: repoMetadata.path as string })
+            },
+            {
+              label: getString('pageTitle.executions'),
+              url: routes.toCODEExecutions({ repoPath: repoMetadata.path as string, pipeline: pipeline as string })
+            }
+          ]
+        }
+      />
+      <PageBody
+        className={cx({ [css.withError]: !!error })}
+        error={error ? getErrorMessage(error || executionError) : null}
+        retryOnError={voidFn(refetch)}
+        noData={{
+          when: () => !execution && !loading && !executionLoading,
+          image: noExecutionImage,
+          message: getString('executions.noData')
+          // button: NewExecutionButton
+        }}>
+        <LoadingSpinner visible={loading || executionLoading} withBorder={!!execution && executionLoading} />
+        {execution && (
+          <SplitPane split="vertical" size={300} minSize={200} maxSize={400}>
+            <ExecutionStageList
+              stages={execution?.stages || []}
+              setSelectedStage={setSelectedStage}
+              selectedStage={selectedStage}
+            />
+            {selectedStage && (
+              <Console stage={execution?.stages?.[selectedStage - 1]} repoPath={repoMetadata?.path as string} />
+            )}
+          </SplitPane>
+        )}
+      </PageBody>
     </Container>
   )
 }

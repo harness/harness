@@ -441,6 +441,42 @@ type (
 		Delete(ctx context.Context, repoID, reqCheckID int64) error
 	}
 
+	JobStore interface {
+		// Find fetches a job by its unique identifier.
+		Find(ctx context.Context, uid string) (*types.Job, error)
+
+		// Create is used to create a new job.
+		Create(ctx context.Context, job *types.Job) error
+
+		// Upsert will insert the job in the database if the job didn't already exist,
+		// or it will update the existing one but only if its definition has changed.
+		Upsert(ctx context.Context, job *types.Job) error
+
+		// UpdateDefinition is used to update a job definition.
+		UpdateDefinition(ctx context.Context, job *types.Job) error
+
+		// UpdateExecution is used to update a job before and after execution.
+		UpdateExecution(ctx context.Context, job *types.Job) error
+
+		// UpdateProgress is used to update a job progress data.
+		UpdateProgress(ctx context.Context, job *types.Job) error
+
+		// CountRunning returns number of jobs that are currently being run.
+		CountRunning(ctx context.Context) (int, error)
+
+		// ListReady returns a list of jobs that are ready for execution.
+		ListReady(ctx context.Context, now time.Time, limit int) ([]*types.Job, error)
+
+		// ListDeadlineExceeded returns a list of jobs that have exceeded their execution deadline.
+		ListDeadlineExceeded(ctx context.Context, now time.Time) ([]*types.Job, error)
+
+		// NextScheduledTime returns a scheduled time of the next ready job.
+		NextScheduledTime(ctx context.Context, now time.Time) (time.Time, error)
+
+		// DeleteOld removes non-recurring jobs that have finished execution or have failed.
+		DeleteOld(ctx context.Context, olderThan time.Time) (int64, error)
+	}
+
 	PipelineStore interface {
 		// Find returns a pipeline given a pipeline ID from the datastore.
 		Find(ctx context.Context, id int64) (*types.Pipeline, error)
@@ -454,8 +490,12 @@ type (
 		// Update tries to update a pipeline in the datastore
 		Update(ctx context.Context, pipeline *types.Pipeline) error
 
-		// List lists the pipelines present in a parent space ID in the datastore.
-		List(ctx context.Context, spaceID int64, pagination types.ListQueryFilter) ([]*types.Pipeline, error)
+		// List lists the pipelines present in a repository in the datastore.
+		List(ctx context.Context, repoID int64, pagination types.ListQueryFilter) ([]*types.Pipeline, error)
+
+		// ListLatest lists the pipelines present in a repository in the datastore.
+		// It also returns latest build information for all the returned entries.
+		ListLatest(ctx context.Context, repoID int64, pagination types.ListQueryFilter) ([]*types.Pipeline, error)
 
 		// UpdateOptLock updates the pipeline using the optimistic locking mechanism.
 		UpdateOptLock(ctx context.Context, pipeline *types.Pipeline,
@@ -464,11 +504,11 @@ type (
 		// Delete deletes a pipeline ID from the datastore.
 		Delete(ctx context.Context, id int64) error
 
-		// Count the number of pipelines in a space matching the given filter.
-		Count(ctx context.Context, spaceID int64, filter types.ListQueryFilter) (int64, error)
+		// Count the number of pipelines in a repository matching the given filter.
+		Count(ctx context.Context, repoID int64, filter types.ListQueryFilter) (int64, error)
 
-		// DeleteByUID deletes a pipeline with a given UID in a space
-		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
+		// DeleteByUID deletes a pipeline with a given UID under a repo.
+		DeleteByUID(ctx context.Context, repoID int64, uid string) error
 
 		// IncrementSeqNum increments the sequence number of the pipeline
 		IncrementSeqNum(ctx context.Context, pipeline *types.Pipeline) (*types.Pipeline, error)

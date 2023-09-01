@@ -50,7 +50,6 @@ const CommitRangeDropdown: React.FC<CommitRangeDropdownProps> = ({
   setSelectedCommits
 }) => {
   const { getString } = useStrings()
-
   const allCommitsSHA = allCommits.map(commit => commit.sha as string)
 
   useEffect(() => {
@@ -63,7 +62,7 @@ const CommitRangeDropdown: React.FC<CommitRangeDropdownProps> = ({
     event: React.MouseEvent<HTMLInputElement | HTMLDivElement, MouseEvent>,
     selectedCommitSHA: string
   ) => {
-    if (event.shiftKey || selectedCommits.length > 1) {
+    if (event.shiftKey) {
       // Select Commit
       setSelectedCommits(current => {
         if (current.includes(selectedCommitSHA)) {

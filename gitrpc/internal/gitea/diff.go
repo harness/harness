@@ -53,9 +53,9 @@ func (g Adapter) DiffShortStat(
 	headRef string,
 	useMergeBase bool,
 ) (types.DiffShortStat, error) {
-	separator := "..."
-	if !useMergeBase {
-		separator = ".."
+	separator := ".."
+	if useMergeBase {
+		separator = "..."
 	}
 
 	shortstatArgs := []string{baseRef + separator + headRef}

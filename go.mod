@@ -18,10 +18,11 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/wire v0.5.0
+	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/gotidy/ptr v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/guregu/null v4.0.0+incompatible
-	github.com/harness/go-rbac v0.0.0-20230409233212-ca97fe90aac8
+	github.com/harness/go-rbac v0.0.0-20230829014129-c9b217856ea2
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/jmoiron/sqlx v1.3.3
 	github.com/joho/godotenv v1.3.0

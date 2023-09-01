@@ -14,6 +14,7 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/jmoiron/sqlx"
 	sqlxtypes "github.com/jmoiron/sqlx/types"
@@ -294,6 +295,7 @@ func (s *executionStore) UpdateOptLock(ctx context.Context,
 }
 
 // List lists the executions for a given pipeline ID.
+// It orders them in descending order of execution number.
 func (s *executionStore) List(
 	ctx context.Context,
 	pipelineID int64,
@@ -302,7 +304,8 @@ func (s *executionStore) List(
 	stmt := database.Builder.
 		Select(executionColumns).
 		From("executions").
-		Where("execution_pipeline_id = ?", fmt.Sprint(pipelineID))
+		Where("execution_pipeline_id = ?", fmt.Sprint(pipelineID)).
+		OrderBy("execution_number " + enum.OrderDesc.String())
 
 	stmt = stmt.Limit(database.Limit(pagination.Size))
 	stmt = stmt.Offset(database.Offset(pagination.Page, pagination.Size))

@@ -42,6 +42,7 @@ import (
 	server2 "github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/codecomments"
+	"github.com/harness/gitness/internal/services/job"
 	pullreq2 "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
@@ -87,6 +88,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	pathUID := check.ProvidePathUIDCheck()
 	repoStore := database.ProvideRepoStore(db, pathCache)
+	pipelineStore := database.ProvidePipelineStore(db)
 	gitrpcConfig, err := server.ProvideGitRPCClientConfig()
 	if err != nil {
 		return nil, err
@@ -95,27 +97,26 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, principalStore, gitrpcInterface)
+	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, pipelineStore, principalStore, gitrpcInterface)
 	executionStore := database.ProvideExecutionStore(db)
 	stageStore := database.ProvideStageStore(db)
-	pipelineStore := database.ProvidePipelineStore(db)
-	executionController := execution.ProvideController(db, authorizer, executionStore, stageStore, pipelineStore, spaceStore)
+	executionController := execution.ProvideController(db, authorizer, executionStore, repoStore, stageStore, pipelineStore)
 	stepStore := database.ProvideStepStore(db)
 	logStore := logs.ProvideLogStore(db, config)
 	logStream := livelog.ProvideLogStream(config)
-	logsController := logs2.ProvideController(db, authorizer, executionStore, pipelineStore, stageStore, stepStore, logStore, logStream, spaceStore)
+	logsController := logs2.ProvideController(db, authorizer, executionStore, repoStore, pipelineStore, stageStore, stepStore, logStore, logStream)
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db)
 	templateStore := database.ProvideTemplateStore(db)
 	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
-	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore, spaceStore)
+	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore)
 	encrypter, err := encrypt.ProvideEncrypter(config)
 	if err != nil {
 		return nil, err
 	}
 	secretController := secret.ProvideController(db, pathUID, pathStore, encrypter, secretStore, authorizer, spaceStore)
 	triggerStore := database.ProvideTriggerStore(db)
-	triggerController := trigger.ProvideController(db, authorizer, triggerStore, pipelineStore, spaceStore)
+	triggerController := trigger.ProvideController(db, authorizer, triggerStore, pipelineStore, repoStore)
 	connectorController := connector.ProvideController(db, pathUID, connectorStore, authorizer, spaceStore)
 	templateController := template.ProvideController(db, pathUID, templateStore, authorizer, spaceStore)
 	pluginStore := database.ProvidePluginStore(db)
@@ -202,7 +203,13 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService)
+	jobStore := database.ProvideJobStore(db)
+	executor := job.ProvideExecutor(jobStore, pubSub)
+	scheduler, err := job.ProvideScheduler(jobStore, executor, mutexManager, pubSub, config)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(webhookService, pullreqService, executor, scheduler)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, grpcServer, manager, servicesServices)
 	return serverSystem, nil
 }

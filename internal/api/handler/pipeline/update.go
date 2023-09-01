@@ -11,7 +11,6 @@ import (
 	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/paths"
 )
 
 func HandleUpdate(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
@@ -26,18 +25,18 @@ func HandleUpdate(pipelineCtrl *pipeline.Controller) http.HandlerFunc {
 			return
 		}
 
-		pipelineRef, err := request.GetPipelineRefFromPath(r)
+		pipelineUID, err := request.GetPipelineUIDFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		spaceRef, pipelineUID, err := paths.DisectLeaf(pipelineRef)
+		repoRef, err := request.GetRepoRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		pipeline, err := pipelineCtrl.Update(ctx, session, spaceRef, pipelineUID, in)
+		pipeline, err := pipelineCtrl.Update(ctx, session, repoRef, pipelineUID, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

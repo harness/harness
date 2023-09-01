@@ -13,17 +13,18 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef string, uid string) error {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef string, uid string) error {
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
-		return fmt.Errorf("failed to find parent space: %w", err)
+		return fmt.Errorf("failed to find repo by ref: %w", err)
 	}
 
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, uid, enum.PermissionPipelineDelete)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, uid, enum.PermissionPipelineDelete)
 	if err != nil {
-		return fmt.Errorf("could not authorize: %w", err)
+		return fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
-	err = c.pipelineStore.DeleteByUID(ctx, space.ID, uid)
+
+	err = c.pipelineStore.DeleteByUID(ctx, repo.ID, uid)
 	if err != nil {
 		return fmt.Errorf("could not delete pipeline: %w", err)
 	}

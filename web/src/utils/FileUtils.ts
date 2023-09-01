@@ -22,6 +22,13 @@ interface UseFileViewerDecisionResult {
   isText: boolean
 }
 
+export interface RepoContentExtended extends RepoFileContent {
+  size?: number
+  target?: string
+  commit_sha?: string
+  url?: string
+}
+
 export function useFileContentViewerDecision({
   repoMetadata,
   gitRef,
@@ -32,6 +39,9 @@ export function useFileContentViewerDecision({
   const metadata = useMemo(() => {
     const filename = resourceContent.name as string
     const extension = filename?.split('.').pop() || ''
+    const isSymlink = resourceContent?.type === 'symlink'
+    const isSubmodule = resourceContent?.type === 'submodule'
+
     const isMarkdown = extension.toLowerCase() === 'md'
     const isPdf = extension.toLowerCase() === 'pdf'
     const isSVG = extension.toLowerCase() === 'svg'
@@ -40,7 +50,9 @@ export function useFileContentViewerDecision({
     const isVideo = VideoExtensions.includes(extension.toLowerCase())
     const isText = !!(
       SpecialTextFiles.find(name => name.toLowerCase() === filename?.toLowerCase()) ||
-      TextExtensions.includes(extension.toLowerCase())
+      TextExtensions.includes(extension.toLowerCase()) ||
+      isSymlink ||
+      isSubmodule
     )
     const category = isMarkdown
       ? FileCategory.MARKDOWN
@@ -54,12 +66,17 @@ export function useFileContentViewerDecision({
       ? FileCategory.AUDIO
       : isVideo
       ? FileCategory.VIDEO
+      : isSymlink
+      ? FileCategory.SYMLINK
+      : isSubmodule
+      ? FileCategory.SUBMODULE
       : isText
       ? FileCategory.TEXT
       : FileCategory.OTHER
-    const isViewable = isPdf || isSVG || isImage || isAudio || isVideo || isText
-    const resourceData = resourceContent?.content as RepoFileContent
-    const isFileTooLarge = resourceData?.size !== resourceData?.data_size
+    const isViewable = isPdf || isSVG || isImage || isAudio || isVideo || isText || isSubmodule || isSymlink
+    const resourceData = resourceContent?.content as RepoContentExtended
+    const isFileTooLarge =
+      resourceData?.size && resourceData?.data_size ? resourceData?.size !== resourceData?.data_size : false
     const rawURL = `/code/api/v1/repos/${repoMetadata?.path}/+/raw/${resourcePath}?routingId=${routingId}&git_ref=${gitRef}`
     return {
       category,
@@ -73,7 +90,8 @@ export function useFileContentViewerDecision({
       size: resourceData?.size || 0,
 
       // base64 data returned from content API. This snapshot can be truncated by backend
-      base64Data: resourceData?.data || '',
+      base64Data: resourceData?.data || resourceData?.target || resourceData?.url || '',
+
       rawURL
     }
   }, [resourceContent.content]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -91,6 +109,8 @@ export enum FileCategory {
   AUDIO = 'AUDIO',
   VIDEO = 'VIDEO',
   TEXT = 'TEXT',
+  SYMLINK = 'SYMLINK',
+  SUBMODULE = 'SUBMODULE',
   OTHER = 'OTHER'
 }
 

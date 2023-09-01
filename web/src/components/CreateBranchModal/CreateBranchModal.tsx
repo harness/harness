@@ -13,7 +13,8 @@ import {
   useToaster,
   FormInput,
   Label,
-  ButtonVariation
+  ButtonVariation,
+  StringSubstitute
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { FontVariation } from '@harnessio/design-system'
@@ -77,7 +78,15 @@ export function useCreateBranchModal({
             hideModal()
             onSuccess(response)
             if (showSuccessMessage) {
-              showSuccess(getString('branchCreated', { branch: name }), 5000)
+              showSuccess(
+                <StringSubstitute
+                  str={getString('branchCreated')}
+                  vars={{
+                    branch: name
+                  }}
+                />,
+                5000
+              )
             }
           })
           .catch(_error => {

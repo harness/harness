@@ -23,21 +23,20 @@ type UpdateInput struct {
 func (c *Controller) Update(
 	ctx context.Context,
 	session *auth.Session,
-	spaceRef string,
+	repoRef string,
 	uid string,
 	in *UpdateInput,
 ) (*types.Pipeline, error) {
-	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find parent space: %w", err)
+		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
+	}
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, uid, enum.PermissionPipelineEdit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
 
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, space.Path, uid, enum.PermissionPipelineEdit)
-	if err != nil {
-		return nil, fmt.Errorf("could not authorize: %w", err)
-	}
-
-	pipeline, err := c.pipelineStore.FindByUID(ctx, space.ID, uid)
+	pipeline, err := c.pipelineStore.FindByUID(ctx, repo.ID, uid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
