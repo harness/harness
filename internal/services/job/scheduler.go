@@ -176,7 +176,44 @@ func (s *Scheduler) WaitJobsDone(ctx context.Context) {
 	}
 }
 
+// CancelJob cancels a currently running or scheduled job
 func (s *Scheduler) CancelJob(ctx context.Context, jobUID string) error {
+	mx, err := globalLock(ctx, s.mxManager)
+	if err != nil {
+		return fmt.Errorf("failed to obtain global lock to cancel a job: %w", err)
+	}
+
+	defer func() {
+		if err := mx.Unlock(ctx); err != nil {
+			log.Ctx(ctx).Err(err).Msg("failed to release global lock after canceling a job")
+		}
+	}()
+
+	job, err := s.store.Find(ctx, jobUID)
+	if err != nil {
+		return fmt.Errorf("failed to find job to cancel: %w", err)
+	}
+
+	if job.IsRecurring {
+		return errors.New("can't cancel recurring jobs")
+	}
+
+	if job.State != enum.JobStateScheduled && job.State != enum.JobStateRunning {
+		return nil // return no error if the job is already canceled or has finished or failed.
+	}
+
+	// first we update the job in the database...
+
+	job.Updated = time.Now().UnixMilli()
+	job.State = enum.JobStateCanceled
+
+	err = s.store.UpdateExecution(ctx, job)
+	if err != nil {
+		return fmt.Errorf("failed to update job to cancel it: %w", err)
+	}
+
+	// ... and then we cancel its context.
+
 	s.cancelJobMx.Lock()
 	cancelFn, ok := s.cancelJobMap[jobUID]
 	s.cancelJobMx.Unlock()
@@ -416,45 +453,50 @@ func (s *Scheduler) runJob(ctx context.Context, job *types.Job) error {
 	}
 
 	s.wgRunning.Add(1)
-	go func(jobCtx context.Context, job *types.Job) {
+	go func(ctx context.Context,
+		jobUID, jobType, jobData string,
+		jobRunDeadline int64,
+	) {
 		defer s.wgRunning.Done()
 
-		log.Ctx(jobCtx).Debug().Msg("started job")
+		log.Ctx(ctx).Debug().Msg("started job")
 
 		timeStart := time.Now()
 
 		// Run the job
-		execResult, execFailure := s.doExec(jobCtx, job)
-
-		// Update the job fields, reschedule if necessary.
-		postExec(job, execResult, execFailure)
+		execResult, execFailure := s.doExec(ctx, jobUID, jobType, jobData, jobRunDeadline)
 
 		// Use the context.Background() because we want to update the job even if the job's context is done.
 		// The context can be done because the job exceeded its deadline or the server is shutting down.
 		backgroundCtx := context.Background()
 
-		// tell everybody that a job has finished execution
-		if err := publishStateChange(backgroundCtx, s.pubsubService, job); err != nil {
-			log.Ctx(jobCtx).Err(err).Msg("failed to publish job state change")
-		}
-
 		if mx, err := globalLock(backgroundCtx, s.mxManager); err != nil {
 			// If locking failed, just log the error and proceed to update the DB anyway.
-			log.Ctx(jobCtx).Err(err).Msg("failed to obtain global lock to update job after execution")
+			log.Ctx(ctx).Err(err).Msg("failed to obtain global lock to update job after execution")
 		} else {
 			defer func() {
 				if err := mx.Unlock(backgroundCtx); err != nil {
-					log.Ctx(jobCtx).Err(err).Msg("failed to release global lock to update job after execution")
+					log.Ctx(ctx).Err(err).Msg("failed to release global lock to update job after execution")
 				}
 			}()
 		}
 
-		if err := s.store.UpdateExecution(backgroundCtx, job); err != nil {
-			log.Ctx(jobCtx).Err(err).Msg("failed to update after execution")
+		job, err := s.store.Find(backgroundCtx, jobUID)
+		if err != nil {
+			log.Ctx(ctx).Err(err).Msg("failed to find job after execution")
 			return
 		}
 
-		logInfo := log.Ctx(jobCtx).Info().Str("duration", time.Since(timeStart).String())
+		// Update the job fields, reschedule if necessary.
+		postExec(job, execResult, execFailure)
+
+		err = s.store.UpdateExecution(backgroundCtx, job)
+		if err != nil {
+			log.Ctx(ctx).Err(err).Msg("failed to update job after execution")
+			return
+		}
+
+		logInfo := log.Ctx(ctx).Info().Str("duration", time.Since(timeStart).String())
 
 		if job.IsRecurring {
 			logInfo = logInfo.Bool("job.IsRecurring", true)
@@ -475,6 +517,10 @@ func (s *Scheduler) runJob(ctx context.Context, job *types.Job) error {
 			logInfo.Msg("job failed")
 			s.scheduleIfHaveMoreJobs()
 
+		case enum.JobStateCanceled:
+			log.Ctx(ctx).Error().Msg("job canceled")
+			s.scheduleIfHaveMoreJobs()
+
 		case enum.JobStateScheduled:
 			scheduledTime := time.UnixMilli(job.Scheduled)
 			logInfo.
@@ -484,9 +530,14 @@ func (s *Scheduler) runJob(ctx context.Context, job *types.Job) error {
 			s.scheduleProcessing(scheduledTime)
 
 		case enum.JobStateRunning:
-			log.Ctx(jobCtx).Error().Msg("should not happen; job still has state=running after finishing")
+			log.Ctx(ctx).Error().Msg("should not happen; job still has state=running after finishing")
 		}
-	}(ctx, job)
+
+		// tell everybody that a job has finished execution
+		if err := publishStateChange(backgroundCtx, s.pubsubService, job); err != nil {
+			log.Ctx(ctx).Err(err).Msg("failed to publish job state change")
+		}
+	}(ctx, job.UID, job.Type, job.Data, job.RunDeadline)
 
 	return nil
 }
@@ -515,28 +566,31 @@ func (s *Scheduler) preExec(job *types.Job) {
 }
 
 // doExec executes the provided types.Job.
-func (s *Scheduler) doExec(ctx context.Context, job *types.Job) (execResult, execError string) {
-	execDeadline := time.UnixMilli(job.RunDeadline)
+func (s *Scheduler) doExec(ctx context.Context,
+	jobUID, jobType, jobData string,
+	jobRunDeadline int64,
+) (execResult, execError string) {
+	execDeadline := time.UnixMilli(jobRunDeadline)
 
 	jobCtx, done := context.WithDeadline(ctx, execDeadline)
 	defer done()
 
 	s.cancelJobMx.Lock()
-	if _, ok := s.cancelJobMap[job.UID]; ok {
+	if _, ok := s.cancelJobMap[jobUID]; ok {
 		// should not happen: jobs have unique UIDs!
 		s.cancelJobMx.Unlock()
 		return "", "failed to start: already running"
 	}
-	s.cancelJobMap[job.UID] = done
+	s.cancelJobMap[jobUID] = done
 	s.cancelJobMx.Unlock()
 
 	defer func() {
 		s.cancelJobMx.Lock()
-		delete(s.cancelJobMap, job.UID)
+		delete(s.cancelJobMap, jobUID)
 		s.cancelJobMx.Unlock()
 	}()
 
-	execResult, err := s.executor.exec(jobCtx, job.UID, job.Type, job.Data)
+	execResult, err := s.executor.exec(jobCtx, jobUID, jobType, jobData)
 	if err != nil {
 		execError = err.Error()
 	}
@@ -546,6 +600,13 @@ func (s *Scheduler) doExec(ctx context.Context, job *types.Job) (execResult, exe
 
 // postExec updates the provided types.Job after execution and reschedules it if necessary.
 func postExec(job *types.Job, resultData, resultErr string) {
+	// Proceed with the update of the job if it's in the running state or
+	// if it's marked as canceled but has succeeded nonetheless.
+	// Other states should not happen, but if they do, just leave the job as it is.
+	if job.State != enum.JobStateRunning && (job.State != enum.JobStateCanceled || resultErr != "") {
+		return
+	}
+
 	now := time.Now()
 	nowMilli := now.UnixMilli()
 

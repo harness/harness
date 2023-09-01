@@ -405,7 +405,8 @@ func (s *JobStore) NextScheduledTime(ctx context.Context, now time.Time) (time.T
 func (s *JobStore) DeleteOld(ctx context.Context, olderThan time.Time) (int64, error) {
 	stmt := database.Builder.
 		Delete("jobs").
-		Where("(job_state = ? OR job_state = ?)", enum.JobStateFinished, enum.JobStateFailed).
+		Where("(job_state = ? OR job_state = ? OR job_state = ?)",
+			enum.JobStateFinished, enum.JobStateFailed, enum.JobStateCanceled).
 		Where("job_is_recurring = false").
 		Where("job_last_executed < ?", olderThan.UnixMilli())
 
