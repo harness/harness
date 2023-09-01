@@ -4,7 +4,6 @@ import {
   FlexExpander,
   Layout,
   Text,
-  StringSubstitute,
   ButtonSize,
   ButtonVariation,
   Avatar
@@ -16,6 +15,7 @@ import { useGet } from 'restful-react'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import type { TypesCommit, TypesRepository, TypesSignature } from 'services/code'
+import { CommitActions } from 'components/CommitActions/CommitActions'
 import { LIST_FETCHING_LIMIT, formatDate } from 'utils/Utils'
 import css from './CommitInfo.module.scss'
 
@@ -31,6 +31,11 @@ const CommitInfo = (props: { repoMetadata: TypesRepository; commitRef: string })
       git_ref: commitRef || repoMetadata?.default_branch
     },
     lazy: !repoMetadata
+  })
+
+  const commitURL = routes.toCODECommit({
+    repoPath: repoMetadata.path as string,
+    commitRef: commitRef
   })
 
   const commitData = useMemo(() => {
@@ -81,19 +86,7 @@ const CommitInfo = (props: { repoMetadata: TypesRepository; commitRef: string })
                 })}
               </Text>
               <FlexExpander />
-              <Text className={css.infoText} flex>
-                <StringSubstitute
-                  str={getString('commitString')}
-                  vars={{
-                    commit: (
-                      <Text
-                        className={css.infoText}
-                        padding={{ left: 'small' }}
-                        color={'black'}>{` ${commitRef.substring(0, 6)}`}</Text>
-                    )
-                  }}
-                />
-              </Text>
+              <CommitActions sha={commitRef} href={commitURL} enableCopy />
             </Layout.Horizontal>
           </Container>
         </Container>

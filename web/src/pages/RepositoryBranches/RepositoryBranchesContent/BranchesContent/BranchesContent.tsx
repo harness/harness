@@ -14,6 +14,7 @@ import type {
   RepoCommitDivergence,
   TypesRepository
 } from 'services/code'
+import { CommitActions } from 'components/CommitActions/CommitActions'
 import { formatDate, getErrorMessage } from 'utils/Utils'
 import { useConfirmAction } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
@@ -94,6 +95,23 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
               defaultBranch={repoMetadata.default_branch as string}
               behind={divergence?.[row.index]?.behind as number}
               ahead={divergence?.[row.index]?.ahead as number}
+            />
+          )
+        }
+      },
+      {
+        Header: getString('commit'),
+        Id: 'commit',
+        width: '15%',
+        Cell: ({ row }: CellProps<RepoBranch>) => {
+          return (
+            <CommitActions
+              sha={row.original.commit?.sha as string}
+              href={routes.toCODECommit({
+                repoPath: repoMetadata.path as string,
+                commitRef: row.original.commit?.sha as string
+              })}
+              enableCopy
             />
           )
         }
