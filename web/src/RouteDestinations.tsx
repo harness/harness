@@ -187,7 +187,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         )}
 
         {OPEN_SOURCE_PIPELINES && (
-          <Route path={routes.toCODEPipelineEdit({ space: pathProps.space, pipeline: pathProps.pipeline })} exact>
+          <Route path={routes.toCODEPipelineEdit({ repoPath, pipeline: pathProps.pipeline })} exact>
             <LayoutWithSideNav title={getString('pageTitle.pipelines')}>
               <NewPipeline />
             </LayoutWithSideNav>

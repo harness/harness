@@ -97,7 +97,7 @@ export const routes: CODERoutes = {
   toCODESpaceAccessControl: ({ space }) => `/access-control/${space}`,
   toCODESpaceSettings: ({ space }) => `/settings/${space}`,
   toCODEPipelines: ({ repoPath }) => `/${repoPath}/pipelines`,
-  toCODEPipelineEdit: ({ repoPath, pipeline }) => `/${repoPath}/pipeline/${pipeline}/edit`,
+  toCODEPipelineEdit: ({ repoPath, pipeline }) => `/${repoPath}/pipelines/${pipeline}/edit`,
   toCODESecrets: ({ space }) => `/secrets/${space}`,
 
   toCODEGlobalSettings: () => '/settings',

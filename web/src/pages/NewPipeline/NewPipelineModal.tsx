@@ -1,15 +1,13 @@
-import React from 'react'
+import React, { useMemo, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useMutate } from 'restful-react'
 import * as yup from 'yup'
 import { Button, ButtonVariation, Dialog, FormInput, Formik, FormikForm, Layout, useToaster } from '@harnessio/uicore'
 import { useModalHook } from 'hooks/useModalHook'
-import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { OpenapiCreatePipelineRequest, TypesPipeline, TypesRepository } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
-
 interface FormData {
   name: string
   branch: string
@@ -19,15 +17,14 @@ interface FormData {
 const useNewPipelineModal = () => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
-  const space = useGetSpaceParam()
   const history = useHistory()
   const { showError } = useToaster()
-
-  const repoMetadata: TypesRepository = { path: `${space}/vb-repo`, default_branch: 'main' }
+  const [repo, setRepo] = useState<TypesRepository | undefined>()
+  const repoPath = useMemo(() => repo?.path || '', [repo])
 
   const { mutate: savePipeline } = useMutate<TypesPipeline>({
     verb: 'POST',
-    path: `/api/v1/pipelines`
+    path: `/api/v1/repos/${repoPath}/+/pipelines`
   })
 
   const handleCreatePipeline = (formData: FormData): void => {
@@ -36,14 +33,11 @@ const useNewPipelineModal = () => {
       const payload: OpenapiCreatePipelineRequest = {
         config_path: yamlPath,
         default_branch: branch,
-        space_ref: space,
-        repo_ref: repoMetadata.path,
-        repo_type: 'GITNESS',
         uid: name
       }
-      savePipeline(payload)
+      savePipeline(payload, { pathParams: { path: `/api/v1/repos/${repoPath}/+/pipelines` } })
         .then(() => {
-          history.push(routes.toCODEPipelineEdit({ space, pipeline: name }))
+          history.push(routes.toCODEPipelineEdit({ repoPath, pipeline: name }))
           hideModal()
         })
         .catch(error => {
@@ -61,7 +55,7 @@ const useNewPipelineModal = () => {
     return (
       <Dialog isOpen enforceFocus={false} onClose={onClose} title={getString('pipelines.createNewPipeline')}>
         <Formik<FormData>
-          initialValues={{ name: '', branch: repoMetadata.default_branch || '', yamlPath: '' }}
+          initialValues={{ name: '', branch: repo?.default_branch || '', yamlPath: '' }}
           formName="createNewPipeline"
           enableReinitialize={true}
           validationSchema={yup.object().shape({
@@ -106,10 +100,13 @@ const useNewPipelineModal = () => {
         </Formik>
       </Dialog>
     )
-  }, [])
+  }, [repo])
 
   return {
-    openModal,
+    openModal: ({ repoMetadata }: { repoMetadata?: TypesRepository }) => {
+      setRepo(repoMetadata)
+      openModal()
+    },
     hideModal
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useMutate } from 'restful-react'
 import { Link, useParams } from 'react-router-dom'
 import { Drawer } from '@blueprintjs/core'
@@ -7,7 +7,7 @@ import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
 import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse } from 'services/code'
 import { useStrings } from 'framework/strings'
-import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import MonacoSourceCodeEditor from 'components/SourceCodeEditor/MonacoSourceCodeEditor'
 import { PluginsPanel } from 'components/PluginsPanel/PluginsPanel'
 import { useAppContext } from 'AppContext'
@@ -21,14 +21,15 @@ const NewPipeline = (): JSX.Element => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const { pipeline } = useParams<CODEProps>()
-  const space = useGetSpaceParam()
+  const { repoMetadata } = useGetRepositoryMetadata()
   const { showError } = useToaster()
   const [pipelineAsYAML, setPipelineAsYaml] = useState<string>('')
   const [showDrawer, setShowDrawer] = useState<boolean>(false)
+  const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
 
   const { mutate, loading } = useMutate<RepoCommitFilesResponse>({
     verb: 'POST',
-    path: `/api/v1/repos/${space}/vb-repo/+/commits`
+    path: `/api/v1/repos/${repoPath}/+/commits`
   })
 
   const handleSaveAndRun = (): void => {
@@ -73,7 +74,7 @@ const NewPipeline = (): JSX.Element => {
           breadcrumbs={
             <Container className={css.header}>
               <Layout.Horizontal spacing="small" className={css.breadcrumb}>
-                <Link to={routes.toCODEPipelines({ space })}>{getString('pageTitle.pipelines')}</Link>
+                <Link to={routes.toCODEPipelines({ repoPath })}>{getString('pageTitle.pipelines')}</Link>
                 <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
                 <Text font={{ size: 'small' }}>{pipeline}</Text>
               </Layout.Horizontal>

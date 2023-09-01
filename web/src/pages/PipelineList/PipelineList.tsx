@@ -62,8 +62,9 @@ const PipelineList = () => {
       variation={ButtonVariation.PRIMARY}
       icon="plus"
       onClick={() => {
-        openModal()
+        openModal({ repoMetadata })
       }}
+      disabled={loading}
     />
   )
 
@@ -132,7 +133,9 @@ const PipelineList = () => {
                   text={getString('edit')}
                   onClick={e => {
                     e.stopPropagation()
-                    history.push(routes.toCODEPipelineEdit({ space, pipeline: uid as string }))
+                    history.push(
+                      routes.toCODEPipelineEdit({ repoPath: repoMetadata?.path || '', pipeline: uid as string })
+                    )
                   }}
                 />
               </Menu>
