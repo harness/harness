@@ -17,7 +17,6 @@ import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
-import { Icon } from '@harnessio/icons'
 import { Calendar, Timer, GitFork } from 'iconoir-react'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -31,6 +30,8 @@ import { ResourceListingPagination } from 'components/ResourceListingPagination/
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
+import { getStatus } from 'utils/PipelineUtils'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
 
@@ -53,7 +54,8 @@ const PipelineList = () => {
   } = useGet<TypesPipeline[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines`,
     queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm, latest: true },
-    lazy: !repoMetadata
+    lazy: !repoMetadata,
+    debounce: 500
   })
 
   const NewPipelineButton = (
@@ -75,8 +77,13 @@ const PipelineList = () => {
           const record = row.original
           return (
             <Layout.Horizontal spacing="small" className={css.nameContainer}>
-              {/* TODO this icon need to depend on the status */}
-              <Icon name="success-tick" size={24} />
+              <ExecutionStatus
+                status={getStatus(record?.execution?.status || ExecutionState.PENDING)}
+                iconOnly
+                noBackground
+                iconSize={24}
+                className={css.statusIcon}
+              />
               <Text className={css.repoName}>
                 <Keywords value={searchTerm}>{record.uid}</Keywords>
               </Text>
@@ -91,7 +98,7 @@ const PipelineList = () => {
           const record = row.original.execution
 
           return record ? (
-            <Layout.Vertical className={css.executionContainer}>
+            <Layout.Vertical spacing={'small'}>
               <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
                 {/* TODO this icon need to depend on the status */}
                 <Text className={css.desc}>{`#${record.number}`}</Text>
@@ -187,7 +194,6 @@ const PipelineList = () => {
           <Container margin={{ top: 'medium' }}>
             {!!pipelines?.length && (
               <Table<TypesPipeline>
-                className={css.table}
                 columns={columns}
                 data={pipelines || []}
                 onRowClick={pipelineInfo =>
@@ -198,7 +204,6 @@ const PipelineList = () => {
                     })
                   )
                 }
-                getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
               />
             )}
 

@@ -16,7 +16,6 @@ import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import { useHistory, useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
-import { Icon } from '@harnessio/icons'
 import { Timer, Calendar } from 'iconoir-react'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -30,6 +29,8 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
+import { getStatus } from 'utils/PipelineUtils'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './ExecutionList.module.scss'
 
@@ -73,8 +74,12 @@ const ExecutionList = () => {
           return (
             <Layout.Vertical className={css.nameContainer}>
               <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
-                {/* TODO this icon need to depend on the status */}
-                <Icon name="success-tick" size={20} />
+                <ExecutionStatus
+                  status={getStatus(record?.status || ExecutionState.PENDING)}
+                  iconOnly
+                  noBackground
+                  iconSize={20}
+                />
                 <Text className={css.number}>{`#${record.number}.`}</Text>
                 <Text className={css.desc}>{record.title}</Text>
               </Layout.Horizontal>
@@ -156,7 +161,6 @@ const ExecutionList = () => {
           <Container margin={{ top: 'medium' }}>
             {!!executions?.length && (
               <Table<TypesExecution>
-                className={css.table}
                 columns={columns}
                 data={executions || []}
                 onRowClick={executionInfo =>
@@ -168,7 +172,6 @@ const ExecutionList = () => {
                     })
                   )
                 }
-                getRowClassName={row => cx(css.row, !row.original.number && css.noDesc)}
               />
             )}
 

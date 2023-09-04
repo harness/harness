@@ -1,16 +1,16 @@
 .logLayout {
-  margin-left: 2.3rem !important;
+  margin-left: var(--spacing-xxxlarge) !important;
 }
 
 .lineNumber {
-  width: 1.5rem;
+  width: var(--spacing-xlarge);
   color: #999;
-  margin-right: 1rem;
+  margin-right: 16px;
   font-family: 'Roboto Mono' !important;
 }
 
 .log {
   color: white !important;
-  margin-bottom: 1rem;
+  margin-bottom: var(--spacing-medium);
   font-family: 'Roboto Mono' !important;
 }

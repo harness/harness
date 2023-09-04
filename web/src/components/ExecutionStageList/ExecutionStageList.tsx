@@ -1,8 +1,9 @@
 import React, { FC } from 'react'
 import { Container, Layout, Text } from '@harnessio/uicore'
-import { Icon } from '@harnessio/icons'
 import cx from 'classnames'
 import type { TypesStage } from 'services/code'
+import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
+import { getStatus } from 'utils/PipelineUtils'
 import css from './ExecutionStageList.module.scss'
 
 interface ExecutionStageListProps {
@@ -26,7 +27,13 @@ const ExecutionStage: FC<ExecutionStageProps> = ({ stage, isSelected = false, se
         setSelectedStage(stage.number || null)
       }}>
       <Layout.Horizontal spacing="small" className={cx(css.layout, { [css.selected]: isSelected })}>
-        <Icon name="success-tick" size={16} />
+        <ExecutionStatus
+          status={getStatus(stage.status || ExecutionState.PENDING)}
+          iconOnly
+          noBackground
+          iconSize={16}
+          className={css.statusIcon}
+        />
         <Text className={css.uid} lineClamp={1}>
           {stage.name}
         </Text>

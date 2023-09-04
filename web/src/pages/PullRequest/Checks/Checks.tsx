@@ -27,7 +27,7 @@ import { useStrings } from 'framework/strings'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import type { TypesCheck } from 'services/code'
-import { PRCheckExecutionState, PRCheckExecutionStatus } from 'components/PRCheckExecutionStatus/PRCheckExecutionStatus'
+import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import css from './Checks.module.scss'
 
 interface ChecksProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
@@ -77,11 +77,11 @@ export const Checks: React.FC<ChecksProps> = props => {
               <Render when={selectedItemData}>
                 <Container className={css.header}>
                   <Layout.Horizontal className={css.headerLayout} spacing="small">
-                    <PRCheckExecutionStatus
+                    <ExecutionStatus
                       className={cx(css.status, {
-                        [css.invert]: selectedItemData?.status === PRCheckExecutionState.PENDING
+                        [css.invert]: selectedItemData?.status === ExecutionState.PENDING
                       })}
-                      status={selectedItemData?.status as PRCheckExecutionState}
+                      status={selectedItemData?.status as ExecutionState}
                       iconSize={20}
                       noBackground
                       iconOnly
@@ -162,11 +162,11 @@ const ChecksMenu: React.FC<ChecksMenuProps> = ({
     } else {
       // Find and set a default selected item. Order: Error, Failure, Running, Success, Pending
       const defaultSelectedItem =
-        prChecksDecisionResult?.data?.find(({ status }) => status === PRCheckExecutionState.ERROR) ||
-        prChecksDecisionResult?.data?.find(({ status }) => status === PRCheckExecutionState.FAILURE) ||
-        prChecksDecisionResult?.data?.find(({ status }) => status === PRCheckExecutionState.RUNNING) ||
-        prChecksDecisionResult?.data?.find(({ status }) => status === PRCheckExecutionState.SUCCESS) ||
-        prChecksDecisionResult?.data?.find(({ status }) => status === PRCheckExecutionState.PENDING) ||
+        prChecksDecisionResult?.data?.find(({ status }) => status === ExecutionState.ERROR) ||
+        prChecksDecisionResult?.data?.find(({ status }) => status === ExecutionState.FAILURE) ||
+        prChecksDecisionResult?.data?.find(({ status }) => status === ExecutionState.RUNNING) ||
+        prChecksDecisionResult?.data?.find(({ status }) => status === ExecutionState.SUCCESS) ||
+        prChecksDecisionResult?.data?.find(({ status }) => status === ExecutionState.PENDING) ||
         prChecksDecisionResult?.data?.[0]
 
       if (defaultSelectedItem) {
@@ -266,9 +266,9 @@ const CheckMenuItem: React.FC<CheckMenuItemProps> = ({ expandable, isSelected = 
           {timeDistance(itemData.updated, itemData.created)}
         </Text>
 
-        <PRCheckExecutionStatus
+        <ExecutionStatus
           className={cx(css.status, css.noShrink)}
-          status={itemData.status as PRCheckExecutionState}
+          status={itemData.status as ExecutionState}
           iconSize={16}
           noBackground
           iconOnly

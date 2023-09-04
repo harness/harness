@@ -5,7 +5,7 @@ import { FontVariation } from '@harnessio/design-system'
 import { Link } from 'react-router-dom'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
-import { PRCheckExecutionStatus, PRCheckExecutionState } from 'components/PRCheckExecutionStatus/PRCheckExecutionStatus'
+import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import type { TypesCheck } from 'services/code'
 import { useAppContext } from 'AppContext'
@@ -50,7 +50,7 @@ export function ChecksOverview({ repoMetadata, pullRequestMetadata, prChecksDeci
         </Truthy>
         <Falsy>
           <Layout.Horizontal spacing="small" className={css.layout}>
-            <PRCheckExecutionStatus status={overallStatus} noBackground iconOnly />
+            <ExecutionStatus status={overallStatus} noBackground iconOnly />
             <Text font={{ variation: FontVariation.LEAD }}>{getString('pr.checks')}</Text>
             <Text color={color} padding={{ left: 'small' }} font={{ variation: FontVariation.FORM_MESSAGE_WARNING }}>
               {message}
@@ -94,7 +94,7 @@ const CheckSection: React.FC<CheckSectionProps> = ({ repoMetadata, pullRequestMe
             <Container className={css.row} key={uid}>
               <Layout.Horizontal className={css.rowLayout}>
                 <Container className={css.status}>
-                  <PRCheckExecutionStatus status={status as PRCheckExecutionState} />
+                  <ExecutionStatus status={status as ExecutionState} />
                 </Container>
 
                 <Link

@@ -11,46 +11,20 @@
   display: grid;
 }
 
-.table {
-  [class*='TableV2--header'] [class*='variation-table-headers'] {
-    text-transform: none;
-    color: var(--grey-400);
-    font-weight: 500;
-    font-size: 13px;
-  }
-
-  .row {
-    height: 80px;
-    box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
-    overflow: hidden;
-
-    &.noDesc > div {
-      height: 44px;
-    }
-  }
-}
-
 .nameContainer {
-  display: flex;
-  align-items: center;
-  height: 3rem !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .repoName {
   font-weight: 600 !important;
-  font-size: 0.875rem !important;
+  font-size: var(--font-size-normal) !important;
   color: var(--grey-700) !important;
-}
-
-.nameContainer {
-  // display: flex;
-  // align-items: center;
-  // height: 3rem !important;
 }
 
 .desc {
   color: var(--grey-700) !important;
-  font-size: 0.75rem !important;
+  font-size: var(--font-size-small) !important;
   font-style: normal !important;
   font-weight: 600 !important;
 }
@@ -61,14 +35,14 @@
 
 .author {
   color: var(--grey500) !important;
-  font-size: 0.75rem !important;
+  font-size: var(--font-size-small) !important;
   font-weight: 500 !important;
 }
 
 .hash {
   color: var(--primary-7) !important;
   font-family: Roboto Mono !important;
-  font-size: 0.75rem !important;
+  font-size: var(--font-size-small) !important;
   font-weight: 500 !important;
 }
 
@@ -82,5 +56,9 @@
 
 .divider {
   color: var(--grey-300) !important;
-  font-size: 0.5rem !important;
+  font-size: 8px !important;
+}
+
+.statusIcon {
+  align-self: center !important;
 }
