@@ -12,6 +12,5 @@ declare const styles: {
   readonly author: string
   readonly hash: string
   readonly triggerLayout: string
-  readonly divider: string
 }
 export default styles

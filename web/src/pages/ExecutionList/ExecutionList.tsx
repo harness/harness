@@ -31,6 +31,7 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/PipelineUtils'
+import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './ExecutionList.module.scss'
 
@@ -87,7 +88,7 @@ const ExecutionList = () => {
                 <Avatar email={record.author_email} name={record.author_name} size="small" hoverCard={false} />
                 {/* TODO need logic here for different trigger types */}
                 <Text className={css.author}>{`${record.author_name} triggered manually`}</Text>
-                <Text className={css.divider}>{`|`}</Text>
+                <PipeSeparator height={7} />
                 {/* TODO Will need to replace this with commit component - wont match Yifan designs */}
                 <a rel="noreferrer noopener" className={css.hash}>
                   {record.after}

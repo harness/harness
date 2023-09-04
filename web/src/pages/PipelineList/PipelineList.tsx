@@ -32,6 +32,7 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/PipelineUtils'
+import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
 
@@ -100,9 +101,8 @@ const PipelineList = () => {
           return record ? (
             <Layout.Vertical spacing={'small'}>
               <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
-                {/* TODO this icon need to depend on the status */}
                 <Text className={css.desc}>{`#${record.number}`}</Text>
-                <Text className={css.divider}>{`|`}</Text>
+                <PipeSeparator height={7} />
                 <Text className={css.desc}>{record.title}</Text>
               </Layout.Horizontal>
               <Layout.Horizontal spacing={'xsmall'} style={{ alignItems: 'center' }}>
@@ -115,10 +115,10 @@ const PipelineList = () => {
                 />
                 {/* TODO need logic here for different trigger types */}
                 <Text className={css.author}>{record.author_name}</Text>
-                <Text className={css.divider}>{`|`}</Text>
+                <PipeSeparator height={7} />
                 <GitFork height={12} width={12} color={Utils.getRealCSSColor(Color.GREY_500)} />
                 <Text className={css.author}>{record.source}</Text>
-                <Text className={css.divider}>{`|`}</Text>
+                <PipeSeparator height={7} />
                 {/* TODO Will need to replace this with commit component - wont match Yifan designs */}
                 <a rel="noreferrer noopener" className={css.hash}>
                   {/* {record.after} */}

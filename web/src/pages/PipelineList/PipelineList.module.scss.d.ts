@@ -12,7 +12,6 @@ declare const styles: {
   readonly hash: string
   readonly triggerLayout: string
   readonly spacer: string
-  readonly divider: string
   readonly statusIcon: string
 }
 export default styles
