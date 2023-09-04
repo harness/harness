@@ -11,7 +11,7 @@
   height: 100%;
 
   .menuItem {
-    margin: 0.5rem 0 0.5rem 1rem !important;
+    margin: var(--spacing-small) 0 var(--spacing-small) var(--spacing-medium) !important;
     cursor: pointer;
 
     &:not(:last-child) {
@@ -35,8 +35,12 @@
       .uid {
         color: var(--grey-700) !important;
         font-weight: 600 !important;
-        font-size: 1rem !important;
+        font-size: var(--font-size-normal) !important;
       }
     }
   }
+}
+
+.statusIcon {
+  align-self: center !important;
 }

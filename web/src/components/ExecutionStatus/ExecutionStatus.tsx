@@ -3,9 +3,9 @@ import { Text } from '@harnessio/uicore'
 import type { IconName } from '@harnessio/icons'
 import cx from 'classnames'
 import { useStrings } from 'framework/strings'
-import css from './PRCheckExecutionStatus.module.scss'
+import css from './ExecutionStatus.module.scss'
 
-export enum PRCheckExecutionState {
+export enum ExecutionState {
   PENDING = 'pending',
   RUNNING = 'running',
   SUCCESS = 'success',
@@ -13,15 +13,15 @@ export enum PRCheckExecutionState {
   ERROR = 'error'
 }
 
-interface PRCheckExecutionStatusProps {
-  status: PRCheckExecutionState
+interface ExecutionStatusProps {
+  status: ExecutionState
   iconOnly?: boolean
   noBackground?: boolean
   iconSize?: number
   className?: string
 }
 
-export const PRCheckExecutionStatus: React.FC<PRCheckExecutionStatusProps> = ({
+export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
   status,
   iconSize = 20,
   iconOnly = false,
@@ -31,27 +31,27 @@ export const PRCheckExecutionStatus: React.FC<PRCheckExecutionStatusProps> = ({
   const { getString } = useStrings()
   const maps = useMemo(
     () => ({
-      [PRCheckExecutionState.PENDING]: {
+      [ExecutionState.PENDING]: {
         icon: 'ci-pending-build',
         css: css.pending,
         title: getString('pending').toLocaleUpperCase()
       },
-      [PRCheckExecutionState.RUNNING]: {
+      [ExecutionState.RUNNING]: {
         icon: 'running-filled',
         css: css.running,
         title: getString('running').toLocaleUpperCase()
       },
-      [PRCheckExecutionState.SUCCESS]: {
+      [ExecutionState.SUCCESS]: {
         icon: 'execution-success',
         css: css.success,
         title: getString('success').toLocaleUpperCase()
       },
-      [PRCheckExecutionState.FAILURE]: {
+      [ExecutionState.FAILURE]: {
         icon: 'error-transparent-no-outline',
         css: css.failure,
         title: getString('failed').toLocaleUpperCase()
       },
-      [PRCheckExecutionState.ERROR]: {
+      [ExecutionState.ERROR]: {
         icon: 'solid-error',
         css: css.error,
         title: getString('error').toLocaleUpperCase()

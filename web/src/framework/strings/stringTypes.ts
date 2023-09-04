@@ -314,9 +314,11 @@ export interface StringsMap {
   payloadUrl: string
   payloadUrlLabel: string
   pending: string
+  'pipelines.lastExecution': string
   'pipelines.name': string
   'pipelines.newPipelineButton': string
   'pipelines.noData': string
+  'pipelines.time': string
   'pr.ableToMerge': string
   'pr.addDescription': string
   'pr.authorCommentedPR': string

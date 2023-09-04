@@ -1971,6 +1971,12 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
+        - description: Whether to fetch latest build information for each pipeline.
+          in: query
+          name: latest
+          required: false
+          schema:
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -2010,7 +2016,7 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repos
+        - pipeline
     post:
       operationId: createPipeline
       parameters:
@@ -7231,6 +7237,8 @@ components:
           type: string
         description:
           type: string
+        execution:
+          $ref: '#/components/schemas/TypesExecution'
         id:
           type: integer
         repo_id:
@@ -7240,8 +7248,6 @@ components:
         uid:
           type: string
         updated:
-          type: integer
-        version:
           type: integer
       type: object
     TypesPlugin:

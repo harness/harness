@@ -15,7 +15,7 @@ import type { TypesPullReq, TypesPullReqStats, TypesRepository } from 'services/
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
 import { usePRChecksDecision } from 'hooks/usePRChecksDecision'
-import { PRCheckExecutionStatus } from 'components/PRCheckExecutionStatus/PRCheckExecutionStatus'
+import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
 import { Checks } from './Checks/Checks'
@@ -248,7 +248,7 @@ export default function PullRequest() {
                           prChecksDecisionResult?.overallStatus ? (
                             <Container className={css.checksCount}>
                               <Layout.Horizontal className={css.checksCountLayout}>
-                                <PRCheckExecutionStatus
+                                <ExecutionStatus
                                   status={prChecksDecisionResult?.overallStatus}
                                   noBackground
                                   iconOnly

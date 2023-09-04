@@ -624,6 +624,8 @@ pipelines:
   noData: There are no pipelines :(
   newPipelineButton: New Pipeline
   name: Pipeline Name
+  time: Time
+  lastExecution: Last Execution
 executions:
   noData: There are no executions :(
   newExecutionButton: Run Pipeline

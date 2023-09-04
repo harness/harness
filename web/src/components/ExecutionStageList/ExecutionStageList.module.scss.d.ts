@@ -7,5 +7,6 @@ declare const styles: {
   readonly layout: string
   readonly selected: string
   readonly uid: string
+  readonly statusIcon: string
 }
 export default styles

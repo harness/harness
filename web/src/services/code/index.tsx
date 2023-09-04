@@ -634,12 +634,12 @@ export interface TypesPipeline {
   created?: number
   default_branch?: string
   description?: string
+  execution?: TypesExecution
   id?: number
   repo_id?: number
   seq?: number
   uid?: string
   updated?: number
-  version?: number
 }
 
 export interface TypesPlugin {
@@ -2239,6 +2239,10 @@ export interface ListPipelinesQueryParams {
    * The maximum number of results to return.
    */
   limit?: number
+  /**
+   * Whether to fetch latest build information for each pipeline.
+   */
+  latest?: boolean
 }
 
 export interface ListPipelinesPathParams {

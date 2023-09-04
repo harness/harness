@@ -4,7 +4,7 @@ import { Color } from '@harnessio/design-system'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { useListStatusCheckResults } from 'services/code'
-import { PRCheckExecutionState } from 'components/PRCheckExecutionStatus/PRCheckExecutionStatus'
+import { ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 
 export function usePRChecksDecision({
   repoMetadata,
@@ -22,18 +22,18 @@ export function usePRChecksDecision({
   const [message, setMessage] = useState('')
   const [complete, setComplete] = useState(true)
   const status = useMemo(() => {
-    let _status: PRCheckExecutionState | undefined
+    let _status: ExecutionState | undefined
     const _count = { ...DEFAULT_COUNTS }
     const total = data?.length
 
     if (total) {
       for (const check of data) {
         switch (check.status) {
-          case PRCheckExecutionState.ERROR:
-          case PRCheckExecutionState.FAILURE:
-          case PRCheckExecutionState.RUNNING:
-          case PRCheckExecutionState.PENDING:
-          case PRCheckExecutionState.SUCCESS:
+          case ExecutionState.ERROR:
+          case ExecutionState.FAILURE:
+          case ExecutionState.RUNNING:
+          case ExecutionState.PENDING:
+          case ExecutionState.SUCCESS:
             _count[check.status]++
             setCount({ ..._count })
             break
@@ -44,27 +44,27 @@ export function usePRChecksDecision({
       }
 
       if (_count.error) {
-        _status = PRCheckExecutionState.ERROR
+        _status = ExecutionState.ERROR
         setColor(Color.RED_900)
         setBackground(Color.RED_50)
         setMessage(stringSubstitute(getString('prChecks.error'), { count: _count.error, total }) as string)
       } else if (_count.failure) {
-        _status = PRCheckExecutionState.FAILURE
+        _status = ExecutionState.FAILURE
         setColor(Color.RED_900)
         setBackground(Color.RED_50)
         setMessage(stringSubstitute(getString('prChecks.failure'), { count: _count.failure, total }) as string)
       } else if (_count.running) {
-        _status = PRCheckExecutionState.RUNNING
+        _status = ExecutionState.RUNNING
         setColor(Color.ORANGE_900)
         setBackground(Color.ORANGE_100)
         setMessage(stringSubstitute(getString('prChecks.running'), { count: _count.running, total }) as string)
       } else if (_count.pending) {
-        _status = PRCheckExecutionState.PENDING
+        _status = ExecutionState.PENDING
         setColor(Color.GREY_600)
         setBackground(Color.GREY_100)
         setMessage(stringSubstitute(getString('prChecks.pending'), { count: _count.pending, total }) as string)
       } else if (_count.success) {
-        _status = PRCheckExecutionState.SUCCESS
+        _status = ExecutionState.SUCCESS
         setColor(Color.GREEN_800)
         setBackground(Color.GREEN_50)
         setMessage(stringSubstitute(getString('prChecks.success'), { count: _count.success, total }) as string)
