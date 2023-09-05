@@ -52,6 +52,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
     response
   } = useGet({
     path: '/api/v1/user/memberships',
+    queryParams: { query: searchTerm },
     debounce: 500
   })
 
