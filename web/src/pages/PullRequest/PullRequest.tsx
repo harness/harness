@@ -105,14 +105,16 @@ export default function PullRequest() {
   )
 
   useEffect(() => {
+    let pollingInterval = 1000
     const fn = () => {
       if (repoMetadata) {
         refetchPullRequest().then(() => {
-          interval = window.setTimeout(fn, PR_POLLING_INTERVAL)
+          pollingInterval = Math.min(pollingInterval + 1000, PR_MAX_POLLING_INTERVAL)
+          interval = window.setTimeout(fn, pollingInterval)
         })
       }
     }
-    let interval = window.setTimeout(fn, PR_POLLING_INTERVAL)
+    let interval = window.setTimeout(fn, pollingInterval)
 
     return () => window.clearTimeout(interval)
   }, [repoMetadata, refetchPullRequest, path])
@@ -288,4 +290,4 @@ export default function PullRequest() {
   )
 }
 
-const PR_POLLING_INTERVAL = 10000
+const PR_MAX_POLLING_INTERVAL = 15000
