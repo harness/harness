@@ -15,7 +15,7 @@ import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
-import { useHistory } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import { Calendar, Timer, GitFork } from 'iconoir-react'
 import { useStrings } from 'framework/strings'
@@ -33,11 +33,13 @@ import { RepositoryPageHeader } from 'components/RepositoryPageHeader/Repository
 import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/PipelineUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
 
 const PipelineList = () => {
   const { routes } = useAppContext()
+  const space = useGetSpaceParam()
   const history = useHistory()
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
@@ -119,11 +121,18 @@ const PipelineList = () => {
                 <GitFork height={12} width={12} color={Utils.getRealCSSColor(Color.GREY_500)} />
                 <Text className={css.author}>{record.source}</Text>
                 <PipeSeparator height={7} />
-                {/* TODO Will need to replace this with commit component - wont match Yifan designs */}
-                <a rel="noreferrer noopener" className={css.hash}>
-                  {/* {record.after} */}
-                  hardcoded
-                </a>
+                <Link
+                  to={routes.toCODECommit({
+                    repoPath: repoMetadata?.path as string,
+                    commitRef: record.after as string
+                  })}
+                  className={css.hash}
+                  onClick={e => {
+                    e.stopPropagation()
+                  }}>
+                  {/* {record.after?.slice(0, 6)} */}
+                  {'hardcoded'.slice(0, 6)}
+                </Link>
               </Layout.Horizontal>
             </Layout.Vertical>
           ) : (
