@@ -14,7 +14,7 @@ import {
 import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
-import { useHistory, useParams } from 'react-router-dom'
+import { Link, useHistory, useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import { Timer, Calendar } from 'iconoir-react'
 import { useStrings } from 'framework/strings'
@@ -89,10 +89,17 @@ const ExecutionList = () => {
                 {/* TODO need logic here for different trigger types */}
                 <Text className={css.author}>{`${record.author_name} triggered manually`}</Text>
                 <PipeSeparator height={7} />
-                {/* TODO Will need to replace this with commit component - wont match Yifan designs */}
-                <a rel="noreferrer noopener" className={css.hash}>
-                  {record.after}
-                </a>
+                <Link
+                  to={routes.toCODECommit({
+                    repoPath: repoMetadata?.path as string,
+                    commitRef: record.after as string
+                  })}
+                  className={css.hash}
+                  onClick={e => {
+                    e.stopPropagation()
+                  }}>
+                  {record.after?.slice(0, 6)}
+                </Link>
               </Layout.Horizontal>
             </Layout.Vertical>
           )

@@ -12,7 +12,7 @@ import { getErrorMessage, voidFn } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
-import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import { ExecutionPageHeader } from 'components/ExecutionPageHeader/ExecutionPageHeader'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './Execution.module.scss'
 
@@ -35,7 +35,7 @@ const Execution = () => {
 
   return (
     <Container className={css.main}>
-      <RepositoryPageHeader
+      <ExecutionPageHeader
         repoMetadata={repoMetadata}
         title={execution?.title as string}
         dataTooltipId="repositoryExecution"
@@ -51,6 +51,16 @@ const Execution = () => {
             }
           ]
         }
+        executionInfo={{
+          message: execution?.message as string,
+          authorName: execution?.author_name as string,
+          authorEmail: execution?.author_email as string,
+          source: execution?.source as string,
+          hash: execution?.after as string,
+          status: execution?.status as string,
+          started: execution?.started as number,
+          finished: execution?.finished as number
+        }}
       />
       <PageBody
         className={cx({ [css.withError]: !!error })}

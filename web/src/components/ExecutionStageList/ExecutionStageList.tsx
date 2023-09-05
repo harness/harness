@@ -1,9 +1,10 @@
 import React, { FC } from 'react'
-import { Container, Layout, Text } from '@harnessio/uicore'
+import { Container, FlexExpander, Layout, Text } from '@harnessio/uicore'
 import cx from 'classnames'
 import type { TypesStage } from 'services/code'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/PipelineUtils'
+import { timeDistance } from 'utils/Utils'
 import css from './ExecutionStageList.module.scss'
 
 interface ExecutionStageListProps {
@@ -37,6 +38,8 @@ const ExecutionStage: FC<ExecutionStageProps> = ({ stage, isSelected = false, se
         <Text className={css.uid} lineClamp={1}>
           {stage.name}
         </Text>
+        <FlexExpander />
+        <Text style={{ fontSize: '12px' }}>{timeDistance(stage.started, stage.stopped)}</Text>
       </Layout.Horizontal>
     </Container>
   )
