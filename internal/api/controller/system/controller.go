@@ -23,11 +23,11 @@ func NewController(principalStore store.PrincipalStore, config *types.Config) *C
 	}
 }
 
-func (c *Controller) IsUserRegistrationAllowed(ctx context.Context) (bool, error) {
+func (c *Controller) IsUserSignupAllowed(ctx context.Context) (bool, error) {
 	usrCount, err := c.principalStore.CountUsers(ctx, &types.UserFilter{})
 	if err != nil {
 		return false, err
 	}
 
-	return usrCount == 0 || c.config.AllowSignUp, nil
+	return usrCount == 0 || c.config.AllowUserSignup, nil
 }

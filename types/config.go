@@ -21,7 +21,7 @@ type Config struct {
 	// 5min should be enough for most git clones to complete.
 	GracefulShutdownTime time.Duration `envconfig:"GITNESS_GRACEFUL_SHUTDOWN_TIME" default:"300s"`
 
-	AllowSignUp bool `envconfig:"GITNESS_ALLOW_SIGN_UP"`
+	AllowUserSignup bool `envconfig:"GITNESS_ALLOW_USER_SIGNUP" default:"true"`
 
 	Profiler struct {
 		Type        string `envconfig:"GITNESS_PROFILER_TYPE"`

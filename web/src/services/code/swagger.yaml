@@ -6982,7 +6982,7 @@ components:
       type: object
     SystemConfigOutput:
       properties:
-        sign_up_allowed:
+        user_signup_allowed:
           type: boolean
       type: object
     TimeDuration:

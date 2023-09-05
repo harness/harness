@@ -488,7 +488,7 @@ export interface RepoSymlinkContent {
 }
 
 export interface SystemConfigOutput {
-  sign_up_allowed?: boolean
+  user_signup_allowed?: boolean
 }
 
 export type TimeDuration = number | null

@@ -12,7 +12,7 @@ import (
 )
 
 type ConfigOutput struct {
-	SignUpAllowed bool `json:"sign_up_allowed"`
+	UserSignupAllowed bool `json:"user_signup_allowed"`
 }
 
 // HandleGetConfig returns an http.HandlerFunc that processes an http.Request
@@ -21,13 +21,13 @@ func HandleGetConfig(sysCtrl *system.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		signUpAllowedCheck, err := sysCtrl.IsUserRegistrationAllowed(ctx)
+		userSignupAllowed, err := sysCtrl.IsUserSignupAllowed(ctx)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 		render.JSON(w, http.StatusOK, ConfigOutput{
-			SignUpAllowed: signUpAllowedCheck,
+			UserSignupAllowed: userSignupAllowed,
 		})
 	}
 }
