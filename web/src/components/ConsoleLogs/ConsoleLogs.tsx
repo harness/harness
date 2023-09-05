@@ -23,14 +23,18 @@ const convertStringToLogArray = (logs: string): log[] => {
 
 const ConsoleLogs: FC<ConsoleLogsProps> = ({ logs }) => {
   const logArray = convertStringToLogArray(logs)
-  return logArray.map((log, index) => {
-    return (
-      <Layout.Horizontal key={index} spacing={'medium'} className={css.logLayout}>
-        <Text className={css.lineNumber}>{log.pos}</Text>
-        <Text className={css.log}>{log.out}</Text>
-      </Layout.Horizontal>
-    )
-  })
+  return (
+    <>
+      {logArray.map((log, index) => {
+        return (
+          <Layout.Horizontal key={index} spacing={'medium'} className={css.logLayout}>
+            <Text className={css.lineNumber}>{log.pos}</Text>
+            <Text className={css.log}>{log.out}</Text>
+          </Layout.Horizontal>
+        )
+      })}
+    </>
+  )
 }
 
 export default ConsoleLogs

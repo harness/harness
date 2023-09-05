@@ -1,13 +1,4 @@
-import {
-  Button,
-  Container,
-  FlexExpander,
-  Layout,
-  Text,
-  ButtonSize,
-  ButtonVariation,
-  Avatar
-} from '@harnessio/uicore'
+import { Button, Container, FlexExpander, Layout, Text, ButtonSize, ButtonVariation, Avatar } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import React, { useMemo } from 'react'
 import { useHistory } from 'react-router-dom'

@@ -55,12 +55,6 @@ module.exports = {
         use: [
           MiniCssExtractPlugin.loader,
           {
-            loader: '@harness/css-types-loader',
-            options: {
-              prettierConfig: CONTEXT
-            }
-          },
-          {
             loader: 'css-loader',
             options: {
               importLoaders: 1,
