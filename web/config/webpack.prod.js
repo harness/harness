@@ -26,6 +26,12 @@ const prodConfig = {
           name: 'vendors',
           chunks: 'all',
           maxSize: 1e7
+        },
+        blueprintjs: {
+          test: /[\\/]node_modules[\\/](@blueprintjs)[\\/]/,
+          name: 'vendor-blueprintjs',
+          chunks: 'all',
+          priority: 10
         }
       }
     }
