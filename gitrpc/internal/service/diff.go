@@ -57,7 +57,12 @@ func (s DiffService) rawDiff(ctx context.Context, request *rpc.DiffRequest, w io
 		args = append(args, "--merge-base")
 	}
 
-	return s.adapter.RawDiff(ctx, repoPath, request.GetBaseRef(), request.GetHeadRef(), w, args...)
+	err = s.adapter.RawDiff(ctx, repoPath, request.GetBaseRef(), request.GetHeadRef(), w, args...)
+	if err != nil {
+		return processGitErrorf(err, "failed to fetch diff "+
+			"between %s and %s", request.GetBaseRef(), request.GetHeadRef())
+	}
+	return nil
 }
 
 func validateDiffRequest(in *rpc.DiffRequest) error {

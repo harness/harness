@@ -41,7 +41,10 @@ func (g Adapter) RawDiff(
 		Stderr: &errbuf,
 		Stdout: w,
 	}); err != nil {
-		return fmt.Errorf("git diff [%s base:%s head:%s]: %s", repoPath, baseRef, headRef, errbuf.String())
+		if errbuf.Len() > 0 {
+			err = &runStdError{err: err, stderr: errbuf.String()}
+		}
+		return processGiteaErrorf(err, "git diff failed between '%s' and '%s' with err: %v", baseRef, headRef, err)
 	}
 	return nil
 }

@@ -27,9 +27,8 @@ func HandleDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 		path := request.GetOptionalRemainderFromPath(r)
 
 		if strings.HasPrefix(r.Header.Get("Accept"), "text/plain") {
-			if err = repoCtrl.RawDiff(ctx, session, repoRef, path, w); err != nil {
-				render.TranslatedUserError(w, err)
-			}
+			// error checking is intentionally skipped because we dont want to send errors as text/plain
+			_ = repoCtrl.RawDiff(ctx, session, repoRef, path, w)
 			return
 		}
 

@@ -48,7 +48,8 @@ func (c *Client) RawDiff(ctx context.Context, params *DiffParams, out io.Writer)
 		MergeBase: params.MergeBase,
 	})
 	if err != nil {
-		return err
+		return processRPCErrorf(err, "failed to fetch diff between '%s' and '%s' with err: %v",
+			params.BaseRef, params.HeadRef, err)
 	}
 
 	reader := streamio.NewReader(func() ([]byte, error) {
