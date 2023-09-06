@@ -309,6 +309,7 @@ export const Changes: React.FC<ChangesProps> = ({
                     onCommentUpdate={onCommentUpdate}
                     targetRef={targetRef}
                     sourceRef={sourceRef}
+                    commitRange={commitRange}
                   />
                 ))}
               </Layout.Vertical>

@@ -56,6 +56,7 @@ interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
   onCommentUpdate: () => void
   targetRef?: string
   sourceRef?: string
+  commitRange?: string[]
 }
 
 //
@@ -72,7 +73,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   pullRequestMetadata,
   onCommentUpdate,
   targetRef,
-  sourceRef
+  sourceRef,
+  commitRange
 }) => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
@@ -133,12 +135,17 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   )
 
   useEffect(() => {
+    if (commitRange) {
+      setComments([])
+    }
+  }, [commitRange])
+
+  useEffect(() => {
     // For some unknown reason, comments is [] when we switch to Changes tab very quickly sometimes,
     // but diff is not empty, and activitiesToDiffCommentItems(diff) is not []. So assigning
     // comments = activitiesToDiffCommentItems(diff) from the useState() is not enough.
     if (diff) {
       const _comments = activitiesToDiffCommentItems(diff)
-
       if (_comments.length > 0 && !comments.length) {
         setComments(_comments)
       }
@@ -217,7 +224,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           right: false,
           lineNumber: 0,
           height: 0,
-          commentItems: []
+          commentItems: [],
+          filePath: ''
         }
 
         if (targetButton && annotatedLineRow) {
@@ -236,7 +244,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             commentItem.left = !commentItem.right
             commentItem.lineNumber = Number(lineNum2?.textContent || lineNum1?.textContent)
           }
-
           setComments([...comments, commentItem])
         }
       },
@@ -258,7 +265,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
       comments.forEach(comment => {
         const lineInfo = getCommentLineInfo(contentRef.current, comment, viewStyle)
-
         if (lineInfo.rowElement) {
           const { rowElement } = lineInfo
 
