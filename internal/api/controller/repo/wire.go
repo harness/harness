@@ -7,6 +7,7 @@ package repo
 import (
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
@@ -24,7 +25,11 @@ var WireSet = wire.NewSet(
 func ProvideController(config *types.Config, db *sqlx.DB, urlProvider *url.Provider,
 	uidCheck check.PathUID, authorizer authz.Authorizer, pathStore store.PathStore, repoStore store.RepoStore,
 	spaceStore store.SpaceStore, pipelineStore store.PipelineStore,
-	principalStore store.PrincipalStore, rpcClient gitrpc.Interface) *Controller {
-	return NewController(config.Git.DefaultBranch, db, urlProvider, uidCheck,
-		authorizer, pathStore, repoStore, spaceStore, pipelineStore, principalStore, rpcClient)
+	principalStore store.PrincipalStore, rpcClient gitrpc.Interface,
+	importer *importer.Repository,
+) *Controller {
+	return NewController(config.Git.DefaultBranch, db, urlProvider,
+		uidCheck, authorizer, pathStore, repoStore,
+		spaceStore, pipelineStore, principalStore, rpcClient,
+		importer)
 }

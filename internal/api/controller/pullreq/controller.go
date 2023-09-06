@@ -114,6 +114,10 @@ func (c *Controller) getRepoCheckAccess(ctx context.Context,
 		return nil, fmt.Errorf("failed to find repository: %w", err)
 	}
 
+	if repo.Importing {
+		return nil, usererror.BadRequest("Repository import is in progress.")
+	}
+
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, false); err != nil {
 		return nil, fmt.Errorf("access check failed: %w", err)
 	}

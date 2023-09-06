@@ -35,6 +35,9 @@ type Repository struct {
 	NumOpenPulls   int `db:"repo_num_open_pulls"       json:"num_open_pulls"`
 	NumMergedPulls int `db:"repo_num_merged_pulls"     json:"num_merged_pulls"`
 
+	Importing       bool    `db:"repo_importing"         json:"importing"`
+	ImportingJobUID *string `db:"repo_importing_job_uid" json:"-"`
+
 	// git urls
 	GitURL string `db:"-" json:"git_url"`
 }

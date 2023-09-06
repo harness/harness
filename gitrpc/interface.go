@@ -30,6 +30,8 @@ type Interface interface {
 	// not update of an exiting one, set the zero ref as the OldValue.
 	UpdateRef(ctx context.Context, params UpdateRefParams) error
 
+	SyncRepository(ctx context.Context, params *SyncRepositoryParams) (*SyncRepositoryOutput, error)
+
 	/*
 	 * Commits service
 	 */

@@ -354,7 +354,9 @@ func (s RepositoryService) SyncRepository(
 		return nil, processGitErrorf(err, "failed to set default branch of repo")
 	}
 
-	return &rpc.SyncRepositoryResponse{}, nil
+	return &rpc.SyncRepositoryResponse{
+		DefaultBranch: defaultBranch,
+	}, nil
 }
 
 func (s RepositoryService) HashRepository(

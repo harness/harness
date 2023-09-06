@@ -317,6 +317,7 @@ github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0/go.mod h1:8NvIoxWQoOIhqOTXgf
 github.com/grpc-ecosystem/grpc-gateway v1.9.5/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
 github.com/guregu/null v4.0.0+incompatible h1:4zw0ckM7ECd6FNNddc3Fu4aty9nTlpkkzH7dPn4/4Gw=
 github.com/guregu/null v4.0.0+incompatible/go.mod h1:ePGpQaN9cw0tj45IR5E5ehMvsFlLlQZAkkOXZurJ3NM=
+github.com/h2non/gock v1.0.9 h1:17gCehSo8ZOgEsFKpQgqHiR7VLyjxdAG3lkhVvO9QZU=
 github.com/h2non/gock v1.0.9/go.mod h1:CZMcB0Lg5IWnr9bF79pPMg9WeV6WumxQiUJ1UvdO1iE=
 github.com/harness/go-rbac v0.0.0-20230829014129-c9b217856ea2 h1:M1Jd2uEKl4YW9g/6vzN1qo06d5dshYYdwxlhOTUSnh4=
 github.com/harness/go-rbac v0.0.0-20230829014129-c9b217856ea2/go.mod h1:uGgBgSZPgyygG5rWzoYsKIQ8TM4zt5yQq9nreznWvOI=
