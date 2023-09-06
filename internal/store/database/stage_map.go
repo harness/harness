@@ -28,6 +28,7 @@ func mapInternalToStage(in *stage) (*types.Stage, error) {
 	return &types.Stage{
 		ID:          in.ID,
 		ExecutionID: in.ExecutionID,
+		RepoID:      in.RepoID,
 		Number:      in.Number,
 		Name:        in.Name,
 		Kind:        in.Kind,
@@ -59,6 +60,7 @@ func mapStageToInternal(in *types.Stage) *stage {
 	return &stage{
 		ID:          in.ID,
 		ExecutionID: in.ExecutionID,
+		RepoID:      in.RepoID,
 		Number:      in.Number,
 		Name:        in.Name,
 		Kind:        in.Kind,
@@ -132,6 +134,7 @@ func scanRowStep(rows *sql.Rows, stage *types.Stage, step *types.Step) error {
 	err := rows.Scan(
 		&stage.ID,
 		&stage.ExecutionID,
+		&stage.RepoID,
 		&stage.Number,
 		&stage.Name,
 		&stage.Kind,

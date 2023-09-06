@@ -36,7 +36,7 @@ func (c *Controller) Tail(
 		return nil, nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
-	execution, err := c.executionStore.Find(ctx, pipeline.ID, executionNum)
+	execution, err := c.executionStore.FindByNumber(ctx, pipeline.ID, executionNum)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to find execution: %w", err)
 	}

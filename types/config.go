@@ -65,10 +65,16 @@ type Config struct {
 		// HTTP defines the http configuration parameters
 		HTTP struct {
 			Bind  string `envconfig:"GITNESS_HTTP_BIND" default:":3000"`
-			Proto string `envconfig:"GITNESS_HTTP_PROTO"`
+			Proto string `envconfig:"GITNESS_HTTP_PROTO" default:"http"`
 			Host  string `envconfig:"GITNESS_HTTP_HOST"`
 			// GitHost is the host used to identify git traffic (OPTIONAL).
 			GitHost string `envconfig:"GITNESS_HTTP_GIT_HOST" default:"git.localhost"`
+			// Network is the docker network on which the gitness container is running.
+			// One example of where it's used is CI executions to be able to communicate
+			// with gitness (for example while performing a clone on a local repo).
+			// In case gitness is running on the host, the build container can talk to
+			// localhost on the host using host.docker.internal.
+			Network string `envconfig:"GITNESS_CI_NETWORK" default:"host.docker.internal"`
 		}
 
 		// Acme defines Acme configuration parameters.
@@ -77,6 +83,11 @@ type Config struct {
 			Endpont string `envconfig:"GITNESS_ACME_ENDPOINT"`
 			Email   bool   `envconfig:"GITNESS_ACME_EMAIL"`
 		}
+	}
+
+	// CI defines configuration related to build executions.
+	CI struct {
+		ParallelWorkers int `envconfig:"GITNESS_CI_PARALLEL_WORKERS" default:"5"`
 	}
 
 	// Database defines the database configuration parameters.

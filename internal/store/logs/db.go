@@ -63,7 +63,8 @@ func (s *logStore) Create(ctx context.Context, stepID int64, r io.Reader) error 
 			,log_data
 		) values (
 			:log_id
-			,:log_data`
+			,:log_data
+		)`
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return fmt.Errorf("could not read log data: %w", err)

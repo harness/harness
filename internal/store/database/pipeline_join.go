@@ -15,6 +15,8 @@ type pipelineExecutionJoin struct {
 	*types.Pipeline
 	ID           sql.NullInt64  `db:"execution_id"`
 	PipelineID   sql.NullInt64  `db:"execution_pipeline_id"`
+	Message      sql.NullString `db:"execution_message"`
+	After        sql.NullString `db:"execution_after"`
 	RepoID       sql.NullInt64  `db:"execution_repo_id"`
 	Trigger      sql.NullString `db:"execution_trigger"`
 	Number       sql.NullInt64  `db:"execution_number"`
@@ -56,6 +58,8 @@ func convertPipelineJoin(join *pipelineExecutionJoin) *types.Pipeline {
 		RepoID:       join.RepoID.Int64,
 		Trigger:      join.Trigger.String,
 		Number:       join.Number.Int64,
+		After:        join.After.String,
+		Message:      join.Message.String,
 		Status:       join.Status.String,
 		Error:        join.Error.String,
 		Link:         join.Link.String,

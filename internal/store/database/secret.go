@@ -209,6 +209,28 @@ func (s *secretStore) List(ctx context.Context, parentID int64, filter types.Lis
 	return dst, nil
 }
 
+// ListAll lists all the secrets present in a space.
+func (s *secretStore) ListAll(ctx context.Context, parentID int64) ([]*types.Secret, error) {
+	stmt := database.Builder.
+		Select(secretColumns).
+		From("secrets").
+		Where("secret_space_id = ?", fmt.Sprint(parentID))
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*types.Secret{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+	}
+
+	return dst, nil
+}
+
 // Delete deletes a secret given a secret ID.
 func (s *secretStore) Delete(ctx context.Context, id int64) error {
 	const secretDeleteStmt = `

@@ -5,7 +5,6 @@
 package execution
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/execution"
@@ -28,14 +27,9 @@ func HandleCreate(executionCtrl *execution.Controller) http.HandlerFunc {
 			return
 		}
 
-		in := new(execution.CreateInput)
-		err = json.NewDecoder(r.Body).Decode(in)
-		if err != nil {
-			render.BadRequestf(w, "Invalid Request Body: %s.", err)
-			return
-		}
+		branch := request.GetBranchFromQuery(r)
 
-		execution, err := executionCtrl.Create(ctx, session, repoRef, pipelineUID, in)
+		execution, err := executionCtrl.Create(ctx, session, repoRef, pipelineUID, branch)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

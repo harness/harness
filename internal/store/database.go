@@ -537,16 +537,22 @@ type (
 		// Delete deletes a secret given an ID.
 		Delete(ctx context.Context, id int64) error
 
-		// DeleteByUID deletes a secret given a space ID and a uid
+		// DeleteByUID deletes a secret given a space ID and a uid.
 		DeleteByUID(ctx context.Context, spaceID int64, uid string) error
 
-		// List lists the secrets in a given space
+		// List lists the secrets in a given space.
 		List(ctx context.Context, spaceID int64, filter types.ListQueryFilter) ([]*types.Secret, error)
+
+		// ListAll lists all the secrets in a given space.
+		ListAll(ctx context.Context, parentID int64) ([]*types.Secret, error)
 	}
 
 	ExecutionStore interface {
-		// Find returns a execution given a pipeline and an execution number
-		Find(ctx context.Context, pipelineID int64, num int64) (*types.Execution, error)
+		// Find returns a execution given an execution ID.
+		Find(ctx context.Context, id int64) (*types.Execution, error)
+
+		// FindByNumber returns a execution given a pipeline and an execution number
+		FindByNumber(ctx context.Context, pipelineID int64, num int64) (*types.Execution, error)
 
 		// Create creates a new execution in the datastore.
 		Create(ctx context.Context, execution *types.Execution) error
@@ -573,6 +579,9 @@ type (
 		// where the stage is incomplete (pending or running).
 		ListIncomplete(ctx context.Context) ([]*types.Stage, error)
 
+		// List returns a list of stages corresponding to an execution ID.
+		List(ctx context.Context, executionID int64) ([]*types.Stage, error)
+
 		// ListWithSteps returns a stage list from the datastore corresponding to an execution,
 		// with the individual steps included.
 		ListWithSteps(ctx context.Context, executionID int64) ([]*types.Stage, error)
@@ -582,11 +591,25 @@ type (
 
 		// FindByNumber returns a stage from the datastore by number.
 		FindByNumber(ctx context.Context, executionID int64, stageNum int) (*types.Stage, error)
+
+		// Update tries to update a stage and returns an optimistic locking error if it was
+		// unable to do so.
+		Update(ctx context.Context, stage *types.Stage) error
+
+		// Create creates a new stage.
+		Create(ctx context.Context, stage *types.Stage) error
 	}
 
 	StepStore interface {
 		// FindByNumber returns a step from the datastore by number.
 		FindByNumber(ctx context.Context, stageID int64, stepNum int) (*types.Step, error)
+
+		// Create creates a new step.
+		Create(ctx context.Context, step *types.Step) error
+
+		// Update tries to update a step and returns an optimistic locking error if it was
+		// unable to do so.
+		Update(ctx context.Context, e *types.Step) error
 	}
 
 	ConnectorStore interface {

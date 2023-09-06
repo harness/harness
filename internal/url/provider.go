@@ -68,3 +68,15 @@ func (p *Provider) GenerateRepoCloneURL(repoPath string) string {
 
 	return p.gitURL.JoinPath(repoPath).String()
 }
+
+// GenerateCustomRepoCloneURL generates a custom clone URL given the base URL.
+// Example: url is http://host.docker.internal:3000 and repoPath is test/gitness-demo
+// it will return http://host.docker.internal:3000/git/test/gitness-demo.git
+func (p *Provider) GenerateCustomRepoCloneURL(baseURL *url.URL, repoPath string) string {
+	repoPath = path.Clean(repoPath)
+	if !strings.HasSuffix(repoPath, ".git") {
+		repoPath += ".git"
+	}
+
+	return baseURL.JoinPath("git").JoinPath(repoPath).String()
+}

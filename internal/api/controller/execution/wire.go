@@ -5,6 +5,8 @@
 package execution
 
 import (
+	"github.com/harness/gitness/build/commit"
+	"github.com/harness/gitness/build/triggerer"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
 
@@ -20,10 +22,12 @@ var WireSet = wire.NewSet(
 func ProvideController(db *sqlx.DB,
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
+	commitService commit.CommitService,
+	triggerer triggerer.Triggerer,
 	repoStore store.RepoStore,
 	stageStore store.StageStore,
 	pipelineStore store.PipelineStore,
 ) *Controller {
-	return NewController(db, authorizer, executionStore, repoStore, stageStore,
-		pipelineStore)
+	return NewController(db, authorizer, executionStore, commitService,
+		triggerer, repoStore, stageStore, pipelineStore)
 }

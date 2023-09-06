@@ -1,0 +1,157 @@
+// Copyright 2022 Harness Inc. All rights reserved.
+// Use of this source code is governed by the Polyform Free Trial License
+// that can be found in the LICENSE.md file for this repository.
+
+package manager
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+
+	"github.com/harness/gitness/types"
+
+	"github.com/drone/drone-go/drone"
+	"github.com/drone/runner-go/client"
+)
+
+type embedded struct {
+	config  *types.Config
+	manager ExecutionManager
+}
+
+var _ client.Client = (*embedded)(nil)
+
+func NewEmbeddedClient(manager ExecutionManager, config *types.Config) *embedded {
+	return &embedded{
+		config:  config,
+		manager: manager,
+	}
+}
+
+// Join notifies the server the runner is joining the cluster.
+// Since the runner is embedded, this can just return nil.
+func (e *embedded) Join(ctx context.Context, machine string) error {
+	return nil
+}
+
+// Leave notifies the server the runner is leaving the cluster.
+// Since the runner is embedded, this can just return nil.
+func (e *embedded) Leave(ctx context.Context, machine string) error {
+	return nil
+}
+
+// Ping sends a ping message to the server to test connectivity.
+// Since the runner is embedded, this can just return nil.
+func (e *embedded) Ping(ctx context.Context, machine string) error {
+	return nil
+}
+
+// Request requests the next available build stage for execution.
+func (e *embedded) Request(ctx context.Context, args *client.Filter) (*drone.Stage, error) {
+	request := &Request{
+		Kind:    args.Kind,
+		Type:    args.Type,
+		OS:      args.OS,
+		Arch:    args.Arch,
+		Variant: args.Variant,
+		Kernel:  args.Kernel,
+		Labels:  args.Labels,
+	}
+	stage, err := e.manager.Request(ctx, request)
+	if err != nil {
+		return nil, err
+	}
+	return convertToDroneStage(stage), nil
+}
+
+// Accept accepts the build stage for execution.
+func (e *embedded) Accept(ctx context.Context, s *drone.Stage) error {
+	stage, err := e.manager.Accept(ctx, s.ID, s.Machine)
+	*s = *convertToDroneStage(stage)
+	return err
+}
+
+// Detail gets the build stage details for execution.
+func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Context, error) {
+	details, err := e.manager.Details(ctx, stage.ID)
+	if err != nil {
+		return nil, err
+	}
+	return &client.Context{
+		Build:   convertToDroneBuild(details.Build),
+		Repo:    convertToDroneRepo(details.Repo),
+		Stage:   convertToDroneStage(details.Stage),
+		Secrets: convertToDroneSecrets(details.Secrets),
+		Config:  convertToDroneFile(details.Config),
+		System: &drone.System{
+			Proto: e.config.Server.HTTP.Proto,
+			Host:  e.config.Server.HTTP.Network,
+		},
+	}, nil
+}
+
+// Update updates the build stage.
+func (e *embedded) Update(ctx context.Context, stage *drone.Stage) error {
+	var err error
+	convertedStage := convertFromDroneStage(stage)
+	if stage.Status == types.StatusPending || stage.Status == types.StatusRunning {
+		err = e.manager.BeforeAll(ctx, convertedStage)
+	} else {
+		err = e.manager.AfterAll(ctx, convertedStage)
+	}
+	*stage = *convertToDroneStage(convertedStage)
+	return err
+}
+
+// UpdateStep updates the build step.
+func (e *embedded) UpdateStep(ctx context.Context, step *drone.Step) error {
+	var err error
+	convertedStep := convertFromDroneStep(step)
+	if step.Status == types.StatusPending || step.Status == types.StatusRunning {
+		err = e.manager.Before(ctx, convertedStep)
+	} else {
+		err = e.manager.After(ctx, convertedStep)
+	}
+	*step = *convertToDroneStep(convertedStep)
+	return err
+}
+
+// Watch watches for build cancellation requests.
+func (e *embedded) Watch(ctx context.Context, stage int64) (bool, error) {
+	// Implement Watch logic here
+	return false, errors.New("Not implemented")
+}
+
+// Batch batch writes logs to the streaming logs.
+func (e *embedded) Batch(ctx context.Context, step int64, lines []*drone.Line) error {
+	for _, l := range lines {
+		line := convertFromDroneLine(l)
+		err := e.manager.Write(ctx, step, line)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Upload uploads the full logs to the server.
+func (e *embedded) Upload(ctx context.Context, step int64, lines []*drone.Line) error {
+	var buffer bytes.Buffer
+	out, err := json.Marshal(lines)
+	if err != nil {
+		return err
+	}
+	_, err = buffer.Write(out)
+	if err != nil {
+		return err
+	}
+	return e.manager.Upload(ctx, step, &buffer)
+}
+
+// UploadCard uploads a card to drone server.
+func (e *embedded) UploadCard(ctx context.Context, step int64, card *drone.CardInput) error {
+	// Implement UploadCard logic here
+	return nil // Replace with appropriate error handling and logic
+}

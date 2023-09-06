@@ -7,25 +7,22 @@ package execution
 import (
 	"context"
 	"fmt"
-	"time"
 
+	"github.com/harness/gitness/build/triggerer"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-)
 
-// TODO: Add more as needed.
-type CreateInput struct {
-	Status string `json:"status"`
-}
+	"github.com/drone/go-scm/scm"
+)
 
 func (c *Controller) Create(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	pipelineUID string,
-	in *CreateInput,
+	branch string,
 ) (*types.Execution, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
@@ -42,25 +39,38 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
-	pipeline, err = c.pipelineStore.IncrementSeqNum(ctx, pipeline)
+	// If the branch is empty, use the default branch specified in the pipeline.
+	if branch == "" {
+		branch = pipeline.DefaultBranch
+	}
+	// expand the branch to a git reference.
+	ref := scm.ExpandRef(branch, "refs/heads")
+
+	// Fetch the commit information from the commits service.
+	commit, err := c.commitService.FindRef(ctx, repo, ref)
 	if err != nil {
-		return nil, fmt.Errorf("failed to increment sequence number: %w", err)
+		return nil, fmt.Errorf("failed to fetch commit: %w", err)
 	}
 
-	now := time.Now().UnixMilli()
-	execution := &types.Execution{
-		Number:     pipeline.Seq,
-		Status:     in.Status,
-		RepoID:     pipeline.RepoID,
-		PipelineID: pipeline.ID,
-		Created:    now,
-		Updated:    now,
-		Version:    0,
-	}
-	err = c.executionStore.Create(ctx, execution)
-	if err != nil {
-		return nil, fmt.Errorf("execution creation failed: %w", err)
+	// Create manual hook for execution.
+	hook := &triggerer.Hook{
+		Trigger:     session.Principal.UID, // who/what triggered the build, different from commit author
+		Author:      commit.Author.Identity.Name,
+		AuthorName:  commit.Author.Identity.Name,
+		AuthorEmail: commit.Author.Identity.Email,
+		Ref:         ref,
+		Message:     commit.Message,
+		Title:       "", // we expect this to be empty.
+		Before:      commit.SHA,
+		After:       commit.SHA,
+		Sender:      session.Principal.UID,
+		Source:      branch,
+		Target:      branch,
+		Action:      types.EventCustom,
+		Params:      map[string]string{},
+		Timestamp:   commit.Author.When.UnixMilli(),
 	}
 
-	return execution, nil
+	// Trigger the execution
+	return c.triggerer.Trigger(ctx, pipeline, hook)
 }

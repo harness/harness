@@ -10,6 +10,12 @@ package main
 import (
 	"context"
 
+	"github.com/harness/gitness/build/commit"
+	"github.com/harness/gitness/build/file"
+	"github.com/harness/gitness/build/manager"
+	"github.com/harness/gitness/build/runner"
+	"github.com/harness/gitness/build/scheduler"
+	"github.com/harness/gitness/build/triggerer"
 	cliserver "github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
@@ -114,6 +120,12 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		secret.WireSet,
 		connector.WireSet,
 		template.WireSet,
+		manager.WireSet,
+		triggerer.WireSet,
+		file.WireSet,
+		runner.WireSet,
+		scheduler.WireSet,
+		commit.WireSet,
 		trigger.WireSet,
 		plugin.WireSet,
 	)
