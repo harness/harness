@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import * as monaco from 'monaco-editor'
 import type monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 import MonacoEditor, { MonacoDiffEditor } from 'react-monaco-editor'
 import { noop } from 'lodash-es'
@@ -22,8 +23,8 @@ const diagnosticsOptions = {
   noSyntaxValidation: true
 }
 
-const compilerOptions = {
-  jsx: 'react',
+const compilerOptions: monacoEditor.languages.typescript.CompilerOptions = {
+  jsx: monaco.languages.typescript.JsxEmit.ReactJSX,
   noLib: true,
   allowNonTsExtensions: true
 }
@@ -44,11 +45,9 @@ export default function MonacoSourceCodeEditor({
   const scrollbar = autoHeight ? 'hidden' : 'auto'
 
   useEffect(() => {
-    if (window.monaco) {
-      monaco.languages.typescript?.typescriptDefaults?.setDiagnosticsOptions?.(diagnosticsOptions)
-      monaco.languages.typescript?.javascriptDefaults?.setDiagnosticsOptions?.(diagnosticsOptions)
-      monaco.languages.typescript?.typescriptDefaults?.setCompilerOptions?.(compilerOptions)
-    }
+    monaco.languages.typescript?.typescriptDefaults?.setDiagnosticsOptions?.(diagnosticsOptions)
+    monaco.languages.typescript?.javascriptDefaults?.setDiagnosticsOptions?.(diagnosticsOptions)
+    monaco.languages.typescript?.typescriptDefaults?.setCompilerOptions?.(compilerOptions)
   }, [])
 
   useEventListener('resize', () => {
