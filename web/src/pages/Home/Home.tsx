@@ -2,6 +2,7 @@ import React from 'react'
 import { ButtonVariation, Container, Layout, PageBody, Text } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { useGet } from 'restful-react'
+import { useHistory } from 'react-router-dom'
 // import type { TypesSpace } from 'services/code'
 import { useStrings } from 'framework/strings'
 // import { usePageIndex } from 'hooks/usePageIndex'
@@ -13,6 +14,8 @@ import css from './Home.module.scss'
 
 export default function Home() {
   const { getString } = useStrings()
+  const history = useHistory()
+  const { routes } = useAppContext()
   // const [searchTerm, setSearchTerm] = useState('')
   // const [page, setPage] = usePageIndex(1)
   const { currentUser } = useAppContext()
@@ -32,6 +35,9 @@ export default function Home() {
       width={173}
       height={48}
       onRefetch={refetch}
+      handleNavigation={spaceName => {
+        history.push(routes.toCODERepositories({ space: spaceName }))
+      }}
     />
   )
   return (
