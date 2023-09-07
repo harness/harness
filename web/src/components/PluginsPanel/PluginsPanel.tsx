@@ -70,7 +70,7 @@ const runStepSpec = {
 }
 
 export interface PluginsPanelInterface {
-  onPluginAddUpdate?: (isUpdate: boolean, pluginFormData: Record<string, any>) => void
+  onPluginAddUpdate: (isUpdate: boolean, pluginFormData: Record<string, any>) => void
 }
 
 export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.Element => {
@@ -197,6 +197,16 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
     )
   }
 
+  const constructPayloadForYAMLInsertion = (isUpdate: boolean, pluginFormData: Record<string, any>) => {
+    let constructedPayload = { ...pluginFormData }
+    switch (category) {
+      case PluginCategory.Drone:
+      case PluginCategory.Harness:
+        constructedPayload = { type: 'script', spec: constructedPayload }
+    }
+    onPluginAddUpdate?.(isUpdate, constructedPayload)
+  }
+
   const renderPluginConfigForm = useCallback((): JSX.Element => {
     // TODO obtain plugin input spec by parsing YAML
     const inputs = get(category === PluginCategory.Drone ? dronePluginSpecMock : runStepSpec, 'inputs', {})
@@ -231,7 +241,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
           <Formik
             initialValues={{}}
             onSubmit={formData => {
-              onPluginAddUpdate?.(false, formData)
+              constructPayloadForYAMLInsertion(false, formData)
             }}>
             <FormikForm>
               <Layout.Vertical flex={{ alignItems: 'flex-start' }} height="100%">

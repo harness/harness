@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useGet, useMutate } from 'restful-react'
 import { Link, useParams } from 'react-router-dom'
-import { isEmpty, isUndefined } from 'lodash'
+import { get, isEmpty, isUndefined, set } from 'lodash'
+import { stringify } from 'yaml'
 import { Container, PageHeader, PageBody, Button, Layout, ButtonVariation, Text, useToaster } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
@@ -21,8 +22,24 @@ import pipelineSchema from './schema/pipeline-schema.json'
 
 import css from './AddUpdatePipeline.module.scss'
 
-const starterPipelineAsString =
-  'version: 1\nstages:\n- type: ci\n  spec:\n    steps:\n    - type: script\n      spec:\n        run: echo hello world'
+const StarterPipeline: Record<string, any> = {
+  version: 1,
+  stages: [
+    {
+      type: 'ci',
+      spec: {
+        steps: [
+          {
+            type: 'script',
+            spec: {
+              run: 'echo hello world'
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
 
 const AddUpdatePipeline = (): JSX.Element => {
   const { routes } = useAppContext()
@@ -30,6 +47,7 @@ const AddUpdatePipeline = (): JSX.Element => {
   const { pipeline } = useParams<CODEProps>()
   const { repoMetadata } = useGetRepositoryMetadata()
   const { showError } = useToaster()
+  const [pipelineAsObj, setPipelineAsObj] = useState<Record<string, any>>(StarterPipeline)
   const [pipelineAsYAML, setPipelineAsYaml] = useState<string>('')
   const { openModal: openRunPipelineModal } = useRunPipelineModal()
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
@@ -57,6 +75,16 @@ const AddUpdatePipeline = (): JSX.Element => {
       setIsExistingPipeline(!isEmpty(pipelineYAMLFileContent) && !isUndefined(pipelineYAMLFileContent.content))
     }
   }, [pipelineYAMLFileContent, resourceLoading])
+
+  useEffect(() => {
+    if (isExistingPipeline) {
+      setPipelineAsYaml(decodeGitContent((pipelineYAMLFileContent?.content as RepoFileContent)?.data))
+    } else {
+      try {
+        setPipelineAsYaml(stringify(pipelineAsObj))
+      } catch (ex) {}
+    }
+  }, [pipelineYAMLFileContent])
 
   const handleSaveAndRun = (): void => {
     try {
@@ -87,6 +115,26 @@ const AddUpdatePipeline = (): JSX.Element => {
     } catch (exception) {
       showError(getErrorMessage(exception), 0, 'pipelines.failedToCreatePipeline')
     }
+  }
+
+  const updatePipeline = (payload: Record<string, any>): Record<string, any> => {
+    const pipelineAsObjClone = { ...pipelineAsObj }
+    let existingSteps: [unknown] = get(pipelineAsObjClone, 'stages.0.spec.steps', [])
+    if (existingSteps.length > 0) {
+      existingSteps.push(payload)
+    } else {
+      existingSteps = [payload]
+    }
+    set(pipelineAsObjClone, 'stages.0.spec.steps', existingSteps)
+    return pipelineAsObjClone
+  }
+
+  const addUpdatePluginToPipelineYAML = (_isUpdate: boolean, pluginFormData: Record<string, any>): void => {
+    try {
+      const updatedPipelineAsObj = updatePipeline(pluginFormData)
+      setPipelineAsObj(updatedPipelineAsObj)
+      setPipelineAsYaml(stringify(updatedPipelineAsObj))
+    } catch (ex) {}
   }
 
   return (
@@ -121,15 +169,12 @@ const AddUpdatePipeline = (): JSX.Element => {
               <MonacoSourceCodeEditor
                 language={'yaml'}
                 schema={pipelineSchema}
-                source={
-                  decodeGitContent((pipelineYAMLFileContent?.content as RepoFileContent)?.data) ||
-                  starterPipelineAsString
-                }
+                source={pipelineAsYAML}
                 onChange={(value: string) => setPipelineAsYaml(value)}
               />
             </Container>
             <Container className={css.pluginsContainer}>
-              <PluginsPanel />
+              <PluginsPanel onPluginAddUpdate={addUpdatePluginToPipelineYAML} />
             </Container>
           </Layout.Horizontal>
         </PageBody>
