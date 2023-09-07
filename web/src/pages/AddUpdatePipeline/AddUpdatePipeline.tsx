@@ -1,18 +1,22 @@
-import React, { useMemo, useState } from 'react'
-import { useMutate } from 'restful-react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { useGet, useMutate } from 'restful-react'
 import { Link, useParams } from 'react-router-dom'
+import { isEmpty, isUndefined } from 'lodash'
 import { Container, PageHeader, PageBody, Button, Layout, ButtonVariation, Text, useToaster } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
-import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse } from 'services/code'
+import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse, RepoFileContent, TypesPipeline } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import MonacoSourceCodeEditor from 'components/SourceCodeEditor/MonacoSourceCodeEditor'
 import { PluginsPanel } from 'components/PluginsPanel/PluginsPanel'
 import useRunPipelineModal from 'components/RunPipelineModal/RunPipelineModal'
+import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useAppContext } from 'AppContext'
 import type { CODEProps } from 'RouteDefinitions'
 import { getErrorMessage } from 'utils/Utils'
+import { decodeGitContent } from 'utils/GitUtils'
 import pipelineSchema from './schema/pipeline-schema.json'
 
 import css from './AddUpdatePipeline.module.scss'
@@ -29,19 +33,45 @@ const AddUpdatePipeline = (): JSX.Element => {
   const [pipelineAsYAML, setPipelineAsYaml] = useState<string>('')
   const { openModal: openRunPipelineModal } = useRunPipelineModal()
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
+  const [isExistingPipeline, setIsExistingPipeline] = useState<boolean>(false)
 
   const { mutate, loading } = useMutate<RepoCommitFilesResponse>({
     verb: 'POST',
     path: `/api/v1/repos/${repoPath}/+/commits`
   })
 
+  // Fetch pipeline metadata to fetch pipeline YAML file content
+  const { data: pipelineData, loading: fetchingPipeline } = useGet<TypesPipeline>({
+    path: `/api/v1/repos/${repoPath}/+/pipelines/${pipeline}`,
+    lazy: !repoMetadata
+  })
+
+  const { data: resourceContent, loading: resourceLoading } = useGetResourceContent({
+    repoMetadata,
+    gitRef: pipelineData?.default_branch || '',
+    resourcePath: pipelineData?.config_path || ''
+  })
+
+  useEffect(() => {
+    if (!resourceLoading) {
+      setIsExistingPipeline(!isEmpty(pipelineData) && !isUndefined(pipelineData.id))
+    }
+  }, [resourceContent, resourceLoading])
+
   const handleSaveAndRun = (): void => {
     try {
       const data: OpenapiCommitFilesRequest = {
-        actions: [{ action: 'CREATE', path: `sample_${new Date().getTime()}.txt`, payload: pipelineAsYAML }],
+        actions: [
+          {
+            action: isExistingPipeline ? 'UPDATE' : 'CREATE',
+            path: pipelineData?.config_path,
+            payload: pipelineAsYAML,
+            sha: isExistingPipeline ? resourceContent?.sha : ''
+          }
+        ],
         branch: repoMetadata?.default_branch,
         new_branch: '',
-        title: `Create pipeline ${pipeline}`,
+        title: `${isExistingPipeline ? getString('updated') : getString('created')} pipeline ${pipeline}`,
         message: ''
       }
 
@@ -85,12 +115,17 @@ const AddUpdatePipeline = (): JSX.Element => {
           }
         />
         <PageBody>
+          <LoadingSpinner visible={fetchingPipeline} />
           <Layout.Horizontal>
             <Container className={css.editorContainer}>
               <MonacoSourceCodeEditor
                 language={'yaml'}
                 schema={pipelineSchema}
-                source={starterPipelineAsString}
+                source={
+                  isExistingPipeline
+                    ? decodeGitContent((resourceContent?.content as RepoFileContent)?.data)
+                    : starterPipelineAsString
+                }
                 onChange={(value: string) => setPipelineAsYaml(value)}
               />
             </Container>
