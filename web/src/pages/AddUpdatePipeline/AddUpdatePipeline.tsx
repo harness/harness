@@ -22,7 +22,7 @@ import pipelineSchema from './schema/pipeline-schema.json'
 import css from './AddUpdatePipeline.module.scss'
 
 const starterPipelineAsString =
-  'stages:\n- type: ci\n  spec:\n    steps:\n    - type: script\n      spec:\n        run: echo hello world'
+  'version: 1\nstages:\n- type: ci\n  spec:\n    steps:\n    - type: script\n      spec:\n        run: echo hello world'
 
 const AddUpdatePipeline = (): JSX.Element => {
   const { routes } = useAppContext()
@@ -46,7 +46,7 @@ const AddUpdatePipeline = (): JSX.Element => {
     lazy: !repoMetadata
   })
 
-  const { data: resourceContent, loading: resourceLoading } = useGetResourceContent({
+  const { data: pipelineYAMLFileContent, loading: resourceLoading } = useGetResourceContent({
     repoMetadata,
     gitRef: pipelineData?.default_branch || '',
     resourcePath: pipelineData?.config_path || ''
@@ -54,9 +54,9 @@ const AddUpdatePipeline = (): JSX.Element => {
 
   useEffect(() => {
     if (!resourceLoading) {
-      setIsExistingPipeline(!isEmpty(pipelineData) && !isUndefined(pipelineData.id))
+      setIsExistingPipeline(!isEmpty(pipelineYAMLFileContent) && !isUndefined(pipelineYAMLFileContent.content))
     }
-  }, [resourceContent, resourceLoading])
+  }, [pipelineYAMLFileContent, resourceLoading])
 
   const handleSaveAndRun = (): void => {
     try {
@@ -66,7 +66,7 @@ const AddUpdatePipeline = (): JSX.Element => {
             action: isExistingPipeline ? 'UPDATE' : 'CREATE',
             path: pipelineData?.config_path,
             payload: pipelineAsYAML,
-            sha: isExistingPipeline ? resourceContent?.sha : ''
+            sha: isExistingPipeline ? pipelineYAMLFileContent?.sha : ''
           }
         ],
         branch: repoMetadata?.default_branch,
@@ -122,9 +122,8 @@ const AddUpdatePipeline = (): JSX.Element => {
                 language={'yaml'}
                 schema={pipelineSchema}
                 source={
-                  isExistingPipeline
-                    ? decodeGitContent((resourceContent?.content as RepoFileContent)?.data)
-                    : starterPipelineAsString
+                  decodeGitContent((pipelineYAMLFileContent?.content as RepoFileContent)?.data) ||
+                  starterPipelineAsString
                 }
                 onChange={(value: string) => setPipelineAsYaml(value)}
               />
