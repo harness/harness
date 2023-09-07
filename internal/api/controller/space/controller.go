@@ -7,6 +7,7 @@ package space
 import (
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types/check"
@@ -17,6 +18,7 @@ import (
 type Controller struct {
 	db              *sqlx.DB
 	urlProvider     *url.Provider
+	eventsStream    events.Events
 	uidCheck        check.PathUID
 	authorizer      authz.Authorizer
 	pathStore       store.PathStore
@@ -31,7 +33,7 @@ type Controller struct {
 	membershipStore store.MembershipStore
 }
 
-func NewController(db *sqlx.DB, urlProvider *url.Provider,
+func NewController(db *sqlx.DB, urlProvider *url.Provider, eventsStream events.Events,
 	uidCheck check.PathUID, authorizer authz.Authorizer,
 	pathStore store.PathStore, pipelineStore store.PipelineStore, secretStore store.SecretStore,
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,
@@ -41,6 +43,7 @@ func NewController(db *sqlx.DB, urlProvider *url.Provider,
 	return &Controller{
 		db:              db,
 		urlProvider:     urlProvider,
+		eventsStream:    eventsStream,
 		uidCheck:        uidCheck,
 		authorizer:      authorizer,
 		pathStore:       pathStore,

@@ -7,8 +7,10 @@ package manager
 import (
 	"context"
 
+	"github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -16,6 +18,7 @@ import (
 type updater struct {
 	Executions store.ExecutionStore
 	Repos      store.RepoStore
+	Events     events.Events
 	Steps      store.StepStore
 	Stages     store.StageStore
 }
@@ -34,6 +37,36 @@ func (u *updater) do(ctx context.Context, step *types.Step) error {
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot update step")
 		return err
+	}
+
+	stage, err := u.Stages.Find(noContext, step.StageID)
+	if err != nil {
+		log.Error().Err(err).Msg("manager: cannot find stage")
+		return nil
+	}
+
+	execution, err := u.Executions.Find(noContext, stage.ExecutionID)
+	if err != nil {
+		log.Error().Err(err).Msg("manager: cannot find execution")
+		return nil
+	}
+
+	repo, err := u.Repos.Find(noContext, execution.RepoID)
+	if err != nil {
+		log.Error().Err(err).Msg("manager: cannot find repo")
+		return nil
+	}
+
+	stages, err := u.Stages.ListWithSteps(noContext, stage.ExecutionID)
+	if err != nil {
+		log.Error().Err(err).Msg("manager: cannot find stages")
+		return nil
+	}
+
+	execution.Stages = stages
+	err = u.Events.Publish(noContext, repo.ParentID, executionEvent(enum.ExecutionUpdated, execution))
+	if err != nil {
+		log.Warn().Err(err).Msg("manager: cannot publish execution updated event")
 	}
 
 	return nil

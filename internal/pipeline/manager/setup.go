@@ -6,9 +6,11 @@ package manager
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
+	"github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/store"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -19,6 +21,7 @@ import (
 
 type setup struct {
 	Executions store.ExecutionStore
+	Events     events.Events
 	Repos      store.RepoStore
 	Steps      store.StepStore
 	Stages     store.StageStore
@@ -39,7 +42,7 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 		Int64("repo.id", execution.RepoID).
 		Logger()
 
-	_, err = s.Repos.Find(noContext, execution.RepoID)
+	repo, err := s.Repos.Find(noContext, execution.RepoID)
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot find the repository")
 		return err
@@ -72,13 +75,35 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 		}
 	}
 
-	_, err = s.updateExecution(ctx, execution)
+	_, err = s.updateExecution(noContext, execution)
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot update the execution")
 		return err
 	}
+	stages, err := s.Stages.ListWithSteps(noContext, execution.ID)
+	if err != nil {
+		log.Error().Err(err).Msg("manager: could not list stages with steps")
+		return err
+	}
+	execution.Stages = stages
+	err = s.Events.Publish(noContext, repo.ParentID, executionEvent(enum.ExecutionRunning, execution))
+	if err != nil {
+		log.Warn().Err(err).Msg("manager: could not publish execution event")
+	}
 
 	return nil
+}
+
+func executionEvent(
+	eventType enum.EventType,
+	execution *types.Execution,
+) *events.Event {
+	// json.Marshal will not return an error here, it can be absorbed
+	bytes, _ := json.Marshal(execution)
+	return &events.Event{
+		Type: eventType,
+		Data: bytes,
+	}
 }
 
 // helper function that updates the execution status from pending to running.

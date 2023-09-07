@@ -41,6 +41,7 @@ import (
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/pipeline/commit"
+	eventsstream "github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/manager"
 	"github.com/harness/gitness/internal/pipeline/runner"
@@ -125,6 +126,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		triggerer.WireSet,
 		file.WireSet,
 		runner.WireSet,
+		eventsstream.WireSet,
 		scheduler.WireSet,
 		commit.WireSet,
 		trigger.WireSet,

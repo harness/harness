@@ -10,7 +10,7 @@ import (
 	"context"
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
-	"github.com/harness/gitness/events"
+	events2 "github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	server3 "github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/gitrpc/server/cron"
@@ -36,9 +36,10 @@ import (
 	"github.com/harness/gitness/internal/auth/authn"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/bootstrap"
-	events3 "github.com/harness/gitness/internal/events/git"
-	events2 "github.com/harness/gitness/internal/events/pullreq"
+	events4 "github.com/harness/gitness/internal/events/git"
+	events3 "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/pipeline/commit"
+	"github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/manager"
 	"github.com/harness/gitness/internal/pipeline/runner"
@@ -137,10 +138,13 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	logStore := logs.ProvideLogStore(db, config)
 	logStream := livelog.ProvideLogStream(config)
 	logsController := logs2.ProvideController(db, authorizer, executionStore, repoStore, pipelineStore, stageStore, stepStore, logStore, logStream)
+	pubsubConfig := pubsub.ProvideConfig(config)
+	pubSub := pubsub.ProvidePubSub(pubsubConfig, universalClient)
+	eventsEvents := events.ProvideEventsStreaming(pubSub)
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db)
 	templateStore := database.ProvideTemplateStore(db)
-	spaceController := space.ProvideController(db, provider, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
+	spaceController := space.ProvideController(db, provider, eventsEvents, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
 	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore)
 	encrypter, err := encrypt.ProvideEncrypter(config)
 	if err != nil {
@@ -162,11 +166,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	eventsSystem, err := events.ProvideSystem(eventsConfig, universalClient)
+	eventsSystem, err := events2.ProvideSystem(eventsConfig, universalClient)
 	if err != nil {
 		return nil, err
 	}
-	reporter, err := events2.ProvideReporter(eventsSystem)
+	reporter, err := events3.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -178,11 +182,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
-	readerFactory, err := events3.ProvideReaderFactory(eventsSystem)
+	readerFactory, err := events4.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
-	eventsReaderFactory, err := events2.ProvideReaderFactory(eventsSystem)
+	eventsReaderFactory, err := events3.ProvideReaderFactory(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +195,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	webhookController := webhook2.ProvideController(webhookConfig, db, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService)
-	eventsReporter, err := events3.ProvideReporter(eventsSystem)
+	eventsReporter, err := events4.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +210,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(config, apiHandler, gitHandler, webHandler)
 	serverServer := server2.ProvideServer(config, routerRouter)
-	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, fileService, logStore, logStream, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore)
+	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, eventsEvents, fileService, logStore, logStream, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore)
 	client := manager.ProvideExecutionClient(executionManager, config)
 	runtimeRunner, err := runner.ProvideExecutionRunner(config, client, executionManager)
 	if err != nil {
