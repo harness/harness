@@ -1,10 +1,10 @@
 import React, { useState, useContext, useEffect } from 'react'
+import { useHistory } from 'react-router-dom'
 import { noop } from 'lodash-es'
 import { useGet } from 'restful-react'
 import type { AppProps } from 'AppProps'
 import { routes } from 'RouteDefinitions'
 import type { TypesUser } from 'services/code'
-import { useAPIToken } from 'hooks/useAPIToken'
 
 interface AppContextProps extends AppProps {
   setAppContext: (value: Partial<AppProps>) => void
@@ -34,10 +34,9 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(func
   value: initialValue,
   children
 }) {
-  const [token, setToken] = useAPIToken()
+  const history = useHistory()
   const { data: currentUser = defaultCurrentUser, error } = useGet({
-    path: '/api/v1/user',
-    lazy: initialValue.standalone && !token
+    path: '/api/v1/user'
   })
   const [appStates, setAppStates] = useState<AppProps>(initialValue)
 
@@ -49,9 +48,9 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(func
 
   useEffect(() => {
     if (initialValue.standalone && error) {
-      setToken('')
+      history.push(routes.toSignIn())
     }
-  }, [initialValue.standalone, error, setToken])
+  }, [initialValue.standalone, error, history])
 
   return (
     <AppContext.Provider

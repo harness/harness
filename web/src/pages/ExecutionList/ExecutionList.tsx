@@ -130,7 +130,7 @@ const ExecutionList = () => {
         disableSortBy: true
       }
     ],
-    [getString]
+    [getString, repoMetadata?.path, routes]
   )
 
   return (

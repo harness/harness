@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Button, ButtonVariation, Container, Dialog, FlexExpander, Layout, Text, useToaster } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
@@ -24,16 +24,20 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
   const { showError } = useToaster()
   const hash = generateAlphaNumericHash(6)
   const { mutate } = useMutate({ path: '/api/v1/user/tokens', verb: 'POST' })
-  const genToken = async (_props: { uid: string }) => {
-    const res = await mutate({ uid: _props.uid })
-    try {
-      setToken(res?.access_token)
-    } catch {
-      showError(res?.data?.message || res?.message)
-    }
-    return res
-  }
+  const genToken = useCallback(
+    async (_props: { uid: string }) => {
+      const res = await mutate({ uid: _props.uid })
+      try {
+        setToken(res?.access_token)
+      } catch {
+        showError(res?.data?.message || res?.message)
+      }
+      return res
+    },
+    [mutate, showError]
+  )
   const tokenData = standalone ? false : hooks?.useGenerateToken?.(hash, currentUser.uid, flag)
+
   useEffect(() => {
     if (tokenData) {
       if (tokenData && tokenData?.status !== 400) {
@@ -44,7 +48,7 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
     } else if (!tokenData && standalone && flag) {
       genToken({ uid: `code_token_${hash}` })
     }
-  }, [flag, tokenData, showError])
+  }, [flag, tokenData, showError]) // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <Dialog
       isOpen={flag}

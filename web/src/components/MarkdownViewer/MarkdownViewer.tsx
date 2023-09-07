@@ -61,7 +61,7 @@ export function MarkdownViewer({ source, className, maxHeight, darkMode }: Markd
         setIsOpen(true)
       }
     },
-    [history, source]
+    [history]
   )
 
   return (

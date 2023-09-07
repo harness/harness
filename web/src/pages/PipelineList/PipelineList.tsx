@@ -168,7 +168,7 @@ const PipelineList = () => {
         disableSortBy: true
       }
     ],
-    [getString, searchTerm]
+    [getString, repoMetadata?.path, routes, searchTerm]
   )
 
   return (

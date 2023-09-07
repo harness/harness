@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import {
   Avatar,
   Button,
@@ -40,34 +40,34 @@ const UsersListing = () => {
     }
   })
   const { mutate: deleteUser } = useAdminDeleteUser({})
-
   const { openModal } = useAddUserModal({ onClose: refetch })
   const { openModal: openResetPasswordModal } = useResetPasswordModal()
-
   const onConfirmAct = useConfirmAct()
-
-  const handleDeleteUser = async (userId: string, displayName?: string) =>
-    await onConfirmAct({
-      action: async () => {
-        try {
-          await deleteUser(userId)
-          showSuccess(getString('newUserModal.userDeleted', { name: displayName }))
-          refetch()
-        } catch (error) {
-          showError(getErrorMessage(error))
-        }
-      },
-      message: (
-        <Text font={{ variation: FontVariation.BODY2 }}>
-          <StringSubstitute
-            str={getString('userManagement.deleteUserMsg', { displayName, userId })}
-            vars={{ avatar: <Avatar name={displayName} /> }}
-          />
-        </Text>
-      ),
-      intent: 'danger',
-      title: getString('userManagement.deleteUser')
-    })
+  const handleDeleteUser = useCallback(
+    async (userId: string, displayName?: string) =>
+      await onConfirmAct({
+        action: async () => {
+          try {
+            await deleteUser(userId)
+            showSuccess(getString('newUserModal.userDeleted', { name: displayName }))
+            refetch()
+          } catch (error) {
+            showError(getErrorMessage(error))
+          }
+        },
+        message: (
+          <Text font={{ variation: FontVariation.BODY2 }}>
+            <StringSubstitute
+              str={getString('userManagement.deleteUserMsg', { displayName, userId })}
+              vars={{ avatar: <Avatar name={displayName} /> }}
+            />
+          </Text>
+        ),
+        intent: 'danger',
+        title: getString('userManagement.deleteUser')
+      }),
+    [deleteUser, getString, onConfirmAct, refetch, showError, showSuccess]
+  )
 
   const columns: Column<TypesUser>[] = useMemo(
     () => [
@@ -178,7 +178,7 @@ const UsersListing = () => {
         }
       }
     ],
-    []
+    [getString, handleDeleteUser, onConfirmAct, openModal, openResetPasswordModal, refetch, showError, showSuccess]
   )
 
   return (

@@ -18,19 +18,15 @@ import { useGet, useMutate } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import ReactTimeago from 'react-timeago'
 import moment from 'moment'
-
 import { useStrings } from 'framework/strings'
-import { useAPIToken } from 'hooks/useAPIToken'
 import { TypesToken, TypesUser, useGetUser, useOpLogout, useUpdateUser } from 'services/code'
 import { ButtonRoleProps, getErrorMessage } from 'utils/Utils'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
-
 import useNewToken from './NewToken/NewToken'
 import EditableTextField from './EditableTextField'
-
 import css from './UserProfile.module.scss'
 
 const USER_TOKENS_API_PATH = '/api/v1/user/tokens'
@@ -48,11 +44,8 @@ const UserProfile = () => {
   const { data: userTokens, loading: tokensLoading, refetch: refetchTokens } = useGet({ path: USER_TOKENS_API_PATH })
   const { mutate: deleteToken } = useMutate({ path: USER_TOKENS_API_PATH, verb: 'DELETE' })
 
-  const [, setToken] = useAPIToken()
-
   const onLogout = async () => {
     await logoutUser()
-    setToken('')
     history.push(routes.toSignIn())
   }
 

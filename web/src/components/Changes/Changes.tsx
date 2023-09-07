@@ -109,7 +109,7 @@ export const Changes: React.FC<ChangesProps> = ({
         })
       )
     }
-  }, [commitRange])
+  }, [commitRange, history, routes, repoMetadata.path, pullRequestMetadata?.number])
 
   const {
     data: rawDiff,
