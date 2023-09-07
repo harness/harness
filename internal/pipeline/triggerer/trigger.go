@@ -9,12 +9,13 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/harness/gitness/build/file"
-	"github.com/harness/gitness/build/scheduler"
-	"github.com/harness/gitness/build/triggerer/dag"
+	"github.com/harness/gitness/internal/pipeline/file"
+	"github.com/harness/gitness/internal/pipeline/scheduler"
+	"github.com/harness/gitness/internal/pipeline/triggerer/dag"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone-yaml/yaml/linter"
@@ -43,15 +44,13 @@ type Hook struct {
 	Before       string            `json:"before"`
 	After        string            `json:"after"`
 	Ref          string            `json:"ref"`
-	Fork         string            `json:"hook"`
+	Fork         string            `json:"fork"`
 	Source       string            `json:"source"`
 	Target       string            `json:"target"`
-	Author       string            `json:"author_login"`
+	AuthorLogin  string            `json:"author_login"`
 	AuthorName   string            `json:"author_name"`
 	AuthorEmail  string            `json:"author_email"`
 	AuthorAvatar string            `json:"author_avatar"`
-	Deployment   string            `json:"deploy_to"`
-	DeploymentID int64             `json:"deploy_id"`
 	Debug        bool              `json:"debug"`
 	Cron         string            `json:"cron"`
 	Sender       string            `json:"sender"`
@@ -101,8 +100,9 @@ func (t *triggerer) Trigger(
 	base *Hook,
 ) (*types.Execution, error) {
 	log := log.With().
-		Str("ref", base.Ref).
-		Str("commit", base.After).
+		Int64("pipeline.id", pipeline.ID).
+		Str("trigger.ref", base.Ref).
+		Str("trigger.commit", base.After).
 		Logger()
 
 	log.Debug().Msg("trigger: received")
@@ -167,15 +167,7 @@ func (t *triggerer) Trigger(
 	// 	}
 	// }
 
-	var ref string
-	if base.After != "" {
-		ref = base.After
-	} else if base.Ref != "" {
-		ref = base.Ref
-	} else {
-		ref = pipeline.DefaultBranch
-	}
-	file, err := t.fileService.Get(ctx, repo, pipeline.ConfigPath, ref)
+	file, err := t.fileService.Get(ctx, repo, pipeline.ConfigPath, base.After)
 	if err != nil {
 		log.Error().Err(err).Msg("trigger: could not find yaml")
 		return nil, err
@@ -191,13 +183,13 @@ func (t *triggerer) Trigger(
 	// if err != nil {
 	// 	logger = logger.WithError(err)
 	// 	logger.Warnln("trigger: cannot convert yaml")
-	// 	return t.createExecutionError(ctx, repo, base, err.Error())
+	// 	return t.createExecutionWithError(ctx, repo, base, err.Error())
 	// }
 
 	manifest, err := yaml.ParseString(string(file.Data))
 	if err != nil {
 		log.Warn().Err(err).Msg("trigger: cannot parse yaml")
-		return t.createExecutionError(ctx, pipeline, base, err.Error())
+		return t.createExecutionWithError(ctx, pipeline, base, err.Error())
 	}
 
 	// verr := t.validate.Validate(ctx, &core.ValidateArgs{
@@ -216,14 +208,14 @@ func (t *triggerer) Trigger(
 	// 	if verr != nil {
 	// 		logger = logger.WithError(err)
 	// 		logger.Warnln("trigger: yaml validation error")
-	// 		return t.createExecutionError(ctx, repo, base, verr.Error())
+	// 		return t.createExecutionWithError(ctx, repo, base, verr.Error())
 	// 	}
 	// }
 
 	err = linter.Manifest(manifest, true)
 	if err != nil {
 		log.Warn().Err(err).Msg("trigger: yaml linting error")
-		return t.createExecutionError(ctx, pipeline, base, err.Error())
+		return t.createExecutionWithError(ctx, pipeline, base, err.Error())
 	}
 
 	verified := true
@@ -267,8 +259,6 @@ func (t *triggerer) Trigger(
 			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match ref")
 		} else if skipRepo(pipeline, repo.Path) {
 			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match repo")
-		} else if skipTarget(pipeline, base.Deployment) {
-			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match deploy target")
 		} else if skipCron(pipeline, base.Cron) {
 			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match cron job")
 		} else {
@@ -278,7 +268,7 @@ func (t *triggerer) Trigger(
 	}
 
 	if dag.DetectCycles() {
-		return t.createExecutionError(ctx, pipeline, base, "Error: Dependency cycle detected in Pipeline")
+		return t.createExecutionWithError(ctx, pipeline, base, "Error: Dependency cycle detected in Pipeline")
 	}
 
 	if len(matched) == 0 {
@@ -298,7 +288,7 @@ func (t *triggerer) Trigger(
 		Trigger:    base.Trigger,
 		Number:     pipeline.Seq,
 		Parent:     base.Parent,
-		Status:     types.StatusPending,
+		Status:     enum.StatusPending,
 		Event:      base.Event,
 		Action:     base.Action,
 		Link:       base.Link,
@@ -311,13 +301,11 @@ func (t *triggerer) Trigger(
 		Fork:         base.Fork,
 		Source:       base.Source,
 		Target:       base.Target,
-		Author:       base.Author,
+		Author:       base.AuthorLogin,
 		AuthorName:   base.AuthorName,
 		AuthorEmail:  base.AuthorEmail,
 		AuthorAvatar: base.AuthorAvatar,
 		Params:       base.Params,
-		Deploy:       base.Deployment,
-		DeployID:     base.DeploymentID,
 		Debug:        base.Debug,
 		Sender:       base.Sender,
 		Cron:         base.Cron,
@@ -327,8 +315,8 @@ func (t *triggerer) Trigger(
 
 	stages := make([]*types.Stage, len(matched))
 	for i, match := range matched {
-		onSuccess := match.Trigger.Status.Match(types.StatusPassing)
-		onFailure := match.Trigger.Status.Match(types.StatusFailing)
+		onSuccess := match.Trigger.Status.Match(enum.StatusPassing)
+		onFailure := match.Trigger.Status.Match(enum.StatusFailing)
 		if len(match.Trigger.Status.Include)+len(match.Trigger.Status.Exclude) == 0 {
 			onFailure = false
 		}
@@ -344,7 +332,7 @@ func (t *triggerer) Trigger(
 			Variant:   match.Platform.Variant,
 			Kernel:    match.Platform.Version,
 			Limit:     match.Concurrency.Limit,
-			Status:    types.StatusWaiting,
+			Status:    enum.StatusWaiting,
 			DependsOn: match.DependsOn,
 			OnSuccess: onSuccess,
 			OnFailure: onFailure,
@@ -366,9 +354,9 @@ func (t *triggerer) Trigger(
 			stage.Name = "default"
 		}
 		if verified == false {
-			stage.Status = types.StatusBlocked
+			stage.Status = enum.StatusBlocked
 		} else if len(stage.DependsOn) == 0 {
-			stage.Status = types.StatusPending
+			stage.Status = enum.StatusPending
 		}
 		stages[i] = stage
 	}
@@ -382,9 +370,9 @@ func (t *triggerer) Trigger(
 		// if the stage is pending dependencies, but those
 		// dependencies are skipped, the stage can be executed
 		// immediately.
-		if stage.Status == types.StatusWaiting &&
+		if stage.Status == enum.StatusWaiting &&
 			len(stage.DependsOn) == 0 {
-			stage.Status = types.StatusPending
+			stage.Status = enum.StatusPending
 		}
 	}
 
@@ -404,7 +392,7 @@ func (t *triggerer) Trigger(
 	// }
 
 	for _, stage := range stages {
-		if stage.Status != types.StatusPending {
+		if stage.Status != enum.StatusPending {
 			continue
 		}
 		err = t.scheduler.Schedule(ctx, stage)
@@ -448,16 +436,17 @@ func (t *triggerer) createExecutionWithStages(
 	})
 }
 
-// createExecutionError creates an execution with an error message.
-func (t *triggerer) createExecutionError(
+// createExecutionWithError creates an execution with an error message.
+func (t *triggerer) createExecutionWithError(
 	ctx context.Context,
 	pipeline *types.Pipeline,
 	base *Hook,
 	message string,
 ) (*types.Execution, error) {
 	log := log.With().
-		Str("ref", base.Ref).
-		Str("commit", base.After).
+		Int64("pipeline.id", pipeline.ID).
+		Str("trigger.ref", base.Ref).
+		Str("trigger.commit", base.After).
 		Logger()
 
 	pipeline, err := t.pipelineStore.IncrementSeqNum(ctx, pipeline)
@@ -469,7 +458,7 @@ func (t *triggerer) createExecutionError(
 		RepoID:       pipeline.RepoID,
 		Number:       pipeline.Seq,
 		Parent:       base.Parent,
-		Status:       types.StatusError,
+		Status:       enum.StatusError,
 		Error:        message,
 		Event:        base.Event,
 		Action:       base.Action,
@@ -482,12 +471,10 @@ func (t *triggerer) createExecutionError(
 		Fork:         base.Fork,
 		Source:       base.Source,
 		Target:       base.Target,
-		Author:       base.Author,
+		Author:       base.AuthorLogin,
 		AuthorName:   base.AuthorName,
 		AuthorEmail:  base.AuthorEmail,
 		AuthorAvatar: base.AuthorAvatar,
-		Deploy:       base.Deployment,
-		DeployID:     base.DeploymentID,
 		Debug:        base.Debug,
 		Sender:       base.Sender,
 		Created:      time.Now().Unix(),
@@ -502,5 +489,5 @@ func (t *triggerer) createExecutionError(
 		return nil, err
 	}
 
-	return execution, err
+	return execution, nil
 }

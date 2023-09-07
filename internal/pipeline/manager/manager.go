@@ -5,21 +5,20 @@
 package manager
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
-	"net/url"
 	"time"
 
-	"github.com/harness/gitness/build/file"
-	"github.com/harness/gitness/build/scheduler"
+	"github.com/harness/gitness/internal/pipeline/file"
+	"github.com/harness/gitness/internal/pipeline/scheduler"
 	"github.com/harness/gitness/internal/store"
 	urlprovider "github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/livelog"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
@@ -49,14 +48,14 @@ type (
 		Kind string `json:"kind"`
 	}
 
-	// Context represents the minimum amount of information
+	// ExecutionContext represents the minimum amount of information
 	// required by the runner to execute a build.
-	Context struct {
-		Repo    *types.Repository `json:"repository"`
-		Build   *types.Execution  `json:"build"`
-		Stage   *types.Stage      `json:"stage"`
-		Secrets []*types.Secret   `json:"secrets"`
-		Config  *file.File        `json:"config"`
+	ExecutionContext struct {
+		Repo      *types.Repository `json:"repository"`
+		Execution *types.Execution  `json:"build"`
+		Stage     *types.Stage      `json:"stage"`
+		Secrets   []*types.Secret   `json:"secrets"`
+		Config    *file.File        `json:"config"`
 	}
 
 	// ExecutionManager encapsulates complex build operations and provides
@@ -72,25 +71,22 @@ type (
 		Write(ctx context.Context, step int64, line *livelog.Line) error
 
 		// Details returns details about stage.
-		Details(ctx context.Context, stageID int64) (*Context, error)
+		Details(ctx context.Context, stageID int64) (*ExecutionContext, error)
 
-		// Upload uploads the full logs.
-		Upload(ctx context.Context, step int64, r io.Reader) error
+		// UploadLogs uploads the full logs.
+		UploadLogs(ctx context.Context, step int64, r io.Reader) error
 
-		// UploadBytes uploads the full logs.
-		UploadBytes(ctx context.Context, step int64, b []byte) error
+		// BeforeStep signals the build step is about to start.
+		BeforeStep(ctx context.Context, step *types.Step) error
 
-		// Before signals the build step is about to start.
-		Before(ctx context.Context, step *types.Step) error
+		// AfterStep signals the build step is complete.
+		AfterStep(ctx context.Context, step *types.Step) error
 
-		// After signals the build step is complete.
-		After(ctx context.Context, step *types.Step) error
+		// BeforeStage signals the build stage is about to start.
+		BeforeStage(ctx context.Context, stage *types.Stage) error
 
-		// BeforeAll signals the build stage is about to start.
-		BeforeAll(ctx context.Context, stage *types.Stage) error
-
-		// AfterAll signals the build stage is complete.
-		AfterAll(ctx context.Context, stage *types.Stage) error
+		// AfterStage signals the build stage is complete.
+		AfterStage(ctx context.Context, stage *types.Stage) error
 	}
 )
 
@@ -203,7 +199,7 @@ func (m *Manager) Accept(ctx context.Context, id int64, machine string) (*types.
 	}
 
 	stage.Machine = machine
-	stage.Status = types.StatusPending
+	stage.Status = enum.StatusPending
 	stage.Updated = time.Now().Unix()
 	err = m.Stages.Update(noContext, stage)
 	if errors.Is(err, gitness_store.ErrVersionConflict) {
@@ -211,14 +207,13 @@ func (m *Manager) Accept(ctx context.Context, id int64, machine string) (*types.
 	} else if err != nil {
 		log.Debug().Err(err).Msg("manager: cannot update stage")
 	} else {
-		log.Debug().Err(err).Msg("manager: stage accepted")
+		log.Info().Msg("manager: stage accepted")
 	}
 	return stage, err
 }
 
 // Write writes a line to the build logs.
 func (m *Manager) Write(ctx context.Context, step int64, line *livelog.Line) error {
-	fmt.Println("line is: ", line)
 	err := m.Logz.Write(ctx, step, line)
 	if err != nil {
 		log.Warn().Int64("step-id", step).Err(err).Msg("manager: cannot write to log stream")
@@ -227,8 +222,8 @@ func (m *Manager) Write(ctx context.Context, step int64, line *livelog.Line) err
 	return nil
 }
 
-// Upload uploads the full logs.
-func (m *Manager) Upload(ctx context.Context, step int64, r io.Reader) error {
+// UploadLogs uploads the full logs.
+func (m *Manager) UploadLogs(ctx context.Context, step int64, r io.Reader) error {
 	err := m.Logs.Create(ctx, step, r)
 	if err != nil {
 		log.Error().Err(err).Int64("step-id", step).Msg("manager: cannot upload complete logs")
@@ -237,19 +232,8 @@ func (m *Manager) Upload(ctx context.Context, step int64, r io.Reader) error {
 	return nil
 }
 
-// UploadBytes uploads the full logs.
-func (m *Manager) UploadBytes(ctx context.Context, step int64, data []byte) error {
-	buf := bytes.NewBuffer(data)
-	err := m.Logs.Create(ctx, step, buf)
-	if err != nil {
-		log.Error().Err(err).Int64("step-id", step).Msg("manager: cannot upload complete logs")
-		return err
-	}
-	return nil
-}
-
 // Details provides details about the stage.
-func (m *Manager) Details(ctx context.Context, stageID int64) (*Context, error) {
+func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext, error) {
 	log := log.With().
 		Int64("stage-id", stageID).
 		Logger()
@@ -276,12 +260,9 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*Context, error) 
 		return nil, err
 	}
 	// Backfill clone URL
-	repo.GitURL, err = m.createCustomCloneURL(repo.Path)
-	if err != nil {
-		log.Warn().Err(err).Msg("manager: could not create custom clone url")
-		return nil, err
-	}
-	stages, err := m.Stages.List(ctx, stage.ExecutionID)
+	repo.GitURL = m.urlProvider.GenerateCICloneURL(repo.Path)
+
+	stages, err := m.Stages.List(noContext, stage.ExecutionID)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot list stages")
 		return nil, err
@@ -301,23 +282,23 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*Context, error) 
 	}
 
 	// Fetch contents of YAML from the execution ref at the pipeline config path.
-	file, err := m.FileService.Get(ctx, repo, pipeline.ConfigPath, execution.After)
+	file, err := m.FileService.Get(noContext, repo, pipeline.ConfigPath, execution.After)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot fetch file")
 		return nil, err
 	}
 
-	return &Context{
-		Repo:    repo,
-		Build:   execution,
-		Stage:   stage,
-		Secrets: secrets,
-		Config:  file,
+	return &ExecutionContext{
+		Repo:      repo,
+		Execution: execution,
+		Stage:     stage,
+		Secrets:   secrets,
+		Config:    file,
 	}, nil
 }
 
 // Before signals the build step is about to start.
-func (m *Manager) Before(ctx context.Context, step *types.Step) error {
+func (m *Manager) BeforeStep(ctx context.Context, step *types.Step) error {
 	log := log.With().
 		Str("step.status", step.Status).
 		Str("step.name", step.Name).
@@ -337,11 +318,11 @@ func (m *Manager) Before(ctx context.Context, step *types.Step) error {
 		Steps:      m.Steps,
 		Stages:     m.Stages,
 	}
-	return updater.do(ctx, step)
+	return updater.do(noContext, step)
 }
 
 // After signals the build step is complete.
-func (m *Manager) After(ctx context.Context, step *types.Step) error {
+func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 	log := log.With().
 		Str("step.status", step.Status).
 		Str("step.name", step.Name).
@@ -357,7 +338,7 @@ func (m *Manager) After(ctx context.Context, step *types.Step) error {
 		Stages:     m.Stages,
 	}
 
-	if err := updater.do(ctx, step); err != nil {
+	if err := updater.do(noContext, step); err != nil {
 		errs = multierror.Append(errs, err)
 		log.Warn().Err(errs).Msg("manager: cannot update step")
 	}
@@ -369,7 +350,7 @@ func (m *Manager) After(ctx context.Context, step *types.Step) error {
 }
 
 // BeforeAll signals the build stage is about to start.
-func (m *Manager) BeforeAll(ctx context.Context, stage *types.Stage) error {
+func (m *Manager) BeforeStage(ctx context.Context, stage *types.Stage) error {
 	s := &setup{
 		Executions: m.Executions,
 		Repos:      m.Repos,
@@ -378,12 +359,11 @@ func (m *Manager) BeforeAll(ctx context.Context, stage *types.Stage) error {
 		Users:      m.Users,
 	}
 
-	err := s.do(ctx, stage)
-	return err
+	return s.do(noContext, stage)
 }
 
 // AfterAll signals the build stage is complete.
-func (m *Manager) AfterAll(ctx context.Context, stage *types.Stage) error {
+func (m *Manager) AfterStage(ctx context.Context, stage *types.Stage) error {
 	t := &teardown{
 		Executions: m.Executions,
 		Logs:       m.Logz,
@@ -392,17 +372,5 @@ func (m *Manager) AfterAll(ctx context.Context, stage *types.Stage) error {
 		Steps:      m.Steps,
 		Stages:     m.Stages,
 	}
-	return t.do(ctx, stage)
-}
-
-// createCustomCloneURL creates an endpoint to interact with gitness
-// using the network (if provided) that gitness is running on.
-func (m *Manager) createCustomCloneURL(repoPath string) (string, error) {
-	// We use http to interact with gitness from the build containers.
-	endpoint := "http://" + m.Config.Server.HTTP.Network + m.Config.Server.HTTP.Bind
-	url, err := url.Parse(endpoint)
-	if err != nil {
-		return "", err
-	}
-	return m.urlProvider.GenerateCustomRepoCloneURL(url, repoPath), nil
+	return t.do(noContext, stage)
 }

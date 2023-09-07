@@ -16,7 +16,7 @@ type Step struct {
 	Started   int64    `json:"started,omitempty"`
 	Stopped   int64    `json:"stopped,omitempty"`
 	Version   int64    `json:"-" db:"step_version"`
-	DependsOn []string `json:"depends_on"`
+	DependsOn []string `json:"depends_on,omitempty"`
 	Image     string   `json:"image,omitempty"`
 	Detached  bool     `json:"detached"`
 	Schema    string   `json:"schema,omitempty"`

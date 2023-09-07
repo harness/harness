@@ -8,11 +8,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/harness/gitness/build/scheduler"
+	"github.com/harness/gitness/internal/pipeline/scheduler"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/livelog"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/log"
 )
 
@@ -71,7 +72,6 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 		stage.Error = stage.Error[:500]
 	}
 
-	stage.Updated = time.Now().Unix()
 	err = t.Stages.Update(noContext, stage)
 	if err != nil {
 		log.Error().Err(err).
@@ -98,19 +98,19 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 
 	log.Info().Msg("manager: execution is finished, teardown")
 
-	execution.Status = types.StatusPassing
+	execution.Status = enum.StatusPassing
 	execution.Finished = time.Now().Unix()
 	for _, sibling := range stages {
-		if sibling.Status == types.StatusKilled {
-			execution.Status = types.StatusKilled
+		if sibling.Status == enum.StatusKilled {
+			execution.Status = enum.StatusKilled
 			break
 		}
-		if sibling.Status == types.StatusFailing {
-			execution.Status = types.StatusFailing
+		if sibling.Status == enum.StatusFailing {
+			execution.Status = enum.StatusFailing
 			break
 		}
-		if sibling.Status == types.StatusError {
-			execution.Status = types.StatusError
+		if sibling.Status == enum.StatusError {
+			execution.Status = enum.StatusError
 			break
 		}
 	}
@@ -136,11 +136,11 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 func isexecutionComplete(stages []*types.Stage) bool {
 	for _, stage := range stages {
 		switch stage.Status {
-		case types.StatusPending,
-			types.StatusRunning,
-			types.StatusWaiting,
-			types.StatusDeclined,
-			types.StatusBlocked:
+		case enum.StatusPending,
+			enum.StatusRunning,
+			enum.StatusWaiting,
+			enum.StatusDeclined,
+			enum.StatusBlocked:
 			return false
 		}
 	}

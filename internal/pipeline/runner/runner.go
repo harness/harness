@@ -5,10 +5,7 @@
 package runner
 
 import (
-	"os"
-
-	"github.com/google/uuid"
-	"github.com/harness/gitness/build/manager"
+	"github.com/harness/gitness/internal/pipeline/manager"
 	"github.com/harness/gitness/types"
 
 	"github.com/drone-runners/drone-runner-docker/engine"
@@ -37,11 +34,6 @@ func NewExecutionRunner(
 		Secret:   secret.Encrypted(),
 	}
 
-	var host string
-	host, err := os.Hostname()
-	if err != nil {
-		host = uuid.New().String()
-	}
 	remote := remote.New(client)
 	upload := uploader.New(client)
 	tracer := history.New(remote)
@@ -54,7 +46,7 @@ func NewExecutionRunner(
 	exec := runtime.NewExecer(tracer, remote, upload,
 		engine, int64(config.CI.ParallelWorkers))
 	runner := &runtime.Runner{
-		Machine:  host, // TODO: Check whether this needs to be configurable
+		Machine:  config.InstanceID,
 		Client:   client,
 		Reporter: tracer,
 		Lookup:   resource.Lookup,

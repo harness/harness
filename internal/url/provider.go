@@ -22,16 +22,21 @@ type Provider struct {
 	// NOTE: url is guaranteed to not have any trailing '/'.
 	apiURLInternalRaw string
 
+	// ciURL stores the rawURL that can be used to communicate with gitness from inside a
+	// container.
+	ciURL *url.URL
+
 	// gitURL stores the URL the git endpoints are available at.
 	// NOTE: we store it as url.URL so we can derive clone URLS without errors.
 	gitURL *url.URL
 }
 
-func NewProvider(apiURLRaw string, apiURLInternalRaw, gitURLRaw string) (*Provider, error) {
+func NewProvider(apiURLRaw string, apiURLInternalRaw, gitURLRaw, ciURLRaw string) (*Provider, error) {
 	// remove trailing '/' to make usage easier
 	apiURLRaw = strings.TrimRight(apiURLRaw, "/")
 	apiURLInternalRaw = strings.TrimRight(apiURLInternalRaw, "/")
 	gitURLRaw = strings.TrimRight(gitURLRaw, "/")
+	ciURLRaw = strings.TrimRight(ciURLRaw, "/")
 
 	// parse gitURL
 	gitURL, err := url.Parse(gitURLRaw)
@@ -39,10 +44,17 @@ func NewProvider(apiURLRaw string, apiURLInternalRaw, gitURLRaw string) (*Provid
 		return nil, fmt.Errorf("provided gitURLRaw '%s' is invalid: %w", gitURLRaw, err)
 	}
 
+	// parse ciURL
+	ciURL, err := url.Parse(ciURLRaw)
+	if err != nil {
+		return nil, fmt.Errorf("provided ciURLRaw '%s' is invalid: %w", ciURLRaw, err)
+	}
+
 	return &Provider{
 		apiURLRaw:         apiURLRaw,
 		apiURLInternalRaw: apiURLInternalRaw,
 		gitURL:            gitURL,
+		ciURL:             ciURL,
 	}, nil
 }
 
@@ -69,14 +81,13 @@ func (p *Provider) GenerateRepoCloneURL(repoPath string) string {
 	return p.gitURL.JoinPath(repoPath).String()
 }
 
-// GenerateCustomRepoCloneURL generates a custom clone URL given the base URL.
-// Example: url is http://host.docker.internal:3000 and repoPath is test/gitness-demo
-// it will return http://host.docker.internal:3000/git/test/gitness-demo.git
-func (p *Provider) GenerateCustomRepoCloneURL(baseURL *url.URL, repoPath string) string {
+// GenerateCICloneURL generates a URL that can be used by CI container builds to
+// interact with gitness and clone a repo.
+func (p *Provider) GenerateCICloneURL(repoPath string) string {
 	repoPath = path.Clean(repoPath)
 	if !strings.HasSuffix(repoPath, ".git") {
 		repoPath += ".git"
 	}
 
-	return baseURL.JoinPath("git").JoinPath(repoPath).String()
+	return p.ciURL.JoinPath(repoPath).String()
 }

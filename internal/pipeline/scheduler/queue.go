@@ -12,6 +12,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 type queue struct {
@@ -116,7 +117,7 @@ func (q *queue) signal(ctx context.Context) error {
 	q.Lock()
 	defer q.Unlock()
 	for _, item := range items {
-		if item.Status == types.StatusRunning {
+		if item.Status == enum.StatusRunning {
 			continue
 		}
 		if item.Machine != "" {
@@ -237,7 +238,7 @@ func withinLimits(stage *types.Stage, siblings []*types.Stage) bool {
 			continue
 		}
 		if sibling.ID < stage.ID ||
-			sibling.Status == types.StatusRunning {
+			sibling.Status == enum.StatusRunning {
 			count++
 		}
 	}
@@ -252,7 +253,7 @@ func shouldThrottle(stage *types.Stage, siblings []*types.Stage, limit int) bool
 	}
 	// if the repository is running it is too late
 	// to skip and we can exit
-	if stage.Status == types.StatusRunning {
+	if stage.Status == enum.StatusRunning {
 		return false
 	}
 

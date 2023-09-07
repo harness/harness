@@ -38,14 +38,7 @@ func (f *service) FindRef(
 	if err != nil {
 		return nil, err
 	}
-	commitOutput, err := f.gitRPCClient.GetCommit(ctx, &gitrpc.GetCommitParams{
-		ReadParams: readParams,
-		SHA:        branchOutput.Branch.Commit.SHA,
-	})
-	if err != nil {
-		return nil, err
-	}
 
 	// convert the RPC commit output to a types.Commit.
-	return controller.MapCommit(&commitOutput.Commit)
+	return controller.MapCommit(branchOutput.Branch.Commit)
 }

@@ -8,12 +8,12 @@ package main
 
 import (
 	"context"
-	"github.com/harness/gitness/build/commit"
-	"github.com/harness/gitness/build/file"
-	"github.com/harness/gitness/build/manager"
-	"github.com/harness/gitness/build/runner"
-	"github.com/harness/gitness/build/scheduler"
-	"github.com/harness/gitness/build/triggerer"
+	"github.com/harness/gitness/internal/pipeline/commit"
+	"github.com/harness/gitness/internal/pipeline/file"
+	"github.com/harness/gitness/internal/pipeline/manager"
+	"github.com/harness/gitness/internal/pipeline/runner"
+	"github.com/harness/gitness/internal/pipeline/scheduler"
+	"github.com/harness/gitness/internal/pipeline/triggerer"
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"

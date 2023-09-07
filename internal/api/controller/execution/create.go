@@ -8,9 +8,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/build/triggerer"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/pipeline/triggerer"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -40,8 +40,11 @@ func (c *Controller) Create(
 	}
 
 	// If the branch is empty, use the default branch specified in the pipeline.
+	// Otherwise use the repo default branch.
 	if branch == "" {
 		branch = pipeline.DefaultBranch
+	} else {
+		branch = repo.DefaultBranch
 	}
 	// expand the branch to a git reference.
 	ref := scm.ExpandRef(branch, "refs/heads")
@@ -55,7 +58,7 @@ func (c *Controller) Create(
 	// Create manual hook for execution.
 	hook := &triggerer.Hook{
 		Trigger:     session.Principal.UID, // who/what triggered the build, different from commit author
-		Author:      commit.Author.Identity.Name,
+		AuthorLogin: commit.Author.Identity.Name,
 		AuthorName:  commit.Author.Identity.Name,
 		AuthorEmail: commit.Author.Identity.Email,
 		Ref:         ref,
@@ -66,7 +69,7 @@ func (c *Controller) Create(
 		Sender:      session.Principal.UID,
 		Source:      branch,
 		Target:      branch,
-		Action:      types.EventCustom,
+		Action:      enum.EventCustom,
 		Params:      map[string]string{},
 		Timestamp:   commit.Author.When.UnixMilli(),
 	}

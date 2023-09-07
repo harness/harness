@@ -3,7 +3,7 @@
 // that can be found in the LICENSE.md file for this repository.
 
 // Status types for a stage.
-package types
+package enum
 
 const (
 	StatusSkipped  = "skipped"

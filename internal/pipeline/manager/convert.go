@@ -7,7 +7,7 @@ package manager
 import (
 	"time"
 
-	"github.com/harness/gitness/build/file"
+	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
 
@@ -100,7 +100,7 @@ func convertFromDroneSteps(steps []*drone.Step) []*types.Step {
 	for i, step := range steps {
 		typesSteps[i] = &types.Step{
 			ID:        step.ID,
-			StageID:   step.StageID, // Assuming StageID maps to step_id
+			StageID:   step.StageID,
 			Number:    int64(step.Number),
 			Name:      step.Name,
 			Status:    step.Status,
@@ -193,46 +193,6 @@ func convertToDroneBuild(execution *types.Execution) *drone.Build {
 		Created:      execution.Created,
 		Updated:      execution.Updated,
 		Version:      execution.Version,
-	}
-}
-
-func convertFromDroneBuild(build *drone.Build) *types.Execution {
-	return &types.Execution{
-		ID:           build.ID,
-		PipelineID:   build.RepoID,
-		RepoID:       build.RepoID,
-		Trigger:      build.Trigger,
-		Number:       build.Number,
-		Parent:       build.Parent,
-		Status:       build.Status,
-		Error:        build.Error,
-		Event:        build.Event,
-		Action:       build.Action,
-		Link:         build.Link,
-		Timestamp:    build.Timestamp,
-		Title:        build.Title,
-		Message:      build.Message,
-		Before:       build.Before,
-		After:        build.After,
-		Ref:          build.Ref,
-		Fork:         build.Fork,
-		Source:       build.Source,
-		Target:       build.Target,
-		Author:       build.Author,
-		AuthorName:   build.AuthorName,
-		AuthorEmail:  build.AuthorEmail,
-		AuthorAvatar: build.AuthorAvatar,
-		Sender:       build.Sender,
-		Params:       build.Params,
-		Cron:         build.Cron,
-		Deploy:       build.Deploy,
-		DeployID:     build.DeployID,
-		Debug:        build.Debug,
-		Started:      build.Started,
-		Finished:     build.Finished,
-		Created:      build.Created,
-		Updated:      build.Updated,
-		Version:      build.Version,
 	}
 }
 

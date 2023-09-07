@@ -30,7 +30,7 @@ type Stage struct {
 	Version     int64             `json:"-"`
 	OnSuccess   bool              `json:"on_success"`
 	OnFailure   bool              `json:"on_failure"`
-	DependsOn   []string          `json:"depends_on"`
+	DependsOn   []string          `json:"depends_on,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Steps       []*Step           `json:"steps,omitempty"`
 }

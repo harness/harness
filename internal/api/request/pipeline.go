@@ -30,7 +30,7 @@ func GetPipelineUIDFromPath(r *http.Request) (string, error) {
 }
 
 func GetBranchFromQuery(r *http.Request) string {
-	return r.URL.Query().Get(QueryParamBranch)
+	return QueryParamOrDefault(r, QueryParamBranch, "")
 }
 
 func GetExecutionNumberFromPath(r *http.Request) (int64, error) {

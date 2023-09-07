@@ -5,8 +5,8 @@
 package triggerer
 
 import (
-	"github.com/harness/gitness/build/file"
-	"github.com/harness/gitness/build/scheduler"
+	"github.com/harness/gitness/internal/pipeline/file"
+	"github.com/harness/gitness/internal/pipeline/scheduler"
 	"github.com/harness/gitness/internal/store"
 
 	"github.com/google/wire"

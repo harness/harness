@@ -38,6 +38,12 @@ type Config struct {
 		// (this could be after proxy path / header rewrite).
 		Git string `envconfig:"GITNESS_URL_GIT" default:"http://localhost:3000/git"`
 
+		// CIURL is the endpoint that can be used by running CI container builds to communicate
+		// with gitness (for example while performing a clone on a local repo).
+		// host.docker.internal allows a running container to talk to services exposed on the host
+		// (either running directly or via a port exposed in a docker container).
+		CIURL string `envconfig:"GITNESS_CI_URL_GIT" default:"http://host.docker.internal:3000/git"`
+
 		// API defines the external URL via which the rest API is reachable.
 		// NOTE: for routing to work properly, the request path reaching gitness has to end with `/api`
 		// (this could be after proxy path rewrite).
@@ -69,12 +75,6 @@ type Config struct {
 			Host  string `envconfig:"GITNESS_HTTP_HOST"`
 			// GitHost is the host used to identify git traffic (OPTIONAL).
 			GitHost string `envconfig:"GITNESS_HTTP_GIT_HOST" default:"git.localhost"`
-			// Network is the docker network on which the gitness container is running.
-			// One example of where it's used is CI executions to be able to communicate
-			// with gitness (for example while performing a clone on a local repo).
-			// In case gitness is running on the host, the build container can talk to
-			// localhost on the host using host.docker.internal.
-			Network string `envconfig:"GITNESS_CI_NETWORK" default:"host.docker.internal"`
 		}
 
 		// Acme defines Acme configuration parameters.

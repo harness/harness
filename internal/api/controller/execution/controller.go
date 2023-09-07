@@ -5,9 +5,9 @@
 package execution
 
 import (
-	"github.com/harness/gitness/build/commit"
-	"github.com/harness/gitness/build/triggerer"
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/pipeline/commit"
+	"github.com/harness/gitness/internal/pipeline/triggerer"
 	"github.com/harness/gitness/internal/store"
 
 	"github.com/jmoiron/sqlx"

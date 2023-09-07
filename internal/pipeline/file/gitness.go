@@ -55,7 +55,7 @@ func (f *service) Get(
 
 	buf, err := ioutil.ReadAll(blobReader.Content)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read blob content from file: %w", err)
 	}
 
 	return &File{

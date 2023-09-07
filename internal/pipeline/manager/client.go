@@ -9,8 +9,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
+	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/client"
@@ -69,6 +72,9 @@ func (e *embedded) Request(ctx context.Context, args *client.Filter) (*drone.Sta
 // Accept accepts the build stage for execution.
 func (e *embedded) Accept(ctx context.Context, s *drone.Stage) error {
 	stage, err := e.manager.Accept(ctx, s.ID, s.Machine)
+	if err != nil {
+		return err
+	}
 	*s = *convertToDroneStage(stage)
 	return err
 }
@@ -80,14 +86,14 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 		return nil, err
 	}
 	return &client.Context{
-		Build:   convertToDroneBuild(details.Build),
+		Build:   convertToDroneBuild(details.Execution),
 		Repo:    convertToDroneRepo(details.Repo),
 		Stage:   convertToDroneStage(details.Stage),
 		Secrets: convertToDroneSecrets(details.Secrets),
 		Config:  convertToDroneFile(details.Config),
 		System: &drone.System{
 			Proto: e.config.Server.HTTP.Proto,
-			Host:  e.config.Server.HTTP.Network,
+			Host:  "host.docker.internal",
 		},
 	}, nil
 }
@@ -96,10 +102,10 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 func (e *embedded) Update(ctx context.Context, stage *drone.Stage) error {
 	var err error
 	convertedStage := convertFromDroneStage(stage)
-	if stage.Status == types.StatusPending || stage.Status == types.StatusRunning {
-		err = e.manager.BeforeAll(ctx, convertedStage)
+	if stage.Status == enum.StatusPending || stage.Status == enum.StatusRunning {
+		err = e.manager.BeforeStage(ctx, convertedStage)
 	} else {
-		err = e.manager.AfterAll(ctx, convertedStage)
+		err = e.manager.AfterStage(ctx, convertedStage)
 	}
 	*stage = *convertToDroneStage(convertedStage)
 	return err
@@ -109,10 +115,10 @@ func (e *embedded) Update(ctx context.Context, stage *drone.Stage) error {
 func (e *embedded) UpdateStep(ctx context.Context, step *drone.Step) error {
 	var err error
 	convertedStep := convertFromDroneStep(step)
-	if step.Status == types.StatusPending || step.Status == types.StatusRunning {
-		err = e.manager.Before(ctx, convertedStep)
+	if step.Status == enum.StatusPending || step.Status == enum.StatusRunning {
+		err = e.manager.BeforeStep(ctx, convertedStep)
 	} else {
-		err = e.manager.After(ctx, convertedStep)
+		err = e.manager.AfterStep(ctx, convertedStep)
 	}
 	*step = *convertToDroneStep(convertedStep)
 	return err
@@ -127,6 +133,7 @@ func (e *embedded) Watch(ctx context.Context, stage int64) (bool, error) {
 // Batch batch writes logs to the streaming logs.
 func (e *embedded) Batch(ctx context.Context, step int64, lines []*drone.Line) error {
 	for _, l := range lines {
+		fmt.Println("line is: ", l)
 		line := convertFromDroneLine(l)
 		err := e.manager.Write(ctx, step, line)
 		if err != nil {
@@ -137,8 +144,12 @@ func (e *embedded) Batch(ctx context.Context, step int64, lines []*drone.Line) e
 }
 
 // Upload uploads the full logs to the server.
-func (e *embedded) Upload(ctx context.Context, step int64, lines []*drone.Line) error {
+func (e *embedded) Upload(ctx context.Context, step int64, l []*drone.Line) error {
 	var buffer bytes.Buffer
+	lines := []livelog.Line{}
+	for _, line := range l {
+		lines = append(lines, *convertFromDroneLine(line))
+	}
 	out, err := json.Marshal(lines)
 	if err != nil {
 		return err
@@ -147,7 +158,7 @@ func (e *embedded) Upload(ctx context.Context, step int64, lines []*drone.Line) 
 	if err != nil {
 		return err
 	}
-	return e.manager.Upload(ctx, step, &buffer)
+	return e.manager.UploadLogs(ctx, step, &buffer)
 }
 
 // UploadCard uploads a card to drone server.

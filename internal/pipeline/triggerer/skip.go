@@ -7,9 +7,8 @@ package triggerer
 import (
 	"strings"
 
-	"github.com/harness/gitness/types"
-
 	"github.com/drone/drone-yaml/yaml"
+	"github.com/harness/gitness/types/enum"
 )
 
 func skipBranch(document *yaml.Pipeline, branch string) bool {
@@ -46,15 +45,15 @@ func skipCron(document *yaml.Pipeline, cron string) bool {
 
 func skipMessage(hook *Hook) bool {
 	switch {
-	case hook.Event == types.EventTag:
+	case hook.Event == enum.EventTag:
 		return false
-	case hook.Event == types.EventCron:
+	case hook.Event == enum.EventCron:
 		return false
-	case hook.Event == types.EventCustom:
+	case hook.Event == enum.EventCustom:
 		return false
-	case hook.Event == types.EventPromote:
+	case hook.Event == enum.EventPromote:
 		return false
-	case hook.Event == types.EventRollback:
+	case hook.Event == enum.EventRollback:
 		return false
 	case skipMessageEval(hook.Message):
 		return true

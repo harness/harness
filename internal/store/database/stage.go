@@ -259,7 +259,7 @@ func (s *stageStore) List(ctx context.Context, executionID int64) ([]*types.Stag
 
 // Update tries to update a stage in the datastore and returns a locking error
 // if it was unable to do so.
-func (s *stageStore) Update(ctx context.Context, e *types.Stage) error {
+func (s *stageStore) Update(ctx context.Context, st *types.Stage) error {
 	const stageUpdateStmt = `
 	UPDATE stages
 	SET
@@ -270,9 +270,9 @@ func (s *stageStore) Update(ctx context.Context, e *types.Stage) error {
 		,stage_error = :stage_error
 	WHERE stage_id = :stage_id AND stage_version = :stage_version - 1`
 	updatedAt := time.Now()
-	steps := e.Steps
+	steps := st.Steps
 
-	stage := mapStageToInternal(e)
+	stage := mapStageToInternal(st)
 
 	stage.Version++
 	stage.Updated = updatedAt.UnixMilli()
@@ -302,9 +302,9 @@ func (s *stageStore) Update(ctx context.Context, e *types.Stage) error {
 	if err != nil {
 		return fmt.Errorf("Could not map stage object: %w", err)
 	}
-	*e = *m
-	e.Version = stage.Version
-	e.Updated = stage.Updated
-	e.Steps = steps // steps is not mapped in database.
+	*st = *m
+	st.Version = stage.Version
+	st.Updated = stage.Updated
+	st.Steps = steps // steps is not mapped in database.
 	return nil
 }

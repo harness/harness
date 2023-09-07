@@ -5,7 +5,7 @@
 package runner
 
 import (
-	"github.com/harness/gitness/build/manager"
+	"github.com/harness/gitness/internal/pipeline/manager"
 	"github.com/harness/gitness/types"
 
 	runnerclient "github.com/drone/runner-go/client"

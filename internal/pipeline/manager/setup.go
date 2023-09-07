@@ -12,6 +12,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/log"
 )
 
@@ -46,7 +47,6 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 	if len(stage.Error) > 500 {
 		stage.Error = stage.Error[:500]
 	}
-	stage.Updated = time.Now().Unix()
 	err = s.Stages.Update(noContext, stage)
 	if err != nil {
 		log.Error().Err(err).
@@ -84,12 +84,11 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 // This accounts for the fact that another agent may have already updated
 // the execution status, which may happen if two stages execute concurrently.
 func (s *setup) updateExecution(ctx context.Context, execution *types.Execution) (bool, error) {
-	if execution.Status != types.StatusPending {
+	if execution.Status != enum.StatusPending {
 		return false, nil
 	}
-	execution.Started = time.Now().Unix()
-	execution.Updated = time.Now().Unix()
-	execution.Status = types.StatusRunning
+	execution.Started = time.Now().UnixMilli()
+	execution.Status = enum.StatusRunning
 	err := s.Executions.Update(noContext, execution)
 	if errors.Is(err, gitness_store.ErrVersionConflict) {
 		return false, nil
