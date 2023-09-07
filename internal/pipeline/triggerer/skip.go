@@ -7,8 +7,9 @@ package triggerer
 import (
 	"strings"
 
-	"github.com/drone/drone-yaml/yaml"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/drone/drone-yaml/yaml"
 )
 
 func skipBranch(document *yaml.Pipeline, branch string) bool {

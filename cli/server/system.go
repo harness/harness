@@ -5,12 +5,13 @@
 package server
 
 import (
-	"github.com/drone/runner-go/poller"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
 	gitrpccron "github.com/harness/gitness/gitrpc/server/cron"
 	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
+
+	"github.com/drone/runner-go/poller"
 )
 
 // System stores high level System sub-routines.

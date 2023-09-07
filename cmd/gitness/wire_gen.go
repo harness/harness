@@ -8,12 +8,7 @@ package main
 
 import (
 	"context"
-	"github.com/harness/gitness/internal/pipeline/commit"
-	"github.com/harness/gitness/internal/pipeline/file"
-	"github.com/harness/gitness/internal/pipeline/manager"
-	"github.com/harness/gitness/internal/pipeline/runner"
-	"github.com/harness/gitness/internal/pipeline/scheduler"
-	"github.com/harness/gitness/internal/pipeline/triggerer"
+
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
@@ -44,6 +39,12 @@ import (
 	"github.com/harness/gitness/internal/bootstrap"
 	events3 "github.com/harness/gitness/internal/events/git"
 	events2 "github.com/harness/gitness/internal/events/pullreq"
+	"github.com/harness/gitness/internal/pipeline/commit"
+	"github.com/harness/gitness/internal/pipeline/file"
+	"github.com/harness/gitness/internal/pipeline/manager"
+	"github.com/harness/gitness/internal/pipeline/runner"
+	"github.com/harness/gitness/internal/pipeline/scheduler"
+	"github.com/harness/gitness/internal/pipeline/triggerer"
 	"github.com/harness/gitness/internal/router"
 	server2 "github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
