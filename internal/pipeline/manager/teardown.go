@@ -99,19 +99,19 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 
 	log.Info().Msg("manager: execution is finished, teardown")
 
-	execution.Status = enum.StatusPassing
-	execution.Finished = time.Now().Unix()
+	execution.Status = enum.CIStatusSuccess
+	execution.Finished = time.Now().UnixMilli()
 	for _, sibling := range stages {
-		if sibling.Status == enum.StatusKilled {
-			execution.Status = enum.StatusKilled
+		if sibling.Status == enum.CIStatusKilled {
+			execution.Status = enum.CIStatusKilled
 			break
 		}
-		if sibling.Status == enum.StatusFailing {
-			execution.Status = enum.StatusFailing
+		if sibling.Status == enum.CIStatusFailure {
+			execution.Status = enum.CIStatusFailure
 			break
 		}
-		if sibling.Status == enum.StatusError {
-			execution.Status = enum.StatusError
+		if sibling.Status == enum.CIStatusError {
+			execution.Status = enum.CIStatusError
 			break
 		}
 	}
@@ -137,11 +137,11 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 func isexecutionComplete(stages []*types.Stage) bool {
 	for _, stage := range stages {
 		switch stage.Status {
-		case enum.StatusPending,
-			enum.StatusRunning,
-			enum.StatusWaiting,
-			enum.StatusDeclined,
-			enum.StatusBlocked:
+		case enum.CIStatusPending,
+			enum.CIStatusRunning,
+			enum.CIStatusWaitingOnDeps,
+			enum.CIStatusDeclined,
+			enum.CIStatusBlocked:
 			return false
 		}
 	}

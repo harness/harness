@@ -125,7 +125,7 @@ func (t *triggerer) Trigger(
 	// 	logger.Infoln("trigger: skipping hook. found skip directive")
 	// 	return nil, nil
 	// }
-	// if base.Event == core.EventPullRequest {
+	// if base.Event == core.TriggerEventPullRequest {
 	// 	if repo.IgnorePulls {
 	// 		logger.Infoln("trigger: skipping hook. project ignores pull requests")
 	// 		return nil, nil
@@ -288,7 +288,7 @@ func (t *triggerer) Trigger(
 		Trigger:    base.Trigger,
 		Number:     pipeline.Seq,
 		Parent:     base.Parent,
-		Status:     enum.StatusPending,
+		Status:     enum.CIStatusPending,
 		Event:      base.Event,
 		Action:     base.Action,
 		Link:       base.Link,
@@ -315,8 +315,8 @@ func (t *triggerer) Trigger(
 
 	stages := make([]*types.Stage, len(matched))
 	for i, match := range matched {
-		onSuccess := match.Trigger.Status.Match(enum.StatusPassing)
-		onFailure := match.Trigger.Status.Match(enum.StatusFailing)
+		onSuccess := match.Trigger.Status.Match(enum.CIStatusSuccess)
+		onFailure := match.Trigger.Status.Match(enum.CIStatusFailure)
 		if len(match.Trigger.Status.Include)+len(match.Trigger.Status.Exclude) == 0 {
 			onFailure = false
 		}
@@ -332,7 +332,7 @@ func (t *triggerer) Trigger(
 			Variant:   match.Platform.Variant,
 			Kernel:    match.Platform.Version,
 			Limit:     match.Concurrency.Limit,
-			Status:    enum.StatusWaiting,
+			Status:    enum.CIStatusWaitingOnDeps,
 			DependsOn: match.DependsOn,
 			OnSuccess: onSuccess,
 			OnFailure: onFailure,
@@ -354,9 +354,9 @@ func (t *triggerer) Trigger(
 			stage.Name = "default"
 		}
 		if verified == false {
-			stage.Status = enum.StatusBlocked
+			stage.Status = enum.CIStatusBlocked
 		} else if len(stage.DependsOn) == 0 {
-			stage.Status = enum.StatusPending
+			stage.Status = enum.CIStatusPending
 		}
 		stages[i] = stage
 	}
@@ -370,9 +370,9 @@ func (t *triggerer) Trigger(
 		// if the stage is pending dependencies, but those
 		// dependencies are skipped, the stage can be executed
 		// immediately.
-		if stage.Status == enum.StatusWaiting &&
+		if stage.Status == enum.CIStatusWaitingOnDeps &&
 			len(stage.DependsOn) == 0 {
-			stage.Status = enum.StatusPending
+			stage.Status = enum.CIStatusPending
 		}
 	}
 
@@ -392,7 +392,7 @@ func (t *triggerer) Trigger(
 	// }
 
 	for _, stage := range stages {
-		if stage.Status != enum.StatusPending {
+		if stage.Status != enum.CIStatusPending {
 			continue
 		}
 		err = t.scheduler.Schedule(ctx, stage)
@@ -458,7 +458,7 @@ func (t *triggerer) createExecutionWithError(
 		RepoID:       pipeline.RepoID,
 		Number:       pipeline.Seq,
 		Parent:       base.Parent,
-		Status:       enum.StatusError,
+		Status:       enum.CIStatusError,
 		Error:        message,
 		Event:        base.Event,
 		Action:       base.Action,

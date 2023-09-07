@@ -40,11 +40,12 @@ func (c *Controller) Create(
 	}
 
 	// If the branch is empty, use the default branch specified in the pipeline.
-	// Otherwise use the repo default branch.
+	// It that is also empty, use the repo default branch.
 	if branch == "" {
 		branch = pipeline.DefaultBranch
-	} else {
-		branch = repo.DefaultBranch
+		if branch == "" {
+			branch = repo.DefaultBranch
+		}
 	}
 	// expand the branch to a git reference.
 	ref := scm.ExpandRef(branch, "refs/heads")
@@ -69,7 +70,7 @@ func (c *Controller) Create(
 		Sender:      session.Principal.UID,
 		Source:      branch,
 		Target:      branch,
-		Action:      enum.EventCustom,
+		Action:      enum.TriggerEventCustom,
 		Params:      map[string]string{},
 		Timestamp:   commit.Author.When.UnixMilli(),
 	}

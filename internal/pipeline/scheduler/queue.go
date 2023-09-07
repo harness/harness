@@ -117,7 +117,7 @@ func (q *queue) signal(ctx context.Context) error {
 	q.Lock()
 	defer q.Unlock()
 	for _, item := range items {
-		if item.Status == enum.StatusRunning {
+		if item.Status == enum.CIStatusRunning {
 			continue
 		}
 		if item.Machine != "" {
@@ -238,7 +238,7 @@ func withinLimits(stage *types.Stage, siblings []*types.Stage) bool {
 			continue
 		}
 		if sibling.ID < stage.ID ||
-			sibling.Status == enum.StatusRunning {
+			sibling.Status == enum.CIStatusRunning {
 			count++
 		}
 	}
@@ -253,7 +253,7 @@ func shouldThrottle(stage *types.Stage, siblings []*types.Stage, limit int) bool
 	}
 	// if the repository is running it is too late
 	// to skip and we can exit
-	if stage.Status == enum.StatusRunning {
+	if stage.Status == enum.CIStatusRunning {
 		return false
 	}
 

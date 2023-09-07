@@ -102,7 +102,7 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 func (e *embedded) Update(ctx context.Context, stage *drone.Stage) error {
 	var err error
 	convertedStage := convertFromDroneStage(stage)
-	if stage.Status == enum.StatusPending || stage.Status == enum.StatusRunning {
+	if stage.Status == enum.CIStatusPending || stage.Status == enum.CIStatusRunning {
 		err = e.manager.BeforeStage(ctx, convertedStage)
 	} else {
 		err = e.manager.AfterStage(ctx, convertedStage)
@@ -115,7 +115,7 @@ func (e *embedded) Update(ctx context.Context, stage *drone.Stage) error {
 func (e *embedded) UpdateStep(ctx context.Context, step *drone.Step) error {
 	var err error
 	convertedStep := convertFromDroneStep(step)
-	if step.Status == enum.StatusPending || step.Status == enum.StatusRunning {
+	if step.Status == enum.CIStatusPending || step.Status == enum.CIStatusRunning {
 		err = e.manager.BeforeStep(ctx, convertedStep)
 	} else {
 		err = e.manager.AfterStep(ctx, convertedStep)

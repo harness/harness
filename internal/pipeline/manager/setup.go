@@ -85,11 +85,11 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 // This accounts for the fact that another agent may have already updated
 // the execution status, which may happen if two stages execute concurrently.
 func (s *setup) updateExecution(ctx context.Context, execution *types.Execution) (bool, error) {
-	if execution.Status != enum.StatusPending {
+	if execution.Status != enum.CIStatusPending {
 		return false, nil
 	}
 	execution.Started = time.Now().UnixMilli()
-	execution.Status = enum.StatusRunning
+	execution.Status = enum.CIStatusRunning
 	err := s.Executions.Update(noContext, execution)
 	if errors.Is(err, gitness_store.ErrVersionConflict) {
 		return false, nil

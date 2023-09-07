@@ -6,11 +6,11 @@ package enum
 
 // Hook event constants.
 const (
-	EventCron        = "cron"
-	EventCustom      = "custom"
-	EventPush        = "push"
-	EventPullRequest = "pull_request"
-	EventTag         = "tag"
-	EventPromote     = "promote"
-	EventRollback    = "rollback"
+	TriggerEventCron        = "cron"
+	TriggerEventCustom      = "custom"
+	TriggerEventPush        = "push"
+	TriggerEventPullRequest = "pull_request"
+	TriggerEventTag         = "tag"
+	TriggerEventPromote     = "promote"
+	TriggerEventRollback    = "rollback"
 )

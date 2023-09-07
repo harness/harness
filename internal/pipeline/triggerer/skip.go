@@ -46,15 +46,15 @@ func skipCron(document *yaml.Pipeline, cron string) bool {
 
 func skipMessage(hook *Hook) bool {
 	switch {
-	case hook.Event == enum.EventTag:
+	case hook.Event == enum.TriggerEventTag:
 		return false
-	case hook.Event == enum.EventCron:
+	case hook.Event == enum.TriggerEventCron:
 		return false
-	case hook.Event == enum.EventCustom:
+	case hook.Event == enum.TriggerEventCustom:
 		return false
-	case hook.Event == enum.EventPromote:
+	case hook.Event == enum.TriggerEventPromote:
 		return false
-	case hook.Event == enum.EventRollback:
+	case hook.Event == enum.TriggerEventRollback:
 		return false
 	case skipMessageEval(hook.Message):
 		return true

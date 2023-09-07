@@ -20,7 +20,6 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog/log"
 )
 
@@ -199,7 +198,7 @@ func (m *Manager) Accept(ctx context.Context, id int64, machine string) (*types.
 	}
 
 	stage.Machine = machine
-	stage.Status = enum.StatusPending
+	stage.Status = enum.CIStatusPending
 	stage.Updated = time.Now().Unix()
 	err = m.Stages.Update(noContext, stage)
 	if errors.Is(err, gitness_store.ErrVersionConflict) {
@@ -330,7 +329,7 @@ func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 		Logger()
 	log.Debug().Msg("manager: updating step status")
 
-	var errs error
+	var retErr error
 	updater := &updater{
 		Executions: m.Executions,
 		Repos:      m.Repos,
@@ -339,14 +338,14 @@ func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 	}
 
 	if err := updater.do(noContext, step); err != nil {
-		errs = multierror.Append(errs, err)
-		log.Warn().Err(errs).Msg("manager: cannot update step")
+		retErr = err
+		log.Warn().Err(err).Msg("manager: cannot update step")
 	}
 
 	if err := m.Logz.Delete(noContext, step.ID); err != nil {
 		log.Warn().Err(err).Msg("manager: cannot teardown log stream")
 	}
-	return errs
+	return retErr
 }
 
 // BeforeAll signals the build stage is about to start.
