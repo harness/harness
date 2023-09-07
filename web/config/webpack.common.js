@@ -221,6 +221,18 @@ module.exports = {
         'vb',
         'xml',
         'yaml'
+      ],
+      globalAPI: true,
+      filename: '[name].worker.[contenthash:6].js',
+      customLanguages: [
+        {
+          label: 'yaml',
+          entry: 'monaco-yaml',
+          worker: {
+            id: 'monaco-yaml/yamlWorker',
+            entry: 'monaco-yaml/yaml.worker'
+          }
+        }
       ]
     })
   ]

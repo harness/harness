@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import * as monaco from 'monaco-editor'
 import type monacoEditor from 'monaco-editor/esm/vs/editor/editor.api'
 import MonacoEditor, { MonacoDiffEditor } from 'react-monaco-editor'
+import { setDiagnosticsOptions } from 'monaco-yaml'
 import { noop } from 'lodash-es'
 import { SourceCodeEditorProps, PLAIN_TEXT } from 'utils/Utils'
 import { useEventListener } from 'hooks/useEventListener'
@@ -52,8 +53,8 @@ export default function MonacoSourceCodeEditor({
   }, [])
 
   useEffect(() => {
-    if (window.monaco && language === 'yaml' && schema) {
-      monaco.languages.yaml?.yamlDefaults?.setDiagnosticsOptions?.({
+    if (language === 'yaml' && schema) {
+      setDiagnosticsOptions({
         validate: true,
         enableSchemaRequest: false,
         hover: true,
@@ -61,7 +62,8 @@ export default function MonacoSourceCodeEditor({
         schemas: [
           {
             fileMatch: ['*'],
-            schema
+            schema,
+            uri: 'https://github.com/harness/harness-schema'
           }
         ]
       })
