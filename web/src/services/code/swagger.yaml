@@ -411,6 +411,14 @@ paths:
   /login:
     post:
       operationId: onLogin
+      parameters:
+        - description: If set to true the token is also returned as a cookie.
+          in: query
+          name: include_cookie
+          required: false
+          schema:
+            default: false
+            type: boolean
       requestBody:
         content:
           application/json:
@@ -609,6 +617,14 @@ paths:
   /register:
     post:
       operationId: onRegister
+      parameters:
+        - description: If set to true the token is also returned as a cookie.
+          in: query
+          name: include_cookie
+          required: false
+          schema:
+            default: false
+            type: boolean
       requestBody:
         content:
           application/json:
@@ -1971,6 +1987,12 @@ paths:
             maximum: 100
             minimum: 1
             type: integer
+        - description: Whether to fetch latest build information for each pipeline.
+          in: query
+          name: latest
+          required: false
+          schema:
+            type: boolean
         - in: path
           name: repo_ref
           required: true
@@ -2010,7 +2032,7 @@ paths:
                 $ref: '#/components/schemas/UsererrorError'
           description: Internal Server Error
       tags:
-        - repos
+        - pipeline
     post:
       operationId: createPipeline
       parameters:
@@ -6976,7 +6998,7 @@ components:
       type: object
     SystemConfigOutput:
       properties:
-        sign_up_allowed:
+        user_signup_allowed:
           type: boolean
       type: object
     TimeDuration:
@@ -7231,6 +7253,8 @@ components:
           type: string
         description:
           type: string
+        execution:
+          $ref: '#/components/schemas/TypesExecution'
         id:
           type: integer
         repo_id:
@@ -7240,8 +7264,6 @@ components:
         uid:
           type: string
         updated:
-          type: integer
-        version:
           type: integer
       type: object
     TypesPlugin:

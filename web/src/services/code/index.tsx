@@ -488,7 +488,7 @@ export interface RepoSymlinkContent {
 }
 
 export interface SystemConfigOutput {
-  sign_up_allowed?: boolean
+  user_signup_allowed?: boolean
 }
 
 export type TimeDuration = number | null
@@ -634,12 +634,12 @@ export interface TypesPipeline {
   created?: number
   default_branch?: string
   description?: string
+  execution?: TypesExecution
   id?: number
   repo_id?: number
   seq?: number
   uid?: string
   updated?: number
-  version?: number
 }
 
 export interface TypesPlugin {
@@ -1176,13 +1176,20 @@ export const useUpdateConnector = ({ connector_ref, ...props }: UseUpdateConnect
     { base: getConfig('code/api/v1'), pathParams: { connector_ref }, ...props }
   )
 
+export interface OnLoginQueryParams {
+  /**
+   * If set to true the token is also returned as a cookie.
+   */
+  include_cookie?: boolean
+}
+
 export type OnLoginProps = Omit<
-  MutateProps<TypesTokenResponse, UsererrorError, void, OpenapiLoginRequest, void>,
+  MutateProps<TypesTokenResponse, UsererrorError, OnLoginQueryParams, OpenapiLoginRequest, void>,
   'path' | 'verb'
 >
 
 export const OnLogin = (props: OnLoginProps) => (
-  <Mutate<TypesTokenResponse, UsererrorError, void, OpenapiLoginRequest, void>
+  <Mutate<TypesTokenResponse, UsererrorError, OnLoginQueryParams, OpenapiLoginRequest, void>
     verb="POST"
     path={`/login`}
     base={getConfig('code/api/v1')}
@@ -1191,12 +1198,12 @@ export const OnLogin = (props: OnLoginProps) => (
 )
 
 export type UseOnLoginProps = Omit<
-  UseMutateProps<TypesTokenResponse, UsererrorError, void, OpenapiLoginRequest, void>,
+  UseMutateProps<TypesTokenResponse, UsererrorError, OnLoginQueryParams, OpenapiLoginRequest, void>,
   'path' | 'verb'
 >
 
 export const useOnLogin = (props: UseOnLoginProps) =>
-  useMutate<TypesTokenResponse, UsererrorError, void, OpenapiLoginRequest, void>('POST', `/login`, {
+  useMutate<TypesTokenResponse, UsererrorError, OnLoginQueryParams, OpenapiLoginRequest, void>('POST', `/login`, {
     base: getConfig('code/api/v1'),
     ...props
   })
@@ -1297,13 +1304,20 @@ export const useListPrincipals = (props: UseListPrincipalsProps) =>
     ...props
   })
 
+export interface OnRegisterQueryParams {
+  /**
+   * If set to true the token is also returned as a cookie.
+   */
+  include_cookie?: boolean
+}
+
 export type OnRegisterProps = Omit<
-  MutateProps<TypesTokenResponse, UsererrorError, void, OpenapiRegisterRequest, void>,
+  MutateProps<TypesTokenResponse, UsererrorError, OnRegisterQueryParams, OpenapiRegisterRequest, void>,
   'path' | 'verb'
 >
 
 export const OnRegister = (props: OnRegisterProps) => (
-  <Mutate<TypesTokenResponse, UsererrorError, void, OpenapiRegisterRequest, void>
+  <Mutate<TypesTokenResponse, UsererrorError, OnRegisterQueryParams, OpenapiRegisterRequest, void>
     verb="POST"
     path={`/register`}
     base={getConfig('code/api/v1')}
@@ -1312,15 +1326,16 @@ export const OnRegister = (props: OnRegisterProps) => (
 )
 
 export type UseOnRegisterProps = Omit<
-  UseMutateProps<TypesTokenResponse, UsererrorError, void, OpenapiRegisterRequest, void>,
+  UseMutateProps<TypesTokenResponse, UsererrorError, OnRegisterQueryParams, OpenapiRegisterRequest, void>,
   'path' | 'verb'
 >
 
 export const useOnRegister = (props: UseOnRegisterProps) =>
-  useMutate<TypesTokenResponse, UsererrorError, void, OpenapiRegisterRequest, void>('POST', `/register`, {
-    base: getConfig('code/api/v1'),
-    ...props
-  })
+  useMutate<TypesTokenResponse, UsererrorError, OnRegisterQueryParams, OpenapiRegisterRequest, void>(
+    'POST',
+    `/register`,
+    { base: getConfig('code/api/v1'), ...props }
+  )
 
 export interface CreateRepositoryQueryParams {
   /**
@@ -2239,6 +2254,10 @@ export interface ListPipelinesQueryParams {
    * The maximum number of results to return.
    */
   limit?: number
+  /**
+   * Whether to fetch latest build information for each pipeline.
+   */
+  latest?: boolean
 }
 
 export interface ListPipelinesPathParams {

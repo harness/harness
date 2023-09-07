@@ -5,6 +5,8 @@
 package request
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -36,20 +38,48 @@ const (
 	PerPageMax      = 100
 )
 
+// GetCookie tries to retrive the cookie from the request or returns false if it doesn't exist.
+func GetCookie(r *http.Request, cookieName string) (string, bool) {
+	cookie, err := r.Cookie(cookieName)
+	if errors.Is(err, http.ErrNoCookie) {
+		return "", false
+	} else if err != nil {
+		// this should never happen - documentation and code only return `nil` or `http.ErrNoCookie`
+		panic(fmt.Sprintf("unexpected error from request.Cookie(...) method: %s", err))
+	}
+
+	return cookie.Value, true
+}
+
 // PathParamOrError tries to retrieve the parameter from the request and
 // returns the parameter if it exists and is not empty, otherwise returns an error.
 func PathParamOrError(r *http.Request, paramName string) (string, error) {
-	value := chi.URLParam(r, paramName)
-	if value == "" {
+	val, ok := PathParam(r, paramName)
+	if !ok {
 		return "", usererror.BadRequestf("Parameter '%s' not found in request path.", paramName)
 	}
 
-	return value, nil
+	return val, nil
 }
 
 // PathParamOrEmpty retrieves the path parameter or returns an empty string otherwise.
 func PathParamOrEmpty(r *http.Request, paramName string) string {
-	return chi.URLParam(r, paramName)
+	val, ok := PathParam(r, paramName)
+	if !ok {
+		return ""
+	}
+
+	return val
+}
+
+// PathParam retrieves the path parameter or returns false if it exists.
+func PathParam(r *http.Request, paramName string) (string, bool) {
+	val := chi.URLParam(r, paramName)
+	if val == "" {
+		return "", false
+	}
+
+	return val, true
 }
 
 // QueryParam returns the parameter if it exists.

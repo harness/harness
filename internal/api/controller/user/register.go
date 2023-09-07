@@ -25,13 +25,13 @@ type RegisterInput struct {
 // This doesn't require auth, but has limited functionalities (unable to create admin user for example).
 func (c *Controller) Register(ctx context.Context, sysCtrl *system.Controller,
 	in *RegisterInput) (*types.TokenResponse, error) {
-	signUpAllowed, err := sysCtrl.IsUserRegistrationAllowed(ctx)
+	signUpAllowed, err := sysCtrl.IsUserSignupAllowed(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	if !signUpAllowed {
-		return nil, usererror.ErrForbidden
+		return nil, usererror.Forbidden("User sign-up is disabled")
 	}
 
 	user, err := c.CreateNoAuth(ctx, &CreateInput{

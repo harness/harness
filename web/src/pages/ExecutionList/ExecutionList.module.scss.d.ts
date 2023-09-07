@@ -3,9 +3,6 @@
 declare const styles: {
   readonly main: string
   readonly layout: string
-  readonly table: string
-  readonly row: string
-  readonly noDesc: string
   readonly withError: string
   readonly nameContainer: string
   readonly name: string
@@ -15,6 +12,5 @@ declare const styles: {
   readonly author: string
   readonly hash: string
   readonly triggerLayout: string
-  readonly divider: string
 }
 export default styles

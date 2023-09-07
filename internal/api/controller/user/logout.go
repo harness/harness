@@ -7,14 +7,17 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types/enum"
 )
 
-// Logout searches for the user's token present in the request and proceeds to  delete it,
-// returns nil if successful.
+var ()
+
+// Logout searches for the user's token present in the request and proceeds to  delete it.
+// If no user was present, a usererror.ErrUnauthorized is returned.
 func (c *Controller) Logout(ctx context.Context, session *auth.Session) error {
 	var (
 		tokenID   int64
@@ -22,8 +25,9 @@ func (c *Controller) Logout(ctx context.Context, session *auth.Session) error {
 	)
 
 	if session == nil {
-		return usererror.BadRequest("no authenticated user")
+		return usererror.ErrUnauthorized
 	}
+
 	switch t := session.Metadata.(type) {
 	case *auth.TokenMetadata:
 		tokenID = t.TokenID
@@ -36,5 +40,10 @@ func (c *Controller) Logout(ctx context.Context, session *auth.Session) error {
 		return usererror.BadRequestf("unsupported logout token type %v", tokenType)
 	}
 
-	return c.tokenStore.Delete(ctx, tokenID)
+	err := c.tokenStore.Delete(ctx, tokenID)
+	if err != nil {
+		return fmt.Errorf("failed to delete token from store: %w", err)
+	}
+
+	return nil
 }

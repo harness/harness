@@ -26,10 +26,10 @@ import { LatestCommitForFolder } from 'components/LatestCommit/LatestCommit'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useEventListener } from 'hooks/useEventListener'
 import { Readme } from './Readme'
-import repositoryCSS from '../../Repository.module.scss'
 import CodeFolder from '../../../../icons/CodeFileFill.svg'
 import Submodule from '../../../../icons/Submodules.svg'
 import Symlink from '../../../../icons/Symlink.svg'
+import repositoryCSS from '../../Repository.module.scss'
 import css from './FolderContent.module.scss'
 
 type FolderContentProps = Pick<GitInfoProps, 'repoMetadata' | 'resourceContent' | 'gitRef'>

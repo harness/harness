@@ -13,6 +13,7 @@ const (
 	JobStateRunning   JobState = "running"
 	JobStateFinished  JobState = "finished"
 	JobStateFailed    JobState = "failed"
+	JobStateCanceled  JobState = "canceled"
 )
 
 // JobPriority represents priority of a background job.

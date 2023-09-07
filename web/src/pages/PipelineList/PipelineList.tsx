@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { Classes, Menu, MenuItem, Popover, Position } from '@blueprintjs/core'
 import {
+  Avatar,
   Button,
   ButtonVariation,
   Container,
@@ -8,19 +9,21 @@ import {
   Layout,
   PageBody,
   TableV2 as Table,
-  Text
+  Text,
+  Utils
 } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
-import { useHistory } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
+import { Calendar, Timer, GitFork } from 'iconoir-react'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
-import { LIST_FETCHING_LIMIT, PageBrowserProps, formatDate, getErrorMessage, voidFn } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT, PageBrowserProps, getErrorMessage, timeDistance, voidFn } from 'utils/Utils'
 import type { TypesPipeline } from 'services/code'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { usePageIndex } from 'hooks/usePageIndex'
@@ -28,6 +31,9 @@ import { ResourceListingPagination } from 'components/ResourceListingPagination/
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
+import { getStatus } from 'utils/PipelineUtils'
+import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
 import useNewPipelineModal from 'pages/NewPipeline/NewPipelineModal'
@@ -50,8 +56,9 @@ const PipelineList = () => {
     response
   } = useGet<TypesPipeline[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines`,
-    queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm },
-    lazy: !repoMetadata
+    queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm, latest: true },
+    lazy: !repoMetadata,
+    debounce: 500
   })
 
   const { openModal } = useNewPipelineModal()
@@ -76,29 +83,90 @@ const PipelineList = () => {
         Cell: ({ row }: CellProps<TypesPipeline>) => {
           const record = row.original
           return (
-            <Container className={css.nameContainer}>
-              <Layout.Horizontal spacing="small" style={{ flexGrow: 1 }}>
-                <Layout.Vertical flex className={css.name}>
-                  <Text className={css.repoName}>
-                    <Keywords value={searchTerm}>{record.uid}</Keywords>
-                  </Text>
-                  {record.description && <Text className={css.desc}>{record.description}</Text>}
-                </Layout.Vertical>
-              </Layout.Horizontal>
-            </Container>
+            <Layout.Horizontal spacing="small" className={css.nameContainer}>
+              <ExecutionStatus
+                status={getStatus(record?.execution?.status || ExecutionState.PENDING)}
+                iconOnly
+                noBackground
+                iconSize={24}
+                className={css.statusIcon}
+              />
+              <Text className={css.repoName}>
+                <Keywords value={searchTerm}>{record.uid}</Keywords>
+              </Text>
+            </Layout.Horizontal>
           )
         }
       },
       {
-        Header: getString('repos.updated'),
+        Header: getString('pipelines.lastExecution'),
+        width: 'calc(50% - 90px)',
+        Cell: ({ row }: CellProps<TypesPipeline>) => {
+          const record = row.original.execution
+
+          return record ? (
+            <Layout.Vertical spacing={'small'}>
+              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
+                <Text className={css.desc}>{`#${record.number}`}</Text>
+                <PipeSeparator height={7} />
+                <Text className={css.desc}>{record.title}</Text>
+              </Layout.Horizontal>
+              <Layout.Horizontal spacing={'xsmall'} style={{ alignItems: 'center' }}>
+                <Avatar
+                  email={record.author_email}
+                  name={record.author_name}
+                  size="small"
+                  hoverCard={false}
+                  className={css.avatar}
+                />
+                {/* TODO need logic here for different trigger types */}
+                <Text className={css.author}>{record.author_name}</Text>
+                <PipeSeparator height={7} />
+                <GitFork height={12} width={12} color={Utils.getRealCSSColor(Color.GREY_500)} />
+                <Text className={css.author}>{record.source}</Text>
+                <PipeSeparator height={7} />
+                <Link
+                  to={routes.toCODECommit({
+                    repoPath: repoMetadata?.path as string,
+                    commitRef: record.after as string
+                  })}
+                  className={css.hash}
+                  onClick={e => {
+                    e.stopPropagation()
+                  }}>
+                  {/* {record.after?.slice(0, 6)} */}
+                  {'hardcoded'.slice(0, 6)}
+                </Link>
+              </Layout.Horizontal>
+            </Layout.Vertical>
+          ) : (
+            <div className={css.spacer} />
+          )
+        }
+      },
+      {
+        Header: getString('pipelines.time'),
         width: '180px',
         Cell: ({ row }: CellProps<TypesPipeline>) => {
-          return (
-            <Layout.Horizontal style={{ alignItems: 'center' }}>
-              <Text color={Color.BLACK} lineClamp={1} rightIconProps={{ size: 10 }} width={120}>
-                {formatDate(row.original.updated as number)}
-              </Text>
-            </Layout.Horizontal>
+          const record = row.original.execution
+
+          return record ? (
+            <Layout.Vertical spacing={'small'}>
+              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
+                <Timer color={Utils.getRealCSSColor(Color.GREY_500)} />
+                <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
+                  {timeDistance(record.started, record.finished)}
+                </Text>
+              </Layout.Horizontal>
+              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
+                <Calendar color={Utils.getRealCSSColor(Color.GREY_500)} />
+                <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
+                  {timeDistance(record.finished, Date.now())} ago
+                </Text>
+              </Layout.Horizontal>
+            </Layout.Vertical>
+          ) : (
+            <div className={css.spacer} />
           )
         },
         disableSortBy: true
@@ -179,7 +247,6 @@ const PipelineList = () => {
           <Container margin={{ top: 'medium' }}>
             {!!pipelines?.length && (
               <Table<TypesPipeline>
-                className={css.table}
                 columns={columns}
                 data={pipelines || []}
                 onRowClick={pipelineInfo =>
@@ -190,7 +257,6 @@ const PipelineList = () => {
                     })
                   )
                 }
-                getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
               />
             )}
 

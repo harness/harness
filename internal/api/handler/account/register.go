@@ -11,6 +11,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/system"
 	"github.com/harness/gitness/internal/api/controller/user"
 	"github.com/harness/gitness/internal/api/render"
+	"github.com/harness/gitness/internal/api/request"
 )
 
 // HandleRegister returns an http.HandlerFunc that processes an http.Request
@@ -19,8 +20,14 @@ func HandleRegister(userCtrl *user.Controller, sysCtrl *system.Controller) http.
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
+		includeCookie, err := request.GetIncludeCookieFromQueryOrDefault(r, false)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
 		in := new(user.RegisterInput)
-		err := json.NewDecoder(r.Body).Decode(in)
+		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
@@ -30,6 +37,10 @@ func HandleRegister(userCtrl *user.Controller, sysCtrl *system.Controller) http.
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
+		}
+
+		if includeCookie {
+			includeTokenCookie(r, w, tokenResponse)
 		}
 
 		render.JSON(w, http.StatusOK, tokenResponse)

@@ -14,9 +14,8 @@ import {
 import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
-import { useHistory, useParams } from 'react-router-dom'
+import { Link, useHistory, useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
-import { Icon } from '@harnessio/icons'
 import { Timer, Calendar } from 'iconoir-react'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -30,6 +29,9 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
+import { getStatus } from 'utils/PipelineUtils'
+import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './ExecutionList.module.scss'
 
@@ -71,26 +73,35 @@ const ExecutionList = () => {
         Cell: ({ row }: CellProps<TypesExecution>) => {
           const record = row.original
           return (
-            <Container className={css.nameContainer}>
-              <Layout.Vertical>
-                <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
-                  {/* TODO this icon need to depend on the status */}
-                  <Icon name="success-tick" size={18} />
-                  <Text className={css.number}>{`#${record.number}.`}</Text>
-                  <Text className={css.desc}>{record.title}</Text>
-                </Layout.Horizontal>
-                <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center', marginLeft: '1.2rem' }}>
-                  <Avatar email={record.author_email} name={record.author_name} size="small" hoverCard={false} />
-                  {/* TODO need logic here for different trigger types */}
-                  <Text className={css.author}>{`${record.author_name} triggered manually`}</Text>
-                  <Text className={css.divider}>{`|`}</Text>
-                  {/* TODO Will need to replace this with commit action - wont match Yifan designs */}
-                  <a rel="noreferrer noopener" className={css.hash}>
-                    {record.after}
-                  </a>
-                </Layout.Horizontal>
-              </Layout.Vertical>
-            </Container>
+            <Layout.Vertical className={css.nameContainer}>
+              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
+                <ExecutionStatus
+                  status={getStatus(record?.status || ExecutionState.PENDING)}
+                  iconOnly
+                  noBackground
+                  iconSize={20}
+                />
+                <Text className={css.number}>{`#${record.number}.`}</Text>
+                <Text className={css.desc}>{record.title}</Text>
+              </Layout.Horizontal>
+              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center', marginLeft: '1.2rem' }}>
+                <Avatar email={record.author_email} name={record.author_name} size="small" hoverCard={false} />
+                {/* TODO need logic here for different trigger types */}
+                <Text className={css.author}>{`${record.author_name} triggered manually`}</Text>
+                <PipeSeparator height={7} />
+                <Link
+                  to={routes.toCODECommit({
+                    repoPath: repoMetadata?.path as string,
+                    commitRef: record.after as string
+                  })}
+                  className={css.hash}
+                  onClick={e => {
+                    e.stopPropagation()
+                  }}>
+                  {record.after?.slice(0, 6)}
+                </Link>
+              </Layout.Horizontal>
+            </Layout.Vertical>
           )
         }
       },
@@ -158,7 +169,6 @@ const ExecutionList = () => {
           <Container margin={{ top: 'medium' }}>
             {!!executions?.length && (
               <Table<TypesExecution>
-                className={css.table}
                 columns={columns}
                 data={executions || []}
                 onRowClick={executionInfo =>
@@ -170,7 +180,6 @@ const ExecutionList = () => {
                     })
                   )
                 }
-                getRowClassName={row => cx(css.row, !row.original.number && css.noDesc)}
               />
             )}
 

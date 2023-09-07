@@ -6,6 +6,7 @@ package request
 
 const (
 	// TODO: have shared constants across all services?
-	HeaderRequestID = "X-Request-Id"
-	HeaderUserAgent = "User-Agent"
+	HeaderRequestID     = "X-Request-Id"
+	HeaderUserAgent     = "User-Agent"
+	HeaderAuthorization = "Authorization"
 )

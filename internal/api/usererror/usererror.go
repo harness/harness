@@ -116,6 +116,11 @@ func BadRequestWithPayload(message string, values ...map[string]any) *Error {
 	return NewWithPayload(http.StatusBadRequest, message, values...)
 }
 
+// Forbidden returns a new user facing forbidden error.
+func Forbidden(message string) *Error {
+	return New(http.StatusForbidden, message)
+}
+
 // ConflictWithPayload returns a new user facing conflict error with payload.
 func ConflictWithPayload(message string, values ...map[string]any) *Error {
 	return NewWithPayload(http.StatusConflict, message, values...)

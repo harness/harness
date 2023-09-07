@@ -637,6 +637,8 @@ pipelines:
   editPipeline: Edit pipeline {{pipeline}}
   run: Run pipeline
   failedToRunPipeline: Failed to run pipeline
+  time: Time
+  lastExecution: Last Execution
 executions:
   noData: There are no executions :(
   newExecutionButton: Run Pipeline

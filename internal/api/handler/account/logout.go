@@ -20,6 +20,12 @@ func HandleLogout(userCtrl *user.Controller) http.HandlerFunc {
 		session, _ := request.AuthSessionFrom(ctx)
 
 		err := userCtrl.Logout(ctx, session)
+
+		// best effort delete cookie even in case of errors, to avoid clients being unable to remove the cookie.
+		// WARNING: It could be that the cookie is removed even though the token is still there in the DB.
+		// However, we have APIs to list and delete session tokens, and expiry time is usually short.
+		deleteTokenCookieIfPresent(r, w)
+
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

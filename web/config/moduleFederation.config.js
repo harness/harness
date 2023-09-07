@@ -11,7 +11,6 @@ const ExactSharedPackages = [
   '@blueprintjs/core',
   '@blueprintjs/select',
   '@blueprintjs/datetime',
-  '@blueprintjs/icons',
   'restful-react'
 ]
 

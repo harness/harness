@@ -81,7 +81,7 @@ export const ChangesDropdown: React.FC<{ diffs: DiffFileEntry[] }> = ({ diffs })
         </Container>
       }
       tooltipProps={{ interactionKind: 'click', hasBackdrop: true, popoverClassName: css.popover }}>
-      <StringSubstitute str={getString('pr.showLink')} vars={{ count: diffs?.length || 0 }} />
+      <StringSubstitute str={getString('pr.showLink')} vars={{ count: diffs?.length || '0' }} />
     </Button>
   )
 }

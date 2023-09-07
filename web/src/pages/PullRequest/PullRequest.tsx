@@ -15,7 +15,7 @@ import type { TypesPullReq, TypesPullReqStats, TypesRepository } from 'services/
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
 import { usePRChecksDecision } from 'hooks/usePRChecksDecision'
-import { PRCheckExecutionStatus } from 'components/PRCheckExecutionStatus/PRCheckExecutionStatus'
+import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
 import { Checks } from './Checks/Checks'
@@ -105,14 +105,16 @@ export default function PullRequest() {
   )
 
   useEffect(() => {
+    let pollingInterval = 1000
     const fn = () => {
       if (repoMetadata) {
         refetchPullRequest().then(() => {
-          interval = window.setTimeout(fn, PR_POLLING_INTERVAL)
+          pollingInterval = Math.min(pollingInterval + 1000, PR_MAX_POLLING_INTERVAL)
+          interval = window.setTimeout(fn, pollingInterval)
         })
       }
     }
-    let interval = window.setTimeout(fn, PR_POLLING_INTERVAL)
+    let interval = window.setTimeout(fn, pollingInterval)
 
     return () => window.clearTimeout(interval)
   }, [repoMetadata, refetchPullRequest, path])
@@ -248,7 +250,7 @@ export default function PullRequest() {
                           prChecksDecisionResult?.overallStatus ? (
                             <Container className={css.checksCount}>
                               <Layout.Horizontal className={css.checksCountLayout}>
-                                <PRCheckExecutionStatus
+                                <ExecutionStatus
                                   status={prChecksDecisionResult?.overallStatus}
                                   noBackground
                                   iconOnly
@@ -288,4 +290,4 @@ export default function PullRequest() {
   )
 }
 
-const PR_POLLING_INTERVAL = 10000
+const PR_MAX_POLLING_INTERVAL = 15000

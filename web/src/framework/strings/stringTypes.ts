@@ -324,11 +324,13 @@ export interface StringsMap {
   'pipelines.enterYAMLPath': string
   'pipelines.failedToCreatePipeline': string
   'pipelines.failedToRunPipeline': string
+  'pipelines.lastExecution': string
   'pipelines.name': string
   'pipelines.newPipelineButton': string
   'pipelines.noData': string
   'pipelines.run': string
   'pipelines.saveAndRun': string
+  'pipelines.time': string
   'pipelines.yamlPath': string
   'plugins.addAPlugin': string
   'plugins.stepLabel': string

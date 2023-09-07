@@ -43,7 +43,6 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
   const [opened, setOpened] = React.useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   // const [page, setPage] = usePageIndex(1)
-
   const { data, error } = useGetSpace({ space_ref: encodeURIComponent(space), lazy: !space })
 
   const {
@@ -52,6 +51,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
     response
   } = useGet({
     path: '/api/v1/user/memberships',
+    queryParams: { query: searchTerm },
     debounce: 500
   })
 
@@ -62,6 +62,14 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
     },
     [onSelect]
   )
+
+  useEffect(() => {
+    //space is used in the api call to get data, so it'll always be the same
+    if (space && data) {
+      selectSpace(data, false)
+      refetch()
+    }
+  }, [data])
 
   useEffect(() => {
     if (space && !selectedSpace && data) {

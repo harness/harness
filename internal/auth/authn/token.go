@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/token"
@@ -91,20 +92,32 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request, sourceRouter SourceRo
 }
 
 func extractToken(r *http.Request) string {
-	bearer := r.Header.Get("Authorization")
-	if bearer == "" {
-		return r.FormValue("access_token")
-	}
-	// pull/push git operations will require auth using
-	// Basic realm
-	if strings.HasPrefix(bearer, "Basic") {
-		_, tkn, ok := r.BasicAuth()
-		if !ok {
-			return ""
-		}
-		return tkn
+	// Check query param first (as that's most immediately visible to caller)
+	if queryToken, ok := request.GetAccessTokenFromQuery(r); ok {
+		return queryToken
 	}
 
-	bearer = strings.TrimPrefix(bearer, "Bearer ")
-	return bearer
+	// check authorization header next
+	headerToken := r.Header.Get(request.HeaderAuthorization)
+	switch {
+	// in case of git push / pull it would be basic auth and token is in password
+	case strings.HasPrefix(headerToken, "Basic "):
+		// return pwd either way - if it's invalid pwd is empty string which we'd return anyway
+		_, pwd, _ := r.BasicAuth()
+		return pwd
+	// strip bearer prefix if present
+	case strings.HasPrefix(headerToken, "Bearer "):
+		return headerToken[7:]
+	// otherwise use value as is
+	case headerToken != "":
+		return headerToken
+	}
+
+	// check cookies last (as that's least visible to caller)
+	if cookieToken, ok := request.GetTokenFromCookie(r); ok {
+		return cookieToken
+	}
+
+	// no token found
+	return ""
 }

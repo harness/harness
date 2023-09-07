@@ -46,6 +46,7 @@ export interface DiffCommentItem<T = Unknown> {
   lineNumber: number
   height: number
   commentItems: CommentItem<T>[]
+  filePath: string
 }
 
 export const DIFF2HTML_CONFIG = {
@@ -64,9 +65,9 @@ export const DIFF2HTML_CONFIG = {
     'generic-line': HoganJsUtils.compile(`
       <tr>
         <td class="{{lineClass}} {{type}}">
-          {{{lineNumber}}}
+          {{{lineNumber}}} {{{filePath}}}
         </td>
-        <td class="{{type}}" data-content-for-line-number="{{lineNumber}}">
+        <td class="{{type}}" data-content-for-line-number="{{lineNumber}}" data-content-for-file-path="{{file.filePath}}">
             <div data-annotation-for-line="{{lineNumber}}" tab-index="0" role="button">+</div>
             <div class="{{contentClass}}">
             {{#prefix}}
@@ -86,7 +87,7 @@ export const DIFF2HTML_CONFIG = {
       </tr>
     `),
     'side-by-side-file-diff': HoganJsUtils.compile(`
-      <div id="{{fileHtmlId}}" class="d2h-file-wrapper side-by-side-file-diff" data-lang="{{file.language}}">
+      <div id="{{fileHtmlId}}" data="{{file.filePath}}" class="d2h-file-wrapper side-by-side-file-diff" data-lang="{{file.language}}">
         <div class="d2h-file-header">
           {{{filePath}}}
         </div>
@@ -113,7 +114,7 @@ export const DIFF2HTML_CONFIG = {
       </div>
     `),
     'line-by-line-file-diff': HoganJsUtils.compile(`
-      <div id="{{fileHtmlId}}" class="d2h-file-wrapper line-by-line-file-diff" data-lang="{{file.language}}">
+      <div id="{{fileHtmlId}}"  data="{{file.filePath}}" class="d2h-file-wrapper {{file.filePath}} line-by-line-file-diff" data-lang="{{file.language}}">
         <div class="d2h-file-header">
         {{{filePath}}}
         </div>
@@ -141,8 +142,10 @@ export function getCommentLineInfo(
   viewStyle: ViewStyle
 ) {
   const isSideBySideView = viewStyle === ViewStyle.SIDE_BY_SIDE
-  const { left, lineNumber } = commentEntry
-  const diffBody = contentDOM?.querySelector(
+  const { left, lineNumber, filePath } = commentEntry
+  const filePathBody = contentDOM?.querySelector(`[data="${filePath}"`)
+
+  const diffBody = filePathBody?.querySelector(
     `${isSideBySideView ? `.d2h-file-side-diff${left ? '.left' : '.right'} ` : ''}.d2h-diff-tbody`
   )
   const rowElement = (
@@ -215,7 +218,8 @@ export function activitiesToDiffCommentItems(diff: DiffFileEntry): DiffCommentIt
         right,
         height: 0,
         lineNumber: (right ? activity.code_comment?.line_new : activity.code_comment?.line_old) as number,
-        commentItems: [activityToCommentItem(activity)].concat(replyComments)
+        commentItems: [activityToCommentItem(activity)].concat(replyComments),
+        filePath: diff.filePath
       }
     }) || []
   )
