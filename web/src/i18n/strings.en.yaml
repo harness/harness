@@ -636,6 +636,7 @@ pipelines:
   saveAndRun: Save and Run
   editPipeline: Edit pipeline {{pipeline}}
   run: Run pipeline
+  failedToRunPipeline: Failed to run pipeline
 executions:
   noData: There are no executions :(
   newExecutionButton: Run Pipeline
@@ -657,3 +658,4 @@ run: Run
 plugins:
   title: Plugins
   addAPlugin: Add a {{category}} plugin
+  stepLabel: step

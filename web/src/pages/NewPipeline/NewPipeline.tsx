@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { useMutate } from 'restful-react'
 import { Link, useParams } from 'react-router-dom'
-import { Drawer } from '@blueprintjs/core'
 import { Container, PageHeader, PageBody, Button, Layout, ButtonVariation, Text, useToaster } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
@@ -10,6 +9,7 @@ import { useStrings } from 'framework/strings'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import MonacoSourceCodeEditor from 'components/SourceCodeEditor/MonacoSourceCodeEditor'
 import { PluginsPanel } from 'components/PluginsPanel/PluginsPanel'
+import useRunPipelineModal from 'components/RunPipelineModal/RunPipelineModal'
 import { useAppContext } from 'AppContext'
 import type { CODEProps } from 'RouteDefinitions'
 import { getErrorMessage } from 'utils/Utils'
@@ -24,7 +24,7 @@ const NewPipeline = (): JSX.Element => {
   const { repoMetadata } = useGetRepositoryMetadata()
   const { showError } = useToaster()
   const [pipelineAsYAML, setPipelineAsYaml] = useState<string>('')
-  const [showDrawer, setShowDrawer] = useState<boolean>(false)
+  const { openModal: openRunPipelineModal } = useRunPipelineModal()
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
 
   const { mutate, loading } = useMutate<RepoCommitFilesResponse>({
@@ -36,14 +36,18 @@ const NewPipeline = (): JSX.Element => {
     try {
       const data: OpenapiCommitFilesRequest = {
         actions: [{ action: 'CREATE', path: `sample_${new Date().getTime()}.txt`, payload: pipelineAsYAML }],
-        branch: 'main',
+        branch: repoMetadata?.default_branch,
         new_branch: '',
         title: `Create pipeline ${pipeline}`,
         message: ''
       }
 
       mutate(data)
-        .then(() => setShowDrawer(true))
+        .then(() => {
+          if (repoMetadata && pipeline) {
+            openRunPipelineModal({ repoMetadata, pipeline })
+          }
+        })
         .catch(error => {
           showError(getErrorMessage(error), 0, 'pipelines.failedToSavePipeline')
         })
@@ -54,20 +58,6 @@ const NewPipeline = (): JSX.Element => {
 
   return (
     <>
-      {showDrawer && (
-        <Drawer isOpen={showDrawer} title={getString('pipelines.run')} onClose={() => setShowDrawer(false)}>
-          <Layout.Vertical padding="xlarge" flex={{ justifyContent: 'flex-end' }} className={css.drawer}>
-            <Layout.Horizontal spacing="medium" flex={{ justifyContent: 'flex-start' }} width="100%">
-              <Button variation={ButtonVariation.PRIMARY} text={getString('run')} />
-              <Button
-                variation={ButtonVariation.SECONDARY}
-                text={getString('cancel')}
-                onClick={() => setShowDrawer(false)}
-              />
-            </Layout.Horizontal>
-          </Layout.Vertical>
-        </Drawer>
-      )}
       <Container className={css.main}>
         <PageHeader
           title={getString('pipelines.editPipeline', { pipeline })}

@@ -8,6 +8,7 @@ import type { OpenapiCreatePipelineRequest, TypesPipeline, TypesRepository } fro
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
+
 interface FormData {
   name: string
   branch: string

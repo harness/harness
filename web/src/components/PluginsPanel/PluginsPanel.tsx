@@ -39,7 +39,7 @@ const PluginCategories: PluginInterface[] = [
   { category: PluginCategory.Drone, name: 'Drone', description: 'Run Drone plugins', icon: 'ci-infra' }
 ]
 
-const pluginSpecMock = {
+const dronePluginSpecMock = {
   inputs: {
     channel: {
       type: 'string'
@@ -59,6 +59,14 @@ const pluginSpecMock = {
       }
     }
   ]
+}
+
+const runStepSpec = {
+  inputs: {
+    script: {
+      type: 'string'
+    }
+  }
 }
 
 export interface PluginsPanelInterface {
@@ -101,6 +109,9 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                 setCategory(category)
                 if (category === PluginCategory.Drone) {
                   setPanelView(PluginPanelView.Listing)
+                } else if (category === PluginCategory.Harness) {
+                  setPlugin({ uid: getString('run') })
+                  setPanelView(PluginPanelView.Configuration)
                 }
               }}
               key={category}
@@ -187,58 +198,57 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   }
 
   const renderPluginConfigForm = useCallback((): JSX.Element => {
-    const { uid, spec } = plugin || {}
-    if (spec) {
-      // let specAsObj = {}
-      // try {
-      //   specAsObj = parse(spec)
-      // } catch (e) {
-      //   // ignore error
-      // }
-      const inputs = get(pluginSpecMock, 'inputs', {})
-      return (
-        <Layout.Vertical
-          spacing="medium"
-          margin={{ left: 'xxlarge', top: 'large', right: 'xxlarge', bottom: 'xxlarge' }}
-          height="95%">
-          <Layout.Horizontal spacing="small" flex={{ justifyContent: 'flex-start' }}>
-            <Icon
-              name="arrow-left"
-              size={18}
-              onClick={() => {
-                setPlugin(undefined)
+    // TODO obtain plugin input spec by parsing YAML
+    const inputs = get(category === PluginCategory.Drone ? dronePluginSpecMock : runStepSpec, 'inputs', {})
+    return (
+      <Layout.Vertical
+        spacing="medium"
+        margin={{ left: 'xxlarge', top: 'large', right: 'xxlarge', bottom: 'xxlarge' }}
+        height="95%">
+        <Layout.Horizontal spacing="small" flex={{ justifyContent: 'flex-start' }}>
+          <Icon
+            name="arrow-left"
+            size={18}
+            onClick={() => {
+              setPlugin(undefined)
+              if (category === PluginCategory.Drone) {
                 setPanelView(PluginPanelView.Listing)
-              }}
-              className={css.arrow}
-            />
+              } else if (category === PluginCategory.Harness) {
+                setPanelView(PluginPanelView.Category)
+              }
+            }}
+            className={css.arrow}
+          />
+          {plugin?.uid ? (
             <Text font={{ variation: FontVariation.H5 }}>
-              {getString('addLabel')} {uid}
+              {getString('addLabel')} {plugin.uid} {getString('plugins.stepLabel')}
             </Text>
-          </Layout.Horizontal>
-          <Container className={css.form}>
-            <Formik
-              initialValues={{}}
-              onSubmit={formData => {
-                onPluginAddUpdate?.(false, formData)
-              }}>
-              <FormikForm>
-                <Layout.Vertical flex={{ alignItems: 'flex-start' }} height="100%">
-                  <Layout.Vertical width="100%">
-                    {Object.keys(inputs).map((field: string) => {
-                      const fieldType = get(inputs, `${field}.type`, '') as 'string'
-                      return renderPluginFormField({ name: field, type: fieldType })
-                    })}
-                  </Layout.Vertical>
-                  <Button variation={ButtonVariation.PRIMARY} text={getString('addLabel')} type="submit" />
+          ) : (
+            <></>
+          )}
+        </Layout.Horizontal>
+        <Container className={css.form}>
+          <Formik
+            initialValues={{}}
+            onSubmit={formData => {
+              onPluginAddUpdate?.(false, formData)
+            }}>
+            <FormikForm>
+              <Layout.Vertical flex={{ alignItems: 'flex-start' }} height="100%">
+                <Layout.Vertical width="100%">
+                  {Object.keys(inputs).map((field: string) => {
+                    const fieldType = get(inputs, `${field}.type`, '') as 'string'
+                    return renderPluginFormField({ name: field, type: fieldType })
+                  })}
                 </Layout.Vertical>
-              </FormikForm>
-            </Formik>
-          </Container>
-        </Layout.Vertical>
-      )
-    }
-    return <></>
-  }, [plugin])
+                <Button variation={ButtonVariation.PRIMARY} text={getString('addLabel')} type="submit" />
+              </Layout.Vertical>
+            </FormikForm>
+          </Formik>
+        </Container>
+      </Layout.Vertical>
+    )
+  }, [plugin, category])
 
   const renderPluginsPanel = useCallback((): JSX.Element => {
     switch (panelView) {
@@ -251,7 +261,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
       default:
         return <></>
     }
-  }, [loading, plugins, panelView])
+  }, [loading, plugins, panelView, category])
 
   return (
     <Container className={css.main}>

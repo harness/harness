@@ -323,6 +323,7 @@ export interface StringsMap {
   'pipelines.enterPipelineName': string
   'pipelines.enterYAMLPath': string
   'pipelines.failedToCreatePipeline': string
+  'pipelines.failedToRunPipeline': string
   'pipelines.name': string
   'pipelines.newPipelineButton': string
   'pipelines.noData': string
@@ -330,6 +331,7 @@ export interface StringsMap {
   'pipelines.saveAndRun': string
   'pipelines.yamlPath': string
   'plugins.addAPlugin': string
+  'plugins.stepLabel': string
   'plugins.title': string
   'pr.ableToMerge': string
   'pr.addDescription': string
