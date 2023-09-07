@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
@@ -38,6 +39,12 @@ import (
 	"github.com/harness/gitness/internal/bootstrap"
 	events3 "github.com/harness/gitness/internal/events/git"
 	events2 "github.com/harness/gitness/internal/events/pullreq"
+	"github.com/harness/gitness/internal/pipeline/commit"
+	"github.com/harness/gitness/internal/pipeline/file"
+	"github.com/harness/gitness/internal/pipeline/manager"
+	"github.com/harness/gitness/internal/pipeline/runner"
+	"github.com/harness/gitness/internal/pipeline/scheduler"
+	"github.com/harness/gitness/internal/pipeline/triggerer"
 	"github.com/harness/gitness/internal/router"
 	server2 "github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
@@ -99,8 +106,21 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, pipelineStore, principalStore, gitrpcInterface)
 	executionStore := database.ProvideExecutionStore(db)
+	commitService := commit.ProvideCommitService(gitrpcInterface)
 	stageStore := database.ProvideStageStore(db)
-	executionController := execution.ProvideController(db, authorizer, executionStore, repoStore, stageStore, pipelineStore)
+	fileService := file.ProvideFileService(gitrpcInterface)
+	lockConfig := server.ProvideLockConfig(config)
+	universalClient, err := server.ProvideRedis(config)
+	if err != nil {
+		return nil, err
+	}
+	mutexManager := lock.ProvideMutexManager(lockConfig, universalClient)
+	schedulerScheduler, err := scheduler.ProvideScheduler(stageStore, mutexManager)
+	if err != nil {
+		return nil, err
+	}
+	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, stageStore, db, pipelineStore, fileService, schedulerScheduler, repoStore)
+	executionController := execution.ProvideController(db, authorizer, executionStore, commitService, triggererTriggerer, repoStore, stageStore, pipelineStore)
 	stepStore := database.ProvideStepStore(db)
 	logStore := logs.ProvideLogStore(db, config)
 	logStream := livelog.ProvideLogStream(config)
@@ -130,10 +150,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	universalClient, err := server.ProvideRedis(config)
-	if err != nil {
-		return nil, err
-	}
 	eventsSystem, err := events.ProvideSystem(eventsConfig, universalClient)
 	if err != nil {
 		return nil, err
@@ -142,8 +158,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	lockConfig := server.ProvideLockConfig(config)
-	mutexManager := lock.ProvideMutexManager(lockConfig, universalClient)
 	migrator := codecomments.ProvideMigrator(gitrpcInterface)
 	pullreqController := pullreq.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface, reporter, mutexManager, migrator)
 	webhookConfig, err := server.ProvideWebhookConfig()
@@ -180,6 +194,13 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(config, apiHandler, gitHandler, webHandler)
 	serverServer := server2.ProvideServer(config, routerRouter)
+	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, fileService, logStore, logStream, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore)
+	client := manager.ProvideExecutionClient(executionManager, config)
+	runtimeRunner, err := runner.ProvideExecutionRunner(config, client, executionManager)
+	if err != nil {
+		return nil, err
+	}
+	poller := runner.ProvideExecutionPoller(runtimeRunner, config, client)
 	serverConfig, err := server.ProvideGitRPCServerConfig()
 	if err != nil {
 		return nil, err
@@ -194,7 +215,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	manager := cron.ProvideManager(serverConfig)
+	cronManager := cron.ProvideManager(serverConfig)
 	repoGitInfoView := database.ProvideRepoGitInfoView(db)
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
 	pubsubConfig := pubsub.ProvideConfig(config)
@@ -205,11 +226,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	jobStore := database.ProvideJobStore(db)
 	executor := job.ProvideExecutor(jobStore, pubSub)
-	scheduler, err := job.ProvideScheduler(jobStore, executor, mutexManager, pubSub, config)
+	jobScheduler, err := job.ProvideScheduler(jobStore, executor, mutexManager, pubSub, config)
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, executor, scheduler)
-	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, grpcServer, manager, servicesServices)
+	servicesServices := services.ProvideServices(webhookService, pullreqService, executor, jobScheduler)
+	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, poller, grpcServer, cronManager, servicesServices)
 	return serverSystem, nil
 }

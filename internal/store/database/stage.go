@@ -6,8 +6,11 @@ package database
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/harness/gitness/internal/store"
+	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -22,6 +25,7 @@ const (
 	stageColumns = `
 	stage_id
 	,stage_execution_id
+	,stage_repo_id
 	,stage_number
 	,stage_name
 	,stage_kind
@@ -45,37 +49,39 @@ const (
 	,stage_on_success
 	,stage_on_failure
 	,stage_depends_on
-	,stage_labels	
+	,stage_labels
 	`
 )
 
 type stage struct {
-	ID          int64              `db:"stage_id"`
-	ExecutionID int64              `db:"stage_execution_id"`
-	Number      int64              `db:"stage_number"`
-	Name        string             `db:"stage_name"`
-	Kind        string             `db:"stage_kind"`
-	Type        string             `db:"stage_type"`
-	Status      string             `db:"stage_status"`
-	Error       string             `db:"stage_error"`
-	ErrIgnore   bool               `db:"stage_errignore"`
-	ExitCode    int                `db:"stage_exit_code"`
-	Machine     string             `db:"stage_machine"`
-	OS          string             `db:"stage_os"`
-	Arch        string             `db:"stage_arch"`
-	Variant     string             `db:"stage_variant"`
-	Kernel      string             `db:"stage_kernel"`
-	Limit       int                `db:"stage_limit"`
-	LimitRepo   int                `db:"stage_limit_repo"`
-	Started     int64              `db:"stage_started"`
-	Stopped     int64              `db:"stage_stopped"`
-	Created     int64              `db:"stage_created"`
-	Updated     int64              `db:"stage_updated"`
-	Version     int64              `db:"stage_version"`
-	OnSuccess   bool               `db:"stage_on_success"`
-	OnFailure   bool               `db:"stage_on_failure"`
-	DependsOn   sqlxtypes.JSONText `db:"stage_depends_on"`
-	Labels      sqlxtypes.JSONText `db:"stage_labels"`
+	ID            int64              `db:"stage_id"`
+	ExecutionID   int64              `db:"stage_execution_id"`
+	RepoID        int64              `db:"stage_repo_id"`
+	Number        int64              `db:"stage_number"`
+	Name          string             `db:"stage_name"`
+	Kind          string             `db:"stage_kind"`
+	Type          string             `db:"stage_type"`
+	Status        string             `db:"stage_status"`
+	Error         string             `db:"stage_error"`
+	ParentGroupID int64              `db:"stage_parent_group_id"`
+	ErrIgnore     bool               `db:"stage_errignore"`
+	ExitCode      int                `db:"stage_exit_code"`
+	Machine       string             `db:"stage_machine"`
+	OS            string             `db:"stage_os"`
+	Arch          string             `db:"stage_arch"`
+	Variant       string             `db:"stage_variant"`
+	Kernel        string             `db:"stage_kernel"`
+	Limit         int                `db:"stage_limit"`
+	LimitRepo     int                `db:"stage_limit_repo"`
+	Started       int64              `db:"stage_started"`
+	Stopped       int64              `db:"stage_stopped"`
+	Created       int64              `db:"stage_created"`
+	Updated       int64              `db:"stage_updated"`
+	Version       int64              `db:"stage_version"`
+	OnSuccess     bool               `db:"stage_on_success"`
+	OnFailure     bool               `db:"stage_on_failure"`
+	DependsOn     sqlxtypes.JSONText `db:"stage_depends_on"`
+	Labels        sqlxtypes.JSONText `db:"stage_labels"`
 }
 
 // NewStageStore returns a new StageStore.
@@ -102,6 +108,80 @@ func (s *stageStore) FindByNumber(ctx context.Context, executionID int64, stageN
 		return nil, database.ProcessSQLErrorf(err, "Failed to find stage")
 	}
 	return mapInternalToStage(dst)
+}
+
+// Create adds a stage in the database.
+func (s *stageStore) Create(ctx context.Context, st *types.Stage) error {
+	const stageInsertStmt = `
+		INSERT INTO stages (
+			stage_execution_id
+			,stage_repo_id
+			,stage_number
+			,stage_name
+			,stage_kind
+			,stage_type
+			,stage_status
+			,stage_error
+			,stage_errignore
+			,stage_exit_code
+			,stage_machine
+			,stage_parent_group_id
+			,stage_os
+			,stage_arch
+			,stage_variant
+			,stage_kernel
+			,stage_limit
+			,stage_limit_repo
+			,stage_started
+			,stage_stopped
+			,stage_created
+			,stage_updated
+			,stage_version
+			,stage_on_success
+			,stage_on_failure
+			,stage_depends_on
+			,stage_labels
+		) VALUES (
+			:stage_execution_id
+			,:stage_repo_id
+			,:stage_number
+			,:stage_name
+			,:stage_kind
+			,:stage_type
+			,:stage_status
+			,:stage_error
+			,:stage_errignore
+			,:stage_exit_code
+			,:stage_machine
+			,:stage_parent_group_id
+			,:stage_os
+			,:stage_arch
+			,:stage_variant
+			,:stage_kernel
+			,:stage_limit
+			,:stage_limit_repo
+			,:stage_started
+			,:stage_stopped
+			,:stage_created
+			,:stage_updated
+			,:stage_version
+			,:stage_on_success
+			,:stage_on_failure
+			,:stage_depends_on
+			,:stage_labels
+
+		) RETURNING stage_id`
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	stage := mapStageToInternal(st)
+	query, arg, err := db.BindNamed(stageInsertStmt, stage)
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "Failed to bind stage object")
+	}
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&stage.ID); err != nil {
+		return database.ProcessSQLErrorf(err, "Stage query failed")
+	}
+	return nil
 }
 
 // ListWithSteps returns a stage with information about all its containing steps.
@@ -152,9 +232,79 @@ func (s *stageStore) ListIncomplete(ctx context.Context) ([]*types.Stage, error)
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := []*stage{}
-	if err := db.GetContext(ctx, dst, queryListIncomplete); err != nil {
+	if err := db.SelectContext(ctx, &dst, queryListIncomplete); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find incomplete stages")
 	}
 	// map stages list
 	return mapInternalToStageList(dst)
+}
+
+// List returns a list of stages corresponding to an execution ID.
+func (s *stageStore) List(ctx context.Context, executionID int64) ([]*types.Stage, error) {
+	const queryList = `
+	SELECT` + stageColumns + `
+	FROM stages
+	WHERE stage_execution_id = $1
+	ORDER BY stage_number ASC
+	`
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*stage{}
+	if err := db.SelectContext(ctx, &dst, queryList, executionID); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed to find stages")
+	}
+	// map stages list
+	return mapInternalToStageList(dst)
+}
+
+// Update tries to update a stage in the datastore and returns a locking error
+// if it was unable to do so.
+func (s *stageStore) Update(ctx context.Context, st *types.Stage) error {
+	const stageUpdateStmt = `
+	UPDATE stages
+	SET
+		stage_status = :stage_status
+		,stage_machine = :stage_machine
+		,stage_updated = :stage_updated
+		,stage_version = :stage_version
+		,stage_error = :stage_error
+	WHERE stage_id = :stage_id AND stage_version = :stage_version - 1`
+	updatedAt := time.Now()
+	steps := st.Steps
+
+	stage := mapStageToInternal(st)
+
+	stage.Version++
+	stage.Updated = updatedAt.UnixMilli()
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(stageUpdateStmt, stage)
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "Failed to bind stage object")
+	}
+
+	result, err := db.ExecContext(ctx, query, arg...)
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "Failed to update stage")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+	}
+
+	if count == 0 {
+		return gitness_store.ErrVersionConflict
+	}
+
+	m, err := mapInternalToStage(stage)
+	if err != nil {
+		return fmt.Errorf("Could not map stage object: %w", err)
+	}
+	*st = *m
+	st.Version = stage.Version
+	st.Updated = stage.Updated
+	st.Steps = steps // steps is not mapped in database.
+	return nil
 }

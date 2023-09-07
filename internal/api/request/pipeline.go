@@ -16,6 +16,7 @@ const (
 	PathParamStepNumber      = "step_number"
 	PathParamTriggerUID      = "trigger_uid"
 	QueryParamLatest         = "latest"
+	QueryParamBranch         = "branch"
 )
 
 func GetPipelineUIDFromPath(r *http.Request) (string, error) {
@@ -26,6 +27,10 @@ func GetPipelineUIDFromPath(r *http.Request) (string, error) {
 
 	// paths are unescaped
 	return url.PathUnescape(rawRef)
+}
+
+func GetBranchFromQuery(r *http.Request) string {
+	return QueryParamOrDefault(r, QueryParamBranch, "")
 }
 
 func GetExecutionNumberFromPath(r *http.Request) (int64, error) {

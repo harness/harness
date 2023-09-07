@@ -5,12 +5,14 @@
 package logs
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
-	"io"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -22,7 +24,7 @@ func (c *Controller) Find(
 	executionNum int64,
 	stageNum int,
 	stepNum int,
-) (io.ReadCloser, error) {
+) ([]*livelog.Line, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
@@ -37,7 +39,7 @@ func (c *Controller) Find(
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
 
-	execution, err := c.executionStore.Find(ctx, pipeline.ID, executionNum)
+	execution, err := c.executionStore.FindByNumber(ctx, pipeline.ID, executionNum)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find execution: %w", err)
 	}
@@ -52,5 +54,20 @@ func (c *Controller) Find(
 		return nil, fmt.Errorf("failed to find step: %w", err)
 	}
 
-	return c.logStore.Find(ctx, step.ID)
+	rc, err := c.logStore.Find(ctx, step.ID)
+	if err != nil {
+		return nil, fmt.Errorf("could not find logs: %w", err)
+	}
+	defer rc.Close()
+
+	lines := []*livelog.Line{}
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(rc)
+
+	err = json.Unmarshal(buf.Bytes(), &lines)
+	if err != nil {
+		return nil, fmt.Errorf("could not unmarshal logs: %w", err)
+	}
+
+	return lines, nil
 }
