@@ -9,7 +9,11 @@ import { routes } from 'RouteDefinitions'
  * Mostly, the implementation of this function is just a redirection to signin page.
  */
 export function handle401() {
-  window.location.href = window.location.origin + routes.toSignIn()
+  const signinUrl = window.location.origin + routes.toSignIn()
+
+  if (window.location.href !== signinUrl) {
+    window.location.href = signinUrl
+  }
 }
 
 /**
