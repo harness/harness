@@ -15,9 +15,12 @@ import type { CODEProps } from 'RouteDefinitions'
 import { getErrorMessage } from 'utils/Utils'
 import pipelineSchema from './schema/pipeline-schema.json'
 
-import css from './NewPipeline.module.scss'
+import css from './AddUpdatePipeline.module.scss'
 
-const NewPipeline = (): JSX.Element => {
+const starterPipelineAsString =
+  'stages:\n- type: ci\n  spec:\n    steps:\n    - type: script\n      spec:\n        run: echo hello world'
+
+const AddUpdatePipeline = (): JSX.Element => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const { pipeline } = useParams<CODEProps>()
@@ -87,9 +90,7 @@ const NewPipeline = (): JSX.Element => {
               <MonacoSourceCodeEditor
                 language={'yaml'}
                 schema={pipelineSchema}
-                source={
-                  'stages:\n- type: ci\n  spec:\n    steps:\n    - type: script\n      spec:\n        run: echo hello world'
-                }
+                source={starterPipelineAsString}
                 onChange={(value: string) => setPipelineAsYaml(value)}
               />
             </Container>
@@ -103,4 +104,4 @@ const NewPipeline = (): JSX.Element => {
   )
 }
 
-export default NewPipeline
+export default AddUpdatePipeline
