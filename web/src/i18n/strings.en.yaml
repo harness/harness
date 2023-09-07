@@ -488,6 +488,7 @@ showCommitHistory: Renamed from {file} - Show History
 noReviewers: No Reviewers
 assignPeople: Assign people
 add: Add +
+addLabel: Add
 users: Users
 findAUser: Find a user
 reviewerNotFound: 'Reviewer <strong>{{reviewer}}</strong> not found.'
@@ -655,3 +656,4 @@ userUpdateSuccess: 'User updated successfully'
 run: Run
 plugins:
   title: Plugins
+  addAPlugin: Add a {{category}} plugin

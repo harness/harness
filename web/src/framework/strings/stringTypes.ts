@@ -11,6 +11,7 @@ export interface StringsMap {
   add: string
   addComment: string
   addGitIgnore: string
+  addLabel: string
   addLicense: string
   addMember: string
   addNewFile: string
@@ -328,6 +329,7 @@ export interface StringsMap {
   'pipelines.run': string
   'pipelines.saveAndRun': string
   'pipelines.yamlPath': string
+  'plugins.addAPlugin': string
   'plugins.title': string
   'pr.ableToMerge': string
   'pr.addDescription': string
