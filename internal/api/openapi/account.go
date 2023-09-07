@@ -7,12 +7,29 @@ package openapi
 import (
 	"net/http"
 
+	"github.com/gotidy/ptr"
 	"github.com/harness/gitness/internal/api/controller/user"
+	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/types"
 
 	"github.com/swaggest/openapi-go/openapi3"
 )
+
+var queryParameterIncludeCookie = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamIncludeCookie,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("If set to true the token is also returned as a cookie."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeBoolean),
+				Default: ptrptr(false),
+			},
+		},
+	},
+}
 
 // request to login to an account.
 type loginRequest struct {
@@ -29,6 +46,7 @@ type registerRequest struct {
 func buildAccount(reflector *openapi3.Reflector) {
 	onLogin := openapi3.Operation{}
 	onLogin.WithTags("account")
+	onLogin.WithParameters(queryParameterIncludeCookie)
 	onLogin.WithMapOfAnything(map[string]interface{}{"operationId": "onLogin"})
 	_ = reflector.SetRequest(&onLogin, new(loginRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&onLogin, new(types.TokenResponse), http.StatusOK)
@@ -49,6 +67,7 @@ func buildAccount(reflector *openapi3.Reflector) {
 
 	onRegister := openapi3.Operation{}
 	onRegister.WithTags("account")
+	onRegister.WithParameters(queryParameterIncludeCookie)
 	onRegister.WithMapOfAnything(map[string]interface{}{"operationId": "onRegister"})
 	_ = reflector.SetRequest(&onRegister, new(registerRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&onRegister, new(types.TokenResponse), http.StatusOK)

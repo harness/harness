@@ -411,6 +411,14 @@ paths:
   /login:
     post:
       operationId: onLogin
+      parameters:
+        - description: If set to true the token is also returned as a cookie.
+          in: query
+          name: include_cookie
+          required: false
+          schema:
+            default: false
+            type: boolean
       requestBody:
         content:
           application/json:
@@ -609,6 +617,14 @@ paths:
   /register:
     post:
       operationId: onRegister
+      parameters:
+        - description: If set to true the token is also returned as a cookie.
+          in: query
+          name: include_cookie
+          required: false
+          schema:
+            default: false
+            type: boolean
       requestBody:
         content:
           application/json:

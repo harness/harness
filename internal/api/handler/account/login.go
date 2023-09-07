@@ -20,8 +20,14 @@ func HandleLogin(userCtrl *user.Controller) http.HandlerFunc {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
+		includeCookie, err := request.GetIncludeCookieFromQueryOrDefault(r, false)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
 		in := new(user.LoginInput)
-		err := json.NewDecoder(r.Body).Decode(in)
+		err = json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
@@ -31,6 +37,10 @@ func HandleLogin(userCtrl *user.Controller) http.HandlerFunc {
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
+		}
+
+		if includeCookie {
+			includeTokenCookie(r, w, tokenResponse)
 		}
 
 		render.JSON(w, http.StatusOK, tokenResponse)

@@ -41,23 +41,19 @@ func performAuthentication(
 			log := hlog.FromRequest(r)
 
 			session, err := authenticator.Authenticate(r, sourceRouter)
+			if err != nil {
+				if !errors.Is(err, authn.ErrNoAuthData) {
+					// log error to help with investigating any auth related errors
+					log.Warn().Err(err).Msg("authentication failed")
+				}
 
-			if errors.Is(err, authn.ErrNoAuthData) {
 				if required {
 					render.Unauthorized(w)
 					return
 				}
 
-				// if there was no auth data in the request - continue as is
+				// if there was no (valid) auth data in the request, then continue without session
 				next.ServeHTTP(w, r)
-				return
-			}
-
-			if err != nil {
-				log.Warn().Msgf("Failed to authenticate request: %s", err)
-
-				// for any other error we fail
-				render.Unauthorized(w)
 				return
 			}
 
