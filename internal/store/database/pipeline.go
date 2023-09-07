@@ -211,6 +211,8 @@ func (s *pipelineStore) ListLatest(
 	,execution_status
 	,execution_error
 	,execution_link
+	,execution_message
+	,execution_after
 	,execution_timestamp
 	,execution_title
 	,execution_author

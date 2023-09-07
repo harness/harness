@@ -5,7 +5,6 @@
 package logs
 
 import (
-	"io"
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/logs"
@@ -42,16 +41,14 @@ func HandleFind(logCtrl *logs.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		rc, err := logCtrl.Find(
+		lines, err := logCtrl.Find(
 			ctx, session, repoRef, pipelineUID,
 			executionNum, int(stageNum), int(stepNum))
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		defer rc.Close()
 
-		w.Header().Set("Content-Type", "text/plain")
-		io.Copy(w, rc)
+		render.JSON(w, http.StatusOK, lines)
 	}
 }

@@ -69,7 +69,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
       selectSpace(data, false)
       refetch()
     }
-  }, [data])
+  }, [data, refetch, selectSpace, space])
 
   useEffect(() => {
     if (space && !selectedSpace && data) {
@@ -81,7 +81,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
     if (response?.status === 403) {
       history.push(routes.toSignIn())
     }
-  }, [response, history])
+  }, [response, history, routes])
 
   useShowRequestError(error)
   const NewSpaceButton = (

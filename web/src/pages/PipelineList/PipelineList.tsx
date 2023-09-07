@@ -212,7 +212,7 @@ const PipelineList = () => {
         }
       }
     ],
-    [getString, searchTerm]
+    [getString, repoMetadata?.path, routes, searchTerm]
   )
 
   return (

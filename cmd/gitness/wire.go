@@ -40,6 +40,12 @@ import (
 	"github.com/harness/gitness/internal/bootstrap"
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
+	"github.com/harness/gitness/internal/pipeline/commit"
+	"github.com/harness/gitness/internal/pipeline/file"
+	"github.com/harness/gitness/internal/pipeline/manager"
+	"github.com/harness/gitness/internal/pipeline/runner"
+	"github.com/harness/gitness/internal/pipeline/scheduler"
+	"github.com/harness/gitness/internal/pipeline/triggerer"
 	"github.com/harness/gitness/internal/router"
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
@@ -114,6 +120,12 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		secret.WireSet,
 		connector.WireSet,
 		template.WireSet,
+		manager.WireSet,
+		triggerer.WireSet,
+		file.WireSet,
+		runner.WireSet,
+		scheduler.WireSet,
+		commit.WireSet,
 		trigger.WireSet,
 		plugin.WireSet,
 	)

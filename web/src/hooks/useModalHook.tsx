@@ -32,7 +32,7 @@ const ModalRoot: Unknown = memo(({ modals, container, component: RootComponent =
 
   useEffect(() => {
     setMountNode(container || document.body)
-  }, [])
+  }, [container])
 
   return mountNode
     ? ReactDOM.createPortal(

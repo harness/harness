@@ -18,15 +18,12 @@ import AuthLayout from 'components/AuthLayout/AuthLayout'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage, type RegisterForm } from 'utils/Utils'
 import { useOnRegister } from 'services/code'
-import { useAPIToken } from 'hooks/useAPIToken'
 import css from './SignUp.module.scss'
 
-// Renders the Register page.
 export const SignUp: React.FC = () => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
-  const [, setToken] = useAPIToken()
 
   const { mutate } = useOnRegister({})
   const onRegister = useCallback(
@@ -42,8 +39,7 @@ export const SignUp: React.FC = () => {
           headers: { Authorization: '' }
         }
       )
-        .then(result => {
-          setToken(result.access_token as string)
+        .then(() => {
           showSuccess(getString('userCreated'))
           window.location.replace(window.location.origin + routes.toCODEHome())
         })
@@ -51,7 +47,7 @@ export const SignUp: React.FC = () => {
           showError(getErrorMessage(error))
         })
     },
-    [mutate, setToken, showSuccess, showError, getString]
+    [mutate, showSuccess, showError, getString, routes]
   )
 
   const handleSubmit = (data: RegisterForm): void => {

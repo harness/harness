@@ -6,8 +6,10 @@ package database
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/internal/store"
+	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
@@ -39,21 +41,22 @@ const (
 )
 
 type step struct {
-	ID        int64              `db:"step_id"`
-	StageID   int64              `db:"step_stage_id"`
-	Number    int64              `db:"step_number"`
-	Name      string             `db:"step_name"`
-	Status    string             `db:"step_status"`
-	Error     string             `db:"step_error"`
-	ErrIgnore bool               `db:"step_errignore"`
-	ExitCode  int                `db:"step_exit_code"`
-	Started   int64              `db:"step_started"`
-	Stopped   int64              `db:"step_stopped"`
-	Version   int64              `db:"step_version"`
-	DependsOn sqlxtypes.JSONText `db:"step_depends_on"`
-	Image     string             `db:"step_image"`
-	Detached  bool               `db:"step_detached"`
-	Schema    string             `db:"step_schema"`
+	ID            int64              `db:"step_id"`
+	StageID       int64              `db:"step_stage_id"`
+	Number        int64              `db:"step_number"`
+	ParentGroupID int64              `db:"step_parent_group_id"`
+	Name          string             `db:"step_name"`
+	Status        string             `db:"step_status"`
+	Error         string             `db:"step_error"`
+	ErrIgnore     bool               `db:"step_errignore"`
+	ExitCode      int                `db:"step_exit_code"`
+	Started       int64              `db:"step_started"`
+	Stopped       int64              `db:"step_stopped"`
+	Version       int64              `db:"step_version"`
+	DependsOn     sqlxtypes.JSONText `db:"step_depends_on"`
+	Image         string             `db:"step_image"`
+	Detached      bool               `db:"step_detached"`
+	Schema        string             `db:"step_schema"`
 }
 
 // NewStepStore returns a new StepStore.
@@ -80,4 +83,107 @@ func (s *stepStore) FindByNumber(ctx context.Context, stageID int64, stepNum int
 		return nil, database.ProcessSQLErrorf(err, "Failed to find step")
 	}
 	return mapInternalToStep(dst)
+}
+
+// Create creates a step.
+func (s *stepStore) Create(ctx context.Context, step *types.Step) error {
+	const stepInsertStmt = `
+	INSERT INTO steps (
+		step_stage_id
+		,step_number
+		,step_name
+		,step_status
+		,step_error
+		,step_parent_group_id
+		,step_errignore
+		,step_exit_code
+		,step_started
+		,step_stopped
+		,step_version
+		,step_depends_on
+		,step_image
+		,step_detached
+		,step_schema
+	) VALUES (
+		:step_stage_id
+		,:step_number
+		,:step_name
+		,:step_status
+		,:step_error
+		,:step_parent_group_id
+		,:step_errignore
+		,:step_exit_code
+		,:step_started
+		,:step_stopped
+		,:step_version
+		,:step_depends_on
+		,:step_image
+		,:step_detached
+		,:step_schema
+	) RETURNING step_id`
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(stepInsertStmt, mapStepToInternal(step))
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "Failed to bind step object")
+	}
+
+	if err = db.QueryRowContext(ctx, query, arg...).Scan(&step.ID); err != nil {
+		return database.ProcessSQLErrorf(err, "Step query failed")
+	}
+
+	return nil
+}
+
+// Update tries to update a step in the datastore and returns a locking error
+// if it was unable to do so.
+func (s *stepStore) Update(ctx context.Context, e *types.Step) error {
+	const stepUpdateStmt = `
+	UPDATE steps
+	SET
+		step_name = :step_name
+		,step_status = :step_status
+		,step_error = :step_error
+		,step_errignore = :step_errignore
+		,step_exit_code = :step_exit_code
+		,step_started = :step_started
+		,step_stopped = :step_stopped
+		,step_depends_on = :step_depends_on
+		,step_image = :step_image
+		,step_detached = :step_detached
+		,step_schema = :step_schema
+		,step_version = :step_version
+	WHERE step_id = :step_id AND step_version = :step_version - 1`
+	step := mapStepToInternal(e)
+
+	step.Version++
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	query, arg, err := db.BindNamed(stepUpdateStmt, step)
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "Failed to bind step object")
+	}
+
+	result, err := db.ExecContext(ctx, query, arg...)
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "Failed to update step")
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return database.ProcessSQLErrorf(err, "Failed to get number of updated rows")
+	}
+
+	if count == 0 {
+		return gitness_store.ErrVersionConflict
+	}
+
+	m, err := mapInternalToStep(step)
+	if err != nil {
+		return fmt.Errorf("Could not map step object: %w", err)
+	}
+	*e = *m
+	e.Version = step.Version
+	return nil
 }

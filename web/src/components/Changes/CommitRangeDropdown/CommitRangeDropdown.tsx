@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { Divider, PopoverInteractionKind, Position } from '@blueprintjs/core'
 import { Checkbox, Container, FlexExpander, Layout, Popover, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -50,13 +50,13 @@ const CommitRangeDropdown: React.FC<CommitRangeDropdownProps> = ({
   setSelectedCommits
 }) => {
   const { getString } = useStrings()
-  const allCommitsSHA = allCommits.map(commit => commit.sha as string)
+  const allCommitsSHA = useMemo(() => allCommits.map(commit => commit.sha as string), [allCommits])
 
   useEffect(() => {
     if (selectedCommits.length && allCommitsSHA.length) {
       setSelectedCommits(prevVal => getCommitRange(prevVal, allCommitsSHA))
     }
-  }, [JSON.stringify(allCommitsSHA)])
+  }, [allCommitsSHA, setSelectedCommits, selectedCommits.length])
 
   const handleCheckboxClick = (
     event: React.MouseEvent<HTMLInputElement | HTMLDivElement, MouseEvent>,

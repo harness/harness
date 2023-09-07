@@ -7,6 +7,7 @@ package types
 type Stage struct {
 	ID          int64             `json:"-"`
 	ExecutionID int64             `json:"execution_id"`
+	RepoID      int64             `json:"repo_id"`
 	Number      int64             `json:"number"`
 	Name        string            `json:"name"`
 	Kind        string            `json:"kind,omitempty"`
@@ -29,7 +30,7 @@ type Stage struct {
 	Version     int64             `json:"-"`
 	OnSuccess   bool              `json:"on_success"`
 	OnFailure   bool              `json:"on_failure"`
-	DependsOn   []string          `json:"depends_on"`
+	DependsOn   []string          `json:"depends_on,omitempty"`
 	Labels      map[string]string `json:"labels,omitempty"`
 	Steps       []*Step           `json:"steps,omitempty"`
 }

@@ -34,7 +34,8 @@ func (c *Controller) Find(
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
 	}
-	execution, err := c.executionStore.Find(ctx, pipeline.ID, executionNum)
+
+	execution, err := c.executionStore.FindByNumber(ctx, pipeline.ID, executionNum)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find execution %d: %w", executionNum, err)
 	}

@@ -18,5 +18,6 @@ func ProvideURLProvider(config *types.Config) (*Provider, error) {
 		config.URL.API,
 		config.URL.APIInternal,
 		config.URL.Git,
+		config.URL.CIURL,
 	)
 }

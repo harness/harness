@@ -7,42 +7,44 @@ import { useStrings } from 'framework/strings'
 import { useOnLogin } from 'services/code'
 import AuthLayout from 'components/AuthLayout/AuthLayout'
 import { useAppContext } from 'AppContext'
-import { useAPIToken } from 'hooks/useAPIToken'
 import { getErrorMessage, type LoginForm } from 'utils/Utils'
 import css from './SignIn.module.scss'
 
 export const SignIn: React.FC = () => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
-  const [, setToken] = useAPIToken()
-  const { mutate } = useOnLogin({})
+  const { mutate } = useOnLogin({
+    queryParams: {
+      include_cookie: true
+    }
+  })
   const { showError } = useToaster()
-
   const onLogin = useCallback(
-    (data: LoginForm) => {
+    ({ username, password }: LoginForm) => {
       mutate(
-        { login_identifier: data.username, password: data.password },
+        { login_identifier: username, password },
         {
           headers: { Authorization: '' }
         }
       )
-        .then(result => {
-          setToken(result.access_token as string)
+        .then(() => {
           window.location.replace(window.location.origin + routes.toCODEHome())
         })
-
         .catch(error => {
           showError(getErrorMessage(error))
         })
     },
-    [mutate, setToken, showError]
+    [mutate, showError, routes]
+  )
+  const onSubmit = useCallback(
+    (data: LoginForm): void => {
+      if (data.username && data.password) {
+        onLogin(data)
+      }
+    },
+    [onLogin]
   )
 
-  const handleSubmit = (data: LoginForm): void => {
-    if (data.username && data.password) {
-      onLogin(data)
-    }
-  }
   return (
     <AuthLayout>
       <Container className={css.signInContainer}>
@@ -54,10 +56,9 @@ export const SignIn: React.FC = () => {
           <Formik<LoginForm>
             initialValues={{ username: '', password: '' }}
             formName="loginPageForm"
-            onSubmit={handleSubmit}
+            onSubmit={onSubmit}
             validationSchema={Yup.object().shape({
               username: Yup.string().required(getString('userNameRequired')),
-
               password: Yup.string().required(getString('passwordRequired'))
             })}>
             <FormikForm>

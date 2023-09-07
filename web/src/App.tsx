@@ -9,7 +9,6 @@ import { AppContextProvider, defaultCurrentUser } from 'AppContext'
 import type { AppProps } from 'AppProps'
 import { buildResfulReactRequestOptions, handle401 } from 'AppUtils'
 import { RouteDestinations } from 'RouteDestinations'
-import { useAPIToken } from 'hooks/useAPIToken'
 import { routes as _routes } from 'RouteDefinitions'
 import { getConfig } from 'services/config'
 import { ModalProvider } from 'hooks/useModalHook'
@@ -33,10 +32,9 @@ const App: React.FC<AppProps> = React.memo(function App({
   currentUserProfileURL = ''
 }: AppProps) {
   const [strings, setStrings] = useState<LanguageRecord>()
-  const [token] = useAPIToken()
   const getRequestOptions = useCallback(
-    (): Partial<RequestInit> => buildResfulReactRequestOptions(hooks?.useGetToken?.() || token),
-    [token, hooks]
+    (): Partial<RequestInit> => buildResfulReactRequestOptions(hooks?.useGetToken?.() || ''),
+    [hooks]
   )
   const routingId = useMemo(() => (standalone ? '' : space.split('/').shift() || ''), [standalone, space])
   const queryParams = useMemo(() => (!standalone ? { routingId } : {}), [standalone, routingId])

@@ -113,8 +113,23 @@ const (
 	`
 )
 
-// Find returns an execution given a pipeline ID and an execution number.
-func (s *executionStore) Find(ctx context.Context, pipelineID int64, executionNum int64) (*types.Execution, error) {
+// Find returns an execution given an execution ID.
+func (s *executionStore) Find(ctx context.Context, id int64) (*types.Execution, error) {
+	const findQueryStmt = `
+	SELECT` + executionColumns + `
+	FROM executions
+	WHERE execution_id = $1`
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := new(execution)
+	if err := db.GetContext(ctx, dst, findQueryStmt, id); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed to find execution")
+	}
+	return mapInternalToExecution(dst)
+}
+
+// FindByNumber returns an execution given a pipeline ID and an execution number.
+func (s *executionStore) FindByNumber(ctx context.Context, pipelineID int64, executionNum int64) (*types.Execution, error) {
 	const findQueryStmt = `
 	SELECT` + executionColumns + `
 	FROM executions
@@ -230,6 +245,7 @@ func (s *executionStore) Update(ctx context.Context, e *types.Execution) error {
 		,execution_version = :execution_version
 	WHERE execution_id = :execution_id AND execution_version = :execution_version - 1`
 	updatedAt := time.Now()
+	stages := e.Stages
 
 	execution := mapExecutionToInternal(e)
 
@@ -264,6 +280,7 @@ func (s *executionStore) Update(ctx context.Context, e *types.Execution) error {
 	*e = *m
 	e.Version = execution.Version
 	e.Updated = execution.Updated
+	e.Stages = stages // stages are not mapped in database.
 	return nil
 }
 
@@ -287,7 +304,7 @@ func (s *executionStore) UpdateOptLock(ctx context.Context,
 			return nil, err
 		}
 
-		execution, err = s.Find(ctx, execution.PipelineID, execution.Number)
+		execution, err = s.FindByNumber(ctx, execution.PipelineID, execution.Number)
 		if err != nil {
 			return nil, err
 		}

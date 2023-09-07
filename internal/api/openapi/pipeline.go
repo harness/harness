@@ -7,14 +7,15 @@ package openapi
 import (
 	"net/http"
 
-	"github.com/gotidy/ptr"
 	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/controller/trigger"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
+	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
 
+	"github.com/gotidy/ptr"
 	"github.com/swaggest/openapi-go/openapi3"
 )
 
@@ -41,7 +42,6 @@ type logRequest struct {
 
 type createExecutionRequest struct {
 	pipelineRequest
-	execution.CreateInput
 }
 
 type createTriggerRequest struct {
@@ -90,6 +90,20 @@ var queryParameterLatest = openapi3.ParameterOrRef{
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type: ptrSchemaType(openapi3.SchemaTypeBoolean),
+			},
+		},
+	},
+}
+
+var queryParameterBranch = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamBranch,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("Branch to run the execution for."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
 			},
 		},
 	},
@@ -156,6 +170,7 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 
 	executionCreate := openapi3.Operation{}
 	executionCreate.WithTags("pipeline")
+	executionCreate.WithParameters(queryParameterBranch)
 	executionCreate.WithMapOfAnything(map[string]interface{}{"operationId": "createExecution"})
 	_ = reflector.SetRequest(&executionCreate, new(createExecutionRequest), http.MethodPost)
 	_ = reflector.SetJSONResponse(&executionCreate, new(types.Execution), http.StatusCreated)
@@ -282,7 +297,8 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	logView.WithTags("pipeline")
 	logView.WithMapOfAnything(map[string]interface{}{"operationId": "viewLogs"})
 	_ = reflector.SetRequest(&logView, new(logRequest), http.MethodGet)
-	_ = reflector.SetStringResponse(&logView, http.StatusOK, "text/plain")
+	_ = reflector.SetStringResponse(&logView, http.StatusOK, "application/json")
+	_ = reflector.SetJSONResponse(&logView, []*livelog.Line{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&logView, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&logView, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&logView, new(usererror.Error), http.StatusForbidden)

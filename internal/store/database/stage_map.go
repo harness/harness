@@ -7,12 +7,58 @@ package database
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 
 	"github.com/harness/gitness/types"
 
 	sqlxtypes "github.com/jmoiron/sqlx/types"
 	"github.com/pkg/errors"
 )
+
+type nullstep struct {
+	ID            sql.NullInt64      `db:"step_id"`
+	StageID       sql.NullInt64      `db:"step_stage_id"`
+	Number        sql.NullInt64      `db:"step_number"`
+	ParentGroupID sql.NullInt64      `db:"step_parent_group_id"`
+	Name          sql.NullString     `db:"step_name"`
+	Status        sql.NullString     `db:"step_status"`
+	Error         sql.NullString     `db:"step_error"`
+	ErrIgnore     sql.NullBool       `db:"step_errignore"`
+	ExitCode      sql.NullInt64      `db:"step_exit_code"`
+	Started       sql.NullInt64      `db:"step_started"`
+	Stopped       sql.NullInt64      `db:"step_stopped"`
+	Version       sql.NullInt64      `db:"step_version"`
+	DependsOn     sqlxtypes.JSONText `db:"step_depends_on"`
+	Image         sql.NullString     `db:"step_image"`
+	Detached      sql.NullBool       `db:"step_detached"`
+	Schema        sql.NullString     `db:"step_schema"`
+}
+
+// used for join operations where fields may be null
+func convertFromNullStep(nullstep *nullstep) (*types.Step, error) {
+	var dependsOn []string
+	err := json.Unmarshal(nullstep.DependsOn, &dependsOn)
+	if err != nil {
+		return nil, fmt.Errorf("could not unmarshal step.depends_on: %w", err)
+	}
+	return &types.Step{
+		ID:        nullstep.ID.Int64,
+		StageID:   nullstep.StageID.Int64,
+		Number:    nullstep.Number.Int64,
+		Name:      nullstep.Name.String,
+		Status:    nullstep.Status.String,
+		Error:     nullstep.Error.String,
+		ErrIgnore: nullstep.ErrIgnore.Bool,
+		ExitCode:  int(nullstep.ExitCode.Int64),
+		Started:   nullstep.Started.Int64,
+		Stopped:   nullstep.Stopped.Int64,
+		Version:   nullstep.Version.Int64,
+		DependsOn: dependsOn,
+		Image:     nullstep.Image.String,
+		Detached:  nullstep.Detached.Bool,
+		Schema:    nullstep.Schema.String,
+	}, nil
+}
 
 func mapInternalToStage(in *stage) (*types.Stage, error) {
 	var dependsOn []string
@@ -28,6 +74,7 @@ func mapInternalToStage(in *stage) (*types.Stage, error) {
 	return &types.Stage{
 		ID:          in.ID,
 		ExecutionID: in.ExecutionID,
+		RepoID:      in.RepoID,
 		Number:      in.Number,
 		Name:        in.Name,
 		Kind:        in.Kind,
@@ -59,6 +106,7 @@ func mapStageToInternal(in *types.Stage) *stage {
 	return &stage{
 		ID:          in.ID,
 		ExecutionID: in.ExecutionID,
+		RepoID:      in.RepoID,
 		Number:      in.Number,
 		Name:        in.Name,
 		Kind:        in.Kind,
@@ -107,7 +155,7 @@ func scanRowsWithSteps(rows *sql.Rows) ([]*types.Stage, error) {
 	var curr *types.Stage
 	for rows.Next() {
 		stage := new(types.Stage)
-		step := new(types.Step)
+		step := new(nullstep)
 		err := scanRowStep(rows, stage, step)
 		if err != nil {
 			return nil, err
@@ -116,8 +164,12 @@ func scanRowsWithSteps(rows *sql.Rows) ([]*types.Stage, error) {
 			curr = stage
 			stages = append(stages, curr)
 		}
-		if step.ID != 0 {
-			curr.Steps = append(curr.Steps, step)
+		if step.ID.Valid {
+			convertedStep, err := convertFromNullStep(step)
+			if err != nil {
+				return nil, err
+			}
+			curr.Steps = append(curr.Steps, convertedStep)
 		}
 	}
 	return stages, nil
@@ -125,13 +177,14 @@ func scanRowsWithSteps(rows *sql.Rows) ([]*types.Stage, error) {
 
 // helper function scans the sql.Row and copies the column
 // values to the destination object.
-func scanRowStep(rows *sql.Rows, stage *types.Stage, step *types.Step) error {
+func scanRowStep(rows *sql.Rows, stage *types.Stage, step *nullstep) error {
 	depJSON := sqlxtypes.JSONText{}
 	labJSON := sqlxtypes.JSONText{}
 	stepDepJSON := sqlxtypes.JSONText{}
 	err := rows.Scan(
 		&stage.ID,
 		&stage.ExecutionID,
+		&stage.RepoID,
 		&stage.Number,
 		&stage.Name,
 		&stage.Kind,

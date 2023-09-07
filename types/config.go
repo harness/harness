@@ -38,6 +38,12 @@ type Config struct {
 		// (this could be after proxy path / header rewrite).
 		Git string `envconfig:"GITNESS_URL_GIT" default:"http://localhost:3000/git"`
 
+		// CIURL is the endpoint that can be used by running CI container builds to communicate
+		// with gitness (for example while performing a clone on a local repo).
+		// host.docker.internal allows a running container to talk to services exposed on the host
+		// (either running directly or via a port exposed in a docker container).
+		CIURL string `envconfig:"GITNESS_CI_URL_GIT" default:"http://host.docker.internal:3000/git"`
+
 		// API defines the external URL via which the rest API is reachable.
 		// NOTE: for routing to work properly, the request path reaching gitness has to end with `/api`
 		// (this could be after proxy path rewrite).
@@ -65,7 +71,7 @@ type Config struct {
 		// HTTP defines the http configuration parameters
 		HTTP struct {
 			Bind  string `envconfig:"GITNESS_HTTP_BIND" default:":3000"`
-			Proto string `envconfig:"GITNESS_HTTP_PROTO"`
+			Proto string `envconfig:"GITNESS_HTTP_PROTO" default:"http"`
 			Host  string `envconfig:"GITNESS_HTTP_HOST"`
 			// GitHost is the host used to identify git traffic (OPTIONAL).
 			GitHost string `envconfig:"GITNESS_HTTP_GIT_HOST" default:"git.localhost"`
@@ -77,6 +83,11 @@ type Config struct {
 			Endpont string `envconfig:"GITNESS_ACME_ENDPOINT"`
 			Email   bool   `envconfig:"GITNESS_ACME_EMAIL"`
 		}
+	}
+
+	// CI defines configuration related to build executions.
+	CI struct {
+		ParallelWorkers int `envconfig:"GITNESS_CI_PARALLEL_WORKERS" default:"5"`
 	}
 
 	// Database defines the database configuration parameters.
