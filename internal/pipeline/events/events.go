@@ -66,7 +66,11 @@ func (e *event) Subscribe(ctx context.Context, spaceID int64) (<-chan *Event, <-
 			// This should never happen
 			return err
 		}
-		chEvent <- event
+		select {
+		case chEvent <- event:
+		default:
+		}
+
 		return nil
 	}
 	option := pubsub.WithChannelNamespace(format(spaceID))
