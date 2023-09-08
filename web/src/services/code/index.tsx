@@ -108,6 +108,12 @@ export interface GitrpcSignature {
   when?: string
 }
 
+export interface LivelogLine {
+  out?: string
+  pos?: number
+  time?: number
+}
+
 export interface OpenapiAdminUsersCreateRequest {
   display_name?: string
   email?: string
@@ -177,10 +183,6 @@ export interface OpenapiCreateConnectorRequest {
   space_ref?: string
   type?: string
   uid?: string
-}
-
-export interface OpenapiCreateExecutionRequest {
-  status?: string
 }
 
 export interface OpenapiCreatePathRequest {
@@ -790,7 +792,7 @@ export interface TypesSpace {
 
 export interface TypesStage {
   arch?: string
-  depends_on?: string[] | null
+  depends_on?: string[]
   errignore?: boolean
   error?: string
   execution_id?: number
@@ -807,6 +809,7 @@ export interface TypesStage {
   on_failure?: boolean
   on_success?: boolean
   os?: string
+  repo_id?: number
   started?: number
   status?: string
   steps?: TypesStep[]
@@ -817,7 +820,7 @@ export interface TypesStage {
 }
 
 export interface TypesStep {
-  depends_on?: string[] | null
+  depends_on?: string[]
   detached?: boolean
   errignore?: boolean
   error?: string
@@ -2459,19 +2462,26 @@ export const useListExecutions = ({ repo_ref, pipeline_uid, ...props }: UseListE
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid }, ...props }
   )
 
+export interface CreateExecutionQueryParams {
+  /**
+   * Branch to run the execution for.
+   */
+  branch?: string
+}
+
 export interface CreateExecutionPathParams {
   repo_ref: string
   pipeline_uid: string
 }
 
 export type CreateExecutionProps = Omit<
-  MutateProps<TypesExecution, UsererrorError, void, OpenapiCreateExecutionRequest, CreateExecutionPathParams>,
+  MutateProps<TypesExecution, UsererrorError, CreateExecutionQueryParams, void, CreateExecutionPathParams>,
   'path' | 'verb'
 > &
   CreateExecutionPathParams
 
 export const CreateExecution = ({ repo_ref, pipeline_uid, ...props }: CreateExecutionProps) => (
-  <Mutate<TypesExecution, UsererrorError, void, OpenapiCreateExecutionRequest, CreateExecutionPathParams>
+  <Mutate<TypesExecution, UsererrorError, CreateExecutionQueryParams, void, CreateExecutionPathParams>
     verb="POST"
     path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/executions`}
     base={getConfig('code/api/v1')}
@@ -2480,13 +2490,13 @@ export const CreateExecution = ({ repo_ref, pipeline_uid, ...props }: CreateExec
 )
 
 export type UseCreateExecutionProps = Omit<
-  UseMutateProps<TypesExecution, UsererrorError, void, OpenapiCreateExecutionRequest, CreateExecutionPathParams>,
+  UseMutateProps<TypesExecution, UsererrorError, CreateExecutionQueryParams, void, CreateExecutionPathParams>,
   'path' | 'verb'
 > &
   CreateExecutionPathParams
 
 export const useCreateExecution = ({ repo_ref, pipeline_uid, ...props }: UseCreateExecutionProps) =>
-  useMutate<TypesExecution, UsererrorError, void, OpenapiCreateExecutionRequest, CreateExecutionPathParams>(
+  useMutate<TypesExecution, UsererrorError, CreateExecutionQueryParams, void, CreateExecutionPathParams>(
     'POST',
     (paramsInPath: CreateExecutionPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/executions`,
@@ -2600,7 +2610,8 @@ export interface ViewLogsPathParams {
   step_number: string
 }
 
-export type ViewLogsProps = Omit<GetProps<void, UsererrorError, void, ViewLogsPathParams>, 'path'> & ViewLogsPathParams
+export type ViewLogsProps = Omit<GetProps<LivelogLine[], UsererrorError, void, ViewLogsPathParams>, 'path'> &
+  ViewLogsPathParams
 
 export const ViewLogs = ({
   repo_ref,
@@ -2610,14 +2621,14 @@ export const ViewLogs = ({
   step_number,
   ...props
 }: ViewLogsProps) => (
-  <Get<void, UsererrorError, void, ViewLogsPathParams>
+  <Get<LivelogLine[], UsererrorError, void, ViewLogsPathParams>
     path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/executions/${execution_number}/logs/${stage_number}/${step_number}`}
     base={getConfig('code/api/v1')}
     {...props}
   />
 )
 
-export type UseViewLogsProps = Omit<UseGetProps<void, UsererrorError, void, ViewLogsPathParams>, 'path'> &
+export type UseViewLogsProps = Omit<UseGetProps<LivelogLine[], UsererrorError, void, ViewLogsPathParams>, 'path'> &
   ViewLogsPathParams
 
 export const useViewLogs = ({
@@ -2628,7 +2639,7 @@ export const useViewLogs = ({
   step_number,
   ...props
 }: UseViewLogsProps) =>
-  useGet<void, UsererrorError, void, ViewLogsPathParams>(
+  useGet<LivelogLine[], UsererrorError, void, ViewLogsPathParams>(
     (paramsInPath: ViewLogsPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/executions/${paramsInPath.execution_number}/logs/${paramsInPath.stage_number}/${paramsInPath.step_number}`,
     {

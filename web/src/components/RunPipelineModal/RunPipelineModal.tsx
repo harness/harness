@@ -14,7 +14,7 @@ import {
 } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 import { useModalHook } from 'hooks/useModalHook'
-import type { OpenapiCreateExecutionRequest, TypesExecution, TypesRepository } from 'services/code'
+import type { CreateExecutionQueryParams, TypesExecution, TypesRepository } from 'services/code'
 import { useMutate } from 'restful-react'
 import { getErrorMessage } from 'utils/Utils'
 import { useHistory } from 'react-router'
@@ -38,12 +38,16 @@ const useRunPipelineModal = () => {
     path: `/api/v1/repos/${repoPath}/+/pipelines/${pipeline}/executions`
   })
 
-  const runPipeline = (_formData: FormData): void => {
+  const runPipeline = (formData: FormData): void => {
+    const { branch } = formData
     try {
-      const payload: OpenapiCreateExecutionRequest = {
-        status: ''
-      }
-      startExecution(payload, { pathParams: { path: `/api/v1/repos/${repoPath}/+/pipelines/${pipeline}/executions` } })
+      startExecution(
+        {},
+        {
+          pathParams: { path: `/api/v1/repos/${repoPath}/+/pipelines/${pipeline}/executions` },
+          queryParams: { branch } as CreateExecutionQueryParams
+        }
+      )
         .then(() => {
           history.push(routes.toCODEExecutions({ repoPath, pipeline }))
           hideModal()
