@@ -1,45 +1,42 @@
 @import 'src/utils/utils';
 
 .main {
-  flex-grow: 1;
+  --code-editor-border-color: var(--grey-200);
 
-  :global {
-    .cm-editor {
-      border: none !important;
+  .codeViewer {
+    flex-grow: 1;
 
-      .cm-scroller {
-        padding: 0 !important;
+    :global {
+      .cm-gutter {
+        background-color: var(--grey-50);
       }
 
-      .cm-content {
-        padding: 0;
-      }
+      .cm-editor {
+        border: none !important;
 
-      .cm-line {
-        &,
-        * {
-          @include mono-font;
+        .cm-scroller {
+          padding: 0 !important;
+
+          .cm-line {
+            &,
+            * {
+              @include mono-font;
+            }
+          }
+        }
+
+        .cm-content {
+          padding: 0;
         }
       }
     }
-  }
 
-  .lineNo {
-    min-width: 70px !important;
-    text-align: right;
-    padding-right: 10px;
-    height: 100%;
-    color: var(--grey-400);
-  }
-}
-
-.gitBlame {
-  --code-editor-border-color: var(--grey-200);
-  // padding: 0 var(--spacing-xlarge) 0 var(--spacing-small) !important;
-
-  :global {
-    .cm-gutter {
-      background-color: var(--grey-50);
+    .lineNo {
+      min-width: 70px !important;
+      text-align: right;
+      padding-right: 10px;
+      height: 100%;
+      color: var(--grey-400);
     }
   }
 
