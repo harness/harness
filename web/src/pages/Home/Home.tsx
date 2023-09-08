@@ -9,6 +9,7 @@ import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { voidFn } from 'utils/Utils'
 import { NewSpaceModalButton } from 'components/NewSpaceModalButton/NewSpaceModalButton'
 import css from './Home.module.scss'
 
@@ -22,9 +23,7 @@ export default function Home() {
   const { space } = useGetRepositoryMetadata()
 
   const spaces = []
-  const { refetch } = useGet({
-    path: '/api/v1/user/memberships'
-  })
+
   const NewSpaceButton = (
     <NewSpaceModalButton
       space={space}
@@ -34,7 +33,7 @@ export default function Home() {
       icon="plus"
       width={173}
       height={48}
-      onRefetch={refetch}
+      onRefetch={voidFn(() => {})}
       handleNavigation={spaceName => {
         history.push(routes.toCODERepositories({ space: spaceName }))
       }}
