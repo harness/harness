@@ -1,4 +1,5 @@
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useState, useContext, useEffect, useMemo } from 'react'
+import { matchPath } from 'react-router-dom'
 import { noop } from 'lodash-es'
 import { useGet } from 'restful-react'
 import type { AppProps } from 'AppProps'
@@ -33,8 +34,13 @@ export const AppContextProvider: React.FC<{ value: AppProps }> = React.memo(func
   value: initialValue,
   children
 }) {
+  const lazy = useMemo(
+    () => initialValue.standalone && !!matchPath(location.pathname, { path: '/(signin|register)' }),
+    [initialValue.standalone]
+  )
   const { data: currentUser = defaultCurrentUser } = useGet({
-    path: '/api/v1/user'
+    path: '/api/v1/user',
+    lazy
   })
   const [appStates, setAppStates] = useState<AppProps>(initialValue)
 

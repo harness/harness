@@ -36,7 +36,6 @@ import NewPipeline from 'pages/NewPipeline/NewPipeline'
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
   const repoPath = `${pathProps.space}/${pathProps.repoName}`
-
   const { OPEN_SOURCE_PIPELINES, OPEN_SOURCE_SECRETS } = useFeatureFlag()
 
   return (
