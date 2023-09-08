@@ -46,12 +46,13 @@ const AddUpdatePipeline = (): JSX.Element => {
   const { getString } = useStrings()
   const { pipeline } = useParams<CODEProps>()
   const { repoMetadata } = useGetRepositoryMetadata()
-  const { showError } = useToaster()
+  const { showError, showSuccess } = useToaster()
   const [pipelineAsObj, setPipelineAsObj] = useState<Record<string, any>>(StarterPipeline)
   const [pipelineAsYAML, setPipelineAsYaml] = useState<string>('')
   const { openModal: openRunPipelineModal } = useRunPipelineModal()
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
   const [isExistingPipeline, setIsExistingPipeline] = useState<boolean>(false)
+  const [isDirty, setIsDirty] = useState<boolean>(false)
 
   const { mutate, loading } = useMutate<RepoCommitFilesResponse>({
     verb: 'POST',
@@ -86,6 +87,15 @@ const AddUpdatePipeline = (): JSX.Element => {
     }
   }, [pipelineYAMLFileContent])
 
+  useEffect(() => {
+    if (isExistingPipeline) {
+      const originalContent = decodeGitContent((pipelineYAMLFileContent?.content as RepoFileContent)?.data)
+      setIsDirty(originalContent !== pipelineAsYAML)
+    } else {
+      setIsDirty(true)
+    }
+  }, [isExistingPipeline, pipelineAsYAML, pipelineYAMLFileContent])
+
   const handleSaveAndRun = (): void => {
     try {
       const data: OpenapiCommitFilesRequest = {
@@ -105,6 +115,7 @@ const AddUpdatePipeline = (): JSX.Element => {
 
       mutate(data)
         .then(() => {
+          showSuccess(getString(isExistingPipeline ? 'pipelines.updated' : 'pipelines.created'))
           if (repoMetadata && pipeline) {
             openRunPipelineModal({ repoMetadata, pipeline })
           }
@@ -113,7 +124,7 @@ const AddUpdatePipeline = (): JSX.Element => {
           showError(getErrorMessage(error), 0, 'pipelines.failedToSavePipeline')
         })
     } catch (exception) {
-      showError(getErrorMessage(exception), 0, 'pipelines.failedToCreatePipeline')
+      showError(getErrorMessage(exception), 0, 'pipelines.failedToSavePipeline')
     }
   }
 
@@ -157,7 +168,7 @@ const AddUpdatePipeline = (): JSX.Element => {
                 variation={ButtonVariation.PRIMARY}
                 text={getString('pipelines.saveAndRun')}
                 onClick={handleSaveAndRun}
-                disabled={loading}
+                disabled={loading || !isDirty}
               />
             </Layout.Horizontal>
           }

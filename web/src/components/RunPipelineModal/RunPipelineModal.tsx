@@ -27,7 +27,7 @@ interface FormData {
 const useRunPipelineModal = () => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
-  const { showError } = useToaster()
+  const { showSuccess, showError } = useToaster()
   const history = useHistory()
   const [repo, setRepo] = useState<TypesRepository>()
   const [pipeline, setPipeline] = useState<string>('')
@@ -49,14 +49,15 @@ const useRunPipelineModal = () => {
         }
       )
         .then(() => {
+          showSuccess(getString('pipelines.executionStarted'))
           history.push(routes.toCODEExecutions({ repoPath, pipeline }))
           hideModal()
         })
         .catch(error => {
-          showError(getErrorMessage(error), 0, 'pipelines.failedToRunPipeline')
+          showError(getErrorMessage(error), 0, 'pipelines.executionCouldNotStart')
         })
     } catch (exception) {
-      showError(getErrorMessage(exception), 0, 'pipelines.failedToRunPipeline')
+      showError(getErrorMessage(exception), 0, 'pipelines.executionCouldNotStart')
     }
   }
 

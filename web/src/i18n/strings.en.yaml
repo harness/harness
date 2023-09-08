@@ -636,9 +636,12 @@ pipelines:
   saveAndRun: Save and Run
   editPipeline: Edit pipeline {{pipeline}}
   run: Run pipeline
-  failedToRunPipeline: Failed to run pipeline
   time: Time
   lastExecution: Last Execution
+  created: Pipeline created successfully
+  updated: Pipeline updated successfully
+  executionStarted: Pipeline execution started successfully
+  executionCouldNotStart: Failure while starting Pipeline execution
 executions:
   noData: There are no executions :(
   newExecutionButton: Run Pipeline
