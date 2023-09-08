@@ -60,6 +60,13 @@ func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 			return
 		}
 
+		h := w.Header()
+		h.Set("Content-Type", "text/event-stream")
+		h.Set("Cache-Control", "no-cache")
+		h.Set("Connection", "keep-alive")
+		h.Set("X-Accel-Buffering", "no")
+		h.Set("Access-Control-Allow-Origin", "*")
+
 		io.WriteString(w, ": ping\n\n")
 		f.Flush()
 
@@ -76,13 +83,6 @@ func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 			io.WriteString(w, "event: error\ndata: eof\n\n")
 			return
 		}
-
-		h := w.Header()
-		h.Set("Content-Type", "text/event-stream")
-		h.Set("Cache-Control", "no-cache")
-		h.Set("Connection", "keep-alive")
-		h.Set("X-Accel-Buffering", "no")
-		h.Set("Access-Control-Allow-Origin", "*")
 
 		ctx, cancel := context.WithTimeout(r.Context(), tailMaxTime)
 		defer cancel()

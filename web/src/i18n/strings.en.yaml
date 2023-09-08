@@ -632,6 +632,7 @@ executions:
   name: Execution Name
   description: Description
   time: Time
+  completedTime: completed {{timeString}} ago
 selectRange: Shift-click to select a range
 allCommits: All Commits
 secrets:
@@ -642,4 +643,9 @@ secrets:
   enterSecretName: Enter Secret name
   value: Secret Value
   createSecret: Create Secret
+  createSuccess: Secret created successfully
+  secretDeleted: Secret {uid} deleted.
+  deleteSecretConfirm: Are you sure you want to delete secret <strong>{{uid}}</strong>? You can't undo this action.
+  failedToDeleteSecret: Failed to delete Secret. Please try again.
+  deleteSecret: Delete Secrets
 userUpdateSuccess: 'User updated successfully'

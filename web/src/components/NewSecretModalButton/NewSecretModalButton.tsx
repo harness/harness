@@ -38,7 +38,7 @@ export interface NewSecretModalButtonProps extends Omit<ButtonProps, 'onClick' |
   modalTitle: string
   submitButtonTitle?: string
   cancelButtonTitle?: string
-  onSubmit: (data: TypesSecret) => void
+  onSuccess: () => void
 }
 
 export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
@@ -46,12 +46,12 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
   modalTitle,
   submitButtonTitle,
   cancelButtonTitle,
-  onSubmit,
+  onSuccess,
   ...props
 }) => {
   const ModalComponent: React.FC = () => {
     const { getString } = useStrings()
-    const { showError } = useToaster()
+    const { showError, showSuccess } = useToaster()
 
     const { mutate: createSecret, loading } = useMutate<TypesSecret>({
       verb: 'POST',
@@ -66,9 +66,10 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
           description: formData.description,
           uid: formData.name
         }
-        const response = await createSecret(payload)
+        await createSecret(payload)
         hideModal()
-        onSubmit(response)
+        showSuccess(getString('secrets.createSuccess'))
+        onSuccess()
       } catch (exception) {
         showError(getErrorMessage(exception), 0, getString('secrets.failedToCreate'))
       }
@@ -152,7 +153,7 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
     )
   }
 
-  const [openModal, hideModal] = useModalHook(ModalComponent, [onSubmit])
+  const [openModal, hideModal] = useModalHook(ModalComponent, [onSuccess])
 
   return <Button onClick={openModal} {...props} />
 }

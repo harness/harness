@@ -57,7 +57,8 @@ const devConfig = {
         secure: false,
         changeOrigin: true
       }
-    }
+    },
+    compress: false
   },
   plugins: [
     new MiniCssExtractPlugin({

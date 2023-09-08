@@ -6,16 +6,17 @@ import {
   Layout,
   PageBody,
   PageHeader,
+  StringSubstitute,
   TableV2 as Table,
-  Text
+  Text,
+  useToaster
 } from '@harnessio/uicore'
-import { Color } from '@harnessio/design-system'
+import { Color, Intent } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
-import { useHistory } from 'react-router-dom'
-import { useGet } from 'restful-react'
-import { useStrings } from 'framework/strings'
+import { useGet, useMutate } from 'restful-react'
+import { String, useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
@@ -26,14 +27,13 @@ import { useQueryParams } from 'hooks/useQueryParams'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { NewSecretModalButton } from 'components/NewSecretModalButton/NewSecretModalButton'
-import { useAppContext } from 'AppContext'
+import { useConfirmAct } from 'hooks/useConfirmAction'
+import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import noSecretsImage from '../RepositoriesListing/no-repo.svg'
 import css from './SecretList.module.scss'
 
 const SecretList = () => {
-  const { routes } = useAppContext()
   const space = useGetSpaceParam()
-  const history = useHistory()
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const pageBrowser = useQueryParams<PageBrowserProps>()
@@ -58,9 +58,7 @@ const SecretList = () => {
       text={getString('secrets.newSecretButton')}
       variation={ButtonVariation.PRIMARY}
       icon="plus"
-      onSubmit={secretInfo =>
-        history.push(routes.toCODESecret({ space, secret: secretInfo.uid as string }))
-      }></NewSecretModalButton>
+      onSuccess={() => refetch()}></NewSecretModalButton>
   )
 
   const columns: Column<TypesSecret>[] = useMemo(
@@ -97,9 +95,62 @@ const SecretList = () => {
           )
         },
         disableSortBy: true
+      },
+      {
+        id: 'action',
+        width: '30px',
+        Cell: ({ row }: CellProps<TypesSecret>) => {
+          const { mutate: deleteSecret } = useMutate({
+            verb: 'DELETE',
+            path: `/api/v1/secrets/${space}/${row.original.uid}`
+          })
+          const { showSuccess, showError } = useToaster()
+          const confirmDeleteSecret = useConfirmAct()
+
+          // TODO - add edit option
+          return (
+            <OptionsMenuButton
+              isDark
+              width="100px"
+              items={[
+                {
+                  text: getString('delete'),
+                  isDanger: true,
+                  onClick: () =>
+                    confirmDeleteSecret({
+                      title: getString('secrets.deleteSecret'),
+                      confirmText: getString('delete'),
+                      intent: Intent.DANGER,
+                      message: (
+                        <String useRichText stringID="secrets.deleteSecretConfirm" vars={{ uid: row.original.uid }} />
+                      ),
+                      action: async () => {
+                        deleteSecret({})
+                          .then(() => {
+                            showSuccess(
+                              <StringSubstitute
+                                str={getString('secrets.secretDeleted')}
+                                vars={{
+                                  uid: row.original.uid
+                                }}
+                              />,
+                              5000
+                            )
+                            refetch()
+                          })
+                          .catch(secretDeleteError => {
+                            showError(getErrorMessage(secretDeleteError), 0, 'secrets.failedToDeleteSecret')
+                          })
+                      }
+                    })
+                }
+              ]}
+            />
+          )
+        }
       }
     ],
-    [getString, searchTerm]
+    [getString, refetch, searchTerm, space]
   )
 
   return (
@@ -130,9 +181,6 @@ const SecretList = () => {
                 className={css.table}
                 columns={columns}
                 data={secrets || []}
-                onRowClick={secretInfo =>
-                  history.push(routes.toCODESecret({ space: 'root', secret: secretInfo.uid as string }))
-                }
                 getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
               />
             )}
