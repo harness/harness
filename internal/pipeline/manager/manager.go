@@ -99,7 +99,7 @@ type Manager struct {
 	Pipelines   store.PipelineStore
 	urlProvider *urlprovider.Provider
 	// Converter  store.ConvertService
-	Events events.Events
+	Events events.EventsStreamer
 	// Globals    store.GlobalSecretStore
 	Logs store.LogStore
 	Logz livelog.LogStream
@@ -120,7 +120,7 @@ func New(
 	executionStore store.ExecutionStore,
 	pipelineStore store.PipelineStore,
 	urlProvider *urlprovider.Provider,
-	events events.Events,
+	events events.EventsStreamer,
 	fileService file.FileService,
 	logStore store.LogStore,
 	logStream livelog.LogStream,

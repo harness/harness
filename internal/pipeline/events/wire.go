@@ -15,7 +15,7 @@ var WireSet = wire.NewSet(
 	ProvideEventsStreaming,
 )
 
-func ProvideEventsStreaming(pubsub pubsub.PubSub) Events {
+func ProvideEventsStreaming(pubsub pubsub.PubSub) EventsStreamer {
 	return &event{
 		pubsub: pubsub,
 		topic:  "events",

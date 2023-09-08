@@ -18,7 +18,7 @@ import (
 type updater struct {
 	Executions store.ExecutionStore
 	Repos      store.RepoStore
-	Events     events.Events
+	Events     events.EventsStreamer
 	Steps      store.StepStore
 	Stages     store.StageStore
 }

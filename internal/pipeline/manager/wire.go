@@ -29,7 +29,7 @@ func ProvideExecutionManager(
 	executionStore store.ExecutionStore,
 	pipelineStore store.PipelineStore,
 	urlProvider *url.Provider,
-	events events.Events,
+	events events.EventsStreamer,
 	fileService file.FileService,
 	logStore store.LogStore,
 	logStream livelog.LogStream,

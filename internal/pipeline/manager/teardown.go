@@ -21,7 +21,7 @@ import (
 
 type teardown struct {
 	Executions store.ExecutionStore
-	Events     events.Events
+	Events     events.EventsStreamer
 	Logs       livelog.LogStream
 	Scheduler  scheduler.Scheduler
 	Repos      store.RepoStore

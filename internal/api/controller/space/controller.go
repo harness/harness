@@ -18,7 +18,7 @@ import (
 type Controller struct {
 	db              *sqlx.DB
 	urlProvider     *url.Provider
-	eventsStream    events.Events
+	eventsStream    events.EventsStreamer
 	uidCheck        check.PathUID
 	authorizer      authz.Authorizer
 	pathStore       store.PathStore
@@ -33,7 +33,7 @@ type Controller struct {
 	membershipStore store.MembershipStore
 }
 
-func NewController(db *sqlx.DB, urlProvider *url.Provider, eventsStream events.Events,
+func NewController(db *sqlx.DB, urlProvider *url.Provider, eventsStream events.EventsStreamer,
 	uidCheck check.PathUID, authorizer authz.Authorizer,
 	pathStore store.PathStore, pipelineStore store.PipelineStore, secretStore store.SecretStore,
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,

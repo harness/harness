@@ -19,7 +19,7 @@ type Event struct {
 	Data json.RawMessage `json:"data"`
 }
 
-type Events interface {
+type EventsStreamer interface {
 	// Publish publishes an event to a given space ID.
 	Publish(ctx context.Context, spaceID int64, event *Event) error
 
@@ -35,7 +35,7 @@ type event struct {
 	topic  string
 }
 
-func New(pubsub pubsub.PubSub, topic string) Events {
+func New(pubsub pubsub.PubSub, topic string) EventsStreamer {
 	return &event{
 		pubsub: pubsub,
 		topic:  topic,

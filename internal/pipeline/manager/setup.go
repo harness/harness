@@ -21,7 +21,7 @@ import (
 
 type setup struct {
 	Executions store.ExecutionStore
-	Events     events.Events
+	Events     events.EventsStreamer
 	Repos      store.RepoStore
 	Steps      store.StepStore
 	Stages     store.StageStore
