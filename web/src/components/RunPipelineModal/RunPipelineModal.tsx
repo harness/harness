@@ -48,9 +48,11 @@ const useRunPipelineModal = () => {
           queryParams: { branch } as CreateExecutionQueryParams
         }
       )
-        .then(() => {
+        .then(response => {
           showSuccess(getString('pipelines.executionStarted'))
-          history.push(routes.toCODEExecutions({ repoPath, pipeline }))
+          if (response?.number && !isNaN(response.number)) {
+            history.push(routes.toCODEExecution({ repoPath, pipeline, execution: response.number.toString() }))
+          }
           hideModal()
         })
         .catch(error => {
