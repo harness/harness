@@ -7,11 +7,14 @@ package repo
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/githook"
+	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
@@ -32,6 +35,7 @@ type Controller struct {
 	pipelineStore  store.PipelineStore
 	principalStore store.PrincipalStore
 	gitRPCClient   gitrpc.Interface
+	importer       *importer.Repository
 }
 
 func NewController(
@@ -46,6 +50,7 @@ func NewController(
 	pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore,
 	gitRPCClient gitrpc.Interface,
+	importer *importer.Repository,
 ) *Controller {
 	return &Controller{
 		defaultBranch:  defaultBranch,
@@ -59,6 +64,7 @@ func NewController(
 		pipelineStore:  pipelineStore,
 		principalStore: principalStore,
 		gitRPCClient:   gitRPCClient,
+		importer:       importer,
 	}
 }
 
@@ -94,4 +100,13 @@ func CreateRPCReadParams(repo *types.Repository) gitrpc.ReadParams {
 	return gitrpc.ReadParams{
 		RepoUID: repo.GitUID,
 	}
+}
+
+func (c *Controller) validateParentRef(parentRef string) error {
+	parentRefAsID, err := strconv.ParseInt(parentRef, 10, 64)
+	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(parentRef)) == 0) {
+		return errRepositoryRequiresParent
+	}
+
+	return nil
 }

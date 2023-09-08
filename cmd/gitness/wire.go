@@ -50,6 +50,7 @@ import (
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/codecomments"
+	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/services/job"
 	pullreqservice "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/webhook"
@@ -128,6 +129,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		commit.WireSet,
 		trigger.WireSet,
 		plugin.WireSet,
+		importer.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

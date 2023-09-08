@@ -25,7 +25,6 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.9
-	github.com/google/uuid v1.3.1
 	github.com/google/wire v0.5.0
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/gotidy/ptr v1.3.0
@@ -81,6 +80,7 @@ require (
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/google/uuid v1.3.1 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect

@@ -203,7 +203,9 @@ message SyncRepositoryRequest {
 }
 
 message SyncRepositoryResponse {
+  string default_branch = 1;
 }
+
 enum HashType {
   HashTypeSHA256 = 0;
 }
