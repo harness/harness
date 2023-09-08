@@ -31,6 +31,7 @@ import { useAppContext } from 'AppContext'
 import { LatestCommitForFile } from 'components/LatestCommit/LatestCommit'
 import { useCommitModal } from 'components/CommitModalButton/CommitModalButton'
 import { useStrings } from 'framework/strings'
+import { getConfig } from 'services/config'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { PlainButton } from 'components/PlainButton/PlainButton'
 import { CommitsView } from 'components/CommitsView/CommitsView'
@@ -57,7 +58,6 @@ export function FileContent({
     useFileContentViewerDecision({ repoMetadata, gitRef, resourcePath, resourceContent })
   const history = useHistory()
   const [activeTab, setActiveTab] = React.useState<string>(FileSection.CONTENT)
-
   const content = useMemo(
     () => decodeGitContent((resourceContent?.content as RepoFileContent)?.data),
     [resourceContent?.content]
@@ -199,13 +199,18 @@ export function FileContent({
                           style={{ padding: '5px' }}
                           width="145px"
                           items={[
-                            // {
-                            //   hasIcon: true,
-                            //   iconName: 'arrow-right',
-                            //   text: getString('viewRaw'),
-                            //   onClick: () => window.open(rawURL, '_blank') // TODO: This is still not working due to token is not stored in cookies
-                            // },
-                            // '-',
+                            {
+                              hasIcon: true,
+                              iconName: 'arrow-right',
+                              text: getString('viewRaw'),
+                              onClick: () => {
+                                const url = standalone
+                                  ? rawURL.replace(/^\/code/, '')
+                                  : getConfig(rawURL).replace('//', '/')
+                                window.open(url, '_blank')
+                              }
+                            },
+                            '-',
                             {
                               hasIcon: true,
                               iconName: 'cloud-download',
@@ -243,6 +248,7 @@ export function FileContent({
                         <Match expr={isViewable}>
                           <Falsy>
                             <Center>
+                              rawURL: {rawURL}
                               <Link
                                 to={rawURL} // TODO: Link component generates wrong copy link
                                 onClick={e => {
