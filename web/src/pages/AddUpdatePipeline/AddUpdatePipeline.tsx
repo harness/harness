@@ -65,18 +65,24 @@ const AddUpdatePipeline = (): JSX.Element => {
     lazy: !repoMetadata
   })
 
-  const { data: pipelineYAMLFileContent, loading: resourceLoading } = useGetResourceContent({
+  const {
+    data: pipelineYAMLFileContent,
+    loading: resourceLoading,
+    refetch: fetchPipelineYAMLFileContent
+  } = useGetResourceContent({
     repoMetadata,
     gitRef: pipelineData?.default_branch || '',
     resourcePath: pipelineData?.config_path || ''
   })
 
+  // check if file exists and has some content
   useEffect(() => {
     if (!resourceLoading) {
       setIsExistingPipeline(!isEmpty(pipelineYAMLFileContent) && !isUndefined(pipelineYAMLFileContent.content))
     }
   }, [pipelineYAMLFileContent, resourceLoading])
 
+  // to load initial content on the editor
   useEffect(() => {
     if (isExistingPipeline) {
       setPipelineAsYaml(decodeGitContent((pipelineYAMLFileContent?.content as RepoFileContent)?.data))
@@ -85,8 +91,9 @@ const AddUpdatePipeline = (): JSX.Element => {
         setPipelineAsYaml(stringify(pipelineAsObj))
       } catch (ex) {}
     }
-  }, [pipelineYAMLFileContent])
+  }, [isExistingPipeline, pipelineYAMLFileContent])
 
+  // find if editor content was modified
   useEffect(() => {
     if (isExistingPipeline) {
       const originalContent = decodeGitContent((pipelineYAMLFileContent?.content as RepoFileContent)?.data)
@@ -115,6 +122,7 @@ const AddUpdatePipeline = (): JSX.Element => {
 
       mutate(data)
         .then(() => {
+          fetchPipelineYAMLFileContent()
           showSuccess(getString(isExistingPipeline ? 'pipelines.updated' : 'pipelines.created'))
           if (repoMetadata && pipeline) {
             openRunPipelineModal({ repoMetadata, pipeline })
