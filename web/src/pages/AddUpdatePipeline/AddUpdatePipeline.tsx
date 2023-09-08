@@ -18,7 +18,8 @@ import { useAppContext } from 'AppContext'
 import type { CODEProps } from 'RouteDefinitions'
 import { getErrorMessage } from 'utils/Utils'
 import { decodeGitContent } from 'utils/GitUtils'
-import pipelineSchema from './schema/pipeline-schema.json'
+import pipelineSchemaV1 from './schema/pipeline-schema-v1.json'
+import pipelineSchemaV0 from './schema/pipeline-schema-v0.json'
 import { YamlVersion } from './Constants'
 
 import css from './AddUpdatePipeline.module.scss'
@@ -205,7 +206,7 @@ const AddUpdatePipeline = (): JSX.Element => {
             <Container className={css.editorContainer}>
               <MonacoSourceCodeEditor
                 language={'yaml'}
-                schema={version === YamlVersion.V0 ? {} : pipelineSchema}
+                schema={version === YamlVersion.V0 ? pipelineSchemaV0 : pipelineSchemaV1}
                 source={pipelineAsYAML}
                 onChange={(value: string) => setPipelineAsYaml(value)}
               />
