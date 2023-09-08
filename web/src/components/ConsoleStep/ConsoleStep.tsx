@@ -7,6 +7,7 @@ import type { LivelogLine, TypesStep } from 'services/code'
 import { timeDistance } from 'utils/Utils'
 import ConsoleLogs from 'components/ConsoleLogs/ConsoleLogs'
 import { useStrings } from 'framework/strings'
+import { ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 import css from './ConsoleStep.module.scss'
 
 interface ConsoleStepProps {
@@ -24,8 +25,8 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
   const [streamingLogs, setStreamingLogs] = useState<LivelogLine[]>([])
   const eventSourceRef = useRef<EventSource | null>(null)
 
-  const shouldUseGet = step?.status !== 'running' && step?.status !== 'pending'
-  const isPending = step?.status === 'pending'
+  const shouldUseGet = step?.status !== ExecutionState.RUNNING && step?.status !== ExecutionState.PENDING
+  const isPending = step?.status === ExecutionState.PENDING
 
   const { data, error, loading, refetch } = useGet<LivelogLine[]>({
     path: `/api/v1/repos/${repoPath}/+/pipelines/${pipelineName}/executions/${executionNumber}/logs/${String(
@@ -39,7 +40,7 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
   }, [stageNumber])
 
   useEffect(() => {
-    if (step?.status === 'running') {
+    if (step?.status === ExecutionState.RUNNING) {
       if (eventSourceRef.current) {
         eventSourceRef.current.close()
         setStreamingLogs([])
@@ -62,11 +63,11 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
   }, [executionNumber, pipelineName, repoPath, stageNumber, step?.number, step?.status])
 
   let icon
-  if (step?.status === 'success') {
+  if (step?.status === ExecutionState.SUCCESS) {
     icon = <Icon name="success-tick" />
   } else if (isPending) {
     icon = <Icon name="circle" />
-  } else if (step?.status === 'running') {
+  } else if (step?.status === ExecutionState.RUNNING) {
     icon = <Icon className={css.spin} name="pending" />
   } else {
     icon = <Icon name="circle" /> // Default icon in case of other statuses or unknown status
@@ -75,7 +76,7 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
   let content
   if (loading) {
     content = <div className={css.loading}>{getString('loading')}</div>
-  } else if (error && step?.status !== 'running') {
+  } else if (error && step?.status !== ExecutionState.RUNNING) {
     content = <div>Error: {error.message}</div>
   } else if (streamingLogs.length) {
     content = <ConsoleLogs logs={streamingLogs} />

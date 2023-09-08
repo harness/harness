@@ -6,7 +6,7 @@ import type { CODEProps } from 'RouteDefinitions'
 import type { TypesStage } from 'services/code'
 import ConsoleStep from 'components/ConsoleStep/ConsoleStep'
 import { timeDistance } from 'utils/Utils'
-// import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { useStrings } from 'framework/strings'
 import css from './Console.module.scss'
 
 interface ConsoleProps {
@@ -16,6 +16,7 @@ interface ConsoleProps {
 
 const Console: FC<ConsoleProps> = ({ stage, repoPath }) => {
   const { pipeline, execution: executionNum } = useParams<CODEProps>()
+  const { getString } = useStrings()
 
   return (
     <div className={css.container}>
@@ -26,7 +27,7 @@ const Console: FC<ConsoleProps> = ({ stage, repoPath }) => {
           </Text>
           {stage?.started && stage?.stopped && (
             <Text font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
-              {`completed ${timeDistance(stage?.stopped, Date.now())} ago`}
+              {getString('executions.completedTime', { timeString: timeDistance(stage?.stopped, Date.now()) })}
             </Text>
           )}
         </Layout.Horizontal>
