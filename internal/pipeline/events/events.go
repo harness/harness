@@ -24,7 +24,10 @@ type Events interface {
 	Publish(ctx context.Context, spaceID int64, event *Event) error
 
 	// Subscribe listens to events on a space ID.
-	Subscribe(ctx context.Context, spaceID int64) (<-chan *Event, <-chan error)
+	Subscribe(ctx context.Context, spaceID int64) (<-chan *Event, <-chan error, pubsub.Consumer)
+
+	// Unsubscribe unsubscribes the consumer.
+	Unsubscribe(ctx context.Context, consumer pubsub.Consumer) error
 }
 
 type event struct {
@@ -53,7 +56,7 @@ func format(id int64) string {
 	return "spaces-" + strconv.Itoa(int(id))
 }
 
-func (e *event) Subscribe(ctx context.Context, spaceID int64) (<-chan *Event, <-chan error) {
+func (e *event) Subscribe(ctx context.Context, spaceID int64) (<-chan *Event, <-chan error, pubsub.Consumer) {
 	chEvent := make(chan *Event, 100) // TODO: check best size here
 	chErr := make(chan error)
 	g := func(payload []byte) error {
@@ -67,6 +70,10 @@ func (e *event) Subscribe(ctx context.Context, spaceID int64) (<-chan *Event, <-
 		return nil
 	}
 	option := pubsub.WithChannelNamespace(format(spaceID))
-	e.pubsub.Subscribe(ctx, e.topic, g, option)
-	return chEvent, chErr
+	consumer := e.pubsub.Subscribe(ctx, e.topic, g, option)
+	return chEvent, chErr, consumer
+}
+
+func (e *event) Unsubscribe(ctx context.Context, consumer pubsub.Consumer) error {
+	return consumer.Unsubscribe(ctx, e.topic)
 }
