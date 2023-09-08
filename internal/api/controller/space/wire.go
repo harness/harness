@@ -8,6 +8,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/pipeline/events"
+	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types/check"
@@ -26,9 +27,11 @@ func ProvideController(db *sqlx.DB, urlProvider *url.Provider, eventsStream even
 	pipelineStore store.PipelineStore, secretStore store.SecretStore,
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore,
 	spaceStore store.SpaceStore, repoStore store.RepoStore, principalStore store.PrincipalStore,
-	repoCtrl *repo.Controller, membershipStore store.MembershipStore,
+	repoCtrl *repo.Controller, membershipStore store.MembershipStore, importer *importer.Repository,
 ) *Controller {
 	return NewController(db, urlProvider, eventsStream, uidCheck, authorizer,
-		pathStore, pipelineStore, secretStore, connectorStore, templateStore,
-		spaceStore, repoStore, principalStore, repoCtrl, membershipStore)
+		pathStore, pipelineStore, secretStore,
+		connectorStore, templateStore,
+		spaceStore, repoStore, principalStore,
+		repoCtrl, membershipStore, importer)
 }

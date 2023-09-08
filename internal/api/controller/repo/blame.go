@@ -9,14 +9,14 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/gitrpc"
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-func (c *Controller) Blame(ctx context.Context, session *auth.Session,
+func (c *Controller) Blame(ctx context.Context,
+	session *auth.Session,
 	repoRef, gitRef, path string,
 	lineFrom, lineTo int,
 ) (types.Stream[*gitrpc.BlamePart], error) {
@@ -29,12 +29,8 @@ func (c *Controller) Blame(ctx context.Context, session *auth.Session,
 		return nil, usererror.BadRequest("Line range must be valid.")
 	}
 
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
 	if err != nil {
-		return nil, err
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, true); err != nil {
 		return nil, err
 	}
 

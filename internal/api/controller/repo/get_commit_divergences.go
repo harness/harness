@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/harness/gitness/gitrpc"
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
@@ -39,17 +38,14 @@ type CommitDivergence struct {
 	Behind int32 `json:"behind"`
 }
 
-/*
-* GetCommitDivergences returns the commit divergences between reference pairs.
- */
-func (c *Controller) GetCommitDivergences(ctx context.Context, session *auth.Session,
-	repoRef string, in *GetCommitDivergencesInput) ([]CommitDivergence, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+// GetCommitDivergences returns the commit divergences between reference pairs.
+func (c *Controller) GetCommitDivergences(ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	in *GetCommitDivergencesInput,
+) ([]CommitDivergence, error) {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
 	if err != nil {
-		return nil, err
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
 		return nil, err
 	}
 

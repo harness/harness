@@ -35,9 +35,12 @@ type Scheduler struct {
 	maxRunning     int
 	purgeMinOldAge time.Duration
 
+	// global context
+	globalCtx context.Context
+
 	// synchronization stuff
-	globalCtx    context.Context
 	signal       chan time.Time
+	signalEdgy   chan struct{}
 	done         chan struct{}
 	wgRunning    sync.WaitGroup
 	cancelJobMx  sync.Mutex
@@ -102,6 +105,7 @@ func (s *Scheduler) Run(ctx context.Context) error {
 	defer close(s.done)
 
 	s.signal = make(chan time.Time, 1)
+	s.signalEdgy = make(chan struct{}, 1)
 	s.globalCtx = ctx
 
 	timer := newSchedulerTimer()
@@ -121,6 +125,10 @@ func (s *Scheduler) Run(ctx context.Context) error {
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
+
+			case <-s.signalEdgy:
+				timer.MakeEdgy()
+				return nil
 
 			case newTime := <-s.signal:
 				dur := timer.RescheduleEarlier(newTime)
@@ -256,6 +264,13 @@ func (s *Scheduler) scheduleProcessing(scheduled time.Time) {
 	}()
 }
 
+func (s *Scheduler) makeTimerEdgy() {
+	select {
+	case s.signalEdgy <- struct{}{}:
+	default:
+	}
+}
+
 // scheduleIfHaveMoreJobs triggers processing of ready jobs if the timer is edgy.
 // The timer would be edgy if the previous iteration found more jobs that it could start (full capacity).
 // This should be run after a non-recurring job has finished.
@@ -276,14 +291,14 @@ func (s *Scheduler) RunJob(ctx context.Context, def Definition) error {
 
 // RunJobs runs a several jobs. It's more efficient than calling RunJob several times
 // because it locks the DB only once.
-// TODO: Add groupID parameter and use it for all jobs.
-func (s *Scheduler) RunJobs(ctx context.Context, defs []Definition) error {
+func (s *Scheduler) RunJobs(ctx context.Context, groupID string, defs []Definition) error {
 	jobs := make([]*types.Job, len(defs))
 	for i, def := range defs {
 		if err := def.Validate(); err != nil {
 			return err
 		}
 		jobs[i] = def.toNewJob()
+		jobs[i].GroupID = groupID
 	}
 
 	return s.startNewJobs(ctx, jobs)
@@ -309,6 +324,8 @@ func (s *Scheduler) startNewJobsNoLock(ctx context.Context, jobs []*types.Job) e
 	if err != nil {
 		return fmt.Errorf("failed to count available slots for job execution: %w", err)
 	}
+
+	canRunAll := available >= len(jobs)
 
 	for _, job := range jobs {
 		if available > 0 {
@@ -338,6 +355,10 @@ func (s *Scheduler) startNewJobsNoLock(ctx context.Context, jobs []*types.Job) e
 
 			s.runJob(ctx, job)
 		}(s.globalCtx)
+	}
+
+	if !canRunAll {
+		s.makeTimerEdgy()
 	}
 
 	return nil
