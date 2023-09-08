@@ -26,8 +26,7 @@ const Console: FC<ConsoleProps> = ({ stage, repoPath }) => {
           </Text>
           {stage?.started && stage?.stopped && (
             <Text font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
-              {/* this needs fixed */}
-              {timeDistance(stage?.started, stage?.stopped)}
+              {`completed ${timeDistance(stage?.stopped, Date.now())} ago`}
             </Text>
           )}
         </Layout.Horizontal>

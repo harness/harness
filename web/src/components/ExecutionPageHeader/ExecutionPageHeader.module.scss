@@ -5,16 +5,6 @@
   gap: var(--spacing-small) !important;
 }
 
-.header {
-  width: 100% !important;
-  gap: var(--spacing-small) !important;
-
-  a {
-    font-size: var(--font-size-small);
-    color: var(--primary-7);
-  }
-}
-
 .breadcrumb {
   align-items: center;
 
@@ -36,6 +26,8 @@
 }
 
 .executionInfo {
+  display: flex !important;
+  gap: var(--spacing-small) !important;
   width: 100% !important;
   align-items: center !important;
   margin-left: 0 !important;
