@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/livelog"
@@ -20,6 +21,7 @@ import (
 
 type teardown struct {
 	Executions store.ExecutionStore
+	Events     events.EventsStreamer
 	Logs       livelog.LogStream
 	Scheduler  scheduler.Scheduler
 	Repos      store.RepoStore
@@ -46,7 +48,7 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 		Str("stage.status", stage.Status).
 		Logger()
 
-	_, err = t.Repos.Find(noContext, execution.RepoID)
+	repo, err := t.Repos.Find(noContext, execution.RepoID)
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot find the repository")
 		return err
@@ -129,6 +131,13 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 		log.Warn().Err(err).
 			Msg("manager: cannot update the execution")
 		return err
+	}
+
+	execution.Stages = stages
+	err = t.Events.Publish(noContext, repo.ParentID, executionEvent(enum.ExecutionCompleted, execution))
+	if err != nil {
+		log.Warn().Err(err).
+			Msg("manager: could not publish execution completed event")
 	}
 
 	return nil
