@@ -632,6 +632,7 @@ executions:
   name: Execution Name
   description: Description
   time: Time
+  completedTime: completed {{timeString}} ago
 selectRange: Shift-click to select a range
 allCommits: All Commits
 secrets:
