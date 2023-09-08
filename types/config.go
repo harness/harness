@@ -200,4 +200,22 @@ type Config struct {
 		// finished and failed jobs will be purged from the DB.
 		PurgeFinishedOlderThan time.Duration `envconfig:"GITNESS_JOBS_PURGE_FINISHED_OLDER_THAN" default:"120h"`
 	}
+
+	Webhook struct {
+		// UserAgentIdentity specifies the identity used for the user agent header
+		// IMPORTANT: do not include version.
+		UserAgentIdentity string `envconfig:"GITNESS_WEBHOOK_USER_AGENT_IDENTITY" default:"Gitness"`
+		// HeaderIdentity specifies the identity used for headers in webhook calls (e.g. X-Gitness-Trigger, ...).
+		// NOTE: If no value is provided, the UserAgentIdentity will be used.
+		HeaderIdentity      string `envconfig:"GITNESS_WEBHOOK_HEADER_IDENTITY"`
+		Concurrency         int    `envconfig:"GITNESS_WEBHOOK_CONCURRENCY" default:"4"`
+		MaxRetries          int    `envconfig:"GITNESS_WEBHOOK_MAX_RETRIES" default:"3"`
+		AllowPrivateNetwork bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_PRIVATE_NETWORK" default:"false"`
+		AllowLoopback       bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_LOOPBACK" default:"false"`
+	}
+
+	Trigger struct {
+		Concurrency int `envconfig:"GITNESS_TRIGGER_CONCURRENCY" default:"4"`
+		MaxRetries  int `envconfig:"GITNESS_TRIGGER_MAX_RETRIES" default:"3"`
+	}
 }

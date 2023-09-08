@@ -43,9 +43,9 @@ func (f *ReaderFactory[R]) Launch(ctx context.Context,
 
 	// setup ctx with copied logger that has extra fields set
 	log := log.Ctx(ctx).With().
-		Str("events_category", f.category).
-		Str("events_group_name", groupName).
-		Str("events_reader_name", readerName).
+		Str("events.category", f.category).
+		Str("events.group_name", groupName).
+		Str("events.reader_name", readerName).
 		Logger()
 
 	// create new stream consumer using factory method
@@ -191,8 +191,8 @@ func ReaderRegisterEvent[T interface{}](reader *GenericReader,
 
 			// update ctx with event type for proper logging
 			log := log.Ctx(ctx).With().
-				Str("events_type", string(eventType)).
-				Str("events_id", event.ID).
+				Str("events.type", string(eventType)).
+				Str("events.id", event.ID).
 				Logger()
 			ctx = log.WithContext(ctx)
 
