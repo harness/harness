@@ -8,6 +8,7 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon, type IconName } from '@harnessio/icons'
 import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 import type { TypesPlugin } from 'services/code'
+import { YamlVersion } from 'pages/AddUpdatePipeline/Constants'
 
 import css from './PluginsPanel.module.scss'
 
@@ -70,10 +71,11 @@ const runStepSpec = {
 }
 
 export interface PluginsPanelInterface {
+  version?: YamlVersion
   onPluginAddUpdate: (isUpdate: boolean, pluginFormData: Record<string, any>) => void
 }
 
-export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.Element => {
+export const PluginsPanel = ({ version = YamlVersion.V0, onPluginAddUpdate }: PluginsPanelInterface): JSX.Element => {
   const { getString } = useStrings()
   const [category, setCategory] = useState<PluginCategory>()
   const [panelView, setPanelView] = useState<PluginPanelView>(PluginPanelView.Category)
@@ -202,7 +204,10 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
     switch (category) {
       case PluginCategory.Drone:
       case PluginCategory.Harness:
-        constructedPayload = { type: 'script', spec: constructedPayload }
+        constructedPayload =
+          version === YamlVersion.V1
+            ? { type: 'script', spec: constructedPayload }
+            : { name: 'run step', commands: [get(constructedPayload, 'script', '')] }
     }
     onPluginAddUpdate?.(isUpdate, constructedPayload)
   }

@@ -19,10 +19,11 @@ import type { CODEProps } from 'RouteDefinitions'
 import { getErrorMessage } from 'utils/Utils'
 import { decodeGitContent } from 'utils/GitUtils'
 import pipelineSchema from './schema/pipeline-schema.json'
+import { YamlVersion } from './Constants'
 
 import css from './AddUpdatePipeline.module.scss'
 
-const StarterPipeline: Record<string, any> = {
+const StarterPipelineV1: Record<string, any> = {
   version: 1,
   stages: [
     {
@@ -41,13 +42,29 @@ const StarterPipeline: Record<string, any> = {
   ]
 }
 
+const StarterPipelineV0: Record<string, any> = {
+  kind: 'pipeline',
+  type: 'docker',
+  name: 'default',
+  steps: [
+    {
+      name: 'test',
+      image: 'alpine',
+      commands: ['echo hello world']
+    }
+  ]
+}
+
 const AddUpdatePipeline = (): JSX.Element => {
+  const version = YamlVersion.V0
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const { pipeline } = useParams<CODEProps>()
   const { repoMetadata } = useGetRepositoryMetadata()
   const { showError, showSuccess } = useToaster()
-  const [pipelineAsObj, setPipelineAsObj] = useState<Record<string, any>>(StarterPipeline)
+  const [pipelineAsObj, setPipelineAsObj] = useState<Record<string, any>>(
+    version === YamlVersion.V0 ? StarterPipelineV0 : StarterPipelineV1
+  )
   const [pipelineAsYAML, setPipelineAsYaml] = useState<string>('')
   const { openModal: openRunPipelineModal } = useRunPipelineModal()
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
@@ -138,13 +155,14 @@ const AddUpdatePipeline = (): JSX.Element => {
 
   const updatePipeline = (payload: Record<string, any>): Record<string, any> => {
     const pipelineAsObjClone = { ...pipelineAsObj }
-    let existingSteps: [unknown] = get(pipelineAsObjClone, 'stages.0.spec.steps', [])
+    const stepInsertPath = version === YamlVersion.V0 ? 'steps' : 'stages.0.spec.steps'
+    let existingSteps: [unknown] = get(pipelineAsObjClone, stepInsertPath, [])
     if (existingSteps.length > 0) {
       existingSteps.push(payload)
     } else {
       existingSteps = [payload]
     }
-    set(pipelineAsObjClone, 'stages.0.spec.steps', existingSteps)
+    set(pipelineAsObjClone, stepInsertPath, existingSteps)
     return pipelineAsObjClone
   }
 
@@ -187,7 +205,7 @@ const AddUpdatePipeline = (): JSX.Element => {
             <Container className={css.editorContainer}>
               <MonacoSourceCodeEditor
                 language={'yaml'}
-                schema={pipelineSchema}
+                schema={version === YamlVersion.V0 ? {} : pipelineSchema}
                 source={pipelineAsYAML}
                 onChange={(value: string) => setPipelineAsYaml(value)}
               />
