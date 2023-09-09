@@ -169,6 +169,7 @@ export interface StringsMap {
   enterUser: string
   error: string
   error404Text: string
+  'executions.completedTime': string
   'executions.description': string
   'executions.name': string
   'executions.newExecutionButton': string
