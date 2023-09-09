@@ -29,20 +29,20 @@ const (
 	ProviderTypeGitLabEnterprise ProviderType = "gitlab-enterprise"
 )
 
-type Provider struct {
-	Type     ProviderType `json:"type"`
-	Host     string       `json:"host"`
-	Username string       `json:"username"`
-	Password string       `json:"password"`
-}
-
-func (p Provider) Enum() []any {
+func (p ProviderType) Enum() []any {
 	return []any{
 		ProviderTypeGitHub,
 		ProviderTypeGitHubEnterprise,
 		ProviderTypeGitLab,
 		ProviderTypeGitLabEnterprise,
 	}
+}
+
+type Provider struct {
+	Type     ProviderType `json:"type"`
+	Host     string       `json:"host"`
+	Username string       `json:"username"`
+	Password string       `json:"password"`
 }
 
 type RepositoryInfo struct {

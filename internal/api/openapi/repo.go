@@ -384,6 +384,18 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&createRepository, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos", createRepository)
 
+	importRepository := openapi3.Operation{}
+	importRepository.WithTags("repository")
+	importRepository.WithMapOfAnything(map[string]interface{}{"operationId": "importRepository"})
+	importRepository.WithParameters(queryParameterSpacePath)
+	_ = reflector.SetRequest(&importRepository, &struct{ repo.ImportInput }{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&importRepository, new(types.Repository), http.StatusCreated)
+	_ = reflector.SetJSONResponse(&importRepository, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&importRepository, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&importRepository, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&importRepository, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/import", importRepository)
+
 	opFind := openapi3.Operation{}
 	opFind.WithTags("repository")
 	opFind.WithMapOfAnything(map[string]interface{}{"operationId": "findRepository"})
