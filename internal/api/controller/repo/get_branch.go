@@ -9,21 +9,19 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types/enum"
 )
 
 // GetBranch gets a repo branch.
-func (c *Controller) GetBranch(ctx context.Context, session *auth.Session,
-	repoRef string, branchName string) (*Branch, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+func (c *Controller) GetBranch(ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	branchName string,
+) (*Branch, error) {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
 	if err != nil {
-		return nil, fmt.Errorf("faild to find repo: %w", err)
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
-		return nil, fmt.Errorf("access check failed: %w", err)
+		return nil, err
 	}
 
 	rpcOut, err := c.gitRPCClient.GetBranch(ctx, &gitrpc.GetBranchParams{

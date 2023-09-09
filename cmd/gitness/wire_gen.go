@@ -120,7 +120,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repository, err := importer.ProvideRepoImporter(provider, gitrpcInterface, repoStore, jobScheduler, executor)
+	repository, err := importer.ProvideRepoImporter(config, provider, gitrpcInterface, repoStore, jobScheduler, executor)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db)
 	templateStore := database.ProvideTemplateStore(db)
-	spaceController := space.ProvideController(db, provider, eventsStreamer, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
+	spaceController := space.ProvideController(db, provider, eventsStreamer, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository)
 	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore)
 	encrypter, err := encrypt.ProvideEncrypter(config)
 	if err != nil {

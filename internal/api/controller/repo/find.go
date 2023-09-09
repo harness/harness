@@ -15,6 +15,7 @@ import (
 
 // Find finds a repo.
 func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef string) (*types.Repository, error) {
+	// note: can't use c.getRepoCheckAccess because even repositories that are currently being imported can be fetched.
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
@@ -24,7 +25,7 @@ func (c *Controller) Find(ctx context.Context, session *auth.Session, repoRef st
 		return nil, err
 	}
 
-	// backfil clone url
+	// backfill clone url
 	repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)
 
 	return repo, nil

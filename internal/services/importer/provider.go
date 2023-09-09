@@ -9,25 +9,40 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/harness/gitness/internal/api/usererror"
+	"github.com/harness/gitness/types"
 
 	"github.com/drone/go-scm/scm"
 	"github.com/drone/go-scm/scm/driver/github"
+	"github.com/drone/go-scm/scm/driver/gitlab"
 	"github.com/drone/go-scm/scm/transport/oauth2"
 )
 
 type ProviderType string
 
 const (
-	ProviderTypeGitHub ProviderType = "github"
+	ProviderTypeGitHub           ProviderType = "github"
+	ProviderTypeGitHubEnterprise ProviderType = "github-enterprise"
+	ProviderTypeGitLab           ProviderType = "gitlab"
+	ProviderTypeGitLabEnterprise ProviderType = "gitlab-enterprise"
 )
 
-type ProviderInfo struct {
-	Type ProviderType
-	Host string
-	User string
-	Pass string
+type Provider struct {
+	Type     ProviderType `json:"type"`
+	Host     string       `json:"host"`
+	Username string       `json:"username"`
+	Password string       `json:"password"`
+}
+
+func (p Provider) Enum() []any {
+	return []any{
+		ProviderTypeGitHub,
+		ProviderTypeGitHubEnterprise,
+		ProviderTypeGitLab,
+		ProviderTypeGitLabEnterprise,
+	}
 }
 
 type RepositoryInfo struct {
@@ -38,42 +53,120 @@ type RepositoryInfo struct {
 	DefaultBranch string
 }
 
-func getClient(provider ProviderInfo) (*scm.Client, error) {
-	var scmClient *scm.Client
+// ToRepo converts the RepositoryInfo into the types.Repository object marked as being imported.
+func (r *RepositoryInfo) ToRepo(
+	spaceID int64,
+	path string,
+	uid string,
+	description string,
+	jobUID string,
+	principal *types.Principal,
+) *types.Repository {
+	now := time.Now().UnixMilli()
+	gitTempUID := "importing-" + jobUID
+	return &types.Repository{
+		Version:         0,
+		ParentID:        spaceID,
+		UID:             uid,
+		GitUID:          gitTempUID, // the correct git UID will be set by the job handler
+		Path:            path,
+		Description:     description,
+		IsPublic:        r.IsPublic,
+		CreatedBy:       principal.ID,
+		Created:         now,
+		Updated:         now,
+		ForkID:          0,
+		DefaultBranch:   r.DefaultBranch,
+		Importing:       true,
+		ImportingJobUID: &jobUID,
+	}
+}
 
+func getClient(provider Provider) (*scm.Client, error) {
 	switch provider.Type {
 	case "":
 		return nil, usererror.BadRequest("provider can not be empty")
+
 	case ProviderTypeGitHub:
-		scmClient = github.NewDefault()
-		if provider.Pass != "" {
-			scmClient.Client = &http.Client{
+		c := github.NewDefault()
+		if provider.Password != "" {
+			c.Client = &http.Client{
 				Transport: &oauth2.Transport{
-					Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Pass}),
+					Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
 				},
 			}
 		}
+		return c, nil
+
+	case ProviderTypeGitHubEnterprise:
+		c, err := github.New(provider.Host)
+		if err != nil {
+			return nil, usererror.BadRequestf("provider Host invalid: %s", err.Error())
+		}
+
+		if provider.Password != "" {
+			c.Client = &http.Client{
+				Transport: &oauth2.Transport{
+					Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
+				},
+			}
+		}
+		return c, nil
+
+	case ProviderTypeGitLab:
+		c := gitlab.NewDefault()
+		if provider.Password != "" {
+			c.Client = &http.Client{
+				Transport: &oauth2.Transport{
+					Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
+				},
+			}
+		}
+
+		return c, nil
+
+	case ProviderTypeGitLabEnterprise:
+		c, err := gitlab.New(provider.Host)
+		if err != nil {
+			return nil, usererror.BadRequestf("provider Host invalid: %s", err.Error())
+		}
+
+		if provider.Password != "" {
+			c.Client = &http.Client{
+				Transport: &oauth2.Transport{
+					Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
+				},
+			}
+		}
+
+		return c, nil
+
 	default:
 		return nil, usererror.BadRequestf("unsupported provider: %s", provider)
 	}
-
-	return scmClient, nil
 }
-func Repo(ctx context.Context, provider ProviderInfo, repoSlug string) (RepositoryInfo, error) {
+func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug string) (RepositoryInfo, error) {
 	scmClient, err := getClient(provider)
 	if err != nil {
 		return RepositoryInfo{}, err
 	}
 
+	if repoSlug == "" {
+		return RepositoryInfo{}, usererror.BadRequest("provider repository identifier is missing")
+	}
+
 	scmRepo, _, err := scmClient.Repositories.Find(ctx, repoSlug)
 	if errors.Is(err, scm.ErrNotFound) {
-		return RepositoryInfo{}, usererror.BadRequestf("repository %s not found at %s", repoSlug, provider)
+		return RepositoryInfo{},
+			usererror.BadRequestf("repository %s not found at %s", repoSlug, provider.Type)
 	}
 	if errors.Is(err, scm.ErrNotAuthorized) {
-		return RepositoryInfo{}, usererror.BadRequestf("bad credentials provided for %s at %s", repoSlug, provider)
+		return RepositoryInfo{},
+			usererror.BadRequestf("bad credentials provided for %s at %s", repoSlug, provider.Type)
 	}
 	if err != nil {
-		return RepositoryInfo{}, fmt.Errorf("failed to fetch repository %s from %s: %w", repoSlug, provider, err)
+		return RepositoryInfo{},
+			fmt.Errorf("failed to fetch repository %s from %s: %w", repoSlug, provider.Type, err)
 	}
 
 	return RepositoryInfo{
@@ -85,13 +178,17 @@ func Repo(ctx context.Context, provider ProviderInfo, repoSlug string) (Reposito
 	}, nil
 }
 
-func Space(ctx context.Context, provider ProviderInfo, space string) (map[string]RepositoryInfo, error) {
+func LoadRepositoriesFromProviderSpace(ctx context.Context, provider Provider, spaceSlug string) ([]RepositoryInfo, error) {
 	scmClient, err := getClient(provider)
 	if err != nil {
 		return nil, err
 	}
 
-	repoMap := make(map[string]RepositoryInfo)
+	if spaceSlug == "" {
+		return nil, usererror.BadRequest("provider space identifier is missing")
+	}
+
+	repos := make([]RepositoryInfo, 0)
 
 	const pageSize = 50
 	page := 1
@@ -104,17 +201,17 @@ func Space(ctx context.Context, provider ProviderInfo, space string) (map[string
 			},
 			RepoSearchTerm: scm.RepoSearchTerm{
 				RepoName: "",
-				User:     space,
+				User:     spaceSlug,
 			},
 		})
 		if errors.Is(err, scm.ErrNotFound) {
-			return nil, usererror.BadRequestf("space %s not found at %s", space, provider)
+			return nil, usererror.BadRequestf("space %s not found at %s", spaceSlug, provider.Type)
 		}
 		if errors.Is(err, scm.ErrNotAuthorized) {
-			return nil, usererror.BadRequestf("bad credentials provided for %s at %s", space, provider)
+			return nil, usererror.BadRequestf("bad credentials provided for %s at %s", spaceSlug, provider.Type)
 		}
 		if err != nil {
-			return nil, fmt.Errorf("failed to fetch space %s from %s: %w", space, provider, err)
+			return nil, fmt.Errorf("failed to fetch space %s from %s: %w", spaceSlug, provider.Type, err)
 		}
 
 		for _, scmRepo := range scmRepos {
@@ -122,13 +219,13 @@ func Space(ctx context.Context, provider ProviderInfo, space string) (map[string
 				continue
 			}
 
-			repoMap[scmRepo.Name] = RepositoryInfo{
+			repos = append(repos, RepositoryInfo{
 				Space:         scmRepo.Namespace,
 				UID:           scmRepo.Name,
 				CloneURL:      scmRepo.Clone,
 				IsPublic:      !scmRepo.Private,
 				DefaultBranch: scmRepo.Branch,
-			}
+			})
 		}
 
 		if len(scmRepos) == 0 || page == scmResponse.Page.Last {
@@ -138,5 +235,5 @@ func Space(ctx context.Context, provider ProviderInfo, space string) (map[string
 		page++
 	}
 
-	return repoMap, nil
+	return repos, nil
 }

@@ -10,24 +10,21 @@ import (
 	"io"
 
 	"github.com/harness/gitness/gitrpc"
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
- * Raw finds the file of the repo at the given path and returns its raw content.
- * If no gitRef is provided, the content is retrieved from the default branch.
- */
-func (c *Controller) Raw(ctx context.Context, session *auth.Session, repoRef string,
-	gitRef string, repoPath string) (io.Reader, int64, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+// Raw finds the file of the repo at the given path and returns its raw content.
+// If no gitRef is provided, the content is retrieved from the default branch.
+func (c *Controller) Raw(ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	gitRef string,
+	repoPath string,
+) (io.Reader, int64, error) {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
 	if err != nil {
-		return nil, 0, err
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, true); err != nil {
 		return nil, 0, err
 	}
 

@@ -11,7 +11,6 @@ import (
 	"io"
 
 	"github.com/harness/gitness/gitrpc"
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/controller"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
@@ -89,12 +88,8 @@ func (c *Controller) GetContent(ctx context.Context,
 	repoPath string,
 	includeLatestCommit bool,
 ) (*GetContentOutput, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
 	if err != nil {
-		return nil, err
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, true); err != nil {
 		return nil, err
 	}
 

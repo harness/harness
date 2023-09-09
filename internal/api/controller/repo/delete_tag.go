@@ -9,20 +9,18 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types/enum"
 )
 
 // DeleteTag deletes a tag from the repo.
-func (c *Controller) DeleteTag(ctx context.Context, session *auth.Session,
-	repoRef, tagName string) error {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+func (c *Controller) DeleteTag(ctx context.Context,
+	session *auth.Session,
+	repoRef,
+	tagName string,
+) error {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
-		return err
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoPush, false); err != nil {
 		return err
 	}
 

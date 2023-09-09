@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strings"
 
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -28,14 +27,13 @@ func (in *UpdateInput) hasChanges(repo *types.Repository) bool {
 }
 
 // Update updates a repository.
-func (c *Controller) Update(ctx context.Context, session *auth.Session,
-	repoRef string, in *UpdateInput) (*types.Repository, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+func (c *Controller) Update(ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	in *UpdateInput,
+) (*types.Repository, error) {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoEdit, false)
 	if err != nil {
-		return nil, err
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoEdit, false); err != nil {
 		return nil, err
 	}
 

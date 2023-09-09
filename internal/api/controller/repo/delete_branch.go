@@ -9,20 +9,19 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types/enum"
 )
 
 // DeleteBranch deletes a repo branch.
-func (c *Controller) DeleteBranch(ctx context.Context, session *auth.Session, repoRef string, branchName string) error {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+func (c *Controller) DeleteBranch(ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	branchName string,
+) error {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
-		return err
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoPush, false); err != nil {
 		return err
 	}
 

@@ -19,6 +19,7 @@ import (
 
 // Delete deletes a repo.
 func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef string) error {
+	// note: can't use c.getRepoCheckAccess because import job for repositories being imported must be cancelled.
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return err
@@ -27,9 +28,21 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef 
 	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoDelete, false); err != nil {
 		return err
 	}
+
+	if repo.Importing {
+		err = c.importer.Cancel(ctx, repo)
+		if err != nil {
+			return fmt.Errorf("failed to cancel repository import")
+		}
+
+		return c.DeleteNoAuth(ctx, session, repo)
+	}
+
 	log.Ctx(ctx).Info().Msgf("Delete request received for repo %s , id: %d", repo.Path, repo.ID)
+
 	// TODO: uncomment when soft delete is implemented
 	// return c.DeleteNoAuth(ctx, session, repo)
+
 	return nil
 }
 

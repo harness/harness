@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types/enum"
 )
@@ -24,14 +23,13 @@ type CreateBranchInput struct {
 }
 
 // CreateBranch creates a new branch for a repo.
-func (c *Controller) CreateBranch(ctx context.Context, session *auth.Session,
-	repoRef string, in *CreateBranchInput) (*Branch, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+func (c *Controller) CreateBranch(ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	in *CreateBranchInput,
+) (*Branch, error) {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
-		return nil, err
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoPush, false); err != nil {
 		return nil, err
 	}
 
