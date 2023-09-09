@@ -215,10 +215,6 @@ func LoadRepositoriesFromProviderSpace(ctx context.Context, provider Provider, s
 		}
 
 		for _, scmRepo := range scmRepos {
-			if !scmRepo.Perm.Pull {
-				continue
-			}
-
 			repos = append(repos, RepositoryInfo{
 				Space:         scmRepo.Namespace,
 				UID:           scmRepo.Name,

@@ -51,6 +51,10 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil, err
 	}
 
+	if len(remoteRepositories) == 0 {
+		return nil, usererror.BadRequestf("found no repositories at %s", in.ProviderSpace)
+	}
+
 	localRepositories := make([]*types.Repository, len(remoteRepositories))
 	cloneURLs := make([]string, len(remoteRepositories))
 
