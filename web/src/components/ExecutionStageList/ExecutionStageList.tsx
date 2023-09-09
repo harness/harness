@@ -32,7 +32,7 @@ const ExecutionStage: FC<ExecutionStageProps> = ({ stage, isSelected = false, se
           status={getStatus(stage.status || ExecutionState.PENDING)}
           iconOnly
           noBackground
-          iconSize={16}
+          iconSize={18}
           className={css.statusIcon}
         />
         <Text className={css.uid} lineClamp={1}>

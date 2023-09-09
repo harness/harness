@@ -740,6 +740,7 @@ export interface TypesRepository {
   fork_id?: number
   git_url?: string
   id?: number
+  importing?: boolean
   is_public?: boolean
   num_closed_pulls?: number
   num_forks?: number

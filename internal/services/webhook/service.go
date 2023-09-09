@@ -27,17 +27,15 @@ const (
 type Config struct {
 	// UserAgentIdentity specifies the identity used for the user agent header
 	// IMPORTANT: do not include version.
-	UserAgentIdentity string `envconfig:"GITNESS_WEBHOOK_USER_AGENT_IDENTITY" default:"Gitness"`
+	UserAgentIdentity string
 	// HeaderIdentity specifies the identity used for headers in webhook calls (e.g. X-Gitness-Trigger, ...).
 	// NOTE: If no value is provided, the UserAgentIdentity will be used.
-	HeaderIdentity string `envconfig:"GITNESS_WEBHOOK_HEADER_IDENTITY"`
-	// EventReaderName is the name used to read events from stream.
-	// Note: this should be different for every running instance.
-	EventReaderName     string `envconfig:"GITNESS_WEBHOOK_EVENT_READER_NAME"`
-	Concurrency         int    `envconfig:"GITNESS_WEBHOOK_CONCURRENCY" default:"4"`
-	MaxRetries          int    `envconfig:"GITNESS_WEBHOOK_MAX_RETRIES" default:"3"`
-	AllowPrivateNetwork bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_PRIVATE_NETWORK" default:"false"`
-	AllowLoopback       bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_LOOPBACK" default:"false"`
+	HeaderIdentity      string
+	EventReaderName     string
+	Concurrency         int
+	MaxRetries          int
+	AllowPrivateNetwork bool
+	AllowLoopback       bool
 }
 
 func (c *Config) Prepare() error {
@@ -91,7 +89,7 @@ func NewService(ctx context.Context, config Config,
 	repoStore store.RepoStore, pullreqStore store.PullReqStore, urlProvider *url.Provider,
 	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Service, error) {
 	if err := config.Prepare(); err != nil {
-		return nil, fmt.Errorf("provided config is invalid: %w", err)
+		return nil, fmt.Errorf("provided webhook service config is invalid: %w", err)
 	}
 	service := &Service{
 		webhookStore:          webhookStore,

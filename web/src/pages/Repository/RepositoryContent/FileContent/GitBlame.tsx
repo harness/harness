@@ -148,7 +148,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
   }
 
   return (
-    <Container className={css.gitBlame}>
+    <Container className={css.main}>
       <Layout.Horizontal className={css.layout}>
         <Container className={css.blameColumn}>
           {Object.values(blameBlocks).map(blameInfo => (
@@ -246,7 +246,7 @@ const GitBlameRenderer = React.memo(function GitBlameSourceViewer({
       filename={filename}
       content={source}
       readonly={true}
-      className={css.main}
+      className={css.codeViewer}
       onViewUpdate={onViewUpdate}
       extensions={extensions.of([])}
       maxHeight="auto"

@@ -58,7 +58,9 @@ const (
 		,repo_num_pulls
 		,repo_num_closed_pulls
 		,repo_num_open_pulls
-		,repo_num_merged_pulls`
+		,repo_num_merged_pulls
+		,repo_importing
+		,repo_importing_job_uid`
 
 	repoSelectBaseWithJoin = `
 		SELECT` + repoColumnsForJoin + `
@@ -124,6 +126,8 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_num_closed_pulls
 			,repo_num_open_pulls
 			,repo_num_merged_pulls
+			,repo_importing
+			,repo_importing_job_uid
 		) values (
 			:repo_version
 			,:repo_parent_id
@@ -142,6 +146,8 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_num_closed_pulls
 			,:repo_num_open_pulls
 			,:repo_num_merged_pulls
+			,:repo_importing
+			,:repo_importing_job_uid
 		) RETURNING repo_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -170,12 +176,15 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			,repo_uid				= :repo_uid
 			,repo_description		= :repo_description
 			,repo_is_public			= :repo_is_public
+			,repo_default_branch    = :repo_default_branch
 			,repo_pullreq_seq		= :repo_pullreq_seq
 			,repo_num_forks			= :repo_num_forks
 			,repo_num_pulls			= :repo_num_pulls
 			,repo_num_closed_pulls	= :repo_num_closed_pulls
 			,repo_num_open_pulls	= :repo_num_open_pulls
 			,repo_num_merged_pulls	= :repo_num_merged_pulls
+			,repo_importing         = :repo_importing
+			,repo_importing_job_uid = :repo_importing_job_uid
 		WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
 
 	updatedAt := time.Now()
@@ -295,17 +304,13 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("repo_uid " + opts.Order.String())
-		//TODO: Postgres does not support COLLATE NOCASE for UTF8
-		// stmt = stmt.OrderBy("repo_uid COLLATE NOCASE " + opts.Order.String())
+		stmt = stmt.OrderBy("repo_importing desc, repo_uid " + opts.Order.String())
 	case enum.RepoAttrCreated:
 		stmt = stmt.OrderBy("repo_created " + opts.Order.String())
 	case enum.RepoAttrUpdated:
 		stmt = stmt.OrderBy("repo_updated " + opts.Order.String())
 	case enum.RepoAttrPath:
-		stmt = stmt.OrderBy("repo_path " + opts.Order.String())
-		//TODO: Postgres does not support COLLATE NOCASE for UTF8
-		// stmt = stmt.OrderBy("repo_path COLLATE NOCASE " + opts.Order.String())
+		stmt = stmt.OrderBy("repo_importing desc, repo_path " + opts.Order.String())
 	}
 
 	sql, args, err := stmt.ToSql()

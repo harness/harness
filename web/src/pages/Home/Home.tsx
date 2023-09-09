@@ -1,11 +1,9 @@
 import React from 'react'
 import { ButtonVariation, Container, Layout, PageBody, Text } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
-import { useGet } from 'restful-react'
+import { noop } from 'lodash-es'
 import { useHistory } from 'react-router-dom'
-// import type { TypesSpace } from 'services/code'
 import { useStrings } from 'framework/strings'
-// import { usePageIndex } from 'hooks/usePageIndex'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -16,15 +14,11 @@ export default function Home() {
   const { getString } = useStrings()
   const history = useHistory()
   const { routes } = useAppContext()
-  // const [searchTerm, setSearchTerm] = useState('')
-  // const [page, setPage] = usePageIndex(1)
   const { currentUser } = useAppContext()
   const { space } = useGetRepositoryMetadata()
 
   const spaces = []
-  const { refetch } = useGet({
-    path: '/api/v1/user/memberships'
-  })
+
   const NewSpaceButton = (
     <NewSpaceModalButton
       space={space}
@@ -34,7 +28,7 @@ export default function Home() {
       icon="plus"
       width={173}
       height={48}
-      onRefetch={refetch}
+      onRefetch={noop}
       handleNavigation={spaceName => {
         history.push(routes.toCODERepositories({ space: spaceName }))
       }}

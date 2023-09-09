@@ -11,6 +11,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
 	"github.com/harness/gitness/internal/store"
@@ -98,7 +99,7 @@ type Manager struct {
 	Pipelines   store.PipelineStore
 	urlProvider *urlprovider.Provider
 	// Converter  store.ConvertService
-	// Events     store.Pubsub
+	Events events.EventsStreamer
 	// Globals    store.GlobalSecretStore
 	Logs store.LogStore
 	Logz livelog.LogStream
@@ -119,6 +120,7 @@ func New(
 	executionStore store.ExecutionStore,
 	pipelineStore store.PipelineStore,
 	urlProvider *urlprovider.Provider,
+	events events.EventsStreamer,
 	fileService file.FileService,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
@@ -134,6 +136,7 @@ func New(
 		Executions:  executionStore,
 		Pipelines:   pipelineStore,
 		urlProvider: urlProvider,
+		Events:      events,
 		FileService: fileService,
 		Logs:        logStore,
 		Logz:        logStream,
@@ -313,6 +316,7 @@ func (m *Manager) BeforeStep(ctx context.Context, step *types.Step) error {
 	}
 	updater := &updater{
 		Executions: m.Executions,
+		Events:     m.Events,
 		Repos:      m.Repos,
 		Steps:      m.Steps,
 		Stages:     m.Stages,
@@ -332,6 +336,7 @@ func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 	var retErr error
 	updater := &updater{
 		Executions: m.Executions,
+		Events:     m.Events,
 		Repos:      m.Repos,
 		Steps:      m.Steps,
 		Stages:     m.Stages,
@@ -352,6 +357,7 @@ func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 func (m *Manager) BeforeStage(ctx context.Context, stage *types.Stage) error {
 	s := &setup{
 		Executions: m.Executions,
+		Events:     m.Events,
 		Repos:      m.Repos,
 		Steps:      m.Steps,
 		Stages:     m.Stages,
@@ -365,6 +371,7 @@ func (m *Manager) BeforeStage(ctx context.Context, stage *types.Stage) error {
 func (m *Manager) AfterStage(ctx context.Context, stage *types.Stage) error {
 	t := &teardown{
 		Executions: m.Executions,
+		Events:     m.Events,
 		Logs:       m.Logz,
 		Repos:      m.Repos,
 		Scheduler:  m.Scheduler,

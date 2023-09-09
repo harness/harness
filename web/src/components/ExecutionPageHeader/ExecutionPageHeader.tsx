@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react'
-import { Layout, Text, PageHeader, Utils, Avatar, FlexExpander } from '@harnessio/uicore'
+import { Layout, Text, PageHeader, Utils, Avatar, FlexExpander, Container } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
 import { Link, useParams } from 'react-router-dom'
@@ -78,8 +78,7 @@ export function ExecutionPageHeader({
       }
       content={
         executionInfo && (
-          // TODO - margin left not playing ball... why?
-          <Layout.Horizontal className={css.executionInfo} spacing="small" style={{ marginLeft: 0 }}>
+          <Container className={css.executionInfo}>
             <ExecutionStatus status={getStatus(executionInfo.status)} iconOnly noBackground iconSize={18} />
             <Text inline color={Color.GREY_800} font={{ size: 'small' }}>
               {executionInfo.message}
@@ -106,14 +105,13 @@ export function ExecutionPageHeader({
               <Text inline color={Color.GREY_500} font={{ size: 'small' }}>
                 {timeDistance(executionInfo.started, executionInfo.finished)}
               </Text>
-            </Layout.Horizontal>
-            <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
+              <PipeSeparator height={7} />
               <Calendar height={16} width={16} color={Utils.getRealCSSColor(Color.GREY_500)} />
               <Text inline color={Color.GREY_500} font={{ size: 'small' }}>
                 {timeDistance(executionInfo.finished, Date.now())} ago
               </Text>
             </Layout.Horizontal>
-          </Layout.Horizontal>
+          </Container>
         )
       }
     />

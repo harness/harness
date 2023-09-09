@@ -170,6 +170,7 @@ export interface StringsMap {
   enterUser: string
   error: string
   error404Text: string
+  'executions.completedTime': string
   'executions.description': string
   'executions.name': string
   'executions.newExecutionButton': string
@@ -480,11 +481,16 @@ export interface StringsMap {
   searchBranches: string
   secret: string
   'secrets.createSecret': string
+  'secrets.createSuccess': string
+  'secrets.deleteSecret': string
+  'secrets.deleteSecretConfirm': string
   'secrets.enterSecretName': string
   'secrets.failedToCreate': string
+  'secrets.failedToDeleteSecret': string
   'secrets.name': string
   'secrets.newSecretButton': string
   'secrets.noData': string
+  'secrets.secretDeleted': string
   'secrets.value': string
   selectBranchPlaceHolder: string
   selectRange: string

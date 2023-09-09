@@ -63,6 +63,7 @@ type SyncRepositoryParams struct {
 }
 
 type SyncRepositoryOutput struct {
+	DefaultBranch string
 }
 
 type HashRepositoryParams struct {
@@ -164,7 +165,7 @@ func (c *Client) DeleteRepository(ctx context.Context, params *DeleteRepositoryP
 }
 
 func (c *Client) SyncRepository(ctx context.Context, params *SyncRepositoryParams) (*SyncRepositoryOutput, error) {
-	_, err := c.repoService.SyncRepository(ctx, &rpc.SyncRepositoryRequest{
+	result, err := c.repoService.SyncRepository(ctx, &rpc.SyncRepositoryRequest{
 		Base:              mapToRPCWriteRequest(params.WriteParams),
 		Source:            params.Source,
 		CreateIfNotExists: params.CreateIfNotExists,
@@ -173,7 +174,9 @@ func (c *Client) SyncRepository(ctx context.Context, params *SyncRepositoryParam
 		return nil, processRPCErrorf(err, "failed to sync repository on server to match provided source")
 	}
 
-	return &SyncRepositoryOutput{}, nil
+	return &SyncRepositoryOutput{
+		DefaultBranch: result.DefaultBranch,
+	}, nil
 }
 
 func (c *Client) HashRepository(ctx context.Context, params *HashRepositoryParams) (*HashRepositoryOutput, error) {

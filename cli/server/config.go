@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/gitrpc/server"
+	"github.com/harness/gitness/internal/services/trigger"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/store/database"
@@ -147,23 +148,26 @@ func ProvideEventsConfig() (events.Config, error) {
 	return config, nil
 }
 
-// ProvideWebhookConfig loads the webhook config from the environment.
-// It backfills certain config elements if required.
-func ProvideWebhookConfig() (webhook.Config, error) {
-	config := webhook.Config{}
-	err := envconfig.Process("", &config)
-	if err != nil {
-		return webhook.Config{}, fmt.Errorf("failed to load events config: %w", err)
+// ProvideWebhookConfig loads the webhook service config from the main config.
+func ProvideWebhookConfig(config *types.Config) webhook.Config {
+	return webhook.Config{
+		UserAgentIdentity:   config.Webhook.UserAgentIdentity,
+		HeaderIdentity:      config.Webhook.HeaderIdentity,
+		EventReaderName:     config.InstanceID,
+		Concurrency:         config.Webhook.Concurrency,
+		MaxRetries:          config.Webhook.MaxRetries,
+		AllowPrivateNetwork: config.Webhook.AllowPrivateNetwork,
+		AllowLoopback:       config.Webhook.AllowLoopback,
 	}
+}
 
-	if config.EventReaderName == "" {
-		config.EventReaderName, err = getSanitizedMachineName()
-		if err != nil {
-			return webhook.Config{}, fmt.Errorf("failed to get sanitized machine name: %w", err)
-		}
+// ProvideTriggerConfig loads the trigger service config from the main config.
+func ProvideTriggerConfig(config *types.Config) trigger.Config {
+	return trigger.Config{
+		EventReaderName: config.InstanceID,
+		Concurrency:     config.Webhook.Concurrency,
+		MaxRetries:      config.Webhook.MaxRetries,
 	}
-
-	return config, nil
 }
 
 // ProvideLockConfig generates the `lock` package config from the gitness config.

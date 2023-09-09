@@ -61,7 +61,7 @@
     "marked": "^4.0.12",
     "masonry-layout": "^4.2.2",
     "moment": "^2.25.3",
-    "monaco-editor": "^0.37.1",
+    "monaco-editor": "^0.40.0",
     "monaco-editor-webpack-plugin": "^7.0.1",
     "monaco-yaml": "^4.0.4",
     "qs": "^6.9.4",
@@ -72,7 +72,7 @@
     "react-intersection-observer": "^9.4.1",
     "react-jsx-match": "^1.1.5",
     "react-keywords": "^0.0.5",
-    "react-monaco-editor": "^0.52.0",
+    "react-monaco-editor": "^0.54.0",
     "react-pdf": "^7.1.2",
     "react-resize-detector": "^7.1.2",
     "react-router-dom": "^5.2.1",
@@ -130,7 +130,6 @@
     "identity-obj-proxy": "^3.0.0",
     "jest": "^26.2.0",
     "js-yaml": "^4.1.0",
-    "lint-staged": "^11.0.0",
     "lodash": "^4.17.21",
     "mini-css-extract-plugin": "^2.4.2",
     "mustache": "^4.0.1",
@@ -157,34 +156,5 @@
   },
   "engines": {
     "node": ">=14.16.0"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --rulesdir ./scripts/eslint-rules --resolve-plugins-relative-to",
-      "sh scripts/typecheck-staged.sh",
-      "prettier --check"
-    ],
-    "*.scss": [
-      "prettier --check"
-    ],
-    "strings.*.yaml": [
-      "npm strings:check"
-    ],
-    "webpack.devServerProxy.config.js": [
-      "exit 1"
-    ]
-  },
-  "i18nSettings": {
-    "extensionToLanguageMap": {
-      "es": [
-        "es"
-      ],
-      "en": [
-        "en",
-        "en-US",
-        "en-IN",
-        "en-UK"
-      ]
-    }
   }
 }

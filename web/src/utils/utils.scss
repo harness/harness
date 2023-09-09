@@ -2,9 +2,11 @@ $code-editor-font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menl
   monospace;
 
 @mixin mono-font {
-  font-family: var(--font-family-mono) !important;
+  font-family: Menlo, Monaco, 'Courier New', monospace var(--font-family-mono) !important;
+  font-weight: normal !important;
   font-size: 13px !important;
   font-feature-settings: 'liga' 0, 'calt' 0;
+  font-variation-settings: normal;
   line-height: 18px;
   letter-spacing: 0px;
 }

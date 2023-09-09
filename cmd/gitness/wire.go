@@ -32,7 +32,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/controller/system"
 	"github.com/harness/gitness/internal/api/controller/template"
-	"github.com/harness/gitness/internal/api/controller/trigger"
+	controllertrigger "github.com/harness/gitness/internal/api/controller/trigger"
 	"github.com/harness/gitness/internal/api/controller/user"
 	controllerwebhook "github.com/harness/gitness/internal/api/controller/webhook"
 	"github.com/harness/gitness/internal/auth/authn"
@@ -41,6 +41,7 @@ import (
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/pipeline/commit"
+	eventsstream "github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/manager"
 	"github.com/harness/gitness/internal/pipeline/runner"
@@ -50,8 +51,10 @@ import (
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/codecomments"
+	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/services/job"
 	pullreqservice "github.com/harness/gitness/internal/services/pullreq"
+	"github.com/harness/gitness/internal/services/trigger"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/cache"
@@ -104,6 +107,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		events.WireSet,
 		cliserver.ProvideWebhookConfig,
 		webhook.WireSet,
+		cliserver.ProvideTriggerConfig,
+		trigger.WireSet,
 		githook.WireSet,
 		cliserver.ProvideLockConfig,
 		lock.WireSet,
@@ -124,10 +129,12 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		triggerer.WireSet,
 		file.WireSet,
 		runner.WireSet,
+		eventsstream.WireSet,
 		scheduler.WireSet,
 		commit.WireSet,
-		trigger.WireSet,
+		controllertrigger.WireSet,
 		plugin.WireSet,
+		importer.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

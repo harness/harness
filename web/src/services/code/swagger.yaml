@@ -7453,6 +7453,8 @@ components:
           type: string
         id:
           type: integer
+        importing:
+          type: boolean
         is_public:
           type: boolean
         num_closed_pulls:

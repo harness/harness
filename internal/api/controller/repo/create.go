@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -151,10 +150,8 @@ func (c *Controller) getSpaceCheckAuthRepoCreation(
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
-	parentRefAsID, err := strconv.ParseInt(in.ParentRef, 10, 64)
-
-	if (err == nil && parentRefAsID <= 0) || (len(strings.TrimSpace(in.ParentRef)) == 0) {
-		return errRepositoryRequiresParent
+	if err := c.validateParentRef(in.ParentRef); err != nil {
+		return err
 	}
 
 	if err := c.uidCheck(in.UID, false); err != nil {

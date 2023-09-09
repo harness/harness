@@ -188,6 +188,8 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 			r.Patch("/", handlerspace.HandleUpdate(spaceCtrl))
 			r.Delete("/", handlerspace.HandleDelete(spaceCtrl))
 
+			r.Get("/stream", handlerspace.HandleEventsStream(spaceCtrl))
+
 			r.Post("/move", handlerspace.HandleMove(spaceCtrl))
 			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))
 			r.Get("/repos", handlerspace.HandleListRepos(spaceCtrl))
@@ -232,6 +234,7 @@ func setupRepos(r chi.Router,
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerrepo.HandleCreate(repoCtrl))
+		r.Post("/import", handlerrepo.HandleImport(repoCtrl))
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 			// repo level operations
 			r.Get("/", handlerrepo.HandleFind(repoCtrl))
@@ -240,6 +243,8 @@ func setupRepos(r chi.Router,
 
 			r.Post("/move", handlerrepo.HandleMove(repoCtrl))
 			r.Get("/service-accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
+
+			r.Get("/import-progress", handlerrepo.HandleImportProgress(repoCtrl))
 
 			// content operations
 			// NOTE: this allows /content and /content/ to both be valid (without any other tricks.)

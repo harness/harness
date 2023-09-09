@@ -143,7 +143,7 @@ export function getCommentLineInfo(
 ) {
   const isSideBySideView = viewStyle === ViewStyle.SIDE_BY_SIDE
   const { left, lineNumber, filePath } = commentEntry
-  const filePathBody = contentDOM?.querySelector(`[data="${filePath}"`)
+  const filePathBody = filePath ? contentDOM?.querySelector(`[data="${filePath}"`) : contentDOM
 
   const diffBody = filePathBody?.querySelector(
     `${isSideBySideView ? `.d2h-file-side-diff${left ? '.left' : '.right'} ` : ''}.d2h-diff-tbody`
