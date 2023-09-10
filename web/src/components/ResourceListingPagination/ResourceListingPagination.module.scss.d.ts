@@ -1,11 +1,8 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly pagination: string
-  readonly main: string
-  readonly roundedButton: string
-  readonly selected: string
-  readonly buttonLeft: string
-  readonly buttonRight: string
-}
-export default styles
+// This is an auto-generated file
+export declare const buttonLeft: string
+export declare const buttonRight: string
+export declare const main: string
+export declare const pagination: string
+export declare const roundedButton: string
+export declare const selected: string

@@ -1,9 +1,6 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly readmeContainer: string
-  readonly contentOnly: string
-  readonly heading: string
-  readonly readmeContent: string
-}
-export default styles
+// This is an auto-generated file
+export declare const contentOnly: string
+export declare const heading: string
+export declare const readmeContainer: string
+export declare const readmeContent: string

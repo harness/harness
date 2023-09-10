@@ -1,8 +1,5 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly link: string
-  readonly copyContainer: string
-  readonly linkText: string
-}
-export default styles
+// This is an auto-generated file
+export declare const copyContainer: string
+export declare const link: string
+export declare const linkText: string

@@ -1,17 +1,14 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly layout: string
-  readonly withError: string
-  readonly nameContainer: string
-  readonly repoName: string
-  readonly desc: string
-  readonly avatar: string
-  readonly author: string
-  readonly hash: string
-  readonly triggerLayout: string
-  readonly spacer: string
-  readonly statusIcon: string
-}
-export default styles
+// This is an auto-generated file
+export declare const author: string
+export declare const avatar: string
+export declare const desc: string
+export declare const hash: string
+export declare const layout: string
+export declare const main: string
+export declare const nameContainer: string
+export declare const repoName: string
+export declare const spacer: string
+export declare const statusIcon: string
+export declare const triggerLayout: string
+export declare const withError: string

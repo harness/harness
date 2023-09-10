@@ -1,10 +1,7 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly link: string
-  readonly subLink: string
-  readonly highlighted: string
-  readonly text: string
-  readonly selected: string
-}
-export default styles
+// This is an auto-generated file
+export declare const highlighted: string
+export declare const link: string
+export declare const selected: string
+export declare const subLink: string
+export declare const text: string

@@ -1,9 +1,6 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly link: string
-  readonly filesMenu: string
-  readonly menuItem: string
-  readonly popover: string
-}
-export default styles
+// This is an auto-generated file
+export declare const filesMenu: string
+export declare const link: string
+export declare const menuItem: string
+export declare const popover: string

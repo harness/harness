@@ -1,26 +1,23 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly menu: string
-  readonly content: string
-  readonly menuItem: string
-  readonly layout: string
-  readonly expanded: string
-  readonly chevron: string
-  readonly selected: string
-  readonly uid: string
-  readonly subMenu: string
-  readonly text: string
-  readonly active: string
-  readonly markdown: string
-  readonly terminal: string
-  readonly header: string
-  readonly headerLayout: string
-  readonly markdownContainer: string
-  readonly terminalContainer: string
-  readonly status: string
-  readonly invert: string
-  readonly noShrink: string
-}
-export default styles
+// This is an auto-generated file
+export declare const active: string
+export declare const chevron: string
+export declare const content: string
+export declare const expanded: string
+export declare const header: string
+export declare const headerLayout: string
+export declare const invert: string
+export declare const layout: string
+export declare const main: string
+export declare const markdown: string
+export declare const markdownContainer: string
+export declare const menu: string
+export declare const menuItem: string
+export declare const noShrink: string
+export declare const selected: string
+export declare const status: string
+export declare const subMenu: string
+export declare const terminal: string
+export declare const terminalContainer: string
+export declare const text: string
+export declare const uid: string

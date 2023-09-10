@@ -1,13 +1,10 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly title: string
-  readonly label: string
-  readonly container: string
-  readonly maxContainer: string
-  readonly branchTagSelect: string
-  readonly selectContainer: string
-  readonly popoverContainer: string
-}
-export default styles
+// This is an auto-generated file
+export declare const branchTagSelect: string
+export declare const container: string
+export declare const label: string
+export declare const main: string
+export declare const maxContainer: string
+export declare const popoverContainer: string
+export declare const selectContainer: string
+export declare const title: string

@@ -1,7 +1,4 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly mainCtn: string
-  readonly roleBadge: string
-}
-export default styles
+// This is an auto-generated file
+export declare const mainCtn: string
+export declare const roleBadge: string

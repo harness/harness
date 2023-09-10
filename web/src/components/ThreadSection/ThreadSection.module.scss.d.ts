@@ -1,12 +1,9 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly thread: string
-  readonly content: string
-  readonly hideGutter: string
-  readonly hideTitleGutter: string
-  readonly titleContent: string
-  readonly inCommentBox: string
-  readonly threadLessSpace: string
-}
-export default styles
+// This is an auto-generated file
+export declare const content: string
+export declare const hideGutter: string
+export declare const hideTitleGutter: string
+export declare const inCommentBox: string
+export declare const thread: string
+export declare const threadLessSpace: string
+export declare const titleContent: string

@@ -1,18 +1,15 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly layout: string
-  readonly input: string
-  readonly withError: string
-  readonly table: string
-  readonly row: string
-  readonly noDesc: string
-  readonly nameContainer: string
-  readonly name: string
-  readonly pinned: string
-  readonly repoName: string
-  readonly repoScope: string
-  readonly desc: string
-}
-export default styles
+// This is an auto-generated file
+export declare const desc: string
+export declare const input: string
+export declare const layout: string
+export declare const main: string
+export declare const name: string
+export declare const nameContainer: string
+export declare const noDesc: string
+export declare const pinned: string
+export declare const repoName: string
+export declare const repoScope: string
+export declare const row: string
+export declare const table: string
+export declare const withError: string

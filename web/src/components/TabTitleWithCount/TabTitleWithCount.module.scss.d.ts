@@ -1,8 +1,5 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly tabsContainer: string
-  readonly tabTitle: string
-  readonly count: string
-}
-export default styles
+// This is an auto-generated file
+export declare const count: string
+export declare const tabsContainer: string
+export declare const tabTitle: string

@@ -1,14 +1,11 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly container: string
-  readonly heading: string
-  readonly path: string
-  readonly inputContainer: string
-  readonly refLink: string
-  readonly breadcrumbItem: string
-  readonly tabs: string
-  readonly selectedView: string
-  readonly editorContainer: string
-}
-export default styles
+// This is an auto-generated file
+export declare const breadcrumbItem: string
+export declare const container: string
+export declare const editorContainer: string
+export declare const heading: string
+export declare const inputContainer: string
+export declare const path: string
+export declare const refLink: string
+export declare const selectedView: string
+export declare const tabs: string

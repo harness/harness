@@ -1,16 +1,13 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly layout: string
-  readonly withError: string
-  readonly nameContainer: string
-  readonly name: string
-  readonly pinned: string
-  readonly number: string
-  readonly desc: string
-  readonly author: string
-  readonly hash: string
-  readonly triggerLayout: string
-}
-export default styles
+// This is an auto-generated file
+export declare const author: string
+export declare const desc: string
+export declare const hash: string
+export declare const layout: string
+export declare const main: string
+export declare const name: string
+export declare const nameContainer: string
+export declare const number: string
+export declare const pinned: string
+export declare const triggerLayout: string
+export declare const withError: string

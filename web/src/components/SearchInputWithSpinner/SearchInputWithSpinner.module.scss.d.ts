@@ -1,10 +1,7 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly layout: string
-  readonly wrapper: string
-  readonly spinnerOnRight: string
-  readonly input: string
-}
-export default styles
+// This is an auto-generated file
+export declare const input: string
+export declare const layout: string
+export declare const main: string
+export declare const spinnerOnRight: string
+export declare const wrapper: string

@@ -1,8 +1,5 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly contentSection: string
-  readonly hideText: string
-  readonly lineDiv: string
-}
-export default styles
+// This is an auto-generated file
+export declare const contentSection: string
+export declare const hideText: string
+export declare const lineDiv: string
