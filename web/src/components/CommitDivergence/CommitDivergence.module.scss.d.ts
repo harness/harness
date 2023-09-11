@@ -1,10 +1,7 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly container: string
-  readonly main: string
-  readonly ahead: string
-  readonly behind: string
-  readonly pipe: string
-}
-export default styles
+// This is an auto-generated file
+export declare const ahead: string
+export declare const behind: string
+export declare const container: string
+export declare const main: string
+export declare const pipe: string

@@ -54,7 +54,8 @@ const (
 		,job_is_recurring
 		,job_recurring_cron
 		,job_consecutive_failures
-		,job_last_failure_error`
+		,job_last_failure_error
+		,job_group_id`
 
 	jobSelectBase = `
 	SELECT` + jobColumns + `
@@ -101,6 +102,7 @@ func (s *JobStore) Create(ctx context.Context, job *types.Job) error {
 			,:job_recurring_cron
 			,:job_consecutive_failures
 			,:job_last_failure_error
+			,:job_group_id
 		)`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -143,6 +145,7 @@ func (s *JobStore) Upsert(ctx context.Context, job *types.Job) error {
 			,:job_recurring_cron
 			,:job_consecutive_failures
 			,:job_last_failure_error
+			,:job_group_id
 		)
 		ON CONFLICT (job_uid) DO
 		UPDATE SET
@@ -196,6 +199,7 @@ func (s *JobStore) UpdateDefinition(ctx context.Context, job *types.Job) error {
 		,job_scheduled = :job_scheduled
 		,job_is_recurring = :job_is_recurring
 		,job_recurring_cron = :job_recurring_cron
+		,job_group_id = :job_group_id
 	WHERE job_uid = :job_uid`
 
 	db := dbtx.GetAccessor(ctx, s.db)

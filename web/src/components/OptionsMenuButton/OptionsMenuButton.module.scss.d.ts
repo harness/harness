@@ -1,8 +1,5 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly danger: string
-  readonly isDark: string
-  readonly icon: string
-}
-export default styles
+// This is an auto-generated file
+export declare const danger: string
+export declare const icon: string
+export declare const isDark: string

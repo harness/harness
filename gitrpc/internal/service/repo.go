@@ -344,6 +344,11 @@ func (s RepositoryService) SyncRepository(
 
 	// get remote default branch
 	defaultBranch, err := s.adapter.GetRemoteDefaultBranch(ctx, request.GetSource())
+	if errors.Is(err, types.ErrNoDefaultBranch) {
+		return &rpc.SyncRepositoryResponse{
+			DefaultBranch: "",
+		}, nil
+	}
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to get default branch from repo")
 	}

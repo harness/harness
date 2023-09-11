@@ -1,15 +1,12 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly container: string
-  readonly heading: string
-  readonly content: string
-  readonly fileContent: string
-  readonly gitBlame: string
-  readonly gitCommit: string
-  readonly gitHistory: string
-  readonly tabsContainer: string
-  readonly tabTitle: string
-  readonly count: string
-}
-export default styles
+// This is an auto-generated file
+export declare const container: string
+export declare const content: string
+export declare const count: string
+export declare const fileContent: string
+export declare const gitBlame: string
+export declare const gitCommit: string
+export declare const gitHistory: string
+export declare const heading: string
+export declare const tabsContainer: string
+export declare const tabTitle: string

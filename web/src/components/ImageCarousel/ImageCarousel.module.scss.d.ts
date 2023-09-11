@@ -1,10 +1,7 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly imageModal: string
-  readonly content: string
-  readonly image: string
-  readonly vertical: string
-  readonly portalContainer: string
-}
-export default styles
+// This is an auto-generated file
+export declare const content: string
+export declare const image: string
+export declare const imageModal: string
+export declare const portalContainer: string
+export declare const vertical: string

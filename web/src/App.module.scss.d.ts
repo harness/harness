@@ -1,7 +1,4 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly fullPage: string
-}
-export default styles
+// This is an auto-generated file
+export declare const fullPage: string
+export declare const main: string

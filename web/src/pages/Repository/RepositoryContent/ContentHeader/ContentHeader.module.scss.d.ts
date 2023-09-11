@@ -1,10 +1,7 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly btnColorFix: string
-  readonly refRoot: string
-  readonly rootSlash: string
-  readonly breadcrumbItem: string
-}
-export default styles
+// This is an auto-generated file
+export declare const breadcrumbItem: string
+export declare const btnColorFix: string
+export declare const main: string
+export declare const refRoot: string
+export declare const rootSlash: string

@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/gitrpc"
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types/enum"
 )
@@ -25,13 +24,9 @@ func (c *Controller) MergeCheck(
 	repoRef string,
 	diffPath string,
 ) (MergeCheck, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, false)
 	if err != nil {
 		return MergeCheck{}, err
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
-		return MergeCheck{}, fmt.Errorf("access check failed: %w", err)
 	}
 
 	info, err := parseDiffPath(diffPath)

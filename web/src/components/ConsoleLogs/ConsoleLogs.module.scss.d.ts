@@ -1,8 +1,5 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly logLayout: string
-  readonly lineNumber: string
-  readonly log: string
-}
-export default styles
+// This is an auto-generated file
+export declare const lineNumber: string
+export declare const log: string
+export declare const logLayout: string

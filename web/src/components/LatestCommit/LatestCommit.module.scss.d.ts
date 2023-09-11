@@ -1,11 +1,8 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly latestCommit: string
-  readonly standalone: string
-  readonly forFile: string
-  readonly shaBtn: string
-  readonly commitLink: string
-  readonly time: string
-}
-export default styles
+// This is an auto-generated file
+export declare const commitLink: string
+export declare const forFile: string
+export declare const latestCommit: string
+export declare const shaBtn: string
+export declare const standalone: string
+export declare const time: string

@@ -1,12 +1,9 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly dialogCtn: string
-  readonly passwordCtn: string
-  readonly layout: string
-  readonly text: string
-  readonly formikForm: string
-  readonly inputWrapper: string
-  readonly copyBtn: string
-}
-export default styles
+// This is an auto-generated file
+export declare const copyBtn: string
+export declare const dialogCtn: string
+export declare const formikForm: string
+export declare const inputWrapper: string
+export declare const layout: string
+export declare const passwordCtn: string
+export declare const text: string

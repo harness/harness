@@ -7,23 +7,19 @@ package repo
 import (
 	"context"
 
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-/*
-* ListServiceAccounts lists the service accounts of a repo.
- */
-func (c *Controller) ListServiceAccounts(ctx context.Context, session *auth.Session,
-	repoRef string) ([]*types.ServiceAccount, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
-	if err != nil {
-		return nil, err
-	}
+// ListServiceAccounts lists the service accounts of a repo.
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
+func (c *Controller) ListServiceAccounts(ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+) ([]*types.ServiceAccount, error) {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, false)
+	if err != nil {
 		return nil, err
 	}
 

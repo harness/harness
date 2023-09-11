@@ -52,6 +52,7 @@ import (
 	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/services/job"
 	pullreq2 "github.com/harness/gitness/internal/services/pullreq"
+	trigger2 "github.com/harness/gitness/internal/services/trigger"
 	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/cache"
@@ -119,7 +120,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repository, err := importer.ProvideRepoImporter(provider, gitrpcInterface, repoStore, jobScheduler, executor)
+	repository, err := importer.ProvideRepoImporter(config, provider, gitrpcInterface, repoStore, jobScheduler, executor)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +143,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db)
 	templateStore := database.ProvideTemplateStore(db)
-	spaceController := space.ProvideController(db, provider, eventsStreamer, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore)
+	spaceController := space.ProvideController(db, provider, eventsStreamer, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository)
 	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore)
 	encrypter, err := encrypt.ProvideEncrypter(config)
 	if err != nil {
@@ -174,10 +175,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	migrator := codecomments.ProvideMigrator(gitrpcInterface)
 	pullreqController := pullreq.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface, reporter, mutexManager, migrator)
-	webhookConfig, err := server.ProvideWebhookConfig()
-	if err != nil {
-		return nil, err
-	}
+	webhookConfig := server.ProvideWebhookConfig(config)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
 	readerFactory, err := events4.ProvideReaderFactory(eventsSystem)
@@ -236,7 +234,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, executor, jobScheduler)
+	triggerConfig := server.ProvideTriggerConfig(config)
+	triggerService, err := trigger2.ProvideService(ctx, triggerConfig, readerFactory, eventsReaderFactory)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, poller, grpcServer, cronManager, servicesServices)
 	return serverSystem, nil
 }

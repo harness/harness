@@ -286,7 +286,7 @@ export default function Webhooks() {
                 showWhen={() => webhooks?.length === 0}
                 forSearch={!!searchTerm}
                 message={getString('webhookEmpty')}
-                buttonText={getString('createWebhook')}
+                buttonText={getString('newWebhook')}
                 onButtonClick={() =>
                   history.push(
                     routes.toCODEWebhookNew({

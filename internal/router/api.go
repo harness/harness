@@ -181,6 +181,7 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 	r.Route("/spaces", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerspace.HandleCreate(spaceCtrl))
+		r.Post("/import", handlerspace.HandleImport(spaceCtrl))
 
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamSpaceRef), func(r chi.Router) {
 			// space operations

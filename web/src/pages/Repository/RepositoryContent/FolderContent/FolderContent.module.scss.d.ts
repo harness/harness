@@ -1,19 +1,16 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly folderContent: string
-  readonly table: string
-  readonly row: string
-  readonly rowText: string
-  readonly readmeContainer: string
-  readonly heading: string
-  readonly readmeContent: string
-  readonly commitMsgLayout: string
-  readonly linkContainer: string
-  readonly noShrink: string
-  readonly link: string
-  readonly text: string
-  readonly hightlight: string
-  readonly commitContainer: string
-}
-export default styles
+// This is an auto-generated file
+export declare const commitContainer: string
+export declare const commitMsgLayout: string
+export declare const folderContent: string
+export declare const heading: string
+export declare const hightlight: string
+export declare const link: string
+export declare const linkContainer: string
+export declare const noShrink: string
+export declare const readmeContainer: string
+export declare const readmeContent: string
+export declare const row: string
+export declare const rowText: string
+export declare const table: string
+export declare const text: string

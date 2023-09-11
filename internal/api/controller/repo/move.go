@@ -7,6 +7,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"github.com/harness/gitness/internal/api/usererror"
 	"strconv"
 	"strings"
 	"time"
@@ -55,11 +56,18 @@ func (i *MoveInput) hasChanges(repo *types.Repository) bool {
 // Move moves a repository to a new space and/or uid.
 //
 //nolint:gocognit // refactor if needed
-func (c *Controller) Move(ctx context.Context, session *auth.Session,
-	repoRef string, in *MoveInput) (*types.Repository, error) {
+func (c *Controller) Move(ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	in *MoveInput,
+) (*types.Repository, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, err
+	}
+
+	if repo.Importing {
+		return nil, usererror.BadRequest("can't move a repo that is being imported")
 	}
 
 	permission := enum.PermissionRepoEdit

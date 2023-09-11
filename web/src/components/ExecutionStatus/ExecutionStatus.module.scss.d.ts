@@ -1,13 +1,10 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly iconOnly: string
-  readonly noBackground: string
-  readonly pending: string
-  readonly running: string
-  readonly success: string
-  readonly failure: string
-  readonly error: string
-}
-export default styles
+// This is an auto-generated file
+export declare const error: string
+export declare const failure: string
+export declare const iconOnly: string
+export declare const main: string
+export declare const noBackground: string
+export declare const pending: string
+export declare const running: string
+export declare const success: string

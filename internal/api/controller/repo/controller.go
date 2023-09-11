@@ -12,6 +12,8 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/gitrpc"
+	apiauth "github.com/harness/gitness/internal/api/auth"
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/githook"
@@ -20,6 +22,7 @@ import (
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -68,6 +71,35 @@ func NewController(
 		gitRPCClient:   gitRPCClient,
 		importer:       importer,
 	}
+}
+
+// getRepoCheckAccess fetches an active repo (not one that is currently being imported)
+// and checks if the current user has permission to access it.
+func (c *Controller) getRepoCheckAccess(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	reqPermission enum.Permission,
+	orPublic bool,
+) (*types.Repository, error) {
+	if repoRef == "" {
+		return nil, usererror.BadRequest("A valid repository reference must be provided.")
+	}
+
+	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find repository: %w", err)
+	}
+
+	if repo.Importing {
+		return nil, usererror.BadRequest("Repository import is in progress.")
+	}
+
+	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, reqPermission, orPublic); err != nil {
+		return nil, fmt.Errorf("access check failed: %w", err)
+	}
+
+	return repo, nil
 }
 
 // CreateRPCWriteParams creates base write parameters for gitrpc write operations.

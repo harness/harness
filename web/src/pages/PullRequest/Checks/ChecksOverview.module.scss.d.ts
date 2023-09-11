@@ -1,16 +1,13 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly showMore: string
-  readonly layout: string
-  readonly checks: string
-  readonly table: string
-  readonly row: string
-  readonly rowLayout: string
-  readonly status: string
-  readonly name: string
-  readonly desc: string
-  readonly time: string
-}
-export default styles
+// This is an auto-generated file
+export declare const checks: string
+export declare const desc: string
+export declare const layout: string
+export declare const main: string
+export declare const name: string
+export declare const row: string
+export declare const rowLayout: string
+export declare const showMore: string
+export declare const status: string
+export declare const table: string
+export declare const time: string

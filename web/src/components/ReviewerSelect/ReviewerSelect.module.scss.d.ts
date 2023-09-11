@@ -1,18 +1,15 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly button: string
-  readonly prefix: string
-  readonly layout: string
-  readonly textInputMain: string
-  readonly main: string
-  readonly input: string
-  readonly tabContainer: string
-  readonly branchesOnly: string
-  readonly popover: string
-  readonly listContainer: string
-  readonly menuItem: string
-  readonly newBtnText: string
-  readonly avatar: string
-}
-export default styles
+// This is an auto-generated file
+export declare const avatar: string
+export declare const branchesOnly: string
+export declare const button: string
+export declare const input: string
+export declare const layout: string
+export declare const listContainer: string
+export declare const main: string
+export declare const menuItem: string
+export declare const newBtnText: string
+export declare const popover: string
+export declare const prefix: string
+export declare const tabContainer: string
+export declare const textInputMain: string
