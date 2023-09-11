@@ -102,7 +102,7 @@ const SecretList = () => {
         Cell: ({ row }: CellProps<TypesSecret>) => {
           const { mutate: deleteSecret } = useMutate({
             verb: 'DELETE',
-            path: `/api/v1/secrets/${space}/${row.original.uid}`
+            path: `/api/v1/secrets/${space}/${row.original.uid}/+`
           })
           const { showSuccess, showError } = useToaster()
           const confirmDeleteSecret = useConfirmAct()
