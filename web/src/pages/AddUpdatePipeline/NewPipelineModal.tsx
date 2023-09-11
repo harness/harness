@@ -100,7 +100,7 @@ const useNewPipelineModal = () => {
                         }
                       }}
                     />
-                    <FormInput.Text name="branch" label={getString('pipelines.basedOn')} />
+                    <FormInput.Text name="branch" label={getString('branch')} />
                     <FormInput.Text
                       name="yamlPath"
                       label={getString('pipelines.yamlPath')}

@@ -629,7 +629,6 @@ pipelines:
   name: Pipeline Name
   createNewPipeline: Create New Pipeline
   enterPipelineName: Enter pipeline name
-  basedOn: Based On
   yamlPath: YAML Path
   enterYAMLPath: Enter YAML path
   failedToCreatePipeline: Failed to create pipeline
