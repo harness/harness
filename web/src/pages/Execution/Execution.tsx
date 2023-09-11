@@ -14,6 +14,7 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { ExecutionPageHeader } from 'components/ExecutionPageHeader/ExecutionPageHeader'
 import usePipelineEventStream from 'hooks/usePipelineEventStream'
+import { ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './Execution.module.scss'
 
@@ -57,7 +58,7 @@ const Execution = () => {
         executionRefetch()
       }
     },
-    shouldRun: execution?.status === 'running'
+    shouldRun: execution?.status === ExecutionState.RUNNING
   })
 
   return (
