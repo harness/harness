@@ -1,11 +1,14 @@
 import React, { useMemo, useState } from 'react'
+import { useHistory } from 'react-router'
+import { useMutate } from 'restful-react'
 import * as yup from 'yup'
+import { capitalize } from 'lodash'
 import { FontVariation } from '@harnessio/design-system'
 import {
   Button,
   ButtonVariation,
+  Container,
   Dialog,
-  FormInput,
   Formik,
   FormikForm,
   Layout,
@@ -15,10 +18,11 @@ import {
 import { useStrings } from 'framework/strings'
 import { useModalHook } from 'hooks/useModalHook'
 import type { CreateExecutionQueryParams, TypesExecution, TypesRepository } from 'services/code'
-import { useMutate } from 'restful-react'
 import { getErrorMessage } from 'utils/Utils'
-import { useHistory } from 'react-router'
 import { useAppContext } from 'AppContext'
+import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
+
+import css from './RunPipelineModal.module.scss'
 
 interface FormData {
   branch: string
@@ -27,7 +31,7 @@ interface FormData {
 const useRunPipelineModal = () => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
-  const { showSuccess, showError } = useToaster()
+  const { showSuccess, showError, clear: clearToaster } = useToaster()
   const history = useHistory()
   const [repo, setRepo] = useState<TypesRepository>()
   const [pipeline, setPipeline] = useState<string>('')
@@ -49,6 +53,7 @@ const useRunPipelineModal = () => {
         }
       )
         .then(response => {
+          clearToaster()
           showSuccess(getString('pipelines.executionStarted'))
           if (response?.number && !isNaN(response.number)) {
             history.push(routes.toCODEExecution({ repoPath, pipeline, execution: response.number.toString() }))
@@ -80,18 +85,33 @@ const useRunPipelineModal = () => {
           })}
           onSubmit={runPipeline}
           enableReinitialize>
-          <FormikForm>
-            <Layout.Vertical spacing="medium">
-              <FormInput.Text
-                name="branch"
-                label={<Text font={{ variation: FontVariation.FORM_LABEL }}>{getString('branch')}</Text>}
-              />
-              <Layout.Horizontal spacing="medium">
-                <Button variation={ButtonVariation.PRIMARY} type="submit" text={getString('pipelines.run')} />
-                <Button variation={ButtonVariation.SECONDARY} text={getString('cancel')} onClick={onClose} />
-              </Layout.Horizontal>
-            </Layout.Vertical>
-          </FormikForm>
+          {formik => {
+            return (
+              <FormikForm>
+                <Layout.Vertical spacing="medium">
+                  <Layout.Vertical spacing="xsmall" padding={{ bottom: 'medium' }}>
+                    <Text font={{ variation: FontVariation.BODY }}>{capitalize(getString('branch'))}</Text>
+                    <Container className={css.branchSelect}>
+                      <BranchTagSelect
+                        gitRef={formik?.values?.branch || repo?.default_branch || ''}
+                        onSelect={(ref: string) => {
+                          formik?.setFieldValue('branch', ref)
+                        }}
+                        repoMetadata={repo || {}}
+                        disableBranchCreation
+                        disableViewAllBranches
+                        forBranchesOnly
+                      />
+                    </Container>
+                  </Layout.Vertical>
+                  <Layout.Horizontal spacing="medium">
+                    <Button variation={ButtonVariation.PRIMARY} type="submit" text={getString('pipelines.run')} />
+                    <Button variation={ButtonVariation.SECONDARY} text={getString('cancel')} onClick={onClose} />
+                  </Layout.Horizontal>
+                </Layout.Vertical>
+              </FormikForm>
+            )
+          }}
         </Formik>
       </Dialog>
     )

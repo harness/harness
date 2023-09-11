@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useMutate } from 'restful-react'
 import * as yup from 'yup'
+import { capitalize } from 'lodash'
 import {
   Button,
   ButtonVariation,
@@ -14,15 +15,14 @@ import {
   Text,
   useToaster
 } from '@harnessio/uicore'
+import { FontVariation } from '@harnessio/design-system'
 import { useModalHook } from 'hooks/useModalHook'
 import type { OpenapiCreatePipelineRequest, TypesPipeline, TypesRepository } from 'services/code'
 import { useStrings } from 'framework/strings'
+import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
 import { DEFAULT_YAML_PATH_PREFIX, DEFAULT_YAML_PATH_SUFFIX } from '../../pages/AddUpdatePipeline/Constants'
-import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
-import { FontVariation } from '@harnessio/design-system'
-import { capitalize } from 'lodash'
 
 import css from './NewPipelineModal.module.scss'
 

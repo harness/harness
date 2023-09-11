@@ -84,7 +84,7 @@ const AddUpdatePipeline = (): JSX.Element => {
   const { getString } = useStrings()
   const { pipeline } = useParams<CODEProps>()
   const { repoMetadata } = useGetRepositoryMetadata()
-  const { showError, showSuccess } = useToaster()
+  const { showError, showSuccess, clear: clearToaster } = useToaster()
   const [pipelineAsObj, setPipelineAsObj] = useState<Record<string, any>>(
     version === YamlVersion.V0 ? StarterPipelineV0 : StarterPipelineV1
   )
@@ -188,6 +188,7 @@ const AddUpdatePipeline = (): JSX.Element => {
         mutate(data)
           .then(() => {
             fetchPipelineYAMLFileContent()
+            clearToaster()
             showSuccess(getString(isExistingPipeline ? 'pipelines.updated' : 'pipelines.created'))
             if (option?.action === PipelineSaveAndRunAction.SAVE_AND_RUN && repoMetadata && pipeline) {
               openRunPipelineModal({ repoMetadata, pipeline })
