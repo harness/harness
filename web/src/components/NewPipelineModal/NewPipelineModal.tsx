@@ -55,8 +55,8 @@ const useNewPipelineModal = () => {
       }
       savePipeline(payload, { pathParams: { path: `/api/v1/repos/${repoPath}/+/pipelines` } })
         .then(() => {
-          history.push(routes.toCODEPipelineEdit({ repoPath, pipeline: name }))
           hideModal()
+          history.push(routes.toCODEPipelineEdit({ repoPath, pipeline: name }))
         })
         .catch(error => {
           showError(getErrorMessage(error), 0, 'pipelines.failedToCreatePipeline')
