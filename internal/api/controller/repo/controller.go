@@ -7,6 +7,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"github.com/harness/gitness/internal/services/exporter"
 	"strconv"
 	"strings"
 
@@ -36,6 +37,7 @@ type Controller struct {
 	principalStore store.PrincipalStore
 	gitRPCClient   gitrpc.Interface
 	importer       *importer.Repository
+	exporter       *exporter.Repository
 }
 
 func NewController(

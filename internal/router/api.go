@@ -235,6 +235,7 @@ func setupRepos(r chi.Router,
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerrepo.HandleCreate(repoCtrl))
 		r.Post("/import", handlerrepo.HandleImport(repoCtrl))
+		r.Post("/export", handlerrepo.HandleExport(repoCtrl))
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 			// repo level operations
 			r.Get("/", handlerrepo.HandleFind(repoCtrl))
@@ -245,6 +246,7 @@ func setupRepos(r chi.Router,
 			r.Get("/service-accounts", handlerrepo.HandleListServiceAccounts(repoCtrl))
 
 			r.Get("/import-progress", handlerrepo.HandleImportProgress(repoCtrl))
+			r.Get("/export-progress", handlerrepo.HandleExportProgress(repoCtrl))
 
 			// content operations
 			// NOTE: this allows /content and /content/ to both be valid (without any other tricks.)
