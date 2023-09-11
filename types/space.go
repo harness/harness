@@ -21,16 +21,17 @@ https://stackoverflow.com/questions/4048151/what-are-the-options-for-storing-hie
 https://www.slideshare.net/billkarwin/models-for-hierarchical-data
 */
 type Space struct {
-	ID          int64  `json:"id"`
-	Version     int64  `json:"-"`
-	ParentID    int64  `json:"parent_id"`
-	Path        string `json:"path"`
-	UID         string `json:"uid"`
-	Description string `json:"description"`
-	IsPublic    bool   `json:"is_public"`
-	CreatedBy   int64  `json:"created_by"`
-	Created     int64  `json:"created"`
-	Updated     int64  `json:"updated"`
+	ID                 int64  `json:"id"`
+	Version            int64  `json:"-"`
+	ParentID           int64  `json:"parent_id"`
+	Path               string `json:"path"`
+	UID                string `json:"uid"`
+	Description        string `json:"description"`
+	IsPublic           bool   `json:"is_public"`
+	CreatedBy          int64  `json:"created_by"`
+	Created            int64  `json:"created"`
+	Updated            int64  `json:"updated"`
+	LatestExportJobUid string `json:"-"`
 }
 
 // Stores spaces query parameters.

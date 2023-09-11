@@ -52,6 +52,8 @@ type space struct {
 	CreatedBy   int64    `db:"space_created_by"`
 	Created     int64    `db:"space_created"`
 	Updated     int64    `db:"space_updated"`
+
+	LatestExportJobUid string `db:"space_latest_export_job_uid"`
 }
 
 const (
@@ -65,7 +67,8 @@ const (
 		,space_is_public
 		,space_created_by
 		,space_created
-		,space_updated`
+		,space_updated
+		,space_latest_export_job_uid`
 
 	spaceSelectBaseWithJoin = `
 		SELECT` + spaceColumnsForJoin + `
@@ -129,6 +132,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 			,space_created_by
 			,space_created
 			,space_updated
+			,space_latest_export_job_uid
 		) values (
 			:space_version
 			,:space_parent_id
@@ -138,6 +142,7 @@ func (s *SpaceStore) Create(ctx context.Context, space *types.Space) error {
 			,:space_created_by
 			,:space_created
 			,:space_updated
+			,:space_latest_export_job_uid
 		) RETURNING space_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -169,6 +174,7 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 			,space_uid			= :space_uid
 			,space_description	= :space_description
 			,space_is_public	= :space_is_public
+			,space_latest_export_job_uid = :space_latest_export_job_uid
 		WHERE space_id = :space_id AND space_version = :space_version - 1`
 
 	dbSpace := mapToInternalSpace(space)
@@ -324,15 +330,16 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 
 func mapToSpace(s *space) types.Space {
 	res := types.Space{
-		ID:          s.ID,
-		Version:     s.Version,
-		UID:         s.UID,
-		Path:        s.Path,
-		Description: s.Description,
-		IsPublic:    s.IsPublic,
-		Created:     s.Created,
-		CreatedBy:   s.CreatedBy,
-		Updated:     s.Updated,
+		ID:                 s.ID,
+		Version:            s.Version,
+		UID:                s.UID,
+		Path:               s.Path,
+		Description:        s.Description,
+		IsPublic:           s.IsPublic,
+		Created:            s.Created,
+		CreatedBy:          s.CreatedBy,
+		Updated:            s.Updated,
+		LatestExportJobUid: s.LatestExportJobUid,
 	}
 
 	// Only overwrite ParentID if it's not a root space
@@ -353,15 +360,16 @@ func mapToSpaces(spaces []*space) []types.Space {
 
 func mapToInternalSpace(s *types.Space) space {
 	res := space{
-		ID:          s.ID,
-		Version:     s.Version,
-		UID:         s.UID,
-		Path:        s.Path,
-		Description: s.Description,
-		IsPublic:    s.IsPublic,
-		Created:     s.Created,
-		CreatedBy:   s.CreatedBy,
-		Updated:     s.Updated,
+		ID:                 s.ID,
+		Version:            s.Version,
+		UID:                s.UID,
+		Path:               s.Path,
+		Description:        s.Description,
+		IsPublic:           s.IsPublic,
+		Created:            s.Created,
+		CreatedBy:          s.CreatedBy,
+		Updated:            s.Updated,
+		LatestExportJobUid: s.LatestExportJobUid,
 	}
 
 	// Only overwrite ParentID if it's not a root space
