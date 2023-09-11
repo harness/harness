@@ -19,17 +19,17 @@ func ProvideSpaceExporter(
 	scheduler *job.Scheduler,
 	executor *job.Executor,
 ) (*Repository, error) {
-	importer := &Repository{
+	exporter := &Repository{
 		urlProvider: urlProvider,
 		git:         git,
 		repoStore:   repoStore,
 		scheduler:   scheduler,
 	}
 
-	err := executor.Register(jobType, importer)
+	err := executor.Register(jobType, exporter)
 	if err != nil {
 		return nil, err
 	}
 
-	return importer, nil
+	return exporter, nil
 }
