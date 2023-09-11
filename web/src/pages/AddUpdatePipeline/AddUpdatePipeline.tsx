@@ -126,7 +126,7 @@ const AddUpdatePipeline = (): JSX.Element => {
 
   const {
     data: pipelineYAMLFileContent,
-    loading: resourceLoading,
+    loading: fetchingPipelineYAMLFileContent,
     refetch: fetchPipelineYAMLFileContent
   } = useGetResourceContent({
     repoMetadata,
@@ -134,39 +134,38 @@ const AddUpdatePipeline = (): JSX.Element => {
     resourcePath: pipelineData?.config_path || ''
   })
 
-  // check if file exists and has some content
-  useEffect(() => {
-    if (!resourceLoading) {
-      setIsExistingPipeline(!isEmpty(pipelineYAMLFileContent) && !isUndefined(pipelineYAMLFileContent.content))
-    }
-  }, [pipelineYAMLFileContent, resourceLoading])
+  const originalPipelineYAMLFileContent = useMemo(
+    (): string => decodeGitContent((pipelineYAMLFileContent?.content as RepoFileContent)?.data),
+    [pipelineYAMLFileContent?.content]
+  )
 
-  // to load initial content on the editor
+  // check if file already exists and has some content
+  useEffect(() => {
+    setIsExistingPipeline(!isEmpty(originalPipelineYAMLFileContent) && !isUndefined(originalPipelineYAMLFileContent))
+  }, [originalPipelineYAMLFileContent])
+
+  // load initial content on the editor
   useEffect(() => {
     if (isExistingPipeline) {
-      setPipelineAsYaml(decodeGitContent((pipelineYAMLFileContent?.content as RepoFileContent)?.data))
+      setPipelineAsYaml(originalPipelineYAMLFileContent)
     } else {
+      // load with starter pipeline
       try {
         setPipelineAsYaml(stringify(pipelineAsObj))
-      } catch (ex) {}
+      } catch (ex) {
+        // ignore exception
+      }
     }
-  }, [isExistingPipeline, pipelineYAMLFileContent])
+  }, [isExistingPipeline, originalPipelineYAMLFileContent, pipelineAsObj])
 
   // find if editor content was modified
   useEffect(() => {
-    if (isExistingPipeline) {
-      const originalContent = decodeGitContent((pipelineYAMLFileContent?.content as RepoFileContent)?.data)
-      setIsDirty(originalContent !== pipelineAsYAML)
-    } else {
-      setIsDirty(true)
-    }
-  }, [isExistingPipeline, pipelineAsYAML, pipelineYAMLFileContent])
+    setIsDirty(originalPipelineYAMLFileContent !== pipelineAsYAML)
+  }, [originalPipelineYAMLFileContent, pipelineAsYAML])
 
+  // set initial CTA title
   useEffect(() => {
-    if (isDirty) {
-      // enable "Save" option if pipeline is edited
-      setSelectedOption(pipelineSaveOption)
-    }
+    setSelectedOption(isDirty ? pipelineSaveAndRunOption : pipelineRunOption)
   }, [isDirty])
 
   const handleSaveAndRun = (option: PipelineSaveAndRunOption): void => {
@@ -191,6 +190,9 @@ const AddUpdatePipeline = (): JSX.Element => {
           .then(() => {
             fetchPipelineYAMLFileContent()
             showSuccess(getString(isExistingPipeline ? 'pipelines.updated' : 'pipelines.created'))
+            if (option?.action === PipelineSaveAndRunAction.SAVE_AND_RUN && repoMetadata && pipeline) {
+              openRunPipelineModal({ repoMetadata, pipeline })
+            }
             setSelectedOption(pipelineRunOption)
           })
           .catch(error => {
@@ -225,17 +227,6 @@ const AddUpdatePipeline = (): JSX.Element => {
 
   const renderCTA = useCallback(() => {
     switch (selectedOption?.action) {
-      case PipelineSaveAndRunAction.SAVE:
-        return (
-          <Button
-            variation={ButtonVariation.PRIMARY}
-            text={getString('save')}
-            onClick={() => {
-              handleSaveAndRun(pipelineSaveOption)
-            }}
-            disabled={loading || !isDirty}
-          />
-        )
       case PipelineSaveAndRunAction.RUN:
         return (
           <Button
@@ -248,8 +239,18 @@ const AddUpdatePipeline = (): JSX.Element => {
             }}
           />
         )
+      case PipelineSaveAndRunAction.SAVE:
       case PipelineSaveAndRunAction.SAVE_AND_RUN:
-        return (
+        return isExistingPipeline ? (
+          <Button
+            variation={ButtonVariation.PRIMARY}
+            text={getString('save')}
+            onClick={() => {
+              handleSaveAndRun(pipelineSaveOption)
+            }}
+            disabled={loading || !isDirty}
+          />
+        ) : (
           <SplitButton
             text={selectedOption?.title}
             disabled={loading || !isDirty}
@@ -260,7 +261,8 @@ const AddUpdatePipeline = (): JSX.Element => {
               position: PopoverPosition.BOTTOM_RIGHT,
               transitionDuration: 1000
             }}
-            intent="primary">
+            intent="primary"
+            onClick={() => handleSaveAndRun(selectedOption)}>
             {pipelineSaveAndRunOptions.map(option => {
               return (
                 <Menu.Item
@@ -271,7 +273,7 @@ const AddUpdatePipeline = (): JSX.Element => {
                     </Text>
                   }
                   onClick={() => {
-                    handleSaveAndRun(option)
+                    setSelectedOption(option)
                   }}
                 />
               )
@@ -281,7 +283,7 @@ const AddUpdatePipeline = (): JSX.Element => {
       default:
         return <></>
     }
-  }, [loading, fetchingPipeline, isDirty, repoMetadata, pipeline, selectedOption])
+  }, [loading, fetchingPipeline, isDirty, repoMetadata, pipeline, selectedOption, isExistingPipeline, pipelineAsYAML])
 
   return (
     <>
@@ -300,7 +302,7 @@ const AddUpdatePipeline = (): JSX.Element => {
           content={<Layout.Horizontal flex={{ justifyContent: 'space-between' }}>{renderCTA()}</Layout.Horizontal>}
         />
         <PageBody>
-          <LoadingSpinner visible={fetchingPipeline} />
+          <LoadingSpinner visible={fetchingPipeline || fetchingPipelineYAMLFileContent} />
           <Layout.Horizontal>
             <Container className={css.editorContainer}>
               <MonacoSourceCodeEditor

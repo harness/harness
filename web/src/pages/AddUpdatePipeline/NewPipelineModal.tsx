@@ -8,6 +8,7 @@ import type { OpenapiCreatePipelineRequest, TypesPipeline, TypesRepository } fro
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
+import { DEFAULT_YAML_PATH_PREFIX, DEFAULT_YAML_PATH_SUFFIX } from './Constants'
 
 interface FormData {
   name: string
@@ -76,28 +77,44 @@ const useNewPipelineModal = () => {
           validateOnChange
           validateOnBlur
           onSubmit={handleCreatePipeline}>
-          <FormikForm>
-            <Layout.Vertical spacing="small">
-              <Layout.Vertical spacing="small">
-                <FormInput.Text
-                  name="name"
-                  label={getString('name')}
-                  placeholder={getString('pipelines.enterPipelineName')}
-                  inputGroup={{ autoFocus: true }}
-                />
-                <FormInput.Text name="branch" label={getString('pipelines.basedOn')} />
-                <FormInput.Text
-                  name="yamlPath"
-                  label={getString('pipelines.yamlPath')}
-                  placeholder={getString('pipelines.enterYAMLPath')}
-                />
-              </Layout.Vertical>
-              <Layout.Horizontal spacing="medium" width="100%">
-                <Button variation={ButtonVariation.PRIMARY} text={getString('create')} type="submit" />
-                <Button variation={ButtonVariation.SECONDARY} text={getString('cancel')} onClick={onClose} />
-              </Layout.Horizontal>
-            </Layout.Vertical>
-          </FormikForm>
+          {formik => {
+            return (
+              <FormikForm>
+                <Layout.Vertical spacing="small">
+                  <Layout.Vertical spacing="small">
+                    <FormInput.Text
+                      name="name"
+                      label={getString('name')}
+                      placeholder={getString('pipelines.enterPipelineName')}
+                      inputGroup={{ autoFocus: true }}
+                      onChange={event => {
+                        const input = (event.target as HTMLInputElement)?.value
+                        formik?.setFieldValue('name', input)
+                        if (input) {
+                          // Keeping minimal validation for now, this could be much more exhaustive
+                          const path = input.trim().replace(/\s/g, '')
+                          formik?.setFieldValue(
+                            'yamlPath',
+                            DEFAULT_YAML_PATH_PREFIX.concat(path).concat(DEFAULT_YAML_PATH_SUFFIX)
+                          )
+                        }
+                      }}
+                    />
+                    <FormInput.Text name="branch" label={getString('pipelines.basedOn')} />
+                    <FormInput.Text
+                      name="yamlPath"
+                      label={getString('pipelines.yamlPath')}
+                      placeholder={getString('pipelines.enterYAMLPath')}
+                    />
+                  </Layout.Vertical>
+                  <Layout.Horizontal spacing="medium" width="100%">
+                    <Button variation={ButtonVariation.PRIMARY} text={getString('create')} type="submit" />
+                    <Button variation={ButtonVariation.SECONDARY} text={getString('cancel')} onClick={onClose} />
+                  </Layout.Horizontal>
+                </Layout.Vertical>
+              </FormikForm>
+            )
+          }}
         </Formik>
       </Dialog>
     )
