@@ -40,7 +40,7 @@ const PluginCategories: PluginInterface[] = [
   { category: PluginCategory.Drone, name: 'Drone', description: 'Run Drone plugins', icon: 'ci-infra' }
 ]
 
-const dronePluginSpecMock = {
+const dronePluginSpecMockData = {
   inputs: {
     channel: {
       type: 'string'
@@ -214,7 +214,7 @@ export const PluginsPanel = ({ version = YamlVersion.V0, onPluginAddUpdate }: Pl
 
   const renderPluginConfigForm = useCallback((): JSX.Element => {
     // TODO obtain plugin input spec by parsing YAML
-    const inputs = get(category === PluginCategory.Drone ? dronePluginSpecMock : runStepSpec, 'inputs', {})
+    const inputs = get(category === PluginCategory.Drone ? dronePluginSpecMockData : runStepSpec, 'inputs', {})
     return (
       <Layout.Vertical
         spacing="medium"
