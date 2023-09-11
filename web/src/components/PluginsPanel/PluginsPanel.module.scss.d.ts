@@ -1,12 +1,9 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly mainTabPanel: string
-  readonly pluginDetailsPanel: string
-  readonly pluginIcon: string
-  readonly plugin: string
-  readonly form: string
-  readonly arrow: string
-}
-export default styles
+// This is an auto-generated file
+export declare const arrow: string
+export declare const form: string
+export declare const main: string
+export declare const mainTabPanel: string
+export declare const plugin: string
+export declare const pluginDetailsPanel: string
+export declare const pluginIcon: string
