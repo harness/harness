@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"github.com/harness/gitness/gitrpc"
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types/enum"
@@ -30,12 +29,8 @@ func (c *Controller) PathsDetails(ctx context.Context,
 	gitRef string,
 	input PathsDetailsInput,
 ) (PathsDetailsOutput, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
 	if err != nil {
-		return PathsDetailsOutput{}, err
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, true); err != nil {
 		return PathsDetailsOutput{}, err
 	}
 
@@ -43,8 +38,10 @@ func (c *Controller) PathsDetails(ctx context.Context,
 		return PathsDetailsOutput{}, nil
 	}
 
-	if len(input.Paths) > 50 {
-		return PathsDetailsOutput{}, usererror.BadRequest("maximum number of elements in the Paths array is 25")
+	const maxInputPaths = 50
+	if len(input.Paths) > maxInputPaths {
+		return PathsDetailsOutput{},
+			usererror.BadRequestf("maximum number of elements in the Paths array is %d", maxInputPaths)
 	}
 
 	// set gitRef to default branch in case an empty reference was provided

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/harness/gitness/gitrpc"
-	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types/enum"
 )
@@ -28,14 +27,13 @@ type CreateCommitTagInput struct {
 }
 
 // CreateCommitTag creates a new tag for a repo.
-func (c *Controller) CreateCommitTag(ctx context.Context, session *auth.Session,
-	repoRef string, in *CreateCommitTagInput) (*CommitTag, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
+func (c *Controller) CreateCommitTag(ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	in *CreateCommitTagInput,
+) (*CommitTag, error) {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
-		return nil, err
-	}
-
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoPush, false); err != nil {
 		return nil, err
 	}
 

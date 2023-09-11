@@ -1,10 +1,7 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly container: string
-  readonly log: string
-  readonly header: string
-  readonly headerLayout: string
-  readonly steps: string
-}
-export default styles
+// This is an auto-generated file
+export declare const container: string
+export declare const header: string
+export declare const headerLayout: string
+export declare const log: string
+export declare const steps: string

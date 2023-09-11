@@ -1,14 +1,11 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly mainCtn: string
-  readonly pageCtn: string
-  readonly table: string
-  readonly profileCard: string
-  readonly detailsCtn: string
-  readonly detailField: string
-  readonly editableTextWrapper: string
-  readonly textInput: string
-  readonly logoutCard: string
-}
-export default styles
+// This is an auto-generated file
+export declare const detailField: string
+export declare const detailsCtn: string
+export declare const editableTextWrapper: string
+export declare const logoutCard: string
+export declare const mainCtn: string
+export declare const pageCtn: string
+export declare const profileCard: string
+export declare const table: string
+export declare const textInput: string

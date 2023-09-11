@@ -1,13 +1,10 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly lineNo: string
-  readonly gitBlame: string
-  readonly layout: string
-  readonly blameColumn: string
-  readonly blameBox: string
-  readonly blameBoxLayout: string
-  readonly blameCommitPortalClass: string
-}
-export default styles
+// This is an auto-generated file
+export declare const blameBox: string
+export declare const blameBoxLayout: string
+export declare const blameColumn: string
+export declare const blameCommitPortalClass: string
+export declare const codeViewer: string
+export declare const layout: string
+export declare const lineNo: string
+export declare const main: string

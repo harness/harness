@@ -648,6 +648,9 @@ executions:
   description: Description
   time: Time
   completedTime: completed {{timeString}} ago
+  started: Execution started
+  failed: Failed to start build
+  newExecution: Run Pipeline
 selectRange: Shift-click to select a range
 allCommits: All Commits
 secrets:

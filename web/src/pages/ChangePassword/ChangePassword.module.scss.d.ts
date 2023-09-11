@@ -1,8 +1,5 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly mainCtn: string
-  readonly pageCtn: string
-  readonly passwordCard: string
-}
-export default styles
+// This is an auto-generated file
+export declare const mainCtn: string
+export declare const pageCtn: string
+export declare const passwordCard: string

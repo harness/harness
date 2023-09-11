@@ -1,11 +1,8 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly container: string
-  readonly section: string
-  readonly sectionHeader: string
-  readonly isOpen: string
-  readonly chevron: string
-  readonly term: string
-}
-export default styles
+// This is an auto-generated file
+export declare const chevron: string
+export declare const container: string
+export declare const isOpen: string
+export declare const section: string
+export declare const sectionHeader: string
+export declare const term: string

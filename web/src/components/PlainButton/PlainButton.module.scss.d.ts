@@ -1,7 +1,4 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly btn: string
-  readonly prefix: string
-}
-export default styles
+// This is an auto-generated file
+export declare const btn: string
+export declare const prefix: string

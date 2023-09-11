@@ -1,16 +1,13 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly withPreview: string
-  readonly tabs: string
-  readonly preview: string
-  readonly markdownEditor: string
-  readonly container: string
-  readonly noBorder: string
-  readonly toolbar: string
-  readonly tabContent: string
-  readonly buttonsBar: string
-  readonly hidden: string
-}
-export default styles
+// This is an auto-generated file
+export declare const buttonsBar: string
+export declare const container: string
+export declare const hidden: string
+export declare const main: string
+export declare const markdownEditor: string
+export declare const noBorder: string
+export declare const preview: string
+export declare const tabContent: string
+export declare const tabs: string
+export declare const toolbar: string
+export declare const withPreview: string

@@ -58,6 +58,7 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
       }
     }
     return () => {
+      setStreamingLogs([])
       if (eventSourceRef.current) eventSourceRef.current.close()
     }
   }, [executionNumber, pipelineName, repoPath, stageNumber, step?.number, step?.status])
@@ -74,7 +75,9 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
   }
 
   let content
-  if (loading) {
+  if (!isOpened) {
+    content = null
+  } else if (loading) {
     content = <div className={css.loading}>{getString('loading')}</div>
   } else if (error && step?.status !== ExecutionState.RUNNING) {
     content = <div>Error: {error.message}</div>

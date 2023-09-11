@@ -1,12 +1,9 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly root: string
-  readonly input: string
-  readonly submit: string
-  readonly field: string
-  readonly actions: string
-  readonly logo: string
-  readonly signUpContainer: string
-}
-export default styles
+// This is an auto-generated file
+export declare const actions: string
+export declare const field: string
+export declare const input: string
+export declare const logo: string
+export declare const root: string
+export declare const signUpContainer: string
+export declare const submit: string

@@ -1,11 +1,8 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly commitInfoContainer: string
-  readonly commitTitleContainer: string
-  readonly infoContainer: string
-  readonly alignContent: string
-  readonly infoText: string
-  readonly titleText: string
-}
-export default styles
+// This is an auto-generated file
+export declare const alignContent: string
+export declare const commitInfoContainer: string
+export declare const commitTitleContainer: string
+export declare const infoContainer: string
+export declare const infoText: string
+export declare const titleText: string

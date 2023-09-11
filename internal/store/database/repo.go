@@ -170,21 +170,22 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 	const sqlQuery = `
 		UPDATE repositories
 		SET
-			repo_version			= :repo_version
-			,repo_updated			= :repo_updated
-			,repo_parent_id			= :repo_parent_id
-			,repo_uid				= :repo_uid
-			,repo_description		= :repo_description
-			,repo_is_public			= :repo_is_public
-			,repo_default_branch    = :repo_default_branch
-			,repo_pullreq_seq		= :repo_pullreq_seq
-			,repo_num_forks			= :repo_num_forks
-			,repo_num_pulls			= :repo_num_pulls
-			,repo_num_closed_pulls	= :repo_num_closed_pulls
-			,repo_num_open_pulls	= :repo_num_open_pulls
-			,repo_num_merged_pulls	= :repo_num_merged_pulls
-			,repo_importing         = :repo_importing
-			,repo_importing_job_uid = :repo_importing_job_uid
+			 repo_version = :repo_version
+			,repo_updated = :repo_updated
+			,repo_parent_id = :repo_parent_id
+			,repo_uid = :repo_uid
+			,repo_git_uid = :repo_git_uid
+			,repo_description = :repo_description
+			,repo_is_public = :repo_is_public
+			,repo_default_branch = :repo_default_branch
+			,repo_pullreq_seq = :repo_pullreq_seq
+			,repo_num_forks = :repo_num_forks
+			,repo_num_pulls = :repo_num_pulls
+			,repo_num_closed_pulls = :repo_num_closed_pulls
+			,repo_num_open_pulls = :repo_num_open_pulls
+			,repo_num_merged_pulls = :repo_num_merged_pulls
+			,repo_importing = :repo_importing
+			,repo_importing_job_uid	= :repo_importing_job_uid
 		WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
 
 	updatedAt := time.Now()
@@ -219,7 +220,8 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 // UpdateOptLock updates the repository using the optimistic locking mechanism.
 func (s *RepoStore) UpdateOptLock(ctx context.Context,
 	repo *types.Repository,
-	mutateFn func(repository *types.Repository) error) (*types.Repository, error) {
+	mutateFn func(repository *types.Repository) error,
+) (*types.Repository, error) {
 	for {
 		dup := *repo
 

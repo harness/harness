@@ -172,9 +172,12 @@ export interface StringsMap {
   error404Text: string
   'executions.completedTime': string
   'executions.description': string
+  'executions.failed': string
   'executions.name': string
+  'executions.newExecution': string
   'executions.newExecutionButton': string
   'executions.noData': string
+  'executions.started': string
   'executions.time': string
   executor: string
   existingAccount: string

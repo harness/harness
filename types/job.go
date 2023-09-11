@@ -27,6 +27,7 @@ type Job struct {
 	RecurringCron       string           `db:"job_recurring_cron"`
 	ConsecutiveFailures int              `db:"job_consecutive_failures"`
 	LastFailureError    string           `db:"job_last_failure_error"`
+	GroupID             string           `db:"job_group_id"`
 }
 
 type JobStateChange struct {

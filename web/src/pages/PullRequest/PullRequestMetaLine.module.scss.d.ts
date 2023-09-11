@@ -1,12 +1,9 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly metaline: string
-  readonly time: string
-  readonly layout: string
-  readonly copyContainer: string
-  readonly linkText: string
-  readonly link: string
-}
-export default styles
+// This is an auto-generated file
+export declare const copyContainer: string
+export declare const layout: string
+export declare const link: string
+export declare const linkText: string
+export declare const main: string
+export declare const metaline: string
+export declare const time: string

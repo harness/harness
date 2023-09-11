@@ -1,8 +1,5 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly input: string
-  readonly branchDropdown: string
-}
-export default styles
+// This is an auto-generated file
+export declare const branchDropdown: string
+export declare const input: string
+export declare const main: string

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Classes, Menu, MenuItem, Popover, Position } from '@blueprintjs/core'
 import {
   Avatar,
@@ -35,6 +35,8 @@ import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/Exec
 import { getStatus } from 'utils/PipelineUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import useNewPipelineModal from 'components/NewPipelineModal/NewPipelineModal'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import usePipelineEventStream from 'hooks/usePipelineEventStream'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
 
@@ -46,14 +48,15 @@ const PipelineList = () => {
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
+  const space = useGetSpaceParam()
 
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
 
   const {
     data: pipelines,
     error: pipelinesError,
-    loading: pipelinesLoading,
-    response
+    response,
+    refetch: pipelinesRefetch
   } = useGet<TypesPipeline[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines`,
     queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm, latest: true },
@@ -62,6 +65,27 @@ const PipelineList = () => {
   })
 
   const { openModal } = useNewPipelineModal()
+  //TODO - do not want to show load between refetchs - remove if/when we move to event stream method
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+
+  useEffect(() => {
+    if (pipelines) {
+      setIsInitialLoad(false)
+    }
+  }, [pipelines])
+
+  usePipelineEventStream({
+    space,
+    onEvent: (data: any) => {
+      // should I include pipeline id here? what if a new pipeline is created? coould check for ids that are higher than the lowest id on the page?
+      if (
+        pipelines?.some(pipeline => pipeline.repo_id === data.data?.repo_id && pipeline.id === data.data?.pipeline_id)
+      ) {
+        //TODO - revisit full refresh - can I use the message to update the execution?
+        pipelinesRefetch()
+      }
+    }
+  })
 
   const NewPipelineButton = (
     <Button
@@ -109,7 +133,7 @@ const PipelineList = () => {
               <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
                 <Text className={css.desc}>{`#${record.number}`}</Text>
                 <PipeSeparator height={7} />
-                <Text className={css.desc}>{record.title}</Text>
+                <Text className={css.desc}>{record.message}</Text>
               </Layout.Horizontal>
               <Layout.Horizontal spacing={'xsmall'} style={{ alignItems: 'center' }}>
                 <Avatar
@@ -134,8 +158,7 @@ const PipelineList = () => {
                   onClick={e => {
                     e.stopPropagation()
                   }}>
-                  {/* {record.after?.slice(0, 6)} */}
-                  {'hardcoded'.slice(0, 6)}
+                  {record.after?.slice(0, 6)}
                 </Link>
               </Layout.Horizontal>
             </Layout.Vertical>
@@ -161,7 +184,7 @@ const PipelineList = () => {
               <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
                 <Calendar color={Utils.getRealCSSColor(Color.GREY_500)} />
                 <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
-                  {timeDistance(record.finished, Date.now())} ago
+                  {timeDistance(record.started, Date.now())} ago
                 </Text>
               </Layout.Horizontal>
             </Layout.Vertical>
@@ -232,10 +255,7 @@ const PipelineList = () => {
           message: getString('pipelines.noData'),
           button: NewPipelineButton
         }}>
-        <LoadingSpinner
-          visible={(loading || pipelinesLoading) && !searchTerm}
-          withBorder={!!pipelines && pipelinesLoading}
-        />
+        <LoadingSpinner visible={(loading || isInitialLoad) && !searchTerm} withBorder={!!pipelines && isInitialLoad} />
 
         <Container padding="xlarge">
           <Layout.Horizontal spacing="large" className={css.layout}>

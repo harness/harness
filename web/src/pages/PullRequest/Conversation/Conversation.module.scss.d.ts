@@ -1,30 +1,27 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly box: string
-  readonly desc: string
-  readonly mdWrapper: string
-  readonly menuWrapper: string
-  readonly selectButton: string
-  readonly timeButton: string
-  readonly timeText: string
-  readonly sortContainer: string
-  readonly sortDropdown: string
-  readonly bp3PopoverWrapper: string
-  readonly mergedBox: string
-  readonly mergeContainer: string
-  readonly descBox: string
-  readonly snapshot: string
-  readonly title: string
-  readonly fname: string
-  readonly snapshotContent: string
-  readonly hideDottedLine: string
-  readonly refreshIcon: string
-  readonly optionMenuIcon: string
-  readonly bp3Icon: string
-  readonly repeatBtn: string
-  readonly bp3ButtonText: string
-  readonly commitLink: string
-  readonly commitContainer: string
-}
-export default styles
+// This is an auto-generated file
+export declare const box: string
+export declare const bp3ButtonText: string
+export declare const bp3Icon: string
+export declare const bp3PopoverWrapper: string
+export declare const commitContainer: string
+export declare const commitLink: string
+export declare const desc: string
+export declare const descBox: string
+export declare const fname: string
+export declare const hideDottedLine: string
+export declare const mdWrapper: string
+export declare const menuWrapper: string
+export declare const mergeContainer: string
+export declare const mergedBox: string
+export declare const optionMenuIcon: string
+export declare const refreshIcon: string
+export declare const repeatBtn: string
+export declare const selectButton: string
+export declare const snapshot: string
+export declare const snapshotContent: string
+export declare const sortContainer: string
+export declare const sortDropdown: string
+export declare const timeButton: string
+export declare const timeText: string
+export declare const title: string

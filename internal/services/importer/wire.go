@@ -9,6 +9,7 @@ import (
 	"github.com/harness/gitness/internal/services/job"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -18,6 +19,7 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideRepoImporter(
+	config *types.Config,
 	urlProvider *url.Provider,
 	git gitrpc.Interface,
 	repoStore store.RepoStore,
@@ -25,10 +27,11 @@ func ProvideRepoImporter(
 	executor *job.Executor,
 ) (*Repository, error) {
 	importer := &Repository{
-		urlProvider: urlProvider,
-		git:         git,
-		repoStore:   repoStore,
-		scheduler:   scheduler,
+		defaultBranch: config.Git.DefaultBranch,
+		urlProvider:   urlProvider,
+		git:           git,
+		repoStore:     repoStore,
+		scheduler:     scheduler,
 	}
 
 	err := executor.Register(jobType, importer)

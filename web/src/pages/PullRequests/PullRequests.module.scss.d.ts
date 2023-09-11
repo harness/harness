@@ -1,12 +1,9 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly table: string
-  readonly row: string
-  readonly title: string
-  readonly convoIcon: string
-  readonly titleRow: string
-  readonly state: string
-}
-export default styles
+// This is an auto-generated file
+export declare const convoIcon: string
+export declare const main: string
+export declare const row: string
+export declare const state: string
+export declare const table: string
+export declare const title: string
+export declare const titleRow: string

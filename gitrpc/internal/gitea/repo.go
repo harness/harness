@@ -69,6 +69,7 @@ func (g Adapter) GetDefaultBranch(ctx context.Context, repoPath string) (string,
 // If the repo doesn't have a default branch, types.ErrNoDefaultBranch is returned.
 func (g Adapter) GetRemoteDefaultBranch(ctx context.Context, remoteURL string) (string, error) {
 	args := []string{
+		"-c", "credential.helper=",
 		"ls-remote",
 		"--symref",
 		"-q",
@@ -118,6 +119,7 @@ func (g Adapter) Clone(ctx context.Context, from, to string, opts types.CloneRep
 func (g Adapter) Sync(ctx context.Context, repoPath string, remoteURL string) error {
 	args := []string{
 		"-c", "advice.fetchShowForcedUpdates=false",
+		"-c", "credential.helper=",
 		"fetch",
 		"--quiet",
 		"--prune",
@@ -131,7 +133,8 @@ func (g Adapter) Sync(ctx context.Context, repoPath string, remoteURL string) er
 
 	cmd := gitea.NewCommand(ctx, args...)
 	_, _, err := cmd.RunStdString(&gitea.RunOpts{
-		Dir: repoPath,
+		Dir:               repoPath,
+		UseContextTimeout: true,
 	})
 	if err != nil {
 		return processGiteaErrorf(err, "failed to sync repo")

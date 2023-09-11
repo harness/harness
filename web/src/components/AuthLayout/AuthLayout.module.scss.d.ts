@@ -1,16 +1,13 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly layout: string
-  readonly cardColumn: string
-  readonly card: string
-  readonly cardChildren: string
-  readonly imageColumn: string
-  readonly image: string
-  readonly subtractContainer: string
-  readonly subtractImage: string
-  readonly imageContainer: string
-  readonly overlayImage: string
-  readonly disclaimer: string
-}
-export default styles
+// This is an auto-generated file
+export declare const card: string
+export declare const cardChildren: string
+export declare const cardColumn: string
+export declare const disclaimer: string
+export declare const image: string
+export declare const imageColumn: string
+export declare const imageContainer: string
+export declare const layout: string
+export declare const overlayImage: string
+export declare const subtractContainer: string
+export declare const subtractImage: string

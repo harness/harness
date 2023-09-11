@@ -1,9 +1,6 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly container: string
-  readonly layout: string
-  readonly noCopy: string
-  readonly commitCopyButton: string
-}
-export default styles
+// This is an auto-generated file
+export declare const commitCopyButton: string
+export declare const container: string
+export declare const layout: string
+export declare const noCopy: string

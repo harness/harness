@@ -1,16 +1,13 @@
 /* eslint-disable */
-// this is an auto-generated file
-declare const styles: {
-  readonly main: string
-  readonly spaceSelector: string
-  readonly selected: string
-  readonly icon: string
-  readonly label: string
-  readonly spaceLabel: string
-  readonly spaceName: string
-  readonly repoLinks: string
-  readonly popoverPortal: string
-  readonly popoverTarget: string
-  readonly popoverContent: string
-}
-export default styles
+// This is an auto-generated file
+export declare const icon: string
+export declare const label: string
+export declare const main: string
+export declare const popoverContent: string
+export declare const popoverPortal: string
+export declare const popoverTarget: string
+export declare const repoLinks: string
+export declare const selected: string
+export declare const spaceLabel: string
+export declare const spaceName: string
+export declare const spaceSelector: string
