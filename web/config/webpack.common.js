@@ -13,7 +13,6 @@ const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 const moduleFederationConfig = require('./moduleFederation.config')
 const CONTEXT = process.cwd()
 const DEV = process.env.NODE_ENV === 'development'
-const STANDALONE = JSON.parse(process.env.STANDALONE ?? 'false')
 
 module.exports = {
   target: 'web',
@@ -152,8 +151,7 @@ module.exports = {
     new ModuleFederationPlugin(moduleFederationConfig),
     new DefinePlugin({
       'process.env': '{}', // required for @blueprintjs/core
-      __DEV__: DEV,
-      __STANDALONE__: STANDALONE
+      __DEV__: DEV
     }),
     new GenerateStringTypesPlugin(),
     new RetryChunkLoadPlugin({
