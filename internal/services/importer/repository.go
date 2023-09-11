@@ -199,7 +199,7 @@ func (i *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", fmt.Errorf("failed to import repository: %w", err)
 	}
 
-	return "", err
+	return "", nil
 }
 
 func (i *Repository) GetProgress(ctx context.Context, repo *types.Repository) (types.JobProgress, error) {
