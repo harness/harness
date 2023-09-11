@@ -34,9 +34,9 @@ import { RepositoryPageHeader } from 'components/RepositoryPageHeader/Repository
 import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/PipelineUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
+import useNewPipelineModal from 'components/NewPipelineModal/NewPipelineModal'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
-import useNewPipelineModal from 'pages/AddUpdatePipeline/NewPipelineModal'
 
 const PipelineList = () => {
   const { routes } = useAppContext()

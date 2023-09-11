@@ -2,13 +2,29 @@ import React, { useMemo, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useMutate } from 'restful-react'
 import * as yup from 'yup'
-import { Button, ButtonVariation, Dialog, FormInput, Formik, FormikForm, Layout, useToaster } from '@harnessio/uicore'
+import {
+  Button,
+  ButtonVariation,
+  Container,
+  Dialog,
+  FormInput,
+  Formik,
+  FormikForm,
+  Layout,
+  Text,
+  useToaster
+} from '@harnessio/uicore'
 import { useModalHook } from 'hooks/useModalHook'
 import type { OpenapiCreatePipelineRequest, TypesPipeline, TypesRepository } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { getErrorMessage } from 'utils/Utils'
-import { DEFAULT_YAML_PATH_PREFIX, DEFAULT_YAML_PATH_SUFFIX } from './Constants'
+import { DEFAULT_YAML_PATH_PREFIX, DEFAULT_YAML_PATH_SUFFIX } from '../../pages/AddUpdatePipeline/Constants'
+import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
+import { FontVariation } from '@harnessio/design-system'
+import { capitalize } from 'lodash'
+
+import css from './NewPipelineModal.module.scss'
 
 interface FormData {
   name: string
@@ -100,7 +116,21 @@ const useNewPipelineModal = () => {
                         }
                       }}
                     />
-                    <FormInput.Text name="branch" label={getString('branch')} />
+                    <Layout.Vertical spacing="xsmall" padding={{ bottom: 'medium' }}>
+                      <Text font={{ variation: FontVariation.BODY }}>{capitalize(getString('branch'))}</Text>
+                      <Container className={css.branchSelect}>
+                        <BranchTagSelect
+                          gitRef={formik?.values?.branch || repo?.default_branch || ''}
+                          onSelect={(ref: string) => {
+                            formik?.setFieldValue('branch', ref)
+                          }}
+                          repoMetadata={repo || {}}
+                          disableBranchCreation
+                          disableViewAllBranches
+                          forBranchesOnly
+                        />
+                      </Container>
+                    </Layout.Vertical>
                     <FormInput.Text
                       name="yamlPath"
                       label={getString('pipelines.yamlPath')}

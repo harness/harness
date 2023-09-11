@@ -180,8 +180,7 @@ const AddUpdatePipeline = (): JSX.Element => {
               sha: isExistingPipeline ? pipelineYAMLFileContent?.sha : ''
             }
           ],
-          branch: repoMetadata?.default_branch,
-          new_branch: '',
+          branch: pipelineData?.default_branch || '',
           title: `${isExistingPipeline ? getString('updated') : getString('created')} pipeline ${pipeline}`,
           message: ''
         }
