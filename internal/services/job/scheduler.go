@@ -35,9 +35,6 @@ type Scheduler struct {
 	maxRunning     int
 	purgeMinOldAge time.Duration
 
-	// global context
-	globalCtx context.Context
-
 	// synchronization stuff
 	signal       chan time.Time
 	done         chan struct{}
@@ -104,7 +101,6 @@ func (s *Scheduler) Run(ctx context.Context) error {
 	defer close(s.done)
 
 	s.signal = make(chan time.Time, 1)
-	s.globalCtx = ctx
 
 	timer := newSchedulerTimer()
 	defer timer.Stop()
