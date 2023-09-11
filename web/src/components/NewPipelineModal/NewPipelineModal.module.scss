@@ -1,0 +1,17 @@
+.branchSelect {
+  :global {
+    .bp3-popover-wrapper {
+      width: 100% !important;
+      .bp3-popover-target {
+        width: 100% !important;
+      }
+    }
+    .bp3-button {
+      justify-content: start;
+      width: 100%;
+    }
+    .bp3-icon-chevron-down {
+      margin-left: auto;
+    }
+  }
+}

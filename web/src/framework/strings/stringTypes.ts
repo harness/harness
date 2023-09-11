@@ -11,6 +11,7 @@ export interface StringsMap {
   add: string
   addComment: string
   addGitIgnore: string
+  addLabel: string
   addLicense: string
   addMember: string
   addNewFile: string
@@ -190,6 +191,7 @@ export interface StringsMap {
   failedToCreateSpace: string
   failedToDeleteBranch: string
   failedToDeleteWebhook: string
+  failedToSavePipeline: string
   fileDeleted: string
   fileTooLarge: string
   files: string
@@ -212,6 +214,7 @@ export interface StringsMap {
   'homepage.welcomeText': string
   in: string
   inactiveBranches: string
+  isRequired: string
   leaveAComment: string
   license: string
   lineBreaks: string
@@ -318,11 +321,26 @@ export interface StringsMap {
   payloadUrl: string
   payloadUrlLabel: string
   pending: string
+  'pipelines.createNewPipeline': string
+  'pipelines.created': string
+  'pipelines.editPipeline': string
+  'pipelines.enterPipelineName': string
+  'pipelines.enterYAMLPath': string
+  'pipelines.executionCouldNotStart': string
+  'pipelines.executionStarted': string
+  'pipelines.failedToCreatePipeline': string
   'pipelines.lastExecution': string
   'pipelines.name': string
   'pipelines.newPipelineButton': string
   'pipelines.noData': string
+  'pipelines.run': string
+  'pipelines.saveAndRun': string
   'pipelines.time': string
+  'pipelines.updated': string
+  'pipelines.yamlPath': string
+  'plugins.addAPlugin': string
+  'plugins.stepLabel': string
+  'plugins.title': string
   'pr.ableToMerge': string
   'pr.addDescription': string
   'pr.authorCommentedPR': string
@@ -455,6 +473,7 @@ export interface StringsMap {
   reviewerNotFound: string
   reviewers: string
   role: string
+  run: string
   running: string
   samplePayloadUrl: string
   save: string

@@ -416,6 +416,7 @@ makeRequired: Make Required
 makeOptional: Make Optional
 remove: Remove
 required: Required
+isRequired: is required
 noneYet: None Yet
 noOptionalReviewers: No Optional Reviewers
 noRequiredReviewers: No Required Reviewers
@@ -487,6 +488,7 @@ showCommitHistory: Renamed from {file} - Show History
 noReviewers: No Reviewers
 assignPeople: Assign people
 add: Add +
+addLabel: Add
 users: Users
 findAUser: Find a user
 reviewerNotFound: 'Reviewer <strong>{{reviewer}}</strong> not found.'
@@ -586,6 +588,7 @@ spaceMemberships:
   memberAdded: Member added successfully.
 failedToCreateSpace: Failed to create Space. Please try again.
 failedToCreatePipeline: Failed to create Pipeline. Please try again.
+failedToSavePipeline: Failed to save Pipeline. Please try again.
 enterName: Enter the name
 createASpace: Create a space
 createSpace: Create Space
@@ -624,8 +627,20 @@ pipelines:
   noData: There are no pipelines :(
   newPipelineButton: New Pipeline
   name: Pipeline Name
+  createNewPipeline: Create New Pipeline
+  enterPipelineName: Enter pipeline name
+  yamlPath: YAML Path
+  enterYAMLPath: Enter YAML path
+  failedToCreatePipeline: Failed to create pipeline
+  saveAndRun: Save and Run
+  editPipeline: Edit pipeline {{pipeline}}
+  run: Run pipeline
   time: Time
   lastExecution: Last Execution
+  created: Pipeline created successfully
+  updated: Pipeline updated successfully
+  executionStarted: Pipeline execution started successfully
+  executionCouldNotStart: Failure while starting Pipeline execution
 executions:
   noData: There are no executions :(
   newExecutionButton: Run Pipeline
@@ -652,3 +667,8 @@ secrets:
   failedToDeleteSecret: Failed to delete Secret. Please try again.
   deleteSecret: Delete Secrets
 userUpdateSuccess: 'User updated successfully'
+run: Run
+plugins:
+  title: Plugins
+  addAPlugin: Add a {{category}} plugin
+  stepLabel: step
