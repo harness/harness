@@ -7,8 +7,6 @@ package space
 import (
 	"context"
 	"fmt"
-	"github.com/harness/gitness/types/check"
-	"github.com/rs/zerolog/log"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +19,7 @@ import (
 	"github.com/harness/gitness/internal/services/job"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -168,16 +167,16 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			cloneURLs[i] = remoteRepository.CloneURL
 		}
 
+		jobGroupID := fmt.Sprintf("space-import-%d", space.ID)
+		err = c.importer.RunMany(ctx, jobGroupID, in.Provider, localRepositories, cloneURLs)
+		if err != nil {
+			return fmt.Errorf("failed to start import repository jobs: %w", err)
+		}
+
 		return nil
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	jobGroupID := fmt.Sprintf("space-import-%d", space.ID)
-	err = c.importer.RunMany(ctx, jobGroupID, in.Provider, localRepositories, cloneURLs)
-	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to start import repository job")
 	}
 
 	return space, nil

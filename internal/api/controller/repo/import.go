@@ -7,7 +7,6 @@ package repo
 import (
 	"context"
 	"fmt"
-
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/paths"
@@ -16,8 +15,6 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
 type ImportInput struct {
@@ -83,15 +80,15 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			return fmt.Errorf("failed to create path: %w", err)
 		}
 
+		err = c.importer.Run(ctx, in.Provider, repo, remoteRepository.CloneURL)
+		if err != nil {
+			return fmt.Errorf("failed to start import repository job: %w", err)
+		}
+
 		return nil
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	err = c.importer.Run(ctx, in.Provider, repo, remoteRepository.CloneURL)
-	if err != nil {
-		log.Ctx(ctx).Err(err).Msg("failed to start import repository job")
 	}
 
 	repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)

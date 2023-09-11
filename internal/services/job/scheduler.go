@@ -40,7 +40,6 @@ type Scheduler struct {
 
 	// synchronization stuff
 	signal       chan time.Time
-	signalEdgy   chan struct{}
 	done         chan struct{}
 	wgRunning    sync.WaitGroup
 	cancelJobMx  sync.Mutex
@@ -105,7 +104,6 @@ func (s *Scheduler) Run(ctx context.Context) error {
 	defer close(s.done)
 
 	s.signal = make(chan time.Time, 1)
-	s.signalEdgy = make(chan struct{}, 1)
 	s.globalCtx = ctx
 
 	timer := newSchedulerTimer()
@@ -125,10 +123,6 @@ func (s *Scheduler) Run(ctx context.Context) error {
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
-
-			case <-s.signalEdgy:
-				timer.MakeEdgy()
-				return nil
 
 			case newTime := <-s.signal:
 				dur := timer.RescheduleEarlier(newTime)
@@ -264,13 +258,6 @@ func (s *Scheduler) scheduleProcessing(scheduled time.Time) {
 	}()
 }
 
-func (s *Scheduler) makeTimerEdgy() {
-	select {
-	case s.signalEdgy <- struct{}{}:
-	default:
-	}
-}
-
 // scheduleIfHaveMoreJobs triggers processing of ready jobs if the timer is edgy.
 // The timer would be edgy if the previous iteration found more jobs that it could start (full capacity).
 // This should be run after a non-recurring job has finished.
@@ -286,12 +273,24 @@ func (s *Scheduler) RunJob(ctx context.Context, def Definition) error {
 		return err
 	}
 
-	return s.startNewJobs(ctx, []*types.Job{def.toNewJob()})
+	job := def.toNewJob()
+
+	if err := s.store.Create(ctx, job); err != nil {
+		return fmt.Errorf("failed to add new job to the database: %w", err)
+	}
+
+	s.scheduleProcessing(time.UnixMilli(job.Scheduled))
+
+	return nil
 }
 
 // RunJobs runs a several jobs. It's more efficient than calling RunJob several times
 // because it locks the DB only once.
 func (s *Scheduler) RunJobs(ctx context.Context, groupID string, defs []Definition) error {
+	if len(defs) == 0 {
+		return nil
+	}
+
 	jobs := make([]*types.Job, len(defs))
 	for i, def := range defs {
 		if err := def.Validate(); err != nil {
@@ -301,65 +300,13 @@ func (s *Scheduler) RunJobs(ctx context.Context, groupID string, defs []Definiti
 		jobs[i].GroupID = groupID
 	}
 
-	return s.startNewJobs(ctx, jobs)
-}
-
-func (s *Scheduler) startNewJobs(ctx context.Context, jobs []*types.Job) error {
-	mx, err := globalLock(ctx, s.mxManager)
-	if err != nil {
-		return fmt.Errorf("failed to obtain global lock to start new jobs: %w", err)
-	}
-
-	defer func() {
-		if err := mx.Unlock(ctx); err != nil {
-			log.Ctx(ctx).Err(err).Msg("failed to release global lock after starting new jobs")
-		}
-	}()
-
-	return s.startNewJobsNoLock(ctx, jobs)
-}
-
-func (s *Scheduler) startNewJobsNoLock(ctx context.Context, jobs []*types.Job) error {
-	available, err := s.availableSlots(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to count available slots for job execution: %w", err)
-	}
-
-	canRunAll := available >= len(jobs)
-
 	for _, job := range jobs {
-		if available > 0 {
-			available--
-			s.preExec(job) // Update the job fields for the new execution: It will be added to the DB as "running".
-		}
-
-		err = s.store.Create(ctx, job)
-		if err != nil {
+		if err := s.store.Create(ctx, job); err != nil {
 			return fmt.Errorf("failed to add new job to the database: %w", err)
 		}
-
-		if job.State != enum.JobStateRunning {
-			continue
-		}
-
-		func(ctx context.Context) {
-			ctx = log.Ctx(ctx).With().
-				Str("job.UID", job.UID).
-				Str("job.Type", job.Type).
-				Logger().WithContext(ctx)
-
-			// tell everybody that a job has started
-			if err := publishStateChange(ctx, s.pubsubService, job); err != nil {
-				log.Err(err).Msg("failed to publish job state change")
-			}
-
-			s.runJob(ctx, job)
-		}(s.globalCtx)
 	}
 
-	if !canRunAll {
-		s.makeTimerEdgy()
-	}
+	s.scheduleProcessing(time.Now())
 
 	return nil
 }

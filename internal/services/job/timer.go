@@ -31,11 +31,6 @@ func (t *schedulerTimer) ResetAt(next time.Time, edgy bool) time.Duration {
 	return t.resetAt(time.Now(), next, edgy)
 }
 
-// MakeEdgy makes the timer edgy which meant it will be triggered immediately on reschedule attempt.
-func (t *schedulerTimer) MakeEdgy() {
-	t.edgy = true
-}
-
 func (t *schedulerTimer) resetAt(now, next time.Time, edgy bool) time.Duration {
 	var dur time.Duration
 
