@@ -1,11 +1,22 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useGet, useMutate } from 'restful-react'
 import { Link, useParams } from 'react-router-dom'
 import { get, isEmpty, isUndefined, set } from 'lodash'
 import { stringify } from 'yaml'
-import { Container, PageHeader, PageBody, Button, Layout, ButtonVariation, Text, useToaster } from '@harnessio/uicore'
+import { Menu, PopoverPosition } from '@blueprintjs/core'
+import {
+  Container,
+  PageHeader,
+  PageBody,
+  Layout,
+  ButtonVariation,
+  Text,
+  useToaster,
+  SplitButton,
+  Button
+} from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import { Color } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse, RepoFileContent, TypesPipeline } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
@@ -56,6 +67,17 @@ const StarterPipelineV0: Record<string, any> = {
   ]
 }
 
+enum PipelineSaveAndRunAction {
+  SAVE,
+  RUN,
+  SAVE_AND_RUN
+}
+
+interface PipelineSaveAndRunOption {
+  title: string
+  action: PipelineSaveAndRunAction
+}
+
 const AddUpdatePipeline = (): JSX.Element => {
   const version = YamlVersion.V0
   const { routes } = useAppContext()
@@ -71,6 +93,25 @@ const AddUpdatePipeline = (): JSX.Element => {
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
   const [isExistingPipeline, setIsExistingPipeline] = useState<boolean>(false)
   const [isDirty, setIsDirty] = useState<boolean>(false)
+
+  const pipelineSaveOption: PipelineSaveAndRunOption = {
+    title: getString('save'),
+    action: PipelineSaveAndRunAction.SAVE
+  }
+
+  const pipelineRunOption: PipelineSaveAndRunOption = {
+    title: getString('run'),
+    action: PipelineSaveAndRunAction.RUN
+  }
+
+  const pipelineSaveAndRunOption: PipelineSaveAndRunOption = {
+    title: getString('pipelines.saveAndRun'),
+    action: PipelineSaveAndRunAction.SAVE_AND_RUN
+  }
+
+  const pipelineSaveAndRunOptions: PipelineSaveAndRunOption[] = [pipelineSaveAndRunOption, pipelineSaveOption]
+
+  const [selectedOption, setSelectedOption] = useState<PipelineSaveAndRunOption>()
 
   const { mutate, loading } = useMutate<RepoCommitFilesResponse>({
     verb: 'POST',
@@ -121,36 +162,43 @@ const AddUpdatePipeline = (): JSX.Element => {
     }
   }, [isExistingPipeline, pipelineAsYAML, pipelineYAMLFileContent])
 
-  const handleSaveAndRun = (): void => {
-    try {
-      const data: OpenapiCommitFilesRequest = {
-        actions: [
-          {
-            action: isExistingPipeline ? 'UPDATE' : 'CREATE',
-            path: pipelineData?.config_path,
-            payload: pipelineAsYAML,
-            sha: isExistingPipeline ? pipelineYAMLFileContent?.sha : ''
-          }
-        ],
-        branch: repoMetadata?.default_branch,
-        new_branch: '',
-        title: `${isExistingPipeline ? getString('updated') : getString('created')} pipeline ${pipeline}`,
-        message: ''
-      }
+  useEffect(() => {
+    if (isDirty) {
+      // enable "Save" option if pipeline is edited
+      setSelectedOption(pipelineSaveOption)
+    }
+  }, [isDirty])
 
-      mutate(data)
-        .then(() => {
-          fetchPipelineYAMLFileContent()
-          showSuccess(getString(isExistingPipeline ? 'pipelines.updated' : 'pipelines.created'))
-          if (repoMetadata && pipeline) {
-            openRunPipelineModal({ repoMetadata, pipeline })
-          }
-        })
-        .catch(error => {
-          showError(getErrorMessage(error), 0, 'pipelines.failedToSavePipeline')
-        })
-    } catch (exception) {
-      showError(getErrorMessage(exception), 0, 'pipelines.failedToSavePipeline')
+  const handleSaveAndRun = (option: PipelineSaveAndRunOption): void => {
+    if ([PipelineSaveAndRunAction.SAVE_AND_RUN, PipelineSaveAndRunAction.SAVE].includes(option?.action)) {
+      try {
+        const data: OpenapiCommitFilesRequest = {
+          actions: [
+            {
+              action: isExistingPipeline ? 'UPDATE' : 'CREATE',
+              path: pipelineData?.config_path,
+              payload: pipelineAsYAML,
+              sha: isExistingPipeline ? pipelineYAMLFileContent?.sha : ''
+            }
+          ],
+          branch: repoMetadata?.default_branch,
+          new_branch: '',
+          title: `${isExistingPipeline ? getString('updated') : getString('created')} pipeline ${pipeline}`,
+          message: ''
+        }
+
+        mutate(data)
+          .then(() => {
+            fetchPipelineYAMLFileContent()
+            showSuccess(getString(isExistingPipeline ? 'pipelines.updated' : 'pipelines.created'))
+            setSelectedOption(pipelineRunOption)
+          })
+          .catch(error => {
+            showError(getErrorMessage(error), 0, 'pipelines.failedToSavePipeline')
+          })
+      } catch (exception) {
+        showError(getErrorMessage(exception), 0, 'pipelines.failedToSavePipeline')
+      }
     }
   }
 
@@ -175,6 +223,66 @@ const AddUpdatePipeline = (): JSX.Element => {
     } catch (ex) {}
   }
 
+  const renderCTA = useCallback(() => {
+    switch (selectedOption?.action) {
+      case PipelineSaveAndRunAction.SAVE:
+        return (
+          <Button
+            variation={ButtonVariation.PRIMARY}
+            text={getString('save')}
+            onClick={() => {
+              handleSaveAndRun(pipelineSaveOption)
+            }}
+            disabled={loading || !isDirty}
+          />
+        )
+      case PipelineSaveAndRunAction.RUN:
+        return (
+          <Button
+            variation={ButtonVariation.PRIMARY}
+            text={getString('run')}
+            onClick={() => {
+              if (repoMetadata && pipeline) {
+                openRunPipelineModal({ repoMetadata, pipeline })
+              }
+            }}
+          />
+        )
+      case PipelineSaveAndRunAction.SAVE_AND_RUN:
+        return (
+          <SplitButton
+            text={selectedOption?.title}
+            disabled={loading || !isDirty}
+            variation={ButtonVariation.PRIMARY}
+            popoverProps={{
+              interactionKind: 'click',
+              usePortal: true,
+              position: PopoverPosition.BOTTOM_RIGHT,
+              transitionDuration: 1000
+            }}
+            intent="primary">
+            {pipelineSaveAndRunOptions.map(option => {
+              return (
+                <Menu.Item
+                  key={option.title}
+                  text={
+                    <Text color={Color.BLACK} font={{ variation: FontVariation.SMALL_BOLD }}>
+                      {option.title}
+                    </Text>
+                  }
+                  onClick={() => {
+                    handleSaveAndRun(option)
+                  }}
+                />
+              )
+            })}
+          </SplitButton>
+        )
+      default:
+        return <></>
+    }
+  }, [loading, fetchingPipeline, isDirty, repoMetadata, pipeline, selectedOption])
+
   return (
     <>
       <Container className={css.main}>
@@ -189,16 +297,7 @@ const AddUpdatePipeline = (): JSX.Element => {
               </Layout.Horizontal>
             </Container>
           }
-          content={
-            <Layout.Horizontal flex={{ justifyContent: 'space-between' }}>
-              <Button
-                variation={ButtonVariation.PRIMARY}
-                text={getString('pipelines.saveAndRun')}
-                onClick={handleSaveAndRun}
-                disabled={loading || !isDirty}
-              />
-            </Layout.Horizontal>
-          }
+          content={<Layout.Horizontal flex={{ justifyContent: 'space-between' }}>{renderCTA()}</Layout.Horizontal>}
         />
         <PageBody>
           <LoadingSpinner visible={fetchingPipeline} />
