@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Avatar,
   Button,
@@ -33,6 +33,7 @@ import { RepositoryPageHeader } from 'components/RepositoryPageHeader/Repository
 import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/PipelineUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
+import usePipelineEventStream from 'hooks/usePipelineEventStream'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './ExecutionList.module.scss'
 
@@ -46,12 +47,11 @@ const ExecutionList = () => {
   const [page, setPage] = usePageIndex(pageInit)
   const { showError, showSuccess } = useToaster()
 
-  const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
+  const { repoMetadata, error, loading, refetch, space } = useGetRepositoryMetadata()
 
   const {
     data: executions,
     error: executionsError,
-    loading: executionsLoading,
     response,
     refetch: executionsRefetch
   } = useGet<TypesExecution[]>({
@@ -60,19 +60,40 @@ const ExecutionList = () => {
     lazy: !repoMetadata
   })
 
-  //TODO - this should NOT be hardcoded to master branch - need a modal to insert branch
+  //TODO - do not want to show load between refetchs - remove if/when we move to event stream method
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+
+  useEffect(() => {
+    if (executions) {
+      setIsInitialLoad(false)
+    }
+  }, [executions])
+
+  usePipelineEventStream({
+    space,
+    onEvent: (data: any) => {
+      // ideally this would include number - so we only check for executions on the page - but what if new executions are kicked off? - could check for ids that are higher than the lowest id on the page?
+      if (
+        executions?.some(
+          execution => execution.repo_id === data.data?.repo_id && execution.pipeline_id === data.data?.pipeline_id
+        )
+      ) {
+        //TODO - revisit full refresh - can I use the message to update the execution?
+        executionsRefetch()
+      }
+    }
+  })
+
   const { mutate, loading: mutateLoading } = useMutate<TypesExecution>({
     verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines/${pipeline}/executions`,
-    queryParams: { branch: 'master' }
+    path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines/${pipeline}/executions`
   })
 
   const handleClick = async () => {
     try {
-      //TODO - really this should be handled by the event bus
-      await mutate(null)
+      //TODO - this should NOT be hardcoded to master branch - need a modal to insert branch - but useful for testing until then
+      await mutate({ branch: 'master' })
       showSuccess('Build started')
-      executionsRefetch()
     } catch {
       showError('Failed to start build')
     }
@@ -140,7 +161,7 @@ const ExecutionList = () => {
               <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
                 <Calendar color={Utils.getRealCSSColor(Color.GREY_500)} />
                 <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
-                  {timeDistance(record.created, Date.now())} ago
+                  {timeDistance(record.started, Date.now())} ago
                 </Text>
               </Layout.Horizontal>
             </Layout.Vertical>
@@ -177,7 +198,7 @@ const ExecutionList = () => {
           message: getString('executions.noData'),
           button: NewExecutionButton
         }}>
-        <LoadingSpinner visible={loading || executionsLoading} withBorder={!!executions && executionsLoading} />
+        <LoadingSpinner visible={loading || isInitialLoad} withBorder={!!executions && isInitialLoad} />
 
         <Container padding="xlarge">
           <Layout.Horizontal spacing="large" className={css.layout}>

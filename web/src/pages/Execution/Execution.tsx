@@ -1,5 +1,5 @@
 import { Container, PageBody } from '@harnessio/uicore'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import cx from 'classnames'
 import { useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
@@ -13,6 +13,7 @@ import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { ExecutionPageHeader } from 'components/ExecutionPageHeader/ExecutionPageHeader'
+import usePipelineEventStream from 'hooks/usePipelineEventStream'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './Execution.module.scss'
 
@@ -20,18 +21,44 @@ const Execution = () => {
   const { pipeline, execution: executionNum } = useParams<CODEProps>()
   const { getString } = useStrings()
 
-  const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
+  const { repoMetadata, error, loading, refetch, space } = useGetRepositoryMetadata()
 
   const {
     data: execution,
     error: executionError,
-    loading: executionLoading
+    loading: executionLoading,
+    refetch: executionRefetch
   } = useGet<TypesExecution>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines/${pipeline}/executions/${executionNum}`,
     lazy: !repoMetadata
   })
 
+  //TODO remove null type here?
   const [selectedStage, setSelectedStage] = useState<number | null>(1)
+  //TODO - do not want to show load between refetchs - remove if/when we move to event stream method
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+
+  useEffect(() => {
+    if (execution) {
+      setIsInitialLoad(false)
+    }
+  }, [execution])
+
+  usePipelineEventStream({
+    space,
+    onEvent: (data: any) => {
+      if (
+        (data.type === 'execution_updated' || data.type === 'execution_completed') &&
+        data.data?.repo_id === execution?.repo_id &&
+        data.data?.pipeline_id === execution?.pipeline_id &&
+        data.data?.number === execution?.number
+      ) {
+        //TODO - revisit full refresh - can I use the message to update the execution?
+        executionRefetch()
+      }
+    },
+    shouldRun: execution?.status === 'running'
+  })
 
   return (
     <Container className={css.main}>
@@ -72,7 +99,7 @@ const Execution = () => {
           message: getString('executions.noData')
           // button: NewExecutionButton
         }}>
-        <LoadingSpinner visible={loading || executionLoading} withBorder={!!execution && executionLoading} />
+        <LoadingSpinner visible={loading || isInitialLoad} withBorder={!!execution && isInitialLoad} />
         {execution && (
           <SplitPane split="vertical" size={300} minSize={200} maxSize={400}>
             <ExecutionStageList
