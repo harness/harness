@@ -48,7 +48,7 @@
   width: min(calc(100vw - var(--nav-menu-width)), 840px) !important;
   height: 100vh;
   position: fixed;
-  left: 5px;
+  left: 241px;
   top: -5px;
 
   > div {
@@ -77,6 +77,13 @@
     width: 100vw;
     height: 100vh;
     background-color: rgba(26, 26, 26, 0.4);
+  }
+
+  :global {
+    .bp3-popover-arrow {
+      left: -11px !important;
+      transform: rotate(180deg);
+    }
   }
 
   > div {

@@ -17,6 +17,7 @@ export interface StringsMap {
   addNewFile: string
   addReadMe: string
   admin: string
+  aiSearch: string
   all: string
   allBranches: string
   allComments: string
@@ -65,6 +66,7 @@ export interface StringsMap {
   cloneText: string
   close: string
   closed: string
+  codeSearch: string
   comment: string
   commentDeleted: string
   commit: string
@@ -307,6 +309,7 @@ export interface StringsMap {
   'pageTitle.repositories': string
   'pageTitle.repository': string
   'pageTitle.repositorySettings': string
+  'pageTitle.search': string
   'pageTitle.secrets': string
   'pageTitle.signin': string
   'pageTitle.spaceSettings': string
@@ -336,6 +339,7 @@ export interface StringsMap {
   'pipelines.run': string
   'pipelines.saveAndRun': string
   'pipelines.time': string
+  poweredByAI: string
   'pipelines.updated': string
   'pipelines.yamlPath': string
   'plugins.addAPlugin': string
@@ -482,6 +486,7 @@ export interface StringsMap {
   scrollToTop: string
   search: string
   searchBranches: string
+  searchResult: string
   secret: string
   'secrets.createSecret': string
   'secrets.createSuccess': string
@@ -527,6 +532,7 @@ export interface StringsMap {
   'spaceSetting.setting': string
   spaces: string
   sslVerificationLabel: string
+  startSearching: string
   status: string
   submitReview: string
   success: string
@@ -586,6 +592,7 @@ export interface StringsMap {
   viewAllTags: string
   viewCommitDetails: string
   viewFile: string
+  viewFileHistory: string
   viewFiles: string
   viewRaw: string
   viewRepo: string

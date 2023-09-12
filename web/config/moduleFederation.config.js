@@ -35,6 +35,7 @@ module.exports = {
     './Settings': './src/pages/RepositorySettings/RepositorySettings.tsx',
     './Webhooks': './src/pages/Webhooks/Webhooks.tsx',
     './WebhookNew': './src/pages/WebhookNew/WebhookNew.tsx',
+    './Search': './src/pages/Search/Search.tsx',
     './WebhookDetails': './src/pages/WebhookDetails/WebhookDetails.tsx',
     './NewRepoModalButton': './src/components/NewRepoModalButton/NewRepoModalButton.tsx'
   },

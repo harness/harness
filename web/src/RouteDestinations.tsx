@@ -30,6 +30,7 @@ import { useStrings } from 'framework/strings'
 import ExecutionList from 'pages/ExecutionList/ExecutionList'
 import Execution from 'pages/Execution/Execution'
 import Secret from 'pages/Secret/Secret'
+import Search from 'pages/Search/Search'
 import AddUpdatePipeline from 'pages/AddUpdatePipeline/AddUpdatePipeline'
 import { useAppContext } from 'AppContext'
 
@@ -246,6 +247,12 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
         <Route path={routes.toCODETags({ repoPath })} exact>
           <LayoutWithSideNav title={getString('pageTitle.tags')}>
             <RepositoryTags />
+          </LayoutWithSideNav>
+        </Route>
+
+        <Route path={routes.toCODESearch({ repoPath })} exact>
+          <LayoutWithSideNav title={getString('pageTitle.search')}>
+            <Search />
           </LayoutWithSideNav>
         </Route>
 

@@ -96,6 +96,7 @@ pageTitle:
   pipelines: Pipelines
   secrets: Secrets
   executions: Executions
+  search: Search powered by AI
 repos:
   name: Repo Name
   data: Repo Data
@@ -482,7 +483,7 @@ newTag: New Tag
 overview: Overview
 fileTooLarge: File is too large to open. {download}
 clickHereToDownload: Click here to download.
-viewFile: View the file at this point in the history
+viewFileHistory: View the file at this point in the history
 viewRepo: View the repository at this point in the history
 hideCommitHistory: Renamed from {file} - Hide History
 showCommitHistory: Renamed from {file} - Show History
@@ -669,6 +670,12 @@ secrets:
   failedToDeleteSecret: Failed to delete Secret. Please try again.
   deleteSecret: Delete Secrets
 userUpdateSuccess: 'User updated successfully'
+viewFile: View File
+searchResult: 'Search Result {count}'
+aiSearch: AI Search
+codeSearch: Code Search
+startSearching: Begin search by describing what you are looking for.
+poweredByAI: Unlock the power of AI with Semantic Code search. Try phrases like "Locate the code for authentication".
 run: Run
 plugins:
   title: Plugins

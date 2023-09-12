@@ -73,7 +73,7 @@ export interface CODERoutes {
   toCODEWebhookNew: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEWebhookDetails: (args: Required<Pick<CODEProps, 'repoPath' | 'webhookId'>>) => string
   toCODESettings: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
-
+  toCODESearch: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEExecutions: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline'>>) => string
   toCODEExecution: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline' | 'execution'>>) => string
   toCODESecret: (args: Required<Pick<CODEProps, 'space' | 'secret'>>) => string
@@ -126,6 +126,7 @@ export const routes: CODERoutes = {
   toCODEBranches: ({ repoPath }) => `/${repoPath}/branches`,
   toCODETags: ({ repoPath }) => `/${repoPath}/tags`,
   toCODESettings: ({ repoPath }) => `/${repoPath}/settings`,
+  toCODESearch: ({ repoPath }) => `/${repoPath}/search`,
   toCODEWebhooks: ({ repoPath }) => `/${repoPath}/webhooks`,
   toCODEWebhookNew: ({ repoPath }) => `/${repoPath}/webhooks/new`,
   toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`,
