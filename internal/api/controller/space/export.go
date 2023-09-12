@@ -2,20 +2,22 @@
 // Use of this source code is governed by the Polyform Free Trial License
 // that can be found in the LICENSE.md file for this repository.
 
-package repo
+package space
 
 import (
 	"context"
 	"fmt"
+	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/services/exporter"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/log"
 )
 
 type ExportInput struct {
-	ParentRef string `json:"parent_ref"`
+	RepoRef string `json:"repo_ref"`
 
 	AccountId         string `json:"accountId"`
 	OrgIdentifier     string `json:"orgIdentifier"`
@@ -25,8 +27,10 @@ type ExportInput struct {
 
 // Export creates a new empty repository in harness code and does git push to it.
 func (c *Controller) Export(ctx context.Context, session *auth.Session, in *ExportInput) (*types.Repository, error) {
-	// todo(abhinav): check perms
-	parentSpace, err := c.getSpaceCheckAuthRepoCreation(ctx, session, in.ParentRef)
+	space, err := c.spaceStore.FindByRef(ctx, in.RepoRef)
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit, false); err != nil {
+		return nil, err
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +48,7 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, in *Expo
 	}
 
 	// todo(abhinav): add pagination
-	repos, err := c.repoStore.List(ctx, parentSpace.ID, &types.RepoFilter{})
+	repos, err := c.repoStore.List(ctx, space.ID, &types.RepoFilter{})
 	if err != nil {
 		return nil, err
 	}
@@ -55,10 +59,6 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, in *Expo
 }
 
 func (c *Controller) sanitizeExportInput(in *ExportInput) error {
-	if err := c.validateParentRef(in.ParentRef); err != nil {
-		return err
-	}
-
 	if in.AccountId == "" {
 		return usererror.BadRequest("account id must be provided")
 	}
