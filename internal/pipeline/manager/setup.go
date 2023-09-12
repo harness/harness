@@ -6,11 +6,10 @@ package manager
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"time"
 
-	"github.com/harness/gitness/internal/pipeline/events"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -20,12 +19,12 @@ import (
 )
 
 type setup struct {
-	Executions store.ExecutionStore
-	Events     events.EventsStreamer
-	Repos      store.RepoStore
-	Steps      store.StepStore
-	Stages     store.StageStore
-	Users      store.PrincipalStore
+	Executions  store.ExecutionStore
+	SSEStreamer sse.Streamer
+	Repos       store.RepoStore
+	Steps       store.StepStore
+	Stages      store.StageStore
+	Users       store.PrincipalStore
 }
 
 func (s *setup) do(ctx context.Context, stage *types.Stage) error {
@@ -86,24 +85,12 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 		return err
 	}
 	execution.Stages = stages
-	err = s.Events.Publish(noContext, repo.ParentID, executionEvent(enum.ExecutionRunning, execution))
+	err = s.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionRunning, execution)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: could not publish execution event")
 	}
 
 	return nil
-}
-
-func executionEvent(
-	eventType enum.EventType,
-	execution *types.Execution,
-) *events.Event {
-	// json.Marshal will not return an error here, it can be absorbed
-	bytes, _ := json.Marshal(execution)
-	return &events.Event{
-		Type: eventType,
-		Data: bytes,
-	}
 }
 
 // helper function that updates the execution status from pending to running.

@@ -41,7 +41,6 @@ import (
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/pipeline/commit"
-	eventsstream "github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/manager"
 	"github.com/harness/gitness/internal/pipeline/runner"
@@ -56,6 +55,7 @@ import (
 	pullreqservice "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/trigger"
 	"github.com/harness/gitness/internal/services/webhook"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/store/cache"
 	"github.com/harness/gitness/internal/store/database"
@@ -129,7 +129,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		triggerer.WireSet,
 		file.WireSet,
 		runner.WireSet,
-		eventsstream.WireSet,
+		sse.WireSet,
 		scheduler.WireSet,
 		commit.WireSet,
 		controllertrigger.WireSet,

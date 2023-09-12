@@ -5,9 +5,9 @@
 package manager
 
 import (
-	"github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/livelog"
@@ -29,7 +29,7 @@ func ProvideExecutionManager(
 	executionStore store.ExecutionStore,
 	pipelineStore store.PipelineStore,
 	urlProvider *url.Provider,
-	events events.EventsStreamer,
+	sseStreamer sse.Streamer,
 	fileService file.FileService,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
@@ -39,7 +39,7 @@ func ProvideExecutionManager(
 	stageStore store.StageStore,
 	stepStore store.StepStore,
 	userStore store.PrincipalStore) ExecutionManager {
-	return New(config, executionStore, pipelineStore, urlProvider, events, fileService, logStore,
+	return New(config, executionStore, pipelineStore, urlProvider, sseStreamer, fileService, logStore,
 		logStream, repoStore, scheduler, secretStore, stageStore, stepStore, userStore)
 }
 

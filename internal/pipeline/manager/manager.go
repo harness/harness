@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	urlprovider "github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/livelog"
@@ -98,7 +98,7 @@ type Manager struct {
 	Pipelines   store.PipelineStore
 	urlProvider *urlprovider.Provider
 	// Converter  store.ConvertService
-	Events events.EventsStreamer
+	SSEStreamer sse.Streamer
 	// Globals    store.GlobalSecretStore
 	Logs store.LogStore
 	Logz livelog.LogStream
@@ -119,7 +119,7 @@ func New(
 	executionStore store.ExecutionStore,
 	pipelineStore store.PipelineStore,
 	urlProvider *urlprovider.Provider,
-	events events.EventsStreamer,
+	sseStreamer sse.Streamer,
 	fileService file.FileService,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
@@ -135,7 +135,7 @@ func New(
 		Executions:  executionStore,
 		Pipelines:   pipelineStore,
 		urlProvider: urlProvider,
-		Events:      events,
+		SSEStreamer: sseStreamer,
 		FileService: fileService,
 		Logs:        logStore,
 		Logz:        logStream,
@@ -313,11 +313,11 @@ func (m *Manager) BeforeStep(ctx context.Context, step *types.Step) error {
 		return err
 	}
 	updater := &updater{
-		Executions: m.Executions,
-		Events:     m.Events,
-		Repos:      m.Repos,
-		Steps:      m.Steps,
-		Stages:     m.Stages,
+		Executions:  m.Executions,
+		SSEStreamer: m.SSEStreamer,
+		Repos:       m.Repos,
+		Steps:       m.Steps,
+		Stages:      m.Stages,
 	}
 	return updater.do(noContext, step)
 }
@@ -333,11 +333,11 @@ func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 
 	var retErr error
 	updater := &updater{
-		Executions: m.Executions,
-		Events:     m.Events,
-		Repos:      m.Repos,
-		Steps:      m.Steps,
-		Stages:     m.Stages,
+		Executions:  m.Executions,
+		SSEStreamer: m.SSEStreamer,
+		Repos:       m.Repos,
+		Steps:       m.Steps,
+		Stages:      m.Stages,
 	}
 
 	if err := updater.do(noContext, step); err != nil {
@@ -354,12 +354,12 @@ func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 // BeforeAll signals the build stage is about to start.
 func (m *Manager) BeforeStage(ctx context.Context, stage *types.Stage) error {
 	s := &setup{
-		Executions: m.Executions,
-		Events:     m.Events,
-		Repos:      m.Repos,
-		Steps:      m.Steps,
-		Stages:     m.Stages,
-		Users:      m.Users,
+		Executions:  m.Executions,
+		SSEStreamer: m.SSEStreamer,
+		Repos:       m.Repos,
+		Steps:       m.Steps,
+		Stages:      m.Stages,
+		Users:       m.Users,
 	}
 
 	return s.do(noContext, stage)
@@ -368,13 +368,13 @@ func (m *Manager) BeforeStage(ctx context.Context, stage *types.Stage) error {
 // AfterAll signals the build stage is complete.
 func (m *Manager) AfterStage(ctx context.Context, stage *types.Stage) error {
 	t := &teardown{
-		Executions: m.Executions,
-		Events:     m.Events,
-		Logs:       m.Logz,
-		Repos:      m.Repos,
-		Scheduler:  m.Scheduler,
-		Steps:      m.Steps,
-		Stages:     m.Stages,
+		Executions:  m.Executions,
+		SSEStreamer: m.SSEStreamer,
+		Logs:        m.Logz,
+		Repos:       m.Repos,
+		Scheduler:   m.Scheduler,
+		Steps:       m.Steps,
+		Stages:      m.Stages,
 	}
 	return t.do(noContext, stage)
 }

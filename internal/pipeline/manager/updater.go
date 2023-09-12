@@ -7,7 +7,7 @@ package manager
 import (
 	"context"
 
-	"github.com/harness/gitness/internal/pipeline/events"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -16,11 +16,11 @@ import (
 )
 
 type updater struct {
-	Executions store.ExecutionStore
-	Repos      store.RepoStore
-	Events     events.EventsStreamer
-	Steps      store.StepStore
-	Stages     store.StageStore
+	Executions  store.ExecutionStore
+	Repos       store.RepoStore
+	SSEStreamer sse.Streamer
+	Steps       store.StepStore
+	Stages      store.StageStore
 }
 
 func (u *updater) do(ctx context.Context, step *types.Step) error {
@@ -64,7 +64,7 @@ func (u *updater) do(ctx context.Context, step *types.Step) error {
 	}
 
 	execution.Stages = stages
-	err = u.Events.Publish(noContext, repo.ParentID, executionEvent(enum.ExecutionUpdated, execution))
+	err = u.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionUpdated, execution)
 	if err != nil {
 		log.Warn().Err(err).Msg("manager: cannot publish execution updated event")
 	}

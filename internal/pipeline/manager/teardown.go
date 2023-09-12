@@ -8,8 +8,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/livelog"
 	gitness_store "github.com/harness/gitness/store"
@@ -20,13 +20,13 @@ import (
 )
 
 type teardown struct {
-	Executions store.ExecutionStore
-	Events     events.EventsStreamer
-	Logs       livelog.LogStream
-	Scheduler  scheduler.Scheduler
-	Repos      store.RepoStore
-	Steps      store.StepStore
-	Stages     store.StageStore
+	Executions  store.ExecutionStore
+	SSEStreamer sse.Streamer
+	Logs        livelog.LogStream
+	Scheduler   scheduler.Scheduler
+	Repos       store.RepoStore
+	Steps       store.StepStore
+	Stages      store.StageStore
 }
 
 func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
@@ -134,7 +134,7 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 	}
 
 	execution.Stages = stages
-	err = t.Events.Publish(noContext, repo.ParentID, executionEvent(enum.ExecutionCompleted, execution))
+	err = t.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionCompleted, execution)
 	if err != nil {
 		log.Warn().Err(err).
 			Msg("manager: could not publish execution completed event")

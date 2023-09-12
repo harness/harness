@@ -13,7 +13,7 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { Split } from 'components/Split/Split'
 import { ExecutionPageHeader } from 'components/ExecutionPageHeader/ExecutionPageHeader'
-import usePipelineEventStream from 'hooks/usePipelineEventStream'
+import useSpaceSSE from 'hooks/useSpaceSSE'
 import { ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './Execution.module.scss'
@@ -45,14 +45,14 @@ const Execution = () => {
     }
   }, [execution])
 
-  usePipelineEventStream({
+  useSpaceSSE({
     space,
-    onEvent: (data: any) => {
+    events: ['execution_updated', 'execution_completed'],
+    onEvent: (_: string, data: any) => {
       if (
-        (data.type === 'execution_updated' || data.type === 'execution_completed') &&
-        data.data?.repo_id === execution?.repo_id &&
-        data.data?.pipeline_id === execution?.pipeline_id &&
-        data.data?.number === execution?.number
+        data?.repo_id === execution?.repo_id &&
+        data?.pipeline_id === execution?.pipeline_id &&
+        data?.number === execution?.number
       ) {
         //TODO - revisit full refresh - can I use the message to update the execution?
         executionRefetch()

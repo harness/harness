@@ -31,7 +31,7 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/PipelineUtils'
-import usePipelineEventStream from 'hooks/usePipelineEventStream'
+import useSpaceSSE from 'hooks/useSpaceSSE'
 import { ExecutionText, ExecutionTrigger } from 'components/ExecutionText/ExecutionText'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './ExecutionList.module.scss'
@@ -68,13 +68,14 @@ const ExecutionList = () => {
     }
   }, [executions])
 
-  usePipelineEventStream({
+  useSpaceSSE({
     space,
-    onEvent: (data: any) => {
+    events: ['execution_updated', 'execution_completed'],
+    onEvent: (_: string, data: any) => {
       // ideally this would include number - so we only check for executions on the page - but what if new executions are kicked off? - could check for ids that are higher than the lowest id on the page?
       if (
         executions?.some(
-          execution => execution.repo_id === data.data?.repo_id && execution.pipeline_id === data.data?.pipeline_id
+          execution => execution.repo_id === data?.repo_id && execution.pipeline_id === data?.pipeline_id
         )
       ) {
         //TODO - revisit full refresh - can I use the message to update the execution?

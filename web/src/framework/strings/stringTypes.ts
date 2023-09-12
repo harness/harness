@@ -339,12 +339,12 @@ export interface StringsMap {
   'pipelines.run': string
   'pipelines.saveAndRun': string
   'pipelines.time': string
-  poweredByAI: string
   'pipelines.updated': string
   'pipelines.yamlPath': string
   'plugins.addAPlugin': string
   'plugins.stepLabel': string
   'plugins.title': string
+  poweredByAI: string
   'pr.ableToMerge': string
   'pr.addDescription': string
   'pr.authorCommentedPR': string

@@ -39,16 +39,21 @@ func (c *Controller) Events(
 		return fmt.Errorf("failed to authorize stream: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, tailMaxTime)
-	defer cancel()
+	ctx, ctxCancel := context.WithTimeout(ctx, tailMaxTime)
+	defer ctxCancel()
 
 	io.WriteString(w, ": ping\n\n")
 	w.Flush()
 
-	events, errc, consumer := c.eventsStream.Subscribe(ctx, space.ID)
-	defer c.eventsStream.Unsubscribe(ctx, consumer)
+	eventStream, errorStream, sseCancel := c.sseStreamer.Stream(ctx, space.ID)
+	defer func() {
+		uerr := sseCancel(ctx)
+		if uerr != nil {
+			log.Ctx(ctx).Warn().Err(uerr).Msgf("failed to cancel sse stream for space '%s'", space.Path)
+		}
+	}()
 	// could not get error channel
-	if errc == nil {
+	if errorStream == nil {
 		io.WriteString(w, "event: error\ndata: eof\n\n")
 		w.Flush()
 		return fmt.Errorf("could not get error channel")
@@ -72,16 +77,17 @@ L:
 		case <-ctx.Done():
 			log.Debug().Msg("events: stream cancelled")
 			break L
-		case err := <-errc:
+		case err := <-errorStream:
 			log.Err(err).Msg("events: received error in the tail channel")
 			break L
 		case <-pingTimer.C:
 			// if time b/w messages takes longer, send a ping
 			io.WriteString(w, ": ping\n\n")
 			w.Flush()
-		case event := <-events:
+		case event := <-eventStream:
+			io.WriteString(w, fmt.Sprintf("event: %s\n", event.Type))
 			io.WriteString(w, "data: ")
-			enc.Encode(event)
+			enc.Encode(event.Data)
 			io.WriteString(w, "\n\n")
 			w.Flush()
 		}

@@ -5,11 +5,11 @@
 // Enums for event types delivered to the event stream for the UI
 package enum
 
-// EventType defines the kind of event
-type EventType string
+// SSEType defines the kind of server sent event
+type SSEType string
 
 const (
-	ExecutionUpdated   = "execution_updated"
-	ExecutionRunning   = "execution_running"
-	ExecutionCompleted = "execution_completed"
+	SSETypeExecutionUpdated   = "execution_updated"
+	SSETypeExecutionRunning   = "execution_running"
+	SSETypeExecutionCompleted = "execution_completed"
 )

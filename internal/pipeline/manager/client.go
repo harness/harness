@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
@@ -133,7 +132,6 @@ func (e *embedded) Watch(ctx context.Context, stage int64) (bool, error) {
 // Batch batch writes logs to the streaming logs.
 func (e *embedded) Batch(ctx context.Context, step int64, lines []*drone.Line) error {
 	for _, l := range lines {
-		fmt.Println("line is: ", l)
 		line := convertFromDroneLine(l)
 		err := e.manager.Write(ctx, step, line)
 		if err != nil {
