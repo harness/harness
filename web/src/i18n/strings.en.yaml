@@ -298,6 +298,7 @@ prChecks:
   failure: '{count}/{total} {count|1:check,checks} failed.'
   running: '{count}/{total} {count|1:check,checks} running.'
   pending: '{count}/{total} {count|1:check,checks} pending.'
+  skipped: '{count}/{total} {count|1:check,checks} skipped.'
   success: '{count}/{total} {count|1:check,checks} succeeded.'
   notFound: No pipelines or external checks found for this repository.
   viewExternal: View Details
@@ -616,6 +617,7 @@ running: Running
 success: Success
 failed: Failed
 error: Error
+skipped: Skipped
 repoDelete:
   title: Delete Repository
   deleteConfirm1: This will permanently delete the "{{repo}}" repository, wiki, issues, comments, packages, secrets, workflow runs, and remove all collaborator associations.

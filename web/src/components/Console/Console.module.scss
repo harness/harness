@@ -26,6 +26,16 @@
   }
 }
 
+.error {
+  position: sticky !important;
+  top: 0 !important;
+  background-color: var(--red) !important;
+  height: var(--log-content-header-height) !important;
+  border-bottom: 1px solid var(--grey-800) !important;
+  padding: var(--spacing-medium) !important;
+  font-weight: 600 !important;
+}
+
 .steps {
   padding: var(--spacing-medium) !important;
 }

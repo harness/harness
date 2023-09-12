@@ -70,6 +70,10 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
     icon = <Icon name="circle" />
   } else if (step?.status === ExecutionState.RUNNING) {
     icon = <Icon className={css.spin} name="pending" />
+  } else if (step?.status === ExecutionState.FAILURE) {
+    icon = <Icon name="danger-icon" />
+  } else if (step?.status === ExecutionState.SKIPPED) {
+    icon = <Icon className={css.timeoutIcon} name="execution-timeout" />
   } else {
     icon = <Icon name="circle" /> // Default icon in case of other statuses or unknown status
   }
@@ -93,7 +97,7 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
         className={css.stepLayout}
         spacing="medium"
         onClick={() => {
-          if (!isPending) {
+          if (!isPending && step?.status !== ExecutionState.SKIPPED) {
             setIsOpened(!isOpened)
             if (shouldUseGet && !isOpened) refetch()
           }
