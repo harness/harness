@@ -25,7 +25,7 @@ type Repository struct {
 	scheduler   *job.Scheduler
 }
 
-type RepoImportData struct {
+type RepoExportData struct {
 	UID             string          `json:"uid"`
 	Description     string          `json:"description"`
 	IsPublic        bool            `json:"is_public"`
@@ -55,7 +55,7 @@ func (e *Repository) Register(executor *job.Executor) error {
 func (e *Repository) Run(ctx context.Context, jobGroupId string, harnessCodeInfo *HarnessCodeInfo, repos []*types.Repository) error {
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repo := range repos {
-		repoJobData := RepoImportData{
+		repoJobData := RepoExportData{
 			UID:             repo.UID,
 			Description:     repo.Description,
 			IsPublic:        repo.IsPublic,
