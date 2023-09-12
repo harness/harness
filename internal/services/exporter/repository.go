@@ -7,6 +7,7 @@ package exporter
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -24,40 +25,69 @@ type Repository struct {
 	scheduler   *job.Scheduler
 }
 
+type RepoImportData struct {
+	UID             string          `json:"uid"`
+	Description     string          `json:"description"`
+	IsPublic        bool            `json:"is_public"`
+	HarnessCodeInfo HarnessCodeInfo `json:"harness_code_info"`
+}
+
+type HarnessCodeInfo struct {
+	AccountId         string `json:"account_id"`
+	ProjectIdentifier string `json:"project_identifier"`
+	OrgIdentifier     string `json:"org_identifier"`
+	Token             string `json:"token"`
+}
+
 var _ job.Handler = (*Repository)(nil)
 
-type Input struct {
-}
+const (
+	exportJobMaxRetries  = 1
+	exportJobMaxDuration = 45 * time.Minute
+)
 
 const jobType = "repository_export"
 
-func (i *Repository) Register(executor *job.Executor) error {
-	return executor.Register(jobType, i)
+func (e *Repository) Register(executor *job.Executor) error {
+	return executor.Register(jobType, e)
 }
 
-func (i *Repository) Run(ctx context.Context, jobUID string, input Input) error {
-	data, err := json.Marshal(input)
-	if err != nil {
-		return err
+func (e *Repository) Run(ctx context.Context, jobGroupId string, harnessCodeInfo *HarnessCodeInfo, repos []*types.Repository) error {
+	jobDefinitions := make([]job.Definition, len(repos))
+	for i, repo := range repos {
+		repoJobData := RepoImportData{
+			UID:             repo.UID,
+			Description:     repo.Description,
+			IsPublic:        repo.IsPublic,
+			HarnessCodeInfo: *harnessCodeInfo,
+		}
+
+		data, err := json.Marshal(repoJobData)
+		if err != nil {
+			return fmt.Errorf("failed to marshal job input json: %w", err)
+		}
+		strData := strings.TrimSpace(string(data))
+		jobUID, err := job.UID()
+
+		jobDefinitions[i] = job.Definition{
+			UID:        jobUID,
+			Type:       jobType,
+			MaxRetries: exportJobMaxRetries,
+			Timeout:    exportJobMaxDuration,
+			Data:       strData,
+		}
 	}
 
-	strData := strings.TrimSpace(string(data))
-
-	return i.scheduler.RunJob(ctx, job.Definition{
-		UID:        jobUID,
-		Type:       jobType,
-		MaxRetries: 1,
-		Timeout:    30 * time.Minute,
-		Data:       strData,
-	})
+	return e.scheduler.RunJobs(ctx, jobGroupId, jobDefinitions)
 }
 
-// Handle is repository import background job handler.
-func (i *Repository) Handle(ctx context.Context, data string, _ job.ProgressReporter) (string, error) {
+// Handle is repository export background job handler.
+func (e *Repository) Handle(ctx context.Context, data string, _ job.ProgressReporter) (string, error) {
+	// create repo via api call and then do git push
 	return "", nil
 }
 
-func (i *Repository) GetProgress(ctx context.Context, repo *types.Repository) (types.JobProgress, error) {
+func (e *Repository) GetProgress(ctx context.Context, repo *types.Repository) (types.JobProgress, error) {
 	// todo(abhinav): implement
 	return types.JobProgress{}, nil
 }
