@@ -87,7 +87,7 @@ func (e *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	return "", nil
 }
 
-func (e *Repository) GetProgress(ctx context.Context, repo *types.Repository) (types.JobProgress, error) {
+func (e *Repository) GetProgress(ctx context.Context, repo *types.Space) (types.JobProgress, error) {
 	// todo(abhinav): implement
 	return types.JobProgress{}, nil
 }

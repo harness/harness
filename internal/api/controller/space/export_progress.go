@@ -11,16 +11,13 @@ import (
 // ExportProgress returns progress of the export job.
 func (c *Controller) ExportProgress(ctx context.Context,
 	session *auth.Session,
-	repoRef string,
+	spaceRef string,
 ) (types.JobProgress, error) {
-	repo, err := c.repoStore.FindByRef(ctx, repoRef)
-	if err != nil {
+	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, false); err != nil {
 		return types.JobProgress{}, err
 	}
 
-	if err = apiauth.CheckRepo(ctx, c.authorizer, session, repo, enum.PermissionRepoView, false); err != nil {
-		return types.JobProgress{}, err
-	}
-
-	return c.exporter.GetProgress(ctx, repo)
+	return c.exporter.GetProgress(ctx, space)
 }

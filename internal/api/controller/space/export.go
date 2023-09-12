@@ -14,8 +14,6 @@ import (
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/log"
-	"github.com/harness/gitness/types/enum"
 )
 
 const groupId = "export_space_%d"
@@ -52,18 +50,18 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, in *Expo
 	}
 
 	// todo(abhinav): add pagination
-	repos, err := c.repoStore.List(ctx, parentSpace.ID, &types.RepoFilter{Size: 200})
+	repos, err := c.repoStore.List(ctx, space.ID, &types.RepoFilter{Size: 200})
 	if err != nil {
 		return nil, err
 	}
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
 		// lock parent space path to ensure it doesn't get updated while we setup new repo
-		_, err := c.pathStore.FindPrimaryWithLock(ctx, enum.PathTargetTypeSpace, parentSpace.ID)
+		_, err := c.pathStore.FindPrimaryWithLock(ctx, enum.PathTargetTypeSpace, space.ID)
 		if err != nil {
 			return usererror.BadRequest("Parent not found'")
 		}
-		groupId := fmt.Sprintf(groupId, parentSpace.ID)
+		groupId := fmt.Sprintf(groupId, space.ID)
 
 		if err != nil {
 			return fmt.Errorf("error creating job UID: %w", err)
