@@ -6,17 +6,46 @@ package trigger
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/events"
 	gitevents "github.com/harness/gitness/internal/events/git"
+	"github.com/harness/gitness/internal/pipeline/triggerer"
+	"github.com/harness/gitness/types/enum"
 )
 
 func (s *Service) handleEventTagCreated(ctx context.Context,
 	event *events.Event[*gitevents.TagCreatedPayload]) error {
-	return events.NewDiscardEventErrorf("not implemented")
+	hook := &triggerer.Hook{
+		Trigger: enum.TriggerHook,
+		Action:  enum.TriggerActionTagCreated,
+		Ref:     event.Payload.Ref,
+		Before:  event.Payload.SHA,
+		After:   event.Payload.SHA,
+		Source:  event.Payload.Ref,
+		Target:  event.Payload.Ref,
+	}
+	err := s.augmentCommitInfo(ctx, hook, event.Payload.RepoID, event.Payload.SHA)
+	if err != nil {
+		return fmt.Errorf("could not augment commit info: %w", err)
+	}
+	return s.trigger(ctx, event.Payload.RepoID, enum.TriggerActionTagCreated, hook)
 }
 
 func (s *Service) handleEventTagUpdated(ctx context.Context,
 	event *events.Event[*gitevents.TagUpdatedPayload]) error {
-	return events.NewDiscardEventErrorf("not implemented")
+	hook := &triggerer.Hook{
+		Trigger: enum.TriggerHook,
+		Action:  enum.TriggerActionTagUpdated,
+		Ref:     event.Payload.Ref,
+		Before:  event.Payload.OldSHA,
+		After:   event.Payload.NewSHA,
+		Source:  event.Payload.Ref,
+		Target:  event.Payload.Ref,
+	}
+	err := s.augmentCommitInfo(ctx, hook, event.Payload.RepoID, event.Payload.NewSHA)
+	if err != nil {
+		return fmt.Errorf("could not augment commit info: %w", err)
+	}
+	return s.trigger(ctx, event.Payload.RepoID, enum.TriggerActionTagUpdated, hook)
 }

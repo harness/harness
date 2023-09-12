@@ -144,14 +144,14 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	connectorStore := database.ProvideConnectorStore(db)
 	templateStore := database.ProvideTemplateStore(db)
 	spaceController := space.ProvideController(db, provider, eventsStreamer, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository)
-	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, authorizer, pipelineStore)
+	triggerStore := database.ProvideTriggerStore(db)
+	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, triggerStore, authorizer, pipelineStore)
 	encrypter, err := encrypt.ProvideEncrypter(config)
 	if err != nil {
 		return nil, err
 	}
 	secretController := secret.ProvideController(db, pathUID, pathStore, encrypter, secretStore, authorizer, spaceStore)
-	triggerStore := database.ProvideTriggerStore(db)
-	triggerController := trigger.ProvideController(db, authorizer, triggerStore, pipelineStore, repoStore)
+	triggerController := trigger.ProvideController(db, authorizer, triggerStore, pathUID, pipelineStore, repoStore)
 	connectorController := connector.ProvideController(db, pathUID, connectorStore, authorizer, spaceStore)
 	templateController := template.ProvideController(db, pathUID, templateStore, authorizer, spaceStore)
 	pluginStore := database.ProvidePluginStore(db)
@@ -235,7 +235,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	triggerConfig := server.ProvideTriggerConfig(config)
-	triggerService, err := trigger2.ProvideService(ctx, triggerConfig, readerFactory, eventsReaderFactory)
+	triggerService, err := trigger2.ProvideService(ctx, triggerConfig, triggerStore, commitService, pullReqStore, repoStore, pipelineStore, triggererTriggerer, readerFactory, eventsReaderFactory)
 	if err != nil {
 		return nil, err
 	}

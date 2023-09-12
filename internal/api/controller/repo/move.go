@@ -7,12 +7,12 @@ package repo
 import (
 	"context"
 	"fmt"
-	"github.com/harness/gitness/internal/api/usererror"
 	"strconv"
 	"strings"
 	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/store/database/dbtx"

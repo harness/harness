@@ -4,13 +4,14 @@
 
 package enum
 
+// TriggerEvent defines the different kinds of events in triggers.
+type TriggerEvent string
+
 // Hook event constants.
 const (
 	TriggerEventCron        = "cron"
-	TriggerEventCustom      = "custom"
+	TriggerEventManual      = "manual"
 	TriggerEventPush        = "push"
 	TriggerEventPullRequest = "pull_request"
 	TriggerEventTag         = "tag"
-	TriggerEventPromote     = "promote"
-	TriggerEventRollback    = "rollback"
 )

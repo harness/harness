@@ -13,7 +13,14 @@ import (
 	"github.com/harness/gitness/events"
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
+	"github.com/harness/gitness/internal/pipeline/commit"
+	"github.com/harness/gitness/internal/pipeline/triggerer"
+	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/stream"
+	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
+
+	"github.com/hashicorp/go-multierror"
 )
 
 const (
@@ -43,11 +50,24 @@ func (c *Config) Prepare() error {
 	return nil
 }
 
-type Service struct{}
+type Service struct {
+	triggerStore  store.TriggerStore
+	pullReqStore  store.PullReqStore
+	repoStore     store.RepoStore
+	pipelineStore store.PipelineStore
+	triggerSvc    triggerer.Triggerer
+	commitSvc     commit.CommitService
+}
 
 func New(
 	ctx context.Context,
 	config Config,
+	triggerStore store.TriggerStore,
+	pullReqStore store.PullReqStore,
+	repoStore store.RepoStore,
+	pipelineStore store.PipelineStore,
+	triggerSvc triggerer.Triggerer,
+	commitSvc commit.CommitService,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 ) (*Service, error) {
@@ -55,7 +75,14 @@ func New(
 		return nil, fmt.Errorf("provided trigger service config is invalid: %w", err)
 	}
 
-	service := &Service{}
+	service := &Service{
+		triggerStore:  triggerStore,
+		pullReqStore:  pullReqStore,
+		repoStore:     repoStore,
+		commitSvc:     commitSvc,
+		pipelineStore: pipelineStore,
+		triggerSvc:    triggerSvc,
+	}
 
 	_, err := gitReaderFactory.Launch(ctx, eventsReaderGroupName, config.EventReaderName,
 		func(r *gitevents.Reader) error {
@@ -100,4 +127,41 @@ func New(
 	}
 
 	return service, nil
+}
+
+// trigger a build given an action on a repo and a hook.
+// It tries to find all enabled triggers, see if the action is the same
+// as the trigger action - and if so, find the pipeline for the trigger
+// and fire an execution.
+func (s *Service) trigger(ctx context.Context, repoID int64,
+	action enum.TriggerAction, hook *triggerer.Hook) error {
+	// Get all enabled triggers for a repo.
+	ret, err := s.triggerStore.ListAllEnabled(ctx, repoID)
+	if err != nil {
+		return fmt.Errorf("failed to list all enabled triggers: %w", err)
+	}
+	validTriggers := []*types.Trigger{}
+	// Check which triggers are eligible to be fired
+	for _, t := range ret {
+		for _, a := range t.Actions {
+			if a == action {
+				validTriggers = append(validTriggers, t)
+				break
+			}
+		}
+	}
+
+	var errs error
+	for _, t := range validTriggers {
+		pipeline, err := s.pipelineStore.Find(ctx, t.PipelineID)
+		if err != nil {
+			errs = multierror.Append(errs, err)
+		}
+
+		_, err = s.triggerSvc.Trigger(ctx, pipeline, hook)
+		if err != nil {
+			errs = multierror.Append(errs, err)
+		}
+	}
+	return errs
 }

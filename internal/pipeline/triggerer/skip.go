@@ -7,8 +7,6 @@ package triggerer
 import (
 	"strings"
 
-	"github.com/harness/gitness/types/enum"
-
 	"github.com/drone/drone-yaml/yaml"
 )
 
@@ -42,27 +40,6 @@ func skipRepo(document *yaml.Pipeline, repo string) bool {
 
 func skipCron(document *yaml.Pipeline, cron string) bool {
 	return !document.Trigger.Cron.Match(cron)
-}
-
-func skipMessage(hook *Hook) bool {
-	switch {
-	case hook.Event == enum.TriggerEventTag:
-		return false
-	case hook.Event == enum.TriggerEventCron:
-		return false
-	case hook.Event == enum.TriggerEventCustom:
-		return false
-	case hook.Event == enum.TriggerEventPromote:
-		return false
-	case hook.Event == enum.TriggerEventRollback:
-		return false
-	case skipMessageEval(hook.Message):
-		return true
-	case skipMessageEval(hook.Title):
-		return true
-	default:
-		return false
-	}
 }
 
 func skipMessageEval(str string) bool {

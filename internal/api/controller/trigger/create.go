@@ -12,13 +12,17 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
 // TODO: Add more as needed.
 type CreateInput struct {
-	Description string `json:"description"`
-	UID         string `json:"uid"`
+	Description string               `json:"description"`
+	UID         string               `json:"uid"`
+	Secret      string               `json:"secret"`
+	Enabled     bool                 `json:"enabled"`
+	Actions     []enum.TriggerAction `json:"actions"`
 }
 
 func (c *Controller) Create(
@@ -39,6 +43,11 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to authorize pipeline: %w", err)
 	}
 
+	err = c.checkCreateInput(in)
+	if err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
+	}
+
 	pipeline, err := c.pipelineStore.FindByUID(ctx, repo.ID, pipelineUID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find pipeline: %w", err)
@@ -47,6 +56,11 @@ func (c *Controller) Create(
 	now := time.Now().UnixMilli()
 	trigger := &types.Trigger{
 		Description: in.Description,
+		Enabled:     in.Enabled,
+		Secret:      in.Secret,
+		CreatedBy:   session.Principal.ID,
+		RepoID:      repo.ID,
+		Actions:     deduplicateActions(in.Actions),
 		UID:         in.UID,
 		PipelineID:  pipeline.ID,
 		Created:     now,
@@ -59,4 +73,21 @@ func (c *Controller) Create(
 	}
 
 	return trigger, nil
+}
+
+func (c *Controller) checkCreateInput(in *CreateInput) error {
+	if err := check.Description(in.Description); err != nil {
+		return err
+	}
+	if err := checkSecret(in.Secret); err != nil {
+		return err
+	}
+	if err := checkActions(in.Actions); err != nil {
+		return err
+	}
+	if err := c.uidCheck(in.UID, false); err != nil {
+		return err
+	}
+
+	return nil
 }
