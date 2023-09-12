@@ -19,7 +19,7 @@ import (
 const groupId = "export_space_%d"
 
 type ExportInput struct {
-	RepoRef string `json:"repo_ref"`
+	SpaceRef string `json:"space_ref"`
 
 	AccountId         string `json:"accountId"`
 	OrgIdentifier     string `json:"orgIdentifier"`
@@ -29,7 +29,7 @@ type ExportInput struct {
 
 // Export creates a new empty repository in harness code and does git push to it.
 func (c *Controller) Export(ctx context.Context, session *auth.Session, in *ExportInput) (*types.Repository, error) {
-	space, err := c.spaceStore.FindByRef(ctx, in.RepoRef)
+	space, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit, false); err != nil {
 		return nil, err
 	}
