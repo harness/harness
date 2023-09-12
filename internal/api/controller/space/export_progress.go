@@ -1,8 +1,7 @@
-package repo
+package space
 
 import (
 	"context"
-
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
