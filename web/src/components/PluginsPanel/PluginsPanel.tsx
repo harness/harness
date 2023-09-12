@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Formik } from 'formik'
 import { capitalize, get } from 'lodash-es'
 import { useGet } from 'restful-react'
-import { useStrings } from 'framework/strings'
-import { Button, ButtonVariation, Container, FormInput, FormikForm, Layout, Tab, Tabs, Text } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon, type IconName } from '@harnessio/icons'
+import { Button, ButtonVariation, Container, FormInput, FormikForm, Layout, Tab, Tabs, Text } from '@harnessio/uicore'
+import { useStrings } from 'framework/strings'
 import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 import type { TypesPlugin } from 'services/code'
 import { YamlVersion } from 'pages/AddUpdatePipeline/Constants'
@@ -104,19 +104,19 @@ export const PluginsPanel = ({ version = YamlVersion.V0, onPluginAddUpdate }: Pl
     return (
       <>
         {PluginCategories.map((item: PluginInterface) => {
-          const { name, category, description, icon } = item
+          const { name, category: pluginCategory, description, icon } = item
           return (
             <Layout.Horizontal
               onClick={() => {
-                setCategory(category)
-                if (category === PluginCategory.Drone) {
+                setCategory(pluginCategory)
+                if (pluginCategory === PluginCategory.Drone) {
                   setPanelView(PluginPanelView.Listing)
-                } else if (category === PluginCategory.Harness) {
+                } else if (pluginCategory === PluginCategory.Harness) {
                   setPlugin({ uid: getString('run') })
                   setPanelView(PluginPanelView.Configuration)
                 }
               }}
-              key={category}
+              key={pluginCategory}
               padding={{ left: 'medium', right: 'medium', top: 'medium', bottom: 'medium' }}
               flex={{ justifyContent: 'flex-start' }}
               className={css.plugin}>
@@ -160,8 +160,8 @@ export const PluginsPanel = ({ version = YamlVersion.V0, onPluginAddUpdate }: Pl
           </Text>
         </Layout.Horizontal>
         <Container>
-          {plugins?.map((plugin: TypesPlugin) => {
-            const { uid, description } = plugin
+          {plugins?.map((_plugin: TypesPlugin) => {
+            const { uid, description } = _plugin
             return (
               <Layout.Horizontal
                 flex={{ justifyContent: 'flex-start' }}
@@ -169,8 +169,9 @@ export const PluginsPanel = ({ version = YamlVersion.V0, onPluginAddUpdate }: Pl
                 className={css.plugin}
                 onClick={() => {
                   setPanelView(PluginPanelView.Configuration)
-                  setPlugin(plugin)
-                }}>
+                  setPlugin(_plugin)
+                }}
+                key={uid}>
                 <Icon name={'gear'} size={25} />
                 <Layout.Vertical padding={{ left: 'small' }}>
                   <Text font={{ variation: FontVariation.BODY2 }} color={Color.PRIMARY_7}>

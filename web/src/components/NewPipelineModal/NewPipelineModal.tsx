@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 import { useMutate } from 'restful-react'
 import * as yup from 'yup'
-import { capitalize } from 'lodash'
+import { capitalize } from 'lodash-es'
 import {
   Button,
   ButtonVariation,
