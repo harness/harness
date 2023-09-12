@@ -6,6 +6,7 @@ package importer
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/githook"
@@ -35,6 +37,7 @@ type Repository struct {
 	urlProvider   *gitnessurl.Provider
 	git           gitrpc.Interface
 	repoStore     store.RepoStore
+	encrypter     encrypt.Encrypter
 	scheduler     *job.Scheduler
 }
 
@@ -55,27 +58,17 @@ func (r *Repository) Register(executor *job.Executor) error {
 
 // Run starts a background job that imports the provided repository from the provided clone URL.
 func (r *Repository) Run(ctx context.Context, provider Provider, repo *types.Repository, cloneURL string) error {
-	input := Input{
+	jobDef, err := r.getJobDef(*repo.ImportingJobUID, Input{
 		RepoID:   repo.ID,
 		GitUser:  provider.Username,
 		GitPass:  provider.Password,
 		CloneURL: cloneURL,
-	}
-
-	data, err := json.Marshal(input)
-	if err != nil {
-		return fmt.Errorf("failed to marshal job input json: %w", err)
-	}
-
-	strData := strings.TrimSpace(string(data))
-
-	return r.scheduler.RunJob(ctx, job.Definition{
-		UID:        *repo.ImportingJobUID,
-		Type:       jobType,
-		MaxRetries: importJobMaxRetries,
-		Timeout:    importJobMaxDuration,
-		Data:       strData,
 	})
+	if err != nil {
+		return err
+	}
+
+	return r.scheduler.RunJob(ctx, jobDef)
 }
 
 // RunMany starts background jobs that import the provided repositories from the provided clone URLs.
@@ -91,34 +84,23 @@ func (r *Repository) RunMany(ctx context.Context,
 	}
 
 	n := len(repos)
-
 	defs := make([]job.Definition, n)
 
 	for k := 0; k < n; k++ {
 		repo := repos[k]
 		cloneURL := cloneURLs[k]
 
-		input := Input{
+		jobDef, err := r.getJobDef(*repo.ImportingJobUID, Input{
 			RepoID:   repo.ID,
 			GitUser:  provider.Username,
 			GitPass:  provider.Password,
 			CloneURL: cloneURL,
-		}
-
-		data, err := json.Marshal(input)
+		})
 		if err != nil {
-			return fmt.Errorf("failed to marshal job input json: %w", err)
+			return err
 		}
 
-		strData := strings.TrimSpace(string(data))
-
-		defs[k] = job.Definition{
-			UID:        *repo.ImportingJobUID,
-			Type:       jobType,
-			MaxRetries: importJobMaxRetries,
-			Timeout:    importJobMaxDuration,
-			Data:       strData,
-		}
+		defs[k] = jobDef
 	}
 
 	err := r.scheduler.RunJobs(ctx, groupID, defs)
@@ -129,13 +111,56 @@ func (r *Repository) RunMany(ctx context.Context,
 	return nil
 }
 
+func (r *Repository) getJobDef(jobUID string, input Input) (job.Definition, error) {
+	data, err := json.Marshal(input)
+	if err != nil {
+		return job.Definition{}, fmt.Errorf("failed to marshal job input json: %w", err)
+	}
+
+	strData := strings.TrimSpace(string(data))
+
+	encryptedData, err := r.encrypter.Encrypt(strData)
+	if err != nil {
+		return job.Definition{}, fmt.Errorf("failed to encrypt job input: %w", err)
+	}
+
+	return job.Definition{
+		UID:        jobUID,
+		Type:       jobType,
+		MaxRetries: importJobMaxRetries,
+		Timeout:    importJobMaxDuration,
+		Data:       base64.StdEncoding.EncodeToString(encryptedData),
+	}, nil
+}
+
+func (r *Repository) getJobInput(data string) (Input, error) {
+	encrypted, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		return Input{}, fmt.Errorf("failed to base64 decode job input: %w", err)
+	}
+
+	decrypted, err := r.encrypter.Decrypt(encrypted)
+	if err != nil {
+		return Input{}, fmt.Errorf("failed to decrypt job input: %w", err)
+	}
+
+	var input Input
+
+	err = json.NewDecoder(strings.NewReader(decrypted)).Decode(&input)
+	if err != nil {
+		return Input{}, fmt.Errorf("failed to unmarshal job input json: %w", err)
+	}
+
+	return input, nil
+}
+
 // Handle is repository import background job handler.
 func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressReporter) (string, error) {
 	systemPrincipal := bootstrap.NewSystemServiceSession().Principal
 
-	var input Input
-	if err := json.NewDecoder(strings.NewReader(data)).Decode(&input); err != nil {
-		return "", fmt.Errorf("failed to unmarshal job input: %w", err)
+	input, err := r.getJobInput(data)
+	if err != nil {
+		return "", err
 	}
 
 	if input.CloneURL == "" {

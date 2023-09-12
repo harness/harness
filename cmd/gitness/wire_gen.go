@@ -106,6 +106,10 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
+	encrypter, err := encrypt.ProvideEncrypter(config)
+	if err != nil {
+		return nil, err
+	}
 	jobStore := database.ProvideJobStore(db)
 	pubsubConfig := pubsub.ProvideConfig(config)
 	universalClient, err := server.ProvideRedis(config)
@@ -120,7 +124,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repository, err := importer.ProvideRepoImporter(config, provider, gitrpcInterface, repoStore, jobScheduler, executor)
+	repository, err := importer.ProvideRepoImporter(config, provider, gitrpcInterface, repoStore, encrypter, jobScheduler, executor)
 	if err != nil {
 		return nil, err
 	}
@@ -146,10 +150,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	spaceController := space.ProvideController(db, provider, eventsStreamer, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository)
 	triggerStore := database.ProvideTriggerStore(db)
 	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, triggerStore, authorizer, pipelineStore)
-	encrypter, err := encrypt.ProvideEncrypter(config)
-	if err != nil {
-		return nil, err
-	}
 	secretController := secret.ProvideController(db, pathUID, pathStore, encrypter, secretStore, authorizer, spaceStore)
 	triggerController := trigger.ProvideController(db, authorizer, triggerStore, pathUID, pipelineStore, repoStore)
 	connectorController := connector.ProvideController(db, pathUID, connectorStore, authorizer, spaceStore)
