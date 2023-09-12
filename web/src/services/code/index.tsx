@@ -47,6 +47,15 @@ export type EnumPullReqState = 'closed' | 'merged' | 'open'
 
 export type EnumTokenType = string
 
+export type EnumTriggerAction =
+  | 'branch_created'
+  | 'branch_updated'
+  | 'pullreq_branch_updated'
+  | 'pullreq_created'
+  | 'pullreq_reopened'
+  | 'tag_created'
+  | 'tag_updated'
+
 export type EnumWebhookExecutionResult = 'fatal_error' | 'retriable_error' | 'success' | null
 
 export type EnumWebhookParent = 'repo' | 'space'
@@ -107,6 +116,15 @@ export interface GitrpcSignature {
   identity?: GitrpcIdentity
   when?: string
 }
+
+export interface ImporterProvider {
+  host?: string
+  password?: string
+  type?: ImporterProviderType
+  username?: string
+}
+
+export type ImporterProviderType = 'github' | 'gitlab'
 
 export interface LivelogLine {
   out?: string
@@ -256,7 +274,10 @@ export interface OpenapiCreateTokenRequest {
 }
 
 export interface OpenapiCreateTriggerRequest {
+  actions?: EnumTriggerAction[] | null
   description?: string
+  enabled?: boolean
+  secret?: string
   uid?: string
 }
 
@@ -380,8 +401,11 @@ export interface OpenapiUpdateTemplateRequest {
 }
 
 export interface OpenapiUpdateTriggerRequest {
-  description?: string
-  uid?: string
+  actions?: EnumTriggerAction[] | null
+  description?: string | null
+  enabled?: boolean | null
+  secret?: string | null
+  uid?: string | null
 }
 
 export interface OpenapiUpdateWebhookRequest {
@@ -861,10 +885,14 @@ export interface TypesTokenResponse {
 }
 
 export interface TypesTrigger {
+  actions?: EnumTriggerAction[] | null
   created?: number
+  created_by?: number
   description?: string
+  enabled?: boolean
   id?: number
   pipeline_id?: number
+  repo_id?: number
   uid?: string
   updated?: number
 }
@@ -4041,6 +4069,47 @@ export const useGetWebhookExecution = ({
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, webhook_id, webhook_execution_id }, ...props }
   )
 
+export interface ImportRepositoryQueryParams {
+  /**
+   * path of parent space (Not needed in standalone).
+   */
+  space_path?: string
+}
+
+export interface ImportRepositoryRequestBody {
+  description?: string
+  parent_ref?: string
+  provider?: ImporterProvider
+  provider_repo?: string
+  uid?: string
+}
+
+export type ImportRepositoryProps = Omit<
+  MutateProps<TypesRepository, UsererrorError, ImportRepositoryQueryParams, ImportRepositoryRequestBody, void>,
+  'path' | 'verb'
+>
+
+export const ImportRepository = (props: ImportRepositoryProps) => (
+  <Mutate<TypesRepository, UsererrorError, ImportRepositoryQueryParams, ImportRepositoryRequestBody, void>
+    verb="POST"
+    path={`/repos/import`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseImportRepositoryProps = Omit<
+  UseMutateProps<TypesRepository, UsererrorError, ImportRepositoryQueryParams, ImportRepositoryRequestBody, void>,
+  'path' | 'verb'
+>
+
+export const useImportRepository = (props: UseImportRepositoryProps) =>
+  useMutate<TypesRepository, UsererrorError, ImportRepositoryQueryParams, ImportRepositoryRequestBody, void>(
+    'POST',
+    `/repos/import`,
+    { base: getConfig('code/api/v1'), ...props }
+  )
+
 export type ListGitignoreProps = Omit<GetProps<string[], UsererrorError, void, void>, 'path'>
 
 export const ListGitignore = (props: ListGitignoreProps) => (
@@ -4839,6 +4908,40 @@ export const useListTemplates = ({ space_ref, ...props }: UseListTemplatesProps)
     (paramsInPath: ListTemplatesPathParams) => `/spaces/${paramsInPath.space_ref}/templates`,
     { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
   )
+
+export interface ImportSpaceRequestBody {
+  description?: string
+  is_public?: boolean
+  parent_ref?: string
+  provider?: ImporterProvider
+  provider_space?: string
+  uid?: string
+}
+
+export type ImportSpaceProps = Omit<
+  MutateProps<TypesSpace, UsererrorError, void, ImportSpaceRequestBody, void>,
+  'path' | 'verb'
+>
+
+export const ImportSpace = (props: ImportSpaceProps) => (
+  <Mutate<TypesSpace, UsererrorError, void, ImportSpaceRequestBody, void>
+    verb="POST"
+    path={`/spaces/import`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseImportSpaceProps = Omit<
+  UseMutateProps<TypesSpace, UsererrorError, void, ImportSpaceRequestBody, void>,
+  'path' | 'verb'
+>
+
+export const useImportSpace = (props: UseImportSpaceProps) =>
+  useMutate<TypesSpace, UsererrorError, void, ImportSpaceRequestBody, void>('POST', `/spaces/import`, {
+    base: getConfig('code/api/v1'),
+    ...props
+  })
 
 export type GetSystemConfigProps = Omit<GetProps<SystemConfigOutput, UsererrorError, void, void>, 'path'>
 

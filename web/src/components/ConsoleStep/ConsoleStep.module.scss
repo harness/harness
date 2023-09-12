@@ -20,3 +20,16 @@
     transform: rotate(360deg);
   }
 }
+
+.timeoutIcon {
+  svg {
+    g {
+      circle {
+        fill: black !important;
+      }
+      path {
+        fill: white !important;
+      }
+    }
+  }
+}

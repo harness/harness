@@ -248,9 +248,8 @@ export function FileContent({
                         <Match expr={isViewable}>
                           <Falsy>
                             <Center>
-                              rawURL: {rawURL}
                               <Link
-                                to={rawURL} // TODO: Link component generates wrong copy link
+                                to={rawURL}
                                 onClick={e => {
                                   Utils.stopEvent(e)
                                   downloadFile({ repoMetadata, resourcePath, gitRef, filename })

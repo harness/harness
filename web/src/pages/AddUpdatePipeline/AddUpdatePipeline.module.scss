@@ -1,0 +1,34 @@
+.main {
+  --header-height: 96px;
+  --heading-height: 58px;
+  min-height: var(--page-height);
+  background-color: var(--primary-bg) !important;
+
+  .layout {
+    align-items: center;
+  }
+}
+
+.editorContainer {
+  width: calc(100% - 30vw);
+  height: calc(100vh - var(--header-height)) !important;
+}
+
+.pluginsContainer {
+  width: 30vw;
+}
+
+.header {
+  a {
+    font-size: var(--font-size-small);
+    color: var(--primary-7);
+  }
+}
+
+.breadcrumb {
+  align-items: center;
+}
+
+.drawer {
+  height: calc(100% - 40px);
+}

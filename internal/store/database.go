@@ -694,6 +694,10 @@ type (
 
 		// Count the number of triggers in a pipeline.
 		Count(ctx context.Context, pipelineID int64, filter types.ListQueryFilter) (int64, error)
+
+		// ListAllEnabled lists all enabled triggers for a given repo without pagination.
+		// It's used only internally to trigger builds.
+		ListAllEnabled(ctx context.Context, repoID int64) ([]*types.Trigger, error)
 	}
 
 	PluginStore interface {

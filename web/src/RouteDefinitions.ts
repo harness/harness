@@ -46,7 +46,7 @@ export interface CODERoutes {
   toCODESpaceAccessControl: (args: Required<Pick<CODEProps, 'space'>>) => string
   toCODESpaceSettings: (args: Required<Pick<CODEProps, 'space'>>) => string
   toCODEPipelines: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
-  toCODEPipelinesNew: (args: Required<Pick<CODEProps, 'space'>>) => string
+  toCODEPipelineEdit: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline'>>) => string
   toCODESecrets: (args: Required<Pick<CODEProps, 'space'>>) => string
 
   toCODEGlobalSettings: () => string
@@ -73,7 +73,7 @@ export interface CODERoutes {
   toCODEWebhookNew: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEWebhookDetails: (args: Required<Pick<CODEProps, 'repoPath' | 'webhookId'>>) => string
   toCODESettings: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
-
+  toCODESearch: (args: Required<Pick<CODEProps, 'repoPath'>>) => string
   toCODEExecutions: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline'>>) => string
   toCODEExecution: (args: Required<Pick<CODEProps, 'repoPath' | 'pipeline' | 'execution'>>) => string
   toCODESecret: (args: Required<Pick<CODEProps, 'space' | 'secret'>>) => string
@@ -97,7 +97,7 @@ export const routes: CODERoutes = {
   toCODESpaceAccessControl: ({ space }) => `/access-control/${space}`,
   toCODESpaceSettings: ({ space }) => `/settings/${space}`,
   toCODEPipelines: ({ repoPath }) => `/${repoPath}/pipelines`,
-  toCODEPipelinesNew: ({ space }) => `/pipelines/${space}/new`,
+  toCODEPipelineEdit: ({ repoPath, pipeline }) => `/${repoPath}/pipelines/${pipeline}/edit`,
   toCODESecrets: ({ space }) => `/secrets/${space}`,
 
   toCODEGlobalSettings: () => '/settings',
@@ -126,6 +126,7 @@ export const routes: CODERoutes = {
   toCODEBranches: ({ repoPath }) => `/${repoPath}/branches`,
   toCODETags: ({ repoPath }) => `/${repoPath}/tags`,
   toCODESettings: ({ repoPath }) => `/${repoPath}/settings`,
+  toCODESearch: ({ repoPath }) => `/${repoPath}/search`,
   toCODEWebhooks: ({ repoPath }) => `/${repoPath}/webhooks`,
   toCODEWebhookNew: ({ repoPath }) => `/${repoPath}/webhooks/new`,
   toCODEWebhookDetails: ({ repoPath, webhookId }) => `/${repoPath}/webhook/${webhookId}`,

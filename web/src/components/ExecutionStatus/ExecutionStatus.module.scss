@@ -32,6 +32,14 @@
     --bgColor: transparent !important;
   }
 
+  &.waiting {
+    svg {
+      > circle {
+        fill: var(--orange-700) !important;
+      }
+    }
+  }
+
   &.pending {
     --fgColor: var(--grey-600);
     --bgColor: var(--grey-100);
@@ -44,6 +52,14 @@
     svg {
       > circle {
         fill: var(--fgColor) !important;
+      }
+    }
+  }
+
+  &.runningBlue {
+    svg {
+      > circle {
+        fill: var(--primary-6) !important;
       }
     }
   }

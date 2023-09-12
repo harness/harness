@@ -9,6 +9,7 @@ import (
 	"github.com/harness/gitness/internal/auth/authz"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/services/codecomments"
+	"github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/lock"
@@ -28,12 +29,14 @@ func ProvideController(db *sqlx.DB, urlProvider *url.Provider, authorizer authz.
 	pullReqReviewStore store.PullReqReviewStore, pullReqReviewerStore store.PullReqReviewerStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore,
 	rpcClient gitrpc.Interface, eventReporter *pullreqevents.Reporter,
-	mtxManager lock.MutexManager, codeCommentMigrator *codecomments.Migrator) *Controller {
+	mtxManager lock.MutexManager, codeCommentMigrator *codecomments.Migrator,
+	pullreqService *pullreq.Service,
+) *Controller {
 	return NewController(db, urlProvider, authorizer,
 		pullReqStore, pullReqActivityStore,
 		codeCommentsView,
 		pullReqReviewStore, pullReqReviewerStore,
 		repoStore, principalStore,
 		rpcClient, eventReporter,
-		mtxManager, codeCommentMigrator)
+		mtxManager, codeCommentMigrator, pullreqService)
 }

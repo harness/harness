@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { Classes, Menu, MenuItem, Popover, Position } from '@blueprintjs/core'
 import {
   Avatar,
   Button,
@@ -33,6 +34,7 @@ import { RepositoryPageHeader } from 'components/RepositoryPageHeader/Repository
 import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/PipelineUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
+import useNewPipelineModal from 'components/NewPipelineModal/NewPipelineModal'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import usePipelineEventStream from 'hooks/usePipelineEventStream'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
@@ -40,13 +42,13 @@ import css from './PipelineList.module.scss'
 
 const PipelineList = () => {
   const { routes } = useAppContext()
-  const space = useGetSpaceParam()
   const history = useHistory()
   const { getString } = useStrings()
   const [searchTerm, setSearchTerm] = useState<string | undefined>()
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
+  const space = useGetSpaceParam()
 
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
 
@@ -62,6 +64,7 @@ const PipelineList = () => {
     debounce: 500
   })
 
+  const { openModal } = useNewPipelineModal()
   //TODO - do not want to show load between refetchs - remove if/when we move to event stream method
   const [isInitialLoad, setIsInitialLoad] = useState(true)
 
@@ -90,15 +93,17 @@ const PipelineList = () => {
       variation={ButtonVariation.PRIMARY}
       icon="plus"
       onClick={() => {
-        history.push(routes.toCODEPipelinesNew({ space }))
-      }}></Button>
+        openModal({ repoMetadata })
+      }}
+      disabled={loading}
+    />
   )
 
   const columns: Column<TypesPipeline>[] = useMemo(
     () => [
       {
         Header: getString('pipelines.name'),
-        width: 'calc(50% - 90px)',
+        width: 'calc(100% - 210px)',
         Cell: ({ row }: CellProps<TypesPipeline>) => {
           const record = row.original
           return (
@@ -109,6 +114,7 @@ const PipelineList = () => {
                 noBackground
                 iconSize={24}
                 className={css.statusIcon}
+                isCi
               />
               <Text className={css.repoName}>
                 <Keywords value={searchTerm}>{record.uid}</Keywords>
@@ -128,7 +134,7 @@ const PipelineList = () => {
               <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
                 <Text className={css.desc}>{`#${record.number}`}</Text>
                 <PipeSeparator height={7} />
-                <Text className={css.desc}>{record.message}</Text>
+                <Text className={css.desc}>{record.title || record.message}</Text>
               </Layout.Horizontal>
               <Layout.Horizontal spacing={'xsmall'} style={{ alignItems: 'center' }}>
                 <Avatar
@@ -140,9 +146,13 @@ const PipelineList = () => {
                 />
                 {/* TODO need logic here for different trigger types */}
                 <Text className={css.author}>{record.author_name}</Text>
-                <PipeSeparator height={7} />
-                <GitFork height={12} width={12} color={Utils.getRealCSSColor(Color.GREY_500)} />
-                <Text className={css.author}>{record.source}</Text>
+                {record.target && (
+                  <>
+                    <PipeSeparator height={7} />
+                    <GitFork height={12} width={12} color={Utils.getRealCSSColor(Color.GREY_500)} />
+                    <Text className={css.author}>{record.target.split('/').pop()}</Text>
+                  </>
+                )}
                 <PipeSeparator height={7} />
                 <Link
                   to={routes.toCODECommit({
@@ -188,6 +198,46 @@ const PipelineList = () => {
           )
         },
         disableSortBy: true
+      },
+      {
+        Header: ' ',
+        width: '30px',
+        Cell: ({ row }: CellProps<TypesPipeline>) => {
+          const [menuOpen, setMenuOpen] = useState(false)
+          const record = row.original
+          const { uid } = record
+          return (
+            <Popover
+              isOpen={menuOpen}
+              onInteraction={nextOpenState => {
+                setMenuOpen(nextOpenState)
+              }}
+              className={Classes.DARK}
+              position={Position.BOTTOM_RIGHT}>
+              <Button
+                variation={ButtonVariation.ICON}
+                icon="Options"
+                data-testid={`menu-${record.uid}`}
+                onClick={e => {
+                  e.stopPropagation()
+                  setMenuOpen(true)
+                }}
+              />
+              <Menu>
+                <MenuItem
+                  icon="edit"
+                  text={getString('edit')}
+                  onClick={e => {
+                    e.stopPropagation()
+                    history.push(
+                      routes.toCODEPipelineEdit({ repoPath: repoMetadata?.path || '', pipeline: uid as string })
+                    )
+                  }}
+                />
+              </Menu>
+            </Popover>
+          )
+        }
       }
     ],
     [getString, repoMetadata?.path, routes, searchTerm]

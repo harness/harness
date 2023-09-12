@@ -23,18 +23,14 @@ import (
 type ProviderType string
 
 const (
-	ProviderTypeGitHub           ProviderType = "github"
-	ProviderTypeGitHubEnterprise ProviderType = "github-enterprise"
-	ProviderTypeGitLab           ProviderType = "gitlab"
-	ProviderTypeGitLabEnterprise ProviderType = "gitlab-enterprise"
+	ProviderTypeGitHub ProviderType = "github"
+	ProviderTypeGitLab ProviderType = "gitlab"
 )
 
 func (p ProviderType) Enum() []any {
 	return []any{
 		ProviderTypeGitHub,
-		ProviderTypeGitHubEnterprise,
 		ProviderTypeGitLab,
-		ProviderTypeGitLabEnterprise,
 	}
 }
 
@@ -83,67 +79,48 @@ func (r *RepositoryInfo) ToRepo(
 }
 
 func getClient(provider Provider) (*scm.Client, error) {
+	if provider.Username == "" || provider.Password == "" {
+		return nil, usererror.BadRequest("scm provider authentication credentials missing")
+	}
+
+	var c *scm.Client
+	var err error
+
 	switch provider.Type {
 	case "":
-		return nil, usererror.BadRequest("provider can not be empty")
+		return nil, usererror.BadRequest("scm provider can not be empty")
 
 	case ProviderTypeGitHub:
-		c := github.NewDefault()
-		if provider.Password != "" {
-			c.Client = &http.Client{
-				Transport: &oauth2.Transport{
-					Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
-				},
+		if provider.Host != "" {
+			c, err = github.New(provider.Host)
+			if err != nil {
+				return nil, usererror.BadRequestf("scm provider Host invalid: %s", err.Error())
 			}
+		} else {
+			c = github.NewDefault()
 		}
-		return c, nil
-
-	case ProviderTypeGitHubEnterprise:
-		c, err := github.New(provider.Host)
-		if err != nil {
-			return nil, usererror.BadRequestf("provider Host invalid: %s", err.Error())
-		}
-
-		if provider.Password != "" {
-			c.Client = &http.Client{
-				Transport: &oauth2.Transport{
-					Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
-				},
-			}
-		}
-		return c, nil
 
 	case ProviderTypeGitLab:
-		c := gitlab.NewDefault()
-		if provider.Password != "" {
-			c.Client = &http.Client{
-				Transport: &oauth2.Transport{
-					Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
-				},
+		if provider.Host != "" {
+			c, err = gitlab.New(provider.Host)
+			if err != nil {
+				return nil, usererror.BadRequestf("scm provider Host invalid: %s", err.Error())
 			}
+		} else {
+			c = gitlab.NewDefault()
 		}
-
-		return c, nil
-
-	case ProviderTypeGitLabEnterprise:
-		c, err := gitlab.New(provider.Host)
-		if err != nil {
-			return nil, usererror.BadRequestf("provider Host invalid: %s", err.Error())
-		}
-
-		if provider.Password != "" {
-			c.Client = &http.Client{
-				Transport: &oauth2.Transport{
-					Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
-				},
-			}
-		}
-
-		return c, nil
 
 	default:
-		return nil, usererror.BadRequestf("unsupported provider: %s", provider)
+		return nil, usererror.BadRequestf("unsupported scm provider: %s", provider)
 	}
+
+	c.Client = &http.Client{
+		Transport: &oauth2.Transport{
+			Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
+		},
+	}
+
+	return c, nil
 }
 func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug string) (RepositoryInfo, error) {
 	scmClient, err := getClient(provider)
@@ -155,18 +132,24 @@ func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug
 		return RepositoryInfo{}, usererror.BadRequest("provider repository identifier is missing")
 	}
 
-	scmRepo, _, err := scmClient.Repositories.Find(ctx, repoSlug)
-	if errors.Is(err, scm.ErrNotFound) {
+	var statusCode int
+	scmRepo, scmResp, err := scmClient.Repositories.Find(ctx, repoSlug)
+	if scmResp != nil {
+		statusCode = scmResp.Status
+	}
+
+	if errors.Is(err, scm.ErrNotFound) || statusCode == http.StatusNotFound {
 		return RepositoryInfo{},
 			usererror.BadRequestf("repository %s not found at %s", repoSlug, provider.Type)
 	}
-	if errors.Is(err, scm.ErrNotAuthorized) {
+	if errors.Is(err, scm.ErrNotAuthorized) || statusCode == http.StatusUnauthorized {
 		return RepositoryInfo{},
 			usererror.BadRequestf("bad credentials provided for %s at %s", repoSlug, provider.Type)
 	}
-	if err != nil {
+	if err != nil || statusCode > 299 {
 		return RepositoryInfo{},
-			fmt.Errorf("failed to fetch repository %s from %s: %w", repoSlug, provider.Type, err)
+			fmt.Errorf("failed to fetch repository %s from %s, status=%d: %w",
+				repoSlug, provider.Type, statusCode, err)
 	}
 
 	return RepositoryInfo{
@@ -188,33 +171,38 @@ func LoadRepositoriesFromProviderSpace(ctx context.Context, provider Provider, s
 		return nil, usererror.BadRequest("provider space identifier is missing")
 	}
 
-	repos := make([]RepositoryInfo, 0)
+	const pageSize = 100
+	opts := scm.ListOptions{Page: 0, Size: pageSize}
 
-	const pageSize = 50
-	page := 1
+	repos := make([]RepositoryInfo, 0)
 	for {
-		scmRepos, scmResponse, err := scmClient.Repositories.ListV2(ctx, scm.RepoListOptions{
-			ListOptions: scm.ListOptions{
-				URL:  "",
-				Page: page,
-				Size: pageSize,
-			},
-			RepoSearchTerm: scm.RepoSearchTerm{
-				RepoName: "",
-				User:     spaceSlug,
-			},
-		})
-		if errors.Is(err, scm.ErrNotFound) {
+		opts.Page++
+
+		var statusCode int
+		scmRepos, scmResp, err := scmClient.Repositories.List(ctx, opts)
+		if scmResp != nil {
+			statusCode = scmResp.Status
+		}
+
+		if errors.Is(err, scm.ErrNotFound) || statusCode == http.StatusNotFound {
 			return nil, usererror.BadRequestf("space %s not found at %s", spaceSlug, provider.Type)
 		}
-		if errors.Is(err, scm.ErrNotAuthorized) {
+		if errors.Is(err, scm.ErrNotAuthorized) || statusCode == http.StatusUnauthorized {
 			return nil, usererror.BadRequestf("bad credentials provided for %s at %s", spaceSlug, provider.Type)
 		}
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch space %s from %s: %w", spaceSlug, provider.Type, err)
+		if err != nil || statusCode > 299 {
+			return nil, fmt.Errorf("failed to fetch space %s from %s, status=%d: %w",
+				spaceSlug, provider.Type, statusCode, err)
+		}
+
+		if len(scmRepos) == 0 {
+			break
 		}
 
 		for _, scmRepo := range scmRepos {
+			if scmRepo.Namespace != spaceSlug {
+				continue
+			}
 			repos = append(repos, RepositoryInfo{
 				Space:         scmRepo.Namespace,
 				UID:           scmRepo.Name,
@@ -223,12 +211,6 @@ func LoadRepositoriesFromProviderSpace(ctx context.Context, provider Provider, s
 				DefaultBranch: scmRepo.Branch,
 			})
 		}
-
-		if len(scmRepos) == 0 || page == scmResponse.Page.Last {
-			break
-		}
-
-		page++
 	}
 
 	return repos, nil

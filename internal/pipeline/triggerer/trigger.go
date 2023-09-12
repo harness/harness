@@ -23,42 +23,35 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Trigger types
-const (
-	TriggerHook = "@hook"
-	TriggerCron = "@cron"
-)
-
 var _ Triggerer = (*triggerer)(nil)
 
 // Hook represents the payload of a post-commit hook.
 type Hook struct {
-	Parent       int64             `json:"parent"`
-	Trigger      string            `json:"trigger"`
-	Event        string            `json:"event"`
-	Action       string            `json:"action"`
-	Link         string            `json:"link"`
-	Timestamp    int64             `json:"timestamp"`
-	Title        string            `json:"title"`
-	Message      string            `json:"message"`
-	Before       string            `json:"before"`
-	After        string            `json:"after"`
-	Ref          string            `json:"ref"`
-	Fork         string            `json:"fork"`
-	Source       string            `json:"source"`
-	Target       string            `json:"target"`
-	AuthorLogin  string            `json:"author_login"`
-	AuthorName   string            `json:"author_name"`
-	AuthorEmail  string            `json:"author_email"`
-	AuthorAvatar string            `json:"author_avatar"`
-	Debug        bool              `json:"debug"`
-	Cron         string            `json:"cron"`
-	Sender       string            `json:"sender"`
-	Params       map[string]string `json:"params"`
+	Parent       int64              `json:"parent"`
+	Trigger      string             `json:"trigger"`
+	Action       enum.TriggerAction `json:"action"`
+	Link         string             `json:"link"`
+	Timestamp    int64              `json:"timestamp"`
+	Title        string             `json:"title"`
+	Message      string             `json:"message"`
+	Before       string             `json:"before"`
+	After        string             `json:"after"`
+	Ref          string             `json:"ref"`
+	Fork         string             `json:"fork"`
+	Source       string             `json:"source"`
+	Target       string             `json:"target"`
+	AuthorLogin  string             `json:"author_login"`
+	AuthorName   string             `json:"author_name"`
+	AuthorEmail  string             `json:"author_email"`
+	AuthorAvatar string             `json:"author_avatar"`
+	Debug        bool               `json:"debug"`
+	Cron         string             `json:"cron"`
+	Sender       string             `json:"sender"`
+	Params       map[string]string  `json:"params"`
 }
 
 // Triggerer is responsible for triggering a Execution from an
-// incoming drone. If an execution is skipped a nil value is
+// incoming hook (could be manual or webhook). If an execution is skipped a nil value is
 // returned.
 type Triggerer interface {
 	Trigger(ctx context.Context, pipeline *types.Pipeline, hook *Hook) (*types.Execution, error)
@@ -115,16 +108,14 @@ func (t *triggerer) Trigger(
 		}
 	}()
 
+	event := string(base.Action.GetTriggerEvent())
+
 	repo, err := t.repoStore.Find(ctx, pipeline.RepoID)
 	if err != nil {
 		log.Error().Err(err).Msg("could not find repo")
 		return nil, err
 	}
 
-	// if skipMessage(base) {
-	// 	logger.Infoln("trigger: skipping hook. found skip directive")
-	// 	return nil, nil
-	// }
 	// if base.Event == core.TriggerEventPullRequest {
 	// 	if repo.IgnorePulls {
 	// 		logger.Infoln("trigger: skipping hook. project ignores pull requests")
@@ -251,9 +242,9 @@ func (t *triggerer) Trigger(
 
 		if skipBranch(pipeline, base.Target) {
 			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match branch")
-		} else if skipEvent(pipeline, base.Event) {
+		} else if skipEvent(pipeline, event) {
 			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match event")
-		} else if skipAction(pipeline, base.Action) {
+		} else if skipAction(pipeline, string(base.Action)) {
 			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match action")
 		} else if skipRef(pipeline, base.Ref) {
 			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match ref")
@@ -282,6 +273,8 @@ func (t *triggerer) Trigger(
 		return nil, err
 	}
 
+	now := time.Now().UnixMilli()
+
 	execution := &types.Execution{
 		RepoID:     repo.ID,
 		PipelineID: pipeline.ID,
@@ -289,8 +282,8 @@ func (t *triggerer) Trigger(
 		Number:     pipeline.Seq,
 		Parent:     base.Parent,
 		Status:     enum.CIStatusPending,
-		Event:      base.Event,
-		Action:     base.Action,
+		Event:      event,
+		Action:     string(base.Action),
 		Link:       base.Link,
 		// Timestamp:    base.Timestamp,
 		Title:        trunc(base.Title, 2000),
@@ -309,8 +302,8 @@ func (t *triggerer) Trigger(
 		Debug:        base.Debug,
 		Sender:       base.Sender,
 		Cron:         base.Cron,
-		Created:      time.Now().Unix(),
-		Updated:      time.Now().Unix(),
+		Created:      now,
+		Updated:      now,
 	}
 
 	stages := make([]*types.Stage, len(matched))
@@ -320,6 +313,8 @@ func (t *triggerer) Trigger(
 		if len(match.Trigger.Status.Include)+len(match.Trigger.Status.Exclude) == 0 {
 			onFailure = false
 		}
+
+		now := time.Now().UnixMilli()
 
 		stage := &types.Stage{
 			RepoID:    repo.ID,
@@ -337,8 +332,8 @@ func (t *triggerer) Trigger(
 			OnSuccess: onSuccess,
 			OnFailure: onFailure,
 			Labels:    match.Node,
-			Created:   time.Now().Unix(),
-			Updated:   time.Now().Unix(),
+			Created:   now,
+			Updated:   now,
 		}
 		if stage.Kind == "pipeline" && stage.Type == "" {
 			stage.Type = "docker"
@@ -454,14 +449,16 @@ func (t *triggerer) createExecutionWithError(
 		return nil, err
 	}
 
+	now := time.Now().UnixMilli()
+
 	execution := &types.Execution{
 		RepoID:       pipeline.RepoID,
 		Number:       pipeline.Seq,
 		Parent:       base.Parent,
 		Status:       enum.CIStatusError,
 		Error:        message,
-		Event:        base.Event,
-		Action:       base.Action,
+		Event:        string(base.Action.GetTriggerEvent()),
+		Action:       string(base.Action),
 		Link:         base.Link,
 		Title:        base.Title,
 		Message:      base.Message,
@@ -477,10 +474,10 @@ func (t *triggerer) createExecutionWithError(
 		AuthorAvatar: base.AuthorAvatar,
 		Debug:        base.Debug,
 		Sender:       base.Sender,
-		Created:      time.Now().Unix(),
-		Updated:      time.Now().Unix(),
-		Started:      time.Now().Unix(),
-		Finished:     time.Now().Unix(),
+		Created:      now,
+		Updated:      now,
+		Started:      now,
+		Finished:     now,
 	}
 
 	err = t.executionStore.Create(ctx, execution)

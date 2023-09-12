@@ -7,6 +7,7 @@ package trigger
 import (
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types/check"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -15,6 +16,7 @@ type Controller struct {
 	db            *sqlx.DB
 	authorizer    authz.Authorizer
 	triggerStore  store.TriggerStore
+	uidCheck      check.PathUID
 	pipelineStore store.PipelineStore
 	repoStore     store.RepoStore
 }
@@ -23,6 +25,7 @@ func NewController(
 	db *sqlx.DB,
 	authorizer authz.Authorizer,
 	triggerStore store.TriggerStore,
+	uidCheck check.PathUID,
 	pipelineStore store.PipelineStore,
 	repoStore store.RepoStore,
 ) *Controller {
@@ -30,6 +33,7 @@ func NewController(
 		db:            db,
 		authorizer:    authorizer,
 		triggerStore:  triggerStore,
+		uidCheck:      uidCheck,
 		pipelineStore: pipelineStore,
 		repoStore:     repoStore,
 	}

@@ -6,6 +6,7 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -15,12 +16,81 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/jmoiron/sqlx"
+	sqlxtypes "github.com/jmoiron/sqlx/types"
 	"github.com/pkg/errors"
 )
 
 var _ store.TriggerStore = (*triggerStore)(nil)
+
+type trigger struct {
+	ID          int64              `db:"trigger_id"`
+	UID         string             `db:"trigger_uid"`
+	Description string             `db:"trigger_description"`
+	Secret      string             `db:"trigger_secret"`
+	PipelineID  int64              `db:"trigger_pipeline_id"`
+	RepoID      int64              `db:"trigger_repo_id"`
+	CreatedBy   int64              `db:"trigger_created_by"`
+	Enabled     bool               `db:"trigger_enabled"`
+	Actions     sqlxtypes.JSONText `db:"trigger_actions"`
+	Created     int64              `db:"trigger_created"`
+	Updated     int64              `db:"trigger_updated"`
+	Version     int64              `db:"trigger_version"`
+}
+
+func mapInternalToTrigger(trigger *trigger) (*types.Trigger, error) {
+	var actions []enum.TriggerAction
+	err := json.Unmarshal(trigger.Actions, &actions)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not unmarshal trigger.actions")
+	}
+
+	return &types.Trigger{
+		ID:          trigger.ID,
+		Description: trigger.Description,
+		Secret:      trigger.Secret,
+		PipelineID:  trigger.PipelineID,
+		RepoID:      trigger.RepoID,
+		CreatedBy:   trigger.CreatedBy,
+		Enabled:     trigger.Enabled,
+		Actions:     actions,
+		UID:         trigger.UID,
+		Created:     trigger.Created,
+		Updated:     trigger.Updated,
+		Version:     trigger.Version,
+	}, nil
+}
+
+func mapInternalToTriggerList(triggers []*trigger) ([]*types.Trigger, error) {
+	ret := make([]*types.Trigger, len(triggers))
+	for i, t := range triggers {
+		trigger, err := mapInternalToTrigger(t)
+		if err != nil {
+			return nil, err
+		}
+		ret[i] = trigger
+	}
+	return ret, nil
+}
+
+func mapTriggerToInternal(t *types.Trigger) *trigger {
+	return &trigger{
+		ID:          t.ID,
+		UID:         t.UID,
+		Description: t.Description,
+		PipelineID:  t.PipelineID,
+		Secret:      t.Secret,
+		RepoID:      t.RepoID,
+		CreatedBy:   t.CreatedBy,
+		Enabled:     t.Enabled,
+		Actions:     EncodeToSQLXJSON(t.Actions),
+		Created:     t.Created,
+		Updated:     t.Updated,
+		Version:     t.Version,
+	}
+}
 
 // NewTriggerStore returns a new TriggerStore.
 func NewTriggerStore(db *sqlx.DB) *triggerStore {
@@ -37,6 +107,8 @@ const (
 	triggerColumns = `
 		trigger_id
 		,trigger_uid
+		,trigger_enabled
+		,trigger_actions
 		,trigger_description
 		,trigger_pipeline_id
 		,trigger_created
@@ -53,33 +125,44 @@ func (s *triggerStore) FindByUID(ctx context.Context, pipelineID int64, uid stri
 	WHERE trigger_pipeline_id = $1 AND trigger_uid = $2`
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := new(types.Trigger)
+	dst := new(trigger)
 	if err := db.GetContext(ctx, dst, findQueryStmt, pipelineID, uid); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find trigger")
 	}
-	return dst, nil
+	return mapInternalToTrigger(dst)
 }
 
 // Create creates a new trigger in the datastore.
-func (s *triggerStore) Create(ctx context.Context, trigger *types.Trigger) error {
+func (s *triggerStore) Create(ctx context.Context, t *types.Trigger) error {
 	const triggerInsertStmt = `
 	INSERT INTO triggers (
 		trigger_uid
 		,trigger_description
+		,trigger_actions
+		,trigger_enabled
+		,trigger_secret
+		,trigger_created_by
 		,trigger_pipeline_id
+		,trigger_repo_id
 		,trigger_created
 		,trigger_updated
 		,trigger_version
 	) VALUES (
 		:trigger_uid
 		,:trigger_description
+		,:trigger_actions
+		,:trigger_enabled
+		,:trigger_secret
+		,:trigger_created_by
 		,:trigger_pipeline_id
+		,:trigger_repo_id
 		,:trigger_created
 		,:trigger_updated
 		,:trigger_version
 	) RETURNING trigger_id`
 	db := dbtx.GetAccessor(ctx, s.db)
 
+	trigger := mapTriggerToInternal(t)
 	query, arg, err := db.BindNamed(triggerInsertStmt, trigger)
 	if err != nil {
 		return database.ProcessSQLErrorf(err, "Failed to bind trigger object")
@@ -93,17 +176,18 @@ func (s *triggerStore) Create(ctx context.Context, trigger *types.Trigger) error
 }
 
 // Update tries to update an trigger in the datastore with optimistic locking.
-func (s *triggerStore) Update(ctx context.Context, e *types.Trigger) error {
+func (s *triggerStore) Update(ctx context.Context, t *types.Trigger) error {
 	const triggerUpdateStmt = `
 	UPDATE triggers
 	SET
 		trigger_uid = :trigger_uid
 		,trigger_description = :trigger_description
 		,trigger_updated = :trigger_updated
+		,trigger_actions = :trigger_actions
 		,trigger_version = :trigger_version
 	WHERE trigger_id = :trigger_id AND trigger_version = :trigger_version - 1`
 	updatedAt := time.Now()
-	trigger := *e
+	trigger := mapTriggerToInternal(t)
 
 	trigger.Version++
 	trigger.Updated = updatedAt.UnixMilli()
@@ -129,8 +213,8 @@ func (s *triggerStore) Update(ctx context.Context, e *types.Trigger) error {
 		return gitness_store.ErrVersionConflict
 	}
 
-	e.Version = trigger.Version
-	e.Updated = trigger.Updated
+	t.Version = trigger.Version
+	t.Updated = trigger.Updated
 	return nil
 }
 
@@ -186,12 +270,37 @@ func (s *triggerStore) List(
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := []*types.Trigger{}
+	dst := []*trigger{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}
 
-	return dst, nil
+	return mapInternalToTriggerList(dst)
+}
+
+// ListAllEnabled lists all enabled triggers for a given repo without pagination
+func (s *triggerStore) ListAllEnabled(
+	ctx context.Context,
+	repoID int64,
+) ([]*types.Trigger, error) {
+	stmt := database.Builder.
+		Select(triggerColumns).
+		From("triggers").
+		Where("trigger_repo_id = ? AND trigger_enabled = true", fmt.Sprint(repoID))
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := []*trigger{}
+	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+	}
+
+	return mapInternalToTriggerList(dst)
 }
 
 // Count of triggers under a given pipeline.

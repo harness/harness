@@ -16,6 +16,8 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -67,6 +69,27 @@ func (c *Controller) Create(
 	err = c.pipelineStore.Create(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("pipeline creation failed: %w", err)
+	}
+
+	// Try to create a default trigger on pipeline creation.
+	// Default trigger operations are set on pull request created, reopened or updated.
+	// We log an error on failure but don't fail the op.
+	trigger := &types.Trigger{
+		Description: "auto-created trigger on pipeline creation",
+		Created:     now,
+		Updated:     now,
+		PipelineID:  pipeline.ID,
+		RepoID:      pipeline.RepoID,
+		CreatedBy:   session.Principal.ID,
+		UID:         "default",
+		Actions: []enum.TriggerAction{enum.TriggerActionPullReqCreated,
+			enum.TriggerActionPullReqReopened, enum.TriggerActionPullReqBranchUpdated},
+		Enabled: true,
+		Version: 0,
+	}
+	err = c.triggerStore.Create(ctx, trigger)
+	if err != nil {
+		log.Ctx(ctx).Err(err).Msg("failed to create auto trigger on pipeline creation")
 	}
 
 	return pipeline, nil

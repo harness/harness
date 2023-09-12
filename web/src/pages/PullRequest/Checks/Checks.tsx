@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Falsy, Match, Render, Truthy } from 'react-jsx-match'
 import { /*CheckCircle,*/ NavArrowRight } from 'iconoir-react'
-import SplitPane from 'react-split-pane'
 import { get } from 'lodash-es'
 import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
@@ -24,6 +23,7 @@ import type { GitInfoProps } from 'utils/GitUtils'
 import { useAppContext } from 'AppContext'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useStrings } from 'framework/strings'
+import { Split } from 'components/Split/Split'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import type { TypesCheck } from 'services/code'
@@ -56,7 +56,7 @@ export const Checks: React.FC<ChecksProps> = props => {
     <Container className={css.main}>
       <Match expr={props.prChecksDecisionResult?.overallStatus}>
         <Truthy>
-          <SplitPane
+          <Split
             split="vertical"
             size="calc(100% - 400px)"
             minSize={800}
@@ -118,7 +118,7 @@ export const Checks: React.FC<ChecksProps> = props => {
                 </Falsy>
               </Match>
             </Container>
-          </SplitPane>
+          </Split>
         </Truthy>
         <Falsy>
           <Container flex={{ align: 'center-center' }} height="90%">

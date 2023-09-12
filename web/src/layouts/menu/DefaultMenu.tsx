@@ -7,13 +7,12 @@ import { useStrings } from 'framework/strings'
 import type { TypesSpace } from 'services/code'
 import { SpaceSelector } from 'components/SpaceSelector/SpaceSelector'
 import { useAppContext } from 'AppContext'
-import { useFeatureFlag } from 'hooks/useFeatureFlag'
 import { NavMenuItem } from './NavMenuItem'
 import css from './DefaultMenu.module.scss'
 
 export const DefaultMenu: React.FC = () => {
   const history = useHistory()
-  const { routes } = useAppContext()
+  const { routes, standalone } = useAppContext()
   const [selectedSpace, setSelectedSpace] = useState<TypesSpace | undefined>()
   const { repoMetadata, gitRef, commitRef } = useGetRepositoryMetadata()
   const { getString } = useStrings()
@@ -25,7 +24,6 @@ export const DefaultMenu: React.FC = () => {
   )
   const isCommitSelected = useMemo(() => routeMatch.path === '/:space*/:repoName/commit/:commitRef*', [routeMatch])
 
-  const { OPEN_SOURCE_PIPELINES, OPEN_SOURCE_SECRETS } = useFeatureFlag()
   return (
     <Container className={css.main}>
       <Layout.Vertical spacing="small">
@@ -118,7 +116,7 @@ export const DefaultMenu: React.FC = () => {
                 })}
               />
 
-              {OPEN_SOURCE_PIPELINES && (
+              {standalone && (
                 <NavMenuItem
                   data-code-repo-section="pipelines"
                   isSubLink
@@ -128,20 +126,30 @@ export const DefaultMenu: React.FC = () => {
                   })}
                 />
               )}
-
               <NavMenuItem
-                data-code-repo-section="settings"
+                data-code-repo-section="pipelines"
                 isSubLink
-                label={getString('settings')}
-                to={routes.toCODESettings({
+                label={getString('pageTitle.pipelines')}
+                to={routes.toCODEPipelines({
                   repoPath
                 })}
               />
+
+              {!standalone && (
+                <NavMenuItem
+                  data-code-repo-section="search"
+                  isSubLink
+                  label={getString('search')}
+                  to={routes.toCODESearch({
+                    repoPath
+                  })}
+                />
+              )}
             </Layout.Vertical>
           </Container>
         </Render>
 
-        {OPEN_SOURCE_SECRETS && (
+        {standalone && (
           <Render when={selectedSpace}>
             {/* icon is placeholder */}
             <NavMenuItem

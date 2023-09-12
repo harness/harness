@@ -4573,6 +4573,66 @@ paths:
           description: Internal Server Error
       tags:
         - webhook
+  /repos/import:
+    post:
+      operationId: importRepository
+      parameters:
+        - description: path of parent space (Not needed in standalone).
+          in: query
+          name: space_path
+          required: false
+          schema:
+            default: false
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                description:
+                  type: string
+                parent_ref:
+                  type: string
+                provider:
+                  $ref: '#/components/schemas/ImporterProvider'
+                provider_repo:
+                  type: string
+                uid:
+                  type: string
+              type: object
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesRepository'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /resources/gitignore:
     get:
       operationId: listGitignore
@@ -5846,6 +5906,60 @@ paths:
           description: Internal Server Error
       tags:
         - space
+  /spaces/import:
+    post:
+      operationId: importSpace
+      requestBody:
+        content:
+          application/json:
+            schema:
+              properties:
+                description:
+                  type: string
+                is_public:
+                  type: boolean
+                parent_ref:
+                  type: string
+                provider:
+                  $ref: '#/components/schemas/ImporterProvider'
+                provider_space:
+                  type: string
+                uid:
+                  type: string
+              type: object
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesSpace'
+          description: Created
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - space
   /system/config:
     get:
       operationId: getSystemConfig
@@ -6265,6 +6379,16 @@ components:
       type: string
     EnumTokenType:
       type: string
+    EnumTriggerAction:
+      enum:
+        - branch_created
+        - branch_updated
+        - pullreq_branch_updated
+        - pullreq_created
+        - pullreq_reopened
+        - tag_created
+        - tag_updated
+      type: string
     EnumWebhookExecutionResult:
       enum:
         - fatal_error
@@ -6373,6 +6497,22 @@ components:
           format: date-time
           type: string
       type: object
+    ImporterProvider:
+      properties:
+        host:
+          type: string
+        password:
+          type: string
+        type:
+          $ref: '#/components/schemas/ImporterProviderType'
+        username:
+          type: string
+      type: object
+    ImporterProviderType:
+      enum:
+        - github
+        - gitlab
+      type: string
     LivelogLine:
       properties:
         out:
@@ -6621,7 +6761,16 @@ components:
       type: object
     OpenapiCreateTriggerRequest:
       properties:
+        actions:
+          items:
+            $ref: '#/components/schemas/EnumTriggerAction'
+          nullable: true
+          type: array
         description:
+          type: string
+        enabled:
+          type: boolean
+        secret:
           type: string
         uid:
           type: string
@@ -6820,9 +6969,22 @@ components:
       type: object
     OpenapiUpdateTriggerRequest:
       properties:
+        actions:
+          items:
+            $ref: '#/components/schemas/EnumTriggerAction'
+          nullable: true
+          type: array
         description:
+          nullable: true
+          type: string
+        enabled:
+          nullable: true
+          type: boolean
+        secret:
+          nullable: true
           type: string
         uid:
+          nullable: true
           type: string
       type: object
     OpenapiUpdateWebhookRequest:
@@ -7671,13 +7833,24 @@ components:
       type: object
     TypesTrigger:
       properties:
+        actions:
+          items:
+            $ref: '#/components/schemas/EnumTriggerAction'
+          nullable: true
+          type: array
         created:
+          type: integer
+        created_by:
           type: integer
         description:
           type: string
+        enabled:
+          type: boolean
         id:
           type: integer
         pipeline_id:
+          type: integer
+        repo_id:
           type: integer
         uid:
           type: string

@@ -261,8 +261,13 @@ CREATE TABLE templates (
 CREATE TABLE triggers (
     trigger_id INTEGER PRIMARY KEY AUTOINCREMENT
     ,trigger_uid TEXT NOT NULL
-    ,trigger_description TEXT NOT NULL
     ,trigger_pipeline_id INTEGER NOT NULL
+    ,trigger_repo_id INTEGER NOT NULL
+    ,trigger_secret TEXT NOT NULL
+    ,trigger_description TEXT NOT NULL
+    ,trigger_enabled BOOLEAN NOT NULL
+    ,trigger_created_by INTEGER NOT NULL
+    ,trigger_actions TEXT NOT NULL
     ,trigger_created INTEGER NOT NULL
     ,trigger_updated INTEGER NOT NULL
     ,trigger_version INTEGER NOT NULL
@@ -270,9 +275,15 @@ CREATE TABLE triggers (
     -- Ensure unique combination of pipeline ID and UID
     ,UNIQUE (trigger_pipeline_id, trigger_uid)
 
-    -- Foreign key to spaces table
+    -- Foreign key to pipelines table
     ,CONSTRAINT fk_triggers_pipeline_id FOREIGN KEY (trigger_pipeline_id)
         REFERENCES pipelines (pipeline_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
+
+    -- Foreign key to repositories table
+    ,CONSTRAINT fk_triggers_repo_id FOREIGN KEY (trigger_repo_id)
+        REFERENCES repositories (repo_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
 );
