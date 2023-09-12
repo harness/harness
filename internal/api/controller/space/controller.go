@@ -8,6 +8,7 @@ import (
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/auth/authz"
 	"github.com/harness/gitness/internal/pipeline/events"
+	"github.com/harness/gitness/internal/services/exporter"
 	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
@@ -33,6 +34,7 @@ type Controller struct {
 	repoCtrl        *repo.Controller
 	membershipStore store.MembershipStore
 	importer        *importer.Repository
+	exporter        *exporter.Repository
 }
 
 func NewController(db *sqlx.DB, urlProvider *url.Provider, eventsStream events.EventsStreamer,
