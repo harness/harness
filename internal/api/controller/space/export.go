@@ -63,14 +63,6 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, in *Expo
 		}
 		groupId := fmt.Sprintf(groupId, space.ID)
 
-		if err != nil {
-			return fmt.Errorf("error creating job UID: %w", err)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error updating space with job UID: %w", err)
-		}
-
 		err = c.exporter.Run(ctx, groupId, providerInfo, repos)
 		if err != nil {
 			return fmt.Errorf("failed to start export repository job: %w", err)
