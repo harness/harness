@@ -44,6 +44,7 @@ var _ job.Handler = (*Repository)(nil)
 const (
 	exportJobMaxRetries  = 1
 	exportJobMaxDuration = 45 * time.Minute
+	exportRepoJobUid     = "export_repo_%d"
 )
 
 const jobType = "repository_export"
@@ -67,7 +68,7 @@ func (e *Repository) Run(ctx context.Context, jobGroupId string, harnessCodeInfo
 			return fmt.Errorf("failed to marshal job input json: %w", err)
 		}
 		strData := strings.TrimSpace(string(data))
-		jobUID, err := job.UID()
+		jobUID := fmt.Sprintf(exportRepoJobUid, repo.ID)
 
 		jobDefinitions[i] = job.Definition{
 			UID:        jobUID,
