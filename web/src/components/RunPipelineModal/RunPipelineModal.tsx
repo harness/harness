@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { useHistory } from 'react-router'
 import { useMutate } from 'restful-react'
 import * as yup from 'yup'
-import { capitalize } from 'lodash'
+import { capitalize } from 'lodash-es'
 import { FontVariation } from '@harnessio/design-system'
 import {
   Button,
@@ -118,9 +118,9 @@ const useRunPipelineModal = () => {
   }, [repo?.default_branch, pipeline])
 
   return {
-    openModal: ({ repoMetadata, pipeline }: { repoMetadata: TypesRepository; pipeline: string }) => {
+    openModal: ({ repoMetadata, pipeline: pipelineUid }: { repoMetadata: TypesRepository; pipeline: string }) => {
       setRepo(repoMetadata)
-      setPipeline(pipeline)
+      setPipeline(pipelineUid)
       openModal()
     },
     hideModal

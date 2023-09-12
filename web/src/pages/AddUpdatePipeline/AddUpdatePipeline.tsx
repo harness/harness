@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useGet, useMutate } from 'restful-react'
 import { Link, useParams } from 'react-router-dom'
-import { get, isEmpty, isUndefined, set } from 'lodash'
+import { get, isEmpty, isUndefined, set } from 'lodash-es'
 import { stringify } from 'yaml'
 import { Menu, PopoverPosition } from '@blueprintjs/core'
 import {
@@ -222,7 +222,9 @@ const AddUpdatePipeline = (): JSX.Element => {
       const updatedPipelineAsObj = updatePipeline(pluginFormData)
       setPipelineAsObj(updatedPipelineAsObj)
       setPipelineAsYaml(stringify(updatedPipelineAsObj))
-    } catch (ex) {}
+    } catch (ex) {
+      // ignore exception
+    }
   }
 
   const renderCTA = useCallback(() => {
