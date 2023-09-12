@@ -34,6 +34,7 @@ const ExecutionStage: FC<ExecutionStageProps> = ({ stage, isSelected = false, se
           noBackground
           iconSize={18}
           className={css.statusIcon}
+          isCi
         />
         <Text className={css.uid} lineClamp={1}>
           {stage.name}

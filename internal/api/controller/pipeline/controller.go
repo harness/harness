@@ -18,6 +18,7 @@ type Controller struct {
 	uidCheck      check.PathUID
 	pathStore     store.PathStore
 	repoStore     store.RepoStore
+	triggerStore  store.TriggerStore
 	authorizer    authz.Authorizer
 	pipelineStore store.PipelineStore
 }
@@ -28,6 +29,7 @@ func NewController(
 	authorizer authz.Authorizer,
 	pathStore store.PathStore,
 	repoStore store.RepoStore,
+	triggerStore store.TriggerStore,
 	pipelineStore store.PipelineStore,
 ) *Controller {
 	return &Controller{
@@ -35,6 +37,7 @@ func NewController(
 		uidCheck:      uidCheck,
 		pathStore:     pathStore,
 		repoStore:     repoStore,
+		triggerStore:  triggerStore,
 		authorizer:    authorizer,
 		pipelineStore: pipelineStore,
 	}

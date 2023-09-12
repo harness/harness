@@ -4,12 +4,19 @@
 
 package types
 
+import "github.com/harness/gitness/types/enum"
+
 type Trigger struct {
-	ID          int64  `db:"trigger_id"              json:"id"`
-	Description string `db:"trigger_description"     json:"description"`
-	PipelineID  int64  `db:"trigger_pipeline_id"     json:"pipeline_id"`
-	UID         string `db:"trigger_uid"             json:"uid"`
-	Created     int64  `db:"trigger_created"         json:"created"`
-	Updated     int64  `db:"trigger_updated"         json:"updated"`
-	Version     int64  `db:"trigger_version"         json:"-"`
+	ID          int64                `json:"id"`
+	Description string               `json:"description"`
+	PipelineID  int64                `json:"pipeline_id"`
+	Secret      string               `json:"-"`
+	RepoID      int64                `json:"repo_id"`
+	CreatedBy   int64                `json:"created_by"`
+	Enabled     bool                 `json:"enabled"`
+	Actions     []enum.TriggerAction `json:"actions"`
+	UID         string               `json:"uid"`
+	Created     int64                `json:"created"`
+	Updated     int64                `json:"updated"`
+	Version     int64                `json:"-"`
 }

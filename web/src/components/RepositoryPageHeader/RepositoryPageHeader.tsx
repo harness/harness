@@ -1,5 +1,5 @@
 import React, { Fragment } from 'react'
-import { Container, Layout, Text, PageHeader } from '@harnessio/uicore'
+import { Container, Layout, Text, PageHeader, PageHeaderProps } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Link, useParams } from 'react-router-dom'
@@ -19,33 +19,35 @@ interface RepositoryPageHeaderProps extends Optional<Pick<GitInfoProps, 'repoMet
   title: string | JSX.Element
   dataTooltipId: string
   extraBreadcrumbLinks?: BreadcrumbLink[]
+  className?: string
+  content?: PageHeaderProps['content']
 }
 
 export function RepositoryPageHeader({
   repoMetadata,
   title,
   dataTooltipId,
-  extraBreadcrumbLinks = []
+  extraBreadcrumbLinks = [],
+  className,
+  content
 }: RepositoryPageHeaderProps) {
   const { gitRef } = useParams<CODEProps>()
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { routes } = useAppContext()
 
-  if (!repoMetadata) {
-    return null
-  }
-
   return (
     <PageHeader
+      className={className}
+      content={content}
       title=""
       breadcrumbs={
         <Container className={css.header}>
           <Layout.Horizontal spacing="small" className={css.breadcrumb}>
             <Link to={routes.toCODERepositories({ space })}>{getString('repositories')}</Link>
             <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
-            <Link to={routes.toCODERepository({ repoPath: repoMetadata.path as string, gitRef })}>
-              {repoMetadata.uid}
+            <Link to={routes.toCODERepository({ repoPath: (repoMetadata?.path as string) || '', gitRef })}>
+              {repoMetadata?.uid || ''}
             </Link>
             {extraBreadcrumbLinks.map(link => (
               <Fragment key={link.url}>

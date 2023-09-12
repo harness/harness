@@ -11,11 +11,13 @@ export interface StringsMap {
   add: string
   addComment: string
   addGitIgnore: string
+  addLabel: string
   addLicense: string
   addMember: string
   addNewFile: string
   addReadMe: string
   admin: string
+  aiSearch: string
   all: string
   allBranches: string
   allComments: string
@@ -64,6 +66,7 @@ export interface StringsMap {
   cloneText: string
   close: string
   closed: string
+  codeSearch: string
   comment: string
   commentDeleted: string
   commit: string
@@ -190,6 +193,7 @@ export interface StringsMap {
   failedToCreateSpace: string
   failedToDeleteBranch: string
   failedToDeleteWebhook: string
+  failedToSavePipeline: string
   fileDeleted: string
   fileTooLarge: string
   files: string
@@ -212,6 +216,7 @@ export interface StringsMap {
   'homepage.welcomeText': string
   in: string
   inactiveBranches: string
+  isRequired: string
   leaveAComment: string
   license: string
   lineBreaks: string
@@ -304,6 +309,7 @@ export interface StringsMap {
   'pageTitle.repositories': string
   'pageTitle.repository': string
   'pageTitle.repositorySettings': string
+  'pageTitle.search': string
   'pageTitle.secrets': string
   'pageTitle.signin': string
   'pageTitle.spaceSettings': string
@@ -318,11 +324,27 @@ export interface StringsMap {
   payloadUrl: string
   payloadUrlLabel: string
   pending: string
+  'pipelines.createNewPipeline': string
+  'pipelines.created': string
+  'pipelines.editPipeline': string
+  'pipelines.enterPipelineName': string
+  'pipelines.enterYAMLPath': string
+  'pipelines.executionCouldNotStart': string
+  'pipelines.executionStarted': string
+  'pipelines.failedToCreatePipeline': string
   'pipelines.lastExecution': string
   'pipelines.name': string
   'pipelines.newPipelineButton': string
   'pipelines.noData': string
+  'pipelines.run': string
+  'pipelines.saveAndRun': string
   'pipelines.time': string
+  poweredByAI: string
+  'pipelines.updated': string
+  'pipelines.yamlPath': string
+  'plugins.addAPlugin': string
+  'plugins.stepLabel': string
+  'plugins.title': string
   'pr.ableToMerge': string
   'pr.addDescription': string
   'pr.authorCommentedPR': string
@@ -391,6 +413,7 @@ export interface StringsMap {
   'prChecks.notFound': string
   'prChecks.pending': string
   'prChecks.running': string
+  'prChecks.skipped': string
   'prChecks.success': string
   'prChecks.viewExternal': string
   prMustSelectSourceAndTargetBranches: string
@@ -455,6 +478,7 @@ export interface StringsMap {
   reviewerNotFound: string
   reviewers: string
   role: string
+  run: string
   running: string
   samplePayloadUrl: string
   save: string
@@ -462,6 +486,7 @@ export interface StringsMap {
   scrollToTop: string
   search: string
   searchBranches: string
+  searchResult: string
   secret: string
   'secrets.createSecret': string
   'secrets.createSuccess': string
@@ -488,6 +513,7 @@ export interface StringsMap {
   showMore: string
   signIn: string
   signUp: string
+  skipped: string
   space: string
   'spaceMemberships.addMember': string
   'spaceMemberships.changeRole': string
@@ -506,6 +532,7 @@ export interface StringsMap {
   'spaceSetting.setting': string
   spaces: string
   sslVerificationLabel: string
+  startSearching: string
   status: string
   submitReview: string
   success: string
@@ -565,6 +592,7 @@ export interface StringsMap {
   viewAllTags: string
   viewCommitDetails: string
   viewFile: string
+  viewFileHistory: string
   viewFiles: string
   viewRaw: string
   viewRepo: string

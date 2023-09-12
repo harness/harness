@@ -65,6 +65,7 @@
     "moment": "^2.25.3",
     "monaco-editor": "^0.40.0",
     "monaco-editor-webpack-plugin": "^7.1.0",
+    "monaco-yaml": "^4.0.4",
     "qs": "^6.9.4",
     "react": "^17.0.2",
     "react-complex-tree": "^1.1.11",

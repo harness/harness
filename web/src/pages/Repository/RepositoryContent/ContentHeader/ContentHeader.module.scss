@@ -1,5 +1,6 @@
 .main {
   padding: var(--spacing-large) var(--spacing-xlarge) 0 var(--spacing-xlarge) !important;
+  position: relative;
 
   div[class*='TextInput'] {
     margin-bottom: 0 !important;
@@ -54,7 +55,31 @@
     }
   }
 
-  .breadcrumbItem {
-    white-space: nowrap !important;
+  .searchBox {
+    position: absolute;
+    right: 16px;
+    top: -50px;
+    z-index: 2;
+    padding-bottom: 0 !important;
+    margin: 0;
+
+    input,
+    input:focus {
+      border: 1px solid var(--ai-purple-600) !important;
+    }
+
+    input {
+      width: 350px !important;
+    }
+
+    svg path {
+      fill: var(--ai-purple-600) !important;
+    }
+
+    img {
+      position: absolute;
+      top: 5px;
+      right: 13px;
+    }
   }
 }

@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/pipeline/file"
@@ -202,7 +201,6 @@ func (m *Manager) Accept(ctx context.Context, id int64, machine string) (*types.
 
 	stage.Machine = machine
 	stage.Status = enum.CIStatusPending
-	stage.Updated = time.Now().Unix()
 	err = m.Stages.Update(noContext, stage)
 	if errors.Is(err, gitness_store.ErrVersionConflict) {
 		log.Debug().Err(err).Msg("manager: stage processed by another agent")

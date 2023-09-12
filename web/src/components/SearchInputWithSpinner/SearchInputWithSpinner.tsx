@@ -16,6 +16,7 @@ interface SearchInputWithSpinnerProps {
   icon?: IconName
   spinnerIcon?: IconName
   spinnerPosition?: 'left' | 'right'
+  onSearch?: (searchTerm: string) => void
 }
 
 export const SearchInputWithSpinner: React.FC<SearchInputWithSpinnerProps> = ({
@@ -26,7 +27,8 @@ export const SearchInputWithSpinner: React.FC<SearchInputWithSpinnerProps> = ({
   placeholder,
   icon = 'search',
   spinnerIcon = 'steps-spinner',
-  spinnerPosition = 'left'
+  spinnerPosition = 'left',
+  onSearch
 }) => {
   const { getString } = useStrings()
   const spinner = <Icon name={spinnerIcon as IconName} color={Color.PRIMARY_7} />
@@ -37,6 +39,7 @@ export const SearchInputWithSpinner: React.FC<SearchInputWithSpinnerProps> = ({
       <Layout.Horizontal className={css.layout}>
         <Render when={loading && !spinnerOnRight}>{spinner}</Render>
         <TextInput
+          type="search"
           value={query}
           wrapperClassName={cx(css.wrapper, { [css.spinnerOnRight]: spinnerOnRight })}
           className={css.input}
@@ -45,7 +48,14 @@ export const SearchInputWithSpinner: React.FC<SearchInputWithSpinnerProps> = ({
           style={{ width }}
           autoFocus
           onFocus={event => event.target.select()}
-          onInput={event => setQuery(event.currentTarget.value || '')}
+          onInput={event => {
+            setQuery(event.currentTarget.value || '')
+          }}
+          onKeyDown={(e: React.KeyboardEvent<HTMLElement>) => {
+            if (e.key === 'Enter') {
+              onSearch?.((e as unknown as React.FormEvent<HTMLInputElement>).currentTarget.value || '')
+            }
+          }}
         />
         <Render when={loading && spinnerOnRight}>{spinner}</Render>
       </Layout.Horizontal>

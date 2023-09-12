@@ -70,7 +70,6 @@ func (c *Controller) Create(
 		Sender:      session.Principal.UID,
 		Source:      branch,
 		Target:      branch,
-		Action:      enum.TriggerEventCustom,
 		Params:      map[string]string{},
 		Timestamp:   commit.Author.When.UnixMilli(),
 	}

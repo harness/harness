@@ -5,6 +5,7 @@
 package importer
 
 import (
+	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/services/job"
 	"github.com/harness/gitness/internal/store"
@@ -23,6 +24,7 @@ func ProvideRepoImporter(
 	urlProvider *url.Provider,
 	git gitrpc.Interface,
 	repoStore store.RepoStore,
+	encrypter encrypt.Encrypter,
 	scheduler *job.Scheduler,
 	executor *job.Executor,
 ) (*Repository, error) {
@@ -31,6 +33,7 @@ func ProvideRepoImporter(
 		urlProvider:   urlProvider,
 		git:           git,
 		repoStore:     repoStore,
+		encrypter:     encrypter,
 		scheduler:     scheduler,
 	}
 

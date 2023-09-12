@@ -1,0 +1,53 @@
+.main {
+  height: 100%;
+  :global {
+    .bp3-tabs {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
+.mainTabPanel {
+  &:global(.bp3-tab-panel[role='tabpanel']) {
+    height: calc(100% - 30px);
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+.pluginDetailsPanel {
+  height: 100%;
+  border-top: 1px solid var(--grey-100);
+}
+
+.pluginIcon {
+  background: var(--teal-200) !important;
+  border-radius: 5px;
+}
+
+.plugin {
+  border: 1px solid var(--grey-100);
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.form {
+  height: 100%;
+  width: 100%;
+  :global {
+    .FormikForm--main {
+      height: 100%;
+      & > div {
+        height: 100%;
+      }
+    }
+  }
+}
+
+.arrow {
+  &:hover {
+    cursor: pointer;
+  }
+}

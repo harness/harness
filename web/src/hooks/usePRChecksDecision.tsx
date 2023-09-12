@@ -63,6 +63,11 @@ export function usePRChecksDecision({
         setColor(Color.GREY_600)
         setBackground(Color.GREY_100)
         setMessage(stringSubstitute(getString('prChecks.pending'), { count: _count.pending, total }) as string)
+      } else if (_count.skipped) {
+        _status = ExecutionState.SKIPPED
+        setColor(Color.GREY_600)
+        setBackground(Color.GREY_100)
+        setMessage(stringSubstitute(getString('prChecks.skipped'), { count: _count.pending, total }) as string)
       } else if (_count.success) {
         _status = ExecutionState.SUCCESS
         setColor(Color.GREEN_800)
@@ -110,5 +115,6 @@ const DEFAULT_COUNTS = {
   failure: 0,
   pending: 0,
   running: 0,
-  success: 0
+  success: 0,
+  skipped: 0
 }

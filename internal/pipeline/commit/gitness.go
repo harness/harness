@@ -42,3 +42,24 @@ func (f *service) FindRef(
 	// convert the RPC commit output to a types.Commit.
 	return controller.MapCommit(branchOutput.Branch.Commit)
 }
+
+// FindCommit finds information about a commit in gitness for the git SHA
+func (f *service) FindCommit(
+	ctx context.Context,
+	repo *types.Repository,
+	sha string,
+) (*types.Commit, error) {
+	readParams := gitrpc.ReadParams{
+		RepoUID: repo.GitUID,
+	}
+	commitOutput, err := f.gitRPCClient.GetCommit(ctx, &gitrpc.GetCommitParams{
+		ReadParams: readParams,
+		SHA:        sha,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// convert the RPC commit output to a types.Commit.
+	return controller.MapCommit(&commitOutput.Commit)
+}

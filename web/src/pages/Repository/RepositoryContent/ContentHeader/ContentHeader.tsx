@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Container, Layout, Button, FlexExpander, ButtonVariation, Text } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
@@ -12,6 +12,8 @@ import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { useCreateBranchModal } from 'components/CreateBranchModal/CreateBranchModal'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { permissionProps } from 'utils/Utils'
+import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
+import svg from './search-background.svg'
 import css from './ContentHeader.module.scss'
 
 export function ContentHeader({
@@ -21,11 +23,9 @@ export function ContentHeader({
   resourceContent
 }: Pick<GitInfoProps, 'repoMetadata' | 'gitRef' | 'resourcePath' | 'resourceContent'>) {
   const { getString } = useStrings()
-  const { routes } = useAppContext()
+  const { routes, standalone, hooks } = useAppContext()
   const history = useHistory()
   const _isDir = isDir(resourceContent)
-  const { standalone } = useAppContext()
-  const { hooks } = useAppContext()
   const space = useGetSpaceParam()
 
   const permPushResult = hooks?.usePermissionTranslate?.(
@@ -62,6 +62,7 @@ export function ContentHeader({
       return { href, text: _path }
     })
   }, [resourcePath, gitRef, repoMetadata.path, routes])
+  const [search, setSearch] = useState('')
 
   return (
     <Container className={css.main}>
@@ -139,6 +140,25 @@ export function ContentHeader({
           </>
         )}
       </Layout.Horizontal>
+      {!standalone && (
+        <Container className={css.searchBox}>
+          <SearchInputWithSpinner
+            placeholder={getString('codeSearch')}
+            spinnerPosition="right"
+            query={search}
+            setQuery={setSearch}
+            onSearch={() => {
+              history.push({
+                pathname: routes.toCODESearch({
+                  repoPath: repoMetadata.path as string
+                }),
+                search: `q=${search}`
+              })
+            }}
+          />
+          {!search && <img src={svg} width={95} height={22} />}
+        </Container>
+      )}
     </Container>
   )
 }

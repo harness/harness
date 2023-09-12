@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react'
 import cx from 'classnames'
 import { useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
-import SplitPane from 'react-split-pane'
 import { routes, type CODEProps } from 'RouteDefinitions'
 import type { TypesExecution } from 'services/code'
 import ExecutionStageList from 'components/ExecutionStageList/ExecutionStageList'
@@ -12,6 +11,7 @@ import { getErrorMessage, voidFn } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { Split } from 'components/Split/Split'
 import { ExecutionPageHeader } from 'components/ExecutionPageHeader/ExecutionPageHeader'
 import usePipelineEventStream from 'hooks/usePipelineEventStream'
 import { ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
@@ -102,7 +102,7 @@ const Execution = () => {
         }}>
         <LoadingSpinner visible={loading || isInitialLoad} withBorder={!!execution && isInitialLoad} />
         {execution && (
-          <SplitPane split="vertical" size={300} minSize={200} maxSize={400}>
+          <Split split="vertical" size={300} minSize={200} maxSize={400}>
             <ExecutionStageList
               stages={execution?.stages || []}
               setSelectedStage={setSelectedStage}
@@ -111,7 +111,7 @@ const Execution = () => {
             {selectedStage && (
               <Console stage={execution?.stages?.[selectedStage - 1]} repoPath={repoMetadata?.path as string} />
             )}
-          </SplitPane>
+          </Split>
         )}
       </PageBody>
     </Container>
