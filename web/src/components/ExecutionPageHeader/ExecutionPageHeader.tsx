@@ -79,7 +79,7 @@ export function ExecutionPageHeader({
       content={
         executionInfo && (
           <Container className={css.executionInfo}>
-            <ExecutionStatus status={getStatus(executionInfo.status)} iconOnly noBackground iconSize={18} />
+            <ExecutionStatus status={getStatus(executionInfo.status)} iconOnly noBackground iconSize={18} isCi />
             <Text inline color={Color.GREY_800} font={{ size: 'small' }}>
               {executionInfo.message}
             </Text>

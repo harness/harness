@@ -7,4 +7,6 @@ export declare const main: string
 export declare const noBackground: string
 export declare const pending: string
 export declare const running: string
+export declare const runningBlue: string
 export declare const success: string
+export declare const waiting: string

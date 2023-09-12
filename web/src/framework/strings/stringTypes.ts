@@ -409,6 +409,7 @@ export interface StringsMap {
   'prChecks.notFound': string
   'prChecks.pending': string
   'prChecks.running': string
+  'prChecks.skipped': string
   'prChecks.success': string
   'prChecks.viewExternal': string
   prMustSelectSourceAndTargetBranches: string
@@ -507,6 +508,7 @@ export interface StringsMap {
   showMore: string
   signIn: string
   signUp: string
+  skipped: string
   space: string
   'spaceMemberships.addMember': string
   'spaceMemberships.changeRole': string

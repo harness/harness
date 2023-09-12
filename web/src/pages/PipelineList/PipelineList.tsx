@@ -114,6 +114,7 @@ const PipelineList = () => {
                 noBackground
                 iconSize={24}
                 className={css.statusIcon}
+                isCi
               />
               <Text className={css.repoName}>
                 <Keywords value={searchTerm}>{record.uid}</Keywords>
@@ -133,7 +134,7 @@ const PipelineList = () => {
               <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
                 <Text className={css.desc}>{`#${record.number}`}</Text>
                 <PipeSeparator height={7} />
-                <Text className={css.desc}>{record.message}</Text>
+                <Text className={css.desc}>{record.title || record.message}</Text>
               </Layout.Horizontal>
               <Layout.Horizontal spacing={'xsmall'} style={{ alignItems: 'center' }}>
                 <Avatar
@@ -145,9 +146,13 @@ const PipelineList = () => {
                 />
                 {/* TODO need logic here for different trigger types */}
                 <Text className={css.author}>{record.author_name}</Text>
-                <PipeSeparator height={7} />
-                <GitFork height={12} width={12} color={Utils.getRealCSSColor(Color.GREY_500)} />
-                <Text className={css.author}>{record.source}</Text>
+                {record.target && (
+                  <>
+                    <PipeSeparator height={7} />
+                    <GitFork height={12} width={12} color={Utils.getRealCSSColor(Color.GREY_500)} />
+                    <Text className={css.author}>{record.target.split('/').pop()}</Text>
+                  </>
+                )}
                 <PipeSeparator height={7} />
                 <Link
                   to={routes.toCODECommit({

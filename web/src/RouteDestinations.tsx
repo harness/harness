@@ -27,16 +27,16 @@ import ChangePassword from 'pages/ChangePassword/ChangePassword'
 import SpaceAccessControl from 'pages/SpaceAccessControl/SpaceAccessControl'
 import SpaceSettings from 'pages/SpaceSettings/SpaceSettings'
 import { useStrings } from 'framework/strings'
-import { useFeatureFlag } from 'hooks/useFeatureFlag'
 import ExecutionList from 'pages/ExecutionList/ExecutionList'
 import Execution from 'pages/Execution/Execution'
 import Secret from 'pages/Secret/Secret'
 import AddUpdatePipeline from 'pages/AddUpdatePipeline/AddUpdatePipeline'
+import { useAppContext } from 'AppContext'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
   const repoPath = `${pathProps.space}/${pathProps.repoName}`
-  const { OPEN_SOURCE_PIPELINES, OPEN_SOURCE_SECRETS } = useFeatureFlag()
+  const { standalone } = useAppContext()
 
   return (
     <BrowserRouter>
@@ -163,7 +163,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </LayoutWithSideNav>
         </Route>
 
-        {OPEN_SOURCE_PIPELINES && (
+        {standalone && (
           <Route
             path={routes.toCODEExecution({
               repoPath,
@@ -177,7 +177,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </Route>
         )}
 
-        {OPEN_SOURCE_PIPELINES && (
+        {standalone && (
           <Route path={routes.toCODEExecutions({ repoPath, pipeline: pathProps.pipeline })} exact>
             <LayoutWithSideNav title={getString('pageTitle.executions')}>
               <ExecutionList />
@@ -185,7 +185,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </Route>
         )}
 
-        {OPEN_SOURCE_PIPELINES && (
+        {standalone && (
           <Route path={routes.toCODEPipelineEdit({ repoPath, pipeline: pathProps.pipeline })} exact>
             <LayoutWithSideNav title={getString('pageTitle.pipelines')}>
               <AddUpdatePipeline />
@@ -193,7 +193,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </Route>
         )}
 
-        {OPEN_SOURCE_PIPELINES && (
+        {standalone && (
           <Route path={routes.toCODEPipelines({ repoPath })} exact>
             <LayoutWithSideNav title={getString('pageTitle.pipelines')}>
               <PipelineList />
@@ -201,7 +201,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </Route>
         )}
 
-        {OPEN_SOURCE_SECRETS && (
+        {standalone && (
           <Route path={routes.toCODESecret({ space: pathProps.space, secret: pathProps.secret })} exact>
             <LayoutWithSideNav title={getString('pageTitle.secrets')}>
               <Secret />
@@ -209,7 +209,7 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           </Route>
         )}
 
-        {OPEN_SOURCE_SECRETS && (
+        {standalone && (
           <Route path={routes.toCODESecrets({ space: pathProps.space })} exact>
             <LayoutWithSideNav title={getString('pageTitle.secrets')}>
               <SecretList />

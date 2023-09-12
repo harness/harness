@@ -10,7 +10,8 @@ export enum ExecutionState {
   RUNNING = 'running',
   SUCCESS = 'success',
   FAILURE = 'failure',
-  ERROR = 'error'
+  ERROR = 'error',
+  SKIPPED = 'skipped'
 }
 
 interface ExecutionStatusProps {
@@ -19,6 +20,7 @@ interface ExecutionStatusProps {
   noBackground?: boolean
   iconSize?: number
   className?: string
+  isCi?: boolean
 }
 
 export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
@@ -26,19 +28,20 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
   iconSize = 20,
   iconOnly = false,
   noBackground = false,
-  className
+  className,
+  isCi = false
 }) => {
   const { getString } = useStrings()
   const maps = useMemo(
     () => ({
       [ExecutionState.PENDING]: {
-        icon: 'ci-pending-build',
-        css: css.pending,
+        icon: isCi ? 'execution-waiting' : 'ci-pending-build',
+        css: isCi ? css.waiting : css.pending,
         title: getString('pending').toLocaleUpperCase()
       },
       [ExecutionState.RUNNING]: {
         icon: 'running-filled',
-        css: css.running,
+        css: isCi ? css.runningBlue : css.running,
         title: getString('running').toLocaleUpperCase()
       },
       [ExecutionState.SUCCESS]: {
@@ -55,9 +58,14 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         icon: 'solid-error',
         css: css.error,
         title: getString('error').toLocaleUpperCase()
+      },
+      [ExecutionState.SKIPPED]: {
+        icon: 'execution-timeout',
+        css: null,
+        title: getString('skipped').toLocaleUpperCase()
       }
     }),
-    [getString]
+    [getString, isCi]
   )
   const map = useMemo(() => maps[status], [maps, status])
 

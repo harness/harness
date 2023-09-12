@@ -20,6 +20,13 @@ const Console: FC<ConsoleProps> = ({ stage, repoPath }) => {
 
   return (
     <div className={css.container}>
+      {stage?.error && (
+        <Container className={css.error}>
+          <Text font={{ variation: FontVariation.BODY }} color={Color.WHITE}>
+            {stage?.error}
+          </Text>
+        </Container>
+      )}
       <Container className={css.header}>
         <Layout.Horizontal className={css.headerLayout} spacing="small">
           <Text font={{ variation: FontVariation.H4 }} color={Color.WHITE} padding={{ left: 'large', right: 'large' }}>
