@@ -3398,6 +3398,40 @@ export const usePullReqMetaData = ({ repo_ref, pullreq_number, ...props }: UsePu
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 
+export interface RecheckPullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type RecheckPullReqProps = Omit<
+  MutateProps<void, UsererrorError, void, OpenapiUpdatePullReqRequest, RecheckPullReqPathParams>,
+  'path' | 'verb'
+> &
+  RecheckPullReqPathParams
+
+export const RecheckPullReq = ({ repo_ref, pullreq_number, ...props }: RecheckPullReqProps) => (
+  <Mutate<void, UsererrorError, void, OpenapiUpdatePullReqRequest, RecheckPullReqPathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/recheck`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseRecheckPullReqProps = Omit<
+  UseMutateProps<void, UsererrorError, void, OpenapiUpdatePullReqRequest, RecheckPullReqPathParams>,
+  'path' | 'verb'
+> &
+  RecheckPullReqPathParams
+
+export const useRecheckPullReq = ({ repo_ref, pullreq_number, ...props }: UseRecheckPullReqProps) =>
+  useMutate<void, UsererrorError, void, OpenapiUpdatePullReqRequest, RecheckPullReqPathParams>(
+    'POST',
+    (paramsInPath: RecheckPullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/recheck`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
 export interface ReviewerListPullReqPathParams {
   repo_ref: string
   pullreq_number: number

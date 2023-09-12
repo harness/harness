@@ -106,6 +106,28 @@ func (s *Service) deleteMergeRef(ctx context.Context, repoID int64, prNum int64)
 	return nil
 }
 
+// UpdateMergeDataIfRequired rechecks the merge data of a PR.
+// TODO: This is a temporary solution - doesn't fix changed merge-base or other things.
+func (s *Service) UpdateMergeDataIfRequired(
+	ctx context.Context,
+	repoID int64,
+	prNum int64,
+) error {
+	pr, err := s.pullreqStore.FindByNumber(ctx, repoID, prNum)
+	if err != nil {
+		return fmt.Errorf("failed to get pull request number %d: %w", prNum, err)
+	}
+
+	// nothing to-do if check was already performed
+	if pr.MergeCheckStatus != enum.MergeCheckStatusUnchecked {
+		return nil
+	}
+
+	// WARNING: This CAN lead to two (or more) merge-checks on the same SHA
+	// running on different machines at the same time.
+	return s.updateMergeDataInner(ctx, pr, "", pr.SourceSHA)
+}
+
 //nolint:funlen // refactor if required.
 func (s *Service) updateMergeData(
 	ctx context.Context,
@@ -114,21 +136,31 @@ func (s *Service) updateMergeData(
 	oldSHA string,
 	newSHA string,
 ) error {
-	// TODO: Merge check should not update the merge base.
-	// TODO: Instead it should accept it as an argument and fail if it doesn't match.
-	// Then is would not longer be necessary to cancel already active mergeability checks.
-
 	pr, err := s.pullreqStore.FindByNumber(ctx, repoID, prNum)
 	if err != nil {
 		return fmt.Errorf("failed to get pull request number %d: %w", prNum, err)
 	}
 
+	return s.updateMergeDataInner(ctx, pr, oldSHA, newSHA)
+}
+
+//nolint:funlen // refactor if required.
+func (s *Service) updateMergeDataInner(
+	ctx context.Context,
+	pr *types.PullReq,
+	oldSHA string,
+	newSHA string,
+) error {
+	// TODO: Merge check should not update the merge base.
+	// TODO: Instead it should accept it as an argument and fail if it doesn't match.
+	// Then is would not longer be necessary to cancel already active mergeability checks.
+
 	if pr.State != enum.PullReqStateOpen {
-		return fmt.Errorf("cannot do mergability check on closed PR %d", prNum)
+		return fmt.Errorf("cannot do mergability check on closed PR %d", pr.Number)
 	}
 
 	// cancel all previous mergability work for this PR based on oldSHA
-	if err = s.pubsub.Publish(ctx, cancelMergeCheckKey, []byte(oldSHA),
+	if err := s.pubsub.Publish(ctx, cancelMergeCheckKey, []byte(oldSHA),
 		pubsub.WithPublishNamespace("pullreq")); err != nil {
 		return err
 	}
@@ -137,6 +169,13 @@ func (s *Service) updateMergeData(
 	ctx, cancel = context.WithCancel(ctx)
 
 	s.cancelMutex.Lock()
+	// NOTE: Temporary workaround to avoid overwriting existing cancel method on same machine.
+	// This doesn't avoid same SHA running on multiple machines
+	if _, ok := s.cancelMergeability[newSHA]; ok {
+		s.cancelMutex.Unlock()
+		cancel()
+		return nil
+	}
 	s.cancelMergeability[newSHA] = cancel
 	s.cancelMutex.Unlock()
 
@@ -175,7 +214,7 @@ func (s *Service) updateMergeData(
 		HeadRepoUID:     sourceRepo.GitUID,
 		HeadBranch:      pr.SourceBranch,
 		RefType:         gitrpcenum.RefTypePullReqMerge,
-		RefName:         strconv.Itoa(int(prNum)),
+		RefName:         strconv.Itoa(int(pr.Number)),
 		HeadExpectedSHA: newSHA,
 		Force:           true,
 
