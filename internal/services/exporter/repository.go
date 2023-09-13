@@ -6,8 +6,10 @@ package exporter
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/harness/gitness/encrypt"
 	"strings"
 	"time"
 
@@ -23,9 +25,10 @@ type Repository struct {
 	git         gitrpc.Interface
 	repoStore   store.RepoStore
 	scheduler   *job.Scheduler
+	encrypter   encrypt.Encrypter
 }
 
-type RepoExportData struct {
+type Input struct {
 	UID             string          `json:"uid"`
 	Description     string          `json:"description"`
 	IsPublic        bool            `json:"is_public"`
@@ -45,6 +48,7 @@ const (
 	exportJobMaxRetries  = 1
 	exportJobMaxDuration = 45 * time.Minute
 	exportRepoJobUid     = "export_repo_%d"
+	exportSpaceJobUid    = "export_space_%d"
 )
 
 const jobType = "repository_export"
@@ -53,10 +57,11 @@ func (e *Repository) Register(executor *job.Executor) error {
 	return executor.Register(jobType, e)
 }
 
-func (e *Repository) Run(ctx context.Context, jobGroupId string, harnessCodeInfo *HarnessCodeInfo, repos []*types.Repository) error {
+func (e *Repository) RunMany(ctx context.Context, spaceId int64, harnessCodeInfo *HarnessCodeInfo, repos []*types.Repository) error {
+	jobGroupId := fmt.Sprintf(exportSpaceJobUid, spaceId)
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repo := range repos {
-		repoJobData := RepoExportData{
+		repoJobData := Input{
 			UID:             repo.UID,
 			Description:     repo.Description,
 			IsPublic:        repo.IsPublic,
@@ -68,6 +73,11 @@ func (e *Repository) Run(ctx context.Context, jobGroupId string, harnessCodeInfo
 			return fmt.Errorf("failed to marshal job input json: %w", err)
 		}
 		strData := strings.TrimSpace(string(data))
+		encryptedData, err := e.encrypter.Encrypt(strData)
+		if err != nil {
+			return fmt.Errorf("failed to encrypt job input: %w", err)
+		}
+
 		jobUID := fmt.Sprintf(exportRepoJobUid, repo.ID)
 
 		jobDefinitions[i] = job.Definition{
@@ -75,7 +85,7 @@ func (e *Repository) Run(ctx context.Context, jobGroupId string, harnessCodeInfo
 			Type:       jobType,
 			MaxRetries: exportJobMaxRetries,
 			Timeout:    exportJobMaxDuration,
-			Data:       strData,
+			Data:       base64.StdEncoding.EncodeToString(encryptedData),
 		}
 	}
 

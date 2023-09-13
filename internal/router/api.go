@@ -182,7 +182,6 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerspace.HandleCreate(spaceCtrl))
 		r.Post("/import", handlerspace.HandleImport(spaceCtrl))
-		r.Post("/export", handlerspace.HandleExport(spaceCtrl))
 
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamSpaceRef), func(r chi.Router) {
 			// space operations
@@ -199,6 +198,7 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 			r.Get("/secrets", handlerspace.HandleListSecrets(spaceCtrl))
 			r.Get("/connectors", handlerspace.HandleListConnectors(spaceCtrl))
 			r.Get("/templates", handlerspace.HandleListTemplates(spaceCtrl))
+			r.Post("/export", handlerspace.HandleExport(spaceCtrl))
 			r.Get("/export-progress", handlerspace.HandleExportProgress(spaceCtrl))
 
 			// Child collections

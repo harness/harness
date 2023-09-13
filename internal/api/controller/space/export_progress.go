@@ -14,6 +14,9 @@ func (c *Controller) ExportProgress(ctx context.Context,
 	spaceRef string,
 ) (types.JobProgress, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
+	if err != nil {
+		return types.JobProgress{}, err
+	}
 
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, false); err != nil {
 		return types.JobProgress{}, err

@@ -16,11 +16,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-const groupId = "export_space_%d"
-
 type ExportInput struct {
-	SpaceRef string `json:"space_ref"`
-
 	AccountId         string `json:"accountId"`
 	OrgIdentifier     string `json:"orgIdentifier"`
 	ProjectIdentifier string `json:"projectIdentifier"`
@@ -28,18 +24,19 @@ type ExportInput struct {
 }
 
 // Export creates a new empty repository in harness code and does git push to it.
-func (c *Controller) Export(ctx context.Context, session *auth.Session, in *ExportInput) (*types.Repository, error) {
-	space, err := c.spaceStore.FindByRef(ctx, in.SpaceRef)
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit, false); err != nil {
-		return nil, err
-	}
+func (c *Controller) Export(ctx context.Context, session *auth.Session, spaceRef string, in *ExportInput) error {
+	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return nil, err
+		return err
+	}
+
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceEdit, false); err != nil {
+		return err
 	}
 
 	err = c.sanitizeExportInput(in)
 	if err != nil {
-		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+		return fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
 	providerInfo := &exporter.HarnessCodeInfo{
@@ -52,28 +49,21 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, in *Expo
 	// todo(abhinav): add pagination
 	repos, err := c.repoStore.List(ctx, space.ID, &types.RepoFilter{Size: 200})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
-		// lock parent space path to ensure it doesn't get updated while we setup new repo
-		_, err := c.pathStore.FindPrimaryWithLock(ctx, enum.PathTargetTypeSpace, space.ID)
-		if err != nil {
-			return usererror.BadRequest("Parent not found'")
-		}
-		groupId := fmt.Sprintf(groupId, space.ID)
-
-		err = c.exporter.Run(ctx, groupId, providerInfo, repos)
+		err = c.exporter.RunMany(ctx, space.ID, providerInfo, repos)
 		if err != nil {
 			return fmt.Errorf("failed to start export repository job: %w", err)
 		}
 		return nil
 	})
-
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return nil, nil
+
+	return nil
 }
 
 func (c *Controller) sanitizeExportInput(in *ExportInput) error {

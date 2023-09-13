@@ -25,12 +25,18 @@ func HandleExport(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		repos, err := spaceCtrl.Export(ctx, session, in)
+		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return
 		}
 
-		render.JSON(w, http.StatusCreated, repos)
+		err = spaceCtrl.Export(ctx, session, spaceRef, in)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+		// todo(abhinav): change return json
+		render.JSON(w, http.StatusAccepted, spaceRef)
 	}
 }
