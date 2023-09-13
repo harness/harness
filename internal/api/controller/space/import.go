@@ -16,7 +16,6 @@ import (
 	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/services/importer"
-	"github.com/harness/gitness/internal/services/job"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
@@ -131,16 +130,9 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		}
 
 		for i, remoteRepository := range remoteRepositories {
-			var jobUID string
-
-			jobUID, err = job.UID()
-			if err != nil {
-				return fmt.Errorf("error creating job UID: %w", err)
-			}
-
 			pathToRepo := paths.Concatinate(path.Value, remoteRepository.UID)
 			repo := remoteRepository.ToRepo(
-				space.ID, pathToRepo, remoteRepository.UID, "", jobUID, &session.Principal)
+				space.ID, pathToRepo, remoteRepository.UID, "", &session.Principal)
 
 			err = c.repoStore.Create(ctx, repo)
 			if err != nil {
