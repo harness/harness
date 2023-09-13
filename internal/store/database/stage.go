@@ -266,9 +266,17 @@ func (s *stageStore) Update(ctx context.Context, st *types.Stage) error {
 	SET
 		stage_status = :stage_status
 		,stage_machine = :stage_machine
+		,stage_started = :stage_started
+		,stage_stopped = :stage_stopped
+		,stage_exit_code = :stage_exit_code
 		,stage_updated = :stage_updated
 		,stage_version = :stage_version
 		,stage_error = :stage_error
+		,stage_on_success = :stage_on_success
+		,stage_on_failure = :stage_on_failure
+		,stage_errignore = :stage_errignore
+		,stage_depends_on = :stage_depends_on
+		,stage_labels = :stage_labels
 	WHERE stage_id = :stage_id AND stage_version = :stage_version - 1`
 	updatedAt := time.Now()
 	steps := st.Steps

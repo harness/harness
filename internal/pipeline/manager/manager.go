@@ -63,6 +63,9 @@ type (
 		// Request requests the next available build stage for execution.
 		Request(ctx context.Context, args *Request) (*types.Stage, error)
 
+		// Watch watches for build cancellation requests.
+		Watch(ctx context.Context, executionID int64) (bool, error)
+
 		// Accept accepts the build stage for execution.
 		Accept(ctx context.Context, stage int64, machine string) (*types.Stage, error)
 
@@ -357,7 +360,6 @@ func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 // BeforeAll signals the build stage is about to start.
 func (m *Manager) BeforeStage(ctx context.Context, stage *types.Stage) error {
 	s := &setup{
-
 		Executions:  m.Executions,
 		Checks:      m.Checks,
 		Pipelines:   m.Pipelines,
@@ -385,4 +387,37 @@ func (m *Manager) AfterStage(ctx context.Context, stage *types.Stage) error {
 		Stages:      m.Stages,
 	}
 	return t.do(noContext, stage)
+}
+
+// Watch watches for build cancellation requests.
+func (m *Manager) Watch(ctx context.Context, executionID int64) (bool, error) {
+	ok, err := m.Scheduler.Cancelled(ctx, executionID)
+	// we expect a context cancel error here which
+	// indicates a polling timeout. The subscribing
+	// client should look for the context cancel error
+	// and resume polling.
+	if err != nil {
+		return ok, err
+	}
+
+	// // TODO: we should be able to return
+	// // immediately if Cancelled returns true. This requires
+	// // some more testing but would avoid the extra database
+	// // call.
+	// if ok {
+	// 	return ok, err
+	// }
+
+	// if no error is returned we should check
+	// the database to see if the build is complete. If
+	// complete, return true.
+	execution, err := m.Executions.Find(ctx, executionID)
+	if err != nil {
+		log := log.With().
+			Int64("execution.id", executionID).
+			Logger()
+		log.Warn().Msg("manager: cannot find build")
+		return ok, fmt.Errorf("could not find build for cancellation: %w", err)
+	}
+	return execution.Status.IsDone(), nil
 }

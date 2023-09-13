@@ -8,6 +8,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
@@ -38,6 +39,7 @@ import (
 	"github.com/harness/gitness/internal/bootstrap"
 	events3 "github.com/harness/gitness/internal/events/git"
 	events2 "github.com/harness/gitness/internal/events/pullreq"
+	"github.com/harness/gitness/internal/pipeline/canceler"
 	"github.com/harness/gitness/internal/pipeline/commit"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/manager"
@@ -131,17 +133,18 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, pipelineStore, principalStore, gitrpcInterface, repository)
 	executionStore := database.ProvideExecutionStore(db)
-	commitService := commit.ProvideCommitService(gitrpcInterface)
-	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	stageStore := database.ProvideStageStore(db)
-	fileService := file.ProvideFileService(gitrpcInterface)
 	schedulerScheduler, err := scheduler.ProvideScheduler(stageStore, mutexManager)
 	if err != nil {
 		return nil, err
 	}
-	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, db, pipelineStore, fileService, schedulerScheduler, repoStore)
-	executionController := execution.ProvideController(db, authorizer, executionStore, commitService, triggererTriggerer, repoStore, stageStore, pipelineStore)
 	stepStore := database.ProvideStepStore(db)
+	cancelerCanceler := canceler.ProvideCanceler(executionStore, streamer, repoStore, schedulerScheduler, stageStore, stepStore)
+	commitService := commit.ProvideCommitService(gitrpcInterface)
+	checkStore := database.ProvideCheckStore(db, principalInfoCache)
+	fileService := file.ProvideFileService(gitrpcInterface)
+	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, db, pipelineStore, fileService, schedulerScheduler, repoStore)
+	executionController := execution.ProvideController(db, authorizer, executionStore, cancelerCanceler, commitService, triggererTriggerer, repoStore, stageStore, pipelineStore)
 	logStore := logs.ProvideLogStore(db, config)
 	logStream := livelog.ProvideLogStream(config)
 	logsController := logs2.ProvideController(db, authorizer, executionStore, repoStore, pipelineStore, stageStore, stepStore, logStore, logStream)

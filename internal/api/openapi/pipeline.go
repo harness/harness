@@ -187,6 +187,18 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.Spec.AddOperation(http.MethodGet,
 		"/repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}", executionFind)
 
+	executionCancel := openapi3.Operation{}
+	executionCancel.WithTags("pipeline")
+	executionCancel.WithMapOfAnything(map[string]interface{}{"operationId": "cancelExecution"})
+	_ = reflector.SetRequest(&executionCancel, new(getExecutionRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&executionCancel, new(types.Execution), http.StatusOK)
+	_ = reflector.SetJSONResponse(&executionCancel, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&executionCancel, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&executionCancel, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&executionCancel, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost,
+		"/repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/cancel", executionCancel)
+
 	executionDelete := openapi3.Operation{}
 	executionDelete.WithTags("pipeline")
 	executionDelete.WithMapOfAnything(map[string]interface{}{"operationId": "deleteExecution"})

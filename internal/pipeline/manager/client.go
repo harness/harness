@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
@@ -126,9 +125,8 @@ func (e *embedded) UpdateStep(ctx context.Context, step *drone.Step) error {
 }
 
 // Watch watches for build cancellation requests.
-func (e *embedded) Watch(ctx context.Context, stage int64) (bool, error) {
-	// Implement Watch logic here
-	return false, errors.New("Not implemented")
+func (e *embedded) Watch(ctx context.Context, executionID int64) (bool, error) {
+	return e.manager.Watch(ctx, executionID)
 }
 
 // Batch batch writes logs to the streaming logs.

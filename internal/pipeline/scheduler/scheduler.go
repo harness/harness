@@ -7,6 +7,8 @@ package scheduler
 import (
 	"context"
 
+	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/types"
 )
 
@@ -29,4 +31,29 @@ type Scheduler interface {
 
 	// Request requests the next stage scheduled for execution.
 	Request(ctx context.Context, filter Filter) (*types.Stage, error)
+
+	// Cancel cancels scheduled or running jobs associated
+	// with the parent build ID.
+	Cancel(context.Context, int64) error
+
+	// Cancelled blocks and listens for a cancellation event and
+	// returns true if the build has been cancelled.
+	Cancelled(context.Context, int64) (bool, error)
+}
+
+type scheduler struct {
+	*queue
+	*canceler
+}
+
+// newScheduler provides an instance of a scheduler with cancel abilities
+func newScheduler(stageStore store.StageStore, lock lock.MutexManager) (Scheduler, error) {
+	q, err := newQueue(stageStore, lock)
+	if err != nil {
+		return nil, err
+	}
+	return scheduler{
+		q,
+		newCanceler(),
+	}, nil
 }

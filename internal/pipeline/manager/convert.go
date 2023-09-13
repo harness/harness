@@ -35,10 +35,10 @@ func convertToDroneStage(stage *types.Stage) *drone.Stage {
 		Kernel:    stage.Kernel,
 		Limit:     stage.Limit,
 		LimitRepo: stage.LimitRepo,
-		Started:   stage.Started,
-		Stopped:   stage.Stopped,
-		Created:   stage.Created,
-		Updated:   stage.Updated,
+		Started:   stage.Started / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Stopped:   stage.Stopped / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Created:   stage.Created / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Updated:   stage.Updated / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
 		Version:   stage.Version,
 		OnSuccess: stage.OnSuccess,
 		OnFailure: stage.OnFailure,
@@ -66,8 +66,8 @@ func convertToDroneStep(step *types.Step) *drone.Step {
 		Error:     step.Error,
 		ErrIgnore: step.ErrIgnore,
 		ExitCode:  step.ExitCode,
-		Started:   step.Started,
-		Stopped:   step.Stopped,
+		Started:   step.Started / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Stopped:   step.Stopped / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
 		Version:   step.Version,
 		DependsOn: step.DependsOn,
 		Image:     step.Image,
@@ -86,8 +86,8 @@ func convertFromDroneStep(step *drone.Step) *types.Step {
 		Error:     step.Error,
 		ErrIgnore: step.ErrIgnore,
 		ExitCode:  step.ExitCode,
-		Started:   step.Started,
-		Stopped:   step.Stopped,
+		Started:   step.Started * 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Stopped:   step.Stopped * 1e3,
 		Version:   step.Version,
 		DependsOn: step.DependsOn,
 		Image:     step.Image,
@@ -108,8 +108,8 @@ func convertFromDroneSteps(steps []*drone.Step) []*types.Step {
 			Error:     step.Error,
 			ErrIgnore: step.ErrIgnore,
 			ExitCode:  step.ExitCode,
-			Started:   step.Started,
-			Stopped:   step.Stopped,
+			Started:   step.Started * 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+			Stopped:   step.Stopped * 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
 			Version:   step.Version,
 			DependsOn: step.DependsOn,
 			Image:     step.Image,
@@ -139,8 +139,8 @@ func convertFromDroneStage(stage *drone.Stage) *types.Stage {
 		Kernel:      stage.Kernel,
 		Limit:       stage.Limit,
 		LimitRepo:   stage.LimitRepo,
-		Started:     stage.Started,
-		Stopped:     stage.Stopped,
+		Started:     stage.Started * 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Stopped:     stage.Stopped * 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
 		Version:     stage.Version,
 		OnSuccess:   stage.OnSuccess,
 		OnFailure:   stage.OnFailure,
@@ -189,10 +189,10 @@ func convertToDroneBuild(execution *types.Execution) *drone.Build {
 		Deploy:       execution.Deploy,
 		DeployID:     execution.DeployID,
 		Debug:        execution.Debug,
-		Started:      execution.Started,
-		Finished:     execution.Finished,
-		Created:      execution.Created,
-		Updated:      execution.Updated,
+		Started:      execution.Started / 1e3,  // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Finished:     execution.Finished / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Created:      execution.Created / 1e3,  // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Updated:      execution.Updated / 1e3,  // Drone uses Unix() timestamps whereas we use UnixMilli()
 		Version:      execution.Version,
 	}
 }
