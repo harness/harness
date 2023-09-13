@@ -164,13 +164,21 @@ func LoadRepositoriesFromProviderSpace(ctx context.Context, provider Provider, s
 	}
 
 	const pageSize = 100
-	opts := scm.ListOptions{Page: 0, Size: pageSize}
+	opts := scm.RepoListOptions{
+		ListOptions: scm.ListOptions{
+			Page: 0,
+			Size: pageSize,
+		},
+		RepoSearchTerm: scm.RepoSearchTerm{
+			User: spaceSlug,
+		},
+	}
 
 	repos := make([]RepositoryInfo, 0)
 	for {
 		opts.Page++
 
-		scmRepos, scmResp, err := scmClient.Repositories.List(ctx, opts)
+		scmRepos, scmResp, err := scmClient.Repositories.ListV2(ctx, opts)
 		if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
 			return nil, err
 		}
@@ -180,9 +188,6 @@ func LoadRepositoriesFromProviderSpace(ctx context.Context, provider Provider, s
 		}
 
 		for _, scmRepo := range scmRepos {
-			if scmRepo.Namespace != spaceSlug {
-				continue
-			}
 			repos = append(repos, RepositoryInfo{
 				Space:         scmRepo.Namespace,
 				UID:           scmRepo.Name,
@@ -203,10 +208,10 @@ func convertSCMError(provider Provider, slug string, r *scm.Response, err error)
 
 	if r == nil {
 		if provider.Host != "" {
-			return usererror.BadRequestf("failed to make HTTP request to %s (host=%s): %w",
+			return usererror.BadRequestf("failed to make HTTP request to %s (host=%s): %s",
 				provider.Type, provider.Host, err)
 		} else {
-			return usererror.BadRequestf("failed to make HTTP request to %s: %w",
+			return usererror.BadRequestf("failed to make HTTP request to %s: %s",
 				provider.Type, err)
 		}
 	}
