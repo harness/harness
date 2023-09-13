@@ -1,5 +1,5 @@
 import React from 'react'
-import { ButtonVariation, Container, Layout, PageBody, Text } from '@harnessio/uicore'
+import { ButtonVariation, ButtonSize, Container, Layout, PageBody, Text } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { noop } from 'lodash-es'
 import { useHistory } from 'react-router-dom'
@@ -21,16 +21,19 @@ export default function Home() {
 
   const NewSpaceButton = (
     <NewSpaceModalButton
+      size={ButtonSize.LARGE}
+      className={css.bigButton}
       space={space}
       modalTitle={getString('createASpace')}
       text={getString('newSpace')}
       variation={ButtonVariation.PRIMARY}
       icon="plus"
-      width={173}
-      height={48}
       onRefetch={noop}
       handleNavigation={spaceName => {
         history.push(routes.toCODERepositories({ space: spaceName }))
+      }}
+      onSubmit={data => {
+        history.push(routes.toCODERepositories({ space: data.path as string }))
       }}
     />
   )
@@ -51,7 +54,7 @@ export default function Home() {
                 })}
               </Text>
               <Text font={{ variation: FontVariation.BODY1 }}>{getString('homepage.firstStep')} </Text>
-              <Container padding={{ top: 'large' }} flex={{ justifyContent: 'center' }}>
+              <Container className={css.buttonContainer} padding={{ top: 'large' }} flex={{ justifyContent: 'center' }}>
                 {NewSpaceButton}
               </Container>
             </Layout.Vertical>

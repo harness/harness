@@ -1,3 +1,29 @@
 .divider {
   margin: var(--spacing-medium) 0 var(--spacing-large) 0 !important;
 }
+
+.dividerContainer {
+  opacity: 0.2;
+  height: 1px;
+  color: var(--grey-100);
+  margin: 20px 0;
+}
+
+.popover {
+  transform: translateY(5px) !important;
+
+  .menuItem {
+    strong {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    p {
+      font-size: 12px;
+      padding: 0 var(--spacing-xlarge);
+      line-height: 16px;
+      margin: 5px 0;
+      max-width: 320px;
+    }
+  }
+}

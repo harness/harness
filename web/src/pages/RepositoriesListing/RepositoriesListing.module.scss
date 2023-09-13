@@ -39,12 +39,25 @@
 
   .row {
     height: 80px;
-    box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
     overflow: hidden;
 
     &.noDesc > div {
       height: 44px;
     }
+  }
+  .rowDisable {
+    background-color: var(--grey-50) !important;
+    cursor: auto !important;
+    .repoName {
+      color: var(--grey-400) !important;
+    }
+    .desc {
+      color: var(--grey-300) !important;
+    }
+  }
+  .rowDisable:hover {
+    box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16) !important;
+    border: unset !important;
   }
 }
 
@@ -101,4 +114,8 @@
     font-size: var(--font-size-small);
     padding-top: var(--spacing-xsmall) !important;
   }
+}
+
+.progressBar {
+  opacity: 0.7;
 }
