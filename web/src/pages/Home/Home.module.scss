@@ -10,3 +10,28 @@
   height: 100vh;
   padding-top: 26% !important;
 }
+
+.buttonContainer {
+  :global {
+    .bp3-button-text {
+      font-size: 16px !important;
+    }
+  }
+}
+
+.bigButton {
+  :global {
+    .SplitButton--splitButton {
+      > .bp3-button {
+        .bp3-button-text {
+          font-size: 16px !important;
+          --font-size: 16px !important;
+        }
+      }
+    }
+    .bp3-icon-chevron-down {
+      left: -7px;
+      position: relative;
+    }
+  }
+}

@@ -21,6 +21,47 @@ export interface GitInfoProps {
   commits: TypesCommit[]
   pullRequestMetadata: TypesPullReq
 }
+export interface RepoFormData {
+  name: string
+  description: string
+  license: string
+  defaultBranch: string
+  gitignore: string
+  addReadme: boolean
+  isPublic: RepoVisibility
+}
+export interface ImportFormData {
+  repoUrl: string
+  username: string
+  password: string
+  name: string
+  description: string
+  isPublic: RepoVisibility
+}
+
+export interface ImportSpaceFormData {
+  gitProvider: string
+  username: string
+  password: string
+  name: string
+  description: string
+  organization: string
+}
+
+export enum RepoVisibility {
+  PUBLIC = 'public',
+  PRIVATE = 'private'
+}
+
+export enum RepoCreationType {
+  IMPORT = 'import',
+  CREATE = 'create'
+}
+
+export enum SpaceCreationType {
+  IMPORT = 'import',
+  CREATE = 'create'
+}
 
 export enum GitContentType {
   FILE = 'file',
@@ -101,6 +142,11 @@ export const CodeIcon = {
   ChecksSuccess: 'success-tick' as IconName
 }
 
+export enum Organization {
+  GITHUB = 'Github',
+  GITLAB = 'Gitlab'
+}
+
 export const REFS_TAGS_PREFIX = 'refs/tags/'
 
 // eslint-disable-next-line no-control-regex
@@ -167,4 +213,18 @@ export const decodeGitContent = (content = '') => {
     }
   }
   return ''
+}
+
+export const parseUrl = (url: string) => {
+  const pattern = /^(https?:\/\/(?:www\.)?(github|gitlab)\.com\/([^/]+\/[^/]+))/
+  const match = url.match(pattern)
+
+  if (match) {
+    const provider = match[2]
+    const fullRepo = match[3]
+    const repoName = match[3].split('/')[1]
+    return { provider, fullRepo, repoName }
+  } else {
+    return null
+  }
 }

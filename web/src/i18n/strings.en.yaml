@@ -589,6 +589,7 @@ spaceMemberships:
   memberUpdated: Member updated successfully.
   memberAdded: Member added successfully.
 failedToCreateSpace: Failed to create Space. Please try again.
+failedToImportSpace: Failed to import Space. Please try again.
 failedToCreatePipeline: Failed to create Pipeline. Please try again.
 failedToSavePipeline: Failed to save Pipeline. Please try again.
 enterName: Enter the name
@@ -692,3 +693,40 @@ plugins:
   title: Plugins
   addAPlugin: Add a {{category}} plugin
   stepLabel: step
+createNewRepo: Create New repository
+importGitRepo: Import Git Repository
+importRepo:
+  title: Import Repository
+  url: Repository URL
+  urlPlaceholder: Enter the Repository URL
+  reqAuth: Requires Authorization
+  userPlaceholder: Enter Username
+  passwordPlaceholder: Enter Password
+  passToken: Password/Token
+  failedToImportRepo: Failed to import repository. Please try again.
+  validation: Invalid GitHub or GitLab URL
+  required: Repository URL is required
+  spaceNameReq: Enter a name for the new space
+  usernameReq: Username is required
+  passwordReq: Password is required
+importSpace:
+  title: Import Space
+  createNewSpace: Create New Space
+  authorization: Authorization
+  content: Import a GitLab Group or a GitHub Org to a new Space in Gitness. Entities at the top level will be imported to the space.
+  next: Next step
+  details: Details of target to import
+  organizationName: Organization Name
+  orgNamePlaceholder: Enter the org name here
+  spaceName: Space Name
+  description: Description (optional)
+  descPlaceholder: Enter the description
+  importLabel: What to import
+  providerRequired: Git Provider is required
+  orgRequired: Organization name is required
+  spaceNameRequired: Space name is required
+  gitProvider: Git Provider
+  invalidUrl: Invalid GitHub or GitLab URL
+  githubOrg: GitHub Organization Name
+  gitlabGroup: GitLab Group Name
+importProgress: 'Import in progress...'
