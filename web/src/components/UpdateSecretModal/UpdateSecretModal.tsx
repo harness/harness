@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import * as yup from 'yup'
 import { useMutate } from 'restful-react'
 import { FontVariation, Intent } from '@harnessio/design-system'
@@ -28,6 +28,7 @@ const useUpdateSecretModal = () => {
   const space = useGetSpaceParam()
   const { showError, showSuccess } = useToaster()
   const [secret, setSecret] = useState<TypesSecret>()
+  const postUpdate = useRef<Function>()
 
   const { mutate: updateSecret, loading } = useMutate<TypesSecret>({
     verb: 'PATCH',
@@ -51,6 +52,7 @@ const useUpdateSecretModal = () => {
           }}
         />
       )
+      postUpdate.current?.()
     } catch (exception) {
       showError(getErrorMessage(exception), 0, getString('secrets.failedToUpdateSecret'))
     }
@@ -137,8 +139,15 @@ const useUpdateSecretModal = () => {
   }, [secret])
 
   return {
-    openModal: ({ secretToUpdate }: { secretToUpdate: TypesSecret }) => {
+    openModal: ({
+      secretToUpdate,
+      openSecretUpdate
+    }: {
+      secretToUpdate: TypesSecret
+      openSecretUpdate: () => Promise<void>
+    }) => {
       setSecret(secretToUpdate)
+      postUpdate.current = openSecretUpdate
       openModal()
     }
   }

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   ButtonVariation,
   Container,
@@ -119,7 +119,7 @@ const SecretList = () => {
                 {
                   text: getString('edit'),
                   isDanger: true,
-                  onClick: () => openUpdateSecretModal({ secretToUpdate: row.original })
+                  onClick: () => openUpdateSecretModal({ secretToUpdate: row.original, openSecretUpdate: refetch })
                 },
                 {
                   text: getString('delete'),
