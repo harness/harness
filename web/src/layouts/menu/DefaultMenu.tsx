@@ -127,6 +127,15 @@ export const DefaultMenu: React.FC = () => {
                 />
               )}
 
+              <NavMenuItem
+                data-code-repo-section="settings"
+                isSubLink
+                label={getString('settings')}
+                to={routes.toCODESettings({
+                  repoPath
+                })}
+              />
+
               {!standalone && (
                 <NavMenuItem
                   data-code-repo-section="search"

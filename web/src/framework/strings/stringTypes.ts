@@ -327,12 +327,18 @@ export interface StringsMap {
   pending: string
   'pipelines.createNewPipeline': string
   'pipelines.created': string
+  'pipelines.deletePipelineButton': string
+  'pipelines.deletePipelineConfirm': string
+  'pipelines.deletePipelineError': string
+  'pipelines.deletePipelineSuccess': string
+  'pipelines.deletePipelineWarning': string
   'pipelines.editPipeline': string
   'pipelines.enterPipelineName': string
   'pipelines.enterYAMLPath': string
   'pipelines.executionCouldNotStart': string
   'pipelines.executionStarted': string
   'pipelines.failedToCreatePipeline': string
+  'pipelines.failedToUpdatePipeline': string
   'pipelines.lastExecution': string
   'pipelines.name': string
   'pipelines.newPipelineButton': string
@@ -340,6 +346,7 @@ export interface StringsMap {
   'pipelines.run': string
   'pipelines.saveAndRun': string
   'pipelines.time': string
+  'pipelines.updatePipelineSuccess': string
   'pipelines.updated': string
   'pipelines.yamlPath': string
   'plugins.addAPlugin': string

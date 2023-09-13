@@ -33,6 +33,7 @@ import Secret from 'pages/Secret/Secret'
 import Search from 'pages/Search/Search'
 import AddUpdatePipeline from 'pages/AddUpdatePipeline/AddUpdatePipeline'
 import { useAppContext } from 'AppContext'
+import PipelineSettings from 'components/PipelineSettings/PipelineSettings'
 
 export const RouteDestinations: React.FC = React.memo(function RouteDestinations() {
   const { getString } = useStrings()
@@ -190,6 +191,14 @@ export const RouteDestinations: React.FC = React.memo(function RouteDestinations
           <Route path={routes.toCODEPipelineEdit({ repoPath, pipeline: pathProps.pipeline })} exact>
             <LayoutWithSideNav title={getString('pageTitle.pipelines')}>
               <AddUpdatePipeline />
+            </LayoutWithSideNav>
+          </Route>
+        )}
+
+        {standalone && (
+          <Route path={routes.toCODEPipelineSettings({ repoPath, pipeline: pathProps.pipeline })} exact>
+            <LayoutWithSideNav title={getString('pageTitle.pipelines')}>
+              <PipelineSettings />
             </LayoutWithSideNav>
           </Route>
         )}

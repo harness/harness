@@ -1,0 +1,31 @@
+.pageHeader {
+  height: auto !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: var(--spacing-small) !important;
+  padding-bottom: 0 !important;
+}
+
+.breadcrumb {
+  align-items: center;
+
+  a {
+    font-size: var(--font-size-small);
+    color: var(--primary-7);
+  }
+}
+
+.tabs {
+  display: flex !important;
+  gap: 1rem !important;
+  .tab {
+    padding: 0.5rem 1rem !important;
+    cursor: pointer !important;
+    color: var(--grey-700) !important;
+    &.active {
+      color: var(--grey-900) !important;
+      font-weight: 600 !important;
+      border-bottom: 2px solid var(--primary-7) !important; // example of an active tab indicator
+    }
+  }
+}

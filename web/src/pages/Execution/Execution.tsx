@@ -65,7 +65,7 @@ const Execution = () => {
     <Container className={css.main}>
       <ExecutionPageHeader
         repoMetadata={repoMetadata}
-        title={execution?.title as string}
+        title={pipeline as string}
         dataTooltipId="repositoryExecution"
         extraBreadcrumbLinks={
           repoMetadata && [

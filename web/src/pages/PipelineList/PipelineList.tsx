@@ -233,13 +233,23 @@ const PipelineList = () => {
                     )
                   }}
                 />
+                <MenuItem
+                  icon="settings"
+                  text={getString('settings')}
+                  onClick={e => {
+                    e.stopPropagation()
+                    history.push(
+                      routes.toCODEPipelineSettings({ repoPath: repoMetadata?.path || '', pipeline: uid as string })
+                    )
+                  }}
+                />
               </Menu>
             </Popover>
           )
         }
       }
     ],
-    [getString, repoMetadata?.path, routes, searchTerm]
+    [getString, history, repoMetadata?.path, routes, searchTerm]
   )
 
   return (
@@ -251,7 +261,7 @@ const PipelineList = () => {
       />
       <PageBody
         className={cx({ [css.withError]: !!error })}
-        error={error ? getErrorMessage(error || pipelinesError) : null}
+        error={error || pipelinesError ? getErrorMessage(error || pipelinesError) : null}
         retryOnError={voidFn(refetch)}
         noData={{
           when: () => pipelines?.length === 0 && searchTerm === undefined,
