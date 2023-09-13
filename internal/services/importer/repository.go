@@ -61,7 +61,7 @@ func (r *Repository) Register(executor *job.Executor) error {
 
 // Run starts a background job that imports the provided repository from the provided clone URL.
 func (r *Repository) Run(ctx context.Context, provider Provider, repo *types.Repository, cloneURL string) error {
-	jobDef, err := r.getJobDef(*repo.ImportingJobUID, Input{
+	jobDef, err := r.getJobDef(JobIDFromRepoID(repo.ID), Input{
 		RepoID:   repo.ID,
 		GitUser:  provider.Username,
 		GitPass:  provider.Password,
@@ -93,7 +93,7 @@ func (r *Repository) RunMany(ctx context.Context,
 		repo := repos[k]
 		cloneURL := cloneURLs[k]
 
-		jobDef, err := r.getJobDef(*repo.ImportingJobUID, Input{
+		jobDef, err := r.getJobDef(JobIDFromRepoID(repo.ID), Input{
 			RepoID:   repo.ID,
 			GitUser:  provider.Username,
 			GitPass:  provider.Password,
@@ -170,15 +170,13 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", errors.New("missing git repository clone URL")
 	}
 
-	if input.GitUser != "" || input.GitPass != "" {
-		repoURL, err := url.Parse(input.CloneURL)
-		if err != nil {
-			return "", fmt.Errorf("failed to parse git clone URL: %w", err)
-		}
-
-		repoURL.User = url.UserPassword(input.GitUser, input.GitPass)
-		input.CloneURL = repoURL.String()
+	repoURL, err := url.Parse(input.CloneURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse git clone URL: %w", err)
 	}
+
+	repoURL.User = url.UserPassword(input.GitUser, input.GitPass)
+	cloneURLWithAuth := repoURL.String()
 
 	repo, err := r.repoStore.Find(ctx, input.RepoID)
 	if err != nil {
@@ -208,7 +206,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 
 		log.Info().Msg("sync repository")
 
-		defaultBranch, err := r.syncGitRepository(ctx, &systemPrincipal, repo, input.CloneURL)
+		defaultBranch, err := r.syncGitRepository(ctx, &systemPrincipal, repo, cloneURLWithAuth)
 		if err != nil {
 			return fmt.Errorf("failed to sync git repository from '%s': %w", input.CloneURL, err)
 		}
@@ -242,7 +240,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		log.Error().Err(err).Msg("failed repository import - cleanup git repository")
 
 		if errDel := r.deleteGitRepository(ctx, &systemPrincipal, repo); errDel != nil {
-			log.Warn().Err(err).
+			log.Warn().Err(errDel).
 				Msg("failed to delete git repository after failed import")
 		}
 
@@ -260,12 +258,12 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 }
 
 func (r *Repository) GetProgress(ctx context.Context, repo *types.Repository) (types.JobProgress, error) {
-	if !repo.Importing || repo.ImportingJobUID == nil || *repo.ImportingJobUID == "" {
+	if !repo.Importing {
 		// if the repo is not being imported, or it's job ID has been cleared (or never existed) return state=finished
 		return job.DoneProgress(), nil
 	}
 
-	progress, err := r.scheduler.GetJobProgress(ctx, *repo.ImportingJobUID)
+	progress, err := r.scheduler.GetJobProgress(ctx, JobIDFromRepoID(repo.ID))
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
 		// if the job is not found return state=failed
 		return job.FailProgress(), nil
@@ -278,11 +276,11 @@ func (r *Repository) GetProgress(ctx context.Context, repo *types.Repository) (t
 }
 
 func (r *Repository) Cancel(ctx context.Context, repo *types.Repository) error {
-	if repo.ImportingJobUID == nil || *repo.ImportingJobUID == "" {
+	if !repo.Importing {
 		return nil
 	}
 
-	err := r.scheduler.CancelJob(ctx, *repo.ImportingJobUID)
+	err := r.scheduler.CancelJob(ctx, JobIDFromRepoID(repo.ID))
 	if err != nil {
 		return fmt.Errorf("failed to cancel job: %w", err)
 	}

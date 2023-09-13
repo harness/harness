@@ -59,8 +59,7 @@ const (
 		,repo_num_closed_pulls
 		,repo_num_open_pulls
 		,repo_num_merged_pulls
-		,repo_importing
-		,repo_importing_job_uid`
+		,repo_importing`
 
 	repoSelectBaseWithJoin = `
 		SELECT` + repoColumnsForJoin + `
@@ -127,7 +126,6 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,repo_num_open_pulls
 			,repo_num_merged_pulls
 			,repo_importing
-			,repo_importing_job_uid
 		) values (
 			:repo_version
 			,:repo_parent_id
@@ -147,7 +145,6 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 			,:repo_num_open_pulls
 			,:repo_num_merged_pulls
 			,:repo_importing
-			,:repo_importing_job_uid
 		) RETURNING repo_id`
 
 	db := dbtx.GetAccessor(ctx, s.db)
@@ -185,7 +182,6 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			,repo_num_open_pulls = :repo_num_open_pulls
 			,repo_num_merged_pulls = :repo_num_merged_pulls
 			,repo_importing = :repo_importing
-			,repo_importing_job_uid	= :repo_importing_job_uid
 		WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
 
 	updatedAt := time.Now()
