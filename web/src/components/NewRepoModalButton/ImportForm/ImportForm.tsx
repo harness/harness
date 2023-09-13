@@ -34,7 +34,7 @@ const ImportForm = (props: ImportFormProps) => {
   return (
     <Formik
       initialValues={formInitialValues}
-      formName="editVariations"
+      formName="importRepoForm"
       validationSchema={yup.object().shape({
         repoUrl: yup
           .string()
@@ -44,9 +44,7 @@ const ImportForm = (props: ImportFormProps) => {
           .string()
           .trim()
           .required(getString('validation.nameIsRequired'))
-          .matches(REGEX_VALID_REPO_NAME, getString('validation.repoNamePatternIsNotValid')),
-        username: yup.string().trim().required(getString('importRepo.usernameReq')),
-        password: yup.string().trim().required(getString('importRepo.passwordReq'))
+          .matches(REGEX_VALID_REPO_NAME, getString('validation.repoNamePatternIsNotValid'))
       })}
       onSubmit={handleSubmit}>
       {formik => {

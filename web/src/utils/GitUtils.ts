@@ -39,6 +39,13 @@ export interface ImportFormData {
   isPublic: RepoVisibility
 }
 
+export interface ExportFormData {
+  accountId: string
+  token: string
+  organization: string
+  name: string
+}
+
 export interface ImportSpaceFormData {
   gitProvider: string
   username: string

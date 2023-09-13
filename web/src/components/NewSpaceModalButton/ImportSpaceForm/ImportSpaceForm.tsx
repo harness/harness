@@ -35,9 +35,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
     { value: 'Gitlab', label: 'Gitlab' }
   ]
   const validationSchemaStepOne = yup.object().shape({
-    gitProvider: yup.string().trim().required(getString('importSpace.providerRequired')),
-    username: yup.string().trim().required(getString('importRepo.usernameReq')),
-    password: yup.string().trim().required(getString('importRepo.passwordReq'))
+    gitProvider: yup.string().trim().required(getString('importSpace.providerRequired'))
   })
 
   const validationSchemaStepTwo = yup.object().shape({
@@ -48,7 +46,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
   return (
     <Formik
       initialValues={formInitialValues}
-      formName="editVariations"
+      formName="importSpaceForm"
       enableReinitialize={true}
       validateOnBlur
       onSubmit={handleSubmit}>
