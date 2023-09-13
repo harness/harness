@@ -32,6 +32,8 @@ type Interface interface {
 
 	SyncRepository(ctx context.Context, params *SyncRepositoryParams) (*SyncRepositoryOutput, error)
 
+	MatchFiles(ctx context.Context, params *MatchFilesParams) (*MatchFilesOutput, error)
+
 	/*
 	 * Commits service
 	 */

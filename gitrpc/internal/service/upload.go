@@ -27,6 +27,7 @@ func (s RepositoryService) addFilesAndPush(
 	repoPath string,
 	filePaths []string,
 	branch string,
+	env []string,
 	author *rpc.Identity,
 	authorDate time.Time,
 	committer *rpc.Identity,
@@ -62,12 +63,13 @@ func (s RepositoryService) addFilesAndPush(
 	if err != nil {
 		return processGitErrorf(err, "failed to commit files")
 	}
+
 	err = s.adapter.Push(ctx, repoPath, types.PushOptions{
 		// TODO: Don't hard-code
 		Remote:  remote,
 		Branch:  branch,
 		Force:   false,
-		Env:     nil,
+		Env:     env,
 		Timeout: 0,
 	})
 	if err != nil {
@@ -129,7 +131,7 @@ func (s RepositoryService) handleFileUploadIfAvailable(ctx context.Context, base
 	}
 	fullPath := filepath.Join(basePath, header.Path)
 	log.Info().Msgf("saving file at path %s", fullPath)
-	_, err = s.store.Save(fullPath, fileData)
+	_, err = s.store.Save(fullPath, &fileData)
 	if err != nil {
 		return "", status.Errorf(codes.Internal, "cannot save file to the store: %v", err)
 	}

@@ -20,6 +20,7 @@ service RepositoryService {
   rpc SyncRepository(SyncRepositoryRequest) returns (SyncRepositoryResponse) {}
   rpc HashRepository(HashRepositoryRequest) returns (HashRepositoryResponse) {}
   rpc MergeBase(MergeBaseRequest) returns (MergeBaseResponse);
+  rpc MatchFiles(MatchFilesRequest) returns (MatchFilesResponse);
 }
 
 message CreateRepositoryRequest {
@@ -232,4 +233,21 @@ message MergeBaseRequest {
 
 message MergeBaseResponse {
   string merge_base_sha = 1;
+}
+
+message FileContent {
+  string path = 1;
+  bytes content = 2;
+}
+
+message MatchFilesRequest {
+  ReadRequest base = 1;
+  string ref = 2;
+  string dir_path = 3;
+  string pattern = 4;
+  int32  max_size = 5;
+}
+
+message MatchFilesResponse {
+  repeated FileContent files = 1;
 }

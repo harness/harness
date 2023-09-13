@@ -109,6 +109,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
+	triggerStore := database.ProvideTriggerStore(db)
 	encrypter, err := encrypt.ProvideEncrypter(config)
 	if err != nil {
 		return nil, err
@@ -128,7 +129,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	streamer := sse.ProvideEventsStreaming(pubSub)
-	repository, err := importer.ProvideRepoImporter(config, provider, gitrpcInterface, repoStore, encrypter, jobScheduler, executor, streamer)
+	repository, err := importer.ProvideRepoImporter(config, provider, gitrpcInterface, db, repoStore, pipelineStore, triggerStore, encrypter, jobScheduler, executor, streamer)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +158,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	spaceController := space.ProvideController(db, provider, streamer, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository)
-	triggerStore := database.ProvideTriggerStore(db)
 	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, triggerStore, authorizer, pipelineStore)
 	secretController := secret.ProvideController(db, pathUID, pathStore, encrypter, secretStore, authorizer, spaceStore)
 	triggerController := trigger.ProvideController(db, authorizer, triggerStore, pathUID, pipelineStore, repoStore)

@@ -12,6 +12,7 @@ import (
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/google/wire"
 )
@@ -24,7 +25,10 @@ func ProvideRepoImporter(
 	config *types.Config,
 	urlProvider *url.Provider,
 	git gitrpc.Interface,
+	db *sqlx.DB,
 	repoStore store.RepoStore,
+	pipelineStore store.PipelineStore,
+	triggerStore store.TriggerStore,
 	encrypter encrypt.Encrypter,
 	scheduler *job.Scheduler,
 	executor *job.Executor,
@@ -34,7 +38,10 @@ func ProvideRepoImporter(
 		defaultBranch: config.Git.DefaultBranch,
 		urlProvider:   urlProvider,
 		git:           git,
+		db:            db,
 		repoStore:     repoStore,
+		pipelineStore: pipelineStore,
+		triggerStore:  triggerStore,
 		encrypter:     encrypter,
 		scheduler:     scheduler,
 		sseStreamer:   sseStreamer,
