@@ -7,7 +7,7 @@ package file
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/types"
@@ -37,7 +37,7 @@ func (f *service) Get(
 		IncludeLatestCommit: false,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read tree node: %w", err)
 	}
 	// viewing Raw content is only supported for blob content
 	if treeNodeOutput.Node.Type != gitrpc.TreeNodeTypeBlob {
@@ -53,7 +53,7 @@ func (f *service) Get(
 		return nil, fmt.Errorf("failed to read blob from gitrpc: %w", err)
 	}
 
-	buf, err := ioutil.ReadAll(blobReader.Content)
+	buf, err := io.ReadAll(blobReader.Content)
 	if err != nil {
 		return nil, fmt.Errorf("could not read blob content from file: %w", err)
 	}

@@ -108,7 +108,7 @@ func (c *Controller) GetContent(ctx context.Context,
 		IncludeLatestCommit: includeLatestCommit,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read tree node: %w", err)
 	}
 
 	info, err := mapToContentInfo(treeNodeOutput.Node, treeNodeOutput.Commit, includeLatestCommit)
