@@ -210,7 +210,7 @@ const PipelineList = () => {
           const { uid } = record
           const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
 
-          const confirmDeleteSecret = useConfirmAct()
+          const confirmDeletePipeline = useConfirmAct()
           const { showSuccess, showError } = useToaster()
           const { mutate: deletePipeline } = useMutate<TypesPipeline>({
             verb: 'DELETE',
@@ -248,7 +248,7 @@ const PipelineList = () => {
                   text={getString('delete')}
                   onClick={e => {
                     e.stopPropagation()
-                    confirmDeleteSecret({
+                    confirmDeletePipeline({
                       title: getString('pipelines.deletePipelineButton'),
                       confirmText: getString('delete'),
                       intent: Intent.DANGER,
