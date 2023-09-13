@@ -146,7 +146,7 @@ const AddUpdatePipeline = (): JSX.Element => {
   // set YAML version for Pipeline setup
   useEffect(() => {
     setYAMLVersion(
-      DRONE_CONFIG_YAML_FILE_SUFFIXES.map((suffix: string) => pipelineData?.config_path?.endsWith(suffix))
+      DRONE_CONFIG_YAML_FILE_SUFFIXES.find((suffix: string) => pipelineData?.config_path?.endsWith(suffix))
         ? YamlVersion.V0
         : YamlVersion.V1
     )
