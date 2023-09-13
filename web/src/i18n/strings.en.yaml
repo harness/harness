@@ -676,6 +676,7 @@ aiSearch: AI Search
 codeSearch: Code Search
 startSearching: Begin search by describing what you are looking for.
 poweredByAI: Unlock the power of AI with Semantic Code search. Try phrases like "Locate the code for authentication".
+failedToFetchFileContent: 'ERROR: Failed to fetch file content.'
 run: Run
 plugins:
   title: Plugins

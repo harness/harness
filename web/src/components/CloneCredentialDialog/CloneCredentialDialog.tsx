@@ -36,7 +36,7 @@ const CloneCredentialDialog = (props: CloneCredentialDialogProps) => {
     },
     [mutate, showError]
   )
-  const tokenData = standalone ? false : hooks?.useGenerateToken?.(hash, currentUser.uid, flag)
+  const tokenData = standalone ? false : hooks?.useGenerateToken?.(hash, currentUser?.uid, flag)
 
   useEffect(() => {
     if (tokenData) {

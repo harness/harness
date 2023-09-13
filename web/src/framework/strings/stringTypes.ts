@@ -193,6 +193,7 @@ export interface StringsMap {
   failedToCreateSpace: string
   failedToDeleteBranch: string
   failedToDeleteWebhook: string
+  failedToFetchFileContent: string
   failedToSavePipeline: string
   fileDeleted: string
   fileTooLarge: string

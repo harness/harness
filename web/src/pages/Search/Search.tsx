@@ -90,12 +90,15 @@ export default function Search() {
     error: resourceError = null,
     loading: resourceLoading
   } = useGetResourceContent({ repoMetadata, gitRef, resourcePath, includeCommit: false, lazy: !resourcePath })
-  const fileContent = useMemo(
+  const fileContent: string = useMemo(
     () =>
       resourceContent?.path === resourcePath
         ? decodeGitContent((resourceContent?.content as RepoFileContent)?.data)
+        : resourceError
+        ? getString('failedToFetchFileContent')
         : '',
-    [resourceContent?.content, resourceContent?.path, resourcePath]
+
+    [resourceContent?.content, resourceContent?.path, resourcePath, resourceError, getString]
   )
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -135,6 +138,14 @@ export default function Search() {
       performSearch()
     }
   }, [repoMetadata?.path]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (fileContent && fileContent !== viewRef?.current?.state.doc.toString()) {
+      viewRef?.current?.dispatch({
+        changes: { from: 0, to: viewRef?.current?.state.doc.length, insert: fileContent }
+      })
+    }
+  }, [fileContent])
 
   useShowRequestError(resourceError)
 
