@@ -644,6 +644,13 @@ pipelines:
   updated: Pipeline updated successfully
   executionStarted: Pipeline execution started successfully
   executionCouldNotStart: Failure while starting Pipeline execution
+  deletePipelineWarning: This will permanently delete the {{pipeline}} pipeline and all executions.
+  deletePipelineButton: Delete pipeline
+  deletePipelineConfirm: Are you sure you want to delete the pipeline <strong>{{pipeline}}</strong>? You can't undo this action.
+  deletePipelineSuccess: Pipeline {{pipeline}} deleted.
+  deletePipelineError: Failed to delete Pipeline. Please try again.
+  updatePipelineSuccess: Pipeline {{pipeline}} updated.
+  failedToUpdatePipeline: Failed to update Pipeline. Please try again.
 executions:
   noData: There are no executions
   newExecutionButton: Run Pipeline
