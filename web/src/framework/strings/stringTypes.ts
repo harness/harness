@@ -558,7 +558,6 @@ export interface StringsMap {
   'unsavedChanges.message': string
   'unsavedChanges.stay': string
   'unsavedChanges.title': string
-  update: string
   updateFile: string
   updateUser: string
   updateWebhook: string

@@ -137,7 +137,6 @@ createABranch: Create a branch
 createATag: Create a tag
 delete: Delete
 edit: Edit
-update: Update
 editAsText: Edit as Text
 branchName: Branch name
 enterBranchPlaceholder: Enter the branch name here
