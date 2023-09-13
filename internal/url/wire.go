@@ -5,13 +5,14 @@
 package url
 
 import (
-	"github.com/harness/gitness/types"
-
 	"github.com/google/wire"
+	"github.com/harness/gitness/types"
 )
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(ProvideURLProvider)
+
+const harnessCodeAPIURLRaw = "http://app.harness.io/gateway/code/api/"
 
 func ProvideURLProvider(config *types.Config) (*Provider, error) {
 	return NewProvider(
@@ -19,5 +20,6 @@ func ProvideURLProvider(config *types.Config) (*Provider, error) {
 		config.URL.APIInternal,
 		config.URL.Git,
 		config.URL.CIURL,
+		harnessCodeAPIURLRaw,
 	)
 }

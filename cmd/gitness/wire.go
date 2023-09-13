@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	"github.com/harness/gitness/internal/services/exporter"
 
 	cliserver "github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
@@ -137,6 +138,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		plugin.WireSet,
 		importer.WireSet,
 		canceler.WireSet,
+		exporter.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

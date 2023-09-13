@@ -198,6 +198,8 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 			r.Get("/secrets", handlerspace.HandleListSecrets(spaceCtrl))
 			r.Get("/connectors", handlerspace.HandleListConnectors(spaceCtrl))
 			r.Get("/templates", handlerspace.HandleListTemplates(spaceCtrl))
+			r.Post("/export", handlerspace.HandleExport(spaceCtrl))
+			r.Get("/export-progress", handlerspace.HandleExportProgress(spaceCtrl))
 
 			// Child collections
 			r.Route("/paths", func(r chi.Router) {

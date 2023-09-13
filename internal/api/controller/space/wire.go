@@ -7,6 +7,7 @@ package space
 import (
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/services/exporter"
 	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
@@ -27,7 +28,7 @@ func ProvideController(db *sqlx.DB, urlProvider *url.Provider, sseStreamer sse.S
 	pipelineStore store.PipelineStore, secretStore store.SecretStore,
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore,
 	spaceStore store.SpaceStore, repoStore store.RepoStore, principalStore store.PrincipalStore,
-	repoCtrl *repo.Controller, membershipStore store.MembershipStore, importer *importer.Repository,
+	repoCtrl *repo.Controller, membershipStore store.MembershipStore, importer *importer.Repository, exporter *exporter.Repository,
 ) *Controller {
 	return NewController(db, urlProvider, sseStreamer, uidCheck, authorizer,
 		pathStore, pipelineStore, secretStore,

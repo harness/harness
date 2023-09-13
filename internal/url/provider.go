@@ -29,9 +29,12 @@ type Provider struct {
 	// gitURL stores the URL the git endpoints are available at.
 	// NOTE: we store it as url.URL so we can derive clone URLS without errors.
 	gitURL *url.URL
+
+	// harnessCodeApiUrl stores the URL for communicating with SaaS harness code.
+	harnessCodeApiUrl *url.URL
 }
 
-func NewProvider(apiURLRaw string, apiURLInternalRaw, gitURLRaw, ciURLRaw string) (*Provider, error) {
+func NewProvider(apiURLRaw string, apiURLInternalRaw, gitURLRaw, ciURLRaw string, harnessCodeApiUrlRaw string) (*Provider, error) {
 	// remove trailing '/' to make usage easier
 	apiURLRaw = strings.TrimRight(apiURLRaw, "/")
 	apiURLInternalRaw = strings.TrimRight(apiURLInternalRaw, "/")
@@ -50,11 +53,18 @@ func NewProvider(apiURLRaw string, apiURLInternalRaw, gitURLRaw, ciURLRaw string
 		return nil, fmt.Errorf("provided ciURLRaw '%s' is invalid: %w", ciURLRaw, err)
 	}
 
+	harnessCodeApiUrlRaw = strings.TrimRight(harnessCodeApiUrlRaw, "/")
+	harnessCodeApiUrl, err := url.Parse(harnessCodeApiUrlRaw)
+	if err != nil {
+		return nil, fmt.Errorf("provided harnessCodeAPIURLRaw '%s' is invalid: %w", harnessCodeAPIURLRaw, err)
+	}
+
 	return &Provider{
 		apiURLRaw:         apiURLRaw,
 		apiURLInternalRaw: apiURLInternalRaw,
 		gitURL:            gitURL,
 		ciURL:             ciURL,
+		harnessCodeApiUrl: harnessCodeApiUrl,
 	}, nil
 }
 

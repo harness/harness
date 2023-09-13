@@ -7,6 +7,7 @@ package space
 import (
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/services/exporter"
 	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
@@ -33,6 +34,7 @@ type Controller struct {
 	repoCtrl        *repo.Controller
 	membershipStore store.MembershipStore
 	importer        *importer.Repository
+	exporter        *exporter.Repository
 }
 
 func NewController(db *sqlx.DB, urlProvider *url.Provider, sseStreamer sse.Streamer,
