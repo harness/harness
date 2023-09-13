@@ -113,7 +113,8 @@ func New(
 				stream.WithConcurrency(config.Concurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
-					stream.WithMaxRetries(config.MaxRetries),
+					// retries not needed for builds which failed to trigger, can be adjusted when needed
+					stream.WithMaxRetries(0),
 				))
 
 			_ = r.RegisterCreated(service.handleEventPullReqCreated)
