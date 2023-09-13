@@ -8,14 +8,13 @@ import {
   PageBody,
   TableV2 as Table,
   Text,
-  Utils,
-  useToaster
+  Utils
 } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import { useHistory, useParams } from 'react-router-dom'
-import { useGet, useMutate } from 'restful-react'
+import { useGet } from 'restful-react'
 import { Timer, Calendar } from 'iconoir-react'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -33,6 +32,7 @@ import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/PipelineUtils'
 import useSpaceSSE from 'hooks/useSpaceSSE'
 import { ExecutionText, ExecutionTrigger } from 'components/ExecutionText/ExecutionText'
+import useRunPipelineModal from 'components/RunPipelineModal/RunPipelineModal'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './ExecutionList.module.scss'
 
@@ -44,7 +44,6 @@ const ExecutionList = () => {
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
-  const { showError, showSuccess } = useToaster()
 
   const { repoMetadata, error, loading, refetch, space } = useGetRepositoryMetadata()
 
@@ -84,19 +83,11 @@ const ExecutionList = () => {
     }
   })
 
-  const { mutate, loading: mutateLoading } = useMutate<TypesExecution>({
-    verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines/${pipeline}/executions`
-  })
+  const { openModal: openRunPipelineModal } = useRunPipelineModal()
 
   const handleClick = async () => {
-    try {
-      //TODO - this should NOT be hardcoded to master branch - need a modal to insert branch - but useful for testing until then
-      await mutate({ branch: 'master' })
-      showSuccess('Build started')
-      executionsRefetch()
-    } catch {
-      showError('Failed to start build')
+    if (repoMetadata && pipeline) {
+      openRunPipelineModal({ repoMetadata, pipeline })
     }
   }
 
@@ -105,7 +96,6 @@ const ExecutionList = () => {
       text={getString('executions.newExecutionButton')}
       variation={ButtonVariation.PRIMARY}
       icon="play-outline"
-      disabled={mutateLoading}
       onClick={handleClick}></Button>
   )
 

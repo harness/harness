@@ -496,10 +496,13 @@ export interface StringsMap {
   'secrets.enterSecretName': string
   'secrets.failedToCreate': string
   'secrets.failedToDeleteSecret': string
+  'secrets.failedToUpdateSecret': string
   'secrets.name': string
   'secrets.newSecretButton': string
   'secrets.noData': string
   'secrets.secretDeleted': string
+  'secrets.secretUpdated': string
+  'secrets.updateSecret': string
   'secrets.value': string
   selectBranchPlaceHolder: string
   selectRange: string

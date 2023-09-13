@@ -666,9 +666,12 @@ secrets:
   createSecret: Create Secret
   createSuccess: Secret created successfully
   secretDeleted: Secret {uid} deleted.
+  secretUpdated: Secret {uid} updated.
   deleteSecretConfirm: Are you sure you want to delete secret <strong>{{uid}}</strong>? You can't undo this action.
   failedToDeleteSecret: Failed to delete Secret. Please try again.
-  deleteSecret: Delete Secrets
+  failedToUpdateSecret: Failed to update Secret. Please try again.
+  deleteSecret: Delete secret
+  updateSecret: Update secret
 userUpdateSuccess: 'User updated successfully'
 viewFile: View File
 searchResult: 'Search Result {count}'
