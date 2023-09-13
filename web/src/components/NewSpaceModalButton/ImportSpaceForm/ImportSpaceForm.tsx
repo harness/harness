@@ -72,9 +72,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
           }
         }
         const handleImport = async () => {
-          console.log('ds')
           await handleSubmit(formik.values)
-          console.log('pos')
           setButtonLoading(false)
         }
         return (

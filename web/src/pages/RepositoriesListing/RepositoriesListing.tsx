@@ -68,7 +68,6 @@ export default function RepositoriesListing() {
       // should I include pipeline id here? what if a new pipeline is created? coould check for ids that are higher than the lowest id on the page?
       if (repositories?.some(repository => repository.id === data?.id && repository.parent_id === data?.parent_id)) {
         //TODO - revisit full refresh - can I use the message to update the execution?
-        console.log('here')
         refetch()
       }
     }
