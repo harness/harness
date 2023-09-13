@@ -124,7 +124,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repository, err := importer.ProvideRepoImporter(config, provider, gitrpcInterface, repoStore, encrypter, jobScheduler, executor)
+	streamer := sse.ProvideEventsStreaming(pubSub)
+	repository, err := importer.ProvideRepoImporter(config, provider, gitrpcInterface, repoStore, encrypter, jobScheduler, executor, streamer)
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +144,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	logStore := logs.ProvideLogStore(db, config)
 	logStream := livelog.ProvideLogStream(config)
 	logsController := logs2.ProvideController(db, authorizer, executionStore, repoStore, pipelineStore, stageStore, stepStore, logStore, logStream)
-	streamer := sse.ProvideEventsStreaming(pubSub)
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db)
 	templateStore := database.ProvideTemplateStore(db)

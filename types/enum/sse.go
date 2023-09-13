@@ -12,4 +12,6 @@ const (
 	SSETypeExecutionUpdated   = "execution_updated"
 	SSETypeExecutionRunning   = "execution_running"
 	SSETypeExecutionCompleted = "execution_completed"
+
+	SSETypeRepositoryImportCompleted = "repository_import_completed"
 )

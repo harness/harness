@@ -98,9 +98,12 @@ func (r *InMemory) Publish(ctx context.Context, topic string, payload []byte, op
 	}
 
 	topic = formatTopic(pubConfig.app, pubConfig.namespace, topic)
+	wg := sync.WaitGroup{}
 	for _, sub := range r.registry {
 		if slices.Contains(sub.topics, topic) && !sub.isClosed() {
+			wg.Add(1)
 			go func(subscriber *inMemorySubscriber) {
+				defer wg.Done()
 				// timer is based on subscriber data
 				t := time.NewTimer(subscriber.config.sendTimeout)
 				defer t.Stop()
@@ -117,6 +120,10 @@ func (r *InMemory) Publish(ctx context.Context, topic string, payload []byte, op
 			}(sub)
 		}
 	}
+
+	// Wait for all subscribers to complete
+	// Otherwise, we might fail notifying some subscribers due to context completion.
+	wg.Wait()
 
 	return nil
 }

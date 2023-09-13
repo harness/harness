@@ -19,10 +19,12 @@ import (
 	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/githook"
 	"github.com/harness/gitness/internal/services/job"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	gitnessurl "github.com/harness/gitness/internal/url"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
 )
@@ -39,6 +41,7 @@ type Repository struct {
 	repoStore     store.RepoStore
 	encrypter     encrypt.Encrypter
 	scheduler     *job.Scheduler
+	sseStreamer   sse.Streamer
 }
 
 var _ job.Handler = (*Repository)(nil)
@@ -186,22 +189,37 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", fmt.Errorf("repository %s is not being imported", repo.UID)
 	}
 
+	log := log.Ctx(ctx).With().
+		Int64("repo.id", repo.ID).
+		Str("repo.path", repo.Path).
+		Logger()
+
+	log.Info().Msg("create git repository")
+
 	gitUID, err := r.createGitRepository(ctx, &systemPrincipal, repo.ID)
 	if err != nil {
 		return "", fmt.Errorf("failed to create empty git repository: %w", err)
 	}
 
+	log.Info().Msgf("successfully created git repository with git_uid '%s'", gitUID)
+
 	err = func() error {
 		repo.GitUID = gitUID
+
+		log.Info().Msg("sync repository")
 
 		defaultBranch, err := r.syncGitRepository(ctx, &systemPrincipal, repo, input.CloneURL)
 		if err != nil {
 			return fmt.Errorf("failed to sync git repository from '%s': %w", input.CloneURL, err)
 		}
 
+		log.Info().Msgf("successfully synced repository (returned default branch: '%s')", defaultBranch)
+
 		if defaultBranch == "" {
 			defaultBranch = r.defaultBranch
 		}
+
+		log.Info().Msg("update repo in DB")
 
 		repo, err = r.repoStore.UpdateOptLock(ctx, repo, func(repo *types.Repository) error {
 			if !repo.Importing {
@@ -221,14 +239,22 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return nil
 	}()
 	if err != nil {
+		log.Error().Err(err).Msg("failed repository import - cleanup git repository")
+
 		if errDel := r.deleteGitRepository(ctx, &systemPrincipal, repo); errDel != nil {
-			log.Ctx(ctx).Err(err).
-				Str("gitUID", gitUID).
+			log.Warn().Err(err).
 				Msg("failed to delete git repository after failed import")
 		}
 
 		return "", fmt.Errorf("failed to import repository: %w", err)
 	}
+
+	err = r.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypeRepositoryImportCompleted, repo)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to publish import completion SSE")
+	}
+
+	log.Info().Msg("completed repository import")
 
 	return "", nil
 }

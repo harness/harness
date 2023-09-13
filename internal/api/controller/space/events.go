@@ -88,7 +88,9 @@ L:
 			io.WriteString(w, fmt.Sprintf("event: %s\n", event.Type))
 			io.WriteString(w, "data: ")
 			enc.Encode(event.Data)
-			io.WriteString(w, "\n\n")
+			// NOTE: enc.Encode is ending the data with a new line, only add one more
+			// Source: https://cs.opensource.google/go/go/+/refs/tags/go1.21.1:src/encoding/json/stream.go;l=220
+			io.WriteString(w, "\n")
 			w.Flush()
 		}
 	}
