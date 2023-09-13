@@ -29,11 +29,12 @@ type trigger struct {
 	ID          int64              `db:"trigger_id"`
 	UID         string             `db:"trigger_uid"`
 	Description string             `db:"trigger_description"`
+	Type        string             `db:"trigger_type"`
 	Secret      string             `db:"trigger_secret"`
 	PipelineID  int64              `db:"trigger_pipeline_id"`
 	RepoID      int64              `db:"trigger_repo_id"`
 	CreatedBy   int64              `db:"trigger_created_by"`
-	Enabled     bool               `db:"trigger_enabled"`
+	Disabled    bool               `db:"trigger_disabled"`
 	Actions     sqlxtypes.JSONText `db:"trigger_actions"`
 	Created     int64              `db:"trigger_created"`
 	Updated     int64              `db:"trigger_updated"`
@@ -50,11 +51,12 @@ func mapInternalToTrigger(trigger *trigger) (*types.Trigger, error) {
 	return &types.Trigger{
 		ID:          trigger.ID,
 		Description: trigger.Description,
+		Type:        trigger.Type,
 		Secret:      trigger.Secret,
 		PipelineID:  trigger.PipelineID,
 		RepoID:      trigger.RepoID,
 		CreatedBy:   trigger.CreatedBy,
-		Enabled:     trigger.Enabled,
+		Disabled:    trigger.Disabled,
 		Actions:     actions,
 		UID:         trigger.UID,
 		Created:     trigger.Created,
@@ -80,11 +82,12 @@ func mapTriggerToInternal(t *types.Trigger) *trigger {
 		ID:          t.ID,
 		UID:         t.UID,
 		Description: t.Description,
+		Type:        t.Type,
 		PipelineID:  t.PipelineID,
 		Secret:      t.Secret,
 		RepoID:      t.RepoID,
 		CreatedBy:   t.CreatedBy,
-		Enabled:     t.Enabled,
+		Disabled:    t.Disabled,
 		Actions:     EncodeToSQLXJSON(t.Actions),
 		Created:     t.Created,
 		Updated:     t.Updated,
@@ -107,7 +110,7 @@ const (
 	triggerColumns = `
 		trigger_id
 		,trigger_uid
-		,trigger_enabled
+		,trigger_disabled
 		,trigger_actions
 		,trigger_description
 		,trigger_pipeline_id
@@ -139,7 +142,8 @@ func (s *triggerStore) Create(ctx context.Context, t *types.Trigger) error {
 		trigger_uid
 		,trigger_description
 		,trigger_actions
-		,trigger_enabled
+		,trigger_disabled
+		,trigger_type
 		,trigger_secret
 		,trigger_created_by
 		,trigger_pipeline_id
@@ -151,7 +155,8 @@ func (s *triggerStore) Create(ctx context.Context, t *types.Trigger) error {
 		:trigger_uid
 		,:trigger_description
 		,:trigger_actions
-		,:trigger_enabled
+		,:trigger_disabled
+		,:trigger_type
 		,:trigger_secret
 		,:trigger_created_by
 		,:trigger_pipeline_id
@@ -286,7 +291,7 @@ func (s *triggerStore) ListAllEnabled(
 	stmt := database.Builder.
 		Select(triggerColumns).
 		From("triggers").
-		Where("trigger_repo_id = ? AND trigger_enabled = true", fmt.Sprint(repoID))
+		Where("trigger_repo_id = ? AND trigger_disabled = false", fmt.Sprint(repoID))
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {

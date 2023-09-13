@@ -1,19 +1,9 @@
-DROP TABLE IF exists pipelines;
-DROP TABLE IF exists executions;
-DROP TABLE IF exists stages;
-DROP TABLE IF exists secrets;
-DROP TABLE IF exists steps;
-DROP TABLE IF exists logs;
-DROP TABLE IF exists plugins;
-DROP TABLE IF exists connectors;
-DROP TABLE IF exists templates;
-DROP TABLE IF exists triggers;
-
 CREATE TABLE pipelines (
     pipeline_id INTEGER PRIMARY KEY AUTOINCREMENT
     ,pipeline_description TEXT NOT NULL
     ,pipeline_uid TEXT NOT NULL
     ,pipeline_seq INTEGER NOT NULL DEFAULT 0
+    ,pipeline_disabled BOOLEAN NOT NULL
     ,pipeline_repo_id INTEGER NOT NULL
     ,pipeline_default_branch TEXT NOT NULL
     ,pipeline_created_by INTEGER NOT NULL
@@ -107,6 +97,7 @@ CREATE TABLE secrets (
     ,secret_created INTEGER NOT NULL
     ,secret_updated INTEGER NOT NULL
     ,secret_version INTEGER NOT NULL
+    ,secret_created_by INTEGER NOT NULL
 
     -- Ensure unique combination of space ID and UID
     ,UNIQUE (secret_space_id, secret_uid)
@@ -116,6 +107,12 @@ CREATE TABLE secrets (
         REFERENCES spaces (space_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
+
+    -- Foreign key to principals table
+    ,CONSTRAINT fk_secrets_created_by FOREIGN KEY (secret_created_by)
+        REFERENCES principals (principal_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
 );
 
 CREATE TABLE stages (
@@ -249,10 +246,11 @@ CREATE TABLE triggers (
     trigger_id INTEGER PRIMARY KEY AUTOINCREMENT
     ,trigger_uid TEXT NOT NULL
     ,trigger_pipeline_id INTEGER NOT NULL
+    ,trigger_type TEXT NOT NULL
     ,trigger_repo_id INTEGER NOT NULL
     ,trigger_secret TEXT NOT NULL
     ,trigger_description TEXT NOT NULL
-    ,trigger_enabled BOOLEAN NOT NULL
+    ,trigger_disabled BOOLEAN NOT NULL
     ,trigger_created_by INTEGER NOT NULL
     ,trigger_actions TEXT NOT NULL
     ,trigger_created INTEGER NOT NULL
@@ -284,19 +282,3 @@ CREATE TABLE plugins (
     -- Ensure unique plugin names
     ,UNIQUE(plugin_uid)
 );
-
-INSERT INTO plugins (plugin_uid, plugin_description, plugin_logo, plugin_spec)
-VALUES
-    ('plugins/slack', 'A sample slack plugin', 'slack.png',
-    'inputs:
-        channel:
-          type: string
-        token:
-          type: string
-
-     steps:
-     - type: script
-       spec:
-          image: plugins/slack
-       envs:
-          PLUGIN_CHANNEL: <+ inputs.channel >');

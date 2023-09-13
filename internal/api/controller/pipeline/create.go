@@ -85,8 +85,8 @@ func (c *Controller) Create(
 		UID:         "default",
 		Actions: []enum.TriggerAction{enum.TriggerActionPullReqCreated,
 			enum.TriggerActionPullReqReopened, enum.TriggerActionPullReqBranchUpdated},
-		Enabled: true,
-		Version: 0,
+		Disabled: false,
+		Version:  0,
 	}
 	err = c.triggerStore.Create(ctx, trigger)
 	if err != nil {

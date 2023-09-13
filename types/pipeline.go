@@ -8,6 +8,7 @@ type Pipeline struct {
 	ID            int64      `db:"pipeline_id"              json:"id"`
 	Description   string     `db:"pipeline_description"     json:"description"`
 	UID           string     `db:"pipeline_uid"             json:"uid"`
+	Disabled      bool       `db:"pipeline_disabled"        json:"disabled"`
 	CreatedBy     int64      `db:"pipeline_created_by"      json:"created_by"`
 	Seq           int64      `db:"pipeline_seq"             json:"seq"` // last execution number for this pipeline
 	RepoID        int64      `db:"pipeline_repo_id"         json:"repo_id"`

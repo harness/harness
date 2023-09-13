@@ -51,6 +51,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	var secret *types.Secret
 	now := time.Now().UnixMilli()
 	secret = &types.Secret{
+		CreatedBy:   session.Principal.ID,
 		Description: in.Description,
 		Data:        in.Data,
 		SpaceID:     parentSpace.ID,
