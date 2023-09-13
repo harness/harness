@@ -8,8 +8,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/harness/gitness/internal/pipeline/events"
+	"github.com/harness/gitness/internal/pipeline/checks"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/livelog"
 	gitness_store "github.com/harness/gitness/store"
@@ -20,13 +21,15 @@ import (
 )
 
 type teardown struct {
-	Executions store.ExecutionStore
-	Events     events.EventsStreamer
-	Logs       livelog.LogStream
-	Scheduler  scheduler.Scheduler
-	Repos      store.RepoStore
-	Steps      store.StepStore
-	Stages     store.StageStore
+	Executions  store.ExecutionStore
+	Checks      store.CheckStore
+	Pipelines   store.PipelineStore
+	SSEStreamer sse.Streamer
+	Logs        livelog.LogStream
+	Scheduler   scheduler.Scheduler
+	Repos       store.RepoStore
+	Steps       store.StepStore
+	Stages      store.StageStore
 }
 
 func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
@@ -45,7 +48,7 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 		Int64("execution.number", execution.Number).
 		Int64("execution.id", execution.ID).
 		Int64("repo.id", execution.RepoID).
-		Str("stage.status", stage.Status).
+		Str("stage.status", string(stage.Status)).
 		Logger()
 
 	repo, err := t.Repos.Find(noContext, execution.RepoID)
@@ -134,10 +137,21 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 	}
 
 	execution.Stages = stages
-	err = t.Events.Publish(noContext, repo.ParentID, executionEvent(enum.ExecutionCompleted, execution))
+	err = t.SSEStreamer.Publish(noContext, repo.ParentID, enum.SSETypeExecutionCompleted, execution)
 	if err != nil {
 		log.Warn().Err(err).
 			Msg("manager: could not publish execution completed event")
+	}
+
+	pipeline, err := t.Pipelines.Find(ctx, execution.PipelineID)
+	if err != nil {
+		log.Error().Err(err).Msg("manager: cannot find pipeline")
+		return err
+	}
+	// try to write to the checks store - if not, log an error and continue
+	err = checks.Write(ctx, t.Checks, execution, pipeline)
+	if err != nil {
+		log.Error().Err(err).Msg("manager: could not write to checks store")
 	}
 
 	return nil

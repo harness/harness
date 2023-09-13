@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Classes, Menu, MenuItem, Popover, Position } from '@blueprintjs/core'
+import { Classes, Intent, Menu, MenuItem, Popover, Position } from '@blueprintjs/core'
 import {
   Avatar,
   Button,
@@ -8,18 +8,20 @@ import {
   FlexExpander,
   Layout,
   PageBody,
+  StringSubstitute,
   TableV2 as Table,
   Text,
-  Utils
+  Utils,
+  useToaster
 } from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
 import { Link, useHistory } from 'react-router-dom'
-import { useGet } from 'restful-react'
+import { useGet, useMutate } from 'restful-react'
 import { Calendar, Timer, GitFork } from 'iconoir-react'
-import { useStrings } from 'framework/strings'
+import { String, useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
@@ -32,11 +34,12 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
-import { getStatus } from 'utils/PipelineUtils'
+import { getStatus } from 'utils/ExecutionUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import useNewPipelineModal from 'components/NewPipelineModal/NewPipelineModal'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
-import usePipelineEventStream from 'hooks/usePipelineEventStream'
+import useSpaceSSE from 'hooks/useSpaceSSE'
+import { useConfirmAct } from 'hooks/useConfirmAction'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
 
@@ -74,13 +77,12 @@ const PipelineList = () => {
     }
   }, [pipelines])
 
-  usePipelineEventStream({
+  useSpaceSSE({
     space,
-    onEvent: (data: any) => {
+    events: ['execution_updated', 'execution_completed'],
+    onEvent: data => {
       // should I include pipeline id here? what if a new pipeline is created? coould check for ids that are higher than the lowest id on the page?
-      if (
-        pipelines?.some(pipeline => pipeline.repo_id === data.data?.repo_id && pipeline.id === data.data?.pipeline_id)
-      ) {
+      if (pipelines?.some(pipeline => pipeline.repo_id === data?.repo_id && pipeline.id === data?.pipeline_id)) {
         //TODO - revisit full refresh - can I use the message to update the execution?
         pipelinesRefetch()
       }
@@ -206,6 +208,15 @@ const PipelineList = () => {
           const [menuOpen, setMenuOpen] = useState(false)
           const record = row.original
           const { uid } = record
+          const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
+
+          const confirmDeletePipeline = useConfirmAct()
+          const { showSuccess, showError } = useToaster()
+          const { mutate: deletePipeline } = useMutate<TypesPipeline>({
+            verb: 'DELETE',
+            path: `/api/v1/repos/${repoPath}/+/pipelines/${uid}`
+          })
+
           return (
             <Popover
               isOpen={menuOpen}
@@ -229,8 +240,53 @@ const PipelineList = () => {
                   text={getString('edit')}
                   onClick={e => {
                     e.stopPropagation()
+                    history.push(routes.toCODEPipelineEdit({ repoPath, pipeline: uid as string }))
+                  }}
+                />
+                <MenuItem
+                  icon="delete"
+                  text={getString('delete')}
+                  onClick={e => {
+                    e.stopPropagation()
+                    confirmDeletePipeline({
+                      title: getString('pipelines.deletePipelineButton'),
+                      confirmText: getString('delete'),
+                      intent: Intent.DANGER,
+                      message: (
+                        <String
+                          useRichText
+                          stringID="pipelines.deletePipelineConfirm"
+                          vars={{ pipeline: row.original.uid }}
+                        />
+                      ),
+                      action: async () => {
+                        deletePipeline({})
+                          .then(() => {
+                            showSuccess(
+                              <StringSubstitute
+                                str={getString('pipelines.deletePipelineSuccess')}
+                                vars={{
+                                  pipeline: row.original.uid
+                                }}
+                              />,
+                              5000
+                            )
+                            pipelinesRefetch()
+                          })
+                          .catch((pipelineDeleteErr: unknown) => {
+                            showError(getErrorMessage(pipelineDeleteErr), 0, 'pipelines.deletePipelineError')
+                          })
+                      }
+                    })
+                  }}
+                />
+                <MenuItem
+                  icon="settings"
+                  text={getString('settings')}
+                  onClick={e => {
+                    e.stopPropagation()
                     history.push(
-                      routes.toCODEPipelineEdit({ repoPath: repoMetadata?.path || '', pipeline: uid as string })
+                      routes.toCODEPipelineSettings({ repoPath: repoMetadata?.path || '', pipeline: uid as string })
                     )
                   }}
                 />
@@ -240,7 +296,7 @@ const PipelineList = () => {
         }
       }
     ],
-    [getString, repoMetadata?.path, routes, searchTerm]
+    [getString, history, repoMetadata?.path, routes, searchTerm]
   )
 
   return (
@@ -252,7 +308,7 @@ const PipelineList = () => {
       />
       <PageBody
         className={cx({ [css.withError]: !!error })}
-        error={error ? getErrorMessage(error || pipelinesError) : null}
+        error={error || pipelinesError ? getErrorMessage(error || pipelinesError) : null}
         retryOnError={voidFn(refetch)}
         noData={{
           when: () => pipelines?.length === 0 && searchTerm === undefined,

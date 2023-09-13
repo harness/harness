@@ -126,11 +126,12 @@ export const DefaultMenu: React.FC = () => {
                   })}
                 />
               )}
+
               <NavMenuItem
-                data-code-repo-section="pipelines"
+                data-code-repo-section="settings"
                 isSubLink
-                label={getString('pageTitle.pipelines')}
-                to={routes.toCODEPipelines({
+                label={getString('settings')}
+                to={routes.toCODESettings({
                   repoPath
                 })}
               />

@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	sqlxtypes "github.com/jmoiron/sqlx/types"
 	"github.com/pkg/errors"
@@ -46,7 +47,7 @@ func convertFromNullStep(nullstep *nullstep) (*types.Step, error) {
 		StageID:   nullstep.StageID.Int64,
 		Number:    nullstep.Number.Int64,
 		Name:      nullstep.Name.String,
-		Status:    nullstep.Status.String,
+		Status:    enum.ParseCIStatus(nullstep.Status.String),
 		Error:     nullstep.Error.String,
 		ErrIgnore: nullstep.ErrIgnore.Bool,
 		ExitCode:  int(nullstep.ExitCode.Int64),

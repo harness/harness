@@ -14,23 +14,18 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-type UpdateInput struct {
-	Status string `json:"status"`
-}
-
-func (c *Controller) Update(
+func (c *Controller) Cancel(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	pipelineUID string,
 	executionNum int64,
-	in *UpdateInput) (*types.Execution, error) {
+) (*types.Execution, error) {
 	repo, err := c.repoStore.FindByRef(ctx, repoRef)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find repo by ref: %w", err)
 	}
-
-	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineUID, enum.PermissionPipelineEdit)
+	err = apiauth.CheckPipeline(ctx, c.authorizer, session, repo.Path, pipelineUID, enum.PermissionPipelineExecute)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
@@ -42,16 +37,13 @@ func (c *Controller) Update(
 
 	execution, err := c.executionStore.FindByNumber(ctx, pipeline.ID, executionNum)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find execution: %w", err)
+		return nil, fmt.Errorf("failed to find execution %d: %w", executionNum, err)
 	}
 
-	return c.executionStore.UpdateOptLock(ctx,
-		execution, func(original *types.Execution) error {
-			// update values only if provided
-			if in.Status != "" {
-				original.Status = in.Status
-			}
+	err = c.canceler.Cancel(ctx, repo, execution)
+	if err != nil {
+		return nil, fmt.Errorf("unable to cancel execution: %w", err)
+	}
 
-			return nil
-		})
+	return execution, nil
 }

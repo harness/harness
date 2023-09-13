@@ -6,6 +6,7 @@ package execution
 
 import (
 	"github.com/harness/gitness/internal/auth/authz"
+	"github.com/harness/gitness/internal/pipeline/canceler"
 	"github.com/harness/gitness/internal/pipeline/commit"
 	"github.com/harness/gitness/internal/pipeline/triggerer"
 	"github.com/harness/gitness/internal/store"
@@ -17,6 +18,7 @@ type Controller struct {
 	db             *sqlx.DB
 	authorizer     authz.Authorizer
 	executionStore store.ExecutionStore
+	canceler       canceler.Canceler
 	commitService  commit.CommitService
 	triggerer      triggerer.Triggerer
 	repoStore      store.RepoStore
@@ -28,6 +30,7 @@ func NewController(
 	db *sqlx.DB,
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
+	canceler canceler.Canceler,
 	commitService commit.CommitService,
 	triggerer triggerer.Triggerer,
 	repoStore store.RepoStore,
@@ -38,6 +41,7 @@ func NewController(
 		db:             db,
 		authorizer:     authorizer,
 		executionStore: executionStore,
+		canceler:       canceler,
 		commitService:  commitService,
 		triggerer:      triggerer,
 		repoStore:      repoStore,

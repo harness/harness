@@ -53,3 +53,11 @@ type ReqCheck struct {
 type CheckPayloadText struct {
 	Details string `json:"details"`
 }
+
+// CheckPayloadInternal is for internal use for more seamless integration for
+// gitness CI status checks.
+type CheckPayloadInternal struct {
+	Number     int64 `json:"execution_number"`
+	RepoID     int64 `json:"repo_id"`
+	PipelineID int64 `json:"pipeline_id"`
+}

@@ -4,7 +4,7 @@ export const getStatus = (status: string | undefined): ExecutionState => {
   switch (status) {
     case 'success':
       return ExecutionState.SUCCESS
-    case 'failed':
+    case 'failure':
       return ExecutionState.FAILURE
     case 'running':
       return ExecutionState.RUNNING

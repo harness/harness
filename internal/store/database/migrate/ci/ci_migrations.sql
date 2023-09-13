@@ -8,6 +8,7 @@ DROP TABLE IF exists plugins;
 DROP TABLE IF exists connectors;
 DROP TABLE IF exists templates;
 DROP TABLE IF exists triggers;
+
 CREATE TABLE pipelines (
     pipeline_id INTEGER PRIMARY KEY AUTOINCREMENT
     ,pipeline_description TEXT NOT NULL
@@ -15,6 +16,7 @@ CREATE TABLE pipelines (
     ,pipeline_seq INTEGER NOT NULL DEFAULT 0
     ,pipeline_repo_id INTEGER NOT NULL
     ,pipeline_default_branch TEXT NOT NULL
+    ,pipeline_created_by INTEGER NOT NULL
     ,pipeline_config_path TEXT NOT NULL
     ,pipeline_created INTEGER NOT NULL
     ,pipeline_updated INTEGER NOT NULL
@@ -28,12 +30,19 @@ CREATE TABLE pipelines (
         REFERENCES repositories (repo_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
+
+    -- Foreign key to principals table
+    ,CONSTRAINT fk_pipelines_created_by FOREIGN KEY (pipeline_created_by)
+        REFERENCES principals (principal_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
 );
 
 CREATE TABLE executions (
     execution_id INTEGER PRIMARY KEY AUTOINCREMENT
     ,execution_pipeline_id INTEGER NOT NULL
     ,execution_repo_id INTEGER NOT NULL
+    ,execution_created_by INTEGER NOT NULL
     ,execution_trigger TEXT NOT NULL
     ,execution_number INTEGER NOT NULL
     ,execution_parent INTEGER NOT NULL
@@ -81,6 +90,12 @@ CREATE TABLE executions (
         REFERENCES repositories (repo_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
+
+    -- Foreign key to principals table
+    ,CONSTRAINT fk_executions_created_by FOREIGN KEY (execution_created_by)
+        REFERENCES principals (principal_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
 );
 
 CREATE TABLE secrets (
@@ -187,34 +202,6 @@ CREATE TABLE logs (
         REFERENCES steps (step_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
-);
-
--- Insert some pipelines
-INSERT INTO pipelines (
-    pipeline_id, pipeline_description, pipeline_uid, pipeline_seq,
-    pipeline_repo_id, pipeline_default_branch,
-    pipeline_config_path, pipeline_created, pipeline_updated, pipeline_version
-) VALUES (
-    1, 'Sample Pipeline 1', 'pipeline_uid_1', 2, 1,
-    'main', 'config_path_1', 1678932000, 1678932100, 1
-);
-
-INSERT INTO pipelines (
-    pipeline_id, pipeline_description, pipeline_uid, pipeline_seq,
-    pipeline_repo_id, pipeline_default_branch,
-    pipeline_config_path, pipeline_created, pipeline_updated, pipeline_version
-) VALUES (
-    2, 'Sample Pipeline 2', 'pipeline_uid_2', 0, 1,
-    'develop', 'config_path_2', 1678932200, 1678932300, 1
-);
-
-INSERT INTO pipelines (
-    pipeline_id, pipeline_description, pipeline_uid, pipeline_seq,
-    pipeline_repo_id, pipeline_default_branch,
-    pipeline_config_path, pipeline_created, pipeline_updated, pipeline_version
-) VALUES (
-    3, 'Sample Pipeline 3', 'pipeline_uid_3', 0, 1,
-    'develop', 'config_path_2', 1678932200000, 1678932300000, 1
 );
 
 CREATE TABLE connectors (

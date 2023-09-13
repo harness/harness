@@ -113,7 +113,7 @@ export const Conversation: React.FC<ConversationProps> = ({
         const allCommentBlock = blocks.filter(_activities => !isSystemComment(_activities))
         const userCommentsOnly = allCommentBlock.filter(_activities => {
           const userCommentReply = _activities.filter(
-            authorIsUser => authorIsUser.payload?.author?.uid === currentUser.uid
+            authorIsUser => currentUser?.uid && authorIsUser.payload?.author?.uid === currentUser?.uid
           )
           return userCommentReply.length !== 0
         })
@@ -122,7 +122,7 @@ export const Conversation: React.FC<ConversationProps> = ({
     }
 
     return blocks
-  }, [activities, dateOrderSort, activityFilter, currentUser.uid])
+  }, [activities, dateOrderSort, activityFilter, currentUser?.uid])
   const path = useMemo(
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata.number}/comments`,
     [repoMetadata.path, pullRequestMetadata.number]

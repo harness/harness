@@ -10,6 +10,7 @@ import (
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/client"
@@ -23,7 +24,7 @@ func convertToDroneStage(stage *types.Stage) *drone.Stage {
 		Name:      stage.Name,
 		Kind:      stage.Kind,
 		Type:      stage.Type,
-		Status:    stage.Status,
+		Status:    string(stage.Status),
 		Error:     stage.Error,
 		ErrIgnore: stage.ErrIgnore,
 		ExitCode:  stage.ExitCode,
@@ -34,10 +35,10 @@ func convertToDroneStage(stage *types.Stage) *drone.Stage {
 		Kernel:    stage.Kernel,
 		Limit:     stage.Limit,
 		LimitRepo: stage.LimitRepo,
-		Started:   stage.Started,
-		Stopped:   stage.Stopped,
-		Created:   stage.Created,
-		Updated:   stage.Updated,
+		Started:   stage.Started / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Stopped:   stage.Stopped / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Created:   stage.Created / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Updated:   stage.Updated / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
 		Version:   stage.Version,
 		OnSuccess: stage.OnSuccess,
 		OnFailure: stage.OnFailure,
@@ -61,12 +62,12 @@ func convertToDroneStep(step *types.Step) *drone.Step {
 		StageID:   step.StageID,
 		Number:    int(step.Number),
 		Name:      step.Name,
-		Status:    step.Status,
+		Status:    string(step.Status),
 		Error:     step.Error,
 		ErrIgnore: step.ErrIgnore,
 		ExitCode:  step.ExitCode,
-		Started:   step.Started,
-		Stopped:   step.Stopped,
+		Started:   step.Started / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Stopped:   step.Stopped / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
 		Version:   step.Version,
 		DependsOn: step.DependsOn,
 		Image:     step.Image,
@@ -81,12 +82,12 @@ func convertFromDroneStep(step *drone.Step) *types.Step {
 		StageID:   step.StageID,
 		Number:    int64(step.Number),
 		Name:      step.Name,
-		Status:    step.Status,
+		Status:    enum.ParseCIStatus(step.Status),
 		Error:     step.Error,
 		ErrIgnore: step.ErrIgnore,
 		ExitCode:  step.ExitCode,
-		Started:   step.Started,
-		Stopped:   step.Stopped,
+		Started:   step.Started * 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Stopped:   step.Stopped * 1e3,
 		Version:   step.Version,
 		DependsOn: step.DependsOn,
 		Image:     step.Image,
@@ -103,12 +104,12 @@ func convertFromDroneSteps(steps []*drone.Step) []*types.Step {
 			StageID:   step.StageID,
 			Number:    int64(step.Number),
 			Name:      step.Name,
-			Status:    step.Status,
+			Status:    enum.ParseCIStatus(step.Status),
 			Error:     step.Error,
 			ErrIgnore: step.ErrIgnore,
 			ExitCode:  step.ExitCode,
-			Started:   step.Started,
-			Stopped:   step.Stopped,
+			Started:   step.Started * 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+			Stopped:   step.Stopped * 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
 			Version:   step.Version,
 			DependsOn: step.DependsOn,
 			Image:     step.Image,
@@ -127,7 +128,7 @@ func convertFromDroneStage(stage *drone.Stage) *types.Stage {
 		Name:        stage.Name,
 		Kind:        stage.Kind,
 		Type:        stage.Type,
-		Status:      stage.Status,
+		Status:      enum.ParseCIStatus(stage.Status),
 		Error:       stage.Error,
 		ErrIgnore:   stage.ErrIgnore,
 		ExitCode:    stage.ExitCode,
@@ -138,8 +139,8 @@ func convertFromDroneStage(stage *drone.Stage) *types.Stage {
 		Kernel:      stage.Kernel,
 		Limit:       stage.Limit,
 		LimitRepo:   stage.LimitRepo,
-		Started:     stage.Started,
-		Stopped:     stage.Stopped,
+		Started:     stage.Started * 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Stopped:     stage.Stopped * 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
 		Version:     stage.Version,
 		OnSuccess:   stage.OnSuccess,
 		OnFailure:   stage.OnFailure,
@@ -164,7 +165,7 @@ func convertToDroneBuild(execution *types.Execution) *drone.Build {
 		Trigger:      execution.Trigger,
 		Number:       execution.Number,
 		Parent:       execution.Parent,
-		Status:       execution.Status,
+		Status:       string(execution.Status),
 		Error:        execution.Error,
 		Event:        execution.Event,
 		Action:       execution.Action,
@@ -188,10 +189,10 @@ func convertToDroneBuild(execution *types.Execution) *drone.Build {
 		Deploy:       execution.Deploy,
 		DeployID:     execution.DeployID,
 		Debug:        execution.Debug,
-		Started:      execution.Started,
-		Finished:     execution.Finished,
-		Created:      execution.Created,
-		Updated:      execution.Updated,
+		Started:      execution.Started / 1e3,  // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Finished:     execution.Finished / 1e3, // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Created:      execution.Created / 1e3,  // Drone uses Unix() timestamps whereas we use UnixMilli()
+		Updated:      execution.Updated / 1e3,  // Drone uses Unix() timestamps whereas we use UnixMilli()
 		Version:      execution.Version,
 	}
 }

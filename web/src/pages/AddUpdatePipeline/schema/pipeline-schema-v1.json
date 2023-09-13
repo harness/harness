@@ -1,18 +1,142 @@
 {
   "definitions": {
-    "Pipeline": {
-      "title": "Pipeline",
-      "description": "Pipeline defines the pipeline execution.",
+    "Config": {
+      "title": "Config",
+      "description": "Config defines the a resource configuration.",
       "type": "object",
       "properties": {
         "version": {
           "description": "Version defines the schema version.",
           "type": ["string", "number"]
         },
-        "name": {
-          "description": "Pipeline provides the pipeline name.",
-          "type": "string"
+        "kind": {
+          "type": "string",
+          "description": "Type defines the schema type.",
+          "enum": ["pipeline", "plugin", "template"]
         },
+        "type": {
+          "type": "string",
+          "description": "Type defines the schema type.",
+          "enum": ["pipeline", "stage", "step"]
+        },
+        "name": {
+          "type": "string",
+          "description": "Name defines an optional resource name."
+        }
+      },
+      "required": ["kind"],
+      "oneOf": [
+        {
+          "allOf": [
+            {
+              "properties": {
+                "kind": {
+                  "const": "pipeline"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/Pipeline"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "kind": {
+                  "const": "template"
+                },
+                "type": {
+                  "const": "stage"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/TemplateStage"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "kind": {
+                  "const": "template"
+                },
+                "type": {
+                  "const": "step"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/TemplateStep"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "kind": {
+                  "const": "plugin"
+                },
+                "type": {
+                  "const": "step"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/PluginStep"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "kind": {
+                  "const": "plugin"
+                },
+                "type": {
+                  "const": "stage"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/PluginStage"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "x-go-skip": true,
+      "x-file": "config.yaml"
+    },
+    "Pipeline": {
+      "title": "Pipeline",
+      "description": "Pipeline defines the pipeline execution.",
+      "type": "object",
+      "properties": {
         "stages": {
           "type": "array",
           "description": "Stages defines a list of pipeline stages.",
@@ -32,7 +156,7 @@
           "description": "Options defines global configuration options."
         }
       },
-      "required": ["version", "stages"],
+      "required": ["stages"],
       "examples": [
         {
           "version": 1,
@@ -105,8 +229,8 @@
           "description": "The stage conditional logic.",
           "$ref": "#/definitions/When"
         },
-        "on": {
-          "$ref": "#/definitions/On"
+        "failure": {
+          "$ref": "#/definitions/FailureList"
         }
       },
       "oneOf": [
@@ -435,47 +559,26 @@
       "x-go-skip": true,
       "x-file": "when_expr.yaml"
     },
-    "On": {
-      "title": "On",
-      "type": "object",
-      "properties": {
-        "failure": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/Failure"
-            },
-            {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Failure"
-              }
-            }
-          ]
+    "FailureList": {
+      "title": "FailureList",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/Failure"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Failure"
+          }
         }
-      },
+      ],
       "x-go-skip": true,
-      "x-file": "on.yaml"
+      "x-file": "failure_list.yaml"
     },
     "Failure": {
       "title": "Failure",
       "type": "object",
-      "description": "Failure defines a failure strategy.",
       "properties": {
-        "type": {
-          "description": "Type defines the failure strategy type.",
-          "type": "string",
-          "enum": [
-            "abort",
-            "ignore",
-            "manual-intervention",
-            "retry",
-            "success",
-            "stage-rollback",
-            "pipeline-rollback",
-            "retry-step-group",
-            "fail"
-          ]
-        },
         "errors": {
           "description": "Errors specifies the types of errors.",
           "type": "array",
@@ -497,9 +600,125 @@
               "user-mark-fail"
             ]
           }
+        },
+        "action": {
+          "$ref": "#/definitions/FailureAction"
+        }
+      },
+      "x-file": "failure.yaml"
+    },
+    "FailureAction": {
+      "title": "FailureAction",
+      "type": "object",
+      "description": "Failure defines a failure strategy.",
+      "properties": {
+        "type": {
+          "description": "Type defines the failure strategy type.",
+          "type": "string",
+          "enum": [
+            "abort",
+            "fail",
+            "ignore",
+            "manual-intervention",
+            "pipeline-rollback",
+            "retry",
+            "retry-step-group",
+            "stage-rollback",
+            "success"
+          ]
         }
       },
       "oneOf": [
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "success"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "fail"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "retry-step-group"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "stage-rollback"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "pipeline-rollback"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
         {
           "allOf": [
             {
@@ -573,7 +792,13 @@
           ]
         }
       ],
-      "x-file": "failure.yaml"
+      "x-file": "failure_action.yaml"
+    },
+    "EmptySpec": {
+      "title": "EmptySpec",
+      "type": "object",
+      "properties": {},
+      "x-file": "empty_spec.yaml"
     },
     "Abort": {
       "title": "Abort",
@@ -611,18 +836,169 @@
             }
           ]
         },
-        "on": {
-          "$ref": "#/definitions/On"
+        "failure": {
+          "$ref": "#/definitions/RetryFailure"
         }
       },
       "type": "object",
       "x-file": "failure_retry.yaml"
     },
+    "RetryFailure": {
+      "title": "RetryFailure",
+      "type": "object",
+      "properties": {
+        "action": {
+          "$ref": "#/definitions/RetryFailureAction"
+        }
+      },
+      "x-file": "retry_failure.yaml"
+    },
+    "RetryFailureAction": {
+      "title": "RetryFailureAction",
+      "type": "object",
+      "description": "Failure action on failure for all retries",
+      "properties": {
+        "type": {
+          "description": "Type defines the failure strategy type.",
+          "type": "string",
+          "enum": ["abort", "fail", "ignore", "manual-intervention", "pipeline-rollback", "stage-rollback", "success"]
+        }
+      },
+      "oneOf": [
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "success"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "fail"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "stage-rollback"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "pipeline-rollback"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "abort"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/Abort"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "ignore"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/Ignore"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "manual-intervention"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/ManualIntervention"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "x-file": "retry_failure_action.yaml"
+    },
     "ManualIntervention": {
       "title": "ManualIntervention",
       "properties": {
-        "on": {
-          "$ref": "#/definitions/On"
+        "timeout_action": {
+          "$ref": "#/definitions/TimeoutAction"
         },
         "timeout": {
           "format": "duration",
@@ -632,6 +1008,129 @@
       },
       "type": "object",
       "x-file": "failure_manual.yaml"
+    },
+    "TimeoutAction": {
+      "title": "TimeoutAction",
+      "type": "object",
+      "description": "Manual intervention for timeout failure action",
+      "properties": {
+        "type": {
+          "description": "Type defines the failure strategy type.",
+          "type": "string",
+          "enum": ["abort", "ignore", "success", "stage-rollback", "pipeline-rollback", "fail"]
+        }
+      },
+      "oneOf": [
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "success"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "fail"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "stage-rollback"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "pipeline-rollback"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/EmptySpec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "abort"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/Abort"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "ignore"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/Ignore"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "x-file": "timeout_action.yaml"
     },
     "StageCI": {
       "properties": {
@@ -1080,8 +1579,8 @@
           "description": "The stage conditional logic.",
           "$ref": "#/definitions/When"
         },
-        "on": {
-          "$ref": "#/definitions/On"
+        "failure": {
+          "$ref": "#/definitions/FailureList"
         }
       },
       "oneOf": [
@@ -2138,6 +2637,10 @@
           },
           "description": "Enum defines a list of accepted input values.",
           "x-go-type": "[]string"
+        },
+        "mask": {
+          "type": "boolean",
+          "description": "Mask indicates the input should be masked."
         }
       },
       "x-file": "input.yaml"
@@ -2362,11 +2865,115 @@
         }
       },
       "x-file": "status.yaml"
+    },
+    "TemplateStage": {
+      "title": "TemplateStage",
+      "description": "TemplateStage defines a stage-level template",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The template name."
+        },
+        "description": {
+          "type": "string",
+          "description": "The template description."
+        },
+        "stage": {
+          "$ref": "#/definitions/Stage"
+        },
+        "inputs": {
+          "type": "object",
+          "description": "Inputs defines the template input parameters.",
+          "additionalProperties": {
+            "$ref": "#/definitions/Input"
+          }
+        }
+      },
+      "x-file": "template_stage.yaml"
+    },
+    "TemplateStep": {
+      "title": "TemplateStep",
+      "description": "TemplateStep defines a step-level template",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The template name."
+        },
+        "description": {
+          "type": "string",
+          "description": "The template description."
+        },
+        "step": {
+          "$ref": "#/definitions/Step"
+        },
+        "inputs": {
+          "type": "object",
+          "description": "Inputs defines the template input parameters.",
+          "additionalProperties": {
+            "$ref": "#/definitions/Input"
+          }
+        }
+      },
+      "x-file": "template_step.yaml"
+    },
+    "PluginStep": {
+      "title": "PluginStep",
+      "description": "PluginStep defines a step-level plugin",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The plugin name."
+        },
+        "description": {
+          "type": "string",
+          "description": "The plugin description."
+        },
+        "step": {
+          "$ref": "#/definitions/Step"
+        },
+        "inputs": {
+          "type": "object",
+          "description": "Inputs defines the plugin input parameters.",
+          "additionalProperties": {
+            "$ref": "#/definitions/Input"
+          }
+        }
+      },
+      "x-file": "plugin_step.yaml"
+    },
+    "PluginStage": {
+      "title": "PluginStage",
+      "description": "PluginStage defines a stage-level plugin",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The plugin name."
+        },
+        "description": {
+          "type": "string",
+          "description": "The plugin description."
+        },
+        "stage": {
+          "$ref": "#/definitions/Stage"
+        },
+        "inputs": {
+          "type": "object",
+          "description": "Inputs defines the plugin input parameters.",
+          "additionalProperties": {
+            "$ref": "#/definitions/Input"
+          }
+        }
+      },
+      "x-file": "plugin_stage.yaml"
     }
   },
   "oneOf": [
     {
-      "$ref": "#/definitions/Pipeline"
+      "$ref": "#/definitions/Config"
     }
   ]
 }

@@ -8,8 +8,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
 
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
@@ -102,7 +100,8 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 func (e *embedded) Update(ctx context.Context, stage *drone.Stage) error {
 	var err error
 	convertedStage := convertFromDroneStage(stage)
-	if stage.Status == enum.CIStatusPending || stage.Status == enum.CIStatusRunning {
+	status := enum.ParseCIStatus(stage.Status)
+	if status == enum.CIStatusPending || status == enum.CIStatusRunning {
 		err = e.manager.BeforeStage(ctx, convertedStage)
 	} else {
 		err = e.manager.AfterStage(ctx, convertedStage)
@@ -115,7 +114,8 @@ func (e *embedded) Update(ctx context.Context, stage *drone.Stage) error {
 func (e *embedded) UpdateStep(ctx context.Context, step *drone.Step) error {
 	var err error
 	convertedStep := convertFromDroneStep(step)
-	if step.Status == enum.CIStatusPending || step.Status == enum.CIStatusRunning {
+	status := enum.ParseCIStatus(step.Status)
+	if status == enum.CIStatusPending || status == enum.CIStatusRunning {
 		err = e.manager.BeforeStep(ctx, convertedStep)
 	} else {
 		err = e.manager.AfterStep(ctx, convertedStep)
@@ -125,15 +125,13 @@ func (e *embedded) UpdateStep(ctx context.Context, step *drone.Step) error {
 }
 
 // Watch watches for build cancellation requests.
-func (e *embedded) Watch(ctx context.Context, stage int64) (bool, error) {
-	// Implement Watch logic here
-	return false, errors.New("Not implemented")
+func (e *embedded) Watch(ctx context.Context, executionID int64) (bool, error) {
+	return e.manager.Watch(ctx, executionID)
 }
 
 // Batch batch writes logs to the streaming logs.
 func (e *embedded) Batch(ctx context.Context, step int64, lines []*drone.Line) error {
 	for _, l := range lines {
-		fmt.Println("line is: ", l)
 		line := convertFromDroneLine(l)
 		err := e.manager.Write(ctx, step, line)
 		if err != nil {

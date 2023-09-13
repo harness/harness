@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/internal/bootstrap"
 	gitevents "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/pipeline/triggerer"
 	"github.com/harness/gitness/types/enum"
@@ -17,13 +18,14 @@ import (
 func (s *Service) handleEventTagCreated(ctx context.Context,
 	event *events.Event[*gitevents.TagCreatedPayload]) error {
 	hook := &triggerer.Hook{
-		Trigger: enum.TriggerHook,
-		Action:  enum.TriggerActionTagCreated,
-		Ref:     event.Payload.Ref,
-		Before:  event.Payload.SHA,
-		After:   event.Payload.SHA,
-		Source:  event.Payload.Ref,
-		Target:  event.Payload.Ref,
+		Trigger:     enum.TriggerHook,
+		Action:      enum.TriggerActionTagCreated,
+		TriggeredBy: bootstrap.NewSystemServiceSession().Principal.ID,
+		Ref:         event.Payload.Ref,
+		Before:      event.Payload.SHA,
+		After:       event.Payload.SHA,
+		Source:      event.Payload.Ref,
+		Target:      event.Payload.Ref,
 	}
 	err := s.augmentCommitInfo(ctx, hook, event.Payload.RepoID, event.Payload.SHA)
 	if err != nil {
@@ -35,13 +37,14 @@ func (s *Service) handleEventTagCreated(ctx context.Context,
 func (s *Service) handleEventTagUpdated(ctx context.Context,
 	event *events.Event[*gitevents.TagUpdatedPayload]) error {
 	hook := &triggerer.Hook{
-		Trigger: enum.TriggerHook,
-		Action:  enum.TriggerActionTagUpdated,
-		Ref:     event.Payload.Ref,
-		Before:  event.Payload.OldSHA,
-		After:   event.Payload.NewSHA,
-		Source:  event.Payload.Ref,
-		Target:  event.Payload.Ref,
+		Trigger:     enum.TriggerHook,
+		Action:      enum.TriggerActionTagUpdated,
+		TriggeredBy: bootstrap.NewSystemServiceSession().Principal.ID,
+		Ref:         event.Payload.Ref,
+		Before:      event.Payload.OldSHA,
+		After:       event.Payload.NewSHA,
+		Source:      event.Payload.Ref,
+		Target:      event.Payload.Ref,
 	}
 	err := s.augmentCommitInfo(ctx, hook, event.Payload.RepoID, event.Payload.NewSHA)
 	if err != nil {

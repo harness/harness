@@ -28,15 +28,13 @@ type Repository struct {
 	ForkID        int64  `db:"repo_fork_id"            json:"fork_id"`
 	PullReqSeq    int64  `db:"repo_pullreq_seq"        json:"-"`
 
-	// TODO: Check if we want to keep those values here
 	NumForks       int `db:"repo_num_forks"            json:"num_forks"`
 	NumPulls       int `db:"repo_num_pulls"            json:"num_pulls"`
 	NumClosedPulls int `db:"repo_num_closed_pulls"     json:"num_closed_pulls"`
 	NumOpenPulls   int `db:"repo_num_open_pulls"       json:"num_open_pulls"`
 	NumMergedPulls int `db:"repo_num_merged_pulls"     json:"num_merged_pulls"`
 
-	Importing       bool    `db:"repo_importing"         json:"importing"`
-	ImportingJobUID *string `db:"repo_importing_job_uid" json:"-"`
+	Importing bool `db:"repo_importing"         json:"importing"`
 
 	// git urls
 	GitURL string `db:"-" json:"git_url"`

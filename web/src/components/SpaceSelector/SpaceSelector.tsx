@@ -92,6 +92,11 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
       variation={ButtonVariation.PRIMARY}
       icon="plus"
       onRefetch={voidFn(refetch)}
+      onSubmit={spaceData => {
+        history.push(routes.toCODERepositories({ space: spaceData.path as string }))
+        setOpened(false)
+      }}
+      fromSpace={true}
     />
   )
 
@@ -213,6 +218,10 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
                     variation={ButtonVariation.PRIMARY}
                     icon="plus"
                     onRefetch={voidFn(refetch)}
+                    onSubmit={spaceData => {
+                      history.push(routes.toCODERepositories({ space: spaceData.path as string }))
+                    }}
+                    fromSpace={true}
                   />
                 }
                 message={<Text font={{ variation: FontVariation.H4 }}> {getString('emptySpaceText')}</Text>}

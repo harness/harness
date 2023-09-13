@@ -7,11 +7,11 @@ package repo
 import (
 	"context"
 	"fmt"
+
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/services/importer"
-	"github.com/harness/gitness/internal/services/job"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -43,11 +43,6 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil, err
 	}
 
-	jobUID, err := job.UID()
-	if err != nil {
-		return nil, fmt.Errorf("error creating job UID: %w", err)
-	}
-
 	var repo *types.Repository
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
 		// lock parent space path to ensure it doesn't get updated while we setup new repo
@@ -57,7 +52,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		}
 
 		pathToRepo := paths.Concatinate(spacePath.Value, in.UID)
-		repo = remoteRepository.ToRepo(parentSpace.ID, pathToRepo, in.UID, in.Description, jobUID, &session.Principal)
+		repo = remoteRepository.ToRepo(parentSpace.ID, pathToRepo, in.UID, in.Description, &session.Principal)
 
 		err = c.repoStore.Create(ctx, repo)
 		if err != nil {

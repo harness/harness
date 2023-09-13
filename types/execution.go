@@ -4,15 +4,18 @@
 
 package types
 
+import "github.com/harness/gitness/types/enum"
+
 // Execution represents an instance of a pipeline execution.
 type Execution struct {
 	ID           int64             `json:"-"`
 	PipelineID   int64             `json:"pipeline_id"`
+	CreatedBy    int64             `json:"created_by"`
 	RepoID       int64             `json:"repo_id"`
 	Trigger      string            `json:"trigger,omitempty"`
 	Number       int64             `json:"number"`
 	Parent       int64             `json:"parent,omitempty"`
-	Status       string            `json:"status"`
+	Status       enum.CIStatus     `json:"status"`
 	Error        string            `json:"error,omitempty"`
 	Event        string            `json:"event,omitempty"`
 	Action       string            `json:"action,omitempty"`

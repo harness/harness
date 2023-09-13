@@ -42,7 +42,7 @@ func (c *Controller) Raw(ctx context.Context,
 		IncludeLatestCommit: false,
 	})
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("failed to read tree node: %w", err)
 	}
 
 	// viewing Raw content is only supported for blob content

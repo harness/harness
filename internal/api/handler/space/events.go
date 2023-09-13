@@ -15,9 +15,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// HandleEventsStream returns an http.HandlerFunc that watches for
+// HandleEvents returns an http.HandlerFunc that watches for
 // events on a space
-func HandleEventsStream(spaceCtrl *space.Controller) http.HandlerFunc {
+func HandleEvents(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)

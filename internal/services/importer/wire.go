@@ -8,6 +8,7 @@ import (
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/services/job"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
@@ -27,6 +28,7 @@ func ProvideRepoImporter(
 	encrypter encrypt.Encrypter,
 	scheduler *job.Scheduler,
 	executor *job.Executor,
+	sseStreamer sse.Streamer,
 ) (*Repository, error) {
 	importer := &Repository{
 		defaultBranch: config.Git.DefaultBranch,
@@ -35,6 +37,7 @@ func ProvideRepoImporter(
 		repoStore:     repoStore,
 		encrypter:     encrypter,
 		scheduler:     scheduler,
+		sseStreamer:   sseStreamer,
 	}
 
 	err := executor.Register(jobType, importer)

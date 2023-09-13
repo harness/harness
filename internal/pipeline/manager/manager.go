@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/harness/gitness/internal/pipeline/events"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	urlprovider "github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/livelog"
@@ -63,6 +63,9 @@ type (
 		// Request requests the next available build stage for execution.
 		Request(ctx context.Context, args *Request) (*types.Stage, error)
 
+		// Watch watches for build cancellation requests.
+		Watch(ctx context.Context, executionID int64) (bool, error)
+
 		// Accept accepts the build stage for execution.
 		Accept(ctx context.Context, stage int64, machine string) (*types.Stage, error)
 
@@ -97,8 +100,9 @@ type Manager struct {
 	FileService file.FileService
 	Pipelines   store.PipelineStore
 	urlProvider *urlprovider.Provider
+	Checks      store.CheckStore
 	// Converter  store.ConvertService
-	Events events.EventsStreamer
+	SSEStreamer sse.Streamer
 	// Globals    store.GlobalSecretStore
 	Logs store.LogStore
 	Logz livelog.LogStream
@@ -119,10 +123,11 @@ func New(
 	executionStore store.ExecutionStore,
 	pipelineStore store.PipelineStore,
 	urlProvider *urlprovider.Provider,
-	events events.EventsStreamer,
+	sseStreamer sse.Streamer,
 	fileService file.FileService,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
+	checkStore store.CheckStore,
 	repoStore store.RepoStore,
 	scheduler scheduler.Scheduler,
 	secretStore store.SecretStore,
@@ -135,10 +140,11 @@ func New(
 		Executions:  executionStore,
 		Pipelines:   pipelineStore,
 		urlProvider: urlProvider,
-		Events:      events,
+		SSEStreamer: sseStreamer,
 		FileService: fileService,
 		Logs:        logStore,
 		Logz:        logStream,
+		Checks:      checkStore,
 		Repos:       repoStore,
 		Scheduler:   scheduler,
 		Secrets:     secretStore,
@@ -300,7 +306,7 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 // Before signals the build step is about to start.
 func (m *Manager) BeforeStep(ctx context.Context, step *types.Step) error {
 	log := log.With().
-		Str("step.status", step.Status).
+		Str("step.status", string(step.Status)).
 		Str("step.name", step.Name).
 		Int64("step.id", step.ID).
 		Logger()
@@ -313,11 +319,11 @@ func (m *Manager) BeforeStep(ctx context.Context, step *types.Step) error {
 		return err
 	}
 	updater := &updater{
-		Executions: m.Executions,
-		Events:     m.Events,
-		Repos:      m.Repos,
-		Steps:      m.Steps,
-		Stages:     m.Stages,
+		Executions:  m.Executions,
+		SSEStreamer: m.SSEStreamer,
+		Repos:       m.Repos,
+		Steps:       m.Steps,
+		Stages:      m.Stages,
 	}
 	return updater.do(noContext, step)
 }
@@ -325,7 +331,7 @@ func (m *Manager) BeforeStep(ctx context.Context, step *types.Step) error {
 // After signals the build step is complete.
 func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 	log := log.With().
-		Str("step.status", step.Status).
+		Str("step.status", string(step.Status)).
 		Str("step.name", step.Name).
 		Int64("step.id", step.ID).
 		Logger()
@@ -333,11 +339,11 @@ func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 
 	var retErr error
 	updater := &updater{
-		Executions: m.Executions,
-		Events:     m.Events,
-		Repos:      m.Repos,
-		Steps:      m.Steps,
-		Stages:     m.Stages,
+		Executions:  m.Executions,
+		SSEStreamer: m.SSEStreamer,
+		Repos:       m.Repos,
+		Steps:       m.Steps,
+		Stages:      m.Stages,
 	}
 
 	if err := updater.do(noContext, step); err != nil {
@@ -354,12 +360,14 @@ func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 // BeforeAll signals the build stage is about to start.
 func (m *Manager) BeforeStage(ctx context.Context, stage *types.Stage) error {
 	s := &setup{
-		Executions: m.Executions,
-		Events:     m.Events,
-		Repos:      m.Repos,
-		Steps:      m.Steps,
-		Stages:     m.Stages,
-		Users:      m.Users,
+		Executions:  m.Executions,
+		Checks:      m.Checks,
+		Pipelines:   m.Pipelines,
+		SSEStreamer: m.SSEStreamer,
+		Repos:       m.Repos,
+		Steps:       m.Steps,
+		Stages:      m.Stages,
+		Users:       m.Users,
 	}
 
 	return s.do(noContext, stage)
@@ -368,13 +376,48 @@ func (m *Manager) BeforeStage(ctx context.Context, stage *types.Stage) error {
 // AfterAll signals the build stage is complete.
 func (m *Manager) AfterStage(ctx context.Context, stage *types.Stage) error {
 	t := &teardown{
-		Executions: m.Executions,
-		Events:     m.Events,
-		Logs:       m.Logz,
-		Repos:      m.Repos,
-		Scheduler:  m.Scheduler,
-		Steps:      m.Steps,
-		Stages:     m.Stages,
+		Executions:  m.Executions,
+		Pipelines:   m.Pipelines,
+		Checks:      m.Checks,
+		SSEStreamer: m.SSEStreamer,
+		Logs:        m.Logz,
+		Repos:       m.Repos,
+		Scheduler:   m.Scheduler,
+		Steps:       m.Steps,
+		Stages:      m.Stages,
 	}
 	return t.do(noContext, stage)
+}
+
+// Watch watches for build cancellation requests.
+func (m *Manager) Watch(ctx context.Context, executionID int64) (bool, error) {
+	ok, err := m.Scheduler.Cancelled(ctx, executionID)
+	// we expect a context cancel error here which
+	// indicates a polling timeout. The subscribing
+	// client should look for the context cancel error
+	// and resume polling.
+	if err != nil {
+		return ok, err
+	}
+
+	// // TODO: we should be able to return
+	// // immediately if Cancelled returns true. This requires
+	// // some more testing but would avoid the extra database
+	// // call.
+	// if ok {
+	// 	return ok, err
+	// }
+
+	// if no error is returned we should check
+	// the database to see if the build is complete. If
+	// complete, return true.
+	execution, err := m.Executions.Find(ctx, executionID)
+	if err != nil {
+		log := log.With().
+			Int64("execution.id", executionID).
+			Logger()
+		log.Warn().Msg("manager: cannot find build")
+		return ok, fmt.Errorf("could not find build for cancellation: %w", err)
+	}
+	return execution.Status.IsDone(), nil
 }
