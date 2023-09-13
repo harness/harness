@@ -33,6 +33,7 @@ func ProvideExecutionManager(
 	fileService file.FileService,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
+	checkStore store.CheckStore,
 	repoStore store.RepoStore,
 	scheduler scheduler.Scheduler,
 	secretStore store.SecretStore,
@@ -40,7 +41,7 @@ func ProvideExecutionManager(
 	stepStore store.StepStore,
 	userStore store.PrincipalStore) ExecutionManager {
 	return New(config, executionStore, pipelineStore, urlProvider, sseStreamer, fileService, logStore,
-		logStream, repoStore, scheduler, secretStore, stageStore, stepStore, userStore)
+		logStream, checkStore, repoStore, scheduler, secretStore, stageStore, stepStore, userStore)
 }
 
 // ProvideExecutionClient provides a client implementation to interact with the execution manager.

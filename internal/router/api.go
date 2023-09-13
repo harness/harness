@@ -406,7 +406,6 @@ func setupExecutions(
 		r.Post("/", handlerexecution.HandleCreate(executionCtrl))
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamExecutionNumber), func(r chi.Router) {
 			r.Get("/", handlerexecution.HandleFind(executionCtrl))
-			r.Patch("/", handlerexecution.HandleUpdate(executionCtrl))
 			r.Delete("/", handlerexecution.HandleDelete(executionCtrl))
 			r.Get(
 				fmt.Sprintf("/logs/{%s}/{%s}",

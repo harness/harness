@@ -31,6 +31,7 @@ const (
 	pipelineColumns = `
 	pipeline_id
 	,pipeline_description
+	,pipeline_created_by
 	,pipeline_uid
 	,pipeline_seq
 	,pipeline_repo_id
@@ -87,6 +88,7 @@ func (s *pipelineStore) Create(ctx context.Context, pipeline *types.Pipeline) er
 		,pipeline_uid
 		,pipeline_seq
 		,pipeline_repo_id
+		,pipeline_created_by
 		,pipeline_default_branch
 		,pipeline_config_path
 		,pipeline_created
@@ -97,6 +99,7 @@ func (s *pipelineStore) Create(ctx context.Context, pipeline *types.Pipeline) er
 		:pipeline_uid,
 		:pipeline_seq,
 		:pipeline_repo_id,
+		:pipeline_created_by,
 		:pipeline_default_branch,
 		:pipeline_config_path,
 		:pipeline_created,

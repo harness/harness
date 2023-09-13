@@ -8,6 +8,7 @@ import (
 	"database/sql"
 
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 )
 
 // pipelineExecutionjoin struct represents a joined row between pipelines and executions
@@ -15,6 +16,7 @@ type pipelineExecutionJoin struct {
 	*types.Pipeline
 	ID           sql.NullInt64  `db:"execution_id"`
 	PipelineID   sql.NullInt64  `db:"execution_pipeline_id"`
+	Action       sql.NullString `db:"execution_action"`
 	Message      sql.NullString `db:"execution_message"`
 	After        sql.NullString `db:"execution_after"`
 	RepoID       sql.NullInt64  `db:"execution_repo_id"`
@@ -56,11 +58,12 @@ func convertPipelineJoin(join *pipelineExecutionJoin) *types.Pipeline {
 		ID:           join.ID.Int64,
 		PipelineID:   join.PipelineID.Int64,
 		RepoID:       join.RepoID.Int64,
+		Action:       join.Action.String,
 		Trigger:      join.Trigger.String,
 		Number:       join.Number.Int64,
 		After:        join.After.String,
 		Message:      join.Message.String,
-		Status:       join.Status.String,
+		Status:       enum.ParseCIStatus(join.Status.String),
 		Error:        join.Error.String,
 		Link:         join.Link.String,
 		Timestamp:    join.Timestamp.Int64,

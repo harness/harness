@@ -26,7 +26,7 @@ type updater struct {
 func (u *updater) do(ctx context.Context, step *types.Step) error {
 	log := log.With().
 		Str("step.name", step.Name).
-		Str("step.status", step.Status).
+		Str("step.status", string(step.Status)).
 		Int64("step.id", step.ID).
 		Logger()
 

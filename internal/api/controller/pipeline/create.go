@@ -59,6 +59,7 @@ func (c *Controller) Create(
 		Description:   in.Description,
 		RepoID:        repo.ID,
 		UID:           in.UID,
+		CreatedBy:     session.Principal.ID,
 		Seq:           0,
 		DefaultBranch: in.DefaultBranch,
 		ConfigPath:    in.ConfigPath,

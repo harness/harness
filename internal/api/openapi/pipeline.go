@@ -7,7 +7,6 @@ package openapi
 import (
 	"net/http"
 
-	"github.com/harness/gitness/internal/api/controller/execution"
 	"github.com/harness/gitness/internal/api/controller/pipeline"
 	"github.com/harness/gitness/internal/api/controller/trigger"
 	"github.com/harness/gitness/internal/api/request"
@@ -64,11 +63,6 @@ type getTriggerRequest struct {
 
 type getPipelineRequest struct {
 	pipelineRequest
-}
-
-type updateExecutionRequest struct {
-	executionRequest
-	execution.UpdateInput
 }
 
 type updateTriggerRequest struct {
@@ -204,19 +198,6 @@ func pipelineOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&executionDelete, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
 		"/repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}", executionDelete)
-
-	executionUpdate := openapi3.Operation{}
-	executionUpdate.WithTags("pipeline")
-	executionUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "updateExecution"})
-	_ = reflector.SetRequest(&executionUpdate, new(updateExecutionRequest), http.MethodPatch)
-	_ = reflector.SetJSONResponse(&executionUpdate, new(types.Execution), http.StatusOK)
-	_ = reflector.SetJSONResponse(&executionUpdate, new(usererror.Error), http.StatusBadRequest)
-	_ = reflector.SetJSONResponse(&executionUpdate, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&executionUpdate, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&executionUpdate, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.SetJSONResponse(&executionUpdate, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodPatch,
-		"/repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}", executionUpdate)
 
 	executionList := openapi3.Operation{}
 	executionList.WithTags("pipeline")

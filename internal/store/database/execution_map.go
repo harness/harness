@@ -13,6 +13,7 @@ func mapInternalToExecution(in *execution) (*types.Execution, error) {
 	return &types.Execution{
 		ID:           in.ID,
 		PipelineID:   in.PipelineID,
+		CreatedBy:    in.CreatedBy,
 		RepoID:       in.RepoID,
 		Trigger:      in.Trigger,
 		Number:       in.Number,
@@ -53,6 +54,7 @@ func mapExecutionToInternal(in *types.Execution) *execution {
 	return &execution{
 		ID:           in.ID,
 		PipelineID:   in.PipelineID,
+		CreatedBy:    in.CreatedBy,
 		RepoID:       in.RepoID,
 		Trigger:      in.Trigger,
 		Number:       in.Number,

@@ -13,6 +13,7 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/jmoiron/sqlx"
 	sqlxtypes "github.com/jmoiron/sqlx/types"
@@ -46,7 +47,7 @@ type step struct {
 	Number        int64              `db:"step_number"`
 	ParentGroupID int64              `db:"step_parent_group_id"`
 	Name          string             `db:"step_name"`
-	Status        string             `db:"step_status"`
+	Status        enum.CIStatus      `db:"step_status"`
 	Error         string             `db:"step_error"`
 	ErrIgnore     bool               `db:"step_errignore"`
 	ExitCode      int                `db:"step_exit_code"`

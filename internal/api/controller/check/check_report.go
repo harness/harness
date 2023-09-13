@@ -74,6 +74,10 @@ func (in *ReportInput) Validate() error {
 		}
 
 		in.Payload.Data = payloadDataJSON
+
+	case enum.CheckPayloadKindPipeline:
+		return usererror.BadRequest("Kind cannot be pipeline for external checks")
+
 	}
 
 	return nil

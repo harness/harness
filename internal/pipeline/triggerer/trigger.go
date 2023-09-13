@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/harness/gitness/internal/pipeline/checks"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
 	"github.com/harness/gitness/internal/pipeline/triggerer/dag"
@@ -29,6 +30,7 @@ var _ Triggerer = (*triggerer)(nil)
 type Hook struct {
 	Parent       int64              `json:"parent"`
 	Trigger      string             `json:"trigger"`
+	TriggeredBy  int64              `json:"triggered_by"`
 	Action       enum.TriggerAction `json:"action"`
 	Link         string             `json:"link"`
 	Timestamp    int64              `json:"timestamp"`
@@ -59,6 +61,7 @@ type Triggerer interface {
 
 type triggerer struct {
 	executionStore store.ExecutionStore
+	checkStore     store.CheckStore
 	stageStore     store.StageStore
 	db             *sqlx.DB
 	pipelineStore  store.PipelineStore
@@ -69,6 +72,7 @@ type triggerer struct {
 
 func New(
 	executionStore store.ExecutionStore,
+	checkStore store.CheckStore,
 	stageStore store.StageStore,
 	pipelineStore store.PipelineStore,
 	db *sqlx.DB,
@@ -78,6 +82,7 @@ func New(
 ) *triggerer {
 	return &triggerer{
 		executionStore: executionStore,
+		checkStore:     checkStore,
 		stageStore:     stageStore,
 		scheduler:      scheduler,
 		db:             db,
@@ -279,6 +284,7 @@ func (t *triggerer) Trigger(
 		RepoID:     repo.ID,
 		PipelineID: pipeline.ID,
 		Trigger:    base.Trigger,
+		CreatedBy:  base.TriggeredBy,
 		Number:     pipeline.Seq,
 		Parent:     base.Parent,
 		Status:     enum.CIStatusPending,
@@ -308,8 +314,8 @@ func (t *triggerer) Trigger(
 
 	stages := make([]*types.Stage, len(matched))
 	for i, match := range matched {
-		onSuccess := match.Trigger.Status.Match(enum.CIStatusSuccess)
-		onFailure := match.Trigger.Status.Match(enum.CIStatusFailure)
+		onSuccess := match.Trigger.Status.Match(string(enum.CIStatusSuccess))
+		onFailure := match.Trigger.Status.Match(string(enum.CIStatusFailure))
 		if len(match.Trigger.Status.Include)+len(match.Trigger.Status.Exclude) == 0 {
 			onFailure = false
 		}
@@ -375,6 +381,12 @@ func (t *triggerer) Trigger(
 	if err != nil {
 		log.Error().Err(err).Msg("trigger: cannot create execution")
 		return nil, err
+	}
+
+	// try to write to check store. log on failure but don't error out the execution
+	err = checks.Write(ctx, t.checkStore, execution, pipeline)
+	if err != nil {
+		log.Error().Err(err).Msg("trigger: could not write to check store")
 	}
 
 	// err = t.status.Send(ctx, user, &core.StatusInput{
@@ -453,6 +465,7 @@ func (t *triggerer) createExecutionWithError(
 
 	execution := &types.Execution{
 		RepoID:       pipeline.RepoID,
+		PipelineID:   pipeline.ID,
 		Number:       pipeline.Seq,
 		Parent:       base.Parent,
 		Status:       enum.CIStatusError,
@@ -462,6 +475,7 @@ func (t *triggerer) createExecutionWithError(
 		Link:         base.Link,
 		Title:        base.Title,
 		Message:      base.Message,
+		CreatedBy:    base.TriggeredBy,
 		Before:       base.Before,
 		After:        base.After,
 		Ref:          base.Ref,
@@ -484,6 +498,12 @@ func (t *triggerer) createExecutionWithError(
 	if err != nil {
 		log.Error().Err(err).Msg("trigger: cannot create execution error")
 		return nil, err
+	}
+
+	// try to write to check store, log on failure
+	err = checks.Write(ctx, t.checkStore, execution, pipeline)
+	if err != nil {
+		log.Error().Err(err).Msg("trigger: failed to update check")
 	}
 
 	return execution, nil

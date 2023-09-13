@@ -10,6 +10,7 @@ import (
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/drone/drone-go/drone"
 	"github.com/drone/runner-go/client"
@@ -23,7 +24,7 @@ func convertToDroneStage(stage *types.Stage) *drone.Stage {
 		Name:      stage.Name,
 		Kind:      stage.Kind,
 		Type:      stage.Type,
-		Status:    stage.Status,
+		Status:    string(stage.Status),
 		Error:     stage.Error,
 		ErrIgnore: stage.ErrIgnore,
 		ExitCode:  stage.ExitCode,
@@ -61,7 +62,7 @@ func convertToDroneStep(step *types.Step) *drone.Step {
 		StageID:   step.StageID,
 		Number:    int(step.Number),
 		Name:      step.Name,
-		Status:    step.Status,
+		Status:    string(step.Status),
 		Error:     step.Error,
 		ErrIgnore: step.ErrIgnore,
 		ExitCode:  step.ExitCode,
@@ -81,7 +82,7 @@ func convertFromDroneStep(step *drone.Step) *types.Step {
 		StageID:   step.StageID,
 		Number:    int64(step.Number),
 		Name:      step.Name,
-		Status:    step.Status,
+		Status:    enum.ParseCIStatus(step.Status),
 		Error:     step.Error,
 		ErrIgnore: step.ErrIgnore,
 		ExitCode:  step.ExitCode,
@@ -103,7 +104,7 @@ func convertFromDroneSteps(steps []*drone.Step) []*types.Step {
 			StageID:   step.StageID,
 			Number:    int64(step.Number),
 			Name:      step.Name,
-			Status:    step.Status,
+			Status:    enum.ParseCIStatus(step.Status),
 			Error:     step.Error,
 			ErrIgnore: step.ErrIgnore,
 			ExitCode:  step.ExitCode,
@@ -127,7 +128,7 @@ func convertFromDroneStage(stage *drone.Stage) *types.Stage {
 		Name:        stage.Name,
 		Kind:        stage.Kind,
 		Type:        stage.Type,
-		Status:      stage.Status,
+		Status:      enum.ParseCIStatus(stage.Status),
 		Error:       stage.Error,
 		ErrIgnore:   stage.ErrIgnore,
 		ExitCode:    stage.ExitCode,
@@ -164,7 +165,7 @@ func convertToDroneBuild(execution *types.Execution) *drone.Build {
 		Trigger:      execution.Trigger,
 		Number:       execution.Number,
 		Parent:       execution.Parent,
-		Status:       execution.Status,
+		Status:       string(execution.Status),
 		Error:        execution.Error,
 		Event:        execution.Event,
 		Action:       execution.Action,

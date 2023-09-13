@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/internal/bootstrap"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/pipeline/triggerer"
 	"github.com/harness/gitness/types/enum"
@@ -19,9 +20,10 @@ import (
 func (s *Service) handleEventPullReqCreated(ctx context.Context,
 	event *events.Event[*pullreqevents.CreatedPayload]) error {
 	hook := &triggerer.Hook{
-		Trigger: enum.TriggerHook,
-		Action:  enum.TriggerActionPullReqCreated,
-		After:   event.Payload.SourceSHA,
+		Trigger:     enum.TriggerHook,
+		Action:      enum.TriggerActionPullReqCreated,
+		TriggeredBy: bootstrap.NewSystemServiceSession().Principal.ID,
+		After:       event.Payload.SourceSHA,
 	}
 	err := s.augmentPullReqInfo(ctx, hook, event.Payload.PullReqID)
 	if err != nil {
@@ -33,9 +35,10 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context,
 func (s *Service) handleEventPullReqReopened(ctx context.Context,
 	event *events.Event[*pullreqevents.ReopenedPayload]) error {
 	hook := &triggerer.Hook{
-		Trigger: enum.TriggerHook,
-		Action:  enum.TriggerActionPullReqReopened,
-		After:   event.Payload.SourceSHA,
+		Trigger:     enum.TriggerHook,
+		Action:      enum.TriggerActionPullReqReopened,
+		TriggeredBy: bootstrap.NewSystemServiceSession().Principal.ID,
+		After:       event.Payload.SourceSHA,
 	}
 	err := s.augmentPullReqInfo(ctx, hook, event.Payload.PullReqID)
 	if err != nil {
@@ -47,9 +50,10 @@ func (s *Service) handleEventPullReqReopened(ctx context.Context,
 func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
 	event *events.Event[*pullreqevents.BranchUpdatedPayload]) error {
 	hook := &triggerer.Hook{
-		Trigger: enum.TriggerHook,
-		Action:  enum.TriggerActionPullReqBranchUpdated,
-		After:   event.Payload.NewSHA,
+		Trigger:     enum.TriggerHook,
+		Action:      enum.TriggerActionPullReqBranchUpdated,
+		TriggeredBy: bootstrap.NewSystemServiceSession().Principal.ID,
+		After:       event.Payload.NewSHA,
 	}
 	err := s.augmentPullReqInfo(ctx, hook, event.Payload.PullReqID)
 	if err != nil {

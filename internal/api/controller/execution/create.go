@@ -60,6 +60,7 @@ func (c *Controller) Create(
 	hook := &triggerer.Hook{
 		Trigger:     session.Principal.UID, // who/what triggered the build, different from commit author
 		AuthorLogin: commit.Author.Identity.Name,
+		TriggeredBy: session.Principal.ID,
 		AuthorName:  commit.Author.Identity.Name,
 		AuthorEmail: commit.Author.Identity.Email,
 		Ref:         ref,

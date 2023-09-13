@@ -14,6 +14,7 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/jmoiron/sqlx"
 	sqlxtypes "github.com/jmoiron/sqlx/types"
@@ -61,7 +62,7 @@ type stage struct {
 	Name          string             `db:"stage_name"`
 	Kind          string             `db:"stage_kind"`
 	Type          string             `db:"stage_type"`
-	Status        string             `db:"stage_status"`
+	Status        enum.CIStatus      `db:"stage_status"`
 	Error         string             `db:"stage_error"`
 	ParentGroupID int64              `db:"stage_parent_group_id"`
 	ErrIgnore     bool               `db:"stage_errignore"`

@@ -97,6 +97,7 @@ type Manager struct {
 	FileService file.FileService
 	Pipelines   store.PipelineStore
 	urlProvider *urlprovider.Provider
+	Checks      store.CheckStore
 	// Converter  store.ConvertService
 	SSEStreamer sse.Streamer
 	// Globals    store.GlobalSecretStore
@@ -123,6 +124,7 @@ func New(
 	fileService file.FileService,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
+	checkStore store.CheckStore,
 	repoStore store.RepoStore,
 	scheduler scheduler.Scheduler,
 	secretStore store.SecretStore,
@@ -139,6 +141,7 @@ func New(
 		FileService: fileService,
 		Logs:        logStore,
 		Logz:        logStream,
+		Checks:      checkStore,
 		Repos:       repoStore,
 		Scheduler:   scheduler,
 		Secrets:     secretStore,
@@ -300,7 +303,7 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 // Before signals the build step is about to start.
 func (m *Manager) BeforeStep(ctx context.Context, step *types.Step) error {
 	log := log.With().
-		Str("step.status", step.Status).
+		Str("step.status", string(step.Status)).
 		Str("step.name", step.Name).
 		Int64("step.id", step.ID).
 		Logger()
@@ -325,7 +328,7 @@ func (m *Manager) BeforeStep(ctx context.Context, step *types.Step) error {
 // After signals the build step is complete.
 func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 	log := log.With().
-		Str("step.status", step.Status).
+		Str("step.status", string(step.Status)).
 		Str("step.name", step.Name).
 		Int64("step.id", step.ID).
 		Logger()
@@ -354,7 +357,10 @@ func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 // BeforeAll signals the build stage is about to start.
 func (m *Manager) BeforeStage(ctx context.Context, stage *types.Stage) error {
 	s := &setup{
+
 		Executions:  m.Executions,
+		Checks:      m.Checks,
+		Pipelines:   m.Pipelines,
 		SSEStreamer: m.SSEStreamer,
 		Repos:       m.Repos,
 		Steps:       m.Steps,
@@ -369,6 +375,8 @@ func (m *Manager) BeforeStage(ctx context.Context, stage *types.Stage) error {
 func (m *Manager) AfterStage(ctx context.Context, stage *types.Stage) error {
 	t := &teardown{
 		Executions:  m.Executions,
+		Pipelines:   m.Pipelines,
+		Checks:      m.Checks,
 		SSEStreamer: m.SSEStreamer,
 		Logs:        m.Logz,
 		Repos:       m.Repos,

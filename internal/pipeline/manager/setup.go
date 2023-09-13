@@ -9,6 +9,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/harness/gitness/internal/pipeline/checks"
 	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	gitness_store "github.com/harness/gitness/store"
@@ -20,7 +21,9 @@ import (
 
 type setup struct {
 	Executions  store.ExecutionStore
+	Checks      store.CheckStore
 	SSEStreamer sse.Streamer
+	Pipelines   store.PipelineStore
 	Repos       store.RepoStore
 	Steps       store.StepStore
 	Stages      store.StageStore
@@ -53,7 +56,7 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 	err = s.Stages.Update(noContext, stage)
 	if err != nil {
 		log.Error().Err(err).
-			Str("stage.status", stage.Status).
+			Str("stage.status", string(stage.Status)).
 			Msg("manager: cannot update the stage")
 		return err
 	}
@@ -66,7 +69,7 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 		err := s.Steps.Create(noContext, step)
 		if err != nil {
 			log.Error().Err(err).
-				Str("stage.status", stage.Status).
+				Str("stage.status", string(stage.Status)).
 				Str("step.name", step.Name).
 				Int64("step.id", step.ID).
 				Msg("manager: cannot persist the step")
@@ -78,6 +81,16 @@ func (s *setup) do(ctx context.Context, stage *types.Stage) error {
 	if err != nil {
 		log.Error().Err(err).Msg("manager: cannot update the execution")
 		return err
+	}
+	pipeline, err := s.Pipelines.Find(ctx, execution.PipelineID)
+	if err != nil {
+		log.Error().Err(err).Msg("manager: cannot find pipeline")
+		return err
+	}
+	// try to write to the checks store - if not, log an error and continue
+	err = checks.Write(ctx, s.Checks, execution, pipeline)
+	if err != nil {
+		log.Error().Err(err).Msg("manager: could not write to checks store")
 	}
 	stages, err := s.Stages.ListWithSteps(noContext, execution.ID)
 	if err != nil {

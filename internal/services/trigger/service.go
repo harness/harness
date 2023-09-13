@@ -156,6 +156,7 @@ func (s *Service) trigger(ctx context.Context, repoID int64,
 		pipeline, err := s.pipelineStore.Find(ctx, t.PipelineID)
 		if err != nil {
 			errs = multierror.Append(errs, err)
+			continue
 		}
 
 		_, err = s.triggerSvc.Trigger(ctx, pipeline, hook)
