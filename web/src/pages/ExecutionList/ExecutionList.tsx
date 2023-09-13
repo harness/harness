@@ -29,7 +29,7 @@ import { ResourceListingPagination } from 'components/ResourceListingPagination/
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
-import { getStatus } from 'utils/PipelineUtils'
+import { getStatus } from 'utils/ExecutionUtils'
 import useSpaceSSE from 'hooks/useSpaceSSE'
 import { ExecutionText, ExecutionTrigger } from 'components/ExecutionText/ExecutionText'
 import useRunPipelineModal from 'components/RunPipelineModal/RunPipelineModal'
@@ -70,7 +70,7 @@ const ExecutionList = () => {
   useSpaceSSE({
     space,
     events: ['execution_updated', 'execution_completed'],
-    onEvent: (_: string, data: any) => {
+    onEvent: data => {
       // ideally this would include number - so we only check for executions on the page - but what if new executions are kicked off? - could check for ids that are higher than the lowest id on the page?
       if (
         executions?.some(
