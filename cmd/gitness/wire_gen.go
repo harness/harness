@@ -8,7 +8,6 @@ package main
 
 import (
 	"context"
-
 	"github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
@@ -50,6 +49,7 @@ import (
 	server2 "github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/codecomments"
+	"github.com/harness/gitness/internal/services/exporter"
 	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/services/job"
 	"github.com/harness/gitness/internal/services/pullreq"
@@ -151,7 +151,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db)
 	templateStore := database.ProvideTemplateStore(db)
-	spaceController := space.ProvideController(db, provider, streamer, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository)
+	exporterRepository, err := exporter.ProvideSpaceExporter(provider, gitrpcInterface, repoStore, jobScheduler, executor)
+	if err != nil {
+		return nil, err
+	}
+	spaceController := space.ProvideController(db, provider, streamer, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository)
 	triggerStore := database.ProvideTriggerStore(db)
 	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, triggerStore, authorizer, pipelineStore)
 	secretController := secret.ProvideController(db, pathUID, pathStore, encrypter, secretStore, authorizer, spaceStore)
