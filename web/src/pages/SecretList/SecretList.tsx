@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import {
   ButtonVariation,
   Container,
@@ -29,6 +29,7 @@ import { ResourceListingPagination } from 'components/ResourceListingPagination/
 import { NewSecretModalButton } from 'components/NewSecretModalButton/NewSecretModalButton'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
+import useUpdateSecretModal from 'components/UpdateSecretModal/UpdateSecretModal'
 import noSecretsImage from '../RepositoriesListing/no-repo.svg'
 import css from './SecretList.module.scss'
 
@@ -60,6 +61,8 @@ const SecretList = () => {
       icon="plus"
       onSuccess={() => refetch()}></NewSecretModalButton>
   )
+
+  const { openModal: openUpdateSecretModal } = useUpdateSecretModal()
 
   const columns: Column<TypesSecret>[] = useMemo(
     () => [
@@ -113,6 +116,11 @@ const SecretList = () => {
               isDark
               width="100px"
               items={[
+                {
+                  text: getString('edit'),
+                  isDanger: true,
+                  onClick: () => openUpdateSecretModal({ secretToUpdate: row.original })
+                },
                 {
                   text: getString('delete'),
                   isDanger: true,

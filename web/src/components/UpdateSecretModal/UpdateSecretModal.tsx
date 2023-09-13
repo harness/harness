@@ -1,6 +1,8 @@
+import React, { useState } from 'react'
+import * as yup from 'yup'
+import { useMutate } from 'restful-react'
+import { FontVariation, Intent } from '@harnessio/design-system'
 import {
-  useToaster,
-  type ButtonProps,
   Button,
   Dialog,
   Layout,
@@ -9,70 +11,54 @@ import {
   Formik,
   FormikForm,
   FormInput,
-  FlexExpander
+  FlexExpander,
+  useToaster,
+  StringSubstitute
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import { Intent, FontVariation } from '@harnessio/design-system'
-import React from 'react'
-import { useMutate } from 'restful-react'
-import * as yup from 'yup'
-import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
-import type { OpenapiCreateSecretRequest, TypesSecret } from 'services/code'
+import { useModalHook } from 'hooks/useModalHook'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import type { OpenapiUpdateSecretRequest, TypesSecret } from 'services/code'
+import type { SecretFormData } from 'components/NewSecretModalButton/NewSecretModalButton'
 import { getErrorMessage } from 'utils/Utils'
 
-export interface SecretFormData {
-  value: string
-  description: string
-  name: string
-}
+const useUpdateSecretModal = () => {
+  const { getString } = useStrings()
+  const space = useGetSpaceParam()
+  const { showError, showSuccess } = useToaster()
+  const [secret, setSecret] = useState<TypesSecret>()
 
-const formInitialValues: SecretFormData = {
-  value: '',
-  description: '',
-  name: ''
-}
+  const { mutate: updateSecret, loading } = useMutate<TypesSecret>({
+    verb: 'PATCH',
+    path: `/api/v1/secrets/${space}/${secret?.uid}/+`
+  })
 
-export interface NewSecretModalButtonProps extends Omit<ButtonProps, 'onClick' | 'onSubmit'> {
-  space: string
-  modalTitle: string
-  submitButtonTitle?: string
-  cancelButtonTitle?: string
-  onSuccess: () => void
-}
-
-export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
-  space,
-  modalTitle,
-  submitButtonTitle,
-  cancelButtonTitle,
-  onSuccess,
-  ...props
-}) => {
-  const ModalComponent: React.FC = () => {
-    const { getString } = useStrings()
-    const { showError, showSuccess } = useToaster()
-
-    const { mutate: createSecret, loading } = useMutate<TypesSecret>({
-      verb: 'POST',
-      path: `/api/v1/secrets`
-    })
-
-    const handleSubmit = async (formData: SecretFormData) => {
-      try {
-        const payload: OpenapiCreateSecretRequest = {
-          space_ref: space,
-          data: formData.value,
-          description: formData.description,
-          uid: formData.name
-        }
-        await createSecret(payload)
-        hideModal()
-        showSuccess(getString('secrets.createSuccess'))
-        onSuccess()
-      } catch (exception) {
-        showError(getErrorMessage(exception), 0, getString('secrets.failedToCreate'))
+  const handleSubmit = async (formData: SecretFormData) => {
+    try {
+      const payload: OpenapiUpdateSecretRequest = {
+        data: formData.value,
+        description: formData.description,
+        uid: formData.name
       }
+      await updateSecret(payload)
+      hideModal()
+      showSuccess(
+        <StringSubstitute
+          str={getString('secrets.secretUpdated')}
+          vars={{
+            uid: formData.name
+          }}
+        />
+      )
+    } catch (exception) {
+      showError(getErrorMessage(exception), 0, getString('secrets.failedToUpdateSecret'))
+    }
+  }
+
+  const [openModal, hideModal] = useModalHook(() => {
+    const onClose = () => {
+      hideModal()
     }
 
     return (
@@ -84,12 +70,12 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
         style={{ width: 700, maxHeight: '95vh', overflow: 'auto' }}>
         <Layout.Vertical padding={{ left: 'xxlarge' }} style={{ height: '100%' }} data-testid="add-secret-modal">
           <Heading level={3} font={{ variation: FontVariation.H3 }} margin={{ bottom: 'xlarge' }}>
-            {modalTitle}
+            {getString('secrets.updateSecret')}
           </Heading>
 
           <Container margin={{ right: 'xxlarge' }}>
             <Formik
-              initialValues={formInitialValues}
+              initialValues={{ name: secret?.uid || '', description: secret?.description || '', value: '' }}
               formName="addSecret"
               enableReinitialize={true}
               validationSchema={yup.object().shape({
@@ -134,11 +120,11 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
                   style={{ alignItems: 'center' }}>
                   <Button
                     type="submit"
-                    text={getString('secrets.createSecret')}
+                    text={getString('secrets.updateSecret')}
                     intent={Intent.PRIMARY}
                     disabled={loading}
                   />
-                  <Button text={cancelButtonTitle || getString('cancel')} minimal onClick={hideModal} />
+                  <Button text={getString('cancel')} minimal onClick={onClose} />
                   <FlexExpander />
                   {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
                 </Layout.Horizontal>
@@ -148,9 +134,14 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
         </Layout.Vertical>
       </Dialog>
     )
+  }, [secret])
+
+  return {
+    openModal: ({ secretToUpdate }: { secretToUpdate: TypesSecret }) => {
+      setSecret(secretToUpdate)
+      openModal()
+    }
   }
-
-  const [openModal, hideModal] = useModalHook(ModalComponent, [onSuccess])
-
-  return <Button onClick={openModal} {...props} />
 }
+
+export default useUpdateSecretModal
