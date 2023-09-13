@@ -32,7 +32,7 @@ import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { ExecutionStatus, ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
-import { getStatus } from 'utils/PipelineUtils'
+import { getStatus } from 'utils/ExecutionUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import useNewPipelineModal from 'components/NewPipelineModal/NewPipelineModal'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -77,11 +77,9 @@ const PipelineList = () => {
   useSpaceSSE({
     space,
     events: ['execution_updated', 'execution_completed'],
-    onEvent: (_: string, data: any) => {
+    onEvent: data => {
       // should I include pipeline id here? what if a new pipeline is created? coould check for ids that are higher than the lowest id on the page?
-      if (
-        pipelines?.some(pipeline => pipeline.repo_id === data?.repo_id && pipeline.id === data?.pipeline_id)
-      ) {
+      if (pipelines?.some(pipeline => pipeline.repo_id === data?.repo_id && pipeline.id === data?.pipeline_id)) {
         //TODO - revisit full refresh - can I use the message to update the execution?
         pipelinesRefetch()
       }

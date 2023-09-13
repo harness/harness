@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 type UseSpaceSSEProps = {
   space: string
   events: string[]
-  onEvent: (type: string, data: any) => void
+  onEvent: (data: any, type: string) => void
   onError?: (event: Event) => void
   shouldRun?: boolean
 }
@@ -20,7 +20,7 @@ const useSpaceSSE = ({ space, events, onEvent, onError, shouldRun = true }: UseS
 
         const handleMessage = (event: MessageEvent) => {
           const data = JSON.parse(event.data)
-          onEvent(event.type, data)
+          onEvent(data, event.type)
         }
 
         const handleError = (event: Event) => {

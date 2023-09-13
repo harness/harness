@@ -627,7 +627,7 @@ repoDelete:
   deleteToastSuccess: Repository deleted successfully
   deleteConfirmButton2: Delete this repository
 pipelines:
-  noData: There are no pipelines :(
+  noData: There are no pipelines
   newPipelineButton: New Pipeline
   name: Pipeline Name
   createNewPipeline: Create New Pipeline
@@ -645,7 +645,7 @@ pipelines:
   executionStarted: Pipeline execution started successfully
   executionCouldNotStart: Failure while starting Pipeline execution
 executions:
-  noData: There are no executions :(
+  noData: There are no executions
   newExecutionButton: Run Pipeline
   name: Execution Name
   description: Description
@@ -657,7 +657,7 @@ executions:
 selectRange: Shift-click to select a range
 allCommits: All Commits
 secrets:
-  noData: There are no secrets :(
+  noData: There are no secrets
   newSecretButton: New Secret
   name: Secret Name
   failedToCreate: Failed to create Secret. Please try again.
