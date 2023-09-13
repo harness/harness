@@ -319,12 +319,15 @@ func (s *executionStore) List(
 	return mapInternalToExecutionList(dst)
 }
 
-// Count of executions in a space.
+// Count of executions in a pipeline, if pipelineID is 0 then return total number of executions.
 func (s *executionStore) Count(ctx context.Context, pipelineID int64) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
-		From("executions").
-		Where("execution_pipeline_id = ?", pipelineID)
+		From("executions")
+
+	if pipelineID > 0 {
+		stmt = stmt.Where("execution_pipeline_id = ?", pipelineID)
+	}
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {

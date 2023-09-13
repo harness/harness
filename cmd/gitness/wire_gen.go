@@ -52,6 +52,7 @@ import (
 	"github.com/harness/gitness/internal/services/exporter"
 	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/services/job"
+	"github.com/harness/gitness/internal/services/metric"
 	"github.com/harness/gitness/internal/services/pullreq"
 	trigger2 "github.com/harness/gitness/internal/services/trigger"
 	"github.com/harness/gitness/internal/services/webhook"
@@ -246,7 +247,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler)
+	collector, err := metric.ProvideCollector(config, principalStore, repoStore, pipelineStore, executionStore, jobScheduler, executor)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, poller, grpcServer, cronManager, servicesServices)
 	return serverSystem, nil
 }

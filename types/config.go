@@ -225,4 +225,10 @@ type Config struct {
 		Concurrency int `envconfig:"GITNESS_TRIGGER_CONCURRENCY" default:"4"`
 		MaxRetries  int `envconfig:"GITNESS_TRIGGER_MAX_RETRIES" default:"3"`
 	}
+
+	Metric struct {
+		Enabled  bool   `envconfig:"GITNESS_METRIC_ENABLED" default:"true"`
+		Endpoint string `envconfig:"GITNESS_METRIC_ENDPOINT" default:"https://stats.drone.ci/api/v1/gitness"`
+		Token    string `envconfig:"GITNESS_METRIC_TOKEN"`
+	}
 }
