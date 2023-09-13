@@ -260,7 +260,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ data, onSelect }) => {
       onSelect(
         item.file_name,
         item.file_path,
-        (item.content || []).join('\n').replace(/^\n/g, '').trim(),
+        (item.lines || []).join('\n').replace(/^\n/g, '').trim(),
         range(item.start_line, item.end_line)
       )
     }
@@ -282,7 +282,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ data, onSelect }) => {
               onSelect(
                 item.file_name,
                 item.file_path,
-                (item.content || []).join('\n').replace(/^\n/g, '').trim(),
+                (item.lines || []).join('\n').replace(/^\n/g, '').trim(),
                 range(item.start_line, item.end_line)
               )
             }}>
@@ -306,7 +306,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ data, onSelect }) => {
               </Container>
               <Editor
                 filename={item.file_name}
-                content={(item.content || []).join('\n').replace(/^\n/g, '').trim()}
+                content={(item.lines || []).join('\n').replace(/^\n/g, '').trim()}
                 readonly={true}
                 maxHeight="200px"
                 darkTheme
@@ -325,7 +325,7 @@ type SearchResultType = {
   start_line: number
   end_line: number
   file_name: string
-  content: string[]
+  lines: string[]
 }
 
 const range = (start: number, stop: number, step = 1) =>
