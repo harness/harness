@@ -70,7 +70,6 @@ func NewClient(baseURL string, accountID string, orgId string, projectId string,
 		token:     token,
 		httpClient: http.Client{
 			Transport: &http.Transport{
-				// #nosec
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: false,
 				},
