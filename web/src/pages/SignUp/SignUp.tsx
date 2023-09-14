@@ -25,7 +25,11 @@ export const SignUp: React.FC = () => {
   const { getString } = useStrings()
   const { showError, showSuccess } = useToaster()
 
-  const { mutate } = useOnRegister({})
+  const { mutate } = useOnRegister({
+    queryParams: {
+      include_cookie: true
+    }
+  })
   const onRegister = useCallback(
     (data: RegisterForm) => {
       mutate(
