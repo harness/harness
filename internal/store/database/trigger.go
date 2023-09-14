@@ -187,6 +187,7 @@ func (s *triggerStore) Update(ctx context.Context, t *types.Trigger) error {
 	SET
 		trigger_uid = :trigger_uid
 		,trigger_description = :trigger_description
+		,trigger_disabled = :trigger_disabled
 		,trigger_updated = :trigger_updated
 		,trigger_actions = :trigger_actions
 		,trigger_version = :trigger_version
