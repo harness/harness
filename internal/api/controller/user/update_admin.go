@@ -41,7 +41,7 @@ func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
 		}
 
 		if admUsrCount == 1 {
-			return nil, usererror.BadRequest("cannot remove admin from the only admin user")
+			return nil, usererror.BadRequest("system requires at least one admin user")
 		}
 
 		return user, nil
