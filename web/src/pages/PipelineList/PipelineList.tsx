@@ -79,7 +79,7 @@ const PipelineList = () => {
 
   useSpaceSSE({
     space,
-    events: ['execution_updated', 'execution_completed'],
+    events: ['execution_updated', 'execution_completed', 'execution_canceled', 'execution_running'],
     onEvent: data => {
       // should I include pipeline id here? what if a new pipeline is created? coould check for ids that are higher than the lowest id on the page?
       if (pipelines?.some(pipeline => pipeline.repo_id === data?.repo_id && pipeline.id === data?.pipeline_id)) {
@@ -105,7 +105,7 @@ const PipelineList = () => {
     () => [
       {
         Header: getString('pipelines.name'),
-        width: 'calc(100% - 210px)',
+        width: 'calc(50% - 105px)',
         Cell: ({ row }: CellProps<TypesPipeline>) => {
           const record = row.original
           return (
@@ -127,7 +127,7 @@ const PipelineList = () => {
       },
       {
         Header: getString('pipelines.lastExecution'),
-        width: 'calc(50% - 90px)',
+        width: 'calc(50% - 105px)',
         Cell: ({ row }: CellProps<TypesPipeline>) => {
           const record = row.original.execution
 

@@ -69,7 +69,7 @@ const ExecutionList = () => {
 
   useSpaceSSE({
     space,
-    events: ['execution_updated', 'execution_completed'],
+    events: ['execution_updated', 'execution_completed', 'execution_canceled', 'execution_running'],
     onEvent: data => {
       // ideally this would include number - so we only check for executions on the page - but what if new executions are kicked off? - could check for ids that are higher than the lowest id on the page?
       if (
