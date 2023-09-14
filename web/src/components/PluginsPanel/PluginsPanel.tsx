@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Formik } from 'formik'
-import { capitalize, get } from 'lodash-es'
+import { capitalize, get, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon, type IconName } from '@harnessio/icons'
@@ -229,9 +229,10 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
 
   const constructPayloadForYAMLInsertion = (pluginFormData: Record<string, any>): Record<string, any> => {
     let constructedPayload = { ...pluginFormData }
+    const pluginStep = get(plugin, 'spec.step', {})
     switch (category) {
       case PluginCategory.Drone:
-        return { type: 'script', spec: constructedPayload }
+        return set(pluginStep, 'spec.envs', constructedPayload)
       case PluginCategory.Harness:
         return { type: 'script', spec: { run: get(constructedPayload, 'script', '') } }
       default:
