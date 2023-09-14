@@ -5,12 +5,13 @@
 package service
 
 import (
-	"code.gitea.io/gitea/modules/git"
 	"context"
 	"time"
 
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
+
+	"code.gitea.io/gitea/modules/git"
 )
 
 type PushService struct {
