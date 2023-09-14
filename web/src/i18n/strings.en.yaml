@@ -653,6 +653,7 @@ pipelines:
   deletePipelineError: Failed to delete Pipeline. Please try again.
   updatePipelineSuccess: Pipeline {{pipeline}} updated.
   failedToUpdatePipeline: Failed to update Pipeline. Please try again.
+  settings: Pipeline Settings
 executions:
   noData: There are no executions
   newExecutionButton: Run Pipeline

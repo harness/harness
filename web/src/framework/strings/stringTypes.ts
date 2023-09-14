@@ -382,6 +382,7 @@ export interface StringsMap {
   'pipelines.noData': string
   'pipelines.run': string
   'pipelines.saveAndRun': string
+  'pipelines.settings': string
   'pipelines.time': string
   'pipelines.updatePipelineSuccess': string
   'pipelines.updated': string

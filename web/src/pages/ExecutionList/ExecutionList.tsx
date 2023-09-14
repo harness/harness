@@ -201,6 +201,16 @@ const ExecutionList = () => {
               />
             </Layout.Horizontal>
             <FlexExpander />
+            <Button
+              variation={ButtonVariation.TERTIARY}
+              text={getString('pipelines.settings')}
+              onClick={e => {
+                e.stopPropagation()
+                if (repoMetadata?.path && pipeline) {
+                  history.push(routes.toCODEPipelineSettings({ repoPath: repoMetadata.path, pipeline }))
+                }
+              }}
+            />
           </Layout.Horizontal>
 
           <Container margin={{ top: 'medium' }}>
