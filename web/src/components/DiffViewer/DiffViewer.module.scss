@@ -80,6 +80,7 @@
           justify-content: center;
           cursor: pointer;
           visibility: hidden;
+          user-select: none;
         }
 
         &:hover [data-annotation-for-line] {
