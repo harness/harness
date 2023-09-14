@@ -5,6 +5,7 @@
 package authn
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -12,34 +13,31 @@ import (
 
 	"github.com/harness/gitness/internal/api/request"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/jwt"
 	"github.com/harness/gitness/internal/store"
-	"github.com/harness/gitness/internal/token"
 	"github.com/harness/gitness/types"
 
-	"github.com/dgrijalva/jwt-go"
+	gojwt "github.com/dgrijalva/jwt-go"
 )
 
-var _ Authenticator = (*TokenAuthenticator)(nil)
+var _ Authenticator = (*JWTAuthenticator)(nil)
 
-/*
- * Authenticates a user by checking for an access token in the
- * "Authorization" header or the "access_token" form value.
- */
-type TokenAuthenticator struct {
+// JWTAuthenticator uses the provided JWT to authenticate the caller.
+type JWTAuthenticator struct {
 	principalStore store.PrincipalStore
 	tokenStore     store.TokenStore
 }
 
 func NewTokenAuthenticator(
 	principalStore store.PrincipalStore,
-	tokenStore store.TokenStore) *TokenAuthenticator {
-	return &TokenAuthenticator{
+	tokenStore store.TokenStore) *JWTAuthenticator {
+	return &JWTAuthenticator{
 		principalStore: principalStore,
 		tokenStore:     tokenStore,
 	}
 }
 
-func (a *TokenAuthenticator) Authenticate(r *http.Request, sourceRouter SourceRouter) (*auth.Session, error) {
+func (a *JWTAuthenticator) Authenticate(r *http.Request, sourceRouter SourceRouter) (*auth.Session, error) {
 	ctx := r.Context()
 	str := extractToken(r)
 
@@ -49,8 +47,8 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request, sourceRouter SourceRo
 
 	var principal *types.Principal
 	var err error
-	claims := &token.JWTClaims{}
-	parsed, err := jwt.ParseWithClaims(str, claims, func(token_ *jwt.Token) (interface{}, error) {
+	claims := &jwt.Claims{}
+	parsed, err := gojwt.ParseWithClaims(str, claims, func(token_ *gojwt.Token) (interface{}, error) {
 		principal, err = a.principalStore.Find(ctx, claims.PrincipalID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get principal for token: %w", err)
@@ -65,12 +63,39 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request, sourceRouter SourceRo
 		return nil, errors.New("parsed JWT token is invalid")
 	}
 
-	if _, ok := parsed.Method.(*jwt.SigningMethodHMAC); !ok {
+	if _, ok := parsed.Method.(*gojwt.SigningMethodHMAC); !ok {
 		return nil, errors.New("invalid HMAC signature for JWT")
 	}
 
+	var metadata auth.Metadata
+	switch {
+	case claims.Token != nil:
+		metadata, err = a.metadataFromTokenClaims(ctx, principal, claims.Token)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get metadata from token claims: %w", err)
+		}
+	case claims.Membership != nil:
+		metadata, err = a.metadataFromMembershipClaims(claims.Membership)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get metadata from membership claims: %w", err)
+		}
+	default:
+		return nil, fmt.Errorf("jwt is missing sub-claims")
+	}
+
+	return &auth.Session{
+		Principal: *principal,
+		Metadata:  metadata,
+	}, nil
+}
+
+func (a *JWTAuthenticator) metadataFromTokenClaims(
+	ctx context.Context,
+	principal *types.Principal,
+	tknClaims *jwt.SubClaimsToken,
+) (auth.Metadata, error) {
 	// ensure tkn exists
-	tkn, err := a.tokenStore.Find(ctx, claims.TokenID)
+	tkn, err := a.tokenStore.Find(ctx, tknClaims.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find token in db: %w", err)
 	}
@@ -81,13 +106,19 @@ func (a *TokenAuthenticator) Authenticate(r *http.Request, sourceRouter SourceRo
 			principal.ID, tkn.PrincipalID)
 	}
 
-	return &auth.Session{
-		Principal: *principal,
-		Metadata: &auth.TokenMetadata{
-			TokenType: tkn.Type,
-			TokenID:   tkn.ID,
-			Grants:    tkn.Grants,
-		},
+	return &auth.TokenMetadata{
+		TokenType: tkn.Type,
+		TokenID:   tkn.ID,
+	}, nil
+}
+
+func (a *JWTAuthenticator) metadataFromMembershipClaims(
+	mbsClaims *jwt.SubClaimsMembership,
+) (auth.Metadata, error) {
+	// We could check if space exists - but also okay to fail later (saves db call)
+	return &auth.MembershipMetadata{
+		SpaceID: mbsClaims.SpaceID,
+		Role:    mbsClaims.Role,
 	}, nil
 }
 

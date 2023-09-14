@@ -83,12 +83,14 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 	if err != nil {
 		return nil, err
 	}
+
 	return &client.Context{
 		Build:   convertToDroneBuild(details.Execution),
 		Repo:    convertToDroneRepo(details.Repo),
 		Stage:   convertToDroneStage(details.Stage),
 		Secrets: convertToDroneSecrets(details.Secrets),
 		Config:  convertToDroneFile(details.Config),
+		Netrc:   convertToDroneNetrc(details.Netrc),
 		System: &drone.System{
 			Proto: e.config.Server.HTTP.Proto,
 			Host:  "host.docker.internal",

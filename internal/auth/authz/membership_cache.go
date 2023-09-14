@@ -67,11 +67,9 @@ func (g permissionCacheGetter) Find(ctx context.Context, key PermissionCacheKey)
 		}
 
 		// If the membership is defined in the current space, check if the user has the required permission.
-		if membership != nil {
-			_, hasRole := slices.BinarySearch(membership.Role.Permissions(), key.Permission)
-			if hasRole {
-				return true, nil
-			}
+		if membership != nil &&
+			roleHasPermission(membership.Role, key.Permission) {
+			return true, nil
 		}
 
 		// If membership with the requested permission has not been found in the current space,
@@ -88,4 +86,9 @@ func (g permissionCacheGetter) Find(ctx context.Context, key PermissionCacheKey)
 	}
 
 	return false, nil
+}
+
+func roleHasPermission(role enum.MembershipRole, permission enum.Permission) bool {
+	_, hasRole := slices.BinarySearch(role.Permissions(), permission)
+	return hasRole
 }

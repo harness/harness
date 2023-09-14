@@ -17,16 +17,19 @@ import (
 )
 
 type CreateTokenInput struct {
-	UID      string           `json:"uid"`
-	Lifetime *time.Duration   `json:"lifetime"`
-	Grants   enum.AccessGrant `json:"grants"`
+	UID      string         `json:"uid"`
+	Lifetime *time.Duration `json:"lifetime"`
 }
 
 /*
  * CreateToken creates a new user access token.
  */
-func (c *Controller) CreateAccessToken(ctx context.Context, session *auth.Session,
-	userUID string, in *CreateTokenInput) (*types.TokenResponse, error) {
+func (c *Controller) CreateAccessToken(
+	ctx context.Context,
+	session *auth.Session,
+	userUID string,
+	in *CreateTokenInput,
+) (*types.TokenResponse, error) {
 	user, err := findUserFromUID(ctx, c.principalStore, userUID)
 	if err != nil {
 		return nil, err
@@ -43,13 +46,15 @@ func (c *Controller) CreateAccessToken(ctx context.Context, session *auth.Sessio
 	if err = check.TokenLifetime(in.Lifetime, true); err != nil {
 		return nil, err
 	}
-	// TODO: Added to unblock UI - Depending on product decision enforce grants, or remove Grants completely.
-	if err = check.AccessGrant(in.Grants, true); err != nil {
-		return nil, err
-	}
 
-	token, jwtToken, err := token.CreatePAT(ctx, c.tokenStore, &session.Principal,
-		user, in.UID, in.Lifetime, in.Grants)
+	token, jwtToken, err := token.CreatePAT(
+		ctx,
+		c.tokenStore,
+		&session.Principal,
+		user,
+		in.UID,
+		in.Lifetime,
+	)
 	if err != nil {
 		return nil, err
 	}

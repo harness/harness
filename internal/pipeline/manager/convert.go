@@ -236,3 +236,15 @@ func convertToDroneSecrets(secrets []*types.Secret) []*drone.Secret {
 	}
 	return ret
 }
+
+func convertToDroneNetrc(netrc *Netrc) *drone.Netrc {
+	if netrc == nil {
+		return nil
+	}
+
+	return &drone.Netrc{
+		Machine:  netrc.Machine,
+		Login:    netrc.Login,
+		Password: netrc.Password,
+	}
+}

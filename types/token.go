@@ -18,9 +18,8 @@ type Token struct {
 	// ExpiresAt is an optional unix time that if specified restricts the validity of a token.
 	ExpiresAt *int64 `db:"token_expires_at"         json:"expires_at,omitempty"`
 	// IssuedAt is the unix time at which the token was issued.
-	IssuedAt  int64            `db:"token_issued_at"          json:"issued_at"`
-	Grants    enum.AccessGrant `db:"token_grants"             json:"grants"`
-	CreatedBy int64            `db:"token_created_by"         json:"created_by"`
+	IssuedAt  int64 `db:"token_issued_at"          json:"issued_at"`
+	CreatedBy int64 `db:"token_created_by"         json:"created_by"`
 }
 
 // TokenResponse is returned as part of token creation for PAT / SAT / User Session.

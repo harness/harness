@@ -6277,8 +6277,6 @@ paths:
         - user
 components:
   schemas:
-    EnumAccessGrant:
-      type: integer
     EnumCIStatus:
       type: string
     EnumCheckPayloadKind:
@@ -6745,8 +6743,6 @@ components:
       type: object
     OpenapiCreateTokenRequest:
       properties:
-        grants:
-          $ref: '#/components/schemas/EnumAccessGrant'
         lifetime:
           $ref: '#/components/schemas/TimeDuration'
         uid:
@@ -7805,8 +7801,6 @@ components:
         expires_at:
           nullable: true
           type: integer
-        grants:
-          $ref: '#/components/schemas/EnumAccessGrant'
         issued_at:
           type: integer
         principal_id:

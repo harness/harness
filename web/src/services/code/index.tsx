@@ -5,8 +5,6 @@ import { Get, GetProps, useGet, UseGetProps, Mutate, MutateProps, useMutate, Use
 
 import { getConfig } from '../config'
 export const SPEC_VERSION = '0.0.0'
-export type EnumAccessGrant = number
-
 export type EnumCIStatus = string
 
 export type EnumCheckPayloadKind = '' | 'markdown' | 'pipeline' | 'raw'
@@ -270,7 +268,6 @@ export interface OpenapiCreateTemplateRequest {
 }
 
 export interface OpenapiCreateTokenRequest {
-  grants?: EnumAccessGrant
   lifetime?: TimeDuration
   uid?: string
 }
@@ -872,7 +869,6 @@ export interface TypesTemplate {
 export interface TypesToken {
   created_by?: number
   expires_at?: number | null
-  grants?: EnumAccessGrant
   issued_at?: number
   principal_id?: number
   type?: EnumTokenType
