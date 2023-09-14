@@ -287,8 +287,7 @@ const AddUpdatePipeline = (): JSX.Element => {
               position: PopoverPosition.BOTTOM_RIGHT,
               transitionDuration: 1000
             }}
-            intent="primary"
-            onClick={() => handleSaveAndRun(selectedOption)}>
+            intent="primary">
             {pipelineSaveAndRunOptions.map(option => {
               return (
                 <Menu.Item
@@ -299,6 +298,7 @@ const AddUpdatePipeline = (): JSX.Element => {
                     </Text>
                   }
                   onClick={() => {
+                    handleSaveAndRun(option)
                     setSelectedOption(option)
                   }}
                 />
