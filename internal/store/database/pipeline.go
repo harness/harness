@@ -32,6 +32,7 @@ const (
 	pipeline_id
 	,pipeline_description
 	,pipeline_created_by
+	,pipeline_disabled
 	,pipeline_uid
 	,pipeline_seq
 	,pipeline_repo_id
@@ -130,6 +131,7 @@ func (s *pipelineStore) Update(ctx context.Context, p *types.Pipeline) error {
 		pipeline_description = :pipeline_description,
 		pipeline_uid = :pipeline_uid,
 		pipeline_seq = :pipeline_seq,
+		pipeline_disabled = :pipeline_disabled,
 		pipeline_default_branch = :pipeline_default_branch,
 		pipeline_config_path = :pipeline_config_path,
 		pipeline_updated = :pipeline_updated,
