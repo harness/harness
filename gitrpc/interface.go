@@ -68,4 +68,5 @@ type Interface interface {
 	 * Blame services
 	 */
 	Blame(ctx context.Context, params *BlameParams) (<-chan *BlamePart, <-chan error)
+	PushRemote(ctx context.Context, params *PushRemoteParams) error
 }

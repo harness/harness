@@ -47,7 +47,7 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, spaceRef
 	}
 
 	// todo(abhinav): add pagination
-	repos, err := c.repoStore.List(ctx, space.ID, &types.RepoFilter{Size: 200})
+	repos, err := c.repoStore.List(ctx, space.ID, &types.RepoFilter{Size: 200, Page: 0, Order: enum.OrderDesc})
 	if err != nil {
 		return err
 	}

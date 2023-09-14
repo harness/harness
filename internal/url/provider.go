@@ -101,3 +101,7 @@ func (p *Provider) GenerateCICloneURL(repoPath string) string {
 
 	return p.ciURL.JoinPath(repoPath).String()
 }
+
+func (p *Provider) GetHarnessCodeInternalUrl() string {
+	return p.harnessCodeApiUrl.String()
+}

@@ -151,7 +151,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db)
 	templateStore := database.ProvideTemplateStore(db)
-	exporterRepository, err := exporter.ProvideSpaceExporter(provider, gitrpcInterface, repoStore, jobScheduler, executor)
+	exporterRepository, err := exporter.ProvideSpaceExporter(provider, gitrpcInterface, repoStore, jobScheduler, executor, encrypter)
 	if err != nil {
 		return nil, err
 	}
