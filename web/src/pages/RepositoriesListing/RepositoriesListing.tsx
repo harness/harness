@@ -31,7 +31,6 @@ import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
-import useSpaceSSE from 'hooks/useSpaceSSE'
 import noRepoImage from './no-repo.svg'
 import css from './RepositoriesListing.module.scss'
 interface TypesRepoExtended extends TypesRepository {
