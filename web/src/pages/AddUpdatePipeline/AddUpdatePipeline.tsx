@@ -238,8 +238,8 @@ const AddUpdatePipeline = (): JSX.Element => {
   const handlePluginAddUpdateIntoYAML = useCallback(
     (_isUpdate: boolean, pluginFormData: Record<string, any>): void => {
       try {
-        const pipeline = parse(pipelineAsYAML)
-        const updatedPipelineAsObj = updatePipelineWithPluginData(pipeline, pluginFormData)
+        const pipelineAsObj = parse(pipelineAsYAML)
+        const updatedPipelineAsObj = updatePipelineWithPluginData(pipelineAsObj, pluginFormData)
         if (Object.keys(updatedPipelineAsObj).length > 0) {
           // avoid setting to empty pipeline in case pipeline update with plugin data fails
           setPipelineAsYaml(stringify(updatedPipelineAsObj))

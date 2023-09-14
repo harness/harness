@@ -82,6 +82,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
 
   const fetchPlugins = () => {
     /* temporarily done till api response gets available */
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     //@ts-ignore
     setPlugins(pluginList)
   }
@@ -228,7 +229,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   }
 
   const constructPayloadForYAMLInsertion = (pluginFormData: Record<string, any>): Record<string, any> => {
-    let constructedPayload = { ...pluginFormData }
+    const constructedPayload = { ...pluginFormData }
     const pluginStep = get(plugin, 'spec.step', {})
     switch (category) {
       case PluginCategory.Drone:
