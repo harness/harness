@@ -301,12 +301,15 @@ func (s *pipelineStore) UpdateOptLock(ctx context.Context,
 	}
 }
 
-// Count of pipelines under a repo.
+// Count of pipelines under a repo, if repoID is zero it will count all pipelines in the system.
 func (s *pipelineStore) Count(ctx context.Context, repoID int64, filter types.ListQueryFilter) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
-		From("pipelines").
-		Where("pipeline_repo_id = ?", repoID)
+		From("pipelines")
+
+	if repoID > 0 {
+		stmt = stmt.Where("pipeline_repo_id = ?", repoID)
+	}
 
 	if filter.Query != "" {
 		stmt = stmt.Where("LOWER(pipeline_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(filter.Query)))

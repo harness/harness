@@ -256,12 +256,15 @@ func (s *RepoStore) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// Count of repos in a space.
+// Count of repos in a space. if parentID (space) is zero then it will count all repositories in the system.
 func (s *RepoStore) Count(ctx context.Context, parentID int64, opts *types.RepoFilter) (int64, error) {
 	stmt := database.Builder.
 		Select("count(*)").
-		From("repositories").
-		Where("repo_parent_id = ?", parentID)
+		From("repositories")
+
+	if parentID > 0 {
+		stmt = stmt.Where("repo_parent_id = ?", parentID)
+	}
 
 	if opts.Query != "" {
 		stmt = stmt.Where("LOWER(repo_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(opts.Query)))
