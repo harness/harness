@@ -275,7 +275,7 @@ export interface OpenapiCreateTokenRequest {
 export interface OpenapiCreateTriggerRequest {
   actions?: EnumTriggerAction[] | null
   description?: string
-  enabled?: boolean
+  disabled?: boolean
   secret?: string
   uid?: string
 }
@@ -398,7 +398,7 @@ export interface OpenapiUpdateTemplateRequest {
 export interface OpenapiUpdateTriggerRequest {
   actions?: EnumTriggerAction[] | null
   description?: string | null
-  enabled?: boolean | null
+  disabled?: boolean | null
   secret?: string | null
   uid?: string | null
 }
@@ -657,6 +657,7 @@ export interface TypesPipeline {
   created_by?: number
   default_branch?: string
   description?: string
+  disabled?: boolean
   execution?: TypesExecution
   id?: number
   repo_id?: number
@@ -776,6 +777,7 @@ export interface TypesRepository {
 
 export interface TypesSecret {
   created?: number
+  created_by?: number
   description?: string
   id?: number
   space_id?: number
@@ -885,10 +887,11 @@ export interface TypesTrigger {
   created?: number
   created_by?: number
   description?: string
-  enabled?: boolean
+  disabled?: boolean
   id?: number
   pipeline_id?: number
   repo_id?: number
+  trigger_type?: string
   uid?: string
   updated?: number
 }

@@ -6277,6 +6277,8 @@ paths:
         - user
 components:
   schemas:
+    EnumAccessGrant:
+      type: integer
     EnumCIStatus:
       type: string
     EnumCheckPayloadKind:
@@ -6757,7 +6759,7 @@ components:
           type: array
         description:
           type: string
-        enabled:
+        disabled:
           type: boolean
         secret:
           type: string
@@ -6961,7 +6963,7 @@ components:
         description:
           nullable: true
           type: string
-        enabled:
+        disabled:
           nullable: true
           type: boolean
         secret:
@@ -7410,6 +7412,8 @@ components:
           type: string
         description:
           type: string
+        disabled:
+          type: boolean
         execution:
           $ref: '#/components/schemas/TypesExecution'
         id:
@@ -7630,6 +7634,8 @@ components:
       properties:
         created:
           type: integer
+        created_by:
+          type: integer
         description:
           type: string
         id:
@@ -7830,7 +7836,7 @@ components:
           type: integer
         description:
           type: string
-        enabled:
+        disabled:
           type: boolean
         id:
           type: integer
@@ -7838,6 +7844,8 @@ components:
           type: integer
         repo_id:
           type: integer
+        trigger_type:
+          type: string
         uid:
           type: string
         updated:

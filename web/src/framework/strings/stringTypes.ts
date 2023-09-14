@@ -597,6 +597,19 @@ export interface StringsMap {
   title: string
   token: string
   tooltipRepoEdit: string
+  'triggers.actions': string
+  'triggers.createSuccess': string
+  'triggers.createTrigger': string
+  'triggers.deleteTrigger': string
+  'triggers.deleteTriggerConfirm': string
+  'triggers.deleteTriggerError': string
+  'triggers.deleteTriggerSuccess': string
+  'triggers.disableTrigger': string
+  'triggers.enterTriggerName': string
+  'triggers.failedToCreate': string
+  'triggers.failedToUpdate': string
+  'triggers.newTrigger': string
+  'triggers.updateSuccess': string
   unrsolvedComment: string
   'unsavedChanges.leave': string
   'unsavedChanges.message': string
