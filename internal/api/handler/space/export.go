@@ -18,16 +18,16 @@ func HandleExport(spaceCtrl *space.Controller) http.HandlerFunc {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		in := new(space.ExportInput)
-		err := json.NewDecoder(r.Body).Decode(in)
-		if err != nil {
-			render.BadRequestf(w, "Invalid Request Body: %s.", err)
-			return
-		}
-
 		spaceRef, err := request.GetSpaceRefFromPath(r)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+			return
+		}
+
+		in := new(space.ExportInput)
+		err = json.NewDecoder(r.Body).Decode(in)
+		if err != nil {
+			render.BadRequestf(w, "Invalid Request Body: %s.", err)
 			return
 		}
 
