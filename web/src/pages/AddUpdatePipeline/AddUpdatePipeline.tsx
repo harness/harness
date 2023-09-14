@@ -332,7 +332,7 @@ const AddUpdatePipeline = (): JSX.Element => {
           content={<Layout.Horizontal flex={{ justifyContent: 'space-between' }}>{renderCTA()}</Layout.Horizontal>}
         />
         <PageBody>
-          <Layout.Horizontal className={css.container}>
+          <Layout.Horizontal className={css.layout}>
             <Container className={css.editorContainer}>
               <MonacoSourceCodeEditor
                 language={'yaml'}
