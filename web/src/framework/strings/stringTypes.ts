@@ -155,6 +155,7 @@ export interface StringsMap {
   edited: string
   email: string
   emailRequired: string
+  emailUser: string
   emptyRepoHeader: string
   emptyRepoInclude: string
   emptySpaceText: string

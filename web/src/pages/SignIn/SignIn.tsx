@@ -62,7 +62,7 @@ export const SignIn: React.FC = () => {
               password: Yup.string().required(getString('passwordRequired'))
             })}>
             <FormikForm>
-              <FormInput.Text name="username" label={getString('email')} disabled={false} />
+              <FormInput.Text name="username" label={getString('emailUser')} disabled={false} />
               <FormInput.Text
                 name="password"
                 label={getString('password')}

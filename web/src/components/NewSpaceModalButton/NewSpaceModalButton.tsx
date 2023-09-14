@@ -222,7 +222,7 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
   const spaceCreateOptions: SpaceCreationOption[] = [
     {
       type: SpaceCreationType.CREATE,
-      title: fromSpace ? getString('newSpace') : getString('createSpace'),
+      title: getString('newSpace'),
       desc: getString('importSpace.createNewSpace')
     },
     {

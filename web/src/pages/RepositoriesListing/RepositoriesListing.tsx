@@ -24,6 +24,7 @@ import type { TypesRepository } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useUpdateQueryParams } from 'hooks/useUpdateQueryParams'
+import useSpaceSSE from 'hooks/useSpaceSSE'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { useAppContext } from 'AppContext'
@@ -32,7 +33,6 @@ import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import noRepoImage from './no-repo.svg'
 import css from './RepositoriesListing.module.scss'
-import useSpaceSSE from 'hooks/useSpaceSSE'
 interface TypesRepoExtended extends TypesRepository {
   importing?: boolean
 }

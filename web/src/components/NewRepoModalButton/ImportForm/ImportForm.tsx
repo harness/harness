@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Intent } from '@blueprintjs/core'
 import * as yup from 'yup'
+import { Color } from '@harnessio/design-system'
 import { Button, Container, Layout, FlexExpander, Formik, FormikForm, FormInput, Text } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { FontVariation } from '@harnessio/design-system'
@@ -31,26 +32,39 @@ const ImportForm = (props: ImportFormProps) => {
     description: '',
     isPublic: RepoVisibility.PRIVATE
   }
+  const validationSchemaStepOne = yup.object().shape({
+    repoUrl: yup
+      .string()
+      .matches(MATCH_REPOURL_REGEX, getString('importSpace.invalidUrl'))
+      .required(getString('importRepo.required')),
+    name: yup
+      .string()
+      .trim()
+      .required(getString('validation.nameIsRequired'))
+      .matches(REGEX_VALID_REPO_NAME, getString('validation.repoNamePatternIsNotValid'))
+  })
   return (
-    <Formik
-      initialValues={formInitialValues}
-      formName="importRepoForm"
-      validationSchema={yup.object().shape({
-        repoUrl: yup
-          .string()
-          .matches(MATCH_REPOURL_REGEX, getString('importSpace.invalidUrl'))
-          .required(getString('importRepo.required')),
-        name: yup
-          .string()
-          .trim()
-          .required(getString('validation.nameIsRequired'))
-          .matches(REGEX_VALID_REPO_NAME, getString('validation.repoNamePatternIsNotValid'))
-      })}
-      onSubmit={handleSubmit}>
+    <Formik onSubmit={handleSubmit} initialValues={formInitialValues} formName="importRepoForm">
       {formik => {
+        const handleValidationClick = async () => {
+          try {
+            await validationSchemaStepOne.validate(formik.values, { abortEarly: false })
+            formik.submitForm()
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } catch (err: any) {
+            formik.setErrors(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              err.inner.reduce((acc: { [x: string]: any }, current: { path: string | number; message: string }) => {
+                acc[current.path] = current.message
+                return acc
+              }, {})
+            )
+          }
+        }
         return (
           <FormikForm>
             <FormInput.Text
+              className={css.hideContainer}
               name="repoUrl"
               label={getString('importRepo.url')}
               placeholder={getString('importRepo.urlPlaceholder')}
@@ -69,6 +83,15 @@ const ImportForm = (props: ImportFormProps) => {
                 }
               }}
             />
+            {formik.errors.repoUrl ? (
+              <Text
+                margin={{ top: 'small', bottom: 'small' }}
+                color={Color.RED_500}
+                icon="circle-cross"
+                iconProps={{ color: Color.RED_500 }}>
+                {formik.errors.repoUrl}
+              </Text>
+            ) : null}
             <FormInput.CheckBox
               name="authorization"
               label={getString('importRepo.reqAuth')}
@@ -104,6 +127,7 @@ const ImportForm = (props: ImportFormProps) => {
             <hr className={css.dividerContainer} />
             <FormInput.Text
               name="name"
+              className={css.hideContainer}
               label={getString('name')}
               placeholder={getString('enterRepoName')}
               tooltipProps={{
@@ -113,6 +137,15 @@ const ImportForm = (props: ImportFormProps) => {
                 formik.validateField('repoUrl')
               }}
             />
+            {formik.errors.name ? (
+              <Text
+                margin={{ top: 'small', bottom: 'small' }}
+                color={Color.RED_500}
+                icon="circle-cross"
+                iconProps={{ color: Color.RED_500 }}>
+                {formik.errors.name}
+              </Text>
+            ) : null}
             <FormInput.Text
               name="description"
               label={getString('description')}
@@ -173,7 +206,14 @@ const ImportForm = (props: ImportFormProps) => {
               spacing="small"
               padding={{ right: 'xxlarge', top: 'xlarge', bottom: 'large' }}
               style={{ alignItems: 'center' }}>
-              <Button type="submit" text={getString('importRepo.title')} intent={Intent.PRIMARY} disabled={loading} />
+              <Button
+                text={getString('importRepo.title')}
+                intent={Intent.PRIMARY}
+                disabled={loading}
+                onClick={() => {
+                  handleValidationClick()
+                }}
+              />
               <Button text={getString('cancel')} minimal onClick={hideModal} />
               <FlexExpander />
 
