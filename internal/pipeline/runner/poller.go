@@ -6,9 +6,10 @@ package runner
 
 import (
 	"context"
+	"fmt"
+	"runtime/debug"
 
 	"github.com/harness/gitness/types"
-	"github.com/rs/zerolog/log"
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	"github.com/drone/drone-go/drone"
@@ -23,10 +24,10 @@ func NewExecutionPoller(
 	client runnerclient.Client,
 ) *poller.Poller {
 	// taking the cautious approach of recovering in case of panics
-	runWithRecovery := func(ctx context.Context, stage *drone.Stage) error {
+	runWithRecovery := func(ctx context.Context, stage *drone.Stage) (err error) {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Error().Msgf("received panic: %s", r)
+				err = fmt.Errorf("panic received while executing run: %s", debug.Stack())
 			}
 		}()
 		return runner.Run(ctx, stage)
