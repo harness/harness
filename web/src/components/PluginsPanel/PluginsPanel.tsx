@@ -60,6 +60,9 @@ const RunStep: Plugin = {
   spec: {
     name: 'Run',
     inputs: {
+      image: {
+        type: 'string'
+      },
       script: {
         type: 'string',
         options: { isExtended: true }
@@ -235,7 +238,10 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
       case PluginCategory.Drone:
         return set(pluginStep, 'spec.envs', constructedPayload)
       case PluginCategory.Harness:
-        return { type: 'script', spec: { run: get(constructedPayload, 'script', '') } }
+        return {
+          type: 'script',
+          spec: { image: get(constructedPayload, 'image', ''), run: get(constructedPayload, 'script', '') }
+        }
       default:
         return {}
     }
