@@ -43,3 +43,12 @@
   text-overflow: ellipsis;
   width: calc(30vw - 2 * var(--spacing-huge));
 }
+
+.formFields {
+  height: calc(100% - var(--spacing-xlarge));
+  overflow-y: scroll;
+}
+
+.panelContent {
+  height: calc(100% - var(--spacing-large));
+}

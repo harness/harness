@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useGet, useMutate } from 'restful-react'
 import { Link, useParams } from 'react-router-dom'
 import { get, isEmpty, isUndefined, set } from 'lodash-es'
-import { stringify } from 'yaml'
+import { parse, stringify } from 'yaml'
 import { Menu, PopoverPosition } from '@blueprintjs/core'
 import {
   Container,
@@ -91,7 +91,6 @@ const AddUpdatePipeline = (): JSX.Element => {
   const { repoMetadata } = useGetRepositoryMetadata()
   const { showError, showSuccess, clear: clearToaster } = useToaster()
   const [yamlVersion, setYAMLVersion] = useState<YamlVersion>()
-  const [pipelineAsObj, setPipelineAsObj] = useState<Record<string, any>>({})
   const [pipelineAsYAML, setPipelineAsYaml] = useState<string>('')
   const { openModal: openRunPipelineModal } = useRunPipelineModal()
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
@@ -169,7 +168,7 @@ const AddUpdatePipeline = (): JSX.Element => {
         // ignore exception
       }
     }
-  }, [yamlVersion, isExistingPipeline, originalPipelineYAMLFileContent, pipelineAsObj])
+  }, [yamlVersion, isExistingPipeline, originalPipelineYAMLFileContent])
 
   // find if editor content was modified
   useEffect(() => {
@@ -217,28 +216,40 @@ const AddUpdatePipeline = (): JSX.Element => {
     }
   }
 
-  const updatePipeline = (payload: Record<string, any>): Record<string, any> => {
-    const pipelineAsObjClone = { ...pipelineAsObj }
-    const stepInsertPath = yamlVersion === YamlVersion.V1 ? 'spec.stages.0.spec.steps' : 'steps'
-    let existingSteps: [unknown] = get(pipelineAsObjClone, stepInsertPath, [])
-    if (existingSteps.length > 0) {
-      existingSteps.push(payload)
-    } else {
-      existingSteps = [payload]
+  const updatePipelineWithPluginData = (
+    existingPipeline: Record<string, any>,
+    payload: Record<string, any>
+  ): Record<string, any> => {
+    const pipelineAsObjClone = { ...existingPipeline }
+    if (Object.keys(pipelineAsObjClone).length > 0) {
+      const stepInsertPath = 'spec.stages.0.spec.steps'
+      let existingSteps: [unknown] = get(pipelineAsObjClone, stepInsertPath, [])
+      if (existingSteps.length > 0) {
+        existingSteps.push(payload)
+      } else {
+        existingSteps = [payload]
+      }
+      set(pipelineAsObjClone, stepInsertPath, existingSteps)
+      return pipelineAsObjClone
     }
-    set(pipelineAsObjClone, stepInsertPath, existingSteps)
-    return pipelineAsObjClone
+    return existingPipeline
   }
 
-  const addUpdatePluginToPipelineYAML = (_isUpdate: boolean, pluginFormData: Record<string, any>): void => {
-    try {
-      const updatedPipelineAsObj = updatePipeline(pluginFormData)
-      setPipelineAsObj(updatedPipelineAsObj)
-      setPipelineAsYaml(stringify(updatedPipelineAsObj))
-    } catch (ex) {
-      // ignore exception
-    }
-  }
+  const handlePluginAddUpdateIntoYAML = useCallback(
+    (_isUpdate: boolean, pluginFormData: Record<string, any>): void => {
+      try {
+        const pipeline = parse(pipelineAsYAML)
+        const updatedPipelineAsObj = updatePipelineWithPluginData(pipeline, pluginFormData)
+        if (Object.keys(updatedPipelineAsObj).length > 0) {
+          // avoid setting to empty pipeline in case pipeline update with plugin data fails
+          setPipelineAsYaml(stringify(updatedPipelineAsObj))
+        }
+      } catch (ex) {
+        // ignore exception
+      }
+    },
+    [yamlVersion, isExistingPipeline, originalPipelineYAMLFileContent, pipelineAsYAML]
+  )
 
   const renderCTA = useCallback(() => {
     switch (selectedOption?.action) {
@@ -300,6 +311,10 @@ const AddUpdatePipeline = (): JSX.Element => {
     }
   }, [loading, fetchingPipeline, isDirty, repoMetadata, pipeline, selectedOption, isExistingPipeline, pipelineAsYAML])
 
+  if (fetchingPipeline || fetchingPipelineYAMLFileContent) {
+    return <LoadingSpinner visible={true} />
+  }
+
   return (
     <>
       <Container className={css.main}>
@@ -317,7 +332,6 @@ const AddUpdatePipeline = (): JSX.Element => {
           content={<Layout.Horizontal flex={{ justifyContent: 'space-between' }}>{renderCTA()}</Layout.Horizontal>}
         />
         <PageBody>
-          <LoadingSpinner visible={fetchingPipeline || fetchingPipelineYAMLFileContent} />
           <Layout.Horizontal className={css.container}>
             <Container className={css.editorContainer}>
               <MonacoSourceCodeEditor
@@ -327,9 +341,11 @@ const AddUpdatePipeline = (): JSX.Element => {
                 onChange={(value: string) => setPipelineAsYaml(value)}
               />
             </Container>
-            <Container className={css.pluginsContainer}>
-              <PluginsPanel onPluginAddUpdate={addUpdatePluginToPipelineYAML} version={yamlVersion} />
-            </Container>
+            {yamlVersion === YamlVersion.V1 && (
+              <Container className={css.pluginsContainer}>
+                <PluginsPanel onPluginAddUpdate={handlePluginAddUpdateIntoYAML} />
+              </Container>
+            )}
           </Layout.Horizontal>
         </PageBody>
       </Container>
