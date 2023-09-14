@@ -188,6 +188,7 @@ type PushOptions struct {
 	ForceWithLease string
 	Env            []string
 	Timeout        time.Duration
+	Mirror         bool
 }
 
 type TreeNodeWithCommit struct {

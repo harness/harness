@@ -24,6 +24,7 @@ type Client struct {
 	diffService        rpc.DiffServiceClient
 	mergeService       rpc.MergeServiceClient
 	blameService       rpc.BlameServiceClient
+	pushService        rpc.PushServiceClient
 }
 
 func New(config Config) (*Client, error) {
@@ -76,5 +77,6 @@ func NewWithConn(conn *grpc.ClientConn) *Client {
 		diffService:        rpc.NewDiffServiceClient(conn),
 		mergeService:       rpc.NewMergeServiceClient(conn),
 		blameService:       rpc.NewBlameServiceClient(conn),
+		pushService:        rpc.NewPushServiceClient(conn),
 	}
 }

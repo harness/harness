@@ -99,6 +99,7 @@ func NewServer(config Config, adapter service.GitAdapter) (*GRPCServer, error) {
 		return nil, err
 	}
 	blameService := service.NewBlameService(adapter, reposRoot)
+	pushService := service.NewPushService(adapter, reposRoot)
 
 	// register services
 	rpc.RegisterRepositoryServiceServer(s, repoService)
@@ -108,6 +109,7 @@ func NewServer(config Config, adapter service.GitAdapter) (*GRPCServer, error) {
 	rpc.RegisterDiffServiceServer(s, diffService)
 	rpc.RegisterMergeServiceServer(s, mergeService)
 	rpc.RegisterBlameServiceServer(s, blameService)
+	rpc.RegisterPushServiceServer(s, pushService)
 
 	return &GRPCServer{
 		Server: s,
