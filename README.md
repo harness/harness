@@ -91,7 +91,7 @@ Register a new user:
 $ ./gitness register
 ```
 
-> NOTE: A user `admin` (pw: `changeit`) gets created by default.
+> NOTE: A user with id `admin` (pw: `changeit`) gets created by default.
 
 Login to the application:
 
