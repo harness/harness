@@ -1,191 +1,22 @@
-import {
-  Button,
-  ButtonVariation,
-  Container,
-  FormInput,
-  Formik,
-  FormikForm,
-  Layout,
-  PageBody,
-  Text,
-  useToaster
-} from '@harnessio/uicore'
+import { Container, PageBody } from '@harnessio/uicore'
 import React from 'react'
-import { useHistory, useParams } from 'react-router-dom'
-import { Color, Intent } from '@harnessio/design-system'
-import { useGet, useMutate } from 'restful-react'
+import { useParams } from 'react-router-dom'
+import { useGet } from 'restful-react'
 import cx from 'classnames'
-import * as yup from 'yup'
 import PipelineSettingsPageHeader from 'components/PipelineSettingsPageHeader/PipelineSettingsPageHeader'
-import { String, useStrings } from 'framework/strings'
+import { useStrings } from 'framework/strings'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { routes, type CODEProps } from 'RouteDefinitions'
-import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage, voidFn } from 'utils/Utils'
-import type { OpenapiUpdatePipelineRequest, TypesPipeline } from 'services/code'
+import type { TypesPipeline } from 'services/code'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
+import PipelineSettingsTab from 'components/PipelineSettingsTab/PipelineSettingsTab'
+import PipelineTriggersTabs from 'components/PipelineTriggersTab/PipelineTriggersTab'
 import css from './PipelineSettings.module.scss'
 
 export enum TabOptions {
   SETTINGS = 'Settings',
   TRIGGERS = 'Triggers'
-}
-
-interface SettingsContentProps {
-  pipeline: string
-  repoPath: string
-  yamlPath: string
-}
-
-interface SettingsFormData {
-  name: string
-  yamlPath: string
-}
-
-const SettingsContent = ({ pipeline, repoPath, yamlPath }: SettingsContentProps) => {
-  const { getString } = useStrings()
-  const { mutate: updatePipeline } = useMutate<TypesPipeline>({
-    verb: 'PATCH',
-    path: `/api/v1/repos/${repoPath}/+/pipelines/${pipeline}`
-  })
-  const { mutate: deletePipeline } = useMutate<TypesPipeline>({
-    verb: 'DELETE',
-    path: `/api/v1/repos/${repoPath}/+/pipelines/${pipeline}`
-  })
-  const { showSuccess, showError } = useToaster()
-  const confirmDeletePipeline = useConfirmAct()
-  const history = useHistory()
-
-  return (
-    <Layout.Vertical padding={'medium'} spacing={'medium'}>
-      <Container padding={'large'} className={css.generalContainer}>
-        <Formik<SettingsFormData>
-          initialValues={{
-            name: pipeline,
-            yamlPath
-          }}
-          formName="pipelineSettings"
-          enableReinitialize={true}
-          validationSchema={yup.object().shape({
-            name: yup
-              .string()
-              .trim()
-              .required(`${getString('name')} ${getString('isRequired')}`),
-            yamlPath: yup
-              .string()
-              .trim()
-              .required(`${getString('pipelines.yamlPath')} ${getString('isRequired')}`)
-          })}
-          validateOnChange
-          validateOnBlur
-          onSubmit={async formData => {
-            const { name, yamlPath: newYamlPath } = formData
-            try {
-              const payload: OpenapiUpdatePipelineRequest = {
-                config_path: newYamlPath,
-                uid: name
-              }
-              await updatePipeline(payload, {
-                pathParams: { path: `/api/v1/repos/${repoPath}/+/pipelines/${pipeline}` }
-              })
-              history.push(
-                routes.toCODEPipelineSettings({
-                  repoPath,
-                  pipeline: name
-                })
-              )
-              showSuccess(getString('pipelines.updatePipelineSuccess', { pipeline }))
-            } catch (exception) {
-              showError(getErrorMessage(exception), 0, 'pipelines.failedToUpdatePipeline')
-            }
-          }}>
-          {() => {
-            return (
-              <FormikForm>
-                <Layout.Vertical spacing={'large'}>
-                  <Layout.Horizontal spacing={'large'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-                    <FormInput.Text
-                      name="name"
-                      className={css.textContainer}
-                      label={
-                        <Text color={Color.GREY_800} font={{ size: 'small' }}>
-                          {getString('name')}
-                        </Text>
-                      }
-                    />
-                  </Layout.Horizontal>
-                  <Layout.Horizontal spacing={'large'} flex={{ alignItems: 'center', justifyContent: 'flex-start' }}>
-                    <FormInput.Text
-                      name="yamlPath"
-                      className={css.textContainer}
-                      label={
-                        <Text color={Color.GREY_800} font={{ size: 'small' }}>
-                          {getString('pipelines.yamlPath')}
-                        </Text>
-                      }
-                    />
-                  </Layout.Horizontal>
-                  <Layout.Horizontal spacing={'large'}>
-                    <Button intent={Intent.PRIMARY} type="submit" text={getString('save')} />
-                    <Button variation={ButtonVariation.TERTIARY} type="reset" text={getString('cancel')} />
-                  </Layout.Horizontal>
-                </Layout.Vertical>
-              </FormikForm>
-            )
-          }}
-        </Formik>
-      </Container>
-      <Container padding={'large'} className={css.generalContainer}>
-        <Layout.Vertical>
-          <Text icon="main-trash" color={Color.GREY_600} font={{ size: 'normal' }}>
-            {getString('dangerDeleteRepo')}
-          </Text>
-          <Layout.Horizontal padding={{ top: 'medium', left: 'medium' }} flex={{ justifyContent: 'space-between' }}>
-            <Container intent="warning" padding={'small'} className={css.yellowContainer}>
-              <Text
-                icon="main-issue"
-                iconProps={{ size: 18, color: Color.ORANGE_700, margin: { right: 'small' } }}
-                color={Color.WARNING}>
-                {getString('pipelines.deletePipelineWarning', {
-                  pipeline
-                })}
-              </Text>
-            </Container>
-            <Button
-              margin={{ right: 'medium' }}
-              intent={Intent.DANGER}
-              onClick={() => {
-                confirmDeletePipeline({
-                  title: getString('pipelines.deletePipelineButton'),
-                  confirmText: getString('delete'),
-                  intent: Intent.DANGER,
-                  message: <String useRichText stringID="pipelines.deletePipelineConfirm" vars={{ pipeline }} />,
-                  action: async () => {
-                    try {
-                      await deletePipeline(null)
-                      history.push(
-                        routes.toCODEPipelines({
-                          repoPath
-                        })
-                      )
-                      showSuccess(getString('pipelines.deletePipelineSuccess', { pipeline }))
-                    } catch (e) {
-                      showError(getString('pipelines.deletePipelineError'))
-                    }
-                  }
-                })
-              }}
-              variation={ButtonVariation.PRIMARY}
-              text={getString('pipelines.deletePipelineButton')}></Button>
-          </Layout.Horizontal>
-        </Layout.Vertical>
-      </Container>
-    </Layout.Vertical>
-  )
-}
-
-const TriggersContent = () => {
-  return <div>Triggers</div>
 }
 
 const PipelineSettings = () => {
@@ -232,13 +63,15 @@ const PipelineSettings = () => {
         retryOnError={voidFn(refetch)}>
         <LoadingSpinner visible={loading || pipelineLoading} withBorder={!!pipeline} />
         {selectedTab === TabOptions.SETTINGS && (
-          <SettingsContent
+          <PipelineSettingsTab
             pipeline={pipeline as string}
             repoPath={repoMetadata?.path as string}
             yamlPath={pipelineData?.config_path as string}
           />
         )}
-        {selectedTab === TabOptions.TRIGGERS && <TriggersContent />}
+        {selectedTab === TabOptions.TRIGGERS && (
+          <PipelineTriggersTabs pipeline={pipeline as string} repoPath={repoMetadata?.path as string} />
+        )}
       </PageBody>
     </Container>
   )

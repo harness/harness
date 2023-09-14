@@ -17,14 +17,17 @@ import (
 )
 
 type CreateTokenInput struct {
-	UID      string           `json:"uid"`
-	Lifetime *time.Duration   `json:"lifetime"`
-	Grants   enum.AccessGrant `json:"grants"`
+	UID      string         `json:"uid"`
+	Lifetime *time.Duration `json:"lifetime"`
 }
 
 // CreateToken creates a new service account access token.
-func (c *Controller) CreateToken(ctx context.Context, session *auth.Session,
-	saUID string, in *CreateTokenInput) (*types.TokenResponse, error) {
+func (c *Controller) CreateToken(
+	ctx context.Context,
+	session *auth.Session,
+	saUID string,
+	in *CreateTokenInput,
+) (*types.TokenResponse, error) {
 	sa, err := findServiceAccountFromUID(ctx, c.principalStore, saUID)
 	if err != nil {
 		return nil, err
@@ -36,18 +39,20 @@ func (c *Controller) CreateToken(ctx context.Context, session *auth.Session,
 	if err = check.TokenLifetime(in.Lifetime, true); err != nil {
 		return nil, err
 	}
-	// TODO: Added to unblock UI - Depending on product decision enforce grants, or remove Grants completely.
-	if err = check.AccessGrant(in.Grants, true); err != nil {
-		return nil, err
-	}
 
 	// Ensure principal has required permissions on parent (ensures that parent exists)
 	if err = apiauth.CheckServiceAccount(ctx, c.authorizer, session, c.spaceStore, c.repoStore,
 		sa.ParentType, sa.ParentID, sa.UID, enum.PermissionServiceAccountEdit); err != nil {
 		return nil, err
 	}
-	token, jwtToken, err := token.CreateSAT(ctx, c.tokenStore, &session.Principal,
-		sa, in.UID, in.Lifetime, in.Grants)
+	token, jwtToken, err := token.CreateSAT(
+		ctx,
+		c.tokenStore,
+		&session.Principal,
+		sa,
+		in.UID,
+		in.Lifetime,
+	)
 	if err != nil {
 		return nil, err
 	}

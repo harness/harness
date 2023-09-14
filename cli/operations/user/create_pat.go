@@ -13,7 +13,6 @@ import (
 
 	"github.com/harness/gitness/cli/provide"
 	"github.com/harness/gitness/internal/api/controller/user"
-	"github.com/harness/gitness/types/enum"
 
 	"github.com/drone/funcmap"
 	"github.com/gotidy/ptr"
@@ -47,7 +46,6 @@ func (c *createPATCommand) run(*kingpin.ParseContext) error {
 	in := user.CreateTokenInput{
 		UID:      c.uid,
 		Lifetime: lifeTime,
-		Grants:   enum.AccessGrantAll,
 	}
 
 	tokenResp, err := provide.Client().UserCreatePAT(ctx, in)

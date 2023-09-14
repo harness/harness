@@ -29,6 +29,17 @@ func NewSystemServiceSession() *auth.Session {
 	}
 }
 
+// pipelineServicePrincipal is the principal that is used during
+// pipeline executions for calling gitness APIs.
+var pipelineServicePrincipal *types.Principal
+
+func NewPipelineServiceSession() *auth.Session {
+	return &auth.Session{
+		Principal: *pipelineServicePrincipal,
+		Metadata:  &auth.EmptyMetadata{},
+	}
+}
+
 // Bootstrap is an abstraction of a function that bootstraps a system.
 type Bootstrap func(context.Context) error
 
@@ -36,11 +47,15 @@ func System(config *types.Config, userCtrl *user.Controller,
 	serviceCtrl *service.Controller) func(context.Context) error {
 	return func(ctx context.Context) error {
 		if err := SystemService(ctx, config, serviceCtrl); err != nil {
-			return err
+			return fmt.Errorf("failed to setup system service: %w", err)
+		}
+
+		if err := PipelineService(ctx, config, serviceCtrl); err != nil {
+			return fmt.Errorf("failed to setup pipeline service: %w", err)
 		}
 
 		if err := AdminUser(ctx, config, userCtrl); err != nil {
-			return err
+			return fmt.Errorf("failed to setup admin user: %w", err)
 		}
 
 		return nil
@@ -70,7 +85,11 @@ func AdminUser(ctx context.Context, config *types.Config, userCtrl *user.Control
 	return nil
 }
 
-func createAdminUser(ctx context.Context, config *types.Config, userCtrl *user.Controller) (*types.User, error) {
+func createAdminUser(
+	ctx context.Context,
+	config *types.Config,
+	userCtrl *user.Controller,
+) (*types.User, error) {
 	in := &user.CreateInput{
 		UID:         config.Principal.Admin.UID,
 		DisplayName: config.Principal.Admin.DisplayName,
@@ -96,10 +115,21 @@ func createAdminUser(ctx context.Context, config *types.Config, userCtrl *user.C
 
 // SystemService sets up the gitness service principal that is used for
 // resources that are automatically created by the system.
-func SystemService(ctx context.Context, config *types.Config, serviceCtrl *service.Controller) error {
+func SystemService(
+	ctx context.Context,
+	config *types.Config,
+	serviceCtrl *service.Controller,
+) error {
 	svc, err := serviceCtrl.FindNoAuth(ctx, config.Principal.System.UID)
 	if errors.Is(err, store.ErrResourceNotFound) {
-		svc, err = createSystemService(ctx, config, serviceCtrl)
+		svc, err = createServicePrincipal(
+			ctx,
+			serviceCtrl,
+			config.Principal.System.UID,
+			config.Principal.System.Email,
+			config.Principal.System.DisplayName,
+			true,
+		)
 	}
 
 	if err != nil {
@@ -116,25 +146,65 @@ func SystemService(ctx context.Context, config *types.Config, serviceCtrl *servi
 	return nil
 }
 
-func createSystemService(ctx context.Context, config *types.Config,
-	serviceCtrl *service.Controller) (*types.Service, error) {
-	in := &service.CreateInput{
-		UID:         config.Principal.System.UID,
-		Email:       config.Principal.System.Email,
-		DisplayName: config.Principal.System.DisplayName,
+// PipelineService sets up the pipeline service principal that is used during
+// pipeline executions for calling gitness APIs.
+func PipelineService(
+	ctx context.Context,
+	config *types.Config,
+	serviceCtrl *service.Controller,
+) error {
+	svc, err := serviceCtrl.FindNoAuth(ctx, config.Principal.Pipeline.UID)
+	if errors.Is(err, store.ErrResourceNotFound) {
+		svc, err = createServicePrincipal(
+			ctx,
+			serviceCtrl,
+			config.Principal.Pipeline.UID,
+			config.Principal.Pipeline.Email,
+			config.Principal.Pipeline.DisplayName,
+			false,
+		)
 	}
 
-	svc, createErr := serviceCtrl.CreateNoAuth(ctx, in, true)
+	if err != nil {
+		return fmt.Errorf("failed to setup pipeline service: %w", err)
+	}
+
+	pipelineServicePrincipal = svc.ToPrincipal()
+
+	log.Ctx(ctx).Info().Msgf("Completed setup of pipeline service '%s' (id: %d).", svc.UID, svc.ID)
+
+	return nil
+}
+
+func createServicePrincipal(
+	ctx context.Context,
+	serviceCtrl *service.Controller,
+	uid string,
+	email string,
+	displayName string,
+	admin bool,
+) (*types.Service, error) {
+	in := &service.CreateInput{
+		UID:         uid,
+		Email:       email,
+		DisplayName: displayName,
+	}
+
+	svc, createErr := serviceCtrl.CreateNoAuth(ctx, in, admin)
 	if createErr == nil || !errors.Is(createErr, store.ErrDuplicate) {
 		return svc, createErr
 	}
 
 	// service might've been created by another instance in which case we should find it now.
 	var findErr error
-	svc, findErr = serviceCtrl.FindNoAuth(ctx, config.Principal.System.UID)
+	svc, findErr = serviceCtrl.FindNoAuth(ctx, uid)
 	if findErr != nil {
-		return nil, fmt.Errorf("failed to find service with uid '%s' (%s) after duplicate error: %w",
-			config.Principal.System.UID, findErr, createErr)
+		return nil, fmt.Errorf(
+			"failed to find service with uid '%s' (%s) after duplicate error: %w",
+			uid,
+			findErr,
+			createErr,
+		)
 	}
 
 	return svc, nil

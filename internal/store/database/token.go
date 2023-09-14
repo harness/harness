@@ -127,7 +127,6 @@ token_id
 ,token_uid
 ,token_principal_id
 ,token_expires_at
-,token_grants
 ,token_issued_at
 ,token_created_by
 FROM tokens
@@ -168,7 +167,6 @@ INSERT INTO tokens (
 	,token_uid
 	,token_principal_id
 	,token_expires_at
-	,token_grants
 	,token_issued_at
 	,token_created_by
 ) values (
@@ -176,7 +174,6 @@ INSERT INTO tokens (
 	,:token_uid
 	,:token_principal_id
 	,:token_expires_at
-	,:token_grants
 	,:token_issued_at
 	,:token_created_by
 ) RETURNING token_id

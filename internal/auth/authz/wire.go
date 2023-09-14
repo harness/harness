@@ -18,8 +18,8 @@ var WireSet = wire.NewSet(
 	ProvidePermissionCache,
 )
 
-func ProvideAuthorizer(pCache PermissionCache) Authorizer {
-	return NewMembershipAuthorizer(pCache)
+func ProvideAuthorizer(pCache PermissionCache, spaceStore store.SpaceStore) Authorizer {
+	return NewMembershipAuthorizer(pCache, spaceStore)
 }
 
 func ProvidePermissionCache(

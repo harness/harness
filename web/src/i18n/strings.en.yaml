@@ -730,5 +730,19 @@ importSpace:
   githubOrg: GitHub Organization Name
   gitlabGroup: GitLab Group Name
 importProgress: 'Import in progress...'
+triggers:
+  newTrigger: New Trigger
+  createTrigger: Create a Trigger
+  createSuccess: Trigger created successfully
+  failedToCreate: Failed to create Trigger. Please try again.
+  enterTriggerName: Enter Trigger name
+  actions: Actions
+  updateSuccess: Trigger updated successfully
+  failedToUpdate: Failed to update Trigger. Please try again.
+  deleteTrigger: Delete trigger
+  disableTrigger: Disable trigger
+  deleteTriggerConfirm: Are you sure you want to delete trigger <strong>{{name}}</strong>? You can't undo this action.
+  deleteTriggerSuccess: Trigger {{name}} deleted.
+  deleteTriggerError: Failed to delete Trigger. Please try again.
 step:
   select: Select a step

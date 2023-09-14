@@ -9,7 +9,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
+	"time"
 
+	"github.com/harness/gitness/internal/bootstrap"
+	"github.com/harness/gitness/internal/jwt"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
 	"github.com/harness/gitness/internal/sse"
@@ -21,6 +25,13 @@ import (
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
+)
+
+const (
+	// pipelineJWTLifetime specifies the max lifetime of an ephemeral pipeline jwt token.
+	pipelineJWTLifetime = 72 * time.Hour
+	// pipelineJWTRole specifies the role of an ephemeral pipeline jwt token.
+	pipelineJWTRole = enum.MembershipRoleContributor
 )
 
 var noContext = context.Background()
@@ -47,6 +58,14 @@ type (
 		Kind string `json:"kind"`
 	}
 
+	// Netrc contains login and initialization information used
+	// by an automated login process.
+	Netrc struct {
+		Machine  string `json:"machine"`
+		Login    string `json:"login"`
+		Password string `json:"password"`
+	}
+
 	// ExecutionContext represents the minimum amount of information
 	// required by the runner to execute a build.
 	ExecutionContext struct {
@@ -55,6 +74,7 @@ type (
 		Stage     *types.Stage      `json:"stage"`
 		Secrets   []*types.Secret   `json:"secrets"`
 		Config    *file.File        `json:"config"`
+		Netrc     *Netrc            `json:"netrc"`
 	}
 
 	// ExecutionManager encapsulates complex build operations and provides
@@ -294,12 +314,44 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 		return nil, err
 	}
 
+	netrc, err := m.createNetrc(repo)
+	if err != nil {
+		log.Warn().Err(err).Msg("manager: failed to create netrc")
+		return nil, err
+	}
+
 	return &ExecutionContext{
 		Repo:      repo,
 		Execution: execution,
 		Stage:     stage,
 		Secrets:   secrets,
 		Config:    file,
+		Netrc:     netrc,
+	}, nil
+}
+
+func (m *Manager) createNetrc(repo *types.Repository) (*Netrc, error) {
+	pipelinePrincipal := bootstrap.NewPipelineServiceSession().Principal
+	jwt, err := jwt.GenerateWithMembership(
+		pipelinePrincipal.ID,
+		repo.ParentID,
+		pipelineJWTRole,
+		pipelineJWTLifetime,
+		pipelinePrincipal.Salt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create jwt: %w", err)
+	}
+
+	cloneUrl, err := url.Parse(repo.GitURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse clone url '%s': %w", cloneUrl, err)
+	}
+
+	return &Netrc{
+		Machine:  cloneUrl.Hostname(),
+		Login:    pipelinePrincipal.UID,
+		Password: jwt,
 	}, nil
 }
 

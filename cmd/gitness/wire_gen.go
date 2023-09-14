@@ -85,7 +85,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	principalInfoCache := cache.ProvidePrincipalInfoCache(principalInfoView)
 	membershipStore := database.ProvideMembershipStore(db, principalInfoCache)
 	permissionCache := authz.ProvidePermissionCache(spaceStore, membershipStore)
-	authorizer := authz.ProvideAuthorizer(permissionCache)
+	authorizer := authz.ProvideAuthorizer(permissionCache, spaceStore)
 	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
 	principalStore := database.ProvidePrincipalStore(db, principalUIDTransformation)
 	tokenStore := database.ProvideTokenStore(db)

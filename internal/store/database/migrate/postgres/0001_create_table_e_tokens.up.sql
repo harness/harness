@@ -8,4 +8,9 @@ CREATE TABLE tokens (
 ,token_issued_at      BIGINT
 ,token_created_by     INTEGER
 ,UNIQUE(token_principal_id, token_uid)
+
+,CONSTRAINT fk_token_principal_id FOREIGN KEY (token_principal_id)
+    REFERENCES principals (principal_id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE
 );

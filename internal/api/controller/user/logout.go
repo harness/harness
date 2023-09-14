@@ -33,7 +33,7 @@ func (c *Controller) Logout(ctx context.Context, session *auth.Session) error {
 		tokenID = t.TokenID
 		tokenType = t.TokenType
 	default:
-		return errors.New("session metadata is of unknown type")
+		return errors.New("provided jwt doesn't support logout")
 	}
 
 	if tokenType != enum.TokenTypeSession {

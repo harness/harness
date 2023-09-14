@@ -18,6 +18,8 @@ var (
 // DisectLeaf splits a path into its parent path and the leaf name
 // e.g. space1/space2/space3 -> (space1/space2, space3, nil).
 func DisectLeaf(path string) (string, string, error) {
+	path = strings.Trim(path, types.PathSeparator)
+
 	if path == "" {
 		return "", "", ErrPathEmpty
 	}
@@ -33,6 +35,8 @@ func DisectLeaf(path string) (string, string, error) {
 // DisectRoot splits a path into its root space and sub-path
 // e.g. space1/space2/space3 -> (space1, space2/space3, nil).
 func DisectRoot(path string) (string, string, error) {
+	path = strings.Trim(path, types.PathSeparator)
+
 	if path == "" {
 		return "", "", ErrPathEmpty
 	}
@@ -67,5 +71,19 @@ func Concatinate(path1 string, path2 string) string {
 // Segments returns all segments of the path
 // e.g. /space1/space2/space3 -> [space1, space2, space3].
 func Segments(path string) []string {
+	path = strings.Trim(path, types.PathSeparator)
 	return strings.Split(path, types.PathSeparator)
+}
+
+// IsAncesterOf returns true iff 'path' is an ancestor of 'other' or they are the same.
+// e.g. other = path(/.*)
+func IsAncesterOf(path string, other string) bool {
+	path = strings.Trim(path, types.PathSeparator)
+	other = strings.Trim(other, types.PathSeparator)
+
+	// add "/" to both to handle space1/inner and space1/in
+	return strings.Contains(
+		other+types.PathSeparator,
+		path+types.PathSeparator,
+	)
 }

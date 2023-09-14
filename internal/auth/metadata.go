@@ -17,23 +17,22 @@ func (m *EmptyMetadata) ImpactsAuthorization() bool {
 	return false
 }
 
-// SSHMetadata contains information about the ssh connection that was used during auth.
-type SSHMetadata struct {
-	KeyID  string
-	Grants enum.AccessGrant // retrieved from ssh key table during verification
-}
-
-func (m *SSHMetadata) ImpactsAuthorization() bool {
-	return m.Grants != enum.AccessGrantAll
-}
-
 // TokenMetadata contains information about the token that was used during auth.
 type TokenMetadata struct {
 	TokenType enum.TokenType
 	TokenID   int64
-	Grants    enum.AccessGrant // retrieved from token during verification
 }
 
 func (m *TokenMetadata) ImpactsAuthorization() bool {
-	return m.Grants != enum.AccessGrantAll
+	return false
+}
+
+// MembershipMetadata contains information about an ephemeral membership grant.
+type MembershipMetadata struct {
+	SpaceID int64
+	Role    enum.MembershipRole
+}
+
+func (m *MembershipMetadata) ImpactsAuthorization() bool {
+	return true
 }

@@ -6745,8 +6745,6 @@ components:
       type: object
     OpenapiCreateTokenRequest:
       properties:
-        grants:
-          $ref: '#/components/schemas/EnumAccessGrant'
         lifetime:
           $ref: '#/components/schemas/TimeDuration'
         uid:
@@ -6761,7 +6759,7 @@ components:
           type: array
         description:
           type: string
-        enabled:
+        disabled:
           type: boolean
         secret:
           type: string
@@ -6965,7 +6963,7 @@ components:
         description:
           nullable: true
           type: string
-        enabled:
+        disabled:
           nullable: true
           type: boolean
         secret:
@@ -7414,6 +7412,8 @@ components:
           type: string
         description:
           type: string
+        disabled:
+          type: boolean
         execution:
           $ref: '#/components/schemas/TypesExecution'
         id:
@@ -7634,6 +7634,8 @@ components:
       properties:
         created:
           type: integer
+        created_by:
+          type: integer
         description:
           type: string
         id:
@@ -7805,8 +7807,6 @@ components:
         expires_at:
           nullable: true
           type: integer
-        grants:
-          $ref: '#/components/schemas/EnumAccessGrant'
         issued_at:
           type: integer
         principal_id:
@@ -7836,7 +7836,7 @@ components:
           type: integer
         description:
           type: string
-        enabled:
+        disabled:
           type: boolean
         id:
           type: integer
@@ -7844,6 +7844,8 @@ components:
           type: integer
         repo_id:
           type: integer
+        trigger_type:
+          type: string
         uid:
           type: string
         updated:

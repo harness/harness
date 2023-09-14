@@ -5,8 +5,6 @@ import { Get, GetProps, useGet, UseGetProps, Mutate, MutateProps, useMutate, Use
 
 import { getConfig } from '../config'
 export const SPEC_VERSION = '0.0.0'
-export type EnumAccessGrant = number
-
 export type EnumCIStatus = string
 
 export type EnumCheckPayloadKind = '' | 'markdown' | 'pipeline' | 'raw'
@@ -270,7 +268,6 @@ export interface OpenapiCreateTemplateRequest {
 }
 
 export interface OpenapiCreateTokenRequest {
-  grants?: EnumAccessGrant
   lifetime?: TimeDuration
   uid?: string
 }
@@ -278,7 +275,7 @@ export interface OpenapiCreateTokenRequest {
 export interface OpenapiCreateTriggerRequest {
   actions?: EnumTriggerAction[] | null
   description?: string
-  enabled?: boolean
+  disabled?: boolean
   secret?: string
   uid?: string
 }
@@ -401,7 +398,7 @@ export interface OpenapiUpdateTemplateRequest {
 export interface OpenapiUpdateTriggerRequest {
   actions?: EnumTriggerAction[] | null
   description?: string | null
-  enabled?: boolean | null
+  disabled?: boolean | null
   secret?: string | null
   uid?: string | null
 }
@@ -660,6 +657,7 @@ export interface TypesPipeline {
   created_by?: number
   default_branch?: string
   description?: string
+  disabled?: boolean
   execution?: TypesExecution
   id?: number
   repo_id?: number
@@ -779,6 +777,7 @@ export interface TypesRepository {
 
 export interface TypesSecret {
   created?: number
+  created_by?: number
   description?: string
   id?: number
   space_id?: number
@@ -872,7 +871,6 @@ export interface TypesTemplate {
 export interface TypesToken {
   created_by?: number
   expires_at?: number | null
-  grants?: EnumAccessGrant
   issued_at?: number
   principal_id?: number
   type?: EnumTokenType
@@ -889,10 +887,11 @@ export interface TypesTrigger {
   created?: number
   created_by?: number
   description?: string
-  enabled?: boolean
+  disabled?: boolean
   id?: number
   pipeline_id?: number
   repo_id?: number
+  trigger_type?: string
   uid?: string
   updated?: number
 }
