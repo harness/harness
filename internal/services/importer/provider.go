@@ -191,7 +191,7 @@ func LoadRepositoriesFromProviderSpace(ctx context.Context, provider Provider, s
 			// in some cases the namespace filter isn't working (e.g. Gitlab)
 			if scmRepo.Namespace != spaceSlug {
 				continue
-+			}
+			}
 
 			repos = append(repos, RepositoryInfo{
 				Space:         scmRepo.Namespace,
