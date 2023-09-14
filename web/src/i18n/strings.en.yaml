@@ -691,7 +691,6 @@ failedToFetchFileContent: 'ERROR: Failed to fetch file content.'
 run: Run
 plugins:
   title: Plugins
-  addAPlugin: Add a {{category}} plugin
   stepLabel: step
 createNewRepo: Create New repository
 importGitRepo: Import Git Repository
@@ -730,3 +729,5 @@ importSpace:
   githubOrg: GitHub Organization Name
   gitlabGroup: GitLab Group Name
 importProgress: 'Import in progress...'
+step:
+  select: Select a step

@@ -318,7 +318,7 @@ const AddUpdatePipeline = (): JSX.Element => {
         />
         <PageBody>
           <LoadingSpinner visible={fetchingPipeline || fetchingPipelineYAMLFileContent} />
-          <Layout.Horizontal>
+          <Layout.Horizontal className={css.container}>
             <Container className={css.editorContainer}>
               <MonacoSourceCodeEditor
                 language={'yaml'}

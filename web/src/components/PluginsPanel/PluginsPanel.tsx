@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Formik } from 'formik'
 import { capitalize, get } from 'lodash-es'
-import { useGet } from 'restful-react'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon, type IconName } from '@harnessio/icons'
-import { Button, ButtonVariation, Container, FormInput, FormikForm, Layout, Tab, Tabs, Text } from '@harnessio/uicore'
+import { Button, ButtonVariation, Container, FormInput, FormikForm, Layout, Text } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
-import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 import type { TypesPlugin } from 'services/code'
 import { YamlVersion } from 'pages/AddUpdatePipeline/Constants'
+
+import pluginList from './plugins/plugins.json'
 
 import css from './PluginsPanel.module.scss'
 
@@ -80,19 +80,12 @@ export const PluginsPanel = ({ version = YamlVersion.V0, onPluginAddUpdate }: Pl
   const [category, setCategory] = useState<PluginCategory>()
   const [panelView, setPanelView] = useState<PluginPanelView>(PluginPanelView.Category)
   const [plugin, setPlugin] = useState<TypesPlugin>()
+  const [plugins, setPlugins] = useState<Record<string, any>[]>()
+  const [loading] = useState<boolean>(false)
 
-  const {
-    data: plugins,
-    loading,
-    refetch: fetchPlugins
-  } = useGet<TypesPlugin[]>({
-    path: `/api/v1/plugins`,
-    queryParams: {
-      limit: LIST_FETCHING_LIMIT,
-      page: 1
-    },
-    lazy: true
-  })
+  const fetchPlugins = () => {
+    setPlugins(pluginList)
+  }
 
   useEffect(() => {
     if (category === PluginCategory.Drone) {
@@ -146,7 +139,7 @@ export const PluginsPanel = ({ version = YamlVersion.V0, onPluginAddUpdate }: Pl
         <Layout.Horizontal
           flex={{ justifyContent: 'flex-start', alignItems: 'center' }}
           spacing="small"
-          padding={{ left: 'medium' }}>
+          padding={{ top: 'medium', bottom: 'medium', left: 'medium' }}>
           <Icon
             name="arrow-left"
             size={18}
@@ -155,13 +148,10 @@ export const PluginsPanel = ({ version = YamlVersion.V0, onPluginAddUpdate }: Pl
             }}
             className={css.arrow}
           />
-          <Text font={{ variation: FontVariation.H5 }} flex={{ justifyContent: 'center' }}>
-            {getString('plugins.addAPlugin', { category: PluginCategory[category as PluginCategory] })}
-          </Text>
         </Layout.Horizontal>
-        <Container>
-          {plugins?.map((_plugin: TypesPlugin) => {
-            const { uid, description } = _plugin
+        <Container className={css.plugins}>
+          {plugins?.map((_plugin: Record<string, any>) => {
+            const { name: uid, description } = _plugin.spec
             return (
               <Layout.Horizontal
                 flex={{ justifyContent: 'flex-start' }}
@@ -177,7 +167,9 @@ export const PluginsPanel = ({ version = YamlVersion.V0, onPluginAddUpdate }: Pl
                   <Text font={{ variation: FontVariation.BODY2 }} color={Color.PRIMARY_7}>
                     {uid}
                   </Text>
-                  <Text font={{ variation: FontVariation.SMALL }}>{description}</Text>
+                  <Text font={{ variation: FontVariation.SMALL }} className={css.pluginDesc}>
+                    {description}
+                  </Text>
                 </Layout.Vertical>
               </Layout.Horizontal>
             )
@@ -280,22 +272,15 @@ export const PluginsPanel = ({ version = YamlVersion.V0, onPluginAddUpdate }: Pl
   }, [loading, plugins, panelView, category])
 
   return (
-    <Container className={css.main}>
-      <Tabs id={'pluginsPanel'} defaultSelectedTabId={'plugins'}>
-        <Tab
-          panelClassName={css.mainTabPanel}
-          id="plugins"
-          title={
-            <Text
-              font={{ variation: FontVariation.BODY2 }}
-              padding={{ left: 'small', bottom: 'xsmall', top: 'xsmall' }}
-              color={Color.PRIMARY_7}>
-              {getString('plugins.title')}
-            </Text>
-          }
-          panel={<Container className={css.pluginDetailsPanel}>{renderPluginsPanel()}</Container>}
-        />
-      </Tabs>
-    </Container>
+    <Layout.Vertical>
+      {panelView === PluginPanelView.Category ? (
+        <Container padding={{ top: 'medium', bottom: 'medium', left: 'medium' }}>
+          <Text font={{ variation: FontVariation.H5 }}>{getString('step.select')}</Text>
+        </Container>
+      ) : (
+        <></>
+      )}
+      {renderPluginsPanel()}
+    </Layout.Vertical>
   )
 }
