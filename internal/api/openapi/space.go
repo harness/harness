@@ -45,6 +45,11 @@ type deletePathRequest struct {
 	PathID string `path:"path_id"`
 }
 
+type exportSpaceRequest struct {
+	spaceRequest
+	space.ExportInput
+}
+
 var queryParameterSortRepo = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamSort,
@@ -168,6 +173,17 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/import", opImport)
+
+	opExport := openapi3.Operation{}
+	opExport.WithTags("space")
+	opExport.WithMapOfAnything(map[string]interface{}{"operationId": "exportSpace"})
+	_ = reflector.SetRequest(&opImport, new(exportSpaceRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opImport, new(types.Space), http.StatusAccepted)
+	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/{space_ref}/export", opImport)
 
 	opGet := openapi3.Operation{}
 	opGet.WithTags("space")
