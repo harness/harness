@@ -9,11 +9,12 @@ import "github.com/harness/gitness/types/enum"
 type Trigger struct {
 	ID          int64                `json:"id"`
 	Description string               `json:"description"`
+	Type        string               `json:"trigger_type"`
 	PipelineID  int64                `json:"pipeline_id"`
 	Secret      string               `json:"-"`
 	RepoID      int64                `json:"repo_id"`
 	CreatedBy   int64                `json:"created_by"`
-	Enabled     bool                 `json:"enabled"`
+	Disabled    bool                 `json:"disabled"`
 	Actions     []enum.TriggerAction `json:"actions"`
 	UID         string               `json:"uid"`
 	Created     int64                `json:"created"`

@@ -9,6 +9,7 @@ import {
   TableV2 as Table,
   Text
 } from '@harnessio/uicore'
+import { ProgressBar, Intent } from '@blueprintjs/core'
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
@@ -31,6 +32,10 @@ import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import noRepoImage from './no-repo.svg'
 import css from './RepositoriesListing.module.scss'
+import useSpaceSSE from 'hooks/useSpaceSSE'
+interface TypesRepoExtended extends TypesRepository {
+  importing?: boolean
+}
 
 export default function RepositoriesListing() {
   const { getString } = useStrings()
@@ -56,6 +61,17 @@ export default function RepositoriesListing() {
     queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm },
     debounce: 500
   })
+  useSpaceSSE({
+    space,
+    events: ['repository_import_completed'],
+    onEvent: data => {
+      // should I include pipeline id here? what if a new pipeline is created? coould check for ids that are higher than the lowest id on the page?
+      if (repositories?.some(repository => repository.id === data?.id && repository.parent_id === data?.parent_id)) {
+        //TODO - revisit full refresh - can I use the message to update the execution?
+        refetch()
+      }
+    }
+  })
 
   useEffect(() => {
     setSearchTerm(undefined)
@@ -64,12 +80,13 @@ export default function RepositoriesListing() {
     }
   }, [space, setPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const columns: Column<TypesRepository>[] = useMemo(
+  const columns: Column<TypesRepoExtended>[] = useMemo(
     () => [
       {
         Header: getString('repos.name'),
         width: 'calc(100% - 180px)',
-        Cell: ({ row }: CellProps<TypesRepository>) => {
+
+        Cell: ({ row }: CellProps<TypesRepoExtended>) => {
           const record = row.original
           return (
             <Container className={css.nameContainer}>
@@ -78,10 +95,16 @@ export default function RepositoriesListing() {
                   <Text className={css.repoName} width={nameTextWidth} lineClamp={2}>
                     <Keywords value={searchTerm}>{record.uid}</Keywords>
                   </Text>
-                  {record.description && (
+                  {record.importing ? (
                     <Text className={css.desc} width={nameTextWidth} lineClamp={1}>
-                      {record.description}
+                      {getString('importProgress')}
                     </Text>
+                  ) : (
+                    record.description && (
+                      <Text className={css.desc} width={nameTextWidth} lineClamp={1}>
+                        {record.description}
+                      </Text>
+                    )
                   )}
                 </Layout.Vertical>
               </Layout.Horizontal>
@@ -92,8 +115,12 @@ export default function RepositoriesListing() {
       {
         Header: getString('repos.updated'),
         width: '180px',
-        Cell: ({ row }: CellProps<TypesRepository>) => {
-          return (
+        Cell: ({ row }: CellProps<TypesRepoExtended>) => {
+          return row.original.importing ? (
+            <Layout.Horizontal style={{ alignItems: 'center' }} padding={{ right: 'large' }}>
+              <ProgressBar intent={Intent.PRIMARY} className={css.progressBar} />
+            </Layout.Horizontal>
+          ) : (
             <Layout.Horizontal style={{ alignItems: 'center' }}>
               <Text color={Color.BLACK} lineClamp={1} rightIconProps={{ size: 10 }} width={120}>
                 {formatDate(row.original.updated as number)}
@@ -107,6 +134,7 @@ export default function RepositoriesListing() {
     ],
     [nameTextWidth, getString, searchTerm]
   )
+
   const onResize = useCallback(() => {
     if (rowContainerRef.current) {
       setNameTextWidth((rowContainerRef.current.closest('div[role="cell"]') as HTMLDivElement)?.offsetWidth - 100)
@@ -118,8 +146,13 @@ export default function RepositoriesListing() {
       modalTitle={getString('createARepo')}
       text={getString('newRepo')}
       variation={ButtonVariation.PRIMARY}
-      icon="plus"
-      onSubmit={repoInfo => history.push(routes.toCODERepository({ repoPath: repoInfo.path as string }))}
+      onSubmit={repoInfo => {
+        if (repoInfo.importing) {
+          refetch()
+        } else {
+          history.push(routes.toCODERepository({ repoPath: repoInfo.path as string }))
+        }
+      }}
     />
   )
 
@@ -155,12 +188,18 @@ export default function RepositoriesListing() {
 
           <Container margin={{ top: 'medium' }}>
             {!!repositories?.length && (
-              <Table<TypesRepository>
+              <Table<TypesRepoExtended>
                 className={css.table}
                 columns={columns}
                 data={repositories || []}
-                onRowClick={repoInfo => history.push(routes.toCODERepository({ repoPath: repoInfo.path as string }))}
-                getRowClassName={row => cx(css.row, !row.original.description && css.noDesc)}
+                onRowClick={repoInfo => {
+                  return repoInfo.importing
+                    ? undefined
+                    : history.push(routes.toCODERepository({ repoPath: repoInfo.path as string }))
+                }}
+                getRowClassName={row =>
+                  cx(css.row, !row.original.description && css.noDesc, row.original.importing && css.rowDisable)
+                }
               />
             )}
 

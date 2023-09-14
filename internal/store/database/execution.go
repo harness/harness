@@ -38,11 +38,12 @@ type executionStore struct {
 type execution struct {
 	ID           int64              `db:"execution_id"`
 	PipelineID   int64              `db:"execution_pipeline_id"`
+	CreatedBy    int64              `db:"execution_created_by"`
 	RepoID       int64              `db:"execution_repo_id"`
 	Trigger      string             `db:"execution_trigger"`
 	Number       int64              `db:"execution_number"`
 	Parent       int64              `db:"execution_parent"`
-	Status       string             `db:"execution_status"`
+	Status       enum.CIStatus      `db:"execution_status"`
 	Error        string             `db:"execution_error"`
 	Event        string             `db:"execution_event"`
 	Action       string             `db:"execution_action"`
@@ -77,6 +78,7 @@ const (
 	executionColumns = `
 		execution_id
 		,execution_pipeline_id
+		,execution_created_by
 		,execution_repo_id
 		,execution_trigger
 		,execution_number
@@ -149,6 +151,7 @@ func (s *executionStore) Create(ctx context.Context, execution *types.Execution)
 	INSERT INTO executions (
 		execution_pipeline_id
 		,execution_repo_id
+		,execution_created_by
 		,execution_trigger
 		,execution_number
 		,execution_parent
@@ -184,6 +187,7 @@ func (s *executionStore) Create(ctx context.Context, execution *types.Execution)
 	) VALUES (
 		:execution_pipeline_id
 		,:execution_repo_id
+		,:execution_created_by
 		,:execution_trigger
 		,:execution_number
 		,:execution_parent
@@ -282,33 +286,6 @@ func (s *executionStore) Update(ctx context.Context, e *types.Execution) error {
 	e.Updated = execution.Updated
 	e.Stages = stages // stages are not mapped in database.
 	return nil
-}
-
-// UpdateOptLock updates the pipeline using the optimistic locking mechanism.
-func (s *executionStore) UpdateOptLock(ctx context.Context,
-	execution *types.Execution,
-	mutateFn func(execution *types.Execution) error) (*types.Execution, error) {
-	for {
-		dup := *execution
-
-		err := mutateFn(&dup)
-		if err != nil {
-			return nil, err
-		}
-
-		err = s.Update(ctx, &dup)
-		if err == nil {
-			return &dup, nil
-		}
-		if !errors.Is(err, gitness_store.ErrVersionConflict) {
-			return nil, err
-		}
-
-		execution, err = s.FindByNumber(ctx, execution.PipelineID, execution.Number)
-		if err != nil {
-			return nil, err
-		}
-	}
 }
 
 // List lists the executions for a given pipeline ID.

@@ -31,27 +31,33 @@ import { getErrorMessage } from 'utils/Utils'
 import { decodeGitContent } from 'utils/GitUtils'
 import pipelineSchemaV1 from './schema/pipeline-schema-v1.json'
 import pipelineSchemaV0 from './schema/pipeline-schema-v0.json'
-import { YamlVersion } from './Constants'
+import { DRONE_CONFIG_YAML_FILE_SUFFIXES, YamlVersion } from './Constants'
 
 import css from './AddUpdatePipeline.module.scss'
 
 const StarterPipelineV1: Record<string, any> = {
   version: 1,
-  stages: [
-    {
-      type: 'ci',
-      spec: {
-        steps: [
-          {
-            type: 'script',
-            spec: {
-              run: 'echo hello world'
+  kind: 'pipeline',
+  spec: {
+    stages: [
+      {
+        name: 'build',
+        type: 'ci',
+        spec: {
+          steps: [
+            {
+              name: 'build',
+              type: 'script',
+              spec: {
+                image: 'golang',
+                run: 'echo "hello world"'
+              }
             }
-          }
-        ]
+          ]
+        }
       }
-    }
-  ]
+    ]
+  }
 }
 
 const StarterPipelineV0: Record<string, any> = {
@@ -79,15 +85,13 @@ interface PipelineSaveAndRunOption {
 }
 
 const AddUpdatePipeline = (): JSX.Element => {
-  const version = YamlVersion.V0
   const { routes } = useAppContext()
   const { getString } = useStrings()
   const { pipeline } = useParams<CODEProps>()
   const { repoMetadata } = useGetRepositoryMetadata()
   const { showError, showSuccess, clear: clearToaster } = useToaster()
-  const [pipelineAsObj, setPipelineAsObj] = useState<Record<string, any>>(
-    version === YamlVersion.V0 ? StarterPipelineV0 : StarterPipelineV1
-  )
+  const [yamlVersion, setYAMLVersion] = useState<YamlVersion>()
+  const [pipelineAsObj, setPipelineAsObj] = useState<Record<string, any>>({})
   const [pipelineAsYAML, setPipelineAsYaml] = useState<string>('')
   const { openModal: openRunPipelineModal } = useRunPipelineModal()
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
@@ -139,6 +143,15 @@ const AddUpdatePipeline = (): JSX.Element => {
     [pipelineYAMLFileContent?.content]
   )
 
+  // set YAML version for Pipeline setup
+  useEffect(() => {
+    setYAMLVersion(
+      DRONE_CONFIG_YAML_FILE_SUFFIXES.find((suffix: string) => pipelineData?.config_path?.endsWith(suffix))
+        ? YamlVersion.V0
+        : YamlVersion.V1
+    )
+  }, [pipelineData])
+
   // check if file already exists and has some content
   useEffect(() => {
     setIsExistingPipeline(!isEmpty(originalPipelineYAMLFileContent) && !isUndefined(originalPipelineYAMLFileContent))
@@ -151,12 +164,12 @@ const AddUpdatePipeline = (): JSX.Element => {
     } else {
       // load with starter pipeline
       try {
-        setPipelineAsYaml(stringify(pipelineAsObj))
+        setPipelineAsYaml(stringify(yamlVersion === YamlVersion.V1 ? StarterPipelineV1 : StarterPipelineV0))
       } catch (ex) {
         // ignore exception
       }
     }
-  }, [isExistingPipeline, originalPipelineYAMLFileContent, pipelineAsObj])
+  }, [yamlVersion, isExistingPipeline, originalPipelineYAMLFileContent, pipelineAsObj])
 
   // find if editor content was modified
   useEffect(() => {
@@ -206,7 +219,7 @@ const AddUpdatePipeline = (): JSX.Element => {
 
   const updatePipeline = (payload: Record<string, any>): Record<string, any> => {
     const pipelineAsObjClone = { ...pipelineAsObj }
-    const stepInsertPath = version === YamlVersion.V0 ? 'steps' : 'stages.0.spec.steps'
+    const stepInsertPath = yamlVersion === YamlVersion.V1 ? 'spec.stages.0.spec.steps' : 'steps'
     let existingSteps: [unknown] = get(pipelineAsObjClone, stepInsertPath, [])
     if (existingSteps.length > 0) {
       existingSteps.push(payload)
@@ -309,13 +322,13 @@ const AddUpdatePipeline = (): JSX.Element => {
             <Container className={css.editorContainer}>
               <MonacoSourceCodeEditor
                 language={'yaml'}
-                schema={version === YamlVersion.V0 ? pipelineSchemaV0 : pipelineSchemaV1}
+                schema={yamlVersion === YamlVersion.V1 ? pipelineSchemaV1 : pipelineSchemaV0}
                 source={pipelineAsYAML}
                 onChange={(value: string) => setPipelineAsYaml(value)}
               />
             </Container>
             <Container className={css.pluginsContainer}>
-              <PluginsPanel onPluginAddUpdate={addUpdatePluginToPipelineYAML} />
+              <PluginsPanel onPluginAddUpdate={addUpdatePluginToPipelineYAML} version={yamlVersion} />
             </Container>
           </Layout.Horizontal>
         </PageBody>

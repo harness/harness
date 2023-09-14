@@ -21,7 +21,7 @@ type UpdateInput struct {
 	UID         *string              `json:"uid"`
 	Actions     []enum.TriggerAction `json:"actions"`
 	Secret      *string              `json:"secret"`
-	Enabled     *bool                `json:"enabled"` // can be nil, so keeping it a pointer
+	Disabled    *bool                `json:"disabled"` // can be nil, so keeping it a pointer
 }
 
 func (c *Controller) Update(
@@ -72,8 +72,8 @@ func (c *Controller) Update(
 			if in.Secret != nil {
 				original.Secret = *in.Secret
 			}
-			if in.Enabled != nil {
-				original.Enabled = *in.Enabled
+			if in.Disabled != nil {
+				original.Disabled = *in.Disabled
 			}
 
 			return nil

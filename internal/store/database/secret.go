@@ -31,6 +31,7 @@ const (
 	secret_id,
 	secret_description,
 	secret_space_id,
+	secret_created_by,
 	secret_uid,
 	secret_data,
 	secret_created,
@@ -82,6 +83,7 @@ func (s *secretStore) Create(ctx context.Context, secret *types.Secret) error {
 	INSERT INTO secrets (
 		secret_description,
 		secret_space_id,
+		secret_created_by,
 		secret_uid,
 		secret_data,
 		secret_created,
@@ -90,6 +92,7 @@ func (s *secretStore) Create(ctx context.Context, secret *types.Secret) error {
 	) VALUES (
 		:secret_description,
 		:secret_space_id,
+		:secret_created_by,
 		:secret_uid,
 		:secret_data,
 		:secret_created,

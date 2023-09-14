@@ -59,6 +59,7 @@ func (c *Controller) Create(
 		Description:   in.Description,
 		RepoID:        repo.ID,
 		UID:           in.UID,
+		CreatedBy:     session.Principal.ID,
 		Seq:           0,
 		DefaultBranch: in.DefaultBranch,
 		ConfigPath:    in.ConfigPath,
@@ -84,8 +85,8 @@ func (c *Controller) Create(
 		UID:         "default",
 		Actions: []enum.TriggerAction{enum.TriggerActionPullReqCreated,
 			enum.TriggerActionPullReqReopened, enum.TriggerActionPullReqBranchUpdated},
-		Enabled: true,
-		Version: 0,
+		Disabled: false,
+		Version:  0,
 	}
 	err = c.triggerStore.Create(ctx, trigger)
 	if err != nil {

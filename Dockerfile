@@ -14,7 +14,6 @@ ARG GITHUB_ACCESS_TOKEN
 # RUN npm ci --omit=dev
 
 COPY ./web .
-COPY .npmrc /root/.npmrc
 
 RUN yarn && yarn build && yarn cache clean
 
@@ -70,18 +69,21 @@ RUN apk --update add ca-certificates
 # ---------------------------------------------------------#
 FROM alpine/git:2.36.3 as final
 
-RUN adduser -u 1001 -D -h /app iamuser
-
 # setup app dir and its content
 WORKDIR /app
-RUN chown -R 1001:1001 /app
-COPY --from=builder --chown=1001:1001 --chmod=700 /app/gitness /app/gitness
+VOLUME /data
 
+ENV XDG_CACHE_HOME /data
+ENV GITRPC_SERVER_GIT_ROOT /data
+ENV GITNESS_DATABASE_DRIVER sqlite3
+ENV GITNESS_DATABASE_DATASOURCE /data/database.sqlite
+ENV GITNESS_METRIC_ENABLED=true
+ENV GITNESS_METRIC_ENDPOINT=https://stats.drone.ci/api/v1/gitness
+
+COPY --from=builder /app/gitness /app/gitness
 COPY --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 EXPOSE 3000
 EXPOSE 3001
-
-USER 1001
 
 ENTRYPOINT [ "/app/gitness", "server" ]

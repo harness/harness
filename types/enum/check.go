@@ -44,10 +44,12 @@ const (
 	CheckPayloadKindEmpty    CheckPayloadKind = ""
 	CheckPayloadKindRaw      CheckPayloadKind = "raw"
 	CheckPayloadKindMarkdown CheckPayloadKind = "markdown"
+	CheckPayloadKindPipeline CheckPayloadKind = "pipeline"
 )
 
 var checkPayloadTypes = sortEnum([]CheckPayloadKind{
 	CheckPayloadKindEmpty,
 	CheckPayloadKindRaw,
 	CheckPayloadKindMarkdown,
+	CheckPayloadKindPipeline,
 })

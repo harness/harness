@@ -8,6 +8,7 @@ type Secret struct {
 	ID          int64  `db:"secret_id"              json:"id"`
 	Description string `db:"secret_description"     json:"description"`
 	SpaceID     int64  `db:"secret_space_id"        json:"space_id"`
+	CreatedBy   int64  `db:"secret_created_by"      json:"created_by"`
 	UID         string `db:"secret_uid"             json:"uid"`
 	Data        string `db:"secret_data"            json:"-"`
 	Created     int64  `db:"secret_created"         json:"created"`

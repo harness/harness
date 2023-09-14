@@ -21,7 +21,7 @@ import { useStrings } from 'framework/strings'
 import type { OpenapiCreateSecretRequest, TypesSecret } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
 
-interface SecretFormData {
+export interface SecretFormData {
   value: string
   description: string
   name: string
@@ -82,10 +82,7 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
         onClose={hideModal}
         title={''}
         style={{ width: 700, maxHeight: '95vh', overflow: 'auto' }}>
-        <Layout.Vertical
-          padding={{ left: 'xxlarge' }}
-          style={{ height: '100%' }}
-          data-testid="add-target-to-flag-modal">
+        <Layout.Vertical padding={{ left: 'xxlarge' }} style={{ height: '100%' }} data-testid="add-secret-modal">
           <Heading level={3} font={{ variation: FontVariation.H3 }} margin={{ bottom: 'xlarge' }}>
             {modalTitle}
           </Heading>

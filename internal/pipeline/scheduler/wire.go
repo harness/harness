@@ -21,5 +21,5 @@ func ProvideScheduler(
 	stageStore store.StageStore,
 	lock lock.MutexManager,
 ) (Scheduler, error) {
-	return newQueue(stageStore, lock)
+	return newScheduler(stageStore, lock)
 }

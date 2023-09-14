@@ -113,7 +113,8 @@ func New(
 				stream.WithConcurrency(config.Concurrency),
 				stream.WithHandlerOptions(
 					stream.WithIdleTimeout(idleTimeout),
-					stream.WithMaxRetries(config.MaxRetries),
+					// retries not needed for builds which failed to trigger, can be adjusted when needed
+					stream.WithMaxRetries(0),
 				))
 
 			_ = r.RegisterCreated(service.handleEventPullReqCreated)
@@ -156,6 +157,7 @@ func (s *Service) trigger(ctx context.Context, repoID int64,
 		pipeline, err := s.pipelineStore.Find(ctx, t.PipelineID)
 		if err != nil {
 			errs = multierror.Append(errs, err)
+			continue
 		}
 
 		_, err = s.triggerSvc.Trigger(ctx, pipeline, hook)

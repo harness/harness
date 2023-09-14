@@ -105,6 +105,7 @@ export interface StringsMap {
   createBranchFromBranch: string
   createBranchFromTag: string
   createFile: string
+  createNewRepo: string
   createNewToken: string
   createNewUser: string
   createPullRequest: string
@@ -193,6 +194,8 @@ export interface StringsMap {
   failedToCreateSpace: string
   failedToDeleteBranch: string
   failedToDeleteWebhook: string
+  failedToFetchFileContent: string
+  failedToImportSpace: string
   failedToSavePipeline: string
   fileDeleted: string
   fileTooLarge: string
@@ -214,6 +217,40 @@ export interface StringsMap {
   history: string
   'homepage.firstStep': string
   'homepage.welcomeText': string
+  importGitRepo: string
+  importProgress: string
+  'importRepo.failedToImportRepo': string
+  'importRepo.passToken': string
+  'importRepo.passwordPlaceholder': string
+  'importRepo.passwordReq': string
+  'importRepo.reqAuth': string
+  'importRepo.required': string
+  'importRepo.spaceNameReq': string
+  'importRepo.title': string
+  'importRepo.url': string
+  'importRepo.urlPlaceholder': string
+  'importRepo.userPlaceholder': string
+  'importRepo.usernameReq': string
+  'importRepo.validation': string
+  'importSpace.authorization': string
+  'importSpace.content': string
+  'importSpace.createNewSpace': string
+  'importSpace.descPlaceholder': string
+  'importSpace.description': string
+  'importSpace.details': string
+  'importSpace.gitProvider': string
+  'importSpace.githubOrg': string
+  'importSpace.gitlabGroup': string
+  'importSpace.importLabel': string
+  'importSpace.invalidUrl': string
+  'importSpace.next': string
+  'importSpace.orgNamePlaceholder': string
+  'importSpace.orgRequired': string
+  'importSpace.organizationName': string
+  'importSpace.providerRequired': string
+  'importSpace.spaceName': string
+  'importSpace.spaceNameRequired': string
+  'importSpace.title': string
   in: string
   inactiveBranches: string
   isRequired: string
@@ -326,12 +363,18 @@ export interface StringsMap {
   pending: string
   'pipelines.createNewPipeline': string
   'pipelines.created': string
+  'pipelines.deletePipelineButton': string
+  'pipelines.deletePipelineConfirm': string
+  'pipelines.deletePipelineError': string
+  'pipelines.deletePipelineSuccess': string
+  'pipelines.deletePipelineWarning': string
   'pipelines.editPipeline': string
   'pipelines.enterPipelineName': string
   'pipelines.enterYAMLPath': string
   'pipelines.executionCouldNotStart': string
   'pipelines.executionStarted': string
   'pipelines.failedToCreatePipeline': string
+  'pipelines.failedToUpdatePipeline': string
   'pipelines.lastExecution': string
   'pipelines.name': string
   'pipelines.newPipelineButton': string
@@ -339,12 +382,13 @@ export interface StringsMap {
   'pipelines.run': string
   'pipelines.saveAndRun': string
   'pipelines.time': string
-  poweredByAI: string
+  'pipelines.updatePipelineSuccess': string
   'pipelines.updated': string
   'pipelines.yamlPath': string
   'plugins.addAPlugin': string
   'plugins.stepLabel': string
   'plugins.title': string
+  poweredByAI: string
   'pr.ableToMerge': string
   'pr.addDescription': string
   'pr.authorCommentedPR': string
@@ -495,10 +539,13 @@ export interface StringsMap {
   'secrets.enterSecretName': string
   'secrets.failedToCreate': string
   'secrets.failedToDeleteSecret': string
+  'secrets.failedToUpdateSecret': string
   'secrets.name': string
   'secrets.newSecretButton': string
   'secrets.noData': string
   'secrets.secretDeleted': string
+  'secrets.secretUpdated': string
+  'secrets.updateSecret': string
   'secrets.value': string
   selectBranchPlaceHolder: string
   selectRange: string

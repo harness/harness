@@ -4,6 +4,8 @@
 
 package types
 
+import "github.com/harness/gitness/types/enum"
+
 type Stage struct {
 	ID          int64             `json:"-"`
 	ExecutionID int64             `json:"execution_id"`
@@ -12,7 +14,7 @@ type Stage struct {
 	Name        string            `json:"name"`
 	Kind        string            `json:"kind,omitempty"`
 	Type        string            `json:"type,omitempty"`
-	Status      string            `json:"status"`
+	Status      enum.CIStatus     `json:"status"`
 	Error       string            `json:"error,omitempty"`
 	ErrIgnore   bool              `json:"errignore,omitempty"`
 	ExitCode    int               `json:"exit_code"`

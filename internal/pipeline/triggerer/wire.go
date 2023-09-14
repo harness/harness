@@ -21,6 +21,7 @@ var WireSet = wire.NewSet(
 // ProvideTriggerer provides a triggerer which can execute builds.
 func ProvideTriggerer(
 	executionStore store.ExecutionStore,
+	checkStore store.CheckStore,
 	stageStore store.StageStore,
 	db *sqlx.DB,
 	pipelineStore store.PipelineStore,
@@ -28,6 +29,6 @@ func ProvideTriggerer(
 	scheduler scheduler.Scheduler,
 	repoStore store.RepoStore,
 ) Triggerer {
-	return New(executionStore, stageStore, pipelineStore,
+	return New(executionStore, checkStore, stageStore, pipelineStore,
 		db, repoStore, scheduler, fileService)
 }

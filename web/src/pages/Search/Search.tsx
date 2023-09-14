@@ -90,12 +90,15 @@ export default function Search() {
     error: resourceError = null,
     loading: resourceLoading
   } = useGetResourceContent({ repoMetadata, gitRef, resourcePath, includeCommit: false, lazy: !resourcePath })
-  const fileContent = useMemo(
+  const fileContent: string = useMemo(
     () =>
       resourceContent?.path === resourcePath
         ? decodeGitContent((resourceContent?.content as RepoFileContent)?.data)
+        : resourceError
+        ? getString('failedToFetchFileContent')
         : '',
-    [resourceContent?.content, resourceContent?.path, resourcePath]
+
+    [resourceContent?.content, resourceContent?.path, resourcePath, resourceError, getString]
   )
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -135,6 +138,14 @@ export default function Search() {
       performSearch()
     }
   }, [repoMetadata?.path]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (fileContent && fileContent !== viewRef?.current?.state.doc.toString()) {
+      viewRef?.current?.dispatch({
+        changes: { from: 0, to: viewRef?.current?.state.doc.length, insert: fileContent }
+      })
+    }
+  }, [fileContent])
 
   useShowRequestError(resourceError)
 
@@ -260,7 +271,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ data, onSelect }) => {
       onSelect(
         item.file_name,
         item.file_path,
-        (item.content || []).join('\n').replace(/^\n/g, '').trim(),
+        (item.lines || []).join('\n').replace(/^\n/g, '').trim(),
         range(item.start_line, item.end_line)
       )
     }
@@ -282,7 +293,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ data, onSelect }) => {
               onSelect(
                 item.file_name,
                 item.file_path,
-                (item.content || []).join('\n').replace(/^\n/g, '').trim(),
+                (item.lines || []).join('\n').replace(/^\n/g, '').trim(),
                 range(item.start_line, item.end_line)
               )
             }}>
@@ -306,7 +317,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ data, onSelect }) => {
               </Container>
               <Editor
                 filename={item.file_name}
-                content={(item.content || []).join('\n').replace(/^\n/g, '').trim()}
+                content={(item.lines || []).join('\n').replace(/^\n/g, '').trim()}
                 readonly={true}
                 maxHeight="200px"
                 darkTheme
@@ -325,7 +336,7 @@ type SearchResultType = {
   start_line: number
   end_line: number
   file_name: string
-  content: string[]
+  lines: string[]
 }
 
 const range = (start: number, stop: number, step = 1) =>

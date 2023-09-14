@@ -31,6 +31,7 @@ const (
 	pipelineColumns = `
 	pipeline_id
 	,pipeline_description
+	,pipeline_created_by
 	,pipeline_uid
 	,pipeline_seq
 	,pipeline_repo_id
@@ -87,6 +88,8 @@ func (s *pipelineStore) Create(ctx context.Context, pipeline *types.Pipeline) er
 		,pipeline_uid
 		,pipeline_seq
 		,pipeline_repo_id
+		,pipeline_disabled
+		,pipeline_created_by
 		,pipeline_default_branch
 		,pipeline_config_path
 		,pipeline_created
@@ -97,6 +100,8 @@ func (s *pipelineStore) Create(ctx context.Context, pipeline *types.Pipeline) er
 		:pipeline_uid,
 		:pipeline_seq,
 		:pipeline_repo_id,
+		:pipeline_disabled,
+		:pipeline_created_by,
 		:pipeline_default_branch,
 		:pipeline_config_path,
 		:pipeline_created,
@@ -229,7 +234,7 @@ func (s *pipelineStore) ListLatest(
 	`
 	// Create a subquery to get max execution IDs for each unique execution pipeline ID.
 	subquery := database.Builder.
-		Select("execution_pipeline_id, execution_id, MAX(execution_number)").
+		Select("execution_pipeline_id, MAX(execution_id) AS execution_id").
 		From("executions").
 		Where("execution_repo_id = ?").
 		GroupBy("execution_pipeline_id")

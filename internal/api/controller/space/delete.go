@@ -13,8 +13,6 @@ import (
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/rs/zerolog/log"
 )
 
 // Delete deletes a space.
@@ -26,13 +24,12 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, spaceRef
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceDelete, false); err != nil {
 		return err
 	}
-	// TODO: uncomment when soft delete is implemented
-	log.Ctx(ctx).Info().Msgf("Delete request received for space %s", space.Path)
-	// return c.DeleteNoAuth(ctx, session, space.ID)
-	return nil
+
+	return c.DeleteNoAuth(ctx, session, space.ID)
 }
 
-// DeleteNoAuth bypasses PermissionSpaceDelete, PermissionSpaceView, PermissionRepoView, and PermissionRepoDelete.
+// DeleteNoAuth deletes the space - no authorization is verified.
+// WARNING this is meant for internal calls only.
 func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, spaceID int64) error {
 	filter := &types.SpaceFilter{
 		Page:  1,
@@ -62,10 +59,25 @@ func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, sp
 	return nil
 }
 
-func (c *Controller) DeleteWithPathNoAuth(ctx context.Context, session *auth.Session, spacePath string) error {
-	space, err := c.spaceStore.FindByRef(ctx, spacePath)
-	if err != nil {
-		return err
+// deleteRepositoriesNoAuth deletes all repositories in a space - no authorization is verified.
+// WARNING this is meant for internal calls only.
+func (c *Controller) deleteRepositoriesNoAuth(ctx context.Context, session *auth.Session, spaceID int64) error {
+	filter := &types.RepoFilter{
+		Page:  1,
+		Size:  int(math.MaxInt),
+		Query: "",
+		Order: enum.OrderAsc,
+		Sort:  enum.RepoAttrNone,
 	}
-	return c.DeleteNoAuth(ctx, session, space.ID)
+	repos, _, err := c.ListRepositoriesNoAuth(ctx, spaceID, filter)
+	if err != nil {
+		return fmt.Errorf("failed to list space repositories: %w", err)
+	}
+	for _, repo := range repos {
+		err = c.repoCtrl.DeleteNoAuth(ctx, session, repo)
+		if err != nil {
+			return fmt.Errorf("failed to delete repository %d: %w", repo.ID, err)
+		}
+	}
+	return nil
 }

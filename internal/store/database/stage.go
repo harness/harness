@@ -14,6 +14,7 @@ import (
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/jmoiron/sqlx"
 	sqlxtypes "github.com/jmoiron/sqlx/types"
@@ -61,7 +62,7 @@ type stage struct {
 	Name          string             `db:"stage_name"`
 	Kind          string             `db:"stage_kind"`
 	Type          string             `db:"stage_type"`
-	Status        string             `db:"stage_status"`
+	Status        enum.CIStatus      `db:"stage_status"`
 	Error         string             `db:"stage_error"`
 	ParentGroupID int64              `db:"stage_parent_group_id"`
 	ErrIgnore     bool               `db:"stage_errignore"`
@@ -265,9 +266,17 @@ func (s *stageStore) Update(ctx context.Context, st *types.Stage) error {
 	SET
 		stage_status = :stage_status
 		,stage_machine = :stage_machine
+		,stage_started = :stage_started
+		,stage_stopped = :stage_stopped
+		,stage_exit_code = :stage_exit_code
 		,stage_updated = :stage_updated
 		,stage_version = :stage_version
 		,stage_error = :stage_error
+		,stage_on_success = :stage_on_success
+		,stage_on_failure = :stage_on_failure
+		,stage_errignore = :stage_errignore
+		,stage_depends_on = :stage_depends_on
+		,stage_labels = :stage_labels
 	WHERE stage_id = :stage_id AND stage_version = :stage_version - 1`
 	updatedAt := time.Now()
 	steps := st.Steps

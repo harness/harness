@@ -1,25 +1,26 @@
 import { useEffect, useRef } from 'react'
 
-type UsePipelineEventStreamProps = {
+type UseSpaceSSEProps = {
   space: string
-  onEvent: (data: any) => void
+  events: string[]
+  onEvent: (data: any, type: string) => void
   onError?: (event: Event) => void
   shouldRun?: boolean
 }
 
-const usePipelineEventStream = ({ space, onEvent, onError, shouldRun = true }: UsePipelineEventStreamProps) => {
+const useSpaceSSE = ({ space, events, onEvent, onError, shouldRun = true }: UseSpaceSSEProps) => {
   //TODO - this is not working right - need to get to the bottom of too many streams being opened and closed... can miss events!
   const eventSourceRef = useRef<EventSource | null>(null)
 
   useEffect(() => {
     // Conditionally establish the event stream - don't want to open on a finished execution
-    if (shouldRun) {
+    if (shouldRun && events.length > 0) {
       if (!eventSourceRef.current) {
-        eventSourceRef.current = new EventSource(`/api/v1/spaces/${space}/stream`)
+        eventSourceRef.current = new EventSource(`/api/v1/spaces/${space}/+/events`)
 
         const handleMessage = (event: MessageEvent) => {
           const data = JSON.parse(event.data)
-          onEvent(data)
+          onEvent(data, event.type)
         }
 
         const handleError = (event: Event) => {
@@ -27,12 +28,21 @@ const usePipelineEventStream = ({ space, onEvent, onError, shouldRun = true }: U
           eventSourceRef?.current?.close()
         }
 
-        eventSourceRef.current.addEventListener('message', handleMessage)
+        // always register error
         eventSourceRef.current.addEventListener('error', handleError)
 
+        // register requested events
+        for (const i in events) {
+          const eventType = events[i]
+          eventSourceRef.current.addEventListener(eventType, handleMessage)
+        }
+
         return () => {
-          eventSourceRef.current?.removeEventListener('message', handleMessage)
           eventSourceRef.current?.removeEventListener('error', handleError)
+          for (const i in events) {
+            const eventType = events[i]
+            eventSourceRef.current?.removeEventListener(eventType, handleMessage)
+          }
           eventSourceRef.current?.close()
           eventSourceRef.current = null
         }
@@ -44,7 +54,7 @@ const usePipelineEventStream = ({ space, onEvent, onError, shouldRun = true }: U
         eventSourceRef.current = null
       }
     }
-  }, [space, shouldRun, onEvent, onError])
+  }, [space, events, shouldRun, onEvent, onError])
 }
 
-export default usePipelineEventStream
+export default useSpaceSSE

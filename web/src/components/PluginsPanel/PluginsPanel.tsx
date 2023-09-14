@@ -207,7 +207,7 @@ export const PluginsPanel = ({ version = YamlVersion.V0, onPluginAddUpdate }: Pl
       case PluginCategory.Harness:
         constructedPayload =
           version === YamlVersion.V1
-            ? { type: 'script', spec: constructedPayload }
+            ? { type: 'script', spec: { run: get(constructedPayload, 'script', '') } }
             : { name: 'run step', commands: [get(constructedPayload, 'script', '')] }
     }
     onPluginAddUpdate?.(isUpdate, constructedPayload)

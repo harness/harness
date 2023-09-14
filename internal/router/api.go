@@ -189,7 +189,7 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 			r.Patch("/", handlerspace.HandleUpdate(spaceCtrl))
 			r.Delete("/", handlerspace.HandleDelete(spaceCtrl))
 
-			r.Get("/stream", handlerspace.HandleEventsStream(spaceCtrl))
+			r.Get("/events", handlerspace.HandleEvents(spaceCtrl))
 
 			r.Post("/move", handlerspace.HandleMove(spaceCtrl))
 			r.Get("/spaces", handlerspace.HandleListSpaces(spaceCtrl))
@@ -408,7 +408,7 @@ func setupExecutions(
 		r.Post("/", handlerexecution.HandleCreate(executionCtrl))
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamExecutionNumber), func(r chi.Router) {
 			r.Get("/", handlerexecution.HandleFind(executionCtrl))
-			r.Patch("/", handlerexecution.HandleUpdate(executionCtrl))
+			r.Post("/cancel", handlerexecution.HandleCancel(executionCtrl))
 			r.Delete("/", handlerexecution.HandleDelete(executionCtrl))
 			r.Get(
 				fmt.Sprintf("/logs/{%s}/{%s}",

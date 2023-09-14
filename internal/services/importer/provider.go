@@ -6,7 +6,8 @@ package importer
 
 import (
 	"context"
-	"errors"
+	"crypto/sha512"
+	"encoding/base32"
 	"fmt"
 	"net/http"
 	"time"
@@ -55,31 +56,35 @@ func (r *RepositoryInfo) ToRepo(
 	path string,
 	uid string,
 	description string,
-	jobUID string,
 	principal *types.Principal,
 ) *types.Repository {
 	now := time.Now().UnixMilli()
-	gitTempUID := "importing-" + jobUID
+	gitTempUID := fmt.Sprintf("importing-%s-%d", hash(path), now)
 	return &types.Repository{
-		Version:         0,
-		ParentID:        spaceID,
-		UID:             uid,
-		GitUID:          gitTempUID, // the correct git UID will be set by the job handler
-		Path:            path,
-		Description:     description,
-		IsPublic:        r.IsPublic,
-		CreatedBy:       principal.ID,
-		Created:         now,
-		Updated:         now,
-		ForkID:          0,
-		DefaultBranch:   r.DefaultBranch,
-		Importing:       true,
-		ImportingJobUID: &jobUID,
+		Version:       0,
+		ParentID:      spaceID,
+		UID:           uid,
+		GitUID:        gitTempUID, // the correct git UID will be set by the job handler
+		Path:          path,
+		Description:   description,
+		IsPublic:      r.IsPublic,
+		CreatedBy:     principal.ID,
+		Created:       now,
+		Updated:       now,
+		ForkID:        0,
+		DefaultBranch: r.DefaultBranch,
+		Importing:     true,
 	}
 }
 
-func getClient(provider Provider) (*scm.Client, error) {
-	if provider.Username == "" || provider.Password == "" {
+func hash(s string) string {
+	h := sha512.New()
+	_, _ = h.Write([]byte(s))
+	return base32.StdEncoding.EncodeToString(h.Sum(nil)[:10])
+}
+
+func getClient(provider Provider, authReq bool) (*scm.Client, error) {
+	if authReq && (provider.Username == "" || provider.Password == "") {
 		return nil, usererror.BadRequest("scm provider authentication credentials missing")
 	}
 
@@ -114,16 +119,18 @@ func getClient(provider Provider) (*scm.Client, error) {
 		return nil, usererror.BadRequestf("unsupported scm provider: %s", provider)
 	}
 
-	c.Client = &http.Client{
-		Transport: &oauth2.Transport{
-			Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
-		},
+	if provider.Password != "" {
+		c.Client = &http.Client{
+			Transport: &oauth2.Transport{
+				Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
+			},
+		}
 	}
 
 	return c, nil
 }
 func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug string) (RepositoryInfo, error) {
-	scmClient, err := getClient(provider)
+	scmClient, err := getClient(provider, false)
 	if err != nil {
 		return RepositoryInfo{}, err
 	}
@@ -132,24 +139,9 @@ func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug
 		return RepositoryInfo{}, usererror.BadRequest("provider repository identifier is missing")
 	}
 
-	var statusCode int
 	scmRepo, scmResp, err := scmClient.Repositories.Find(ctx, repoSlug)
-	if scmResp != nil {
-		statusCode = scmResp.Status
-	}
-
-	if errors.Is(err, scm.ErrNotFound) || statusCode == http.StatusNotFound {
-		return RepositoryInfo{},
-			usererror.BadRequestf("repository %s not found at %s", repoSlug, provider.Type)
-	}
-	if errors.Is(err, scm.ErrNotAuthorized) || statusCode == http.StatusUnauthorized {
-		return RepositoryInfo{},
-			usererror.BadRequestf("bad credentials provided for %s at %s", repoSlug, provider.Type)
-	}
-	if err != nil || statusCode > 299 {
-		return RepositoryInfo{},
-			fmt.Errorf("failed to fetch repository %s from %s, status=%d: %w",
-				repoSlug, provider.Type, statusCode, err)
+	if err = convertSCMError(provider, repoSlug, scmResp, err); err != nil {
+		return RepositoryInfo{}, err
 	}
 
 	return RepositoryInfo{
@@ -162,7 +154,7 @@ func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug
 }
 
 func LoadRepositoriesFromProviderSpace(ctx context.Context, provider Provider, spaceSlug string) ([]RepositoryInfo, error) {
-	scmClient, err := getClient(provider)
+	scmClient, err := getClient(provider, true)
 	if err != nil {
 		return nil, err
 	}
@@ -172,27 +164,23 @@ func LoadRepositoriesFromProviderSpace(ctx context.Context, provider Provider, s
 	}
 
 	const pageSize = 100
-	opts := scm.ListOptions{Page: 0, Size: pageSize}
+	opts := scm.RepoListOptions{
+		ListOptions: scm.ListOptions{
+			Page: 0,
+			Size: pageSize,
+		},
+		RepoSearchTerm: scm.RepoSearchTerm{
+			User: spaceSlug,
+		},
+	}
 
 	repos := make([]RepositoryInfo, 0)
 	for {
 		opts.Page++
 
-		var statusCode int
-		scmRepos, scmResp, err := scmClient.Repositories.List(ctx, opts)
-		if scmResp != nil {
-			statusCode = scmResp.Status
-		}
-
-		if errors.Is(err, scm.ErrNotFound) || statusCode == http.StatusNotFound {
-			return nil, usererror.BadRequestf("space %s not found at %s", spaceSlug, provider.Type)
-		}
-		if errors.Is(err, scm.ErrNotAuthorized) || statusCode == http.StatusUnauthorized {
-			return nil, usererror.BadRequestf("bad credentials provided for %s at %s", spaceSlug, provider.Type)
-		}
-		if err != nil || statusCode > 299 {
-			return nil, fmt.Errorf("failed to fetch space %s from %s, status=%d: %w",
-				spaceSlug, provider.Type, statusCode, err)
+		scmRepos, scmResp, err := scmClient.Repositories.ListV2(ctx, opts)
+		if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
+			return nil, err
 		}
 
 		if len(scmRepos) == 0 {
@@ -200,9 +188,6 @@ func LoadRepositoriesFromProviderSpace(ctx context.Context, provider Provider, s
 		}
 
 		for _, scmRepo := range scmRepos {
-			if scmRepo.Namespace != spaceSlug {
-				continue
-			}
 			repos = append(repos, RepositoryInfo{
 				Space:         scmRepo.Namespace,
 				UID:           scmRepo.Name,
@@ -214,4 +199,35 @@ func LoadRepositoriesFromProviderSpace(ctx context.Context, provider Provider, s
 	}
 
 	return repos, nil
+}
+
+func convertSCMError(provider Provider, slug string, r *scm.Response, err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if r == nil {
+		if provider.Host != "" {
+			return usererror.BadRequestf("failed to make HTTP request to %s (host=%s): %s",
+				provider.Type, provider.Host, err)
+		} else {
+			return usererror.BadRequestf("failed to make HTTP request to %s: %s",
+				provider.Type, err)
+		}
+	}
+
+	switch r.Status {
+	case http.StatusNotFound:
+		return usererror.BadRequestf("couldn't find %s at %s: %s",
+			slug, provider.Type, err.Error())
+	case http.StatusUnauthorized:
+		return usererror.BadRequestf("bad credentials provided for %s at %s: %s",
+			slug, provider.Type, err.Error())
+	case http.StatusForbidden:
+		return usererror.BadRequestf("access denied to %s at %s: %s",
+			slug, provider.Type, err.Error())
+	default:
+		return usererror.BadRequestf("failed to fetch %s from %s (HTTP status %d): %s",
+			slug, provider.Type, r.Status, err.Error())
+	}
 }

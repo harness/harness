@@ -21,7 +21,7 @@ type CreateInput struct {
 	Description string               `json:"description"`
 	UID         string               `json:"uid"`
 	Secret      string               `json:"secret"`
-	Enabled     bool                 `json:"enabled"`
+	Disabled    bool                 `json:"disabled"`
 	Actions     []enum.TriggerAction `json:"actions"`
 }
 
@@ -56,7 +56,7 @@ func (c *Controller) Create(
 	now := time.Now().UnixMilli()
 	trigger := &types.Trigger{
 		Description: in.Description,
-		Enabled:     in.Enabled,
+		Disabled:    in.Disabled,
 		Secret:      in.Secret,
 		CreatedBy:   session.Principal.ID,
 		RepoID:      repo.ID,

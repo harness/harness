@@ -47,7 +47,6 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
   onViewUpdate,
   darkTheme
 }: EditorProps) {
-  const contentRef = useRef(content)
   const view = useRef<EditorView>()
   const ref = useRef<HTMLDivElement>()
   const languageConfig = useMemo(() => new Compartment(), [])
@@ -138,15 +137,6 @@ export const Editor = React.memo(function CodeMirrorReactEditor({
         })
     }
   }, [filename, forMarkdown, view, languageConfig, markdownLanguageSupport])
-
-  useEffect(() => {
-    if (contentRef.current !== content) {
-      contentRef.current = content
-      viewRef?.current?.dispatch({
-        changes: { from: 0, to: viewRef?.current?.state.doc.length, insert: content }
-      })
-    }
-  }, [content, viewRef])
 
   return <Container ref={ref} className={cx(css.editor, className)} style={style} />
 })

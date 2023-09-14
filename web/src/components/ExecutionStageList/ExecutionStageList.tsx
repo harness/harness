@@ -3,7 +3,7 @@ import { Container, FlexExpander, Layout, Text } from '@harnessio/uicore'
 import cx from 'classnames'
 import type { TypesStage } from 'services/code'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
-import { getStatus } from 'utils/PipelineUtils'
+import { getStatus } from 'utils/ExecutionUtils'
 import { timeDistance } from 'utils/Utils'
 import css from './ExecutionStageList.module.scss'
 

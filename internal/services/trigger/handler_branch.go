@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/internal/bootstrap"
 	gitevents "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/pipeline/triggerer"
 	"github.com/harness/gitness/types/enum"
@@ -23,12 +24,13 @@ func ExtractBranch(ref string) string {
 func (s *Service) handleEventBranchCreated(ctx context.Context,
 	event *events.Event[*gitevents.BranchCreatedPayload]) error {
 	hook := &triggerer.Hook{
-		Trigger: enum.TriggerHook,
-		Action:  enum.TriggerActionBranchCreated,
-		Ref:     event.Payload.Ref,
-		Source:  ExtractBranch(event.Payload.Ref),
-		Target:  ExtractBranch(event.Payload.Ref),
-		After:   event.Payload.SHA,
+		Trigger:     enum.TriggerHook,
+		Action:      enum.TriggerActionBranchCreated,
+		Ref:         event.Payload.Ref,
+		Source:      ExtractBranch(event.Payload.Ref),
+		TriggeredBy: bootstrap.NewSystemServiceSession().Principal.ID,
+		Target:      ExtractBranch(event.Payload.Ref),
+		After:       event.Payload.SHA,
 	}
 	err := s.augmentCommitInfo(ctx, hook, event.Payload.RepoID, event.Payload.SHA)
 	if err != nil {
@@ -40,13 +42,14 @@ func (s *Service) handleEventBranchCreated(ctx context.Context,
 func (s *Service) handleEventBranchUpdated(ctx context.Context,
 	event *events.Event[*gitevents.BranchUpdatedPayload]) error {
 	hook := &triggerer.Hook{
-		Trigger: enum.TriggerHook,
-		Action:  enum.TriggerActionBranchUpdated,
-		Ref:     event.Payload.Ref,
-		Before:  event.Payload.OldSHA,
-		After:   event.Payload.NewSHA,
-		Source:  ExtractBranch(event.Payload.Ref),
-		Target:  ExtractBranch(event.Payload.Ref),
+		Trigger:     enum.TriggerHook,
+		Action:      enum.TriggerActionBranchUpdated,
+		Ref:         event.Payload.Ref,
+		Before:      event.Payload.OldSHA,
+		After:       event.Payload.NewSHA,
+		TriggeredBy: bootstrap.NewSystemServiceSession().Principal.ID,
+		Source:      ExtractBranch(event.Payload.Ref),
+		Target:      ExtractBranch(event.Payload.Ref),
 	}
 	err := s.augmentCommitInfo(ctx, hook, event.Payload.RepoID, event.Payload.NewSHA)
 	if err != nil {

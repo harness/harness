@@ -589,6 +589,7 @@ spaceMemberships:
   memberUpdated: Member updated successfully.
   memberAdded: Member added successfully.
 failedToCreateSpace: Failed to create Space. Please try again.
+failedToImportSpace: Failed to import Space. Please try again.
 failedToCreatePipeline: Failed to create Pipeline. Please try again.
 failedToSavePipeline: Failed to save Pipeline. Please try again.
 enterName: Enter the name
@@ -627,7 +628,7 @@ repoDelete:
   deleteToastSuccess: Repository deleted successfully
   deleteConfirmButton2: Delete this repository
 pipelines:
-  noData: There are no pipelines :(
+  noData: There are no pipelines
   newPipelineButton: New Pipeline
   name: Pipeline Name
   createNewPipeline: Create New Pipeline
@@ -644,8 +645,15 @@ pipelines:
   updated: Pipeline updated successfully
   executionStarted: Pipeline execution started successfully
   executionCouldNotStart: Failure while starting Pipeline execution
+  deletePipelineWarning: This will permanently delete the {{pipeline}} pipeline and all executions.
+  deletePipelineButton: Delete pipeline
+  deletePipelineConfirm: Are you sure you want to delete the pipeline <strong>{{pipeline}}</strong>? You can't undo this action.
+  deletePipelineSuccess: Pipeline {{pipeline}} deleted.
+  deletePipelineError: Failed to delete Pipeline. Please try again.
+  updatePipelineSuccess: Pipeline {{pipeline}} updated.
+  failedToUpdatePipeline: Failed to update Pipeline. Please try again.
 executions:
-  noData: There are no executions :(
+  noData: There are no executions
   newExecutionButton: Run Pipeline
   name: Execution Name
   description: Description
@@ -657,7 +665,7 @@ executions:
 selectRange: Shift-click to select a range
 allCommits: All Commits
 secrets:
-  noData: There are no secrets :(
+  noData: There are no secrets
   newSecretButton: New Secret
   name: Secret Name
   failedToCreate: Failed to create Secret. Please try again.
@@ -666,9 +674,12 @@ secrets:
   createSecret: Create Secret
   createSuccess: Secret created successfully
   secretDeleted: Secret {uid} deleted.
+  secretUpdated: Secret {uid} updated.
   deleteSecretConfirm: Are you sure you want to delete secret <strong>{{uid}}</strong>? You can't undo this action.
   failedToDeleteSecret: Failed to delete Secret. Please try again.
-  deleteSecret: Delete Secrets
+  failedToUpdateSecret: Failed to update Secret. Please try again.
+  deleteSecret: Delete secret
+  updateSecret: Update secret
 userUpdateSuccess: 'User updated successfully'
 viewFile: View File
 searchResult: 'Search Result {count}'
@@ -676,8 +687,46 @@ aiSearch: AI Search
 codeSearch: Code Search
 startSearching: Begin search by describing what you are looking for.
 poweredByAI: Unlock the power of AI with Semantic Code search. Try phrases like "Locate the code for authentication".
+failedToFetchFileContent: 'ERROR: Failed to fetch file content.'
 run: Run
 plugins:
   title: Plugins
   addAPlugin: Add a {{category}} plugin
   stepLabel: step
+createNewRepo: Create New repository
+importGitRepo: Import Git Repository
+importRepo:
+  title: Import Repository
+  url: Repository URL
+  urlPlaceholder: Enter the Repository URL
+  reqAuth: Requires Authorization
+  userPlaceholder: Enter Username
+  passwordPlaceholder: Enter Password
+  passToken: Password/Token
+  failedToImportRepo: Failed to import repository. Please try again.
+  validation: Invalid GitHub or GitLab URL
+  required: Repository URL is required
+  spaceNameReq: Enter a name for the new space
+  usernameReq: Username is required
+  passwordReq: Password is required
+importSpace:
+  title: Import Space
+  createNewSpace: Create New Space
+  authorization: Authorization
+  content: Import a GitLab Group or a GitHub Org to a new Space in Gitness. Entities at the top level will be imported to the space.
+  next: Next step
+  details: Details of target to import
+  organizationName: Organization Name
+  orgNamePlaceholder: Enter the org name here
+  spaceName: Space Name
+  description: Description (optional)
+  descPlaceholder: Enter the description
+  importLabel: What to import
+  providerRequired: Git Provider is required
+  orgRequired: Organization name is required
+  spaceNameRequired: Space name is required
+  gitProvider: Git Provider
+  invalidUrl: Invalid GitHub or GitLab URL
+  githubOrg: GitHub Organization Name
+  gitlabGroup: GitLab Group Name
+importProgress: 'Import in progress...'
