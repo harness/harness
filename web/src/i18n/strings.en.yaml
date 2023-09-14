@@ -104,7 +104,7 @@ repos:
   activities: Monthly Activities
   updated: Updated Date
   lastChange: Last Change
-  noDataMessage: Here is no Repository. Try to
+  noDataMessage: There are no repositories in this space.  Create a new repository, or import an existing Git repository by clicking below
   enterBranchName: Enter a branch name
 createRepoModal:
   branchLabel: 'Your repository will be initialized with a '
@@ -385,7 +385,7 @@ repoEmptyMarkdownExisting: |
   ### Or you can push an existing repository
 
   ```sh
-  git remote add REPO_URL
+  git remote add origin REPO_URL
   git branch -M DEFAULT_BRANCH
   git push -u origin DEFAULT_BRANCH
   ```
