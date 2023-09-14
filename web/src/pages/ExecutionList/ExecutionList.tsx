@@ -93,7 +93,7 @@ const ExecutionList = () => {
 
   const NewExecutionButton = (
     <Button
-      text={getString('executions.newExecutionButton')}
+      text={getString('run')}
       variation={ButtonVariation.PRIMARY}
       icon="play-outline"
       onClick={handleClick}></Button>
@@ -187,7 +187,19 @@ const ExecutionList = () => {
 
         <Container padding="xlarge">
           <Layout.Horizontal spacing="large" className={css.layout}>
-            {NewExecutionButton}
+            <Layout.Horizontal spacing="medium">
+              {NewExecutionButton}
+              <Button
+                variation={ButtonVariation.SECONDARY}
+                text={getString('edit')}
+                onClick={e => {
+                  e.stopPropagation()
+                  if (repoMetadata?.path && pipeline) {
+                    history.push(routes.toCODEPipelineEdit({ repoPath: repoMetadata.path, pipeline }))
+                  }
+                }}
+              />
+            </Layout.Horizontal>
             <FlexExpander />
           </Layout.Horizontal>
 
