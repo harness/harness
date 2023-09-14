@@ -91,7 +91,6 @@ func NewHarnessCodeClient(baseUrl string, accountID string, orgId string, projec
 func (c *HarnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInput) (*Repository, error) {
 	path := fmt.Sprintf(pathCreateRepo, c.client.accountId, c.client.orgId, c.client.projectId, input.UID, c.client.accountId)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, appendPath(c.client.baseURL, path), nil)
-
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new http request : %w", err)
 	}
