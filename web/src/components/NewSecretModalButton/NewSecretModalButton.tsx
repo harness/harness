@@ -9,7 +9,8 @@ import {
   Formik,
   FormikForm,
   FormInput,
-  FlexExpander
+  FlexExpander,
+  ButtonVariation
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Intent, FontVariation } from '@harnessio/design-system'
@@ -80,14 +81,14 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
         isOpen
         enforceFocus={false}
         onClose={hideModal}
-        title={''}
-        style={{ width: 700, maxHeight: '95vh', overflow: 'auto' }}>
-        <Layout.Vertical padding={{ left: 'xxlarge' }} style={{ height: '100%' }} data-testid="add-secret-modal">
-          <Heading level={3} font={{ variation: FontVariation.H3 }} margin={{ bottom: 'xlarge' }}>
+        title={
+          <Heading level={3} font={{ variation: FontVariation.H3 }}>
             {modalTitle}
           </Heading>
-
-          <Container margin={{ right: 'xxlarge' }}>
+        }
+        style={{ width: 700, maxHeight: '95vh', overflow: 'auto' }}>
+        <Layout.Vertical style={{ height: '100%' }} data-testid="add-secret-modal">
+          <Container>
             <Formik
               initialValues={formInitialValues}
               formName="addSecret"
@@ -100,45 +101,52 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
               validateOnBlur
               onSubmit={handleSubmit}>
               <FormikForm>
-                <FormInput.Text
-                  name="name"
-                  label={getString('name')}
-                  placeholder={getString('secrets.enterSecretName')}
-                  tooltipProps={{
-                    dataTooltipId: 'secretNameTextField'
-                  }}
-                  inputGroup={{ autoFocus: true }}
-                />
-                <FormInput.Text
-                  name="value"
-                  label={getString('value')}
-                  placeholder={getString('secrets.value')}
-                  tooltipProps={{
-                    dataTooltipId: 'secretDescriptionTextField'
-                  }}
-                  inputGroup={{ type: 'password' }}
-                />
-                <FormInput.Text
-                  name="description"
-                  label={getString('description')}
-                  placeholder={getString('enterDescription')}
-                  tooltipProps={{
-                    dataTooltipId: 'secretDescriptionTextField'
-                  }}
-                  isOptional
-                />
+                <Container>
+                  <FormInput.Text
+                    name="name"
+                    label={getString('name')}
+                    placeholder={getString('secrets.enterSecretName')}
+                    tooltipProps={{
+                      dataTooltipId: 'secretNameTextField'
+                    }}
+                    inputGroup={{ autoFocus: true }}
+                  />
+                  <FormInput.Text
+                    name="value"
+                    label={getString('value')}
+                    placeholder={getString('secrets.value')}
+                    tooltipProps={{
+                      dataTooltipId: 'secretDescriptionTextField'
+                    }}
+                    inputGroup={{ type: 'password' }}
+                  />
+                  <FormInput.Text
+                    name="description"
+                    label={getString('description')}
+                    placeholder={getString('enterDescription')}
+                    tooltipProps={{
+                      dataTooltipId: 'secretDescriptionTextField'
+                    }}
+                    isOptional
+                  />
+                </Container>
 
                 <Layout.Horizontal
                   spacing="small"
-                  padding={{ right: 'xxlarge', top: 'xxxlarge', bottom: 'large' }}
+                  padding={{ right: 'xxlarge', top: 'xxxlarge' }}
                   style={{ alignItems: 'center' }}>
                   <Button
                     type="submit"
                     text={getString('secrets.createSecret')}
-                    intent={Intent.PRIMARY}
+                    variation={ButtonVariation.PRIMARY}
                     disabled={loading}
                   />
-                  <Button text={cancelButtonTitle || getString('cancel')} minimal onClick={hideModal} />
+                  <Button
+                    text={cancelButtonTitle || getString('cancel')}
+                    minimal
+                    onClick={hideModal}
+                    variation={ButtonVariation.SECONDARY}
+                  />
                   <FlexExpander />
                   {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
                 </Layout.Horizontal>
