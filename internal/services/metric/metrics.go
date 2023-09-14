@@ -92,7 +92,7 @@ func (c *Collector) Handle(ctx context.Context, _ string, _ job.ProgressReporter
 	data := metricData{
 		Hostname:   c.hostname,
 		Installer:  users[0].Email,
-		Installed:  time.Unix(users[0].Created, 0).Format(time.DateTime),
+		Installed:  time.UnixMilli(users[0].Created).Format("2006-01-02 15:04:05"),
 		Version:    version.Version.String(),
 		Users:      totalUsers,
 		Repos:      totalRepos,
