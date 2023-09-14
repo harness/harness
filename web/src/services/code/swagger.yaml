@@ -2442,8 +2442,9 @@ paths:
           description: Internal Server Error
       tags:
         - pipeline
-    patch:
-      operationId: updateExecution
+  /repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/cancel:
+    post:
+      operationId: cancelExecution
       parameters:
         - in: path
           name: repo_ref
@@ -2460,11 +2461,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OpenapiUpdateExecutionRequest'
       responses:
         '200':
           content:
@@ -2472,12 +2468,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/TypesExecution'
           description: OK
-        '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UsererrorError'
-          description: Bad Request
         '401':
           content:
             application/json:
@@ -6289,10 +6279,13 @@ components:
   schemas:
     EnumAccessGrant:
       type: integer
+    EnumCIStatus:
+      type: string
     EnumCheckPayloadKind:
       enum:
         - ''
         - markdown
+        - pipeline
         - raw
       type: string
     EnumCheckStatus:
@@ -6910,11 +6903,6 @@ components:
         uid:
           type: string
       type: object
-    OpenapiUpdateExecutionRequest:
-      properties:
-        status:
-          type: string
-      type: object
     OpenapiUpdatePipelineRequest:
       properties:
         config_path:
@@ -7279,6 +7267,8 @@ components:
           type: string
         created:
           type: integer
+        created_by:
+          type: integer
         cron:
           type: string
         debug:
@@ -7324,7 +7314,7 @@ components:
         started:
           type: integer
         status:
-          type: string
+          $ref: '#/components/schemas/EnumCIStatus'
         target:
           type: string
         timestamp:
@@ -7417,6 +7407,8 @@ components:
         config_path:
           type: string
         created:
+          type: integer
+        created_by:
           type: integer
         default_branch:
           type: string
@@ -7746,7 +7738,7 @@ components:
         started:
           type: integer
         status:
-          type: string
+          $ref: '#/components/schemas/EnumCIStatus'
         steps:
           items:
             $ref: '#/components/schemas/TypesStep'
@@ -7785,7 +7777,7 @@ components:
         started:
           type: integer
         status:
-          type: string
+          $ref: '#/components/schemas/EnumCIStatus'
         stopped:
           type: integer
       type: object

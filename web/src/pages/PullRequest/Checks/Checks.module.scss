@@ -11,6 +11,10 @@
   > div {
     position: relative !important;
 
+    .menu {
+      overflow: auto;
+    }
+
     .menu,
     .content {
       width: 100%;
@@ -34,6 +38,7 @@
           }
 
           .chevron {
+            transform: rotate(-90deg);
             transition: transform 0.2s ease;
           }
 
@@ -55,13 +60,19 @@
 
         .subMenu {
           cursor: pointer;
-          height: var(--stage-detail-section-height);
+          height: 38px;
           align-items: center;
           padding: 0;
           padding-left: var(--spacing-medium);
           margin-left: 32px;
           border-top-left-radius: 6px;
           border-bottom-left-radius: 6px;
+
+          .text {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--grey-800);
+          }
 
           &:hover,
           &.selected {
@@ -70,6 +81,10 @@
             .text {
               color: var(--primary-7);
             }
+          }
+
+          &.selected .text {
+            font-weight: 600;
           }
 
           &.active {
@@ -114,6 +129,12 @@
             padding: var(--spacing-small) var(--spacing-large) 0;
           }
         }
+
+        span[data-icon='execution-success'] svg {
+          circle {
+            color: transparent !important;
+          }
+        }
       }
 
       .header {
@@ -151,4 +172,82 @@
 
 .noShrink {
   flex-shrink: inherit;
+}
+
+.pipelineStages {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-top: 8px !important;
+
+  &.hidden {
+    display: none;
+  }
+
+  .spinner {
+    padding: var(--spacing-small) 0 var(--spacing-xlarge);
+    text-align: center;
+  }
+}
+
+.pipelineSteps {
+  height: 100%;
+  overflow: auto;
+  padding: 10px 20px 0 !important;
+
+  &::before {
+    content: '';
+    height: 10px;
+    width: 100%;
+    background-color: var(--black);
+    position: absolute;
+    top: 64px;
+    z-index: 1;
+  }
+
+  .stepHeader {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    border-radius: 6px;
+    padding: 0 10px 0 6px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: var(--black);
+
+    &.expanded {
+      .chevron {
+        transform: rotate(90deg);
+      }
+    }
+
+    .chevron {
+      transition: transform 0.2s ease;
+    }
+
+    &:hover {
+      background-color: #22222aa9;
+    }
+
+    &.selected {
+      background-color: #22222a;
+    }
+
+    &.selected .name {
+      color: var(--primary-7) !important;
+      font-weight: 600 !important;
+    }
+
+    .name {
+      color: #b0b1c3 !important;
+      font-weight: 400 !important;
+      font-size: 12px !important;
+      font-family: var(--font-family-mono);
+    }
+  }
+
+  .stepLogViewer {
+    padding-left: 20px;
+  }
 }

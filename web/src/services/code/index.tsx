@@ -7,7 +7,9 @@ import { getConfig } from '../config'
 export const SPEC_VERSION = '0.0.0'
 export type EnumAccessGrant = number
 
-export type EnumCheckPayloadKind = '' | 'markdown' | 'raw'
+export type EnumCIStatus = string
+
+export type EnumCheckPayloadKind = '' | 'markdown' | 'pipeline' | 'raw'
 
 export type EnumCheckStatus = 'error' | 'failure' | 'pending' | 'running' | 'success'
 
@@ -363,10 +365,6 @@ export interface OpenapiUpdateConnectorRequest {
   uid?: string
 }
 
-export interface OpenapiUpdateExecutionRequest {
-  status?: string
-}
-
 export interface OpenapiUpdatePipelineRequest {
   config_path?: string
   description?: string
@@ -582,6 +580,7 @@ export interface TypesExecution {
   author_name?: string
   before?: string
   created?: number
+  created_by?: number
   cron?: string
   debug?: boolean
   deploy_id?: number
@@ -604,7 +603,7 @@ export interface TypesExecution {
   source_repo?: string
   stages?: TypesStage[]
   started?: number
-  status?: string
+  status?: EnumCIStatus
   target?: string
   timestamp?: number
   title?: string
@@ -658,6 +657,7 @@ export interface TypesPath {
 export interface TypesPipeline {
   config_path?: string
   created?: number
+  created_by?: number
   default_branch?: string
   description?: string
   execution?: TypesExecution
@@ -836,7 +836,7 @@ export interface TypesStage {
   os?: string
   repo_id?: number
   started?: number
-  status?: string
+  status?: EnumCIStatus
   steps?: TypesStep[]
   stopped?: number
   throttle?: number
@@ -855,7 +855,7 @@ export interface TypesStep {
   number?: number
   schema?: string
   started?: number
-  status?: string
+  status?: EnumCIStatus
   stopped?: number
 }
 
@@ -2596,38 +2596,38 @@ export const useFindExecution = ({ repo_ref, pipeline_uid, execution_number, ...
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid, execution_number }, ...props }
   )
 
-export interface UpdateExecutionPathParams {
+export interface CancelExecutionPathParams {
   repo_ref: string
   pipeline_uid: string
   execution_number: string
 }
 
-export type UpdateExecutionProps = Omit<
-  MutateProps<TypesExecution, UsererrorError, void, OpenapiUpdateExecutionRequest, UpdateExecutionPathParams>,
+export type CancelExecutionProps = Omit<
+  MutateProps<TypesExecution, UsererrorError, void, void, CancelExecutionPathParams>,
   'path' | 'verb'
 > &
-  UpdateExecutionPathParams
+  CancelExecutionPathParams
 
-export const UpdateExecution = ({ repo_ref, pipeline_uid, execution_number, ...props }: UpdateExecutionProps) => (
-  <Mutate<TypesExecution, UsererrorError, void, OpenapiUpdateExecutionRequest, UpdateExecutionPathParams>
-    verb="PATCH"
-    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/executions/${execution_number}`}
+export const CancelExecution = ({ repo_ref, pipeline_uid, execution_number, ...props }: CancelExecutionProps) => (
+  <Mutate<TypesExecution, UsererrorError, void, void, CancelExecutionPathParams>
+    verb="POST"
+    path={`/repos/${repo_ref}/pipelines/${pipeline_uid}/executions/${execution_number}/cancel`}
     base={getConfig('code/api/v1')}
     {...props}
   />
 )
 
-export type UseUpdateExecutionProps = Omit<
-  UseMutateProps<TypesExecution, UsererrorError, void, OpenapiUpdateExecutionRequest, UpdateExecutionPathParams>,
+export type UseCancelExecutionProps = Omit<
+  UseMutateProps<TypesExecution, UsererrorError, void, void, CancelExecutionPathParams>,
   'path' | 'verb'
 > &
-  UpdateExecutionPathParams
+  CancelExecutionPathParams
 
-export const useUpdateExecution = ({ repo_ref, pipeline_uid, execution_number, ...props }: UseUpdateExecutionProps) =>
-  useMutate<TypesExecution, UsererrorError, void, OpenapiUpdateExecutionRequest, UpdateExecutionPathParams>(
-    'PATCH',
-    (paramsInPath: UpdateExecutionPathParams) =>
-      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/executions/${paramsInPath.execution_number}`,
+export const useCancelExecution = ({ repo_ref, pipeline_uid, execution_number, ...props }: UseCancelExecutionProps) =>
+  useMutate<TypesExecution, UsererrorError, void, void, CancelExecutionPathParams>(
+    'POST',
+    (paramsInPath: CancelExecutionPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pipelines/${paramsInPath.pipeline_uid}/executions/${paramsInPath.execution_number}/cancel`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, pipeline_uid, execution_number }, ...props }
   )
 

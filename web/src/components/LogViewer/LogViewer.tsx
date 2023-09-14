@@ -23,9 +23,11 @@ export interface LogViewerProps {
   content: string
 
   termRefs?: React.MutableRefObject<TermRefs>
+
+  autoHeight?: boolean
 }
 
-export const LogViewer: React.FC<LogViewerProps> = ({ scrollbackLines, content, termRefs }) => {
+export const LogViewer: React.FC<LogViewerProps> = ({ scrollbackLines, content, termRefs, autoHeight }) => {
   const ref = useRef<HTMLDivElement | null>(null)
   const lines = useMemo(() => content.split(/\r?\n/), [content])
   const term = useRef<{ term: Terminal; fitAddon: FitAddon }>()
@@ -70,11 +72,19 @@ export const LogViewer: React.FC<LogViewerProps> = ({ scrollbackLines, content, 
   useEffect(() => {
     term.current?.term?.clear()
     lines.forEach(line => term.current?.term?.writeln(line))
-  }, [lines])
+
+    if (autoHeight) {
+      term.current?.term?.resize(term.current?.term?.cols, lines.length + 1)
+    }
+
+    return () => {
+      term.current?.term?.clear()
+    }
+  }, [lines, autoHeight])
 
   useEventListener('resize', () => {
     term.current?.fitAddon?.fit()
   })
 
-  return <Container ref={ref} width="100%" height="100%" />
+  return <Container ref={ref} width="100%" height={autoHeight ? 'auto' : '100%'} />
 }

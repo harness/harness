@@ -329,7 +329,8 @@ export function formatBytes(bytes: number, decimals = 2) {
 export enum PullRequestCheckType {
   EMPTY = '',
   RAW = 'raw',
-  MARKDOWN = 'markdown'
+  MARKDOWN = 'markdown',
+  PIPELINE = 'pipeline'
 }
 
 export function isInViewport(element: Element) {
