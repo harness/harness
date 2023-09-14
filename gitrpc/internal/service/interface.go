@@ -88,4 +88,11 @@ type GitAdapter interface {
 		sourceRef string,
 		path string,
 		params types.DiffCutParams) (types.HunkHeader, types.Hunk, error)
+
+	MatchFiles(ctx context.Context,
+		repoPath string,
+		ref string,
+		dirPath string,
+		regExpDef string,
+		maxSize int) ([]types.FileContent, error)
 }

@@ -5,25 +5,19 @@
 package storage
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
-	"sync"
 )
 
-type LocalStore struct {
-	mutex sync.RWMutex
-	files map[string]bool
-}
+type LocalStore struct{}
 
 func NewLocalStore() *LocalStore {
-	return &LocalStore{
-		files: make(map[string]bool),
-	}
+	return &LocalStore{}
 }
 
-func (store *LocalStore) Save(filePath string, data bytes.Buffer) (string, error) {
+func (store *LocalStore) Save(filePath string, data io.Reader) (string, error) {
 	err := os.MkdirAll(filepath.Dir(filePath), 0o777)
 	if err != nil {
 		return "", err
@@ -34,15 +28,10 @@ func (store *LocalStore) Save(filePath string, data bytes.Buffer) (string, error
 	}
 	defer file.Close()
 
-	_, err = data.WriteTo(file)
+	_, err = io.Copy(file, data)
 	if err != nil {
 		return "", fmt.Errorf("cannot write to file: %w", err)
 	}
-
-	store.mutex.Lock()
-	defer store.mutex.Unlock()
-
-	store.files[filePath] = true
 
 	return filePath, nil
 }

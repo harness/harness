@@ -17,7 +17,6 @@ import (
 	"github.com/harness/gitness/gitrpc/internal/types"
 
 	gitea "code.gitea.io/gitea/modules/git"
-	gogitplumbing "github.com/go-git/go-git/v5/plumbing"
 	gogitfilemode "github.com/go-git/go-git/v5/plumbing/filemode"
 	gogitobject "github.com/go-git/go-git/v5/plumbing/object"
 )
@@ -35,23 +34,9 @@ func (g Adapter) GetTreeNode(ctx context.Context,
 ) (*types.TreeNode, error) {
 	treePath = cleanTreePath(treePath)
 
-	repoEntry, err := g.repoCache.Get(ctx, repoPath)
+	_, refCommit, err := g.getGoGitCommit(ctx, repoPath, ref)
 	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to open repository")
-	}
-
-	repo := repoEntry.Repo()
-
-	refSHA, err := repo.ResolveRevision(gogitplumbing.Revision(ref))
-	if errors.Is(err, gogitplumbing.ErrReferenceNotFound) {
-		return nil, types.ErrNotFound
-	} else if err != nil {
-		return nil, fmt.Errorf("failed to resolve revision %s: %w", ref, err)
-	}
-
-	refCommit, err := repo.CommitObject(*refSHA)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load commit data: %w", err)
+		return nil, err
 	}
 
 	rootEntry := gogitobject.TreeEntry{
@@ -100,23 +85,9 @@ func (g Adapter) ListTreeNodes(ctx context.Context,
 ) ([]types.TreeNode, error) {
 	treePath = cleanTreePath(treePath)
 
-	repoEntry, err := g.repoCache.Get(ctx, repoPath)
+	_, refCommit, err := g.getGoGitCommit(ctx, repoPath, ref)
 	if err != nil {
-		return nil, processGiteaErrorf(err, "failed to open repository")
-	}
-
-	repo := repoEntry.Repo()
-
-	refSHA, err := repo.ResolveRevision(gogitplumbing.Revision(ref))
-	if errors.Is(err, gogitplumbing.ErrReferenceNotFound) {
-		return nil, types.ErrNotFound
-	} else if err != nil {
-		return nil, fmt.Errorf("failed to resolve revision %s: %w", ref, err)
-	}
-
-	refCommit, err := repo.CommitObject(*refSHA)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load commit data: %w", err)
+		return nil, err
 	}
 
 	tree, err := refCommit.Tree()

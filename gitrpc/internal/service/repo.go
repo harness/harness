@@ -5,7 +5,6 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -55,7 +54,7 @@ var (
 )
 
 type Storage interface {
-	Save(filePath string, data bytes.Buffer) (string, error)
+	Save(filePath string, data io.Reader) (string, error)
 }
 
 type RepositoryService struct {
@@ -232,7 +231,7 @@ func (s RepositoryService) createRepositoryInternal(
 			}
 			// NOTE: This creates the branch in origin repo (as it doesn't exist as of now)
 			// TODO: this should at least be a constant and not hardcoded?
-			if err = s.addFilesAndPush(ctx, tempDir, filePaths, "HEAD:"+defaultBranch, author, authorDate,
+			if err = s.addFilesAndPush(ctx, tempDir, filePaths, "HEAD:"+defaultBranch, nil, author, authorDate,
 				committer, committerDate, "origin", "initial commit"); err != nil {
 				return err
 			}
