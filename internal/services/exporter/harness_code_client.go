@@ -97,7 +97,6 @@ func (c *HarnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInp
 	}
 
 	resp, err := c.client.Do(req)
-
 	if err != nil {
 		return nil, fmt.Errorf("request execution failed: %w", err)
 	}
@@ -107,8 +106,12 @@ func (c *HarnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInp
 	}
 
 	var repository Repository
-	err = unmarshalResponse(resp, repository)
+	err = mapStatusCodeToError(resp.StatusCode)
+	if err != nil {
+		return nil, err
+	}
 
+	err = unmarshalResponse(resp, repository)
 	if err != nil {
 		return nil, err
 	}
@@ -118,13 +121,11 @@ func (c *HarnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInp
 func (c *HarnessCodeClient) DeleteRepo(ctx context.Context, input repo.CreateInput) error {
 	path := fmt.Sprintf(pathDeleteRepo, c.client.accountId, c.client.orgId, c.client.projectId, input.UID, c.client.accountId)
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, appendPath(c.client.baseURL, path), nil)
-
 	if err != nil {
 		return fmt.Errorf("unable to create new http request : %w", err)
 	}
 
 	resp, err := c.client.Do(req)
-
 	if err != nil {
 		return fmt.Errorf("request execution failed: %w", err)
 	}
