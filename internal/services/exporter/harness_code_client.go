@@ -18,13 +18,15 @@ import (
 )
 
 const (
-	pathCreateRepo      = "/v1/accounts/%s/orgs/%s/projects/%s/repos/%s?routingId=%s"
-	pathDeleteRepo      = "/v1/accounts/%s/orgs/%s/projects/%s/repos/%s?routingId=%s"
-	headerAuthorization = "X-Api-Key"
+	pathCreateRepo = "/v1/accounts/%s/orgs/%s/projects/%s/repos/%s?routingId=%s"
+	pathDeleteRepo = "/v1/accounts/%s/orgs/%s/projects/%s/repos/%s?routingId=%s"
+	headerApiKey   = "X-Api-Key"
 )
 
 var (
-	ErrNotFound = fmt.Errorf("not found")
+	ErrNotFound   = fmt.Errorf("not found")
+	ErrBadRequest = fmt.Errorf("bad request")
+	ErrInternal   = fmt.Errorf("internal error")
 )
 
 type HarnessCodeClient struct {
@@ -70,7 +72,7 @@ func NewClient(baseURL string, accountID string, orgId string, projectId string,
 			Transport: &http.Transport{
 				// #nosec
 				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
+					InsecureSkipVerify: false,
 				},
 			},
 		},
@@ -131,12 +133,7 @@ func (c *HarnessCodeClient) DeleteRepo(ctx context.Context, input repo.CreateInp
 	if resp != nil && resp.Body != nil {
 		defer func() { _ = resp.Body.Close() }()
 	}
-
-	if resp.StatusCode == http.StatusNoContent {
-		return nil
-	}
-	return fmt.Errorf("recieved error with status code %d", resp.StatusCode)
-
+	return mapStatusCodeToError(resp.StatusCode)
 }
 
 func appendPath(uri string, path string) string {
@@ -154,16 +151,12 @@ func (c *Client) Do(r *http.Request) (*http.Response, error) {
 
 // addAuthHeader adds the Authorization header to the request.
 func addAuthHeader(req *http.Request, token string) {
-	req.Header.Add(headerAuthorization, token)
+	req.Header.Add(headerApiKey, token)
 }
 
 func unmarshalResponse(resp *http.Response, data interface{}) error {
 	if resp == nil {
 		return fmt.Errorf("http response is empty")
-	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		return ErrNotFound
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -181,4 +174,25 @@ func unmarshalResponse(resp *http.Response, data interface{}) error {
 	}
 
 	return nil
+}
+
+// TODO: this should be up to the caller on what is accepted
+func mapStatusCodeToError(statusCode int) error {
+	switch {
+	case statusCode == 500:
+		return ErrInternal
+	case statusCode >= 500:
+		return fmt.Errorf("received server side error status code %d", statusCode)
+	case statusCode == 404:
+		return ErrNotFound
+	case statusCode == 400:
+		return ErrBadRequest
+	case statusCode >= 400:
+		return fmt.Errorf("received client side error status code %d", statusCode)
+	case statusCode >= 300:
+		return fmt.Errorf("received further action required status code %d", statusCode)
+	default:
+		// TODO: definitely more things to consider here ...
+		return nil
+	}
 }
