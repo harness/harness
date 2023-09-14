@@ -386,7 +386,6 @@ export interface StringsMap {
   'pipelines.updatePipelineSuccess': string
   'pipelines.updated': string
   'pipelines.yamlPath': string
-  'plugins.addAPlugin': string
   'plugins.stepLabel': string
   'plugins.title': string
   poweredByAI: string
@@ -582,6 +581,7 @@ export interface StringsMap {
   sslVerificationLabel: string
   startSearching: string
   status: string
+  'step.select': string
   submitReview: string
   success: string
   switchBranchesTags: string

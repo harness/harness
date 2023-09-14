@@ -1,21 +1,3 @@
-.main {
-  height: 100%;
-  :global {
-    .bp3-tabs {
-      width: 100%;
-      height: 100%;
-    }
-  }
-}
-
-.mainTabPanel {
-  &:global(.bp3-tab-panel[role='tabpanel']) {
-    height: calc(100% - 30px);
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-  }
-}
-
 .pluginDetailsPanel {
   height: 100%;
   border-top: 1px solid var(--grey-100);
@@ -50,4 +32,23 @@
   &:hover {
     cursor: pointer;
   }
+}
+
+.plugins {
+  max-height: calc(100vh - var(--header-height));
+  overflow-y: scroll;
+}
+
+.pluginDesc {
+  text-overflow: ellipsis;
+  width: calc(30vw - 2 * var(--spacing-huge));
+}
+
+.formFields {
+  height: calc(100% - var(--spacing-xlarge));
+  overflow-y: scroll;
+}
+
+.panelContent {
+  height: calc(100% - var(--spacing-large));
 }

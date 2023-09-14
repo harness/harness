@@ -28,7 +28,7 @@ const useUpdateSecretModal = () => {
   const space = useGetSpaceParam()
   const { showError, showSuccess } = useToaster()
   const [secret, setSecret] = useState<TypesSecret>()
-  const postUpdate = useRef<Function>()
+  const postUpdate = useRef<() => Promise<void>>()
 
   const { mutate: updateSecret, loading } = useMutate<TypesSecret>({
     verb: 'PATCH',
