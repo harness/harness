@@ -176,7 +176,6 @@ func unmarshalResponse(resp *http.Response, data interface{}) error {
 	return nil
 }
 
-// TODO: this should be up to the caller on what is accepted
 func mapStatusCodeToError(statusCode int) error {
 	switch {
 	case statusCode == 500:
