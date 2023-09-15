@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react'
 
-/**
- * useLiveTimer returns the current time, updated every second.
- *
- * @param isActive - If true, the timer is active and updates every second.
- */
-export function useLiveTimer(isActive: boolean): number {
+const useLiveTimer = (isActive = true): number => {
   const [currentTime, setCurrentTime] = useState(Date.now())
 
   useEffect(() => {
@@ -26,3 +21,5 @@ export function useLiveTimer(isActive: boolean): number {
 
   return currentTime
 }
+
+export default useLiveTimer

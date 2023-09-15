@@ -33,7 +33,7 @@ import { getStatus } from 'utils/ExecutionUtils'
 import useSpaceSSE from 'hooks/useSpaceSSE'
 import { ExecutionText, ExecutionTrigger } from 'components/ExecutionText/ExecutionText'
 import useRunPipelineModal from 'components/RunPipelineModal/RunPipelineModal'
-import { useLiveTimer } from 'hooks/useLiveTimeHook'
+import useLiveTimer from 'hooks/useLiveTimeHook'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './ExecutionList.module.scss'
 
@@ -45,7 +45,7 @@ const ExecutionList = () => {
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
-  const currentTime = useLiveTimer(true)
+  const currentTime = useLiveTimer()
 
   const { repoMetadata, error, loading, refetch, space } = useGetRepositoryMetadata()
 

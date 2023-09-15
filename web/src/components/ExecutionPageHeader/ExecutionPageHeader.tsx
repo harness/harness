@@ -13,7 +13,7 @@ import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/Exec
 import { getStatus } from 'utils/ExecutionUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { timeDistance } from 'utils/Utils'
-import { useLiveTimer } from 'hooks/useLiveTimeHook'
+import useLiveTimer from 'hooks/useLiveTimeHook'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import css from './ExecutionPageHeader.module.scss'
 
@@ -50,8 +50,9 @@ export function ExecutionPageHeader({
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { routes } = useAppContext()
+  const currentTime = useLiveTimer()
+
   const isActive = executionInfo?.status === ExecutionState.RUNNING
-  const currentTime = useLiveTimer(true)
 
   if (!repoMetadata) {
     return null

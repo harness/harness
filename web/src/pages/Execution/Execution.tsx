@@ -15,6 +15,7 @@ import { Split } from 'components/Split/Split'
 import { ExecutionPageHeader } from 'components/ExecutionPageHeader/ExecutionPageHeader'
 import useSpaceSSE from 'hooks/useSpaceSSE'
 import { ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
+import { getStatus } from 'utils/ExecutionUtils'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './Execution.module.scss'
 
@@ -58,7 +59,7 @@ const Execution = () => {
         executionRefetch()
       }
     },
-    shouldRun: execution?.status === ExecutionState.RUNNING
+    shouldRun: [ExecutionState.RUNNING, ExecutionState.PENDING].includes(getStatus(execution?.status))
   })
 
   return (

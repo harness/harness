@@ -40,7 +40,7 @@ import useNewPipelineModal from 'components/NewPipelineModal/NewPipelineModal'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import useSpaceSSE from 'hooks/useSpaceSSE'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import { useLiveTimer } from 'hooks/useLiveTimeHook'
+import useLiveTimer from 'hooks/useLiveTimeHook'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
@@ -54,7 +54,7 @@ const PipelineList = () => {
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
   const space = useGetSpaceParam()
-  const currentTime = useLiveTimer(true)
+  const currentTime = useLiveTimer()
 
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
 

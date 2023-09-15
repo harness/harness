@@ -5,7 +5,7 @@ import type { TypesStage } from 'services/code'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/ExecutionUtils'
 import { timeDistance } from 'utils/Utils'
-import { useLiveTimer } from 'hooks/useLiveTimeHook'
+import useLiveTimer from 'hooks/useLiveTimeHook'
 import css from './ExecutionStageList.module.scss'
 
 interface ExecutionStageListProps {
