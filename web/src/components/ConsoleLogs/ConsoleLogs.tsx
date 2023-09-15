@@ -13,10 +13,10 @@ const ConsoleLogs: FC<ConsoleLogsProps> = ({ logs }) => {
       {logs.map((log, index) => {
         return (
           <Layout.Horizontal key={index} spacing={'medium'} className={css.logLayout}>
-            <Text className={css.lineNumber}>{log.pos}</Text>
+            {typeof log.pos === 'number' && <Text className={css.lineNumber}>{log.pos + 1}</Text>}
             <Text className={css.log}>{log.out}</Text>
             <FlexExpander />
-            <Text>{log.time}s</Text>
+            <Text className={css.time}>{log.time}s</Text>
           </Layout.Horizontal>
         )
       })}

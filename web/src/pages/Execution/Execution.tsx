@@ -80,7 +80,7 @@ const Execution = () => {
           ]
         }
         executionInfo={{
-          message: execution?.message as string,
+          message: (execution?.message || execution?.title) as string,
           authorName: execution?.author_name as string,
           authorEmail: execution?.author_email as string,
           source: execution?.source as string,
@@ -91,7 +91,7 @@ const Execution = () => {
         }}
       />
       <PageBody
-        className={cx({ [css.withError]: !!error })}
+        className={cx(css.pageBody, { [css.withError]: !!error })}
         error={error ? getErrorMessage(error || executionError) : null}
         retryOnError={voidFn(refetch)}
         noData={{

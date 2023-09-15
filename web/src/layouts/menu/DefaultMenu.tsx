@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react'
-import { Container, Layout } from '@harnessio/uicore'
+import { Container, Layout, Utils } from '@harnessio/uicore'
 import { Render } from 'react-jsx-match'
 import { useHistory, useRouteMatch } from 'react-router-dom'
+import { Lock } from 'iconoir-react'
+import { Color } from '@harnessio/design-system'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import type { TypesSpace } from 'services/code'
@@ -154,9 +156,9 @@ export const DefaultMenu: React.FC = () => {
           <Render when={selectedSpace}>
             {/* icon is placeholder */}
             <NavMenuItem
-              icon="lock"
               label={getString('pageTitle.secrets')}
               to={routes.toCODESecrets({ space: selectedSpace?.path as string })}
+              customIcon={<Lock color={Utils.getRealCSSColor(Color.GREY_700)} />}
             />
           </Render>
         )}

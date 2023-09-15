@@ -29,15 +29,23 @@ type TriggerAction = {
   value: string
 }
 
-export const triggerActions: TriggerAction[] = [
+const branchActions: TriggerAction[] = [
   { name: 'Branch Created', value: 'branch_created' },
-  { name: 'Branch Updated', value: 'branch_updated' },
-  { name: 'Pull Request Branch Updated', value: 'pullreq_branch_updated' },
+  { name: 'Branch Updated', value: 'branch_updated' }
+]
+
+const pullRequestActions: TriggerAction[] = [
   { name: 'Pull Request Created', value: 'pullreq_created' },
-  { name: 'Pull Request Reopened', value: 'pullreq_reopened' },
+  { name: 'Pull Request Updated', value: 'pullreq_branch_updated' },
+  { name: 'Pull Request Reopened', value: 'pullreq_reopened' }
+]
+
+const tagActions: TriggerAction[] = [
   { name: 'Tag Created', value: 'tag_created' },
   { name: 'Tag Updated', value: 'tag_updated' }
 ]
+
+export const allActions: TriggerAction[][] = [branchActions, pullRequestActions, tagActions]
 
 interface TriggerMenuItemProps {
   name: string
@@ -177,25 +185,29 @@ const TriggerDetails = ({
               />
             </Container>
             <div className={css.separator} />
-            <Container className={css.actionsContainer} padding={'large'}>
-              {triggerActions.map(action => (
-                <Checkbox
-                  key={action.name}
-                  name="actions"
-                  label={action.name}
-                  value={action.value}
-                  checked={formik.values.actions.includes(action.value as EnumTriggerAction)}
-                  onChange={event => {
-                    if (event.currentTarget.checked) {
-                      formik.setFieldValue('actions', [...formik.values.actions, action.value])
-                    } else {
-                      formik.setFieldValue(
-                        'actions',
-                        formik.values.actions.filter((value: string) => value !== action.value)
-                      )
-                    }
-                  }}
-                />
+            <Container>
+              {allActions.map((actionGroup, index) => (
+                <Container className={css.actionsContainer} padding={'large'} key={index}>
+                  {actionGroup.map(action => (
+                    <Checkbox
+                      key={action.name}
+                      name="actions"
+                      label={action.name}
+                      value={action.value}
+                      checked={formik.values.actions.includes(action.value as EnumTriggerAction)}
+                      onChange={event => {
+                        if (event.currentTarget.checked) {
+                          formik.setFieldValue('actions', [...formik.values.actions, action.value])
+                        } else {
+                          formik.setFieldValue(
+                            'actions',
+                            formik.values.actions.filter((value: string) => value !== action.value)
+                          )
+                        }
+                      }}
+                    />
+                  ))}
+                </Container>
               ))}
             </Container>
             <div className={css.separator} />
@@ -203,9 +215,9 @@ const TriggerDetails = ({
               spacing="small"
               padding={{ top: 'large', left: 'large', right: 'large' }}
               style={{ alignItems: 'center' }}>
-              <Button type="submit" text={getString('edit')} intent={Intent.PRIMARY} disabled={loading} />
+              <Button type="submit" text={getString('save')} intent={Intent.PRIMARY} disabled={loading} />
               <Button
-                text={getString('triggers.deleteTrigger')}
+                text={getString('delete')}
                 intent={Intent.DANGER}
                 variation={ButtonVariation.SECONDARY}
                 onClick={() => {
@@ -255,46 +267,48 @@ const PipelineTriggersTabs = ({ repoPath, pipeline }: PipelineTriggersTabsProps)
   return (
     <>
       <LoadingSpinner visible={loading} />
-      {data?.length && (
-        <Layout.Horizontal padding={'large'}>
-          <Layout.Vertical padding={'large'}>
-            <NewTriggerModalButton
-              modalTitle={getString('triggers.createTrigger')}
-              text={getString('triggers.newTrigger')}
-              variation={ButtonVariation.PRIMARY}
-              icon="plus"
-              onSuccess={() => refetch()}
-              repoPath={repoPath}
-              pipeline={pipeline}
-              width="150px"
-            />
-            <Layout.Vertical spacing={'large'} className={css.triggerList}>
-              {data?.map((trigger, index) => (
-                <TriggerMenuItem
-                  key={trigger.id}
-                  name={trigger.uid as string}
-                  lastUpdated={trigger.updated as number}
-                  setSelectedTrigger={setSelectedTrigger}
-                  index={index}
-                  isSelected={selectedTrigger === index}
-                />
-              ))}
+      <Layout.Horizontal padding={'large'}>
+        <Layout.Vertical padding={'large'}>
+          <NewTriggerModalButton
+            modalTitle={getString('triggers.createTrigger')}
+            text={getString('triggers.newTrigger')}
+            variation={ButtonVariation.PRIMARY}
+            icon="plus"
+            onSuccess={() => refetch()}
+            repoPath={repoPath}
+            pipeline={pipeline}
+            width="150px"
+          />
+          <Layout.Vertical spacing={'large'} className={css.triggerList}>
+            {data?.map((trigger, index) => (
+              <TriggerMenuItem
+                key={trigger.id}
+                name={trigger.uid as string}
+                lastUpdated={trigger.updated as number}
+                setSelectedTrigger={setSelectedTrigger}
+                index={index}
+                isSelected={selectedTrigger === index}
+              />
+            ))}
+          </Layout.Vertical>
+        </Layout.Vertical>
+        {data && data?.length > 0 && (
+          <>
+            <div className={css.separator} />
+            <Layout.Vertical padding={'large'}>
+              <TriggerDetails
+                name={data?.[selectedTrigger]?.uid as string}
+                repoPath={repoPath}
+                pipeline={pipeline}
+                refetchTriggers={refetch}
+                setSelectedTrigger={setSelectedTrigger}
+                initialActions={data?.[selectedTrigger]?.actions as EnumTriggerAction[]}
+                initialDisabled={data?.[selectedTrigger]?.disabled as boolean}
+              />
             </Layout.Vertical>
-          </Layout.Vertical>
-          <div className={css.separator} />
-          <Layout.Vertical padding={'large'}>
-            <TriggerDetails
-              name={data?.[selectedTrigger]?.uid as string}
-              repoPath={repoPath}
-              pipeline={pipeline}
-              refetchTriggers={refetch}
-              setSelectedTrigger={setSelectedTrigger}
-              initialActions={data?.[selectedTrigger]?.actions as EnumTriggerAction[]}
-              initialDisabled={data?.[selectedTrigger]?.disabled as boolean}
-            />
-          </Layout.Vertical>
-        </Layout.Horizontal>
-      )}
+          </>
+        )}
+      </Layout.Horizontal>
     </>
   )
 }

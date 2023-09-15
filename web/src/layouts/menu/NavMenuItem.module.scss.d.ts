@@ -1,5 +1,6 @@
 /* eslint-disable */
 // This is an auto-generated file
+export declare const customIcon: string
 export declare const highlighted: string
 export declare const link: string
 export declare const selected: string

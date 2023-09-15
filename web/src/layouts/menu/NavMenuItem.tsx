@@ -15,6 +15,7 @@ interface NavMenuItemProps extends NavLinkProps {
   isSelected?: boolean
   isDeselected?: boolean
   isHighlighted?: boolean
+  customIcon?: React.ReactNode
 }
 
 export const NavMenuItem: React.FC<NavMenuItemProps> = ({
@@ -28,6 +29,7 @@ export const NavMenuItem: React.FC<NavMenuItemProps> = ({
   isDeselected,
   isHighlighted,
   children,
+  customIcon,
   ...others
 }) => (
   <Link
@@ -39,7 +41,8 @@ export const NavMenuItem: React.FC<NavMenuItemProps> = ({
     activeClassName={isDeselected ? '' : css.selected}
     {...others}>
     {children}
-    <Text icon={icon} rightIcon={rightIcon} className={css.text} {...textProps}>
+    {customIcon && <span className={css.customIcon}>{customIcon}</span>}
+    <Text icon={customIcon ? undefined : icon} rightIcon={rightIcon} className={css.text} {...textProps}>
       {label}
     </Text>
   </Link>

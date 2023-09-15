@@ -1,5 +1,5 @@
 .logLayout {
-  margin-left: 30px !important;
+  margin-left: 23px !important;
 }
 
 .lineNumber {
@@ -7,10 +7,16 @@
   color: #999;
   margin-right: 16px;
   font-family: 'Roboto Mono' !important;
+  user-select: none !important;
+  text-align: right !important;
 }
 
 .log {
   color: white !important;
   margin-bottom: var(--spacing-medium);
   font-family: 'Roboto Mono' !important;
+}
+
+.time {
+  user-select: none !important;
 }

@@ -34,7 +34,7 @@ const Console: FC<ConsoleProps> = ({ stage, repoPath }) => {
           </Text>
           {stage?.started && stage?.stopped && (
             <Text font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
-              {getString('executions.completedTime', { timeString: timeDistance(stage?.stopped, Date.now()) })}
+              {getString('executions.completedTime', { timeString: timeDistance(stage?.stopped, Date.now(), true) })}
             </Text>
           )}
         </Layout.Horizontal>

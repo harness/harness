@@ -125,6 +125,7 @@ validation:
   newPasswordRequired: New password is a required field
   confirmPasswordRequired: Confirm Password is a required field
   spaceNamePatternIsNotValid: "Name can only contain alphanumerics, '-', '_', '.', and '$'"
+  nameLogic: name must start with a letter or _ and only contain [a-zA-Z0-9-_.]
 commitMessage: Commit message
 optionalExtendedDescription: Optional extended description
 optional: Optional

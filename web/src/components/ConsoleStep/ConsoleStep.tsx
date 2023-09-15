@@ -58,10 +58,13 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
       }
     }
     return () => {
+      if (step?.status === ExecutionState.RUNNING && isOpened) {
+        refetch()
+      }
       setStreamingLogs([])
       if (eventSourceRef.current) eventSourceRef.current.close()
     }
-  }, [executionNumber, pipelineName, repoPath, stageNumber, step?.number, step?.status])
+  }, [executionNumber, isOpened, pipelineName, repoPath, stageNumber, step?.name, step?.number, step?.status])
 
   let icon
   if (step?.status === ExecutionState.SUCCESS) {
@@ -107,7 +110,9 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
         {icon}
         <Text>{step?.name}</Text>
         <FlexExpander />
-        {step?.started && step?.stopped && <div>{timeDistance(step?.stopped, step?.started)}</div>}
+        {step?.started && step?.stopped && (
+          <Text className={css.time}>{timeDistance(step?.stopped, step?.started, true)}</Text>
+        )}
       </Layout.Horizontal>
 
       {isOpened && content}

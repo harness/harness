@@ -644,6 +644,7 @@ export interface StringsMap {
   'validation.gitTagNameInvalid': string
   'validation.nameInvalid': string
   'validation.nameIsRequired': string
+  'validation.nameLogic': string
   'validation.newPasswordRequired': string
   'validation.repoNamePatternIsNotValid': string
   'validation.spaceNamePatternIsNotValid': string

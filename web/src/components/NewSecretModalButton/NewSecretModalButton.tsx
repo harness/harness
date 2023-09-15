@@ -94,7 +94,11 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
               formName="addSecret"
               enableReinitialize={true}
               validationSchema={yup.object().shape({
-                name: yup.string().trim().required(),
+                name: yup
+                  .string()
+                  .trim()
+                  .required()
+                  .matches(/^[a-zA-Z_][a-zA-Z0-9-_.]*$/, getString('validation.nameLogic')),
                 value: yup.string().trim().required()
               })}
               validateOnChange
@@ -118,7 +122,7 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
                     tooltipProps={{
                       dataTooltipId: 'secretDescriptionTextField'
                     }}
-                    inputGroup={{ type: 'password' }}
+                    inputGroup={{ type: 'password', autoComplete: 'new-password' }}
                   />
                   <FormInput.Text
                     name="description"

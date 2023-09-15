@@ -82,7 +82,11 @@ const useUpdateSecretModal = () => {
               formName="addSecret"
               enableReinitialize={true}
               validationSchema={yup.object().shape({
-                name: yup.string().trim().required(),
+                name: yup
+                  .string()
+                  .trim()
+                  .required()
+                  .matches(/^[a-zA-Z_][a-zA-Z0-9-_.]*$/, getString('validation.nameLogic')),
                 value: yup.string().trim().required()
               })}
               validateOnChange

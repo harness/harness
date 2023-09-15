@@ -3,7 +3,6 @@
 export declare const author: string
 export declare const avatar: string
 export declare const desc: string
-export declare const hash: string
 export declare const layout: string
 export declare const main: string
 export declare const nameContainer: string

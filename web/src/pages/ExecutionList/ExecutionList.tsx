@@ -28,11 +28,12 @@ import { usePageIndex } from 'hooks/usePageIndex'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
-import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
+import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/ExecutionUtils'
 import useSpaceSSE from 'hooks/useSpaceSSE'
 import { ExecutionText, ExecutionTrigger } from 'components/ExecutionText/ExecutionText'
 import useRunPipelineModal from 'components/RunPipelineModal/RunPipelineModal'
+import { useLiveTimer } from 'hooks/useLiveTimeHook'
 import noExecutionImage from '../RepositoriesListing/no-repo.svg'
 import css from './ExecutionList.module.scss'
 
@@ -44,6 +45,7 @@ const ExecutionList = () => {
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
+  const currentTime = useLiveTimer(true)
 
   const { repoMetadata, error, loading, refetch, space } = useGetRepositoryMetadata()
 
@@ -111,7 +113,7 @@ const ExecutionList = () => {
               <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
                 <ExecutionStatus status={getStatus(record.status)} iconOnly noBackground iconSize={20} isCi />
                 <Text className={css.number}>{`#${record.number}.`}</Text>
-                <Text className={css.desc}>{record.message}</Text>
+                <Text className={css.desc}>{record.message || record.title}</Text>
               </Layout.Horizontal>
               <ExecutionText
                 authorEmail={record.author_email as string}
@@ -133,29 +135,36 @@ const ExecutionList = () => {
         width: '180px',
         Cell: ({ row }: CellProps<TypesExecution>) => {
           const record = row.original
+
+          // Determine if the execution is active.
+          const isActive = record.status === ExecutionState.RUNNING
+
           return (
             <Layout.Vertical spacing={'small'}>
-              {record?.started && record?.finished && (
+              {record?.started && (isActive || record?.finished) && (
                 <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
                   <Timer color={Utils.getRealCSSColor(Color.GREY_500)} />
                   <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
-                    {timeDistance(record.started, record.finished)}
+                    {/* Use live time when running, static time when finished */}
+                    {timeDistance(record.started, isActive ? currentTime : record.finished, true)}
                   </Text>
                 </Layout.Horizontal>
               )}
-              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
-                <Calendar color={Utils.getRealCSSColor(Color.GREY_500)} />
-                <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
-                  {timeDistance(record.started, Date.now())} ago
-                </Text>
-              </Layout.Horizontal>
+              {record?.finished && (
+                <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
+                  <Calendar color={Utils.getRealCSSColor(Color.GREY_500)} />
+                  <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
+                    {timeDistance(record.finished, currentTime, true)} ago
+                  </Text>
+                </Layout.Horizontal>
+              )}
             </Layout.Vertical>
           )
         },
         disableSortBy: true
       }
     ],
-    [getString, repoMetadata?.path, routes]
+    [currentTime, getString, repoMetadata?.path]
   )
 
   return (
