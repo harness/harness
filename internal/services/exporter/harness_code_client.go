@@ -23,6 +23,7 @@ const (
 	pathCreateRepo = "/v1/accounts/%s/orgs/%s/projects/%s/repos"
 	pathDeleteRepo = "/v1/accounts/%s/orgs/%s/projects/%s/repos/%s"
 	headerApiKey   = "X-Api-Key"
+	routingId      = "routingId"
 )
 
 var (
@@ -102,7 +103,7 @@ func (c *HarnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInp
 		return nil, fmt.Errorf("unable to create new http request : %w", err)
 	}
 
-	q := map[string]string{"routingId": c.client.accountId}
+	q := map[string]string{routingId: c.client.accountId}
 	addQueryParams(req, q)
 	req.Header.Add("Content-Type", "application/json")
 	req.ContentLength = int64(len(bodyBytes))
@@ -146,7 +147,7 @@ func (c *HarnessCodeClient) DeleteRepo(ctx context.Context, repoUid string) erro
 		return fmt.Errorf("unable to create new http request : %w", err)
 	}
 
-	q := map[string]string{"routingId": c.client.accountId}
+	q := map[string]string{routingId: c.client.accountId}
 	addQueryParams(req, q)
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -181,21 +182,14 @@ func unmarshalResponse(resp *http.Response, data interface{}) error {
 	if resp == nil {
 		return fmt.Errorf("http response is empty")
 	}
-
-	if resp.StatusCode >= 300 {
-		return fmt.Errorf("expected response code 200 but got: %s", resp.Status)
-	}
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("error reading response body : %w", err)
 	}
-
 	err = json.Unmarshal(body, data)
 	if err != nil {
 		return fmt.Errorf("error deserializing response body : %w", err)
 	}
-
 	return nil
 }
 

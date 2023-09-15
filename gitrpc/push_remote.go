@@ -11,8 +11,7 @@ import (
 
 type PushRemoteParams struct {
 	ReadParams
-	RemoteUrlWithToken string
-	Timeout            int64
+	RemoteUrl string
 }
 
 func (c *Client) PushRemote(ctx context.Context, params *PushRemoteParams) error {
@@ -21,9 +20,8 @@ func (c *Client) PushRemote(ctx context.Context, params *PushRemoteParams) error
 	}
 
 	_, err := c.pushService.PushRemote(ctx, &rpc.PushRemoteRequest{
-		Base:               mapToRPCReadRequest(params.ReadParams),
-		RemoteUrlWithToken: params.RemoteUrlWithToken,
-		Timeout:            params.Timeout,
+		Base:      mapToRPCReadRequest(params.ReadParams),
+		RemoteUrl: params.RemoteUrl,
 	})
 	if err != nil {
 		return processRPCErrorf(err, "failed to push to remote")
@@ -37,7 +35,7 @@ func (p PushRemoteParams) Validate() error {
 		return err
 	}
 
-	if p.RemoteUrlWithToken == "" {
+	if p.RemoteUrl == "" {
 		return ErrInvalidArgumentf("remote url cannot be empty")
 	}
 	return nil

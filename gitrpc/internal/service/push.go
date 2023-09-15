@@ -6,7 +6,6 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
@@ -44,11 +43,10 @@ func (s PushService) PushRemote(
 	}
 
 	err = s.adapter.Push(ctx, repoPath, types.PushOptions{
-		Remote:  request.RemoteUrlWithToken,
-		Force:   false,
-		Env:     nil,
-		Timeout: time.Duration(request.Timeout),
-		Mirror:  true,
+		Remote: request.RemoteUrl,
+		Force:  false,
+		Env:    nil,
+		Mirror: true,
 	})
 	if err != nil {
 		return nil, err

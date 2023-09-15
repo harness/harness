@@ -53,7 +53,6 @@ const (
 	exportJobMaxDuration = 45 * time.Minute
 	exportRepoJobUid     = "export_repo_%d"
 	exportSpaceJobUid    = "export_space_%d"
-	pushMaxDuration      = 40 * time.Minute
 )
 
 const jobType = "repository_export"
@@ -100,7 +99,6 @@ func (r *Repository) RunMany(ctx context.Context, spaceId int64, harnessCodeInfo
 
 // Handle is repository export background job handler.
 func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressReporter) (string, error) {
-
 	input, err := r.getJobInput(data)
 	if err != nil {
 		return "", err
@@ -115,9 +113,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	if err != nil {
 		return "", err
 	}
-	parentRef := harnessCodeInfo.AccountId + "/" + harnessCodeInfo.OrgIdentifier + "/" + harnessCodeInfo.ProjectIdentifier
 	remoteRepo, err := client.CreateRepo(ctx, repo.CreateInput{
-		ParentRef:     parentRef,
 		UID:           repository.UID,
 		DefaultBranch: repository.DefaultBranch,
 		Description:   repository.Description,
@@ -136,9 +132,8 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	}
 
 	err = r.git.PushRemote(ctx, &gitrpc.PushRemoteParams{
-		ReadParams:         gitrpc.ReadParams{RepoUID: repository.GitUID},
-		RemoteUrlWithToken: urlWithToken,
-		Timeout:            pushMaxDuration.Nanoseconds(),
+		ReadParams: gitrpc.ReadParams{RepoUID: repository.GitUID},
+		RemoteUrl:  urlWithToken,
 	})
 	if strings.Contains(err.Error(), "empty") {
 		return "", nil
