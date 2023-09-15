@@ -194,22 +194,27 @@ func (s *PrincipalStore) ListUsers(ctx context.Context, opts *types.UserFilter) 
 	stmt = stmt.Limit(database.Limit(opts.Size))
 	stmt = stmt.Offset(database.Offset(opts.Page, opts.Size))
 
+	order := opts.Order
+	if order == enum.OrderDefault {
+		order = enum.OrderAsc
+	}
+
 	switch opts.Sort {
 	case enum.UserAttrName, enum.UserAttrNone:
 		// NOTE: string concatenation is safe because the
 		// order attribute is an enum and is not user-defined,
 		// and is therefore not subject to injection attacks.
-		stmt = stmt.OrderBy("principal_display_name " + opts.Order.String())
+		stmt = stmt.OrderBy("principal_display_name " + order.String())
 	case enum.UserAttrCreated:
-		stmt = stmt.OrderBy("principal_created " + opts.Order.String())
+		stmt = stmt.OrderBy("principal_created " + order.String())
 	case enum.UserAttrUpdated:
-		stmt = stmt.OrderBy("principal_updated " + opts.Order.String())
+		stmt = stmt.OrderBy("principal_updated " + order.String())
 	case enum.UserAttrEmail:
-		stmt = stmt.OrderBy("LOWER(principal_email) " + opts.Order.String())
+		stmt = stmt.OrderBy("LOWER(principal_email) " + order.String())
 	case enum.UserAttrUID:
-		stmt = stmt.OrderBy("principal_uid " + opts.Order.String())
+		stmt = stmt.OrderBy("principal_uid " + order.String())
 	case enum.UserAttrAdmin:
-		stmt = stmt.OrderBy("principal_admin " + opts.Order.String())
+		stmt = stmt.OrderBy("principal_admin " + order.String())
 	}
 
 	sql, _, err := stmt.ToSql()

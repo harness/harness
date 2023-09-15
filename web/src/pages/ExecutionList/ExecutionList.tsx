@@ -69,7 +69,7 @@ const ExecutionList = () => {
 
   useSpaceSSE({
     space,
-    events: ['execution_updated', 'execution_completed'],
+    events: ['execution_updated', 'execution_completed', 'execution_canceled', 'execution_running'],
     onEvent: data => {
       // ideally this would include number - so we only check for executions on the page - but what if new executions are kicked off? - could check for ids that are higher than the lowest id on the page?
       if (
@@ -93,7 +93,7 @@ const ExecutionList = () => {
 
   const NewExecutionButton = (
     <Button
-      text={getString('executions.newExecutionButton')}
+      text={getString('run')}
       variation={ButtonVariation.PRIMARY}
       icon="play-outline"
       onClick={handleClick}></Button>
@@ -187,8 +187,30 @@ const ExecutionList = () => {
 
         <Container padding="xlarge">
           <Layout.Horizontal spacing="large" className={css.layout}>
-            {NewExecutionButton}
+            <Layout.Horizontal spacing="medium">
+              {NewExecutionButton}
+              <Button
+                variation={ButtonVariation.SECONDARY}
+                text={getString('edit')}
+                onClick={e => {
+                  e.stopPropagation()
+                  if (repoMetadata?.path && pipeline) {
+                    history.push(routes.toCODEPipelineEdit({ repoPath: repoMetadata.path, pipeline }))
+                  }
+                }}
+              />
+            </Layout.Horizontal>
             <FlexExpander />
+            <Button
+              variation={ButtonVariation.TERTIARY}
+              text={getString('pipelines.settings')}
+              onClick={e => {
+                e.stopPropagation()
+                if (repoMetadata?.path && pipeline) {
+                  history.push(routes.toCODEPipelineSettings({ repoPath: repoMetadata.path, pipeline }))
+                }
+              }}
+            />
           </Layout.Horizontal>
 
           <Container margin={{ top: 'medium' }}>

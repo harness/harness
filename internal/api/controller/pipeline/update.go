@@ -15,9 +15,10 @@ import (
 )
 
 type UpdateInput struct {
-	Description string `json:"description"`
-	UID         string `json:"uid"`
-	ConfigPath  string `json:"config_path"`
+	Description *string `json:"description"`
+	UID         string  `json:"uid"`
+	Disabled    *bool   `json:"disabled"`
+	ConfigPath  string  `json:"config_path"`
 }
 
 func (c *Controller) Update(
@@ -42,14 +43,17 @@ func (c *Controller) Update(
 	}
 
 	return c.pipelineStore.UpdateOptLock(ctx, pipeline, func(pipeline *types.Pipeline) error {
-		if in.Description != "" {
-			pipeline.Description = in.Description
+		if in.Description != nil {
+			pipeline.Description = *in.Description
 		}
 		if in.UID != "" {
 			pipeline.UID = in.UID
 		}
 		if in.ConfigPath != "" {
 			pipeline.ConfigPath = in.ConfigPath
+		}
+		if in.Disabled != nil {
+			pipeline.Disabled = *in.Disabled
 		}
 
 		return nil

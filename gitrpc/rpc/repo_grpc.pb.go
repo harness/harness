@@ -35,6 +35,7 @@ type RepositoryServiceClient interface {
 	SyncRepository(ctx context.Context, in *SyncRepositoryRequest, opts ...grpc.CallOption) (*SyncRepositoryResponse, error)
 	HashRepository(ctx context.Context, in *HashRepositoryRequest, opts ...grpc.CallOption) (*HashRepositoryResponse, error)
 	MergeBase(ctx context.Context, in *MergeBaseRequest, opts ...grpc.CallOption) (*MergeBaseResponse, error)
+	MatchFiles(ctx context.Context, in *MatchFilesRequest, opts ...grpc.CallOption) (*MatchFilesResponse, error)
 }
 
 type repositoryServiceClient struct {
@@ -256,6 +257,15 @@ func (c *repositoryServiceClient) MergeBase(ctx context.Context, in *MergeBaseRe
 	return out, nil
 }
 
+func (c *repositoryServiceClient) MatchFiles(ctx context.Context, in *MatchFilesRequest, opts ...grpc.CallOption) (*MatchFilesResponse, error) {
+	out := new(MatchFilesResponse)
+	err := c.cc.Invoke(ctx, "/rpc.RepositoryService/MatchFiles", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RepositoryServiceServer is the server API for RepositoryService service.
 // All implementations must embed UnimplementedRepositoryServiceServer
 // for forward compatibility
@@ -273,6 +283,7 @@ type RepositoryServiceServer interface {
 	SyncRepository(context.Context, *SyncRepositoryRequest) (*SyncRepositoryResponse, error)
 	HashRepository(context.Context, *HashRepositoryRequest) (*HashRepositoryResponse, error)
 	MergeBase(context.Context, *MergeBaseRequest) (*MergeBaseResponse, error)
+	MatchFiles(context.Context, *MatchFilesRequest) (*MatchFilesResponse, error)
 	mustEmbedUnimplementedRepositoryServiceServer()
 }
 
@@ -318,6 +329,9 @@ func (UnimplementedRepositoryServiceServer) HashRepository(context.Context, *Has
 }
 func (UnimplementedRepositoryServiceServer) MergeBase(context.Context, *MergeBaseRequest) (*MergeBaseResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MergeBase not implemented")
+}
+func (UnimplementedRepositoryServiceServer) MatchFiles(context.Context, *MatchFilesRequest) (*MatchFilesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MatchFiles not implemented")
 }
 func (UnimplementedRepositoryServiceServer) mustEmbedUnimplementedRepositoryServiceServer() {}
 
@@ -583,6 +597,24 @@ func _RepositoryService_MergeBase_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RepositoryService_MatchFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MatchFilesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepositoryServiceServer).MatchFiles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.RepositoryService/MatchFiles",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepositoryServiceServer).MatchFiles(ctx, req.(*MatchFilesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RepositoryService_ServiceDesc is the grpc.ServiceDesc for RepositoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -625,6 +657,10 @@ var RepositoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MergeBase",
 			Handler:    _RepositoryService_MergeBase_Handler,
+		},
+		{
+			MethodName: "MatchFiles",
+			Handler:    _RepositoryService_MatchFiles_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -36,7 +36,6 @@ func HandleExport(spaceCtrl *space.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		// todo(abhinav): change return json
-		render.JSON(w, http.StatusAccepted, spaceRef)
+		w.WriteHeader(http.StatusAccepted)
 	}
 }

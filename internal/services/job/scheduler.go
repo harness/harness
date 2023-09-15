@@ -613,12 +613,35 @@ func (s *Scheduler) GetJobProgress(ctx context.Context, jobUID string) (types.Jo
 		return types.JobProgress{}, err
 	}
 
+	return mapToProgress(job), nil
+}
+
+func (s *Scheduler) GetJobProgressForGroup(ctx context.Context, jobGroupUID string) ([]types.JobProgress, error) {
+	job, err := s.store.ListByGroupID(ctx, jobGroupUID)
+	if err != nil {
+		return nil, err
+	}
+	return mapToProgressMany(job), nil
+}
+
+func mapToProgressMany(jobs []*types.Job) []types.JobProgress {
+	if jobs == nil {
+		return nil
+	}
+	j := make([]types.JobProgress, len(jobs))
+	for i, job := range jobs {
+		j[i] = mapToProgress(job)
+	}
+	return j
+}
+
+func mapToProgress(job *types.Job) types.JobProgress {
 	return types.JobProgress{
 		State:    job.State,
 		Progress: job.RunProgress,
 		Result:   job.Result,
 		Failure:  job.LastFailureError,
-	}, nil
+	}
 }
 
 func (s *Scheduler) AddRecurring(

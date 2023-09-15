@@ -327,3 +327,8 @@ type PathDetails struct {
 	LastCommit *Commit
 	Size       int64
 }
+
+type FileContent struct {
+	Path    string
+	Content []byte
+}

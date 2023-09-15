@@ -55,15 +55,45 @@ const PluginCategories: PluginCategoryInterface[] = [
   { category: PluginCategory.Drone, name: 'Drone', description: 'Run Drone plugins', icon: 'ci-infra' }
 ]
 
+const StepNameInput: PluginInput = {
+  type: 'string',
+  description: 'Name of the step'
+}
+
 const RunStep: Plugin = {
   name: 'run',
   spec: {
     name: 'Run',
     inputs: {
+      name: StepNameInput,
+      image: {
+        type: 'string'
+      },
       script: {
         type: 'string',
         options: { isExtended: true }
       }
+    }
+  }
+}
+
+interface PluginInsertionTemplateInterface {
+  name?: string
+  type: 'plugin'
+  spec: {
+    uses: string
+    with: { [key: string]: string }
+  }
+}
+
+const PluginInsertionTemplate: PluginInsertionTemplateInterface = {
+  name: '<step-name>',
+  type: 'plugin',
+  spec: {
+    uses: '<plugin-uid-from-database>',
+    with: {
+      '<param1>': '<value1>',
+      '<param2>': '<value2>'
     }
   }
 }
@@ -228,21 +258,45 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
     )
   }
 
-  const constructPayloadForYAMLInsertion = (pluginFormData: Record<string, any>): Record<string, any> => {
-    const constructedPayload = { ...pluginFormData }
-    const pluginStep = get(plugin, 'spec.step', {})
+  const constructPayloadForYAMLInsertion = (
+    pluginFormData: Record<string, any>,
+    pluginMetadata?: Plugin
+  ): Record<string, any> => {
+    const { name, image, script } = pluginFormData
     switch (category) {
       case PluginCategory.Drone:
-        return set(pluginStep, 'spec.envs', constructedPayload)
+        const payload = { ...PluginInsertionTemplate }
+        set(payload, 'name', name)
+        set(payload, 'spec.uses', pluginMetadata?.name)
+        set(payload, 'spec.with', pluginFormData)
+        return payload as PluginInsertionTemplateInterface
       case PluginCategory.Harness:
-        return { type: 'script', spec: { run: get(constructedPayload, 'script', '') } }
+        return name && image && script
+          ? {
+              name,
+              type: 'script',
+              spec: { image, run: script }
+            }
+          : {}
       default:
         return {}
     }
   }
 
+  const insertNameFieldToPluginInputs = (existingInputs: {
+    [key: string]: PluginInput
+  }): { [key: string]: PluginInput } => {
+    const inputsClone = Object.assign(
+      {
+        name: StepNameInput
+      },
+      existingInputs
+    )
+    return inputsClone
+  }
+
   const renderPluginConfigForm = useCallback((): JSX.Element => {
-    const inputs: { [key: string]: PluginInput } = get(plugin, 'spec.inputs', {})
+    const inputs: { [key: string]: PluginInput } = insertNameFieldToPluginInputs(get(plugin, 'spec.inputs', {}))
     return (
       <Layout.Vertical
         spacing="large"
@@ -272,7 +326,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
           <Formik
             initialValues={{}}
             onSubmit={formData => {
-              onPluginAddUpdate?.(false, constructPayloadForYAMLInsertion(formData))
+              onPluginAddUpdate?.(false, constructPayloadForYAMLInsertion(formData, plugin))
             }}>
             <FormikForm height="100%" flex={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
               <Layout.Vertical flex={{ alignItems: 'flex-start' }} height="100%">

@@ -29,6 +29,7 @@ var (
 type CreateInput struct {
 	Description   string `json:"description"`
 	UID           string `json:"uid"`
+	Disabled      bool   `json:"disabled"`
 	DefaultBranch string `json:"default_branch"`
 	ConfigPath    string `json:"config_path"`
 }
@@ -59,6 +60,7 @@ func (c *Controller) Create(
 		Description:   in.Description,
 		RepoID:        repo.ID,
 		UID:           in.UID,
+		Disabled:      in.Disabled,
 		CreatedBy:     session.Principal.ID,
 		Seq:           0,
 		DefaultBranch: in.DefaultBranch,

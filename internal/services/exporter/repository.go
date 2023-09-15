@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/sse"
+	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/log"
 	"net/url"
 	"strings"
@@ -29,6 +31,7 @@ type Repository struct {
 	repoStore   store.RepoStore
 	scheduler   *job.Scheduler
 	encrypter   encrypt.Encrypter
+	sseStreamer sse.Streamer
 }
 
 type Input struct {
@@ -62,7 +65,7 @@ func (r *Repository) Register(executor *job.Executor) error {
 }
 
 func (r *Repository) RunMany(ctx context.Context, spaceId int64, harnessCodeInfo *HarnessCodeInfo, repos []*types.Repository) error {
-	jobGroupId := fmt.Sprintf(exportSpaceJobUid, spaceId)
+	jobGroupId := getJobGroupId(spaceId)
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
 		repoJobData := Input{
@@ -97,6 +100,10 @@ func (r *Repository) RunMany(ctx context.Context, spaceId int64, harnessCodeInfo
 	return r.scheduler.RunJobs(ctx, jobGroupId, jobDefinitions)
 }
 
+func getJobGroupId(spaceId int64) string {
+	return fmt.Sprintf(exportSpaceJobUid, spaceId)
+}
+
 // Handle is repository export background job handler.
 func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressReporter) (string, error) {
 	input, err := r.getJobInput(data)
@@ -123,6 +130,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		GitIgnore:     "",
 	})
 	if err != nil {
+		publishSSE(ctx, r, repository)
 		return "", err
 	}
 
@@ -143,9 +151,22 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		if errDelete != nil {
 			log.Ctx(ctx).Err(errDelete).Msgf("Cannot delete repo %s", remoteRepo.UID)
 		}
+		publishSSE(ctx, r, repository)
 		return "", err
 	}
+
+	log.Info().Msgf("completed repository export for repo", repository.UID)
+
+	publishSSE(ctx, r, repository)
+
 	return "", nil
+}
+
+func publishSSE(ctx context.Context, r *Repository, repository *types.Repository) {
+	err := r.sseStreamer.Publish(ctx, repository.ParentID, enum.SSETypeRepositoryExportCompleted, repository)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to publish export completion SSE")
+	}
 }
 
 func (r *Repository) getJobInput(data string) (Input, error) {
@@ -169,9 +190,16 @@ func (r *Repository) getJobInput(data string) (Input, error) {
 	return input, nil
 }
 
-func (r *Repository) GetProgress(ctx context.Context, repo *types.Space) (types.JobProgress, error) {
-	// todo(abhinav): implement
-	return types.JobProgress{}, nil
+func (r *Repository) GetProgress(ctx context.Context, space *types.Space) ([]types.JobProgress, error) {
+	spaceId := getJobGroupId(space.ID)
+	progress, err := r.scheduler.GetJobProgressForGroup(ctx, spaceId)
+	if err != nil {
+		return nil, err
+	}
+	if progress == nil || len(progress) == 0 {
+		return []types.JobProgress{job.FailProgress()}, nil
+	}
+	return progress, nil
 }
 
 func modifyUrl(u string, token string) (string, error) {

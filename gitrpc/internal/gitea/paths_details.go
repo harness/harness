@@ -19,27 +19,15 @@ import (
 // PathsDetails returns additional details about provided the paths.
 func (g Adapter) PathsDetails(ctx context.Context,
 	repoPath string,
-	rev string,
+	ref string,
 	paths []string,
 ) ([]types.PathDetails, error) {
-	repoEntry, err := g.repoCache.Get(ctx, repoPath)
+	repo, refCommit, err := g.getGoGitCommit(ctx, repoPath, ref)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open repository: %w", err)
+		return nil, err
 	}
 
-	repo := repoEntry.Repo()
-
-	refSHA, err := repo.ResolveRevision(gogitplumbing.Revision(rev))
-	if errors.Is(err, gogitplumbing.ErrReferenceNotFound) {
-		return nil, types.ErrNotFound
-	} else if err != nil {
-		return nil, fmt.Errorf("failed to resolve revision %s: %w", rev, err)
-	}
-
-	refCommit, err := repo.CommitObject(*refSHA)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load commit data: %w", err)
-	}
+	refSHA := refCommit.Hash.String()
 
 	tree, err := refCommit.Tree()
 	if err != nil {
@@ -70,7 +58,7 @@ func (g Adapter) PathsDetails(ctx context.Context,
 			}
 		}
 
-		commitEntry, err := g.lastCommitCache.Get(ctx, makeCommitEntryKey(repoPath, refSHA.String(), path))
+		commitEntry, err := g.lastCommitCache.Get(ctx, makeCommitEntryKey(repoPath, refSHA, path))
 		if err != nil {
 			return nil, fmt.Errorf("failed to find last commit for path %s: %w", path, err)
 		}

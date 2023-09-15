@@ -5,9 +5,14 @@
 package runner
 
 import (
+	"context"
+	"fmt"
+	"runtime/debug"
+
 	"github.com/harness/gitness/types"
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
+	"github.com/drone/drone-go/drone"
 	runnerclient "github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/poller"
@@ -18,9 +23,19 @@ func NewExecutionPoller(
 	config *types.Config,
 	client runnerclient.Client,
 ) *poller.Poller {
+	// taking the cautious approach of recovering in case of panics
+	runWithRecovery := func(ctx context.Context, stage *drone.Stage) (err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic received while executing run: %s", debug.Stack())
+			}
+		}()
+		return runner.Run(ctx, stage)
+	}
+
 	return &poller.Poller{
 		Client:   client,
-		Dispatch: runner.Run,
+		Dispatch: runWithRecovery,
 		Filter: &runnerclient.Filter{
 			Kind: resource.Kind,
 			Type: resource.Type,

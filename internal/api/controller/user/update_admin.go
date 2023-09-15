@@ -6,9 +6,11 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -31,6 +33,19 @@ func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
 		return nil, err
 	}
 
+	// Fail if the user being updated is the only admin in DB.
+	if request.Admin == false && user.Admin == true {
+		admUsrCount, err := c.principalStore.CountUsers(ctx, &types.UserFilter{Admin: true})
+		if err != nil {
+			return nil, fmt.Errorf("failed to check admin user count: %w", err)
+		}
+
+		if admUsrCount == 1 {
+			return nil, usererror.BadRequest("system requires at least one admin user")
+		}
+
+		return user, nil
+	}
 	user.Admin = request.Admin
 	user.Updated = time.Now().UnixMilli()
 
