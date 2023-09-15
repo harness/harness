@@ -40,7 +40,6 @@ import useNewPipelineModal from 'components/NewPipelineModal/NewPipelineModal'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import useSpaceSSE from 'hooks/useSpaceSSE'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import useLiveTimer from 'hooks/useLiveTimeHook'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
@@ -54,7 +53,6 @@ const PipelineList = () => {
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
   const space = useGetSpaceParam()
-  const currentTime = useLiveTimer()
 
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
 
@@ -182,16 +180,13 @@ const PipelineList = () => {
         Cell: ({ row }: CellProps<TypesPipeline>) => {
           const record = row.original.execution
 
-          const isActive = record?.status === ExecutionState.RUNNING
-
           return record ? (
             <Layout.Vertical spacing={'small'}>
-              {record?.started && (isActive || record?.finished) && (
+              {record?.started && record?.finished && (
                 <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
                   <Timer color={Utils.getRealCSSColor(Color.GREY_500)} />
                   <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
-                    {/* Use live time when running, static time when finished */}
-                    {timeDistance(record.started, isActive ? currentTime : record.finished, true)}
+                    {timeDistance(record.started, record.finished, true)}
                   </Text>
                 </Layout.Horizontal>
               )}
@@ -199,7 +194,7 @@ const PipelineList = () => {
                 <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
                   <Calendar color={Utils.getRealCSSColor(Color.GREY_500)} />
                   <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
-                    {timeDistance(record.finished, currentTime, true)} ago
+                    {timeDistance(record.finished, Date.now(), true)} ago
                   </Text>
                 </Layout.Horizontal>
               )}
@@ -217,7 +212,7 @@ const PipelineList = () => {
           const [menuOpen, setMenuOpen] = useState(false)
           const record = row.original
           const { uid } = record
-          const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
+          const repoPath = repoMetadata?.path || ''
 
           const confirmDeletePipeline = useConfirmAct()
           const { showSuccess, showError } = useToaster()

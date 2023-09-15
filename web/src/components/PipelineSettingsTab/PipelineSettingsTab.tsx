@@ -42,7 +42,7 @@ const PipelineSettingsTab = ({ pipeline, repoPath, yamlPath }: SettingsContentPr
     verb: 'DELETE',
     path: `/api/v1/repos/${repoPath}/+/pipelines/${pipeline}`
   })
-  const { showSuccess, showError } = useToaster()
+  const { showSuccess, showError, clear: clearToaster } = useToaster()
   const confirmDeletePipeline = useConfirmAct()
   const history = useHistory()
 
@@ -84,8 +84,10 @@ const PipelineSettingsTab = ({ pipeline, repoPath, yamlPath }: SettingsContentPr
                   pipeline: name
                 })
               )
+              clearToaster()
               showSuccess(getString('pipelines.updatePipelineSuccess', { pipeline }))
             } catch (exception) {
+              clearToaster()
               showError(getErrorMessage(exception), 0, 'pipelines.failedToUpdatePipeline')
             }
           }}>

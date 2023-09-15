@@ -140,6 +140,21 @@ export const timeDistance = (date1 = 0, date2 = 0, onlyHighestDenomination = fal
   } ${seconds}s`
 }
 
+export const timeDifferenceInMinutesAndSeconds = (date1 = 0, date2 = 0) => {
+  let distance = Math.abs(date1 - date2)
+
+  if (!distance) {
+    return '00:00'
+  }
+
+  const minutes = Math.floor(distance / 60000)
+  distance -= minutes * 60000
+
+  const seconds = Math.floor(distance / 1000)
+
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+
 const LOCALE = Intl.NumberFormat().resolvedOptions?.().locale || 'en-US'
 
 /**

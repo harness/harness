@@ -8,12 +8,13 @@ import {
   Container,
   Button,
   useToaster,
-  Checkbox
+  Checkbox,
+  FormInput
 } from '@harnessio/uicore'
 import React from 'react'
 import { useGet, useMutate } from 'restful-react'
 import cx from 'classnames'
-import { FontVariation, Intent } from '@harnessio/design-system'
+import { Color, Intent } from '@harnessio/design-system'
 import * as yup from 'yup'
 import { Icon } from '@harnessio/icons'
 import { String, useStrings } from 'framework/strings'
@@ -95,6 +96,7 @@ interface TriggerDetailsProps {
 }
 
 export interface TriggerFormData {
+  name: string
   disabled: boolean
   actions: EnumTriggerAction[]
 }
@@ -109,7 +111,7 @@ const TriggerDetails = ({
   initialDisabled
 }: TriggerDetailsProps) => {
   const { getString } = useStrings()
-  const { showError, showSuccess } = useToaster()
+  const { showError, showSuccess, clear: clearToaster } = useToaster()
 
   const { mutate: updateTrigger, loading } = useMutate<TypesTrigger>({
     verb: 'PATCH',
@@ -125,43 +127,38 @@ const TriggerDetails = ({
   const handleSubmit = async (formData: TriggerFormData) => {
     try {
       const payload: OpenapiUpdateTriggerRequest = {
+        uid: formData.name,
         actions: formData.actions,
         disabled: formData.disabled
       }
       await updateTrigger(payload)
+      clearToaster()
       showSuccess(getString('triggers.updateSuccess'))
       refetchTriggers()
     } catch (exception) {
+      clearToaster()
       showError(getErrorMessage(exception), 0, getString('triggers.failedToUpdate'))
     }
   }
 
   const formInitialValues: TriggerFormData = {
+    name: name,
     actions: initialActions,
     disabled: initialDisabled
   }
 
   return (
     <Layout.Vertical className={cx(css.generalContainer, css.editTriggerContainer)} padding={'large'}>
-      <Layout.Horizontal padding={{ top: 'medium', left: 'large', right: 'large' }}>
-        <Text font={{ variation: FontVariation.H5 }} className={css.editTriggerTitle}>
-          {name}
-        </Text>
-        <FlexExpander />
-        <Layout.Horizontal
-          spacing={'xsmall'}
-          style={{ alignItems: 'center', borderRadius: '4px' }}
-          className={css.pillContainer}>
-          <Text className={css.pillText} font={{ size: 'xsmall' }}>
-            Internal
-          </Text>
-        </Layout.Horizontal>
-      </Layout.Horizontal>
       <Formik
         initialValues={formInitialValues}
         formName="editTrigger"
         enableReinitialize={true}
         validationSchema={yup.object().shape({
+          name: yup
+            .string()
+            .trim()
+            .required()
+            .matches(/^[a-zA-Z_][a-zA-Z0-9-_.]*$/, getString('validation.nameLogic')),
           actions: yup.array().of(yup.string()),
           disabled: yup.boolean()
         })}
@@ -170,6 +167,26 @@ const TriggerDetails = ({
         onSubmit={handleSubmit}>
         {formik => (
           <FormikForm>
+            <Layout.Horizontal padding={{ top: 'medium', left: 'large', right: 'large' }}>
+              <FormInput.Text
+                name="name"
+                className={css.textContainer}
+                label={
+                  <Text color={Color.GREY_800} font={{ size: 'small' }}>
+                    {getString('name')}
+                  </Text>
+                }
+              />
+              <FlexExpander />
+              <Layout.Horizontal
+                spacing={'xsmall'}
+                style={{ alignItems: 'center', borderRadius: '4px' }}
+                className={css.pillContainer}>
+                <Text className={css.pillText} font={{ size: 'xsmall' }}>
+                  Internal
+                </Text>
+              </Layout.Horizontal>
+            </Layout.Horizontal>
             <Container padding={'large'}>
               <Checkbox
                 name="disabled"

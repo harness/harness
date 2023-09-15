@@ -394,6 +394,8 @@ export interface StringsMap {
   'pipelines.editPipeline': string
   'pipelines.enterPipelineName': string
   'pipelines.enterYAMLPath': string
+  'pipelines.executionCancelled': string
+  'pipelines.executionCouldNotCancel': string
   'pipelines.executionCouldNotStart': string
   'pipelines.executionStarted': string
   'pipelines.failedToCreatePipeline': string

@@ -4,7 +4,7 @@ import cx from 'classnames'
 import type { TypesStage } from 'services/code'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/ExecutionUtils'
-import { timeDistance } from 'utils/Utils'
+import { timeDifferenceInMinutesAndSeconds } from 'utils/Utils'
 import useLiveTimer from 'hooks/useLiveTimeHook'
 import css from './ExecutionStageList.module.scss'
 
@@ -47,7 +47,7 @@ const ExecutionStage: FC<ExecutionStageProps> = ({ stage, isSelected = false, se
         {stage.started && (stage.stopped || isActive) && (
           <Text style={{ fontSize: '12px' }}>
             {/* Use live time when running, static time when finished */}
-            {timeDistance(stage.started, isActive ? currentTime : stage.stopped, true)}
+            {timeDifferenceInMinutesAndSeconds(stage.started, isActive ? currentTime : stage.stopped)}
           </Text>
         )}
       </Layout.Horizontal>

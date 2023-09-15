@@ -54,7 +54,7 @@ export const NewTriggerModalButton: React.FC<NewTriggerModalButtonProps> = ({
 }) => {
   const ModalComponent: React.FC = () => {
     const { getString } = useStrings()
-    const { showError, showSuccess } = useToaster()
+    const { showError, showSuccess, clear: clearToaster } = useToaster()
 
     const { mutate: createTrigger, loading } = useMutate<TypesTrigger>({
       verb: 'POST',
@@ -69,9 +69,11 @@ export const NewTriggerModalButton: React.FC<NewTriggerModalButtonProps> = ({
         }
         await createTrigger(payload)
         hideModal()
+        clearToaster()
         showSuccess(getString('triggers.createSuccess'))
         onSuccess()
       } catch (exception) {
+        clearToaster()
         showError(getErrorMessage(exception), 0, getString('triggers.failedToCreate'))
       }
     }
