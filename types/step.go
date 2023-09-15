@@ -4,7 +4,12 @@
 
 package types
 
-import "github.com/harness/gitness/types/enum"
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/harness/gitness/types/enum"
+)
 
 type Step struct {
 	ID        int64         `json:"-"`
@@ -22,4 +27,14 @@ type Step struct {
 	Image     string        `json:"image,omitempty"`
 	Detached  bool          `json:"detached"`
 	Schema    string        `json:"schema,omitempty"`
+}
+
+// Pretty print a step
+func (s Step) String() string {
+	// Convert the Step struct to JSON
+	jsonStr, err := json.MarshalIndent(s, "", "  ")
+	if err != nil {
+		return fmt.Sprintf("Error converting to JSON: %v", err)
+	}
+	return string(jsonStr)
 }
