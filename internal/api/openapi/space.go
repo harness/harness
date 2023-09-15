@@ -177,13 +177,24 @@ func spaceOperations(reflector *openapi3.Reflector) {
 	opExport := openapi3.Operation{}
 	opExport.WithTags("space")
 	opExport.WithMapOfAnything(map[string]interface{}{"operationId": "exportSpace"})
-	_ = reflector.SetRequest(&opImport, new(exportSpaceRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opImport, new(types.Space), http.StatusAccepted)
-	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusBadRequest)
-	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opImport, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/{space_ref}/export", opImport)
+	_ = reflector.SetRequest(&opExport, new(exportSpaceRequest), http.MethodPost)
+	_ = reflector.SetJSONResponse(&opExport, nil, http.StatusAccepted)
+	_ = reflector.SetJSONResponse(&opExport, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opExport, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opExport, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opExport, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/spaces/{space_ref}/export", opExport)
+
+	opExportProgress := openapi3.Operation{}
+	opExportProgress.WithTags("space")
+	opExportProgress.WithMapOfAnything(map[string]interface{}{"operationId": "exportProgressSpace"})
+	_ = reflector.SetRequest(&opExportProgress, new(spaceRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&opExportProgress, new(space.ExportProgressOutput), http.StatusOK)
+	_ = reflector.SetJSONResponse(&opExportProgress, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&opExportProgress, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opExportProgress, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opExportProgress, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/spaces/{space_ref}/export-progress", opExportProgress)
 
 	opGet := openapi3.Operation{}
 	opGet.WithTags("space")

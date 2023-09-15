@@ -42,7 +42,7 @@ func NewController(db *sqlx.DB, urlProvider *url.Provider, sseStreamer sse.Strea
 	pathStore store.PathStore, pipelineStore store.PipelineStore, secretStore store.SecretStore,
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,
 	repoStore store.RepoStore, principalStore store.PrincipalStore, repoCtrl *repo.Controller,
-	membershipStore store.MembershipStore, importer *importer.Repository,
+	membershipStore store.MembershipStore, importer *importer.Repository, exporter *exporter.Repository,
 ) *Controller {
 	return &Controller{
 		db:              db,
@@ -61,5 +61,6 @@ func NewController(db *sqlx.DB, urlProvider *url.Provider, sseStreamer sse.Strea
 		repoCtrl:        repoCtrl,
 		membershipStore: membershipStore,
 		importer:        importer,
+		exporter:        exporter,
 	}
 }

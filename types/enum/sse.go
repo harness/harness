@@ -15,4 +15,5 @@ const (
 	SSETypeExecutionCanceled  = "execution_canceled"
 
 	SSETypeRepositoryImportCompleted = "repository_import_completed"
+	SSETypeRepositoryExportCompleted = "repository_export_completed"
 )

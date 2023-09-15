@@ -77,6 +77,20 @@ func (s *JobStore) Find(ctx context.Context, uid string) (*types.Job, error) {
 	return result, nil
 }
 
+// ListByGroupID fetches all jobs for a group id
+func (s *JobStore) ListByGroupID(ctx context.Context, groupId string) ([]*types.Job, error) {
+	const sqlQuery = jobSelectBase + `
+	WHERE job_group_id = $1`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	result := make([]*types.Job, 0)
+	if err := db.GetContext(ctx, result, sqlQuery, groupId); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed to find job by group id")
+	}
+	return result, nil
+}
+
 // Create creates a new job.
 func (s *JobStore) Create(ctx context.Context, job *types.Job) error {
 	const sqlQuery = `

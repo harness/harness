@@ -12,7 +12,7 @@ import (
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(ProvideURLProvider)
 
-const harnessCodeAPIURLRaw = "http://app.harness.io/gateway/code/api/"
+const harnessCodeAPIURLRaw = "https://app.harness.io/gateway/code/api/"
 
 func ProvideURLProvider(config *types.Config) (*Provider, error) {
 	return NewProvider(

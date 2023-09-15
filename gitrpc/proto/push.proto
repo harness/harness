@@ -11,7 +11,7 @@ service PushService {
 
 message PushRemoteRequest {
   ReadRequest base = 1;
-  string remoteUrl = 2;
+  string remote_url = 2;
   int64 timeout = 3;
 }
 

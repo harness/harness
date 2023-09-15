@@ -7,20 +7,23 @@
 package exporter
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/types"
 	"io"
 	"net/http"
 	"strings"
 )
 
 const (
-	pathCreateRepo = "/v1/accounts/%s/orgs/%s/projects/%s/repos/%s?routingId=%s"
-	pathDeleteRepo = "/v1/accounts/%s/orgs/%s/projects/%s/repos/%s?routingId=%s"
+	pathCreateRepo = "/v1/accounts/%s/orgs/%s/projects/%s/repos"
+	pathDeleteRepo = "/v1/accounts/%s/orgs/%s/projects/%s/repos/%s"
 	headerApiKey   = "X-Api-Key"
+	routingId      = "routingId"
 )
 
 var (
@@ -88,12 +91,22 @@ func NewHarnessCodeClient(baseUrl string, accountID string, orgId string, projec
 	}, nil
 }
 
-func (c *HarnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInput) (*Repository, error) {
-	path := fmt.Sprintf(pathCreateRepo, c.client.accountId, c.client.orgId, c.client.projectId, input.UID, c.client.accountId)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, appendPath(c.client.baseURL, path), nil)
+func (c *HarnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInput) (*types.Repository, error) {
+	path := fmt.Sprintf(pathCreateRepo, c.client.accountId, c.client.orgId, c.client.projectId)
+	bodyBytes, err := json.Marshal(input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize body: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, appendPath(c.client.baseURL, path), bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new http request : %w", err)
 	}
+
+	q := map[string]string{routingId: c.client.accountId}
+	addQueryParams(req, q)
+	req.Header.Add("Content-Type", "application/json")
+	req.ContentLength = int64(len(bodyBytes))
 
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -104,7 +117,7 @@ func (c *HarnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInp
 		defer func() { _ = resp.Body.Close() }()
 	}
 
-	var repository Repository
+	repository := new(types.Repository)
 	err = mapStatusCodeToError(resp.StatusCode)
 	if err != nil {
 		return nil, err
@@ -114,16 +127,28 @@ func (c *HarnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInp
 	if err != nil {
 		return nil, err
 	}
-	return &repository, err
+	return repository, err
 }
 
-func (c *HarnessCodeClient) DeleteRepo(ctx context.Context, input repo.CreateInput) error {
-	path := fmt.Sprintf(pathDeleteRepo, c.client.accountId, c.client.orgId, c.client.projectId, input.UID, c.client.accountId)
+func addQueryParams(req *http.Request, params map[string]string) {
+	if len(params) > 0 {
+		q := req.URL.Query()
+		for key, value := range params {
+			q.Add(key, value)
+		}
+		req.URL.RawQuery = q.Encode()
+	}
+}
+
+func (c *HarnessCodeClient) DeleteRepo(ctx context.Context, repoUid string) error {
+	path := fmt.Sprintf(pathDeleteRepo, c.client.accountId, c.client.orgId, c.client.projectId, repoUid)
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, appendPath(c.client.baseURL, path), nil)
 	if err != nil {
 		return fmt.Errorf("unable to create new http request : %w", err)
 	}
 
+	q := map[string]string{routingId: c.client.accountId}
+	addQueryParams(req, q)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("request execution failed: %w", err)
@@ -157,21 +182,14 @@ func unmarshalResponse(resp *http.Response, data interface{}) error {
 	if resp == nil {
 		return fmt.Errorf("http response is empty")
 	}
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("expected response code 200 but got: %s", resp.Status)
-	}
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("error reading response body : %w", err)
 	}
-
 	err = json.Unmarshal(body, data)
 	if err != nil {
 		return fmt.Errorf("error deserializing response body : %w", err)
 	}
-
 	return nil
 }
 

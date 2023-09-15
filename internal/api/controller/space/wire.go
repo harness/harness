@@ -34,5 +34,5 @@ func ProvideController(db *sqlx.DB, urlProvider *url.Provider, sseStreamer sse.S
 		pathStore, pipelineStore, secretStore,
 		connectorStore, templateStore,
 		spaceStore, repoStore, principalStore,
-		repoCtrl, membershipStore, importer)
+		repoCtrl, membershipStore, importer, exporter)
 }
