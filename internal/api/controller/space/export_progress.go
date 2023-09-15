@@ -8,19 +8,27 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
+type ExportProgressOutput struct {
+	JobProgress []types.JobProgress `json:"job_progress"`
+}
+
 // ExportProgress returns progress of the export job.
 func (c *Controller) ExportProgress(ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-) (types.JobProgress, error) {
+) (ExportProgressOutput, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
-		return types.JobProgress{}, err
+		return ExportProgressOutput{}, err
 	}
 
 	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, false); err != nil {
-		return types.JobProgress{}, err
+		return ExportProgressOutput{}, err
 	}
 
-	return c.exporter.GetProgress(ctx, space)
+	progress, err := c.exporter.GetProgress(ctx, space)
+	if err != nil {
+		return ExportProgressOutput{}, err
+	}
+	return ExportProgressOutput{JobProgress: progress}, nil
 }

@@ -445,6 +445,9 @@ type (
 		// Find fetches a job by its unique identifier.
 		Find(ctx context.Context, uid string) (*types.Job, error)
 
+		// ListByGroupID fetches all jobs for a group id
+		ListByGroupID(ctx context.Context, groupId string) ([]*types.Job, error)
+
 		// Create is used to create a new job.
 		Create(ctx context.Context, job *types.Job) error
 
