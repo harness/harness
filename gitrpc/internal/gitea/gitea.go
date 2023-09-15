@@ -15,12 +15,12 @@ import (
 )
 
 type Adapter struct {
-	repoCache       cache.Cache[string, *RepoEntryValue]
+	repoProvider    *GoGitRepoProvider
 	lastCommitCache cache.Cache[CommitEntryKey, *types.Commit]
 }
 
 func New(
-	repoCache cache.Cache[string, *RepoEntryValue],
+	repoProvider *GoGitRepoProvider,
 	lastCommitCache cache.Cache[CommitEntryKey, *types.Commit],
 ) (Adapter, error) {
 	// TODO: should be subdir of gitRoot? What is it being used for?
@@ -32,7 +32,7 @@ func New(
 	}
 
 	return Adapter{
-		repoCache:       repoCache,
+		repoProvider:    repoProvider,
 		lastCommitCache: lastCommitCache,
 	}, nil
 }

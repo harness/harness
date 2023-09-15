@@ -232,9 +232,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	cacheCache := server3.ProvideGoGitRepoCache()
-	cache2 := server3.ProvideLastCommitCache(serverConfig, universalClient, cacheCache)
-	gitAdapter, err := server3.ProvideGITAdapter(cacheCache, cache2)
+	goGitRepoProvider := server3.ProvideGoGitRepoProvider()
+	cacheCache := server3.ProvideLastCommitCache(serverConfig, universalClient, goGitRepoProvider)
+	gitAdapter, err := server3.ProvideGITAdapter(goGitRepoProvider, cacheCache)
 	if err != nil {
 		return nil, err
 	}
