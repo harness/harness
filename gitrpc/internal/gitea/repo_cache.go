@@ -6,7 +6,6 @@ package gitea
 
 import (
 	"context"
-	"time"
 
 	"github.com/harness/gitness/cache"
 
@@ -14,7 +13,7 @@ import (
 )
 
 func NewRepoCache() cache.Cache[string, *RepoEntryValue] {
-	return cache.New[string, *RepoEntryValue](repoGetter{}, 4*time.Hour)
+	return cache.NewNoCache[string, *RepoEntryValue](repoGetter{})
 }
 
 type repoGetter struct{}

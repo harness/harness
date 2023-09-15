@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
 
@@ -38,7 +39,10 @@ type Repository struct {
 	defaultBranch string
 	urlProvider   *gitnessurl.Provider
 	git           gitrpc.Interface
+	db            *sqlx.DB
 	repoStore     store.RepoStore
+	pipelineStore store.PipelineStore
+	triggerStore  store.TriggerStore
 	encrypter     encrypt.Encrypter
 	scheduler     *job.Scheduler
 	sseStreamer   sse.Streamer
@@ -234,6 +238,12 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 			return fmt.Errorf("failed to update repository after import: %w", err)
 		}
 
+		const convertPipelinesCommitMessage = "autoconvert pipeline"
+		err = r.processPipelines(ctx, &systemPrincipal, repo, convertPipelinesCommitMessage)
+		if err != nil {
+			log.Warn().Err(err).Msg("failed to convert pipelines")
+		}
+
 		return nil
 	}()
 	if err != nil {
@@ -364,6 +374,37 @@ func (r *Repository) deleteGitRepository(ctx context.Context,
 	}
 
 	return nil
+}
+
+func (r *Repository) matchFiles(ctx context.Context,
+	repo *types.Repository,
+	ref string,
+	dirPath string,
+	pattern string,
+	maxSize int,
+) ([]pipelineFile, error) {
+	resp, err := r.git.MatchFiles(ctx, &gitrpc.MatchFilesParams{
+		ReadParams: gitrpc.ReadParams{RepoUID: repo.GitUID},
+		Ref:        ref,
+		DirPath:    dirPath,
+		Pattern:    pattern,
+		MaxSize:    maxSize,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert pipelines: %w", err)
+	}
+
+	pipelines := make([]pipelineFile, len(resp.Files))
+	for i, pipeline := range resp.Files {
+		pipelines[i] = pipelineFile{
+			Name:          "",
+			OriginalPath:  pipeline.Path,
+			ConvertedPath: "",
+			Content:       pipeline.Content,
+		}
+	}
+
+	return pipelines, nil
 }
 
 func (r *Repository) createRPCWriteParams(ctx context.Context,

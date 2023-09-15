@@ -154,9 +154,16 @@ func (s *Service) trigger(ctx context.Context, repoID int64,
 
 	var errs error
 	for _, t := range validTriggers {
+		// TODO: We can make a minor optimization here to not fetch a pipeline each time
+		// since there could be multiple triggers for a pipeline.
 		pipeline, err := s.pipelineStore.Find(ctx, t.PipelineID)
 		if err != nil {
 			errs = multierror.Append(errs, err)
+			continue
+		}
+
+		// Don't fire triggers for disabled pipelines
+		if pipeline.Disabled {
 			continue
 		}
 

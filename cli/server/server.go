@@ -77,6 +77,11 @@ func (c *command) run(*kingpin.ParseContext) error {
 	g, gCtx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
+		// initialize metric collector
+		if system.services.MetricCollector != nil {
+			system.services.MetricCollector.Register(gCtx)
+		}
+
 		return system.services.JobScheduler.Run(gCtx)
 	})
 

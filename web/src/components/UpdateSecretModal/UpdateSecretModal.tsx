@@ -13,7 +13,8 @@ import {
   FormInput,
   FlexExpander,
   useToaster,
-  StringSubstitute
+  StringSubstitute,
+  ButtonVariation
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { useStrings } from 'framework/strings'
@@ -68,14 +69,14 @@ const useUpdateSecretModal = () => {
         isOpen
         enforceFocus={false}
         onClose={hideModal}
-        title={''}
-        style={{ width: 700, maxHeight: '95vh', overflow: 'auto' }}>
-        <Layout.Vertical padding={{ left: 'xxlarge' }} style={{ height: '100%' }} data-testid="add-secret-modal">
-          <Heading level={3} font={{ variation: FontVariation.H3 }} margin={{ bottom: 'xlarge' }}>
+        title={
+          <Heading level={3} font={{ variation: FontVariation.H3 }}>
             {getString('secrets.updateSecret')}
           </Heading>
-
-          <Container margin={{ right: 'xxlarge' }}>
+        }
+        style={{ width: 700, maxHeight: '95vh', overflow: 'auto' }}>
+        <Layout.Vertical style={{ height: '100%' }} data-testid="add-secret-modal">
+          <Container>
             <Formik
               initialValues={{ name: secret?.uid || '', description: secret?.description || '', value: '' }}
               formName="addSecret"
@@ -118,15 +119,15 @@ const useUpdateSecretModal = () => {
 
                 <Layout.Horizontal
                   spacing="small"
-                  padding={{ right: 'xxlarge', top: 'xxxlarge', bottom: 'large' }}
+                  padding={{ right: 'xxlarge', top: 'xxxlarge' }}
                   style={{ alignItems: 'center' }}>
                   <Button
                     type="submit"
                     text={getString('secrets.updateSecret')}
-                    intent={Intent.PRIMARY}
+                    variation={ButtonVariation.PRIMARY}
                     disabled={loading}
                   />
-                  <Button text={getString('cancel')} minimal onClick={onClose} />
+                  <Button text={getString('cancel')} minimal variation={ButtonVariation.SECONDARY} onClick={onClose} />
                   <FlexExpander />
                   {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
                 </Layout.Horizontal>

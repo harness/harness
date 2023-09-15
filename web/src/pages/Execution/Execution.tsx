@@ -47,7 +47,7 @@ const Execution = () => {
 
   useSpaceSSE({
     space,
-    events: ['execution_updated', 'execution_completed'],
+    events: ['execution_updated', 'execution_completed', 'execution_canceled', 'execution_running'],
     onEvent: data => {
       if (
         data?.repo_id === execution?.repo_id &&

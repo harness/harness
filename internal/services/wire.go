@@ -6,6 +6,7 @@ package services
 
 import (
 	"github.com/harness/gitness/internal/services/job"
+	"github.com/harness/gitness/internal/services/metric"
 	"github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/trigger"
 	"github.com/harness/gitness/internal/services/webhook"
@@ -18,10 +19,11 @@ var WireSet = wire.NewSet(
 )
 
 type Services struct {
-	Webhook      *webhook.Service
-	PullReq      *pullreq.Service
-	Trigger      *trigger.Service
-	JobScheduler *job.Scheduler
+	Webhook         *webhook.Service
+	PullReq         *pullreq.Service
+	Trigger         *trigger.Service
+	JobScheduler    *job.Scheduler
+	MetricCollector *metric.Collector
 }
 
 func ProvideServices(
@@ -29,11 +31,13 @@ func ProvideServices(
 	pullReqSvc *pullreq.Service,
 	triggerSvc *trigger.Service,
 	jobScheduler *job.Scheduler,
+	metricCollector *metric.Collector,
 ) Services {
 	return Services{
-		Webhook:      webhooksSvc,
-		PullReq:      pullReqSvc,
-		Trigger:      triggerSvc,
-		JobScheduler: jobScheduler,
+		Webhook:         webhooksSvc,
+		PullReq:         pullReqSvc,
+		Trigger:         triggerSvc,
+		JobScheduler:    jobScheduler,
+		MetricCollector: metricCollector,
 	}
 }

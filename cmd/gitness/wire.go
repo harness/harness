@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/harness/gitness/internal/services/exporter"
 
 	cliserver "github.com/harness/gitness/cli/server"
@@ -54,6 +55,7 @@ import (
 	"github.com/harness/gitness/internal/services/codecomments"
 	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/services/job"
+	"github.com/harness/gitness/internal/services/metric"
 	pullreqservice "github.com/harness/gitness/internal/services/pullreq"
 	"github.com/harness/gitness/internal/services/trigger"
 	"github.com/harness/gitness/internal/services/webhook"
@@ -139,6 +141,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		importer.WireSet,
 		canceler.WireSet,
 		exporter.WireSet,
+		metric.WireSet,
 	)
 	return &cliserver.System{}, nil
 }
