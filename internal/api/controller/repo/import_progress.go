@@ -6,9 +6,13 @@ package repo
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -28,5 +32,13 @@ func (c *Controller) ImportProgress(ctx context.Context,
 		return types.JobProgress{}, err
 	}
 
-	return c.importer.GetProgress(ctx, repo)
+	progress, err := c.importer.GetProgress(ctx, repo)
+	if errors.Is(err, importer.ErrNotFound) {
+		return types.JobProgress{}, usererror.NotFound("No recent or ongoing import found for repository.")
+	}
+	if err != nil {
+		return types.JobProgress{}, fmt.Errorf("failed to retrieve import progress: %w", err)
+	}
+
+	return progress, err
 }

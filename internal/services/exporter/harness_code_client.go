@@ -12,11 +12,12 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/harness/gitness/internal/api/controller/repo"
-	"github.com/harness/gitness/types"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/types"
 )
 
 const (
@@ -27,16 +28,16 @@ const (
 )
 
 var (
-	ErrNotFound   = fmt.Errorf("not found")
-	ErrBadRequest = fmt.Errorf("bad request")
-	ErrInternal   = fmt.Errorf("internal error")
+	errHTTPNotFound   = fmt.Errorf("not found")
+	errHTTPBadRequest = fmt.Errorf("bad request")
+	errHTTPInternal   = fmt.Errorf("internal error")
 )
 
-type HarnessCodeClient struct {
-	client *Client
+type harnessCodeClient struct {
+	client *client
 }
 
-type Client struct {
+type client struct {
 	baseURL    string
 	httpClient http.Client
 
@@ -47,8 +48,8 @@ type Client struct {
 	token string
 }
 
-// NewClient creates a new harness Client for interacting with the platforms APIs.
-func NewClient(baseURL string, accountID string, orgId string, projectId string, token string) (*Client, error) {
+// newClient creates a new harness Client for interacting with the platforms APIs.
+func newClient(baseURL string, accountID string, orgId string, projectId string, token string) (*client, error) {
 	if baseURL == "" {
 		return nil, fmt.Errorf("baseUrl required")
 	}
@@ -65,7 +66,7 @@ func NewClient(baseURL string, accountID string, orgId string, projectId string,
 		return nil, fmt.Errorf("token required")
 	}
 
-	return &Client{
+	return &client{
 		baseURL:   baseURL,
 		accountId: accountID,
 		orgId:     orgId,
@@ -81,17 +82,17 @@ func NewClient(baseURL string, accountID string, orgId string, projectId string,
 	}, nil
 }
 
-func NewHarnessCodeClient(baseUrl string, accountID string, orgId string, projectId string, token string) (*HarnessCodeClient, error) {
-	client, err := NewClient(baseUrl, accountID, orgId, projectId, token)
+func newHarnessCodeClient(baseUrl string, accountID string, orgId string, projectId string, token string) (*harnessCodeClient, error) {
+	client, err := newClient(baseUrl, accountID, orgId, projectId, token)
 	if err != nil {
 		return nil, err
 	}
-	return &HarnessCodeClient{
+	return &harnessCodeClient{
 		client: client,
 	}, nil
 }
 
-func (c *HarnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInput) (*types.Repository, error) {
+func (c *harnessCodeClient) CreateRepo(ctx context.Context, input repo.CreateInput) (*types.Repository, error) {
 	path := fmt.Sprintf(pathCreateRepo, c.client.accountId, c.client.orgId, c.client.projectId)
 	bodyBytes, err := json.Marshal(input)
 	if err != nil {
@@ -140,7 +141,7 @@ func addQueryParams(req *http.Request, params map[string]string) {
 	}
 }
 
-func (c *HarnessCodeClient) DeleteRepo(ctx context.Context, repoUid string) error {
+func (c *harnessCodeClient) DeleteRepo(ctx context.Context, repoUid string) error {
 	path := fmt.Sprintf(pathDeleteRepo, c.client.accountId, c.client.orgId, c.client.projectId, repoUid)
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, appendPath(c.client.baseURL, path), nil)
 	if err != nil {
@@ -168,7 +169,7 @@ func appendPath(uri string, path string) string {
 	return strings.TrimRight(uri, "/") + "/" + strings.TrimLeft(path, "/")
 }
 
-func (c *Client) Do(r *http.Request) (*http.Response, error) {
+func (c *client) Do(r *http.Request) (*http.Response, error) {
 	addAuthHeader(r, c.token)
 	return c.httpClient.Do(r)
 }
@@ -196,13 +197,13 @@ func unmarshalResponse(resp *http.Response, data interface{}) error {
 func mapStatusCodeToError(statusCode int) error {
 	switch {
 	case statusCode == 500:
-		return ErrInternal
+		return errHTTPInternal
 	case statusCode >= 500:
 		return fmt.Errorf("received server side error status code %d", statusCode)
 	case statusCode == 404:
-		return ErrNotFound
+		return errHTTPNotFound
 	case statusCode == 400:
-		return ErrBadRequest
+		return errHTTPBadRequest
 	case statusCode >= 400:
 		return fmt.Errorf("received client side error status code %d", statusCode)
 	case statusCode >= 300:

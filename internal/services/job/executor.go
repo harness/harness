@@ -141,15 +141,6 @@ func (e *Executor) exec(
 	return exec.Handle(ctx, input, progressReporter) // runs the job
 }
 
-func DoneProgress() types.JobProgress {
-	return types.JobProgress{
-		State:    enum.JobStateFinished,
-		Progress: ProgressMax,
-		Result:   "",
-		Failure:  "",
-	}
-}
-
 func FailProgress() types.JobProgress {
 	return types.JobProgress{
 		State:    enum.JobStateFailed,

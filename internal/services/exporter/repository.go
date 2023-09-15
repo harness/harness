@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"strings"
@@ -24,6 +25,11 @@ import (
 	"github.com/harness/gitness/internal/store"
 	gitnessurl "github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
+)
+
+var (
+	// ErrNotFound is returned if no export data was found.
+	ErrNotFound = errors.New("export not found")
 )
 
 type Repository struct {
@@ -117,7 +123,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", err
 	}
 	harnessCodeInfo := input.HarnessCodeInfo
-	client, err := NewHarnessCodeClient(r.urlProvider.GetHarnessCodeInternalUrl(), harnessCodeInfo.AccountId, harnessCodeInfo.OrgIdentifier, harnessCodeInfo.ProjectIdentifier, harnessCodeInfo.Token)
+	client, err := newHarnessCodeClient(r.urlProvider.GetHarnessCodeInternalUrl(), harnessCodeInfo.AccountId, harnessCodeInfo.OrgIdentifier, harnessCodeInfo.ProjectIdentifier, harnessCodeInfo.Token)
 	if err != nil {
 		return "", err
 	}
@@ -202,6 +208,11 @@ func (r *Repository) GetProgressForSpace(ctx context.Context, spaceID int64) ([]
 	if err != nil {
 		return nil, fmt.Errorf("failed to get job progress for group: %w", err)
 	}
+
+	if len(progress) == 0 {
+		return nil, ErrNotFound
+	}
+
 	return progress, nil
 }
 
