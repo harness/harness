@@ -123,43 +123,19 @@ type (
 		FindMany(ctx context.Context, ids []int64) ([]*types.PrincipalInfo, error)
 	}
 
-	// PathStore defines the path data storage.
-	// It is used to store routing paths for repos & spaces.
-	PathStore interface {
-		// Create creates a new path.
-		Create(ctx context.Context, path *types.Path) error
+	// SpacePathStore defines the path data storage for spaces.
+	SpacePathStore interface {
+		// InsertSegment inserts a space path segment to the table.
+		InsertSegment(ctx context.Context, segment *types.SpacePathSegment) error
 
-		// Find finds the path for the given id.
-		Find(ctx context.Context, id int64) (*types.Path, error)
+		// FindPrimaryBySpaceID finds the primary path of a space given its ID.
+		FindPrimaryBySpaceID(ctx context.Context, spaceID int64) (*types.SpacePath, error)
 
-		// FindWithLock finds the path for the given id and locks the entry.
-		FindWithLock(ctx context.Context, id int64) (*types.Path, error)
+		// FindByPath returns the space path for a given raw path.
+		FindByPath(ctx context.Context, path string) (*types.SpacePath, error)
 
-		// FindValue finds the path for the given value.
-		FindValue(ctx context.Context, value string) (*types.Path, error)
-
-		// FindPrimary finds the primary path for a target.
-		FindPrimary(ctx context.Context, targetType enum.PathTargetType, targetID int64) (*types.Path, error)
-
-		// FindPrimaryWithLock finds the primary path for a target and locks the db entry.
-		FindPrimaryWithLock(ctx context.Context, targetType enum.PathTargetType, targetID int64) (*types.Path, error)
-
-		// Update updates an existing path.
-		Update(ctx context.Context, path *types.Path) error
-
-		// Delete deletes a specific path.
-		Delete(ctx context.Context, id int64) error
-
-		// Count returns the count of paths for a target.
-		Count(ctx context.Context, targetType enum.PathTargetType, targetID int64,
-			opts *types.PathFilter) (int64, error)
-
-		// List lists all paths for a target.
-		List(ctx context.Context, targetType enum.PathTargetType, targetID int64,
-			opts *types.PathFilter) ([]*types.Path, error)
-
-		// ListPrimaryDescendantsWithLock lists all primary paths that are descendants of the given path and locks them.
-		ListPrimaryDescendantsWithLock(ctx context.Context, value string) ([]*types.Path, error)
+		// DeletePrimarySegment deletes the primary segment of a space.
+		DeletePrimarySegment(ctx context.Context, spaceID int64) error
 	}
 
 	// SpaceStore defines the space data storage.
@@ -187,7 +163,7 @@ type (
 		Count(ctx context.Context, id int64, opts *types.SpaceFilter) (int64, error)
 
 		// List returns a list of child spaces in a space.
-		List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]types.Space, error)
+		List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error)
 	}
 
 	// RepoStore defines the repository data storage.

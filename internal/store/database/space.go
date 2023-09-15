@@ -26,17 +26,23 @@ import (
 var _ store.SpaceStore = (*SpaceStore)(nil)
 
 // NewSpaceStore returns a new SpaceStore.
-func NewSpaceStore(db *sqlx.DB, pathCache store.PathCache) *SpaceStore {
+func NewSpaceStore(
+	db *sqlx.DB,
+	spacePathCache store.SpacePathCache,
+	spacePathStore store.SpacePathStore,
+) *SpaceStore {
 	return &SpaceStore{
-		db:        db,
-		pathCache: pathCache,
+		db:             db,
+		spacePathCache: spacePathCache,
+		spacePathStore: spacePathStore,
 	}
 }
 
 // SpaceStore implements a SpaceStore backed by a relational database.
 type SpaceStore struct {
-	db        *sqlx.DB
-	pathCache store.PathCache
+	db             *sqlx.DB
+	spacePathCache store.SpacePathCache
+	spacePathStore store.SpacePathStore
 }
 
 // space is an internal representation used to store space data in DB.
@@ -46,7 +52,6 @@ type space struct {
 	// IMPORTANT: We need to make parentID optional for spaces to allow it to be a foreign key.
 	ParentID    null.Int `db:"space_parent_id"`
 	UID         string   `db:"space_uid"`
-	Path        string   `db:"space_path"`
 	Description string   `db:"space_description"`
 	IsPublic    bool     `db:"space_is_public"`
 	CreatedBy   int64    `db:"space_created_by"`
@@ -55,40 +60,35 @@ type space struct {
 }
 
 const (
-	spaceColumnsForJoin = `
+	spaceColumns = `
 		space_id
 		,space_version
 		,space_parent_id
 		,space_uid
-		,paths.path_value AS space_path
 		,space_description
 		,space_is_public
 		,space_created_by
 		,space_created
 		,space_updated`
 
-	spaceSelectBaseWithJoin = `
-		SELECT` + spaceColumnsForJoin + `
-		FROM spaces
-		INNER JOIN paths
-		ON spaces.space_id=paths.path_space_id AND paths.path_is_primary=true`
+	spaceSelectBase = `
+	SELECT` + spaceColumns + `
+	FROM spaces`
 )
 
 // Find the space by id.
 func (s *SpaceStore) Find(ctx context.Context, id int64) (*types.Space, error) {
-	const spaceSelectByID = spaceSelectBaseWithJoin + `
+	const sqlQuery = spaceSelectBase + `
 		WHERE space_id = $1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := new(space)
-	if err := db.GetContext(ctx, dst, spaceSelectByID, id); err != nil {
+	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find space")
 	}
 
-	result := mapToSpace(dst)
-
-	return &result, nil
+	return mapToSpace(ctx, s.spacePathStore, dst)
 }
 
 // FindByRef finds the space using the spaceRef as either the id or the space path.
@@ -96,18 +96,13 @@ func (s *SpaceStore) FindByRef(ctx context.Context, spaceRef string) (*types.Spa
 	// ASSUMPTION: digits only is not a valid space path
 	id, err := strconv.ParseInt(spaceRef, 10, 64)
 	if err != nil {
-		var path *types.Path
-		path, err = s.pathCache.Get(ctx, spaceRef)
+		var path *types.SpacePath
+		path, err = s.spacePathCache.Get(ctx, spaceRef)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get path: %w", err)
 		}
 
-		if path.TargetType != enum.PathTargetTypeSpace {
-			// IMPORTANT: expose as not found error as we didn't find the space!
-			return nil, fmt.Errorf("path is not targeting a space - %w", gitness_store.ErrResourceNotFound)
-		}
-
-		id = path.TargetID
+		id = path.SpaceID
 	}
 
 	return s.Find(ctx, id)
@@ -201,6 +196,12 @@ func (s *SpaceStore) Update(ctx context.Context, space *types.Space) error {
 	space.Version = dbSpace.Version
 	space.Updated = dbSpace.Updated
 
+	// update path in case parent/uid changed
+	space.Path, err = getSpacePath(ctx, s.spacePathStore, space.ID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -275,11 +276,10 @@ func (s *SpaceStore) Count(ctx context.Context, id int64, opts *types.SpaceFilte
 }
 
 // List returns a list of spaces under the parent space.
-func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]types.Space, error) {
+func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter) ([]*types.Space, error) {
 	stmt := database.Builder.
-		Select(spaceColumnsForJoin).
+		Select(spaceColumns).
 		From("spaces").
-		InnerJoin(`paths ON spaces.space_id=paths.path_space_id AND paths.path_is_primary=true`).
 		Where("space_parent_id = ?", fmt.Sprint(id))
 
 	stmt = stmt.Limit(database.Limit(opts.Size))
@@ -301,10 +301,6 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 		stmt = stmt.OrderBy("space_created " + opts.Order.String())
 	case enum.SpaceAttrUpdated:
 		stmt = stmt.OrderBy("space_updated " + opts.Order.String())
-	case enum.SpaceAttrPath:
-		stmt = stmt.OrderBy("space_path " + opts.Order.String())
-		//TODO: Postgres does not support COLLATE NOCASE for UTF8
-		// stmt = stmt.OrderBy("space_path COLLATE NOCASE " + opts.Order.String())
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -319,44 +315,73 @@ func (s *SpaceStore) List(ctx context.Context, id int64, opts *types.SpaceFilter
 		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}
 
-	return mapToSpaces(dst), nil
+	return s.mapToSpaces(ctx, dst)
 }
 
-func mapToSpace(s *space) types.Space {
-	res := types.Space{
-		ID:          s.ID,
-		Version:     s.Version,
-		UID:         s.UID,
-		Path:        s.Path,
-		Description: s.Description,
-		IsPublic:    s.IsPublic,
-		Created:     s.Created,
-		CreatedBy:   s.CreatedBy,
-		Updated:     s.Updated,
+func mapToSpace(
+	ctx context.Context,
+	spacePathStore store.SpacePathStore,
+	in *space,
+) (*types.Space, error) {
+	var err error
+	res := &types.Space{
+		ID:          in.ID,
+		Version:     in.Version,
+		UID:         in.UID,
+		Description: in.Description,
+		IsPublic:    in.IsPublic,
+		Created:     in.Created,
+		CreatedBy:   in.CreatedBy,
+		Updated:     in.Updated,
 	}
 
 	// Only overwrite ParentID if it's not a root space
-	if s.ParentID.Valid {
-		res.ParentID = s.ParentID.Int64
+	if in.ParentID.Valid {
+		res.ParentID = in.ParentID.Int64
 	}
 
-	return res
+	// backfill path
+	res.Path, err = getSpacePath(ctx, spacePathStore, in.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get primary path for space %d: %w", in.ID, err)
+	}
+
+	return res, nil
 }
 
-func mapToSpaces(spaces []*space) []types.Space {
-	res := make([]types.Space, len(spaces))
+func getSpacePath(
+	ctx context.Context,
+	spacePathStore store.SpacePathStore,
+	spaceID int64,
+) (string, error) {
+	spacePath, err := spacePathStore.FindPrimaryBySpaceID(ctx, spaceID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get primary path for space %d: %w", spaceID, err)
+	}
+
+	return spacePath.Value, nil
+}
+
+func (s *SpaceStore) mapToSpaces(
+	ctx context.Context,
+	spaces []*space,
+) ([]*types.Space, error) {
+	var err error
+	res := make([]*types.Space, len(spaces))
 	for i := range spaces {
-		res[i] = mapToSpace(spaces[i])
+		res[i], err = mapToSpace(ctx, s.spacePathStore, spaces[i])
+		if err != nil {
+			return nil, err
+		}
 	}
-	return res
+	return res, nil
 }
 
-func mapToInternalSpace(s *types.Space) space {
-	res := space{
+func mapToInternalSpace(s *types.Space) *space {
+	res := &space{
 		ID:          s.ID,
 		Version:     s.Version,
 		UID:         s.UID,
-		Path:        s.Path,
 		Description: s.Description,
 		IsPublic:    s.IsPublic,
 		Created:     s.Created,

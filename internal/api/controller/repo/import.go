@@ -8,13 +8,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
 type ImportInput struct {
@@ -45,34 +42,11 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 
 	var repo *types.Repository
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
-		// lock parent space path to ensure it doesn't get updated while we setup new repo
-		spacePath, err := c.pathStore.FindPrimaryWithLock(ctx, enum.PathTargetTypeSpace, parentSpace.ID)
-		if err != nil {
-			return usererror.BadRequest("Parent not found'")
-		}
-
-		pathToRepo := paths.Concatinate(spacePath.Value, in.UID)
-		repo = remoteRepository.ToRepo(parentSpace.ID, pathToRepo, in.UID, in.Description, &session.Principal)
+		repo = remoteRepository.ToRepo(parentSpace.ID, in.UID, in.Description, &session.Principal)
 
 		err = c.repoStore.Create(ctx, repo)
 		if err != nil {
 			return fmt.Errorf("failed to create repository in storage: %w", err)
-		}
-
-		path := &types.Path{
-			Version:    0,
-			Value:      repo.Path,
-			IsPrimary:  true,
-			TargetType: enum.PathTargetTypeRepo,
-			TargetID:   repo.ID,
-			CreatedBy:  repo.CreatedBy,
-			Created:    repo.Created,
-			Updated:    repo.Updated,
-		}
-
-		err = c.pathStore.Create(ctx, path)
-		if err != nil {
-			return fmt.Errorf("failed to create path: %w", err)
 		}
 
 		err = c.importer.Run(ctx, in.Provider, repo, remoteRepository.CloneURL)

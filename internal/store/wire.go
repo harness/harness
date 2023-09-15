@@ -14,8 +14,8 @@ var WireSet = wire.NewSet(
 	ProvidePrincipalUIDTransformation,
 )
 
-func ProvidePathTransformation() PathTransformation {
-	return ToLowerPathTransformation
+func ProvidePathTransformation() SpacePathTransformation {
+	return ToLowerSpacePathTransformation
 }
 
 func ProvidePrincipalUIDTransformation() PrincipalUIDTransformation {

@@ -6,21 +6,21 @@ package cache
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/harness/gitness/cache"
+	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
 )
 
-// pathCacheGetter is used to hook a PathStore as source of a pathCache.
+// pathCacheGetter is used to hook a SpacePathStore as source of a PathCache.
 // IMPORTANT: It assumes that the pathCache already transformed the key.
 type pathCacheGetter struct {
-	pathStore store.PathStore
+	spacePathStore store.SpacePathStore
 }
 
-func (g *pathCacheGetter) Find(ctx context.Context, key string) (*types.Path, error) {
-	path, err := g.pathStore.FindValue(ctx, key)
+func (g *pathCacheGetter) Find(ctx context.Context, key string) (*types.SpacePath, error) {
+	path, err := g.spacePathStore.FindByPath(ctx, key)
 	if err != nil {
 		return nil, err
 	}
@@ -30,22 +30,19 @@ func (g *pathCacheGetter) Find(ctx context.Context, key string) (*types.Path, er
 
 // pathCache is a decorator of a Cache required to handle path transformations.
 type pathCache struct {
-	inner              cache.Cache[string, *types.Path]
-	pathTransformation store.PathTransformation
+	inner                   cache.Cache[string, *types.SpacePath]
+	spacePathTransformation store.SpacePathTransformation
 }
 
-func (c *pathCache) Get(ctx context.Context, key string) (*types.Path, error) {
-	uniqueKey, err := c.pathTransformation(key)
-	if err != nil {
-		return nil, fmt.Errorf("failed to transform path: %w", err)
+func (c *pathCache) Get(ctx context.Context, key string) (*types.SpacePath, error) {
+	// build unique key from provided value
+	segments := paths.Segments(key)
+	uniqueKey := ""
+	for i, segment := range segments {
+		uniqueKey = paths.Concatinate(uniqueKey, c.spacePathTransformation(segment, i == 0))
 	}
 
-	path, err := c.inner.Get(ctx, uniqueKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return path, nil
+	return c.inner.Get(ctx, uniqueKey)
 }
 
 func (c *pathCache) Stats() (int64, int64) {

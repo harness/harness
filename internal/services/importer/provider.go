@@ -53,19 +53,17 @@ type RepositoryInfo struct {
 // ToRepo converts the RepositoryInfo into the types.Repository object marked as being imported.
 func (r *RepositoryInfo) ToRepo(
 	spaceID int64,
-	path string,
 	uid string,
 	description string,
 	principal *types.Principal,
 ) *types.Repository {
 	now := time.Now().UnixMilli()
-	gitTempUID := fmt.Sprintf("importing-%s-%d", hash(path), now)
+	gitTempUID := fmt.Sprintf("importing-%s-%d", hash(fmt.Sprintf("%d:%s", spaceID, uid)), now)
 	return &types.Repository{
 		Version:       0,
 		ParentID:      spaceID,
 		UID:           uid,
 		GitUID:        gitTempUID, // the correct git UID will be set by the job handler
-		Path:          path,
 		Description:   description,
 		IsPublic:      r.IsPublic,
 		CreatedBy:     principal.ID,

@@ -20,7 +20,7 @@ func (c *Controller) ListSpaces(ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
 	filter *types.SpaceFilter,
-) ([]types.Space, int64, error) {
+) ([]*types.Space, int64, error) {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
 		return nil, 0, err
@@ -37,8 +37,8 @@ func (c *Controller) ListSpacesNoAuth(
 	ctx context.Context,
 	spaceID int64,
 	filter *types.SpaceFilter,
-) ([]types.Space, int64, error) {
-	var spaces []types.Space
+) ([]*types.Space, int64, error) {
+	var spaces []*types.Space
 	var count int64
 
 	err := dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
@@ -58,8 +58,5 @@ func (c *Controller) ListSpacesNoAuth(
 		return nil, 0, err
 	}
 
-	/*
-	 * TODO: needs access control? Might want to avoid that (makes paging and performance hard)
-	 */
 	return spaces, count, nil
 }

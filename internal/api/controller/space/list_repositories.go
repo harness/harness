@@ -49,8 +49,5 @@ func (c *Controller) ListRepositoriesNoAuth(
 		repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)
 	}
 
-	/*
-	 * TODO: needs access control? Might want to avoid that (makes paging and performance hard)
-	 */
 	return repos, count, nil
 }

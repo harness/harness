@@ -32,7 +32,6 @@ type Controller struct {
 	urlProvider    *url.Provider
 	uidCheck       check.PathUID
 	authorizer     authz.Authorizer
-	pathStore      store.PathStore
 	repoStore      store.RepoStore
 	spaceStore     store.SpaceStore
 	pipelineStore  store.PipelineStore
@@ -47,7 +46,6 @@ func NewController(
 	urlProvider *url.Provider,
 	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
-	pathStore store.PathStore,
 	repoStore store.RepoStore,
 	spaceStore store.SpaceStore,
 	pipelineStore store.PipelineStore,
@@ -61,7 +59,6 @@ func NewController(
 		urlProvider:    urlProvider,
 		uidCheck:       uidCheck,
 		authorizer:     authorizer,
-		pathStore:      pathStore,
 		repoStore:      repoStore,
 		spaceStore:     spaceStore,
 		pipelineStore:  pipelineStore,

@@ -16,10 +16,10 @@ func ToLowerPrincipalUIDTransformation(uid string) (string, error) {
 	return strings.ToLower(uid), nil
 }
 
-// PathTransformation transforms a path to a value that should be duplicate free.
+// SpacePathTransformation transforms a path to a value that should be duplicate free.
 // This allows us to simply switch between paths being case sensitive, insensitive or anything in between.
-type PathTransformation func(string) (string, error)
+type SpacePathTransformation func(original string, isRoot bool) string
 
-func ToLowerPathTransformation(original string) (string, error) {
-	return strings.ToLower(original), nil
+func ToLowerSpacePathTransformation(original string, _ bool) string {
+	return strings.ToLower(original)
 }

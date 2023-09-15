@@ -201,17 +201,6 @@ func setupSpaces(r chi.Router, spaceCtrl *space.Controller) {
 			r.Post("/export", handlerspace.HandleExport(spaceCtrl))
 			r.Get("/export-progress", handlerspace.HandleExportProgress(spaceCtrl))
 
-			// Child collections
-			r.Route("/paths", func(r chi.Router) {
-				r.Get("/", handlerspace.HandleListPaths(spaceCtrl))
-				r.Post("/", handlerspace.HandleCreatePath(spaceCtrl))
-
-				// per path operations
-				r.Route(fmt.Sprintf("/{%s}", request.PathParamPathID), func(r chi.Router) {
-					r.Delete("/", handlerspace.HandleDeletePath(spaceCtrl))
-				})
-			})
-
 			r.Route("/members", func(r chi.Router) {
 				r.Get("/", handlerspace.HandleMembershipList(spaceCtrl))
 				r.Post("/", handlerspace.HandleMembershipAdd(spaceCtrl))
@@ -294,17 +283,6 @@ func setupRepos(r chi.Router,
 				r.Get("/", handlerrepo.HandleListCommitTags(repoCtrl))
 				r.Post("/", handlerrepo.HandleCreateCommitTag(repoCtrl))
 				r.Delete("/*", handlerrepo.HandleDeleteCommitTag(repoCtrl))
-			})
-
-			// repo path operations
-			r.Route("/paths", func(r chi.Router) {
-				r.Get("/", handlerrepo.HandleListPaths(repoCtrl))
-				r.Post("/", handlerrepo.HandleCreatePath(repoCtrl))
-
-				// per path operations
-				r.Route(fmt.Sprintf("/{%s}", request.PathParamPathID), func(r chi.Router) {
-					r.Delete("/", handlerrepo.HandleDeletePath(repoCtrl))
-				})
 			})
 
 			// diffs

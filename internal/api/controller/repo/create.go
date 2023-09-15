@@ -17,9 +17,7 @@ import (
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/internal/bootstrap"
 	"github.com/harness/gitness/internal/githook"
-	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/resources"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -61,61 +59,26 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 		return nil, fmt.Errorf("error creating repository on GitRPC: %w", err)
 	}
 
-	var repo *types.Repository
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
-		// lock parent space path to ensure it doesn't get updated while we setup new repo
-		var spacePath *types.Path
-		spacePath, err = c.pathStore.FindPrimaryWithLock(ctx, enum.PathTargetTypeSpace, parentSpace.ID)
-		if err != nil {
-			return usererror.BadRequest("Parent not found'")
-		}
-
-		now := time.Now().UnixMilli()
-		repo = &types.Repository{
-			Version:       0,
-			ParentID:      parentSpace.ID,
-			UID:           in.UID,
-			GitUID:        gitRPCResp.UID,
-			Path:          paths.Concatinate(spacePath.Value, in.UID),
-			Description:   in.Description,
-			IsPublic:      in.IsPublic,
-			CreatedBy:     session.Principal.ID,
-			Created:       now,
-			Updated:       now,
-			ForkID:        in.ForkID,
-			DefaultBranch: in.DefaultBranch,
-		}
-		dberr := c.repoStore.Create(ctx, repo)
-		// cleanup git repo if we fail to create repo in db (best effort deletion)
-		defer func() {
-			if dberr != nil {
-				if err := c.DeleteRepositoryRPC(ctx, session, repo); err != nil {
-					log.Ctx(ctx).Warn().Err(err).Msg("gitrpc failed to delete repo for cleanup")
-				}
-			}
-		}()
-		if dberr != nil {
-			return fmt.Errorf("faild to create repository in storage: %w", dberr)
-		}
-
-		path := &types.Path{
-			Version:    0,
-			Value:      repo.Path,
-			IsPrimary:  true,
-			TargetType: enum.PathTargetTypeRepo,
-			TargetID:   repo.ID,
-			CreatedBy:  repo.CreatedBy,
-			Created:    repo.Created,
-			Updated:    repo.Updated,
-		}
-		dberr = c.pathStore.Create(ctx, path)
-		if dberr != nil {
-			return fmt.Errorf("failed to create path: %w", dberr)
-		}
-		return nil
-	})
+	now := time.Now().UnixMilli()
+	repo := &types.Repository{
+		Version:       0,
+		ParentID:      parentSpace.ID,
+		UID:           in.UID,
+		GitUID:        gitRPCResp.UID,
+		Description:   in.Description,
+		IsPublic:      in.IsPublic,
+		CreatedBy:     session.Principal.ID,
+		Created:       now,
+		Updated:       now,
+		ForkID:        in.ForkID,
+		DefaultBranch: in.DefaultBranch,
+	}
+	err = c.repoStore.Create(ctx, repo)
 	if err != nil {
-		return nil, err
+		if dErr := c.DeleteGitRPCRepositories(ctx, session, repo); dErr != nil {
+			log.Ctx(ctx).Warn().Err(dErr).Msg("gitrpc failed to delete repo for cleanup")
+		}
+		return nil, fmt.Errorf("failed to create repository in storage: %w", err)
 	}
 
 	// backfil GitURL

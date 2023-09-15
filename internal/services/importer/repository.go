@@ -82,23 +82,23 @@ func (r *Repository) Run(ctx context.Context, provider Provider, repo *types.Rep
 func (r *Repository) RunMany(ctx context.Context,
 	groupID string,
 	provider Provider,
-	repos []*types.Repository,
+	repoIDs []int64,
 	cloneURLs []string,
 ) error {
-	if len(repos) != len(cloneURLs) {
+	if len(repoIDs) != len(cloneURLs) {
 		return fmt.Errorf("slice length mismatch: have %d repositories and %d clone URLs",
-			len(repos), len(cloneURLs))
+			len(repoIDs), len(cloneURLs))
 	}
 
-	n := len(repos)
+	n := len(repoIDs)
 	defs := make([]job.Definition, n)
 
 	for k := 0; k < n; k++ {
-		repo := repos[k]
+		repoID := repoIDs[k]
 		cloneURL := cloneURLs[k]
 
-		jobDef, err := r.getJobDef(JobIDFromRepoID(repo.ID), Input{
-			RepoID:   repo.ID,
+		jobDef, err := r.getJobDef(JobIDFromRepoID(repoID), Input{
+			RepoID:   repoID,
 			GitUser:  provider.Username,
 			GitPass:  provider.Password,
 			CloneURL: cloneURL,

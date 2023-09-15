@@ -16,7 +16,6 @@ type Controller struct {
 	defaultBranch string
 	db            *sqlx.DB
 	uidCheck      check.PathUID
-	pathStore     store.PathStore
 	repoStore     store.RepoStore
 	triggerStore  store.TriggerStore
 	authorizer    authz.Authorizer
@@ -27,7 +26,6 @@ func NewController(
 	db *sqlx.DB,
 	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
-	pathStore store.PathStore,
 	repoStore store.RepoStore,
 	triggerStore store.TriggerStore,
 	pipelineStore store.PipelineStore,
@@ -35,7 +33,6 @@ func NewController(
 	return &Controller{
 		db:            db,
 		uidCheck:      uidCheck,
-		pathStore:     pathStore,
 		repoStore:     repoStore,
 		triggerStore:  triggerStore,
 		authorizer:    authorizer,

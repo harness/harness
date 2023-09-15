@@ -26,15 +26,18 @@ func ProvidePrincipalInfoCache(getter store.PrincipalInfoView) store.PrincipalIn
 	return cache.NewExtended[int64, *types.PrincipalInfo](getter, 30*time.Second)
 }
 
-// ProvidePathCache provides a cache for storing routing paths and their types.Path objects.
-func ProvidePathCache(pathStore store.PathStore, pathTransformation store.PathTransformation) store.PathCache {
+// ProvidePathCache provides a cache for storing routing paths and their types.SpacePath objects.
+func ProvidePathCache(
+	pathStore store.SpacePathStore,
+	spacePathTransformation store.SpacePathTransformation,
+) store.SpacePathCache {
 	return &pathCache{
-		inner: cache.New[string, *types.Path](
+		inner: cache.New[string, *types.SpacePath](
 			&pathCacheGetter{
-				pathStore: pathStore,
+				spacePathStore: pathStore,
 			},
-			60*time.Second),
-		pathTransformation: pathTransformation,
+			1*time.Minute),
+		spacePathTransformation: spacePathTransformation,
 	}
 }
 

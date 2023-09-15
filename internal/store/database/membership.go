@@ -23,17 +23,23 @@ import (
 var _ store.MembershipStore = (*MembershipStore)(nil)
 
 // NewMembershipStore returns a new MembershipStore.
-func NewMembershipStore(db *sqlx.DB, pCache store.PrincipalInfoCache) *MembershipStore {
+func NewMembershipStore(
+	db *sqlx.DB,
+	pCache store.PrincipalInfoCache,
+	spacePathStore store.SpacePathStore,
+) *MembershipStore {
 	return &MembershipStore{
-		db:     db,
-		pCache: pCache,
+		db:             db,
+		pCache:         pCache,
+		spacePathStore: spacePathStore,
 	}
 }
 
 // MembershipStore implements store.MembershipStore backed by a relational database.
 type MembershipStore struct {
-	db     *sqlx.DB
-	pCache store.PrincipalInfoCache
+	db             *sqlx.DB
+	pCache         store.PrincipalInfoCache
+	spacePathStore store.SpacePathStore
 }
 
 type membership struct {
@@ -303,12 +309,11 @@ func (s *MembershipStore) ListSpaces(ctx context.Context,
 	userID int64,
 	filter types.MembershipSpaceFilter,
 ) ([]types.MembershipSpace, error) {
-	const columns = membershipColumns + "," + spaceColumnsForJoin
+	const columns = membershipColumns + "," + spaceColumns
 	stmt := database.Builder.
 		Select(columns).
 		From("memberships").
 		InnerJoin("spaces ON spaces.space_id = membership_space_id").
-		InnerJoin(`paths ON spaces.space_id=paths.path_space_id AND paths.path_is_primary=true`).
 		Where("membership_principal_id = ?", userID)
 
 	stmt = applyMembershipSpaceFilter(stmt, filter)
@@ -323,8 +328,6 @@ func (s *MembershipStore) ListSpaces(ctx context.Context,
 	switch filter.Sort {
 	case enum.MembershipSpaceSortUID:
 		stmt = stmt.OrderBy("space_uid " + order.String())
-	case enum.MembershipSpaceSortPath:
-		stmt = stmt.OrderBy("space_path " + order.String())
 	case enum.MembershipSpaceSortCreated:
 		stmt = stmt.OrderBy("membership_created " + order.String())
 	}
@@ -456,7 +459,11 @@ func (s *MembershipStore) mapToMembershipSpaces(ctx context.Context,
 	res := make([]types.MembershipSpace, len(ms))
 	for i, m := range ms {
 		res[i].Membership = mapToMembership(&m.membership)
-		res[i].Space = mapToSpace(&m.space)
+		space, err := mapToSpace(ctx, s.spacePathStore, &m.space)
+		if err != nil {
+			return nil, fmt.Errorf("faild to map space %d: %w", m.space.ID, err)
+		}
+		res[i].Space = *space
 		if addedBy, ok := infoMap[m.membership.CreatedBy]; ok {
 			res[i].AddedBy = *addedBy
 		}

@@ -61,13 +61,11 @@ type MembershipSpaceSort string
 // MembershipSpaceSort enumeration.
 const (
 	MembershipSpaceSortUID     MembershipSpaceSort = uid
-	MembershipSpaceSortPath    MembershipSpaceSort = path
 	MembershipSpaceSortCreated MembershipSpaceSort = created
 )
 
 var membershipSpaceSorts = sortEnum([]MembershipSpaceSort{
 	MembershipSpaceSortUID,
-	MembershipSpaceSortPath,
 	MembershipSpaceSortCreated,
 })
 
@@ -76,7 +74,7 @@ func (s MembershipSpaceSort) Sanitize() (MembershipSpaceSort, bool) {
 	return Sanitize(s, GetAllMembershipSpaceSorts)
 }
 func GetAllMembershipSpaceSorts() ([]MembershipSpaceSort, MembershipSpaceSort) {
-	return membershipSpaceSorts, MembershipSpaceSortPath
+	return membershipSpaceSorts, MembershipSpaceSortUID
 }
 
 // ParseMembershipSpaceSort parses the membership space sort attribute string
@@ -85,8 +83,6 @@ func ParseMembershipSpaceSort(s string) MembershipSpaceSort {
 	switch strings.ToLower(s) {
 	case name:
 		return MembershipSpaceSortUID
-	case path:
-		return MembershipSpaceSortPath
 	case created, createdAt:
 		return MembershipSpaceSortCreated
 	default:
@@ -99,8 +95,6 @@ func (s MembershipSpaceSort) String() string {
 	switch s {
 	case MembershipSpaceSortUID:
 		return uid
-	case MembershipSpaceSortPath:
-		return path
 	case MembershipSpaceSortCreated:
 		return created
 	default:
