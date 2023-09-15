@@ -7,18 +7,20 @@ package template
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
 // UpdateInput is used for updating a template.
 type UpdateInput struct {
-	Description string `json:"description"`
-	UID         string `json:"uid"`
-	Data        string `json:"data"`
+	UID         *string `json:"uid"`
+	Description *string `json:"description"`
+	Data        *string `json:"data"`
 }
 
 func (c *Controller) Update(
@@ -44,16 +46,35 @@ func (c *Controller) Update(
 	}
 
 	return c.templateStore.UpdateOptLock(ctx, template, func(original *types.Template) error {
-		if in.Description != "" {
-			original.Description = in.Description
+		if in.UID != nil {
+			original.UID = *in.UID
 		}
-		if in.Data != "" {
-			original.Data = in.Data
+		if in.Description != nil {
+			original.Description = *in.Description
 		}
-		if in.UID != "" {
-			original.UID = in.UID
+		if in.Data != nil {
+			original.Data = *in.Data
 		}
 
 		return nil
 	})
+}
+
+func (c *Controller) sanitizeUpdateInput(in *UpdateInput) error {
+	if in.UID != nil {
+		if err := c.uidCheck(*in.UID, false); err != nil {
+			return err
+		}
+	}
+
+	if in.Description != nil {
+		*in.Description = strings.TrimSpace(*in.Description)
+		if err := check.Description(*in.Description); err != nil {
+			return err
+		}
+	}
+
+	// TODO: Validate Data
+
+	return nil
 }

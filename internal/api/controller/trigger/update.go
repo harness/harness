@@ -7,6 +7,7 @@ package trigger
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
@@ -59,12 +60,11 @@ func (c *Controller) Update(
 
 	return c.triggerStore.UpdateOptLock(ctx,
 		trigger, func(original *types.Trigger) error {
-			// update values only if provided
-			if in.Description != nil {
-				original.Description = *in.Description
-			}
 			if in.UID != nil {
 				original.UID = *in.UID
+			}
+			if in.Description != nil {
+				original.Description = *in.Description
 			}
 			if in.Actions != nil {
 				original.Actions = deduplicateActions(in.Actions)
@@ -81,24 +81,27 @@ func (c *Controller) Update(
 }
 
 func (c *Controller) checkUpdateInput(in *UpdateInput) error {
+	if in.UID != nil {
+		if err := c.uidCheck(*in.UID, false); err != nil {
+			return err
+		}
+	}
+
 	if in.Description != nil {
+		*in.Description = strings.TrimSpace(*in.Description)
 		if err := check.Description(*in.Description); err != nil {
 			return err
 		}
 	}
+
 	if in.Secret != nil {
 		if err := checkSecret(*in.Secret); err != nil {
 			return err
 		}
 	}
+
 	if in.Actions != nil {
 		if err := checkActions(in.Actions); err != nil {
-			return err
-		}
-	}
-
-	if in.UID != nil {
-		if err := c.uidCheck(*in.UID, false); err != nil {
 			return err
 		}
 	}
