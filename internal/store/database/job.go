@@ -85,9 +85,10 @@ func (s *JobStore) ListByGroupID(ctx context.Context, groupId string) ([]*types.
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := make([]*types.Job, 0)
-	if err := db.GetContext(ctx, &dst, sqlQuery, groupId); err != nil {
+	if err := db.SelectContext(ctx, &dst, sqlQuery, groupId); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find job by group id")
 	}
+
 	return dst, nil
 }
 

@@ -121,6 +121,11 @@ func Forbidden(message string) *Error {
 	return New(http.StatusForbidden, message)
 }
 
+// NotFound returns a new user facing not found error.
+func NotFound(message string) *Error {
+	return New(http.StatusNotFound, message)
+}
+
 // ConflictWithPayload returns a new user facing conflict error with payload.
 func ConflictWithPayload(message string, values ...map[string]any) *Error {
 	return NewWithPayload(http.StatusConflict, message, values...)

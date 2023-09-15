@@ -9,14 +9,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/log"
-	"net/url"
-	"strings"
-	"time"
 
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/services/job"
@@ -64,7 +65,12 @@ func (r *Repository) Register(executor *job.Executor) error {
 	return executor.Register(jobType, r)
 }
 
-func (r *Repository) RunMany(ctx context.Context, spaceId int64, harnessCodeInfo *HarnessCodeInfo, repos []*types.Repository) error {
+func (r *Repository) RunManyForSpace(
+	ctx context.Context,
+	spaceId int64,
+	repos []*types.Repository,
+	harnessCodeInfo *HarnessCodeInfo,
+) error {
 	jobGroupId := getJobGroupId(spaceId)
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
@@ -190,14 +196,11 @@ func (r *Repository) getJobInput(data string) (Input, error) {
 	return input, nil
 }
 
-func (r *Repository) GetProgress(ctx context.Context, space *types.Space) ([]types.JobProgress, error) {
-	spaceId := getJobGroupId(space.ID)
+func (r *Repository) GetProgressForSpace(ctx context.Context, spaceID int64) ([]types.JobProgress, error) {
+	spaceId := getJobGroupId(spaceID)
 	progress, err := r.scheduler.GetJobProgressForGroup(ctx, spaceId)
 	if err != nil {
-		return nil, err
-	}
-	if progress == nil || len(progress) == 0 {
-		return []types.JobProgress{job.FailProgress()}, nil
+		return nil, fmt.Errorf("failed to get job progress for group: %w", err)
 	}
 	return progress, nil
 }
