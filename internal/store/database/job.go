@@ -84,11 +84,11 @@ func (s *JobStore) ListByGroupID(ctx context.Context, groupId string) ([]*types.
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	result := make([]*types.Job, 0)
-	if err := db.GetContext(ctx, result, sqlQuery, groupId); err != nil {
+	dst := make([]*types.Job, 0)
+	if err := db.GetContext(ctx, &dst, sqlQuery, groupId); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find job by group id")
 	}
-	return result, nil
+	return dst, nil
 }
 
 // Create creates a new job.
