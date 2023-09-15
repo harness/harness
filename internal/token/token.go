@@ -18,7 +18,9 @@ import (
 )
 
 const (
-	userTokenLifeTime time.Duration = 24 * time.Hour // 1 day.
+	// userSessionTokenLifeTime is the duration a login / register token is valid.
+	// NOTE: Users can list / delete session tokens via rest API if they want to cleanup earlier.
+	userSessionTokenLifeTime time.Duration = 30 * 24 * time.Hour // 30 days.
 )
 
 func CreateUserSession(
@@ -35,7 +37,7 @@ func CreateUserSession(
 		principal,
 		principal,
 		uid,
-		ptr.Duration(userTokenLifeTime),
+		ptr.Duration(userSessionTokenLifeTime),
 	)
 }
 
