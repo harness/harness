@@ -193,7 +193,10 @@ func (g Adapter) Push(ctx context.Context, repoPath string, opts types.PushOptio
 // NOTE: Modification of gitea implementation that supports --force-with-lease.
 // TODOD: return our own error types and move to above adapter.Push method
 func Push(ctx context.Context, repoPath string, opts types.PushOptions) error {
-	cmd := gitea.NewCommand(ctx, "push")
+	cmd := gitea.NewCommand(ctx,
+		"-c", "credential.helper=",
+		"push",
+	)
 	if opts.Force {
 		cmd.AddArguments("-f")
 	}

@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/gitrpc/internal/gitea"
 	"github.com/harness/gitness/gitrpc/internal/middleware"
 	"github.com/harness/gitness/gitrpc/internal/tempdir"
 	"github.com/harness/gitness/gitrpc/internal/types"
@@ -327,7 +328,7 @@ func (r *SharedRepo) push(ctx context.Context, writeRequest *rpc.WriteRequest,
 	sourceRef, destinationRef string) error {
 	// Because calls hooks we need to pass in the environment
 	env := CreateEnvironmentForPush(ctx, writeRequest)
-	if err := git.Push(ctx, r.tmpPath, git.PushOptions{
+	if err := gitea.Push(ctx, r.tmpPath, types.PushOptions{
 		Remote: r.remoteRepo.Path,
 		Branch: sourceRef + ":" + destinationRef,
 		Env:    env,
