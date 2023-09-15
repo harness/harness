@@ -13,6 +13,8 @@ export type EnumCheckStatus = 'error' | 'failure' | 'pending' | 'running' | 'suc
 
 export type EnumContentEncodingType = 'base64' | 'utf8'
 
+export type EnumJobState = 'canceled' | 'failed' | 'finished' | 'running' | 'scheduled'
+
 export type EnumMembershipRole = 'contributor' | 'executor' | 'reader' | 'space_owner'
 
 export type EnumMergeCheckStatus = string
@@ -20,8 +22,6 @@ export type EnumMergeCheckStatus = string
 export type EnumMergeMethod = 'merge' | 'squash' | 'rebase'
 
 export type EnumParentResourceType = 'space' | 'repo'
-
-export type EnumPathTargetType = string
 
 export type EnumPrincipalType = 'service' | 'serviceaccount' | 'user'
 
@@ -203,14 +203,11 @@ export interface OpenapiCreateConnectorRequest {
   uid?: string
 }
 
-export interface OpenapiCreatePathRequest {
-  path?: string
-}
-
 export interface OpenapiCreatePipelineRequest {
   config_path?: string
   default_branch?: string
   description?: string
+  disabled?: boolean
   uid?: string
 }
 
@@ -221,10 +218,6 @@ export interface OpenapiCreatePullReqRequest {
   source_repo_ref?: string
   target_branch?: string
   title?: string
-}
-
-export interface OpenapiCreateRepoPathRequest {
-  path?: string
 }
 
 export interface OpenapiCreateRepositoryRequest {
@@ -294,6 +287,13 @@ export interface OpenapiDirContent {
   entries?: OpenapiContentInfo[] | null
 }
 
+export interface OpenapiExportSpaceRequest {
+  accountId?: string
+  orgIdentifier?: string
+  projectIdentifier?: string
+  token?: string
+}
+
 export interface OpenapiGetContentOutput {
   content?: OpenapiContent
   latest_commit?: TypesCommit
@@ -314,14 +314,10 @@ export interface OpenapiMergePullReq {
 }
 
 export interface OpenapiMoveRepoRequest {
-  keep_as_alias?: boolean
-  parent_ref?: string | null
   uid?: string | null
 }
 
 export interface OpenapiMoveSpaceRequest {
-  keep_as_alias?: boolean
-  parent_ref?: string | null
   uid?: string | null
 }
 
@@ -357,15 +353,16 @@ export interface OpenapiUpdateAdminRequest {
 }
 
 export interface OpenapiUpdateConnectorRequest {
-  data?: string
-  description?: string
-  uid?: string
+  data?: string | null
+  description?: string | null
+  uid?: string | null
 }
 
 export interface OpenapiUpdatePipelineRequest {
-  config_path?: string
-  description?: string
-  uid?: string
+  config_path?: string | null
+  description?: string | null
+  disabled?: boolean | null
+  uid?: string | null
 }
 
 export interface OpenapiUpdatePullReqRequest {
@@ -379,9 +376,9 @@ export interface OpenapiUpdateRepoRequest {
 }
 
 export interface OpenapiUpdateSecretRequest {
-  data?: string
-  description?: string
-  uid?: string
+  data?: string | null
+  description?: string | null
+  uid?: string | null
 }
 
 export interface OpenapiUpdateSpaceRequest {
@@ -390,9 +387,9 @@ export interface OpenapiUpdateSpaceRequest {
 }
 
 export interface OpenapiUpdateTemplateRequest {
-  data?: string
-  description?: string
-  uid?: string
+  data?: string | null
+  description?: string | null
+  uid?: string | null
 }
 
 export interface OpenapiUpdateTriggerRequest {
@@ -508,6 +505,10 @@ export interface RepoSymlinkContent {
   target?: string
 }
 
+export interface SpaceExportProgressOutput {
+  repos?: TypesJobProgress[] | null
+}
+
 export interface SystemConfigOutput {
   user_signup_allowed?: boolean
 }
@@ -613,6 +614,13 @@ export interface TypesIdentity {
   name?: string
 }
 
+export interface TypesJobProgress {
+  failure?: string
+  progress?: number
+  result?: string
+  state?: EnumJobState
+}
+
 export interface TypesListCommitResponse {
   commits?: TypesCommit[] | null
   rename_details?: TypesRenameDetails[] | null
@@ -638,17 +646,6 @@ export interface TypesMembershipUser {
 export interface TypesMergeResponse {
   conflict_files?: string[]
   sha?: string
-}
-
-export interface TypesPath {
-  created?: number
-  created_by?: number
-  id?: number
-  is_primary?: boolean
-  target_id?: number
-  target_type?: EnumPathTargetType
-  updated?: number
-  value?: string
 }
 
 export interface TypesPipeline {
@@ -2166,111 +2163,6 @@ export const usePathDetails = ({ repo_ref, ...props }: UsePathDetailsProps) =>
     pathParams: { repo_ref },
     ...props
   })
-
-export interface ListRepositoryPathsQueryParams {
-  /**
-   * The page to return.
-   */
-  page?: number
-  /**
-   * The maximum number of results to return.
-   */
-  limit?: number
-}
-
-export interface ListRepositoryPathsPathParams {
-  repo_ref: string
-}
-
-export type ListRepositoryPathsProps = Omit<
-  GetProps<TypesPath[], UsererrorError, ListRepositoryPathsQueryParams, ListRepositoryPathsPathParams>,
-  'path'
-> &
-  ListRepositoryPathsPathParams
-
-export const ListRepositoryPaths = ({ repo_ref, ...props }: ListRepositoryPathsProps) => (
-  <Get<TypesPath[], UsererrorError, ListRepositoryPathsQueryParams, ListRepositoryPathsPathParams>
-    path={`/repos/${repo_ref}/paths`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseListRepositoryPathsProps = Omit<
-  UseGetProps<TypesPath[], UsererrorError, ListRepositoryPathsQueryParams, ListRepositoryPathsPathParams>,
-  'path'
-> &
-  ListRepositoryPathsPathParams
-
-export const useListRepositoryPaths = ({ repo_ref, ...props }: UseListRepositoryPathsProps) =>
-  useGet<TypesPath[], UsererrorError, ListRepositoryPathsQueryParams, ListRepositoryPathsPathParams>(
-    (paramsInPath: ListRepositoryPathsPathParams) => `/repos/${paramsInPath.repo_ref}/paths`,
-    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
-  )
-
-export interface CreateRepositoryPathPathParams {
-  repo_ref: string
-}
-
-export type CreateRepositoryPathProps = Omit<
-  MutateProps<TypesPath, UsererrorError, void, OpenapiCreateRepoPathRequest, CreateRepositoryPathPathParams>,
-  'path' | 'verb'
-> &
-  CreateRepositoryPathPathParams
-
-export const CreateRepositoryPath = ({ repo_ref, ...props }: CreateRepositoryPathProps) => (
-  <Mutate<TypesPath, UsererrorError, void, OpenapiCreateRepoPathRequest, CreateRepositoryPathPathParams>
-    verb="POST"
-    path={`/repos/${repo_ref}/paths`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseCreateRepositoryPathProps = Omit<
-  UseMutateProps<TypesPath, UsererrorError, void, OpenapiCreateRepoPathRequest, CreateRepositoryPathPathParams>,
-  'path' | 'verb'
-> &
-  CreateRepositoryPathPathParams
-
-export const useCreateRepositoryPath = ({ repo_ref, ...props }: UseCreateRepositoryPathProps) =>
-  useMutate<TypesPath, UsererrorError, void, OpenapiCreateRepoPathRequest, CreateRepositoryPathPathParams>(
-    'POST',
-    (paramsInPath: CreateRepositoryPathPathParams) => `/repos/${paramsInPath.repo_ref}/paths`,
-    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
-  )
-
-export interface DeleteRepositoryPathPathParams {
-  repo_ref: string
-}
-
-export type DeleteRepositoryPathProps = Omit<
-  MutateProps<void, UsererrorError, void, string, DeleteRepositoryPathPathParams>,
-  'path' | 'verb'
-> &
-  DeleteRepositoryPathPathParams
-
-export const DeleteRepositoryPath = ({ repo_ref, ...props }: DeleteRepositoryPathProps) => (
-  <Mutate<void, UsererrorError, void, string, DeleteRepositoryPathPathParams>
-    verb="DELETE"
-    path={`/repos/${repo_ref}/paths`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseDeleteRepositoryPathProps = Omit<
-  UseMutateProps<void, UsererrorError, void, string, DeleteRepositoryPathPathParams>,
-  'path' | 'verb'
-> &
-  DeleteRepositoryPathPathParams
-
-export const useDeleteRepositoryPath = ({ repo_ref, ...props }: UseDeleteRepositoryPathProps) =>
-  useMutate<void, UsererrorError, void, string, DeleteRepositoryPathPathParams>(
-    'DELETE',
-    (paramsInPath: DeleteRepositoryPathPathParams) => `/repos/${paramsInPath.repo_ref}/paths`,
-    { base: getConfig('code/api/v1'), pathParams: { repo_ref }, ...props }
-  )
 
 export interface ListPipelinesQueryParams {
   /**
@@ -4386,6 +4278,68 @@ export const useListConnectors = ({ space_ref, ...props }: UseListConnectorsProp
     { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
   )
 
+export interface ExportSpacePathParams {
+  space_ref: string
+}
+
+export type ExportSpaceProps = Omit<
+  MutateProps<void, UsererrorError, void, OpenapiExportSpaceRequest, ExportSpacePathParams>,
+  'path' | 'verb'
+> &
+  ExportSpacePathParams
+
+export const ExportSpace = ({ space_ref, ...props }: ExportSpaceProps) => (
+  <Mutate<void, UsererrorError, void, OpenapiExportSpaceRequest, ExportSpacePathParams>
+    verb="POST"
+    path={`/spaces/${space_ref}/export`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseExportSpaceProps = Omit<
+  UseMutateProps<void, UsererrorError, void, OpenapiExportSpaceRequest, ExportSpacePathParams>,
+  'path' | 'verb'
+> &
+  ExportSpacePathParams
+
+export const useExportSpace = ({ space_ref, ...props }: UseExportSpaceProps) =>
+  useMutate<void, UsererrorError, void, OpenapiExportSpaceRequest, ExportSpacePathParams>(
+    'POST',
+    (paramsInPath: ExportSpacePathParams) => `/spaces/${paramsInPath.space_ref}/export`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
+  )
+
+export interface ExportProgressSpacePathParams {
+  space_ref: string
+}
+
+export type ExportProgressSpaceProps = Omit<
+  GetProps<SpaceExportProgressOutput, UsererrorError, void, ExportProgressSpacePathParams>,
+  'path'
+> &
+  ExportProgressSpacePathParams
+
+export const ExportProgressSpace = ({ space_ref, ...props }: ExportProgressSpaceProps) => (
+  <Get<SpaceExportProgressOutput, UsererrorError, void, ExportProgressSpacePathParams>
+    path={`/spaces/${space_ref}/export-progress`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseExportProgressSpaceProps = Omit<
+  UseGetProps<SpaceExportProgressOutput, UsererrorError, void, ExportProgressSpacePathParams>,
+  'path'
+> &
+  ExportProgressSpacePathParams
+
+export const useExportProgressSpace = ({ space_ref, ...props }: UseExportProgressSpaceProps) =>
+  useGet<SpaceExportProgressOutput, UsererrorError, void, ExportProgressSpacePathParams>(
+    (paramsInPath: ExportProgressSpacePathParams) => `/spaces/${paramsInPath.space_ref}/export-progress`,
+    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
+  )
+
 export interface MembershipListQueryParams {
   /**
    * The substring by which the space members are filtered.
@@ -4577,111 +4531,6 @@ export const useMoveSpace = ({ space_ref, ...props }: UseMoveSpaceProps) =>
     { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
   )
 
-export interface ListPathsQueryParams {
-  /**
-   * The page to return.
-   */
-  page?: number
-  /**
-   * The maximum number of results to return.
-   */
-  limit?: number
-}
-
-export interface ListPathsPathParams {
-  space_ref: string
-}
-
-export type ListPathsProps = Omit<
-  GetProps<TypesPath[], UsererrorError, ListPathsQueryParams, ListPathsPathParams>,
-  'path'
-> &
-  ListPathsPathParams
-
-export const ListPaths = ({ space_ref, ...props }: ListPathsProps) => (
-  <Get<TypesPath[], UsererrorError, ListPathsQueryParams, ListPathsPathParams>
-    path={`/spaces/${space_ref}/paths`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseListPathsProps = Omit<
-  UseGetProps<TypesPath[], UsererrorError, ListPathsQueryParams, ListPathsPathParams>,
-  'path'
-> &
-  ListPathsPathParams
-
-export const useListPaths = ({ space_ref, ...props }: UseListPathsProps) =>
-  useGet<TypesPath[], UsererrorError, ListPathsQueryParams, ListPathsPathParams>(
-    (paramsInPath: ListPathsPathParams) => `/spaces/${paramsInPath.space_ref}/paths`,
-    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
-  )
-
-export interface CreatePathPathParams {
-  space_ref: string
-}
-
-export type CreatePathProps = Omit<
-  MutateProps<TypesPath, UsererrorError, void, OpenapiCreatePathRequest, CreatePathPathParams>,
-  'path' | 'verb'
-> &
-  CreatePathPathParams
-
-export const CreatePath = ({ space_ref, ...props }: CreatePathProps) => (
-  <Mutate<TypesPath, UsererrorError, void, OpenapiCreatePathRequest, CreatePathPathParams>
-    verb="POST"
-    path={`/spaces/${space_ref}/paths`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseCreatePathProps = Omit<
-  UseMutateProps<TypesPath, UsererrorError, void, OpenapiCreatePathRequest, CreatePathPathParams>,
-  'path' | 'verb'
-> &
-  CreatePathPathParams
-
-export const useCreatePath = ({ space_ref, ...props }: UseCreatePathProps) =>
-  useMutate<TypesPath, UsererrorError, void, OpenapiCreatePathRequest, CreatePathPathParams>(
-    'POST',
-    (paramsInPath: CreatePathPathParams) => `/spaces/${paramsInPath.space_ref}/paths`,
-    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
-  )
-
-export interface DeletePathPathParams {
-  space_ref: string
-}
-
-export type DeletePathProps = Omit<
-  MutateProps<void, UsererrorError, void, string, DeletePathPathParams>,
-  'path' | 'verb'
-> &
-  DeletePathPathParams
-
-export const DeletePath = ({ space_ref, ...props }: DeletePathProps) => (
-  <Mutate<void, UsererrorError, void, string, DeletePathPathParams>
-    verb="DELETE"
-    path={`/spaces/${space_ref}/paths`}
-    base={getConfig('code/api/v1')}
-    {...props}
-  />
-)
-
-export type UseDeletePathProps = Omit<
-  UseMutateProps<void, UsererrorError, void, string, DeletePathPathParams>,
-  'path' | 'verb'
-> &
-  DeletePathPathParams
-
-export const useDeletePath = ({ space_ref, ...props }: UseDeletePathProps) =>
-  useMutate<void, UsererrorError, void, string, DeletePathPathParams>(
-    'DELETE',
-    (paramsInPath: DeletePathPathParams) => `/spaces/${paramsInPath.space_ref}/paths`,
-    { base: getConfig('code/api/v1'), pathParams: { space_ref }, ...props }
-  )
-
 export interface ListReposQueryParams {
   /**
    * The substring which is used to filter the repositories by their path name.
@@ -4690,7 +4539,7 @@ export interface ListReposQueryParams {
   /**
    * The data by which the repositories are sorted.
    */
-  sort?: 'uid' | 'path' | 'created' | 'updated'
+  sort?: 'uid' | 'created' | 'updated'
   /**
    * The order of the output.
    */
@@ -4818,7 +4667,7 @@ export interface ListSpacesQueryParams {
   /**
    * The data by which the spaces are sorted.
    */
-  sort?: 'uid' | 'path' | 'created' | 'updated'
+  sort?: 'uid' | 'created' | 'updated'
   /**
    * The order of the output.
    */
@@ -5105,7 +4954,7 @@ export interface MembershipSpacesQueryParams {
   /**
    * The field by which the spaces the user is a member of are sorted.
    */
-  sort?: 'created' | 'path' | 'uid'
+  sort?: 'created' | 'uid'
   /**
    * The page to return.
    */

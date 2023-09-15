@@ -52,7 +52,6 @@ var queryParameterSortRepo = openapi3.ParameterOrRef{
 				Default: ptrptr(enum.RepoAttrUID.String()),
 				Enum: []interface{}{
 					ptr.String(enum.RepoAttrUID.String()),
-					ptr.String(enum.RepoAttrPath.String()),
 					ptr.String(enum.RepoAttrCreated.String()),
 					ptr.String(enum.RepoAttrUpdated.String()),
 				},

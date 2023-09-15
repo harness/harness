@@ -16,6 +16,22 @@ const (
 	JobStateCanceled  JobState = "canceled"
 )
 
+var jobStates = sortEnum([]JobState{
+	JobStateScheduled,
+	JobStateRunning,
+	JobStateFinished,
+	JobStateFailed,
+	JobStateCanceled,
+})
+
+func (JobState) Enum() []interface{} { return toInterfaceSlice(jobStates) }
+func (s JobState) Sanitize() (JobState, bool) {
+	return Sanitize(s, GetAllJobStates)
+}
+func GetAllJobStates() ([]JobState, JobState) {
+	return jobStates, ""
+}
+
 // JobPriority represents priority of a background job.
 type JobPriority int
 

@@ -2,6 +2,7 @@ package space
 
 import (
 	"context"
+
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
@@ -9,7 +10,7 @@ import (
 )
 
 type ExportProgressOutput struct {
-	JobProgress []types.JobProgress `json:"job_progress"`
+	Repos []types.JobProgress `json:"repos"`
 }
 
 // ExportProgress returns progress of the export job.
@@ -30,5 +31,5 @@ func (c *Controller) ExportProgress(ctx context.Context,
 	if err != nil {
 		return ExportProgressOutput{}, err
 	}
-	return ExportProgressOutput{JobProgress: progress}, nil
+	return ExportProgressOutput{Repos: progress}, nil
 }
