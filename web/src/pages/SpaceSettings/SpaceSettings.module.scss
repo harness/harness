@@ -12,6 +12,13 @@
   }
 }
 
+.dividerContainer {
+  opacity: 0.2;
+  height: 1px;
+  color: var(--grey-100);
+  margin: 20px 0;
+}
+
 .label {
   width: 100px;
   padding-right: var(--spacing-medium);
@@ -48,6 +55,8 @@
   background: var(--grey-0) !important;
   box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
   border-radius: 4px;
+  overflow: hidden !important;
+  position: relative !important;
 }
 
 .yellowContainer {
@@ -59,4 +68,123 @@
 
 .verticalContainer {
   width: 100% !important;
+}
+
+.upgradeContainer {
+  align-items: center;
+  overflow: hidden !important;
+  position: relative !important;
+  .button {
+    --background-color: var(--green-700) !important;
+    --background-color-hover: var(--green-800) !important;
+    --background-color-active: var(--green-700) !important;
+    z-index: 2;
+    .buttonText {
+      font-size: 13px !important;
+    }
+  }
+}
+
+.harnessWatermark {
+  position: absolute;
+  right: -2.81%;
+  top: 6%;
+  bottom: -17%;
+  z-index: 1;
+  opacity: 0.1 !important;
+  svg {
+    opacity: 0.1;
+  }
+}
+
+.upgradeHeader {
+  align-items: center;
+}
+
+.importContainer {
+  background: var(--grey-50) !important;
+  border: 1px solid var(--grey-200) !important;
+  border-radius: 4px;
+
+  :global {
+    .bp3-form-group {
+      margin: unset !important;
+    }
+  }
+}
+
+.detailsLabel {
+  white-space: nowrap !important;
+  max-width: 155px !important;
+  color: var(--grey-600) !important;
+}
+
+.icon {
+  > svg {
+    fill: var(--primary-7) !important;
+
+    > path {
+      fill: var(--primary-7) !important;
+    }
+  }
+}
+
+.checkbox {
+  :global {
+    .Tooltip--acenter {
+      opacity: 0.7 !important;
+    }
+    .bp3-control-indicator {
+      background: var(--primary-7) !important;
+      opacity: 0.7;
+    }
+  }
+}
+
+.repoInfo {
+  border-radius: 4px;
+  border: 1px solid var(--grey-100);
+  background: var(--grey-50) !important;
+}
+
+.upgradeButton {
+  --background-color: var(--green-700) !important;
+  --background-color-hover: var(--green-800) !important;
+  --background-color-active: var(--green-700) !important;
+  z-index: 2;
+  .buttonText {
+    font-size: 13px !important;
+  }
+}
+
+.progressBar {
+  width: 461px;
+}
+
+.harnessUpgradeWatermark {
+  position: absolute;
+  right: 2%;
+  top: 6%;
+  bottom: -17%;
+  z-index: 1;
+  opacity: 0.1 !important;
+  svg {
+    opacity: 0.1;
+  }
+}
+
+.mainContainer {
+  :global {
+    --bp3-intent-color: unset !important;
+
+    .bp3-intent-danger {
+      --bp3-intent-color: unset !important;
+    }
+    .bp3-form-helper-text {
+      margin-top: unset !important;
+    }
+    .FormError--errorDiv {
+      display: none !important;
+    }
+  }
 }

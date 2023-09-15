@@ -748,3 +748,29 @@ triggers:
   deleteTriggerError: Failed to delete Trigger. Please try again.
 step:
   select: Select a step
+exportSpace:
+  accIdRequired: Account ID is required
+  accesstokenReq: Access token is required
+  accIdLabel: 'Harness Account Id'
+  accIdPlaceholder: 'Enter the Harness Account ID'
+  tokenLabel: 'Account Token'
+  tokenPlaceholder: 'Enter the access token here'
+  organization: Organization
+  projectName: Project Name
+  entitiesLabel: Entities to upgrade
+  projectOrg: Project Organization
+  repoToConvert: '{{length}} repositories to be converted'
+  startUpgrade: Start Upgrade
+  upgradeHarness: Upgrade to Harness
+  newProject: New Project Details
+  upgradeConfirmation: Upgrade Confirmation
+  upgradeTitle: Upgrade this space to the Harness Software Delivery platform
+  upgrade: Upgrade
+  upgradeContent: Upgrade this space to Harness. By upgrading to Harness, you will create a new project in your
+    Harness account and migrate all repositories, pipelines and users / access controls to the new
+    project. Learn more about Harness.
+  upgradeProgress: 'Upgrading in progress'
+  exportCompleted: Export Completed
+  exportRepoCompleted: Exported {{repoCount}} repositories
+  exportRepo: Exporting {{repoCount}} repositories
+spaceUpdate: Space Updated
