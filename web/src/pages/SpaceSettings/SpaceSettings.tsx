@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Button,
   Text,
@@ -13,25 +13,26 @@ import {
   useToaster,
   Heading
 } from '@harnessio/uicore'
-import { useMutate } from 'restful-react'
+import { noop } from 'lodash-es'
+import { useMutate, useGet } from 'restful-react'
 import { Intent, Color, FontVariation } from '@harnessio/design-system'
-import { useGetSpace } from 'services/code'
-import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
-import { ACCESS_MODES, permissionProps, voidFn } from 'utils/Utils'
-import { Dialog } from '@blueprintjs/core'
-import { ProgressBar, Intent as IntentCore } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
+import { Dialog } from '@blueprintjs/core'
+import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { ProgressBar, Intent as IntentCore } from '@blueprintjs/core'
+import { TypesJobProgress, useGetSpace } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
-import useDeleteSpaceModal from './DeleteSpaceModal/DeleteSpaceModal'
-import Harness from '../../icons/Harness.svg'
-import Upgrade from '../../icons/Upgrade.svg'
 import { getErrorMessage } from 'utils/Utils'
+import { ACCESS_MODES, permissionProps, voidFn } from 'utils/Utils'
 import type { ExportFormDataExtended } from 'utils/GitUtils'
 import { useModalHook } from 'hooks/useModalHook'
+import useSpaceSSE from 'hooks/useSpaceSSE'
+import Harness from '../../icons/Harness.svg'
+import Upgrade from '../../icons/Upgrade.svg'
+import useDeleteSpaceModal from './DeleteSpaceModal/DeleteSpaceModal'
 import ExportForm from './ExportForm/ExportForm'
 import css from './SpaceSettings.module.scss'
-import useSpaceSSE from 'hooks/useSpaceSSE'
 
 export default function SpaceSettings() {
   const { space } = useGetRepositoryMetadata()
@@ -56,18 +57,59 @@ export default function SpaceSettings() {
     verb: 'POST',
     path: `/api/v1/spaces/${space}/move`
   })
+  const { data: exportProgressSpace, refetch: refetchExport } = useGet({
+    path: `/api/v1/spaces/${space}/export-progress`
+  })
+  const countFinishedRepos = () => {
+    return exportProgressSpace?.repos.filter((repo: TypesJobProgress) => repo.state === 'finished').length
+  }
+
+  const checkReposState = () => {
+    return exportProgressSpace?.repos.every(
+      (repo: TypesJobProgress) => repo.state === 'finished' || repo.state === 'failed' || repo.state === 'canceled'
+    )
+  }
+
+  const checkExportIsRunning = () => {
+    return exportProgressSpace?.repos.every(
+      (repo: TypesJobProgress) => repo.state === 'running' || repo.state === 'scheduled'
+    )
+  }
+
+  useEffect(() => {
+    if (exportProgressSpace?.repos && checkExportIsRunning()) {
+      setUpgrading(true)
+      setRepoCount(exportProgressSpace?.repos.length)
+    } else if (exportProgressSpace?.repos && checkReposState()) {
+      setRepoCount(countFinishedRepos)
+      setExportDone(true)
+    }
+  }, [exportProgressSpace, checkExportIsRunning, checkReposState, countFinishedRepos])
+
+  useSpaceSSE({
+    space,
+    events: ['repository_export_completed'],
+    onEvent: () => {
+      refetchExport()
+
+      if (exportProgressSpace && checkReposState()) {
+        setRepoCount(countFinishedRepos)
+        setExportDone(true)
+      }
+    }
+  })
+
   const ExportModal = () => {
-    const { getString } = useStrings()
     const [step, setStep] = useState(0)
 
     const { mutate: exportSpace } = useMutate({
       verb: 'POST',
       path: `/api/v1/spaces/${space}/export`
     })
+
     const handleExportSubmit = (formData: ExportFormDataExtended) => {
       try {
         setRepoCount(formData.repoCount)
-        setUpgrading(true)
         const exportPayload = {
           accountId: formData.accountId || '',
           orgIdentifier: formData.organization,
@@ -77,6 +119,7 @@ export default function SpaceSettings() {
         exportSpace(exportPayload)
           .then(_ => {
             hideModal()
+            setUpgrading(true)
           })
           .catch(_error => {
             showError(getErrorMessage(_error), 0, getString('failedToImportSpace'))
@@ -86,17 +129,6 @@ export default function SpaceSettings() {
       }
     }
 
-    useSpaceSSE({
-      space,
-      events: ['space_export_completed'],
-      onEvent: eventData => {
-        if (eventData.id === data?.id && data?.uid === eventData.uid) {
-          setExportDone(true)
-        } else if (eventData.status === 200) {
-          setExportDone(true)
-        }
-      }
-    })
     return (
       <Dialog
         isOpen
@@ -136,7 +168,7 @@ export default function SpaceSettings() {
       </Dialog>
     )
   }
-  const [openModal, hideModal] = useModalHook(ExportModal, [() => {}, space])
+  const [openModal, hideModal] = useModalHook(ExportModal, [noop, space])
   const permEditResult = hooks?.usePermissionTranslate?.(
     {
       resource: {
@@ -174,7 +206,7 @@ export default function SpaceSettings() {
                 <Layout.Vertical padding={{ top: 'medium' }}>
                   {upgrading ? (
                     <Container
-                      height={187}
+                      height={exportDone ? 150 : 187}
                       color={Color.PRIMARY_BG}
                       padding="xlarge"
                       margin={{ bottom: 'medium' }}
@@ -197,7 +229,7 @@ export default function SpaceSettings() {
                           <Container padding={{ top: 'medium' }}>
                             {exportDone ? (
                               <Text
-                                icon={'check'}
+                                icon={'execution-success'}
                                 iconProps={{
                                   size: 16,
                                   color: Color.GREEN_500
