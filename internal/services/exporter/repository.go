@@ -142,7 +142,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		GitIgnore:     "",
 	})
 	if err != nil {
-		publishSSE(ctx, r, repository)
+		r.publishSSE(ctx, repository)
 		return "", err
 	}
 
@@ -155,29 +155,26 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		ReadParams: gitrpc.ReadParams{RepoUID: repository.GitUID},
 		RemoteUrl:  urlWithToken,
 	})
-	if strings.Contains(err.Error(), "empty") {
-		return "", nil
-	}
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "empty") {
 		errDelete := client.DeleteRepo(ctx, remoteRepo.UID)
 		if errDelete != nil {
-			log.Ctx(ctx).Err(errDelete).Msgf("Cannot delete repo %s", remoteRepo.UID)
+			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete repo '%s' on harness", remoteRepo.UID)
 		}
-		publishSSE(ctx, r, repository)
+		r.publishSSE(ctx, repository)
 		return "", err
 	}
 
-	log.Info().Msgf("completed repository export for repo", repository.UID)
+	log.Ctx(ctx).Info().Msgf("completed exporting repository '%s' to harness", repository.UID)
 
-	publishSSE(ctx, r, repository)
+	r.publishSSE(ctx, repository)
 
 	return "", nil
 }
 
-func publishSSE(ctx context.Context, r *Repository, repository *types.Repository) {
+func (r *Repository) publishSSE(ctx context.Context, repository *types.Repository) {
 	err := r.sseStreamer.Publish(ctx, repository.ParentID, enum.SSETypeRepositoryExportCompleted, repository)
 	if err != nil {
-		log.Warn().Err(err).Msg("failed to publish export completion SSE")
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish export completion SSE")
 	}
 }
 
