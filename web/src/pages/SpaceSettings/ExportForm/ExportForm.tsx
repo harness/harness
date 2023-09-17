@@ -20,10 +20,10 @@ import {
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import type { TypesRepository } from 'services/code'
-import Upgrade from '../../../icons/Upgrade.svg'
 
 import { useStrings } from 'framework/strings'
 import type { ExportFormDataExtended } from 'utils/GitUtils'
+import Upgrade from '../../../icons/Upgrade.svg'
 import css from '../SpaceSettings.module.scss'
 
 interface ExportFormProps {
