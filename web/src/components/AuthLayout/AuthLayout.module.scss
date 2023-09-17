@@ -1,6 +1,6 @@
 .layout {
   // Signup card widths
-  --min-width: 840px;
+  --min-width: 950px;
   --max-width: 35%;
 
   display: grid;
@@ -36,14 +36,20 @@
     .subtractContainer {
       display: flex;
       justify-content: flex-end;
-      margin-top: var(--spacing-large);
-      margin-right: var(--spacing-large);
+      margin-bottom: var(--spacing-xxxlarge);
+      margin-right: var(--spacing-xxxlarge);
     }
     .subtractImage {
       float: right;
     }
+    .harnessImage {
+      float: left;
+    }
     .imageContainer {
       padding: 10% 25%;
+    }
+    .gitnessContainer {
+      padding: 9% 20%;
     }
 
     .overlayImage {
