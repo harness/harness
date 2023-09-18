@@ -100,17 +100,21 @@ export const Changes: React.FC<ChangesProps> = ({
   )
 
   useEffect(() => {
-      history.push(
-        routes.toCODEPullRequest({
-          repoPath: repoMetadata.path as string,
-          pullRequestId: String(pullRequestMetadata?.number),
-          pullRequestSection: PullRequestSection.FILES_CHANGED,
-          commitSHA:
-            commitRange.length === 0 ? undefined :
-            commitRange.length === 1 ? commitRange[0] :
-            `${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
-        })
-      )
+    if (!pullRequestMetadata) {
+      return
+    }
+
+    history.push(
+      routes.toCODEPullRequest({
+        repoPath: repoMetadata.path as string,
+        pullRequestId: String(pullRequestMetadata?.number),
+        pullRequestSection: PullRequestSection.FILES_CHANGED,
+        commitSHA:
+          commitRange.length === 0 ? undefined :
+          commitRange.length === 1 ? commitRange[0] :
+          `${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
+      })
+    )
   }, [commitRange, history, routes, repoMetadata.path, pullRequestMetadata?.number])
 
   const {
