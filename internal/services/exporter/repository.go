@@ -10,11 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
-	"github.com/harness/gitness/internal/api/controller/repo"
-	"github.com/harness/gitness/internal/sse"
-	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 	"net/url"
 	"strings"
@@ -74,34 +69,34 @@ const (
 
 var ErrJobRunning = errors.New("an export job is already running")
 
-
 func (r *Repository) Register(executor *job.Executor) error {
 	return executor.Register(jobType, r)
 }
-}
-	func (r *Repository) RunManyForSpace(
-		ctx context.Context,
-		spaceId int64,
-		repos []*types.Repository,
-		harnessCodeInfo *HarnessCodeInfo,
-) error {		jobGroupId := getJobGroupId(spaceId)
 
-		jobs, err := r.scheduler.GetJobProgressForGroup(ctx, jobGroupId)
-		if err != nil {
+func (r *Repository) RunManyForSpace(
+	ctx context.Context,
+	spaceId int64,
+	repos []*types.Repository,
+	harnessCodeInfo *HarnessCodeInfo,
+) error {
+	jobGroupId := getJobGroupId(spaceId)
+
+	jobs, err := r.scheduler.GetJobProgressForGroup(ctx, jobGroupId)
+	if err != nil {
 		return fmt.Errorf("cannot get job progress before starting. %w", err)
 	}
 
-		err = checkJobAlreadyRunning(jobs)
-		if err != nil {
+	err = checkJobAlreadyRunning(jobs)
+	if err != nil {
 		return err
 	}
 
-		n, err := r.scheduler.PurgeJobsByGroupId(ctx, jobGroupId)
-		if err != nil {
+	n, err := r.scheduler.PurgeJobsByGroupId(ctx, jobGroupId)
+	if err != nil {
 		return err
 	}
-		log.Ctx(ctx).Info().Msgf("deleted %d old jobs", n)
-		jobDefinitions := make([]job.Definition, len(repos))
+	log.Ctx(ctx).Info().Msgf("deleted %d old jobs", n)
+	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
 		repoJobData := Input{
 			UID:             repository.UID,
