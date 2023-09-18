@@ -40,3 +40,7 @@ const (
 	JobPriorityNormal   JobPriority = 0
 	JobPriorityElevated JobPriority = 1
 )
+
+func (s JobState) IsCompleted() bool {
+	return s == JobStateFinished || s == JobStateFailed || s == JobStateCanceled
+}

@@ -63,9 +63,10 @@ const (
 	exportJobMaxDuration = 45 * time.Minute
 	exportRepoJobUid     = "export_repo_%d"
 	exportSpaceJobUid    = "export_space_%d"
+	jobType              = "repository_export"
 )
 
-const jobType = "repository_export"
+var ErrJobRunning = errors.New("an export job is already running")
 
 func (r *Repository) Register(executor *job.Executor) error {
 	return executor.Register(jobType, r)
@@ -78,6 +79,25 @@ func (r *Repository) RunManyForSpace(
 	harnessCodeInfo *HarnessCodeInfo,
 ) error {
 	jobGroupId := getJobGroupId(spaceId)
+
+	jobs, err := r.scheduler.GetJobProgressForGroup(ctx, jobGroupId)
+	if err != nil {
+		return fmt.Errorf("cannot get job progress before starting. %w", err)
+	}
+
+	if len(jobs) >= 0 {
+		err = checkJobAlreadyRunning(jobs)
+		if err != nil {
+			return err
+		}
+
+		n, err := r.scheduler.PurgeJobsByGroupId(ctx, jobGroupId)
+		if err != nil {
+			return err
+		}
+		log.Ctx(ctx).Info().Msgf("deleted %d old jobs", n)
+	}
+
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
 		repoJobData := Input{
@@ -110,6 +130,18 @@ func (r *Repository) RunManyForSpace(
 	}
 
 	return r.scheduler.RunJobs(ctx, jobGroupId, jobDefinitions)
+}
+
+func checkJobAlreadyRunning(jobs []types.JobProgress) error {
+	if jobs == nil {
+		return nil
+	}
+	for _, j := range jobs {
+		if !j.State.IsCompleted() {
+			return ErrJobRunning
+		}
+	}
+	return nil
 }
 
 func getJobGroupId(spaceId int64) string {

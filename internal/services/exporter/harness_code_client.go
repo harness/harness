@@ -31,6 +31,7 @@ var (
 	errHTTPNotFound   = fmt.Errorf("not found")
 	errHTTPBadRequest = fmt.Errorf("bad request")
 	errHTTPInternal   = fmt.Errorf("internal error")
+	errHTTPDuplicate  = fmt.Errorf("resource already exists")
 )
 
 type harnessCodeClient struct {
@@ -204,6 +205,8 @@ func mapStatusCodeToError(statusCode int) error {
 		return errHTTPNotFound
 	case statusCode == 400:
 		return errHTTPBadRequest
+	case statusCode == 409:
+		return errHTTPDuplicate
 	case statusCode >= 400:
 		return fmt.Errorf("received client side error status code %d", statusCode)
 	case statusCode >= 300:

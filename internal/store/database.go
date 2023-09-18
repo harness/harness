@@ -439,6 +439,9 @@ type (
 		// ListByGroupID fetches all jobs for a group id
 		ListByGroupID(ctx context.Context, groupId string) ([]*types.Job, error)
 
+		// DeleteByGroupID deletes all jobs for a group id
+		DeleteByGroupID(ctx context.Context, groupId string) (int64, error)
+
 		// Create is used to create a new job.
 		Create(ctx context.Context, job *types.Job) error
 
