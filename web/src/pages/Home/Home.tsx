@@ -1,7 +1,8 @@
 import React from 'react'
-import { ButtonVariation, ButtonSize, Container, Layout, PageBody, Text } from '@harnessio/uicore'
+import { ButtonVariation, ButtonSize, Container, Layout, PageBody, Text, Button } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { noop } from 'lodash-es'
+import { useGet } from 'restful-react'
 import { useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -17,7 +18,15 @@ export default function Home() {
   const { currentUser } = useAppContext()
   const { space } = useGetRepositoryMetadata()
 
-  const spaces = []
+  const {
+    data: spaces,
+    refetch,
+    response
+  } = useGet({
+    path: '/api/v1/user/memberships',
+
+    debounce: 500
+  })
 
   const NewSpaceButton = (
     <NewSpaceModalButton
@@ -45,7 +54,7 @@ export default function Home() {
       >
         <LoadingSpinner visible={false} />
 
-        {spaces.length == 0 ? (
+        {spaces?.length === 0 ? (
           <Container className={css.container} flex={{ justifyContent: 'center', align: 'center-center' }}>
             <Layout.Vertical className={css.spaceContainer} spacing="small">
               <Text font={{ variation: FontVariation.H2 }}>
@@ -59,7 +68,29 @@ export default function Home() {
               </Container>
             </Layout.Vertical>
           </Container>
-        ) : null}
+        ) : (
+          <Container className={css.container} flex={{ justifyContent: 'center', align: 'center-center' }}>
+            <Layout.Vertical className={css.spaceContainer} spacing="small">
+              <Text flex={{ justifyContent: 'center', align: 'center-center' }} font={{ variation: FontVariation.H2 }}>
+                {getString('homepage.selectSpaceTitle')}
+              </Text>
+              <Text font={{ variation: FontVariation.BODY1 }}>{getString('homepage.selectSpaceContent')}</Text>
+              <Container className={css.buttonContainer} padding={{ top: 'large' }} flex={{ justifyContent: 'center' }}>
+                <Button
+                  text={getString('homepage.selectSpace')}
+                  size={ButtonSize.LARGE}
+                  variation={ButtonVariation.PRIMARY}
+                  onClick={() => {
+                    const button = document.body.querySelectorAll(
+                      '.bp3-popover-target>.StyledProps--main'
+                    )[0] as HTMLElement
+                    button.click()
+                  }}
+                />
+              </Container>
+            </Layout.Vertical>
+          </Container>
+        )}
       </PageBody>
     </Container>
   )

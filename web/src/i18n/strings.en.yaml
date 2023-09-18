@@ -603,6 +603,9 @@ emptySpaceText: "It's empty now, please create a new space"
 homepage:
   welcomeText: Welcome {{currentUser}}, let's get you started with Gitness!
   firstStep: Get started by creating a space.  Organize and manage your repositories and pipelines with spaces
+  selectSpaceTitle: Select a space to get started
+  selectSpaceContent: Spaces contain your repositories and pipelines. To start using Gitness, select a space or create a new one.
+  selectSpace: Select Space
 deleteSpace: Delete Space
 spaceSetting:
   intentText: This will permanently delete the space named '{{space}}', and everything contained in it. All repositories in this space, all sub-spaces and repositories they contain will be deleted.

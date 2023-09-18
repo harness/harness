@@ -240,6 +240,9 @@ export interface StringsMap {
   hideCommitHistory: string
   history: string
   'homepage.firstStep': string
+  'homepage.selectSpace': string
+  'homepage.selectSpaceContent': string
+  'homepage.selectSpaceTitle': string
   'homepage.welcomeText': string
   importGitRepo: string
   importProgress: string
