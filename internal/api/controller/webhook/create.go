@@ -6,6 +6,7 @@ package webhook
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/harness/gitness/internal/auth"
@@ -45,6 +46,11 @@ func (c *Controller) Create(
 		return nil, err
 	}
 
+	encryptedSecret, err := c.encrypter.Encrypt(in.Secret)
+	if err != nil {
+		return nil, fmt.Errorf("failed to encrypt webhook secret: %w", err)
+	}
+
 	// create new webhook object
 	hook := &types.Webhook{
 		ID:         0, // the ID will be populated in the data layer
@@ -60,7 +66,7 @@ func (c *Controller) Create(
 		DisplayName:           in.DisplayName,
 		Description:           in.Description,
 		URL:                   in.URL,
-		Secret:                in.Secret,
+		Secret:                string(encryptedSecret),
 		Enabled:               in.Enabled,
 		Insecure:              in.Insecure,
 		Triggers:              deduplicateTriggers(in.Triggers),

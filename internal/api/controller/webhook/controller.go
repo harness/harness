@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/encrypt"
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
@@ -30,6 +31,7 @@ type Controller struct {
 	webhookExecutionStore store.WebhookExecutionStore
 	repoStore             store.RepoStore
 	webhookService        *webhook.Service
+	encrypter             encrypt.Encrypter
 }
 
 func NewController(
@@ -41,6 +43,7 @@ func NewController(
 	webhookExecutionStore store.WebhookExecutionStore,
 	repoStore store.RepoStore,
 	webhookService *webhook.Service,
+	encrypter encrypt.Encrypter,
 ) *Controller {
 	return &Controller{
 		allowLoopback:         allowLoopback,
@@ -51,6 +54,7 @@ func NewController(
 		webhookExecutionStore: webhookExecutionStore,
 		repoStore:             repoStore,
 		webhookService:        webhookService,
+		encrypter:             encrypter,
 	}
 }
 

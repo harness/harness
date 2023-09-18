@@ -332,8 +332,12 @@ func (s *Service) prepareHTTPRequest(ctx context.Context, execution *types.Webho
 
 	// add HMAC only if a secret was provided
 	if webhook.Secret != "" {
+		decryptedSecret, err := s.encrypter.Decrypt([]byte(webhook.Secret))
+		if err != nil {
+			return nil, fmt.Errorf("failed to decrypt webhook secret: %w", err)
+		}
 		var hmac string
-		hmac, err = generateHMACSHA256(bBuff.Bytes(), []byte(webhook.Secret))
+		hmac, err = generateHMACSHA256(bBuff.Bytes(), []byte(decryptedSecret))
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate SHA256 based HMAC: %w", err)
 		}

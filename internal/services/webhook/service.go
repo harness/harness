@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	gitevents "github.com/harness/gitness/internal/events/git"
@@ -72,6 +73,7 @@ type Service struct {
 	pullreqStore          store.PullReqStore
 	principalStore        store.PrincipalStore
 	gitRPCClient          gitrpc.Interface
+	encrypter             encrypt.Encrypter
 
 	secureHTTPClient   *http.Client
 	insecureHTTPClient *http.Client
@@ -87,7 +89,8 @@ func NewService(ctx context.Context, config Config,
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
 	repoStore store.RepoStore, pullreqStore store.PullReqStore, urlProvider *url.Provider,
-	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Service, error) {
+	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface, encrypter encrypt.Encrypter,
+) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided webhook service config is invalid: %w", err)
 	}
@@ -99,6 +102,7 @@ func NewService(ctx context.Context, config Config,
 		urlProvider:           urlProvider,
 		principalStore:        principalStore,
 		gitRPCClient:          gitRPCClient,
+		encrypter:             encrypter,
 
 		secureHTTPClient:   newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, false),
 		insecureHTTPClient: newHTTPClient(config.AllowLoopback, config.AllowPrivateNetwork, true),

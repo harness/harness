@@ -6,6 +6,7 @@ package webhook
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
@@ -58,7 +59,11 @@ func (c *Controller) Update(
 		hook.URL = *in.URL
 	}
 	if in.Secret != nil {
-		hook.Secret = *in.Secret
+		encryptedSecret, err := c.encrypter.Encrypt(*in.Secret)
+		if err != nil {
+			return nil, fmt.Errorf("failed to encrypt webhook secret: %w", err)
+		}
+		hook.Secret = string(encryptedSecret)
 	}
 	if in.Enabled != nil {
 		hook.Enabled = *in.Enabled

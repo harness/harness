@@ -7,6 +7,7 @@ package webhook
 import (
 	"context"
 
+	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	gitevents "github.com/harness/gitness/internal/events/git"
@@ -27,8 +28,8 @@ func ProvideService(ctx context.Context, config Config,
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
 	repoStore store.RepoStore, pullreqStore store.PullReqStore, urlProvider *url.Provider,
-	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface) (*Service, error) {
+	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface, encrypter encrypt.Encrypter) (*Service, error) {
 	return NewService(ctx, config, gitReaderFactory, prReaderFactory,
 		webhookStore, webhookExecutionStore, repoStore, pullreqStore,
-		urlProvider, principalStore, gitRPCClient)
+		urlProvider, principalStore, gitRPCClient, encrypter)
 }
