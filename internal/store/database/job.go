@@ -91,6 +91,32 @@ func (s *JobStore) ListByGroupID(ctx context.Context, groupId string) ([]*types.
 	return result, nil
 }
 
+// DeleteByGroupID deletes all jobs for a group id
+func (s *JobStore) DeleteByGroupID(ctx context.Context, groupId string) (int64, error) {
+	stmt := database.Builder.
+		Delete("jobs").
+		Where("(job_group_id = ?)", groupId)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert delete by group id jobs query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	result, err := db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(err, "failed to execute delete jobs by group id query")
+	}
+
+	n, err := result.RowsAffected()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(err, "failed to get number of deleted jobs in group")
+	}
+
+	return n, nil
+}
+
 // Create creates a new job.
 func (s *JobStore) Create(ctx context.Context, job *types.Job) error {
 	const sqlQuery = `

@@ -24,3 +24,7 @@ const (
 	JobPriorityNormal   JobPriority = 0
 	JobPriorityElevated JobPriority = 1
 )
+
+func GetCompletedJobState() []JobState {
+	return []JobState{JobStateFinished, JobStateCanceled, JobStateFinished}
+}

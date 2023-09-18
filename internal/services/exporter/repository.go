@@ -8,12 +8,14 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/types/enum"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/exp/slices"
 	"net/url"
 	"strings"
 	"time"
@@ -56,9 +58,10 @@ const (
 	exportJobMaxDuration = 45 * time.Minute
 	exportRepoJobUid     = "export_repo_%d"
 	exportSpaceJobUid    = "export_space_%d"
+	jobType              = "repository_export"
 )
 
-const jobType = "repository_export"
+var ErrJobRunning = errors.New("an export job is already running")
 
 func (r *Repository) Register(executor *job.Executor) error {
 	return executor.Register(jobType, r)
@@ -66,6 +69,23 @@ func (r *Repository) Register(executor *job.Executor) error {
 
 func (r *Repository) RunMany(ctx context.Context, spaceId int64, harnessCodeInfo *HarnessCodeInfo, repos []*types.Repository) error {
 	jobGroupId := getJobGroupId(spaceId)
+
+	jobs, err := r.scheduler.GetJobProgressForGroup(ctx, jobGroupId)
+	if err != nil {
+		return fmt.Errorf("cannot get job progress before starting. %w", err)
+	}
+
+	err = checkJobAlreadyRunning(jobs)
+	if err != nil {
+		return err
+	}
+
+	n, err := r.scheduler.PurgeJobsByGroupId(ctx, jobGroupId)
+	if err != nil {
+		return err
+	}
+	log.Ctx(ctx).Info().Msgf("deleted %d old jobs", n)
+
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
 		repoJobData := Input{
@@ -98,6 +118,17 @@ func (r *Repository) RunMany(ctx context.Context, spaceId int64, harnessCodeInfo
 	}
 
 	return r.scheduler.RunJobs(ctx, jobGroupId, jobDefinitions)
+}
+
+func checkJobAlreadyRunning(jobs []types.JobProgress) error {
+	if jobs != nil {
+		for _, j := range jobs {
+			if !slices.Contains(enum.GetCompletedJobState(), j.State) {
+				return ErrJobRunning
+			}
+		}
+	}
+	return nil
 }
 
 func getJobGroupId(spaceId int64) string {
@@ -156,7 +187,6 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	}
 
 	log.Info().Msgf("completed repository export for repo", repository.UID)
-
 	publishSSE(ctx, r, repository)
 
 	return "", nil
