@@ -185,11 +185,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
                 formName="editVariations"
                 enableReinitialize={true}
                 validationSchema={yup.object().shape({
-                  name: yup
-                    .string()
-                    .trim()
-                    .required()
-                    .matches(REGEX_VALID_REPO_NAME, getString('validation.repoNamePatternIsNotValid'))
+                  name: yup.string().trim().required().matches(REGEX_VALID_REPO_NAME, getString('validation.nameLogic'))
                 })}
                 validateOnChange
                 validateOnBlur

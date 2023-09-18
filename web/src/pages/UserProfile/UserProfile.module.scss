@@ -29,6 +29,10 @@
         }
       }
 
+      .avatar {
+        cursor: initial !important ;
+      }
+
       .detailsCtn {
         display: flex;
         flex-direction: column;

@@ -173,7 +173,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
         <Heading level={2} padding={{ left: 'small' }} color={Color.BLACK}>
           <Layout.Horizontal flex={{ justifyContent: 'space-between', alignItems: 'center' }}>
             <Text font={{ variation: FontVariation.H5 }}>{getString('selectSpaceText')}</Text>
-            {!!spaces?.length && (
+            {(!!spaces?.length || searchTerm.length > 1) && (
               <Layout.Horizontal flex={{ justifyContent: 'space-between' }}>
                 <SearchInputWithSpinner
                   loading={false}
@@ -182,14 +182,9 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
                   setQuery={setSearchTerm}
                 />
                 <Container padding={{ left: 'small', right: 'small' }}></Container>
-                {NewSpaceButton}
+                {spaces?.length === 0 ? null : NewSpaceButton}
                 <Button icon={'small-cross'} variation={ButtonVariation.ICON} className={Classes.POPOVER_DISMISS} />
               </Layout.Horizontal>
-            )}
-            {spaces?.length === 0 && (
-              <Container flex={{ alignItems: 'self-end' }}>
-                <Button icon={'small-cross'} variation={ButtonVariation.ICON} className={Classes.POPOVER_DISMISS} />
-              </Container>
             )}
           </Layout.Horizontal>
         </Heading>

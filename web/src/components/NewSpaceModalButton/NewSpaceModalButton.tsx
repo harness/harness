@@ -170,11 +170,7 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
                 formName="editVariations"
                 enableReinitialize={true}
                 validationSchema={yup.object().shape({
-                  name: yup
-                    .string()
-                    .trim()
-                    .required()
-                    .matches(REGEX_VALID_REPO_NAME, getString('validation.spaceNamePatternIsNotValid'))
+                  name: yup.string().trim().required().matches(REGEX_VALID_REPO_NAME, getString('validation.nameLogic'))
                 })}
                 validateOnChange
                 validateOnBlur

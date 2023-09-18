@@ -124,8 +124,8 @@ validation:
   expirationDateRequired: Expiration date is required
   newPasswordRequired: New password is a required field
   confirmPasswordRequired: Confirm Password is a required field
-  spaceNamePatternIsNotValid: "Name can only contain alphanumerics, '-', '_', '.', and '$'"
-  nameLogic: name must start with a letter or _ and only contain [a-zA-Z0-9-_.]
+  spaceNamePatternIsNotValid: "Name has to start with a letter or '_' and only contain alphanumerics"
+  nameLogic: Name must start with a letter or _ and only contain [a-zA-Z0-9-_.]
 commitMessage: Commit message
 optionalExtendedDescription: Optional extended description
 optional: Optional
@@ -504,7 +504,7 @@ noAccount?: No Account?
 alreadyHaveAccount: Already have an account?
 privacyPolicy: Privacy Policy
 termsOfUse: Terms of Use
-bySigningIn: By signing in, you agree to our {policy} and our {terms}
+bySigningIn: By signing up, you agree to our {policy} and our {terms}
 userId: User ID
 characterLimit: 6+ characters
 enterUser: Enter user id here ...
@@ -605,7 +605,7 @@ homepage:
 deleteSpace: Delete Space
 spaceSetting:
   intentText: This will permanently delete the space named '{{space}}', and everything contained in it. All repositories in this space, all sub-spaces and repositories they contain will be deleted.
-  deleteWarning: Unexpected bad things wll happen if you don’t read this
+  deleteWarning: Unexpected bad things will happen if you don’t read this
   deleteConfirm1: This will permanently delete the "{{space}}" space and everything contained in it.  All repositories in this space, all sub-spaces and repositories they contain will be deleted.
   deleteConfirmButton1: I want to delete this space
   deleteConfirm2: To confirm, type "{{space}}" in the box below

@@ -132,7 +132,7 @@ export default function SpaceSettings() {
     return (
       <Dialog
         isOpen
-        //   onClose={hideModal}
+        onClose={hideModal}
         enforceFocus={false}
         title={''}
         style={{
