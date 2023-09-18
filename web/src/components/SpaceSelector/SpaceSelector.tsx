@@ -97,6 +97,10 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
         setOpened(false)
       }}
       fromSpace={true}
+      handleNavigation={spaceData => {
+        history.push(routes.toCODERepositories({ space: spaceData as string }))
+        setOpened(false)
+      }}
     />
   )
 

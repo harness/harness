@@ -18,11 +18,7 @@ export default function Home() {
   const { currentUser } = useAppContext()
   const { space } = useGetRepositoryMetadata()
 
-  const {
-    data: spaces,
-    refetch,
-    response
-  } = useGet({
+  const { data: spaces } = useGet({
     path: '/api/v1/user/memberships',
 
     debounce: 500
@@ -81,6 +77,7 @@ export default function Home() {
                   size={ButtonSize.LARGE}
                   variation={ButtonVariation.PRIMARY}
                   onClick={() => {
+                    // TODO: create a space provider to trigger open modal of space selector
                     const button = document.body.querySelectorAll(
                       '.bp3-popover-target>.StyledProps--main'
                     )[0] as HTMLElement

@@ -138,11 +138,17 @@ const MergeableLabel: React.FC<Pick<CompareContentHeaderProps, 'repoMetadata' | 
 
   useEffect(() => {
     if (targetGitRef && sourceGitRef) {
-      mergeCheck({}).then(response => {
-        setMergable(response.mergeable)
-      })
+      mergeCheck({})
+        .then(response => {
+          setMergable(response.mergeable)
+        })
+        .catch(err => {
+          getErrorMessage(err)
+        })
     }
   }, [targetGitRef, sourceGitRef, mergeCheck])
+
+  useEffect
 
   return (
     <Text
