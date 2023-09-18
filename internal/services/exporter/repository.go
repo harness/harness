@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"golang.org/x/exp/slices"
 	"net/url"
 	"strings"
 	"time"
@@ -134,7 +133,7 @@ func (r *Repository) RunManyForSpace(
 func checkJobAlreadyRunning(jobs []types.JobProgress) error {
 	if jobs != nil {
 		for _, j := range jobs {
-			if !slices.Contains(enum.GetCompletedJobState(), j.State) {
+			if !j.State.IsCompleted() {
 				return ErrJobRunning
 			}
 		}

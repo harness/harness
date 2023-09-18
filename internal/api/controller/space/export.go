@@ -6,6 +6,7 @@ package space
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
@@ -56,6 +57,9 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, spaceRef
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
 		err = c.exporter.RunManyForSpace(ctx, space.ID, repos, providerInfo)
 		if err != nil {
+			if errors.Is(err, exporter.ErrJobRunning) {
+				return usererror.ConflictWithPayload(exporter.ErrJobRunning.Error())
+			}
 			return fmt.Errorf("failed to start export repository job: %w", err)
 		}
 		return nil
