@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Classes, Intent, Menu, MenuItem, Popover, Position } from '@blueprintjs/core'
 import {
   Avatar,
@@ -78,16 +78,27 @@ const PipelineList = () => {
     }
   }, [pipelines])
 
-  useSpaceSSE({
-    space,
-    events: ['execution_updated', 'execution_completed', 'execution_canceled', 'execution_running'],
-    onEvent: data => {
-      // should I include pipeline id here? what if a new pipeline is created? coould check for ids that are higher than the lowest id on the page?
-      if (pipelines?.some(pipeline => pipeline.repo_id === data?.repo_id && pipeline.id === data?.pipeline_id)) {
-        //TODO - revisit full refresh - can I use the message to update the execution?
+  const onEvent = useCallback(
+    data => {
+      // should I include pipeline id here? what if a new pipeline is created? could check for ids that are higher than the lowest id on the page?
+      if (repoMetadata?.id === data?.repo_id) {
+        //TODO - revisit full refresh - can I use the message to update the pipeline?
         pipelinesRefetch()
       }
-    }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [repoMetadata?.id]
+  )
+
+  const events = useMemo(
+    () => ['execution_updated', 'execution_completed', 'execution_canceled', 'execution_running'],
+    []
+  )
+
+  useSpaceSSE({
+    space,
+    events,
+    onEvent
   })
 
   const NewPipelineButton = (
@@ -300,6 +311,7 @@ const PipelineList = () => {
         }
       }
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [getString, history, repoMetadata?.path, routes, searchTerm]
   )
 
@@ -311,7 +323,7 @@ const PipelineList = () => {
         dataTooltipId="repositoryPipelines"
       />
       <PageBody
-        className={cx({ [css.withError]: !!error })}
+        className={cx({ [css.withError]: !!error || !!pipelinesError })}
         error={error || pipelinesError ? getErrorMessage(error || pipelinesError) : null}
         retryOnError={voidFn(refetch)}
         noData={{

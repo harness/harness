@@ -1,8 +1,9 @@
-import { Container, PageBody } from '@harnessio/uicore'
-import React, { useEffect, useState } from 'react'
+import { Container, PageBody, Text } from '@harnessio/uicore'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import cx from 'classnames'
 import { useParams } from 'react-router-dom'
 import { useGet } from 'restful-react'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { routes, type CODEProps } from 'RouteDefinitions'
 import type { TypesExecution } from 'services/code'
 import ExecutionStageList from 'components/ExecutionStageList/ExecutionStageList'
@@ -46,10 +47,8 @@ const Execution = () => {
     }
   }, [execution])
 
-  useSpaceSSE({
-    space,
-    events: ['execution_updated', 'execution_completed', 'execution_canceled', 'execution_running'],
-    onEvent: data => {
+  const onEvent = useCallback(
+    data => {
       if (
         data?.repo_id === execution?.repo_id &&
         data?.pipeline_id === execution?.pipeline_id &&
@@ -59,7 +58,24 @@ const Execution = () => {
         executionRefetch()
       }
     },
-    shouldRun: [ExecutionState.RUNNING, ExecutionState.PENDING].includes(getStatus(execution?.status))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [execution?.number, execution?.pipeline_id, execution?.repo_id]
+  )
+
+  const shouldRun = useMemo(() => {
+    return [ExecutionState.RUNNING, ExecutionState.PENDING].includes(getStatus(execution?.status))
+  }, [execution?.status])
+
+  const events = useMemo(
+    () => ['execution_updated', 'execution_completed', 'execution_canceled', 'execution_running'],
+    []
+  )
+
+  useSpaceSSE({
+    space,
+    events,
+    onEvent,
+    shouldRun
   })
 
   return (
@@ -102,7 +118,14 @@ const Execution = () => {
           // button: NewExecutionButton
         }}>
         <LoadingSpinner visible={loading || isInitialLoad} withBorder={!!execution && isInitialLoad} />
-        {execution && (
+        {execution?.error && (
+          <Container className={css.error}>
+            <Text font={{ variation: FontVariation.BODY }} color={Color.WHITE}>
+              {execution?.error}
+            </Text>
+          </Container>
+        )}
+        {execution && !execution?.error && (
           <Split split="vertical" size={300} minSize={200} maxSize={400}>
             <ExecutionStageList
               stages={execution?.stages || []}

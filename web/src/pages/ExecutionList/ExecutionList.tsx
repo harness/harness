@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Button,
   ButtonVariation,
@@ -22,7 +22,7 @@ import { useAppContext } from 'AppContext'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { LIST_FETCHING_LIMIT, PageBrowserProps, getErrorMessage, timeDistance, voidFn } from 'utils/Utils'
 import type { CODEProps } from 'RouteDefinitions'
-import type { EnumTriggerAction, TypesExecution } from 'services/code'
+import type { EnumTriggerAction, TypesExecution, TypesPipeline } from 'services/code'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
@@ -49,6 +49,11 @@ const ExecutionList = () => {
 
   const { repoMetadata, error, loading, refetch, space } = useGetRepositoryMetadata()
 
+  const { data: pipelineData, error: pipelineError } = useGet<TypesPipeline>({
+    path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines/${pipeline}`,
+    lazy: !repoMetadata
+  })
+
   const {
     data: executions,
     error: executionsError,
@@ -69,20 +74,27 @@ const ExecutionList = () => {
     }
   }, [executions])
 
-  useSpaceSSE({
-    space,
-    events: ['execution_updated', 'execution_completed', 'execution_canceled', 'execution_running'],
-    onEvent: data => {
+  const onEvent = useCallback(
+    data => {
       // ideally this would include number - so we only check for executions on the page - but what if new executions are kicked off? - could check for ids that are higher than the lowest id on the page?
-      if (
-        executions?.some(
-          execution => execution.repo_id === data?.repo_id && execution.pipeline_id === data?.pipeline_id
-        )
-      ) {
+      if (repoMetadata?.id === data?.repo_id && pipelineData?.id === data?.pipeline_id) {
         //TODO - revisit full refresh - can I use the message to update the execution?
         executionsRefetch()
       }
-    }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pipelineData?.id, repoMetadata?.id]
+  )
+
+  const events = useMemo(
+    () => ['execution_updated', 'execution_completed', 'execution_canceled', 'execution_running'],
+    []
+  )
+
+  useSpaceSSE({
+    space,
+    events,
+    onEvent
   })
 
   const { openModal: openRunPipelineModal } = useRunPipelineModal()
@@ -183,8 +195,8 @@ const ExecutionList = () => {
         }
       />
       <PageBody
-        className={cx({ [css.withError]: !!error })}
-        error={error ? getErrorMessage(error || executionsError) : null}
+        className={cx({ [css.withError]: !!error || !!pipelineError || !!executionsError })}
+        error={error || pipeline || executionsError ? getErrorMessage(error || pipelineError || executionsError) : null}
         retryOnError={voidFn(refetch)}
         noData={{
           when: () => executions?.length === 0,

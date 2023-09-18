@@ -10,3 +10,11 @@
 .withError {
   display: grid;
 }
+
+.error {
+  top: 0 !important;
+  background-color: var(--red) !important;
+  height: var(--log-content-header-height) !important;
+  padding: var(--spacing-medium) !important;
+  font-weight: 600 !important;
+}

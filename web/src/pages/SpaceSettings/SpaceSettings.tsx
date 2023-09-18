@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Button,
   Text,
@@ -18,8 +18,8 @@ import { useMutate, useGet } from 'restful-react'
 import { Intent, Color, FontVariation } from '@harnessio/design-system'
 import { useHistory } from 'react-router-dom'
 import { Dialog } from '@blueprintjs/core'
-import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { ProgressBar, Intent as IntentCore } from '@blueprintjs/core'
+import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { TypesJobProgress, useGetSpace } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
@@ -86,9 +86,11 @@ export default function SpaceSettings() {
     }
   }, [exportProgressSpace, checkExportIsRunning, checkReposState, countFinishedRepos])
 
+  const events = useMemo(() => ['repository_export_completed'], [])
+
   useSpaceSSE({
     space,
-    events: ['repository_export_completed'],
+    events,
     onEvent: () => {
       refetchExport()
 

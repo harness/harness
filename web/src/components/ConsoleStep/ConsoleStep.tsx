@@ -40,7 +40,7 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
   }, [stageNumber])
 
   useEffect(() => {
-    if (step?.status === ExecutionState.RUNNING) {
+    if (step?.status === ExecutionState.RUNNING && isOpened) {
       if (eventSourceRef.current) {
         eventSourceRef.current.close()
         setStreamingLogs([])
@@ -64,6 +64,7 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
       setStreamingLogs([])
       if (eventSourceRef.current) eventSourceRef.current.close()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [executionNumber, isOpened, pipelineName, repoPath, stageNumber, step?.name, step?.number, step?.status])
 
   let icon

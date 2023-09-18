@@ -61,16 +61,25 @@ export default function RepositoriesListing() {
     queryParams: { page, limit: LIST_FETCHING_LIMIT, query: searchTerm },
     debounce: 500
   })
-  useSpaceSSE({
-    space,
-    events: ['repository_import_completed'],
-    onEvent: data => {
-      // should I include pipeline id here? what if a new pipeline is created? coould check for ids that are higher than the lowest id on the page?
+
+  const onEvent = useCallback(
+    data => {
+      // should I include repo id here? what if a new repo is created? coould check for ids that are higher than the lowest id on the page?
       if (repositories?.some(repository => repository.id === data?.id && repository.parent_id === data?.parent_id)) {
         //TODO - revisit full refresh - can I use the message to update the execution?
         refetch()
       }
-    }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },
+    [repositories]
+  )
+
+  const events = useMemo(() => ['repository_import_completed'], [])
+
+  useSpaceSSE({
+    space,
+    events,
+    onEvent
   })
 
   useEffect(() => {
