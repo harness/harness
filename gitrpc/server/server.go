@@ -74,7 +74,8 @@ func NewServer(config Config, adapter service.GitAdapter) (*GRPCServer, error) {
 		}
 	}
 	// initialize services
-	repoService, err := service.NewRepositoryService(adapter, store, reposRoot, config.GitHookPath, reposGraveyard)
+	repoService, err := service.NewRepositoryService(adapter, store, reposRoot, config.TmpDir,
+		config.GitHookPath, reposGraveyard)
 	if err != nil {
 		return nil, err
 	}
