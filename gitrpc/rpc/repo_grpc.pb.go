@@ -36,6 +36,7 @@ type RepositoryServiceClient interface {
 	HashRepository(ctx context.Context, in *HashRepositoryRequest, opts ...grpc.CallOption) (*HashRepositoryResponse, error)
 	MergeBase(ctx context.Context, in *MergeBaseRequest, opts ...grpc.CallOption) (*MergeBaseResponse, error)
 	MatchFiles(ctx context.Context, in *MatchFilesRequest, opts ...grpc.CallOption) (*MatchFilesResponse, error)
+	GeneratePipeline(ctx context.Context, in *GeneratePipelineRequest, opts ...grpc.CallOption) (*GeneratePipelineResponse, error)
 }
 
 type repositoryServiceClient struct {
@@ -266,6 +267,15 @@ func (c *repositoryServiceClient) MatchFiles(ctx context.Context, in *MatchFiles
 	return out, nil
 }
 
+func (c *repositoryServiceClient) GeneratePipeline(ctx context.Context, in *GeneratePipelineRequest, opts ...grpc.CallOption) (*GeneratePipelineResponse, error) {
+	out := new(GeneratePipelineResponse)
+	err := c.cc.Invoke(ctx, "/rpc.RepositoryService/GeneratePipeline", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RepositoryServiceServer is the server API for RepositoryService service.
 // All implementations must embed UnimplementedRepositoryServiceServer
 // for forward compatibility
@@ -284,6 +294,7 @@ type RepositoryServiceServer interface {
 	HashRepository(context.Context, *HashRepositoryRequest) (*HashRepositoryResponse, error)
 	MergeBase(context.Context, *MergeBaseRequest) (*MergeBaseResponse, error)
 	MatchFiles(context.Context, *MatchFilesRequest) (*MatchFilesResponse, error)
+	GeneratePipeline(context.Context, *GeneratePipelineRequest) (*GeneratePipelineResponse, error)
 	mustEmbedUnimplementedRepositoryServiceServer()
 }
 
@@ -332,6 +343,9 @@ func (UnimplementedRepositoryServiceServer) MergeBase(context.Context, *MergeBas
 }
 func (UnimplementedRepositoryServiceServer) MatchFiles(context.Context, *MatchFilesRequest) (*MatchFilesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MatchFiles not implemented")
+}
+func (UnimplementedRepositoryServiceServer) GeneratePipeline(context.Context, *GeneratePipelineRequest) (*GeneratePipelineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GeneratePipeline not implemented")
 }
 func (UnimplementedRepositoryServiceServer) mustEmbedUnimplementedRepositoryServiceServer() {}
 
@@ -615,6 +629,24 @@ func _RepositoryService_MatchFiles_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RepositoryService_GeneratePipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GeneratePipelineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RepositoryServiceServer).GeneratePipeline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/rpc.RepositoryService/GeneratePipeline",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RepositoryServiceServer).GeneratePipeline(ctx, req.(*GeneratePipelineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RepositoryService_ServiceDesc is the grpc.ServiceDesc for RepositoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -661,6 +693,10 @@ var RepositoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MatchFiles",
 			Handler:    _RepositoryService_MatchFiles_Handler,
+		},
+		{
+			MethodName: "GeneratePipeline",
+			Handler:    _RepositoryService_GeneratePipeline_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

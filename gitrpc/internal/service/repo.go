@@ -62,16 +62,18 @@ type RepositoryService struct {
 	adapter        GitAdapter
 	store          Storage
 	reposRoot      string
+	tmpDir         string
 	gitHookPath    string
 	reposGraveyard string
 }
 
-func NewRepositoryService(adapter GitAdapter, store Storage, reposRoot string,
+func NewRepositoryService(adapter GitAdapter, store Storage, reposRoot string, tmpDir string,
 	gitHookPath string, reposGraveyard string) (*RepositoryService, error) {
 	return &RepositoryService{
 		adapter:        adapter,
 		store:          store,
 		reposRoot:      reposRoot,
+		tmpDir:         tmpDir,
 		gitHookPath:    gitHookPath,
 		reposGraveyard: reposGraveyard,
 	}, nil

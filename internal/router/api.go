@@ -318,6 +318,7 @@ func setupPipelines(
 		r.Get("/", handlerrepo.HandleListPipelines(repoCtrl))
 		// Create takes path and parentId via body, not uri
 		r.Post("/", handlerpipeline.HandleCreate(pipelineCtrl))
+		r.Get("/generate", handlerrepo.HandlePipelineGenerate(repoCtrl))
 		r.Route(fmt.Sprintf("/{%s}", request.PathParamPipelineRef), func(r chi.Router) {
 			r.Get("/", handlerpipeline.HandleFind(pipelineCtrl))
 			r.Patch("/", handlerpipeline.HandleUpdate(pipelineCtrl))

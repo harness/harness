@@ -21,6 +21,7 @@ service RepositoryService {
   rpc HashRepository(HashRepositoryRequest) returns (HashRepositoryResponse) {}
   rpc MergeBase(MergeBaseRequest) returns (MergeBaseResponse);
   rpc MatchFiles(MatchFilesRequest) returns (MatchFilesResponse);
+  rpc GeneratePipeline(GeneratePipelineRequest) returns (GeneratePipelineResponse);
 }
 
 message CreateRepositoryRequest {
@@ -250,4 +251,12 @@ message MatchFilesRequest {
 
 message MatchFilesResponse {
   repeated FileContent files = 1;
+}
+
+message GeneratePipelineRequest {
+  ReadRequest base = 1;
+}
+
+message GeneratePipelineResponse {
+  bytes pipeline_yaml = 1;
 }
