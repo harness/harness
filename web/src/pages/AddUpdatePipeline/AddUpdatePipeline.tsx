@@ -278,7 +278,11 @@ const AddUpdatePipeline = (): JSX.Element => {
           />
         ) : (
           <SplitButton
-            text={selectedOption?.title}
+            text={
+              <Text color={Color.WHITE} font={{ variation: FontVariation.BODY2_SEMI, weight: 'bold' }}>
+                {selectedOption?.title}
+              </Text>
+            }
             disabled={loading || !isDirty}
             variation={ButtonVariation.PRIMARY}
             popoverProps={{
@@ -293,11 +297,7 @@ const AddUpdatePipeline = (): JSX.Element => {
               return (
                 <Menu.Item
                   key={option.title}
-                  text={
-                    <Text color={Color.BLACK} font={{ variation: FontVariation.SMALL_BOLD }}>
-                      {option.title}
-                    </Text>
-                  }
+                  text={<Text font={{ variation: FontVariation.BODY2 }}>{option.title}</Text>}
                   onClick={() => {
                     handleSaveAndRun(option)
                     setSelectedOption(option)

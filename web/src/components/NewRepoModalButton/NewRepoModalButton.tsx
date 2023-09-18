@@ -28,7 +28,7 @@ import {
   SplitButton
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import { FontVariation } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useGet, useMutate } from 'restful-react'
 import { get } from 'lodash-es'
 import { useModalHook } from 'hooks/useModalHook'
@@ -344,7 +344,11 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
     <SplitButton
       {...props}
       loading={false}
-      text={repoOption.title}
+      text={
+        <Text color={Color.WHITE} font={{ variation: FontVariation.BODY2_SEMI, weight: 'bold' }}>
+          {repoOption.title}
+        </Text>
+      }
       variation={ButtonVariation.PRIMARY}
       popoverProps={{
         interactionKind: 'click',
@@ -362,12 +366,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         return (
           <Menu.Item
             key={option.type}
-            className={css.menuItem}
-            text={
-              <>
-                <p>{option.desc}</p>
-              </>
-            }
+            text={<Text font={{ variation: FontVariation.BODY2 }}>{option.desc}</Text>}
             onClick={() => {
               setRepoOption(option)
             }}

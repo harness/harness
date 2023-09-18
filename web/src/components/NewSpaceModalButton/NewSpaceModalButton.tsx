@@ -13,10 +13,11 @@ import {
   useToaster,
   FormInput,
   ButtonVariation,
-  SplitButton
+  SplitButton,
+  Text
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import { FontVariation } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { get } from 'lodash-es'
 import { useModalHook } from 'hooks/useModalHook'
@@ -245,7 +246,11 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
     <SplitButton
       {...props}
       loading={false}
-      text={spaceOption.title}
+      text={
+        <Text color={Color.WHITE} font={{ variation: FontVariation.BODY2_SEMI, weight: 'bold' }}>
+          {spaceOption.title}
+        </Text>
+      }
       variation={ButtonVariation.PRIMARY}
       popoverProps={{
         interactionKind: 'click',
@@ -265,11 +270,7 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
             <Menu.Item
               key={`import_space_${option.type}`}
               className={css.menuItem}
-              text={
-                <>
-                  <p>{option.desc}</p>
-                </>
-              }
+              text={<Text font={{ variation: FontVariation.BODY2 }}>{option.desc}</Text>}
               onClick={event => {
                 event.stopPropagation()
                 event.preventDefault()

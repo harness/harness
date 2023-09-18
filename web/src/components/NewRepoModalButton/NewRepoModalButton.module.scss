@@ -11,21 +11,6 @@
 
 .popover {
   transform: translateY(5px) !important;
-
-  .menuItem {
-    strong {
-      display: inline-block;
-      margin-left: 10px;
-    }
-
-    p {
-      font-size: 12px;
-      padding: 0 var(--spacing-xlarge);
-      line-height: 16px;
-      margin: 5px 0;
-      max-width: 320px;
-    }
-  }
 }
 
 .hideContainer {
