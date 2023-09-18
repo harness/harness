@@ -33,6 +33,7 @@ import { ResourceListingPagination } from 'components/ResourceListingPagination/
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import type { OpenapiWebhookType } from 'services/code'
+import { formatTriggers } from 'utils/GitUtils'
 import { WebhooksHeader } from './WebhooksHeader/WebhooksHeader'
 import css from './Webhooks.module.scss'
 
@@ -157,7 +158,7 @@ export default function Webhooks() {
                   </Text>
                   {!!row.original.triggers?.length && (
                     <Text padding={{ left: 'small', right: 'small' }} color={Color.GREY_500}>
-                      ({row.original.triggers.join(', ')})
+                      ({formatTriggers(row.original?.triggers).join(', ')})
                     </Text>
                   )}
                   {!row.original.triggers?.length && (

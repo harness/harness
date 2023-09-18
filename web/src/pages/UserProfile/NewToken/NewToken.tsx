@@ -9,7 +9,8 @@ import {
   FormInput,
   Layout,
   SelectOption,
-  Text
+  Text,
+  useToaster
 } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Formik } from 'formik'
@@ -21,7 +22,7 @@ import { omit } from 'lodash-es'
 import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import type { OpenapiCreateTokenRequest } from 'services/code'
-import { REGEX_VALID_REPO_NAME } from 'utils/Utils'
+import { REGEX_VALID_REPO_NAME, getErrorMessage } from 'utils/Utils'
 import { CodeIcon } from 'utils/GitUtils'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { FormInputWithCopyButton } from 'components/UserManagementFlows/AddUserModal'
@@ -31,6 +32,7 @@ import css from 'components/CloneCredentialDialog/CloneCredentialDialog.module.s
 const useNewToken = ({ onClose }: { onClose: () => void }) => {
   const { getString } = useStrings()
   const { mutate } = useMutate({ path: '/api/v1/user/tokens', verb: 'POST' })
+  const { showError } = useToaster()
 
   const [generatedToken, setGeneratedToken] = useState<string>()
   const isTokenGenerated = Boolean(generatedToken)
@@ -72,7 +74,9 @@ const useNewToken = ({ onClose }: { onClose: () => void }) => {
               payload = omit(payload, 'lifetime')
             }
 
-            const res = await mutate(payload)
+            const res = await mutate(payload).catch(err => {
+              showError(getErrorMessage(err))
+            })
             setGeneratedToken(res?.access_token)
           }}>
           {formikProps => {

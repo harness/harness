@@ -605,7 +605,7 @@ export interface StringsMap {
   'spaceSetting.deleteToastSuccess': string
   'spaceSetting.deleteWarning': string
   'spaceSetting.intentText': string
-  'spaceSetting.setting': string
+  'spaceSetting.settings': string
   spaceUpdate: string
   spaces: string
   sslVerificationLabel: string

@@ -4,6 +4,7 @@
 
 import type { IconName } from '@harnessio/icons'
 import type {
+  EnumWebhookTrigger,
   OpenapiContentInfo,
   OpenapiDirContent,
   OpenapiGetContentOutput,
@@ -159,6 +160,15 @@ export enum Organization {
 }
 
 export const REFS_TAGS_PREFIX = 'refs/tags/'
+
+export function formatTriggers(triggers: EnumWebhookTrigger[]) {
+  return triggers.map(trigger => {
+    return trigger
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  })
+}
 
 // eslint-disable-next-line no-control-regex
 const BAD_GIT_REF_REGREX = /(^|[/.])([/.]|$)|^@$|@{|[\x00-\x20\x7f~^:?*[\\]|\.lock(\/|$)/

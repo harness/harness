@@ -84,7 +84,7 @@ export default function SpaceSettings() {
       setRepoCount(countFinishedRepos)
       setExportDone(true)
     }
-  }, [exportProgressSpace, checkExportIsRunning, checkReposState, countFinishedRepos])
+  }, [exportProgressSpace]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const events = useMemo(() => ['repository_export_completed'], [])
 
@@ -191,7 +191,7 @@ export default function SpaceSettings() {
   )
   return (
     <Container className={css.mainCtn}>
-      <Page.Header title={getString('spaceSetting.setting')} />
+      <Page.Header title={getString('spaceSetting.settings')} />
       <Page.Body>
         <Container padding="xlarge">
           <Formik

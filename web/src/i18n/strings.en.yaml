@@ -615,7 +615,7 @@ spaceSetting:
   deleteConfirm2: To confirm, type "{{space}}" in the box below
   deleteConfirmButton2: Delete this space
   deleteToastSuccess: Space deleted successfully
-  setting: Setting
+  settings: Settings
 contributor: Contributor
 reader: Reader
 executor: Executor
