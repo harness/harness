@@ -318,7 +318,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
     {
       type: RepoCreationType.CREATE,
       title: getString('newRepo'),
-      desc: getString('createNewRepo')
+      desc: getString('createARepo')
     },
     {
       type: RepoCreationType.IMPORT,

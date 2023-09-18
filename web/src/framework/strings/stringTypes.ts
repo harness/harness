@@ -261,7 +261,7 @@ export interface StringsMap {
   'importRepo.validation': string
   'importSpace.authorization': string
   'importSpace.content': string
-  'importSpace.createNewSpace': string
+  'importSpace.createASpace': string
   'importSpace.descPlaceholder': string
   'importSpace.description': string
   'importSpace.details': string

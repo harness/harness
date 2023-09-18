@@ -718,8 +718,8 @@ importRepo:
   usernameReq: Username is required
   passwordReq: Password is required
 importSpace:
-  title: Import Space
-  createNewSpace: Create New Space
+  title: Import space
+  createASpace: Create a space
   authorization: Authorization
   content: Import a GitLab Group or a GitHub Org to a new Space in Gitness. Entities at the top level will be imported to the space.
   next: Next step
