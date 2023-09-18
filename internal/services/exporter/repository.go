@@ -96,6 +96,7 @@ func (r *Repository) RunManyForSpace(
 		return err
 	}
 	log.Ctx(ctx).Info().Msgf("deleted %d old jobs", n)
+
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
 		repoJobData := Input{
