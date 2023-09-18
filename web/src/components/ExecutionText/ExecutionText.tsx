@@ -1,11 +1,11 @@
 import React from 'react'
-import { Avatar, Layout, Text, Utils } from '@harnessio/uicore'
-import { Link } from 'react-router-dom'
+import { Avatar, Container, Layout, Text, Utils } from '@harnessio/uicore'
 import { GitCommit, GitFork, Label } from 'iconoir-react'
 import { Color } from '@harnessio/design-system'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { useAppContext } from 'AppContext'
 import type { EnumTriggerAction } from 'services/code'
+import { CommitActions } from 'components/CommitActions/CommitActions'
 import css from './ExecutionText.module.scss'
 
 export enum ExecutionTrigger {
@@ -146,17 +146,16 @@ export const ExecutionText: React.FC<ExecutionTextProps> = ({
       <Avatar email={authorEmail} name={authorName} size="small" hoverCard={false} />
       {componentToRender}
       <PipeSeparator height={7} />
-      <Link
-        to={routes.toCODECommit({
-          repoPath: repoPath,
-          commitRef: commitRef
-        })}
-        className={css.hash}
-        onClick={e => {
-          e.stopPropagation()
-        }}>
-        {commitRef?.slice(0, 6)}
-      </Link>
+      <Container onClick={Utils.stopEvent}>
+        <CommitActions
+          href={routes.toCODECommit({
+            repoPath: repoPath,
+            commitRef: commitRef
+          })}
+          sha={commitRef}
+          enableCopy
+        />
+      </Container>
     </Layout.Horizontal>
   )
 }

@@ -18,7 +18,7 @@ import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
 import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
-import { Link, useHistory } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import { useGet, useMutate } from 'restful-react'
 import { Calendar, Timer, GitFork } from 'iconoir-react'
 import { String, useStrings } from 'framework/strings'
@@ -40,6 +40,7 @@ import useNewPipelineModal from 'components/NewPipelineModal/NewPipelineModal'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import useSpaceSSE from 'hooks/useSpaceSSE'
 import { useConfirmAct } from 'hooks/useConfirmAction'
+import { CommitActions } from 'components/CommitActions/CommitActions'
 import noPipelineImage from '../RepositoriesListing/no-repo.svg'
 import css from './PipelineList.module.scss'
 
@@ -156,17 +157,16 @@ const PipelineList = () => {
                   </>
                 )}
                 <PipeSeparator height={7} />
-                <Link
-                  to={routes.toCODECommit({
-                    repoPath: repoMetadata?.path as string,
-                    commitRef: record.after as string
-                  })}
-                  className={css.hash}
-                  onClick={e => {
-                    e.stopPropagation()
-                  }}>
-                  {record.after?.slice(0, 6)}
-                </Link>
+                <Container onClick={Utils.stopEvent}>
+                  <CommitActions
+                    href={routes.toCODECommit({
+                      repoPath: repoMetadata?.path as string,
+                      commitRef: record?.after as string
+                    })}
+                    sha={record?.after as string}
+                    enableCopy
+                  />
+                </Container>
               </Layout.Horizontal>
             </Layout.Vertical>
           ) : (
@@ -182,18 +182,22 @@ const PipelineList = () => {
 
           return record ? (
             <Layout.Vertical spacing={'small'}>
-              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
-                <Timer color={Utils.getRealCSSColor(Color.GREY_500)} />
-                <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
-                  {timeDistance(record.started, record.finished)}
-                </Text>
-              </Layout.Horizontal>
-              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
-                <Calendar color={Utils.getRealCSSColor(Color.GREY_500)} />
-                <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
-                  {timeDistance(record.started, Date.now())} ago
-                </Text>
-              </Layout.Horizontal>
+              {record?.started && record?.finished && (
+                <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
+                  <Timer color={Utils.getRealCSSColor(Color.GREY_500)} />
+                  <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
+                    {timeDistance(record.started, record.finished, true)}
+                  </Text>
+                </Layout.Horizontal>
+              )}
+              {record?.finished && (
+                <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
+                  <Calendar color={Utils.getRealCSSColor(Color.GREY_500)} />
+                  <Text inline color={Color.GREY_500} lineClamp={1} width={180} font={{ size: 'small' }}>
+                    {timeDistance(record.finished, Date.now(), true)} ago
+                  </Text>
+                </Layout.Horizontal>
+              )}
             </Layout.Vertical>
           ) : (
             <div className={css.spacer} />
@@ -208,7 +212,7 @@ const PipelineList = () => {
           const [menuOpen, setMenuOpen] = useState(false)
           const record = row.original
           const { uid } = record
-          const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
+          const repoPath = repoMetadata?.path || ''
 
           const confirmDeletePipeline = useConfirmAct()
           const { showSuccess, showError } = useToaster()

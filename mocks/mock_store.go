@@ -530,10 +530,10 @@ func (mr *MockSpaceStoreMockRecorder) FindByRef(arg0, arg1 interface{}) *gomock.
 }
 
 // List mocks base method.
-func (m *MockSpaceStore) List(arg0 context.Context, arg1 int64, arg2 *types.SpaceFilter) ([]types.Space, error) {
+func (m *MockSpaceStore) List(arg0 context.Context, arg1 int64, arg2 *types.SpaceFilter) ([]*types.Space, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1, arg2)
-	ret0, _ := ret[0].([]types.Space)
+	ret0, _ := ret[0].([]*types.Space)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -1,5 +1,16 @@
 import React, { useCallback } from 'react'
-import { Button, Container, FormInput, Formik, FormikForm, Layout, Text, useToaster } from '@harnessio/uicore'
+import {
+  Button,
+  Container,
+  FlexExpander,
+  FormInput,
+  Formik,
+  FormikForm,
+  Layout,
+  Text,
+  useToaster,
+  StringSubstitute
+} from '@harnessio/uicore'
 import { Color } from '@harnessio/design-system'
 import * as Yup from 'yup'
 import { Link } from 'react-router-dom'
@@ -48,9 +59,16 @@ export const SignIn: React.FC = () => {
   return (
     <AuthLayout>
       <Container className={css.signInContainer}>
-        <Text font={{ size: 'large', weight: 'bold' }} color={Color.BLACK}>
-          {getString('signIn')}
-        </Text>
+        <Layout.Horizontal flex={{ alignItems: 'center' }}>
+          <Text font={{ size: 'large', weight: 'bold' }} color={Color.BLACK}>
+            {getString('signIn')}
+          </Text>
+          <FlexExpander />
+          <Layout.Horizontal spacing="xsmall">
+            <Text>{getString('noAccount?')}</Text>
+            <Link to={routes.toRegister()}>{getString('signUp')}</Link>
+          </Layout.Horizontal>
+        </Layout.Horizontal>
 
         <Container margin={{ top: 'xxlarge' }}>
           <Formik<LoginForm>
@@ -75,10 +93,13 @@ export const SignIn: React.FC = () => {
             </FormikForm>
           </Formik>
         </Container>
-
-        <Layout.Horizontal margin={{ top: 'xxxlarge' }} spacing="xsmall">
-          <Text>{getString('noAccount?')}</Text>
-          <Link to={routes.toRegister()}>{getString('signUp')}</Link>
+        <Layout.Horizontal padding={{ top: 'medium' }} spacing="xsmall">
+          <Text>
+            <StringSubstitute
+              str={getString('bySigningIn')}
+              vars={{ policy: <a> {getString('privacyPolicy')} </a>, terms: <a> {getString('termsOfUse')} </a> }}
+            />
+          </Text>
         </Layout.Horizontal>
       </Container>
     </AuthLayout>

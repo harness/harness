@@ -13,8 +13,8 @@ type (
 	// PrincipalInfoCache caches principal IDs to principal info.
 	PrincipalInfoCache cache.ExtendedCache[int64, *types.PrincipalInfo]
 
-	// PathCache caches path values to path.
-	PathCache cache.Cache[string, *types.Path]
+	// SpacePathCache caches a raw path to a space path.
+	SpacePathCache cache.Cache[string, *types.SpacePath]
 
 	// RepoGitInfoCache caches repository IDs to values GitUID.
 	RepoGitInfoCache cache.Cache[int64, *types.RepositoryGitInfo]

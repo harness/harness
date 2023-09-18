@@ -12,6 +12,9 @@ import (
 	"github.com/drone-runners/drone-runner-docker/engine/compiler"
 	"github.com/drone-runners/drone-runner-docker/engine/linter"
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
+	compiler2 "github.com/drone-runners/drone-runner-docker/engine2/compiler"
+	engine2 "github.com/drone-runners/drone-runner-docker/engine2/engine"
+	runtime2 "github.com/drone-runners/drone-runner-docker/engine2/runtime"
 	"github.com/drone/drone-go/drone"
 	runnerclient "github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/environ/provider"
@@ -27,7 +30,7 @@ func NewExecutionRunner(
 	config *types.Config,
 	client runnerclient.Client,
 	m manager.ExecutionManager,
-) (*runtime.Runner, error) {
+) (*runtime2.Runner, error) {
 	compiler := &compiler.Compiler{
 		Environ:  provider.Static(map[string]string{}),
 		Registry: registry.Static([]*drone.Registry{}),
@@ -41,11 +44,11 @@ func NewExecutionRunner(
 	if err != nil {
 		return nil, err
 	}
-	// TODO: Using the same parallel workers as the max concurrent step limit,
-	// this can be made configurable if needed later.
+
 	exec := runtime.NewExecer(tracer, remote, upload,
 		engine, int64(config.CI.ParallelWorkers))
-	runner := &runtime.Runner{
+
+	legacyRunner := &runtime.Runner{
 		Machine:  config.InstanceID,
 		Client:   client,
 		Reporter: tracer,
@@ -54,5 +57,28 @@ func NewExecutionRunner(
 		Compiler: compiler,
 		Exec:     exec.Exec,
 	}
+
+	engine2, err := engine2.NewEnv(engine2.Opts{})
+	if err != nil {
+		return nil, err
+	}
+
+	exec2 := runtime2.NewExecer(tracer, remote, upload, engine2, int64(config.CI.ParallelWorkers))
+
+	compiler2 := &compiler2.CompilerImpl{
+		Environ:  provider.Static(map[string]string{}),
+		Registry: registry.Static([]*drone.Registry{}),
+		Secret:   secret.Encrypted(),
+	}
+
+	runner := &runtime2.Runner{
+		Machine:      config.InstanceID,
+		Client:       client,
+		Reporter:     tracer,
+		Compiler:     compiler2,
+		Exec:         exec2.Exec,
+		LegacyRunner: legacyRunner,
+	}
+
 	return runner, nil
 }

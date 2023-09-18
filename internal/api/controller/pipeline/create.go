@@ -21,9 +21,13 @@ import (
 )
 
 var (
-	// errPipelineRequiresParent if the user tries to create a pipeline without a parent space.
+	// errPipelineRequiresParent is returned if the user tries to create a pipeline without a parent space.
 	errPipelineRequiresParent = usererror.BadRequest(
 		"Parent space required - standalone pipelines are not supported.")
+
+	// errPipelineRequiresConfigPath is returned if the user tries to create a pipeline with an empty config path.
+	errPipelineRequiresConfigPath = usererror.BadRequest(
+		"Pipeline requires a config path.")
 )
 
 type CreateInput struct {
@@ -110,6 +114,10 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 
 	if in.DefaultBranch == "" {
 		in.DefaultBranch = c.defaultBranch
+	}
+
+	if in.ConfigPath == "" {
+		return errPipelineRequiresConfigPath
 	}
 
 	return nil

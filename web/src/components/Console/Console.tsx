@@ -7,6 +7,7 @@ import type { TypesStage } from 'services/code'
 import ConsoleStep from 'components/ConsoleStep/ConsoleStep'
 import { timeDistance } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
+import useLiveTimer from 'hooks/useLiveTimeHook'
 import css from './Console.module.scss'
 
 interface ConsoleProps {
@@ -17,6 +18,7 @@ interface ConsoleProps {
 const Console: FC<ConsoleProps> = ({ stage, repoPath }) => {
   const { pipeline, execution: executionNum } = useParams<CODEProps>()
   const { getString } = useStrings()
+  const currentTime = useLiveTimer()
 
   return (
     <div className={css.container}>
@@ -32,9 +34,9 @@ const Console: FC<ConsoleProps> = ({ stage, repoPath }) => {
           <Text font={{ variation: FontVariation.H4 }} color={Color.WHITE} padding={{ left: 'large', right: 'large' }}>
             {stage?.name}
           </Text>
-          {stage?.started && stage?.stopped && (
+          {stage?.stopped && (
             <Text font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
-              {getString('executions.completedTime', { timeString: timeDistance(stage?.stopped, Date.now()) })}
+              {getString('executions.completedTime', { timeString: timeDistance(stage?.stopped, currentTime, true) })}
             </Text>
           )}
         </Layout.Horizontal>

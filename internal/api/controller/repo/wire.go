@@ -23,13 +23,13 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(config *types.Config, db *sqlx.DB, urlProvider *url.Provider,
-	uidCheck check.PathUID, authorizer authz.Authorizer, pathStore store.PathStore, repoStore store.RepoStore,
+	uidCheck check.PathUID, authorizer authz.Authorizer, repoStore store.RepoStore,
 	spaceStore store.SpaceStore, pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore, rpcClient gitrpc.Interface,
 	importer *importer.Repository,
 ) *Controller {
 	return NewController(config.Git.DefaultBranch, db, urlProvider,
-		uidCheck, authorizer, pathStore, repoStore,
+		uidCheck, authorizer, repoStore,
 		spaceStore, pipelineStore, principalStore, rpcClient,
 		importer)
 }

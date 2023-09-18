@@ -9,10 +9,12 @@ import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { CODEProps } from 'RouteDefinitions'
 import type { GitInfoProps } from 'utils/GitUtils'
-import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
+import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/ExecutionUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { timeDistance } from 'utils/Utils'
+import useLiveTimer from 'hooks/useLiveTimeHook'
+import { CommitActions } from 'components/CommitActions/CommitActions'
 import css from './ExecutionPageHeader.module.scss'
 
 interface BreadcrumbLink {
@@ -48,6 +50,9 @@ export function ExecutionPageHeader({
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { routes } = useAppContext()
+  const currentTime = useLiveTimer()
+
+  const isActive = executionInfo?.status === ExecutionState.RUNNING
 
   if (!repoMetadata) {
     return null
@@ -94,23 +99,38 @@ export function ExecutionPageHeader({
               {executionInfo.source}
             </Text>
             <PipeSeparator height={7} />
-            <Link
-              to={routes.toCODECommit({ repoPath: repoMetadata.path as string, commitRef: executionInfo.hash })}
-              className={css.hash}>
-              {executionInfo.hash?.slice(0, 6)}
-            </Link>
+            {executionInfo.hash && (
+              <Container onClick={Utils.stopEvent}>
+                <CommitActions
+                  href={routes.toCODECommit({
+                    repoPath: repoMetadata.path as string,
+                    commitRef: executionInfo.hash
+                  })}
+                  sha={executionInfo.hash}
+                  enableCopy
+                />
+              </Container>
+            )}
             <FlexExpander />
-            <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }} className={css.timer}>
-              <Timer height={16} width={16} color={Utils.getRealCSSColor(Color.GREY_500)} />
-              <Text inline color={Color.GREY_500} font={{ size: 'small' }}>
-                {timeDistance(executionInfo.started, executionInfo.finished)}
-              </Text>
-              <PipeSeparator height={7} />
-              <Calendar height={16} width={16} color={Utils.getRealCSSColor(Color.GREY_500)} />
-              <Text inline color={Color.GREY_500} font={{ size: 'small' }}>
-                {timeDistance(executionInfo.finished, Date.now())} ago
-              </Text>
-            </Layout.Horizontal>
+            {executionInfo.started && (
+              <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }} className={css.timer}>
+                <Timer height={16} width={16} color={Utils.getRealCSSColor(Color.GREY_500)} />
+                <Text inline color={Color.GREY_500} font={{ size: 'small' }}>
+                  {isActive
+                    ? timeDistance(executionInfo.started, currentTime, true) // Live update time when status is 'RUNNING'
+                    : timeDistance(executionInfo.started, executionInfo.finished, true)}
+                </Text>
+                {executionInfo.finished && (
+                  <>
+                    <PipeSeparator height={7} />
+                    <Calendar height={16} width={16} color={Utils.getRealCSSColor(Color.GREY_500)} />
+                    <Text inline color={Color.GREY_500} font={{ size: 'small' }}>
+                      {timeDistance(executionInfo.finished, currentTime, true)} ago
+                    </Text>
+                  </>
+                )}
+              </Layout.Horizontal>
+            )}
           </Container>
         )
       }

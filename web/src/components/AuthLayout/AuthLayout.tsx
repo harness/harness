@@ -8,12 +8,15 @@ const AuthLayout: React.FC<React.PropsWithChildren<unknown>> = props => {
   return (
     <div className={css.layout}>
       <div className={css.imageColumn} style={{ background: `url(${Images.DarkBackground})` }}>
-        <Container className={css.subtractContainer}>
-          <img className={css.subtractImage} width={250} height={250} src={Images.Subtract} alt="" aria-hidden />
+        <Container height={250} padding={'xxlarge'}>
+          <img className={css.harnessImage} width={75} height={16} src={Images.HarnessDarkLogo} alt="" aria-hidden />
         </Container>
-        <Layout.Vertical className={css.imageContainer}>
+        <Layout.Vertical className={css.gitnessContainer}>
           <img className={cx(css.image)} src={Images.Signup} alt="" aria-hidden />
         </Layout.Vertical>
+        <Container className={css.subtractContainer}>
+          <img className={css.subtractImage} width={250} height={250} src={Images.GitLogo} alt="" aria-hidden />
+        </Container>
       </div>
       <div className={css.cardColumn}>
         <div className={css.card}>

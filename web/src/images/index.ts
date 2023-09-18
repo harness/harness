@@ -10,8 +10,12 @@ import DarkBackground from 'images/dark-background.png'
 import Signup from 'images/signup.png'
 import Subtract from 'images/Subtract.png'
 import EmptySpace from 'images/no-space.svg'
+import GitLogo from 'images/gitLogo.png'
+import HarnessDarkLogo from 'images/logo-dark.png'
 
 export const Images = {
+  HarnessDarkLogo,
+  GitLogo,
   PrOpen,
   PrMerged,
   PrClosed,

@@ -46,6 +46,10 @@ export interface ExportFormData {
   name: string
 }
 
+export interface ExportFormDataExtended extends ExportFormData {
+  repoCount: number
+}
+
 export interface ImportSpaceFormData {
   gitProvider: string
   username: string

@@ -21,7 +21,7 @@ import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import type { EnumTriggerAction, OpenapiCreateTriggerRequest, TypesTrigger } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
-import { triggerActions } from 'components/PipelineTriggersTab/PipelineTriggersTab'
+import { allActions } from 'components/PipelineTriggersTab/PipelineTriggersTab'
 import css from './NewTriggerModalButton.module.scss'
 
 export interface TriggerFormData {
@@ -54,7 +54,7 @@ export const NewTriggerModalButton: React.FC<NewTriggerModalButtonProps> = ({
 }) => {
   const ModalComponent: React.FC = () => {
     const { getString } = useStrings()
-    const { showError, showSuccess } = useToaster()
+    const { showError, showSuccess, clear: clearToaster } = useToaster()
 
     const { mutate: createTrigger, loading } = useMutate<TypesTrigger>({
       verb: 'POST',
@@ -69,9 +69,11 @@ export const NewTriggerModalButton: React.FC<NewTriggerModalButtonProps> = ({
         }
         await createTrigger(payload)
         hideModal()
+        clearToaster()
         showSuccess(getString('triggers.createSuccess'))
         onSuccess()
       } catch (exception) {
+        clearToaster()
         showError(getErrorMessage(exception), 0, getString('triggers.failedToCreate'))
       }
     }
@@ -92,11 +94,9 @@ export const NewTriggerModalButton: React.FC<NewTriggerModalButtonProps> = ({
               validationSchema={yup.object().shape({
                 name: yup
                   .string()
-                  .required('name is required')
-                  .matches(
-                    /^[a-zA-Z_][a-zA-Z0-9-_.]*$/,
-                    'name must start with a letter or _ and only contain [a-zA-Z0-9-_.]'
-                  ),
+                  .trim()
+                  .required()
+                  .matches(/^[a-zA-Z_][a-zA-Z0-9-_.]*$/, getString('validation.nameLogic')),
                 actions: yup.array().of(yup.string())
               })}
               validateOnChange
@@ -113,24 +113,29 @@ export const NewTriggerModalButton: React.FC<NewTriggerModalButtonProps> = ({
                   <Text font={{ variation: FontVariation.FORM_LABEL }} margin={{ bottom: 'xsmall' }}>
                     {getString('triggers.actions')}
                   </Text>
-                  <Container className={css.actionsContainer} padding={'large'}>
-                    {triggerActions.map(action => (
-                      <Checkbox
-                        key={action.name}
-                        name="actions"
-                        label={action.name}
-                        value={action.value}
-                        onChange={event => {
-                          if (event.currentTarget.checked) {
-                            formik.setFieldValue('actions', [...formik.values.actions, action.value])
-                          } else {
-                            formik.setFieldValue(
-                              'actions',
-                              formik.values.actions.filter((value: string) => value !== action.value)
-                            )
-                          }
-                        }}
-                      />
+                  <Container className={css.actionsContainer}>
+                    {allActions.map((actionGroup, index) => (
+                      <Container className={css.actionsSubContainer} padding={'large'} key={index}>
+                        {actionGroup.map(action => (
+                          <Checkbox
+                            key={action.name}
+                            name="actions"
+                            label={action.name}
+                            value={action.value}
+                            checked={formik.values.actions.includes(action.value as EnumTriggerAction)}
+                            onChange={event => {
+                              if (event.currentTarget.checked) {
+                                formik.setFieldValue('actions', [...formik.values.actions, action.value])
+                              } else {
+                                formik.setFieldValue(
+                                  'actions',
+                                  formik.values.actions.filter((value: string) => value !== action.value)
+                                )
+                              }
+                            }}
+                          />
+                        ))}
+                      </Container>
                     ))}
                   </Container>
                   <Layout.Horizontal spacing="small" padding={{ top: 'large' }} style={{ alignItems: 'center' }}>

@@ -4,7 +4,8 @@ import cx from 'classnames'
 import type { TypesStage } from 'services/code'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/ExecutionUtils'
-import { timeDistance } from 'utils/Utils'
+import { timeDifferenceInMinutesAndSeconds } from 'utils/Utils'
+import useLiveTimer from 'hooks/useLiveTimeHook'
 import css from './ExecutionStageList.module.scss'
 
 interface ExecutionStageListProps {
@@ -21,6 +22,9 @@ interface ExecutionStageProps {
 }
 
 const ExecutionStage: FC<ExecutionStageProps> = ({ stage, isSelected = false, setSelectedStage }) => {
+  const isActive = stage?.status === ExecutionState.RUNNING
+  const currentTime = useLiveTimer(isActive)
+
   return (
     <Container
       className={css.menuItem}
@@ -40,7 +44,12 @@ const ExecutionStage: FC<ExecutionStageProps> = ({ stage, isSelected = false, se
           {stage.name}
         </Text>
         <FlexExpander />
-        <Text style={{ fontSize: '12px' }}>{timeDistance(stage.started, stage.stopped)}</Text>
+        {stage.started && (stage.stopped || isActive) && (
+          <Text style={{ fontSize: '12px' }}>
+            {/* Use live time when running, static time when finished */}
+            {timeDifferenceInMinutesAndSeconds(stage.started, isActive ? currentTime : stage.stopped)}
+          </Text>
+        )}
       </Layout.Horizontal>
     </Container>
   )

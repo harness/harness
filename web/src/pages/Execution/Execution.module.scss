@@ -1,10 +1,10 @@
 .main {
-  min-height: var(--page-height);
+  height: calc(100vh - 112px) !important;
   background-color: var(--primary-bg) !important;
 }
 
-.container {
-  height: calc(100vh - var(--page-header-height));
+.pageBody {
+  min-height: 100% !important;
 }
 
 .withError {

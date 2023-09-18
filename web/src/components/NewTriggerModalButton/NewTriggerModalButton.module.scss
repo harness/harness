@@ -3,6 +3,10 @@
   width: 100% !important;
   border-radius: 4px !important;
   border: 1px solid rgba(217, 218, 229, 0.5) !important;
+}
+
+.actionsSubContainer {
+  width: 100% !important;
   display: grid !important;
   grid-template-columns: repeat(2, 1fr) !important;
   gap: 10px !important;

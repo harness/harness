@@ -12,14 +12,14 @@ import (
 	"github.com/harness/gitness/types"
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
+	runtime2 "github.com/drone-runners/drone-runner-docker/engine2/runtime"
 	"github.com/drone/drone-go/drone"
 	runnerclient "github.com/drone/runner-go/client"
-	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/poller"
 )
 
 func NewExecutionPoller(
-	runner *runtime.Runner,
+	runner *runtime2.Runner,
 	config *types.Config,
 	client runnerclient.Client,
 ) *poller.Poller {

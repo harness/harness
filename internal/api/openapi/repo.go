@@ -42,16 +42,6 @@ type moveRepoRequest struct {
 	repo.MoveInput
 }
 
-type createRepoPathRequest struct {
-	repoRequest
-	repo.CreatePathInput
-}
-
-type deleteRepoPathRequest struct {
-	repoRequest
-	PathID string `path:"path_id"`
-}
-
 type getContentRequest struct {
 	repoRequest
 	Path string `path:"path"`
@@ -451,40 +441,6 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.SetJSONResponse(&opServiceAccounts, new(usererror.Error), http.StatusNotFound)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/service-accounts", opServiceAccounts)
-
-	opListPaths := openapi3.Operation{}
-	opListPaths.WithTags("repository")
-	opListPaths.WithMapOfAnything(map[string]interface{}{"operationId": "listRepositoryPaths"})
-	opListPaths.WithParameters(queryParameterPage, queryParameterLimit)
-	_ = reflector.SetRequest(&opListPaths, new(repoRequest), http.MethodGet)
-	_ = reflector.SetJSONResponse(&opListPaths, []types.Path{}, http.StatusOK)
-	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.SetJSONResponse(&opListPaths, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/paths", opListPaths)
-
-	opCreatePath := openapi3.Operation{}
-	opCreatePath.WithTags("repository")
-	opCreatePath.WithMapOfAnything(map[string]interface{}{"operationId": "createRepositoryPath"})
-	_ = reflector.SetRequest(&opCreatePath, new(createRepoPathRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opCreatePath, new(types.Path), http.StatusCreated)
-	_ = reflector.SetJSONResponse(&opCreatePath, new(usererror.Error), http.StatusBadRequest)
-	_ = reflector.SetJSONResponse(&opCreatePath, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&opCreatePath, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&opCreatePath, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/paths", opCreatePath)
-
-	onDeletePath := openapi3.Operation{}
-	onDeletePath.WithTags("repository")
-	onDeletePath.WithMapOfAnything(map[string]interface{}{"operationId": "deleteRepositoryPath"})
-	_ = reflector.SetRequest(&onDeletePath, new(deleteRepoPathRequest), http.MethodDelete)
-	_ = reflector.SetJSONResponse(&onDeletePath, nil, http.StatusNoContent)
-	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusInternalServerError)
-	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusUnauthorized)
-	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusForbidden)
-	_ = reflector.SetJSONResponse(&onDeletePath, new(usererror.Error), http.StatusNotFound)
-	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/paths/{path_id}", onDeletePath)
 
 	opGetContent := openapi3.Operation{}
 	opGetContent.WithTags("repository")

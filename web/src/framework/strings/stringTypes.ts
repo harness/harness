@@ -188,6 +188,28 @@ export interface StringsMap {
   expiration: string
   expirationDate: string
   expired: string
+  'exportSpace.accIdLabel': string
+  'exportSpace.accIdPlaceholder': string
+  'exportSpace.accIdRequired': string
+  'exportSpace.accesstokenReq': string
+  'exportSpace.entitiesLabel': string
+  'exportSpace.exportCompleted': string
+  'exportSpace.exportRepo': string
+  'exportSpace.exportRepoCompleted': string
+  'exportSpace.newProject': string
+  'exportSpace.organization': string
+  'exportSpace.projectName': string
+  'exportSpace.projectOrg': string
+  'exportSpace.repoToConvert': string
+  'exportSpace.startUpgrade': string
+  'exportSpace.tokenLabel': string
+  'exportSpace.tokenPlaceholder': string
+  'exportSpace.upgrade': string
+  'exportSpace.upgradeConfirmation': string
+  'exportSpace.upgradeContent': string
+  'exportSpace.upgradeHarness': string
+  'exportSpace.upgradeProgress': string
+  'exportSpace.upgradeTitle': string
   failed: string
   failedToCreateBranch: string
   failedToCreatePipeline: string
@@ -372,6 +394,8 @@ export interface StringsMap {
   'pipelines.editPipeline': string
   'pipelines.enterPipelineName': string
   'pipelines.enterYAMLPath': string
+  'pipelines.executionCancelled': string
+  'pipelines.executionCouldNotCancel': string
   'pipelines.executionCouldNotStart': string
   'pipelines.executionStarted': string
   'pipelines.failedToCreatePipeline': string
@@ -578,6 +602,7 @@ export interface StringsMap {
   'spaceSetting.deleteWarning': string
   'spaceSetting.intentText': string
   'spaceSetting.setting': string
+  spaceUpdate: string
   spaces: string
   sslVerificationLabel: string
   startSearching: string
@@ -644,6 +669,7 @@ export interface StringsMap {
   'validation.gitTagNameInvalid': string
   'validation.nameInvalid': string
   'validation.nameIsRequired': string
+  'validation.nameLogic': string
   'validation.newPasswordRequired': string
   'validation.repoNamePatternIsNotValid': string
   'validation.spaceNamePatternIsNotValid': string

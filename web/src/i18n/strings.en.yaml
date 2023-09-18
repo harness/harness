@@ -124,7 +124,8 @@ validation:
   expirationDateRequired: Expiration date is required
   newPasswordRequired: New password is a required field
   confirmPasswordRequired: Confirm Password is a required field
-  spaceNamePatternIsNotValid: "Name can only contain alphanumerics, '-', '_', '.', and '$'"
+  spaceNamePatternIsNotValid: "Name has to start with a letter or '_' and only contain alphanumerics"
+  nameLogic: Name must start with a letter or _ and only contain [a-zA-Z0-9-_.]
 commitMessage: Commit message
 optionalExtendedDescription: Optional extended description
 optional: Optional
@@ -503,7 +504,7 @@ noAccount?: No Account?
 alreadyHaveAccount: Already have an account?
 privacyPolicy: Privacy Policy
 termsOfUse: Terms of Use
-bySigningIn: By signing in, you agree to our {policy} and our {terms}
+bySigningIn: By signing up, you agree to our {policy} and our {terms}
 userId: User ID
 characterLimit: 6+ characters
 enterUser: Enter user id here ...
@@ -604,7 +605,7 @@ homepage:
 deleteSpace: Delete Space
 spaceSetting:
   intentText: This will permanently delete the space named '{{space}}', and everything contained in it. All repositories in this space, all sub-spaces and repositories they contain will be deleted.
-  deleteWarning: Unexpected bad things wll happen if you don’t read this
+  deleteWarning: Unexpected bad things will happen if you don’t read this
   deleteConfirm1: This will permanently delete the "{{space}}" space and everything contained in it.  All repositories in this space, all sub-spaces and repositories they contain will be deleted.
   deleteConfirmButton1: I want to delete this space
   deleteConfirm2: To confirm, type "{{space}}" in the box below
@@ -654,6 +655,8 @@ pipelines:
   updatePipelineSuccess: Pipeline {{pipeline}} updated.
   failedToUpdatePipeline: Failed to update Pipeline. Please try again.
   settings: Pipeline Settings
+  executionCancelled: Pipeline execution cancelled.
+  executionCouldNotCancel: Failure while cancelling Pipeline execution.
 executions:
   noData: There are no executions
   newExecutionButton: Run Pipeline
@@ -747,3 +750,29 @@ triggers:
   deleteTriggerError: Failed to delete Trigger. Please try again.
 step:
   select: Select a step
+exportSpace:
+  accIdRequired: Account ID is required
+  accesstokenReq: Access token is required
+  accIdLabel: 'Harness Account Id'
+  accIdPlaceholder: 'Enter the Harness Account ID'
+  tokenLabel: 'Account Token'
+  tokenPlaceholder: 'Enter the access token here'
+  organization: Organization
+  projectName: Project Name
+  entitiesLabel: Entities to upgrade
+  projectOrg: Project Organization
+  repoToConvert: '{{length}} repositories to be converted'
+  startUpgrade: Start Upgrade
+  upgradeHarness: Upgrade to Harness
+  newProject: New Project Details
+  upgradeConfirmation: Upgrade Confirmation
+  upgradeTitle: Upgrade this space to the Harness Software Delivery platform
+  upgrade: Upgrade
+  upgradeContent: Upgrade this space to Harness. By upgrading to Harness, you will create a new project in your
+    Harness account and migrate all repositories, pipelines and users / access controls to the new
+    project. Learn more about Harness.
+  upgradeProgress: 'Upgrading in progress'
+  exportCompleted: Export Completed
+  exportRepoCompleted: Exported {{repoCount}} repositories
+  exportRepo: Exporting {{repoCount}} repositories
+spaceUpdate: Space Updated

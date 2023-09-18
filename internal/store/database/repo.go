@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/internal/paths"
 	"github.com/harness/gitness/internal/store"
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database"
@@ -25,17 +26,49 @@ import (
 var _ store.RepoStore = (*RepoStore)(nil)
 
 // NewRepoStore returns a new RepoStore.
-func NewRepoStore(db *sqlx.DB, pathCache store.PathCache) *RepoStore {
+func NewRepoStore(
+	db *sqlx.DB,
+	spacePathCache store.SpacePathCache,
+	spacePathStore store.SpacePathStore,
+) *RepoStore {
 	return &RepoStore{
-		db:        db,
-		pathCache: pathCache,
+		db:             db,
+		spacePathCache: spacePathCache,
+		spacePathStore: spacePathStore,
 	}
 }
 
 // RepoStore implements a store.RepoStore backed by a relational database.
 type RepoStore struct {
-	db        *sqlx.DB
-	pathCache store.PathCache
+	db             *sqlx.DB
+	spacePathCache store.SpacePathCache
+	spacePathStore store.SpacePathStore
+}
+
+type repository struct {
+	// TODO: int64 ID doesn't match DB
+	ID          int64  `db:"repo_id"`
+	Version     int64  `db:"repo_version"`
+	ParentID    int64  `db:"repo_parent_id"`
+	UID         string `db:"repo_uid"`
+	Description string `db:"repo_description"`
+	IsPublic    bool   `db:"repo_is_public"`
+	CreatedBy   int64  `db:"repo_created_by"`
+	Created     int64  `db:"repo_created"`
+	Updated     int64  `db:"repo_updated"`
+
+	GitUID        string `db:"repo_git_uid"`
+	DefaultBranch string `db:"repo_default_branch"`
+	ForkID        int64  `db:"repo_fork_id"`
+	PullReqSeq    int64  `db:"repo_pullreq_seq"`
+
+	NumForks       int `db:"repo_num_forks"`
+	NumPulls       int `db:"repo_num_pulls"`
+	NumClosedPulls int `db:"repo_num_closed_pulls"`
+	NumOpenPulls   int `db:"repo_num_open_pulls"`
+	NumMergedPulls int `db:"repo_num_merged_pulls"`
+
+	Importing bool `db:"repo_importing"`
 }
 
 const (
@@ -44,7 +77,6 @@ const (
 		,repo_version
 		,repo_parent_id
 		,repo_uid
-		,paths.path_value AS repo_path
 		,repo_description
 		,repo_is_public
 		,repo_created_by
@@ -61,25 +93,39 @@ const (
 		,repo_num_merged_pulls
 		,repo_importing`
 
-	repoSelectBaseWithJoin = `
+	repoSelectBase = `
 		SELECT` + repoColumnsForJoin + `
-		FROM repositories
-		INNER JOIN paths
-		ON repositories.repo_id=paths.path_repo_id AND paths.path_is_primary=true`
+		FROM repositories`
 )
 
 // Find finds the repo by id.
 func (s *RepoStore) Find(ctx context.Context, id int64) (*types.Repository, error) {
-	const sqlQuery = repoSelectBaseWithJoin + `
+	const sqlQuery = repoSelectBase + `
 		WHERE repo_id = $1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := new(types.Repository)
+	dst := new(repository)
 	if err := db.GetContext(ctx, dst, sqlQuery, id); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find repo")
 	}
-	return dst, nil
+
+	return s.mapToRepo(ctx, dst)
+}
+
+// Find finds the repo with the given UID in the given space ID.
+func (s *RepoStore) FindByUID(ctx context.Context, spaceID int64, uid string) (*types.Repository, error) {
+	const sqlQuery = repoSelectBase + `
+		WHERE repo_parent_id = $1 AND LOWER(repo_uid) = $2`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	dst := new(repository)
+	if err := db.GetContext(ctx, dst, sqlQuery, spaceID, strings.ToLower(uid)); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed to find repo")
+	}
+
+	return s.mapToRepo(ctx, dst)
 }
 
 // FindByRef finds the repo using the repoRef as either the id or the repo path.
@@ -87,18 +133,13 @@ func (s *RepoStore) FindByRef(ctx context.Context, repoRef string) (*types.Repos
 	// ASSUMPTION: digits only is not a valid repo path
 	id, err := strconv.ParseInt(repoRef, 10, 64)
 	if err != nil {
-		var path *types.Path
-		path, err = s.pathCache.Get(ctx, repoRef)
+		spacePath, repoUID, err := paths.DisectLeaf(repoRef)
+		pathObject, err := s.spacePathCache.Get(ctx, spacePath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get path: %w", err)
+			return nil, fmt.Errorf("failed to get space path: %w", err)
 		}
 
-		if path.TargetType != enum.PathTargetTypeRepo {
-			// IMPORTANT: expose as not found error as we didn't find the repo!
-			return nil, fmt.Errorf("path is not targeting a repo - %w", gitness_store.ErrResourceNotFound)
-		}
-
-		id = path.TargetID
+		return s.FindByUID(ctx, pathObject.SpaceID, repoUID)
 	}
 
 	return s.Find(ctx, id)
@@ -150,13 +191,18 @@ func (s *RepoStore) Create(ctx context.Context, repo *types.Repository) error {
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	// insert repo first so we get id
-	query, arg, err := db.BindNamed(sqlQuery, repo)
+	query, arg, err := db.BindNamed(sqlQuery, mapToInternalRepo(repo))
 	if err != nil {
 		return database.ProcessSQLErrorf(err, "Failed to bind repo object")
 	}
 
 	if err = db.QueryRowContext(ctx, query, arg...).Scan(&repo.ID); err != nil {
 		return database.ProcessSQLErrorf(err, "Insert query failed")
+	}
+
+	repo.Path, err = s.getRepoPath(ctx, repo.ParentID, repo.UID)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -184,14 +230,15 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 			,repo_importing = :repo_importing
 		WHERE repo_id = :repo_id AND repo_version = :repo_version - 1`
 
-	updatedAt := time.Now()
+	dbRepo := mapToInternalRepo(repo)
 
-	repo.Version++
-	repo.Updated = updatedAt.UnixMilli()
+	// update Version (used for optimistic locking) and Updated time
+	dbRepo.Version++
+	dbRepo.Updated = time.Now().UnixMilli()
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	query, arg, err := db.BindNamed(sqlQuery, repo)
+	query, arg, err := db.BindNamed(sqlQuery, dbRepo)
 	if err != nil {
 		return database.ProcessSQLErrorf(err, "Failed to bind repo object")
 	}
@@ -208,6 +255,15 @@ func (s *RepoStore) Update(ctx context.Context, repo *types.Repository) error {
 
 	if count == 0 {
 		return gitness_store.ErrVersionConflict
+	}
+
+	repo.Version = dbRepo.Version
+	repo.Updated = dbRepo.Updated
+
+	// update path in case parent/uid changed (its most likely cached anyway)
+	repo.Path, err = s.getRepoPath(ctx, repo.ParentID, repo.UID)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -290,7 +346,6 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 	stmt := database.Builder.
 		Select(repoColumnsForJoin).
 		From("repositories").
-		InnerJoin("paths ON repositories.repo_id=paths.path_repo_id AND paths.path_is_primary=true").
 		Where("repo_parent_id = ?", fmt.Sprint(parentID))
 
 	if opts.Query != "" {
@@ -310,8 +365,6 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 		stmt = stmt.OrderBy("repo_created " + opts.Order.String())
 	case enum.RepoAttrUpdated:
 		stmt = stmt.OrderBy("repo_updated " + opts.Order.String())
-	case enum.RepoAttrPath:
-		stmt = stmt.OrderBy("repo_importing desc, repo_path " + opts.Order.String())
 	}
 
 	sql, args, err := stmt.ToSql()
@@ -321,10 +374,93 @@ func (s *RepoStore) List(ctx context.Context, parentID int64, opts *types.RepoFi
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
-	dst := []*types.Repository{}
+	dst := []*repository{}
 	if err = db.SelectContext(ctx, &dst, sql, args...); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
 	}
 
-	return dst, nil
+	return s.mapToRepos(ctx, dst)
+}
+
+func (s *RepoStore) mapToRepo(
+	ctx context.Context,
+	in *repository,
+) (*types.Repository, error) {
+	var err error
+	res := &types.Repository{
+		ID:             in.ID,
+		Version:        in.Version,
+		ParentID:       in.ParentID,
+		UID:            in.UID,
+		Description:    in.Description,
+		IsPublic:       in.IsPublic,
+		Created:        in.Created,
+		CreatedBy:      in.CreatedBy,
+		Updated:        in.Updated,
+		GitUID:         in.GitUID,
+		DefaultBranch:  in.DefaultBranch,
+		ForkID:         in.ForkID,
+		PullReqSeq:     in.PullReqSeq,
+		NumForks:       in.NumForks,
+		NumPulls:       in.NumPulls,
+		NumClosedPulls: in.NumClosedPulls,
+		NumOpenPulls:   in.NumOpenPulls,
+		NumMergedPulls: in.NumMergedPulls,
+		Importing:      in.Importing,
+		// Path: is set below
+	}
+
+	res.Path, err = s.getRepoPath(ctx, in.ParentID, in.UID)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (s *RepoStore) getRepoPath(ctx context.Context, parentID int64, repoUID string) (string, error) {
+	spacePath, err := s.spacePathStore.FindPrimaryBySpaceID(ctx, parentID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get primary path for space %d: %w", parentID, err)
+	}
+	return paths.Concatinate(spacePath.Value, repoUID), nil
+}
+
+func (s *RepoStore) mapToRepos(
+	ctx context.Context,
+	repos []*repository,
+) ([]*types.Repository, error) {
+	var err error
+	res := make([]*types.Repository, len(repos))
+	for i := range repos {
+		res[i], err = s.mapToRepo(ctx, repos[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func mapToInternalRepo(in *types.Repository) *repository {
+	return &repository{
+		ID:             in.ID,
+		Version:        in.Version,
+		ParentID:       in.ParentID,
+		UID:            in.UID,
+		Description:    in.Description,
+		IsPublic:       in.IsPublic,
+		Created:        in.Created,
+		CreatedBy:      in.CreatedBy,
+		Updated:        in.Updated,
+		GitUID:         in.GitUID,
+		DefaultBranch:  in.DefaultBranch,
+		ForkID:         in.ForkID,
+		PullReqSeq:     in.PullReqSeq,
+		NumForks:       in.NumForks,
+		NumPulls:       in.NumPulls,
+		NumClosedPulls: in.NumClosedPulls,
+		NumOpenPulls:   in.NumOpenPulls,
+		NumMergedPulls: in.NumMergedPulls,
+		Importing:      in.Importing,
+	}
 }

@@ -11,33 +11,32 @@ import (
 // Repository represents a code repository.
 type Repository struct {
 	// TODO: int64 ID doesn't match DB
-	ID          int64  `db:"repo_id"              json:"id"`
-	Version     int64  `db:"repo_version"         json:"-"`
-	ParentID    int64  `db:"repo_parent_id"       json:"parent_id"`
-	UID         string `db:"repo_uid"             json:"uid"`
-	Path        string `db:"repo_path"            json:"path"`
-	Description string `db:"repo_description"     json:"description"`
-	IsPublic    bool   `db:"repo_is_public"       json:"is_public"`
-	CreatedBy   int64  `db:"repo_created_by"      json:"created_by"`
-	Created     int64  `db:"repo_created"         json:"created"`
-	Updated     int64  `db:"repo_updated"         json:"updated"`
+	ID          int64  `json:"id"`
+	Version     int64  `json:"-"`
+	ParentID    int64  `json:"parent_id"`
+	UID         string `json:"uid"`
+	Path        string `json:"path"`
+	Description string `json:"description"`
+	IsPublic    bool   `json:"is_public"`
+	CreatedBy   int64  `json:"created_by"`
+	Created     int64  `json:"created"`
+	Updated     int64  `json:"updated"`
 
-	// Forking (omit isFork ... ForkID <= 0 is giving the same information)
-	GitUID        string `db:"repo_git_uid"            json:"-"`
-	DefaultBranch string `db:"repo_default_branch"     json:"default_branch"`
-	ForkID        int64  `db:"repo_fork_id"            json:"fork_id"`
-	PullReqSeq    int64  `db:"repo_pullreq_seq"        json:"-"`
+	GitUID        string `json:"-"`
+	DefaultBranch string `json:"default_branch"`
+	ForkID        int64  `json:"fork_id"`
+	PullReqSeq    int64  `json:"-"`
 
-	NumForks       int `db:"repo_num_forks"            json:"num_forks"`
-	NumPulls       int `db:"repo_num_pulls"            json:"num_pulls"`
-	NumClosedPulls int `db:"repo_num_closed_pulls"     json:"num_closed_pulls"`
-	NumOpenPulls   int `db:"repo_num_open_pulls"       json:"num_open_pulls"`
-	NumMergedPulls int `db:"repo_num_merged_pulls"     json:"num_merged_pulls"`
+	NumForks       int `json:"num_forks"`
+	NumPulls       int `json:"num_pulls"`
+	NumClosedPulls int `json:"num_closed_pulls"`
+	NumOpenPulls   int `json:"num_open_pulls"`
+	NumMergedPulls int `json:"num_merged_pulls"`
 
-	Importing bool `db:"repo_importing"         json:"importing"`
+	Importing bool `json:"importing"`
 
 	// git urls
-	GitURL string `db:"-" json:"git_url"`
+	GitURL string `json:"git_url"`
 }
 
 func (r Repository) GetGitUID() string {

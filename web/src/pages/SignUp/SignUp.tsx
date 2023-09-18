@@ -62,15 +62,9 @@ export const SignUp: React.FC = () => {
   return (
     <AuthLayout>
       <Container className={css.signUpContainer}>
-        {/* <Container flex={{ justifyContent: 'space-between', alignItems: 'center' }} margin={{ bottom: 'xxxlarge' }}>
-      <HarnessLogo height={25} />
-    </Container> */}
         <Text font={{ size: 'large', weight: 'bold' }} color={Color.BLACK}>
           {getString('signUp')}
         </Text>
-        {/* <Text font={{ size: 'medium' }} color={Color.GREY_500} margin={{ top: 'xsmall' }}>
-      and get ship done.
-    </Text> */}
 
         <Container margin={{ top: 'xlarge' }}>
           <Formik<RegisterForm>
@@ -116,7 +110,7 @@ export const SignUp: React.FC = () => {
           </Formik>
         </Container>
 
-        <Layout.Horizontal margin={{ top: 'xxlarge' }} spacing="xsmall">
+        <Layout.Horizontal margin={{ top: 'xlarge' }} spacing="xsmall">
           <Text>
             <StringSubstitute
               str={getString('bySigningIn')}
@@ -124,7 +118,7 @@ export const SignUp: React.FC = () => {
             />
           </Text>
         </Layout.Horizontal>
-        <Layout.Horizontal margin={{ top: 'xxlarge' }} spacing="xsmall">
+        <Layout.Horizontal margin={{ top: 'small' }} spacing="xsmall">
           <Text>{getString('alreadyHaveAccount')}</Text>
           <Link to={routes.toSignIn()}>{getString('signIn')}</Link>
         </Layout.Horizontal>

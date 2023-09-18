@@ -160,6 +160,7 @@ const UserProfile = () => {
         <Container className={css.pageCtn}>
           <Card className={css.profileCard}>
             <Avatar
+              className={css.avatar}
               name={currentUser?.display_name}
               size="large"
               hoverCard={false}

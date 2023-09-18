@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/harness/gitness/encrypt"
+	"net/url"
 	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/types/enum"
@@ -20,11 +20,22 @@ import (
 	"strings"
 	"time"
 
+	"github.com/harness/gitness/encrypt"
+	"github.com/harness/gitness/internal/api/controller/repo"
+	"github.com/harness/gitness/internal/sse"
+	"github.com/harness/gitness/types/enum"
+	"github.com/rs/zerolog/log"
+
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/services/job"
 	"github.com/harness/gitness/internal/store"
 	gitnessurl "github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
+)
+
+var (
+	// ErrNotFound is returned if no export data was found.
+	ErrNotFound = errors.New("export not found")
 )
 
 type Repository struct {
@@ -63,30 +74,34 @@ const (
 
 var ErrJobRunning = errors.New("an export job is already running")
 
+
 func (r *Repository) Register(executor *job.Executor) error {
 	return executor.Register(jobType, r)
 }
+}
+	func (r *Repository) RunManyForSpace(
+		ctx context.Context,
+		spaceId int64,
+		repos []*types.Repository,
+		harnessCodeInfo *HarnessCodeInfo,
+) error {		jobGroupId := getJobGroupId(spaceId)
 
-func (r *Repository) RunMany(ctx context.Context, spaceId int64, harnessCodeInfo *HarnessCodeInfo, repos []*types.Repository) error {
-	jobGroupId := getJobGroupId(spaceId)
-
-	jobs, err := r.scheduler.GetJobProgressForGroup(ctx, jobGroupId)
-	if err != nil {
+		jobs, err := r.scheduler.GetJobProgressForGroup(ctx, jobGroupId)
+		if err != nil {
 		return fmt.Errorf("cannot get job progress before starting. %w", err)
 	}
 
-	err = checkJobAlreadyRunning(jobs)
-	if err != nil {
+		err = checkJobAlreadyRunning(jobs)
+		if err != nil {
 		return err
 	}
 
-	n, err := r.scheduler.PurgeJobsByGroupId(ctx, jobGroupId)
-	if err != nil {
+		n, err := r.scheduler.PurgeJobsByGroupId(ctx, jobGroupId)
+		if err != nil {
 		return err
 	}
-	log.Ctx(ctx).Info().Msgf("deleted %d old jobs", n)
-
-	jobDefinitions := make([]job.Definition, len(repos))
+		log.Ctx(ctx).Info().Msgf("deleted %d old jobs", n)
+		jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
 		repoJobData := Input{
 			UID:             repository.UID,
@@ -142,7 +157,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", err
 	}
 	harnessCodeInfo := input.HarnessCodeInfo
-	client, err := NewHarnessCodeClient(r.urlProvider.GetHarnessCodeInternalUrl(), harnessCodeInfo.AccountId, harnessCodeInfo.OrgIdentifier, harnessCodeInfo.ProjectIdentifier, harnessCodeInfo.Token)
+	client, err := newHarnessCodeClient(r.urlProvider.GetHarnessCodeInternalUrl(), harnessCodeInfo.AccountId, harnessCodeInfo.OrgIdentifier, harnessCodeInfo.ProjectIdentifier, harnessCodeInfo.Token)
 	if err != nil {
 		return "", err
 	}
@@ -161,7 +176,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		GitIgnore:     "",
 	})
 	if err != nil {
-		publishSSE(ctx, r, repository)
+		r.publishSSE(ctx, repository)
 		return "", err
 	}
 
@@ -174,28 +189,26 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		ReadParams: gitrpc.ReadParams{RepoUID: repository.GitUID},
 		RemoteUrl:  urlWithToken,
 	})
-	if strings.Contains(err.Error(), "empty") {
-		return "", nil
-	}
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "empty") {
 		errDelete := client.DeleteRepo(ctx, remoteRepo.UID)
 		if errDelete != nil {
-			log.Ctx(ctx).Err(errDelete).Msgf("Cannot delete repo %s", remoteRepo.UID)
+			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete repo '%s' on harness", remoteRepo.UID)
 		}
-		publishSSE(ctx, r, repository)
+		r.publishSSE(ctx, repository)
 		return "", err
 	}
 
-	log.Info().Msgf("completed repository export for repo", repository.UID)
-	publishSSE(ctx, r, repository)
+	log.Ctx(ctx).Info().Msgf("completed exporting repository '%s' to harness", repository.UID)
+
+	r.publishSSE(ctx, repository)
 
 	return "", nil
 }
 
-func publishSSE(ctx context.Context, r *Repository, repository *types.Repository) {
+func (r *Repository) publishSSE(ctx context.Context, repository *types.Repository) {
 	err := r.sseStreamer.Publish(ctx, repository.ParentID, enum.SSETypeRepositoryExportCompleted, repository)
 	if err != nil {
-		log.Warn().Err(err).Msg("failed to publish export completion SSE")
+		log.Ctx(ctx).Warn().Err(err).Msg("failed to publish export completion SSE")
 	}
 }
 
@@ -220,15 +233,17 @@ func (r *Repository) getJobInput(data string) (Input, error) {
 	return input, nil
 }
 
-func (r *Repository) GetProgress(ctx context.Context, space *types.Space) ([]types.JobProgress, error) {
-	spaceId := getJobGroupId(space.ID)
+func (r *Repository) GetProgressForSpace(ctx context.Context, spaceID int64) ([]types.JobProgress, error) {
+	spaceId := getJobGroupId(spaceID)
 	progress, err := r.scheduler.GetJobProgressForGroup(ctx, spaceId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get job progress for group: %w", err)
 	}
-	if progress == nil || len(progress) == 0 {
-		return []types.JobProgress{job.FailProgress()}, nil
+
+	if len(progress) == 0 {
+		return nil, ErrNotFound
 	}
+
 	return progress, nil
 }
 

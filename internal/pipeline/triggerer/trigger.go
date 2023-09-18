@@ -6,9 +6,14 @@ package triggerer
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"runtime/debug"
 	"time"
 
+	v1yaml "github.com/drone/spec/dist/go"
+	"github.com/drone/spec/dist/go/parse/expand"
+	"github.com/drone/spec/dist/go/parse/normalize"
 	"github.com/harness/gitness/internal/pipeline/checks"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
@@ -121,155 +126,144 @@ func (t *triggerer) Trigger(
 		return nil, err
 	}
 
-	// if base.Event == core.TriggerEventPullRequest {
-	// 	if repo.IgnorePulls {
-	// 		logger.Infoln("trigger: skipping hook. project ignores pull requests")
-	// 		return nil, nil
-	// 	}
-	// 	if repo.IgnoreForks && !strings.EqualFold(base.Fork, repo.Slug) {
-	// 		logger.Infoln("trigger: skipping hook. project ignores forks")
-	// 		return nil, nil
-	// 	}
-	// }
-
-	// user, err := t.users.Find(ctx, repo.UserID)
-	// if err != nil {
-	// 	logger = logger.WithError(err)
-	// 	logger.Warnln("trigger: cannot find repository owner")
-	// 	return nil, err
-	// }
-
-	// if user.Active == false {
-	// 	logger.Infoln("trigger: skipping hook. repository owner is inactive")
-	// 	return nil, nil
-	// }
-
-	// if the commit message is not included we should
-	// make an optional API call to the version control
-	// system to augment the available information.
-	// if base.Message == "" && base.After != "" {
-	// 	commit, err := t.commits.Find(ctx, user, repo.Slug, base.After)
-	// 	if err == nil && commit != nil {
-	// 		base.Message = commit.Message
-	// 		if base.AuthorEmail == "" {
-	// 			base.AuthorEmail = commit.Author.Email
-	// 		}
-	// 		if base.AuthorName == "" {
-	// 			base.AuthorName = commit.Author.Name
-	// 		}
-	// 		if base.AuthorAvatar == "" {
-	// 			base.AuthorAvatar = commit.Author.Avatar
-	// 		}
-	// 	}
-	// }
-
 	file, err := t.fileService.Get(ctx, repo, pipeline.ConfigPath, base.After)
 	if err != nil {
 		log.Error().Err(err).Msg("trigger: could not find yaml")
 		return nil, err
 	}
 
-	// // this code is temporarily in place to detect and convert
-	// // the legacy yaml configuration file to the new format.
-	// raw.Data, err = converter.ConvertString(raw.Data, converter.Metadata{
-	// 	Filename: repo.Config,
-	// 	URL:      repo.Link,
-	// 	Ref:      base.Ref,
-	// })
-	// if err != nil {
-	// 	logger = logger.WithError(err)
-	// 	logger.Warnln("trigger: cannot convert yaml")
-	// 	return t.createExecutionWithError(ctx, repo, base, err.Error())
-	// }
-
-	manifest, err := yaml.ParseString(string(file.Data))
-	if err != nil {
-		log.Warn().Err(err).Msg("trigger: cannot parse yaml")
-		return t.createExecutionWithError(ctx, pipeline, base, err.Error())
-	}
-
-	// verr := t.validate.Validate(ctx, &core.ValidateArgs{
-	// 	User:   user,
-	// 	Repo:   repo,
-	// 	Execution:  tmpExecution,
-	// 	Config: raw,
-	// })
-	// switch verr {
-	// case core.ErrValidatorBlock:
-	// 	logger.Debugln("trigger: yaml validation error: block pipeline")
-	// case core.ErrValidatorSkip:
-	// 	logger.Debugln("trigger: yaml validation error: skip pipeline")
-	// 	return nil, nil
-	// default:
-	// 	if verr != nil {
-	// 		logger = logger.WithError(err)
-	// 		logger.Warnln("trigger: yaml validation error")
-	// 		return t.createExecutionWithError(ctx, repo, base, verr.Error())
-	// 	}
-	// }
-
-	err = linter.Manifest(manifest, true)
-	if err != nil {
-		log.Warn().Err(err).Msg("trigger: yaml linting error")
-		return t.createExecutionWithError(ctx, pipeline, base, err.Error())
-	}
-
-	verified := true
-	// if repo.Protected && base.Trigger == core.TriggerHook {
-	// 	key := signer.KeyString(repo.Secret)
-	// 	val := []byte(raw.Data)
-	// 	verified, _ = signer.Verify(val, key)
-	// }
-	// // if pipeline validation failed with a block error, the
-	// // pipeline verification should be set to false, which will
-	// // force manual review and approval.
-	// if verr == core.ErrValidatorBlock {
-	// 	verified = false
-	// }
-
-	var matched []*yaml.Pipeline
-	var dag = dag.New()
-	for _, document := range manifest.Resources {
-		pipeline, ok := document.(*yaml.Pipeline)
-		if !ok {
-			continue
+	// For drone, follow the existing path of calculating dependencies, creating a DAG,
+	// and creating stages accordingly. For V1 YAML - for now we can just parse the stages
+	// and create them sequentially.
+	stages := []*types.Stage{}
+	if !isV1Yaml(file.Data) {
+		manifest, err := yaml.ParseString(string(file.Data))
+		if err != nil {
+			log.Warn().Err(err).Msg("trigger: cannot parse yaml")
+			return t.createExecutionWithError(ctx, pipeline, base, err.Error())
 		}
-		// TODO add repo
-		// TODO add instance
-		// TODO add target
-		// TODO add ref
-		name := pipeline.Name
-		if name == "" {
-			name = "default"
+
+		err = linter.Manifest(manifest, true)
+		if err != nil {
+			log.Warn().Err(err).Msg("trigger: yaml linting error")
+			return t.createExecutionWithError(ctx, pipeline, base, err.Error())
 		}
-		node := dag.Add(pipeline.Name, pipeline.DependsOn...)
-		node.Skip = true
 
-		if skipBranch(pipeline, base.Target) {
-			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match branch")
-		} else if skipEvent(pipeline, event) {
-			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match event")
-		} else if skipAction(pipeline, string(base.Action)) {
-			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match action")
-		} else if skipRef(pipeline, base.Ref) {
-			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match ref")
-		} else if skipRepo(pipeline, repo.Path) {
-			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match repo")
-		} else if skipCron(pipeline, base.Cron) {
-			log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match cron job")
-		} else {
-			matched = append(matched, pipeline)
-			node.Skip = false
+		verified := true
+
+		var matched []*yaml.Pipeline
+		var dag = dag.New()
+		for _, document := range manifest.Resources {
+			pipeline, ok := document.(*yaml.Pipeline)
+			if !ok {
+				continue
+			}
+			// TODO add repo
+			// TODO add instance
+			// TODO add target
+			// TODO add ref
+			name := pipeline.Name
+			if name == "" {
+				name = "default"
+			}
+			node := dag.Add(pipeline.Name, pipeline.DependsOn...)
+			node.Skip = true
+
+			if skipBranch(pipeline, base.Target) {
+				log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match branch")
+			} else if skipEvent(pipeline, event) {
+				log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match event")
+			} else if skipAction(pipeline, string(base.Action)) {
+				log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match action")
+			} else if skipRef(pipeline, base.Ref) {
+				log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match ref")
+			} else if skipRepo(pipeline, repo.Path) {
+				log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match repo")
+			} else if skipCron(pipeline, base.Cron) {
+				log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match cron job")
+			} else {
+				matched = append(matched, pipeline)
+				node.Skip = false
+			}
 		}
-	}
 
-	if dag.DetectCycles() {
-		return t.createExecutionWithError(ctx, pipeline, base, "Error: Dependency cycle detected in Pipeline")
-	}
+		if dag.DetectCycles() {
+			return t.createExecutionWithError(ctx, pipeline, base, "Error: Dependency cycle detected in Pipeline")
+		}
 
-	if len(matched) == 0 {
-		log.Info().Msg("trigger: skipping execution, no matching pipelines")
-		return nil, nil
+		if len(matched) == 0 {
+			log.Info().Msg("trigger: skipping execution, no matching pipelines")
+			return nil, nil
+		}
+
+		for i, match := range matched {
+			onSuccess := match.Trigger.Status.Match(string(enum.CIStatusSuccess))
+			onFailure := match.Trigger.Status.Match(string(enum.CIStatusFailure))
+			if len(match.Trigger.Status.Include)+len(match.Trigger.Status.Exclude) == 0 {
+				onFailure = false
+			}
+
+			now := time.Now().UnixMilli()
+
+			stage := &types.Stage{
+				RepoID:    repo.ID,
+				Number:    int64(i + 1),
+				Name:      match.Name,
+				Kind:      match.Kind,
+				Type:      match.Type,
+				OS:        match.Platform.OS,
+				Arch:      match.Platform.Arch,
+				Variant:   match.Platform.Variant,
+				Kernel:    match.Platform.Version,
+				Limit:     match.Concurrency.Limit,
+				Status:    enum.CIStatusWaitingOnDeps,
+				DependsOn: match.DependsOn,
+				OnSuccess: onSuccess,
+				OnFailure: onFailure,
+				Labels:    match.Node,
+				Created:   now,
+				Updated:   now,
+			}
+			if stage.Kind == "pipeline" && stage.Type == "" {
+				stage.Type = "docker"
+			}
+			if stage.OS == "" {
+				stage.OS = "linux"
+			}
+			if stage.Arch == "" {
+				stage.Arch = "amd64"
+			}
+
+			if stage.Name == "" {
+				stage.Name = "default"
+			}
+			if verified == false {
+				stage.Status = enum.CIStatusBlocked
+			} else if len(stage.DependsOn) == 0 {
+				stage.Status = enum.CIStatusPending
+			}
+			stages = append(stages, stage)
+		}
+
+		for _, stage := range stages {
+			// here we re-work the dependencies for the stage to
+			// account for the fact that some steps may be skipped
+			// and may otherwise break the dependency chain.
+			stage.DependsOn = dag.Dependencies(stage.Name)
+
+			// if the stage is pending dependencies, but those
+			// dependencies are skipped, the stage can be executed
+			// immediately.
+			if stage.Status == enum.CIStatusWaitingOnDeps &&
+				len(stage.DependsOn) == 0 {
+				stage.Status = enum.CIStatusPending
+			}
+		}
+	} else {
+		stages, err = parseV1Stages(file.Data, repo.ID)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse v1 YAML into stages: %w", err)
+		}
 	}
 
 	pipeline, err = t.pipelineStore.IncrementSeqNum(ctx, pipeline)
@@ -312,71 +306,6 @@ func (t *triggerer) Trigger(
 		Updated:      now,
 	}
 
-	stages := make([]*types.Stage, len(matched))
-	for i, match := range matched {
-		onSuccess := match.Trigger.Status.Match(string(enum.CIStatusSuccess))
-		onFailure := match.Trigger.Status.Match(string(enum.CIStatusFailure))
-		if len(match.Trigger.Status.Include)+len(match.Trigger.Status.Exclude) == 0 {
-			onFailure = false
-		}
-
-		now := time.Now().UnixMilli()
-
-		stage := &types.Stage{
-			RepoID:    repo.ID,
-			Number:    int64(i + 1),
-			Name:      match.Name,
-			Kind:      match.Kind,
-			Type:      match.Type,
-			OS:        match.Platform.OS,
-			Arch:      match.Platform.Arch,
-			Variant:   match.Platform.Variant,
-			Kernel:    match.Platform.Version,
-			Limit:     match.Concurrency.Limit,
-			Status:    enum.CIStatusWaitingOnDeps,
-			DependsOn: match.DependsOn,
-			OnSuccess: onSuccess,
-			OnFailure: onFailure,
-			Labels:    match.Node,
-			Created:   now,
-			Updated:   now,
-		}
-		if stage.Kind == "pipeline" && stage.Type == "" {
-			stage.Type = "docker"
-		}
-		if stage.OS == "" {
-			stage.OS = "linux"
-		}
-		if stage.Arch == "" {
-			stage.Arch = "amd64"
-		}
-
-		if stage.Name == "" {
-			stage.Name = "default"
-		}
-		if verified == false {
-			stage.Status = enum.CIStatusBlocked
-		} else if len(stage.DependsOn) == 0 {
-			stage.Status = enum.CIStatusPending
-		}
-		stages[i] = stage
-	}
-
-	for _, stage := range stages {
-		// here we re-work the dependencies for the stage to
-		// account for the fact that some steps may be skipped
-		// and may otherwise break the dependency chain.
-		stage.DependsOn = dag.Dependencies(stage.Name)
-
-		// if the stage is pending dependencies, but those
-		// dependencies are skipped, the stage can be executed
-		// immediately.
-		if stage.Status == enum.CIStatusWaitingOnDeps &&
-			len(stage.DependsOn) == 0 {
-			stage.Status = enum.CIStatusPending
-		}
-	}
-
 	err = t.createExecutionWithStages(ctx, execution, stages)
 	if err != nil {
 		log.Error().Err(err).Msg("trigger: cannot create execution")
@@ -388,15 +317,6 @@ func (t *triggerer) Trigger(
 	if err != nil {
 		log.Error().Err(err).Msg("trigger: could not write to check store")
 	}
-
-	// err = t.status.Send(ctx, user, &core.StatusInput{
-	// 	Repo:  repo,
-	// 	Execution: execution,
-	// })
-	// if err != nil {
-	// 	logger = logger.WithError(err)
-	// 	logger.Warnln("trigger: cannot create status")
-	// }
 
 	for _, stage := range stages {
 		if stage.Status != enum.CIStatusPending {
@@ -418,6 +338,68 @@ func trunc(s string, i int) string {
 		return string(runes[:i])
 	}
 	return s
+}
+
+// parseV1Stages tries to parse the yaml into a list of stages and returns an error
+// if we are unable to do so or the yaml contains something unexpected.
+func parseV1Stages(data []byte, repoID int64) ([]*types.Stage, error) {
+	stages := []*types.Stage{}
+	// For V1 YAML, just go through the YAML and create stages serially for now
+	config, err := v1yaml.ParseBytes(data)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse v1 yaml: %w", err)
+	}
+
+	err = expand.Expand(config)
+	if err != nil {
+		return nil, fmt.Errorf("could not expand matrix stages in v1 yaml: %w", err)
+	}
+
+	// Normalize the config to make sure stage names and step names are unique
+	err = normalize.Normalize(config)
+	if err != nil {
+		return nil, fmt.Errorf("could not normalize v1 yaml: %w", err)
+	}
+
+	if config.Kind != "pipeline" {
+		return nil, fmt.Errorf("cannot support non-pipeline kinds in v1 at the moment: %w", err)
+	}
+
+	switch v := config.Spec.(type) {
+	case *v1yaml.Pipeline:
+		for idx, stage := range v.Stages {
+			// Only parse CI stages for now
+			switch stage.Spec.(type) {
+			case *v1yaml.StageCI:
+				now := time.Now().UnixMilli()
+				temp := &types.Stage{
+					RepoID:  repoID,
+					Number:  int64(idx + 1),
+					Name:    stage.Id, // for v1, ID is the unique identifier per stage
+					Created: now,
+					Updated: now,
+					Status:  enum.CIStatusPending,
+				}
+				stages = append(stages, temp)
+			default:
+				return nil, fmt.Errorf("only CI stage supported in v1 at the moment")
+			}
+
+		}
+	default:
+		return nil, fmt.Errorf("unknown yaml: %w", err)
+	}
+	return stages, nil
+}
+
+// Checks whether YAML is V1 Yaml or drone Yaml
+func isV1Yaml(data []byte) bool {
+	// if we are dealing with the legacy drone yaml, use
+	// the legacy drone engine.
+	if !regexp.MustCompilePOSIX(`^spec:`).Match(data) {
+		return false
+	}
+	return true
 }
 
 // createExecutionWithStages writes an execution along with its stages in a single transaction.

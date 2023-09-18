@@ -5,11 +5,11 @@
 package runner
 
 import (
+	runtime2 "github.com/drone-runners/drone-runner-docker/engine2/runtime"
 	"github.com/harness/gitness/internal/pipeline/manager"
 	"github.com/harness/gitness/types"
 
 	runnerclient "github.com/drone/runner-go/client"
-	"github.com/drone/runner-go/pipeline/runtime"
 	"github.com/drone/runner-go/poller"
 	"github.com/google/wire"
 )
@@ -25,14 +25,14 @@ func ProvideExecutionRunner(
 	config *types.Config,
 	client runnerclient.Client,
 	manager manager.ExecutionManager,
-) (*runtime.Runner, error) {
+) (*runtime2.Runner, error) {
 	return NewExecutionRunner(config, client, manager)
 }
 
 // ProvideExecutionPoller provides a poller which can poll the manager
 // for new builds and execute them.
 func ProvideExecutionPoller(
-	runner *runtime.Runner,
+	runner *runtime2.Runner,
 	config *types.Config,
 	client runnerclient.Client,
 ) *poller.Poller {

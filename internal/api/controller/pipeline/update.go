@@ -7,18 +7,20 @@ package pipeline
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
 )
 
 type UpdateInput struct {
+	UID         *string `json:"uid"`
 	Description *string `json:"description"`
-	UID         string  `json:"uid"`
 	Disabled    *bool   `json:"disabled"`
-	ConfigPath  string  `json:"config_path"`
+	ConfigPath  *string `json:"config_path"`
 }
 
 func (c *Controller) Update(
@@ -43,14 +45,14 @@ func (c *Controller) Update(
 	}
 
 	return c.pipelineStore.UpdateOptLock(ctx, pipeline, func(pipeline *types.Pipeline) error {
+		if in.UID != nil {
+			pipeline.UID = *in.UID
+		}
 		if in.Description != nil {
 			pipeline.Description = *in.Description
 		}
-		if in.UID != "" {
-			pipeline.UID = in.UID
-		}
-		if in.ConfigPath != "" {
-			pipeline.ConfigPath = in.ConfigPath
+		if in.ConfigPath != nil {
+			pipeline.ConfigPath = *in.ConfigPath
 		}
 		if in.Disabled != nil {
 			pipeline.Disabled = *in.Disabled
@@ -58,4 +60,27 @@ func (c *Controller) Update(
 
 		return nil
 	})
+}
+
+func (c *Controller) sanitizeUpdatenput(in *UpdateInput) error {
+	if in.UID != nil {
+		if err := c.uidCheck(*in.UID, false); err != nil {
+			return err
+		}
+	}
+
+	if in.Description != nil {
+		*in.Description = strings.TrimSpace(*in.Description)
+		if err := check.Description(*in.Description); err != nil {
+			return err
+		}
+	}
+
+	if in.ConfigPath != nil {
+		if *in.ConfigPath == "" {
+			return errPipelineRequiresConfigPath
+		}
+	}
+
+	return nil
 }

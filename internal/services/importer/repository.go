@@ -35,6 +35,11 @@ const (
 	importJobMaxDuration = 45 * time.Minute
 )
 
+var (
+	// ErrNotFound is returned if no import data was found.
+	ErrNotFound = errors.New("import not found")
+)
+
 type Repository struct {
 	defaultBranch string
 	urlProvider   *gitnessurl.Provider
@@ -82,23 +87,23 @@ func (r *Repository) Run(ctx context.Context, provider Provider, repo *types.Rep
 func (r *Repository) RunMany(ctx context.Context,
 	groupID string,
 	provider Provider,
-	repos []*types.Repository,
+	repoIDs []int64,
 	cloneURLs []string,
 ) error {
-	if len(repos) != len(cloneURLs) {
+	if len(repoIDs) != len(cloneURLs) {
 		return fmt.Errorf("slice length mismatch: have %d repositories and %d clone URLs",
-			len(repos), len(cloneURLs))
+			len(repoIDs), len(cloneURLs))
 	}
 
-	n := len(repos)
+	n := len(repoIDs)
 	defs := make([]job.Definition, n)
 
 	for k := 0; k < n; k++ {
-		repo := repos[k]
+		repoID := repoIDs[k]
 		cloneURL := cloneURLs[k]
 
-		jobDef, err := r.getJobDef(JobIDFromRepoID(repo.ID), Input{
-			RepoID:   repo.ID,
+		jobDef, err := r.getJobDef(JobIDFromRepoID(repoID), Input{
+			RepoID:   repoID,
 			GitUser:  provider.Username,
 			GitPass:  provider.Password,
 			CloneURL: cloneURL,
@@ -268,15 +273,15 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 }
 
 func (r *Repository) GetProgress(ctx context.Context, repo *types.Repository) (types.JobProgress, error) {
-	if !repo.Importing {
-		// if the repo is not being imported, or it's job ID has been cleared (or never existed) return state=finished
-		return job.DoneProgress(), nil
-	}
-
 	progress, err := r.scheduler.GetJobProgress(ctx, JobIDFromRepoID(repo.ID))
 	if errors.Is(err, gitness_store.ErrResourceNotFound) {
-		// if the job is not found return state=failed
-		return job.FailProgress(), nil
+		if repo.Importing {
+			// if the job is not found but repo is marked as importing, return state=failed
+			return job.FailProgress(), nil
+		}
+
+		// otherwise there either was no import, or it completed a long time ago (job cleaned up by now)
+		return types.JobProgress{}, ErrNotFound
 	}
 	if err != nil {
 		return types.JobProgress{}, fmt.Errorf("failed to get job progress: %w", err)

@@ -78,13 +78,13 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	principalUID := check.ProvidePrincipalUIDCheck()
-	pathTransformation := store.ProvidePathTransformation()
-	pathStore := database.ProvidePathStore(db, pathTransformation)
-	pathCache := cache.ProvidePathCache(pathStore, pathTransformation)
-	spaceStore := database.ProvideSpaceStore(db, pathCache)
+	spacePathTransformation := store.ProvidePathTransformation()
+	spacePathStore := database.ProvideSpacePathStore(db, spacePathTransformation)
+	spacePathCache := cache.ProvidePathCache(spacePathStore, spacePathTransformation)
+	spaceStore := database.ProvideSpaceStore(db, spacePathCache, spacePathStore)
 	principalInfoView := database.ProvidePrincipalInfoView(db)
 	principalInfoCache := cache.ProvidePrincipalInfoCache(principalInfoView)
-	membershipStore := database.ProvideMembershipStore(db, principalInfoCache)
+	membershipStore := database.ProvideMembershipStore(db, principalInfoCache, spacePathStore)
 	permissionCache := authz.ProvidePermissionCache(spaceStore, membershipStore)
 	authorizer := authz.ProvideAuthorizer(permissionCache, spaceStore)
 	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
@@ -99,7 +99,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	pathUID := check.ProvidePathUIDCheck()
-	repoStore := database.ProvideRepoStore(db, pathCache)
+	repoStore := database.ProvideRepoStore(db, spacePathCache, spacePathStore)
 	pipelineStore := database.ProvidePipelineStore(db)
 	gitrpcConfig, err := server.ProvideGitRPCClientConfig()
 	if err != nil {
@@ -133,7 +133,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, pathStore, repoStore, spaceStore, pipelineStore, principalStore, gitrpcInterface, repository)
+	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, repoStore, spaceStore, pipelineStore, principalStore, gitrpcInterface, repository)
 	executionStore := database.ProvideExecutionStore(db)
 	stageStore := database.ProvideStageStore(db)
 	schedulerScheduler, err := scheduler.ProvideScheduler(stageStore, mutexManager)
@@ -157,9 +157,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	spaceController := space.ProvideController(db, provider, streamer, pathUID, authorizer, pathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository)
-	pipelineController := pipeline.ProvideController(db, pathUID, pathStore, repoStore, triggerStore, authorizer, pipelineStore)
-	secretController := secret.ProvideController(db, pathUID, pathStore, encrypter, secretStore, authorizer, spaceStore)
+	spaceController := space.ProvideController(config, db, provider, streamer, pathUID, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository)
+	pipelineController := pipeline.ProvideController(db, pathUID, repoStore, triggerStore, authorizer, pipelineStore)
+	secretController := secret.ProvideController(db, pathUID, encrypter, secretStore, authorizer, spaceStore)
 	triggerController := trigger.ProvideController(db, authorizer, triggerStore, pathUID, pipelineStore, repoStore)
 	connectorController := connector.ProvideController(db, pathUID, connectorStore, authorizer, spaceStore)
 	templateController := template.ProvideController(db, pathUID, templateStore, authorizer, spaceStore)

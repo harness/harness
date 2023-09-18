@@ -16,7 +16,6 @@ import (
 type Controller struct {
 	db          *sqlx.DB
 	uidCheck    check.PathUID
-	pathStore   store.PathStore
 	encrypter   encrypt.Encrypter
 	secretStore store.SecretStore
 	authorizer  authz.Authorizer
@@ -27,7 +26,6 @@ func NewController(
 	db *sqlx.DB,
 	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
-	pathStore store.PathStore,
 	encrypter encrypt.Encrypter,
 	secretStore store.SecretStore,
 	spaceStore store.SpaceStore,
@@ -35,7 +33,6 @@ func NewController(
 	return &Controller{
 		db:          db,
 		uidCheck:    uidCheck,
-		pathStore:   pathStore,
 		encrypter:   encrypter,
 		secretStore: secretStore,
 		authorizer:  authorizer,

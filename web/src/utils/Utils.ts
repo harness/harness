@@ -105,24 +105,54 @@ export const displayDateTime = (value: number): string | null => {
   return value ? moment.unix(value / 1000).format(DEFAULT_DATE_FORMAT) : null
 }
 
-export const timeDistance = (date1 = 0, date2 = 0) => {
+export const timeDistance = (date1 = 0, date2 = 0, onlyHighestDenomination = false) => {
   let distance = Math.abs(date1 - date2)
 
   if (!distance) {
     return ''
   }
 
-  const days = Math.floor(distance / (24 * 3600000)) // 24 hours * 60 minutes * 60 seconds * 1000 milliseconds
+  const days = Math.floor(distance / (24 * 3600000))
+  if (onlyHighestDenomination && days) {
+    return days + 'd'
+  }
   distance -= days * 24 * 3600000
+
   const hours = Math.floor(distance / 3600000)
+  if (onlyHighestDenomination && hours) {
+    return hours + 'h'
+  }
   distance -= hours * 3600000
+
   const minutes = Math.floor(distance / 60000)
+  if (onlyHighestDenomination && minutes) {
+    return minutes + 'm'
+  }
   distance -= minutes * 60000
+
   const seconds = Math.floor(distance / 1000)
+  if (onlyHighestDenomination) {
+    return seconds + 's'
+  }
 
   return `${days ? days + 'd ' : ''}${hours ? hours + 'h ' : ''}${
     minutes ? minutes + 'm' : hours || days ? '0m' : ''
   } ${seconds}s`
+}
+
+export const timeDifferenceInMinutesAndSeconds = (date1 = 0, date2 = 0) => {
+  let distance = Math.abs(date1 - date2)
+
+  if (!distance) {
+    return '00:00'
+  }
+
+  const minutes = Math.floor(distance / 60000)
+  distance -= minutes * 60000
+
+  const seconds = Math.floor(distance / 1000)
+
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
 const LOCALE = Intl.NumberFormat().resolvedOptions?.().locale || 'en-US'

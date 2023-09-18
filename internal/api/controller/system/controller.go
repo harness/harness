@@ -29,5 +29,5 @@ func (c *Controller) IsUserSignupAllowed(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
-	return usrCount == 0 || c.config.AllowUserSignup, nil
+	return usrCount == 0 || c.config.UserSignupEnabled, nil
 }

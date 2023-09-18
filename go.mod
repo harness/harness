@@ -12,7 +12,7 @@ require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/drone-runners/drone-runner-docker v1.8.3
+	github.com/drone-runners/drone-runner-docker v1.8.4-0.20230915031357-c2cd927803f4
 	github.com/drone/drone-go v1.7.1
 	github.com/drone/drone-yaml v1.2.3
 	github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d
@@ -67,6 +67,7 @@ require (
 	cloud.google.com/go/compute v1.18.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	dario.cat/mergo v1.0.0 // indirect
+	github.com/99designs/basicauth-go v0.0.0-20160802081356-2a93ba0f464d // indirect
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
@@ -78,7 +79,8 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/drone/envsubst v1.0.3 // indirect
 	github.com/drone/go-convert v0.0.0-20230913194237-2228eb829d0e // indirect
-	github.com/drone/spec v0.0.0-20230913142424-983cda6e1ef2 // indirect
+	github.com/drone/signal v1.0.0 // indirect
+	github.com/drone/spec v0.0.0-20230915020458-f218a35b2082 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect

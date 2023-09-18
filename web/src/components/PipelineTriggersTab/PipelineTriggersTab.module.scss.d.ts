@@ -8,6 +8,7 @@ export declare const pillContainer: string
 export declare const pillText: string
 export declare const selected: string
 export declare const separator: string
+export declare const textContainer: string
 export declare const triggerDate: string
 export declare const triggerList: string
 export declare const triggerMenuItem: string

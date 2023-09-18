@@ -20,7 +20,7 @@ var WireSet = wire.NewSet(
 	ProvideDatabase,
 	ProvidePrincipalStore,
 	ProvidePrincipalInfoView,
-	ProvidePathStore,
+	ProvideSpacePathStore,
 	ProvideSpaceStore,
 	ProvideRepoStore,
 	ProvideJobStore,
@@ -73,19 +73,30 @@ func ProvidePrincipalInfoView(db *sqlx.DB) store.PrincipalInfoView {
 	return NewPrincipalInfoView(db)
 }
 
-// ProvidePathStore provides a path store.
-func ProvidePathStore(db *sqlx.DB, pathTransformation store.PathTransformation) store.PathStore {
-	return NewPathStore(db, pathTransformation)
+// ProvideSpacePathStore provides a space path store.
+func ProvideSpacePathStore(
+	db *sqlx.DB,
+	spacePathTransformation store.SpacePathTransformation,
+) store.SpacePathStore {
+	return NewSpacePathStore(db, spacePathTransformation)
 }
 
 // ProvideSpaceStore provides a space store.
-func ProvideSpaceStore(db *sqlx.DB, pathCache store.PathCache) store.SpaceStore {
-	return NewSpaceStore(db, pathCache)
+func ProvideSpaceStore(
+	db *sqlx.DB,
+	spacePathCache store.SpacePathCache,
+	spacePathStore store.SpacePathStore,
+) store.SpaceStore {
+	return NewSpaceStore(db, spacePathCache, spacePathStore)
 }
 
 // ProvideRepoStore provides a repo store.
-func ProvideRepoStore(db *sqlx.DB, pathCache store.PathCache) store.RepoStore {
-	return NewRepoStore(db, pathCache)
+func ProvideRepoStore(
+	db *sqlx.DB,
+	spacePathCache store.SpacePathCache,
+	spacePathStore store.SpacePathStore,
+) store.RepoStore {
+	return NewRepoStore(db, spacePathCache, spacePathStore)
 }
 
 // ProvideJobStore provides a job store.
@@ -146,8 +157,9 @@ func ProvideRepoGitInfoView(db *sqlx.DB) store.RepoGitInfoView {
 func ProvideMembershipStore(
 	db *sqlx.DB,
 	principalInfoCache store.PrincipalInfoCache,
+	spacePathStore store.SpacePathStore,
 ) store.MembershipStore {
-	return NewMembershipStore(db, principalInfoCache)
+	return NewMembershipStore(db, principalInfoCache, spacePathStore)
 }
 
 // ProvideTokenStore provides a token store.

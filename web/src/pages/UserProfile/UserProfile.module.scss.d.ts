@@ -1,5 +1,6 @@
 /* eslint-disable */
 // This is an auto-generated file
+export declare const avatar: string
 export declare const detailField: string
 export declare const detailsCtn: string
 export declare const editableTextWrapper: string

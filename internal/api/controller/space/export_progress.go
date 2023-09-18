@@ -2,14 +2,19 @@ package space
 
 import (
 	"context"
+	"fmt"
+
 	apiauth "github.com/harness/gitness/internal/api/auth"
+	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/services/exporter"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/pkg/errors"
 )
 
 type ExportProgressOutput struct {
-	JobProgress []types.JobProgress `json:"job_progress"`
+	Repos []types.JobProgress `json:"repos"`
 }
 
 // ExportProgress returns progress of the export job.
@@ -26,9 +31,13 @@ func (c *Controller) ExportProgress(ctx context.Context,
 		return ExportProgressOutput{}, err
 	}
 
-	progress, err := c.exporter.GetProgress(ctx, space)
-	if err != nil {
-		return ExportProgressOutput{}, err
+	progress, err := c.exporter.GetProgressForSpace(ctx, space.ID)
+	if errors.Is(err, exporter.ErrNotFound) {
+		return ExportProgressOutput{}, usererror.NotFound("No recent or ongoing export found for space.")
 	}
-	return ExportProgressOutput{JobProgress: progress}, nil
+	if err != nil {
+		return ExportProgressOutput{}, fmt.Errorf("failed to retrieve export progress: %w", err)
+	}
+
+	return ExportProgressOutput{Repos: progress}, nil
 }

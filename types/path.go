@@ -4,44 +4,26 @@
 
 package types
 
-import (
-	"github.com/harness/gitness/types/enum"
-)
-
 const (
 	PathSeparator = "/"
 )
 
-// Represents a path to a resource (e.g. space) that can be used to address the resource.
-type Path struct {
+// SpacePath represents a full path to a space.
+type SpacePath struct {
+	Value     string `json:"value"`
+	IsPrimary bool   `json:"is_primary"`
+	SpaceID   int64  `json:"space_id"`
+}
+
+// SpacePathSegment represents a segment of a path to a space.
+type SpacePathSegment struct {
 	// TODO: int64 ID doesn't match DB
-	ID         int64               `json:"id"`
-	Version    int64               `json:"-"`
-	Value      string              `json:"value"`
-	IsPrimary  bool                `json:"is_primary"`
-	TargetType enum.PathTargetType `json:"target_type"`
-	TargetID   int64               `json:"target_id"`
-	CreatedBy  int64               `json:"created_by"`
-	Created    int64               `json:"created"`
-	Updated    int64               `json:"updated"`
-}
-
-func (p *Path) Identifier() string {
-	return p.Value
-}
-
-// PathParams used for creating paths (alias or rename).
-type PathParams struct {
-	Path      string
-	CreatedBy int64
-	Created   int64
-	Updated   int64
-}
-
-// PathFilter stores path query parameters.
-type PathFilter struct {
-	Page  int           `json:"page"`
-	Size  int           `json:"size"`
-	Sort  enum.PathAttr `json:"sort"`
-	Order enum.Order    `json:"order"`
+	ID        int64  `json:"id"`
+	UID       string `json:"uid"`
+	IsPrimary bool   `json:"is_primary"`
+	SpaceID   int64  `json:"space_id"`
+	ParentID  int64  `json:"parent_id"`
+	CreatedBy int64  `json:"created_by"`
+	Created   int64  `json:"created"`
+	Updated   int64  `json:"updated"`
 }
