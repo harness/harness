@@ -79,11 +79,8 @@ const CommitRangeDropdown: React.FC<CommitRangeDropdownProps> = ({
       // clicked commit is outside of current range - extend it!
       const extendedArray = getCommitRange([...current, selectedCommitSHA], allCommitsSHA)
 
-      //  Are all commits selected, then return AllCommits explicitly
-      if (extendedArray.length === allCommits.length) {
-        return []
-      }
-
+      // NOTE: this CAN contain all commits - we let it through for consistent user experience.
+      // This way, the user sees selected exactly what they clicked on (+ we don't have to handle single commit pr differently)
       return extendedArray
     })
   }
@@ -142,9 +139,11 @@ const CommitRangeDropdown: React.FC<CommitRangeDropdownProps> = ({
         color={Color.GREY_700}
         font={{ variation: FontVariation.BODY2 }}
         margin={{ right: 'medium' }}>
-        {selectedCommits.length && selectedCommits.length !== allCommitsSHA.length
-          ? `${selectedCommits.length} ${selectedCommits.length > 1 ? getString('commits') : getString('commit')}`
-          : getString('allCommits')}
+        {
+          areAllCommitsSelected
+            ? getString('allCommits')
+            : `${selectedCommits.length} ${selectedCommits.length > 1 ? getString('commits') : getString('commit')}`
+        }
       </Text>
     </Popover>
   )

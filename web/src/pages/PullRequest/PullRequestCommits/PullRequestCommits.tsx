@@ -10,14 +10,14 @@ import { CommitsView } from 'components/CommitsView/CommitsView'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 
 interface CommitProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
-  prHasChanged: boolean
+  prStatsChanged: Number
   handleRefresh: () => void
 }
 
 export const PullRequestCommits: React.FC<CommitProps> = ({
   repoMetadata,
   pullRequestMetadata,
-  prHasChanged,
+  prStatsChanged,
   handleRefresh
 }) => {
   const limit = LIST_FETCHING_LIMIT
@@ -43,7 +43,7 @@ export const PullRequestCommits: React.FC<CommitProps> = ({
         repoMetadata={repoMetadata}
         emptyTitle={getString('noCommits')}
         emptyMessage={getString('noCommitsPR')}
-        prHasChanged={prHasChanged}
+        prStatsChanged={prStatsChanged}
         handleRefresh={voidFn(handleRefresh)}
         pullRequestMetadata={pullRequestMetadata}
       />

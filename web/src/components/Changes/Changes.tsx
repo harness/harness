@@ -14,7 +14,7 @@ import * as Diff2Html from 'diff2html'
 import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
-import { noop } from 'lodash-es'
+import { isEqual, noop } from 'lodash-es'
 import { useStrings } from 'framework/strings'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { PullRequestSection, formatNumber, getErrorMessage, voidFn } from 'utils/Utils'
@@ -48,7 +48,7 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   pullRequestMetadata?: TypesPullReq
   className?: string
   onCommentUpdate: () => void
-  prHasChanged?: boolean
+  prStatsChanged: Number
   onDataReady?: (data: DiffFileEntry[]) => void
   defaultCommitRange?: string[]
   scrollElement: HTMLElement
@@ -62,9 +62,9 @@ export const Changes: React.FC<ChangesProps> = ({
   emptyTitle,
   emptyMessage,
   pullRequestMetadata,
-  onCommentUpdate,
   className,
-  prHasChanged,
+  onCommentUpdate,
+  prStatsChanged,
   onDataReady,
   defaultCommitRange,
   scrollElement
@@ -197,24 +197,31 @@ export const Changes: React.FC<ChangesProps> = ({
   // happens after some comments are authored.
   useEffect(
     function setActivitiesIfNotSet() {
-      if (prActivities) {
-        setActivities(prActivities)
+      if (!prActivities || isEqual(activities, prActivities)) {
+        return
       }
+
+      setActivities(prActivities)
+
     },
     [prActivities]
   )
 
   useEffect(() => {
-    if (prHasChanged) {
-      refetchActivities()
+    if (readOnly) {
+      return
     }
-  }, [prHasChanged, refetchActivities])
+
+    refetchActivities()
+  }, [prStatsChanged])
 
   useEffect(() => {
-    if (prHasChanged) {
-      refetchFileViews()
+    if (readOnly) {
+      return
     }
-  }, [prHasChanged, refetchFileViews])
+
+    refetchFileViews()
+  }, [prStatsChanged])
 
   useEffect(() => {
     const _raw = rawDiff && typeof rawDiff === 'string' ? rawDiff : ''
@@ -335,7 +342,7 @@ export const Changes: React.FC<ChangesProps> = ({
                   // is changed. Making it easier to control states inside DiffView itself, as it does not
                   //  have to deal with any view configuration
                   <DiffViewer
-                    readOnly={readOnly}
+                    readOnly={readOnly || (commitRange?.length || 0) > 0} // render in readonly mode in case a commit is selected
                     key={viewStyle + index + lineBreaks}
                     diff={diff}
                     viewStyle={viewStyle}

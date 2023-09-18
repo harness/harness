@@ -136,6 +136,10 @@ export const DIFF2HTML_CONFIG = {
   }
 } as Readonly<Diff2Html.Diff2HtmlConfig>
 
+export function contentDOMHasData(contentDOM: HTMLDivElement): boolean {
+  return contentDOM?.querySelector('[data]') != null
+}
+
 export function getCommentLineInfo(
   contentDOM: HTMLDivElement | null,
   commentEntry: DiffCommentItem,
@@ -143,7 +147,7 @@ export function getCommentLineInfo(
 ) {
   const isSideBySideView = viewStyle === ViewStyle.SIDE_BY_SIDE
   const { left, lineNumber, filePath } = commentEntry
-  const filePathBody = filePath ? contentDOM?.querySelector(`[data="${filePath}"`) : contentDOM
+  const filePathBody = (filePath ? contentDOM?.querySelector(`[data="${filePath}"`) : contentDOM)
 
   const diffBody = filePathBody?.querySelector(
     `${isSideBySideView ? `.d2h-file-side-diff${left ? '.left' : '.right'} ` : ''}.d2h-diff-tbody`
@@ -178,7 +182,7 @@ export function getCommentLineInfo(
   }
 }
 
-export function renderCommentOppositePlaceHolder(annotation: DiffCommentItem, oppositeRowElement: HTMLTableRowElement) {
+export function createCommentOppositePlaceHolder(annotation: DiffCommentItem): HTMLTableRowElement {
   const placeHolderRow = document.createElement('tr')
 
   placeHolderRow.dataset.placeHolderForLine = String(annotation.lineNumber)
@@ -191,7 +195,8 @@ export function renderCommentOppositePlaceHolder(annotation: DiffCommentItem, op
       </div>
     </td>
   `
-  oppositeRowElement.after(placeHolderRow)
+
+  return placeHolderRow
 }
 
 export const activityToCommentItem = (activity: TypesPullReqActivity): CommentItem<TypesPullReqActivity> => ({
@@ -205,7 +210,7 @@ export const activityToCommentItem = (activity: TypesPullReqActivity): CommentIt
 })
 
 export function activitiesToDiffCommentItems(diff: DiffFileEntry): DiffCommentItem<TypesPullReqActivity>[] {
-  return (
+  const commentThreads = (
     diff.fileActivities?.map(activity => {
       const replyComments =
         diff.activities
@@ -219,8 +224,11 @@ export function activitiesToDiffCommentItems(diff: DiffFileEntry): DiffCommentIt
         height: 0,
         lineNumber: (right ? activity.code_comment?.line_new : activity.code_comment?.line_old) as number,
         commentItems: [activityToCommentItem(activity)].concat(replyComments),
-        filePath: diff.filePath
+        filePath: diff.filePath,
       }
     }) || []
   )
+
+  // filter out threads where all comments are deleted
+  return commentThreads.filter(({commentItems: commentItems}) => commentItems.map(item => !item.deleted).reduce((a,b) => a || b), false)
 }

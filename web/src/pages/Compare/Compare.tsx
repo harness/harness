@@ -277,13 +277,14 @@ export default function Compare() {
                   panel: (
                     <TabContentWrapper loading={loading} error={error} onRetry={noop} className={css.changesContainer}>
                       <Changes
-                        readOnly
+                        readOnly={true}
                         repoMetadata={repoMetadata}
                         targetRef={targetGitRef}
                         sourceRef={sourceGitRef}
                         emptyTitle={getString('noChanges')}
                         emptyMessage={getString('noChangesCompare')}
                         onCommentUpdate={noop}
+                        prStatsChanged={0}
                         scrollElement={(standalone ? document.querySelector(`.${css.main}`)?.parentElement || window : window) as HTMLElement}
                       />
                     </TabContentWrapper>

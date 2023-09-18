@@ -4,7 +4,7 @@ import { FontVariation } from '@harnessio/design-system'
 import { useGet, useMutate } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { useHistory } from 'react-router-dom'
-import { compact } from 'lodash-es'
+import { compact, isEqual } from 'lodash-es'
 import { useAppContext } from 'AppContext'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
@@ -58,21 +58,20 @@ export default function PullRequest() {
   const showSpinner = useMemo(() => {
     return loading || (prLoading && !prData)
   }, [loading, prLoading, prData])
-  const [stats, setStats] = useState<TypesPullReqStats>()
   const [showEditDescription, setShowEditDescription] = useState(false)
-  const prHasChanged = useMemo(() => {
-    if (stats && prData?.stats) {
-      if (
-        stats.commits !== prData.stats.commits ||
-        stats.conversations !== prData.stats.conversations ||
-        stats.files_changed !== prData.stats.files_changed
-      ) {
-        window.setTimeout(() => setStats(prData.stats), 50)
-        return true
-      }
+  
+  const [stats, setStats] = useState<TypesPullReqStats>()
+  // simple value one can listen on to react on stats changes (boolean is NOT enough)
+  const [prStatsChanged, setPrStatsChanged] = useState(0)
+  useMemo(() => {
+    if (isEqual(stats, prData?.stats)) {
+      return
     }
-    return false
+
+    setStats(stats)
+    setPrStatsChanged(Date.now())
   }, [prData?.stats, stats])
+
   const onAddDescriptionClick = useCallback(() => {
     setShowEditDescription(true)
     history.replace(
@@ -92,43 +91,36 @@ export default function PullRequest() {
     path: recheckPath,
   })
 
-  useEffect(
-    function setStatsIfNotSet() {
-      if (!stats && prData?.stats) {
-        setStats(prData.stats)
-      }
-    },
-    [prData?.stats, stats]
-  )
-
   // prData holds the latest good PR data to make sure page is not broken
   // when polling fails
   useEffect(
     function setPrDataIfNotSet() {
-      if (pullRequestData) {
-        // recheck pr (merge-check, ...) in case it's unavailable
-        // Approximation of identifying target branch update:
-        //   1. branch got updated before page was loaded (status is unchecked and prData is empty)
-        //      NOTE: This doesn't guarantee the status is UNCHECKED due to target branch update and can cause duplicate
-        //      PR merge checks being run on PR creation or source branch update.
-        //   2. branch got updated while we are on the page (same source_sha but status changed to UNCHECKED)
-        //      NOTE: This doesn't cover the case in which the status changed back to UNCHECKED before the PR is refetched.
-        //      In that case, the user will have to re-open the PR - better than us spamming the backend with rechecks.
-        // This is a TEMPORARY SOLUTION and will most likely change in the future (more so on backend side)
-        if (pullRequestData.state == 'open' &&
-            pullRequestData.merge_check_status == MergeCheckStatus.UNCHECKED &&
-            (
-              // case 1:
-              !prData || 
-              // case 2:
-              (prData?.merge_check_status != MergeCheckStatus.UNCHECKED && prData?.source_sha == pullRequestData.source_sha)
-            ) && !loadingRecheckPR) {
-              // best effort attempt to recheck PR - fail silently
-              recheckPR({})
-        }
-
-        setPrData(pullRequestData)
+      if (!pullRequestData || (prData && isEqual(prData, pullRequestData))) {
+        return
       }
+
+      // recheck pr (merge-check, ...) in case it's unavailable
+      // Approximation of identifying target branch update:
+      //   1. branch got updated before page was loaded (status is unchecked and prData is empty)
+      //      NOTE: This doesn't guarantee the status is UNCHECKED due to target branch update and can cause duplicate
+      //      PR merge checks being run on PR creation or source branch update.
+      //   2. branch got updated while we are on the page (same source_sha but status changed to UNCHECKED)
+      //      NOTE: This doesn't cover the case in which the status changed back to UNCHECKED before the PR is refetched.
+      //      In that case, the user will have to re-open the PR - better than us spamming the backend with rechecks.
+      // This is a TEMPORARY SOLUTION and will most likely change in the future (more so on backend side)
+      if (pullRequestData.state == 'open' &&
+          pullRequestData.merge_check_status == MergeCheckStatus.UNCHECKED &&
+          (
+            // case 1:
+            !prData || 
+            // case 2:
+            (prData?.merge_check_status != MergeCheckStatus.UNCHECKED && prData?.source_sha == pullRequestData.source_sha)
+          ) && !loadingRecheckPR) {
+            // best effort attempt to recheck PR - fail silently
+            recheckPR({})
+      }
+
+      setPrData(pullRequestData)
     },
     [pullRequestData]
   )
@@ -217,7 +209,7 @@ export default function PullRequest() {
                           setShowEditDescription(false)
                           refetchPullRequest()
                         }}
-                        prHasChanged={prHasChanged}
+                        prStatsChanged={prStatsChanged}
                         showEditDescription={showEditDescription}
                         onCancelEditDescription={() => setShowEditDescription(false)}
                       />
@@ -237,7 +229,7 @@ export default function PullRequest() {
                       <PullRequestCommits
                         repoMetadata={repoMetadata as TypesRepository}
                         pullRequestMetadata={prData as TypesPullReq}
-                        prHasChanged={prHasChanged}
+                        prStatsChanged={prStatsChanged}
                         handleRefresh={voidFn(refetchPullRequest)}
                       />
                     )
@@ -263,7 +255,7 @@ export default function PullRequest() {
                           emptyTitle={getString('noChanges')}
                           emptyMessage={getString('noChangesPR')}
                           onCommentUpdate={voidFn(refetchPullRequest)}
-                          prHasChanged={prHasChanged}
+                          prStatsChanged={prStatsChanged}
                           scrollElement={(standalone ? document.querySelector(`.${css.main}`)?.parentElement || window : window) as HTMLElement}
                         />
                       </Container>

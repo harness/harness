@@ -29,7 +29,7 @@ import css from './Conversation.module.scss'
 
 export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   onCommentUpdate: () => void
-  prHasChanged?: boolean
+  prStatsChanged: Number
   showEditDescription?: boolean
   onCancelEditDescription: () => void
   prChecksDecisionResult?: PRChecksDecisionResult
@@ -39,7 +39,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   repoMetadata,
   pullRequestMetadata,
   onCommentUpdate,
-  prHasChanged,
+  prStatsChanged,
   showEditDescription,
   onCancelEditDescription,
   prChecksDecisionResult
@@ -143,10 +143,10 @@ export const Conversation: React.FC<ConversationProps> = ({
   )
 
   useEffect(() => {
-    if (prHasChanged) {
+    if (prStatsChanged) {
       refetchActivities()
     }
-  }, [prHasChanged, refetchActivities, refetchReviewers])
+  }, [prStatsChanged, refetchActivities])
 
   return (
     <PullRequestTabContentWrapper loading={showSpinner} error={error} onRetry={refetchActivities}>
@@ -176,6 +176,7 @@ export const Conversation: React.FC<ConversationProps> = ({
                       pullRequestMetadata={pullRequestMetadata}
                       onCommentUpdate={onCommentUpdate}
                       onCancelEditDescription={onCancelEditDescription}
+                      prStatsChanged={prStatsChanged}
                     />
                   )}
 

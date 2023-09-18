@@ -32,7 +32,7 @@ interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
   commits: TypesCommit[] | null
   emptyTitle: string
   emptyMessage: string
-  prHasChanged?: boolean
+  prStatsChanged?: Number
   handleRefresh?: () => void
   showFileHistoryIcons?: boolean
   resourcePath?: string
@@ -46,7 +46,7 @@ export function CommitsView({
   emptyTitle,
   emptyMessage,
   handleRefresh = noop,
-  prHasChanged,
+  prStatsChanged,
   showFileHistoryIcons = false,
   resourcePath = '',
   setActiveTab,
@@ -186,7 +186,7 @@ export function CommitsView({
     <Container className={css.container}>
       <Layout.Horizontal>
         <FlexExpander />
-        {!prHasChanged ? null : (
+        {!prStatsChanged ? null : (
           <Button
             onClick={handleRefresh}
             iconProps={{ className: css.refreshIcon, size: 12 }}
