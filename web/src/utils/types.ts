@@ -8,4 +8,5 @@ export interface DiffFileEntry extends DiffFile {
   contentId: string
   fileActivities?: TypesPullReqActivity[]
   activities?: TypesPullReqActivity[]
+  fileViews?: Map<string, string>
 }

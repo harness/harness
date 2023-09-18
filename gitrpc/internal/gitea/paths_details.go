@@ -42,9 +42,10 @@ func (g Adapter) PathsDetails(ctx context.Context,
 		if len(path) > 0 {
 			entry, err := tree.FindEntry(path)
 			if errors.Is(err, gogitobject.ErrDirectoryNotFound) || errors.Is(err, gogitobject.ErrEntryNotFound) {
-				return nil, types.ErrPathNotFound
-			} else if err != nil {
-				return nil, fmt.Errorf("can't find path entry %s: %w", path, err)
+				return nil, &types.PathNotFoundError{Path: path}
+			}
+			if err != nil {
+				return nil, fmt.Errorf("failed to find path entry %s: %w", path, err)
 			}
 
 			if entry.Mode == gogitfilemode.Regular || entry.Mode == gogitfilemode.Executable {

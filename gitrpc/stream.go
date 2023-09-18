@@ -20,6 +20,8 @@ func NewStreamReader[T any](chData <-chan T, chErr <-chan error) *StreamReader[T
 	}
 }
 
+// Next returns the next element or error.
+// In case the end has been reached, an io.EOF is returned.
 func (str *StreamReader[T]) Next() (T, error) {
 	var null T
 

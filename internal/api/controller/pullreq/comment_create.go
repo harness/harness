@@ -111,7 +111,7 @@ func (c *Controller) CommentCreate(
 			LineEnd:         in.LineEnd,
 			LineEndNew:      in.LineEndNew,
 		})
-		if gitrpc.ErrorStatus(err) == gitrpc.StatusNotFound {
+		if gitrpc.ErrorStatus(err) == gitrpc.StatusNotFound || gitrpc.ErrorStatus(err) == gitrpc.StatusPathNotFound {
 			return nil, usererror.BadRequest(gitrpc.ErrorMessage(err))
 		}
 		if err != nil {

@@ -66,3 +66,9 @@ enum RefType {
   RefPullReqHead = 4;
   RefPullReqMerge = 5;
 }
+
+// PathNotFoundError is an error returned in the case a provided path is not found in the repo.
+message PathNotFoundError {
+  // path is the path that wasn't found in the repo.
+  string path = 1;
+}

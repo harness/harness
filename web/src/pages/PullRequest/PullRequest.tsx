@@ -27,7 +27,7 @@ import css from './PullRequest.module.scss'
 export default function PullRequest() {
   const history = useHistory()
   const { getString } = useStrings()
-  const { routes } = useAppContext()
+  const { routes, standalone } = useAppContext()
   const {
     repoMetadata,
     error,
@@ -264,6 +264,7 @@ export default function PullRequest() {
                           emptyMessage={getString('noChangesPR')}
                           onCommentUpdate={voidFn(refetchPullRequest)}
                           prHasChanged={prHasChanged}
+                          scrollElement={(standalone ? document.querySelector(`.${css.main}`)?.parentElement || window : window) as HTMLElement}
                         />
                       </Container>
                     )

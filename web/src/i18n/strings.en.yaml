@@ -320,6 +320,7 @@ all: All
 scrollToTop: Scroll to top
 filesChanged: Changes
 viewed: Viewed
+changedSinceLastView: Changed since last view
 comment: Comment
 addComment: Add comment
 replyHere: Reply here...

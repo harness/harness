@@ -37,6 +37,7 @@ var WireSet = wire.NewSet(
 	ProvideCodeCommentView,
 	ProvidePullReqReviewStore,
 	ProvidePullReqReviewerStore,
+	ProvidePullReqFileViewStore,
 	ProvideWebhookStore,
 	ProvideWebhookExecutionStore,
 	ProvideCheckStore,
@@ -196,6 +197,11 @@ func ProvidePullReqReviewerStore(db *sqlx.DB,
 	principalInfoCache store.PrincipalInfoCache,
 ) store.PullReqReviewerStore {
 	return NewPullReqReviewerStore(db, principalInfoCache)
+}
+
+// ProvidePullReqFileViewStore provides a pull request file view store.
+func ProvidePullReqFileViewStore(db *sqlx.DB) store.PullReqFileViewStore {
+	return NewPullReqFileViewStore(db)
 }
 
 // ProvideWebhookStore provides a webhook store.

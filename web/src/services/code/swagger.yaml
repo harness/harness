@@ -3357,6 +3357,154 @@ paths:
           description: Internal Server Error
       tags:
         - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/file-views:
+    get:
+      operationId: fileViewListPullReq
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TypesPullReqFileView'
+                type: array
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+    put:
+      operationId: fileViewAddPullReq
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenapiFileViewAddPullReqRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TypesPullReqFileView'
+          description: OK
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
+  /repos/{repo_ref}/pullreq/{pullreq_number}/file-views/{file_path}:
+    delete:
+      operationId: fileViewDeletePullReq
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pullreq_number
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: file_path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - pullreq
   /repos/{repo_ref}/pullreq/{pullreq_number}/merge:
     post:
       operationId: mergePullReqOp
@@ -6249,8 +6397,6 @@ components:
           type: integer
         changes:
           type: integer
-        content_url:
-          type: string
         deletions:
           type: integer
         is_binary:
@@ -6271,8 +6417,10 @@ components:
         sha:
           type: string
         status:
-          type: string
+          $ref: '#/components/schemas/GitrpcFileDiffStatus'
       type: object
+    GitrpcFileDiffStatus:
+      type: string
     GitrpcIdentity:
       properties:
         email:
@@ -6602,6 +6750,13 @@ components:
         projectIdentifier:
           type: string
         token:
+          type: string
+      type: object
+    OpenapiFileViewAddPullReqRequest:
+      properties:
+        commit_sha:
+          type: string
+        path:
           type: string
       type: object
     OpenapiGetContentOutput:
@@ -7363,6 +7518,15 @@ components:
           type: string
         type:
           $ref: '#/components/schemas/EnumPullReqActivityType'
+      type: object
+    TypesPullReqFileView:
+      properties:
+        obsolete:
+          type: boolean
+        path:
+          type: string
+        sha:
+          type: string
       type: object
     TypesPullReqReviewer:
       properties:

@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"path"
 
 	"github.com/harness/gitness/gitrpc/internal/streamio"
 	"github.com/harness/gitness/gitrpc/internal/types"
@@ -281,21 +280,33 @@ func (c *Client) DiffCut(ctx context.Context, params *DiffCutParams) (DiffCutOut
 }
 
 type FileDiff struct {
-	SHA         string `json:"sha"`
-	OldSHA      string `json:"old_sha,omitempty"`
-	Path        string `json:"path"`
-	OldPath     string `json:"old_path,omitempty"`
-	Status      string `json:"status"`
-	Additions   int64  `json:"additions"`
-	Deletions   int64  `json:"deletions"`
-	Changes     int64  `json:"changes"`
-	ContentURL  string `json:"content_url"`
-	Patch       []byte `json:"patch,omitempty"`
-	IsBinary    bool   `json:"is_binary"`
-	IsSubmodule bool   `json:"is_submodule"`
+	SHA         string         `json:"sha"`
+	OldSHA      string         `json:"old_sha,omitempty"`
+	Path        string         `json:"path"`
+	OldPath     string         `json:"old_path,omitempty"`
+	Status      FileDiffStatus `json:"status"`
+	Additions   int64          `json:"additions"`
+	Deletions   int64          `json:"deletions"`
+	Changes     int64          `json:"changes"`
+	Patch       []byte         `json:"patch,omitempty"`
+	IsBinary    bool           `json:"is_binary"`
+	IsSubmodule bool           `json:"is_submodule"`
 }
 
-func (c *Client) Diff(ctx context.Context, params *DiffParams, baseURL string) (<-chan *FileDiff, <-chan error) {
+type FileDiffStatus string
+
+const (
+	// NOTE: keeping values upper case for now to stay consistent with current API.
+	// TODO: change drone/go-scm (and potentially new dependencies) to case insensitive.
+
+	FileDiffStatusUndefined FileDiffStatus = "UNDEFINED"
+	FileDiffStatusAdded     FileDiffStatus = "ADDED"
+	FileDiffStatusModified  FileDiffStatus = "MODIFIED"
+	FileDiffStatusDeleted   FileDiffStatus = "DELETED"
+	FileDiffStatusRenamed   FileDiffStatus = "RENAMED"
+)
+
+func (c *Client) Diff(ctx context.Context, params *DiffParams) (<-chan *FileDiff, <-chan error) {
 	ch := make(chan *FileDiff)
 	// needs to be buffered so it is not blocking on receiver side when all data is sent
 	cherr := make(chan error, 1)
@@ -335,11 +346,10 @@ func (c *Client) Diff(ctx context.Context, params *DiffParams, baseURL string) (
 				OldSHA:      resp.OldSha,
 				Path:        resp.Path,
 				OldPath:     resp.OldPath,
-				Status:      resp.Status.String(),
+				Status:      mapRPCFileDiffStatus(resp.Status),
 				Additions:   int64(resp.Additions),
 				Deletions:   int64(resp.Deletions),
 				Changes:     int64(resp.Changes),
-				ContentURL:  path.Join(baseURL, resp.Path),
 				Patch:       resp.Patch,
 				IsBinary:    resp.IsBinary,
 				IsSubmodule: resp.IsSubmodule,
@@ -348,4 +358,19 @@ func (c *Client) Diff(ctx context.Context, params *DiffParams, baseURL string) (
 	}()
 
 	return ch, cherr
+}
+
+func mapRPCFileDiffStatus(status rpc.DiffResponse_FileStatus) FileDiffStatus {
+	switch status {
+	case rpc.DiffResponse_ADDED:
+		return FileDiffStatusAdded
+	case rpc.DiffResponse_DELETED:
+		return FileDiffStatusDeleted
+	case rpc.DiffResponse_MODIFIED:
+		return FileDiffStatusModified
+	case rpc.DiffResponse_RENAMED:
+		return FileDiffStatusRenamed
+	default:
+		return FileDiffStatusUndefined
+	}
 }

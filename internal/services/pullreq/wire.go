@@ -38,10 +38,11 @@ func ProvideService(ctx context.Context,
 	activityStore store.PullReqActivityStore,
 	codeCommentView store.CodeCommentView,
 	codeCommentMigrator *codecomments.Migrator,
+	fileViewStore store.PullReqFileViewStore,
 	pubsub pubsub.PubSub,
 	urlProvider *url.Provider,
 ) (*Service, error) {
 	return New(ctx, config, gitReaderFactory, pullReqEvFactory, pullReqEvReporter, gitRPCClient,
 		db, repoGitInfoCache, repoStore, pullreqStore, activityStore,
-		codeCommentView, codeCommentMigrator, pubsub, urlProvider)
+		codeCommentView, codeCommentMigrator, fileViewStore, pubsub, urlProvider)
 }

@@ -15,7 +15,7 @@ import css from './RepositoryCommit.module.scss'
 
 export default function RepositoryCommits() {
   const { repoMetadata, error, loading, commitRef, refetch } = useGetRepositoryMetadata()
-  const { routes } = useAppContext()
+  const { routes, standalone } = useAppContext()
   const { getString } = useStrings()
 
   const {
@@ -43,6 +43,7 @@ export default function RepositoryCommits() {
             emptyTitle={getString('noChanges')}
             emptyMessage={getString('noChangesCompare')}
             onCommentUpdate={noop}
+            scrollElement={(standalone ? document.querySelector(`.${css.main}`)?.parentElement || window : window) as HTMLElement}
           />
         </Container>
       )

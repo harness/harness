@@ -8,9 +8,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/harness/gitness/gitrpc/internal/types"
 	"io"
 	"path"
+
+	"github.com/harness/gitness/gitrpc/internal/types"
 
 	gogitobject "github.com/go-git/go-git/v5/plumbing/object"
 )
@@ -35,7 +36,7 @@ func (g Adapter) MatchFiles(ctx context.Context,
 	if dirPath != "" {
 		tree, err = tree.Tree(dirPath)
 		if errors.Is(err, gogitobject.ErrDirectoryNotFound) {
-			return nil, types.ErrPathNotFound
+			return nil, &types.PathNotFoundError{Path: dirPath}
 		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to navigate to %s directory: %w", dirPath, err)

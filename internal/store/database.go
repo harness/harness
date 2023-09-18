@@ -349,6 +349,21 @@ type (
 		List(ctx context.Context, prID int64) ([]*types.PullReqReviewer, error)
 	}
 
+	// PullReqFileViewStore stores information about what file a user viewed.
+	PullReqFileViewStore interface {
+		// Upsert inserts or updates the latest viewed sha for a file in a PR.
+		Upsert(ctx context.Context, fileView *types.PullReqFileView) error
+
+		// DeleteByFileForPrincipal deletes the entry for the specified PR, principal, and file.
+		DeleteByFileForPrincipal(ctx context.Context, prID int64, principalID int64, filePath string) error
+
+		// MarkObsolete updates all entries of the files as obsolete for the PR.
+		MarkObsolete(ctx context.Context, prID int64, filePaths []string) error
+
+		// List lists all files marked as viewed by the user for the specified PR.
+		List(ctx context.Context, prID int64, principalID int64) ([]*types.PullReqFileView, error)
+	}
+
 	// WebhookStore defines the webhook data storage.
 	WebhookStore interface {
 		// Find finds the webhook by id.

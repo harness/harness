@@ -87,6 +87,7 @@ var codes = map[gitrpc.Status]int{
 	gitrpc.StatusConflict:           http.StatusConflict,
 	gitrpc.StatusInvalidArgument:    http.StatusBadRequest,
 	gitrpc.StatusNotFound:           http.StatusNotFound,
+	gitrpc.StatusPathNotFound:       http.StatusNotFound,
 	gitrpc.StatusNotImplemented:     http.StatusNotImplemented,
 	gitrpc.StatusPreconditionFailed: http.StatusPreconditionFailed,
 	gitrpc.StatusUnauthorized:       http.StatusUnauthorized,

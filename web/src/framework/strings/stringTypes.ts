@@ -55,6 +55,7 @@ export interface StringsMap {
   changePassword: string
   changePasswordSuccesfully: string
   changeRole: string
+  changedSinceLastView: string
   changes: string
   characterLimit: string
   checkRuns: string

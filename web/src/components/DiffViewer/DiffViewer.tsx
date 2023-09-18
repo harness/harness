@@ -11,9 +11,9 @@ import {
   Text,
   ButtonSize,
   useToaster,
-  ButtonProps
+  ButtonProps,
+  Checkbox
 } from '@harnessio/uicore'
-import { Color } from '@harnessio/design-system'
 import cx from 'classnames'
 import { Render } from 'react-jsx-match'
 import { Link } from 'react-router-dom'
@@ -23,7 +23,6 @@ import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
 import { useEventListener } from 'hooks/useEventListener'
 import type { DiffFileEntry } from 'utils/types'
 import { useConfirmAct } from 'hooks/useConfirmAction'
-import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { useAppContext } from 'AppContext'
 import type { OpenapiCommentCreatePullReqRequest, TypesPullReq, TypesPullReqActivity } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
@@ -57,6 +56,7 @@ interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
   targetRef?: string
   sourceRef?: string
   commitRange?: string[]
+  scrollElement: HTMLElement
 }
 
 //
@@ -74,29 +74,48 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   onCommentUpdate,
   targetRef,
   sourceRef,
-  commitRange
+  commitRange,
+  scrollElement
 }) => {
   const { routes } = useAppContext()
   const { getString } = useStrings()
-  const [viewed, setViewed] = useState(false)
-  const [collapsed, setCollapsed] = useState(false)
+  const viewedPath = useMemo(
+    () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/file-views`,
+    [repoMetadata.path, pullRequestMetadata?.number]
+  )
+  const { mutate: markViewed } = useMutate({ verb: 'PUT', path: viewedPath})
+  const { mutate: unmarkViewed } = useMutate({ verb: 'DELETE', path: ({ filePath }) => `${viewedPath}/${filePath}` })
+
+  // file viewed feature is only enabled if no commit range is provided (otherwise component is hidden, too)
+  const [viewed, setViewed] = useState(commitRange?.length === 0 && diff.fileViews?.get(diff.filePath) === diff.checksumAfter)
+  useEffect(() => {
+    if (commitRange?.length === 0) {
+      setViewed(diff.fileViews?.get(diff.filePath) === diff.checksumAfter)
+    }
+  },
+  [diff.fileViews, diff.filePath, diff.checksumAfter, commitRange])
+  
+  const [collapsed, setCollapsed] = useState(viewed)
+  useEffect(() => {
+    setCollapsed(viewed)
+  },
+  [viewed])
   const [fileUnchanged] = useState(diff.unchangedPercentage === 100)
   const [fileDeleted] = useState(diff.isDeleted)
   const [renderCustomContent, setRenderCustomContent] = useState(fileUnchanged || fileDeleted)
-  const [heightWithoutComments, setHeightWithoutComents] = useState<number | string>('auto')
   const [diffRenderer, setDiffRenderer] = useState<Diff2HtmlUI>()
   const { ref: inViewRef, inView } = useInView({ rootMargin: '100px 0px' })
   const containerRef = useRef<HTMLDivElement | null>(null)
   const { currentUser, standalone } = useAppContext()
   const { showError } = useToaster()
   const confirmAct = useConfirmAct()
-  const path = useMemo(
+  const commentPath = useMemo(
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/comments`,
     [repoMetadata.path, pullRequestMetadata?.number]
   )
-  const { mutate: saveComment } = useMutate({ verb: 'POST', path })
-  const { mutate: updateComment } = useMutate({ verb: 'PATCH', path: ({ id }) => `${path}/${id}` })
-  const { mutate: deleteComment } = useMutate({ verb: 'DELETE', path: ({ id }) => `${path}/${id}` })
+  const { mutate: saveComment } = useMutate({ verb: 'POST', path: commentPath })
+  const { mutate: updateComment } = useMutate({ verb: 'PATCH', path: ({ id }) => `${commentPath}/${id}` })
+  const { mutate: deleteComment } = useMutate({ verb: 'DELETE', path: ({ id }) => `${commentPath}/${id}` })
   const [comments, setComments] = useState<DiffCommentItem<TypesPullReqActivity>[]>([])
   const [dirty, setDirty] = useState(false)
   const commentsRef = useRef<DiffCommentItem<TypesPullReqActivity>[]>(comments)
@@ -128,7 +147,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           diffRenderer?.draw()
         }
         contentDOM.dataset.rendered = 'true'
-        setHeightWithoutComents(containerDOM.clientHeight)
       }
     },
     [diffRenderer, renderCustomContent]
@@ -186,7 +204,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           containerDOM.scrollIntoView()
 
           if (stickyTopPosition) {
-            window.scroll({ top: window.scrollY - stickyTopPosition })
+            scrollElement.scroll({ top: scrollElement.scrollTop - stickyTopPosition })
           }
         }
 
@@ -196,15 +214,14 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       } else {
         containerClassList.remove(css.collapsed)
 
-        const commentsHeight = comments.reduce((total, comment) => total + comment.height, 0) || 0
-        const newHeight = Number(heightWithoutComments) + commentsHeight
+        const newHeight = Number(containerDOM.scrollHeight)
 
         if (parseInt(containerStyle.height) != newHeight) {
           containerStyle.height = `${newHeight}px`
         }
       }
     },
-    [collapsed, heightWithoutComments, stickyTopPosition, comments]
+    [collapsed, stickyTopPosition]
   )
 
   useEventListener(
@@ -504,27 +521,21 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           <Layout.Horizontal>
             <Button
               variation={ButtonVariation.ICON}
-              icon={collapsed ? 'chevron-right' : 'chevron-down'}
+              icon={collapsed ? 'main-chevron-right' : 'main-chevron-down'}
               size={ButtonSize.SMALL}
               onClick={() => setCollapsed(!collapsed)}
+              iconProps={{
+                  size: 10,
+                  style: {
+                    color: '#383946',
+                    flexGrow: 1,
+                    justifyContent: 'center',
+                    display: 'flex'
+                  }
+                }
+              }
+              className={css.chevron}
             />
-            <Container style={{ alignSelf: 'center' }} padding={{ right: 'small' }}>
-              <Layout.Horizontal spacing="xsmall">
-                <Render when={diff.addedLines}>
-                  <Text color={Color.GREEN_600} style={{ fontSize: '12px' }}>
-                    +{diff.addedLines}
-                  </Text>
-                </Render>
-                <Render when={diff.addedLines && diff.deletedLines}>
-                  <PipeSeparator height={8} />
-                </Render>
-                <Render when={diff.deletedLines}>
-                  <Text color={Color.RED_500} style={{ fontSize: '12px' }}>
-                    -{diff.deletedLines}
-                  </Text>
-                </Render>
-              </Layout.Horizontal>
-            </Container>
             <Text inline className={css.fname}>
               <Link
                 to={routes.toCODERepository({
@@ -534,20 +545,59 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 })}>
                 {diff.isRename ? `${diff.oldName} -> ${diff.newName}` : diff.filePath}
               </Link>
+              <CopyButton content={diff.filePath} icon={CodeIcon.Copy} size={ButtonSize.SMALL} />
             </Text>
-            <CopyButton content={diff.filePath} icon={CodeIcon.Copy} size={ButtonSize.SMALL} />
+            <Container style={{ alignSelf: 'center' }} padding={{ left: 'small' }}>
+              <Layout.Horizontal spacing="xsmall">
+                <Render when={diff.addedLines || diff.isNew}>
+                  <Text tag="span" className={css.addedLines}>
+                    +{diff.addedLines || 0}
+                  </Text>
+                </Render>
+                <Render when={diff.deletedLines || diff.isDeleted}>
+                  <Text tag="span" className={css.deletedLines}>
+                    -{diff.deletedLines || 0}
+                  </Text>
+                </Render>
+              </Layout.Horizontal>
+            </Container>
             <FlexExpander />
 
-            <Render when={!readOnly}>
+            <Render when={!readOnly && commitRange?.length === 0 && diff.fileViews?.get(diff.filePath) !== undefined && diff.fileViews?.get(diff.filePath) !== diff.checksumAfter}>
+              <Container>
+                <Text className={css.fileChanged}>
+                {getString('changedSinceLastView')}
+                </Text>
+              </Container>
+            </Render>
+
+            <Render when={!readOnly && commitRange?.length === 0 }>
               <Container>
                 <label className={css.viewLabel}>
-                  <input
-                    type="checkbox"
-                    value="viewed"
+                  <Checkbox
                     checked={viewed}
-                    onChange={() => {
-                      setViewed(!viewed)
-                      setCollapsed(!viewed)
+                    onChange={async () => {
+                      if (viewed) {
+                        setViewed(false)
+
+                        // update local data first
+                        diff.fileViews?.delete(diff.filePath)
+
+                        // best effort attempt to recflect on server (swallow exception - user still sees correct data locally)
+                        await unmarkViewed(null, { pathParams: { filePath: diff.filePath } }).catch(() =>{})
+                      } else {
+                        setViewed(true)
+
+                        // update local data first
+                        // we could wait for server response for the guaranteed correct SHA, but this is non-crucial data so it's okay
+                        diff.fileViews?.set(diff.filePath, diff.checksumAfter || "unknown")
+
+                        // best effort attempt to recflect on server (swallow exception - user still sees correct data locally)
+                        await markViewed({
+                          path: diff.filePath,
+                          commit_sha: pullRequestMetadata?.source_sha
+                        }, {}).catch(() =>{})
+                      }
                     }}
                   />
                   {getString('viewed')}

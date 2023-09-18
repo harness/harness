@@ -170,6 +170,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	codeCommentView := database.ProvideCodeCommentView(db)
 	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
 	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db, principalInfoCache)
+	pullReqFileViewStore := database.ProvidePullReqFileViewStore(db)
 	eventsConfig, err := server.ProvideEventsConfig()
 	if err != nil {
 		return nil, err
@@ -193,11 +194,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	repoGitInfoView := database.ProvideRepoGitInfoView(db)
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
-	pullreqService, err := pullreq.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter, gitrpcInterface, db, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore, codeCommentView, migrator, pubSub, provider)
+	pullreqService, err := pullreq.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter, gitrpcInterface, db, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore, codeCommentView, migrator, pullReqFileViewStore, pubSub, provider)
 	if err != nil {
 		return nil, err
 	}
-	pullreqController := pullreq2.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, gitrpcInterface, reporter, mutexManager, migrator, pullreqService)
+	pullreqController := pullreq2.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, pullReqFileViewStore, gitrpcInterface, reporter, mutexManager, migrator, pullreqService)
 	webhookConfig := server.ProvideWebhookConfig(config)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)

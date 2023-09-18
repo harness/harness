@@ -25,7 +25,7 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
 import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
-import type { TypesCommit, TypesPullReq, TypesPullReqActivity } from 'services/code'
+import type { TypesCommit, TypesPullReqFileView, TypesPullReq, TypesPullReqActivity } from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -51,6 +51,7 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   prHasChanged?: boolean
   onDataReady?: (data: DiffFileEntry[]) => void
   defaultCommitRange?: string[]
+  scrollElement: HTMLElement
 }
 
 export const Changes: React.FC<ChangesProps> = ({
@@ -65,7 +66,8 @@ export const Changes: React.FC<ChangesProps> = ({
   className,
   prHasChanged,
   onDataReady,
-  defaultCommitRange
+  defaultCommitRange,
+  scrollElement
 }) => {
   const { getString } = useStrings()
   const history = useHistory()
@@ -98,17 +100,17 @@ export const Changes: React.FC<ChangesProps> = ({
   )
 
   useEffect(() => {
-    if (commitRange.length) {
       history.push(
         routes.toCODEPullRequest({
           repoPath: repoMetadata.path as string,
           pullRequestId: String(pullRequestMetadata?.number),
           pullRequestSection: PullRequestSection.FILES_CHANGED,
           commitSHA:
-            commitRange.length === 1 ? commitRange[0] : `${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
+            commitRange.length === 0 ? undefined :
+            commitRange.length === 1 ? commitRange[0] :
+            `${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
         })
       )
-    }
   }, [commitRange, history, routes, repoMetadata.path, pullRequestMetadata?.number])
 
   const {
@@ -129,6 +131,27 @@ export const Changes: React.FC<ChangesProps> = ({
   })
 
   const {
+    data: rawFileViews,
+    loading: loadingFileViews,
+    error: errorFileViews,
+    refetch: refetchFileViews
+  } = useGet<TypesPullReqFileView[]>({
+    path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/file-views`,
+    lazy: !pullRequestMetadata?.number
+  })
+  
+  // create a map for faster lookup and ability to insert / remove single elements
+  const fileViews = useMemo(() => {
+    const out = new Map<string, string>()
+    rawFileViews
+      ?.filter(({ path, sha }) => path && sha) // every entry is expected to have a path and sha - otherwise skip ...
+      .forEach(({ path, sha, obsolete }) => { out.set(path!, obsolete ? "ffffffffffffffffffffffffffffffffffffffff" : sha!)})
+    return out
+  },
+  [rawFileViews])
+
+
+  const {
     data: prActivities,
     loading: loadingActivities,
     error: errorActivities,
@@ -139,8 +162,8 @@ export const Changes: React.FC<ChangesProps> = ({
   })
   const [activities, setActivities] = useState<TypesPullReqActivity[]>()
   const showSpinner = useMemo(
-    () => loading || (loadingActivities && !activities),
-    [loading, loadingActivities, activities]
+    () => loading || (loadingActivities && !activities) || (loadingFileViews && !fileViews),
+    [loading, loadingActivities, activities, loadingFileViews, fileViews]
   )
   const diffStats = useMemo(
     () =>
@@ -184,6 +207,12 @@ export const Changes: React.FC<ChangesProps> = ({
   }, [prHasChanged, refetchActivities])
 
   useEffect(() => {
+    if (prHasChanged) {
+      refetchFileViews()
+    }
+  }, [prHasChanged, refetchFileViews])
+
+  useEffect(() => {
     const _raw = rawDiff && typeof rawDiff === 'string' ? rawDiff : ''
 
     if (rawDiff) {
@@ -203,27 +232,30 @@ export const Changes: React.FC<ChangesProps> = ({
           fileId,
           filePath,
           fileActivities: fileActivities || [],
-          activities: activities || []
+          activities: activities || [],
+          fileViews: fileViews || [],
         }
       })
 
       setDiffs(_diffs)
       onDataReady?.(_diffs)
     }
-  }, [rawDiff, activities, onDataReady])
+  }, [rawDiff, activities, fileViews, onDataReady])
 
   useEventListener(
     'scroll',
-    useCallback(() => setSticky(window.scrollY >= STICKY_HEADER_HEIGHT), [])
+    useCallback(() => {setSticky(scrollElement.scrollTop >= STICKY_HEADER_HEIGHT)}, []),
+      scrollElement
   )
 
   useShowRequestError(errorActivities)
+  useShowRequestError(errorFileViews)
 
   return (
     <Container className={cx(css.container, className)} {...(!!loading || !!error ? { flex: true } : {})}>
       <LoadingSpinner visible={loading || showSpinner} withBorder={true} />
       <Render when={error}>
-        <PageError message={getErrorMessage(error || errorActivities)} onClick={voidFn(refetch)} />
+        <PageError message={getErrorMessage(error || errorActivities || errorFileViews)} onClick={voidFn(refetch)} />
       </Render>
       <Render when={!error && !loading}>
         <Container className={cx(css.header, { [css.stickied]: isSticky })}>
@@ -265,7 +297,7 @@ export const Changes: React.FC<ChangesProps> = ({
                     variation={ButtonVariation.ICON}
                     icon="arrow-up"
                     iconProps={{ size: 14 }}
-                    onClick={() => window.scroll({ top: 0 })}
+                    onClick={() => scrollElement.scroll({ top: 0 })}
                     tooltip={getString('scrollToTop')}
                     tooltipProps={{ isDark: true }}
                   />
@@ -290,7 +322,7 @@ export const Changes: React.FC<ChangesProps> = ({
             <>
               {/* TODO: lineBreaks is broken in line-by-line view, enable it for side-by-side only now */}
               <Layout.Vertical
-                spacing="large"
+                spacing="medium"
                 className={cx(css.main, {
                   [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
                 })}>
@@ -310,6 +342,7 @@ export const Changes: React.FC<ChangesProps> = ({
                     targetRef={targetRef}
                     sourceRef={sourceRef}
                     commitRange={commitRange}
+                    scrollElement={scrollElement}
                   />
                 ))}
               </Layout.Vertical>

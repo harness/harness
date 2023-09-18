@@ -42,7 +42,7 @@ import css from './Compare.module.scss'
 export default function Compare() {
   const { getString } = useStrings()
   const history = useHistory()
-  const { routes } = useAppContext()
+  const { routes, standalone } = useAppContext()
   const { repoMetadata, error, loading, diffRefs } = useGetRepositoryMetadata()
   const [sourceGitRef, setSourceGitRef] = useState(diffRefs.sourceGitRef)
   const [targetGitRef, setTargetGitRef] = useState(diffRefs.targetGitRef)
@@ -284,6 +284,7 @@ export default function Compare() {
                         emptyTitle={getString('noChanges')}
                         emptyMessage={getString('noChangesCompare')}
                         onCommentUpdate={noop}
+                        scrollElement={(standalone ? document.querySelector(`.${css.main}`)?.parentElement || window : window) as HTMLElement}
                       />
                     </TabContentWrapper>
                   )

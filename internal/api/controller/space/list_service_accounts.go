@@ -23,7 +23,7 @@ func (c *Controller) ListServiceAccounts(ctx context.Context, session *auth.Sess
 		return nil, err
 	}
 
-	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionSpaceView, false); err != nil {
+	if err = apiauth.CheckSpace(ctx, c.authorizer, session, space, enum.PermissionServiceAccountView, false); err != nil {
 		return nil, err
 	}
 

@@ -20,6 +20,7 @@ var (
 
 const (
 	conflictFilesKey = "conflict_files"
+	pathKey          = "path"
 )
 
 type Status string
@@ -29,6 +30,7 @@ const (
 	StatusInternal           Status = "internal"
 	StatusInvalidArgument    Status = "invalid"
 	StatusNotFound           Status = "not_found"
+	StatusPathNotFound       Status = "path_not_found"
 	StatusNotImplemented     Status = "not_implemented"
 	StatusUnauthorized       Status = "unauthorized"
 	StatusFailed             Status = "failed"
@@ -146,7 +148,20 @@ func processRPCErrorf(err error, format string, args ...interface{}) error {
 	case st.Code() == codes.AlreadyExists:
 		return NewError(StatusConflict, msg)
 	case st.Code() == codes.NotFound:
-		return NewError(StatusNotFound, msg)
+		code := StatusNotFound
+		details := make(map[string]any)
+		for _, detail := range st.Details() {
+			switch t := detail.(type) {
+			case *rpc.PathNotFoundError:
+				code = StatusPathNotFound
+				details[pathKey] = t.Path
+			default:
+			}
+		}
+		if len(details) > 0 {
+			return NewErrorWithDetails(code, msg, details)
+		}
+		return NewError(code, msg)
 	case st.Code() == codes.InvalidArgument:
 		return NewError(StatusInvalidArgument, msg)
 	case st.Code() == codes.FailedPrecondition:
@@ -174,6 +189,17 @@ func AsConflictFilesError(err error) (files []string) {
 	object, ok := details[conflictFilesKey]
 	if ok {
 		files, _ = object.([]string)
+	}
+
+	return
+}
+
+// AsPathNotFoundError returns the path that wasn't found in case that's the error.
+func AsPathNotFoundError(err error) (path string) {
+	details := ErrorDetails(err)
+	object, ok := details[pathKey]
+	if ok {
+		path = object.(string)
 	}
 
 	return

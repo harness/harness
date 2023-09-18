@@ -114,6 +114,20 @@ type PullReqReviewer struct {
 	AddedBy  PrincipalInfo `json:"added_by"`
 }
 
+// PullReqFileView represents a file reviewed entry for a given pr and principal.
+// NOTE: keep api lightweight and don't return unnecessary extra data.
+type PullReqFileView struct {
+	PullReqID   int64 `json:"-"`
+	PrincipalID int64 `json:"-"`
+
+	Path     string `json:"path"`
+	SHA      string `json:"sha"`
+	Obsolete bool   `json:"obsolete"`
+
+	Created int64 `json:"-"`
+	Updated int64 `json:"-"`
+}
+
 type MergeResponse struct {
 	SHA           string   `json:"sha,omitempty"`
 	ConflictFiles []string `json:"conflict_files,omitempty"`

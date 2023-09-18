@@ -13,7 +13,6 @@ import (
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/api/usererror"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/internal/config"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -127,7 +126,7 @@ func (c *Controller) Diff(
 		HeadRef:      info.HeadRef,
 		MergeBase:    info.MergeBase,
 		IncludePatch: includePatch,
-	}, config.ApiURL))
+	}))
 
 	return reader, nil
 }

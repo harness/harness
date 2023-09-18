@@ -36,7 +36,7 @@ export interface PullRequestCodeCommentPayload {
   diff_html_snapshot: string // snapshot used to render diff in comment (PR Conversation). Could be used to send email notification too (with more work on capturing CSS styles and put them inline)
 }
 
-export const DIFF_VIEWER_HEADER_HEIGHT = 36
+export const DIFF_VIEWER_HEADER_HEIGHT = 48
 // const DIFF_MAX_CHANGES = 100
 // const DIFF_MAX_LINE_LENGTH = 100
 

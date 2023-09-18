@@ -36,6 +36,7 @@ type Service struct {
 	activityStore       store.PullReqActivityStore
 	codeCommentView     store.CodeCommentView
 	codeCommentMigrator *codecomments.Migrator
+	fileViewStore       store.PullReqFileViewStore
 	urlProvider         *url.Provider
 
 	cancelMutex        sync.Mutex
@@ -58,6 +59,7 @@ func New(ctx context.Context,
 	activityStore store.PullReqActivityStore,
 	codeCommentView store.CodeCommentView,
 	codeCommentMigrator *codecomments.Migrator,
+	fileViewStore store.PullReqFileViewStore,
 	bus pubsub.PubSub,
 	urlProvider *url.Provider,
 ) (*Service, error) {
@@ -72,6 +74,7 @@ func New(ctx context.Context,
 		codeCommentView:     codeCommentView,
 		urlProvider:         urlProvider,
 		codeCommentMigrator: codeCommentMigrator,
+		fileViewStore:       fileViewStore,
 		cancelMergeability:  make(map[string]context.CancelFunc),
 		pubsub:              bus,
 	}
@@ -116,6 +119,27 @@ func New(ctx context.Context,
 			_ = r.RegisterCreated(service.createHeadRefOnCreated)
 			_ = r.RegisterBranchUpdated(service.updateHeadRefOnBranchUpdate)
 			_ = r.RegisterReopened(service.updateHeadRefOnReopen)
+
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	// pull request file viewed maintenance
+
+	const groupPullReqFileViewed = "gitness:pullreq:fileviewed"
+	_, err = pullreqEvReaderFactory.Launch(ctx, groupPullReqFileViewed, config.InstanceID,
+		func(r *pullreqevents.Reader) error {
+			const idleTimeout = 30 * time.Second
+			r.Configure(
+				stream.WithConcurrency(3),
+				stream.WithHandlerOptions(
+					stream.WithIdleTimeout(idleTimeout),
+					stream.WithMaxRetries(1),
+				))
+
+			_ = r.RegisterBranchUpdated(service.handleFileViewedOnBranchUpdate)
 
 			return nil
 		})

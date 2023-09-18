@@ -37,6 +37,7 @@ type Controller struct {
 	reviewerStore       store.PullReqReviewerStore
 	repoStore           store.RepoStore
 	principalStore      store.PrincipalStore
+	fileViewStore       store.PullReqFileViewStore
 	gitRPCClient        gitrpc.Interface
 	eventReporter       *pullreqevents.Reporter
 	mtxManager          lock.MutexManager
@@ -55,6 +56,7 @@ func NewController(
 	pullreqReviewerStore store.PullReqReviewerStore,
 	repoStore store.RepoStore,
 	principalStore store.PrincipalStore,
+	fileViewStore store.PullReqFileViewStore,
 	gitRPCClient gitrpc.Interface,
 	eventReporter *pullreqevents.Reporter,
 	mtxManager lock.MutexManager,
@@ -72,6 +74,7 @@ func NewController(
 		reviewerStore:       pullreqReviewerStore,
 		repoStore:           repoStore,
 		principalStore:      principalStore,
+		fileViewStore:       fileViewStore,
 		gitRPCClient:        gitRPCClient,
 		codeCommentMigrator: codeCommentMigrator,
 		eventReporter:       eventReporter,

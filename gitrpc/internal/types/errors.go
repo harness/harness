@@ -15,7 +15,6 @@ var (
 	ErrAlreadyExists               = errors.New("already exists")
 	ErrInvalidArgument             = errors.New("invalid argument")
 	ErrNotFound                    = errors.New("not found")
-	ErrPathNotFound                = errors.New("path not found")
 	ErrInvalidPath                 = errors.New("path is invalid")
 	ErrUndefinedAction             = errors.New("undefined action")
 	ErrActionNotAllowedOnEmptyRepo = errors.New("action not allowed on empty repository")
@@ -82,5 +81,28 @@ func (e *MergeUnrelatedHistoriesError) Unwrap() error {
 //nolint:errorlint // the purpose of this method is to check whether the target itself if of this type.
 func (e *MergeUnrelatedHistoriesError) Is(target error) bool {
 	_, ok := target.(*MergeUnrelatedHistoriesError)
+	return ok
+}
+
+// PathNotFoundError represents an error if a path in a repo can't be found.
+type PathNotFoundError struct {
+	Path string
+}
+
+func IsPathNotFoundError(err error) bool {
+	return errors.Is(err, &PathNotFoundError{})
+}
+
+func (e *PathNotFoundError) Error() string {
+	return fmt.Sprintf("path '%s' wasn't found in the repo", e.Path)
+}
+
+func (e *PathNotFoundError) Unwrap() error {
+	return nil
+}
+
+//nolint:errorlint // the purpose of this method is to check whether the target itself if of this type.
+func (e *PathNotFoundError) Is(target error) bool {
+	_, ok := target.(*PathNotFoundError)
 	return ok
 }

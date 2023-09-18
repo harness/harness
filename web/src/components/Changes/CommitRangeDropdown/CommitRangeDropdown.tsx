@@ -62,36 +62,30 @@ const CommitRangeDropdown: React.FC<CommitRangeDropdownProps> = ({
     event: React.MouseEvent<HTMLInputElement | HTMLDivElement, MouseEvent>,
     selectedCommitSHA: string
   ) => {
-    if (event.shiftKey) {
-      // Select Commit
-      setSelectedCommits(current => {
-        if (current.includes(selectedCommitSHA)) {
-          // If Commit is Selected, return the bigger Sub Array
-          const sortedCommits = sortSelectedCommits(current, allCommitsSHA)
-          const subArray = getBiggerSubarray(sortedCommits, sortedCommits.indexOf(selectedCommitSHA))
+    setSelectedCommits(current => {
+      // handle single commit clicked (either no shift held, or no commit selected yet)
+      if (!event.shiftKey || current.length == 0) {
+        return [selectedCommitSHA]
+      }
 
-          return subArray
-        } else {
-          //  If a Non Consecutive Commit is Selected, Select the Range instead.
-          if (current.length >= 1) {
-            //  If a All Commits are Selected, Clear the Range.
-            if (current.length + 1 === allCommits.length) {
-              return []
-            }
+      // handle already selected commit clicked
+      if (current.includes(selectedCommitSHA)) {
+        const sortedCommits = sortSelectedCommits(current, allCommitsSHA)
+        const subArray = getBiggerSubarray(sortedCommits, sortedCommits.indexOf(selectedCommitSHA))
 
-            const selectedCommitRange = getCommitRange([...current, selectedCommitSHA], allCommitsSHA)
+        return subArray
+      }
 
-            return selectedCommitRange
-          } else {
-            //  When the First Commit is Selected.
-            return [selectedCommitSHA]
-          }
-        }
-      })
-    } else {
-      // If a Single Commit is Clicked
-      setSelectedCommits([selectedCommitSHA])
-    }
+      // clicked commit is outside of current range - extend it!
+      const extendedArray = getCommitRange([...current, selectedCommitSHA], allCommitsSHA)
+
+      //  Are all commits selected, then return AllCommits explicitly
+      if (extendedArray.length === allCommits.length) {
+        return []
+      }
+
+      return extendedArray
+    })
   }
 
   const areAllCommitsSelected = !selectedCommits.length

@@ -97,6 +97,20 @@ type reviewSubmitPullReqRequest struct {
 	pullReqRequest
 }
 
+type fileViewAddPullReqRequest struct {
+	pullReqRequest
+	pullreq.FileViewAddInput
+}
+
+type fileViewListPullReqRequest struct {
+	pullReqRequest
+}
+
+type fileViewDeletePullReqRequest struct {
+	pullReqRequest
+	Path string `path:"file_path"`
+}
+
 var queryParameterQueryPullRequest = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamQuery,
@@ -480,4 +494,40 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&recheckPullReq, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&recheckPullReq, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/pullreq/{pullreq_number}/recheck", recheckPullReq)
+
+	fileViewAdd := openapi3.Operation{}
+	fileViewAdd.WithTags("pullreq")
+	fileViewAdd.WithMapOfAnything(map[string]interface{}{"operationId": "fileViewAddPullReq"})
+	_ = reflector.SetRequest(&fileViewAdd, new(fileViewAddPullReqRequest), http.MethodPut)
+	_ = reflector.SetJSONResponse(&fileViewAdd, new(types.PullReqFileView), http.StatusOK)
+	_ = reflector.SetJSONResponse(&fileViewAdd, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&fileViewAdd, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&fileViewAdd, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&fileViewAdd, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodPut,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/file-views", fileViewAdd)
+
+	fileViewList := openapi3.Operation{}
+	fileViewList.WithTags("pullreq")
+	fileViewList.WithMapOfAnything(map[string]interface{}{"operationId": "fileViewListPullReq"})
+	_ = reflector.SetRequest(&fileViewList, new(fileViewListPullReqRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&fileViewList, []types.PullReqFileView{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&fileViewList, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&fileViewList, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&fileViewList, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&fileViewList, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/file-views", fileViewList)
+
+	fileViewDelete := openapi3.Operation{}
+	fileViewDelete.WithTags("pullreq")
+	fileViewDelete.WithMapOfAnything(map[string]interface{}{"operationId": "fileViewDeletePullReq"})
+	_ = reflector.SetRequest(&fileViewDelete, new(fileViewDeletePullReqRequest), http.MethodDelete)
+	_ = reflector.SetJSONResponse(&fileViewDelete, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&fileViewDelete, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&fileViewDelete, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&fileViewDelete, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&fileViewDelete, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodDelete,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/file-views/{file_path}", fileViewDelete)
 }

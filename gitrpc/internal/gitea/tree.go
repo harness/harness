@@ -54,8 +54,11 @@ func (g Adapter) GetTreeNode(ctx context.Context,
 		}
 
 		treeEntry, err = tree.FindEntry(treePath)
+		if errors.Is(err, gogitobject.ErrDirectoryNotFound) || errors.Is(err, gogitobject.ErrEntryNotFound) {
+			return nil, &types.PathNotFoundError{Path: treePath}
+		}
 		if err != nil {
-			return nil, fmt.Errorf("can't find path entry %s: %w", treePath, types.ErrPathNotFound)
+			return nil, fmt.Errorf("failed to find path entry %s: %w", treePath, err)
 		}
 	}
 
@@ -98,9 +101,10 @@ func (g Adapter) ListTreeNodes(ctx context.Context,
 	if len(treePath) > 0 {
 		tree, err = tree.Tree(treePath)
 		if errors.Is(err, gogitobject.ErrDirectoryNotFound) || errors.Is(err, gogitobject.ErrEntryNotFound) {
-			return nil, types.ErrPathNotFound
-		} else if err != nil {
-			return nil, fmt.Errorf("can't find path entry %s: %w", treePath, err)
+			return nil, &types.PathNotFoundError{Path: treePath}
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to find path entry %s: %w", treePath, err)
 		}
 	}
 

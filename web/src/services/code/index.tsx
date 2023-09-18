@@ -89,7 +89,6 @@ export type GitrpcFileAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'MOVE'
 export interface GitrpcFileDiff {
   additions?: number
   changes?: number
-  content_url?: string
   deletions?: number
   is_binary?: boolean
   is_submodule?: boolean
@@ -98,8 +97,10 @@ export interface GitrpcFileDiff {
   patch?: number[]
   path?: string
   sha?: string
-  status?: string
+  status?: GitrpcFileDiffStatus
 }
+
+export type GitrpcFileDiffStatus = string
 
 export interface GitrpcIdentity {
   email?: string
@@ -292,6 +293,11 @@ export interface OpenapiExportSpaceRequest {
   orgIdentifier?: string
   projectIdentifier?: string
   token?: string
+}
+
+export interface OpenapiFileViewAddPullReqRequest {
+  commit_sha?: string
+  path?: string
 }
 
 export interface OpenapiGetContentOutput {
@@ -724,6 +730,12 @@ export interface TypesPullReqActivity {
   sub_order?: number
   text?: string
   type?: EnumPullReqActivityType
+}
+
+export interface TypesPullReqFileView {
+  obsolete?: boolean
+  path?: string
+  sha?: string
 }
 
 export interface TypesPullReqReviewer {
@@ -3248,6 +3260,118 @@ export const useListPullReqCommits = ({ repo_ref, pullreq_number, ...props }: Us
   useGet<TypesCommit[], UsererrorError, ListPullReqCommitsQueryParams, ListPullReqCommitsPathParams>(
     (paramsInPath: ListPullReqCommitsPathParams) =>
       `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/commits`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface FileViewListPullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type FileViewListPullReqProps = Omit<
+  GetProps<TypesPullReqFileView[], UsererrorError, void, FileViewListPullReqPathParams>,
+  'path'
+> &
+  FileViewListPullReqPathParams
+
+export const FileViewListPullReq = ({ repo_ref, pullreq_number, ...props }: FileViewListPullReqProps) => (
+  <Get<TypesPullReqFileView[], UsererrorError, void, FileViewListPullReqPathParams>
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/file-views`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseFileViewListPullReqProps = Omit<
+  UseGetProps<TypesPullReqFileView[], UsererrorError, void, FileViewListPullReqPathParams>,
+  'path'
+> &
+  FileViewListPullReqPathParams
+
+export const useFileViewListPullReq = ({ repo_ref, pullreq_number, ...props }: UseFileViewListPullReqProps) =>
+  useGet<TypesPullReqFileView[], UsererrorError, void, FileViewListPullReqPathParams>(
+    (paramsInPath: FileViewListPullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/file-views`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface FileViewAddPullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type FileViewAddPullReqProps = Omit<
+  MutateProps<
+    TypesPullReqFileView,
+    UsererrorError,
+    void,
+    OpenapiFileViewAddPullReqRequest,
+    FileViewAddPullReqPathParams
+  >,
+  'path' | 'verb'
+> &
+  FileViewAddPullReqPathParams
+
+export const FileViewAddPullReq = ({ repo_ref, pullreq_number, ...props }: FileViewAddPullReqProps) => (
+  <Mutate<TypesPullReqFileView, UsererrorError, void, OpenapiFileViewAddPullReqRequest, FileViewAddPullReqPathParams>
+    verb="PUT"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/file-views`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseFileViewAddPullReqProps = Omit<
+  UseMutateProps<
+    TypesPullReqFileView,
+    UsererrorError,
+    void,
+    OpenapiFileViewAddPullReqRequest,
+    FileViewAddPullReqPathParams
+  >,
+  'path' | 'verb'
+> &
+  FileViewAddPullReqPathParams
+
+export const useFileViewAddPullReq = ({ repo_ref, pullreq_number, ...props }: UseFileViewAddPullReqProps) =>
+  useMutate<TypesPullReqFileView, UsererrorError, void, OpenapiFileViewAddPullReqRequest, FileViewAddPullReqPathParams>(
+    'PUT',
+    (paramsInPath: FileViewAddPullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/file-views`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
+  )
+
+export interface FileViewDeletePullReqPathParams {
+  repo_ref: string
+  pullreq_number: number
+}
+
+export type FileViewDeletePullReqProps = Omit<
+  MutateProps<void, UsererrorError, void, string, FileViewDeletePullReqPathParams>,
+  'path' | 'verb'
+> &
+  FileViewDeletePullReqPathParams
+
+export const FileViewDeletePullReq = ({ repo_ref, pullreq_number, ...props }: FileViewDeletePullReqProps) => (
+  <Mutate<void, UsererrorError, void, string, FileViewDeletePullReqPathParams>
+    verb="DELETE"
+    path={`/repos/${repo_ref}/pullreq/${pullreq_number}/file-views`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseFileViewDeletePullReqProps = Omit<
+  UseMutateProps<void, UsererrorError, void, string, FileViewDeletePullReqPathParams>,
+  'path' | 'verb'
+> &
+  FileViewDeletePullReqPathParams
+
+export const useFileViewDeletePullReq = ({ repo_ref, pullreq_number, ...props }: UseFileViewDeletePullReqProps) =>
+  useMutate<void, UsererrorError, void, string, FileViewDeletePullReqPathParams>(
+    'DELETE',
+    (paramsInPath: FileViewDeletePullReqPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/pullreq/${paramsInPath.pullreq_number}/file-views`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, pullreq_number }, ...props }
   )
 

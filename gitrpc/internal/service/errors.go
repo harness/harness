@@ -192,6 +192,7 @@ func ErrAbortedf(format string, a ...interface{}) error {
 func processGitErrorf(err error, format string, args ...interface{}) error {
 	var (
 		cferr *types.MergeConflictsError
+		pferr *types.PathNotFoundError
 	)
 	const nl = "\n"
 	// when we add err as argument it will be part of the new error
@@ -199,9 +200,13 @@ func processGitErrorf(err error, format string, args ...interface{}) error {
 	switch {
 	case errors.Is(err, types.ErrNotFound),
 		errors.Is(err, types.ErrSHADoesNotMatch),
-		errors.Is(err, types.ErrHunkNotFound),
-		errors.Is(err, types.ErrPathNotFound):
+		errors.Is(err, types.ErrHunkNotFound):
 		return ErrNotFound(err)
+	case errors.As(err, &pferr):
+		rpcErr := &rpc.PathNotFoundError{
+			Path: pferr.Path,
+		}
+		return ErrNotFoundf("failed to find path", rpcErr, err)
 	case errors.Is(err, types.ErrAlreadyExists):
 		return ErrAlreadyExists(err)
 	case errors.Is(err, types.ErrInvalidArgument):

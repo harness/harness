@@ -27,7 +27,7 @@ func ProvideController(db *sqlx.DB, urlProvider *url.Provider, authorizer authz.
 	pullReqStore store.PullReqStore, pullReqActivityStore store.PullReqActivityStore,
 	codeCommentsView store.CodeCommentView,
 	pullReqReviewStore store.PullReqReviewStore, pullReqReviewerStore store.PullReqReviewerStore,
-	repoStore store.RepoStore, principalStore store.PrincipalStore,
+	repoStore store.RepoStore, principalStore store.PrincipalStore, fileViewStore store.PullReqFileViewStore,
 	rpcClient gitrpc.Interface, eventReporter *pullreqevents.Reporter,
 	mtxManager lock.MutexManager, codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service,
@@ -36,7 +36,7 @@ func ProvideController(db *sqlx.DB, urlProvider *url.Provider, authorizer authz.
 		pullReqStore, pullReqActivityStore,
 		codeCommentsView,
 		pullReqReviewStore, pullReqReviewerStore,
-		repoStore, principalStore,
+		repoStore, principalStore, fileViewStore,
 		rpcClient, eventReporter,
 		mtxManager, codeCommentMigrator, pullreqService)
 }
