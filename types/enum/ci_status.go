@@ -56,7 +56,7 @@ func ParseCIStatus(status string) CIStatus {
 	}
 }
 
-// IsDone returns true if the build has a completed state.
+// IsDone returns true if in a completed state.
 func (status CIStatus) IsDone() bool {
 	switch status {
 	case CIStatusWaitingOnDeps,
@@ -66,5 +66,17 @@ func (status CIStatus) IsDone() bool {
 		return false
 	default:
 		return true
+	}
+}
+
+// IsFailed returns true if in a failed state.
+func (status CIStatus) IsFailed() bool {
+	switch status {
+	case CIStatusFailure,
+		CIStatusKilled,
+		CIStatusError:
+		return true
+	default:
+		return false
 	}
 }

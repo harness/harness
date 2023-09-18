@@ -12,7 +12,7 @@ require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/drone-runners/drone-runner-docker v1.8.4-0.20230915031357-c2cd927803f4
+	github.com/drone-runners/drone-runner-docker v1.8.4-0.20230918141428-184504616269
 	github.com/drone/drone-go v1.7.1
 	github.com/drone/drone-yaml v1.2.3
 	github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d
@@ -50,10 +50,11 @@ require (
 	github.com/rs/zerolog v1.29.0
 	github.com/sercand/kuberesolver/v5 v5.1.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
 	github.com/swaggest/openapi-go v0.2.23
 	github.com/swaggest/swgui v1.4.2
 	github.com/unrolled/secure v1.0.8
+	go.starlark.net v0.0.0-20230912135651-745481cf39ed
 	go.uber.org/multierr v1.8.0
 	golang.org/x/crypto v0.13.0
 	golang.org/x/exp v0.0.0-20230108222341-4b8118a2686a
@@ -71,6 +72,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e // indirect
+	github.com/antonmedv/expr v1.15.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
 	github.com/buildkite/yaml v2.1.0+incompatible // indirect
@@ -82,6 +84,7 @@ require (
 	github.com/docker/go-connections v0.3.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/drone/envsubst v1.0.3 // indirect
+	github.com/drone/signal v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect

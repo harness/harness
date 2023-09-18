@@ -14,6 +14,7 @@ import (
 	v1yaml "github.com/drone/spec/dist/go"
 	"github.com/drone/spec/dist/go/parse/expand"
 	"github.com/drone/spec/dist/go/parse/normalize"
+	"github.com/drone/spec/dist/go/parse/script"
 	"github.com/harness/gitness/internal/pipeline/checks"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
@@ -256,12 +257,13 @@ func (t *triggerer) Trigger(
 			}
 		}
 	} else {
-		stages, err = parseV1Stages(file.Data, repo.ID)
+		stages, err = parseV1Stages(file.Data, repo)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse v1 YAML into stages: %w", err)
 		}
 	}
 
+	// Increment pipeline number using optimistic locking.
 	pipeline, err = t.pipelineStore.IncrementSeqNum(ctx, pipeline)
 	if err != nil {
 		log.Error().Err(err).Msg("trigger: cannot increment execution sequence number")
@@ -269,7 +271,6 @@ func (t *triggerer) Trigger(
 	}
 
 	now := time.Now().UnixMilli()
-
 	execution := &types.Execution{
 		RepoID:     repo.ID,
 		PipelineID: pipeline.ID,
@@ -338,7 +339,9 @@ func trunc(s string, i int) string {
 
 // parseV1Stages tries to parse the yaml into a list of stages and returns an error
 // if we are unable to do so or the yaml contains something unexpected.
-func parseV1Stages(data []byte, repoID int64) ([]*types.Stage, error) {
+// Currently, all the stages will be executed one after the other on completion.
+// Once we have depends on in v1, this will be changed to use the DAG.
+func parseV1Stages(data []byte, repo *types.Repository) ([]*types.Stage, error) {
 	stages := []*types.Stage{}
 	// For V1 YAML, just go through the YAML and create stages serially for now
 	config, err := v1yaml.ParseBytes(data)
@@ -346,6 +349,7 @@ func parseV1Stages(data []byte, repoID int64) ([]*types.Stage, error) {
 		return nil, fmt.Errorf("could not parse v1 yaml: %w", err)
 	}
 
+	// Expand matrix strategies in YAML
 	err = expand.Expand(config)
 	if err != nil {
 		return nil, fmt.Errorf("could not expand matrix stages in v1 yaml: %w", err)
@@ -361,21 +365,51 @@ func parseV1Stages(data []byte, repoID int64) ([]*types.Stage, error) {
 		return nil, fmt.Errorf("cannot support non-pipeline kinds in v1 at the moment: %w", err)
 	}
 
+	var prevStage string
+
 	switch v := config.Spec.(type) {
 	case *v1yaml.Pipeline:
+		// Expand expressions in strings
+		script.ExpandConfig(config, map[string]interface{}{}) // TODO: pass in params for resolution
+
 		for idx, stage := range v.Stages {
 			// Only parse CI stages for now
 			switch stage.Spec.(type) {
 			case *v1yaml.StageCI:
 				now := time.Now().UnixMilli()
-				temp := &types.Stage{
-					RepoID:  repoID,
-					Number:  int64(idx + 1),
-					Name:    stage.Id, // for v1, ID is the unique identifier per stage
-					Created: now,
-					Updated: now,
-					Status:  enum.CIStatusPending,
+				var onSuccess, onFailure bool
+				onSuccess = true
+				if stage.When != nil {
+					if when := stage.When.Eval; when != "" {
+						// TODO: pass in params for resolution
+						onSuccess, onFailure, err = script.EvalWhen(when, map[string]interface{}{})
+						if err != nil {
+							return nil, fmt.Errorf("could not resolve when condition for stage: %w", err)
+						}
+					}
 				}
+
+				dependsOn := []string{}
+				if prevStage != "" {
+					dependsOn = append(dependsOn, prevStage)
+				}
+				status := enum.CIStatusWaitingOnDeps
+				// If the stage has no dependencies, it can be picked up for execution.
+				if len(dependsOn) == 0 {
+					status = enum.CIStatusPending
+				}
+				temp := &types.Stage{
+					RepoID:    repo.ID,
+					Number:    int64(idx + 1),
+					Name:      stage.Id, // for v1, ID is the unique identifier per stage
+					Created:   now,
+					Updated:   now,
+					Status:    status,
+					OnSuccess: onSuccess,
+					OnFailure: onFailure,
+					DependsOn: dependsOn,
+				}
+				prevStage = temp.Name
 				stages = append(stages, temp)
 			default:
 				return nil, fmt.Errorf("only CI stage supported in v1 at the moment")
@@ -392,10 +426,7 @@ func parseV1Stages(data []byte, repoID int64) ([]*types.Stage, error) {
 func isV1Yaml(data []byte) bool {
 	// if we are dealing with the legacy drone yaml, use
 	// the legacy drone engine.
-	if !regexp.MustCompilePOSIX(`^spec:`).Match(data) {
-		return false
-	}
-	return true
+	return regexp.MustCompilePOSIX(`^spec:`).Match(data)
 }
 
 // createExecutionWithStages writes an execution along with its stages in a single transaction.

@@ -6,6 +6,7 @@ package manager
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/internal/pipeline/checks"
@@ -16,6 +17,7 @@ import (
 	gitness_store "github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/hashicorp/go-multierror"
 
 	"github.com/rs/zerolog/log"
 )
@@ -96,7 +98,21 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 		return err
 	}
 
-	if isexecutionComplete(stages) == false {
+	err = t.cancelDownstream(ctx, stages)
+	if err != nil {
+		log.Error().Err(err).
+			Msg("manager: cannot cancel downstream builds")
+		return err
+	}
+
+	err = t.scheduleDownstream(ctx, stage, stages)
+	if err != nil {
+		log.Error().Err(err).
+			Msg("manager: cannot schedule downstream builds")
+		return err
+	}
+
+	if !isexecutionComplete(stages) {
 		log.Warn().Err(err).
 			Msg("manager: execution pending completion of additional stages")
 		return nil
@@ -157,6 +173,69 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 	return nil
 }
 
+// cancelDownstream is a helper function that tests for
+// downstream stages and cancels them based on the overall
+// pipeline state.
+func (t *teardown) cancelDownstream(
+	ctx context.Context,
+	stages []*types.Stage,
+) error {
+	failed := false
+	for _, s := range stages {
+		// check pipeline state
+		if s.Status.IsFailed() {
+			failed = true
+		}
+	}
+
+	var errs error
+	for _, s := range stages {
+		if s.Status != enum.CIStatusWaitingOnDeps {
+			continue
+		}
+
+		var skip bool
+		if failed && !s.OnFailure {
+			skip = true
+		}
+		if !failed && !s.OnSuccess {
+			skip = true
+		}
+		if !skip {
+			continue
+		}
+
+		if !areDepsComplete(s, stages) {
+			continue
+		}
+
+		log := log.With().
+			Int64("stage.id", s.ID).
+			Bool("stage.on_success", s.OnSuccess).
+			Bool("stage.on_failure", s.OnFailure).
+			Bool("failed", failed).
+			Str("stage.depends_on", strings.Join(s.DependsOn, ",")).
+			Logger()
+
+		log.Debug().Msg("manager: skipping step")
+
+		s.Status = enum.CIStatusSkipped
+		s.Started = time.Now().UnixMilli()
+		s.Stopped = time.Now().UnixMilli()
+		err := t.Stages.Update(noContext, s)
+		if err == gitness_store.ErrVersionConflict {
+			t.resync(ctx, s)
+			continue
+		}
+		if err != nil {
+			log.Error().Err(err).
+				Msg("manager: cannot update stage status")
+			errs = multierror.Append(errs, err)
+		}
+	}
+	return errs
+}
+
 func isexecutionComplete(stages []*types.Stage) bool {
 	for _, stage := range stages {
 		switch stage.Status {
@@ -169,4 +248,97 @@ func isexecutionComplete(stages []*types.Stage) bool {
 		}
 	}
 	return true
+}
+
+func areDepsComplete(stage *types.Stage, stages []*types.Stage) bool {
+	deps := map[string]struct{}{}
+	for _, dep := range stage.DependsOn {
+		deps[dep] = struct{}{}
+	}
+	for _, sibling := range stages {
+		if _, ok := deps[sibling.Name]; !ok {
+			continue
+		}
+		if !sibling.Status.IsDone() {
+			return false
+		}
+	}
+	return true
+}
+
+// scheduleDownstream is a helper function that tests for
+// downstream stages and schedules stages if all dependencies
+// and execution requirements are met.
+func (t *teardown) scheduleDownstream(
+	ctx context.Context,
+	stage *types.Stage,
+	stages []*types.Stage,
+) error {
+
+	var errs error
+	for _, sibling := range stages {
+		if sibling.Status == enum.CIStatusWaitingOnDeps {
+			if len(sibling.DependsOn) == 0 {
+				continue
+			}
+
+			// PROBLEM: isDep only checks the direct parent
+			// i think ....
+			// if isDep(stage, sibling) == false {
+			// 	continue
+			// }
+			if !areDepsComplete(sibling, stages) {
+				continue
+			}
+			// if isLastDep(stage, sibling, stages) == false {
+			// 	continue
+			// }
+
+			log := log.With().
+				Int64("stage.id", sibling.ID).
+				Str("stage.name", sibling.Name).
+				Str("stage.depends_on", strings.Join(sibling.DependsOn, ",")).
+				Logger()
+
+			log.Debug().Msg("manager: schedule next stage")
+
+			sibling.Status = enum.CIStatusPending
+			err := t.Stages.Update(noContext, sibling)
+			if err == gitness_store.ErrVersionConflict {
+				t.resync(ctx, sibling)
+				continue
+			}
+			if err != nil {
+				log.Error().Err(err).
+					Msg("manager: cannot update stage status")
+				errs = multierror.Append(errs, err)
+			}
+
+			err = t.Scheduler.Schedule(noContext, sibling)
+			if err != nil {
+				log.Error().Err(err).
+					Msg("manager: cannot schedule stage")
+				errs = multierror.Append(errs, err)
+			}
+		}
+	}
+	return errs
+}
+
+// resync updates the stage from the database. Note that it does
+// not update the Version field. This is by design. It prevents
+// the current go routine from updating a stage that has been
+// updated by another go routine.
+func (t *teardown) resync(ctx context.Context, stage *types.Stage) error {
+	updated, err := t.Stages.Find(ctx, stage.ID)
+	if err != nil {
+		return err
+	}
+	stage.Status = updated.Status
+	stage.Error = updated.Error
+	stage.ExitCode = updated.ExitCode
+	stage.Machine = updated.Machine
+	stage.Started = updated.Started
+	stage.Stopped = updated.Stopped
+	return nil
 }
