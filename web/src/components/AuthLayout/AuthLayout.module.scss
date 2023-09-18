@@ -4,7 +4,7 @@
   --max-width: 35%;
 
   display: grid;
-  grid-template-columns: minmax(var(--min-width), var(--max-width)) auto;
+  grid-template-columns: 60% 40%;
   grid-template-rows: 100vh;
 
   .cardColumn {
@@ -13,9 +13,9 @@
   }
 
   .card {
-    padding: 250px 220px;
+    padding: 250px 128px;
     overflow-x: hidden !important;
-    width: var(--min-width);
+    // width: var(--min-width);
     margin: 0 auto;
     height: 100%;
 
@@ -49,7 +49,7 @@
       padding: 10% 25%;
     }
     .gitnessContainer {
-      padding: 9% 20%;
+      padding: 6% 22%;
     }
 
     .overlayImage {
