@@ -85,16 +85,18 @@ func (r *Repository) RunManyForSpace(
 		return fmt.Errorf("cannot get job progress before starting. %w", err)
 	}
 
-	err = checkJobAlreadyRunning(jobs)
-	if err != nil {
-		return err
-	}
+	if len(jobs) >= 0 {
+		err = checkJobAlreadyRunning(jobs)
+		if err != nil {
+			return err
+		}
 
-	n, err := r.scheduler.PurgeJobsByGroupId(ctx, jobGroupId)
-	if err != nil {
-		return err
+		n, err := r.scheduler.PurgeJobsByGroupId(ctx, jobGroupId)
+		if err != nil {
+			return err
+		}
+		log.Ctx(ctx).Info().Msgf("deleted %d old jobs", n)
 	}
-	log.Ctx(ctx).Info().Msgf("deleted %d old jobs", n)
 
 	jobDefinitions := make([]job.Definition, len(repos))
 	for i, repository := range repos {
@@ -131,11 +133,12 @@ func (r *Repository) RunManyForSpace(
 }
 
 func checkJobAlreadyRunning(jobs []types.JobProgress) error {
-	if jobs != nil {
-		for _, j := range jobs {
-			if !j.State.IsCompleted() {
-				return ErrJobRunning
-			}
+	if jobs == nil {
+		return nil
+	}
+	for _, j := range jobs {
+		if !j.State.IsCompleted() {
+			return ErrJobRunning
 		}
 	}
 	return nil

@@ -624,10 +624,10 @@ func (s *Scheduler) GetJobProgressForGroup(ctx context.Context, jobGroupUID stri
 	return mapToProgressMany(job), nil
 }
 
-func (s *Scheduler) PurgeJobsByGroupId(ctx context.Context, jobGroupUID string) (int64, error) {
-	n, err := s.store.DeleteByGroupID(ctx, jobGroupUID)
+func (s *Scheduler) PurgeJobsByGroupId(ctx context.Context, jobGroupID string) (int64, error) {
+	n, err := s.store.DeleteByGroupID(ctx, jobGroupID)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to delete jobs by group id=%s: %w", jobGroupID, err)
 	}
 	return n, nil
 }

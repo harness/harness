@@ -4,8 +4,6 @@
 
 package enum
 
-import "golang.org/x/exp/slices"
-
 // JobState represents state of a background job.
 type JobState string
 
@@ -43,10 +41,6 @@ const (
 	JobPriorityElevated JobPriority = 1
 )
 
-func getCompletedJobState() []JobState {
-	return []JobState{JobStateFinished, JobStateCanceled, JobStateFinished}
-}
-
 func (s JobState) IsCompleted() bool {
-	return slices.Contains(getCompletedJobState(), s)
+	return s == JobStateFinished || s == JobStateFailed || s == JobStateCanceled
 }
