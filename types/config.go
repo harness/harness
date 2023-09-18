@@ -88,7 +88,7 @@ type Config struct {
 
 	// CI defines configuration related to build executions.
 	CI struct {
-		ParallelWorkers int `envconfig:"GITNESS_CI_PARALLEL_WORKERS" default:"5"`
+		ParallelWorkers int `envconfig:"GITNESS_CI_PARALLEL_WORKERS" default:"2"`
 	}
 
 	// Database defines the database configuration parameters.

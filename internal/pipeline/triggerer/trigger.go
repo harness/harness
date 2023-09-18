@@ -149,8 +149,6 @@ func (t *triggerer) Trigger(
 			return t.createExecutionWithError(ctx, pipeline, base, err.Error())
 		}
 
-		verified := true
-
 		var matched []*yaml.Pipeline
 		var dag = dag.New()
 		for _, document := range manifest.Resources {
@@ -237,9 +235,7 @@ func (t *triggerer) Trigger(
 			if stage.Name == "" {
 				stage.Name = "default"
 			}
-			if verified == false {
-				stage.Status = enum.CIStatusBlocked
-			} else if len(stage.DependsOn) == 0 {
+			if len(stage.DependsOn) == 0 {
 				stage.Status = enum.CIStatusPending
 			}
 			stages = append(stages, stage)

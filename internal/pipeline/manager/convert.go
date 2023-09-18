@@ -200,6 +200,7 @@ func convertToDroneBuild(execution *types.Execution) *drone.Build {
 func convertToDroneRepo(repo *types.Repository) *drone.Repo {
 	return &drone.Repo{
 		ID:      repo.ID,
+		Trusted: true, // as builds are running on user machines, the repo is marked trusted.
 		UID:     repo.UID,
 		UserID:  repo.CreatedBy,
 		Name:    repo.UID,
