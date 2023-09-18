@@ -204,7 +204,7 @@ func mapStatusCodeToError(statusCode int) error {
 	case statusCode == 404:
 		return errHTTPNotFound
 	case statusCode == 400:
-		return errHTTPNotFound
+		return errHTTPBadRequest
 	case statusCode == 409:
 		return errHTTPDuplicate
 	case statusCode >= 400:
