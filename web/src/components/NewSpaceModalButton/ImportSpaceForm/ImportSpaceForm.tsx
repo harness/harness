@@ -174,6 +174,14 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                       tooltipProps={{
                         dataTooltipId: 'importSpaceOrgName'
                       }}
+                      onChange={event => {
+                        const target = event.target as HTMLInputElement
+                        formik.setFieldValue('organization', target.value)
+                        if (target.value) {
+                          formik.setFieldValue('name', target.value)
+                          formik.validateField('organization')
+                        }
+                      }}
                     />
                     {formik.errors.organization ? (
                       <Text

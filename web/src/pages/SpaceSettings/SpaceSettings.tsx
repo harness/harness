@@ -3,7 +3,6 @@ import {
   Button,
   Text,
   Container,
-  FormInput,
   Formik,
   Layout,
   Page,
@@ -11,7 +10,8 @@ import {
   ButtonSize,
   FlexExpander,
   useToaster,
-  Heading
+  Heading,
+  TextInput
 } from '@harnessio/uicore'
 import { noop } from 'lodash-es'
 import { useMutate, useGet } from 'restful-react'
@@ -60,7 +60,7 @@ export default function SpaceSettings() {
   const { data: exportProgressSpace, refetch: refetchExport } = useGet({
     path: `/api/v1/spaces/${space}/export-progress`
   })
-  const countFinishedRepos = () => {
+  const countFinishedRepos = (): number => {
     return exportProgressSpace?.repos.filter((repo: TypesJobProgress) => repo.state === 'finished').length
   }
 
@@ -309,7 +309,14 @@ export default function SpaceSettings() {
                       <Container className={css.content}>
                         {editName === ACCESS_MODES.EDIT ? (
                           <Layout.Horizontal>
-                            <FormInput.Text name="name" className={css.textContainer} />
+                            <TextInput
+                              name="name"
+                              value={formik.values.name || data?.uid}
+                              className={css.textContainer}
+                              onChange={evt => {
+                                formik.setFieldValue('name', (evt.currentTarget as HTMLInputElement)?.value)
+                              }}
+                            />
                             <Layout.Horizontal className={css.buttonContainer}>
                               <Button
                                 className={css.saveBtn}
@@ -365,7 +372,14 @@ export default function SpaceSettings() {
                       <Container className={css.content}>
                         {editDesc === ACCESS_MODES.EDIT ? (
                           <Layout.Horizontal>
-                            <FormInput.Text name="desc" className={css.textContainer} />
+                            <TextInput
+                              onChange={evt => {
+                                formik.setFieldValue('desc', (evt.currentTarget as HTMLInputElement)?.value)
+                              }}
+                              value={formik.values.desc || data?.description}
+                              name="desc"
+                              className={css.textContainer}
+                            />
                             <Layout.Horizontal className={css.buttonContainer}>
                               <Button
                                 className={css.saveBtn}

@@ -5,10 +5,10 @@ import {
   Text,
   Button,
   ButtonVariation,
-  FormInput,
   Formik,
   useToaster,
-  ButtonSize
+  ButtonSize,
+  TextInput
 } from '@harnessio/uicore'
 import { Color, Intent } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
@@ -93,7 +93,14 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                 <Container className={css.content}>
                   {editDesc === ACCESS_MODES.EDIT ? (
                     <Layout.Horizontal>
-                      <FormInput.Text name="desc" className={css.textContainer} />
+                      <TextInput
+                        className={css.textContainer}
+                        onChange={evt => {
+                          formik.setFieldValue('desc', (evt.currentTarget as HTMLInputElement)?.value)
+                        }}
+                        value={formik.values.desc || repoMetadata?.description}
+                        name="desc"
+                      />
                       <Layout.Horizontal className={css.buttonContainer}>
                         <Button
                           className={css.saveBtn}
