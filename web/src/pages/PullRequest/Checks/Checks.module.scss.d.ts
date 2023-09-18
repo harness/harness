@@ -2,6 +2,7 @@
 // This is an auto-generated file
 export declare const active: string
 export declare const chevron: string
+export declare const consoleLine: string
 export declare const content: string
 export declare const expanded: string
 export declare const header: string

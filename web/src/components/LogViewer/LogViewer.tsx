@@ -1,65 +1,48 @@
-import React, { useEffect, useMemo, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Container } from '@harnessio/uicore'
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
-import { CanvasAddon } from 'xterm-addon-canvas'
 import { SearchAddon } from 'xterm-addon-search'
-import { WebLinksAddon } from 'xterm-addon-web-links'
 import 'xterm/css/xterm.css'
 import { useEventListener } from 'hooks/useEventListener'
 
-const DEFAULT_SCROLLBACK_LINES = 100000
-
-export type TermRefs = { term: Terminal; fitAddon: FitAddon } | undefined
+export type TermRefs = { term: Terminal; fitAddon: FitAddon }
 
 export interface LogViewerProps {
-  /** Search text */
-  searchText?: string
-
-  /** Number of scrollback lines */
-  scrollbackLines?: number
-
-  /** Log content as string */
+  search?: string
   content: string
-
-  termRefs?: React.MutableRefObject<TermRefs>
-
+  termRefs?: React.MutableRefObject<TermRefs | undefined>
   autoHeight?: boolean
 }
 
-export const LogViewer: React.FC<LogViewerProps> = ({ scrollbackLines, content, termRefs, autoHeight }) => {
+const LogTerminal: React.FC<LogViewerProps> = ({ content, termRefs, autoHeight }) => {
   const ref = useRef<HTMLDivElement | null>(null)
-  const lines = useMemo(() => content.split(/\r?\n/), [content])
-  const term = useRef<{ term: Terminal; fitAddon: FitAddon }>()
+  const term = useRef<TermRefs>()
 
   useEffect(() => {
     if (!term.current) {
       const _term = new Terminal({
-        cursorBlink: true,
-        cursorStyle: 'block',
         allowTransparency: true,
         disableStdin: true,
-        scrollback: scrollbackLines || DEFAULT_SCROLLBACK_LINES,
-        theme: {
-          background: 'transparent'
-        }
+        tabStopWidth: 2,
+        scrollOnUserInput: false,
+        smoothScrollDuration: 0,
+        scrollback: 10000
       })
 
       const searchAddon = new SearchAddon()
       const fitAddon = new FitAddon()
-      const webLinksAddon = new WebLinksAddon()
 
       _term.loadAddon(searchAddon)
       _term.loadAddon(fitAddon)
-      _term.loadAddon(webLinksAddon)
-      _term.loadAddon(new CanvasAddon())
 
       _term.open(ref?.current as HTMLDivElement)
 
       fitAddon.fit()
       searchAddon.activate(_term)
 
-      _term.write('\x1b[?25l') // disable cursor
+      // disable cursor
+      _term.write('\x1b[?25l')
 
       term.current = { term: _term, fitAddon }
 
@@ -67,24 +50,38 @@ export const LogViewer: React.FC<LogViewerProps> = ({ scrollbackLines, content, 
         termRefs.current = term.current
       }
     }
+
+    return () => {
+      if (term.current) {
+        if (termRefs) {
+          termRefs.current = undefined
+        }
+        setTimeout(() => term.current?.term.dispose(), 1000)
+      }
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    term.current?.term?.clear()
+    const lines = content.split(/\r?\n/)
+
     lines.forEach(line => term.current?.term?.writeln(line))
 
     if (autoHeight) {
       term.current?.term?.resize(term.current?.term?.cols, lines.length + 1)
     }
 
+    setTimeout(() => {
+      term.current?.term.scrollToTop()
+    }, 0)
+
     return () => {
       term.current?.term?.clear()
     }
-  }, [lines, autoHeight])
+  }, [content, autoHeight])
 
-  useEventListener('resize', () => {
-    term.current?.fitAddon?.fit()
-  })
+  useEventListener('resize', () => term.current?.fitAddon?.fit())
 
   return <Container ref={ref} width="100%" height={autoHeight ? 'auto' : '100%'} />
 }
+
+export const LogViewer = React.memo(LogTerminal)

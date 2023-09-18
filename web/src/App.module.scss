@@ -4,6 +4,9 @@
   @include vars;
 
   &.fullPage {
+    --font-family: Inter, sans-serif;
+    --font-family-mono: Roboto Mono, monospace;
+
     height: var(--page-height);
   }
 

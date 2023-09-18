@@ -1,3 +1,5 @@
+@import 'src/utils/utils';
+
 .main {
   --stage-title-height: 54px;
   --stage-detail-section-height: 48px;
@@ -194,6 +196,9 @@
   height: 100%;
   overflow: auto;
   padding: 10px 20px 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 
   &::before {
     content: '';
@@ -248,6 +253,19 @@
   }
 
   .stepLogViewer {
-    padding-left: 20px;
+    padding: 15px 36px;
+    flex-shrink: 0;
+
+    .consoleLine {
+      color: var(--white);
+
+      @include mono-font;
+
+      word-wrap: break-word !important;
+      white-space: pre-wrap !important;
+      cursor: text;
+      margin: 0;
+      padding: 0;
+    }
   }
 }
