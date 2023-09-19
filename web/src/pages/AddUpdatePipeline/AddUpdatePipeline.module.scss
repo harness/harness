@@ -3,6 +3,7 @@
   --heading-height: 58px;
   min-height: var(--page-height);
   background-color: var(--white) !important;
+  --generate-pipeline-header: 55px;
 
   .layout {
     align-items: center;
@@ -14,16 +15,20 @@
   overflow: hidden;
 }
 
+.extendedHeight {
+  height: calc(100vh - var(--header-height)) !important;
+}
+
 .editorContainer {
   width: calc(100% - 30vw);
-  height: calc(100vh - var(--header-height)) !important;
+  height: calc(100vh - var(--header-height) - var(--generate-pipeline-header));
   border-right: 1px solid var(--grey-100);
   padding: var(--spacing-small) !important;
 }
 
 .pluginsContainer {
   width: 30vw;
-  height: calc(100vh - var(--header-height)) !important;
+  height: calc(100vh - var(--header-height) - var(--generate-pipeline-header)) !important;
   background-color: var(--grey-50) !important;
 }
 

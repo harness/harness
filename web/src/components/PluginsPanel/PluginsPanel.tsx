@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Formik } from 'formik'
-import { capitalize, get, set } from 'lodash-es'
+import { capitalize, get, omit, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon, type IconName } from '@harnessio/icons'
@@ -81,8 +81,8 @@ interface PluginInsertionTemplateInterface {
   name?: string
   type: 'plugin'
   spec: {
-    uses: string
-    with: { [key: string]: string }
+    name: string
+    inputs: { [key: string]: string }
   }
 }
 
@@ -90,13 +90,16 @@ const PluginInsertionTemplate: PluginInsertionTemplateInterface = {
   name: '<step-name>',
   type: 'plugin',
   spec: {
-    uses: '<plugin-uid-from-database>',
-    with: {
+    name: '<plugin-uid-from-database>',
+    inputs: {
       '<param1>': '<value1>',
       '<param2>': '<value2>'
     }
   }
 }
+
+const PluginNameFieldPath = 'spec.name'
+const PluginInputsFieldPath = 'spec.inputs'
 
 export interface PluginsPanelInterface {
   onPluginAddUpdate: (isUpdate: boolean, pluginFormData: Record<string, any>) => void
@@ -267,15 +270,15 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
       case PluginCategory.Drone:
         const payload = { ...PluginInsertionTemplate }
         set(payload, 'name', name)
-        set(payload, 'spec.uses', pluginMetadata?.name)
-        set(payload, 'spec.with', pluginFormData)
+        set(payload, PluginNameFieldPath, pluginMetadata?.name)
+        set(payload, PluginInputsFieldPath, omit(pluginFormData, 'name'))
         return payload as PluginInsertionTemplateInterface
       case PluginCategory.Harness:
-        return name && image && script
+        return image || script
           ? {
-              name,
-              type: 'script',
-              spec: { image, run: script }
+              ...(name && { name }),
+              type: 'run',
+              spec: { ...(image && { image }), ...(script && { script }) }
             }
           : {}
       default:
