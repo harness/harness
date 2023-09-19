@@ -92,7 +92,7 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
 
       eventSourceRef.current.onmessage = event => {
         try {
-          const scrollParent = containerRef.current?.closest(`.${css.pipelineSteps}`) as HTMLDivElement
+          const scrollParent = containerRef.current?.closest(`.${css.content}`) as HTMLDivElement
           const autoScroll =
             scrollParent && scrollParent.scrollTop === scrollParent.scrollHeight - scrollParent.offsetHeight
 
@@ -153,11 +153,7 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
         onClick={() => {
           setExpanded(!expanded)
         }}>
-        <NavArrowRight
-          color={Utils.getRealCSSColor(Color.GREY_500)}
-          className={cx(css.noShrink, css.chevron)}
-          strokeWidth="1.5"
-        />
+        <NavArrowRight color={Utils.getRealCSSColor(Color.GREY_500)} className={cx(css.noShrink, css.chevron)} />
 
         <ExecutionStatus
           className={cx(css.status, css.noShrink)}
@@ -184,7 +180,7 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
         </Render>
       </Layout.Horizontal>
       <Render when={expanded}>
-        <Container className={css.stepLogViewer} ref={containerRef}></Container>
+        <Container className={css.stepLogContainer} ref={containerRef}></Container>
       </Render>
     </Container>
   )

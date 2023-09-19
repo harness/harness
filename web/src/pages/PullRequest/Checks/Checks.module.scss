@@ -111,6 +111,7 @@
 
     .content {
       background-color: var(--black);
+      overflow: auto;
 
       &.markdown {
         :global {
@@ -120,20 +121,11 @@
         }
 
         padding: 0 var(--spacing-large) var(--spacing-medium);
-        overflow: auto;
       }
 
       &.terminal {
-        overflow: hidden;
-
         .header {
           padding: var(--spacing-medium) var(--spacing-large) 0;
-        }
-
-        :global {
-          .terminal.xterm {
-            padding: var(--spacing-small) var(--spacing-large) 0;
-          }
         }
 
         span[data-icon='execution-success'] svg {
@@ -149,6 +141,7 @@
         top: 0;
         background-color: var(--black);
         height: var(--log-content-header-height);
+        z-index: 3;
 
         .headerLayout {
           border-bottom: 1px solid var(--grey-800);
@@ -162,14 +155,8 @@
         padding-left: var(--spacing-small);
       }
 
-      .terminalContainer {
-        height: calc(100% - var(--log-content-header-height));
-
-        .logViewer {
-          padding: var(--spacing-medium) var(--spacing-large) var(--spacing-medium) var(--spacing-xxlarge);
-          overflow: auto;
-          height: 100%;
-        }
+      .logViewer {
+        padding: var(--spacing-medium) var(--spacing-medium) var(--spacing-medium) var(--spacing-xxlarge);
       }
     }
   }
@@ -204,8 +191,6 @@
 }
 
 .pipelineSteps {
-  height: 100%;
-  overflow: auto;
   padding: 10px 20px 0 !important;
   display: flex;
   flex-direction: column;
@@ -228,7 +213,7 @@
     border-radius: 6px;
     padding: 0 10px 0 6px;
     position: sticky;
-    top: 0;
+    top: 74px;
     z-index: 2;
     background-color: var(--black);
 
@@ -263,7 +248,7 @@
     }
   }
 
-  .stepLogViewer {
+  .stepLogContainer {
     padding: 15px 36px;
     flex-shrink: 0;
 

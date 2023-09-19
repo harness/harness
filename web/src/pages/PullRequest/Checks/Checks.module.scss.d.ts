@@ -25,9 +25,8 @@ export declare const selected: string
 export declare const spinner: string
 export declare const status: string
 export declare const stepHeader: string
-export declare const stepLogViewer: string
+export declare const stepLogContainer: string
 export declare const subMenu: string
 export declare const terminal: string
-export declare const terminalContainer: string
 export declare const text: string
 export declare const uid: string

@@ -6,7 +6,7 @@ import css from './LogViewer.module.scss'
 
 export interface LogViewerProps {
   search?: string
-  content: string
+  content?: string
   className?: string
 }
 
@@ -14,7 +14,7 @@ const LogTerminal: React.FC<LogViewerProps> = ({ content, className }) => {
   const ref = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    content.split(/\r?\n/).forEach(line => ref.current?.appendChild(lineElement(line)))
+    content?.split(/\r?\n/).forEach(line => ref.current?.appendChild(lineElement(line)))
   }, [content])
 
   return <Container ref={ref} className={cx(css.main, className)} />

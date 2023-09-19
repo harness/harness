@@ -73,7 +73,7 @@ const App: React.FC<AppProps> = React.memo(function App({
                   }}>
                   <IconoirProvider
                     iconProps={{
-                      strokeWidth: 1,
+                      strokeWidth: 1.5,
                       width: '16px',
                       height: '16px'
                     }}>

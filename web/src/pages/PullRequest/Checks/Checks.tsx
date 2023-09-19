@@ -115,22 +115,20 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
                   </Container>
                 </Truthy>
                 <Falsy>
-                  <Container className={css.terminalContainer}>
-                    <Match expr={selectedStage}>
-                      <Truthy>
-                        <CheckPipelineSteps
-                          repoMetadata={repoMetadata}
-                          pullRequestMetadata={pullRequestMetadata}
-                          pipelineName={selectedItemData?.uid as string}
-                          stage={selectedStage as TypesStage}
-                          executionNumber={get(selectedItemData, 'payload.data.execution_number', '')}
-                        />
-                      </Truthy>
-                      <Falsy>
-                        <LogViewer content={logContent} className={css.logViewer} />
-                      </Falsy>
-                    </Match>
-                  </Container>
+                  <Match expr={selectedStage}>
+                    <Truthy>
+                      <CheckPipelineSteps
+                        repoMetadata={repoMetadata}
+                        pullRequestMetadata={pullRequestMetadata}
+                        pipelineName={selectedItemData?.uid as string}
+                        stage={selectedStage as TypesStage}
+                        executionNumber={get(selectedItemData, 'payload.data.execution_number', '')}
+                      />
+                    </Truthy>
+                    <Falsy>
+                      <LogViewer content={logContent} className={css.logViewer} />
+                    </Falsy>
+                  </Match>
                 </Falsy>
               </Match>
             </Container>
