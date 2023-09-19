@@ -252,6 +252,10 @@ const AddUpdatePipeline = (): JSX.Element => {
   )
 
   const renderCTA = useCallback(() => {
+    /* Do not render CTA till pipeline existence info is obtained */
+    if (fetchingPipeline || !pipelineData) {
+      return <></>
+    }
     switch (selectedOption?.action) {
       case PipelineSaveAndRunAction.RUN:
         return (
@@ -310,7 +314,18 @@ const AddUpdatePipeline = (): JSX.Element => {
       default:
         return <></>
     }
-  }, [loading, fetchingPipeline, isDirty, repoMetadata, pipeline, selectedOption, isExistingPipeline, pipelineAsYAML])
+  }, [
+    loading,
+    fetchingPipeline,
+    fetchingPipelineYAMLFileContent,
+    isDirty,
+    repoMetadata,
+    pipeline,
+    selectedOption,
+    isExistingPipeline,
+    pipelineAsYAML,
+    pipelineData
+  ])
 
   if (fetchingPipeline || fetchingPipelineYAMLFileContent) {
     return <LoadingSpinner visible={true} />

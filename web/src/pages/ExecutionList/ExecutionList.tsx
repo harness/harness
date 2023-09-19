@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { isEmpty } from 'lodash'
 import {
   Button,
   ButtonVariation,
@@ -58,7 +59,8 @@ const ExecutionList = () => {
     data: executions,
     error: executionsError,
     response,
-    refetch: executionsRefetch
+    refetch: executionsRefetch,
+    loading: isFetchingExecutions
   } = useGet<TypesExecution[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines/${pipeline}/executions`,
     queryParams: { page, limit: LIST_FETCHING_LIMIT },
@@ -204,34 +206,41 @@ const ExecutionList = () => {
           message: getString('executions.noData'),
           button: NewExecutionButton
         }}>
-        <LoadingSpinner visible={loading || isInitialLoad} withBorder={!!executions && isInitialLoad} />
+        <LoadingSpinner
+          visible={loading || isInitialLoad || isFetchingExecutions}
+          withBorder={!!executions && isInitialLoad}
+        />
 
         <Container padding="xlarge">
           <Layout.Horizontal spacing="large" className={css.layout}>
-            <Layout.Horizontal spacing="medium">
-              {NewExecutionButton}
-              <Button
-                variation={ButtonVariation.SECONDARY}
-                text={getString('edit')}
-                onClick={e => {
-                  e.stopPropagation()
-                  if (repoMetadata?.path && pipeline) {
-                    history.push(routes.toCODEPipelineEdit({ repoPath: repoMetadata.path, pipeline }))
-                  }
-                }}
-              />
-            </Layout.Horizontal>
-            <FlexExpander />
-            <Button
-              variation={ButtonVariation.TERTIARY}
-              text={getString('pipelines.settings')}
-              onClick={e => {
-                e.stopPropagation()
-                if (repoMetadata?.path && pipeline) {
-                  history.push(routes.toCODEPipelineSettings({ repoPath: repoMetadata.path, pipeline }))
-                }
-              }}
-            />
+            {!isEmpty(executions) && (
+              <>
+                <Layout.Horizontal spacing="medium">
+                  {NewExecutionButton}
+                  <Button
+                    variation={ButtonVariation.SECONDARY}
+                    text={getString('edit')}
+                    onClick={e => {
+                      e.stopPropagation()
+                      if (repoMetadata?.path && pipeline) {
+                        history.push(routes.toCODEPipelineEdit({ repoPath: repoMetadata.path, pipeline }))
+                      }
+                    }}
+                  />
+                </Layout.Horizontal>
+                <FlexExpander />
+                <Button
+                  variation={ButtonVariation.TERTIARY}
+                  text={getString('pipelines.settings')}
+                  onClick={e => {
+                    e.stopPropagation()
+                    if (repoMetadata?.path && pipeline) {
+                      history.push(routes.toCODEPipelineSettings({ repoPath: repoMetadata.path, pipeline }))
+                    }
+                  }}
+                />
+              </>
+            )}
           </Layout.Horizontal>
 
           <Container margin={{ top: 'medium' }}>
