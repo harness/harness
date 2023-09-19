@@ -11,6 +11,7 @@ export declare const headerLayout: string
 export declare const hidden: string
 export declare const invert: string
 export declare const layout: string
+export declare const logViewer: string
 export declare const main: string
 export declare const markdown: string
 export declare const markdownContainer: string

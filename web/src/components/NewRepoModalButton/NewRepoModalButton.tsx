@@ -346,7 +346,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
       loading={false}
       text={
         <Text color={Color.WHITE} font={{ variation: FontVariation.BODY2_SEMI, weight: 'bold' }}>
-          {repoOption.title}
+          {repoCreateOptions[0].title}
         </Text>
       }
       variation={ButtonVariation.PRIMARY}
@@ -357,18 +357,21 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         position: PopoverPosition.BOTTOM_RIGHT,
         transitionDuration: 1000
       }}
-      icon={repoOption.type === RepoCreationType.IMPORT ? undefined : 'plus'}
+      icon={'plus'}
       {...permissionProps(permResult, standalone)}
       onClick={() => {
-        openModal()
+        setRepoOption(repoCreateOptions[0])
+        setTimeout(() => openModal(), 0)
       }}>
-      {repoCreateOptions.map(option => {
+      {[repoCreateOptions[1]].map(option => {
         return (
           <Menu.Item
+            className={css.menuItem}
             key={option.type}
             text={<Text font={{ variation: FontVariation.BODY2 }}>{option.desc}</Text>}
             onClick={() => {
-              setRepoOption(option)
+              setRepoOption(repoCreateOptions[1])
+              setTimeout(() => openModal(), 0)
             }}
           />
         )

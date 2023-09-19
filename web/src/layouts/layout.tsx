@@ -1,6 +1,7 @@
 import React from 'react'
 import { Avatar, Container, FlexExpander, Layout } from '@harnessio/uicore'
 import { Render } from 'react-jsx-match'
+import { ProfileCircle } from 'iconoir-react'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
 import { useDocumentTitle } from 'hooks/useDocumentTitle'
@@ -33,8 +34,12 @@ export const LayoutWithSideNav: React.FC<LayoutWithSideNavProps> = ({ title, chi
           <FlexExpander />
 
           <Render when={currentUser?.admin}>
-            <Container className={css.settings}>
-              <NavMenuItem icon="user-groups" label={getString('userManagement.text')} to={routes.toCODEUsers()} />
+            <Container className={css.userManagement}>
+              <NavMenuItem
+                customIcon={<ProfileCircle />}
+                label={getString('userManagement.text')}
+                to={routes.toCODEUsers()}
+              />
             </Container>
           </Render>
 

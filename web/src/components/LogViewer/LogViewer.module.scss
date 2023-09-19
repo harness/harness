@@ -1,28 +1,19 @@
-.container {
-  --background: var(--grey-900);
-  --header-selected: var(--grey-700);
+@import 'src/utils/utils';
 
-  background: var(--background) !important;
-  padding: var(--spacing-small) !important;
+.main {
+  flex-shrink: 0;
 
-  .section {
-    .sectionHeader {
-      padding: var(--spacing-small) !important;
-      padding-left: 18px !important;
-      cursor: pointer;
-      border-radius: 5px;
+  .line {
+    margin: 0;
+    padding: 0;
+    cursor: text;
+    min-height: 20px;
+    display: block;
 
-      &.isOpen {
-        background: var(--header-selected) !important;
-      }
+    @include mono-font;
+    color: var(--white);
 
-      .chevron {
-        transform: translateX(-4px);
-      }
-    }
-
-    .term {
-      padding: var(--spacing-xsmall) 0 !important;
-    }
+    word-wrap: break-word !important;
+    white-space: pre-wrap !important;
   }
 }

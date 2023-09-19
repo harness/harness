@@ -274,7 +274,7 @@ const AddUpdatePipeline = (): JSX.Element => {
           <SplitButton
             text={
               <Text color={Color.WHITE} font={{ variation: FontVariation.BODY2_SEMI, weight: 'bold' }}>
-                {selectedOption?.title}
+                {pipelineSaveAndRunOptions[0].title}
               </Text>
             }
             disabled={loading || !isDirty}
@@ -286,10 +286,11 @@ const AddUpdatePipeline = (): JSX.Element => {
               transitionDuration: 1000
             }}
             intent="primary"
-            onClick={() => handleSaveAndRun(selectedOption)}>
-            {pipelineSaveAndRunOptions.map(option => {
+            onClick={() => handleSaveAndRun(pipelineSaveAndRunOptions[0])}>
+            {[pipelineSaveAndRunOptions[1]].map(option => {
               return (
                 <Menu.Item
+                  className={css.menuItem}
                   key={option.title}
                   text={<Text font={{ variation: FontVariation.BODY2 }}>{option.title}</Text>}
                   onClick={() => {

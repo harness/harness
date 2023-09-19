@@ -61,6 +61,7 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
       })) || [],
     [users]
   )
+  const [selectUser, setSelectUser] = useState<SelectOption>()
 
   const handleClose = () => {
     setSearchTerm('')
@@ -73,7 +74,7 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
         isOpen
         enforceFocus={false}
         onClose={handleClose}
-        title={isEditFlow ? getString('changeRole') : getString('spaceMemberships.addMember')}>
+        title={isEditFlow ? getString('changeRole') : getString('spaceMemberships.addMember', { name: space })}>
         <Formik<MembershipAddRequestBody>
           initialValues={{
             user_uid: membershipDetails?.principal?.uid || '',
@@ -115,19 +116,26 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
               disabled={isEditFlow}
               onQueryChange={setSearchTerm}
               selectProps={{ loadingItems: fetchingUsers }}
+              onChange={item => setSelectUser(item)}
             />
             <FormInput.Select name="role" label={getString('role')} items={roleOptions} usePortal />
             <Button
               type="submit"
               margin={{ top: 'xxxlarge' }}
-              text={isEditFlow ? getString('save') : getString('addMember')}
+              text={
+                isEditFlow
+                  ? getString('save')
+                  : getString(selectUser ? 'addUserToSpace2' : 'addUserToSpace1', {
+                      user: selectUser?.label || selectUser?.value
+                    })
+              }
               variation={ButtonVariation.PRIMARY}
             />
           </FormikForm>
         </Formik>
       </Dialog>
     )
-  }, [isEditFlow, membershipDetails, userOptions])
+  }, [isEditFlow, membershipDetails, userOptions, selectUser])
 
   return {
     openModal: (isEditing?: boolean, memberInfo?: TypesPrincipalInfo) => {

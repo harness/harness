@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react'
-import { Container, Layout, Utils } from '@harnessio/uicore'
+import { Container, Layout } from '@harnessio/uicore'
 import { Render } from 'react-jsx-match'
 import { useHistory, useRouteMatch } from 'react-router-dom'
-import { Lock } from 'iconoir-react'
-import { Color } from '@harnessio/design-system'
+import { LockKey, BookmarkBook, UserSquare, Settings } from 'iconoir-react'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import type { TypesSpace } from 'services/code'
@@ -41,11 +40,11 @@ export const DefaultMenu: React.FC = () => {
 
         <Render when={selectedSpace}>
           <NavMenuItem
-            icon="code-repo"
             label={getString('repositories')}
             to={routes.toCODERepositories({ space: selectedSpace?.path as string })}
             isDeselected={!!repoMetadata}
             isHighlighted={!!repoMetadata}
+            customIcon={<BookmarkBook />}
           />
         </Render>
 
@@ -143,24 +142,23 @@ export const DefaultMenu: React.FC = () => {
 
         {standalone && (
           <Render when={selectedSpace}>
-            {/* icon is placeholder */}
             <NavMenuItem
               label={getString('pageTitle.secrets')}
               to={routes.toCODESecrets({ space: selectedSpace?.path as string })}
-              customIcon={<Lock color={Utils.getRealCSSColor(Color.GREY_700)} />}
+              customIcon={<LockKey />}
             />
           </Render>
         )}
 
         <Render when={selectedSpace}>
           <NavMenuItem
-            icon="nav-project"
-            label={getString('accessControl')}
+            customIcon={<UserSquare />}
+            label={getString('permissions')}
             to={routes.toCODESpaceAccessControl({ space: selectedSpace?.path as string })}
           />
 
           <NavMenuItem
-            icon="code-settings"
+            customIcon={<Settings />}
             label={getString('settings')}
             to={routes.toCODESpaceSettings({ space: selectedSpace?.path as string })}
           />

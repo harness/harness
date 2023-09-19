@@ -124,13 +124,13 @@ const SpaceAccessControl = () => {
 
   return (
     <Container className={css.mainCtn}>
-      <Page.Header title={getString('accessControl')} />
+      <Page.Header title={getString('permissionsFor', { name: space })} />
       <Page.Body>
         <Container padding="xlarge">
           <LoadingSpinner visible={loading} />
           <Button
             icon="plus"
-            text={getString('newMember')}
+            text={getString('addMember')}
             variation={ButtonVariation.PRIMARY}
             margin={{ bottom: 'medium' }}
             onClick={() => openModal()}

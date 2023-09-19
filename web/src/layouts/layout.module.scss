@@ -13,11 +13,15 @@
       flex-direction: column;
       overflow: auto;
 
-      .settings {
+      .userManagement {
         margin: 0 var(--spacing-medium);
         padding: var(--spacing-small) 0;
         border-top: 1px solid var(--grey-200);
         border-bottom: 1px solid var(--grey-200);
+
+        > a {
+          height: 30px !important;
+        }
       }
 
       .profile {

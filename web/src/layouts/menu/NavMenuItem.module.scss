@@ -59,30 +59,19 @@
     opacity: 1;
   }
 
+  .customIcon {
+    height: 16px;
+    padding-right: var(--spacing-small) !important;
+    color: var(--grey-700);
+  }
+
+  &.selected .customIcon {
+    color: var(--primary-8);
+  }
+
   .text {
     --text-color: var(--grey-700);
-
     color: var(--text-color) !important;
     font-size: 13px !important;
-
-    > span:not([data-icon='code-file']):not([data-icon='code-repo']) {
-      color: var(--text-color) !important;
-
-      svg path {
-        fill: var(--text-color);
-      }
-    }
-
-    > span[data-icon='code-file'],
-    > span[data-icon='code-repo'] {
-      svg path {
-        stroke: var(--text-color);
-      }
-    }
   }
-}
-
-.customIcon {
-  height: 16px;
-  padding-right: var(--spacing-small) !important;
 }

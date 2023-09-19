@@ -6,4 +6,5 @@ export declare const editorContainer: string
 export declare const header: string
 export declare const layout: string
 export declare const main: string
+export declare const menuItem: string
 export declare const pluginsContainer: string

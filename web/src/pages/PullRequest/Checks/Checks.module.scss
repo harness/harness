@@ -159,10 +159,17 @@
 
       .markdownContainer {
         padding-top: var(--spacing-medium);
+        padding-left: var(--spacing-small);
       }
 
       .terminalContainer {
         height: calc(100% - var(--log-content-header-height));
+
+        .logViewer {
+          padding: var(--spacing-medium) var(--spacing-large) var(--spacing-medium) var(--spacing-xxlarge);
+          overflow: auto;
+          height: 100%;
+        }
       }
     }
   }

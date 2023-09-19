@@ -48,6 +48,8 @@ off: Off
 loading: Loading...
 title: Title
 accessControl: Access Control
+permissions: Permissions
+permissionsFor: Permissions for {{name}}
 addGitIgnore: Add a .gitignore
 addReadMe: Add a README file
 failedToCreateRepo: Failed to create Repository. Please try again.
@@ -76,7 +78,7 @@ pageTitle:
   signin: Sign In
   register: Register a new account
   accessControl: Access Control
-  spaceSettings: Space Settings
+  spaceSettings: Project Settings
   compare: Pull Request Compare
   pullRequest: Pull Request
   pullRequests: Pull Requests
@@ -104,7 +106,7 @@ repos:
   activities: Monthly Activities
   updated: Updated Date
   lastChange: Last Change
-  noDataMessage: There are no repositories in this space.  Create a new repository, or import an existing Git repository by clicking below
+  noDataMessage: There are no repositories in this project.  Create a new repository, or import an existing Git repository by clicking below
   enterBranchName: Enter a branch name
 createRepoModal:
   branchLabel: 'Your repository will be initialized with a '
@@ -260,6 +262,7 @@ pr:
   prMerged: This Pull Request was merged
   prClosed: This Pull Request was closed.
   reviewSubmitted: Review submitted.
+  requestSubmitted: Request for changes submitted.
   prReviewSubmit: '{user} {state|approved:approved, rejected:rejected,changereq:requested changes to, reviewed} the pull request.  {time}'
   prMergedBannerInfo: '{user} merged branch {source} into {target} {time}.'
   prMergedInfo: '{user} merged branch {source} into {target}. {time}'
@@ -498,9 +501,9 @@ addLabel: Add
 users: Users
 findAUser: Find a user
 reviewerNotFound: 'Reviewer <strong>{{reviewer}}</strong> not found.'
-spaces: Spaces
-space: Space
-selectSpace: Select space here
+spaces: Projects
+space: Project
+selectSpace: Select project here
 copyBranch: Copy Branch Name
 noAccount?: No Account?
 alreadyHaveAccount: Already have an account?
@@ -579,43 +582,44 @@ newUserModal:
   userCreated: User created successfully
   userUpdated: User updated successfully
   userDeleted: User '{{name}}' deleted successfully
-selectSpaceText: 'Select a Space'
+selectSpaceText: Select a Project
 user: User
 role: Role
-newMember: New Member
-addMember: Add member
+addMember: Add Member
+addUserToSpace1: Add user to this Project
+addUserToSpace2: Add {{user}} to this Project
 spaceMemberships:
-  addMember: Add a member
+  addMember: Add a member for {{name}}
   changeRole: Change Role
   removeMember: Remove Member
   removeMembershipMsg: Are you sure you want to remove this member?
   removeMembershipToast: Member removed successfully
   memberUpdated: Member updated successfully.
   memberAdded: Member added successfully.
-failedToCreateSpace: Failed to create Space. Please try again.
-failedToImportSpace: Failed to import Space. Please try again.
+failedToCreateSpace: Failed to create Project. Please try again.
+failedToImportSpace: Failed to import Project. Please try again.
 failedToCreatePipeline: Failed to create Pipeline. Please try again.
 failedToSavePipeline: Failed to save Pipeline. Please try again.
 enterName: Enter the name
-createASpace: Create a space
-createSpace: Create Space
-newSpace: New Space
-emptySpaceText: "It's empty now, please create a new space"
+createASpace: Create a project
+createSpace: Create Project
+newSpace: New Project
+emptySpaceText: "It's empty now, please create a new project"
 homepage:
   welcomeText: Welcome {{currentUser}}, let's get you started with Gitness!
-  firstStep: Get started by creating a space.  Organize and manage your repositories and pipelines with spaces
-  selectSpaceTitle: Select a space to get started
-  selectSpaceContent: Spaces contain your repositories and pipelines. To start using Gitness, select a space or create a new one.
-  selectSpace: Select Space
-deleteSpace: Delete Space
+  firstStep: Get started by creating a project.  Organize and manage your repositories and pipelines with spaces
+  selectSpaceTitle: Select a project to get started
+  selectSpaceContent: Projects contain your repositories and pipelines. To start using Gitness, select a project or create a new one.
+  selectSpace: Select Project
+deleteSpace: Delete Project
 spaceSetting:
-  intentText: This will permanently delete the space named '{{space}}', and everything contained in it. All repositories in this space, all sub-spaces and repositories they contain will be deleted.
+  intentText: This will permanently delete the project named '{{space}}', and everything contained in it. All repositories in this project, all sub-spaces and repositories they contain will be deleted.
   deleteWarning: Unexpected bad things will happen if you don’t read this
-  deleteConfirm1: This will permanently delete the "{{space}}" space and everything contained in it.  All repositories in this space, all sub-spaces and repositories they contain will be deleted.
-  deleteConfirmButton1: I want to delete this space
+  deleteConfirm1: This will permanently delete the "{{space}}" project and everything contained in it.  All repositories in this project, all sub-spaces and repositories they contain will be deleted.
+  deleteConfirmButton1: I want to delete this project
   deleteConfirm2: To confirm, type "{{space}}" in the box below
-  deleteConfirmButton2: Delete this space
-  deleteToastSuccess: Space deleted successfully
+  deleteConfirmButton2: Delete this project
+  deleteToastSuccess: Project deleted successfully
   settings: Settings
 contributor: Contributor
 reader: Reader
@@ -719,25 +723,25 @@ importRepo:
   failedToImportRepo: Failed to import repository. Please try again.
   validation: Invalid GitHub or GitLab URL
   required: Repository URL is required
-  spaceNameReq: Enter a name for the new space
+  spaceNameReq: Enter a name for the new project
   usernameReq: Username is required
   passwordReq: Password is required
 importSpace:
-  title: Import space
-  createASpace: Create a space
+  title: Import project
+  createASpace: Create a project
   authorization: Authorization
-  content: Import a GitLab Group or a GitHub Org to a new Space in Gitness. Entities at the top level will be imported to the space.
+  content: Import a GitLab Group or a GitHub Org to a new Project in Gitness. Entities at the top level will be imported to the project.
   next: Next step
   details: Details of target to import
   organizationName: Organization Name
   orgNamePlaceholder: Enter the org name here
-  spaceName: Space Name
+  spaceName: Project Name
   description: Description (optional)
   descPlaceholder: Enter the description
   importLabel: What to import
   providerRequired: Git Provider is required
   orgRequired: Organization name is required
-  spaceNameRequired: Space name is required
+  spaceNameRequired: Project name is required
   gitProvider: Git Provider
   invalidUrl: Invalid GitHub or GitLab URL
   githubOrg: GitHub Organization Name
@@ -775,13 +779,13 @@ exportSpace:
   upgradeHarness: Upgrade to Harness
   newProject: New Project Details
   upgradeConfirmation: Upgrade Confirmation
-  upgradeTitle: Upgrade this space to the Harness Software Delivery platform
+  upgradeTitle: Upgrade this project to the Harness Software Delivery platform
   upgrade: Upgrade
-  upgradeContent: Upgrade this space to Harness. By upgrading to Harness, you will create a new project in your
+  upgradeContent: Upgrade this project to Harness. By upgrading to Harness, you will create a new project in your
     Harness account and migrate all repositories, pipelines and users / access controls to the new
     project. Learn more about Harness.
   upgradeProgress: 'Upgrading in progress'
   exportCompleted: Export Completed
   exportRepoCompleted: Exported {{repoCount}} repositories
   exportRepo: Exporting {{repoCount}} repositories
-spaceUpdate: Space Updated
+spaceUpdate: Project Updated

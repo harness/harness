@@ -1,11 +1,11 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Falsy, Match, Render, Truthy } from 'react-jsx-match'
 import { get } from 'lodash-es'
 import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
 import { Container, Layout, Text, FlexExpander, Button, ButtonVariation, ButtonSize } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { LogViewer, TermRefs } from 'components/LogViewer/LogViewer'
+import { LogViewer } from 'components/LogViewer/LogViewer'
 import { PullRequestCheckType } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
 import { useStrings } from 'framework/strings'
@@ -22,8 +22,6 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
   const { getString } = useStrings()
   const history = useHistory()
   const { routes } = useAppContext()
-  const termRefs = useRef<TermRefs>()
-  const onSplitPaneResized = useCallback(() => termRefs.current?.fitAddon?.fit(), [])
   const [selectedItemData, setSelectedItemData] = useState<TypesCheck>()
   const [selectedStage, setSelectedStage] = useState<TypesStage | null>(null)
   const isCheckDataMarkdown = useMemo(
@@ -59,7 +57,6 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
             size={'calc(100% - 400px)'}
             minSize={'calc(100% - 300px)'}
             maxSize={'calc(100% - 600px)'}
-            onDragFinished={onSplitPaneResized}
             primary="second">
             <ChecksMenu
               repoMetadata={repoMetadata}
@@ -130,7 +127,7 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
                         />
                       </Truthy>
                       <Falsy>
-                        <LogViewer termRefs={termRefs} content={logContent} />
+                        <LogViewer content={logContent} className={css.logViewer} />
                       </Falsy>
                     </Match>
                   </Container>

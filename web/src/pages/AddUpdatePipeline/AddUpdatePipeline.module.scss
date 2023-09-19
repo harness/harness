@@ -41,3 +41,9 @@
 .drawer {
   height: calc(100% - 40px);
 }
+
+.menuItem {
+  &:hover p {
+    color: var(--white) !important;
+  }
+}

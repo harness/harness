@@ -13,6 +13,7 @@ import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
 import cx from 'classnames'
 import Keywords from 'react-keywords'
+import { NavArrowRight } from 'iconoir-react'
 import { useGet } from 'restful-react'
 import type { CellProps, Column } from 'react-table'
 import { useHistory } from 'react-router-dom'
@@ -25,9 +26,6 @@ import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/Search
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { NewSpaceModalButton } from 'components/NewSpaceModalButton/NewSpaceModalButton'
 import { useAppContext } from 'AppContext'
-// import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
-
-// import { usePageIndex } from 'hooks/usePageIndex'
 import css from './SpaceSelector.module.scss'
 
 interface SpaceSelectorProps {
@@ -156,19 +154,19 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
         onClick={() => setOpened(!opened)}>
         <Layout.Horizontal>
           <Container className={css.label}>
-            <Layout.Vertical>
+            {/* <Layout.Vertical>
               <Container>
                 <Text className={css.spaceLabel} icon="nav-project" iconProps={{ size: 12 }}>
                   {getString('space').toUpperCase()}
                 </Text>
               </Container>
-            </Layout.Vertical>
+            </Layout.Vertical> */}
             <Text className={css.spaceName} lineClamp={1}>
               {selectedSpace ? selectedSpace.uid : getString('selectSpace')}
             </Text>
           </Container>
           <Container className={css.icon}>
-            <Icon name="main-chevron-right" size={10} />
+            <NavArrowRight width={24} height={24} strokeWidth={1} />
           </Container>
         </Layout.Horizontal>
       </Container>

@@ -98,12 +98,12 @@ export const SystemComment: React.FC<SystemCommentProps> = ({
         <Container>
           <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
             <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
-            <Text flex>
+            <Text flex tag="div">
               <StringSubstitute
                 str={getString('pr.prBranchPushInfo')}
                 vars={{
                   user: (
-                    <Text padding={{ right: 'small' }}>
+                    <Text padding={{ right: 'small' }} inline>
                       <strong>{payload?.author?.display_name}</strong>
                     </Text>
                   ),

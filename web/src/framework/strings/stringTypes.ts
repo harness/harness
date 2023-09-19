@@ -16,6 +16,8 @@ export interface StringsMap {
   addMember: string
   addNewFile: string
   addReadMe: string
+  addUserToSpace1: string
+  addUserToSpace2: string
   admin: string
   aiSearch: string
   all: string
@@ -309,7 +311,6 @@ export interface StringsMap {
   newFile: string
   newFileNotAllowed: string
   newFolder: string
-  newMember: string
   newPullRequest: string
   newRepo: string
   newSpace: string
@@ -390,6 +391,8 @@ export interface StringsMap {
   payloadUrl: string
   payloadUrlLabel: string
   pending: string
+  permissions: string
+  permissionsFor: string
   'pipelines.createNewPipeline': string
   'pipelines.created': string
   'pipelines.deletePipelineButton': string
@@ -471,6 +474,7 @@ export interface StringsMap {
   'pr.prStateChanged': string
   'pr.prStateChangedDraft': string
   'pr.readyForReview': string
+  'pr.requestSubmitted': string
   'pr.reviewChanges': string
   'pr.reviewSubmitted': string
   'pr.showDiff': string

@@ -4,6 +4,7 @@
   border: 1px solid var(--grey-200);
   background: var(--white) !important;
   margin-bottom: var(--spacing-medium) !important;
+  height: 48px;
 
   &.selected,
   &:hover {
@@ -11,12 +12,13 @@
     border-radius: 4px;
     border: 1px solid var(--primary-3);
     box-shadow: 0px 2px 4px 0px rgba(96, 97, 112, 0.16), 0px 0px 1px 0px rgba(40, 41, 61, 0.04);
+    color: var(--primary-7);
+  }
 
-    .icon {
-      svg path {
-        fill: var(--primary-7);
-      }
-    }
+  > div {
+    height: 100%;
+    flex-grow: 1;
+    align-items: center;
   }
 
   .label {
@@ -34,13 +36,12 @@
     color: var(--black);
     font-size: 13px !important;
     line-height: 20px !important;
-    padding-left: 17px !important;
+    padding-left: 10px !important;
   }
 
   .icon {
     display: flex;
     align-items: center;
-    padding-top: 3px;
   }
 }
 
@@ -82,7 +83,7 @@
   :global {
     .bp3-popover-arrow {
       left: -11px !important;
-      transform: rotate(180deg);
+      transform: rotate(180deg) translateY(-4px);
     }
   }
 

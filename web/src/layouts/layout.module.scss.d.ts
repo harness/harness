@@ -5,4 +5,4 @@ export declare const layout: string
 export declare const main: string
 export declare const menu: string
 export declare const profile: string
-export declare const settings: string
+export declare const userManagement: string

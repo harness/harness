@@ -53,6 +53,10 @@
 
 .menuItem {
   max-width: fit-content;
+
+  &:hover p {
+    color: var(--white) !important;
+  }
 }
 
 .importContainer {

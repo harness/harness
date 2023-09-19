@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Dialog, Intent, PopoverPosition, Menu } from '@blueprintjs/core'
+import { Dialog, Intent, PopoverPosition, Classes } from '@blueprintjs/core'
 import * as yup from 'yup'
 import {
   Button,
@@ -14,7 +14,8 @@ import {
   FormInput,
   ButtonVariation,
   SplitButton,
-  Text
+  Text,
+  SplitButtonOption
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -248,13 +249,14 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
       loading={false}
       text={
         <Text color={Color.WHITE} font={{ variation: FontVariation.BODY2_SEMI, weight: 'bold' }}>
-          {spaceOption.title}
+          {spaceCreateOptions[0].title}
         </Text>
       }
       variation={ButtonVariation.PRIMARY}
       popoverProps={{
         interactionKind: 'click',
         usePortal: true,
+        captureDismiss: true,
         popoverClassName: fromSpace ? css.popoverSpace : css.popoverSplit,
         position: PopoverPosition.BOTTOM_RIGHT,
         transitionDuration: 1000
@@ -262,24 +264,19 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
       icon={'plus'}
       {...permissionProps(permResult, standalone)}
       onClick={() => {
-        openModal()
+        setSpaceOption(spaceCreateOptions[0])
+        setTimeout(() => openModal(), 0)
       }}>
-      {spaceCreateOptions.map(option => {
-        return (
-          <Container key={`import_space_container_${option.type}`}>
-            <Menu.Item
-              key={`import_space_${option.type}`}
-              className={css.menuItem}
-              text={<Text font={{ variation: FontVariation.BODY2 }}>{option.desc}</Text>}
-              onClick={event => {
-                event.stopPropagation()
-                event.preventDefault()
-                setSpaceOption(option)
-              }}
-            />
-          </Container>
-        )
-      })}
+      <Container className={Classes.POPOVER_DISMISS_OVERRIDE}>
+        <SplitButtonOption
+          className={css.menuItem}
+          onClick={() => {
+            setSpaceOption(spaceCreateOptions[1])
+            setTimeout(() => openModal(), 0)
+          }}
+          text={<Text font={{ variation: FontVariation.BODY2 }}>{getString('importSpace.title')}</Text>}
+        />
+      </Container>
     </SplitButton>
   )
 }

@@ -10,7 +10,11 @@
 }
 
 .popover {
-  transform: translateY(5px) !important;
+  .menuItem {
+    &:hover p {
+      color: var(--white) !important;
+    }
+  }
 }
 
 .hideContainer {

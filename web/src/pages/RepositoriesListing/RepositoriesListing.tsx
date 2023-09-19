@@ -10,7 +10,6 @@ import {
   Text
 } from '@harnessio/uicore'
 import { ProgressBar, Intent } from '@blueprintjs/core'
-import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 import Keywords from 'react-keywords'
@@ -31,8 +30,10 @@ import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
+import { RepoPublicLabel } from 'components/RepoPublicLabel/RepoPublicLabel'
 import noRepoImage from './no-repo.svg'
 import css from './RepositoriesListing.module.scss'
+
 interface TypesRepoExtended extends TypesRepository {
   importing?: boolean
 }
@@ -103,7 +104,9 @@ export default function RepositoriesListing() {
                 <Layout.Vertical flex className={css.name} ref={rowContainerRef}>
                   <Text className={css.repoName} width={nameTextWidth} lineClamp={2}>
                     <Keywords value={searchTerm}>{record.uid}</Keywords>
+                    <RepoPublicLabel isPublic={row.original.is_public} margin={{ left: 'small' }} />
                   </Text>
+
                   {record.importing ? (
                     <Text className={css.desc} width={nameTextWidth} lineClamp={1}>
                       {getString('importProgress')}
@@ -134,7 +137,6 @@ export default function RepositoriesListing() {
               <Text color={Color.BLACK} lineClamp={1} rightIconProps={{ size: 10 }} width={120}>
                 {formatDate(row.original.updated as number)}
               </Text>
-              {row.original.is_public === false ? <Icon name="lock" size={10} /> : undefined}
             </Layout.Horizontal>
           )
         },
