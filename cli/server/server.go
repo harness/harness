@@ -89,6 +89,14 @@ func (c *command) run(*kingpin.ParseContext) error {
 	gHTTP, shutdownHTTP := system.server.ListenAndServe()
 	g.Go(gHTTP.Wait)
 	if c.enableCI {
+		// start populating plugins
+		g.Go(func() error {
+			err := system.pluginManager.Populate(ctx)
+			if err != nil {
+				log.Error().Err(err).Msg("could not populate plugins")
+			}
+			return nil
+		})
 		// start poller for CI build executions.
 		g.Go(func() error {
 			log := logrus.New()

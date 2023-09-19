@@ -5,10 +5,11 @@
 package runner
 
 import (
-	runtime2 "github.com/drone-runners/drone-runner-docker/engine2/runtime"
 	"github.com/harness/gitness/internal/pipeline/manager"
+	"github.com/harness/gitness/internal/pipeline/plugin"
 	"github.com/harness/gitness/types"
 
+	runtime2 "github.com/drone-runners/drone-runner-docker/engine2/runtime"
 	runnerclient "github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/poller"
 	"github.com/google/wire"
@@ -24,9 +25,10 @@ var WireSet = wire.NewSet(
 func ProvideExecutionRunner(
 	config *types.Config,
 	client runnerclient.Client,
+	pluginManager *plugin.PluginManager,
 	manager manager.ExecutionManager,
 ) (*runtime2.Runner, error) {
-	return NewExecutionRunner(config, client, manager)
+	return NewExecutionRunner(config, client, pluginManager, manager)
 }
 
 // ProvideExecutionPoller provides a poller which can poll the manager

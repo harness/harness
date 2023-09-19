@@ -698,10 +698,19 @@ type (
 		// along with their associated schemas.
 		List(ctx context.Context, filter types.ListQueryFilter) ([]*types.Plugin, error)
 
+		// ListAll returns back the full list of plugins.
+		ListAll(ctx context.Context) ([]*types.Plugin, error)
+
 		// Create creates a new entry in the plugin datastore.
 		Create(ctx context.Context, plugin *types.Plugin) error
 
+		// Update tries to update an trigger.
+		Update(ctx context.Context, plugin *types.Plugin) error
+
 		// Count counts the number of plugins matching the given filter.
 		Count(ctx context.Context, filter types.ListQueryFilter) (int64, error)
+
+		// Find returns a plugin given a name and a version.
+		Find(ctx context.Context, name, version string) (*types.Plugin, error)
 	}
 )

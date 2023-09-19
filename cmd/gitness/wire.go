@@ -10,8 +10,6 @@ package main
 import (
 	"context"
 
-	"github.com/harness/gitness/internal/services/exporter"
-
 	cliserver "github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
@@ -46,6 +44,7 @@ import (
 	"github.com/harness/gitness/internal/pipeline/commit"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/manager"
+	pluginmanager "github.com/harness/gitness/internal/pipeline/plugin"
 	"github.com/harness/gitness/internal/pipeline/runner"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
 	"github.com/harness/gitness/internal/pipeline/triggerer"
@@ -53,6 +52,7 @@ import (
 	"github.com/harness/gitness/internal/server"
 	"github.com/harness/gitness/internal/services"
 	"github.com/harness/gitness/internal/services/codecomments"
+	"github.com/harness/gitness/internal/services/exporter"
 	"github.com/harness/gitness/internal/services/importer"
 	"github.com/harness/gitness/internal/services/job"
 	"github.com/harness/gitness/internal/services/metric"
@@ -138,6 +138,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		commit.WireSet,
 		controllertrigger.WireSet,
 		plugin.WireSet,
+		pluginmanager.WireSet,
 		importer.WireSet,
 		canceler.WireSet,
 		exporter.WireSet,

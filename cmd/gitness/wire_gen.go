@@ -42,6 +42,7 @@ import (
 	"github.com/harness/gitness/internal/pipeline/commit"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/manager"
+	plugin2 "github.com/harness/gitness/internal/pipeline/plugin"
 	"github.com/harness/gitness/internal/pipeline/runner"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
 	"github.com/harness/gitness/internal/pipeline/triggerer"
@@ -223,7 +224,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	serverServer := server2.ProvideServer(config, routerRouter)
 	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, streamer, fileService, logStore, logStream, checkStore, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore)
 	client := manager.ProvideExecutionClient(executionManager, config)
-	runtimeRunner, err := runner.ProvideExecutionRunner(config, client, executionManager)
+	pluginManager := plugin2.ProvidePluginManager(config, pluginStore)
+	runtimeRunner, err := runner.ProvideExecutionRunner(config, client, pluginManager, executionManager)
 	if err != nil {
 		return nil, err
 	}
@@ -253,6 +255,6 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector)
-	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, poller, grpcServer, cronManager, servicesServices)
+	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, poller, grpcServer, pluginManager, cronManager, servicesServices)
 	return serverSystem, nil
 }

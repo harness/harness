@@ -11,10 +11,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	v1yaml "github.com/drone/spec/dist/go"
-	"github.com/drone/spec/dist/go/parse/expand"
-	"github.com/drone/spec/dist/go/parse/normalize"
-	"github.com/drone/spec/dist/go/parse/script"
 	"github.com/harness/gitness/internal/pipeline/checks"
 	"github.com/harness/gitness/internal/pipeline/file"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
@@ -24,8 +20,12 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/drone-runners/drone-runner-docker/engine2/script"
 	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone-yaml/yaml/linter"
+	v1yaml "github.com/drone/spec/dist/go"
+	"github.com/drone/spec/dist/go/parse/expand"
+	"github.com/drone/spec/dist/go/parse/normalize"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
