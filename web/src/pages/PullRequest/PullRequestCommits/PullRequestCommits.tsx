@@ -10,7 +10,7 @@ import { CommitsView } from 'components/CommitsView/CommitsView'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 
 interface CommitProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
-  prStatsChanged: Number
+  prStatsChanged: number
   handleRefresh: () => void
 }
 

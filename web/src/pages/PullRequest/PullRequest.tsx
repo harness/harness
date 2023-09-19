@@ -59,7 +59,7 @@ export default function PullRequest() {
     return loading || (prLoading && !prData)
   }, [loading, prLoading, prData])
   const [showEditDescription, setShowEditDescription] = useState(false)
-  
+
   const [stats, setStats] = useState<TypesPullReqStats>()
   // simple value one can listen on to react on stats changes (boolean is NOT enough)
   const [prStatsChanged, setPrStatsChanged] = useState(0)
@@ -86,9 +86,9 @@ export default function PullRequest() {
     () => `/api/v1/repos/${repoMetadata?.path}/+/pullreq/${pullRequestId}/recheck`,
     [repoMetadata?.path, pullRequestId]
   )
-  const { mutate : recheckPR, loading: loadingRecheckPR } = useMutate({
+  const { mutate: recheckPR, loading: loadingRecheckPR } = useMutate({
     verb: 'POST',
-    path: recheckPath,
+    path: recheckPath
   })
 
   // prData holds the latest good PR data to make sure page is not broken
@@ -108,16 +108,18 @@ export default function PullRequest() {
       //      NOTE: This doesn't cover the case in which the status changed back to UNCHECKED before the PR is refetched.
       //      In that case, the user will have to re-open the PR - better than us spamming the backend with rechecks.
       // This is a TEMPORARY SOLUTION and will most likely change in the future (more so on backend side)
-      if (pullRequestData.state == 'open' &&
-          pullRequestData.merge_check_status == MergeCheckStatus.UNCHECKED &&
-          (
-            // case 1:
-            !prData || 
-            // case 2:
-            (prData?.merge_check_status != MergeCheckStatus.UNCHECKED && prData?.source_sha == pullRequestData.source_sha)
-          ) && !loadingRecheckPR) {
-            // best effort attempt to recheck PR - fail silently
-            recheckPR({})
+      if (
+        pullRequestData.state == 'open' &&
+        pullRequestData.merge_check_status == MergeCheckStatus.UNCHECKED &&
+        // case 1:
+        (!prData ||
+          // case 2:
+          (prData?.merge_check_status != MergeCheckStatus.UNCHECKED &&
+            prData?.source_sha == pullRequestData.source_sha)) &&
+        !loadingRecheckPR
+      ) {
+        // best effort attempt to recheck PR - fail silently
+        recheckPR({})
       }
 
       setPrData(pullRequestData)
@@ -256,7 +258,11 @@ export default function PullRequest() {
                           emptyMessage={getString('noChangesPR')}
                           onCommentUpdate={voidFn(refetchPullRequest)}
                           prStatsChanged={prStatsChanged}
-                          scrollElement={(standalone ? document.querySelector(`.${css.main}`)?.parentElement || window : window) as HTMLElement}
+                          scrollElement={
+                            (standalone
+                              ? document.querySelector(`.${css.main}`)?.parentElement || window
+                              : window) as HTMLElement
+                          }
                         />
                       </Container>
                     )

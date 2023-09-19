@@ -8,6 +8,7 @@ import ConsoleStep from 'components/ConsoleStep/ConsoleStep'
 import { timeDistance } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
 import useLiveTimer from 'hooks/useLiveTimeHook'
+import { ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
 import css from './Console.module.scss'
 
 interface ConsoleProps {
@@ -36,7 +37,10 @@ const Console: FC<ConsoleProps> = ({ stage, repoPath }) => {
           </Text>
           {stage?.stopped && (
             <Text font={{ variation: FontVariation.BODY }} color={Color.GREY_500}>
-              {getString('executions.completedTime', { timeString: timeDistance(stage?.stopped, currentTime, true) })}
+              {getString(
+                stage.status === ExecutionState.KILLED ? 'executions.canceledTime' : 'executions.completedTime',
+                { timeString: timeDistance(stage?.stopped, currentTime, true) }
+              )}
             </Text>
           )}
         </Layout.Horizontal>

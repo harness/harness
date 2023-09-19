@@ -175,6 +175,7 @@ export interface StringsMap {
   enterUser: string
   error: string
   error404Text: string
+  'executions.canceledTime': string
   'executions.completedTime': string
   'executions.description': string
   'executions.failed': string
@@ -281,6 +282,7 @@ export interface StringsMap {
   in: string
   inactiveBranches: string
   isRequired: string
+  killed: string
   leaveAComment: string
   license: string
   lineBreaks: string
@@ -484,6 +486,7 @@ export interface StringsMap {
   'pr.unified': string
   'prChecks.error': string
   'prChecks.failure': string
+  'prChecks.killed': string
   'prChecks.notFound': string
   'prChecks.pending': string
   'prChecks.running': string

@@ -158,6 +158,7 @@ const SecretList = () => {
         }
       }
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [getString, refetch, searchTerm, space]
   )
 

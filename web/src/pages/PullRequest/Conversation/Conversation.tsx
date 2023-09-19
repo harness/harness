@@ -29,7 +29,7 @@ import css from './Conversation.module.scss'
 
 export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   onCommentUpdate: () => void
-  prStatsChanged: Number
+  prStatsChanged: number
   showEditDescription?: boolean
   onCancelEditDescription: () => void
   prChecksDecisionResult?: PRChecksDecisionResult

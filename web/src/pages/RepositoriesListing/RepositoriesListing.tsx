@@ -69,7 +69,8 @@ export default function RepositoriesListing() {
         //TODO - revisit full refresh - can I use the message to update the execution?
         refetch()
       }
-    }, // eslint-disable-line react-hooks/exhaustive-deps
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [repositories]
   )
 

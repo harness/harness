@@ -18,12 +18,12 @@ import { useAppContext } from 'AppContext'
 import type { CODEProps } from 'RouteDefinitions'
 import { getErrorMessage } from 'utils/Utils'
 import { decodeGitContent } from 'utils/GitUtils'
+import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import pipelineSchemaV1 from './schema/pipeline-schema-v1.json'
 import pipelineSchemaV0 from './schema/pipeline-schema-v0.json'
 import { V1_SCHEMA_YAML_FILE_REGEX, YamlVersion } from './Constants'
 
 import css from './AddUpdatePipeline.module.scss'
-import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 
 const StarterPipelineV1: Record<string, any> = {
   version: 1,

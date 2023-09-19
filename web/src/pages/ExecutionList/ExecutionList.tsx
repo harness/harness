@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { isEmpty } from 'lodash'
+import { isEmpty } from 'lodash-es'
 import {
   Button,
   ButtonVariation,
@@ -126,8 +126,10 @@ const ExecutionList = () => {
             <Layout.Vertical className={css.nameContainer}>
               <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
                 <ExecutionStatus status={getStatus(record.status)} iconOnly noBackground iconSize={20} isCi />
-                <Text className={css.number}>{`#${record.number}.`}</Text>
-                <Text className={css.desc}>{record.message || record.title}</Text>
+                <Text className={css.number} lineClamp={1}>{`#${record.number}.`}</Text>
+                <Text className={css.desc} lineClamp={1}>
+                  {record.message || record.title}
+                </Text>
               </Layout.Horizontal>
               <ExecutionText
                 authorEmail={record.author_email as string}

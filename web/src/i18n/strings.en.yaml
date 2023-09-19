@@ -303,6 +303,7 @@ prChecks:
   pending: '{count}/{total} {count|1:check,checks} pending.'
   skipped: '{count}/{total} {count|1:check,checks} skipped.'
   success: '{count}/{total} {count|1:check,checks} succeeded.'
+  killed: '{count}/{total} {count|1:check,checks} killed.'
   notFound: No pipelines or external checks found for this repository.
   viewExternal: View Details
 webhookListingContent: 'create,delete,deployment ...'
@@ -626,6 +627,7 @@ success: Success
 failed: Failed
 error: Error
 skipped: Skipped
+killed: Killed
 repoDelete:
   title: Delete Repository
   deleteConfirm1: This will permanently delete the "{{repo}}" repository, wiki, issues, comments, packages, secrets, workflow runs, and remove all collaborator associations.
@@ -669,6 +671,7 @@ executions:
   description: Description
   time: Time
   completedTime: completed {{timeString}} ago
+  canceledTime: canceled {{timeString}} ago
   started: Execution started
   failed: Failed to start build
   newExecution: Run Pipeline

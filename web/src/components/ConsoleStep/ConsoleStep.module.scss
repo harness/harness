@@ -37,3 +37,10 @@
 .time {
   user-select: none !important;
 }
+
+.stepName {
+  font-family: 'Roboto Mono' !important;
+  color: var(--grey-300) !important;
+  font-size: var(--font-size-small) !important;
+  font-weight: 400 !important;
+}

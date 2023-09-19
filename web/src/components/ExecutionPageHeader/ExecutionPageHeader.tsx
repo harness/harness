@@ -1,9 +1,21 @@
 import React, { Fragment } from 'react'
-import { Layout, Text, PageHeader, Utils, Avatar, FlexExpander, Container } from '@harnessio/uicore'
+import {
+  Layout,
+  Text,
+  PageHeader,
+  Utils,
+  Avatar,
+  FlexExpander,
+  Container,
+  Button,
+  ButtonVariation,
+  useToaster
+} from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
 import { Link, useParams } from 'react-router-dom'
 import { Calendar, GitFork, Timer } from 'iconoir-react'
+import { useMutate } from 'restful-react'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -12,9 +24,10 @@ import type { GitInfoProps } from 'utils/GitUtils'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
 import { getStatus } from 'utils/ExecutionUtils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
-import { timeDistance } from 'utils/Utils'
+import { getErrorMessage, timeDistance } from 'utils/Utils'
 import useLiveTimer from 'hooks/useLiveTimeHook'
 import { CommitActions } from 'components/CommitActions/CommitActions'
+import type { TypesExecution } from 'services/code'
 import css from './ExecutionPageHeader.module.scss'
 
 interface BreadcrumbLink {
@@ -38,19 +51,29 @@ interface ExecutionPageHeaderProps extends Optional<Pick<GitInfoProps, 'repoMeta
   dataTooltipId: string
   extraBreadcrumbLinks?: BreadcrumbLink[]
   executionInfo?: ExecutionInfo
+  pipeline: string
+  execution: string
 }
 
 export function ExecutionPageHeader({
   repoMetadata,
   title,
   extraBreadcrumbLinks = [],
-  executionInfo
+  executionInfo,
+  pipeline,
+  execution
 }: ExecutionPageHeaderProps) {
   const { gitRef } = useParams<CODEProps>()
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { routes } = useAppContext()
   const currentTime = useLiveTimer()
+  const { showSuccess, showError, clear: clearToaster } = useToaster()
+
+  const { mutate: cancelExecution } = useMutate<TypesExecution>({
+    verb: 'POST',
+    path: `/api/v1/repos/${repoMetadata?.path}/+/pipelines/${pipeline}/executions/${execution}/cancel`
+  })
 
   const isActive = executionInfo?.status === ExecutionState.RUNNING
 
@@ -85,7 +108,7 @@ export function ExecutionPageHeader({
         executionInfo && (
           <Container className={css.executionInfo}>
             <ExecutionStatus status={getStatus(executionInfo.status)} iconOnly noBackground iconSize={18} isCi />
-            <Text inline color={Color.GREY_800} font={{ size: 'small' }}>
+            <Text inline lineClamp={1} color={Color.GREY_800} font={{ size: 'small' }}>
               {executionInfo.message}
             </Text>
             <PipeSeparator height={7} />
@@ -130,6 +153,24 @@ export function ExecutionPageHeader({
                   </>
                 )}
               </Layout.Horizontal>
+            )}
+            {[ExecutionState.RUNNING, ExecutionState.PENDING].includes(getStatus(executionInfo?.status)) && (
+              <>
+                <PipeSeparator height={7} />
+                <Button
+                  variation={ButtonVariation.SECONDARY}
+                  text={getString('cancel')}
+                  onClick={async () => {
+                    try {
+                      await cancelExecution(null)
+                      clearToaster()
+                      showSuccess(getString('pipelines.executionCancelled'))
+                    } catch (exception) {
+                      showError(getErrorMessage(exception), 0, 'pipelines.executionCouldNotCancel')
+                    }
+                  }}
+                />
+              </>
             )}
           </Container>
         )

@@ -84,6 +84,8 @@ const Execution = () => {
         repoMetadata={repoMetadata}
         title={pipeline as string}
         dataTooltipId="repositoryExecution"
+        pipeline={pipeline as string}
+        execution={executionNum as string}
         extraBreadcrumbLinks={
           repoMetadata && [
             {

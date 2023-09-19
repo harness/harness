@@ -53,6 +53,11 @@ export function usePRChecksDecision({
         setColor(Color.RED_900)
         setBackground(Color.RED_50)
         setMessage(stringSubstitute(getString('prChecks.failure'), { count: _count.failure, total }) as string)
+      } else if (_count.killed) {
+        _status = ExecutionState.KILLED
+        setColor(Color.RED_900)
+        setBackground(Color.RED_50)
+        setMessage(stringSubstitute(getString('prChecks.killed'), { count: _count.killed, total }) as string)
       } else if (_count.running) {
         _status = ExecutionState.RUNNING
         setColor(Color.ORANGE_900)
@@ -67,7 +72,7 @@ export function usePRChecksDecision({
         _status = ExecutionState.SKIPPED
         setColor(Color.GREY_600)
         setBackground(Color.GREY_100)
-        setMessage(stringSubstitute(getString('prChecks.skipped'), { count: _count.pending, total }) as string)
+        setMessage(stringSubstitute(getString('prChecks.skipped'), { count: _count.skipped, total }) as string)
       } else if (_count.success) {
         _status = ExecutionState.SUCCESS
         setColor(Color.GREEN_800)
@@ -116,5 +121,6 @@ const DEFAULT_COUNTS = {
   pending: 0,
   running: 0,
   success: 0,
-  skipped: 0
+  skipped: 0,
+  killed: 0
 }

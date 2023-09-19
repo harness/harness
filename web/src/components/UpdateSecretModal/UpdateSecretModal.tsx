@@ -109,7 +109,7 @@ const useUpdateSecretModal = () => {
                   tooltipProps={{
                     dataTooltipId: 'secretDescriptionTextField'
                   }}
-                  inputGroup={{ type: 'password' }}
+                  inputGroup={{ type: 'password', autoComplete: 'new-password' }}
                 />
                 <FormInput.Text
                   name="description"

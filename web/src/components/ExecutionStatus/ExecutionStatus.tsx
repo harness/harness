@@ -11,7 +11,8 @@ export enum ExecutionState {
   SUCCESS = 'success',
   FAILURE = 'failure',
   ERROR = 'error',
-  SKIPPED = 'skipped'
+  SKIPPED = 'skipped',
+  KILLED = 'killed'
 }
 
 interface ExecutionStatusProps {
@@ -63,6 +64,11 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         icon: 'execution-timeout',
         css: null,
         title: getString('skipped').toLocaleUpperCase()
+      },
+      [ExecutionState.KILLED]: {
+        icon: 'execution-stopped',
+        css: null,
+        title: getString('killed').toLocaleUpperCase()
       }
     }),
     [getString, isCi]

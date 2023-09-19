@@ -109,7 +109,7 @@ const ConsoleStep: FC<ConsoleStepProps> = ({ step, stageNumber, repoPath, pipeli
         <Icon name={isOpened ? 'chevron-down' : 'chevron-right'} />
         {/* TODO - flesh icon logic out */}
         {icon}
-        <Text>{step?.name}</Text>
+        <Text className={css.stepName}>{step?.name}</Text>
         <FlexExpander />
         {step?.started && step?.stopped && (
           <Text className={css.time}>{timeDistance(step?.stopped, step?.started, true)}</Text>
