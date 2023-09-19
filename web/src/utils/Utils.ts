@@ -293,17 +293,27 @@ const MONACO_SUPPORTED_LANGUAGES = [
 
 const EXTENSION_TO_LANG: Record<string, string> = {
   tsx: 'typescript',
-  jsx: 'typescript'
+  jsx: 'typescript',
+  cc: 'cpp',
+  env: 'shell',
+  Makefile: 'shell',
+  toml: 'ini'
 }
 
 export const PLAIN_TEXT = 'plaintext'
 
 export const filenameToLanguage = (name?: string): string | undefined => {
-  const extension = name?.split('.').pop() || ''
+  const extension = (name?.split('.').pop() || '').toLowerCase()
+  const lang = MONACO_SUPPORTED_LANGUAGES.find(l => l === extension) || EXTENSION_TO_LANG[extension]
+
+  if (lang) {
+    return lang
+  }
+
   const map = langMap.languages(extension)
 
   if (map?.length) {
-    return MONACO_SUPPORTED_LANGUAGES.find(lang => map.includes(lang)) || EXTENSION_TO_LANG[extension] || PLAIN_TEXT
+    return MONACO_SUPPORTED_LANGUAGES.find(_lang => map.includes(_lang)) || PLAIN_TEXT
   }
 
   return PLAIN_TEXT
