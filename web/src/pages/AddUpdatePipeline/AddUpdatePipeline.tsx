@@ -21,7 +21,7 @@ import { decodeGitContent } from 'utils/GitUtils'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import pipelineSchemaV1 from './schema/pipeline-schema-v1.json'
 import pipelineSchemaV0 from './schema/pipeline-schema-v0.json'
-import { V1_SCHEMA_YAML_FILE_REGEX, YamlVersion } from './Constants'
+import { DRONE_CONFIG_YAML_FILE_SUFFIXES, YamlVersion } from './Constants'
 
 import css from './AddUpdatePipeline.module.scss'
 
@@ -136,9 +136,9 @@ const AddUpdatePipeline = (): JSX.Element => {
   // set YAML version for Pipeline setup
   useEffect(() => {
     setYAMLVersion(
-      pipelineData?.config_path && V1_SCHEMA_YAML_FILE_REGEX.test(pipelineData.config_path)
-        ? YamlVersion.V1
-        : YamlVersion.V0
+      DRONE_CONFIG_YAML_FILE_SUFFIXES.find((suffix: string) => pipelineData?.config_path?.endsWith(suffix))
+        ? YamlVersion.V0
+        : YamlVersion.V1
     )
   }, [pipelineData])
 
