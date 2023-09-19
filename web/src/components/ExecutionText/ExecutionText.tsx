@@ -34,7 +34,7 @@ interface ExecutionTextProps {
   commitRef: string
   event: ExecutionTrigger
   target: string
-  beforeRef: string
+  afterRef: string
   source: string
   action: EnumTriggerAction | undefined
 }
@@ -76,7 +76,7 @@ export const ExecutionText: React.FC<ExecutionTextProps> = ({
   commitRef,
   event,
   target,
-  beforeRef,
+  afterRef,
   source,
   action
 }) => {
@@ -101,7 +101,7 @@ export const ExecutionText: React.FC<ExecutionTextProps> = ({
       componentToRender = (
         <>
           <Text font={{ size: 'small' }} className={css.author}>{`${authorName} pushed`}</Text>
-          <Pill type={PillType.COMMIT} text={beforeRef.slice(0, 6)} />
+          <Pill type={PillType.COMMIT} text={afterRef?.slice(0, 6)} />
           <Text font={{ size: 'small' }} className={css.author}>
             to
           </Text>

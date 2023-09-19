@@ -139,7 +139,7 @@ const ExecutionList = () => {
                 event={record.event as ExecutionTrigger}
                 action={record.action as EnumTriggerAction}
                 target={record.target as string}
-                beforeRef={record.before as string}
+                afterRef={record.after as string}
                 source={record.source as string}
               />
             </Layout.Vertical>
