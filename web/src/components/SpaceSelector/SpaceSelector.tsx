@@ -221,7 +221,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
                     fromSpace={true}
                   />
                 }
-                message={<Text font={{ variation: FontVariation.H4 }}> {getString('emptySpaceText')}</Text>}
+                message={<Text font={{ variation: FontVariation.H3 }}> {getString('emptySpaceText')}</Text>}
               />
             )}
             {/* <ResourceListingPagination response={response} page={page} setPage={setPage} /> */}

@@ -51,6 +51,7 @@ import {
 import type { TypesRepository, OpenapiCreateRepositoryRequest } from 'services/code'
 import { useAppContext } from 'AppContext'
 import ImportForm from './ImportForm/ImportForm'
+import Private from '../../icons/private.svg'
 import css from './NewRepoModalButton.module.scss'
 
 const formInitialValues: RepoFormData = {
@@ -167,7 +168,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         enforceFocus={false}
         onClose={hideModal}
         title={''}
-        style={{ width: 700, maxHeight: '95vh', overflow: 'auto' }}>
+        style={{ width: 610, maxHeight: '95vh', overflow: 'auto' }}>
         <Layout.Vertical
           padding={{ left: 'xxlarge' }}
           style={{ height: '100%' }}
@@ -226,6 +227,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
                       {getString('createRepoModal.branch')}
                     </Text>
                   </Container>
+                  <hr className={css.dividerContainer} />
                   <Container>
                     <FormInput.RadioGroup
                       name="isPublic"
@@ -253,7 +255,10 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
                           label: (
                             <Container>
                               <Layout.Horizontal>
-                                <Icon name="git-clone-step" size={20} margin={{ right: 'medium' }} />
+                                <Container margin={{ right: 'medium' }}>
+                                  <img width={20} height={20} src={Private} />
+                                </Container>
+                                {/* <Icon name="git-clone-step" size={20} margin={{ right: 'medium' }} /> */}
                                 <Container margin={{ left: 'small' }}>
                                   <Layout.Vertical spacing="xsmall">
                                     <Text>{getString('private')}</Text>
@@ -270,6 +275,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
                       ]}
                     />
                   </Container>
+                  <hr className={css.dividerContainer} />
 
                   <FormInput.Select
                     name="license"
@@ -294,9 +300,10 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
                       dataTooltipId: 'addReadMe'
                     }}
                   />
+                  <hr className={css.dividerContainer} />
                   <Layout.Horizontal
                     spacing="small"
-                    padding={{ right: 'xxlarge', top: 'xxxlarge', bottom: 'large' }}
+                    padding={{ right: 'xxlarge', bottom: 'large' }}
                     style={{ alignItems: 'center' }}>
                     <Button type="submit" text={getString('createRepo')} intent={Intent.PRIMARY} disabled={loading} />
                     <Button text={cancelButtonTitle || getString('cancel')} minimal onClick={hideModal} />

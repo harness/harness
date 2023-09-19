@@ -82,7 +82,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                 <>
                   <Container width={'70%'}>
                     <Layout.Horizontal>
-                      <Icon className={css.icon} name="code-info" size={16} />
+                      {/* <Icon className={css.icon} name="code-info" size={16} /> */}
                       <Text padding={{ left: 'small' }} font={{ size: 'small' }}>
                         {getString('importSpace.content')}
                       </Text>

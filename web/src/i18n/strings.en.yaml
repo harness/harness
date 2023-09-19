@@ -101,7 +101,7 @@ pageTitle:
   executions: Executions
   search: Search powered by AI
 repos:
-  name: Repo Name
+  name: Repository Name
   data: Repo Data
   activities: Monthly Activities
   updated: Updated Date
@@ -607,7 +607,7 @@ newSpace: New Project
 emptySpaceText: "It's empty now, please create a new project"
 homepage:
   welcomeText: Welcome {{currentUser}}, let's get you started with Gitness!
-  firstStep: Get started by creating a project.  Organize and manage your repositories and pipelines with projects
+  firstStep: Projects contain your repositories and pipelines.  Create a new project to get started with Gitness
   selectSpaceTitle: Select a project to get started
   selectSpaceContent: Projects contain your repositories and pipelines. To start using Gitness, select a project or create a new one.
   selectSpace: Select Project

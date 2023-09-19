@@ -24,7 +24,7 @@ export const DefaultMenu: React.FC = () => {
     [routeMatch]
   )
   const isCommitSelected = useMemo(() => routeMatch.path === '/:space*/:repoName/commit/:commitRef*', [routeMatch])
-
+  const isWebhookSelected = useMemo(() => routeMatch.path.startsWith('/:space*/:repoName/webhook'), [routeMatch])
   return (
     <Container className={css.main}>
       <Layout.Vertical spacing="small">
@@ -100,6 +100,7 @@ export const DefaultMenu: React.FC = () => {
               <NavMenuItem
                 data-code-repo-section="branches"
                 isSubLink
+                isSelected={isWebhookSelected}
                 label={getString('webhooks')}
                 to={routes.toCODEWebhooks({
                   repoPath

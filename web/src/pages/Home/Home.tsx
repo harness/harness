@@ -53,12 +53,16 @@ export default function Home() {
         {spaces?.length === 0 ? (
           <Container className={css.container} flex={{ justifyContent: 'center', align: 'center-center' }}>
             <Layout.Vertical className={css.spaceContainer} spacing="small">
-              <Text font={{ variation: FontVariation.H2 }}>
+              <Text flex={{ justifyContent: 'center', align: 'center-center' }} font={{ variation: FontVariation.H2 }}>
                 {getString('homepage.welcomeText', {
                   currentUser: currentUser?.display_name
                 })}
               </Text>
-              <Text font={{ variation: FontVariation.BODY1 }}>{getString('homepage.firstStep')} </Text>
+              <Text
+                flex={{ justifyContent: 'center', align: 'center-center' }}
+                font={{ variation: FontVariation.BODY1 }}>
+                {getString('homepage.firstStep')}
+              </Text>
               <Container className={css.buttonContainer} padding={{ top: 'large' }} flex={{ justifyContent: 'center' }}>
                 {NewSpaceButton}
               </Container>
