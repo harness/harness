@@ -366,7 +366,7 @@ const AddUpdatePipeline = (): JSX.Element => {
             content={<Layout.Horizontal flex={{ justifyContent: 'space-between' }}>{renderCTA()}</Layout.Horizontal>}
           />
           <Layout.Horizontal
-            padding={{ left: 'medium', bottom: 'medium' }}
+            padding={{ left: 'medium', bottom: 'large' }}
             className={css.generateHeader}
             spacing="large"
             flex={{ justifyContent: 'flex-start' }}>
