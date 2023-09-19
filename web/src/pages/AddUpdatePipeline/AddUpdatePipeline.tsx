@@ -343,62 +343,62 @@ const AddUpdatePipeline = (): JSX.Element => {
   return (
     <>
       <Container className={css.main}>
-        <Layout.Vertical>
-          <RepositoryPageHeader
-            repoMetadata={repoMetadata}
-            title={getString('pageTitle.executions')}
-            dataTooltipId="repositoryExecutions"
-            extraBreadcrumbLinks={
-              repoMetadata && [
-                {
-                  label: getString('pageTitle.pipelines'),
-                  url: routes.toCODEPipelines({ repoPath: repoMetadata.path as string })
-                },
-                ...(pipeline
-                  ? [
-                      {
-                        label: pipeline,
-                        url: ''
-                      }
-                    ]
-                  : [])
-              ]
-            }
-            content={<Layout.Horizontal flex={{ justifyContent: 'space-between' }}>{renderCTA()}</Layout.Horizontal>}
-          />
-          {yamlVersion === YamlVersion.V1 && (
-            <Layout.Horizontal
-              padding={{ left: 'medium', bottom: 'large' }}
-              className={css.generateHeader}
-              spacing="large"
-              flex={{ justifyContent: 'flex-start' }}>
-              <Button
-                text={getString('generate')}
-                variation={ButtonVariation.PRIMARY}
-                className={css.generate}
-                onClick={handleGeneratePipeline}
-                disabled={generatingPipeline}
-              />
-              <Text font={{ variation: FontVariation.H5 }}>{getString('generateHelptext')}</Text>
-            </Layout.Horizontal>
-          )}
-        </Layout.Vertical>
+        <RepositoryPageHeader
+          repoMetadata={repoMetadata}
+          title={getString('pageTitle.executions')}
+          dataTooltipId="repositoryExecutions"
+          extraBreadcrumbLinks={
+            repoMetadata && [
+              {
+                label: getString('pageTitle.pipelines'),
+                url: routes.toCODEPipelines({ repoPath: repoMetadata.path as string })
+              },
+              ...(pipeline
+                ? [
+                    {
+                      label: pipeline,
+                      url: ''
+                    }
+                  ]
+                : [])
+            ]
+          }
+          content={<Layout.Horizontal flex={{ justifyContent: 'space-between' }}>{renderCTA()}</Layout.Horizontal>}
+        />
         <PageBody>
-          <Layout.Horizontal className={css.layout}>
-            <Container className={cx(css.editorContainer, { [css.extendedHeight]: yamlVersion === YamlVersion.V0 })}>
-              <MonacoSourceCodeEditor
-                language={'yaml'}
-                schema={yamlVersion === YamlVersion.V1 ? pipelineSchemaV1 : pipelineSchemaV0}
-                source={pipelineAsYAML}
-                onChange={(value: string) => setPipelineAsYaml(value)}
-              />
-            </Container>
+          <Layout.Vertical>
             {yamlVersion === YamlVersion.V1 && (
-              <Container className={css.pluginsContainer}>
-                <PluginsPanel onPluginAddUpdate={handlePluginAddUpdateIntoYAML} />
-              </Container>
+              <Layout.Horizontal
+                padding={{ left: 'medium', bottom: 'medium', top: 'medium' }}
+                className={css.generateHeader}
+                spacing="large"
+                flex={{ justifyContent: 'flex-start' }}>
+                <Button
+                  text={getString('generate')}
+                  variation={ButtonVariation.PRIMARY}
+                  className={css.generate}
+                  onClick={handleGeneratePipeline}
+                  disabled={generatingPipeline}
+                />
+                <Text font={{ variation: FontVariation.H5 }}>{getString('generateHelptext')}</Text>
+              </Layout.Horizontal>
             )}
-          </Layout.Horizontal>
+            <Layout.Horizontal className={css.layout}>
+              <Container className={cx(css.editorContainer, { [css.extendedHeight]: yamlVersion === YamlVersion.V0 })}>
+                <MonacoSourceCodeEditor
+                  language={'yaml'}
+                  schema={yamlVersion === YamlVersion.V1 ? pipelineSchemaV1 : pipelineSchemaV0}
+                  source={pipelineAsYAML}
+                  onChange={(value: string) => setPipelineAsYaml(value)}
+                />
+              </Container>
+              {yamlVersion === YamlVersion.V1 && (
+                <Container className={css.pluginsContainer}>
+                  <PluginsPanel onPluginAddUpdate={handlePluginAddUpdateIntoYAML} />
+                </Container>
+              )}
+            </Layout.Horizontal>
+          </Layout.Vertical>
         </PageBody>
       </Container>
     </>
