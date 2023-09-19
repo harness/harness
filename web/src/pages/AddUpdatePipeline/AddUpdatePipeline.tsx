@@ -3,6 +3,7 @@ import { useGet, useMutate } from 'restful-react'
 import { useParams } from 'react-router-dom'
 import { get, isEmpty, isUndefined, set } from 'lodash-es'
 import { parse, stringify } from 'yaml'
+import cx from 'classnames'
 import { Menu, PopoverPosition } from '@blueprintjs/core'
 import { Container, PageBody, Layout, ButtonVariation, Text, useToaster, SplitButton, Button } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -384,7 +385,7 @@ const AddUpdatePipeline = (): JSX.Element => {
         </Layout.Vertical>
         <PageBody>
           <Layout.Horizontal className={css.layout}>
-            <Container className={css.editorContainer}>
+            <Container className={cx(css.editorContainer, { [css.extendedHeight]: yamlVersion === YamlVersion.V0 })}>
               <MonacoSourceCodeEditor
                 language={'yaml'}
                 schema={yamlVersion === YamlVersion.V1 ? pipelineSchemaV1 : pipelineSchemaV0}
