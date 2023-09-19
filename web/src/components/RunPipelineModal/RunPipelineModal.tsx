@@ -61,7 +61,11 @@ const useRunPipelineModal = () => {
           hideModal()
         })
         .catch(error => {
-          showError(getErrorMessage(error), 0, 'pipelines.executionCouldNotStart')
+          const errorMssg = getErrorMessage(error)
+          const pipelineDoesNotExistOnGit = errorMssg === getString('pipelines.failedToFindPath')
+          pipelineDoesNotExistOnGit
+            ? showError(`${getString('pipelines.executionCouldNotStart')}, ${errorMssg}.`)
+            : showError(getErrorMessage(error), 0, 'pipelines.executionCouldNotStart')
         })
     } catch (exception) {
       showError(getErrorMessage(exception), 0, 'pipelines.executionCouldNotStart')

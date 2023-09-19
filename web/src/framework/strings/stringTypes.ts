@@ -403,6 +403,7 @@ export interface StringsMap {
   'pipelines.executionCouldNotStart': string
   'pipelines.executionStarted': string
   'pipelines.failedToCreatePipeline': string
+  'pipelines.failedToFindPath': string
   'pipelines.failedToUpdatePipeline': string
   'pipelines.lastExecution': string
   'pipelines.name': string
@@ -561,6 +562,7 @@ export interface StringsMap {
   searchBranches: string
   searchResult: string
   secret: string
+  'secrets.create': string
   'secrets.createSecret': string
   'secrets.createSuccess': string
   'secrets.deleteSecret': string

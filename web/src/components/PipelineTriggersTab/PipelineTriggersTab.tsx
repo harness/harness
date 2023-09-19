@@ -147,6 +147,10 @@ const TriggerDetails = ({
     disabled: initialDisabled
   }
 
+  if (loading) {
+    return <LoadingSpinner visible={true} />
+  }
+
   return (
     <Layout.Vertical className={cx(css.generalContainer, css.editTriggerContainer)} padding={'large'}>
       <Formik
@@ -281,9 +285,12 @@ const PipelineTriggersTabs = ({ repoPath, pipeline }: PipelineTriggersTabsProps)
 
   const [selectedTrigger, setSelectedTrigger] = React.useState<number>(0)
 
+  if (loading) {
+    return <LoadingSpinner visible={true} />
+  }
+
   return (
     <>
-      <LoadingSpinner visible={loading} />
       <Layout.Horizontal padding={'large'}>
         <Layout.Vertical padding={'large'}>
           <NewTriggerModalButton
