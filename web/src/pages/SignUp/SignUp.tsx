@@ -114,7 +114,10 @@ export const SignUp: React.FC = () => {
           <Text>
             <StringSubstitute
               str={getString('bySigningIn')}
-              vars={{ policy: <a> {getString('privacyPolicy')} </a>, terms: <a> {getString('termsOfUse')} </a> }}
+              vars={{
+                policy: <a href="https://harness.io/privacy"> {getString('privacyPolicy')} </a>,
+                terms: <a href="https://harness.io/subscriptionterms"> {getString('termsOfUse')} </a>
+              }}
             />
           </Text>
         </Layout.Horizontal>

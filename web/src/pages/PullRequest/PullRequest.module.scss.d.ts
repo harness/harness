@@ -8,3 +8,4 @@ export declare const input: string
 export declare const main: string
 export declare const prNumber: string
 export declare const prTitle: string
+export declare const titleText: string

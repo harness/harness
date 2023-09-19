@@ -10,7 +10,11 @@
 }
 
 .popover {
+  transform: translateY(5px) !important;
+
   .menuItem {
+    min-width: 186px;
+
     &:hover p {
       color: var(--white) !important;
     }

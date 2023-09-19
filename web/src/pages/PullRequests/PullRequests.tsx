@@ -25,7 +25,6 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { GitRefLink } from 'components/GitRefLink/GitRefLink'
 import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequestStateLabel'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
-// import { ExecutionStatusLabel } from 'components/ExecutionStatusLabel/ExecutionStatusLabel'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
 import css from './PullRequests.module.scss'
 
@@ -94,18 +93,24 @@ export default function PullRequests() {
               <PullRequestStateLabel iconSize={22} data={row.original} iconOnly />
               <Container padding={{ left: 'small' }}>
                 <Layout.Vertical spacing="xsmall">
-                  <Text color={Color.GREY_800} className={css.title}>
-                    {row.original.title}
-                    <Icon
-                      className={css.convoIcon}
-                      padding={{ left: 'medium', right: 'xsmall' }}
-                      name="code-chat"
-                      size={15}
-                    />
-                    <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500} tag="span">
-                      {row.original.stats?.conversations}
-                    </Text>
-                  </Text>
+                  <Container>
+                    <Layout.Horizontal>
+                      <Text color={Color.GREY_800} className={css.title} lineClamp={1}>
+                        {row.original.title}
+                      </Text>
+                      <Container className={css.convo}>
+                        <Icon
+                          className={css.convoIcon}
+                          padding={{ left: 'medium', right: 'xsmall' }}
+                          name="code-chat"
+                          size={15}
+                        />
+                        <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500} tag="span">
+                          {row.original.stats?.conversations}
+                        </Text>
+                      </Container>
+                    </Layout.Horizontal>
+                  </Container>
                   <Container>
                     <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }}>
                       <Text color={Color.GREY_500} font={{ size: 'small' }}>

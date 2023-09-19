@@ -33,6 +33,11 @@
       line-height: 22px !important;
     }
   }
+
+  .titleText {
+    flex-shrink: 0;
+    max-width: calc(100vw - 500px);
+  }
 }
 
 .changes {

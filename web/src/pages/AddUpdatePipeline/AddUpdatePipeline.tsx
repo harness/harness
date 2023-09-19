@@ -283,7 +283,7 @@ const AddUpdatePipeline = (): JSX.Element => {
               interactionKind: 'click',
               usePortal: true,
               position: PopoverPosition.BOTTOM_RIGHT,
-              transitionDuration: 1000
+              popoverClassName: css.popover
             }}
             intent="primary"
             onClick={() => handleSaveAndRun(pipelineSaveAndRunOptions[0])}>

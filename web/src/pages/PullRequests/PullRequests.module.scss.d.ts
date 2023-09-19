@@ -1,5 +1,6 @@
 /* eslint-disable */
 // This is an auto-generated file
+export declare const convo: string
 export declare const convoIcon: string
 export declare const main: string
 export declare const row: string

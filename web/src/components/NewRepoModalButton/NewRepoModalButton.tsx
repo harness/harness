@@ -354,8 +354,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         interactionKind: 'click',
         usePortal: true,
         popoverClassName: css.popover,
-        position: PopoverPosition.BOTTOM_RIGHT,
-        transitionDuration: 1000
+        position: PopoverPosition.BOTTOM_RIGHT
       }}
       icon={'plus'}
       {...permissionProps(permResult, standalone)}

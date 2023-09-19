@@ -258,8 +258,7 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
         usePortal: true,
         captureDismiss: true,
         popoverClassName: fromSpace ? css.popoverSpace : css.popoverSplit,
-        position: PopoverPosition.BOTTOM_RIGHT,
-        transitionDuration: 1000
+        position: PopoverPosition.BOTTOM_RIGHT
       }}
       icon={'plus'}
       {...permissionProps(permResult, standalone)}

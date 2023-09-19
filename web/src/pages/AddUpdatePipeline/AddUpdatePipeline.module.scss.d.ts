@@ -8,3 +8,4 @@ export declare const layout: string
 export declare const main: string
 export declare const menuItem: string
 export declare const pluginsContainer: string
+export declare const popover: string

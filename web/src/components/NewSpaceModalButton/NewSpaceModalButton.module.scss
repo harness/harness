@@ -3,15 +3,17 @@
 }
 
 .popoverSplit {
+  transform: translateY(5px) !important;
+
   :global {
     .bp3-menu {
-      min-width: 248px;
-      max-width: 248px;
+      min-width: 224px;
     }
+
     .bp3-menu-item {
-      min-width: 240px;
-      max-width: 240px;
+      min-width: 214px;
     }
+
     .menuItem {
       max-width: fit-content;
     }
@@ -115,15 +117,17 @@
 .popoverSpace {
   position: relative;
   left: 33px;
+  transform: translateY(5px) !important;
+
   :global {
     .bp3-menu {
       min-width: 162px;
-      max-width: 162px;
     }
+
     .bp3-menu-item {
-      min-width: 153px;
-      max-width: 153px;
+      min-width: 158px;
     }
+
     .menuItem {
       max-width: fit-content;
     }

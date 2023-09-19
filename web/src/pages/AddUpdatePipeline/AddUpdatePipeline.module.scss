@@ -42,8 +42,19 @@
   height: calc(100% - 40px);
 }
 
-.menuItem {
-  &:hover p {
-    color: var(--white) !important;
+.popover {
+  transform: translateY(5px) !important;
+
+  :global {
+    .bp3-menu {
+      min-width: 162px;
+    }
+  }
+  .menuItem {
+    min-width: 146px;
+
+    &:hover p {
+      color: var(--white) !important;
+    }
   }
 }
