@@ -650,7 +650,7 @@ pipelines:
   created: Pipeline created successfully
   updated: Pipeline updated successfully
   executionStarted: Pipeline execution started successfully
-  executionCouldNotStart: Failure while starting Pipeline execution
+  executionCouldNotStart: Failure while starting pipeline execution
   deletePipelineWarning: This will permanently delete the {{pipeline}} pipeline and all executions.
   deletePipelineButton: Delete pipeline
   deletePipelineConfirm: Are you sure you want to delete the pipeline <strong>{{pipeline}}</strong>? You can't undo this action.
@@ -661,6 +661,7 @@ pipelines:
   settings: Pipeline Settings
   executionCancelled: Pipeline execution cancelled.
   executionCouldNotCancel: Failure while cancelling Pipeline execution.
+  failedToFindPath: failed to find path
 executions:
   noData: There are no executions
   newExecutionButton: Run Pipeline
@@ -676,6 +677,7 @@ allCommits: All Commits
 secrets:
   noData: There are no secrets
   newSecretButton: New Secret
+  create: Create a secret
   name: Secret Name
   failedToCreate: Failed to create Secret. Please try again.
   enterSecretName: Enter Secret name

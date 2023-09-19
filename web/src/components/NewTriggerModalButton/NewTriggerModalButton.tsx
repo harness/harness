@@ -10,7 +10,8 @@ import {
   FormInput,
   FlexExpander,
   Text,
-  Checkbox
+  Checkbox,
+  ButtonVariation
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { FontVariation, Intent } from '@harnessio/design-system'
@@ -85,7 +86,7 @@ export const NewTriggerModalButton: React.FC<NewTriggerModalButtonProps> = ({
         onClose={hideModal}
         title={modalTitle}
         style={{ width: 700, maxHeight: '95vh', overflow: 'auto' }}>
-        <Layout.Vertical padding={'large'} style={{ height: '100%' }} data-testid="add-trigger-modal">
+        <Layout.Vertical padding={{ top: 'xsmall' }} style={{ height: '100%' }} data-testid="add-trigger-modal">
           <Container>
             <Formik
               initialValues={formInitialValues}
@@ -138,9 +139,19 @@ export const NewTriggerModalButton: React.FC<NewTriggerModalButtonProps> = ({
                       </Container>
                     ))}
                   </Container>
-                  <Layout.Horizontal spacing="small" padding={{ top: 'large' }} style={{ alignItems: 'center' }}>
-                    <Button type="submit" text={getString('create')} intent={Intent.PRIMARY} disabled={loading} />
-                    <Button text={cancelButtonTitle || getString('cancel')} minimal onClick={hideModal} />
+                  <Layout.Horizontal spacing="small" padding={{ top: 'xlarge' }} style={{ alignItems: 'center' }}>
+                    <Button
+                      type="submit"
+                      text={getString('create')}
+                      variation={ButtonVariation.PRIMARY}
+                      disabled={loading}
+                    />
+                    <Button
+                      text={cancelButtonTitle || getString('cancel')}
+                      variation={ButtonVariation.SECONDARY}
+                      minimal
+                      onClick={hideModal}
+                    />
                     <FlexExpander />
                     {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
                   </Layout.Horizontal>

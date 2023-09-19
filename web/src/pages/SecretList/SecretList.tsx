@@ -55,7 +55,7 @@ const SecretList = () => {
   const NewSecretButton = (
     <NewSecretModalButton
       space={space}
-      modalTitle={getString('secrets.newSecretButton')}
+      modalTitle={getString('secrets.create')}
       text={getString('secrets.newSecretButton')}
       variation={ButtonVariation.PRIMARY}
       icon="plus"

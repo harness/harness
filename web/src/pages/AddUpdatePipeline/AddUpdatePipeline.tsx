@@ -1,21 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useGet, useMutate } from 'restful-react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { get, isEmpty, isUndefined, set } from 'lodash-es'
 import { parse, stringify } from 'yaml'
 import { Menu, PopoverPosition } from '@blueprintjs/core'
-import {
-  Container,
-  PageHeader,
-  PageBody,
-  Layout,
-  ButtonVariation,
-  Text,
-  useToaster,
-  SplitButton,
-  Button
-} from '@harnessio/uicore'
-import { Icon } from '@harnessio/icons'
+import { Container, PageBody, Layout, ButtonVariation, Text, useToaster, SplitButton, Button } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse, RepoFileContent, TypesPipeline } from 'services/code'
 import { useStrings } from 'framework/strings'
@@ -34,6 +23,7 @@ import pipelineSchemaV0 from './schema/pipeline-schema-v0.json'
 import { V1_SCHEMA_YAML_FILE_REGEX, YamlVersion } from './Constants'
 
 import css from './AddUpdatePipeline.module.scss'
+import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 
 const StarterPipelineV1: Record<string, any> = {
   version: 1,
@@ -334,16 +324,25 @@ const AddUpdatePipeline = (): JSX.Element => {
   return (
     <>
       <Container className={css.main}>
-        <PageHeader
-          title={getString('pipelines.editPipeline', { pipeline })}
-          breadcrumbs={
-            <Container className={css.header}>
-              <Layout.Horizontal spacing="small" className={css.breadcrumb}>
-                <Link to={routes.toCODEPipelines({ repoPath })}>{getString('pageTitle.pipelines')}</Link>
-                <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
-                <Text font={{ size: 'small' }}>{pipeline}</Text>
-              </Layout.Horizontal>
-            </Container>
+        <RepositoryPageHeader
+          repoMetadata={repoMetadata}
+          title={getString('pageTitle.executions')}
+          dataTooltipId="repositoryExecutions"
+          extraBreadcrumbLinks={
+            repoMetadata && [
+              {
+                label: getString('pageTitle.pipelines'),
+                url: routes.toCODEPipelines({ repoPath: repoMetadata.path as string })
+              },
+              ...(pipeline
+                ? [
+                    {
+                      label: pipeline,
+                      url: ''
+                    }
+                  ]
+                : [])
+            ]
           }
           content={<Layout.Horizontal flex={{ justifyContent: 'space-between' }}>{renderCTA()}</Layout.Horizontal>}
         />
