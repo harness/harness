@@ -1,16 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import { useGet } from 'restful-react'
 import { Formik } from 'formik'
+import { parse } from 'yaml'
 import { capitalize, get, omit, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
+import type { TypesPlugin } from 'services/code'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon, type IconName } from '@harnessio/icons'
 import { Button, ButtonVariation, Container, FormInput, FormikForm, Layout, Popover, Text } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
-
-import pluginList from './plugins/plugins.json'
+import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 
 import css from './PluginsPanel.module.scss'
-
 enum PluginCategory {
   Harness,
   Drone
@@ -27,15 +28,6 @@ interface PluginInput {
   description?: string
   default?: string
   options?: { isExtended?: boolean }
-}
-
-interface Plugin {
-  name: string
-  spec: {
-    name: string
-    description?: string
-    inputs: { [key: string]: PluginInput }
-  }
 }
 
 interface PluginCategoryInterface {
@@ -60,26 +52,26 @@ const StepNameInput: PluginInput = {
   description: 'Name of the step'
 }
 
-const RunStep: Plugin = {
-  name: 'run',
-  spec: {
-    name: 'Run',
-    inputs: {
-      name: StepNameInput,
-      image: {
-        type: 'string'
-      },
-      script: {
-        type: 'string',
-        options: { isExtended: true }
-      }
-    }
-  }
-}
+// const RunStep: Plugin = {
+//   name: 'run',
+//   spec: {
+//     name: 'Run',
+//     inputs: {
+//       name: StepNameInput,
+//       image: {
+//         type: 'string'
+//       },
+//       script: {
+//         type: 'string',
+//         options: { isExtended: true }
+//       }
+//     }
+//   }
+// }
 
 interface PluginInsertionTemplateInterface {
   name?: string
-  type: 'plugin'
+  type: 'plugins'
   spec: {
     name: string
     inputs: { [key: string]: string }
@@ -88,7 +80,7 @@ interface PluginInsertionTemplateInterface {
 
 const PluginInsertionTemplate: PluginInsertionTemplateInterface = {
   name: '<step-name>',
-  type: 'plugin',
+  type: 'plugins',
   spec: {
     name: '<plugin-uid-from-database>',
     inputs: {
@@ -109,16 +101,20 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   const { getString } = useStrings()
   const [category, setCategory] = useState<PluginCategory>()
   const [panelView, setPanelView] = useState<PluginPanelView>(PluginPanelView.Category)
-  const [plugin, setPlugin] = useState<Plugin>()
-  const [plugins, setPlugins] = useState<Plugin[]>()
-  const [loading] = useState<boolean>(false)
+  const [plugin, setPlugin] = useState<TypesPlugin>()
 
-  const fetchPlugins = () => {
-    /* temporarily done till api response gets available */
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
-    setPlugins(pluginList)
-  }
+  const {
+    data: plugins,
+    refetch: fetchPlugins,
+    loading
+  } = useGet<TypesPlugin[]>({
+    path: `/api/v1/plugins`,
+    queryParams: {
+      limit: LIST_FETCHING_LIMIT,
+      page: 1
+    },
+    lazy: true
+  })
 
   useEffect(() => {
     if (category === PluginCategory.Drone) {
@@ -138,7 +134,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                 if (pluginCategory === PluginCategory.Drone) {
                   setPanelView(PluginPanelView.Listing)
                 } else if (pluginCategory === PluginCategory.Harness) {
-                  setPlugin(RunStep)
+                  // setPlugin(RunStep)
                   setPanelView(PluginPanelView.Configuration)
                 }
               }}
@@ -183,8 +179,8 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
           />
         </Layout.Horizontal>
         <Container className={css.plugins}>
-          {plugins?.map((pluginItem: Plugin) => {
-            const { name: uid, description } = pluginItem.spec
+          {plugins?.map((pluginItem: TypesPlugin) => {
+            const { uid, description } = pluginItem
             return (
               <Layout.Horizontal
                 flex={{ justifyContent: 'flex-start' }}
@@ -263,14 +259,19 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
 
   const constructPayloadForYAMLInsertion = (
     pluginFormData: Record<string, any>,
-    pluginMetadata?: Plugin
+    pluginMetadata?: TypesPlugin
   ): Record<string, any> => {
     const { name, image, script } = pluginFormData
     switch (category) {
       case PluginCategory.Drone:
-        const payload = { ...PluginInsertionTemplate }
-        set(payload, 'name', name)
-        set(payload, PluginNameFieldPath, pluginMetadata?.name)
+        let payload = { ...PluginInsertionTemplate }
+        /* Step name is optional, set only if specified by user */
+        if (name) {
+          set(payload, 'name', name)
+        } else {
+          payload = omit(payload, 'name')
+        }
+        set(payload, PluginNameFieldPath, pluginMetadata?.uid)
         set(payload, PluginInputsFieldPath, omit(pluginFormData, 'name'))
         return payload as PluginInsertionTemplateInterface
       case PluginCategory.Harness:
@@ -298,8 +299,23 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
     return inputsClone
   }
 
+  const getPluginInputsFromSpec = useCallback((pluginSpec: string): Record<string, any> => {
+    if (!pluginSpec) {
+      return {}
+    }
+    try {
+      const pluginSpecAsObj = parse(pluginSpec)
+      return get(pluginSpecAsObj, 'spec.inputs', {})
+    } catch (ex) {}
+    return {}
+  }, [])
+
   const renderPluginConfigForm = useCallback((): JSX.Element => {
-    const inputs: { [key: string]: PluginInput } = insertNameFieldToPluginInputs(get(plugin, 'spec.inputs', {}))
+    const pluginInputs = getPluginInputsFromSpec(get(plugin, 'spec', '') as string)
+    if (Object.keys(pluginInputs).length === 0) {
+      return <></>
+    }
+    const allPluginInputs = insertNameFieldToPluginInputs(pluginInputs)
     return (
       <Layout.Vertical
         spacing="large"
@@ -319,9 +335,9 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
             }}
             className={css.arrow}
           />
-          {plugin?.spec?.name && (
+          {plugin?.uid && (
             <Text font={{ variation: FontVariation.H5 }}>
-              {getString('addLabel')} {plugin.spec.name} {getString('plugins.stepLabel')}
+              {getString('addLabel')} {plugin.uid} {getString('plugins.stepLabel')}
             </Text>
           )}
         </Layout.Horizontal>
@@ -333,13 +349,11 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
             }}>
             <FormikForm height="100%" flex={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
               <Layout.Vertical flex={{ alignItems: 'flex-start' }} height="100%">
-                {inputs && (
-                  <Layout.Vertical width="100%" className={css.formFields} spacing="xsmall">
-                    {Object.keys(inputs).map((field: string) => {
-                      return renderPluginFormField({ name: field, properties: get(inputs, field) })
-                    })}
-                  </Layout.Vertical>
-                )}
+                <Layout.Vertical width="100%" className={css.formFields} spacing="xsmall">
+                  {Object.keys(allPluginInputs).map((field: string) => {
+                    return renderPluginFormField({ name: field, properties: get(allPluginInputs, field) })
+                  })}
+                </Layout.Vertical>
                 <Button variation={ButtonVariation.PRIMARY} text={getString('addLabel')} type="submit" />
               </Layout.Vertical>
             </FormikForm>
