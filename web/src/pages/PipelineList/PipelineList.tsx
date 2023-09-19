@@ -144,11 +144,13 @@ const PipelineList = () => {
           const record = row.original.execution
 
           return record ? (
-            <Layout.Vertical spacing={'small'}>
+            <Layout.Vertical spacing={'small'} padding={{ left: 'small', right: 'small' }}>
               <Layout.Horizontal spacing={'small'} style={{ alignItems: 'center' }}>
                 <Text className={css.desc}>{`#${record.number}`}</Text>
                 <PipeSeparator height={7} />
-                <Text className={css.desc}>{record.title || record.message}</Text>
+                <Text className={css.desc} lineClamp={1}>
+                  {record.title || record.message}
+                </Text>
               </Layout.Horizontal>
               <Layout.Horizontal spacing={'xsmall'} style={{ alignItems: 'center' }}>
                 <Avatar
@@ -164,7 +166,9 @@ const PipelineList = () => {
                   <>
                     <PipeSeparator height={7} />
                     <GitFork height={12} width={12} color={Utils.getRealCSSColor(Color.GREY_500)} />
-                    <Text className={css.author}>{record.target.split('/').pop()}</Text>
+                    <Text className={css.author} lineClamp={1}>
+                      {record.target.split('/').pop()}
+                    </Text>
                   </>
                 )}
                 <PipeSeparator height={7} />
