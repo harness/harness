@@ -1,31 +1,22 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
 import { Falsy, Match, Render, Truthy } from 'react-jsx-match'
-import { CheckCircle, NavArrowRight } from 'iconoir-react'
-import { get, sortBy } from 'lodash-es'
+import { get } from 'lodash-es'
 import cx from 'classnames'
 import { useHistory } from 'react-router-dom'
-import { Container, Layout, Text, FlexExpander, Utils, Button, ButtonVariation, ButtonSize } from '@harnessio/uicore'
-import { Icon } from '@harnessio/icons'
+import { Container, Layout, Text, FlexExpander, Button, ButtonVariation, ButtonSize } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { LogViewer, TermRefs } from 'components/LogViewer/LogViewer'
-import { ButtonRoleProps, PullRequestCheckType, PullRequestSection, timeDistance } from 'utils/Utils'
-import type { GitInfoProps } from 'utils/GitUtils'
+import { PullRequestCheckType } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
-import { useQueryParams } from 'hooks/useQueryParams'
 import { useStrings } from 'framework/strings'
 import { Split } from 'components/Split/Split'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
-import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import type { TypesCheck, TypesStage } from 'services/code'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
-import { CheckPipelineStages } from './CheckPipelineStages'
-import { findDefaultExecution } from './ChecksUtils'
+import type { ChecksProps } from './ChecksUtils'
 import { CheckPipelineSteps } from './CheckPipelineSteps'
+import { ChecksMenu } from './ChecksMenu'
 import css from './Checks.module.scss'
-
-interface ChecksProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
-  prChecksDecisionResult?: PRChecksDecisionResult
-}
 
 export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadata, prChecksDecisionResult }) => {
   const { getString } = useStrings()
@@ -154,187 +145,6 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
           </Container>
         </Falsy>
       </Match>
-    </Container>
-  )
-}
-
-interface ChecksMenuProps extends ChecksProps {
-  onDataItemChanged: (itemData: TypesCheck) => void
-  setSelectedStage: (stage: TypesStage | null) => void
-}
-
-const ChecksMenu: React.FC<ChecksMenuProps> = ({
-  repoMetadata,
-  pullRequestMetadata,
-  prChecksDecisionResult,
-  onDataItemChanged,
-  setSelectedStage: setSelectedStageFromProps
-}) => {
-  const { routes } = useAppContext()
-  const history = useHistory()
-  const { uid } = useQueryParams<{ uid: string }>()
-  const [selectedUID, setSelectedUID] = React.useState<string | undefined>()
-  const [selectedStage, setSelectedStage] = useState<TypesStage | null>(null)
-
-  useMemo(() => {
-    if (selectedUID) {
-      const selectedDataItem = prChecksDecisionResult?.data?.find(item => item.uid === selectedUID)
-      if (selectedDataItem) {
-        onDataItemChanged(selectedDataItem)
-      }
-    }
-  }, [selectedUID, prChecksDecisionResult?.data, onDataItemChanged])
-
-  useEffect(() => {
-    if (uid) {
-      if (uid !== selectedUID && prChecksDecisionResult?.data?.find(item => item.uid === uid)) {
-        setSelectedUID(uid)
-      }
-    } else {
-      const defaultSelectedItem = findDefaultExecution(prChecksDecisionResult?.data)
-
-      if (defaultSelectedItem) {
-        onDataItemChanged(defaultSelectedItem)
-        setSelectedUID(defaultSelectedItem.uid)
-        history.replace(
-          routes.toCODEPullRequest({
-            repoPath: repoMetadata.path as string,
-            pullRequestId: String(pullRequestMetadata.number),
-            pullRequestSection: PullRequestSection.CHECKS
-          }) + `?uid=${defaultSelectedItem.uid}${selectedStage ? `&stageId=${selectedStage.name}` : ''}`
-        )
-      }
-    }
-  }, [
-    uid,
-    prChecksDecisionResult?.data,
-    selectedUID,
-    history,
-    routes,
-    repoMetadata.path,
-    pullRequestMetadata.number,
-    onDataItemChanged,
-    selectedStage
-  ])
-
-  return (
-    <Container className={css.menu}>
-      {sortBy(prChecksDecisionResult?.data || [], ['uid'])?.map(itemData => (
-        <CheckMenuItem
-          repoMetadata={repoMetadata}
-          pullRequestMetadata={pullRequestMetadata}
-          prChecksDecisionResult={prChecksDecisionResult}
-          key={itemData.uid}
-          itemData={itemData}
-          isPipeline={itemData.payload?.kind === PullRequestCheckType.PIPELINE}
-          isSelected={itemData.uid === selectedUID}
-          onClick={stage => {
-            setSelectedUID(itemData.uid)
-            setSelectedStage(stage || null)
-            setSelectedStageFromProps(stage || null)
-
-            history.replace(
-              routes.toCODEPullRequest({
-                repoPath: repoMetadata.path as string,
-                pullRequestId: String(pullRequestMetadata.number),
-                pullRequestSection: PullRequestSection.CHECKS
-              }) + `?uid=${itemData.uid}${stage ? `&stageId=${stage.name}` : ''}`
-            )
-          }}
-          setSelectedStage={stage => {
-            setSelectedStage(stage)
-            setSelectedStageFromProps(stage)
-          }}
-        />
-      ))}
-    </Container>
-  )
-}
-
-interface CheckMenuItemProps extends ChecksProps {
-  isPipeline?: boolean
-  isSelected?: boolean
-  itemData: TypesCheck
-  onClick: (stage?: TypesStage) => void
-  setSelectedStage: (stage: TypesStage | null) => void
-}
-
-const CheckMenuItem: React.FC<CheckMenuItemProps> = ({
-  isPipeline,
-  isSelected = false,
-  itemData,
-  onClick,
-  repoMetadata,
-  pullRequestMetadata,
-  setSelectedStage
-}) => {
-  const [expanded, setExpanded] = useState(isSelected)
-
-  useEffect(() => {
-    if (isSelected) {
-      setExpanded(isSelected)
-    }
-  }, [isSelected])
-
-  return (
-    <Container className={css.menuItem}>
-      <Layout.Horizontal
-        spacing="small"
-        className={cx(css.layout, { [css.expanded]: expanded, [css.selected]: isSelected })}
-        {...ButtonRoleProps}
-        onClick={() => {
-          if (isPipeline) {
-            setExpanded(!expanded)
-          } else {
-            onClick()
-          }
-        }}>
-        <Match expr={isPipeline}>
-          <Truthy>
-            <Icon name="pipeline" size={20} />
-          </Truthy>
-          <Falsy>
-            <CheckCircle color={Utils.getRealCSSColor(Color.GREY_500)} className={css.noShrink} />
-          </Falsy>
-        </Match>
-
-        <Text className={css.uid} lineClamp={1}>
-          {itemData.uid}
-        </Text>
-
-        <FlexExpander />
-
-        <Text color={Color.GREY_300} font={{ variation: FontVariation.SMALL }} className={css.noShrink}>
-          {timeDistance(itemData.updated, itemData.created)}
-        </Text>
-
-        <ExecutionStatus
-          className={cx(css.status, css.noShrink)}
-          status={itemData.status as ExecutionState}
-          iconSize={16}
-          noBackground
-          iconOnly
-        />
-
-        <Render when={isPipeline}>
-          <NavArrowRight
-            color={Utils.getRealCSSColor(Color.GREY_500)}
-            className={cx(css.noShrink, css.chevron)}
-            strokeWidth="1.5"
-          />
-        </Render>
-      </Layout.Horizontal>
-
-      <Render when={isPipeline}>
-        <CheckPipelineStages
-          pipelineName={itemData.uid as string}
-          executionNumber={get(itemData, 'payload.data.execution_number', '')}
-          expanded={expanded}
-          repoMetadata={repoMetadata}
-          pullRequestMetadata={pullRequestMetadata}
-          onSelectStage={setSelectedStage}
-        />
-      </Render>
     </Container>
   )
 }

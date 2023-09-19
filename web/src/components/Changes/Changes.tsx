@@ -29,6 +29,7 @@ import type { TypesCommit, TypesPullReqFileView, TypesPullReq, TypesPullReqActiv
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
+import { PlainButton } from 'components/PlainButton/PlainButton'
 import { ChangesDropdown } from './ChangesDropdown'
 import { DiffViewConfiguration } from './DiffViewConfiguration'
 import ReviewSplitButton from './ReviewSplitButton/ReviewSplitButton'
@@ -48,7 +49,7 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   pullRequestMetadata?: TypesPullReq
   className?: string
   onCommentUpdate: () => void
-  prStatsChanged: Number
+  prStatsChanged: number
   onDataReady?: (data: DiffFileEntry[]) => void
   defaultCommitRange?: string[]
   scrollElement: HTMLElement
@@ -56,8 +57,8 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
 
 export const Changes: React.FC<ChangesProps> = ({
   repoMetadata,
-  targetRef,
-  sourceRef,
+  targetRef: _targetRef,
+  sourceRef: _sourceRef,
   readOnly,
   emptyTitle,
   emptyMessage,
@@ -77,7 +78,9 @@ export const Changes: React.FC<ChangesProps> = ({
   const [isSticky, setSticky] = useState(false)
   const [commitRange, setCommitRange] = useState<string[]>(defaultCommitRange || [])
   const { routes } = useAppContext()
-
+  const [prHasChanged, setPrHasChanged] = useState(false)
+  const [sourceRef, setSourceRef] = useState(_sourceRef)
+  const [targetRef, setTargetRef] = useState(_targetRef)
   const { data: prCommits } = useGet<{
     commits: TypesCommit[]
   }>({
@@ -110,9 +113,11 @@ export const Changes: React.FC<ChangesProps> = ({
         pullRequestId: String(pullRequestMetadata?.number),
         pullRequestSection: PullRequestSection.FILES_CHANGED,
         commitSHA:
-          commitRange.length === 0 ? undefined :
-          commitRange.length === 1 ? commitRange[0] :
-          `${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
+          commitRange.length === 0
+            ? undefined
+            : commitRange.length === 1
+            ? commitRange[0]
+            : `${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
       })
     )
   }, [commitRange, history, routes, repoMetadata.path, pullRequestMetadata?.number])
@@ -143,17 +148,17 @@ export const Changes: React.FC<ChangesProps> = ({
     path: `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/file-views`,
     lazy: !pullRequestMetadata?.number
   })
-  
+
   // create a map for faster lookup and ability to insert / remove single elements
   const fileViews = useMemo(() => {
     const out = new Map<string, string>()
     rawFileViews
       ?.filter(({ path, sha }) => path && sha) // every entry is expected to have a path and sha - otherwise skip ...
-      .forEach(({ path, sha, obsolete }) => { out.set(path!, obsolete ? "ffffffffffffffffffffffffffffffffffffffff" : sha!)})
+      .forEach(({ path, sha, obsolete }) => {
+        out.set(path, obsolete ? 'ffffffffffffffffffffffffffffffffffffffff' : sha)
+      })
     return out
-  },
-  [rawFileViews])
-
+  }, [rawFileViews])
 
   const {
     data: prActivities,
@@ -202,7 +207,6 @@ export const Changes: React.FC<ChangesProps> = ({
       }
 
       setActivities(prActivities)
-
     },
     [prActivities]
   )
@@ -222,6 +226,12 @@ export const Changes: React.FC<ChangesProps> = ({
 
     refetchFileViews()
   }, [prStatsChanged])
+
+  useEffect(() => {
+    if (sourceRef !== _sourceRef || targetRef !== _targetRef) {
+      setPrHasChanged(true)
+    }
+  }, [_sourceRef, sourceRef, _targetRef, targetRef])
 
   useEffect(() => {
     const _raw = rawDiff && typeof rawDiff === 'string' ? rawDiff : ''
@@ -244,7 +254,7 @@ export const Changes: React.FC<ChangesProps> = ({
           filePath,
           fileActivities: fileActivities || [],
           activities: activities || [],
-          fileViews: fileViews || [],
+          fileViews: fileViews || []
         }
       })
 
@@ -255,8 +265,10 @@ export const Changes: React.FC<ChangesProps> = ({
 
   useEventListener(
     'scroll',
-    useCallback(() => {setSticky(scrollElement.scrollTop >= STICKY_HEADER_HEIGHT)}, []),
-      scrollElement
+    useCallback(() => {
+      setSticky(scrollElement.scrollTop >= STICKY_HEADER_HEIGHT)
+    }, []),
+    scrollElement
   )
 
   useShowRequestError(errorActivities)
@@ -300,6 +312,18 @@ export const Changes: React.FC<ChangesProps> = ({
                 />
               </Text>
 
+              <Render when={prHasChanged}>
+                <PlainButton
+                  text={getString('refresh')}
+                  className={css.refreshBtn}
+                  onClick={() => {
+                    setPrHasChanged(false)
+                    setTargetRef(_targetRef)
+                    setSourceRef(_sourceRef)
+                  }}
+                />
+              </Render>
+
               {/* Show "Scroll to top" button */}
               <Render when={isSticky}>
                 <Layout.Horizontal padding={{ left: 'small' }}>
@@ -315,6 +339,7 @@ export const Changes: React.FC<ChangesProps> = ({
                 </Layout.Horizontal>
               </Render>
             </Container>
+
             <FlexExpander />
 
             <ReviewSplitButton
@@ -351,7 +376,7 @@ export const Changes: React.FC<ChangesProps> = ({
                     pullRequestMetadata={pullRequestMetadata}
                     onCommentUpdate={onCommentUpdate}
                     targetRef={targetRef}
-                    sourceRef={sourceRef}
+                    sourceRef={_sourceRef}
                     commitRange={commitRange}
                     scrollElement={scrollElement}
                   />

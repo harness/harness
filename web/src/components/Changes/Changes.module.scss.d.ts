@@ -12,6 +12,7 @@ export declare const main: string
 export declare const menuItem: string
 export declare const menuReviewItem: string
 export declare const popover: string
+export declare const refreshBtn: string
 export declare const refreshIcon: string
 export declare const repeatBtn: string
 export declare const reviewButton: string

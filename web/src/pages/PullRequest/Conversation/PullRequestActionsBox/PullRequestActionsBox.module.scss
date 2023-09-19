@@ -25,7 +25,7 @@
   }
 
   &.unchecked {
-    background-color: #fcf4e3 !important; // Note: No UICore color variable for this background
+    background-color: var(--orange-50) !important; // Note: No UICore color variable for this background
   }
 
   .layout {

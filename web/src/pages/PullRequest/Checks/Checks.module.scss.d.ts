@@ -5,6 +5,7 @@ export declare const chevron: string
 export declare const consoleLine: string
 export declare const content: string
 export declare const expanded: string
+export declare const forPipeline: string
 export declare const header: string
 export declare const headerLayout: string
 export declare const hidden: string

@@ -61,7 +61,7 @@
 }
 
 .yellowContainer {
-  background: #fcf4e3 !important;
+  background: var(--orange-50) !important;
   padding: var(--spacing-medium) var(--spacing-small);
   margin: 0 var(--spacing-large) 0 0 !important;
   border-radius: 4px;

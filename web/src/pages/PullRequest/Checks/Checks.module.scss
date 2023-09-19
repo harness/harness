@@ -32,6 +32,11 @@
           align-items: center;
           min-height: var(--stage-title-height);
           padding: 0 var(--spacing-medium) 0 var(--spacing-xlarge);
+          border-bottom: 1px solid var(--grey-100);
+
+          &.forPipeline {
+            padding-left: 18px;
+          }
 
           &.expanded {
             .chevron {
@@ -40,7 +45,6 @@
           }
 
           .chevron {
-            transform: rotate(-90deg);
             transition: transform 0.2s ease;
           }
 
@@ -65,8 +69,8 @@
           height: 38px;
           align-items: center;
           padding: 0;
-          padding-left: var(--spacing-medium);
-          margin-left: 32px;
+          padding-left: var(--spacing-small);
+          margin-left: var(--spacing-xlarge);
           border-top-left-radius: 6px;
           border-bottom-left-radius: 6px;
 

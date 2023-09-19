@@ -37,7 +37,7 @@
     }
 
     .outdated {
-      background: #fcf4e3 !important;
+      background: var(--orange-50) !important;
       color: #c05809 !important;
       border: 1px solid var(--yellow-300) !important;
       padding: 4px 6px !important;

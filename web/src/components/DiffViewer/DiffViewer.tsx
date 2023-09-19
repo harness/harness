@@ -84,23 +84,23 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/file-views`,
     [repoMetadata.path, pullRequestMetadata?.number]
   )
-  const { mutate: markViewed } = useMutate({ verb: 'PUT', path: viewedPath})
+  const { mutate: markViewed } = useMutate({ verb: 'PUT', path: viewedPath })
   const { mutate: unmarkViewed } = useMutate({ verb: 'DELETE', path: ({ filePath }) => `${viewedPath}/${filePath}` })
 
   // file viewed feature is only enabled if no commit range is provided (otherwise component is hidden, too)
-  const [viewed, setViewed] = useState(commitRange?.length === 0 && diff.fileViews?.get(diff.filePath) === diff.checksumAfter)
+  const [viewed, setViewed] = useState(
+    commitRange?.length === 0 && diff.fileViews?.get(diff.filePath) === diff.checksumAfter
+  )
   useEffect(() => {
     if (commitRange?.length === 0) {
       setViewed(diff.fileViews?.get(diff.filePath) === diff.checksumAfter)
     }
-  },
-  [diff.fileViews, diff.filePath, diff.checksumAfter, commitRange])
-  
+  }, [diff.fileViews, diff.filePath, diff.checksumAfter, commitRange])
+
   const [collapsed, setCollapsed] = useState(viewed)
   useEffect(() => {
     setCollapsed(viewed)
-  },
-  [viewed])
+  }, [viewed])
   const [fileUnchanged] = useState(diff.unchangedPercentage === 100)
   const [fileDeleted] = useState(diff.isDeleted)
   const [renderCustomContent, setRenderCustomContent] = useState(fileUnchanged || fileDeleted)
@@ -131,16 +131,15 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   }
   // use separate flag for monitoring comment rendering as opposed to updating comments to void spamming comment changes
   const [renderComments, _setRenderComments] = useState(0)
+  const commitRefs = useRef<{ sourceRef?: string; targetRef?: string }>({ sourceRef, targetRef })
+
   function triggerCodeCommentRendering() {
     _setRenderComments(Date.now())
   }
+
   useMemo(() => {
     triggerCodeCommentRendering()
-  }, [
-    viewStyle,
-    inView,
-    commitRange
-  ])
+  }, [viewStyle, inView, commitRange])
 
   const [dirty, setDirty] = useState(false)
   const commentsRef = useRef<DiffCommentItem<TypesPullReqActivity>[]>(comments)
@@ -172,7 +171,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           diffRenderer?.draw()
           triggerCodeCommentRendering()
         }
-        
+
         contentDOM.dataset.rendered = 'true'
       }
     },
@@ -183,7 +182,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     // no activities or commit range view? no comments!
     if (!diff?.fileActivities || (commitRange?.length || 0) > 0) {
       setComments([])
-      return  
+      return
     }
     const _comments = activitiesToDiffCommentItems(diff)
     if (_comments.length > 0) {
@@ -208,6 +207,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     },
     [inView, diffRenderer, renderDiffAndUpdateContainerHeightIfNeeded]
   )
+
+  useEffect(() => {
+    commitRefs.current = { sourceRef, targetRef }
+  }, [sourceRef, targetRef])
 
   useEffect(
     function handleCollapsedState() {
@@ -305,7 +308,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       // Update latest commentsRef to use it inside CommentBox callbacks
       commentsRef.current = comments
 
-      comments.forEach(comment => {        
+      comments.forEach(comment => {
         const lineInfo = getCommentLineInfo(contentRef.current, comment, viewStyle)
 
         // TODO: add support for live updating changes and replies to comment!
@@ -322,7 +325,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
         // in split view, actually attach the placeholder
         if (isSideBySide && lineInfo.oppositeRowElement != null) {
-            lineInfo.oppositeRowElement.after(oppositeRowPlaceHolder)
+          lineInfo.oppositeRowElement.after(oppositeRowPlaceHolder)
         }
 
         // Create a new row below it and render CommentBox inside
@@ -336,16 +339,14 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           // Clean up CommentBox rendering and reset states bound to lineInfo
           ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
           commentRowElement.parentElement?.removeChild(commentRowElement)
-          lineInfo.oppositeRowElement?.parentElement?.removeChild(
-            oppositeRowPlaceHolder as Element
-          )
+          lineInfo.oppositeRowElement?.parentElement?.removeChild(oppositeRowPlaceHolder as Element)
           delete lineInfo.rowElement.dataset.annotated
 
           setComments(
-              commentsRef.current.filter(item => {
-                return item !== comment
-              })
-            )
+            commentsRef.current.filter(item => {
+              return item !== comment
+            })
+          )
         }
 
         // Note: CommentBox is rendered as an independent React component
@@ -360,12 +361,12 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               initialContent={''}
               width={isSideBySide ? 'calc(100vw / 2 - 163px)' : undefined} // TODO: Re-calcualte for standalone version
               onHeightChange={boxHeight => {
-                  const first = oppositeRowPlaceHolder?.firstElementChild as HTMLTableCellElement
-                  const last = oppositeRowPlaceHolder?.lastElementChild as HTMLTableCellElement
-                  if (first && last) {
-                    first.style.height = `${boxHeight}px`
-                    last.style.height = `${boxHeight}px`
-                  }
+                const first = oppositeRowPlaceHolder?.firstElementChild as HTMLTableCellElement
+                const last = oppositeRowPlaceHolder?.lastElementChild as HTMLTableCellElement
+                if (first && last) {
+                  first.style.height = `${boxHeight}px`
+                  last.style.height = `${boxHeight}px`
+                }
               }}
               onCancel={resetCommentState}
               setDirty={setDirty}
@@ -383,8 +384,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                       line_start_new: !comment.left,
                       line_end_new: !comment.left,
                       path: diff.filePath,
-                      source_commit_sha: sourceRef,
-                      target_commit_sha: targetRef,
+                      source_commit_sha: commitRefs.current.sourceRef,
+                      target_commit_sha: commitRefs.current.targetRef,
                       text: value
                     }
 
@@ -492,9 +493,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         )
       })
     },
-    [
-      renderComments,
-    ]
+    [renderComments]
   )
 
   useEffect(function cleanUpCommentBoxRendering() {
@@ -521,15 +520,14 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               size={ButtonSize.SMALL}
               onClick={() => setCollapsed(!collapsed)}
               iconProps={{
-                  size: 10,
-                  style: {
-                    color: '#383946',
-                    flexGrow: 1,
-                    justifyContent: 'center',
-                    display: 'flex'
-                  }
+                size: 10,
+                style: {
+                  color: '#383946',
+                  flexGrow: 1,
+                  justifyContent: 'center',
+                  display: 'flex'
                 }
-              }
+              }}
               className={css.chevron}
             />
             <Text inline className={css.fname}>
@@ -559,15 +557,19 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
             </Container>
             <FlexExpander />
 
-            <Render when={!readOnly && commitRange?.length === 0 && diff.fileViews?.get(diff.filePath) !== undefined && diff.fileViews?.get(diff.filePath) !== diff.checksumAfter}>
+            <Render
+              when={
+                !readOnly &&
+                commitRange?.length === 0 &&
+                diff.fileViews?.get(diff.filePath) !== undefined &&
+                diff.fileViews?.get(diff.filePath) !== diff.checksumAfter
+              }>
               <Container>
-                <Text className={css.fileChanged}>
-                {getString('changedSinceLastView')}
-                </Text>
+                <Text className={css.fileChanged}>{getString('changedSinceLastView')}</Text>
               </Container>
             </Render>
 
-            <Render when={!readOnly && commitRange?.length === 0 }>
+            <Render when={!readOnly && commitRange?.length === 0}>
               <Container>
                 <label className={css.viewLabel}>
                   <Checkbox
@@ -580,19 +582,22 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                         diff.fileViews?.delete(diff.filePath)
 
                         // best effort attempt to recflect on server (swallow exception - user still sees correct data locally)
-                        await unmarkViewed(null, { pathParams: { filePath: diff.filePath } }).catch(() =>{})
+                        await unmarkViewed(null, { pathParams: { filePath: diff.filePath } }).catch(() => {})
                       } else {
                         setViewed(true)
 
                         // update local data first
                         // we could wait for server response for the guaranteed correct SHA, but this is non-crucial data so it's okay
-                        diff.fileViews?.set(diff.filePath, diff.checksumAfter || "unknown")
+                        diff.fileViews?.set(diff.filePath, diff.checksumAfter || 'unknown')
 
                         // best effort attempt to recflect on server (swallow exception - user still sees correct data locally)
-                        await markViewed({
-                          path: diff.filePath,
-                          commit_sha: pullRequestMetadata?.source_sha
-                        }, {}).catch(() =>{})
+                        await markViewed(
+                          {
+                            path: diff.filePath,
+                            commit_sha: pullRequestMetadata?.source_sha
+                          },
+                          {}
+                        ).catch(() => {})
                       }
                     }}
                   />

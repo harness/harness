@@ -1,5 +1,11 @@
 import { ExecutionState } from 'components/ExecutionStatus/ExecutionStatus'
+import type { PRChecksDecisionResult } from 'hooks/usePRChecksDecision'
 import type { EnumCheckStatus } from 'services/code'
+import type { GitInfoProps } from 'utils/GitUtils'
+
+export interface ChecksProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
+  prChecksDecisionResult?: PRChecksDecisionResult
+}
 
 type CheckType = { status: EnumCheckStatus }[]
 

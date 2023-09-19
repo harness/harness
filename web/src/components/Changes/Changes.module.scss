@@ -9,8 +9,38 @@
   z-index: 2;
   width: 100%;
 
+  /* Create a mask to hide left, right edges of
+     contents scrolled up over sticky header */
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -5px;
+    height: 100%;
+    width: calc(100% + 10px);
+    background-color: var(--page-background);
+    z-index: -1;
+  }
+
   &.stickied {
     background-color: var(--primary-bg) !important;
+  }
+
+  .refreshBtn {
+    background: var(--orange-50) !important;
+    color: #c05809 !important;
+    border: 1px solid var(--yellow-300) !important;
+    padding: 0 10px !important;
+    height: 28px !important;
+
+    font-size: 13px !important;
+    margin: 0 var(--spacing-xsmall) 0 var(--spacing-medium) !important;
+
+    &:hover {
+      font-weight: 500 !important;
+      box-shadow: none !important;
+      border-color: #c05809;
+    }
   }
 }
 

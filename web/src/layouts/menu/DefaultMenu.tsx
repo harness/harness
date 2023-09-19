@@ -42,17 +42,6 @@ export const DefaultMenu: React.FC = () => {
         <Render when={selectedSpace}>
           <NavMenuItem
             icon="code-repo"
-            rightIcon={repoMetadata ? 'main-chevron-down' : 'main-chevron-right'}
-            textProps={{
-              rightIconProps: {
-                size: 10,
-                style: {
-                  flexGrow: 1,
-                  justifyContent: 'end',
-                  display: 'flex'
-                }
-              }
-            }}
             label={getString('repositories')}
             to={routes.toCODERepositories({ space: selectedSpace?.path as string })}
             isDeselected={!!repoMetadata}
