@@ -72,6 +72,21 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
   useEffect(() => {
     if (space && !selectedSpace && data) {
       selectSpace(data, false)
+    } else if (!space && selectSpace && data) {
+      selectSpace(
+        {
+          created: 0,
+          created_by: 0,
+          description: '',
+          id: -1,
+          is_public: false,
+          parent_id: 0,
+          path: '',
+          uid: getString('selectSpace'),
+          updated: 0
+        },
+        false
+      )
     }
   }, [space, selectedSpace, data, onSelect, selectSpace])
 
@@ -175,7 +190,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
         <Heading level={2} padding={{ left: 'small' }} color={Color.BLACK}>
           <Layout.Horizontal flex={{ justifyContent: 'space-between', alignItems: 'center' }}>
             <Text font={{ variation: FontVariation.H5 }}>{getString('selectSpaceText')}</Text>
-            {(!!spaces?.length || searchTerm.length > 1) && (
+            {(!!spaces?.length || searchTerm.length >= 1) && (
               <Layout.Horizontal flex={{ justifyContent: 'space-between' }}>
                 <SearchInputWithSpinner
                   loading={false}

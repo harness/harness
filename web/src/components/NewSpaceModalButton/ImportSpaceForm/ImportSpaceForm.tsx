@@ -76,7 +76,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
           setButtonLoading(false)
         }
         return (
-          <Container width={'97%'}>
+          <Container className={css.hideContainer} width={'97%'}>
             <FormikForm>
               {step === 0 ? (
                 <>
@@ -282,8 +282,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                     intent={Intent.PRIMARY}
                     onClick={() => {
                       handleValidationClick()
-
-                      if (formik.values.name !== '' || formik.values.organization !== '') {
+                      if (formik.values.name !== '' && formik.values.organization !== '') {
                         handleImport()
                         setButtonLoading(false)
                       }

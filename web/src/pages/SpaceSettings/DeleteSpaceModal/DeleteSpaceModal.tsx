@@ -4,6 +4,7 @@ import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
 import { Divider } from '@blueprintjs/core'
 import { useHistory } from 'react-router-dom'
+import { useAppContext } from 'AppContext'
 import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -12,6 +13,7 @@ import { useDeleteSpace } from 'services/code'
 const useDeleteSpaceModal = () => {
   const space = useGetSpaceParam()
   const { getString } = useStrings()
+  const { routes } = useAppContext()
 
   // this isn't implemented in the backend yet
   const { mutate: deleteSpace, loading, error: deleteError } = useDeleteSpace({})
@@ -95,7 +97,7 @@ const useDeleteSpaceModal = () => {
                   setShowConfirmPage(false)
                   setDeleteConfirmString('')
                   hideModal()
-                  history.push('/')
+                  history.push(routes.toCODEHome())
                   showSuccess(getString('spaceSetting.deleteToastSuccess'))
                 } catch (e) {
                   showError(deleteError?.message)

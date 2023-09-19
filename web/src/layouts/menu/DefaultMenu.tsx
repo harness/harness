@@ -31,7 +31,9 @@ export const DefaultMenu: React.FC = () => {
         <SpaceSelector
           onSelect={(_selectedSpace, isUserAction) => {
             setSelectedSpace(_selectedSpace)
-
+            if (_selectedSpace.path === '' && _selectedSpace.id === -1) {
+              setSelectedSpace(undefined)
+            }
             if (isUserAction) {
               history.push(routes.toCODERepositories({ space: _selectedSpace.path as string }))
             }

@@ -8,6 +8,7 @@ import { FontVariation } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import { REGEX_VALID_REPO_NAME } from 'utils/Utils'
 import { ImportFormData, RepoVisibility, parseUrl } from 'utils/GitUtils'
+import Private from '../../../icons/private.svg'
 import css from '../NewRepoModalButton.module.scss'
 
 interface ImportFormProps {
@@ -184,7 +185,10 @@ const ImportForm = (props: ImportFormProps) => {
                     label: (
                       <Container>
                         <Layout.Horizontal>
-                          <Icon name="git-clone-step" size={20} margin={{ right: 'medium' }} />
+                          <Container margin={{ right: 'medium' }}>
+                            <img width={20} height={20} src={Private} />
+                          </Container>
+                          {/* <Icon name="git-clone-step" size={20} margin={{ right: 'medium' }} /> */}
                           <Container margin={{ left: 'small' }}>
                             <Layout.Vertical spacing="xsmall">
                               <Text>{getString('private')}</Text>
