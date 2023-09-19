@@ -47,27 +47,11 @@ const PluginCategories: PluginCategoryInterface[] = [
   { category: PluginCategory.Drone, name: 'Drone', description: 'Run Drone plugins', icon: 'ci-infra' }
 ]
 
-const StepNameInput: PluginInput = {
-  type: 'string',
-  description: 'Name of the step'
+const RunStep: TypesPlugin = {
+  uid: 'run',
+  description: 'Run a script',
+  spec: '{"kind":"run","type":"step","name":"Run","spec":{"name":"run","description":"Run a script","inputs":{"image":{"type":"string","description":"Container image","required":true},"script":{"type":"string","description":"Script to execute","required":true,"options":{"isExtended":true}}}}}'
 }
-
-// const RunStep: Plugin = {
-//   name: 'run',
-//   spec: {
-//     name: 'Run',
-//     inputs: {
-//       name: StepNameInput,
-//       image: {
-//         type: 'string'
-//       },
-//       script: {
-//         type: 'string',
-//         options: { isExtended: true }
-//       }
-//     }
-//   }
-// }
 
 interface PluginInsertionTemplateInterface {
   name?: string
@@ -134,7 +118,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                 if (pluginCategory === PluginCategory.Drone) {
                   setPanelView(PluginPanelView.Listing)
                 } else if (pluginCategory === PluginCategory.Harness) {
-                  // setPlugin(RunStep)
+                  setPlugin(RunStep)
                   setPanelView(PluginPanelView.Configuration)
                 }
               }}
@@ -292,7 +276,10 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   }): { [key: string]: PluginInput } => {
     const inputsClone = Object.assign(
       {
-        name: StepNameInput
+        name: {
+          type: 'string',
+          description: 'Name of the step'
+        }
       },
       existingInputs
     )
