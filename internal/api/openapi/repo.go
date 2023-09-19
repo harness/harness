@@ -636,6 +636,17 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opDiff, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/diff/{range}", opDiff)
 
+	opCommitDiff := openapi3.Operation{}
+	opCommitDiff.WithTags("repository")
+	opCommitDiff.WithMapOfAnything(map[string]interface{}{"operationId": "getCommitDiff"})
+	_ = reflector.SetRequest(&opCommitDiff, new(GetCommitRequest), http.MethodGet)
+	_ = reflector.SetStringResponse(&opCommitDiff, http.StatusOK, "text/plain")
+	_ = reflector.SetJSONResponse(&opCommitDiff, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opCommitDiff, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opCommitDiff, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opCommitDiff, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/commits/{commit_sha}/diff", opCommitDiff)
+
 	opDiffStats := openapi3.Operation{}
 	opDiffStats.WithTags("repository")
 	opDiffStats.WithMapOfAnything(map[string]interface{}{"operationId": "diffStats"})

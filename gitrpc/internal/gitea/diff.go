@@ -41,50 +41,29 @@ func (g Adapter) RawDiff(
 		Stderr: &errbuf,
 		Stdout: w,
 	}); err != nil {
-		// lets check if headref points to first commit.
-		fc, fcErr := g.getRefDiff(ctx, repoPath, headRef, w)
-		if fc && fcErr != nil {
-			return processGiteaErrorf(err, "git diff failed between '%s' and '%s' with err: %v", baseRef, headRef, err)
+		if errbuf.Len() > 0 {
+			err = &runStdError{err: err, stderr: errbuf.String()}
 		}
-		// not first commit then return original error from the diff.
-		if !fc {
-			if errbuf.Len() > 0 {
-				err = &runStdError{err: err, stderr: errbuf.String()}
-			}
-			return processGiteaErrorf(err, "git diff failed between '%s' and '%s' with err: %v", baseRef, headRef, err)
-		}
+		return processGiteaErrorf(err, "git diff failed between '%s' and '%s' with err: %v", baseRef, headRef, err)
 	}
 	return nil
 }
 
-// get ref diff
-func (g Adapter) getRefDiff(ctx context.Context, repoPath, ref string, w io.Writer) (fc bool, err error) {
-	repo, err := git.OpenRepository(ctx, repoPath)
-	if err != nil {
-		return false, err
-	}
-	commit, err := repo.GetCommit(ref)
-	if err != nil {
-		return false, processGiteaErrorf(err, "git diff failed for commit '%s': %v", ref, err)
-	}
-
+// CommitDiff will stream diff for provided ref
+func (g Adapter) CommitDiff(ctx context.Context, repoPath, sha string, w io.Writer) error {
 	args := make([]string, 0, 8)
-	args = append(args, "show", "--full-index", "--pretty=format:%b", ref)
-
-	if commit.ParentCount() == 0 {
-		fc = true
-	}
+	args = append(args, "show", "--full-index", "--pretty=format:%b", sha)
 
 	stderr := new(bytes.Buffer)
-	cmd := git.NewCommand(repo.Ctx, args...)
-	if err = cmd.Run(&git.RunOpts{
-		Dir:    repo.Path,
+	cmd := git.NewCommand(ctx, args...)
+	if err := cmd.Run(&git.RunOpts{
+		Dir:    repoPath,
 		Stdout: w,
 		Stderr: stderr,
 	}); err != nil {
-		return fc, fmt.Errorf("run: %v - %s", err, stderr)
+		return processGiteaErrorf(err, "commit diff error: %v", stderr)
 	}
-	return fc, nil
+	return nil
 }
 
 func (g Adapter) DiffShortStat(

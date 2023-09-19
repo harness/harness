@@ -7,7 +7,6 @@ package gitrpc
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/harness/gitness/gitrpc/internal/streamio"
@@ -58,7 +57,33 @@ func (c *Client) RawDiff(ctx context.Context, params *DiffParams, out io.Writer)
 	})
 
 	if _, err = io.Copy(out, reader); err != nil {
-		return fmt.Errorf("copy rpc data: %w", err)
+		return processRPCErrorf(err, "failed to fetch diff between '%s' and '%s' with err: %v",
+			params.BaseRef, params.HeadRef, err)
+	}
+
+	return nil
+}
+
+func (c *Client) CommitDiff(ctx context.Context, params *GetCommitParams, out io.Writer) error {
+	if err := params.Validate(); err != nil {
+		return err
+	}
+	diff, err := c.diffService.CommitDiff(ctx, &rpc.CommitDiffRequest{
+		Base: mapToRPCReadRequest(params.ReadParams),
+		Sha:  params.SHA,
+	})
+	if err != nil {
+		return processRPCErrorf(err, "failed to fetch diff for commit '%s': %v", params.SHA, err)
+	}
+
+	reader := streamio.NewReader(func() ([]byte, error) {
+		var resp *rpc.CommitDiffResponse
+		resp, err = diff.Recv()
+		return resp.GetData(), err
+	})
+
+	if _, err = io.Copy(out, reader); err != nil {
+		return err
 	}
 
 	return nil

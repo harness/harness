@@ -71,6 +71,11 @@ type GitAdapter interface {
 		mergeBase bool,
 		w io.Writer) error
 
+	CommitDiff(ctx context.Context,
+		repoPath,
+		sha string,
+		w io.Writer) error
+
 	DiffShortStat(ctx context.Context,
 		repoPath string,
 		baseRef string,
