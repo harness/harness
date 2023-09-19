@@ -23,14 +23,14 @@ func (g Adapter) RawDiff(
 	repoPath string,
 	baseRef string,
 	headRef string,
+	mergeBase bool,
 	w io.Writer,
-	customArgs ...string,
 ) error {
-	args := []string{
-		"diff",
-		"-M",
+	args := make([]string, 0, 8)
+	args = append(args, "diff", "-M", "--full-index")
+	if mergeBase {
+		args = append(args, "--merge-base")
 	}
-	args = append(args, customArgs...)
 	args = append(args, baseRef, headRef)
 
 	cmd := git.NewCommand(ctx, args...)
@@ -41,12 +41,50 @@ func (g Adapter) RawDiff(
 		Stderr: &errbuf,
 		Stdout: w,
 	}); err != nil {
-		if errbuf.Len() > 0 {
-			err = &runStdError{err: err, stderr: errbuf.String()}
+		// lets check if headref points to first commit.
+		fc, fcErr := g.getRefDiff(ctx, repoPath, headRef, w)
+		if fc && fcErr != nil {
+			return processGiteaErrorf(err, "git diff failed between '%s' and '%s' with err: %v", baseRef, headRef, err)
 		}
-		return processGiteaErrorf(err, "git diff failed between '%s' and '%s' with err: %v", baseRef, headRef, err)
+		// not first commit then return original error from the diff.
+		if !fc {
+			if errbuf.Len() > 0 {
+				err = &runStdError{err: err, stderr: errbuf.String()}
+			}
+			return processGiteaErrorf(err, "git diff failed between '%s' and '%s' with err: %v", baseRef, headRef, err)
+		}
 	}
 	return nil
+}
+
+// get ref diff
+func (g Adapter) getRefDiff(ctx context.Context, repoPath, ref string, w io.Writer) (fc bool, err error) {
+	repo, err := git.OpenRepository(ctx, repoPath)
+	if err != nil {
+		return false, err
+	}
+	commit, err := repo.GetCommit(ref)
+	if err != nil {
+		return false, processGiteaErrorf(err, "git diff failed for commit '%s': %v", ref, err)
+	}
+
+	args := make([]string, 0, 8)
+	args = append(args, "show", "--full-index", "--pretty=format:%b", ref)
+
+	if commit.ParentCount() == 0 {
+		fc = true
+	}
+
+	stderr := new(bytes.Buffer)
+	cmd := git.NewCommand(repo.Ctx, args...)
+	if err = cmd.Run(&git.RunOpts{
+		Dir:    repo.Path,
+		Stdout: w,
+		Stderr: stderr,
+	}); err != nil {
+		return fc, fmt.Errorf("run: %v - %s", err, stderr)
+	}
+	return fc, nil
 }
 
 func (g Adapter) DiffShortStat(

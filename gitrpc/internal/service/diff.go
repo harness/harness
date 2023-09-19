@@ -48,16 +48,9 @@ func (s DiffService) rawDiff(ctx context.Context, request *rpc.DiffRequest, w io
 	}
 
 	base := request.GetBase()
-
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
-	args := make([]string, 0, 4)
-	args = append(args, "--full-index")
-	if request.GetMergeBase() {
-		args = append(args, "--merge-base")
-	}
-
-	err = s.adapter.RawDiff(ctx, repoPath, request.GetBaseRef(), request.GetHeadRef(), w, args...)
+	err = s.adapter.RawDiff(ctx, repoPath, request.GetBaseRef(), request.GetHeadRef(), request.MergeBase, w)
 	if err != nil {
 		return processGitErrorf(err, "failed to fetch diff "+
 			"between %s and %s", request.GetBaseRef(), request.GetHeadRef())
