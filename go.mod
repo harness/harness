@@ -17,7 +17,7 @@ require (
 	github.com/drone/drone-yaml v1.2.3
 	github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d
 	github.com/drone/go-convert v0.0.0-20230919093251-7104c3bcc635
-	github.com/drone/go-generate v0.0.0-20230919103306-db4551429a31
+	github.com/drone/go-generate v0.0.0-20230919204203-e4bd241a4c09
 	github.com/drone/go-scm v1.31.2
 	github.com/drone/runner-go v1.12.0
 	github.com/drone/spec v0.0.0-20230919004456-7455b8913ff5
@@ -70,7 +70,6 @@ require (
 	cloud.google.com/go/compute v1.18.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	dario.cat/mergo v1.0.0 // indirect
-	github.com/99designs/basicauth-go v0.0.0-20160802081356-2a93ba0f464d // indirect
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e // indirect
 	github.com/antonmedv/expr v1.15.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -84,7 +83,6 @@ require (
 	github.com/docker/go-connections v0.3.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/drone/envsubst v1.0.3 // indirect
-	github.com/drone/signal v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -132,7 +130,7 @@ require (
 	github.com/go-enry/go-enry/v2 v2.8.2 // indirect
 	github.com/go-enry/go-oniguruma v1.2.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-git/go-billy/v5 v5.5.0 // indirect
+	github.com/go-git/go-billy/v5 v5.5.0
 	github.com/go-git/go-git/v5 v5.9.0
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.1 // indirect
