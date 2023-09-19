@@ -234,8 +234,10 @@ export interface StringsMap {
   findOrCreateBranch: string
   firstTimeTitle: string
   general: string
+  generate: string
   generateCloneCred: string
   generateCloneText: string
+  generateHelptext: string
   getMyCloneTitle: string
   gitIgnore: string
   gitness: string
@@ -409,6 +411,7 @@ export interface StringsMap {
   'pipelines.executionStarted': string
   'pipelines.failedToCreatePipeline': string
   'pipelines.failedToFindPath': string
+  'pipelines.failedToGenerate': string
   'pipelines.failedToUpdatePipeline': string
   'pipelines.lastExecution': string
   'pipelines.name': string

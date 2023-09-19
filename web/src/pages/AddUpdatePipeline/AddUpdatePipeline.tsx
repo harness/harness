@@ -86,6 +86,7 @@ const AddUpdatePipeline = (): JSX.Element => {
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
   const [isExistingPipeline, setIsExistingPipeline] = useState<boolean>(false)
   const [isDirty, setIsDirty] = useState<boolean>(false)
+  const [generatingPipeline, setGeneratingPipeline] = useState<boolean>(false)
 
   const pipelineSaveOption: PipelineSaveAndRunOption = {
     title: getString('save'),
@@ -241,6 +242,22 @@ const AddUpdatePipeline = (): JSX.Element => {
     [yamlVersion, isExistingPipeline, originalPipelineYAMLFileContent, pipelineAsYAML]
   )
 
+  const handleGeneratePipeline = useCallback(async (): Promise<void> => {
+    try {
+      const response = await fetch(`/api/v1/repos/${repoPath}/+/pipelines/generate`)
+      if (response.ok && response.status === 200) {
+        const pipelineAsYAML = await response.text()
+        if (pipelineAsYAML) {
+          setPipelineAsYaml(pipelineAsYAML)
+        }
+      }
+      setGeneratingPipeline(false)
+    } catch (exception) {
+      showError(getErrorMessage(exception), 0, getString('pipelines.failedToGenerate'))
+      setGeneratingPipeline(false)
+    }
+  }, [repoPath])
+
   const renderCTA = useCallback(() => {
     /* Do not render CTA till pipeline existence info is obtained */
     if (fetchingPipeline || !pipelineData) {
@@ -325,28 +342,44 @@ const AddUpdatePipeline = (): JSX.Element => {
   return (
     <>
       <Container className={css.main}>
-        <RepositoryPageHeader
-          repoMetadata={repoMetadata}
-          title={getString('pageTitle.executions')}
-          dataTooltipId="repositoryExecutions"
-          extraBreadcrumbLinks={
-            repoMetadata && [
-              {
-                label: getString('pageTitle.pipelines'),
-                url: routes.toCODEPipelines({ repoPath: repoMetadata.path as string })
-              },
-              ...(pipeline
-                ? [
-                    {
-                      label: pipeline,
-                      url: ''
-                    }
-                  ]
-                : [])
-            ]
-          }
-          content={<Layout.Horizontal flex={{ justifyContent: 'space-between' }}>{renderCTA()}</Layout.Horizontal>}
-        />
+        <Layout.Vertical>
+          <RepositoryPageHeader
+            repoMetadata={repoMetadata}
+            title={getString('pageTitle.executions')}
+            dataTooltipId="repositoryExecutions"
+            extraBreadcrumbLinks={
+              repoMetadata && [
+                {
+                  label: getString('pageTitle.pipelines'),
+                  url: routes.toCODEPipelines({ repoPath: repoMetadata.path as string })
+                },
+                ...(pipeline
+                  ? [
+                      {
+                        label: pipeline,
+                        url: ''
+                      }
+                    ]
+                  : [])
+              ]
+            }
+            content={<Layout.Horizontal flex={{ justifyContent: 'space-between' }}>{renderCTA()}</Layout.Horizontal>}
+          />
+          <Layout.Horizontal
+            padding={{ left: 'medium', bottom: 'medium' }}
+            className={css.generateHeader}
+            spacing="large"
+            flex={{ justifyContent: 'flex-start' }}>
+            <Button
+              text={getString('generate')}
+              variation={ButtonVariation.PRIMARY}
+              className={css.generate}
+              onClick={handleGeneratePipeline}
+              disabled={generatingPipeline}
+            />
+            <Text font={{ variation: FontVariation.H5 }}>{getString('generateHelptext')}</Text>
+          </Layout.Horizontal>
+        </Layout.Vertical>
         <PageBody>
           <Layout.Horizontal className={css.layout}>
             <Container className={css.editorContainer}>

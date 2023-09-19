@@ -668,6 +668,7 @@ pipelines:
   executionCancelled: Pipeline execution cancelled.
   executionCouldNotCancel: Failure while cancelling Pipeline execution.
   failedToFindPath: failed to find path
+  failedToGenerate: Failed to generate pipeline
 executions:
   noData: There are no executions
   newExecutionButton: Run Pipeline
@@ -789,3 +790,5 @@ exportSpace:
   exportRepoCompleted: Exported {{repoCount}} repositories
   exportRepo: Exporting {{repoCount}} repositories
 spaceUpdate: Project Updated
+generate: Generate
+generateHelptext: Let Gitness build your Pipeline for you.
