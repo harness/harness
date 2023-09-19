@@ -41,13 +41,20 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
     () => `/api/v1/repos/${repoMetadata?.path}/+/blame/${resourcePath}`,
     [repoMetadata, resourcePath]
   )
-  const { data, error, loading } = useGet<GitrpcBlamePart[]>({
+  const {
+    data: _data,
+    error,
+    loading
+  } = useGet<GitrpcBlamePart[]>({
     path,
     queryParams: {
       git_ref: gitRef
     },
     lazy: !repoMetadata || !resourcePath
   })
+  const data = useMemo(() => {
+    return (_data as unknown as string) === '[]' ? [] : _data
+  }, [_data])
 
   useEffect(() => {
     if (data) {
@@ -147,6 +154,10 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
     return <Container padding="xlarge">{getErrorMessage(error)}</Container>
   }
 
+  if (!data?.length) {
+    return <Text font={{ variation: FontVariation.BODY }}>{getString('blameEmpty')}</Text>
+  }
+
   return (
     <Container className={css.main}>
       <Layout.Horizontal className={css.layout}>
@@ -155,6 +166,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
             <GitBlameMetaInfo key={blameInfo.fromLineNumber} {...blameInfo} />
           ))}
         </Container>
+
         <Render when={Object.values(blameBlocks).length}>
           <GitBlameRenderer
             source={data?.map(({ lines }) => (lines as string[]).join('\n')).join('\n') || ''}

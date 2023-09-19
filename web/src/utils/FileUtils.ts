@@ -462,6 +462,7 @@ const TextExtensions = [
 
 const SpecialTextFiles = [
   'Dockerfile',
+  '.dockerignore',
   '.gitignore',
   'yarn.lock',
   'README',

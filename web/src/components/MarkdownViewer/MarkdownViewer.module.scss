@@ -19,6 +19,10 @@
         }
       }
 
+      p {
+        white-space: pre-wrap;
+      }
+
       tt,
       code {
         @include mono-font;

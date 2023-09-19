@@ -107,7 +107,7 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
         createSpace(payload)
           .then(() => {
             hideModal()
-            handleNavigation?.(formData.name)
+            handleNavigation?.(formData.name.trim())
             onRefetch()
           })
           .catch(_error => {
@@ -121,8 +121,8 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
     const handleImportSubmit = async (formData: ImportSpaceFormData) => {
       try {
         const importPayload = {
-          description: formData.description || '',
-          uid: formData.name,
+          description: (formData.description || '').trim(),
+          uid: formData.name.trim(),
           provider: {
             type: formData.gitProvider.toLowerCase(),
             username: formData.username,

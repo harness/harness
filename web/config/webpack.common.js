@@ -118,7 +118,8 @@ module.exports = {
       },
       {
         test: /\.ttf$/,
-        loader: 'file-loader'
+        loader: 'file-loader',
+        mimetype: 'application/octet-stream'
       },
       {
         test: /\.ya?ml$/,

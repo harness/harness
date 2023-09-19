@@ -33,6 +33,7 @@ export interface StringsMap {
   basedOn: string
   blame: string
   blameCommitLine: string
+  blameEmpty: string
   botAlerts: string
   branch: string
   branchCreated: string

@@ -466,12 +466,13 @@ generateCloneCred: + Generate Clone Credential
 generateCloneText: 'Please generate clone credential if it’s your first time'
 getMyCloneTitle: Generate Clone Credential
 cloneText: Your clone credentials have been generated. Please make sure to copy and store your password somewhere safe, you won't be able to see it again.
-manageApiToken: Manage Api Token
+manageApiToken: Manage API Token
 userName: User Name
 passwordApi: Password (API Token)
 firstTimeTitle: Please generate Git Credentials if it’s your first time to clone the repository
 manageCredText: You can also manage your git credential {URL}
 blame: Blame
+blameEmpty: File is empty. No blame information available.
 viewRaw: View Raw
 download: Download
 changes: Changes
@@ -613,9 +614,9 @@ homepage:
   selectSpace: Select Project
 deleteSpace: Delete Project
 spaceSetting:
-  intentText: This will permanently delete the project named '{{space}}', and everything contained in it. All repositories in this project, all sub-projects and repositories they contain will be deleted.
+  intentText: This will permanently delete the project named '{{space}}', and everything contained in it. All repositories in this project will be deleted.
   deleteWarning: Unexpected bad things will happen if you don’t read this
-  deleteConfirm1: This will permanently delete the "{{space}}" project and everything contained in it.  All repositories in this project, all sub-projects and repositories they contain will be deleted.
+  deleteConfirm1: This will permanently delete the "{{space}}" project and everything contained in it.  All repositories in this project will be deleted.
   deleteConfirmButton1: I want to delete this project
   deleteConfirm2: To confirm, type "{{space}}" in the box below
   deleteConfirmButton2: Delete this project
@@ -712,7 +713,7 @@ plugins:
   title: Plugins
   stepLabel: step
 createNewRepo: Create New repository
-importGitRepo: Import Git Repository
+importGitRepo: Import Repository
 importRepo:
   title: Import Repository
   url: Repository URL
@@ -728,7 +729,7 @@ importRepo:
   usernameReq: Username is required
   passwordReq: Password is required
 importSpace:
-  title: Import project
+  title: Import Project
   createASpace: Create a project
   authorization: Authorization
   content: Import a GitLab Group or a GitHub Org to a new Project in Gitness. Entities at the top level will be imported to the project.
@@ -783,7 +784,7 @@ exportSpace:
   upgradeTitle: Upgrade this project to the Harness Software Delivery platform
   upgrade: Upgrade
   upgradeContent: Upgrade this project to Harness. By upgrading to Harness, you will create a new project in your
-    Harness account and migrate all repositories, pipelines and users / access controls to the new
+    Harness account and migrate all repositories, pipelines and users / memberships to the new
     project. Learn more about Harness.
   upgradeProgress: 'Upgrading in progress'
   exportCompleted: Export Completed
