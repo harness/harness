@@ -103,7 +103,7 @@ export const Changes: React.FC<ChangesProps> = ({
   )
 
   useEffect(() => {
-    if (!pullRequestMetadata) {
+    if (!pullRequestMetadata?.number) {
       return
     }
 
@@ -155,7 +155,7 @@ export const Changes: React.FC<ChangesProps> = ({
     rawFileViews
       ?.filter(({ path, sha }) => path && sha) // every entry is expected to have a path and sha - otherwise skip ...
       .forEach(({ path, sha, obsolete }) => {
-        out.set(path, obsolete ? 'ffffffffffffffffffffffffffffffffffffffff' : sha)
+        out.set(path || "", obsolete ? 'ffffffffffffffffffffffffffffffffffffffff' : (sha || ""))
       })
     return out
   }, [rawFileViews])
@@ -202,11 +202,11 @@ export const Changes: React.FC<ChangesProps> = ({
   // happens after some comments are authored.
   useEffect(
     function setActivitiesIfNotSet() {
-      if (!prActivities || isEqual(activities, prActivities)) {
+      if (!prActivities) {
         return
       }
 
-      setActivities(prActivities)
+      setActivities(oldActivities => isEqual(oldActivities, prActivities) ? oldActivities : prActivities)
     },
     [prActivities]
   )
@@ -217,7 +217,7 @@ export const Changes: React.FC<ChangesProps> = ({
     }
 
     refetchActivities()
-  }, [prStatsChanged])
+  }, [readOnly, prStatsChanged, refetchActivities])
 
   useEffect(() => {
     if (readOnly) {
@@ -225,7 +225,7 @@ export const Changes: React.FC<ChangesProps> = ({
     }
 
     refetchFileViews()
-  }, [prStatsChanged])
+  }, [readOnly, prStatsChanged, refetchFileViews])
 
   useEffect(() => {
     if (sourceRef !== _sourceRef || targetRef !== _targetRef) {
@@ -242,9 +242,6 @@ export const Changes: React.FC<ChangesProps> = ({
         const containerId = `container-${fileId}`
         const contentId = `content-${fileId}`
         const filePath = diff.isDeleted ? diff.oldName : diff.newName
-        const fileActivities: TypesPullReqActivity[] | undefined = activities?.filter(
-          activity => filePath === activity.code_comment?.path
-        )
 
         return {
           ...diff,
@@ -252,14 +249,21 @@ export const Changes: React.FC<ChangesProps> = ({
           contentId,
           fileId,
           filePath,
-          fileActivities: fileActivities || [],
           activities: activities || [],
           fileViews: fileViews || []
         }
       })
 
-      setDiffs(_diffs)
-      onDataReady?.(_diffs)
+      setDiffs(oldDiffs => {
+        if (isEqual(oldDiffs, _diffs)) {
+          return oldDiffs
+        }
+
+        // notify parent of new data
+        onDataReady?.(_diffs)
+
+        return _diffs
+      })
     }
   }, [rawDiff, activities, fileViews, onDataReady])
 
@@ -267,7 +271,7 @@ export const Changes: React.FC<ChangesProps> = ({
     'scroll',
     useCallback(() => {
       setSticky(scrollElement.scrollTop >= STICKY_HEADER_HEIGHT)
-    }, []),
+    }, [scrollElement.scrollTop]),
     scrollElement
   )
 

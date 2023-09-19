@@ -32,7 +32,7 @@ interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
   commits: TypesCommit[] | null
   emptyTitle: string
   emptyMessage: string
-  prStatsChanged?: Number
+  prStatsChanged?: number
   handleRefresh?: () => void
   showFileHistoryIcons?: boolean
   resourcePath?: string

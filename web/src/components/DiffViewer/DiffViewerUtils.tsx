@@ -1,9 +1,8 @@
 import type * as Diff2Html from 'diff2html'
 import HoganJsUtils from 'diff2html/lib/hoganjs-utils'
 import { get } from 'lodash-es'
-import type { CommentItem } from 'components/CommentBox/CommentBox'
+import type { CommentItem, SingleConsumerEventStream } from 'components/CommentBox/CommentBox'
 import type { TypesPullReqActivity } from 'services/code'
-import type { DiffFileEntry } from 'utils/types'
 
 export enum ViewStyle {
   SIDE_BY_SIDE = 'side-by-side',
@@ -41,12 +40,14 @@ export const DIFF_VIEWER_HEADER_HEIGHT = 48
 // const DIFF_MAX_LINE_LENGTH = 100
 
 export interface DiffCommentItem<T = Unknown> {
+  inner: T
   left: boolean
   right: boolean
   lineNumber: number
-  height: number
   commentItems: CommentItem<T>[]
   filePath: string
+  destroy: (() => void) | undefined
+  eventStream: SingleConsumerEventStream<CommentItem<T>[]> | undefined
 }
 
 export const DIFF2HTML_CONFIG = {
@@ -182,13 +183,13 @@ export function getCommentLineInfo(
   }
 }
 
-export function createCommentOppositePlaceHolder(annotation: DiffCommentItem): HTMLTableRowElement {
+export function createCommentOppositePlaceHolder(lineNumber:number): HTMLTableRowElement {
   const placeHolderRow = document.createElement('tr')
 
-  placeHolderRow.dataset.placeHolderForLine = String(annotation.lineNumber)
+  placeHolderRow.dataset.placeHolderForLine = String(lineNumber)
   placeHolderRow.innerHTML = `
-    <td height="${annotation.height}px" class="d2h-code-side-linenumber d2h-code-side-emptyplaceholder d2h-cntx d2h-emptyplaceholder"></td>
-    <td class="d2h-cntx d2h-emptyplaceholder" height="${annotation.height}px">
+    <td height="${0}px" class="d2h-code-side-linenumber d2h-code-side-emptyplaceholder d2h-cntx d2h-emptyplaceholder"></td>
+    <td class="d2h-cntx d2h-emptyplaceholder" height="${0}px">
       <div class="d2h-code-side-line d2h-code-side-emptyplaceholder">
         <span class="d2h-code-line-prefix">&nbsp;</span>
         <span class="d2h-code-line-ctn hljs"><br></span>
@@ -200,31 +201,38 @@ export function createCommentOppositePlaceHolder(annotation: DiffCommentItem): H
 }
 
 export const activityToCommentItem = (activity: TypesPullReqActivity): CommentItem<TypesPullReqActivity> => ({
+  id: activity.id || 0,
   author: activity.author?.display_name as string,
   created: activity.created as number,
-  updated: activity.edited as number,
+  edited: activity.edited as number,
+  updated: activity.updated as number,
   deleted: activity.deleted as number,
   outdated: !!activity.code_comment?.outdated,
   content: (activity.text || (activity.payload as Unknown)?.Message) as string,
-  payload: activity
+  payload: activity,
 })
 
-export function activitiesToDiffCommentItems(diff: DiffFileEntry): DiffCommentItem<TypesPullReqActivity>[] {
+export function activitiesToDiffCommentItems(filePath: string, activities: TypesPullReqActivity[]): DiffCommentItem<TypesPullReqActivity>[] {
   const commentThreads = (
-    diff.fileActivities?.map(activity => {
+    activities?.
+    filter(activity => filePath === activity.code_comment?.path).
+    map(activity => {
       const replyComments =
-        diff.activities
+        activities
           ?.filter(replyActivity => replyActivity.parent_id === activity.id)
           .map(_activity => activityToCommentItem(_activity)) || []
       const right = get(activity.payload, 'line_start_new', false)
 
       return {
+        inner: activity,
         left: !right,
         right,
         height: 0,
         lineNumber: (right ? activity.code_comment?.line_new : activity.code_comment?.line_old) as number,
         commentItems: [activityToCommentItem(activity)].concat(replyComments),
-        filePath: diff.filePath,
+        filePath: filePath,
+        destroy: undefined,
+        eventStream: undefined
       }
     }) || []
   )

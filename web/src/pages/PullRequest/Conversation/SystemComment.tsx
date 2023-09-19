@@ -198,7 +198,7 @@ export const SystemComment: React.FC<SystemCommentProps> = ({
                         item =>
                           `|${item.author}|<s>${(item.payload?.payload as Unknown)?.old}</s>|${
                             (item.payload?.payload as Unknown)?.new
-                          }|${formatDate(item.updated)} ${formatTime(item.updated)}|`
+                          }|${formatDate(item.edited)} ${formatTime(item.edited)}|`
                       )
                   )
                   .join('\n')}

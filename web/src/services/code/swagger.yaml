@@ -7484,6 +7484,8 @@ components:
           $ref: '#/components/schemas/TypesCodeCommentFields'
         created:
           type: integer
+        updated:
+          type: integer
         deleted:
           nullable: true
           type: integer

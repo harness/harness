@@ -49,7 +49,7 @@ export default function RepositoryCommits() {
         </Container>
       )
     }
-  }, [repoMetadata, commitRef, getString])
+  }, [repoMetadata, commitRef, getString, standalone])
 
   return (
     <Container className={css.main}>

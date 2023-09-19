@@ -124,7 +124,7 @@ export default function PullRequest() {
 
       setPrData(pullRequestData)
     },
-    [pullRequestData]
+    [pullRequestData, loadingRecheckPR, recheckPR, setPrData] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
   useEffect(() => {

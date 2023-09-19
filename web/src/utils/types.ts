@@ -6,7 +6,6 @@ export interface DiffFileEntry extends DiffFile {
   filePath: string
   containerId: string
   contentId: string
-  fileActivities?: TypesPullReqActivity[]
   activities?: TypesPullReqActivity[]
   fileViews?: Map<string, string>
 }

@@ -28,7 +28,7 @@ type PullReqActivity struct {
 
 	CreatedBy int64  `json:"-"` // not returned, because the author info is in the Author field
 	Created   int64  `json:"created"`
-	Updated   int64  `json:"-"` // not returned, it's updated by the server internally. Clients should use EditedAt.
+	Updated   int64  `json:"updated"` // we need updated to determine the latest version reliably.
 	Edited    int64  `json:"edited"`
 	Deleted   *int64 `json:"deleted,omitempty"`
 

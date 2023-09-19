@@ -715,6 +715,7 @@ export interface TypesPullReqActivity {
   author?: TypesPrincipalInfo
   code_comment?: TypesCodeCommentFields
   created?: number
+  updated?: number
   deleted?: number | null
   edited?: number
   id?: number

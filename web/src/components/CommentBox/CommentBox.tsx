@@ -14,12 +14,15 @@ import { useAppContext } from 'AppContext'
 import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButton'
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
-import { ButtonRoleProps } from 'utils/Utils'
+import { ButtonRoleProps, CodeCommentState } from 'utils/Utils'
 import css from './CommentBox.module.scss'
+import { useEmitCodeCommentStatus } from 'hooks/useEmitCodeCommentStatus'
 
 export interface CommentItem<T = unknown> {
+  id: number
   author: string
   created: string | number
+  edited: string | number
   updated: string | number
   deleted: string | number
   outdated: boolean
@@ -47,6 +50,22 @@ export enum CommentBoxOutletPosition {
   BETWEEN_SAVE_AND_CANCEL_BUTTONS = 'between_save_and_cancel_buttons'
 }
 
+export type CommentItemsHandler<T> = (t: T) => void;
+export class SingleConsumerEventStream<T> {
+  consumerHandler: CommentItemsHandler<T> | undefined
+  
+  subscribe(fn: CommentItemsHandler<T>): () => void {
+    this.consumerHandler = fn
+    return () => { 
+      this.consumerHandler = undefined
+    }
+  }
+
+  publish(t: T) {
+    this.consumerHandler?.(t);
+  }
+}
+
 interface CommentBoxProps<T> {
   className?: string
   onHeightChange?: (height: number) => void
@@ -56,7 +75,8 @@ interface CommentBoxProps<T> {
   resetOnSave?: boolean
   hideCancel?: boolean
   currentUserName: string
-  commentItems: CommentItem<T>[]
+  commentItems: CommentItem<T>[],
+  eventStream?: SingleConsumerEventStream<CommentItem<T>[]>,
   handleAction: (
     action: CommentAction,
     content: string,
@@ -75,6 +95,7 @@ export const CommentBox = <T = unknown,>({
   width,
   fluid,
   commentItems = [],
+  eventStream,
   currentUserName,
   handleAction,
   onCancel = noop,
@@ -86,6 +107,30 @@ export const CommentBox = <T = unknown,>({
 }: CommentBoxProps<T>) => {
   const { getString } = useStrings()
   const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
+  const emitCodeCommentStatus = useEmitCodeCommentStatus({
+    id: comments?.[0]?.id,
+    onMatch: () => {}
+  })
+  useEffect(() => {
+    if (!eventStream) {
+      return
+    }
+
+    const unsubscribe = eventStream.subscribe(updatedComments => {
+      // TODO: could be more efficient?
+      setComments([...updatedComments])
+
+      const payload = updatedComments[0]?.payload
+      if (payload && typeof payload == 'object' && 'resolved' in payload) {
+        emitCodeCommentStatus(payload.resolved ? CodeCommentState.RESOLVED : CodeCommentState.ACTIVE)
+      }
+    });
+
+    return () => {
+      unsubscribe();  // Clean up the subscription on unmount
+    };
+  }, [eventStream, emitCodeCommentStatus]);
+
   const [showReplyPlaceHolder, setShowReplyPlaceHolder] = useState(!!comments.length)
   const [markdown, setMarkdown] = useState(initialContent)
   const [dirties, setDirties] = useState<Record<string, boolean>>({})
@@ -140,7 +185,7 @@ export const CommentBox = <T = unknown,>({
               const [result, updatedItem] = await handleAction(action, content, atCommentItem)
 
               if (result && action === CommentAction.DELETE && atCommentItem) {
-                atCommentItem.updated = atCommentItem.deleted = Date.now()
+                atCommentItem.edited = atCommentItem.deleted = Date.now()
                 setComments([...comments])
               }
 
@@ -270,10 +315,10 @@ const CommentsThread = <T = unknown,>({
                   </Text>
                   <PipeSeparator height={8} />
                   <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
-                    <ReactTimeago date={new Date(commentItem?.updated)} />
+                    <ReactTimeago date={new Date(commentItem?.edited)} />
                   </Text>
 
-                  <Render when={commentItem?.updated !== commentItem?.created || !!commentItem?.deleted}>
+                  <Render when={commentItem?.edited !== commentItem?.created || !!commentItem?.deleted}>
                     <>
                       <PipeSeparator height={8} />
                       <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
