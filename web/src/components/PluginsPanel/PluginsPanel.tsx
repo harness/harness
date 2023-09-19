@@ -274,11 +274,11 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
         set(payload, PluginInputsFieldPath, omit(pluginFormData, 'name'))
         return payload as PluginInsertionTemplateInterface
       case PluginCategory.Harness:
-        return name && image && script
+        return image || script
           ? {
-              name,
-              type: 'script',
-              spec: { image, run: script }
+              ...(name && { name }),
+              type: 'run',
+              spec: { ...(image && { image }), ...(script && { script }) }
             }
           : {}
       default:

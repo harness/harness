@@ -222,7 +222,7 @@
         },
         "type": {
           "description": "The stage type.",
-          "enum": ["cd", "ci", "custom", "flag", "iacm", "template"],
+          "enum": ["cd", "ci", "custom", "flag", "iacm", "template", "group", "parallel"],
           "type": "string"
         },
         "when": {
@@ -231,6 +231,15 @@
         },
         "failure": {
           "$ref": "#/definitions/FailureList"
+        }
+      },
+      "x-properties": {
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          },
+          "x-go-type": "map[string]interface{}"
         }
       },
       "oneOf": [
@@ -341,6 +350,42 @@
               }
             }
           ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "group"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/StageGroup"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "parallel"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/StageParallel"
+                }
+              }
+            }
+          ]
         }
       ],
       "anyOf": [
@@ -348,6 +393,8 @@
           "required": ["type"]
         }
       ],
+      "x-docs-skip": false,
+      "x-docs-title": "stage",
       "x-file": "stage.yaml"
     },
     "Strategy": {
@@ -417,6 +464,19 @@
           ]
         }
       ],
+      "examples": [
+        {
+          "strategy": {
+            "matrix": {
+              "axis": {
+                "golang": [1.19, 1.21],
+                "node": [16, 18]
+              }
+            }
+          }
+        }
+      ],
+      "x-docs-title": "strategy",
       "x-file": "strategy.yaml"
     },
     "For": {
@@ -471,6 +531,17 @@
           }
         }
       },
+      "examples": [
+        {
+          "matrix": {
+            "axis": {
+              "golang": [1.19, 1.21],
+              "node": [16, 18]
+            }
+          }
+        }
+      ],
+      "x-docs-title": "matrix",
       "x-file": "strategy_matrix.yaml"
     },
     "While": {
@@ -508,6 +579,7 @@
     },
     "When": {
       "title": "When",
+      "description": "Expression used to evaluate whether or not a Stage or Step should execute.",
       "oneOf": [
         {
           "type": "string"
@@ -523,6 +595,8 @@
         }
       ],
       "x-go-skip": true,
+      "x-docs-skip": false,
+      "x-docs-title": "when",
       "x-file": "when.yaml"
     },
     "WhenCond": {
@@ -532,6 +606,7 @@
         "$ref": "#/definitions/WhenExpr"
       },
       "x-go-skip": true,
+      "x-docs-skip": true,
       "x-file": "when_cond.yaml"
     },
     "WhenExpr": {
@@ -557,6 +632,7 @@
         }
       },
       "x-go-skip": true,
+      "x-docs-skip": true,
       "x-file": "when_expr.yaml"
     },
     "FailureList": {
@@ -1174,12 +1250,14 @@
       },
       "type": "object",
       "title": "StageCI",
+      "x-docs-skip": false,
+      "x-docs-title": "stage.type.ci",
       "x-file": "stage_ci.yaml"
     },
     "Cache": {
       "title": "Cache",
       "type": "object",
-      "description": "Cache defines caching behavior.",
+      "description": "Cache defines pipeline caching behavior.",
       "properties": {
         "enabled": {
           "description": "Enabled enables cache intelligence.",
@@ -1252,6 +1330,8 @@
           "type": "boolean"
         }
       },
+      "x-docs-skip": false,
+      "x-docs-title": "clone.stage",
       "x-file": "clone_stage.yaml"
     },
     "Platform": {
@@ -1260,19 +1340,46 @@
       "type": "object",
       "properties": {
         "arch": {
-          "$ref": "#/definitions/Arch",
-          "description": "Arch defines the target cpu architecture."
+          "description": "Arch defines the target cpu architecture.",
+          "type": "string",
+          "enum": [
+            "amd64",
+            "arm",
+            "arm64",
+            "386",
+            "ppc",
+            "ppc64",
+            "ppc64le",
+            "riscv",
+            "riscv64",
+            "s390",
+            "s390x",
+            "sparc",
+            "sparc64"
+          ]
         },
         "features": {
           "description": "Features defines the target platform features.",
+          "type": "array",
           "items": {
             "type": "string"
-          },
-          "type": "array"
+          }
         },
         "os": {
-          "$ref": "#/definitions/OS",
-          "description": "OS defines the target operating system."
+          "description": "OS defines the target operating system.",
+          "type": "string",
+          "enum": [
+            "linux",
+            "windows",
+            "macos",
+            "darwin",
+            "dragonfly",
+            "freebsd",
+            "netbsd",
+            "openbsd",
+            "plan9",
+            "solaris"
+          ]
         },
         "variant": {
           "description": "Variant defines the target cpu architecture variant.",
@@ -1297,34 +1404,6 @@
         }
       ],
       "x-file": "platform.yaml"
-    },
-    "Arch": {
-      "title": "Arch",
-      "type": "string",
-      "description": "List of cpu architectures.",
-      "enum": [
-        "amd64",
-        "arm",
-        "arm64",
-        "386",
-        "ppc",
-        "ppc64",
-        "ppc64le",
-        "riscv",
-        "riscv64",
-        "s390",
-        "s390x",
-        "sparc",
-        "sparc64"
-      ],
-      "x-file": "enum_arch.yaml"
-    },
-    "OS": {
-      "title": "OS",
-      "type": "string",
-      "description": "List of operating systems.",
-      "enum": ["linux", "windows", "macos", "darwin", "dragonfly", "freebsd", "netbsd", "openbsd", "plan9", "solaris"],
-      "x-file": "enum_os.yaml"
     },
     "Runtime": {
       "title": "Runtime",
@@ -1559,6 +1638,7 @@
             "barrier",
             "bitrise",
             "script",
+            "run",
             "group",
             "parallel",
             "plugin",
@@ -1581,6 +1661,15 @@
         },
         "failure": {
           "$ref": "#/definitions/FailureList"
+        }
+      },
+      "x-properties": {
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          },
+          "x-go-type": "map[string]interface{}"
         }
       },
       "oneOf": [
@@ -1669,6 +1758,24 @@
               "properties": {
                 "spec": {
                   "$ref": "#/definitions/StepExec"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "properties": {
+                "type": {
+                  "const": "run"
+                }
+              }
+            },
+            {
+              "properties": {
+                "spec": {
+                  "$ref": "#/definitions/StepRun"
                 }
               }
             }
@@ -1837,16 +1944,6 @@
       "title": "StepBackground",
       "type": "object",
       "properties": {
-        "image": {
-          "type": "string"
-        },
-        "user": {
-          "type": "string"
-        },
-        "pull": {
-          "type": "string",
-          "enum": ["always", "never", "if-not-exists"]
-        },
         "shell": {
           "type": "string",
           "enum": ["sh", "bash", "powershell", "pwsh"]
@@ -1859,40 +1956,256 @@
           "description": "The step environment variables."
         },
         "run": {
-          "type": "string"
+          "type": "string",
+          "x-deprecate": true
         },
-        "entrypoint": {
-          "type": "string"
+        "script": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
-        "args": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "ports": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "network": {
-          "type": "string"
-        },
-        "privileged": {
-          "type": "boolean"
-        },
-        "resources": {
-          "$ref": "#/definitions/Resources"
+        "container": {
+          "$ref": "#/definitions/Container"
         },
         "mount": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/Mount"
           }
+        },
+        "image": {
+          "type": "string",
+          "x-deprecate": true
+        },
+        "user": {
+          "type": "string",
+          "x-deprecate": true
+        },
+        "pull": {
+          "type": "string",
+          "enum": ["always", "never", "if-not-exists"],
+          "x-deprecate": true
+        },
+        "entrypoint": {
+          "type": "string",
+          "x-deprecate": true
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-deprecate": true
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-deprecate": true
+        },
+        "network": {
+          "type": "string",
+          "x-deprecate": true
+        },
+        "privileged": {
+          "type": "boolean",
+          "x-deprecate": true
+        },
+        "resources": {
+          "$ref": "#/definitions/Resources",
+          "x-deprecate": true
+        },
+        "workdir": {
+          "type": "string",
+          "x-deprecate": true
         }
       },
       "x-file": "step_background.yaml"
+    },
+    "Container": {
+      "title": "Container",
+      "description": "Container configures step execution inside a container.",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "image": {
+              "type": "string",
+              "description": "Container image."
+            },
+            "connector": {
+              "type": "string",
+              "description": "Connect used to authenticate to the registry."
+            },
+            "credentials": {
+              "$ref": "#/definitions/Credentials",
+              "description": "Credentials used to authenticate to the registry."
+            },
+            "pull": {
+              "type": "string",
+              "enum": ["always", "never", "if-not-exists"]
+            },
+            "entrypoint": {
+              "type": "string"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "dns": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "dsn_search": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "extra_hosts": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "network": {
+              "type": "string"
+            },
+            "network_mode": {
+              "type": "string"
+            },
+            "privileged": {
+              "type": "boolean"
+            },
+            "workdir": {
+              "type": "string"
+            },
+            "ports": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "volumes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "user": {
+              "type": "string"
+            },
+            "group": {
+              "type": "string"
+            },
+            "cpu": {
+              "type": ["string", "number"]
+            },
+            "memory": {
+              "format": "bytes",
+              "type": ["string", "number"]
+            },
+            "shm_size": {
+              "format": "bytes",
+              "type": ["string", "number"]
+            }
+          }
+        }
+      ],
+      "x-go-skip": true,
+      "x-docs-title": "container",
+      "x-file": "container.yaml"
+    },
+    "Credentials": {
+      "type": "object",
+      "title": "Credentials",
+      "description": "Configures registry credentials.",
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "Username defines registry username."
+        },
+        "password": {
+          "type": "string",
+          "description": "Username defines registry password."
+        },
+        "aws": {
+          "$ref": "#/definitions/CredentialsAWS",
+          "description": "Configures registry credentials for AWS / EC2."
+        }
+      },
+      "examples": [
+        {
+          "credentials": {
+            "username": "${{ secrets.get(\"username\") }}",
+            "password": "${{ secrets.get(\"password\") }}"
+          }
+        },
+        {
+          "credentials": {
+            "aws": {
+              "access_key": "${{ secrets.get(\"access_key\") }}",
+              "secret_key": "${{ secrets.get(\"secret_key\") }}"
+            }
+          }
+        }
+      ],
+      "x-docs-title": "credentials",
+      "x-file": "credentials.yaml"
+    },
+    "CredentialsAWS": {
+      "type": "object",
+      "title": "CredentialsAWS",
+      "description": "Configures AWS credentials.",
+      "properties": {
+        "access_key": {
+          "type": "string",
+          "description": "Provides the AWS access key"
+        },
+        "secret_key": {
+          "type": "string",
+          "description": "Provides the AWS secret key"
+        }
+      },
+      "x-docs-title": "credentials.aws",
+      "x-file": "credentials_aws.yaml"
     },
     "StepBarrier": {
       "title": "StepBarrier",
@@ -2037,6 +2350,58 @@
       "required": ["path", "type"],
       "x-file": "report.yaml"
     },
+    "StepRun": {
+      "title": "StepRun",
+      "type": "object",
+      "properties": {
+        "shell": {
+          "type": "string",
+          "enum": ["sh", "bash", "powershell", "pwsh", "python"]
+        },
+        "script": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "container": {
+          "$ref": "#/definitions/Container"
+        },
+        "envs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "The step environment variables."
+        },
+        "reports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Report"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mount": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Mount"
+          }
+        }
+      },
+      "x-file": "step_run.yaml"
+    },
     "StepTest": {
       "title": "StepTest",
       "type": "object",
@@ -2152,6 +2517,9 @@
         "image": {
           "type": "string"
         },
+        "name": {
+          "type": "string"
+        },
         "uses": {
           "type": "string"
         },
@@ -2190,6 +2558,13 @@
         "with": {
           "type": "object"
         },
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          },
+          "x-go-type": "map[string]interface{}"
+        },
         "outputs": {
           "type": "array",
           "items": {
@@ -2219,8 +2594,9 @@
         "inputs": {
           "type": "object",
           "additionalProperties": {
-            "type": "string"
-          }
+            "type": "object"
+          },
+          "x-go-type": "map[string]interface{}"
         },
         "overlays": {
           "type": "object"
@@ -2429,6 +2805,7 @@
       },
       "type": "object",
       "title": "StageCD",
+      "x-docs-skip": true,
       "x-file": "stage_cd.yaml"
     },
     "StageCustom": {
@@ -2458,6 +2835,7 @@
       },
       "type": "object",
       "title": "StageCustom",
+      "x-docs-skip": true,
       "x-file": "stage_custom.yaml"
     },
     "StageInfra": {
@@ -2500,12 +2878,14 @@
       },
       "type": "object",
       "title": "StageInfra",
+      "x-docs-skip": true,
+      "x-docs-title": "stage.type.infra",
       "x-file": "stage_infra.yaml"
     },
     "Clone": {
       "title": "Clone",
       "type": "object",
-      "description": "Clone defines the default clone behavior.",
+      "description": "Clone defines the clone behavior.",
       "properties": {
         "depth": {
           "description": "Depth defines the clone depth.",
@@ -2533,6 +2913,8 @@
           "description": "Reference defines the clone ref."
         }
       },
+      "x-docs-skip": false,
+      "x-docs-title": "clone",
       "x-file": "clone.yaml"
     },
     "Reference": {
@@ -2583,27 +2965,176 @@
       },
       "type": "object",
       "title": "StageFlag",
+      "x-docs-skip": true,
       "x-file": "stage_flag.yaml"
     },
     "StageTemplate": {
       "properties": {
         "name": {
           "type": "string",
-          "description": "Template name."
+          "description": "The template name."
         },
         "inputs": {
           "type": "object",
+          "description": "The template inputs.",
           "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "overlays": {
-          "type": "object"
+            "type": "object"
+          },
+          "x-go-type": "map[string]interface{}"
         }
       },
       "type": "object",
       "title": "StageTemplate",
+      "description": "Configures a Stage Template step.",
+      "examples": [
+        {
+          "type": "template",
+          "spec": {
+            "name": "deploy",
+            "inputs": {
+              "environment": "prod",
+              "region": "us-east"
+            }
+          }
+        }
+      ],
+      "x-docs-skip": false,
+      "x-docs-title": "stage.type.template",
       "x-file": "stage_template.yaml"
+    },
+    "StageGroup": {
+      "properties": {
+        "stages": {
+          "description": "Configures a series of stages to execute.",
+          "items": {
+            "$ref": "#/definitions/Stage"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "title": "StageGroup",
+      "examples": [
+        {
+          "type": "group",
+          "spec": {
+            "stages": [
+              {
+                "type": "ci",
+                "spec": {
+                  "steps": [
+                    {
+                      "type": "run",
+                      "spec": {
+                        "script": "go build",
+                        "container": "golang"
+                      }
+                    },
+                    {
+                      "type": "run",
+                      "spec": {
+                        "script": "go test",
+                        "container": "golang"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "ci",
+                "spec": {
+                  "steps": [
+                    {
+                      "type": "run",
+                      "spec": {
+                        "script": "npm install",
+                        "container": "node"
+                      }
+                    },
+                    {
+                      "type": "run",
+                      "spec": {
+                        "script": "npm test",
+                        "container": "node"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "x-docs-skip": false,
+      "x-docs-title": "stage.type.group",
+      "x-file": "stage_group.yaml"
+    },
+    "StageParallel": {
+      "properties": {
+        "stages": {
+          "description": "Configures a series of stages to execute in parallel.",
+          "items": {
+            "$ref": "#/definitions/Stage"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "title": "StageParallel",
+      "x-docs-skip": false,
+      "x-docs-title": "stage.type.parallel",
+      "examples": [
+        {
+          "type": "parallel",
+          "spec": {
+            "stages": [
+              {
+                "type": "ci",
+                "spec": {
+                  "steps": [
+                    {
+                      "type": "run",
+                      "spec": {
+                        "script": "go build",
+                        "container": "golang"
+                      }
+                    },
+                    {
+                      "type": "run",
+                      "spec": {
+                        "script": "go test",
+                        "container": "golang"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "ci",
+                "spec": {
+                  "steps": [
+                    {
+                      "type": "run",
+                      "spec": {
+                        "script": "npm install",
+                        "container": "node"
+                      }
+                    },
+                    {
+                      "type": "run",
+                      "spec": {
+                        "script": "npm test",
+                        "container": "node"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "x-file": "stage_parallel.yaml"
     },
     "Input": {
       "title": "Input",
@@ -2620,7 +3151,8 @@
           "description": "Desc defines the input description."
         },
         "default": {
-          "type": ["string", "number", "boolean", "array", "object"]
+          "type": ["string", "number", "boolean", "array", "object"],
+          "x-go-type": "interface{}"
         },
         "required": {
           "type": "boolean",
@@ -2843,6 +3375,7 @@
           "type": "string"
         }
       },
+      "x-docs-skip": true,
       "x-file": "barrier.yaml"
     },
     "Status": {
