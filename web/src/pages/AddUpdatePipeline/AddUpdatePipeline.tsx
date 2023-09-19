@@ -365,20 +365,22 @@ const AddUpdatePipeline = (): JSX.Element => {
             }
             content={<Layout.Horizontal flex={{ justifyContent: 'space-between' }}>{renderCTA()}</Layout.Horizontal>}
           />
-          <Layout.Horizontal
-            padding={{ left: 'medium', bottom: 'large' }}
-            className={css.generateHeader}
-            spacing="large"
-            flex={{ justifyContent: 'flex-start' }}>
-            <Button
-              text={getString('generate')}
-              variation={ButtonVariation.PRIMARY}
-              className={css.generate}
-              onClick={handleGeneratePipeline}
-              disabled={generatingPipeline}
-            />
-            <Text font={{ variation: FontVariation.H5 }}>{getString('generateHelptext')}</Text>
-          </Layout.Horizontal>
+          {yamlVersion === YamlVersion.V1 && (
+            <Layout.Horizontal
+              padding={{ left: 'medium', bottom: 'large' }}
+              className={css.generateHeader}
+              spacing="large"
+              flex={{ justifyContent: 'flex-start' }}>
+              <Button
+                text={getString('generate')}
+                variation={ButtonVariation.PRIMARY}
+                className={css.generate}
+                onClick={handleGeneratePipeline}
+                disabled={generatingPipeline}
+              />
+              <Text font={{ variation: FontVariation.H5 }}>{getString('generateHelptext')}</Text>
+            </Layout.Horizontal>
+          )}
         </Layout.Vertical>
         <PageBody>
           <Layout.Horizontal className={css.layout}>
