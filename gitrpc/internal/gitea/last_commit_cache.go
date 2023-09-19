@@ -23,11 +23,11 @@ import (
 
 func NewInMemoryLastCommitCache(
 	cacheDuration time.Duration,
-	repoCache cache.Cache[string, *RepoEntryValue],
+	repoProvider *GoGitRepoProvider,
 ) cache.Cache[CommitEntryKey, *types.Commit] {
 	return cache.New[CommitEntryKey, *types.Commit](
 		commitEntryGetter{
-			repoCache: repoCache,
+			repoProvider: repoProvider,
 		},
 		cacheDuration)
 }
@@ -35,12 +35,12 @@ func NewInMemoryLastCommitCache(
 func NewRedisLastCommitCache(
 	redisClient redis.UniversalClient,
 	cacheDuration time.Duration,
-	repoCache cache.Cache[string, *RepoEntryValue],
+	repoProvider *GoGitRepoProvider,
 ) cache.Cache[CommitEntryKey, *types.Commit] {
 	return cache.NewRedis[CommitEntryKey, *types.Commit](
 		redisClient,
 		commitEntryGetter{
-			repoCache: repoCache,
+			repoProvider: repoProvider,
 		},
 		func(key CommitEntryKey) string {
 			h := sha256.New()
@@ -52,9 +52,9 @@ func NewRedisLastCommitCache(
 }
 
 func NoLastCommitCache(
-	repoCache cache.Cache[string, *RepoEntryValue],
+	repoProvider *GoGitRepoProvider,
 ) cache.Cache[CommitEntryKey, *types.Commit] {
-	return cache.NewNoCache[CommitEntryKey, *types.Commit](commitEntryGetter{repoCache: repoCache})
+	return cache.NewNoCache[CommitEntryKey, *types.Commit](commitEntryGetter{repoProvider: repoProvider})
 }
 
 type CommitEntryKey string
@@ -96,7 +96,7 @@ func (c commitValueCodec) Decode(s string) (*types.Commit, error) {
 }
 
 type commitEntryGetter struct {
-	repoCache cache.Cache[string, *RepoEntryValue]
+	repoProvider *GoGitRepoProvider
 }
 
 // Find implements the cache.Getter interface.
@@ -119,12 +119,12 @@ func (c commitEntryGetter) Find(ctx context.Context, key CommitEntryKey) (*types
 		return nil, types.ErrNotFound
 	}
 
-	repo, err := c.repoCache.Get(ctx, repoPath)
+	repo, err := c.repoProvider.Get(ctx, repoPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repository %s from cache: %w", repoPath, err)
 	}
 
-	commit, err := repo.Repo().CommitObject(gogitplumbing.NewHash(commitSHA))
+	commit, err := repo.CommitObject(gogitplumbing.NewHash(commitSHA))
 	if err != nil {
 		return nil, fmt.Errorf("failed to load commit data: %w", err)
 	}

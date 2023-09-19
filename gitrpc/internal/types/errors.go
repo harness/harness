@@ -14,6 +14,8 @@ import (
 var (
 	ErrAlreadyExists               = errors.New("already exists")
 	ErrInvalidArgument             = errors.New("invalid argument")
+	ErrRepositoryNotFound          = errors.New("repository not found")
+	ErrRepositoryCorrupted         = errors.New("repository corrupted")
 	ErrNotFound                    = errors.New("not found")
 	ErrInvalidPath                 = errors.New("path is invalid")
 	ErrUndefinedAction             = errors.New("undefined action")

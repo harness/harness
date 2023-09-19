@@ -21,37 +21,38 @@ var WireSet = wire.NewSet(
 	ProvideServer,
 	ProvideHTTPServer,
 	ProvideGITAdapter,
-	ProvideGoGitRepoCache,
+	ProvideGoGitRepoProvider,
 	ProvideLastCommitCache,
 )
 
-func ProvideGoGitRepoCache() cache.Cache[string, *gitea.RepoEntryValue] {
-	return gitea.NewRepoCache()
+func ProvideGoGitRepoProvider() *gitea.GoGitRepoProvider {
+	const objectCacheSize = 16 << 20 // 16MiB
+	return gitea.NewGoGitRepoProvider(objectCacheSize, 15*time.Minute)
 }
 
 func ProvideLastCommitCache(
 	config Config,
 	redisClient redis.UniversalClient,
-	repoCache cache.Cache[string, *gitea.RepoEntryValue],
+	repoProvider *gitea.GoGitRepoProvider,
 ) cache.Cache[gitea.CommitEntryKey, *types.Commit] {
 	cacheDuration := time.Duration(config.LastCommitCache.DurationSeconds) * time.Second
 
 	if config.LastCommitCache.Mode == ModeNone || cacheDuration < time.Second {
-		return gitea.NoLastCommitCache(repoCache)
+		return gitea.NoLastCommitCache(repoProvider)
 	}
 
 	if config.LastCommitCache.Mode == ModeRedis && redisClient != nil {
-		return gitea.NewRedisLastCommitCache(redisClient, cacheDuration, repoCache)
+		return gitea.NewRedisLastCommitCache(redisClient, cacheDuration, repoProvider)
 	}
 
-	return gitea.NewInMemoryLastCommitCache(cacheDuration, repoCache)
+	return gitea.NewInMemoryLastCommitCache(cacheDuration, repoProvider)
 }
 
 func ProvideGITAdapter(
-	repoCache cache.Cache[string, *gitea.RepoEntryValue],
+	repoProvider *gitea.GoGitRepoProvider,
 	lastCommitCache cache.Cache[gitea.CommitEntryKey, *types.Commit],
 ) (service.GitAdapter, error) {
-	return gitea.New(repoCache, lastCommitCache)
+	return gitea.New(repoProvider, lastCommitCache)
 }
 
 func ProvideServer(config Config, adapter service.GitAdapter) (*GRPCServer, error) {
