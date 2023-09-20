@@ -341,14 +341,12 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   }, [])
 
   const getInitialFormValues = useCallback((pluginInputs: Record<string, any>): Record<string, any> => {
-    const initialValueMap: Record<string, any> = {}
-    Object.keys(pluginInputs).forEach((field: string) => {
-      const value = get(pluginInputs, `${field}.default`)
-      if (value) {
-        initialValueMap[field] = value
+    return Object.entries(pluginInputs).reduce((acc, [field, inputObj]) => {
+      if (inputObj?.default) {
+        acc[field] = inputObj.default
       }
-    })
-    return initialValueMap
+      return acc
+    }, {} as Record<string, any>)
   }, [])
 
   const renderPluginConfigForm = useCallback((): JSX.Element => {
