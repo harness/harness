@@ -4,7 +4,7 @@ import { parse } from 'yaml'
 import { capitalize, get, omit, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { Icon, type IconName } from '@harnessio/icons'
+import { Icon, IconProps } from '@harnessio/icons'
 import {
   Accordion,
   Button,
@@ -45,7 +45,7 @@ interface PluginCategoryInterface {
   category: PluginCategory
   name: string
   description: string
-  icon: IconName
+  icon: IconProps
 }
 
 interface PluginInsertionTemplateInterface {
@@ -96,13 +96,13 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
       category: PluginCategory.Harness,
       name: capitalize(getString('run')),
       description: getString('pluginsPanel.run.helptext'),
-      icon: 'run-step'
+      icon: { name: 'run-step', size: 15 }
     },
     {
       category: PluginCategory.Drone,
       name: capitalize(getString('plugins.title')),
       description: getString('pluginsPanel.plugins.helptext'),
-      icon: 'plugin-ci-step'
+      icon: { name: 'plugin-ci-step', size: 18 }
     }
   ]
 
@@ -165,7 +165,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                   flex={{ justifyContent: 'flex-start' }}
                   className={css.plugin}>
                   <Container className={css.pluginIcon}>
-                    <Icon name={icon} />
+                    <Icon {...icon} />
                   </Container>
                   <Layout.Vertical padding={{ left: 'medium' }} spacing="xsmall">
                     <Text
