@@ -377,7 +377,7 @@ const AddUpdatePipeline = (): JSX.Element => {
         />
         <PageBody>
           <Layout.Vertical>
-            {yamlVersion === YamlVersion.V1 && (
+            {!isExistingPipeline && yamlVersion === YamlVersion.V1 && (
               <Layout.Horizontal
                 padding={{ left: 'medium', bottom: 'medium', top: 'medium' }}
                 className={css.generateHeader}
@@ -385,16 +385,19 @@ const AddUpdatePipeline = (): JSX.Element => {
                 flex={{ justifyContent: 'flex-start' }}>
                 <Button
                   text={getString('generate')}
-                  variation={ButtonVariation.PRIMARY}
+                  variation={ButtonVariation.SECONDARY}
                   className={css.generate}
                   onClick={handleGeneratePipeline}
                   disabled={generatingPipeline}
                 />
-                <Text font={{ variation: FontVariation.H5 }}>{getString('generateHelptext')}</Text>
+                <Text font={{ weight: 'bold' }}>{getString('generateHelptext')}</Text>
               </Layout.Horizontal>
             )}
             <Layout.Horizontal className={css.layout}>
-              <Container className={cx(css.editorContainer, { [css.extendedHeight]: yamlVersion === YamlVersion.V0 })}>
+              <Container
+                className={cx(css.editorContainer, {
+                  [css.extendedHeight]: isExistingPipeline || yamlVersion === YamlVersion.V0
+                })}>
                 <MonacoSourceCodeEditor
                   language={'yaml'}
                   schema={yamlVersion === YamlVersion.V1 ? pipelineSchemaV1 : pipelineSchemaV0}
@@ -403,7 +406,7 @@ const AddUpdatePipeline = (): JSX.Element => {
                 />
               </Container>
               {yamlVersion === YamlVersion.V1 && (
-                <Container className={css.pluginsContainer}>
+                <Container className={cx(css.pluginsContainer, { [css.extendedHeight]: isExistingPipeline })}>
                   <PluginsPanel
                     onPluginAddUpdate={(isUpdate: boolean, pluginFormData: Record<string, any>) =>
                       handlePluginAddUpdateToPipeline({
