@@ -160,14 +160,13 @@
     .chevron {
       align-self: center;
       height: 24px;
-      width:24px;
+      width: 24px;
     }
 
     .fname {
       align-self: center;
       align-items: center;
       text-align: left;
-
 
       a {
         font-size: 13px;
@@ -191,12 +190,11 @@
       border-radius: 2px;
       padding: 0px 8px 0px 8px;
 
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       line-height: 18px;
       text-align: center;
       color: var(--green-800);
-
     }
 
     .deletedLines {
@@ -207,7 +205,7 @@
       border-radius: 2px;
       padding: 0px 8px 0px 8px;
 
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       line-height: 18px;
       text-align: center;
@@ -224,12 +222,11 @@
       margin-top: 2px;
       margin-right: 8px;
 
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
       line-height: 28px;
       text-align: center;
       color: var(--orange-500);
-
     }
 
     .viewLabel {
@@ -240,19 +237,19 @@
       padding-left: 8px;
       align-items: center;
 
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 500;
       line-height: 28px;
       border-radius: 4px;
       text-align: center;
       color: var(--black);
-  
+
       margin-top: 2px;
 
       // avoid text being selected when user presses button twice
       user-select: none;
       cursor: pointer;
-  
+
       input {
         display: inline-block;
         margin-right: var(--spacing-small);
@@ -262,7 +259,6 @@
 
   .diffContent {
     box-shadow: 0px 2px 4px 0px rgba(96, 97, 112, 0.16), 0px 0px 1px 0px rgba(40, 41, 61, 0.04);
-
 
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;

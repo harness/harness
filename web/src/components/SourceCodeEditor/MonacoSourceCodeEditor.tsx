@@ -16,7 +16,9 @@ export const MonacoEditorOptions = {
   tabSize: 2,
   insertSpaces: true,
   overviewRulerBorder: false,
-  automaticLayout: true
+  automaticLayout: true,
+  fontSize: 13,
+  fontFamily: 'var(--font-family-mono)'
 }
 
 const diagnosticsOptions = {

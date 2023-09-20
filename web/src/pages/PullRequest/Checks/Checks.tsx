@@ -52,12 +52,7 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
     <Container className={css.main}>
       <Match expr={prChecksDecisionResult?.overallStatus}>
         <Truthy>
-          <Split
-            split="vertical"
-            size={'calc(100% - 400px)'}
-            minSize={'calc(100% - 300px)'}
-            maxSize={'calc(100% - 600px)'}
-            primary="second">
+          <Split split="vertical" size={400} minSize={300} maxSize={600} primary="first">
             <ChecksMenu
               repoMetadata={repoMetadata}
               pullRequestMetadata={pullRequestMetadata}
