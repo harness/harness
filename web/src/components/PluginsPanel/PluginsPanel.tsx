@@ -4,11 +4,12 @@ import { parse } from 'yaml'
 import { capitalize, get, omit, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
-import { Icon, type IconName } from '@harnessio/icons'
+import { Icon, IconProps } from '@harnessio/icons'
 import {
   Accordion,
   Button,
   ButtonVariation,
+  Card,
   Container,
   ExpandingSearchInput,
   FormInput,
@@ -44,7 +45,7 @@ interface PluginCategoryInterface {
   category: PluginCategory
   name: string
   description: string
-  icon: IconName
+  icon: IconProps
 }
 
 interface PluginInsertionTemplateInterface {
@@ -95,13 +96,13 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
       category: PluginCategory.Harness,
       name: capitalize(getString('run')),
       description: getString('pluginsPanel.run.helptext'),
-      icon: 'run-step'
+      icon: { name: 'run-step', size: 15 }
     },
     {
       category: PluginCategory.Drone,
       name: capitalize(getString('plugins.title')),
       description: getString('pluginsPanel.plugins.helptext'),
-      icon: 'ci-infra'
+      icon: { name: 'plugin-ci-step', size: 18 }
     }
   ]
 
@@ -140,36 +141,54 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
     }
   }, [query])
 
+  const handlePluginCategoryClick = useCallback((selectedCategory: PluginCategory) => {
+    setCategory(selectedCategory)
+    if (selectedCategory === PluginCategory.Drone) {
+      setPanelView(PluginPanelView.Listing)
+    } else if (selectedCategory === PluginCategory.Harness) {
+      setPlugin(RunStep)
+      setPanelView(PluginPanelView.Configuration)
+    }
+  }, [])
+
   const renderPluginCategories = (): JSX.Element => {
     return (
       <>
         {PluginCategories.map((item: PluginCategoryInterface) => {
           const { name, category: pluginCategory, description, icon } = item
           return (
-            <Layout.Horizontal
-              onClick={() => {
-                setCategory(pluginCategory)
-                if (pluginCategory === PluginCategory.Drone) {
-                  setPanelView(PluginPanelView.Listing)
-                } else if (pluginCategory === PluginCategory.Harness) {
-                  setPlugin(RunStep)
-                  setPanelView(PluginPanelView.Configuration)
-                }
-              }}
-              key={pluginCategory}
-              padding={{ left: 'medium', right: 'medium', top: 'medium', bottom: 'medium' }}
-              flex={{ justifyContent: 'flex-start' }}
-              className={css.plugin}>
-              <Container padding="small" className={css.pluginIcon}>
-                <Icon name={icon} />
-              </Container>
-              <Layout.Vertical padding={{ left: 'small' }}>
-                <Text color={Color.PRIMARY_7} font={{ variation: FontVariation.BODY2 }}>
-                  {name}
-                </Text>
-                <Text font={{ variation: FontVariation.SMALL }}>{description}</Text>
-              </Layout.Vertical>
-            </Layout.Horizontal>
+            <Card className={css.pluginCard}>
+              <Layout.Horizontal flex={{ justifyContent: 'space-between' }}>
+                <Layout.Horizontal
+                  onClick={() => handlePluginCategoryClick(pluginCategory)}
+                  key={pluginCategory}
+                  flex={{ justifyContent: 'flex-start' }}
+                  className={css.plugin}>
+                  <Container className={css.pluginIcon}>
+                    <Icon {...icon} />
+                  </Container>
+                  <Layout.Vertical padding={{ left: 'medium' }} spacing="xsmall">
+                    <Text
+                      color={Color.GREY_900}
+                      className={css.pluginCategory}
+                      font={{ variation: FontVariation.BODY2_SEMI }}>
+                      {name}
+                    </Text>
+                    <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }}>
+                      {description}
+                    </Text>
+                  </Layout.Vertical>
+                </Layout.Horizontal>
+                <Container>
+                  <Icon
+                    name="arrow-right"
+                    size={24}
+                    onClick={() => handlePluginCategoryClick(pluginCategory)}
+                    className={css.plugin}
+                  />
+                </Container>
+              </Layout.Horizontal>
+            </Card>
           )
         })}
       </>
@@ -219,12 +238,15 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                   setPlugin(pluginItem)
                 }}
                 key={uid}>
-                <Icon name={'gear'} size={25} />
-                <Layout.Vertical padding={{ left: 'small' }}>
-                  <Text font={{ variation: FontVariation.BODY2 }} color={Color.PRIMARY_7}>
+                <Icon name={'plugin-ci-step'} size={25} />
+                <Layout.Vertical padding={{ left: 'small' }} spacing="xsmall">
+                  <Text
+                    color={Color.GREY_900}
+                    className={css.pluginCategory}
+                    font={{ variation: FontVariation.BODY2_SEMI }}>
                     {uid}
                   </Text>
-                  <Text font={{ variation: FontVariation.SMALL }} className={css.pluginDesc}>
+                  <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }} className={css.pluginDesc}>
                     {description}
                   </Text>
                 </Layout.Vertical>
