@@ -238,12 +238,15 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                   setPlugin(pluginItem)
                 }}
                 key={uid}>
-                <Icon name={'gear'} size={25} />
-                <Layout.Vertical padding={{ left: 'small' }}>
-                  <Text font={{ variation: FontVariation.BODY2 }} color={Color.PRIMARY_7}>
+                <Icon name={'plugin-ci-step'} size={25} />
+                <Layout.Vertical padding={{ left: 'small' }} spacing="xsmall">
+                  <Text
+                    color={Color.GREY_900}
+                    className={css.pluginCategory}
+                    font={{ variation: FontVariation.BODY2_SEMI }}>
                     {uid}
                   </Text>
-                  <Text font={{ variation: FontVariation.SMALL }} className={css.pluginDesc}>
+                  <Text color={Color.GREY_500} font={{ variation: FontVariation.SMALL }} className={css.pluginDesc}>
                     {description}
                   </Text>
                 </Layout.Vertical>
