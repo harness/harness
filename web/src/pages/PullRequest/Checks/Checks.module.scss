@@ -206,6 +206,12 @@
     z-index: 1;
   }
 
+  .stepContainer {
+    display: flex;
+    flex-direction: column;
+    word-break: break-all;
+  }
+
   .stepHeader {
     display: flex;
     align-items: center;

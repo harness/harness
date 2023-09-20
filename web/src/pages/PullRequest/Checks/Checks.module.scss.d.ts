@@ -24,6 +24,7 @@ export declare const pipelineSteps: string
 export declare const selected: string
 export declare const spinner: string
 export declare const status: string
+export declare const stepContainer: string
 export declare const stepHeader: string
 export declare const stepLogContainer: string
 export declare const subMenu: string

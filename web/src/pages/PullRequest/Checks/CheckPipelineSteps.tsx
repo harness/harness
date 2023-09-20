@@ -145,7 +145,7 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
   useShowRequestError(error, 0)
 
   return (
-    <Container key={step.number}>
+    <Container key={step.number} className={css.stepContainer}>
       <Layout.Horizontal
         spacing="small"
         className={cx(css.stepHeader, { [css.expanded]: expanded, [css.selected]: expanded })}
