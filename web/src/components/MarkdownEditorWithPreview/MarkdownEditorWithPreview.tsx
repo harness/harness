@@ -38,6 +38,7 @@ const toolbar: ToolbarItem[] = [
 ]
 
 interface MarkdownEditorWithPreviewProps {
+  className?: string,
   value?: string
   onChange?: (value: string) => void
   onSave?: (value: string) => void
@@ -59,10 +60,11 @@ interface MarkdownEditorWithPreviewProps {
 
   // When set to true, the editor will be scrolled to center of screen
   // and cursor is set to the end of the document
-  autoFocusAndPositioning?: boolean
+  autoFocusAndPosition?: boolean
 }
 
 export function MarkdownEditorWithPreview({
+  className,
   value = '',
   onChange,
   onSave,
@@ -74,7 +76,7 @@ export function MarkdownEditorWithPreview({
   editorHeight,
   noBorder,
   viewRef: viewRefProp,
-  autoFocusAndPositioning,
+  autoFocusAndPosition,
   secondarySaveButton: SecondarySaveButton
 }: MarkdownEditorWithPreviewProps) {
   const [selectedTab, setSelectedTab] = useState(MarkdownEditorTab.WRITE)
@@ -213,13 +215,13 @@ export function MarkdownEditorWithPreview({
   }, [viewRefProp, viewRef.current]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (autoFocusAndPositioning) {
+    if (autoFocusAndPosition) {
       scrollToAndSetCursorToEnd(containerRef, viewRef, value)
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoFocusAndPosition, value])
 
   return (
-    <Container ref={containerRef} className={cx(css.container, { [css.noBorder]: noBorder })}>
+    <Container ref={containerRef} className={cx(css.container, { [css.noBorder]: noBorder }, className)}>
       <ul className={css.tabs}>
         <li>
           <a
@@ -305,17 +307,14 @@ function scrollToAndSetCursorToEnd(
   content = '',
   moveCursorToEnd = true
 ) {
-  window.setTimeout(() => {
-    const dom = containerRef?.current as unknown as { scrollIntoViewIfNeeded: () => void }
+  const dom = containerRef?.current as unknown as { scrollIntoViewIfNeeded: () => void }
+  if (!dom) {
+    return
+  }
 
-    if (dom?.scrollIntoViewIfNeeded) {
-      dom.scrollIntoViewIfNeeded()
-    } else {
-      containerRef?.current?.scrollIntoView({ block: 'center' })
-    }
+  dom.scrollIntoViewIfNeeded()
 
-    if (moveCursorToEnd) {
-      viewRef.current?.dispatch({ selection: { anchor: content.length, head: content.length } })
-    }
-  }, 250)
+  if (moveCursorToEnd) {
+    viewRef.current?.dispatch({ selection: { anchor: content.length, head: content.length } })
+  }
 }

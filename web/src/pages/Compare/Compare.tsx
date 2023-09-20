@@ -229,7 +229,7 @@ export default function Compare() {
                               value={description}
                               onChange={setDescription}
                               hideButtons
-                              autoFocusAndPositioning={true}
+                              autoFocusAndPosition={true}
                               i18n={{
                                 placeHolder: getString('pr.descriptionPlaceHolder'),
                                 tabEdit: getString('write'),

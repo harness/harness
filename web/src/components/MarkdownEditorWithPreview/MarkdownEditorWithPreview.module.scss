@@ -167,14 +167,15 @@
 
   position: relative;
 
+  scroll-margin-top: 10px;
+  scroll-margin-bottom: 10px;
+
   .tabs {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
-    background-color: var(--grey-100);
     padding: 15px 15px 0;
-    background: var(--grey-50) !important;
     border-bottom: 1px solid var(--tab-border-primary);
     border-top-left-radius: var(--radius);
     border-top-right-radius: var(--radius);

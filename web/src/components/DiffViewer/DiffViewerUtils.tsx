@@ -213,30 +213,25 @@ export const activityToCommentItem = (activity: TypesPullReqActivity): CommentIt
 })
 
 export function activitiesToDiffCommentItems(filePath: string, activities: TypesPullReqActivity[]): DiffCommentItem<TypesPullReqActivity>[] {
-  const commentThreads = (
-    activities?.
-    filter(activity => filePath === activity.code_comment?.path).
-    map(activity => {
-      const replyComments =
-        activities
-          ?.filter(replyActivity => replyActivity.parent_id === activity.id)
-          .map(_activity => activityToCommentItem(_activity)) || []
-      const right = get(activity.payload, 'line_start_new', false)
+  return activities?.
+            filter(activity => filePath === activity.code_comment?.path).
+            map(activity => {
+              const replyComments =
+                activities
+                  ?.filter(replyActivity => replyActivity.parent_id === activity.id)
+                  .map(_activity => activityToCommentItem(_activity)) || []
+              const right = get(activity.payload, 'line_start_new', false)
 
-      return {
-        inner: activity,
-        left: !right,
-        right,
-        height: 0,
-        lineNumber: (right ? activity.code_comment?.line_new : activity.code_comment?.line_old) as number,
-        commentItems: [activityToCommentItem(activity)].concat(replyComments),
-        filePath: filePath,
-        destroy: undefined,
-        eventStream: undefined
-      }
-    }) || []
-  )
-
-  // filter out threads where all comments are deleted
-  return commentThreads.filter(({commentItems: commentItems}) => commentItems.map(item => !item.deleted).reduce((a,b) => a || b), false)
+              return {
+                inner: activity,
+                left: !right,
+                right,
+                height: 0,
+                lineNumber: (right ? activity.code_comment?.line_new : activity.code_comment?.line_old) as number,
+                commentItems: [activityToCommentItem(activity)].concat(replyComments),
+                filePath: filePath,
+                destroy: undefined,
+                eventStream: undefined
+              }
+            }) || []
 }

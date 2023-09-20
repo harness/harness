@@ -15,8 +15,8 @@ import { OptionsMenuButton } from 'components/OptionsMenuButton/OptionsMenuButto
 import { MarkdownEditorWithPreview } from 'components/MarkdownEditorWithPreview/MarkdownEditorWithPreview'
 import { MarkdownViewer } from 'components/MarkdownViewer/MarkdownViewer'
 import { ButtonRoleProps, CodeCommentState } from 'utils/Utils'
-import css from './CommentBox.module.scss'
 import { useEmitCodeCommentStatus } from 'hooks/useEmitCodeCommentStatus'
+import css from './CommentBox.module.scss'
 
 export interface CommentItem<T = unknown> {
   id: number
@@ -67,7 +67,9 @@ export class SingleConsumerEventStream<T> {
 }
 
 interface CommentBoxProps<T> {
-  className?: string
+  outerClassName?: string
+  editorClassName?: string
+  boxClassName?: string
   onHeightChange?: (height: number) => void
   initialContent?: string
   width?: string
@@ -85,11 +87,14 @@ interface CommentBoxProps<T> {
   onCancel?: () => void
   setDirty: (dirty: boolean) => void
   outlets?: Partial<Record<CommentBoxOutletPosition, React.ReactNode>>
-  autoFocusAndPositioning?: boolean
+  autoFocusAndPosition?: boolean,
+  enableReplyPlaceHolder?: boolean
 }
 
 export const CommentBox = <T = unknown,>({
-  className,
+  outerClassName,
+  editorClassName,
+  boxClassName,
   onHeightChange = noop,
   initialContent = '',
   width,
@@ -103,13 +108,14 @@ export const CommentBox = <T = unknown,>({
   resetOnSave,
   setDirty: setDirtyProp,
   outlets = {},
-  autoFocusAndPositioning
+  autoFocusAndPosition,
+  enableReplyPlaceHolder,
 }: CommentBoxProps<T>) => {
   const { getString } = useStrings()
   const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
   const emitCodeCommentStatus = useEmitCodeCommentStatus({
     id: comments?.[0]?.id,
-    onMatch: () => {}
+    onMatch: () => undefined
   })
   useEffect(() => {
     if (!eventStream) {
@@ -121,17 +127,17 @@ export const CommentBox = <T = unknown,>({
       setComments([...updatedComments])
 
       const payload = updatedComments[0]?.payload
-      if (payload && typeof payload == 'object' && 'resolved' in payload) {
-        emitCodeCommentStatus(payload.resolved ? CodeCommentState.RESOLVED : CodeCommentState.ACTIVE)
+      if (payload && typeof payload == 'object') {
+        emitCodeCommentStatus('resolved' in payload && payload.resolved ? CodeCommentState.RESOLVED : CodeCommentState.ACTIVE)
       }
     });
 
     return () => {
       unsubscribe();  // Clean up the subscription on unmount
     };
-  }, [eventStream, emitCodeCommentStatus]);
+  }, [eventStream, setComments, emitCodeCommentStatus]);
 
-  const [showReplyPlaceHolder, setShowReplyPlaceHolder] = useState(!!comments.length)
+  const [showReplyPlaceHolder, setShowReplyPlaceHolder] = useState(enableReplyPlaceHolder)
   const [markdown, setMarkdown] = useState(initialContent)
   const [dirties, setDirties] = useState<Record<string, boolean>>({})
   const { ref } = useResizeDetector<HTMLDivElement>({
@@ -143,12 +149,11 @@ export const CommentBox = <T = unknown,>({
   })
   const _onCancel = useCallback(() => {
     setMarkdown('')
-    if (!comments.length) {
+    setShowReplyPlaceHolder(true)
+    if (onCancel && !comments.length) {
       onCancel()
-    } else {
-      setShowReplyPlaceHolder(true)
     }
-  }, [comments, setShowReplyPlaceHolder, onCancel])
+  }, [setShowReplyPlaceHolder, onCancel, comments.length])
   const hidePlaceHolder = useCallback(() => setShowReplyPlaceHolder(false), [setShowReplyPlaceHolder])
   const onQuote = useCallback((content: string) => {
     const replyContent = content
@@ -170,11 +175,11 @@ export const CommentBox = <T = unknown,>({
 
   return (
     <Container
-      className={cx(css.main, { [css.fluid]: fluid }, className)}
+      className={cx(css.main, { [css.fluid]: fluid }, outerClassName)}
       padding={!fluid ? 'medium' : undefined}
       width={width}
       ref={ref}>
-      <Container className={css.box}>
+      <Container className={cx(boxClassName, css.box)}>
         {outlets[CommentBoxOutletPosition.TOP]}
 
         <Layout.Vertical>
@@ -196,14 +201,14 @@ export const CommentBox = <T = unknown,>({
             }}
             outlets={outlets}
           />
-          <Match expr={showReplyPlaceHolder}>
+          <Match expr={showReplyPlaceHolder && enableReplyPlaceHolder}>
             <Truthy>
               <Container>
-                <Layout.Horizontal spacing="small" className={css.replyPlaceHolder} padding="medium">
+                <Layout.Horizontal spacing="small" className={cx(css.replyPlaceHolder, editorClassName)} padding="medium">
                   <Avatar name={currentUserName} size="small" hoverCard={false} />
                   <TextInput
                     {...ButtonRoleProps}
-                    placeholder={getString('replyHere')}
+                    placeholder={getString(comments.length ? 'replyHere' : 'leaveAComment')}
                     onFocus={hidePlaceHolder}
                     onClick={hidePlaceHolder}
                   />
@@ -214,6 +219,7 @@ export const CommentBox = <T = unknown,>({
             <Falsy>
               <Container className={cx(css.newCommentContainer, { [css.hasThread]: !!comments.length })}>
                 <MarkdownEditorWithPreview
+                  className={editorClassName}
                   viewRef={viewRef}
                   noBorder
                   i18n={{
@@ -235,6 +241,7 @@ export const CommentBox = <T = unknown,>({
 
                       if (result) {
                         setMarkdown('')
+                        setShowReplyPlaceHolder(true)
 
                         if (resetOnSave) {
                           viewRef.current?.dispatch({
@@ -246,7 +253,6 @@ export const CommentBox = <T = unknown,>({
                           })
                         } else {
                           setComments([...comments, updatedItem as CommentItem<T>])
-                          setShowReplyPlaceHolder(true)
                         }
                       }
                     } else {
@@ -263,7 +269,7 @@ export const CommentBox = <T = unknown,>({
                   setDirty={_dirty => {
                     setDirties({ ...dirties, ['new']: _dirty })
                   }}
-                  autoFocusAndPositioning={autoFocusAndPositioning}
+                  autoFocusAndPosition={autoFocusAndPosition ? !showReplyPlaceHolder : false}
                 />
               </Container>
             </Falsy>
@@ -410,7 +416,7 @@ const CommentsThread = <T = unknown,>({
                           save: getString('save'),
                           cancel: getString('cancel')
                         }}
-                        autoFocusAndPositioning
+                        autoFocusAndPosition
                       />
                     </Container>
                   </Truthy>

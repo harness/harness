@@ -1,13 +1,17 @@
 /* eslint-disable */
 // This is an auto-generated file
+export declare const ascContainer: string
 export declare const box: string
 export declare const bp3ButtonText: string
 export declare const bp3Icon: string
 export declare const bp3PopoverWrapper: string
+export declare const commentBox: string
+export declare const commentEditor: string
 export declare const commitContainer: string
 export declare const commitLink: string
 export declare const desc: string
 export declare const descBox: string
+export declare const descContainer: string
 export declare const fname: string
 export declare const hideDottedLine: string
 export declare const mdWrapper: string
@@ -22,6 +26,7 @@ export declare const snapshot: string
 export declare const snapshotContent: string
 export declare const sortContainer: string
 export declare const sortDropdown: string
+export declare const threadbox: string
 export declare const timeButton: string
 export declare const timeText: string
 export declare const title: string

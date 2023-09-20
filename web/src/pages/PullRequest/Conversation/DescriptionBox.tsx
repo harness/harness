@@ -71,7 +71,7 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
               cancel: getString('cancel')
             }}
             editorHeight="400px"
-            autoFocusAndPositioning
+            autoFocusAndPosition={true}
           />
         )) || (
           <Container className={css.mdWrapper}>

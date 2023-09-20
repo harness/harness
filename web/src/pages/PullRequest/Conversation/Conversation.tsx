@@ -148,6 +148,44 @@ export const Conversation: React.FC<ConversationProps> = ({
     }
   }, [prStatsChanged, refetchActivities])
 
+
+  
+const newCommentBox = useMemo(() => {
+  return (
+      <CommentBox
+        fluid
+        boxClassName={css.commentBox}
+        editorClassName={css.commentEditor}
+        commentItems={[]}
+        currentUserName={currentUser.display_name}
+        resetOnSave
+        hideCancel={false}
+        setDirty={setDirtyNewComment}
+        enableReplyPlaceHolder={true}
+        autoFocusAndPosition={true}
+        handleAction={async (_action, value) => {
+          let result = true
+          let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
+
+          await saveComment({ text: value })
+            .then((newComment: TypesPullReqActivity) => {
+              updatedItem = activityToCommentItem(newComment)
+            })
+            .catch(exception => {
+              result = false
+              showError(getErrorMessage(exception), 0)
+            })
+
+          if (result) {
+            onCommentUpdate()
+          }
+
+          return [result, updatedItem]
+        }}
+      />
+  );
+}, [currentUser, onCommentUpdate, saveComment, showError])
+
   return (
     <PullRequestTabContentWrapper loading={showSpinner} error={error} onRetry={refetchActivities}>
       <Container>
@@ -211,6 +249,13 @@ export const Conversation: React.FC<ConversationProps> = ({
                     </Text>
                   </Layout.Horizontal>
 
+                  {dateOrderSort != orderSortDate.DESC ? null :
+                    <Container className={css.descContainer}>
+                      {newCommentBox}
+                    </Container>
+                  }
+
+
                   {activityBlocks?.map((commentItems, index) => {
                     const threadId = commentItems[0].payload?.id
 
@@ -247,10 +292,13 @@ export const Conversation: React.FC<ConversationProps> = ({
                           <CommentBox
                             key={threadId}
                             fluid
-                            className={css.hideDottedLine}
+                            boxClassName={css.threadbox}
+                            outerClassName={css.hideDottedLine}
                             commentItems={commentItems}
                             currentUserName={currentUser.display_name}
                             setDirty={setDirtyCurrentComments}
+                            enableReplyPlaceHolder={true}
+                            autoFocusAndPosition={true}
                             handleAction={async (action, value, commentItem) => {
                               let result = true
                               let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
@@ -337,41 +385,19 @@ export const Conversation: React.FC<ConversationProps> = ({
                                 />
                               )
                             }}
-                            autoFocusAndPositioning
                           />
                         }></ThreadSection>
                     )
                   })}
 
-                  <CommentBox
-                    fluid
-                    commentItems={[]}
-                    currentUserName={currentUser.display_name}
-                    resetOnSave
-                    hideCancel
-                    setDirty={setDirtyNewComment}
-                    handleAction={async (_action, value) => {
-                      let result = true
-                      let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
+                  {dateOrderSort != orderSortDate.ASC ? null :
+                    <Container className={css.ascContainer}>
+                      {newCommentBox}
+                    </Container>
+                  }
 
-                      await saveComment({ text: value })
-                        .then((newComment: TypesPullReqActivity) => {
-                          updatedItem = activityToCommentItem(newComment)
-                        })
-                        .catch(exception => {
-                          result = false
-                          showError(getErrorMessage(exception), 0)
-                        })
-
-                      if (result) {
-                        onCommentUpdate()
-                      }
-
-                      return [result, updatedItem]
-                    }}
-                  />
-                </Layout.Vertical>
-              </Container>
+                  </Layout.Vertical>
+                </Container>
 
               <PullRequestSideBar
                 reviewers={reviewers}
