@@ -28,7 +28,7 @@
 
 .pluginsContainer {
   width: 30vw;
-  height: calc(100vh - var(--header-height) - var(--generate-pipeline-header)) !important;
+  height: calc(100vh - var(--header-height) - var(--generate-pipeline-header));
   background-color: var(--grey-50) !important;
 }
 
@@ -70,4 +70,5 @@
 
 .generateHeader {
   border-bottom: 1px solid var(--grey-100);
+  background: var(--grey-50) !important;
 }

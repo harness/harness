@@ -1,13 +1,24 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Formik } from 'formik'
+import { parse } from 'yaml'
 import { capitalize, get, omit, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
+import type { TypesPlugin } from 'services/code'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon, type IconName } from '@harnessio/icons'
-import { Button, ButtonVariation, Container, FormInput, FormikForm, Layout, Popover, Text } from '@harnessio/uicore'
+import {
+  Accordion,
+  Button,
+  ButtonVariation,
+  Container,
+  ExpandingSearchInput,
+  FormInput,
+  FormikForm,
+  Layout,
+  Popover,
+  Text
+} from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
-
-import pluginList from './plugins/plugins.json'
 
 import css from './PluginsPanel.module.scss'
 
@@ -29,52 +40,11 @@ interface PluginInput {
   options?: { isExtended?: boolean }
 }
 
-interface Plugin {
-  name: string
-  spec: {
-    name: string
-    description?: string
-    inputs: { [key: string]: PluginInput }
-  }
-}
-
 interface PluginCategoryInterface {
   category: PluginCategory
   name: string
   description: string
   icon: IconName
-}
-
-const PluginCategories: PluginCategoryInterface[] = [
-  {
-    category: PluginCategory.Harness,
-    name: 'Run',
-    description: 'Run a script on macOS, Linux, or Windows',
-    icon: 'run-step'
-  },
-  { category: PluginCategory.Drone, name: 'Drone', description: 'Run Drone plugins', icon: 'ci-infra' }
-]
-
-const StepNameInput: PluginInput = {
-  type: 'string',
-  description: 'Name of the step'
-}
-
-const RunStep: Plugin = {
-  name: 'run',
-  spec: {
-    name: 'Run',
-    inputs: {
-      name: StepNameInput,
-      image: {
-        type: 'string'
-      },
-      script: {
-        type: 'string',
-        options: { isExtended: true }
-      }
-    }
-  }
 }
 
 interface PluginInsertionTemplateInterface {
@@ -101,6 +71,12 @@ const PluginInsertionTemplate: PluginInsertionTemplateInterface = {
 const PluginNameFieldPath = 'spec.name'
 const PluginInputsFieldPath = 'spec.inputs'
 
+const LIST_FETCHING_LIMIT = 100
+
+const RunStep: TypesPlugin = {
+  uid: 'run'
+}
+
 export interface PluginsPanelInterface {
   onPluginAddUpdate: (isUpdate: boolean, pluginFormData: Record<string, any>) => void
 }
@@ -109,22 +85,60 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   const { getString } = useStrings()
   const [category, setCategory] = useState<PluginCategory>()
   const [panelView, setPanelView] = useState<PluginPanelView>(PluginPanelView.Category)
-  const [plugin, setPlugin] = useState<Plugin>()
-  const [plugins, setPlugins] = useState<Plugin[]>()
-  const [loading] = useState<boolean>(false)
+  const [plugin, setPlugin] = useState<TypesPlugin>()
+  const [plugins, setPlugins] = useState<TypesPlugin[]>([])
+  const [query, setQuery] = useState<string>('')
+  const [loading, setLoading] = useState<boolean>(false)
 
-  const fetchPlugins = () => {
-    /* temporarily done till api response gets available */
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    //@ts-ignore
-    setPlugins(pluginList)
+  const PluginCategories: PluginCategoryInterface[] = [
+    {
+      category: PluginCategory.Harness,
+      name: capitalize(getString('run')),
+      description: getString('pluginsPanel.run.helptext'),
+      icon: 'run-step'
+    },
+    {
+      category: PluginCategory.Drone,
+      name: capitalize(getString('plugins.title')),
+      description: getString('pluginsPanel.plugins.helptext'),
+      icon: 'ci-infra'
+    }
+  ]
+
+  const fetchPlugins = async (page: number): Promise<TypesPlugin[]> => {
+    const response = await fetch(`/api/v1/plugins?page=${page}&limit=${LIST_FETCHING_LIMIT}`)
+    if (!response.ok) throw new Error('Failed to fetch plugins')
+    return response.json()
   }
+
+  const fetchAllPlugins = useCallback(async (): Promise<void> => {
+    try {
+      setLoading(true)
+      const pluginsPage1 = await fetchPlugins(1)
+      const pluginsPage2 = await fetchPlugins(2)
+      setPlugins([...pluginsPage1, ...pluginsPage2])
+    } catch (ex) {
+      /* ignore exception */
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (category === PluginCategory.Drone) {
-      fetchPlugins()
+      fetchAllPlugins()
     }
   }, [category])
+
+  useEffect(() => {
+    if (panelView !== PluginPanelView.Listing) return
+
+    if (query) {
+      setPlugins(existingPlugins => existingPlugins.filter((item: TypesPlugin) => item.uid?.includes(query)))
+    } else {
+      fetchAllPlugins()
+    }
+  }, [query])
 
   const renderPluginCategories = (): JSX.Element => {
     return (
@@ -169,22 +183,32 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
       </Container>
     ) : (
       <Layout.Vertical spacing="small" padding={{ top: 'small' }}>
-        <Layout.Horizontal
-          flex={{ justifyContent: 'flex-start', alignItems: 'center' }}
-          spacing="small"
-          padding={{ top: 'medium', bottom: 'medium', left: 'medium' }}>
-          <Icon
-            name="arrow-left"
-            size={18}
-            onClick={() => {
-              setPanelView(PluginPanelView.Category)
-            }}
-            className={css.arrow}
+        <Layout.Horizontal flex={{ justifyContent: 'space-between' }} padding={{ left: 'small', right: 'xlarge' }}>
+          <Layout.Horizontal
+            flex={{ justifyContent: 'flex-start', alignItems: 'center' }}
+            spacing="small"
+            padding={{ top: 'medium', bottom: 'medium', left: 'medium' }}>
+            <Icon
+              name="arrow-left"
+              size={18}
+              onClick={() => {
+                setPanelView(PluginPanelView.Category)
+              }}
+              className={css.arrow}
+            />
+            <Text font={{ variation: FontVariation.H5 }}>{getString('plugins.select')}</Text>
+          </Layout.Horizontal>
+          <ExpandingSearchInput
+            autoFocus={true}
+            alwaysExpanded={true}
+            defaultValue={query}
+            onChange={setQuery}
+            className={css.search}
           />
         </Layout.Horizontal>
         <Container className={css.plugins}>
-          {plugins?.map((pluginItem: Plugin) => {
-            const { name: uid, description } = pluginItem.spec
+          {plugins?.map((pluginItem: TypesPlugin) => {
+            const { uid, description } = pluginItem
             return (
               <Layout.Horizontal
                 flex={{ justifyContent: 'flex-start' }}
@@ -210,7 +234,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
         </Container>
       </Layout.Vertical>
     )
-  }, [loading, plugins])
+  }, [loading, plugins, query])
 
   const generateFriendlyName = useCallback((pluginName: string): string => {
     return capitalize(pluginName.split('_').join(' '))
@@ -245,7 +269,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   )
 
   const renderPluginFormField = ({ name, properties }: { name: string; properties: PluginInput }): JSX.Element => {
-    const { type, default: defaultValue, options } = properties
+    const { type, options } = properties
     const { isExtended } = options || {}
     const WrapperComponent = isExtended ? FormInput.TextArea : FormInput.Text
     return type === 'string' ? (
@@ -254,7 +278,6 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
         label={generateLabelForPluginField({ name, properties })}
         style={{ width: '100%' }}
         key={name}
-        placeholder={defaultValue}
       />
     ) : (
       <></>
@@ -263,24 +286,29 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
 
   const constructPayloadForYAMLInsertion = (
     pluginFormData: Record<string, any>,
-    pluginMetadata?: Plugin
+    pluginMetadata?: TypesPlugin
   ): Record<string, any> => {
-    const { name, image, script } = pluginFormData
+    const { name, container = {} } = pluginFormData
     switch (category) {
       case PluginCategory.Drone:
-        const payload = { ...PluginInsertionTemplate }
-        set(payload, 'name', name)
-        set(payload, PluginNameFieldPath, pluginMetadata?.name)
+        let payload = { ...PluginInsertionTemplate }
+        /* Step name is optional, set only if specified by user */
+        if (name) {
+          set(payload, 'name', name)
+        } else {
+          payload = omit(payload, 'name')
+        }
+        set(payload, PluginNameFieldPath, pluginMetadata?.uid)
         set(payload, PluginInputsFieldPath, omit(pluginFormData, 'name'))
         return payload as PluginInsertionTemplateInterface
       case PluginCategory.Harness:
-        return image || script
-          ? {
-              ...(name && { name }),
-              type: 'run',
-              spec: { ...(image && { image }), ...(script && { script }) }
-            }
-          : {}
+        return {
+          ...(name && { name }),
+          type: 'run',
+          ...(Object.keys(container).length === 1 && container?.image
+            ? { spec: { container: get(container, 'image') } }
+            : { spec: pluginFormData })
+        }
       default:
         return {}
     }
@@ -291,20 +319,41 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   }): { [key: string]: PluginInput } => {
     const inputsClone = Object.assign(
       {
-        name: StepNameInput
+        name: {
+          type: 'string',
+          description: 'Name of the step'
+        }
       },
       existingInputs
     )
     return inputsClone
   }
 
+  const getPluginInputsFromSpec = useCallback((pluginSpec: string): Record<string, any> => {
+    if (!pluginSpec) {
+      return {}
+    }
+    try {
+      const pluginSpecAsObj = parse(pluginSpec)
+      return get(pluginSpecAsObj, 'spec.inputs', {})
+    } catch (ex) {}
+    return {}
+  }, [])
+
+  const getInitialFormValues = useCallback((pluginInputs: Record<string, any>): Record<string, any> => {
+    return Object.entries(pluginInputs).reduce((acc, [field, inputObj]) => {
+      if (inputObj?.default) {
+        acc[field] = inputObj.default
+      }
+      return acc
+    }, {} as Record<string, any>)
+  }, [])
+
   const renderPluginConfigForm = useCallback((): JSX.Element => {
-    const inputs: { [key: string]: PluginInput } = insertNameFieldToPluginInputs(get(plugin, 'spec.inputs', {}))
+    const pluginInputs = getPluginInputsFromSpec(get(plugin, 'spec', '') as string)
+    const allPluginInputs = insertNameFieldToPluginInputs(pluginInputs)
     return (
-      <Layout.Vertical
-        spacing="large"
-        padding={{ left: 'xxlarge', top: 'large', right: 'xxlarge', bottom: 'xxlarge' }}
-        className={css.panelContent}>
+      <Layout.Vertical spacing="large" className={css.configForm}>
         <Layout.Horizontal spacing="small" flex={{ justifyContent: 'flex-start' }}>
           <Icon
             name="arrow-left"
@@ -319,28 +368,163 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
             }}
             className={css.arrow}
           />
-          {plugin?.spec?.name && (
+          {plugin?.uid && (
             <Text font={{ variation: FontVariation.H5 }}>
-              {getString('addLabel')} {plugin.spec.name} {getString('plugins.stepLabel')}
+              {getString('addLabel')} {plugin.uid} {getString('plugins.stepLabel')}
             </Text>
           )}
         </Layout.Horizontal>
         <Container className={css.form}>
           <Formik
-            initialValues={{}}
+            initialValues={getInitialFormValues(pluginInputs)}
             onSubmit={formData => {
               onPluginAddUpdate?.(false, constructPayloadForYAMLInsertion(formData, plugin))
             }}>
             <FormikForm height="100%" flex={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <Layout.Vertical flex={{ alignItems: 'flex-start' }} height="100%">
-                {inputs && (
-                  <Layout.Vertical width="100%" className={css.formFields} spacing="xsmall">
-                    {Object.keys(inputs).map((field: string) => {
-                      return renderPluginFormField({ name: field, properties: get(inputs, field) })
-                    })}
-                  </Layout.Vertical>
-                )}
-                <Button variation={ButtonVariation.PRIMARY} text={getString('addLabel')} type="submit" />
+              <Layout.Vertical flex={{ alignItems: 'flex-start' }} height="inherit" spacing="medium">
+                <Layout.Vertical
+                  width="100%"
+                  className={css.formFields}
+                  spacing="xsmall"
+                  flex={{ justifyContent: 'space-between' }}>
+                  {category === PluginCategory.Harness ? (
+                    <Layout.Vertical width="inherit">
+                      <FormInput.TextArea
+                        name={'script'}
+                        label={getString('pluginsPanel.run.script')}
+                        style={{ width: '100%' }}
+                        key={'script'}
+                      />
+                      <FormInput.Select
+                        name={'shell'}
+                        label={getString('pluginsPanel.run.shell')}
+                        style={{ width: '100%' }}
+                        key={'shell'}
+                        items={[
+                          { label: getString('pluginsPanel.run.sh'), value: 'sh' },
+                          { label: getString('pluginsPanel.run.bash'), value: 'bash' },
+                          { label: getString('pluginsPanel.run.powershell'), value: 'powershell' },
+                          { label: getString('pluginsPanel.run.pwsh'), value: 'pwsh' }
+                        ]}
+                      />
+                      <Accordion activeId="">
+                        <Accordion.Panel
+                          id="container"
+                          summary="Container"
+                          details={
+                            <Layout.Vertical className={css.indent}>
+                              <FormInput.Text
+                                name={'container.image'}
+                                label={getString('pluginsPanel.run.image')}
+                                style={{ width: '100%' }}
+                                key={'container.image'}
+                              />
+                              <Accordion activeId="">
+                                <Accordion.Panel
+                                  id="container.credentials"
+                                  summary={getString('pluginsPanel.run.credentials')}
+                                  details={
+                                    <Layout.Vertical className={css.indent}>
+                                      <FormInput.Text
+                                        name={'container.credentials.username'}
+                                        label={getString('pluginsPanel.run.username')}
+                                        style={{ width: '100%' }}
+                                        key={'container.credentials.username'}
+                                      />
+                                      <FormInput.Text
+                                        name={'container.credentials.password'}
+                                        label={getString('pluginsPanel.run.password')}
+                                        style={{ width: '100%' }}
+                                        key={'container.credentials.password'}
+                                      />
+                                    </Layout.Vertical>
+                                  }
+                                />
+                              </Accordion>
+                              <FormInput.Text
+                                name={'container.pull'}
+                                label={getString('pluginsPanel.run.pull')}
+                                style={{ width: '100%' }}
+                                key={'container.pull'}
+                              />
+                              <FormInput.Text
+                                name={'container.entrypoint'}
+                                label={getString('pluginsPanel.run.entrypoint')}
+                                style={{ width: '100%' }}
+                                key={'container.entrypoint'}
+                              />
+                              <FormInput.Text
+                                name={'container.network'}
+                                label={getString('pluginsPanel.run.network')}
+                                style={{ width: '100%' }}
+                                key={'container.network'}
+                              />
+                              <FormInput.Text
+                                name={'container.networkMode'}
+                                label={getString('pluginsPanel.run.networkMode')}
+                                style={{ width: '100%' }}
+                                key={'container.networkMode'}
+                              />
+                              <FormInput.RadioGroup
+                                name={'container.privileged'}
+                                label={getString('pluginsPanel.run.privileged')}
+                                style={{ width: '100%' }}
+                                key={'container.privileged'}
+                                items={[
+                                  { label: 'Yes', value: 'true' },
+                                  { label: 'No', value: 'false' }
+                                ]}
+                              />
+                              <FormInput.Toggle
+                                name={'container.privileged'}
+                                label={getString('pluginsPanel.run.privileged')}
+                                style={{ width: '100%' }}
+                                key={'container.privileged'}
+                              />
+                              <FormInput.Text
+                                name={'container.user'}
+                                label={getString('user')}
+                                style={{ width: '100%' }}
+                                key={'container.user'}
+                              />
+                            </Layout.Vertical>
+                          }
+                        />
+                        <Accordion.Panel
+                          id="mount"
+                          summary="Mount"
+                          details={
+                            <Layout.Vertical className={css.indent}>
+                              <FormInput.Text
+                                name={'mount.name'}
+                                label={getString('name')}
+                                style={{ width: '100%' }}
+                                key={'mount.name'}
+                              />
+                              <FormInput.Text
+                                name={'mount.path'}
+                                label={getString('pluginsPanel.run.path')}
+                                style={{ width: '100%' }}
+                                key={'mount.path'}
+                              />
+                            </Layout.Vertical>
+                          }
+                        />
+                      </Accordion>
+                    </Layout.Vertical>
+                  ) : Object.keys(pluginInputs).length > 0 ? (
+                    <Layout.Vertical width="inherit">
+                      {Object.keys(allPluginInputs).map((field: string) => {
+                        return renderPluginFormField({ name: field, properties: get(allPluginInputs, field) })
+                      })}
+                    </Layout.Vertical>
+                  ) : (
+                    <></>
+                  )}
+                </Layout.Vertical>
+                <Container margin={{ top: 'small', bottom: 'small' }}>
+                  <Button variation={ButtonVariation.PRIMARY} text={getString('addLabel')} type="submit" />
+                </Container>
               </Layout.Vertical>
             </FormikForm>
           </Formik>

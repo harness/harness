@@ -714,6 +714,28 @@ run: Run
 plugins:
   title: Plugins
   stepLabel: step
+  select: Select a plugin
+pluginsPanel:
+  plugins:
+    helptext: Run a plugin step
+  run:
+    helptext: Run a container or a shell command
+    script: Script
+    shell: Shell
+    sh: Sh
+    bash: Bash
+    powershell: Powershell
+    pwsh: Pwsh
+    image: Image
+    credentials: Credentials
+    username: Username
+    password: Password
+    pull: Pull
+    entrypoint: Entrypoint
+    network: Network
+    networkMode: Network Mode
+    privileged: Privileged
+    path: Path
 createNewRepo: Create New repository
 importGitRepo: Import Repository
 importRepo:
