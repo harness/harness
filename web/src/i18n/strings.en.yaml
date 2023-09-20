@@ -705,7 +705,7 @@ secrets:
 userUpdateSuccess: 'User updated successfully'
 viewFile: View File
 searchResult: 'Search Result {count}'
-aiSearch: AI Search
+aiSearch: AIDA SEARCH
 codeSearch: Code Search
 codeSearchModal: Begin search by describing what you are looking for
 searchHeader: 'Here are some example to get you start:'
