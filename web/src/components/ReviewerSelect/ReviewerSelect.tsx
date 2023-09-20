@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Icon as BPIcon, Menu, MenuItem, PopoverPosition } from '@blueprintjs/core'
+import { Menu, MenuItem, PopoverPosition } from '@blueprintjs/core'
 import {
   Button,
   ButtonProps,
@@ -17,51 +17,28 @@ import { useGet } from 'restful-react'
 import { String, useStrings } from 'framework/strings'
 import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
-import { CodeIcon, GitInfoProps, REFS_TAGS_PREFIX } from 'utils/GitUtils'
+import { CodeIcon } from 'utils/GitUtils'
 import { usePageIndex } from 'hooks/usePageIndex'
+import type { TypesPullReq } from 'services/code'
 import css from './ReviewerSelect.module.scss'
 
-export interface ReviewerSelectProps extends Omit<ButtonProps, 'onSelect'>, Pick<GitInfoProps, 'repoMetadata'> {
-  gitRef: string
+export interface ReviewerSelectProps extends Omit<ButtonProps, 'onSelect'> {
+  pullRequestMetadata: TypesPullReq
   onSelect: (id: number) => void
-  labelPrefix?: string
-  placeHolder?: string
 }
 
-export const ReviewerSelect: React.FC<ReviewerSelectProps> = ({
-  repoMetadata,
-  gitRef,
-  onSelect,
-  labelPrefix,
-  placeHolder,
-  ...props
-}) => {
-  const text = gitRef.replace(REFS_TAGS_PREFIX, '')
-
+export const ReviewerSelect: React.FC<ReviewerSelectProps> = ({ pullRequestMetadata, onSelect, ...props }) => {
+  const { getString } = useStrings()
   return (
     <Button
       className={css.button}
-      text={
-        text ? (
-          labelPrefix ? (
-            <>
-              <span className={css.prefix}>{labelPrefix}</span>
-              {text}
-            </>
-          ) : (
-            text
-          )
-        ) : (
-          <span className={css.prefix}>{placeHolder}</span>
-        )
-      }
+      text={<span className={css.prefix}>{getString('add')}</span>}
       variation={ButtonVariation.TERTIARY}
       minimal
       size={ButtonSize.SMALL}
       tooltip={
         <PopoverContent
-          gitRef={gitRef}
-          repoMetadata={repoMetadata}
+          pullRequestMetadata={pullRequestMetadata}
           onSelect={ref => {
             onSelect(ref)
           }}
@@ -79,7 +56,7 @@ export const ReviewerSelect: React.FC<ReviewerSelectProps> = ({
   )
 }
 
-const PopoverContent: React.FC<ReviewerSelectProps> = ({ repoMetadata, gitRef, onSelect }) => {
+const PopoverContent: React.FC<ReviewerSelectProps> = ({ pullRequestMetadata, onSelect }) => {
   const { getString } = useStrings()
 
   const inputRef = useRef<HTMLInputElement | null>()
@@ -103,10 +80,9 @@ const PopoverContent: React.FC<ReviewerSelectProps> = ({ repoMetadata, gitRef, o
         />
 
         <Container className={cx(css.tabContainer)}>
-          <GitRefList
-            gitRef={gitRef}
+          <ReviewerList
             onSelect={display_name => onSelect(display_name)}
-            repoMetadata={repoMetadata}
+            pullRequestMetadata={pullRequestMetadata}
             query={query}
             setLoading={setLoading}
           />
@@ -116,18 +92,18 @@ const PopoverContent: React.FC<ReviewerSelectProps> = ({ repoMetadata, gitRef, o
   )
 }
 
-interface GitRefListProps extends Omit<ReviewerSelectProps, 'onQuery'> {
+interface ReviewerListProps extends Omit<ReviewerSelectProps, 'onQuery'> {
   query: string
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-function GitRefList({
-  gitRef,
+function ReviewerList({
+  pullRequestMetadata,
   query,
   onSelect,
 
   setLoading
-}: GitRefListProps) {
+}: ReviewerListProps) {
   const [page] = usePageIndex(1)
   const { routingId } = useAppContext()
   const { data, error, loading } = useGet<Unknown[]>({
@@ -156,27 +132,30 @@ function GitRefList({
       {!!data?.length && (
         <Container className={css.listContainer}>
           <Menu>
-            {data.map(({ display_name, email, id }) => (
-              <MenuItem
-                key={email}
-                className={css.menuItem}
-                text={
-                  <Layout.Horizontal>
-                    <Avatar className={css.avatar} name={display_name} size="small" hoverCard={false} />
+            {data.map(({ display_name, email, id }) => {
+              const disabled = id === pullRequestMetadata?.author?.id
+              return (
+                <MenuItem
+                  key={email}
+                  className={cx(css.menuItem, { [css.disabled]: disabled })}
+                  text={
+                    <Layout.Horizontal>
+                      <Avatar className={css.avatar} name={display_name} size="small" hoverCard={false} />
 
-                    <Layout.Vertical padding={{ left: 'small' }}>
-                      <Text>
-                        <strong>{display_name}</strong>
-                      </Text>
-                      <Text>{email}</Text>
-                    </Layout.Vertical>
-                  </Layout.Horizontal>
-                }
-                labelElement={display_name === gitRef ? <BPIcon icon="small-tick" /> : undefined}
-                disabled={display_name === gitRef}
-                onClick={() => onSelect(id as number)}
-              />
-            ))}
+                      <Layout.Vertical padding={{ left: 'small' }}>
+                        <Text>
+                          <strong>{display_name}</strong>
+                        </Text>
+                        <Text>{email}</Text>
+                      </Layout.Vertical>
+                    </Layout.Horizontal>
+                  }
+                  labelElement={disabled ? <Text className={css.owner}>owner</Text> : undefined}
+                  disabled={disabled}
+                  onClick={() => onSelect(id as number)}
+                />
+              )
+            })}
           </Menu>
         </Container>
       )}

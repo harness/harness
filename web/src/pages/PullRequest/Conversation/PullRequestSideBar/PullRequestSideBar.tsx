@@ -141,9 +141,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
               fill={false}
               position={Position.BOTTOM_RIGHT}> */}
             <ReviewerSelect
-              gitRef={''}
-              text={getString('add')}
-              labelPrefix={getString('add')}
+              pullRequestMetadata={pullRequestMetadata}
               onSelect={function (id: number): void {
                 updateCodeCommentStatus({ reviewer_id: id }).catch(err => {
                   showError(getErrorMessage(err))
@@ -151,8 +149,7 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                 if (refetchReviewers) {
                   refetchReviewers()
                 }
-              }}
-              repoMetadata={{}}></ReviewerSelect>
+              }}></ReviewerSelect>
             {/* </Popover> */}
           </Layout.Horizontal>
           <Container padding={{ top: 'medium', bottom: 'large' }}>
