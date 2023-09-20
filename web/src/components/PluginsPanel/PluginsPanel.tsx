@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { useGet } from 'restful-react'
 import { Formik } from 'formik'
 import { parse } from 'yaml'
-import { capitalize, get, omit, set } from 'lodash-es'
+import { capitalize, get, isEmpty, omit, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import type { TypesPlugin } from 'services/code'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -78,6 +78,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   const [category, setCategory] = useState<PluginCategory>()
   const [panelView, setPanelView] = useState<PluginPanelView>(PluginPanelView.Category)
   const [plugin, setPlugin] = useState<TypesPlugin>()
+  const [plugins, setPlugins] = useState<TypesPlugin[]>([])
 
   const PluginCategories: PluginCategoryInterface[] = [
     {
@@ -95,7 +96,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   ]
 
   const {
-    data: plugins,
+    data: fetchedPlugins,
     refetch: fetchPlugins,
     loading
   } = useGet<TypesPlugin[]>({
@@ -109,9 +110,22 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
 
   useEffect(() => {
     if (category === PluginCategory.Drone) {
-      fetchPlugins()
+      Promise.all([
+        fetchPlugins({ queryParams: { limit: LIST_FETCHING_LIMIT, page: 1 } }),
+        fetchPlugins({ queryParams: { limit: LIST_FETCHING_LIMIT, page: 2 } })
+      ])
     }
   }, [category])
+
+  useEffect(() => {
+    if (!loading && fetchedPlugins) {
+      if (isEmpty(plugins)) {
+        setPlugins(fetchedPlugins)
+      } else {
+        setPlugins(existingPlugins => [...(existingPlugins || []), ...fetchedPlugins])
+      }
+    }
+  }, [loading, fetchedPlugins])
 
   const renderPluginCategories = (): JSX.Element => {
     return (
