@@ -47,12 +47,6 @@ interface PluginCategoryInterface {
   icon: IconName
 }
 
-const RunStep: TypesPlugin = {
-  uid: 'run',
-  description: 'Run a script',
-  spec: '{"kind":"run","type":"step","name":"Run","spec":{"name":"run","description":"Run a script","inputs":{"image":{"type":"string","description":"Container image","required":true},"script":{"type":"string","description":"Script to execute","required":true,"options":{"isExtended":true}}}}}'
-}
-
 interface PluginInsertionTemplateInterface {
   name?: string
   type: 'plugin'
@@ -95,13 +89,13 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   const PluginCategories: PluginCategoryInterface[] = [
     {
       category: PluginCategory.Harness,
-      name: 'Run',
+      name: capitalize(getString('run')),
       description: getString('pluginsPanel.run.helptext'),
       icon: 'run-step'
     },
     {
       category: PluginCategory.Drone,
-      name: 'Plugin',
+      name: capitalize(getString('plugins.title')),
       description: getString('pluginsPanel.plugins.helptext'),
       icon: 'ci-infra'
     }
@@ -161,7 +155,6 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                 if (pluginCategory === PluginCategory.Drone) {
                   setPanelView(PluginPanelView.Listing)
                 } else if (pluginCategory === PluginCategory.Harness) {
-                  setPlugin(RunStep)
                   setPanelView(PluginPanelView.Configuration)
                 }
               }}
