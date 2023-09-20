@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { isEmpty } from 'lodash-es'
 import {
   Button,
   ButtonVariation,
@@ -20,7 +19,6 @@ import { Timer, Calendar } from 'iconoir-react'
 import { useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useAppContext } from 'AppContext'
-import { NoResultCard } from 'components/NoResultCard/NoResultCard'
 import { LIST_FETCHING_LIMIT, PageBrowserProps, getErrorMessage, timeDistance, voidFn } from 'utils/Utils'
 import type { CODEProps } from 'RouteDefinitions'
 import type { EnumTriggerAction, TypesExecution, TypesPipeline } from 'services/code'
@@ -35,7 +33,7 @@ import useSpaceSSE from 'hooks/useSpaceSSE'
 import { ExecutionText, ExecutionTrigger } from 'components/ExecutionText/ExecutionText'
 import useRunPipelineModal from 'components/RunPipelineModal/RunPipelineModal'
 import useLiveTimer from 'hooks/useLiveTimeHook'
-import noExecutionImage from '../RepositoriesListing/no-repo.svg'
+import { NoExecutionsCard } from 'components/NoExecutionsCard/NoExecutionsCard'
 import css from './ExecutionList.module.scss'
 
 const ExecutionList = () => {
@@ -201,13 +199,7 @@ const ExecutionList = () => {
       <PageBody
         className={cx({ [css.withError]: !!error || !!pipelineError || !!executionsError })}
         error={error || pipeline || executionsError ? getErrorMessage(error || pipelineError || executionsError) : null}
-        retryOnError={voidFn(refetch)}
-        noData={{
-          when: () => executions?.length === 0,
-          image: noExecutionImage,
-          message: getString('executions.noData'),
-          button: NewExecutionButton
-        }}>
+        retryOnError={voidFn(refetch)}>
         <LoadingSpinner
           visible={loading || isInitialLoad || isFetchingExecutions}
           withBorder={!!executions && isInitialLoad}
@@ -215,34 +207,30 @@ const ExecutionList = () => {
 
         <Container padding="xlarge">
           <Layout.Horizontal spacing="large" className={css.layout}>
-            {!isEmpty(executions) && (
-              <>
-                <Layout.Horizontal spacing="medium">
-                  {NewExecutionButton}
-                  <Button
-                    variation={ButtonVariation.SECONDARY}
-                    text={getString('edit')}
-                    onClick={e => {
-                      e.stopPropagation()
-                      if (repoMetadata?.path && pipeline) {
-                        history.push(routes.toCODEPipelineEdit({ repoPath: repoMetadata.path, pipeline }))
-                      }
-                    }}
-                  />
-                </Layout.Horizontal>
-                <FlexExpander />
-                <Button
-                  variation={ButtonVariation.TERTIARY}
-                  text={getString('pipelines.settings')}
-                  onClick={e => {
-                    e.stopPropagation()
-                    if (repoMetadata?.path && pipeline) {
-                      history.push(routes.toCODEPipelineSettings({ repoPath: repoMetadata.path, pipeline }))
-                    }
-                  }}
-                />
-              </>
-            )}
+            <Layout.Horizontal spacing="medium">
+              {NewExecutionButton}
+              <Button
+                variation={ButtonVariation.SECONDARY}
+                text={getString('edit')}
+                onClick={e => {
+                  e.stopPropagation()
+                  if (repoMetadata?.path && pipeline) {
+                    history.push(routes.toCODEPipelineEdit({ repoPath: repoMetadata.path, pipeline }))
+                  }
+                }}
+              />
+            </Layout.Horizontal>
+            <FlexExpander />
+            <Button
+              variation={ButtonVariation.TERTIARY}
+              text={getString('pipelines.settings')}
+              onClick={e => {
+                e.stopPropagation()
+                if (repoMetadata?.path && pipeline) {
+                  history.push(routes.toCODEPipelineSettings({ repoPath: repoMetadata.path, pipeline }))
+                }
+              }}
+            />
           </Layout.Horizontal>
 
           <Container margin={{ top: 'medium' }}>
@@ -262,7 +250,7 @@ const ExecutionList = () => {
               />
             )}
 
-            <NoResultCard showWhen={() => !!executions && executions.length === 0} forSearch={true} />
+            <NoExecutionsCard showWhen={() => !!executions && executions.length === 0} />
           </Container>
           <ResourceListingPagination response={response} page={page} setPage={setPage} />
         </Container>
