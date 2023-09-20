@@ -64,7 +64,7 @@ func (e *embedded) Request(ctx context.Context, args *client.Filter) (*drone.Sta
 	if err != nil {
 		return nil, err
 	}
-	return convertToDroneStage(stage), nil
+	return ConvertToDroneStage(stage), nil
 }
 
 // Accept accepts the build stage for execution.
@@ -73,7 +73,7 @@ func (e *embedded) Accept(ctx context.Context, s *drone.Stage) error {
 	if err != nil {
 		return err
 	}
-	*s = *convertToDroneStage(stage)
+	*s = *ConvertToDroneStage(stage)
 	return err
 }
 
@@ -85,12 +85,12 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 	}
 
 	return &client.Context{
-		Build:   convertToDroneBuild(details.Execution),
-		Repo:    convertToDroneRepo(details.Repo),
-		Stage:   convertToDroneStage(details.Stage),
-		Secrets: convertToDroneSecrets(details.Secrets),
-		Config:  convertToDroneFile(details.Config),
-		Netrc:   convertToDroneNetrc(details.Netrc),
+		Build:   ConvertToDroneBuild(details.Execution),
+		Repo:    ConvertToDroneRepo(details.Repo),
+		Stage:   ConvertToDroneStage(details.Stage),
+		Secrets: ConvertToDroneSecrets(details.Secrets),
+		Config:  ConvertToDroneFile(details.Config),
+		Netrc:   ConvertToDroneNetrc(details.Netrc),
 		System: &drone.System{
 			Proto: e.config.Server.HTTP.Proto,
 			Host:  "host.docker.internal",
@@ -101,28 +101,28 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 // Update updates the build stage.
 func (e *embedded) Update(ctx context.Context, stage *drone.Stage) error {
 	var err error
-	convertedStage := convertFromDroneStage(stage)
+	convertedStage := ConvertFromDroneStage(stage)
 	status := enum.ParseCIStatus(stage.Status)
 	if status == enum.CIStatusPending || status == enum.CIStatusRunning {
 		err = e.manager.BeforeStage(ctx, convertedStage)
 	} else {
 		err = e.manager.AfterStage(ctx, convertedStage)
 	}
-	*stage = *convertToDroneStage(convertedStage)
+	*stage = *ConvertToDroneStage(convertedStage)
 	return err
 }
 
 // UpdateStep updates the build step.
 func (e *embedded) UpdateStep(ctx context.Context, step *drone.Step) error {
 	var err error
-	convertedStep := convertFromDroneStep(step)
+	convertedStep := ConvertFromDroneStep(step)
 	status := enum.ParseCIStatus(step.Status)
 	if status == enum.CIStatusPending || status == enum.CIStatusRunning {
 		err = e.manager.BeforeStep(ctx, convertedStep)
 	} else {
 		err = e.manager.AfterStep(ctx, convertedStep)
 	}
-	*step = *convertToDroneStep(convertedStep)
+	*step = *ConvertToDroneStep(convertedStep)
 	return err
 }
 
@@ -134,7 +134,7 @@ func (e *embedded) Watch(ctx context.Context, executionID int64) (bool, error) {
 // Batch batch writes logs to the streaming logs.
 func (e *embedded) Batch(ctx context.Context, step int64, lines []*drone.Line) error {
 	for _, l := range lines {
-		line := convertFromDroneLine(l)
+		line := ConvertFromDroneLine(l)
 		err := e.manager.Write(ctx, step, line)
 		if err != nil {
 			return err
@@ -148,7 +148,7 @@ func (e *embedded) Upload(ctx context.Context, step int64, l []*drone.Line) erro
 	var buffer bytes.Buffer
 	lines := []livelog.Line{}
 	for _, line := range l {
-		lines = append(lines, *convertFromDroneLine(line))
+		lines = append(lines, *ConvertFromDroneLine(line))
 	}
 	out, err := json.Marshal(lines)
 	if err != nil {

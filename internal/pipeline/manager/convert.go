@@ -16,7 +16,7 @@ import (
 	"github.com/drone/runner-go/client"
 )
 
-func convertToDroneStage(stage *types.Stage) *drone.Stage {
+func ConvertToDroneStage(stage *types.Stage) *drone.Stage {
 	return &drone.Stage{
 		ID:        stage.ID,
 		BuildID:   stage.ExecutionID,
@@ -44,19 +44,19 @@ func convertToDroneStage(stage *types.Stage) *drone.Stage {
 		OnFailure: stage.OnFailure,
 		DependsOn: stage.DependsOn,
 		Labels:    stage.Labels,
-		Steps:     convertToDroneSteps(stage.Steps),
+		Steps:     ConvertToDroneSteps(stage.Steps),
 	}
 }
 
-func convertToDroneSteps(steps []*types.Step) []*drone.Step {
+func ConvertToDroneSteps(steps []*types.Step) []*drone.Step {
 	droneSteps := make([]*drone.Step, len(steps))
 	for i, step := range steps {
-		droneSteps[i] = convertToDroneStep(step)
+		droneSteps[i] = ConvertToDroneStep(step)
 	}
 	return droneSteps
 }
 
-func convertToDroneStep(step *types.Step) *drone.Step {
+func ConvertToDroneStep(step *types.Step) *drone.Step {
 	return &drone.Step{
 		ID:        step.ID,
 		StageID:   step.StageID,
@@ -76,7 +76,7 @@ func convertToDroneStep(step *types.Step) *drone.Step {
 	}
 }
 
-func convertFromDroneStep(step *drone.Step) *types.Step {
+func ConvertFromDroneStep(step *drone.Step) *types.Step {
 	return &types.Step{
 		ID:        step.ID,
 		StageID:   step.StageID,
@@ -96,7 +96,7 @@ func convertFromDroneStep(step *drone.Step) *types.Step {
 	}
 }
 
-func convertFromDroneSteps(steps []*drone.Step) []*types.Step {
+func ConvertFromDroneSteps(steps []*drone.Step) []*types.Step {
 	typesSteps := make([]*types.Step, len(steps))
 	for i, step := range steps {
 		typesSteps[i] = &types.Step{
@@ -120,7 +120,7 @@ func convertFromDroneSteps(steps []*drone.Step) []*types.Step {
 	return typesSteps
 }
 
-func convertFromDroneStage(stage *drone.Stage) *types.Stage {
+func ConvertFromDroneStage(stage *drone.Stage) *types.Stage {
 	return &types.Stage{
 		ID:          stage.ID,
 		ExecutionID: stage.BuildID,
@@ -146,11 +146,11 @@ func convertFromDroneStage(stage *drone.Stage) *types.Stage {
 		OnFailure:   stage.OnFailure,
 		DependsOn:   stage.DependsOn,
 		Labels:      stage.Labels,
-		Steps:       convertFromDroneSteps(stage.Steps),
+		Steps:       ConvertFromDroneSteps(stage.Steps),
 	}
 }
 
-func convertFromDroneLine(l *drone.Line) *livelog.Line {
+func ConvertFromDroneLine(l *drone.Line) *livelog.Line {
 	return &livelog.Line{
 		Number:    l.Number,
 		Message:   l.Message,
@@ -158,7 +158,7 @@ func convertFromDroneLine(l *drone.Line) *livelog.Line {
 	}
 }
 
-func convertToDroneBuild(execution *types.Execution) *drone.Build {
+func ConvertToDroneBuild(execution *types.Execution) *drone.Build {
 	return &drone.Build{
 		ID:           execution.ID,
 		RepoID:       execution.RepoID,
@@ -197,7 +197,7 @@ func convertToDroneBuild(execution *types.Execution) *drone.Build {
 	}
 }
 
-func convertToDroneRepo(repo *types.Repository) *drone.Repo {
+func ConvertToDroneRepo(repo *types.Repository) *drone.Repo {
 	return &drone.Repo{
 		ID:      repo.ID,
 		Trusted: true, // as builds are running on user machines, the repo is marked trusted.
@@ -217,28 +217,28 @@ func convertToDroneRepo(repo *types.Repository) *drone.Repo {
 	}
 }
 
-func convertToDroneFile(file *file.File) *client.File {
+func ConvertToDroneFile(file *file.File) *client.File {
 	return &client.File{
 		Data: file.Data,
 	}
 }
 
-func convertToDroneSecret(secret *types.Secret) *drone.Secret {
+func ConvertToDroneSecret(secret *types.Secret) *drone.Secret {
 	return &drone.Secret{
 		Name: secret.UID,
 		Data: secret.Data,
 	}
 }
 
-func convertToDroneSecrets(secrets []*types.Secret) []*drone.Secret {
+func ConvertToDroneSecrets(secrets []*types.Secret) []*drone.Secret {
 	ret := make([]*drone.Secret, len(secrets))
 	for i, s := range secrets {
-		ret[i] = convertToDroneSecret(s)
+		ret[i] = ConvertToDroneSecret(s)
 	}
 	return ret
 }
 
-func convertToDroneNetrc(netrc *Netrc) *drone.Netrc {
+func ConvertToDroneNetrc(netrc *Netrc) *drone.Netrc {
 	if netrc == nil {
 		return nil
 	}

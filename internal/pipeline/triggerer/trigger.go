@@ -13,6 +13,7 @@ import (
 
 	"github.com/harness/gitness/internal/pipeline/checks"
 	"github.com/harness/gitness/internal/pipeline/file"
+	"github.com/harness/gitness/internal/pipeline/manager"
 	"github.com/harness/gitness/internal/pipeline/scheduler"
 	"github.com/harness/gitness/internal/pipeline/triggerer/dag"
 	"github.com/harness/gitness/internal/store"
@@ -20,11 +21,11 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/drone-runners/drone-runner-docker/engine2/inputs"
 	"github.com/drone-runners/drone-runner-docker/engine2/script"
 	"github.com/drone/drone-yaml/yaml"
 	"github.com/drone/drone-yaml/yaml/linter"
 	v1yaml "github.com/drone/spec/dist/go"
-	"github.com/drone/spec/dist/go/parse/expand"
 	"github.com/drone/spec/dist/go/parse/normalize"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
@@ -131,6 +132,38 @@ func (t *triggerer) Trigger(
 	if err != nil {
 		log.Error().Err(err).Msg("trigger: could not find yaml")
 		return nil, err
+	}
+
+	now := time.Now().UnixMilli()
+	execution := &types.Execution{
+		RepoID:     repo.ID,
+		PipelineID: pipeline.ID,
+		Trigger:    base.Trigger,
+		CreatedBy:  base.TriggeredBy,
+		Parent:     base.Parent,
+		Status:     enum.CIStatusPending,
+		Event:      event,
+		Action:     string(base.Action),
+		Link:       base.Link,
+		// Timestamp:    base.Timestamp,
+		Title:        trunc(base.Title, 2000),
+		Message:      trunc(base.Message, 2000),
+		Before:       base.Before,
+		After:        base.After,
+		Ref:          base.Ref,
+		Fork:         base.Fork,
+		Source:       base.Source,
+		Target:       base.Target,
+		Author:       base.AuthorLogin,
+		AuthorName:   base.AuthorName,
+		AuthorEmail:  base.AuthorEmail,
+		AuthorAvatar: base.AuthorAvatar,
+		Params:       base.Params,
+		Debug:        base.Debug,
+		Sender:       base.Sender,
+		Cron:         base.Cron,
+		Created:      now,
+		Updated:      now,
 	}
 
 	// For drone, follow the existing path of calculating dependencies, creating a DAG,
@@ -257,7 +290,7 @@ func (t *triggerer) Trigger(
 			}
 		}
 	} else {
-		stages, err = parseV1Stages(file.Data, repo)
+		stages, err = parseV1Stages(file.Data, repo, execution)
 		if err != nil {
 			return nil, fmt.Errorf("could not parse v1 YAML into stages: %w", err)
 		}
@@ -269,39 +302,9 @@ func (t *triggerer) Trigger(
 		log.Error().Err(err).Msg("trigger: cannot increment execution sequence number")
 		return nil, err
 	}
-
-	now := time.Now().UnixMilli()
-	execution := &types.Execution{
-		RepoID:     repo.ID,
-		PipelineID: pipeline.ID,
-		Trigger:    base.Trigger,
-		CreatedBy:  base.TriggeredBy,
-		Number:     pipeline.Seq,
-		Parent:     base.Parent,
-		Status:     enum.CIStatusPending,
-		Event:      event,
-		Action:     string(base.Action),
-		Link:       base.Link,
-		// Timestamp:    base.Timestamp,
-		Title:        trunc(base.Title, 2000),
-		Message:      trunc(base.Message, 2000),
-		Before:       base.Before,
-		After:        base.After,
-		Ref:          base.Ref,
-		Fork:         base.Fork,
-		Source:       base.Source,
-		Target:       base.Target,
-		Author:       base.AuthorLogin,
-		AuthorName:   base.AuthorName,
-		AuthorEmail:  base.AuthorEmail,
-		AuthorAvatar: base.AuthorAvatar,
-		Params:       base.Params,
-		Debug:        base.Debug,
-		Sender:       base.Sender,
-		Cron:         base.Cron,
-		Created:      now,
-		Updated:      now,
-	}
+	// TODO: this can be made better. We are setting this later since otherwise any parsing failure
+	// would lead to an incremented pipeline sequence number.
+	execution.Number = pipeline.Seq
 
 	err = t.createExecutionWithStages(ctx, execution, stages)
 	if err != nil {
@@ -341,18 +344,12 @@ func trunc(s string, i int) string {
 // if we are unable to do so or the yaml contains something unexpected.
 // Currently, all the stages will be executed one after the other on completion.
 // Once we have depends on in v1, this will be changed to use the DAG.
-func parseV1Stages(data []byte, repo *types.Repository) ([]*types.Stage, error) {
+func parseV1Stages(data []byte, repo *types.Repository, execution *types.Execution) ([]*types.Stage, error) {
 	stages := []*types.Stage{}
 	// For V1 YAML, just go through the YAML and create stages serially for now
 	config, err := v1yaml.ParseBytes(data)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse v1 yaml: %w", err)
-	}
-
-	// Expand matrix strategies in YAML
-	err = expand.Expand(config)
-	if err != nil {
-		return nil, fmt.Errorf("could not expand matrix stages in v1 yaml: %w", err)
 	}
 
 	// Normalize the config to make sure stage names and step names are unique
@@ -365,12 +362,16 @@ func parseV1Stages(data []byte, repo *types.Repository) ([]*types.Stage, error) 
 		return nil, fmt.Errorf("cannot support non-pipeline kinds in v1 at the moment: %w", err)
 	}
 
+	inputParams := map[string]interface{}{}
+	inputParams["repo"] = inputs.Repo(manager.ConvertToDroneRepo(repo))
+	inputParams["build"] = inputs.Build(manager.ConvertToDroneBuild(execution))
+
 	var prevStage string
 
 	switch v := config.Spec.(type) {
 	case *v1yaml.Pipeline:
-		// Expand expressions in strings
-		script.ExpandConfig(config, map[string]interface{}{}) // TODO: pass in params for resolution
+		// Expand expressions in strings and matrices
+		script.ExpandConfig(config, inputParams)
 
 		for idx, stage := range v.Stages {
 			// Only parse CI stages for now
@@ -382,7 +383,7 @@ func parseV1Stages(data []byte, repo *types.Repository) ([]*types.Stage, error) 
 				if stage.When != nil {
 					if when := stage.When.Eval; when != "" {
 						// TODO: pass in params for resolution
-						onSuccess, onFailure, err = script.EvalWhen(when, map[string]interface{}{})
+						onSuccess, onFailure, err = script.EvalWhen(when, inputParams)
 						if err != nil {
 							return nil, fmt.Errorf("could not resolve when condition for stage: %w", err)
 						}
