@@ -1,6 +1,7 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const error: string
+export declare const executionWaiting: string
 export declare const failure: string
 export declare const iconOnly: string
 export declare const main: string

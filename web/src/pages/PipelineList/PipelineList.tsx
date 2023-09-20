@@ -129,6 +129,7 @@ const PipelineList = () => {
                 iconSize={24}
                 className={css.statusIcon}
                 isCi
+                inExecution
               />
               <Text className={css.repoName}>
                 <Keywords value={searchTerm}>{record.uid}</Keywords>

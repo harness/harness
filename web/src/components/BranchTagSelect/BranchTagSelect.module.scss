@@ -4,6 +4,17 @@ html[class=''] {
   }
 }
 
+.branchContainer {
+  :global(> .bp3-button-text) {
+    display: flex !important;
+    > .branchSpan {
+      display: flex !important;
+      align-items: center !important;
+      padding-right: var(--spacing-tiny);
+    }
+  }
+}
+
 .button {
   --border: 1px solid var(--grey-200) !important;
   --background-color-active: var(--white) !important;
@@ -19,6 +30,7 @@ html[class=''] {
   .prefix {
     color: var(--grey-450) !important;
     font-weight: normal;
+    padding-right: var(--spacing-xsmall);
   }
 
   :global {

@@ -39,6 +39,13 @@
       }
     }
   }
+  &.executionWaiting {
+    svg {
+      > circle {
+        fill: #b0b1c3 !important;
+      }
+    }
+  }
 
   &.pending {
     --fgColor: var(--grey-600);

@@ -22,6 +22,7 @@ interface ExecutionStatusProps {
   iconSize?: number
   className?: string
   isCi?: boolean
+  inExecution?: boolean
 }
 
 export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
@@ -30,14 +31,15 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
   iconOnly = false,
   noBackground = false,
   className,
-  isCi = false
+  isCi = false,
+  inExecution = false
 }) => {
   const { getString } = useStrings()
   const maps = useMemo(
     () => ({
       [ExecutionState.PENDING]: {
-        icon: isCi ? 'execution-waiting' : 'ci-pending-build',
-        css: isCi ? css.waiting : css.pending,
+        icon: isCi ? (inExecution ? 'execution-waiting' : 'running-filled') : 'ci-pending-build',
+        css: isCi ? (inExecution ? css.waiting : css.executionWaiting) : css.pending,
         title: getString('pending').toLocaleUpperCase()
       },
       [ExecutionState.RUNNING]: {

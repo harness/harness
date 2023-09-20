@@ -1,6 +1,8 @@
 /* eslint-disable */
 // This is an auto-generated file
+export declare const branchContainer: string
 export declare const branchesOnly: string
+export declare const branchSpan: string
 export declare const button: string
 export declare const input: string
 export declare const listContainer: string

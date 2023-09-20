@@ -9,6 +9,7 @@ import { noop } from 'lodash-es'
 import { String, useStrings } from 'framework/strings'
 import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
+import Branches from '../../icons/Branches.svg'
 import { CodeIcon, GitInfoProps, GitRefType, isRefATag, REFS_TAGS_PREFIX } from 'utils/GitUtils'
 import css from './BranchTagSelect.module.scss'
 
@@ -44,22 +45,35 @@ export const BranchTagSelect: React.FC<BranchTagSelectProps> = ({
 
   return (
     <Button
-      className={cx(css.button, className)}
+      className={cx(css.button, className, gitRefType == GitRefType.BRANCH ? css.branchContainer : null)}
       text={
         text ? (
           labelPrefix ? (
             <>
+              {gitRefType == GitRefType.BRANCH ? (
+                <span className={css.branchSpan}>
+                  <img src={Branches} width={14} height={14} />
+                </span>
+              ) : null}
+
               <span className={css.prefix}>{labelPrefix}</span>
               {text}
             </>
           ) : (
-            text
+            <>
+              {gitRefType == GitRefType.BRANCH ? (
+                <span className={css.branchSpan}>
+                  <img src={Branches} width={14} height={14} />
+                </span>
+              ) : null}
+              {text}
+            </>
           )
         ) : (
           <span className={css.prefix}>{placeHolder}</span>
         )
       }
-      icon={gitRefType == GitRefType.BRANCH ? CodeIcon.Branch : CodeIcon.Tag}
+      icon={gitRefType == GitRefType.BRANCH ? undefined : CodeIcon.Tag}
       rightIcon="chevron-down"
       variation={ButtonVariation.TERTIARY}
       iconProps={{ size: 14 }}
@@ -256,15 +270,19 @@ function GitRefList({
             )) || (
               <Button
                 text={
-                  <String
-                    stringID={activeGitRefType === GitRefType.BRANCH ? 'createBranchFromBranch' : 'createBranchFromTag'}
-                    tagName="span"
-                    className={css.newBtnText}
-                    vars={{ newBranch: query, target: gitRef }}
-                    useRichText
-                  />
+                  <>
+                    <img src={Branches} width={20} height={20}></img>
+                    <String
+                      stringID={
+                        activeGitRefType === GitRefType.BRANCH ? 'createBranchFromBranch' : 'createBranchFromTag'
+                      }
+                      tagName="span"
+                      className={css.newBtnText}
+                      vars={{ newBranch: query, target: gitRef }}
+                      useRichText
+                    />
+                  </>
                 }
-                icon={CodeIcon.Branch}
                 variation={ButtonVariation.SECONDARY}
                 onClick={() => onCreateBranch()}
                 className={Classes.POPOVER_DISMISS}

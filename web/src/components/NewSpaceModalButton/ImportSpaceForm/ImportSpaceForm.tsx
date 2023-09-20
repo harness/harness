@@ -31,8 +31,8 @@ const ImportSpaceForm = (props: ImportFormProps) => {
     organization: ''
   }
   const providers = [
-    { value: 'Github', label: 'Github' },
-    { value: 'Gitlab', label: 'Gitlab' }
+    { value: 'GitHub', label: 'GitHub' },
+    { value: 'GitLab', label: 'GitLab' }
   ]
   const validationSchemaStepOne = yup.object().shape({
     gitProvider: yup.string().trim().required(getString('importSpace.providerRequired'))

@@ -70,7 +70,7 @@ tagDescription: Enter tag description here
 findBranch: Find a branch
 searchBranches: Search branches
 updated: Updated
-cloneHTTPS: Clone with HTTPS
+cloneHTTPS: Git clone URL
 nameYourFile: Name your file...
 noResultTitle: Sorry, no result found
 noResultMessage: What you searched was unfortunately not found or doesn’t exist
@@ -469,7 +469,7 @@ cloneText: Your clone credentials have been generated. Please make sure to copy 
 manageApiToken: Manage API Token
 userName: User Name
 passwordApi: Password (API Token)
-firstTimeTitle: Please generate Git Credentials if it’s your first time to clone the repository
+firstTimeTitle: Please generate Git Credentials if it’s your first time cloning the repository
 manageCredText: You can also manage your git credential {URL}
 blame: Blame
 blameEmpty: File is empty. No blame information available.
@@ -590,7 +590,7 @@ addMember: Add Member
 addUserToSpace1: Add user to this Project
 addUserToSpace2: Add {{user}} to this Project
 spaceMemberships:
-  addMember: Add a member for {{name}}
+  addMember: Add a member to {{name}}
   changeRole: Change Role
   removeMember: Remove Member
   removeMembershipMsg: Are you sure you want to remove this member?
@@ -776,19 +776,17 @@ exportSpace:
   projectName: Project Name
   entitiesLabel: Entities to upgrade
   projectOrg: Project Organization
-  repoToConvert: '{{length}} repositories to be converted'
+  repoToConvert: '{{length}} repositories to be upgraded'
   startUpgrade: Start Upgrade
   upgradeHarness: Upgrade to Harness
   newProject: New Project Details
   upgradeConfirmation: Upgrade Confirmation
   upgradeTitle: Upgrade this project to the Harness Software Delivery platform
   upgrade: Upgrade
-  upgradeContent: Upgrade this project to Harness. By upgrading to Harness, you will create a new project in your
-    Harness account and migrate all repositories, pipelines and users / memberships to the new
-    project. Learn more about Harness.
+  upgradeContent: Upgrade this project to Harness. By upgrading to Harness, you will create a new project in your Harness account and migrate all repositories to the new project. Learn more about Harness.
   upgradeProgress: 'Upgrading in progress'
-  exportCompleted: Export Completed
-  exportRepoCompleted: Exported {{repoCount}} repositories
+  exportCompleted: Upgrade Completed
+  exportRepoCompleted: Upgraded {{repoCount}} repositories
   exportRepo: Exporting {{repoCount}} repositories
 spaceUpdate: Project Updated
 generate: Generate
