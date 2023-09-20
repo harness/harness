@@ -72,7 +72,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
   useEffect(() => {
     if (space && !selectedSpace && data) {
       selectSpace(data, false)
-    } else if (!space && selectSpace && data) {
+    } else if (!space && selectSpace && data && selectedSpace?.id !== -1) {
       selectSpace(
         {
           created: 0,
@@ -88,7 +88,7 @@ export const SpaceSelector: React.FC<SpaceSelectorProps> = ({ onSelect }) => {
         false
       )
     }
-  }, [space, selectedSpace, data, onSelect, selectSpace])
+  }, [space, selectedSpace, data, onSelect, selectSpace, getString])
 
   useEffect(() => {
     if (response?.status === 403) {
