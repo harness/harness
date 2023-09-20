@@ -17,7 +17,7 @@ require (
 	github.com/drone/drone-yaml v1.2.3
 	github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d
 	github.com/drone/go-convert v0.0.0-20230919093251-7104c3bcc635
-	github.com/drone/go-generate v0.0.0-20230919204203-e4bd241a4c09
+	github.com/drone/go-generate v0.0.0-20230920014042-6085ee5c9522
 	github.com/drone/go-scm v1.31.2
 	github.com/drone/runner-go v1.12.0
 	github.com/drone/spec v0.0.0-20230919004456-7455b8913ff5

@@ -149,8 +149,8 @@ github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d h1:/IO7UVVu191Jc0Daj
 github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d/go.mod h1:Hph0/pT6ZxbujnE1Z6/08p5I0XXuOsppqF6NQlGOK0E=
 github.com/drone/go-convert v0.0.0-20230919093251-7104c3bcc635 h1:qQX+U2iEm4X2FcmBzxZwZgz8gLpUTa6lBB1vBBCV9Oo=
 github.com/drone/go-convert v0.0.0-20230919093251-7104c3bcc635/go.mod h1:PyCDcuAhGF6W0VJ6qMmlM47dsSyGv/zDiMqeJxMFuGM=
-github.com/drone/go-generate v0.0.0-20230919204203-e4bd241a4c09 h1:R8TCjywzq3N6b9UhUVyuYQcORcG9qRGusxAAlGgS82Y=
-github.com/drone/go-generate v0.0.0-20230919204203-e4bd241a4c09/go.mod h1:eTfy716efMJgVvk/ZkRvitaXY2UuytfqDjxclFMeLdQ=
+github.com/drone/go-generate v0.0.0-20230920014042-6085ee5c9522 h1:i3EfRpr/eYifK9w0ninT3xHAthkS4NTQjLX0/zDIsy4=
+github.com/drone/go-generate v0.0.0-20230920014042-6085ee5c9522/go.mod h1:eTfy716efMJgVvk/ZkRvitaXY2UuytfqDjxclFMeLdQ=
 github.com/drone/go-scm v1.31.2 h1:6hZxf0aETV17830fMCPrgcA4y8j/8Gdfy0xEdInUeqQ=
 github.com/drone/go-scm v1.31.2/go.mod h1:DFIJJjhMj0TSXPz+0ni4nyZ9gtTtC40Vh/TGRugtyWw=
 github.com/drone/runner-go v1.12.0 h1:zUjDj9ylsJ4n4Mvy4znddq/Z4EBzcUXzTltpzokKtgs=
