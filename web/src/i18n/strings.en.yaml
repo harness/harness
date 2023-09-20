@@ -712,6 +712,7 @@ run: Run
 plugins:
   title: Plugins
   stepLabel: step
+  select: Select a plugin
 pluginsPanel:
   plugins:
     helptext: Run a plugin step

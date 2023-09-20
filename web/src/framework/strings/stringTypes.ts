@@ -425,6 +425,7 @@ export interface StringsMap {
   'pipelines.updatePipelineSuccess': string
   'pipelines.updated': string
   'pipelines.yamlPath': string
+  'plugins.select': string
   'plugins.stepLabel': string
   'plugins.title': string
   'pluginsPanel.plugins.helptext': string

@@ -191,19 +191,28 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
       </Container>
     ) : (
       <Layout.Vertical spacing="small" padding={{ top: 'small' }}>
-        <Layout.Horizontal
-          flex={{ justifyContent: 'flex-start', alignItems: 'center' }}
-          spacing="small"
-          padding={{ top: 'medium', bottom: 'medium', left: 'medium' }}>
-          <Icon
-            name="arrow-left"
-            size={18}
-            onClick={() => {
-              setPanelView(PluginPanelView.Category)
-            }}
-            className={css.arrow}
+        <Layout.Horizontal flex={{ justifyContent: 'space-between' }} padding={{ left: 'small', right: 'xlarge' }}>
+          <Layout.Horizontal
+            flex={{ justifyContent: 'flex-start', alignItems: 'center' }}
+            spacing="small"
+            padding={{ top: 'medium', bottom: 'medium', left: 'medium' }}>
+            <Icon
+              name="arrow-left"
+              size={18}
+              onClick={() => {
+                setPanelView(PluginPanelView.Category)
+              }}
+              className={css.arrow}
+            />
+            <Text font={{ variation: FontVariation.H5 }}>{getString('plugins.select')}</Text>
+          </Layout.Horizontal>
+          <ExpandingSearchInput
+            autoFocus={true}
+            alwaysExpanded={true}
+            defaultValue={query}
+            onChange={setQuery}
+            className={css.search}
           />
-          <ExpandingSearchInput autoFocus={true} alwaysExpanded={true} defaultValue={query} onChange={setQuery} />
         </Layout.Horizontal>
         <Container className={css.plugins}>
           {plugins?.map((pluginItem: TypesPlugin) => {

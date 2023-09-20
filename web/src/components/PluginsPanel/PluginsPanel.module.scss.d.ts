@@ -9,3 +9,4 @@ export declare const pluginDesc: string
 export declare const pluginDetailsPanel: string
 export declare const pluginIcon: string
 export declare const plugins: string
+export declare const search: string
