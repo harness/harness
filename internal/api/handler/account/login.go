@@ -15,19 +15,13 @@ import (
 
 // HandleLogin returns an http.HandlerFunc that authenticates
 // the user and returns an authentication token on success.
-func HandleLogin(userCtrl *user.Controller) http.HandlerFunc {
+func HandleLogin(userCtrl *user.Controller, cookieName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
 
-		includeCookie, err := request.GetIncludeCookieFromQueryOrDefault(r, false)
-		if err != nil {
-			render.TranslatedUserError(w, err)
-			return
-		}
-
 		in := new(user.LoginInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		err := json.NewDecoder(r.Body).Decode(in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
@@ -39,8 +33,8 @@ func HandleLogin(userCtrl *user.Controller) http.HandlerFunc {
 			return
 		}
 
-		if includeCookie {
-			includeTokenCookie(r, w, tokenResponse)
+		if cookieName != "" {
+			includeTokenCookie(r, w, tokenResponse, cookieName)
 		}
 
 		render.JSON(w, http.StatusOK, tokenResponse)

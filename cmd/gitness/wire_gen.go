@@ -94,7 +94,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	controller := user.ProvideController(db, principalUID, authorizer, principalStore, tokenStore, membershipStore)
 	serviceController := service.NewController(principalUID, authorizer, principalStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller, serviceController)
-	authenticator := authn.ProvideAuthenticator(principalStore, tokenStore)
+	authenticator := authn.ProvideAuthenticator(config, principalStore, tokenStore)
 	provider, err := url.ProvideURLProvider(config)
 	if err != nil {
 		return nil, err

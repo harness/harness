@@ -102,7 +102,8 @@ type Config struct {
 
 	// Token defines token configuration parameters.
 	Token struct {
-		Expire time.Duration `envconfig:"GITNESS_TOKEN_EXPIRE" default:"720h"`
+		CookieName string        `envconfig:"GITNESS_TOKEN_COOKIE_NAME" default:"token"`
+		Expire     time.Duration `envconfig:"GITNESS_TOKEN_EXPIRE" default:"720h"`
 	}
 
 	Logs struct {

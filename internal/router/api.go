@@ -119,7 +119,7 @@ func NewAPIHandler(
 	r.Use(middlewareauthn.Attempt(authenticator, authn.SourceRouterAPI))
 
 	r.Route("/v1", func(r chi.Router) {
-		setupRoutesV1(r, repoCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
+		setupRoutesV1(r, config, repoCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
 			connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
 			webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
 	})
@@ -142,6 +142,7 @@ func corsHandler(config *types.Config) func(http.Handler) http.Handler {
 }
 
 func setupRoutesV1(r chi.Router,
+	config *types.Config,
 	repoCtrl *repo.Controller,
 	executionCtrl *execution.Controller,
 	triggerCtrl *trigger.Controller,
@@ -171,7 +172,7 @@ func setupRoutesV1(r chi.Router,
 	setupPrincipals(r, principalCtrl)
 	setupInternal(r, githookCtrl)
 	setupAdmin(r, userCtrl)
-	setupAccount(r, userCtrl, sysCtrl)
+	setupAccount(r, userCtrl, sysCtrl, config)
 	setupSystem(r, sysCtrl)
 	setupResources(r)
 	setupPlugins(r, pluginCtrl)
@@ -598,8 +599,9 @@ func setupAdmin(r chi.Router, userCtrl *user.Controller) {
 	})
 }
 
-func setupAccount(r chi.Router, userCtrl *user.Controller, sysCtrl *system.Controller) {
-	r.Post("/login", account.HandleLogin(userCtrl))
-	r.Post("/register", account.HandleRegister(userCtrl, sysCtrl))
-	r.Post("/logout", account.HandleLogout(userCtrl))
+func setupAccount(r chi.Router, userCtrl *user.Controller, sysCtrl *system.Controller, config *types.Config) {
+	cookieName := config.Token.CookieName
+	r.Post("/login", account.HandleLogin(userCtrl, cookieName))
+	r.Post("/register", account.HandleRegister(userCtrl, sysCtrl, cookieName))
+	r.Post("/logout", account.HandleLogout(userCtrl, cookieName))
 }
