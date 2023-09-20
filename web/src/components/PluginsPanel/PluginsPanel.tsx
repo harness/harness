@@ -289,9 +289,9 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
     pluginMetadata?: TypesPlugin
   ): Record<string, any> => {
     const { name, container = {} } = pluginFormData
+    let payload = { ...PluginInsertionTemplate }
     switch (category) {
       case PluginCategory.Drone:
-        let payload = { ...PluginInsertionTemplate }
         /* Step name is optional, set only if specified by user */
         if (name) {
           set(payload, 'name', name)
@@ -336,7 +336,9 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
     try {
       const pluginSpecAsObj = parse(pluginSpec)
       return get(pluginSpecAsObj, 'spec.inputs', {})
-    } catch (ex) {}
+    } catch (ex) {
+      /* ignore error */
+    }
     return {}
   }, [])
 
