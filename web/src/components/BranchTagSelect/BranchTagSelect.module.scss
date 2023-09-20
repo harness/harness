@@ -20,6 +20,15 @@ html[class=''] {
     color: var(--grey-450) !important;
     font-weight: normal;
   }
+
+  :global {
+    .bp3-button-text {
+      max-width: 250px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
 }
 
 .main {
@@ -68,6 +77,10 @@ html[class=''] {
       a.bp3-menu-item:hover {
         background: var(--primary-1) !important;
         color: var(--grey-1000) !important;
+      }
+
+      .bp3-menu-item {
+        max-width: 600px;
       }
     }
   }

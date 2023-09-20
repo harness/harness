@@ -69,9 +69,11 @@ export function LatestCommitForFile({ repoMetadata, latestCommit, standaloneStyl
           </Text>
           <PipeSeparator height={9} />
 
-          <Link to={commitURL} className={css.commitLink}>
-            {latestCommit?.title}
-          </Link>
+          <Text lineClamp={1} tooltipProps={{ portalClassName: css.popover }}>
+            <Link to={commitURL} className={css.commitLink}>
+              {latestCommit?.title}
+            </Link>
+          </Text>
           <PipeSeparator height={9} />
           <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_400}>
             {formatDate(latestCommit?.author?.when as string)}

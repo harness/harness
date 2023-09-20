@@ -64,7 +64,10 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
             <Text
               lineClamp={1}
               className={cx(css.rowText, row.original?.name === repoMetadata.default_branch ? css.defaultBranch : '')}
-              color={Color.BLACK}>
+              color={Color.BLACK}
+              tooltipProps={{
+                popoverClassName: css.popover
+              }}>
               <Link
                 to={routes.toCODERepository({
                   repoPath: repoMetadata.path as string,
