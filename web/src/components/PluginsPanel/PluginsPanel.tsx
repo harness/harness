@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { Formik } from 'formik'
 import { parse } from 'yaml'
-import { capitalize, get, omit, set } from 'lodash-es'
+import { capitalize, get, has, omit, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import type { TypesPlugin } from 'services/code'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -297,7 +297,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
     pluginFormData: Record<string, any>,
     pluginMetadata?: TypesPlugin
   ): Record<string, any> => {
-    const { name } = pluginFormData
+    const { name, container = {} } = pluginFormData
     switch (category) {
       case PluginCategory.Drone:
         let payload = { ...PluginInsertionTemplate }
@@ -314,7 +314,9 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
         return {
           ...(name && { name }),
           type: 'run',
-          spec: pluginFormData
+          ...(Object.keys(container).length === 1 && has(container, 'image')
+            ? { spec: { container: get(container, 'image') } }
+            : { spec: pluginFormData })
         }
       default:
         return {}
