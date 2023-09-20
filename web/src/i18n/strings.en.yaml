@@ -739,7 +739,7 @@ pluginsPanel:
     privileged: Privileged
     path: Path
     always: Always
-    never: never
+    never: Never
     ifNotExists: If not exists
 createNewRepo: Create New repository
 importGitRepo: Import Repository
