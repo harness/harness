@@ -43,6 +43,7 @@ const changedFileId = (collection: Unknown[]) => collection.filter(Boolean).join
 interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   targetRef?: string
   sourceRef?: string
+  commitSHA?: string
   readOnly?: boolean
   emptyTitle: string
   emptyMessage: string
@@ -59,6 +60,7 @@ export const Changes: React.FC<ChangesProps> = ({
   repoMetadata,
   targetRef: _targetRef,
   sourceRef: _sourceRef,
+  commitSHA,
   readOnly,
   emptyTitle,
   emptyMessage,
@@ -92,16 +94,6 @@ export const Changes: React.FC<ChangesProps> = ({
     lazy: !pullRequestMetadata?.number
   })
 
-  const commitRangePath = useMemo(
-    () =>
-      commitRange.length === 1
-        ? `${commitRange[0]}~1...${commitRange[0]}`
-        : commitRange.length > 1
-        ? `${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
-        : undefined,
-    [commitRange]
-  )
-
   useEffect(() => {
     if (!pullRequestMetadata?.number) {
       return
@@ -128,15 +120,15 @@ export const Changes: React.FC<ChangesProps> = ({
     loading,
     refetch
   } = useGet<string>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/diff/${
-      commitRangePath ? commitRangePath : `${targetRef}...${sourceRef}`
-    }`,
+    path: commitSHA ?
+      `/api/v1/repos/${repoMetadata?.path}/+/commits/${commitSHA}/diff`
+      : `/api/v1/repos/${repoMetadata?.path}/+/diff/${targetRef}...${sourceRef}`,
     requestOptions: {
       headers: {
         Accept: 'text/plain'
       }
     },
-    lazy: !targetRef || !sourceRef
+    lazy: commitSHA ? false : !targetRef || !sourceRef
   })
 
   const {

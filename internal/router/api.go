@@ -265,6 +265,7 @@ func setupRepos(r chi.Router,
 				// per commit operations
 				r.Route(fmt.Sprintf("/{%s}", request.PathParamCommitSHA), func(r chi.Router) {
 					r.Get("/", handlerrepo.HandleGetCommit(repoCtrl))
+					r.Get("/diff", handlerrepo.HandleCommitDiff(repoCtrl))
 				})
 			})
 

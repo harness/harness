@@ -10,6 +10,7 @@ import "shared.proto";
 service DiffService {
   rpc RawDiff(DiffRequest) returns (stream RawDiffResponse) {}
   rpc Diff(DiffRequest) returns (stream DiffResponse) {}
+  rpc CommitDiff(CommitDiffRequest) returns (stream CommitDiffResponse);
   rpc DiffShortStat(DiffRequest) returns (DiffShortStatResponse) {}
   rpc GetDiffHunkHeaders(GetDiffHunkHeadersRequest) returns (GetDiffHunkHeadersResponse) {}
   rpc DiffCut(DiffCutRequest) returns (DiffCutResponse) {}
@@ -125,4 +126,13 @@ message DiffResponse {
   bool is_binary = 10;
   // is submodule
   bool is_submodule = 11;
+}
+
+message CommitDiffRequest {
+  ReadRequest base = 1;
+  string sha       = 2;
+}
+
+message CommitDiffResponse {
+  bytes data = 1;
 }

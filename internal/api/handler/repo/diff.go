@@ -27,8 +27,10 @@ func HandleDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 		path := request.GetOptionalRemainderFromPath(r)
 
 		if strings.HasPrefix(r.Header.Get("Accept"), "text/plain") {
-			// error checking is intentionally skipped because we dont want to send errors as text/plain
-			_ = repoCtrl.RawDiff(ctx, session, repoRef, path, w)
+			err := repoCtrl.RawDiff(ctx, session, repoRef, path, w)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusOK)
+			}
 			return
 		}
 
@@ -40,6 +42,31 @@ func HandleDiff(repoCtrl *repo.Controller) http.HandlerFunc {
 		}
 
 		render.JSONArrayDynamic(ctx, w, stream)
+	}
+}
+
+// HandleCommitDiff returns the diff between two commits, branches or tags.
+func HandleCommitDiff(repoCtrl *repo.Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		session, _ := request.AuthSessionFrom(ctx)
+		repoRef, err := request.GetRepoRefFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		commitSHA, err := request.GetCommitSHAFromPath(r)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		err = repoCtrl.CommitDiff(ctx, session, repoRef, commitSHA, w)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
 	}
 }
 

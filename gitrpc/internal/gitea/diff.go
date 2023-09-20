@@ -23,14 +23,14 @@ func (g Adapter) RawDiff(
 	repoPath string,
 	baseRef string,
 	headRef string,
+	mergeBase bool,
 	w io.Writer,
-	customArgs ...string,
 ) error {
-	args := []string{
-		"diff",
-		"-M",
+	args := make([]string, 0, 8)
+	args = append(args, "diff", "-M", "--full-index")
+	if mergeBase {
+		args = append(args, "--merge-base")
 	}
-	args = append(args, customArgs...)
 	args = append(args, baseRef, headRef)
 
 	cmd := git.NewCommand(ctx, args...)
@@ -45,6 +45,23 @@ func (g Adapter) RawDiff(
 			err = &runStdError{err: err, stderr: errbuf.String()}
 		}
 		return processGiteaErrorf(err, "git diff failed between '%s' and '%s' with err: %v", baseRef, headRef, err)
+	}
+	return nil
+}
+
+// CommitDiff will stream diff for provided ref
+func (g Adapter) CommitDiff(ctx context.Context, repoPath, sha string, w io.Writer) error {
+	args := make([]string, 0, 8)
+	args = append(args, "show", "--full-index", "--pretty=format:%b", sha)
+
+	stderr := new(bytes.Buffer)
+	cmd := git.NewCommand(ctx, args...)
+	if err := cmd.Run(&git.RunOpts{
+		Dir:    repoPath,
+		Stdout: w,
+		Stderr: stderr,
+	}); err != nil {
+		return processGiteaErrorf(err, "commit diff error: %v", stderr)
 	}
 	return nil
 }

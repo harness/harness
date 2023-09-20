@@ -42,6 +42,24 @@ func (c *Controller) RawDiff(
 	}, w)
 }
 
+func (c *Controller) CommitDiff(
+	ctx context.Context,
+	session *auth.Session,
+	repoRef string,
+	sha string,
+	w io.Writer,
+) error {
+	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView, true)
+	if err != nil {
+		return err
+	}
+
+	return c.gitRPCClient.CommitDiff(ctx, &gitrpc.GetCommitParams{
+		ReadParams: CreateRPCReadParams(repo),
+		SHA:        sha,
+	}, w)
+}
+
 type CompareInfo struct {
 	BaseRef   string
 	HeadRef   string
