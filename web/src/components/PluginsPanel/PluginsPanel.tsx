@@ -9,9 +9,9 @@ import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon, type IconName } from '@harnessio/icons'
 import { Button, ButtonVariation, Container, FormInput, FormikForm, Layout, Popover, Text } from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
-import { LIST_FETCHING_LIMIT } from 'utils/Utils'
 
 import css from './PluginsPanel.module.scss'
+
 enum PluginCategory {
   Harness,
   Drone
@@ -77,6 +77,8 @@ const PluginInsertionTemplate: PluginInsertionTemplateInterface = {
 const PluginNameFieldPath = 'spec.name'
 const PluginInputsFieldPath = 'spec.inputs'
 
+const LIST_FETCHING_LIMIT = 100
+
 export interface PluginsPanelInterface {
   onPluginAddUpdate: (isUpdate: boolean, pluginFormData: Record<string, any>) => void
 }
@@ -94,7 +96,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   } = useGet<TypesPlugin[]>({
     path: `/api/v1/plugins`,
     queryParams: {
-      limit: 100,
+      limit: LIST_FETCHING_LIMIT,
       page: 1
     },
     lazy: true
