@@ -1,13 +1,22 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { useGet } from 'restful-react'
 import { Formik } from 'formik'
 import { parse } from 'yaml'
-import { capitalize, get, isEmpty, omit, set } from 'lodash-es'
+import { capitalize, get, omit, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import type { TypesPlugin } from 'services/code'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon, type IconName } from '@harnessio/icons'
-import { Button, ButtonVariation, Container, FormInput, FormikForm, Layout, Popover, Text } from '@harnessio/uicore'
+import {
+  Button,
+  ButtonVariation,
+  Container,
+  ExpandingSearchInput,
+  FormInput,
+  FormikForm,
+  Layout,
+  Popover,
+  Text
+} from '@harnessio/uicore'
 import { useStrings } from 'framework/strings'
 
 import css from './PluginsPanel.module.scss'
@@ -79,6 +88,8 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   const [panelView, setPanelView] = useState<PluginPanelView>(PluginPanelView.Category)
   const [plugin, setPlugin] = useState<TypesPlugin>()
   const [plugins, setPlugins] = useState<TypesPlugin[]>([])
+  const [query, setQuery] = useState<string>('')
+  const [loading, setLoading] = useState<boolean>(false)
 
   const PluginCategories: PluginCategoryInterface[] = [
     {
@@ -95,37 +106,47 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
     }
   ]
 
-  const {
-    data: fetchedPlugins,
-    refetch: fetchPlugins,
-    loading
-  } = useGet<TypesPlugin[]>({
-    path: `/api/v1/plugins`,
-    queryParams: {
-      limit: LIST_FETCHING_LIMIT,
-      page: 1
-    },
-    lazy: true
-  })
+  const fetchAllPlugins = useCallback((): void => {
+    try {
+      setLoading(true)
+      let allPlugins: TypesPlugin[] = []
+      fetch(`/api/v1/plugins?page=${1}&limit=${LIST_FETCHING_LIMIT}`)
+        .then(async response => {
+          const plugins = await response.json()
+          allPlugins = [...plugins]
+          fetch(`/api/v1/plugins?page=${2}&limit=${LIST_FETCHING_LIMIT}`).then(async response => {
+            const plugins = await response.json()
+            setPlugins([...allPlugins, ...plugins])
+          })
+        })
+        .catch(_err => {
+          /* ignore error */
+        })
+        .catch(_err => {
+          /* ignore error */
+        })
+      setLoading(false)
+    } catch (ex) {
+      /* ignore exception */
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (category === PluginCategory.Drone) {
-      Promise.all([
-        fetchPlugins({ queryParams: { limit: LIST_FETCHING_LIMIT, page: 1 } }),
-        fetchPlugins({ queryParams: { limit: LIST_FETCHING_LIMIT, page: 2 } })
-      ])
+      fetchAllPlugins()
     }
   }, [category])
 
   useEffect(() => {
-    if (!loading && fetchedPlugins) {
-      if (isEmpty(plugins)) {
-        setPlugins(fetchedPlugins)
+    if (panelView === PluginPanelView.Listing) {
+      if (query) {
+        setPlugins(existingPlugins => existingPlugins.filter((item: TypesPlugin) => item.uid?.includes(query)))
       } else {
-        setPlugins(existingPlugins => [...(existingPlugins || []), ...fetchedPlugins])
+        fetchAllPlugins()
       }
     }
-  }, [loading, fetchedPlugins])
+  }, [query])
 
   const renderPluginCategories = (): JSX.Element => {
     return (
@@ -182,6 +203,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
             }}
             className={css.arrow}
           />
+          <ExpandingSearchInput autoFocus={true} alwaysExpanded={true} defaultValue={query} onChange={setQuery} />
         </Layout.Horizontal>
         <Container className={css.plugins}>
           {plugins?.map((pluginItem: TypesPlugin) => {
@@ -211,7 +233,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
         </Container>
       </Layout.Vertical>
     )
-  }, [loading, plugins])
+  }, [loading, plugins, query])
 
   const generateFriendlyName = useCallback((pluginName: string): string => {
     return capitalize(pluginName.split('_').join(' '))
