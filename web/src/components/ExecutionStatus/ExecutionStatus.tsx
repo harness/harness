@@ -73,7 +73,7 @@ export const ExecutionStatus: React.FC<ExecutionStatusProps> = ({
         title: getString('killed').toLocaleUpperCase()
       }
     }),
-    [getString, isCi]
+    [getString, inExecution, isCi]
   )
   const map = useMemo(() => maps[status], [maps, status])
 

@@ -14,6 +14,8 @@ export const getStatus = (status: string | undefined): ExecutionState => {
       return ExecutionState.ERROR
     case 'killed':
       return ExecutionState.KILLED
+    case 'skipped':
+      return ExecutionState.SKIPPED
     default:
       return ExecutionState.PENDING
   }
