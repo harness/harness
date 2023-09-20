@@ -35,7 +35,7 @@
 }
 
 .plugins {
-  max-height: calc(100vh - var(--header-height));
+  max-height: calc(100vh - var(--header-height) - var(--generate-pipeline-header));
   overflow-y: scroll;
 }
 

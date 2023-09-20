@@ -94,7 +94,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   } = useGet<TypesPlugin[]>({
     path: `/api/v1/plugins`,
     queryParams: {
-      limit: LIST_FETCHING_LIMIT,
+      limit: 100,
       page: 1
     },
     lazy: true
