@@ -22,7 +22,7 @@ import { useModalHook } from 'hooks/useModalHook'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import type { OpenapiUpdateSecretRequest, TypesSecret } from 'services/code'
 import type { SecretFormData } from 'components/NewSecretModalButton/NewSecretModalButton'
-import { getErrorMessage } from 'utils/Utils'
+import { getErrorMessage, truncateString } from 'utils/Utils'
 
 const useUpdateSecretModal = () => {
   const { getString } = useStrings()
@@ -49,7 +49,7 @@ const useUpdateSecretModal = () => {
         <StringSubstitute
           str={getString('secrets.secretUpdated')}
           vars={{
-            uid: formData.name
+            uid: truncateString(formData.name, 20)
           }}
         />
       )
@@ -86,6 +86,8 @@ const useUpdateSecretModal = () => {
                   .string()
                   .trim()
                   .required()
+                  .min(1, getString('validation.nameTooShort'))
+                  .max(100, getString('validation.nameTooLong'))
                   .matches(/^[a-zA-Z_][a-zA-Z0-9-_.]*$/, getString('validation.nameLogic')),
                 value: yup.string().trim().required()
               })}

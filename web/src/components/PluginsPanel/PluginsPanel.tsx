@@ -3,7 +3,6 @@ import { Formik } from 'formik'
 import { parse } from 'yaml'
 import { capitalize, get, omit, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
-import type { TypesPlugin } from 'services/code'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon, type IconName } from '@harnessio/icons'
 import {
@@ -18,6 +17,7 @@ import {
   Popover,
   Text
 } from '@harnessio/uicore'
+import type { TypesPlugin } from 'services/code'
 import { useStrings } from 'framework/strings'
 
 import css from './PluginsPanel.module.scss'

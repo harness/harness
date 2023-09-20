@@ -8,7 +8,6 @@ export declare const nameContainer: string
 export declare const noDesc: string
 export declare const pinned: string
 export declare const repoName: string
-export declare const repoScope: string
 export declare const row: string
 export declare const table: string
 export declare const withError: string

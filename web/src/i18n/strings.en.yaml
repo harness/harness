@@ -128,6 +128,8 @@ validation:
   confirmPasswordRequired: Confirm Password is a required field
   spaceNamePatternIsNotValid: "Name has to start with a letter or '_' and only contain alphanumerics"
   nameLogic: Name must start with a letter or _ and only contain [a-zA-Z0-9-_.]
+  nameTooLong: Name is too long
+  nameTooShort: Name is too short
 commitMessage: Commit message
 optionalExtendedDescription: Optional extended description
 optional: Optional

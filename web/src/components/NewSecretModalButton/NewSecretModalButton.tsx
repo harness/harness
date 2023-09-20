@@ -98,6 +98,8 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
                   .string()
                   .trim()
                   .required()
+                  .min(1, getString('validation.nameTooShort'))
+                  .max(100, getString('validation.nameTooLong'))
                   .matches(/^[a-zA-Z_][a-zA-Z0-9-_.]*$/, getString('validation.nameLogic')),
                 value: yup.string().trim().required()
               })}

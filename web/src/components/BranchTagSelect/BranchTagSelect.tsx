@@ -9,8 +9,8 @@ import { noop } from 'lodash-es'
 import { String, useStrings } from 'framework/strings'
 import { getErrorMessage, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { useAppContext } from 'AppContext'
-import Branches from '../../icons/Branches.svg'
 import { CodeIcon, GitInfoProps, GitRefType, isRefATag, REFS_TAGS_PREFIX } from 'utils/GitUtils'
+import Branches from '../../icons/Branches.svg'
 import css from './BranchTagSelect.module.scss'
 
 export interface BranchTagSelectProps extends Omit<ButtonProps, 'onSelect'>, Pick<GitInfoProps, 'repoMetadata'> {

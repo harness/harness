@@ -708,6 +708,8 @@ export interface StringsMap {
   'validation.nameInvalid': string
   'validation.nameIsRequired': string
   'validation.nameLogic': string
+  'validation.nameTooLong': string
+  'validation.nameTooShort': string
   'validation.newPasswordRequired': string
   'validation.repoNamePatternIsNotValid': string
   'validation.spaceNamePatternIsNotValid': string

@@ -20,7 +20,7 @@ import { String, useStrings } from 'framework/strings'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { SearchInputWithSpinner } from 'components/SearchInputWithSpinner/SearchInputWithSpinner'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
-import { LIST_FETCHING_LIMIT, PageBrowserProps, formatDate, getErrorMessage, voidFn } from 'utils/Utils'
+import { LIST_FETCHING_LIMIT, PageBrowserProps, formatDate, getErrorMessage, truncateString, voidFn } from 'utils/Utils'
 import type { TypesSecret } from 'services/code'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useQueryParams } from 'hooks/useQueryParams'
@@ -75,10 +75,14 @@ const SecretList = () => {
             <Container className={css.nameContainer}>
               <Layout.Horizontal spacing="small" style={{ flexGrow: 1 }}>
                 <Layout.Vertical flex className={css.name}>
-                  <Text className={css.repoName}>
+                  <Text className={css.repoName} lineClamp={1}>
                     <Keywords value={searchTerm}>{record.uid}</Keywords>
                   </Text>
-                  {record.description && <Text className={css.desc}>{record.description}</Text>}
+                  {record.description && (
+                    <Text className={css.desc} lineClamp={1}>
+                      {record.description}
+                    </Text>
+                  )}
                 </Layout.Vertical>
               </Layout.Horizontal>
             </Container>
@@ -139,7 +143,7 @@ const SecretList = () => {
                               <StringSubstitute
                                 str={getString('secrets.secretDeleted')}
                                 vars={{
-                                  uid: row.original.uid
+                                  uid: truncateString(row.original.uid as string, 20)
                                 }}
                               />,
                               5000

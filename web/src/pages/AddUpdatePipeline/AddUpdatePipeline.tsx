@@ -257,9 +257,9 @@ const AddUpdatePipeline = (): JSX.Element => {
     try {
       const response = await fetch(`/api/v1/repos/${repoPath}/+/pipelines/generate`)
       if (response.ok && response.status === 200) {
-        const pipelineAsYAML = await response.text()
-        if (pipelineAsYAML) {
-          setPipelineAsYaml(pipelineAsYAML)
+        const responsePipelineAsYAML = await response.text()
+        if (responsePipelineAsYAML) {
+          setPipelineAsYaml(responsePipelineAsYAML)
         }
       }
       setGeneratingPipeline(false)
