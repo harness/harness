@@ -102,7 +102,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
       category: PluginCategory.Drone,
       name: capitalize(getString('plugins.title')),
       description: getString('pluginsPanel.plugins.helptext'),
-      icon: 'ci-infra'
+      icon: 'plugin-ci-step'
     }
   ]
 
