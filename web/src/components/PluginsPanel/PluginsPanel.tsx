@@ -227,7 +227,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   )
 
   const renderPluginFormField = ({ name, properties }: { name: string; properties: PluginInput }): JSX.Element => {
-    const { type, default: defaultValue, options } = properties
+    const { type, options } = properties
     const { isExtended } = options || {}
     const WrapperComponent = isExtended ? FormInput.TextArea : FormInput.Text
     return type === 'string' ? (
@@ -236,7 +236,6 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
         label={generateLabelForPluginField({ name, properties })}
         style={{ width: '100%' }}
         key={name}
-        placeholder={defaultValue}
       />
     ) : (
       <></>
