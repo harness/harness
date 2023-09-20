@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useGet, useMutate } from 'restful-react'
 import { useParams } from 'react-router-dom'
 import { get, isEmpty, isUndefined, set } from 'lodash-es'
@@ -88,6 +88,7 @@ const AddUpdatePipeline = (): JSX.Element => {
   const [isExistingPipeline, setIsExistingPipeline] = useState<boolean>(false)
   const [isDirty, setIsDirty] = useState<boolean>(false)
   const [generatingPipeline, setGeneratingPipeline] = useState<boolean>(false)
+  const pipelineAsYAMLRef = useRef<string>('')
 
   const pipelineSaveOption: PipelineSaveAndRunOption = {
     title: getString('save'),
@@ -227,20 +228,29 @@ const AddUpdatePipeline = (): JSX.Element => {
     return existingPipeline
   }
 
-  const handlePluginAddUpdateIntoYAML = useCallback(
-    (_isUpdate: boolean, pluginFormData: Record<string, any>): void => {
+  const handlePluginAddUpdateToPipeline = useCallback(
+    ({
+      pluginFormData,
+      existingYAML
+    }: {
+      isUpdate: boolean
+      pluginFormData: Record<string, any>
+      existingYAML: string
+    }): void => {
       try {
-        const pipelineAsObj = parse(pipelineAsYAML)
+        const pipelineAsObj = parse(existingYAML)
         const updatedPipelineAsObj = updatePipelineWithPluginData(pipelineAsObj, pluginFormData)
         if (Object.keys(updatedPipelineAsObj).length > 0) {
           // avoid setting to empty pipeline in case pipeline update with plugin data fails
-          setPipelineAsYaml(stringify(updatedPipelineAsObj))
+          const updatedPipelineAsYAML = stringify(updatedPipelineAsObj)
+          setPipelineAsYaml(updatedPipelineAsYAML)
+          pipelineAsYAMLRef.current = updatedPipelineAsYAML
         }
       } catch (ex) {
         // ignore exception
       }
     },
-    [yamlVersion, isExistingPipeline, originalPipelineYAMLFileContent, pipelineAsYAML]
+    []
   )
 
   const handleGeneratePipeline = useCallback(async (): Promise<void> => {
@@ -394,7 +404,15 @@ const AddUpdatePipeline = (): JSX.Element => {
               </Container>
               {yamlVersion === YamlVersion.V1 && (
                 <Container className={css.pluginsContainer}>
-                  <PluginsPanel onPluginAddUpdate={handlePluginAddUpdateIntoYAML} />
+                  <PluginsPanel
+                    onPluginAddUpdate={(isUpdate: boolean, pluginFormData: Record<string, any>) =>
+                      handlePluginAddUpdateToPipeline({
+                        isUpdate,
+                        pluginFormData,
+                        existingYAML: pipelineAsYAMLRef.current || pipelineAsYAML
+                      })
+                    }
+                  />
                 </Container>
               )}
             </Layout.Horizontal>
