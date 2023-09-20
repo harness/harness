@@ -306,7 +306,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
           ...(name && { name }),
           type: 'run',
           ...(Object.keys(container).length === 1 && container?.image
-            ? { spec: { container: get(container, 'image') } }
+            ? { spec: { ...pluginFormData, container: get(container, 'image') } }
             : { spec: pluginFormData })
         }
       default:
@@ -389,6 +389,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                   flex={{ justifyContent: 'space-between' }}>
                   {category === PluginCategory.Harness ? (
                     <Layout.Vertical width="inherit">
+                      <FormInput.Text name={'name'} label={getString('name')} style={{ width: '100%' }} key={'name'} />
                       <FormInput.TextArea
                         name={'script'}
                         label={getString('pluginsPanel.run.script')}
@@ -419,6 +420,47 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                                 style={{ width: '100%' }}
                                 key={'container.image'}
                               />
+                              <FormInput.Select
+                                name={'container.pull'}
+                                label={getString('pluginsPanel.run.pull')}
+                                style={{ width: '100%' }}
+                                key={'container.pull'}
+                                items={[
+                                  { label: getString('pluginsPanel.run.always'), value: 'always' },
+                                  { label: getString('pluginsPanel.run.never'), value: 'never' },
+                                  { label: getString('pluginsPanel.run.ifNotExists'), value: 'f-not-exists' }
+                                ]}
+                              />
+                              <FormInput.Text
+                                name={'container.entrypoint'}
+                                label={getString('pluginsPanel.run.entrypoint')}
+                                style={{ width: '100%' }}
+                                key={'container.entrypoint'}
+                              />
+                              <FormInput.Text
+                                name={'container.network'}
+                                label={getString('pluginsPanel.run.network')}
+                                style={{ width: '100%' }}
+                                key={'container.network'}
+                              />
+                              <FormInput.Text
+                                name={'container.networkMode'}
+                                label={getString('pluginsPanel.run.networkMode')}
+                                style={{ width: '100%' }}
+                                key={'container.networkMode'}
+                              />
+                              <FormInput.Toggle
+                                name={'container.privileged'}
+                                label={getString('pluginsPanel.run.privileged')}
+                                style={{ width: '100%' }}
+                                key={'container.privileged'}
+                              />
+                              <FormInput.Text
+                                name={'container.user'}
+                                label={getString('user')}
+                                style={{ width: '100%' }}
+                                key={'container.user'}
+                              />
                               <Accordion activeId="">
                                 <Accordion.Panel
                                   id="container.credentials"
@@ -441,52 +483,6 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                                   }
                                 />
                               </Accordion>
-                              <FormInput.Text
-                                name={'container.pull'}
-                                label={getString('pluginsPanel.run.pull')}
-                                style={{ width: '100%' }}
-                                key={'container.pull'}
-                              />
-                              <FormInput.Text
-                                name={'container.entrypoint'}
-                                label={getString('pluginsPanel.run.entrypoint')}
-                                style={{ width: '100%' }}
-                                key={'container.entrypoint'}
-                              />
-                              <FormInput.Text
-                                name={'container.network'}
-                                label={getString('pluginsPanel.run.network')}
-                                style={{ width: '100%' }}
-                                key={'container.network'}
-                              />
-                              <FormInput.Text
-                                name={'container.networkMode'}
-                                label={getString('pluginsPanel.run.networkMode')}
-                                style={{ width: '100%' }}
-                                key={'container.networkMode'}
-                              />
-                              <FormInput.RadioGroup
-                                name={'container.privileged'}
-                                label={getString('pluginsPanel.run.privileged')}
-                                style={{ width: '100%' }}
-                                key={'container.privileged'}
-                                items={[
-                                  { label: 'Yes', value: 'true' },
-                                  { label: 'No', value: 'false' }
-                                ]}
-                              />
-                              <FormInput.Toggle
-                                name={'container.privileged'}
-                                label={getString('pluginsPanel.run.privileged')}
-                                style={{ width: '100%' }}
-                                key={'container.privileged'}
-                              />
-                              <FormInput.Text
-                                name={'container.user'}
-                                label={getString('user')}
-                                style={{ width: '100%' }}
-                                key={'container.user'}
-                              />
                             </Layout.Vertical>
                           }
                         />
