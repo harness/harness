@@ -347,11 +347,19 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
     return {}
   }, [])
 
+  const getInitialFormValues = useCallback((pluginInputs: Record<string, any>): Record<string, any> => {
+    const initialValueMap: Record<string, any> = {}
+    Object.keys(pluginInputs).forEach((field: string) => {
+      const value = get(pluginInputs, `${field}.default`)
+      if (value) {
+        initialValueMap[field] = value
+      }
+    })
+    return initialValueMap
+  }, [])
+
   const renderPluginConfigForm = useCallback((): JSX.Element => {
     const pluginInputs = getPluginInputsFromSpec(get(plugin, 'spec', '') as string)
-    if (category === PluginCategory.Drone && Object.keys(pluginInputs).length === 0) {
-      return <></>
-    }
     const allPluginInputs = insertNameFieldToPluginInputs(pluginInputs)
     return (
       <Layout.Vertical spacing="large" className={css.configForm}>
@@ -377,7 +385,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
         </Layout.Horizontal>
         <Container className={css.form}>
           <Formik
-            initialValues={{}}
+            initialValues={getInitialFormValues(pluginInputs)}
             onSubmit={formData => {
               onPluginAddUpdate?.(false, constructPayloadForYAMLInsertion(formData, plugin))
             }}>
@@ -513,12 +521,14 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                         />
                       </Accordion>
                     </Layout.Vertical>
-                  ) : (
+                  ) : Object.keys(pluginInputs).length > 0 ? (
                     <Layout.Vertical width="inherit">
                       {Object.keys(allPluginInputs).map((field: string) => {
                         return renderPluginFormField({ name: field, properties: get(allPluginInputs, field) })
                       })}
                     </Layout.Vertical>
+                  ) : (
+                    <></>
                   )}
                 </Layout.Vertical>
                 <Container margin={{ top: 'small', bottom: 'small' }}>
