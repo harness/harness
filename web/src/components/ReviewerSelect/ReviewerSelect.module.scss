@@ -63,9 +63,18 @@
     max-height: 300px;
     overflow-y: auto;
 
+    .owner {
+      font-weight: bold;
+      font-size: 12px;
+    }
+
     .menuItem:hover {
-      background: var(--primary-1) !important;
+      background: var(--primary-1);
       border-radius: 4px;
+    }
+
+    .disabled:hover {
+      background: var(--grey-100) !important;
     }
   }
 

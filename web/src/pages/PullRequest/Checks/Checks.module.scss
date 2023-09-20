@@ -206,6 +206,12 @@
     z-index: 1;
   }
 
+  .stepContainer {
+    display: flex;
+    flex-direction: column;
+    word-break: break-all;
+  }
+
   .stepHeader {
     display: flex;
     align-items: center;
@@ -249,7 +255,7 @@
   }
 
   .stepLogContainer {
-    padding: 15px 36px;
+    padding: 15px 10px 15px 36px;
     flex-shrink: 0;
 
     .consoleLine {

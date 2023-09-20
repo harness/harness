@@ -167,7 +167,7 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
                         setPathsChunks(pathsChunks.map(_chunk => (pathsChunk === _chunk ? pathsChunk : _chunk)))
                       }
 
-                      console.log('Failed to fetch path commit details', error) // eslint-disable-line no-console
+                      console.error('Failed to fetch path commit details', error) // eslint-disable-line no-console
                     })
                 }
                 break

@@ -1,5 +1,8 @@
 .logLayout {
+  margin-top: var(--spacing-small);
   margin-left: 23px !important;
+  display: flex !important;
+  word-break: break-all !important;
 }
 
 .lineNumber {
@@ -12,6 +15,10 @@
   font-size: 13px !important;
 }
 
+.flexExpand {
+  flex-grow: 1;
+}
+
 .log {
   color: white !important;
   font-family: 'Roboto Mono' !important;
@@ -21,4 +28,6 @@
 
 .time {
   user-select: none !important;
+  margin-left: var(--layout-spacing) !important;
+  word-break: keep-all !important;
 }

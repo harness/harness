@@ -38,7 +38,7 @@ const toolbar: ToolbarItem[] = [
 ]
 
 interface MarkdownEditorWithPreviewProps {
-  className?: string,
+  className?: string
   value?: string
   onChange?: (value: string) => void
   onSave?: (value: string) => void
@@ -311,8 +311,8 @@ function scrollToAndSetCursorToEnd(
   if (!dom) {
     return
   }
-
-  dom.scrollIntoViewIfNeeded()
+  // TODO: polyfill scrollintviewifneeded for other browsers besides chrome for scroll
+  dom?.scrollIntoViewIfNeeded?.()
 
   if (moveCursorToEnd) {
     viewRef.current?.dispatch({ selection: { anchor: content.length, head: content.length } })

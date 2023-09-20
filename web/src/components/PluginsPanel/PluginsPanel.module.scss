@@ -4,12 +4,17 @@
 }
 
 .pluginIcon {
-  background: var(--teal-200) !important;
+  padding: var(--spacing-small) var(--spacing-3) var(--spacing-small) var(--spacing-3) !important;
+  background: var(--grey-100) !important;
   border-radius: 5px;
 }
 
+.pluginCard {
+  margin: var(--spacing-medium);
+  padding: var(--spacing-medium) !important;
+}
+
 .plugin {
-  border: 1px solid var(--grey-100);
   &:hover {
     cursor: pointer;
   }
@@ -63,4 +68,8 @@
 .configForm {
   height: calc(100% - var(--spacing-large) - var(--spacing-xxlarge));
   margin: var(--spacing-large) var(--spacing-xxlarge) var(--spacing-xxlarge) var(--spacing-xxlarge) !important;
+}
+
+.pluginCategory {
+  font-weight: 600 !important;
 }

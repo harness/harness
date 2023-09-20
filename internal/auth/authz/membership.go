@@ -41,6 +41,16 @@ func (a *MembershipAuthorizer) Check(
 	resource *types.Resource,
 	permission enum.Permission,
 ) (bool, error) {
+	// public access - not expected to come here as of now (have to refactor that part)
+	if session == nil {
+		log.Ctx(ctx).Warn().Msgf(
+			"public access request for %s in scope %#v got to authorizer",
+			permission,
+			scope,
+		)
+		return false, nil
+	}
+
 	log.Ctx(ctx).Debug().Msgf(
 		"[MembershipAuthorizer] %s with id '%d' requests %s for %s '%s' in scope %#v with metadata %#v",
 		session.Principal.Type,
@@ -98,7 +108,7 @@ func (a *MembershipAuthorizer) Check(
 	}
 
 	// ensure we aren't bypassing unknown metadata with impact on authorization
-	if session.Metadata.ImpactsAuthorization() {
+	if session.Metadata != nil && session.Metadata.ImpactsAuthorization() {
 		return false, fmt.Errorf("session contains unknown metadata that impacts authorization: %T", session.Metadata)
 	}
 

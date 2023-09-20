@@ -38,9 +38,9 @@ const StarterPipelineV1: Record<string, any> = {
           steps: [
             {
               name: 'build',
-              type: 'script',
+              type: 'run',
               spec: {
-                image: 'golang',
+                container: 'alpine',
                 run: 'echo "hello world"'
               }
             }
