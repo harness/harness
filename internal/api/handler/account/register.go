@@ -16,7 +16,7 @@ import (
 
 // HandleRegister returns an http.HandlerFunc that processes an http.Request
 // to register the named user account with the system.
-func HandleRegister(userCtrl *user.Controller, sysCtrl *system.Controller) http.HandlerFunc {
+func HandleRegister(userCtrl *user.Controller, sysCtrl *system.Controller, cookieName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -40,7 +40,7 @@ func HandleRegister(userCtrl *user.Controller, sysCtrl *system.Controller) http.
 		}
 
 		if includeCookie {
-			includeTokenCookie(r, w, tokenResponse)
+			includeTokenCookie(r, w, tokenResponse, cookieName)
 		}
 
 		render.JSON(w, http.StatusOK, tokenResponse)

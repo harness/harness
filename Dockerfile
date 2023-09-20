@@ -79,6 +79,7 @@ ENV GITNESS_DATABASE_DRIVER sqlite3
 ENV GITNESS_DATABASE_DATASOURCE /data/database.sqlite
 ENV GITNESS_METRIC_ENABLED=true
 ENV GITNESS_METRIC_ENDPOINT=https://stats.drone.ci/api/v1/gitness
+ENV GITNESS_TOKEN_COOKIE_NAME=token
 
 COPY --from=builder /app/gitness /app/gitness
 COPY --from=cert-image /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt

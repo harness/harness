@@ -14,7 +14,7 @@ import (
 
 // HandleLogout returns a http.HandlerFunc that deletes the
 // user token being used in the respective request and logs the user out.
-func HandleLogout(userCtrl *user.Controller) http.HandlerFunc {
+func HandleLogout(userCtrl *user.Controller, cookieName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		session, _ := request.AuthSessionFrom(ctx)
@@ -24,7 +24,7 @@ func HandleLogout(userCtrl *user.Controller) http.HandlerFunc {
 		// best effort delete cookie even in case of errors, to avoid clients being unable to remove the cookie.
 		// WARNING: It could be that the cookie is removed even though the token is still there in the DB.
 		// However, we have APIs to list and delete session tokens, and expiry time is usually short.
-		deleteTokenCookieIfPresent(r, w)
+		deleteTokenCookieIfPresent(r, w, cookieName)
 
 		if err != nil {
 			render.TranslatedUserError(w, err)

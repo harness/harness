@@ -24,14 +24,18 @@ var _ Authenticator = (*JWTAuthenticator)(nil)
 
 // JWTAuthenticator uses the provided JWT to authenticate the caller.
 type JWTAuthenticator struct {
+	cookieName     string
 	principalStore store.PrincipalStore
 	tokenStore     store.TokenStore
 }
 
 func NewTokenAuthenticator(
 	principalStore store.PrincipalStore,
-	tokenStore store.TokenStore) *JWTAuthenticator {
+	tokenStore store.TokenStore,
+	cookieName string,
+) *JWTAuthenticator {
 	return &JWTAuthenticator{
+		cookieName:     cookieName,
 		principalStore: principalStore,
 		tokenStore:     tokenStore,
 	}
@@ -39,7 +43,7 @@ func NewTokenAuthenticator(
 
 func (a *JWTAuthenticator) Authenticate(r *http.Request, sourceRouter SourceRouter) (*auth.Session, error) {
 	ctx := r.Context()
-	str := extractToken(r)
+	str := extractToken(r, a.cookieName)
 
 	if len(str) == 0 {
 		return nil, ErrNoAuthData
@@ -122,7 +126,7 @@ func (a *JWTAuthenticator) metadataFromMembershipClaims(
 	}, nil
 }
 
-func extractToken(r *http.Request) string {
+func extractToken(r *http.Request, cookieName string) string {
 	// Check query param first (as that's most immediately visible to caller)
 	if queryToken, ok := request.GetAccessTokenFromQuery(r); ok {
 		return queryToken
@@ -145,7 +149,7 @@ func extractToken(r *http.Request) string {
 	}
 
 	// check cookies last (as that's least visible to caller)
-	if cookieToken, ok := request.GetTokenFromCookie(r); ok {
+	if cookieToken, ok := request.GetTokenFromCookie(r, cookieName); ok {
 		return cookieToken
 	}
 

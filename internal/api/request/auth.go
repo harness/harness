@@ -11,7 +11,6 @@ import (
 const (
 	QueryParamAccessToken   = "access_token"
 	QueryParamIncludeCookie = "include_cookie"
-	CookieToken             = "token"
 )
 
 func GetAccessTokenFromQuery(r *http.Request) (string, bool) {
@@ -22,6 +21,6 @@ func GetIncludeCookieFromQueryOrDefault(r *http.Request, dflt bool) (bool, error
 	return QueryParamAsBoolOrDefault(r, QueryParamIncludeCookie, dflt)
 }
 
-func GetTokenFromCookie(r *http.Request) (string, bool) {
-	return GetCookie(r, CookieToken)
+func GetTokenFromCookie(r *http.Request, cookieName string) (string, bool) {
+	return GetCookie(r, cookieName)
 }

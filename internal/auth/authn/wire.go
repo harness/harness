@@ -6,6 +6,7 @@ package authn
 
 import (
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
@@ -15,6 +16,6 @@ var WireSet = wire.NewSet(
 	ProvideAuthenticator,
 )
 
-func ProvideAuthenticator(principalStore store.PrincipalStore, tokenStore store.TokenStore) Authenticator {
-	return NewTokenAuthenticator(principalStore, tokenStore)
+func ProvideAuthenticator(config *types.Config, principalStore store.PrincipalStore, tokenStore store.TokenStore) Authenticator {
+	return NewTokenAuthenticator(principalStore, tokenStore, config.Token.CookieName)
 }
