@@ -12,11 +12,16 @@ interface SearchInputWithSpinnerProps {
   setQuery: (value: string) => void
   loading?: boolean
   width?: number
+  height?: number | string
   placeholder?: string
   icon?: IconName
   spinnerIcon?: IconName
   spinnerPosition?: 'left' | 'right'
   onSearch?: (searchTerm: string) => void
+  onKeyDown?: (e: React.KeyboardEvent<HTMLElement>) => void
+  readOnly?: boolean
+  disabled?: boolean
+  type?: string
 }
 
 export const SearchInputWithSpinner: React.FC<SearchInputWithSpinnerProps> = ({
@@ -24,11 +29,16 @@ export const SearchInputWithSpinner: React.FC<SearchInputWithSpinnerProps> = ({
   setQuery,
   loading = false,
   width = 250,
+  height = 'var(--spacing-8)',
   placeholder,
   icon = 'search',
   spinnerIcon = 'steps-spinner',
   spinnerPosition = 'left',
-  onSearch
+  onSearch,
+  onKeyDown,
+  readOnly,
+  disabled,
+  type = 'search'
 }) => {
   const { getString } = useStrings()
   const spinner = <Icon name={spinnerIcon as IconName} color={Color.PRIMARY_7} />
@@ -39,13 +49,13 @@ export const SearchInputWithSpinner: React.FC<SearchInputWithSpinnerProps> = ({
       <Layout.Horizontal className={css.layout}>
         <Render when={loading && !spinnerOnRight}>{spinner}</Render>
         <TextInput
-          type="search"
+          type={type}
           value={query}
           wrapperClassName={cx(css.wrapper, { [css.spinnerOnRight]: spinnerOnRight })}
           className={css.input}
           placeholder={placeholder || getString('search')}
           leftIcon={icon as IconName}
-          style={{ width }}
+          style={{ width, height }}
           autoFocus
           onFocus={event => event.target.select()}
           onInput={event => {
@@ -55,7 +65,10 @@ export const SearchInputWithSpinner: React.FC<SearchInputWithSpinnerProps> = ({
             if (e.key === 'Enter') {
               onSearch?.((e as unknown as React.FormEvent<HTMLInputElement>).currentTarget.value || '')
             }
+            onKeyDown?.(e)
           }}
+          disabled={disabled}
+          readOnly={readOnly}
         />
         <Render when={loading && spinnerOnRight}>{spinner}</Render>
       </Layout.Horizontal>

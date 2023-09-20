@@ -71,6 +71,7 @@ export interface StringsMap {
   close: string
   closed: string
   codeSearch: string
+  codeSearchModal: string
   comment: string
   commentDeleted: string
   commit: string
@@ -571,6 +572,7 @@ export interface StringsMap {
   scrollToTop: string
   search: string
   searchBranches: string
+  searchHeader: string
   searchResult: string
   secret: string
   'secrets.create': string

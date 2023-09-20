@@ -71,6 +71,7 @@
     "react-complex-tree": "^1.1.11",
     "react-dom": "^17.0.2",
     "react-draggable": "^4.4.2",
+    "react-hotkeys-hook": "^4.4.1",
     "react-intersection-observer": "^9.4.1",
     "react-jsx-match": "^1.1.5",
     "react-keywords": "^0.0.5",
