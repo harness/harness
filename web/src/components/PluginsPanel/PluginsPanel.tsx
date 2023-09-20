@@ -105,28 +105,21 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
     }
   ]
 
-  const fetchAllPlugins = useCallback((): void => {
+  const fetchPlugins = async (page: number): Promise<TypesPlugin[]> => {
+    const response = await fetch(`/api/v1/plugins?page=${page}&limit=${LIST_FETCHING_LIMIT}`)
+    if (!response.ok) throw new Error('Failed to fetch plugins')
+    return response.json()
+  }
+
+  const fetchAllPlugins = useCallback(async (): Promise<void> => {
     try {
       setLoading(true)
-      let allPlugins: TypesPlugin[] = []
-      fetch(`/api/v1/plugins?page=${1}&limit=${LIST_FETCHING_LIMIT}`)
-        .then(async response => {
-          const plugins = await response.json()
-          allPlugins = [...plugins]
-          fetch(`/api/v1/plugins?page=${2}&limit=${LIST_FETCHING_LIMIT}`).then(async response => {
-            const plugins = await response.json()
-            setPlugins([...allPlugins, ...plugins])
-          })
-        })
-        .catch(_err => {
-          /* ignore error */
-        })
-        .catch(_err => {
-          /* ignore error */
-        })
-      setLoading(false)
+      const pluginsPage1 = await fetchPlugins(1)
+      const pluginsPage2 = await fetchPlugins(2)
+      setPlugins([...pluginsPage1, ...pluginsPage2])
     } catch (ex) {
       /* ignore exception */
+    } finally {
       setLoading(false)
     }
   }, [])
@@ -138,12 +131,12 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   }, [category])
 
   useEffect(() => {
-    if (panelView === PluginPanelView.Listing) {
-      if (query) {
-        setPlugins(existingPlugins => existingPlugins.filter((item: TypesPlugin) => item.uid?.includes(query)))
-      } else {
-        fetchAllPlugins()
-      }
+    if (panelView !== PluginPanelView.Listing) return
+
+    if (query) {
+      setPlugins(existingPlugins => existingPlugins.filter((item: TypesPlugin) => item.uid?.includes(query)))
+    } else {
+      fetchAllPlugins()
     }
   }, [query])
 
