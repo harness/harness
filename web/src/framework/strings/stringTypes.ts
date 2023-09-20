@@ -429,7 +429,23 @@ export interface StringsMap {
   'plugins.stepLabel': string
   'plugins.title': string
   'pluginsPanel.plugins.helptext': string
+  'pluginsPanel.run.bash': string
+  'pluginsPanel.run.credentials': string
+  'pluginsPanel.run.entrypoint': string
   'pluginsPanel.run.helptext': string
+  'pluginsPanel.run.image': string
+  'pluginsPanel.run.network': string
+  'pluginsPanel.run.networkMode': string
+  'pluginsPanel.run.password': string
+  'pluginsPanel.run.path': string
+  'pluginsPanel.run.powershell': string
+  'pluginsPanel.run.privileged': string
+  'pluginsPanel.run.pull': string
+  'pluginsPanel.run.pwsh': string
+  'pluginsPanel.run.script': string
+  'pluginsPanel.run.sh': string
+  'pluginsPanel.run.shell': string
+  'pluginsPanel.run.username': string
   poweredByAI: string
   'pr.ableToMerge': string
   'pr.addDescription': string
