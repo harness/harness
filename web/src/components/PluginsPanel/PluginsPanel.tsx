@@ -37,16 +37,6 @@ interface PluginCategoryInterface {
   icon: IconName
 }
 
-const PluginCategories: PluginCategoryInterface[] = [
-  {
-    category: PluginCategory.Harness,
-    name: 'Run',
-    description: 'Run a script on macOS, Linux, or Windows',
-    icon: 'run-step'
-  },
-  { category: PluginCategory.Drone, name: 'Drone', description: 'Run Drone plugins', icon: 'ci-infra' }
-]
-
 const RunStep: TypesPlugin = {
   uid: 'run',
   description: 'Run a script',
@@ -88,6 +78,21 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   const [category, setCategory] = useState<PluginCategory>()
   const [panelView, setPanelView] = useState<PluginPanelView>(PluginPanelView.Category)
   const [plugin, setPlugin] = useState<TypesPlugin>()
+
+  const PluginCategories: PluginCategoryInterface[] = [
+    {
+      category: PluginCategory.Harness,
+      name: 'Run',
+      description: getString('pluginsPanel.run.helptext'),
+      icon: 'run-step'
+    },
+    {
+      category: PluginCategory.Drone,
+      name: 'Plugin',
+      description: getString('pluginsPanel.plugins.helptext'),
+      icon: 'ci-infra'
+    }
+  ]
 
   const {
     data: plugins,

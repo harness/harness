@@ -712,6 +712,11 @@ run: Run
 plugins:
   title: Plugins
   stepLabel: step
+pluginsPanel:
+  plugins:
+    helptext: Run a plugin step
+  run:
+    helptext: Run a container or a shell command
 createNewRepo: Create New repository
 importGitRepo: Import Repository
 importRepo:

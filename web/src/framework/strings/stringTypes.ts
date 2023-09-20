@@ -427,6 +427,8 @@ export interface StringsMap {
   'pipelines.yamlPath': string
   'plugins.stepLabel': string
   'plugins.title': string
+  'pluginsPanel.plugins.helptext': string
+  'pluginsPanel.run.helptext': string
   poweredByAI: string
   'pr.ableToMerge': string
   'pr.addDescription': string
