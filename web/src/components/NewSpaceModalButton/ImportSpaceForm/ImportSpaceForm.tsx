@@ -166,7 +166,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                     <FormInput.Text
                       name="organization"
                       label={
-                        formik.values.gitProvider === Organization.GITHUB
+                        formik.values.gitProvider.toLowerCase() === Organization.GITHUB.toLowerCase()
                           ? getString('importSpace.githubOrg')
                           : getString('importSpace.gitlabGroup')
                       }
