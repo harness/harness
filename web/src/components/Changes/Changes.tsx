@@ -114,15 +114,26 @@ export const Changes: React.FC<ChangesProps> = ({
     )
   }, [commitRange, history, routes, repoMetadata.path, pullRequestMetadata?.number])
 
+  const diffSubPath = useMemo(
+    () =>
+      commitSHA 
+        // show specific commit
+        ? `commits/${commitSHA}/diff`
+        // show range of commits and user selected subrange
+        : commitRange.length > 0
+        ? `diff/${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
+        // show range of commits and user did not select a subrange
+        : `diff/${targetRef}...${sourceRef}`,
+    [commitRange]
+  )
+
   const {
     data: rawDiff,
     error,
     loading,
     refetch
   } = useGet<string>({
-    path: commitSHA ?
-      `/api/v1/repos/${repoMetadata?.path}/+/commits/${commitSHA}/diff`
-      : `/api/v1/repos/${repoMetadata?.path}/+/diff/${targetRef}...${sourceRef}`,
+    path: `/api/v1/repos/${repoMetadata?.path}/+/${diffSubPath}`,
     requestOptions: {
       headers: {
         Accept: 'text/plain'
