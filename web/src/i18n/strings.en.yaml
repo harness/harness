@@ -111,7 +111,7 @@ repos:
 createRepoModal:
   branchLabel: 'Your repository will be initialized with a '
   branch: ' branch.'
-  publicLabel: Anyone on the internet can see this repository.
+  publicLabel: Anyone with access to the Gitness environment can clone this repo
   privateLabel: You choose who can see and commit to this repository.
 validation:
   repoNamePatternIsNotValid: "Name can only contain alphanumerics, '-', '_', '.', and '$'"
@@ -811,7 +811,7 @@ exportSpace:
   upgradeProgress: 'Upgrading in progress'
   exportCompleted: Upgrade Completed
   exportRepoCompleted: Upgraded {{repoCount}} repositories
-  exportRepo: Exporting {{repoCount}} repositories
+  exportRepo: Upgrading {{repoCount}} repositories
 spaceUpdate: Project Updated
 generate: Generate
 generateHelptext: Let Gitness build your Pipeline for you.
