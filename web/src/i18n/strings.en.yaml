@@ -738,6 +738,9 @@ pluginsPanel:
     networkMode: Network Mode
     privileged: Privileged
     path: Path
+    always: Always
+    never: Never
+    ifNotExists: If not exists
 createNewRepo: Create New repository
 importGitRepo: Import Repository
 importRepo:
