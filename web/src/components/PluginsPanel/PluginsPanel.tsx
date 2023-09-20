@@ -416,7 +416,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                           { label: getString('pluginsPanel.run.pwsh'), value: 'pwsh' }
                         ]}
                       />
-                      <Accordion activeId="container">
+                      <Accordion activeId="">
                         <Accordion.Panel
                           id="container"
                           summary="Container"
@@ -428,7 +428,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                                 style={{ width: '100%' }}
                                 key={'container.image'}
                               />
-                              <Accordion activeId="container.credentials">
+                              <Accordion activeId="">
                                 <Accordion.Panel
                                   id="container.credentials"
                                   summary={getString('pluginsPanel.run.credentials')}
