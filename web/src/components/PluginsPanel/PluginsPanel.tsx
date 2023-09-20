@@ -73,6 +73,10 @@ const PluginInputsFieldPath = 'spec.inputs'
 
 const LIST_FETCHING_LIMIT = 100
 
+const RunStep: TypesPlugin = {
+  uid: 'run'
+}
+
 export interface PluginsPanelInterface {
   onPluginAddUpdate: (isUpdate: boolean, pluginFormData: Record<string, any>) => void
 }
@@ -155,6 +159,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                 if (pluginCategory === PluginCategory.Drone) {
                   setPanelView(PluginPanelView.Listing)
                 } else if (pluginCategory === PluginCategory.Harness) {
+                  setPlugin(RunStep)
                   setPanelView(PluginPanelView.Configuration)
                 }
               }}
