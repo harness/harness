@@ -56,7 +56,7 @@ export const SearchInputWithSpinner: React.FC<SearchInputWithSpinnerProps> = ({
           placeholder={placeholder || getString('search')}
           leftIcon={icon as IconName}
           style={{ width, height }}
-          autoFocus
+          autoFocus={!readOnly && !disabled}
           onFocus={event => event.target.select()}
           onInput={event => {
             setQuery(event.currentTarget.value || '')

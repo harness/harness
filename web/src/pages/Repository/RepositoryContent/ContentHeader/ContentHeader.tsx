@@ -63,7 +63,15 @@ export function ContentHeader({
     }
   }, [performSearch, search, searchSampleQueryIndex])
 
-  useHotkeys('ctrl+k', () => setShowSearchModal(true))
+  useHotkeys(
+    'ctrl+k',
+    () => {
+      if (!showSearchModal) {
+        setShowSearchModal(true)
+      }
+    },
+    [showSearchModal]
+  )
 
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
