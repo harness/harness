@@ -23,6 +23,7 @@ var WireSet = wire.NewSet(
 func ProvideController(db *sqlx.DB,
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
+	checkStore store.CheckStore,
 	canceler canceler.Canceler,
 	commitService commit.CommitService,
 	triggerer triggerer.Triggerer,
@@ -30,6 +31,6 @@ func ProvideController(db *sqlx.DB,
 	stageStore store.StageStore,
 	pipelineStore store.PipelineStore,
 ) *Controller {
-	return NewController(db, authorizer, executionStore, canceler, commitService,
-		triggerer, repoStore, stageStore, pipelineStore)
+	return NewController(db, authorizer, executionStore, checkStore,
+		canceler, commitService, triggerer, repoStore, stageStore, pipelineStore)
 }

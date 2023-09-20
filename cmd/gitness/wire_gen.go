@@ -136,6 +136,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, repoStore, spaceStore, pipelineStore, principalStore, gitrpcInterface, repository)
 	executionStore := database.ProvideExecutionStore(db)
+	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	stageStore := database.ProvideStageStore(db)
 	schedulerScheduler, err := scheduler.ProvideScheduler(stageStore, mutexManager)
 	if err != nil {
@@ -144,10 +145,9 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	stepStore := database.ProvideStepStore(db)
 	cancelerCanceler := canceler.ProvideCanceler(executionStore, streamer, repoStore, schedulerScheduler, stageStore, stepStore)
 	commitService := commit.ProvideCommitService(gitrpcInterface)
-	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	fileService := file.ProvideFileService(gitrpcInterface)
 	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, db, pipelineStore, fileService, schedulerScheduler, repoStore)
-	executionController := execution.ProvideController(db, authorizer, executionStore, cancelerCanceler, commitService, triggererTriggerer, repoStore, stageStore, pipelineStore)
+	executionController := execution.ProvideController(db, authorizer, executionStore, checkStore, cancelerCanceler, commitService, triggererTriggerer, repoStore, stageStore, pipelineStore)
 	logStore := logs.ProvideLogStore(db, config)
 	logStream := livelog.ProvideLogStream(config)
 	logsController := logs2.ProvideController(db, authorizer, executionStore, repoStore, pipelineStore, stageStore, stepStore, logStore, logStream)

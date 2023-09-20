@@ -18,6 +18,7 @@ type Controller struct {
 	db             *sqlx.DB
 	authorizer     authz.Authorizer
 	executionStore store.ExecutionStore
+	checkStore     store.CheckStore
 	canceler       canceler.Canceler
 	commitService  commit.CommitService
 	triggerer      triggerer.Triggerer
@@ -30,6 +31,7 @@ func NewController(
 	db *sqlx.DB,
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
+	checkStore store.CheckStore,
 	canceler canceler.Canceler,
 	commitService commit.CommitService,
 	triggerer triggerer.Triggerer,
@@ -41,6 +43,7 @@ func NewController(
 		db:             db,
 		authorizer:     authorizer,
 		executionStore: executionStore,
+		checkStore:     checkStore,
 		canceler:       canceler,
 		commitService:  commitService,
 		triggerer:      triggerer,

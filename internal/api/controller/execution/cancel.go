@@ -10,8 +10,10 @@ import (
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
+	"github.com/harness/gitness/internal/pipeline/checks"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+	"github.com/rs/zerolog/log"
 )
 
 func (c *Controller) Cancel(
@@ -43,6 +45,12 @@ func (c *Controller) Cancel(
 	err = c.canceler.Cancel(ctx, repo, execution)
 	if err != nil {
 		return nil, fmt.Errorf("unable to cancel execution: %w", err)
+	}
+
+	// Write to the checks store, log and ignore on errors
+	err = checks.Write(ctx, c.checkStore, execution, pipeline)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("could not update status check")
 	}
 
 	return execution, nil
