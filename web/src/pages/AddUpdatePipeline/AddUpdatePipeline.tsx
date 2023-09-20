@@ -12,7 +12,7 @@ import { useStrings } from 'framework/strings'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import MonacoSourceCodeEditor from 'components/SourceCodeEditor/MonacoSourceCodeEditor'
-import { PluginsPanel } from 'components/PluginsPanel/PluginsPanel'
+import { PluginForm, PluginsPanel } from 'components/PluginsPanel/PluginsPanel'
 import useRunPipelineModal from 'components/RunPipelineModal/RunPipelineModal'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useAppContext } from 'AppContext'
@@ -26,7 +26,7 @@ import { DRONE_CONFIG_YAML_FILE_SUFFIXES, YamlVersion } from './Constants'
 
 import css from './AddUpdatePipeline.module.scss'
 
-const StarterPipelineV1: Record<string, any> = {
+const StarterPipelineV1: Record<string, unknown> = {
   version: 1,
   kind: 'pipeline',
   spec: {
@@ -51,7 +51,7 @@ const StarterPipelineV1: Record<string, any> = {
   }
 }
 
-const StarterPipelineV0: Record<string, any> = {
+const StarterPipelineV0: Record<string, unknown> = {
   kind: 'pipeline',
   type: 'docker',
   name: 'default',
@@ -210,13 +210,13 @@ const AddUpdatePipeline = (): JSX.Element => {
   }
 
   const updatePipelineWithPluginData = (
-    existingPipeline: Record<string, any>,
-    payload: Record<string, any>
-  ): Record<string, any> => {
+    existingPipeline: Record<string, unknown>,
+    payload: Record<string, unknown>
+  ): Record<string, unknown> => {
     const pipelineAsObjClone = { ...existingPipeline }
     if (Object.keys(pipelineAsObjClone).length > 0) {
       const stepInsertPath = 'spec.stages.0.spec.steps'
-      let existingSteps: [unknown] = get(pipelineAsObjClone, stepInsertPath, [])
+      let existingSteps = get(pipelineAsObjClone, stepInsertPath, []) as unknown[]
       if (existingSteps.length > 0) {
         existingSteps.push(payload)
       } else {
@@ -234,7 +234,7 @@ const AddUpdatePipeline = (): JSX.Element => {
       existingYAML
     }: {
       isUpdate: boolean
-      pluginFormData: Record<string, any>
+      pluginFormData: PluginForm
       existingYAML: string
     }): void => {
       try {
@@ -408,7 +408,7 @@ const AddUpdatePipeline = (): JSX.Element => {
               {yamlVersion === YamlVersion.V1 && (
                 <Container className={cx(css.pluginsContainer, { [css.extendedHeight]: isExistingPipeline })}>
                   <PluginsPanel
-                    onPluginAddUpdate={(isUpdate: boolean, pluginFormData: Record<string, any>) =>
+                    onPluginAddUpdate={(isUpdate: boolean, pluginFormData: PluginForm) =>
                       handlePluginAddUpdateToPipeline({
                         isUpdate,
                         pluginFormData,
