@@ -6,6 +6,19 @@ Gitness is building on top of Drone to create a new, open source developer platf
 For more information on Gitness, please visit [gitness.com](https://gitness.com/).
 For more information on Drone, please visit [drone.io](https://www.drone.io/)
 
+# Using Docker
+The latest publicly released docker image can be found on [harness/gitness](https://hub.docker.com/r/harness/gitness).
+To try it out, run the command below. Once the container is running, you can visit localhost:3000 in your browser.
+
+``` bash
+docker run \
+  -p 3000:3000 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /tmp/gitness:/data \
+  harness/gitness:latest
+```
+> The Gitness image uses a volume to store the database and repositories. It is highly recommended to use a bind mount or named volume as otherwise all data will be lost once the contaner is stopped.
+
 # Pre-Requisites
 
 Install the latest stable version of Node and Go version 1.19 or higher, and then install the below Go programs. Ensure the GOPATH [bin directory](https://go.dev/doc/gopath_code#GOPATH) is added to your PATH.

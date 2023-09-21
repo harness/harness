@@ -234,7 +234,7 @@ export function MarkdownEditorWithPreview({
     if (autoFocusAndPosition && !dirty) {
       scrollToAndSetCursorToEnd(containerRef, viewRef, value, true)
     }
-  }, [autoFocusAndPosition, value])
+  }, [autoFocusAndPosition, viewRef, containerRef, scrollToAndSetCursorToEnd,  value, dirty])
 
   return (
     <Container ref={containerRef} className={cx(css.container, { [css.noBorder]: noBorder }, className)}>
