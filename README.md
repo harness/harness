@@ -1,7 +1,10 @@
 # Gitness
 Your lightweight, super fast code hosting and continuous integration service (powered by Drone)
 
-For more information, please visit [gitness.com](https://gitness.com/)
+Gitness is building on top of Drone to create a new, open source developer platform with code hosting and pipeline capabilities. Gitness development is taking place in the `master` branch.  Drone development will continue in the `drone` branch until we a ready for our first tagged Gitness release, at which point the project will fully converge.
+
+For more information on Gitness, please visit [gitness.com](https://gitness.com/).
+For more information on Drone, please visit [drone.io](https://www.drone.io/)
 
 # Pre-Requisites
 
