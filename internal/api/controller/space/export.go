@@ -48,10 +48,18 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, spaceRef
 		Token:             in.Token,
 	}
 
-	// todo(abhinav): add pagination
-	repos, err := c.repoStore.List(ctx, space.ID, &types.RepoFilter{Size: 200, Page: 0, Order: enum.OrderDesc})
-	if err != nil {
-		return err
+	var repos []*types.Repository
+	page := 1
+	for {
+		reposInPage, err := c.repoStore.List(ctx, space.ID, &types.RepoFilter{Size: 200, Page: page, Order: enum.OrderDesc})
+		if err != nil {
+			return err
+		}
+		if len(reposInPage) == 0 {
+			break
+		}
+		page += 1
+		repos = append(repos, reposInPage...)
 	}
 
 	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
