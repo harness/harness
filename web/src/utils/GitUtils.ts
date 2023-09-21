@@ -58,6 +58,7 @@ export interface ImportSpaceFormData {
   name: string
   description: string
   organization: string
+  host: string
 }
 
 export enum RepoVisibility {

@@ -48,6 +48,11 @@
   font-size: 13px !important;
   --form-input-font-size: 13px !important;
 
+  .hostContainer {
+    margin-top: 15px !important;
+    margin-bottom: unset !important;
+  }
+
   .selectBox {
     margin-bottom: unset !important;
   }

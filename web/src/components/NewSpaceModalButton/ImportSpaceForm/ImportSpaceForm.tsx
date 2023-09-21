@@ -28,8 +28,10 @@ const ImportSpaceForm = (props: ImportFormProps) => {
     password: '',
     name: '',
     description: '',
-    organization: ''
+    organization: '',
+    host: ''
   }
+
   const providers = [
     { value: 'GitHub', label: 'GitHub' },
     { value: 'GitLab', label: 'GitLab' }
@@ -75,6 +77,15 @@ const ImportSpaceForm = (props: ImportFormProps) => {
           await handleSubmit(formik.values)
           setButtonLoading(false)
         }
+        const getHostPlaceHolder = (host: string) => {
+          if (host.toLowerCase() === Organization.GITHUB.toLowerCase()) {
+            return getString('enterGithubPlaceholder')
+          } else if (host.toLowerCase() === Organization.GITLAB.toLowerCase()) {
+            return getString('enterGitlabPlaceholder')
+          } else {
+            return getString('enterAddress')
+          }
+        }
         return (
           <Container className={css.hideContainer} width={'97%'}>
             <FormikForm>
@@ -104,6 +115,24 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                         icon="circle-cross"
                         iconProps={{ color: Color.RED_500 }}>
                         {formik.errors.gitProvider}
+                      </Text>
+                    ) : null}
+                    <FormInput.Text
+                      name="host"
+                      label={'Address (optional)'}
+                      placeholder={getHostPlaceHolder(formik.values.gitProvider)}
+                      tooltipProps={{
+                        dataTooltipId: 'spaceUserTextField'
+                      }}
+                      className={css.hostContainer}
+                    />
+                    {formik.errors.host ? (
+                      <Text
+                        margin={{ top: 'small', bottom: 'small' }}
+                        color={Color.RED_500}
+                        icon="circle-cross"
+                        iconProps={{ color: Color.RED_500 }}>
+                        {formik.errors.host}
                       </Text>
                     ) : null}
                     <Layout.Horizontal flex>

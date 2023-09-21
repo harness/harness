@@ -168,8 +168,11 @@ export interface StringsMap {
   enableWebhookContent: string
   enableWebhookTitle: string
   enabled: string
+  enterAddress: string
   enterBranchPlaceholder: string
   enterDescription: string
+  enterGithubPlaceholder: string
+  enterGitlabPlaceholder: string
   enterName: string
   enterNewBranchName: string
   enterNewPassword: string

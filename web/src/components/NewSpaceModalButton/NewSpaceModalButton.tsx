@@ -126,7 +126,8 @@ export const NewSpaceModalButton: React.FC<NewSpaceModalButtonProps> = ({
           provider: {
             type: formData.gitProvider.toLowerCase(),
             username: formData.username,
-            password: formData.password
+            password: formData.password,
+            host: formData.host
           },
           provider_space: formData.organization
         }

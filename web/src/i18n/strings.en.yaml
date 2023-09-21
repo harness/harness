@@ -821,3 +821,6 @@ exportSpace:
 spaceUpdate: Project Updated
 generate: Generate
 generateHelptext: Let Gitness build your Pipeline for you.
+enterAddress: Enter Address
+enterGitlabPlaceholder: https://gitlab.com/
+enterGithubPlaceholder: https://api.github.com/
