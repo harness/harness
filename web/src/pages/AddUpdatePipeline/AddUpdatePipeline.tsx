@@ -57,7 +57,7 @@ const StarterPipelineV1: Record<string, unknown> = {
               type: 'run',
               spec: {
                 container: 'alpine',
-                run: 'echo "hello world"'
+                script: 'echo "hello world"'
               }
             }
           ]

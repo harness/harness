@@ -812,7 +812,7 @@ exportSpace:
   newProject: New Project Details
   upgradeConfirmation: Upgrade Confirmation
   upgradeTitle: Upgrade this project to the Harness Software Delivery platform
-  upgrade: Upgrade
+  upgrade: Upgrade (Coming Soon)
   upgradeContent: Upgrade this project to Harness. By upgrading to Harness, you will create a new project in your Harness account and migrate all repositories to the new project. Learn more about Harness.
   upgradeProgress: 'Upgrading in progress'
   exportCompleted: Upgrade Completed
