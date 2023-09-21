@@ -1,6 +1,0 @@
-kind: template
-load: plugin.txt
-data:
-  stepName: my_step
-  image: my_image
-  commands: my_command
