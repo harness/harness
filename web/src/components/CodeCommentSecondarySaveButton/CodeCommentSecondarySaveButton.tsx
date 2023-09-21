@@ -49,8 +49,8 @@ export const CodeCommentSecondarySaveButton: React.FC<CodeCommentSecondarySaveBu
         const payload = { status }
         const id = commentItems[0]?.payload?.id
 
-        updateCodeCommentStatus(payload, { pathParams: { id } })
-          .then(() => {
+        await updateCodeCommentStatus(payload, { pathParams: { id } })
+          .then(async () => {
             if (commentItems[0]?.payload) {
               if (resolved) {
                 commentItems[0].payload.resolved = 0
@@ -61,7 +61,7 @@ export const CodeCommentSecondarySaveButton: React.FC<CodeCommentSecondarySaveBu
             if (isMounted.current) {
               setResolved(!resolved)
             }
-            emitCodeCommentStatus(status)
+            await emitCodeCommentStatus(status)
             ;(onClick as () => void)()
           })
           .catch(_exception => {
