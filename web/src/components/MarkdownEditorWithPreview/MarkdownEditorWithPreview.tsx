@@ -231,8 +231,8 @@ export function MarkdownEditorWithPreview({
   }, [viewRefProp, viewRef.current]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (autoFocusAndPosition) {
-      scrollToAndSetCursorToEnd(containerRef, viewRef, value)
+    if (autoFocusAndPosition && !dirty) {
+      scrollToAndSetCursorToEnd(containerRef, viewRef, value, true)
     }
   }, [autoFocusAndPosition, value])
 
