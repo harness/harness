@@ -5,7 +5,7 @@ import { orderBy } from 'lodash-es'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
-import type { TypesPullReqActivity, TypesPullReq } from 'services/code'
+import type { TypesPullReqActivity, TypesPullReq, TypesPullReqStats } from 'services/code'
 import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem } from 'components/CommentBox/CommentBox'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { getErrorMessage, orderSortDate, ButtonRoleProps } from 'utils/Utils'
@@ -29,7 +29,7 @@ import css from './Conversation.module.scss'
 
 export interface ConversationProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   onCommentUpdate: () => void
-  prStatsChanged: number
+  prStats?: TypesPullReqStats
   showEditDescription?: boolean
   onCancelEditDescription: () => void
   prChecksDecisionResult?: PRChecksDecisionResult
@@ -39,7 +39,7 @@ export const Conversation: React.FC<ConversationProps> = ({
   repoMetadata,
   pullRequestMetadata,
   onCommentUpdate,
-  prStatsChanged,
+  prStats,
   showEditDescription,
   onCancelEditDescription,
   prChecksDecisionResult
@@ -143,10 +143,18 @@ export const Conversation: React.FC<ConversationProps> = ({
   )
 
   useEffect(() => {
-    if (prStatsChanged) {
+    if (prStats) {
       refetchActivities()
     }
-  }, [prStatsChanged, refetchActivities])
+  }, [
+    prStats,
+    prStats?.conversations,
+    prStats?.unresolved_count,
+    pullRequestMetadata?.title,
+    pullRequestMetadata?.state,
+    pullRequestMetadata?.source_sha,
+    refetchActivities]
+  )
 
 
   
@@ -214,7 +222,7 @@ const newCommentBox = useMemo(() => {
                       pullRequestMetadata={pullRequestMetadata}
                       onCommentUpdate={onCommentUpdate}
                       onCancelEditDescription={onCancelEditDescription}
-                      prStatsChanged={prStatsChanged}
+                      prStats={prStats}
                     />
                   )}
 

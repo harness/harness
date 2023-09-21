@@ -31,7 +31,7 @@ type RepoGitInfoView struct {
 
 func (s *RepoGitInfoView) Find(ctx context.Context, id int64) (*types.RepositoryGitInfo, error) {
 	const sqlQuery = `
-		SELECT repo_git_uid
+		SELECT repo_git_uid, repo_parent_id
 		FROM repositories
 		WHERE repo_id = $1`
 
@@ -44,7 +44,7 @@ func (s *RepoGitInfoView) Find(ctx context.Context, id int64) (*types.Repository
 
 	var result = types.RepositoryGitInfo{ID: id}
 
-	if err := v.Scan(&result.GitUID); err != nil {
+	if err := v.Scan(&result.GitUID, &result.ParentID); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "failed to scan git uid")
 	}
 

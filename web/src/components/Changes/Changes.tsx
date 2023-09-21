@@ -25,7 +25,7 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
 import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
-import type { TypesCommit, TypesPullReqFileView, TypesPullReq, TypesPullReqActivity } from 'services/code'
+import type { TypesCommit, TypesPullReqFileView, TypesPullReq, TypesPullReqActivity, TypesPullReqStats } from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -50,7 +50,7 @@ interface ChangesProps extends Pick<GitInfoProps, 'repoMetadata'> {
   pullRequestMetadata?: TypesPullReq
   className?: string
   onCommentUpdate: () => void
-  prStatsChanged: number
+  prStats?: TypesPullReqStats
   onDataReady?: (data: DiffFileEntry[]) => void
   defaultCommitRange?: string[]
   scrollElement: HTMLElement
@@ -67,7 +67,7 @@ export const Changes: React.FC<ChangesProps> = ({
   pullRequestMetadata,
   className,
   onCommentUpdate,
-  prStatsChanged,
+  prStats,
   onDataReady,
   defaultCommitRange,
   scrollElement
@@ -220,15 +220,7 @@ export const Changes: React.FC<ChangesProps> = ({
     }
 
     refetchActivities()
-  }, [readOnly, prStatsChanged, refetchActivities])
-
-  useEffect(() => {
-    if (readOnly) {
-      return
-    }
-
-    refetchFileViews()
-  }, [readOnly, prStatsChanged, refetchFileViews])
+  }, [readOnly, prStats?.conversations, prStats?.unresolved_count, refetchActivities])
 
   useEffect(() => {
     if (sourceRef !== _sourceRef || targetRef !== _targetRef) {
@@ -327,6 +319,7 @@ export const Changes: React.FC<ChangesProps> = ({
                     setPrHasChanged(false)
                     setTargetRef(_targetRef)
                     setSourceRef(_sourceRef)
+                    refetchFileViews()
                   }}
                 />
               </Render>

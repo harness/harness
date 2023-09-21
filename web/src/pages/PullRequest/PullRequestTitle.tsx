@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Container, Text, Layout, Button, ButtonVariation, ButtonSize, TextInput, useToaster } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
@@ -43,6 +43,15 @@ export const PullRequestTitle: React.FC<PullRequestTitleProps> = ({
       .catch(exception => showError(getErrorMessage(exception), 0))
   }, [description, val, mutate, showError])
 
+  useEffect(() => {
+    setOriginal(title)
+
+    // make sure to update editor if it's not open
+    if (!edit) {
+      setVal(title)
+    }
+  }, [title, edit])
+
   return (
     <Layout.Horizontal spacing="small" className={css.prTitle}>
       <Match expr={edit}>
@@ -77,7 +86,10 @@ export const PullRequestTitle: React.FC<PullRequestTitleProps> = ({
                 variation={ButtonVariation.TERTIARY}
                 text={getString('cancel')}
                 size={ButtonSize.MEDIUM}
-                onClick={() => setEdit(false)}
+                onClick={() => {
+                  setEdit(false)
+                  setVal(title)
+                }}
               />
             </Layout.Horizontal>
           </Container>

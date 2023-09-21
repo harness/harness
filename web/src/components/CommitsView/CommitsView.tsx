@@ -6,7 +6,6 @@ import {
   Avatar,
   Layout,
   ButtonVariation,
-  ButtonSize,
   Button,
   FlexExpander,
   StringSubstitute,
@@ -15,7 +14,7 @@ import {
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
-import { noop, orderBy } from 'lodash-es'
+import { orderBy } from 'lodash-es'
 import { Link, useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
@@ -32,8 +31,6 @@ interface CommitsViewProps extends Pick<GitInfoProps, 'repoMetadata'> {
   commits: TypesCommit[] | null
   emptyTitle: string
   emptyMessage: string
-  prStatsChanged?: number
-  handleRefresh?: () => void
   showFileHistoryIcons?: boolean
   resourcePath?: string
   setActiveTab?: React.Dispatch<React.SetStateAction<string>>
@@ -45,8 +42,6 @@ export function CommitsView({
   commits,
   emptyTitle,
   emptyMessage,
-  handleRefresh = noop,
-  prStatsChanged,
   showFileHistoryIcons = false,
   resourcePath = '',
   setActiveTab,
@@ -186,17 +181,6 @@ export function CommitsView({
     <Container className={css.container}>
       <Layout.Horizontal>
         <FlexExpander />
-        {!prStatsChanged ? null : (
-          <Button
-            onClick={handleRefresh}
-            iconProps={{ className: css.refreshIcon, size: 12 }}
-            icon="repeat"
-            text={getString('refresh')}
-            variation={ButtonVariation.SECONDARY}
-            size={ButtonSize.SMALL}
-            margin={{ bottom: 'small' }}
-          />
-        )}
       </Layout.Horizontal>
       {!!commits?.length &&
         Object.entries(commitsGroupedByDate).map(([date, commitsByDate]) => {

@@ -14,6 +14,8 @@ import (
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type CommentStatusInput struct {
@@ -52,10 +54,11 @@ func (c *Controller) CommentStatus(
 		return nil, fmt.Errorf("failed to acquire access to repo: %w", err)
 	}
 
+	var pr *types.PullReq
 	var act *types.PullReqActivity
 
 	err = controller.TxOptLock(ctx, c.db, func(ctx context.Context) error {
-		pr, err := c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
+		pr, err = c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
 		if err != nil {
 			return fmt.Errorf("failed to find pull request by number: %w", err)
 		}
@@ -110,6 +113,10 @@ func (c *Controller) CommentStatus(
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
+		log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
 	}
 
 	return act, nil

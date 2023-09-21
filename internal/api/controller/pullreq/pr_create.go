@@ -16,6 +16,8 @@ import (
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type CreateInput struct {
@@ -108,6 +110,10 @@ func (c *Controller) Create(
 		TargetBranch: in.TargetBranch,
 		SourceSHA:    sourceSHA,
 	})
+
+	if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
+		log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
+	}
 
 	return pr, nil
 }

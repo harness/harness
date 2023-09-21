@@ -16,4 +16,6 @@ const (
 
 	SSETypeRepositoryImportCompleted = "repository_import_completed"
 	SSETypeRepositoryExportCompleted = "repository_export_completed"
+
+	SSETypePullrequesUpdated = "pullreq_updated"
 )

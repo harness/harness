@@ -17,6 +17,7 @@ import (
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/githook"
 	"github.com/harness/gitness/internal/services/codecomments"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/pubsub"
@@ -37,6 +38,7 @@ type Service struct {
 	codeCommentView     store.CodeCommentView
 	codeCommentMigrator *codecomments.Migrator
 	fileViewStore       store.PullReqFileViewStore
+	sseStreamer         sse.Streamer
 	urlProvider         *url.Provider
 
 	cancelMutex        sync.Mutex
@@ -62,6 +64,7 @@ func New(ctx context.Context,
 	fileViewStore store.PullReqFileViewStore,
 	bus pubsub.PubSub,
 	urlProvider *url.Provider,
+	sseStreamer sse.Streamer,
 ) (*Service, error) {
 	service := &Service{
 		pullreqEvReporter:   pullreqEvReporter,
@@ -77,6 +80,7 @@ func New(ctx context.Context,
 		fileViewStore:       fileViewStore,
 		cancelMergeability:  make(map[string]context.CancelFunc),
 		pubsub:              bus,
+		sseStreamer:         sseStreamer,
 	}
 
 	var err error

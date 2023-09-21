@@ -16,6 +16,8 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { TabTitleWithCount, tabContainerCSS } from 'components/TabTitleWithCount/TabTitleWithCount'
 import { usePRChecksDecision } from 'hooks/usePRChecksDecision'
 import { ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
+import useSpaceSSE from 'hooks/useSpaceSSE'
+import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { PullRequestMetaLine } from './PullRequestMetaLine'
 import { Conversation } from './Conversation/Conversation'
 import { Checks } from './Checks/Checks'
@@ -24,10 +26,13 @@ import { PullRequestCommits } from './PullRequestCommits/PullRequestCommits'
 import { PullRequestTitle } from './PullRequestTitle'
 import css from './PullRequest.module.scss'
 
+const SSE_EVENTS = ['pullreq_updated']
+
 export default function PullRequest() {
   const history = useHistory()
   const { getString } = useStrings()
   const { routes, standalone } = useAppContext()
+  const space = useGetSpaceParam()
   const {
     repoMetadata,
     error,
@@ -50,6 +55,24 @@ export default function PullRequest() {
     path,
     lazy: !repoMetadata
   })
+
+  const eventHandler = useCallback((data : TypesPullReq)=> {
+    // ensure this update belongs to the PR we are showing right now - to avoid unnecessary reloads
+    if (!data || !repoMetadata ||
+      data.target_repo_id !== repoMetadata.id ||
+      String(data.number) !== pullRequestId
+    ) {
+      return
+    }
+    // NOTE: we refresh as events don't contain all pr stats yet (can be optimized)
+    refetchPullRequest()
+  }, [pullRequestId, repoMetadata, refetchPullRequest])
+  useSpaceSSE({
+    space,
+    events: SSE_EVENTS,
+    onEvent: eventHandler
+  })
+  
   const [prData, setPrData] = useState<TypesPullReq>()
   const prChecksDecisionResult = usePRChecksDecision({
     repoMetadata,
@@ -60,17 +83,16 @@ export default function PullRequest() {
   }, [loading, prLoading, prData])
   const [showEditDescription, setShowEditDescription] = useState(false)
 
-  const [stats, setStats] = useState<TypesPullReqStats>()
-  // simple value one can listen on to react on stats changes (boolean is NOT enough)
-  const [prStatsChanged, setPrStatsChanged] = useState(0)
+  const [prStats, setPRStats] = useState<TypesPullReqStats>()
   useMemo(() => {
-    if (isEqual(stats, prData?.stats)) {
-      return
-    }
+    setPRStats(oldPRStats => {
+      if (isEqual(oldPRStats, prData?.stats)) {
+        return oldPRStats
+      }
 
-    setStats(stats)
-    setPrStatsChanged(Date.now())
-  }, [prData?.stats, stats])
+      return prData?.stats
+    })
+  }, [prData, setPRStats])
 
   const onAddDescriptionClick = useCallback(() => {
     setShowEditDescription(true)
@@ -128,16 +150,14 @@ export default function PullRequest() {
   )
 
   useEffect(() => {
-    let pollingInterval = 1000
     const fn = () => {
       if (repoMetadata) {
         refetchPullRequest().then(() => {
-          pollingInterval = Math.min(pollingInterval + 1000, PR_MAX_POLLING_INTERVAL)
-          interval = window.setTimeout(fn, pollingInterval)
+          interval = window.setTimeout(fn, PR_POLLING_INTERVAL)
         })
       }
     }
-    let interval = window.setTimeout(fn, pollingInterval)
+    let interval = window.setTimeout(fn, PR_POLLING_INTERVAL)
 
     return () => window.clearTimeout(interval)
   }, [repoMetadata, refetchPullRequest, path])
@@ -211,7 +231,7 @@ export default function PullRequest() {
                           setShowEditDescription(false)
                           refetchPullRequest()
                         }}
-                        prStatsChanged={prStatsChanged}
+                        prStats={prStats}
                         showEditDescription={showEditDescription}
                         onCancelEditDescription={() => setShowEditDescription(false)}
                       />
@@ -231,8 +251,6 @@ export default function PullRequest() {
                       <PullRequestCommits
                         repoMetadata={repoMetadata as TypesRepository}
                         pullRequestMetadata={prData as TypesPullReq}
-                        prStatsChanged={prStatsChanged}
-                        handleRefresh={voidFn(refetchPullRequest)}
                       />
                     )
                   },
@@ -257,7 +275,7 @@ export default function PullRequest() {
                           emptyTitle={getString('noChanges')}
                           emptyMessage={getString('noChangesPR')}
                           onCommentUpdate={voidFn(refetchPullRequest)}
-                          prStatsChanged={prStatsChanged}
+                          prStats={prStats}
                           scrollElement={
                             (standalone
                               ? document.querySelector(`.${css.main}`)?.parentElement || window
@@ -318,4 +336,4 @@ export default function PullRequest() {
   )
 }
 
-const PR_MAX_POLLING_INTERVAL = 15000
+const PR_POLLING_INTERVAL = 20000

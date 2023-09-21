@@ -17,6 +17,8 @@ import (
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -257,6 +259,10 @@ func (s *Service) updateMergeDataInner(
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update PR merge ref in db with error: %w", err)
+	}
+
+	if err = s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
+		log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
 	}
 
 	return nil

@@ -17,6 +17,7 @@ import (
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/services/codecomments"
 	"github.com/harness/gitness/internal/services/pullreq"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/lock"
@@ -43,6 +44,7 @@ type Controller struct {
 	mtxManager          lock.MutexManager
 	codeCommentMigrator *codecomments.Migrator
 	pullreqService      *pullreq.Service
+	sseStreamer         sse.Streamer
 }
 
 func NewController(
@@ -62,6 +64,7 @@ func NewController(
 	mtxManager lock.MutexManager,
 	codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service,
+	sseStreamer sse.Streamer,
 ) *Controller {
 	return &Controller{
 		db:                  db,
@@ -80,6 +83,7 @@ func NewController(
 		eventReporter:       eventReporter,
 		mtxManager:          mtxManager,
 		pullreqService:      pullreqService,
+		sseStreamer:         sseStreamer,
 	}
 }
 

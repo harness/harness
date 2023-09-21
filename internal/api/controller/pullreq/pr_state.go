@@ -181,5 +181,9 @@ func (c *Controller) State(ctx context.Context,
 		})
 	}
 
+	if err = c.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
+		log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
+	}
+
 	return pr, nil
 }

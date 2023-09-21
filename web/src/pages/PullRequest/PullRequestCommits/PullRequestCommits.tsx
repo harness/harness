@@ -9,16 +9,9 @@ import { ResourceListingPagination } from 'components/ResourceListingPagination/
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 
-interface CommitProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
-  prStatsChanged: number
-  handleRefresh: () => void
-}
-
-export const PullRequestCommits: React.FC<CommitProps> = ({
+export const PullRequestCommits: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>> = ({
   repoMetadata,
   pullRequestMetadata,
-  prStatsChanged,
-  handleRefresh
 }) => {
   const limit = LIST_FETCHING_LIMIT
   const [page, setPage] = usePageIndex()
@@ -43,8 +36,6 @@ export const PullRequestCommits: React.FC<CommitProps> = ({
         repoMetadata={repoMetadata}
         emptyTitle={getString('noCommits')}
         emptyMessage={getString('noCommitsPR')}
-        prStatsChanged={prStatsChanged}
-        handleRefresh={voidFn(handleRefresh)}
         pullRequestMetadata={pullRequestMetadata}
       />
 

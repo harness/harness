@@ -167,7 +167,7 @@ func (c *Controller) CommentCreate(
 		return nil, fmt.Errorf("failed to create comment: %w", err)
 	}
 
-	_, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 		pr.CommentCount++
 		if act.IsBlocking() {
 			pr.UnresolvedCount++
@@ -177,6 +177,10 @@ func (c *Controller) CommentCreate(
 	if err != nil {
 		// non-critical error
 		log.Ctx(ctx).Err(err).Msgf("failed to increment pull request comment counters")
+	}
+
+	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
+		log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
 	}
 
 	return act, nil

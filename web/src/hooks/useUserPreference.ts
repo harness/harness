@@ -14,7 +14,7 @@ export function useUserPreference<T = string>(
   key: UserPreference,
   defaultValue: T,
   filter: (val: T) => boolean = () => true
-): [T, (val: T) => void] {
+): [T, (val: T) => void, () => void] {
   const prefKey = `CODE_MOD_USER_PREF__${key}`
   const convert = useCallback(
     val => {
@@ -58,5 +58,10 @@ export function useUserPreference<T = string>(
     [prefKey, filter]
   )
 
-  return [preference, savePreference]
+  // NOTE: can be used to reset the value to the stored preference.
+  const resetToPreference = useCallback(() => {
+    setPreference(convert(localStorage[prefKey]) || (defaultValue as T))
+  }, [prefKey, convert, defaultValue])
+
+  return [preference, savePreference, resetToPreference]
 }

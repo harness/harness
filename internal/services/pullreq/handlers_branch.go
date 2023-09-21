@@ -45,13 +45,13 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 	s.forEveryOpenPR(ctx, event.Payload.RepoID, event.Payload.Ref, func(pr *types.PullReq) error {
 		// First check if the merge base has changed
 
-		targetRepoGit, err := s.repoGitInfoCache.Get(ctx, pr.TargetRepoID)
+		targetRepo, err := s.repoGitInfoCache.Get(ctx, pr.TargetRepoID)
 		if err != nil {
 			return fmt.Errorf("failed to get repo git info: %w", err)
 		}
 
 		mergeBaseInfo, err := s.gitRPCClient.MergeBase(ctx, gitrpc.MergeBaseParams{
-			ReadParams: gitrpc.ReadParams{RepoUID: targetRepoGit.GitUID},
+			ReadParams: gitrpc.ReadParams{RepoUID: targetRepo.GitUID},
 			Ref1:       event.Payload.NewSHA,
 			Ref2:       pr.TargetBranch,
 		})
@@ -111,6 +111,11 @@ func (s *Service) triggerPREventOnBranchUpdate(ctx context.Context,
 			NewMergeBaseSHA: newMergeBase,
 			Forced:          event.Payload.Forced,
 		})
+
+		if err = s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
+			log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
+		}
+
 		return nil
 	})
 	return nil
@@ -122,7 +127,12 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 	event *events.Event[*gitevents.BranchDeletedPayload],
 ) error {
 	s.forEveryOpenPR(ctx, event.Payload.RepoID, event.Payload.Ref, func(pr *types.PullReq) error {
-		pr, err := s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
+		targetRepo, err := s.repoGitInfoCache.Get(ctx, pr.TargetRepoID)
+		if err != nil {
+			return fmt.Errorf("failed to get repo info: %w", err)
+		}
+
+		pr, err = s.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 			pr.ActivitySeq++ // because we need to write the activity
 
 			pr.State = enum.PullReqStateClosed
@@ -152,6 +162,11 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 				Number:       pr.Number,
 			},
 		})
+
+		if err = s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
+			log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
+		}
+
 		return nil
 	})
 	return nil

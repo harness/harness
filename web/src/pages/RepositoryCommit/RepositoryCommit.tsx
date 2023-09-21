@@ -42,7 +42,6 @@ export default function RepositoryCommits() {
             emptyTitle={getString('noChanges')}
             emptyMessage={getString('noChangesCompare')}
             onCommentUpdate={noop}
-            prStatsChanged={0}
             scrollElement={(standalone ? document.querySelector(`.${css.main}`)?.parentElement || window : window) as HTMLElement}
           />
         </Container>

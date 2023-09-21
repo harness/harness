@@ -12,10 +12,9 @@ import { TabContentWrapper } from 'components/TabContentWrapper/TabContentWrappe
 interface CommitProps extends Pick<GitInfoProps, 'repoMetadata'> {
   sourceSha?: string
   targetSha?: string
-  handleRefresh: () => void
 }
 
-export const CompareCommits: React.FC<CommitProps> = ({ repoMetadata, sourceSha, targetSha, handleRefresh }) => {
+export const CompareCommits: React.FC<CommitProps> = ({ repoMetadata, sourceSha, targetSha }) => {
   const limit = LIST_FETCHING_LIMIT
   const [page, setPage] = usePageIndex()
   const { getString } = useStrings()
@@ -39,7 +38,6 @@ export const CompareCommits: React.FC<CommitProps> = ({ repoMetadata, sourceSha,
         repoMetadata={repoMetadata}
         emptyTitle={getString('compareEmptyDiffTitle')}
         emptyMessage={getString('compareEmptyDiffMessage')}
-        handleRefresh={voidFn(handleRefresh)}
       />
       <ResourceListingPagination response={response} page={page} setPage={setPage} />
     </TabContentWrapper>

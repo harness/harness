@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Container, PageBody, Text, TableV2, Layout, StringSubstitute, FlexExpander, Utils } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -25,8 +25,11 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import { GitRefLink } from 'components/GitRefLink/GitRefLink'
 import { PullRequestStateLabel } from 'components/PullRequestStateLabel/PullRequestStateLabel'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
+import useSpaceSSE from 'hooks/useSpaceSSE'
 import { PullRequestsContentHeader } from './PullRequestsContentHeader/PullRequestsContentHeader'
 import css from './PullRequests.module.scss'
+
+const SSE_EVENTS = ['pullreq_updated']
 
 export default function PullRequests() {
   const { getString } = useStrings()
@@ -55,6 +58,7 @@ export default function PullRequests() {
     data,
     error: prError,
     loading: prLoading,
+    refetch: refetchPrs,
     response
   } = useGet<TypesPullReq[]>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/pullreq`,
@@ -68,6 +72,22 @@ export default function PullRequests() {
     },
     debounce: 500,
     lazy: !repoMetadata
+  })
+  
+  const eventHandler = useCallback((pr : TypesPullReq) => {
+    // ensure this update belongs to the repo we are looking at right now - to avoid unnecessary reloads
+    if (!pr || !repoMetadata ||
+      pr.target_repo_id !== repoMetadata.id
+    ) {
+      return
+    }
+
+    refetchPrs()
+  }, [repoMetadata, refetchPrs])
+  useSpaceSSE({
+    space,
+    events: SSE_EVENTS,
+    onEvent: eventHandler
   })
 
   const { standalone } = useAppContext()

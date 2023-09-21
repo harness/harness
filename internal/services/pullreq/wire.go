@@ -12,6 +12,7 @@ import (
 	gitevents "github.com/harness/gitness/internal/events/git"
 	pullreqevents "github.com/harness/gitness/internal/events/pullreq"
 	"github.com/harness/gitness/internal/services/codecomments"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/pubsub"
@@ -41,8 +42,9 @@ func ProvideService(ctx context.Context,
 	fileViewStore store.PullReqFileViewStore,
 	pubsub pubsub.PubSub,
 	urlProvider *url.Provider,
+	sseStreamer sse.Streamer,
 ) (*Service, error) {
 	return New(ctx, config, gitReaderFactory, pullReqEvFactory, pullReqEvReporter, gitRPCClient,
 		db, repoGitInfoCache, repoStore, pullreqStore, activityStore,
-		codeCommentView, codeCommentMigrator, fileViewStore, pubsub, urlProvider)
+		codeCommentView, codeCommentMigrator, fileViewStore, pubsub, urlProvider, sseStreamer)
 }

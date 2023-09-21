@@ -122,7 +122,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
     }
   ]
 
-  const [mergeOption, setMergeOption] = useUserPreference<PRMergeOption>(
+  const [mergeOption, setMergeOption, resetMergeOption] = useUserPreference<PRMergeOption>(
     UserPreference.PULL_REQUEST_MERGE_STRATEGY,
     mergeOptions[1],
     option => option.method !== 'close'
@@ -304,7 +304,10 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
                                   .catch(exception => showError(getErrorMessage(exception)))
                               } else {
                                 updatePRState({ state: 'closed' })
-                                  .then(onPRStateChanged)
+                                  .then(() => {
+                                    resetMergeOption()
+                                    onPRStateChanged()
+                                  })
                                   .catch(exception => showError(getErrorMessage(exception)))
                               }
                             }}>

@@ -12,6 +12,8 @@ import (
 	"github.com/harness/gitness/internal/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type CommentUpdateInput struct {
@@ -67,6 +69,10 @@ func (c *Controller) CommentUpdate(
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to update comment: %w", err)
+	}
+
+	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
+		log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
 	}
 
 	return act, nil

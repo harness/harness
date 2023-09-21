@@ -66,5 +66,9 @@ func (c *Controller) CommentDelete(
 		log.Ctx(ctx).Err(err).Msgf("failed to decrement pull request comment counters")
 	}
 
+	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
+		log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
+	}
+
 	return nil
 }

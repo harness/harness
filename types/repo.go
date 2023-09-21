@@ -54,6 +54,7 @@ type RepoFilter struct {
 
 // RepositoryGitInfo holds git info for a repository.
 type RepositoryGitInfo struct {
-	ID     int64
-	GitUID string
+	ID       int64
+	ParentID int64
+	GitUID   string
 }

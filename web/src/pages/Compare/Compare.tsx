@@ -260,7 +260,6 @@ export default function Compare() {
                       repoMetadata={repoMetadata as TypesRepository}
                       sourceSha={sourceGitRef}
                       targetSha={targetGitRef}
-                      handleRefresh={noop} // TODO: when to refresh
                     />
                   )
                 },
@@ -284,7 +283,6 @@ export default function Compare() {
                         emptyTitle={getString('noChanges')}
                         emptyMessage={getString('noChangesCompare')}
                         onCommentUpdate={noop}
-                        prStatsChanged={0}
                         scrollElement={(standalone ? document.querySelector(`.${css.main}`)?.parentElement || window : window) as HTMLElement}
                       />
                     </TabContentWrapper>

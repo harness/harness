@@ -35,7 +35,11 @@ export const DescriptionBox: React.FC<DescriptionBoxProps> = ({
 
   useEffect(() => {
     setEdit(!pullRequestMetadata?.description?.length)
-  }, [pullRequestMetadata?.description?.length])
+
+    if (pullRequestMetadata?.description) {
+      setContent(pullRequestMetadata?.description)
+    }
+  }, [pullRequestMetadata?.description, pullRequestMetadata?.description?.length])
 
   return (
     <Container className={cx({ [css.box]: !edit, [css.desc]: !edit })}>
