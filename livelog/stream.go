@@ -1,10 +1,10 @@
-// Copyright 2019 Drone IO, Inc.
+// Copyright 2023 Harness, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,8 +17,6 @@ package livelog
 import (
 	"context"
 	"sync"
-
-	"github.com/drone/drone/core"
 )
 
 // this is the amount of items that are stored in memory
@@ -30,7 +28,7 @@ const bufferSize = 5000
 type stream struct {
 	sync.Mutex
 
-	hist []*core.Line
+	hist []*Line
 	list map[*subscriber]struct{}
 }
 
@@ -40,7 +38,7 @@ func newStream() *stream {
 	}
 }
 
-func (s *stream) write(line *core.Line) error {
+func (s *stream) write(line *Line) error {
 	s.Lock()
 	s.hist = append(s.hist, line)
 	for l := range s.list {
@@ -56,9 +54,9 @@ func (s *stream) write(line *core.Line) error {
 	return nil
 }
 
-func (s *stream) subscribe(ctx context.Context) (<-chan *core.Line, <-chan error) {
+func (s *stream) subscribe(ctx context.Context) (<-chan *Line, <-chan error) {
 	sub := &subscriber{
-		handler: make(chan *core.Line, bufferSize),
+		handler: make(chan *Line, bufferSize),
 		closec:  make(chan struct{}),
 	}
 	err := make(chan error)

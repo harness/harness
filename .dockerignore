@@ -1,2 +1,12 @@
-*
-!release/*
+*.sqlite
+*.sqlite3
+web/node_modules
+web/dist
+release
+.idea
+coverage.out
+
+# ignore any executables we build
+/gitness
+/gitrpcserver
+/gitness-githook

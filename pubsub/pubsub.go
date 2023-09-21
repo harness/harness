@@ -1,10 +1,10 @@
-// Copyright 2021 Drone IO, Inc.
+// Copyright 2023 Harness, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,21 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build !oss
-
 package pubsub
 
-import (
-	"github.com/drone/drone/core"
-	"github.com/drone/drone/service/redisdb"
-)
+import "context"
 
-// New creates a new publish subscriber. If Redis client passed as parameter is not nil it uses
-// a Redis implementation, otherwise it uses an in-memory implementation.
-func New(r redisdb.RedisDB) core.Pubsub {
-	if r != nil {
-		return newHubRedis(r)
-	}
+type Publisher interface {
+	// Publish topic to message broker with payload.
+	Publish(ctx context.Context, topic string, payload []byte,
+		options ...PublishOption) error
+}
 
-	return newHub()
+type PubSub interface {
+	Publisher
+	// Subscribe consumer to process the topic with payload, this should be
+	// blocking operation.
+	Subscribe(ctx context.Context, topic string,
+		handler func(payload []byte) error, options ...SubscribeOption) Consumer
+}
+
+type Consumer interface {
+	Subscribe(ctx context.Context, topics ...string) error
+	Unsubscribe(ctx context.Context, topics ...string) error
+	Close() error
 }
