@@ -269,7 +269,7 @@ pr:
   prMergedBannerInfo: '{user} merged branch {source} into {target} {time}.'
   prMergedInfo: '{user} merged branch {source} into {target}. {time}'
   prBranchPushInfo: '{user} pushed a new commit {commit}'
-  prBranchDeleteInfo: '{user} deleted the source branch with latest {commit}'
+  prBranchDeleteInfo: '{user} deleted the source branch with latest commit {commit}'
   prStateChanged: '{user} changed pull request state from {old} to {new}.'
   prStateChangedDraft: '{user} opened pull request for review.'
   titleChanged: '{user} changed title from {old} to {new}.'
