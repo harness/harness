@@ -1,5 +1,5 @@
 # Gitness
-Your lightweight, super fast code hosting and build service.
+Your lightweight, super fast code hosting and continuous integration service (powered by Drone)
 
 For more information, please visit [gitness.com](https://gitness.com/)
 
