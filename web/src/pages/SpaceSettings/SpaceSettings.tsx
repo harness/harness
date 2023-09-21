@@ -275,6 +275,7 @@ export default function SpaceSettings() {
                         <Button
                           className={css.button}
                           variation={ButtonVariation.PRIMARY}
+                          disabled
                           onClick={() => {
                             openModal()
                           }}
