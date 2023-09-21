@@ -133,6 +133,46 @@ export const SystemComment: React.FC<SystemCommentProps> = ({
       )
     }
 
+    case CommentType.BRANCH_DELETE: {
+      return (
+        <Container>
+          <Layout.Horizontal spacing="small" style={{ alignItems: 'center' }} className={css.mergedBox}>
+            <Avatar name={payload?.author?.display_name} size="small" hoverCard={false} />
+            <Text flex tag="div">
+              <StringSubstitute
+                str={getString('pr.prBranchDeleteInfo')}
+                vars={{
+                  user: (
+                    <Text padding={{ right: 'small' }} inline>
+                      <strong>{payload?.author?.display_name}</strong>
+                    </Text>
+                  ),
+                  commit: (
+                    <Container className={css.commitContainer} padding={{ left: 'small' }}>
+                      <CommitActions
+                        enableCopy
+                        sha={(payload?.payload as Unknown)?.sha}
+                        href={routes.toCODEPullRequest({
+                          repoPath: repoMetadataPath as string,
+                          pullRequestSection: PullRequestSection.FILES_CHANGED,
+                          pullRequestId: String(pullRequestMetadata.number),
+                          commitSHA: (payload?.payload as Unknown)?.sha as string
+                        })}
+                      />
+                    </Container>
+                  )
+                }}
+              />
+            </Text>
+            <PipeSeparator height={9} />
+            <Text inline font={{ variation: FontVariation.SMALL }} color={Color.GREY_400} width={100}>
+              <ReactTimeago date={payload?.created as number} />
+            </Text>
+          </Layout.Horizontal>
+        </Container>
+      )
+    }
+
     case CommentType.STATE_CHANGE: {
       const openFromDraft =
         (payload?.payload as Unknown)?.old_draft === true && (payload?.payload as Unknown)?.new_draft === false

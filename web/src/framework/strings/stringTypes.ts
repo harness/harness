@@ -491,6 +491,7 @@ export interface StringsMap {
   'pr.modalTitle': string
   'pr.openForReview': string
   'pr.outdated': string
+  'pr.prBranchDeleteInfo': string
   'pr.prBranchPushInfo': string
   'pr.prCanBeMerged': string
   'pr.prClosed': string
