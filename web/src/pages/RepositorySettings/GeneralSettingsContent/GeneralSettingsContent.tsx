@@ -10,6 +10,7 @@ import {
   ButtonSize,
   TextInput
 } from '@harnessio/uicore'
+import cx from 'classnames'
 import { Color, Intent } from '@harnessio/design-system'
 import { useMutate } from 'restful-react'
 import { ACCESS_MODES, permissionProps, voidFn } from 'utils/Utils'
@@ -85,14 +86,14 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                 </Container>
               </Layout.Horizontal>
               <Layout.Horizontal>
-                <Container className={css.label}>
+                <Container className={cx(css.label, css.descText)}>
                   <Text color={Color.GREY_600} font={{ size: 'small' }}>
                     {getString('description')}
                   </Text>
                 </Container>
                 <Container className={css.content}>
                   {editDesc === ACCESS_MODES.EDIT ? (
-                    <Layout.Horizontal>
+                    <Layout.Horizontal className={css.editContainer}>
                       <TextInput
                         className={css.textContainer}
                         onChange={evt => {

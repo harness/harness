@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { PageBody, Container, Tabs } from '@harnessio/uicore'
+import { PageBody, Container } from '@harnessio/uicore'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 
@@ -10,14 +10,8 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import GeneralSettingsContent from './GeneralSettingsContent/GeneralSettingsContent'
 import css from './RepositorySettings.module.scss'
 
-enum SettingsTab {
-  webhooks = 'webhooks',
-  general = 'general'
-}
 export default function RepositorySettings() {
   const { repoMetadata, error, loading, refetch } = useGetRepositoryMetadata()
-
-  const [activeTab, setActiveTab] = React.useState<string>(SettingsTab.general)
 
   const { getString } = useStrings()
   return (
@@ -31,21 +25,7 @@ export default function RepositorySettings() {
         <LoadingSpinner visible={loading} />
         {repoMetadata && (
           <Container className={css.main} padding={'large'}>
-            <Tabs
-              id="SettingsTabs"
-              vertical
-              large={false}
-              defaultSelectedTabId={activeTab}
-              animate={false}
-              onChange={(id: string) => setActiveTab(id)}
-              tabList={[
-                {
-                  id: SettingsTab.general,
-                  title: getString('general'),
-                  panel: <GeneralSettingsContent repoMetadata={repoMetadata} refetch={refetch} />,
-                  iconProps: { name: 'cog' }
-                }
-              ]}></Tabs>
+            <GeneralSettingsContent repoMetadata={repoMetadata} refetch={refetch} />
           </Container>
         )}
       </PageBody>

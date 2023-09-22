@@ -61,12 +61,17 @@
 }
 
 .label {
-  width: 30%;
+  padding-top: var(--spacing-xsmall);
+  width: 120px;
   padding-right: var(--spacing-medium);
 }
 
+.descText {
+  align-self: center !important;
+}
+
 .content {
-  width: 70%;
+  width: 80%;
 }
 
 .deleteContainer {
@@ -80,6 +85,12 @@
 
 .textContainer {
   width: 80%;
+}
+
+.editContainer {
+  :global(.TextInput--main) {
+    margin-bottom: unset !important;
+  }
 }
 
 .buttonContainer {
