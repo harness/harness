@@ -4,6 +4,7 @@ import { NavArrowRight } from 'iconoir-react'
 import cx from 'classnames'
 import { useGet } from 'restful-react'
 import Anser from 'anser'
+import DOMPurify from 'dompurify'
 import { Container, Layout, Text, FlexExpander, Utils, useToaster } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -11,6 +12,7 @@ import { ButtonRoleProps, getErrorMessage, timeDistance } from 'utils/Utils'
 import type { GitInfoProps } from 'utils/GitUtils'
 import type { LivelogLine, TypesStage, TypesStep } from 'services/code'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
+import { useScheduleRendering } from 'hooks/useScheduleRendering'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import css from './Checks.module.scss'
 
@@ -57,7 +59,7 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
   const [expanded, setExpanded] = useState(
     isRunning || step.status === ExecutionState.ERROR || step.status === ExecutionState.FAILURE
   )
-  const stepLogPath = useMemo(
+  const path = useMemo(
     () =>
       `/api/v1/repos/${repoMetadata?.path}/+/pipelines/${pipelineName}/executions/${executionNumber}/logs/${stage.number}/${step.number}`,
     [executionNumber, pipelineName, repoMetadata?.path, stage.number, step.number]
@@ -70,16 +72,40 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
     loading,
     refetch
   } = useGet<LivelogLine[]>({
-    path: stepLogPath,
+    path,
     lazy: true
   })
   const [isStreamingDone, setIsStreamingDone] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [autoCollapse, setAutoCollapse] = useState(false)
-  const closeEventStream = useCallback(() => {
+  const closeEventStream = useCallback((event?: Event) => {
     eventSourceRef.current?.close()
     eventSourceRef.current = null
+
+    // Report to console an error if last event is not `eof`
+    if (event) {
+      if ((event as unknown as { data: string }).data !== 'eof') {
+        console.error('An error has occurred while streaming through EventSource', event) // eslint-disable-line no-console
+      }
+    }
   }, [])
+  const streamLogsRenderer = useCallback((_logs: string[]) => {
+    const logContainer = containerRef.current as HTMLDivElement
+    const fragment = new DocumentFragment()
+
+    _logs.forEach(_log => fragment.appendChild(createLogLineElement(_log)))
+
+    const scrollParent = logContainer.closest(`.${css.content}`) as HTMLDivElement
+    const autoScroll = scrollParent && scrollParent.scrollTop === scrollParent.scrollHeight - scrollParent.offsetHeight
+
+    logContainer.appendChild(fragment)
+
+    if (autoScroll) {
+      scrollParent.scrollTop = scrollParent.scrollHeight
+    }
+  }, [])
+
+  const sendStreamingDataToRender = useScheduleRendering({ renderer: streamLogsRenderer })
 
   useEffect(() => {
     if (expanded && isRunning) {
@@ -88,37 +114,28 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
       if (containerRef.current) {
         containerRef.current.textContent = ''
       }
-      eventSourceRef.current = new EventSource(`${stepLogPath}/stream`)
 
+      eventSourceRef.current = new EventSource(`${path}/stream`)
       eventSourceRef.current.onmessage = event => {
         try {
-          const scrollParent = containerRef.current?.closest(`.${css.content}`) as HTMLDivElement
-          const autoScroll =
-            scrollParent && scrollParent.scrollTop === scrollParent.scrollHeight - scrollParent.offsetHeight
-
-          const element = createLogLineElement((JSON.parse(event.data) as LivelogLine).out)
-          containerRef.current?.appendChild(element)
-
-          if (autoScroll) {
-            scrollParent.scrollTop = scrollParent.scrollHeight
-          }
+          sendStreamingDataToRender((JSON.parse(event.data) as LivelogLine).out || '')
         } catch (exception) {
           showError(getErrorMessage(exception))
           closeEventStream()
         }
       }
 
-      eventSourceRef.current.onerror = () => {
+      eventSourceRef.current.onerror = event => {
         setIsStreamingDone(true)
         setAutoCollapse(true)
-        closeEventStream()
+        closeEventStream(event)
       }
     } else {
       closeEventStream()
     }
 
     return closeEventStream
-  }, [expanded, isRunning, showError, stepLogPath, step.status, closeEventStream])
+  }, [expanded, isRunning, showError, path, step.status, closeEventStream, sendStreamingDataToRender])
 
   useEffect(() => {
     if (!lazy && !error && (!isStreamingDone || !isRunning) && expanded) {
@@ -189,6 +206,23 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
 const createLogLineElement = (line = '') => {
   const element = document.createElement('pre')
   element.className = css.consoleLine
-  element.innerHTML = Anser.ansiToHtml(line.replace(/\r?\n$/, ''))
+
+  const html = Anser.ansiToHtml(line.replace(/\r?\n$/, ''))
+
+  if (window.Sanitizer && element.setHTML) {
+    element.setHTML(html, {
+      sanitizer: new window.Sanitizer({
+        allowElements: ['span'],
+        allowAttributes: { style: ['span'] }
+      })
+    })
+  } else {
+    element.innerHTML = DOMPurify.sanitize(html, {
+      USE_PROFILES: { html: true },
+      ALLOWED_TAGS: ['span'],
+      ALLOWED_ATTR: ['style']
+    })
+  }
+
   return element
 }

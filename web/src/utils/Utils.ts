@@ -1,5 +1,4 @@
 import { Intent, IToaster, IToastProps, Position, Toaster } from '@blueprintjs/core'
-import type { editor as EDITOR } from 'monaco-editor/esm/vs/editor/editor.api'
 import { get } from 'lodash-es'
 import moment from 'moment'
 import langMap from 'lang-map'
@@ -89,16 +88,6 @@ export interface SourceCodeEditorProps {
   wordWrap?: boolean
   onChange?: (value: string) => void
   schema?: Record<string, unknown>
-}
-
-// Monaco editor has a bug where when its value is set, the value
-// is selected all by default.
-// Fix by set selection range to zero
-export const deselectAllMonacoEditor = (editor?: EDITOR.IStandaloneCodeEditor) => {
-  editor?.focus()
-  setTimeout(() => {
-    editor?.setSelection(new monaco.Selection(0, 0, 0, 0))
-  }, 0)
 }
 
 export const displayDateTime = (value: number): string | null => {

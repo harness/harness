@@ -46,13 +46,11 @@ declare interface Window {
   harnessNameSpace: string
   bugsnagClient?: any
   STRIP_CODE_PREFIX?: boolean
-  monaco?: any
+  Sanitizer: any
 }
 
 declare const __ENABLE_CDN__: boolean
 declare let __webpack_public_path__: string
-
-declare const monaco: any
 
 declare module '*.scss'
 
