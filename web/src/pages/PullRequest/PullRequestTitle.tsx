@@ -96,7 +96,12 @@ export const PullRequestTitle: React.FC<PullRequestTitleProps> = ({
         </Truthy>
         <Else>
           <>
-            <Text tag="h1" className={css.titleText} font={{ variation: FontVariation.H4 }} lineClamp={1}>
+            <Text
+              tag="h1"
+              className={css.titleText}
+              font={{ variation: FontVariation.H4 }}
+              lineClamp={1}
+              tooltipProps={{ portalClassName: css.popover }}>
               {original} <span className={css.prNumber}>#{number}</span>
             </Text>
             <Button

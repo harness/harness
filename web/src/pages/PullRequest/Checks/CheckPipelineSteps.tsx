@@ -95,7 +95,7 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
 
     _logs.forEach(_log => fragment.appendChild(createLogLineElement(_log)))
 
-    const scrollParent = logContainer.closest(`.${css.content}`) as HTMLDivElement
+    const scrollParent = logContainer?.closest(`.${css.content}`) as HTMLDivElement
     const autoScroll = scrollParent && scrollParent.scrollTop === scrollParent.scrollHeight - scrollParent.offsetHeight
 
     logContainer.appendChild(fragment)
