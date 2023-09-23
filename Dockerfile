@@ -46,8 +46,6 @@ ARG BUILD_TAGS
 
 # set required build flags
 RUN CGO_ENABLED=1 \
-    GOOS=linux \
-    GOARCH=amd64 \
     BUILD_TAGS=${BUILD_TAGS} \
     make build
 
