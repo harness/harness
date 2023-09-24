@@ -1,6 +1,16 @@
-// Copyright 2022 Harness Inc. All rights reserved.
-// Use of this source code is governed by the Polyform Free Trial License
-// that can be found in the LICENSE.md file for this repository.
+// Copyright 2023 Harness, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package usererror
 
@@ -14,7 +24,6 @@ import (
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/check"
 
-	"github.com/harness/go-rbac"
 	"github.com/rs/zerolog/log"
 )
 
@@ -26,11 +35,6 @@ func Translate(err error) *Error {
 	)
 
 	// TODO: Improve performance of checking multiple errors with errors.Is
-
-	// check if err is RBAC error
-	if rbacErr := processRBACErrors(err); rbacErr != nil {
-		return rbacErr
-	}
 
 	switch {
 	// api errors
@@ -101,31 +105,4 @@ func httpStatusCode(code gitrpc.Status) int {
 		return v
 	}
 	return http.StatusInternalServerError
-}
-
-func processRBACErrors(err error) *Error {
-	msg := err.Error()
-	switch {
-	case
-		errors.Is(err, rbac.ErrBaseURLRequired),
-		errors.Is(err, rbac.ErrInvalidPrincipalType),
-		errors.Is(err, rbac.ErrAccountRequired),
-		errors.Is(err, rbac.ErrPrincipalIdentifierRequired),
-		errors.Is(err, rbac.ErrPermissionsRequired),
-		errors.Is(err, rbac.ErrResourceTypeRequired),
-		errors.Is(err, rbac.ErrResourceTypeKeyRequired),
-		errors.Is(err, rbac.ErrResourceTypeValueRequired),
-		errors.Is(err, rbac.ErrPermissionRequired),
-		errors.Is(err, rbac.ErrPermissionsSizeExceeded),
-		errors.Is(err, rbac.ErrInvalidCacheEntryType),
-		errors.Is(err, rbac.ErrNoHeader),
-		errors.Is(err, rbac.ErrAuthorizationTokenRequired),
-		errors.Is(err, rbac.ErrOddNumberOfArguments):
-		return New(http.StatusBadRequest, msg)
-	case errors.Is(err, rbac.ErrMapperFuncCannotBeNil),
-		errors.Is(err, rbac.ErrLoggerCannotBeNil):
-		return New(http.StatusInternalServerError, msg)
-	}
-
-	return nil
 }

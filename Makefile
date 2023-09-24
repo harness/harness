@@ -4,12 +4,9 @@ endif
 ifndef GOBIN # derive value from gopath (default to first entry, similar to 'go get')
 	GOBIN := $(shell go env GOPATH | sed 's/:.*//')/bin
 endif
-ifndef DOCKER_BUILD_OPTS
-	DOCKER_BUILD_OPTS :=
-endif
 
 tools = $(addprefix $(GOBIN)/, golangci-lint goimports govulncheck protoc-gen-go protoc-gen-go-grpc gci)
-deps = $(addprefix $(GOBIN)/, wire dbmate mockgen)
+deps = $(addprefix $(GOBIN)/, wire dbmate)
 
 LDFLAGS = "-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.major=${GITNESS_VERSION_MAJOR} -X github.com/harness/gitness/version.minor=${GITNESS_VERSION_MINOR} -X github.com/harness/gitness/version.patch=${GITNESS_VERSION_PATCH}"
 
@@ -82,34 +79,6 @@ run: dep ## Run the gitness binary from source
 
 ###############################################################################
 #
-# Docker environment commands
-# The following targets relate to running gitness and its dependent services
-#
-###############################################################################
-
-image: ## Build the gitness docker image
-	@echo "Building Gitness Standalone Image"
-	@docker build \
-			--build-arg GITNESS_VERSION=latest \
-			--build-arg BUILD_TAGS=${BUILD_TAGS} \
-			--build-arg GIT_COMMIT=${GIT_COMMIT} \
-			--build-arg GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN} \
-			--platform linux/amd64 \
-			 -t gitness-standalone:latest .
-
-gitrpc-image: ## Build the gitness gitrpc docker image
-	@echo "Building Gitness GitRPC Image"
-	@docker build \
-			--build-arg GITNESS_VERSION=latest \
-			--build-arg BUILD_TAGS=${BUILD_TAGS} \
-			--build-arg GIT_COMMIT=${GIT_COMMIT} \
-			--build-arg GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN} \
-			--platform linux/amd64 \
-			 -t gitness-gitrpc:latest \
-			 -f ./docker/Dockerfile.gitrpc .
-
-###############################################################################
-#
 # Code Formatting and linting
 #
 ###############################################################################
@@ -135,11 +104,8 @@ lint: tools generate # lint the golang code
 # the source file has changed.
 ###############################################################################
 
-generate: $(mocks) wire mocks/mock_client.go proto
+generate: wire proto
 	@echo "Generating Code"
-
-mocks: $(mocks)
-	@echo "Generating Test Mocks"
 
 wire: cmd/gitness/wire_gen.go cmd/gitrpcserver/wire_gen.go cmd/githaserver/wire_gen.go
 
@@ -156,9 +122,6 @@ cmd/gitrpcserver/wire_gen.go: cmd/gitrpcserver/wire.go
 
 cmd/githaserver/wire_gen.go: cmd/githaserver/wire.go
 	@sh ./scripts/wire/githaserver/wire.sh
-
-mocks/mock_client.go: internal/store/database.go client/client.go
-	go generate mocks/mock.go
 
 proto: ## generate proto files for gitrpc integration
 	@protoc --proto_path=./gitrpc/proto \
@@ -197,10 +160,6 @@ $(GOBIN)/wire:
 # Install dbmate to perform db migrations
 $(GOBIN)/dbmate:
 	go install github.com/amacneil/dbmate@v1.15.0
-
-# Install mockgen to generate mocks
-$(GOBIN)/mockgen:
-	go install github.com/golang/mock/mockgen@latest
 
 $(GOBIN)/govulncheck:
 	go install golang.org/x/vuln/cmd/govulncheck@latest
