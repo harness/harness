@@ -17,7 +17,7 @@ docker run \
   -v /tmp/gitness:/data \
   harness/gitness:latest
 ```
-> The Gitness image uses a volume to store the database and repositories. It is highly recommended to use a bind mount or named volume as otherwise all data will be lost once the contaner is stopped.
+> The Gitness image uses a volume to store the database and repositories. It is highly recommended to use a bind mount or named volume as otherwise all data will be lost once the container is stopped.
 
 # Pre-Requisites
 
