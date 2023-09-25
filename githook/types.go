@@ -15,8 +15,10 @@
 package githook
 
 // Output represents the output of server hook api calls.
-// TODO: support non-error messages (once we need it).
 type Output struct {
+	// Messages contains standard user facing messages.
+	Messages []string `json:"messages,omitempty"`
+
 	// Error contains the user facing error (like "branch is protected", ...).
 	Error *string `json:"error,omitempty"`
 }

@@ -212,7 +212,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	githookController := githook.ProvideController(db, authorizer, principalStore, repoStore, eventsReporter)
+	githookController := githook.ProvideController(db, authorizer, principalStore, repoStore, eventsReporter, pullReqStore, provider)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore)
 	checkController := check2.ProvideController(db, authorizer, repoStore, checkStore, gitrpcInterface)
@@ -220,7 +220,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController)
 	gitHandler := router.ProvideGitHandler(config, provider, repoStore, authenticator, authorizer, gitrpcInterface)
 	webHandler := router.ProvideWebHandler(config)
-	routerRouter := router.ProvideRouter(config, apiHandler, gitHandler, webHandler)
+	routerRouter := router.ProvideRouter(config, apiHandler, gitHandler, webHandler, provider)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, streamer, fileService, logStore, logStream, checkStore, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore)
 	client := manager.ProvideExecutionClient(executionManager, config)

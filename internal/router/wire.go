@@ -15,6 +15,8 @@
 package router
 
 import (
+	"strings"
+
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/api/controller/check"
 	"github.com/harness/gitness/internal/api/controller/connector"
@@ -56,9 +58,20 @@ func ProvideRouter(
 	api APIHandler,
 	git GitHandler,
 	web WebHandler,
+	urlProvider *url.Provider,
 ) *Router {
-	return NewRouter(api, git, web,
-		config.Server.HTTP.GitHost)
+	// use url provider as it has the latest data.
+	gitHostname := urlProvider.GetGITHostname()
+	apiHostname := urlProvider.GetAPIHostname()
+
+	// only use host name to identify git traffic if it differs from api hostname.
+	// TODO: Can we make this even more flexible - aka use the full base urls to route traffic?
+	gitRoutingHost := ""
+	if strings.ToLower(gitHostname) != strings.ToLower(apiHostname) {
+		gitRoutingHost = gitHostname
+	}
+
+	return NewRouter(api, git, web, gitRoutingHost)
 }
 
 func ProvideGitHandler(

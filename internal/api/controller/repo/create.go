@@ -92,7 +92,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 
 	// backfil GitURL
-	repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)
+	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
 	return repo, nil
 }

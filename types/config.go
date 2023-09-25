@@ -41,29 +41,41 @@ type Config struct {
 
 	// URL defines the URLs via which the different parts of the service are reachable by.
 	URL struct {
+		// Base is used to generate external facing URLs in case they aren't provided explicitly.
+		// Value is derived from HTTP.Server unless explicitly specified.
+		Base string `envconfig:"GiTNESS_URL_BASE"`
+
 		// Git defines the external URL via which the GIT API is reachable.
 		// NOTE: for routing to work properly, the request path & hostname reaching gitness
 		// have to statisfy at least one of the following two conditions:
 		// - Path ends with `/git`
-		// - Hostname matches Config.Server.HTTP.GitHost
+		// - Hostname is different to API hostname
 		// (this could be after proxy path / header rewrite).
-		Git string `envconfig:"GITNESS_URL_GIT" default:"http://localhost:3000/git"`
-
-		// CIURL is the endpoint that can be used by running CI container builds to communicate
-		// with gitness (for example while performing a clone on a local repo).
-		// host.docker.internal allows a running container to talk to services exposed on the host
-		// (either running directly or via a port exposed in a docker container).
-		CIURL string `envconfig:"GITNESS_CI_URL_GIT" default:"http://host.docker.internal:3000/git"`
+		// Value is derived from Base unless explicitly specified (e.g. http://localhost:3000/git).
+		Git string `envconfig:"GITNESS_URL_GIT"`
 
 		// API defines the external URL via which the rest API is reachable.
 		// NOTE: for routing to work properly, the request path reaching gitness has to end with `/api`
 		// (this could be after proxy path rewrite).
-		API string `envconfig:"GITNESS_URL_API" default:"http://localhost:3000/api"`
+		// Value is derived from Base unless explicitly specified (e.g. http://localhost:3000/api).
+		API string `envconfig:"GITNESS_URL_API"`
+
+		// UI defines the external URL via which the UI is reachable.
+		// Value is derived from Base unless explicitly specified (e.g. http://localhost:3000).
+		UI string `envconfig:"GITNESS_URL_UI"`
 
 		// APIInternal defines the internal URL via which the rest API is reachable.
 		// NOTE: for routing to work properly, the request path reaching gitness has to end with `/api`
 		// (this could be after proxy path rewrite).
-		APIInternal string `envconfig:"GITNESS_URL_API_INTERNAL" default:"http://localhost:3000/api"`
+		// Value is derived from Base unless explicitly specified (e.g. http://localhost:3000/api).
+		APIInternal string `envconfig:"GITNESS_URL_API_INTERNAL"`
+
+		// GitContainer is the endpoint that can be used by running container builds to communicate
+		// with gitness (for example while performing a clone on a local repo).
+		// host.docker.internal allows a running container to talk to services exposed on the host
+		// (either running directly or via a port exposed in a docker container).
+		// Value is derived from Base unless explicitly specified (e.g. http://host.docker.internal:3000/git).
+		GitContainer string `envconfig:"GITNESS_URL_GIT_CONTAINER"`
 	}
 
 	// Git defines the git configuration parameters
@@ -83,9 +95,6 @@ type Config struct {
 		HTTP struct {
 			Bind  string `envconfig:"GITNESS_HTTP_BIND" default:":3000"`
 			Proto string `envconfig:"GITNESS_HTTP_PROTO" default:"http"`
-			Host  string `envconfig:"GITNESS_HTTP_HOST"`
-			// GitHost is the host used to identify git traffic (OPTIONAL).
-			GitHost string `envconfig:"GITNESS_HTTP_GIT_HOST" default:"git.localhost"`
 		}
 
 		// Acme defines Acme configuration parameters.
@@ -93,6 +102,7 @@ type Config struct {
 			Enabled bool   `envconfig:"GITNESS_ACME_ENABLED"`
 			Endpont string `envconfig:"GITNESS_ACME_ENDPOINT"`
 			Email   bool   `envconfig:"GITNESS_ACME_EMAIL"`
+			Host    string `envconfig:"GITNESS_ACME_HOST"`
 		}
 	}
 

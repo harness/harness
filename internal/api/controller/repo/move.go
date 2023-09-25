@@ -78,7 +78,7 @@ func (c *Controller) Move(ctx context.Context,
 		return nil, fmt.Errorf("failed to update repo: %w", err)
 	}
 
-	repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)
+	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
 	return repo, nil
 }

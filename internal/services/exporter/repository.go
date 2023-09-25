@@ -37,6 +37,11 @@ import (
 	"github.com/harness/gitness/types"
 )
 
+const (
+	// TODO: take as optional input from api input to allow exporting to SMP.
+	harnessCodeAPIURLRaw = "https://app.harness.io/gateway/code/api"
+)
+
 var (
 	// ErrNotFound is returned if no export data was found.
 	ErrNotFound = errors.New("export not found")
@@ -165,7 +170,13 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", err
 	}
 	harnessCodeInfo := input.HarnessCodeInfo
-	client, err := newHarnessCodeClient(r.urlProvider.GetHarnessCodeInternalUrl(), harnessCodeInfo.AccountId, harnessCodeInfo.OrgIdentifier, harnessCodeInfo.ProjectIdentifier, harnessCodeInfo.Token)
+	client, err := newHarnessCodeClient(
+		harnessCodeAPIURLRaw,
+		harnessCodeInfo.AccountId,
+		harnessCodeInfo.OrgIdentifier,
+		harnessCodeInfo.ProjectIdentifier,
+		harnessCodeInfo.Token,
+	)
 	if err != nil {
 		return "", err
 	}

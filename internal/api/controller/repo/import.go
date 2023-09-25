@@ -70,7 +70,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil, err
 	}
 
-	repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)
+	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
 	return repo, nil
 }

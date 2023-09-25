@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/internal/auth/authz"
 	eventsgit "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/url"
 
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
@@ -29,6 +30,7 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(db *sqlx.DB, authorizer authz.Authorizer, principalStore store.PrincipalStore,
-	repoStore store.RepoStore, gitReporter *eventsgit.Reporter) *Controller {
-	return NewController(db, authorizer, principalStore, repoStore, gitReporter)
+	repoStore store.RepoStore, gitReporter *eventsgit.Reporter, pullreqStore store.PullReqStore,
+	urlProvider *url.Provider) *Controller {
+	return NewController(db, authorizer, principalStore, repoStore, gitReporter, pullreqStore, urlProvider)
 }

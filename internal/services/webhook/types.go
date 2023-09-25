@@ -80,7 +80,7 @@ func repositoryInfoFrom(repo *types.Repository, urlProvider *url.Provider) Repos
 		Path:          repo.Path,
 		UID:           repo.UID,
 		DefaultBranch: repo.DefaultBranch,
-		GitURL:        urlProvider.GenerateRepoCloneURL(repo.Path),
+		GitURL:        urlProvider.GenerateGITCloneURL(repo.Path),
 	}
 }
 

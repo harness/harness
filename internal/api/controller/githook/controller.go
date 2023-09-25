@@ -23,6 +23,7 @@ import (
 	"github.com/harness/gitness/internal/auth/authz"
 	eventsgit "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/internal/store"
+	"github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -58,6 +59,8 @@ type Controller struct {
 	principalStore store.PrincipalStore
 	repoStore      store.RepoStore
 	gitReporter    *eventsgit.Reporter
+	pullreqStore   store.PullReqStore
+	urlProvider    *url.Provider
 }
 
 func NewController(
@@ -66,6 +69,8 @@ func NewController(
 	principalStore store.PrincipalStore,
 	repoStore store.RepoStore,
 	gitReporter *eventsgit.Reporter,
+	pullreqStore store.PullReqStore,
+	urlProvider *url.Provider,
 ) *Controller {
 	return &Controller{
 		db:             db,
@@ -73,6 +78,8 @@ func NewController(
 		principalStore: principalStore,
 		repoStore:      repoStore,
 		gitReporter:    gitReporter,
+		pullreqStore:   pullreqStore,
+		urlProvider:    urlProvider,
 	}
 }
 

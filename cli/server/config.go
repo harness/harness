@@ -16,8 +16,10 @@ package server
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"unicode"
 
 	"github.com/harness/gitness/events"
@@ -49,7 +51,77 @@ func LoadConfig() (*types.Config, error) {
 		return nil, fmt.Errorf("unable to ensure that instance ID is set in config: %w", err)
 	}
 
+	err = backfillURLs(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to backfil urls: %w", err)
+	}
+
 	return config, nil
+}
+
+func backfillURLs(config *types.Config) error {
+	// default base url
+	scheme, host, port, path := "http", "localhost", "3000", ""
+
+	// override default with whatever server bind provided
+	bindHost, bindPort, _ := strings.Cut(config.Server.HTTP.Bind, ":")
+	if bindHost != "" {
+		host = bindHost
+	}
+	if bindPort != "" {
+		port = bindPort
+	}
+
+	// TODO: handle https of server bind
+
+	// backfil internal URLS before continuing override with user provided base (which is external facing)
+	if config.URL.APIInternal == "" {
+		config.URL.APIInternal = fmt.Sprintf("%s://localhost:%s/api", scheme, port)
+	}
+	if config.URL.GitContainer == "" {
+		config.URL.GitContainer = fmt.Sprintf("%s://host.docker.internal:%s/git", scheme, port)
+	}
+
+	// override base with whatever user explicit override
+	if config.URL.Base != "" {
+		u, err := url.Parse(config.URL.Base)
+		if err != nil {
+			return fmt.Errorf("failed to parse base url '%s': %w", config.URL.Base, err)
+		}
+		if u.Scheme != "" {
+			scheme = u.Scheme
+		}
+		if u.Hostname() != "" {
+			host = u.Hostname()
+		}
+		if u.Port() != "" {
+			port = u.Port()
+		}
+		if u.Path != "" {
+			// ensure path starts with a slash (so we only add slash if path is provided)
+			path = "/" + strings.Trim(u.Path, "/")
+		}
+	}
+
+	// create base URL object
+	baseURLRaw := fmt.Sprintf("%s://%s:%s%s", scheme, host, port, path)
+	baseURL, err := url.Parse(baseURLRaw)
+	if err != nil {
+		return fmt.Errorf("failed to parse derived base url '%s': %w", baseURLRaw, err)
+	}
+
+	// backfill all external URLs that weren't explicitly overwritten
+	if config.URL.API == "" {
+		config.URL.API = baseURL.JoinPath("api").String()
+	}
+	if config.URL.Git == "" {
+		config.URL.Git = baseURL.JoinPath("git").String()
+	}
+	if config.URL.UI == "" {
+		config.URL.UI = baseURL.String()
+	}
+
+	return nil
 }
 
 // getSanitizedMachineName gets the name of the machine and returns it in sanitized format.

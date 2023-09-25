@@ -96,6 +96,16 @@ func handleServerHookOutput(out *Output, err error) error {
 		return errors.New("the server returned an empty output")
 	}
 
+	// print messages before any error
+	if len(out.Messages) > 0 {
+		// add empty line before and after to make it easier readable
+		fmt.Println()
+		for _, msg := range out.Messages {
+			fmt.Println(msg)
+		}
+		fmt.Println()
+	}
+
 	if out.Error != nil {
 		return errors.New(*out.Error)
 	}

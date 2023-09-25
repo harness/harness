@@ -56,7 +56,7 @@ func (c *Controller) ListRepositoriesNoAuth(
 
 	// backfill URLs
 	for _, repo := range repos {
-		repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)
+		repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 	}
 
 	return repos, count, nil

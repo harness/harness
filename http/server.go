@@ -36,7 +36,7 @@ type Config struct {
 	Addr              string
 	Cert              string
 	Key               string
-	Host              string
+	AcmeHost          string
 	ReadHeaderTimeout time.Duration
 }
 
@@ -124,7 +124,7 @@ func (s Server) listenAndServeAcme() (*errgroup.Group, ShutdownFunction) {
 	m := &autocert.Manager{
 		Cache:      autocert.DirCache(".cache"),
 		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist(s.config.Host),
+		HostPolicy: autocert.HostWhitelist(s.config.AcmeHost),
 	}
 	s1 := &http.Server{
 		Addr:              ":http",

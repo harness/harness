@@ -71,7 +71,7 @@ func (c *Controller) Update(ctx context.Context,
 	}
 
 	// backfill repo url
-	repo.GitURL = c.urlProvider.GenerateRepoCloneURL(repo.Path)
+	repo.GitURL = c.urlProvider.GenerateGITCloneURL(repo.Path)
 
 	return repo, nil
 }

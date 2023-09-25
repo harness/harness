@@ -23,6 +23,8 @@ import (
 	"github.com/harness/gitness/internal/auth"
 	events "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -45,10 +47,21 @@ func (c *Controller) PostReceive(
 		return nil, fmt.Errorf("input is nil")
 	}
 
+	repo, err := c.getRepoCheckAccess(ctx, session, repoID, enum.PermissionRepoEdit)
+	if err != nil {
+		return nil, err
+	}
+
 	// report ref events (best effort)
 	c.reportReferenceEvents(ctx, repoID, principalID, in)
 
-	return &githook.Output{}, nil
+	// create output object and have following messages fill its messages
+	out := &githook.Output{}
+
+	// handle branch updates related to PRs - best effort
+	c.handlePRMessaging(ctx, repo, principalID, in, out)
+
+	return out, nil
 }
 
 // reportReferenceEvents is reporting reference events to the event system.
@@ -137,4 +150,65 @@ func (c *Controller) reportTagEvent(
 			Forced: true,
 		})
 	}
+}
+
+// handlePRMessaging checks any single branch push for pr information and returns an according response if needed.
+// TODO: If it is a new branch, or an update on a branch without any PR, it also sends out an SSE for pr creation.
+func (c *Controller) handlePRMessaging(
+	ctx context.Context,
+	repo *types.Repository,
+	principalID int64,
+	in *githook.PostReceiveInput,
+	out *githook.Output,
+) {
+	// skip anything that was a batch push / isn't branch related / isn't updating/creating a branch.
+	if len(in.RefUpdates) != 1 ||
+		!strings.HasPrefix(in.RefUpdates[0].Ref, gitReferenceNamePrefixBranch) ||
+		in.RefUpdates[0].New == types.NilSHA {
+		return
+	}
+
+	// for now we only care about first branch that was pushed.
+	branchName := in.RefUpdates[0].Ref[len(gitReferenceNamePrefixBranch):]
+
+	// do we have a PR related to it?
+	prs, err := c.pullreqStore.List(ctx, &types.PullReqFilter{
+		Page: 1,
+		// without forks we expect at most one PR (keep 2 to not break when forks are introduced)
+		Size:         2,
+		SourceRepoID: repo.ID,
+		SourceBranch: branchName,
+		// we only care about open PRs - merged/closed will lead to "create new PR" message
+		States: []enum.PullReqState{enum.PullReqStateOpen},
+		Order:  enum.OrderAsc,
+		Sort:   enum.PullReqSortCreated,
+	})
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msgf(
+			"failed to find pullrequests for branch '%s' originating from repo '%s'",
+			branchName,
+			repo.Path,
+		)
+		return
+	}
+
+	// for already existing PRs, print them to users terminal for easier access.
+	if len(prs) > 0 {
+		msgs := make([]string, 2*len(prs)+1)
+		msgs[0] = fmt.Sprintf("Branch '%s' has open PRs:", branchName)
+		for i, pr := range prs {
+			msgs[2*i+1] = fmt.Sprintf("  (#%d) %s", pr.Number, pr.Title)
+			msgs[2*i+2] = "    " + c.urlProvider.GenerateUIPRURL(repo.Path, pr.Number)
+		}
+		out.Messages = append(out.Messages, msgs...)
+		return
+	}
+
+	// this is a new PR!
+	out.Messages = append(out.Messages,
+		fmt.Sprintf("Create a new PR for branch '%s'", branchName),
+		"  "+c.urlProvider.GenerateUICompareURL(repo.Path, repo.DefaultBranch, branchName),
+	)
+
+	// TODO: store latest pushed branch for user in cache and send out SSE
 }
