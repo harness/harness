@@ -30,7 +30,7 @@ func ProvideServer(config *types.Config, router *router.Router) *Server {
 	return &Server{
 		http.NewServer(
 			http.Config{
-				Addr:     config.Server.HTTP.Bind,
+				Port:     config.Server.HTTP.Port,
 				Acme:     config.Server.Acme.Enabled,
 				AcmeHost: config.Server.Acme.Host,
 			},

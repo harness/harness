@@ -17,7 +17,9 @@ package http
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/acme/autocert"
@@ -33,7 +35,7 @@ const (
 // TODO: expose via options?
 type Config struct {
 	Acme              bool
-	Addr              string
+	Port              int
 	Cert              string
 	Key               string
 	AcmeHost          string
@@ -74,7 +76,7 @@ func (s *Server) ListenAndServe() (*errgroup.Group, ShutdownFunction) {
 func (s *Server) listenAndServe() (*errgroup.Group, ShutdownFunction) {
 	var g errgroup.Group
 	s1 := &http.Server{
-		Addr:              s.config.Addr,
+		Addr:              fmt.Sprintf(":%d", s.config.Port),
 		ReadHeaderTimeout: s.config.ReadHeaderTimeout,
 		Handler:           s.handler,
 	}
@@ -161,6 +163,7 @@ func (s Server) listenAndServeAcme() (*errgroup.Group, ShutdownFunction) {
 }
 
 func redirect(w http.ResponseWriter, req *http.Request) {
-	target := "https://" + req.Host + req.URL.Path
+	// TODO: in case of reverse-proxy the host might be not the external host.
+	target := "https://" + req.Host + "/" + strings.TrimPrefix(req.URL.Path, "/")
 	http.Redirect(w, req, target, http.StatusTemporaryRedirect)
 }

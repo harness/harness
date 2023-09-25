@@ -119,7 +119,7 @@ func (c *command) run(*kingpin.ParseContext) error {
 	}
 
 	log.Info().
-		Str("port", config.Server.HTTP.Bind).
+		Int("port", config.Server.HTTP.Port).
 		Str("revision", version.GitCommit).
 		Str("repository", version.GitRepository).
 		Stringer("version", version.Version).

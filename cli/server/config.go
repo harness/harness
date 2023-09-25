@@ -61,16 +61,7 @@ func LoadConfig() (*types.Config, error) {
 
 func backfillURLs(config *types.Config) error {
 	// default base url
-	scheme, host, port, path := "http", "localhost", "3000", ""
-
-	// override default with whatever server bind provided
-	bindHost, bindPort, _ := strings.Cut(config.Server.HTTP.Bind, ":")
-	if bindHost != "" {
-		host = bindHost
-	}
-	if bindPort != "" {
-		port = bindPort
-	}
+	scheme, host, port, path := "http", "localhost", fmt.Sprint(config.Server.HTTP.Port), ""
 
 	// TODO: handle https of server bind
 

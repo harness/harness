@@ -23,7 +23,7 @@ import (
 
 func TestBackfilURLsPortBind(t *testing.T) {
 	config := &types.Config{}
-	config.Server.HTTP.Bind = ":1234"
+	config.Server.HTTP.Port = 1234
 
 	err := backfillURLs(config)
 	require.NoError(t, err)
@@ -35,23 +35,9 @@ func TestBackfilURLsPortBind(t *testing.T) {
 	require.Equal(t, "http://host.docker.internal:1234/git", config.URL.GitContainer)
 }
 
-func TestBackfilURLsHostBind(t *testing.T) {
-	config := &types.Config{}
-	config.Server.HTTP.Bind = "abc:1234"
-
-	err := backfillURLs(config)
-	require.NoError(t, err)
-
-	require.Equal(t, "http://abc:1234/api", config.URL.API)
-	require.Equal(t, "http://abc:1234/git", config.URL.Git)
-	require.Equal(t, "http://abc:1234", config.URL.UI)
-	require.Equal(t, "http://localhost:1234/api", config.URL.APIInternal)
-	require.Equal(t, "http://host.docker.internal:1234/git", config.URL.GitContainer)
-}
-
 func TestBackfilURLsBase(t *testing.T) {
 	config := &types.Config{}
-	config.Server.HTTP.Bind = "abc:1234"
+	config.Server.HTTP.Port = 1234
 	config.URL.Base = "https://xyz:4321/test"
 
 	err := backfillURLs(config)
@@ -66,7 +52,7 @@ func TestBackfilURLsBase(t *testing.T) {
 
 func TestBackfilURLsCustom(t *testing.T) {
 	config := &types.Config{}
-	config.Server.HTTP.Bind = "abc:1234"
+	config.Server.HTTP.Port = 1234
 	config.URL.Base = "https://xyz:4321/test"
 	config.URL.API = "http://API:1111/API/p"
 	config.URL.APIInternal = "http://APIInternal:1111/APIInternal/p"

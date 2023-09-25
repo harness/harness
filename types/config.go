@@ -93,7 +93,7 @@ type Config struct {
 	Server struct {
 		// HTTP defines the http configuration parameters
 		HTTP struct {
-			Bind  string `envconfig:"GITNESS_HTTP_BIND" default:":3000"`
+			Port  int    `envconfig:"GITNESS_HTTP_PORT" default:"3000"`
 			Proto string `envconfig:"GITNESS_HTTP_PROTO" default:"http"`
 		}
 

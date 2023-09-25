@@ -27,8 +27,8 @@ const (
 
 // Config represents the configuration for the gitrpc server.
 type Config struct {
-	// Bind specifies the addr used to bind the grpc server.
-	Bind string `envconfig:"GITRPC_SERVER_BIND" default:":3001"`
+	// Port specifies the port used to bind the grpc server.
+	Port int `envconfig:"GITRPC_SERVER_PORT" default:"3001"`
 	// GitRoot specifies the directory containing git related data (e.g. repos, ...)
 	GitRoot string `envconfig:"GITRPC_SERVER_GIT_ROOT"`
 	// TmpDir (optional) specifies the directory for temporary data (e.g. repo clones, ...)
@@ -37,7 +37,7 @@ type Config struct {
 	GitHookPath string `envconfig:"GITRPC_SERVER_GIT_HOOK_PATH"`
 
 	HTTP struct {
-		Bind string `envconfig:"GITRPC_SERVER_HTTP_BIND" default:":4001"`
+		Port int `envconfig:"GITRPC_SERVER_HTTP_PORT" default:"4001"`
 	}
 	MaxConnAge      time.Duration `envconfig:"GITRPC_SERVER_MAX_CONN_AGE" default:"630720000s"`
 	MaxConnAgeGrace time.Duration `envconfig:"GITRPC_SERVER_MAX_CONN_AGE_GRACE" default:"630720000s"`
@@ -66,23 +66,23 @@ func (c *Config) Validate() error {
 	if c == nil {
 		return errors.New("config is required")
 	}
-	if c.Bind == "" {
-		return errors.New("config.Bind is required")
+	if c.Port < 0 {
+		return errors.New("Port is required")
 	}
 	if c.GitRoot == "" {
-		return errors.New("config.GitRoot is required")
+		return errors.New("GitRoot is required")
 	}
 	if c.GitHookPath == "" {
-		return errors.New("config.GitHookPath is required")
+		return errors.New("GitHookPath is required")
 	}
 	if c.MaxConnAge == 0 {
-		return errors.New("config.MaxConnAge is required")
+		return errors.New("MaxConnAge is required")
 	}
 	if c.MaxConnAgeGrace == 0 {
-		return errors.New("config.MaxConnAgeGrace is required")
+		return errors.New("MaxConnAgeGrace is required")
 	}
 	if m := c.LastCommitCache.Mode; m != "" && m != ModeInMemory && m != ModeRedis && m != ModeNone {
-		return errors.New("config.LastCommitCache.Mode has unsupported value")
+		return errors.New("LastCommitCache.Mode has unsupported value")
 	}
 
 	return nil

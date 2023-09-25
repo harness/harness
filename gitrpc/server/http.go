@@ -57,7 +57,7 @@ func NewHTTPServer(config Config) (*HTTPServer, error) {
 	return &HTTPServer{
 		gitnesshttp.NewServer(
 			gitnesshttp.Config{
-				Addr: config.HTTP.Bind,
+				Port: config.HTTP.Port,
 			},
 			handleHTTP(reposRoot),
 		),

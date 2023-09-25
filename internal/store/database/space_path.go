@@ -143,8 +143,8 @@ func (s *SpacePathStore) FindPrimaryBySpaceID(ctx context.Context, spaceID int64
 	}, nil
 }
 func (s *SpacePathStore) FindByPath(ctx context.Context, path string) (*types.SpacePath, error) {
-	const sqlQueryParent = spacePathSelectBase + ` WHERE space_path_uid_unique = $1 AND space_path_parent_id = $2`
 	const sqlQueryNoParent = spacePathSelectBase + ` WHERE space_path_uid_unique = $1 AND space_path_parent_id IS NULL`
+	const sqlQueryParent = spacePathSelectBase + ` WHERE space_path_uid_unique = $1 AND space_path_parent_id = $2`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 	segment := new(spacePathSegment)
@@ -154,13 +154,18 @@ func (s *SpacePathStore) FindByPath(ctx context.Context, path string) (*types.Sp
 		return nil, fmt.Errorf("path with no segments was passed '%s'", path)
 	}
 
+	var err error
 	var parentID int64
-	sqlquery := sqlQueryNoParent
 	originalPath := ""
 	isPrimary := true
 	for i, segmentUID := range segmentUIDs {
 		uniqueSegmentUID := s.spacePathTransformation(segmentUID, i == 0)
-		err := db.GetContext(ctx, segment, sqlquery, uniqueSegmentUID, parentID)
+
+		if parentID == 0 {
+			err = db.GetContext(ctx, segment, sqlQueryNoParent, uniqueSegmentUID)
+		} else {
+			err = db.GetContext(ctx, segment, sqlQueryParent, uniqueSegmentUID, parentID)
+		}
 		if err != nil {
 			return nil, database.ProcessSQLErrorf(err, "Failed to find segment for '%s' in '%s'", uniqueSegmentUID, path)
 		}
@@ -168,7 +173,6 @@ func (s *SpacePathStore) FindByPath(ctx context.Context, path string) (*types.Sp
 		originalPath = paths.Concatinate(originalPath, segment.UID)
 		parentID = segment.SpaceID
 		isPrimary = isPrimary && segment.IsPrimary.ValueOrZero()
-		sqlquery = sqlQueryParent
 	}
 
 	return &types.SpacePath{

@@ -39,7 +39,7 @@ const (
 
 type GRPCServer struct {
 	*grpc.Server
-	Bind string
+	Port int
 }
 
 func NewServer(config Config, adapter service.GitAdapter) (*GRPCServer, error) {
@@ -124,12 +124,12 @@ func NewServer(config Config, adapter service.GitAdapter) (*GRPCServer, error) {
 
 	return &GRPCServer{
 		Server: s,
-		Bind:   config.Bind,
+		Port:   config.Port,
 	}, nil
 }
 
 func (s *GRPCServer) Start() error {
-	lis, err := net.Listen("tcp", s.Bind)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", s.Port))
 	if err != nil {
 		return err
 	}
