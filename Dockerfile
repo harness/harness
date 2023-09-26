@@ -26,6 +26,8 @@ RUN apk update \
 # Setup workig dir
 WORKDIR /app
 
+RUN git config --global --add safe.directory '/app'
+
 # Get dependancies - will also be cached if we won't change mod/sum
 COPY go.mod .
 COPY go.sum .
