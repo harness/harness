@@ -284,6 +284,11 @@
       cursor: text;
       margin: 0;
       padding: 0;
+
+      &:empty {
+        display: inline-block;
+        min-height: 20px;
+      }
     }
   }
 }

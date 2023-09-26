@@ -17,7 +17,8 @@
 .main {
   min-height: var(--page-height);
 
-  > div[class*='PageHeader'] {
+  > div[class*='PageHeader'],
+  [data-testid='page-header'] {
     border-bottom: none !important;
   }
 }

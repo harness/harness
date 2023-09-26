@@ -28,7 +28,7 @@ import { ButtonRoleProps, getErrorMessage, timeDistance } from 'utils/Utils'
 import type { GitInfoProps } from 'utils/GitUtils'
 import type { LivelogLine, TypesStage, TypesStep } from 'services/code'
 import { ExecutionState, ExecutionStatus } from 'components/ExecutionStatus/ExecutionStatus'
-import { useScheduleRendering } from 'hooks/useScheduleRendering'
+import { useScheduleJob } from 'hooks/useScheduleJob'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import css from './Checks.module.scss'
 
@@ -105,23 +105,40 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
       }
     }
   }, [])
-  const streamLogsRenderer = useCallback((_logs: string[]) => {
-    const logContainer = containerRef.current as HTMLDivElement
-    const fragment = new DocumentFragment()
+  const sendStreamLogToRenderer = useScheduleJob({
+    handler: useCallback((blocks: string[]) => {
+      const logContainer = containerRef.current as HTMLDivElement
 
-    _logs.forEach(_log => fragment.appendChild(createLogLineElement(_log)))
+      if (logContainer) {
+        const fragment = new DocumentFragment()
 
-    const scrollParent = logContainer?.closest(`.${css.content}`) as HTMLDivElement
-    const autoScroll = scrollParent && scrollParent.scrollTop === scrollParent.scrollHeight - scrollParent.offsetHeight
+        blocks.forEach(block => fragment.appendChild(createLogLineElement(block)))
 
-    logContainer.appendChild(fragment)
+        const scrollParent = logContainer.closest(`.${css.content}`) as HTMLDivElement
+        const autoScroll =
+          scrollParent && scrollParent.scrollTop === scrollParent.scrollHeight - scrollParent.offsetHeight
 
-    if (autoScroll) {
-      scrollParent.scrollTop = scrollParent.scrollHeight
-    }
-  }, [])
+        logContainer?.appendChild(fragment)
 
-  const sendStreamingDataToRender = useScheduleRendering({ renderer: streamLogsRenderer })
+        if (autoScroll) {
+          scrollParent.scrollTop = scrollParent.scrollHeight
+        }
+      }
+    }, []),
+    isStreaming: true
+  })
+  const sendCompleteLogsToRenderer = useScheduleJob({
+    handler: useCallback((blocks: string[]) => {
+      const logContainer = containerRef.current as HTMLDivElement
+
+      if (logContainer) {
+        const fragment = new DocumentFragment()
+        blocks.forEach(block => fragment.appendChild(createLogLineElement(block)))
+        logContainer.appendChild(fragment)
+      }
+    }, []),
+    maxProcessingBlockSize: 100
+  })
 
   useEffect(() => {
     if (expanded && isRunning) {
@@ -134,7 +151,7 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
       eventSourceRef.current = new EventSource(`${path}/stream`)
       eventSourceRef.current.onmessage = event => {
         try {
-          sendStreamingDataToRender((JSON.parse(event.data) as LivelogLine).out || '')
+          sendStreamLogToRenderer((JSON.parse(event.data) as LivelogLine).out || '')
         } catch (exception) {
           showError(getErrorMessage(exception))
           closeEventStream()
@@ -151,13 +168,17 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
     }
 
     return closeEventStream
-  }, [expanded, isRunning, showError, path, step.status, closeEventStream, sendStreamingDataToRender])
+  }, [expanded, isRunning, showError, path, step.status, closeEventStream, sendStreamLogToRenderer])
 
   useEffect(() => {
-    if (!lazy && !error && (!isStreamingDone || !isRunning) && expanded) {
-      refetch()
+    if (!lazy && !error && !isRunning && !isStreamingDone && expanded) {
+      if (!logs) {
+        refetch()
+      } else {
+        sendCompleteLogsToRenderer(logs.map(({ out = '' }) => out))
+      }
     }
-  }, [lazy, error, refetch, isStreamingDone, expanded, isRunning])
+  }, [lazy, error, logs, refetch, isStreamingDone, expanded, isRunning, sendCompleteLogsToRenderer])
 
   useEffect(() => {
     if (autoCollapse && expanded && step.status === ExecutionState.SUCCESS) {
@@ -168,12 +189,9 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
 
   useEffect(() => {
     if (!isRunning && logs?.length) {
-      logs.forEach(_log => {
-        const element = createLogLineElement(_log.out)
-        containerRef.current?.appendChild(element)
-      })
+      sendCompleteLogsToRenderer(logs.map(({ out = '' }) => out))
     }
-  }, [isRunning, logs])
+  }, [isRunning, logs, sendCompleteLogsToRenderer])
 
   useShowRequestError(error, 0)
 
@@ -184,6 +202,9 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
         className={cx(css.stepHeader, { [css.expanded]: expanded, [css.selected]: expanded })}
         {...ButtonRoleProps}
         onClick={() => {
+          if (expanded && isStreamingDone) {
+            setIsStreamingDone(false)
+          }
           setExpanded(!expanded)
         }}>
         <NavArrowRight color={Utils.getRealCSSColor(Color.GREY_500)} className={cx(css.noShrink, css.chevron)} />

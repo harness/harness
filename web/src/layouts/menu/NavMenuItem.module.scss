@@ -81,7 +81,8 @@
     color: var(--grey-700);
   }
 
-  &.selected .customIcon {
+  &.selected .customIcon,
+  &.highlighted .customIcon {
     color: var(--primary-8);
   }
 
