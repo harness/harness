@@ -15,8 +15,8 @@
 package hooks
 
 import (
+	gitnessgithook "github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/githook"
-	gitnessgithook "github.com/harness/gitness/internal/githook"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )

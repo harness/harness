@@ -21,8 +21,8 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/cli/provide"
-	"github.com/harness/gitness/internal/api/controller/user"
 
 	"github.com/drone/funcmap"
 	"github.com/gotidy/ptr"

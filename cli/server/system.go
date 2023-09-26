@@ -15,12 +15,12 @@
 package server
 
 import (
+	"github.com/harness/gitness/app/bootstrap"
+	"github.com/harness/gitness/app/pipeline/plugin"
+	"github.com/harness/gitness/app/server"
+	"github.com/harness/gitness/app/services"
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
 	gitrpccron "github.com/harness/gitness/gitrpc/server/cron"
-	"github.com/harness/gitness/internal/bootstrap"
-	"github.com/harness/gitness/internal/pipeline/plugin"
-	"github.com/harness/gitness/internal/server"
-	"github.com/harness/gitness/internal/services"
 
 	"github.com/drone/runner-go/poller"
 )
