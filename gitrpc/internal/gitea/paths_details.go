@@ -27,6 +27,8 @@ import (
 )
 
 // PathsDetails returns additional details about provided the paths.
+//
+//nolint:gocognit // refactor if needed
 func (g Adapter) PathsDetails(ctx context.Context,
 	repoPath string,
 	ref string,
@@ -49,6 +51,7 @@ func (g Adapter) PathsDetails(ctx context.Context,
 	for i, path := range paths {
 		results[i].Path = path
 
+		//nolint:nestif
 		if len(path) > 0 {
 			entry, err := tree.FindEntry(path)
 			if errors.Is(err, gogitobject.ErrDirectoryNotFound) || errors.Is(err, gogitobject.ErrEntryNotFound) {

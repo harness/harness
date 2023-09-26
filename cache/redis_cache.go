@@ -16,6 +16,7 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -79,7 +80,7 @@ func (c *Redis[K, V]) Get(ctx context.Context, key K) (V, error) {
 		c.countHit++
 		return c.codec.Decode(raw)
 	}
-	if err != redis.Nil {
+	if !errors.Is(err, redis.Nil) {
 		return nothing, err
 	}
 

@@ -71,7 +71,7 @@ type step struct {
 }
 
 // NewStepStore returns a new StepStore.
-func NewStepStore(db *sqlx.DB) *stepStore {
+func NewStepStore(db *sqlx.DB) store.StepStore {
 	return &stepStore{
 		db: db,
 	}
@@ -192,7 +192,7 @@ func (s *stepStore) Update(ctx context.Context, e *types.Step) error {
 
 	m, err := mapInternalToStep(step)
 	if err != nil {
-		return fmt.Errorf("Could not map step object: %w", err)
+		return fmt.Errorf("could not map step object: %w", err)
 	}
 	*e = *m
 	e.Version = step.Version

@@ -59,7 +59,7 @@ func (g Adapter) RawDiff(
 	return nil
 }
 
-// CommitDiff will stream diff for provided ref
+// CommitDiff will stream diff for provided ref.
 func (g Adapter) CommitDiff(ctx context.Context, repoPath, sha string, w io.Writer) error {
 	args := make([]string, 0, 8)
 	args = append(args, "show", "--full-index", "--pretty=format:%b", sha)

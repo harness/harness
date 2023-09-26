@@ -35,7 +35,7 @@ func ProvideTriggerer(
 	stageStore store.StageStore,
 	db *sqlx.DB,
 	pipelineStore store.PipelineStore,
-	fileService file.FileService,
+	fileService file.Service,
 	scheduler scheduler.Scheduler,
 	repoStore store.RepoStore,
 ) Triggerer {

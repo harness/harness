@@ -53,7 +53,7 @@ type Handler interface {
 	Handle(ctx context.Context, input string, fn ProgressReporter) (result string, err error)
 }
 
-var noHandlerDefinedError = errors.New("no handler registered for the job type")
+var errNoHandlerDefined = errors.New("no handler registered for the job type")
 
 // NewExecutor creates new Executor.
 func NewExecutor(jobStore store.JobStore, publisher pubsub.Publisher) *Executor {
@@ -113,7 +113,7 @@ func (e *Executor) exec(
 
 	exec, ok := e.handlerMap[jobType]
 	if !ok {
-		return "", noHandlerDefinedError
+		return "", errNoHandlerDefined
 	}
 
 	// progressReporter is the function with which the job can update its progress.

@@ -39,15 +39,17 @@ const (
 )
 
 func (TriggerAction) Enum() []interface{}               { return toInterfaceSlice(triggerActions) }
-func (s TriggerAction) Sanitize() (TriggerAction, bool) { return Sanitize(s, GetAllTriggerActions) }
+func (t TriggerAction) Sanitize() (TriggerAction, bool) { return Sanitize(t, GetAllTriggerActions) }
 func (t TriggerAction) GetTriggerEvent() TriggerEvent {
 	if t == TriggerActionPullReqCreated ||
 		t == TriggerActionPullReqBranchUpdated ||
 		t == TriggerActionPullReqReopened {
 		return TriggerEventPullRequest
-	} else if t == TriggerActionTagCreated || t == TriggerActionTagUpdated {
+	}
+	if t == TriggerActionTagCreated || t == TriggerActionTagUpdated {
 		return TriggerEventTag
-	} else if t == "" {
+	}
+	if t == "" {
 		return TriggerEventManual
 	}
 	return TriggerEventPush
@@ -67,7 +69,7 @@ var triggerActions = sortEnum([]TriggerAction{
 	TriggerActionPullReqBranchUpdated,
 })
 
-// Trigger types
+// Trigger types.
 const (
 	TriggerHook = "@hook"
 	TriggerCron = "@cron"

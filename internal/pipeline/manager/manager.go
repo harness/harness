@@ -127,7 +127,7 @@ type (
 type Manager struct {
 	Executions  store.ExecutionStore
 	Config      *types.Config
-	FileService file.FileService
+	FileService file.Service
 	Pipelines   store.PipelineStore
 	urlProvider *urlprovider.Provider
 	Checks      store.CheckStore
@@ -154,7 +154,7 @@ func New(
 	pipelineStore store.PipelineStore,
 	urlProvider *urlprovider.Provider,
 	sseStreamer sse.Streamer,
-	fileService file.FileService,
+	fileService file.Service,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
 	checkStore store.CheckStore,
@@ -238,11 +238,12 @@ func (m *Manager) Accept(ctx context.Context, id int64, machine string) (*types.
 	stage.Machine = machine
 	stage.Status = enum.CIStatusPending
 	err = m.Stages.Update(noContext, stage)
-	if errors.Is(err, gitness_store.ErrVersionConflict) {
+	switch {
+	case errors.Is(err, gitness_store.ErrVersionConflict):
 		log.Debug().Err(err).Msg("manager: stage processed by another agent")
-	} else if err != nil {
+	case err != nil:
 		log.Debug().Err(err).Msg("manager: cannot update stage")
-	} else {
+	default:
 		log.Info().Msg("manager: stage accepted")
 	}
 	return stage, err
@@ -353,13 +354,13 @@ func (m *Manager) createNetrc(repo *types.Repository) (*Netrc, error) {
 		return nil, fmt.Errorf("failed to create jwt: %w", err)
 	}
 
-	cloneUrl, err := url.Parse(repo.GitURL)
+	cloneURL, err := url.Parse(repo.GitURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse clone url '%s': %w", cloneUrl, err)
+		return nil, fmt.Errorf("failed to parse clone url '%s': %w", cloneURL, err)
 	}
 
 	return &Netrc{
-		Machine:  cloneUrl.Hostname(),
+		Machine:  cloneURL.Hostname(),
 		Login:    pipelinePrincipal.UID,
 		Password: jwt,
 	}, nil

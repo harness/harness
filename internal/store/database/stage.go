@@ -96,7 +96,7 @@ type stage struct {
 }
 
 // NewStageStore returns a new StageStore.
-func NewStageStore(db *sqlx.DB) *stageStore {
+func NewStageStore(db *sqlx.DB) store.StageStore {
 	return &stageStore{
 		db: db,
 	}
@@ -319,7 +319,7 @@ func (s *stageStore) Update(ctx context.Context, st *types.Stage) error {
 
 	m, err := mapInternalToStage(stage)
 	if err != nil {
-		return fmt.Errorf("Could not map stage object: %w", err)
+		return fmt.Errorf("could not map stage object: %w", err)
 	}
 	*st = *m
 	st.Version = stage.Version

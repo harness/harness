@@ -55,7 +55,7 @@ const (
 )
 
 // NewPipelineStore returns a new PipelineStore.
-func NewPipelineStore(db *sqlx.DB) *pipelineStore {
+func NewPipelineStore(db *sqlx.DB) store.PipelineStore {
 	return &pipelineStore{
 		db: db,
 	}

@@ -38,7 +38,7 @@ func (c *Controller) PipelineGenerate(
 		ReadParams: CreateRPCReadParams(repo),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate pipeline: %s", err)
+		return nil, fmt.Errorf("failed to generate pipeline: %w", err)
 	}
 
 	return result.PipelineYAML, nil

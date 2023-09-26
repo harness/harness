@@ -40,7 +40,7 @@ func ProvideExecutionManager(
 	pipelineStore store.PipelineStore,
 	urlProvider *url.Provider,
 	sseStreamer sse.Streamer,
-	fileService file.FileService,
+	fileService file.Service,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
 	checkStore store.CheckStore,
@@ -55,7 +55,7 @@ func ProvideExecutionManager(
 }
 
 // ProvideExecutionClient provides a client implementation to interact with the execution manager.
-// We use an embedded client here
+// We use an embedded client here.
 func ProvideExecutionClient(manager ExecutionManager, config *types.Config) client.Client {
 	return NewEmbeddedClient(manager, config)
 }

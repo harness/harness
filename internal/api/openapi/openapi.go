@@ -38,7 +38,7 @@ func Generate() *openapi3.Spec {
 		WithTitle("API Specification").
 		WithVersion(version.Version.String())
 	reflector.Spec.Servers = []openapi3.Server{{
-		URL: config.ApiURL,
+		URL: config.APIURL,
 	}}
 
 	//

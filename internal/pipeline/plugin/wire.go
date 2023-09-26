@@ -30,6 +30,6 @@ var WireSet = wire.NewSet(
 func ProvidePluginManager(
 	config *types.Config,
 	pluginStore store.PluginStore,
-) *PluginManager {
-	return NewPluginManager(config, pluginStore)
+) *Manager {
+	return NewManager(config, pluginStore)
 }

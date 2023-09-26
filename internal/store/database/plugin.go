@@ -42,7 +42,7 @@ const (
 )
 
 // NewPluginStore returns a new PluginStore.
-func NewPluginStore(db *sqlx.DB) *pluginStore {
+func NewPluginStore(db *sqlx.DB) store.PluginStore {
 	return &pluginStore{
 		db: db,
 	}
@@ -85,7 +85,7 @@ func (s *pluginStore) Create(ctx context.Context, plugin *types.Plugin) error {
 	return nil
 }
 
-// Find finds a version of a plugin
+// Find finds a version of a plugin.
 func (s *pluginStore) Find(ctx context.Context, name, version string) (*types.Plugin, error) {
 	const pluginFindStmt = `
 	SELECT` + pluginColumns +

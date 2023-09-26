@@ -20,6 +20,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_inMemMutex_Lock(t *testing.T) {
@@ -44,7 +46,8 @@ func Test_inMemMutex_Lock(t *testing.T) {
 			t.Errorf("error from go routine while locking %s, err: %v", mx.Key(), err)
 			return
 		}
-		mx.Unlock(context.Background())
+		err = mx.Unlock(context.Background())
+		require.NoError(t, err)
 	}()
 
 	mx, err := manager.NewMutex("key1")
@@ -56,7 +59,8 @@ func Test_inMemMutex_Lock(t *testing.T) {
 		t.Errorf("error while locking %v, err: %v", mx.Key(), err)
 	}
 	time.Sleep(1 * time.Second)
-	mx.Unlock(context.Background())
+	err = mx.Unlock(context.Background())
+	require.NoError(t, err)
 	wg.Wait()
 }
 
@@ -104,7 +108,8 @@ func Test_inMemMutex_MaxTries(t *testing.T) {
 		t.Errorf("error while locking %v, err: %v", mx.Key(), err)
 	}
 	time.Sleep(1 * time.Second)
-	mx.Unlock(context.Background())
+	err = mx.Unlock(context.Background())
+	require.NoError(t, err)
 	wg.Wait()
 }
 

@@ -35,7 +35,7 @@ func ProvideService(
 	ctx context.Context,
 	config Config,
 	triggerStore store.TriggerStore,
-	commitSvc commit.CommitService,
+	commitSvc commit.Service,
 	pullReqStore store.PullReqStore,
 	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,

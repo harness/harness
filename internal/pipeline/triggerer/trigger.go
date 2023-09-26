@@ -82,7 +82,7 @@ type triggerer struct {
 	stageStore     store.StageStore
 	db             *sqlx.DB
 	pipelineStore  store.PipelineStore
-	fileService    file.FileService
+	fileService    file.Service
 	scheduler      scheduler.Scheduler
 	repoStore      store.RepoStore
 }
@@ -95,8 +95,8 @@ func New(
 	db *sqlx.DB,
 	repoStore store.RepoStore,
 	scheduler scheduler.Scheduler,
-	fileService file.FileService,
-) *triggerer {
+	fileService file.Service,
+) Triggerer {
 	return &triggerer{
 		executionStore: executionStore,
 		checkStore:     checkStore,
@@ -109,6 +109,7 @@ func New(
 	}
 }
 
+//nolint:gocognit,gocyclo,cyclop //TODO: Refactor @Vistaar
 func (t *triggerer) Trigger(
 	ctx context.Context,
 	pipeline *types.Pipeline,
@@ -180,6 +181,7 @@ func (t *triggerer) Trigger(
 	// and creating stages accordingly. For V1 YAML - for now we can just parse the stages
 	// and create them sequentially.
 	stages := []*types.Stage{}
+	//nolint:nestif // refactor if needed
 	if !isV1Yaml(file.Data) {
 		manifest, err := yaml.ParseString(string(file.Data))
 		if err != nil {
@@ -208,22 +210,23 @@ func (t *triggerer) Trigger(
 			if name == "" {
 				name = "default"
 			}
-			node := dag.Add(pipeline.Name, pipeline.DependsOn...)
+			node := dag.Add(name, pipeline.DependsOn...)
 			node.Skip = true
 
-			if skipBranch(pipeline, base.Target) {
-				log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match branch")
-			} else if skipEvent(pipeline, event) {
-				log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match event")
-			} else if skipAction(pipeline, string(base.Action)) {
-				log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match action")
-			} else if skipRef(pipeline, base.Ref) {
-				log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match ref")
-			} else if skipRepo(pipeline, repo.Path) {
-				log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match repo")
-			} else if skipCron(pipeline, base.Cron) {
-				log.Info().Str("pipeline", pipeline.Name).Msg("trigger: skipping pipeline, does not match cron job")
-			} else {
+			switch {
+			case skipBranch(pipeline, base.Target):
+				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match branch")
+			case skipEvent(pipeline, event):
+				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match event")
+			case skipAction(pipeline, string(base.Action)):
+				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match action")
+			case skipRef(pipeline, base.Ref):
+				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match ref")
+			case skipRepo(pipeline, repo.Path):
+				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match repo")
+			case skipCron(pipeline, base.Cron):
+				log.Info().Str("pipeline", name).Msg("trigger: skipping pipeline, does not match cron job")
+			default:
 				matched = append(matched, pipeline)
 				node.Skip = false
 			}
@@ -235,6 +238,7 @@ func (t *triggerer) Trigger(
 
 		if len(matched) == 0 {
 			log.Info().Msg("trigger: skipping execution, no matching pipelines")
+			//nolint:nilnil // on purpose
 			return nil, nil
 		}
 
@@ -244,8 +248,6 @@ func (t *triggerer) Trigger(
 			if len(match.Trigger.Status.Include)+len(match.Trigger.Status.Exclude) == 0 {
 				onFailure = false
 			}
-
-			now := time.Now().UnixMilli()
 
 			stage := &types.Stage{
 				RepoID:    repo.ID,
@@ -354,6 +356,8 @@ func trunc(s string, i int) string {
 // if we are unable to do so or the yaml contains something unexpected.
 // Currently, all the stages will be executed one after the other on completion.
 // Once we have depends on in v1, this will be changed to use the DAG.
+//
+//nolint:gocognit // refactor if needed.
 func parseV1Stages(data []byte, repo *types.Repository, execution *types.Execution) ([]*types.Stage, error) {
 	stages := []*types.Stage{}
 	// For V1 YAML, just go through the YAML and create stages serially for now
@@ -425,7 +429,6 @@ func parseV1Stages(data []byte, repo *types.Repository, execution *types.Executi
 			default:
 				return nil, fmt.Errorf("only CI stage supported in v1 at the moment")
 			}
-
 		}
 	default:
 		return nil, fmt.Errorf("unknown yaml: %w", err)
@@ -433,7 +436,7 @@ func parseV1Stages(data []byte, repo *types.Repository, execution *types.Executi
 	return stages, nil
 }
 
-// Checks whether YAML is V1 Yaml or drone Yaml
+// Checks whether YAML is V1 Yaml or drone Yaml.
 func isV1Yaml(data []byte) bool {
 	// if we are dealing with the legacy drone yaml, use
 	// the legacy drone engine.

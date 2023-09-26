@@ -64,7 +64,10 @@ func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, re
 	return nil
 }
 
-func (c *Controller) DeleteGitRPCRepositories(ctx context.Context, session *auth.Session, repo *types.Repository) error {
+func (c *Controller) DeleteGitRPCRepositories(
+	ctx context.Context,
+	session *auth.Session, repo *types.Repository,
+) error {
 	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return fmt.Errorf("failed to create RPC write params: %w", err)

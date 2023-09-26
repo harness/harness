@@ -73,7 +73,10 @@ func (e *pubsubStreamer) Publish(ctx context.Context, spaceID int64, eventType e
 	return nil
 }
 
-func (e *pubsubStreamer) Stream(ctx context.Context, spaceID int64) (<-chan *Event, <-chan error, func(context.Context) error) {
+func (e *pubsubStreamer) Stream(
+	ctx context.Context,
+	spaceID int64,
+) (<-chan *Event, <-chan error, func(context.Context) error) {
 	chEvent := make(chan *Event, 100) // TODO: check best size here
 	chErr := make(chan error)
 	g := func(payload []byte) error {
@@ -100,7 +103,7 @@ func (e *pubsubStreamer) Stream(ctx context.Context, spaceID int64) (<-chan *Eve
 	return chEvent, chErr, unsubscribeFN
 }
 
-// getSpaceTopic creates the namespace name which will be `spaces:<id>`
+// getSpaceTopic creates the namespace name which will be `spaces:<id>`.
 func getSpaceTopic(spaceID int64) string {
 	return "spaces:" + strconv.Itoa(int(spaceID))
 }

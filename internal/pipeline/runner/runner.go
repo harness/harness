@@ -40,7 +40,7 @@ import (
 func NewExecutionRunner(
 	config *types.Config,
 	client runnerclient.Client,
-	pluginManager *plugin.PluginManager,
+	pluginManager *plugin.Manager,
 	m manager.ExecutionManager,
 ) (*runtime2.Runner, error) {
 	// For linux, containers need to have extra hosts set in order to interact with

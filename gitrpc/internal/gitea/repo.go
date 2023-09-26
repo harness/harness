@@ -213,7 +213,7 @@ func Push(ctx context.Context, repoPath string, opts types.PushOptions) error {
 	if opts.ForceWithLease != "" {
 		cmd.AddArguments(fmt.Sprintf("--force-with-lease=%s", opts.ForceWithLease))
 	}
-	if opts.Mirror == true {
+	if opts.Mirror {
 		cmd.AddArguments("--mirror")
 	}
 	cmd.AddArguments("--", opts.Remote)

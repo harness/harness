@@ -177,6 +177,8 @@ func (r *Repository) getJobInput(data string) (Input, error) {
 }
 
 // Handle is repository import background job handler.
+//
+//nolint:gocognit // refactor if needed.
 func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressReporter) (string, error) {
 	systemPrincipal := bootstrap.NewSystemServiceSession().Principal
 

@@ -292,6 +292,8 @@ issues:
       linters: [ govet ]
     - source: "^//\\s*go:generate\\s"
       linters: [ lll ]
+    - text: 'replacement are not allowed: github.com/docker/docker'
+      linters: [ gomoddirectives ]
     - source: "(noinspection|TODO)"
       linters: [ godot ]
     - source: "//noinspection"

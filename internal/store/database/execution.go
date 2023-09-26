@@ -34,7 +34,7 @@ import (
 var _ store.ExecutionStore = (*executionStore)(nil)
 
 // NewExecutionStore returns a new ExecutionStore.
-func NewExecutionStore(db *sqlx.DB) *executionStore {
+func NewExecutionStore(db *sqlx.DB) store.ExecutionStore {
 	return &executionStore{
 		db: db,
 	}
@@ -44,7 +44,7 @@ type executionStore struct {
 	db *sqlx.DB
 }
 
-// exection represents an execution object stored in the database.
+// execution represents an execution object stored in the database.
 type execution struct {
 	ID           int64              `db:"execution_id"`
 	PipelineID   int64              `db:"execution_pipeline_id"`
@@ -141,7 +141,11 @@ func (s *executionStore) Find(ctx context.Context, id int64) (*types.Execution, 
 }
 
 // FindByNumber returns an execution given a pipeline ID and an execution number.
-func (s *executionStore) FindByNumber(ctx context.Context, pipelineID int64, executionNum int64) (*types.Execution, error) {
+func (s *executionStore) FindByNumber(
+	ctx context.Context,
+	pipelineID int64,
+	executionNum int64,
+) (*types.Execution, error) {
 	const findQueryStmt = `
 	SELECT` + executionColumns + `
 	FROM executions
@@ -289,7 +293,7 @@ func (s *executionStore) Update(ctx context.Context, e *types.Execution) error {
 
 	m, err := mapInternalToExecution(execution)
 	if err != nil {
-		return fmt.Errorf("Could not map execution object: %w", err)
+		return fmt.Errorf("could not map execution object: %w", err)
 	}
 	*e = *m
 	e.Version = execution.Version

@@ -179,7 +179,6 @@ func (c *Controller) getSpaceCheckAuthSpaceCreation(
 	}
 
 	return parentSpace.ID, nil
-
 }
 
 func (c *Controller) sanitizeCreateInput(in *CreateInput) error {

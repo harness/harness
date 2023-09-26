@@ -30,7 +30,7 @@ type Controller struct {
 	executionStore store.ExecutionStore
 	checkStore     store.CheckStore
 	canceler       canceler.Canceler
-	commitService  commit.CommitService
+	commitService  commit.Service
 	triggerer      triggerer.Triggerer
 	repoStore      store.RepoStore
 	stageStore     store.StageStore
@@ -43,7 +43,7 @@ func NewController(
 	executionStore store.ExecutionStore,
 	checkStore store.CheckStore,
 	canceler canceler.Canceler,
-	commitService commit.CommitService,
+	commitService commit.Service,
 	triggerer triggerer.Triggerer,
 	repoStore store.RepoStore,
 	stageStore store.StageStore,

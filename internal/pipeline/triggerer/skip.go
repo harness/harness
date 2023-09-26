@@ -15,8 +15,6 @@
 package triggerer
 
 import (
-	"strings"
-
 	"github.com/drone/drone-yaml/yaml"
 )
 
@@ -36,30 +34,10 @@ func skipAction(document *yaml.Pipeline, action string) bool {
 	return !document.Trigger.Action.Match(action)
 }
 
-func skipInstance(document *yaml.Pipeline, instance string) bool {
-	return !document.Trigger.Instance.Match(instance)
-}
-
-func skipTarget(document *yaml.Pipeline, env string) bool {
-	return !document.Trigger.Target.Match(env)
-}
-
 func skipRepo(document *yaml.Pipeline, repo string) bool {
 	return !document.Trigger.Repo.Match(repo)
 }
 
 func skipCron(document *yaml.Pipeline, cron string) bool {
 	return !document.Trigger.Cron.Match(cron)
-}
-
-func skipMessageEval(str string) bool {
-	lower := strings.ToLower(str)
-	switch {
-	case strings.Contains(lower, "[ci skip]"),
-		strings.Contains(lower, "[skip ci]"),
-		strings.Contains(lower, "***no_ci***"):
-		return true
-	default:
-		return false
-	}
 }

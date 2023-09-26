@@ -66,7 +66,7 @@ type Service struct {
 	repoStore     store.RepoStore
 	pipelineStore store.PipelineStore
 	triggerSvc    triggerer.Triggerer
-	commitSvc     commit.CommitService
+	commitSvc     commit.Service
 }
 
 func New(
@@ -77,7 +77,7 @@ func New(
 	repoStore store.RepoStore,
 	pipelineStore store.PipelineStore,
 	triggerSvc triggerer.Triggerer,
-	commitSvc commit.CommitService,
+	commitSvc commit.Service,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 ) (*Service, error) {

@@ -39,7 +39,7 @@ type Step struct {
 	Schema    string        `json:"schema,omitempty"`
 }
 
-// Pretty print a step
+// Pretty print a step.
 func (s Step) String() string {
 	// Convert the Step struct to JSON
 	jsonStr, err := json.MarshalIndent(s, "", "  ")

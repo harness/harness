@@ -45,7 +45,7 @@ type nullstep struct {
 	Schema        sql.NullString     `db:"step_schema"`
 }
 
-// used for join operations where fields may be null
+// used for join operations where fields may be null.
 func convertFromNullStep(nullstep *nullstep) (*types.Step, error) {
 	var dependsOn []string
 	err := json.Unmarshal(nullstep.DependsOn, &dependsOn)
@@ -236,8 +236,20 @@ func scanRowStep(rows *sql.Rows, stage *types.Stage, step *nullstep) error {
 		&step.Detached,
 		&step.Schema,
 	)
-	json.Unmarshal(depJSON, &stage.DependsOn)
-	json.Unmarshal(labJSON, &stage.Labels)
-	json.Unmarshal(stepDepJSON, &step.DependsOn)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to scan row: %w", err)
+	}
+	err = json.Unmarshal(depJSON, &stage.DependsOn)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal depJSON: %w", err)
+	}
+	err = json.Unmarshal(labJSON, &stage.Labels)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal labJSON: %w", err)
+	}
+	err = json.Unmarshal(stepDepJSON, &step.DependsOn)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal stepDepJSON: %w", err)
+	}
+	return nil
 }

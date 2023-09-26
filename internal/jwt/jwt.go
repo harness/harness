@@ -80,7 +80,13 @@ func GenerateForToken(token *types.Token, secret string) (string, error) {
 }
 
 // GenerateWithMembership generates a jwt with the given ephemeral membership.
-func GenerateWithMembership(principalID int64, spaceID int64, role enum.MembershipRole, lifetime time.Duration, secret string) (string, error) {
+func GenerateWithMembership(
+	principalID int64,
+	spaceID int64,
+	role enum.MembershipRole,
+	lifetime time.Duration,
+	secret string,
+) (string, error) {
 	issuedAt := time.Now()
 	expiresAt := issuedAt.Add(lifetime)
 

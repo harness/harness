@@ -48,6 +48,8 @@ func (f *FileViewAddInput) Validate() error {
 // The downside is that the caller could provide a SHA that never was part of the PR in the first place.
 // We can't block against that with our current data, as the existence of force push makes it impossible to verify
 // whether the commit ever was part of the PR - it would require us to store the full pr.SourceSHA history.
+//
+//nolint:gocognit // refactor if needed.
 func (c *Controller) FileViewAdd(
 	ctx context.Context,
 	session *auth.Session,

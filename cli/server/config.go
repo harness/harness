@@ -74,6 +74,7 @@ func backfillURLs(config *types.Config) error {
 	}
 
 	// override base with whatever user explicit override
+	//nolint:nestif // simple conditional override of all elements
 	if config.URL.Base != "" {
 		u, err := url.Parse(config.URL.Base)
 		if err != nil {

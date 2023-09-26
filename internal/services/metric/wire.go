@@ -15,10 +15,11 @@
 package metric
 
 import (
-	"github.com/google/wire"
 	"github.com/harness/gitness/internal/services/job"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/types"
+
+	"github.com/google/wire"
 )
 
 var WireSet = wire.NewSet(

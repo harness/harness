@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/harness/gitness/types"
+
 	"github.com/stretchr/testify/require"
 )
 

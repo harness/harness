@@ -152,7 +152,10 @@ func mapGiteaCommit(giteaCommit *gitea.Commit) (*types.Commit, error) {
 	}, nil
 }
 
-func mapGogitNodeToTreeNodeModeAndType(gogitMode gogitfilemode.FileMode) (types.TreeNodeType, types.TreeNodeMode, error) {
+func mapGogitNodeToTreeNodeModeAndType(
+	gogitMode gogitfilemode.FileMode,
+) (types.TreeNodeType, types.TreeNodeMode, error) {
+	//nolint:exhaustive
 	switch gogitMode {
 	case gogitfilemode.Regular, gogitfilemode.Deprecated:
 		return types.TreeNodeTypeBlob, types.TreeNodeModeFile, nil

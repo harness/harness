@@ -87,11 +87,11 @@ func (s *JobStore) Find(ctx context.Context, uid string) (*types.Job, error) {
 	return result, nil
 }
 
-// DeleteByGroupID deletes all jobs for a group id
-func (s *JobStore) DeleteByGroupID(ctx context.Context, groupId string) (int64, error) {
+// DeleteByGroupID deletes all jobs for a group id.
+func (s *JobStore) DeleteByGroupID(ctx context.Context, groupID string) (int64, error) {
 	stmt := database.Builder.
 		Delete("jobs").
-		Where("(job_group_id = ?)", groupId)
+		Where("(job_group_id = ?)", groupID)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -113,15 +113,15 @@ func (s *JobStore) DeleteByGroupID(ctx context.Context, groupId string) (int64, 
 	return n, nil
 }
 
-// ListByGroupID fetches all jobs for a group id
-func (s *JobStore) ListByGroupID(ctx context.Context, groupId string) ([]*types.Job, error) {
+// ListByGroupID fetches all jobs for a group id.
+func (s *JobStore) ListByGroupID(ctx context.Context, groupID string) ([]*types.Job, error) {
 	const sqlQuery = jobSelectBase + `
 	WHERE job_group_id = $1`
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
 	dst := make([]*types.Job, 0)
-	if err := db.SelectContext(ctx, &dst, sqlQuery, groupId); err != nil {
+	if err := db.SelectContext(ctx, &dst, sqlQuery, groupID); err != nil {
 		return nil, database.ProcessSQLErrorf(err, "Failed to find job by group id")
 	}
 

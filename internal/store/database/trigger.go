@@ -106,7 +106,7 @@ func mapTriggerToInternal(t *types.Trigger) *trigger {
 }
 
 // NewTriggerStore returns a new TriggerStore.
-func NewTriggerStore(db *sqlx.DB) *triggerStore {
+func NewTriggerStore(db *sqlx.DB) store.TriggerStore {
 	return &triggerStore{
 		db: db,
 	}
@@ -294,7 +294,7 @@ func (s *triggerStore) List(
 	return mapInternalToTriggerList(dst)
 }
 
-// ListAllEnabled lists all enabled triggers for a given repo without pagination
+// ListAllEnabled lists all enabled triggers for a given repo without pagination.
 func (s *triggerStore) ListAllEnabled(
 	ctx context.Context,
 	repoID int64,

@@ -50,7 +50,7 @@ const (
 )
 
 // NewConnectorStore returns a new ConnectorStore.
-func NewConnectorStore(db *sqlx.DB) *connectorStore {
+func NewConnectorStore(db *sqlx.DB) store.ConnectorStore {
 	return &connectorStore{
 		db: db,
 	}
@@ -193,7 +193,11 @@ func (s *connectorStore) UpdateOptLock(ctx context.Context,
 }
 
 // List lists all the connectors present in a space.
-func (s *connectorStore) List(ctx context.Context, parentID int64, filter types.ListQueryFilter) ([]*types.Connector, error) {
+func (s *connectorStore) List(
+	ctx context.Context,
+	parentID int64,
+	filter types.ListQueryFilter,
+) ([]*types.Connector, error) {
 	stmt := database.Builder.
 		Select(connectorColumns).
 		From("connectors").

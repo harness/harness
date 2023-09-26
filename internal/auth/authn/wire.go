@@ -26,6 +26,10 @@ var WireSet = wire.NewSet(
 	ProvideAuthenticator,
 )
 
-func ProvideAuthenticator(config *types.Config, principalStore store.PrincipalStore, tokenStore store.TokenStore) Authenticator {
+func ProvideAuthenticator(
+	config *types.Config,
+	principalStore store.PrincipalStore,
+	tokenStore store.TokenStore,
+) Authenticator {
 	return NewTokenAuthenticator(principalStore, tokenStore, config.Token.CookieName)
 }

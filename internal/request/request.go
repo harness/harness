@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package request provides http handlers for serving the
-// web applications and API endpoints.
-
 package request
 
 import (

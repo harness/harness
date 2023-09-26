@@ -15,5 +15,5 @@
 package config
 
 const (
-	ApiURL = "/api/v1"
+	APIURL = "/api/v1"
 )

@@ -89,22 +89,22 @@ func (s RepositoryService) GetTreeNode(ctx context.Context,
 		},
 	}
 
-	if request.GetIncludeLatestCommit() {
-		pathDetails, err := s.adapter.PathsDetails(ctx, repoPath, request.GitRef, []string{request.Path})
-		if err != nil {
-			return nil, err
-		}
+	if !request.GetIncludeLatestCommit() {
+		return res, nil
+	}
 
-		if len(pathDetails) != 1 {
-			return nil, fmt.Errorf("failed to get details for the path %s", request.Path)
-		}
+	pathDetails, err := s.adapter.PathsDetails(ctx, repoPath, request.GitRef, []string{request.Path})
+	if err != nil {
+		return nil, err
+	}
 
-		if pathDetails[0].LastCommit != nil {
-			res.Commit, err = mapGitCommit(pathDetails[0].LastCommit)
-			if err != nil {
-				return nil, err
-			}
-		}
+	if len(pathDetails) != 1 || pathDetails[0].LastCommit == nil {
+		return nil, fmt.Errorf("failed to get details for the path %s", request.Path)
+	}
+
+	res.Commit, err = mapGitCommit(pathDetails[0].LastCommit)
+	if err != nil {
+		return nil, err
 	}
 
 	return res, nil

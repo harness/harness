@@ -15,13 +15,14 @@
 package exporter
 
 import (
-	"github.com/google/wire"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/internal/services/job"
 	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/internal/url"
+
+	"github.com/google/wire"
 )
 
 var WireSet = wire.NewSet(

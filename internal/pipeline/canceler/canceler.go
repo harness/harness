@@ -63,6 +63,7 @@ func New(
 	}
 }
 
+//nolint:gocognit // refactor if needed.
 func (s *service) Cancel(ctx context.Context, repo *types.Repository, execution *types.Execution) error {
 	log := log.With().
 		Int64("execution.id", execution.ID).
@@ -73,9 +74,8 @@ func (s *service) Cancel(ctx context.Context, repo *types.Repository, execution 
 	// do not cancel the build if the build status is
 	// complete. only cancel the build if the status is
 	// running or pending.
-	switch execution.Status {
-	case enum.CIStatusPending, enum.CIStatusRunning:
-	default:
+	if execution.Status != enum.CIStatusPending &&
+		execution.Status != enum.CIStatusRunning {
 		return nil
 	}
 

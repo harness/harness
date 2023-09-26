@@ -15,7 +15,7 @@
 // Enums for event types delivered to the event stream for the UI
 package enum
 
-// SSEType defines the kind of server sent event
+// SSEType defines the kind of server sent event.
 type SSEType string
 
 const (

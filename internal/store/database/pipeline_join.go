@@ -21,7 +21,7 @@ import (
 	"github.com/harness/gitness/types/enum"
 )
 
-// pipelineExecutionjoin struct represents a joined row between pipelines and executions
+// pipelineExecutionjoin struct represents a joined row between pipelines and executions.
 type pipelineExecutionJoin struct {
 	*types.Pipeline
 	ID           sql.NullInt64  `db:"execution_id"`

@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/internal/api/request"
 )
 
+//nolint:cyclop // this should move to controller
 func HandleFind(logCtrl *logs.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

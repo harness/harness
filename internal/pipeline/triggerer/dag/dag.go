@@ -140,7 +140,6 @@ func (d *Dag) detectCycles(name string, visited, recStack map[string]bool) bool 
 		} else if recStack[v] {
 			return true
 		}
-
 	}
 	recStack[name] = false
 	return false

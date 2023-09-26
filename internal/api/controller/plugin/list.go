@@ -29,7 +29,6 @@ func (c *Controller) List(
 	ctx context.Context,
 	filter types.ListQueryFilter,
 ) ([]*types.Plugin, int64, error) {
-
 	plugins, err := c.pluginStore.List(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list plugins: %w", err)

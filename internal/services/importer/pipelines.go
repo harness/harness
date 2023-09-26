@@ -51,7 +51,7 @@ func (r *Repository) processPipelines(ctx context.Context,
 		return err
 	}
 
-	pipelineFiles := r.convertPipelines(ctx, principal, repo)
+	pipelineFiles := r.convertPipelines(ctx, repo)
 	if len(pipelineFiles) == 0 {
 		return nil
 	}
@@ -144,7 +144,6 @@ func (r *Repository) processPipelines(ctx context.Context,
 // convertPipelines converts pipelines found in the repository.
 // Note: For GitHub actions, there can be multiple.
 func (r *Repository) convertPipelines(ctx context.Context,
-	principal *types.Principal,
 	repo *types.Repository,
 ) []pipelineFile {
 	const maxSize = 65536
@@ -189,6 +188,7 @@ func (r *Repository) convertPipelines(ctx context.Context,
 
 	filesYML := match(".github/workflows", "*.yml")
 	filesYAML := match(".github/workflows", "*.yaml")
+	//nolint:gocritic // intended usage
 	files := append(filesYML, filesYAML...)
 	converted := convertPipelineFiles(ctx, files, func() pipelineConverter { return github.New() })
 	if len(converted) > 0 {

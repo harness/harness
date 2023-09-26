@@ -31,10 +31,6 @@ import (
 )
 
 var (
-	// errPipelineRequiresParent is returned if the user tries to create a pipeline without a parent space.
-	errPipelineRequiresParent = usererror.BadRequest(
-		"Parent space required - standalone pipelines are not supported.")
-
 	// errPipelineRequiresConfigPath is returned if the user tries to create a pipeline with an empty config path.
 	errPipelineRequiresConfigPath = usererror.BadRequest(
 		"Pipeline requires a config path.")

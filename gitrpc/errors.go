@@ -209,7 +209,7 @@ func AsPathNotFoundError(err error) (path string) {
 	details := ErrorDetails(err)
 	object, ok := details[pathKey]
 	if ok {
-		path = object.(string)
+		path, _ = object.(string)
 	}
 
 	return

@@ -405,6 +405,8 @@ func mapRPCFileDiffStatus(status rpc.DiffResponse_FileStatus) FileDiffStatus {
 		return FileDiffStatusModified
 	case rpc.DiffResponse_RENAMED:
 		return FileDiffStatusRenamed
+	case rpc.DiffResponse_UNDEFINED:
+		return FileDiffStatusUndefined
 	default:
 		return FileDiffStatusUndefined
 	}

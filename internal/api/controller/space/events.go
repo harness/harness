@@ -23,7 +23,7 @@ import (
 
 	apiauth "github.com/harness/gitness/internal/api/auth"
 	"github.com/harness/gitness/internal/auth"
-	"github.com/harness/gitness/internal/writer"
+	gitnessio "github.com/harness/gitness/internal/io"
 	"github.com/harness/gitness/types/enum"
 
 	"github.com/rs/zerolog/log"
@@ -34,11 +34,12 @@ var (
 	tailMaxTime  = 2 * time.Hour
 )
 
+//nolint:gocognit // refactor if needed
 func (c *Controller) Events(
 	ctx context.Context,
 	session *auth.Session,
 	spaceRef string,
-	w writer.WriterFlusher,
+	w gitnessio.WriterFlusher,
 ) error {
 	space, err := c.spaceStore.FindByRef(ctx, spaceRef)
 	if err != nil {
@@ -52,7 +53,10 @@ func (c *Controller) Events(
 	ctx, ctxCancel := context.WithTimeout(ctx, tailMaxTime)
 	defer ctxCancel()
 
-	io.WriteString(w, ": ping\n\n")
+	_, err = io.WriteString(w, ": ping\n\n")
+	if err != nil {
+		return fmt.Errorf("failed to send initial ping: %w", err)
+	}
 	w.Flush()
 
 	eventStream, errorStream, sseCancel := c.sseStreamer.Stream(ctx, space.ID)
@@ -64,7 +68,7 @@ func (c *Controller) Events(
 	}()
 	// could not get error channel
 	if errorStream == nil {
-		io.WriteString(w, "event: error\ndata: eof\n\n")
+		_, _ = io.WriteString(w, "event: error\ndata: eof\n\n")
 		w.Flush()
 		return fmt.Errorf("could not get error channel")
 	}
@@ -85,28 +89,49 @@ L:
 		pingTimer.Reset(pingInterval)
 		select {
 		case <-ctx.Done():
-			log.Debug().Msg("events: stream cancelled")
+			log.Ctx(ctx).Debug().Msg("events: stream cancelled")
 			break L
 		case err := <-errorStream:
 			log.Err(err).Msg("events: received error in the tail channel")
 			break L
 		case <-pingTimer.C:
 			// if time b/w messages takes longer, send a ping
-			io.WriteString(w, ": ping\n\n")
+			_, err = io.WriteString(w, ": ping\n\n")
+			if err != nil {
+				return fmt.Errorf("failed to send ping: %w", err)
+			}
 			w.Flush()
 		case event := <-eventStream:
-			io.WriteString(w, fmt.Sprintf("event: %s\n", event.Type))
-			io.WriteString(w, "data: ")
-			enc.Encode(event.Data)
+			_, err = io.WriteString(w, fmt.Sprintf("event: %s\n", event.Type))
+			if err != nil {
+				return fmt.Errorf("failed to send event header: %w", err)
+			}
+			_, err = io.WriteString(w, "data: ")
+			if err != nil {
+				return fmt.Errorf("failed to send data header: %w", err)
+			}
+			err = enc.Encode(event.Data)
+			if err != nil {
+				return fmt.Errorf("failed to send data: %w", err)
+			}
 			// NOTE: enc.Encode is ending the data with a new line, only add one more
 			// Source: https://cs.opensource.google/go/go/+/refs/tags/go1.21.1:src/encoding/json/stream.go;l=220
-			io.WriteString(w, "\n")
+			_, err = io.WriteString(w, "\n")
+			if err != nil {
+				return fmt.Errorf("failed to send end of message: %w", err)
+			}
+
 			w.Flush()
 		}
 	}
 
-	io.WriteString(w, "event: error\ndata: eof\n\n")
+	_, err = io.WriteString(w, "event: error\ndata: eof\n\n")
+	if err != nil {
+		return fmt.Errorf("failed to send eof: %w", err)
+	}
 	w.Flush()
-	log.Debug().Msg("events: stream closed")
+
+	log.Ctx(ctx).Debug().Msg("events: stream closed")
+
 	return nil
 }

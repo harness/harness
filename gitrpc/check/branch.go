@@ -28,7 +28,7 @@ import (
  * 3: {, look for a preceding @ to reject @{ in refs
  * 4: A bad character: ASCII control characters, and
  *    ":", "?", "[", "\", "^", "~", SP, or TAB
- * 5: *, reject unless REFNAME_REFSPEC_PATTERN is set
+ * 5: *, reject unless REFNAME_REFSPEC_PATTERN is set.
  */
 var refnameDisposition = [256]byte{
 	1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -41,6 +41,7 @@ var refnameDisposition = [256]byte{
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 4, 4,
 }
 
+//nolint:gocognit // refactor if needed
 func BranchName(branch string) error {
 	const lock = ".lock"
 	last := byte('\x00')

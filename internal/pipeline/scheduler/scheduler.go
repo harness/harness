@@ -56,7 +56,7 @@ type scheduler struct {
 	*canceler
 }
 
-// newScheduler provides an instance of a scheduler with cancel abilities
+// newScheduler provides an instance of a scheduler with cancel abilities.
 func newScheduler(stageStore store.StageStore, lock lock.MutexManager) (Scheduler, error) {
 	q, err := newQueue(stageStore, lock)
 	if err != nil {

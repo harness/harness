@@ -16,6 +16,7 @@ package gitea
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -33,7 +34,7 @@ func (g Adapter) GetBlob(ctx context.Context, repoPath string, sha string, sizeL
 
 	blob, err := repo.BlobObject(gogitplumbing.NewHash(sha))
 	if err != nil {
-		if err == gogitplumbing.ErrObjectNotFound {
+		if errors.Is(err, gogitplumbing.ErrObjectNotFound) {
 			return nil, types.ErrNotFound
 		}
 		return nil, fmt.Errorf("failed to get blob object: %w", err)

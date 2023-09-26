@@ -57,10 +57,7 @@ func GetStepNumberFromPath(r *http.Request) (int64, error) {
 
 func GetLatestFromPath(r *http.Request) bool {
 	v, _ := QueryParam(r, QueryParamLatest)
-	if v == "true" {
-		return true
-	}
-	return false
+	return v == "true"
 }
 
 func GetTriggerUIDFromPath(r *http.Request) (string, error) {

@@ -57,7 +57,8 @@ func (status CIStatus) ConvertToCheckStatus() CheckStatus {
 // instead of explicitly returning not found error.
 func ParseCIStatus(status string) CIStatus {
 	switch strings.ToLower(status) {
-	case "skipped", "blocked", "declined", "waiting_on_dependencies", "pending", "running", "success", "failure", "killed", "error":
+	case "skipped", "blocked", "declined", "waiting_on_dependencies",
+		"pending", "running", "success", "failure", "killed", "error":
 		return CIStatus(strings.ToLower(status))
 	case "": // just in case status is not passed through
 		return CIStatusPending
@@ -68,6 +69,7 @@ func ParseCIStatus(status string) CIStatus {
 
 // IsDone returns true if in a completed state.
 func (status CIStatus) IsDone() bool {
+	//nolint:exhaustive
 	switch status {
 	case CIStatusWaitingOnDeps,
 		CIStatusPending,
@@ -81,12 +83,7 @@ func (status CIStatus) IsDone() bool {
 
 // IsFailed returns true if in a failed state.
 func (status CIStatus) IsFailed() bool {
-	switch status {
-	case CIStatusFailure,
-		CIStatusKilled,
-		CIStatusError:
-		return true
-	default:
-		return false
-	}
+	return status == CIStatusFailure ||
+		status == CIStatusKilled ||
+		status == CIStatusError
 }

@@ -22,11 +22,11 @@ import (
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideFileService,
+	ProvideService,
 )
 
-// ProvideFileService provides a service which can read file contents
+// ProvideService provides a service which can read file contents
 // from a repository.
-func ProvideFileService(gitRPCClient gitrpc.Interface) FileService {
-	return new(gitRPCClient)
+func ProvideService(gitRPCClient gitrpc.Interface) Service {
+	return newService(gitRPCClient)
 }

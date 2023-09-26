@@ -19,7 +19,7 @@ import (
 	"io"
 )
 
-// LogStore provides an interface for the persistent log store backend
+// LogStore provides an interface for the persistent log store backend.
 type LogStore interface {
 	// Find returns a log stream from the datastore.
 	Find(ctx context.Context, stepID int64) (io.ReadCloser, error)

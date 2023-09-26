@@ -86,7 +86,7 @@ func Segments(path string) []string {
 }
 
 // IsAncesterOf returns true iff 'path' is an ancestor of 'other' or they are the same.
-// e.g. other = path(/.*)
+// e.g. other = path(/.*).
 func IsAncesterOf(path string, other string) bool {
 	path = strings.Trim(path, types.PathSeparator)
 	other = strings.Trim(other, types.PathSeparator)

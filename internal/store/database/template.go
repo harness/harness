@@ -50,7 +50,7 @@ const (
 )
 
 // NewTemplateStore returns a new TemplateStore.
-func NewTemplateStore(db *sqlx.DB) *templateStore {
+func NewTemplateStore(db *sqlx.DB) store.TemplateStore {
 	return &templateStore{
 		db: db,
 	}
@@ -191,7 +191,11 @@ func (s *templateStore) UpdateOptLock(ctx context.Context,
 }
 
 // List lists all the templates present in a space.
-func (s *templateStore) List(ctx context.Context, parentID int64, filter types.ListQueryFilter) ([]*types.Template, error) {
+func (s *templateStore) List(
+	ctx context.Context,
+	parentID int64,
+	filter types.ListQueryFilter,
+) ([]*types.Template, error) {
 	stmt := database.Builder.
 		Select(templateColumns).
 		From("templates").

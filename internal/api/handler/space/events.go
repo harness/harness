@@ -20,13 +20,13 @@ import (
 	"github.com/harness/gitness/internal/api/controller/space"
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
-	"github.com/harness/gitness/internal/writer"
+	"github.com/harness/gitness/internal/io"
 
 	"github.com/rs/zerolog/log"
 )
 
 // HandleEvents returns an http.HandlerFunc that watches for
-// events on a space
+// events on a space.
 func HandleEvents(spaceCtrl *space.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -52,7 +52,7 @@ func HandleEvents(spaceCtrl *space.Controller) http.HandlerFunc {
 			return
 		}
 
-		writer := writer.NewWriterFlusher(w, f)
+		writer := io.NewWriterFlusher(w, f)
 
 		err = spaceCtrl.Events(ctx, session, spaceRef, writer)
 		if err != nil {

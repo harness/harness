@@ -89,7 +89,11 @@ func (c *command) run(*kingpin.ParseContext) error {
 	g.Go(func() error {
 		// initialize metric collector
 		if system.services.MetricCollector != nil {
-			system.services.MetricCollector.Register(gCtx)
+			err := system.services.MetricCollector.Register(gCtx)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to register metric collector")
+				return err
+			}
 		}
 
 		return system.services.JobScheduler.Run(gCtx)

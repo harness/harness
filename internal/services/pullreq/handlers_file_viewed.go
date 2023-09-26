@@ -28,7 +28,7 @@ import (
 // handleFileViewedOnBranchUpdate handles pull request Branch Updated events.
 // It marks existing file reviews as obsolete for the PR depending on the change to the file.
 //
-// The major reason of this handler is to allow detect changes that occured to a file since last reviewed,
+// The major reason of this handler is to allow detect changes that occurred to a file since last reviewed,
 // even if the file content is the same - e.g. file got deleted and readded with the same content.
 func (s *Service) handleFileViewedOnBranchUpdate(ctx context.Context,
 	event *events.Event[*pullreqevents.BranchUpdatedPayload],
@@ -71,7 +71,7 @@ func (s *Service) handleFileViewedOnBranchUpdate(ctx context.Context,
 			obsoletePaths = append(obsoletePaths, fileDiff.OldPath, fileDiff.Path)
 		case gitrpc.FileDiffStatusModified:
 			obsoletePaths = append(obsoletePaths, fileDiff.Path)
-		default:
+		case gitrpc.FileDiffStatusUndefined:
 			// other cases we don't care
 		}
 	}

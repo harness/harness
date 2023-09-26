@@ -54,15 +54,19 @@ type Collector struct {
 	scheduler      *job.Scheduler
 }
 
-func (c *Collector) Register(ctx context.Context) {
+func (c *Collector) Register(ctx context.Context) error {
 	if !c.enabled {
-		return
+		return nil
 	}
-	c.scheduler.AddRecurring(ctx, jobType, jobType, "0 0 * * *", time.Minute)
+	err := c.scheduler.AddRecurring(ctx, jobType, jobType, "0 0 * * *", time.Minute)
+	if err != nil {
+		return fmt.Errorf("failed to register recurring job for collector: %w", err)
+	}
+
+	return nil
 }
 
 func (c *Collector) Handle(ctx context.Context, _ string, _ job.ProgressReporter) (string, error) {
-
 	if !c.enabled {
 		return "", nil
 	}
@@ -121,7 +125,7 @@ func (c *Collector) Handle(ctx context.Context, _ string, _ job.ProgressReporter
 	}
 
 	endpoint := fmt.Sprintf("%s?api_key=%s", c.endpoint, c.token)
-	req, err := http.NewRequest("POST", endpoint, buf)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
 	if err != nil {
 		return "", fmt.Errorf("failed to create a request for metric data to endpoint %s: %w", endpoint, err)
 	}

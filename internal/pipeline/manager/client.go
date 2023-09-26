@@ -34,7 +34,7 @@ type embedded struct {
 
 var _ client.Client = (*embedded)(nil)
 
-func NewEmbeddedClient(manager ExecutionManager, config *types.Config) *embedded {
+func NewEmbeddedClient(manager ExecutionManager, config *types.Config) client.Client {
 	return &embedded{
 		config:  config,
 		manager: manager,

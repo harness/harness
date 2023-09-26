@@ -23,6 +23,8 @@ import (
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 type queue struct {
@@ -32,7 +34,6 @@ type queue struct {
 	ready    chan struct{}
 	paused   bool
 	interval time.Duration
-	throttle int
 	store    store.StageStore
 	workers  map[*worker]struct{}
 	ctx      context.Context
@@ -53,7 +54,12 @@ func newQueue(store store.StageStore, lock lock.MutexManager) (*queue, error) {
 		interval: time.Minute,
 		ctx:      context.Background(),
 	}
-	go q.start()
+	go func() {
+		if err := q.start(); err != nil {
+			log.Err(err).Msg("queue start failed")
+		}
+	}()
+
 	return q, nil
 }
 
@@ -103,11 +109,16 @@ func (q *queue) Request(ctx context.Context, params Filter) (*types.Stage, error
 	}
 }
 
+//nolint:gocognit // refactor if needed.
 func (q *queue) signal(ctx context.Context) error {
 	if err := q.globMx.Lock(ctx); err != nil {
 		return err
 	}
-	defer q.globMx.Unlock(ctx)
+	defer func() {
+		if err := q.globMx.Unlock(ctx); err != nil {
+			log.Ctx(ctx).Err(err).Msg("failed to release global lock after signaling")
+		}
+	}()
 
 	q.Lock()
 	count := len(q.workers)
@@ -137,14 +148,14 @@ func (q *queue) signal(ctx context.Context) error {
 		// if the stage defines concurrency limits we
 		// need to make sure those limits are not exceeded
 		// before proceeding.
-		if withinLimits(item, items) == false {
+		if !withinLimits(item, items) {
 			continue
 		}
 
 		// if the system defines concurrency limits
 		// per repository we need to make sure those limits
 		// are not exceeded before proceeding.
-		if shouldThrottle(item, items, item.LimitRepo) == true {
+		if shouldThrottle(item, items, item.LimitRepo) {
 			continue
 		}
 
@@ -182,11 +193,9 @@ func (q *queue) signal(ctx context.Context) error {
 				}
 			}
 
-			select {
-			case w.channel <- item:
-				delete(q.workers, w)
-				break loop
-			}
+			w.channel <- item
+			delete(q.workers, w)
+			break loop
 		}
 	}
 	return nil
@@ -198,9 +207,15 @@ func (q *queue) start() error {
 		case <-q.ctx.Done():
 			return q.ctx.Err()
 		case <-q.ready:
-			q.signal(q.ctx)
+			if err := q.signal(q.ctx); err != nil {
+				// don't return, only log error
+				log.Ctx(q.ctx).Err(err).Msg("failed to signal on ready")
+			}
 		case <-time.After(q.interval):
-			q.signal(q.ctx)
+			if err := q.signal(q.ctx); err != nil {
+				// don't return, only log error
+				log.Ctx(q.ctx).Err(err).Msg("failed to signal on interval")
+			}
 		}
 	}
 }
@@ -214,10 +229,6 @@ type worker struct {
 	variant string
 	labels  map[string]string
 	channel chan *types.Stage
-}
-
-type counter struct {
-	counts map[string]int
 }
 
 func checkLabels(a, b map[string]string) bool {
@@ -287,7 +298,7 @@ func shouldThrottle(stage *types.Stage, siblings []*types.Stage, limit int) bool
 	return count >= limit
 }
 
-// matchResource is a helper function that returns
+// matchResource is a helper function that returns.
 func matchResource(kinda, typea, kindb, typeb string) bool {
 	if kinda == "" {
 		kinda = "pipeline"

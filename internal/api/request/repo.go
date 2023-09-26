@@ -44,7 +44,7 @@ func GetRepoIDFromQuery(r *http.Request) (int64, error) {
 
 // ParseSortRepo extracts the repo sort parameter from the url.
 func ParseSortRepo(r *http.Request) enum.RepoAttr {
-	return enum.ParseRepoAtrr(
+	return enum.ParseRepoAttr(
 		r.URL.Query().Get(QueryParamSort),
 	)
 }

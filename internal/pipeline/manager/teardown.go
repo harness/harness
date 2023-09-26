@@ -16,6 +16,7 @@ package manager
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -44,6 +45,7 @@ type teardown struct {
 	Stages      store.StageStore
 }
 
+//nolint:gocognit // refactor if needed.
 func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 	log := log.With().
 		Int64("stage.id", stage.ID).
@@ -98,7 +100,10 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 	}
 
 	for _, step := range stage.Steps {
-		t.Logs.Delete(noContext, step.ID)
+		err = t.Logs.Delete(noContext, step.ID)
+		if err != nil {
+			log.Warn().Err(err).Msgf("failed to delete log stream for step %d", step.ID)
+		}
 	}
 
 	stages, err := t.Stages.ListWithSteps(noContext, execution.ID)
@@ -115,7 +120,7 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 		return err
 	}
 
-	err = t.scheduleDownstream(ctx, stage, stages)
+	err = t.scheduleDownstream(ctx, stages)
 	if err != nil {
 		log.Error().Err(err).
 			Msg("manager: cannot schedule downstream builds")
@@ -151,7 +156,7 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 	}
 
 	err = t.Executions.Update(noContext, execution)
-	if err == gitness_store.ErrVersionConflict {
+	if errors.Is(err, gitness_store.ErrVersionConflict) {
 		log.Warn().Err(err).
 			Msg("manager: execution updated by another goroutine")
 		return nil
@@ -186,6 +191,8 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 // cancelDownstream is a helper function that tests for
 // downstream stages and cancels them based on the overall
 // pipeline state.
+//
+//nolint:gocognit // refactor if needed
 func (t *teardown) cancelDownstream(
 	ctx context.Context,
 	stages []*types.Stage,
@@ -233,8 +240,11 @@ func (t *teardown) cancelDownstream(
 		s.Started = time.Now().UnixMilli()
 		s.Stopped = time.Now().UnixMilli()
 		err := t.Stages.Update(noContext, s)
-		if err == gitness_store.ErrVersionConflict {
-			t.resync(ctx, s)
+		if errors.Is(err, gitness_store.ErrVersionConflict) {
+			rErr := t.resync(ctx, s)
+			if rErr != nil {
+				log.Warn().Err(rErr).Msg("failed to resync after version conflict")
+			}
 			continue
 		}
 		if err != nil {
@@ -248,12 +258,11 @@ func (t *teardown) cancelDownstream(
 
 func isexecutionComplete(stages []*types.Stage) bool {
 	for _, stage := range stages {
-		switch stage.Status {
-		case enum.CIStatusPending,
-			enum.CIStatusRunning,
-			enum.CIStatusWaitingOnDeps,
-			enum.CIStatusDeclined,
-			enum.CIStatusBlocked:
+		if stage.Status == enum.CIStatusPending ||
+			stage.Status == enum.CIStatusRunning ||
+			stage.Status == enum.CIStatusWaitingOnDeps ||
+			stage.Status == enum.CIStatusDeclined ||
+			stage.Status == enum.CIStatusBlocked {
 			return false
 		}
 	}
@@ -281,55 +290,58 @@ func areDepsComplete(stage *types.Stage, stages []*types.Stage) bool {
 // and execution requirements are met.
 func (t *teardown) scheduleDownstream(
 	ctx context.Context,
-	stage *types.Stage,
 	stages []*types.Stage,
 ) error {
-
 	var errs error
 	for _, sibling := range stages {
-		if sibling.Status == enum.CIStatusWaitingOnDeps {
-			if len(sibling.DependsOn) == 0 {
-				continue
-			}
+		if sibling.Status != enum.CIStatusWaitingOnDeps {
+			continue
+		}
 
-			// PROBLEM: isDep only checks the direct parent
-			// i think ....
-			// if isDep(stage, sibling) == false {
-			// 	continue
-			// }
-			if !areDepsComplete(sibling, stages) {
-				continue
-			}
-			// if isLastDep(stage, sibling, stages) == false {
-			// 	continue
-			// }
+		if len(sibling.DependsOn) == 0 {
+			continue
+		}
 
-			log := log.With().
-				Int64("stage.id", sibling.ID).
-				Str("stage.name", sibling.Name).
-				Str("stage.depends_on", strings.Join(sibling.DependsOn, ",")).
-				Logger()
+		// PROBLEM: isDep only checks the direct parent
+		// i think ....
+		// if isDep(stage, sibling) == false {
+		// 	continue
+		// }
+		if !areDepsComplete(sibling, stages) {
+			continue
+		}
+		// if isLastDep(stage, sibling, stages) == false {
+		// 	continue
+		// }
 
-			log.Debug().Msg("manager: schedule next stage")
+		log := log.With().
+			Int64("stage.id", sibling.ID).
+			Str("stage.name", sibling.Name).
+			Str("stage.depends_on", strings.Join(sibling.DependsOn, ",")).
+			Logger()
 
-			sibling.Status = enum.CIStatusPending
-			err := t.Stages.Update(noContext, sibling)
-			if err == gitness_store.ErrVersionConflict {
-				t.resync(ctx, sibling)
-				continue
-			}
-			if err != nil {
-				log.Error().Err(err).
-					Msg("manager: cannot update stage status")
-				errs = multierror.Append(errs, err)
-			}
+		log.Debug().Msg("manager: schedule next stage")
 
-			err = t.Scheduler.Schedule(noContext, sibling)
-			if err != nil {
-				log.Error().Err(err).
-					Msg("manager: cannot schedule stage")
-				errs = multierror.Append(errs, err)
+		sibling.Status = enum.CIStatusPending
+		err := t.Stages.Update(noContext, sibling)
+		if errors.Is(err, gitness_store.ErrVersionConflict) {
+			rErr := t.resync(ctx, sibling)
+			if rErr != nil {
+				log.Warn().Err(rErr).Msg("failed to resync after version conflict")
 			}
+			continue
+		}
+		if err != nil {
+			log.Error().Err(err).
+				Msg("manager: cannot update stage status")
+			errs = multierror.Append(errs, err)
+		}
+
+		err = t.Scheduler.Schedule(noContext, sibling)
+		if err != nil {
+			log.Error().Err(err).
+				Msg("manager: cannot schedule stage")
+			errs = multierror.Append(errs, err)
 		}
 	}
 	return errs

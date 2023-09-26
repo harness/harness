@@ -129,9 +129,9 @@ export default function SpaceSettings() {
       try {
         setRepoCount(formData.repoCount)
         const exportPayload = {
-          accountId: formData.accountId || '',
-          orgIdentifier: formData.organization,
-          projectIdentifier: formData.name,
+          account_id: formData.accountId || '',
+          org_identifier: formData.organization,
+          project_identifier: formData.name,
           token: formData.token
         }
         exportSpace(exportPayload)

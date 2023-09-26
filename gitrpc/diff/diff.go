@@ -78,6 +78,7 @@ func (s *Section) NumLines() int {
 }
 
 // Line returns a specific line by given type and line number in a section.
+// nolint: gocognit
 func (s *Section) Line(lineType LineType, line int) *Line {
 	var (
 		difference      = 0
@@ -93,7 +94,8 @@ loop:
 			addCount++
 		case DiffLineDelete:
 			delCount++
-		default:
+		case DiffLinePlain,
+			DiffLineSection:
 			if matchedDiffLine != nil {
 				break loop
 			}
@@ -111,6 +113,8 @@ loop:
 			if diffLine.LeftLine == 0 && diffLine.RightLine == line+difference {
 				matchedDiffLine = diffLine
 			}
+		case DiffLinePlain,
+			DiffLineSection:
 		}
 	}
 
@@ -212,8 +216,8 @@ func (p *Parser) readLine() error {
 	var err error
 	p.buffer, err = p.ReadBytes('\n')
 	if err != nil {
-		if err != io.EOF {
-			return fmt.Errorf("read string: %v", err)
+		if !errors.Is(err, io.EOF) {
+			return fmt.Errorf("read string: %w", err)
 		}
 
 		p.isEOF = true
@@ -228,6 +232,7 @@ func (p *Parser) readLine() error {
 
 var diffHead = []byte("diff --git ")
 
+//nolint:gocognit
 func (p *Parser) parseFileHeader() (*File, error) {
 	submoduleMode := " 160000"
 	line := string(p.buffer)
@@ -263,18 +268,18 @@ checkType:
 			return nil, err
 		}
 
-		line := string(p.buffer)
+		subLine := string(p.buffer)
 		p.buffer = nil
 
-		if len(line) == 0 {
+		if len(subLine) == 0 {
 			continue
 		}
 
 		switch {
-		case strings.HasPrefix(line, enum.DiffExtHeaderNewFileMode):
+		case strings.HasPrefix(subLine, enum.DiffExtHeaderNewFileMode):
 			file.Type = FileAdd
-			file.IsSubmodule = strings.HasSuffix(line, submoduleMode)
-			fields := strings.Fields(line)
+			file.IsSubmodule = strings.HasSuffix(subLine, submoduleMode)
+			fields := strings.Fields(subLine)
 			if len(fields) > 0 {
 				mode, _ := strconv.ParseUint(fields[len(fields)-1], 8, 64)
 				file.mode = enum.EntryMode(mode)
@@ -282,10 +287,10 @@ checkType:
 					file.oldMode = file.mode
 				}
 			}
-		case strings.HasPrefix(line, enum.DiffExtHeaderDeletedFileMode):
+		case strings.HasPrefix(subLine, enum.DiffExtHeaderDeletedFileMode):
 			file.Type = FileDelete
-			file.IsSubmodule = strings.HasSuffix(line, submoduleMode)
-			fields := strings.Fields(line)
+			file.IsSubmodule = strings.HasSuffix(subLine, submoduleMode)
+			fields := strings.Fields(subLine)
 			if len(fields) > 0 {
 				mode, _ := strconv.ParseUint(fields[len(fields)-1], 8, 64)
 				file.mode = enum.EntryMode(mode)
@@ -293,8 +298,8 @@ checkType:
 					file.oldMode = file.mode
 				}
 			}
-		case strings.HasPrefix(line, enum.DiffExtHeaderIndex): // e.g. index ee791be..9997571 100644
-			fields := strings.Fields(line[6:])
+		case strings.HasPrefix(subLine, enum.DiffExtHeaderIndex): // e.g. index ee791be..9997571 100644
+			fields := strings.Fields(subLine[6:])
 			shas := strings.Split(fields[0], "..")
 			if len(shas) != 2 {
 				return nil, errors.New("malformed index: expect two SHAs in the form of <old>..<new>")
@@ -308,23 +313,23 @@ checkType:
 				file.oldMode = enum.EntryMode(mode)
 			}
 			break checkType
-		case strings.HasPrefix(line, enum.DiffExtHeaderSimilarity):
+		case strings.HasPrefix(subLine, enum.DiffExtHeaderSimilarity):
 			file.Type = FileRename
 			file.OldPath = a
 			file.Path = b
 
 			// No need to look for index if it's a pure rename
-			if strings.HasSuffix(line, "100%") {
+			if strings.HasSuffix(subLine, "100%") {
 				break checkType
 			}
-		case strings.HasPrefix(line, enum.DiffExtHeaderNewMode):
-			fields := strings.Fields(line)
+		case strings.HasPrefix(subLine, enum.DiffExtHeaderNewMode):
+			fields := strings.Fields(subLine)
 			if len(fields) > 0 {
 				mode, _ := strconv.ParseUint(fields[len(fields)-1], 8, 64)
 				file.mode = enum.EntryMode(mode)
 			}
-		case strings.HasPrefix(line, enum.DiffExtHeaderOldMode):
-			fields := strings.Fields(line)
+		case strings.HasPrefix(subLine, enum.DiffExtHeaderOldMode):
+			fields := strings.Fields(subLine)
 			if len(fields) > 0 {
 				mode, _ := strconv.ParseUint(fields[len(fields)-1], 8, 64)
 				file.oldMode = enum.EntryMode(mode)
@@ -335,6 +340,7 @@ checkType:
 	return file, nil
 }
 
+//nolint:gocognit // refactor if needed
 func (p *Parser) parseSection() (*Section, error) {
 	line := string(p.buffer)
 	p.buffer = nil
@@ -374,7 +380,6 @@ func (p *Parser) parseSection() (*Section, error) {
 		if p.buffer[0] != ' ' &&
 			p.buffer[0] != '+' &&
 			p.buffer[0] != '-' {
-
 			// No new line indicator
 			if p.buffer[0] == '\\' &&
 				bytes.HasPrefix(p.buffer, []byte(`\ No newline at end of file`)) {
@@ -384,14 +389,14 @@ func (p *Parser) parseSection() (*Section, error) {
 			return section, nil
 		}
 
-		line := string(p.buffer)
+		subLine := string(p.buffer)
 		p.buffer = nil
 
-		switch line[0] {
+		switch subLine[0] {
 		case ' ':
 			section.Lines = append(section.Lines, &Line{
 				Type:      DiffLinePlain,
-				Content:   line,
+				Content:   subLine,
 				LeftLine:  leftLine,
 				RightLine: rightLine,
 			})
@@ -400,7 +405,7 @@ func (p *Parser) parseSection() (*Section, error) {
 		case '+':
 			section.Lines = append(section.Lines, &Line{
 				Type:      DiffLineAdd,
-				Content:   line,
+				Content:   subLine,
 				RightLine: rightLine,
 			})
 			section.numAdditions++
@@ -408,7 +413,7 @@ func (p *Parser) parseSection() (*Section, error) {
 		case '-':
 			section.Lines = append(section.Lines, &Line{
 				Type:     DiffLineDelete,
-				Content:  line,
+				Content:  subLine,
 				LeftLine: leftLine,
 			})
 			section.numDeletions++
@@ -421,7 +426,8 @@ func (p *Parser) parseSection() (*Section, error) {
 	return section, nil
 }
 
-func (p *Parser) Parse(f func(f *File)) error {
+//nolint:gocognit
+func (p *Parser) Parse(send func(f *File) error) error {
 	file := new(File)
 	currentFileLines := 0
 	additions := 0
@@ -445,8 +451,11 @@ func (p *Parser) Parse(f func(f *File)) error {
 		// Found new file
 		if bytes.HasPrefix(p.buffer, diffHead) {
 			// stream previous file
-			if !file.IsEmpty() && f != nil {
-				f(file)
+			if !file.IsEmpty() && send != nil {
+				err = send(file)
+				if err != nil {
+					return fmt.Errorf("failed to send out file: %w", err)
+				}
 			}
 			file, err = p.parseFileHeader()
 			if err != nil {
@@ -487,8 +496,11 @@ func (p *Parser) Parse(f func(f *File)) error {
 	}
 
 	// stream last file
-	if !file.IsEmpty() && f != nil {
-		f(file)
+	if !file.IsEmpty() && send != nil {
+		err = send(file)
+		if err != nil {
+			return fmt.Errorf("failed to send last file: %w", err)
+		}
 	}
 
 	return nil
@@ -500,7 +512,7 @@ func UnescapeChars(in []byte) []byte {
 		return in
 	}
 
-	out := bytes.Replace(in, escapedSlash, regularSlash, -1)
-	out = bytes.Replace(out, escapedTab, regularTab, -1)
+	out := bytes.ReplaceAll(in, escapedSlash, regularSlash)
+	out = bytes.ReplaceAll(out, escapedTab, regularTab)
 	return out
 }

@@ -22,11 +22,11 @@ import (
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideCommitService,
+	ProvideService,
 )
 
-// ProvideCommitService provides a service which can fetch commit
+// ProvideService provides a service which can fetch commit
 // information about a repository.
-func ProvideCommitService(gitRPCClient gitrpc.Interface) CommitService {
-	return new(gitRPCClient)
+func ProvideService(gitRPCClient gitrpc.Interface) Service {
+	return newService(gitRPCClient)
 }

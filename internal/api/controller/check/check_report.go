@@ -87,7 +87,6 @@ func (in *ReportInput) Validate() error {
 
 	case enum.CheckPayloadKindPipeline:
 		return usererror.BadRequest("Kind cannot be pipeline for external checks")
-
 	}
 
 	return nil

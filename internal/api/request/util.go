@@ -48,7 +48,7 @@ const (
 	PerPageMax      = 100
 )
 
-// GetCookie tries to retrive the cookie from the request or returns false if it doesn't exist.
+// GetCookie tries to retrieve the cookie from the request or returns false if it doesn't exist.
 func GetCookie(r *http.Request, cookieName string) (string, bool) {
 	cookie, err := r.Cookie(cookieName)
 	if errors.Is(err, http.ErrNoCookie) {

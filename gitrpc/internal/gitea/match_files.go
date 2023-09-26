@@ -54,7 +54,9 @@ func (g Adapter) MatchFiles(ctx context.Context,
 	}
 
 	var files []types.FileContent
-	for _, fileEntry := range tree.Entries {
+	for i := range tree.Entries {
+		fileEntry := tree.Entries[i]
+
 		ok, err := path.Match(pattern, fileEntry.Name)
 		if err != nil {
 			return nil, err

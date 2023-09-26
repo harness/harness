@@ -144,6 +144,9 @@ func (s *RepoStore) FindByRef(ctx context.Context, repoRef string) (*types.Repos
 	id, err := strconv.ParseInt(repoRef, 10, 64)
 	if err != nil {
 		spacePath, repoUID, err := paths.DisectLeaf(repoRef)
+		if err != nil {
+			return nil, fmt.Errorf("failed to disect leaf for path '%s': %w", repoRef, err)
+		}
 		pathObject, err := s.spacePathCache.Get(ctx, spacePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get space path: %w", err)

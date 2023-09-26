@@ -67,7 +67,7 @@ func ProvideRouter(
 	// only use host name to identify git traffic if it differs from api hostname.
 	// TODO: Can we make this even more flexible - aka use the full base urls to route traffic?
 	gitRoutingHost := ""
-	if strings.ToLower(gitHostname) != strings.ToLower(apiHostname) {
+	if !strings.EqualFold(gitHostname, apiHostname) {
 		gitRoutingHost = gitHostname
 	}
 

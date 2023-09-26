@@ -125,7 +125,7 @@ func (s *setup) updateExecution(ctx context.Context, execution *types.Execution)
 	}
 	execution.Started = time.Now().UnixMilli()
 	execution.Status = enum.CIStatusRunning
-	err := s.Executions.Update(noContext, execution)
+	err := s.Executions.Update(ctx, execution)
 	if errors.Is(err, gitness_store.ErrVersionConflict) {
 		return false, nil
 	}

@@ -161,7 +161,11 @@ func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug
 	}, nil
 }
 
-func LoadRepositoriesFromProviderSpace(ctx context.Context, provider Provider, spaceSlug string) ([]RepositoryInfo, error) {
+func LoadRepositoriesFromProviderSpace(
+	ctx context.Context,
+	provider Provider,
+	spaceSlug string,
+) ([]RepositoryInfo, error) {
 	scmClient, err := getClient(provider, true)
 	if err != nil {
 		return nil, err
@@ -223,10 +227,10 @@ func convertSCMError(provider Provider, slug string, r *scm.Response, err error)
 		if provider.Host != "" {
 			return usererror.BadRequestf("failed to make HTTP request to %s (host=%s): %s",
 				provider.Type, provider.Host, err)
-		} else {
-			return usererror.BadRequestf("failed to make HTTP request to %s: %s",
-				provider.Type, err)
 		}
+
+		return usererror.BadRequestf("failed to make HTTP request to %s: %s",
+			provider.Type, err)
 	}
 
 	switch r.Status {

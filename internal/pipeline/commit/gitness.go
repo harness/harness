@@ -26,7 +26,7 @@ type service struct {
 	gitRPCClient gitrpc.Interface
 }
 
-func new(gitRPCClient gitrpc.Interface) CommitService {
+func newService(gitRPCClient gitrpc.Interface) Service {
 	return &service{gitRPCClient: gitRPCClient}
 }
 
@@ -53,7 +53,7 @@ func (f *service) FindRef(
 	return controller.MapCommit(branchOutput.Branch.Commit)
 }
 
-// FindCommit finds information about a commit in gitness for the git SHA
+// FindCommit finds information about a commit in gitness for the git SHA.
 func (f *service) FindCommit(
 	ctx context.Context,
 	repo *types.Repository,

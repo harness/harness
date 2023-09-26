@@ -36,7 +36,7 @@ type logs struct {
 }
 
 // NewLogStore returns a new LogStore.
-func NewDatabaseLogStore(db *sqlx.DB) *logStore {
+func NewDatabaseLogStore(db *sqlx.DB) store.LogStore {
 	return &logStore{
 		db: db,
 	}

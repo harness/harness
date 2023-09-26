@@ -144,8 +144,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	stepStore := database.ProvideStepStore(db)
 	cancelerCanceler := canceler.ProvideCanceler(executionStore, streamer, repoStore, schedulerScheduler, stageStore, stepStore)
-	commitService := commit.ProvideCommitService(gitrpcInterface)
-	fileService := file.ProvideFileService(gitrpcInterface)
+	commitService := commit.ProvideService(gitrpcInterface)
+	fileService := file.ProvideService(gitrpcInterface)
 	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, db, pipelineStore, fileService, schedulerScheduler, repoStore)
 	executionController := execution.ProvideController(db, authorizer, executionStore, checkStore, cancelerCanceler, commitService, triggererTriggerer, repoStore, stageStore, pipelineStore)
 	logStore := logs.ProvideLogStore(db, config)

@@ -78,6 +78,7 @@ func (a *MembershipAuthorizer) Check(
 
 	var spacePath string
 
+	//nolint:exhaustive // we want to fail on anything else
 	switch resource.Type {
 	case enum.ResourceTypeSpace:
 		spacePath = paths.Concatinate(scope.SpacePath, resource.Name)
@@ -92,6 +93,12 @@ func (a *MembershipAuthorizer) Check(
 		spacePath = scope.SpacePath
 
 	case enum.ResourceTypeSecret:
+		spacePath = scope.SpacePath
+
+	case enum.ResourceTypeConnector:
+		spacePath = scope.SpacePath
+
+	case enum.ResourceTypeTemplate:
 		spacePath = scope.SpacePath
 
 	case enum.ResourceTypeUser:

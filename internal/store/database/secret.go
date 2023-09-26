@@ -37,6 +37,7 @@ const (
 		SELECT` + secretColumns + `
 		FROM secrets`
 
+	//nolint:gosec // wrong flagging
 	secretColumns = `
 	secret_id,
 	secret_description,
@@ -51,7 +52,7 @@ const (
 )
 
 // NewSecretStore returns a new SecretStore.
-func NewSecretStore(db *sqlx.DB) *secretStore {
+func NewSecretStore(db *sqlx.DB) store.SecretStore {
 	return &secretStore{
 		db: db,
 	}
@@ -89,6 +90,7 @@ func (s *secretStore) FindByUID(ctx context.Context, spaceID int64, uid string) 
 
 // Create creates a secret.
 func (s *secretStore) Create(ctx context.Context, secret *types.Secret) error {
+	//nolint:gosec // wrong flagging
 	const secretInsertStmt = `
 	INSERT INTO secrets (
 		secret_description,
@@ -246,6 +248,7 @@ func (s *secretStore) ListAll(ctx context.Context, parentID int64) ([]*types.Sec
 
 // Delete deletes a secret given a secret ID.
 func (s *secretStore) Delete(ctx context.Context, id int64) error {
+	//nolint:gosec // wrong flagging
 	const secretDeleteStmt = `
 		DELETE FROM secrets
 		WHERE secret_id = $1`
@@ -261,6 +264,7 @@ func (s *secretStore) Delete(ctx context.Context, id int64) error {
 
 // DeleteByUID deletes a secret with a given UID in a space.
 func (s *secretStore) DeleteByUID(ctx context.Context, spaceID int64, uid string) error {
+	//nolint:gosec // wrong flagging
 	const secretDeleteStmt = `
 	DELETE FROM secrets
 	WHERE secret_space_id = $1 AND secret_uid = $2`

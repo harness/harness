@@ -51,7 +51,6 @@ func Handler() http.HandlerFunc {
 	// http.FileServer to always load the index.html
 	// file if a directory path is being requested.
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		// because this is a single page application,
 		// we need to always load the index.html file
 		// in the root of the project, unless the path

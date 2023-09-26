@@ -18,12 +18,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/harness/gitness/internal/store"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -109,7 +109,12 @@ func (s *PullReqFileViewStore) Upsert(ctx context.Context, view *types.PullReqFi
 }
 
 // DeleteByFileForPrincipal deletes the entry for the specified PR, principal, and file.
-func (s *PullReqFileViewStore) DeleteByFileForPrincipal(ctx context.Context, prID int64, principalID int64, filePath string) error {
+func (s *PullReqFileViewStore) DeleteByFileForPrincipal(
+	ctx context.Context,
+	prID int64,
+	principalID int64,
+	filePath string,
+) error {
 	const sqlQuery = `
 	DELETE from pullreq_file_views
 	WHERE pullreq_file_view_pullreq_id = $1 AND
@@ -150,7 +155,11 @@ func (s *PullReqFileViewStore) MarkObsolete(ctx context.Context, prID int64, fil
 }
 
 // List lists all files marked as viewed by the user for the specified PR.
-func (s *PullReqFileViewStore) List(ctx context.Context, prID int64, principalID int64) ([]*types.PullReqFileView, error) {
+func (s *PullReqFileViewStore) List(
+	ctx context.Context,
+	prID int64,
+	principalID int64,
+) ([]*types.PullReqFileView, error) {
 	stmt := database.Builder.
 		Select(pullReqFileViewsColumn).
 		From("pullreq_file_views").

@@ -27,7 +27,7 @@ type service struct {
 	gitRPCClient gitrpc.Interface
 }
 
-func new(gitRPCClient gitrpc.Interface) FileService {
+func newService(gitRPCClient gitrpc.Interface) Service {
 	return &service{gitRPCClient: gitRPCClient}
 }
 

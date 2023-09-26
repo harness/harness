@@ -15,8 +15,9 @@
 package url
 
 import (
-	"github.com/google/wire"
 	"github.com/harness/gitness/types"
+
+	"github.com/google/wire"
 )
 
 // WireSet provides a wire set for this package.

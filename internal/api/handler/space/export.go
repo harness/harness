@@ -19,7 +19,6 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/internal/api/controller/space"
-
 	"github.com/harness/gitness/internal/api/render"
 	"github.com/harness/gitness/internal/api/request"
 )

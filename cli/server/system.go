@@ -30,7 +30,7 @@ type System struct {
 	bootstrap      bootstrap.Bootstrap
 	server         *server.Server
 	gitRPCServer   *gitrpcserver.GRPCServer
-	pluginManager  *plugin.PluginManager
+	pluginManager  *plugin.Manager
 	poller         *poller.Poller
 	services       services.Services
 	gitRPCCronMngr *gitrpccron.Manager
@@ -38,7 +38,7 @@ type System struct {
 
 // NewSystem returns a new system structure.
 func NewSystem(bootstrap bootstrap.Bootstrap, server *server.Server, poller *poller.Poller,
-	gitRPCServer *gitrpcserver.GRPCServer, pluginManager *plugin.PluginManager,
+	gitRPCServer *gitrpcserver.GRPCServer, pluginManager *plugin.Manager,
 	gitrpccron *gitrpccron.Manager, services services.Services) *System {
 	return &System{
 		bootstrap:      bootstrap,

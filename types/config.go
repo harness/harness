@@ -109,9 +109,10 @@ type Config struct {
 	// CI defines configuration related to build executions.
 	CI struct {
 		ParallelWorkers int `envconfig:"GITNESS_CI_PARALLEL_WORKERS" default:"2"`
-		// PluginsZipPath is a pointer to a zip containing all the plugins schemas.
+		// PluginsZipURL is a pointer to a zip containing all the plugins schemas.
 		// This could be a local path or an external location.
-		PluginsZipPath string `envconfig:"GITNESS_CI_PLUGINS_ZIP_PATH" default:"https://github.com/bradrydzewski/plugins/archive/refs/heads/master.zip"`
+		//nolint:lll
+		PluginsZipURL string `envconfig:"GITNESS_CI_PLUGINS_ZIP_URL" default:"https://github.com/bradrydzewski/plugins/archive/refs/heads/master.zip"`
 	}
 
 	// Database defines the database configuration parameters.

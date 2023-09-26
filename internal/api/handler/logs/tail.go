@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//nolint:cyclop
 package logs
 
 import (
@@ -33,6 +34,9 @@ var (
 	tailMaxTime  = 1 * time.Hour
 )
 
+// TODO: Move to controller and do error handling (see space events)
+//
+//nolint:gocognit,errcheck,cyclop // refactor if needed.
 func HandleTail(logCtrl *logs.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()

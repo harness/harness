@@ -81,6 +81,8 @@ func NewScheduler(
 
 // Run runs the background job scheduler.
 // It's a blocking call. It blocks until the provided context is done.
+//
+//nolint:gocognit // refactor if needed.
 func (s *Scheduler) Run(ctx context.Context) error {
 	if s.done != nil {
 		return errors.New("already started")
@@ -560,6 +562,8 @@ func (s *Scheduler) doExec(ctx context.Context,
 }
 
 // postExec updates the provided types.Job after execution and reschedules it if necessary.
+//
+//nolint:gocognit // refactor if needed.
 func postExec(job *types.Job, resultData, resultErr string) {
 	// Proceed with the update of the job if it's in the running state or
 	// if it's marked as canceled but has succeeded nonetheless.
@@ -585,6 +589,7 @@ func postExec(job *types.Job, resultData, resultErr string) {
 	}
 
 	// Reschedule recurring jobs
+	//nolint:nestif // refactor if needed
 	if job.IsRecurring {
 		if resultErr == "" {
 			job.ConsecutiveFailures = 0
@@ -634,7 +639,7 @@ func (s *Scheduler) GetJobProgressForGroup(ctx context.Context, jobGroupUID stri
 	return mapToProgressMany(job), nil
 }
 
-func (s *Scheduler) PurgeJobsByGroupId(ctx context.Context, jobGroupID string) (int64, error) {
+func (s *Scheduler) PurgeJobsByGroupID(ctx context.Context, jobGroupID string) (int64, error) {
 	n, err := s.store.DeleteByGroupID(ctx, jobGroupID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to delete jobs by group id=%s: %w", jobGroupID, err)

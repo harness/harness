@@ -22,7 +22,7 @@ import (
 
 type PushRemoteParams struct {
 	ReadParams
-	RemoteUrl string
+	RemoteURL string
 }
 
 func (c *Client) PushRemote(ctx context.Context, params *PushRemoteParams) error {
@@ -32,7 +32,7 @@ func (c *Client) PushRemote(ctx context.Context, params *PushRemoteParams) error
 
 	_, err := c.pushService.PushRemote(ctx, &rpc.PushRemoteRequest{
 		Base:      mapToRPCReadRequest(params.ReadParams),
-		RemoteUrl: params.RemoteUrl,
+		RemoteUrl: params.RemoteURL,
 	})
 	if err != nil {
 		return processRPCErrorf(err, "failed to push to remote")
@@ -46,7 +46,7 @@ func (p PushRemoteParams) Validate() error {
 		return err
 	}
 
-	if p.RemoteUrl == "" {
+	if p.RemoteURL == "" {
 		return ErrInvalidArgumentf("remote url cannot be empty")
 	}
 	return nil

@@ -24,6 +24,7 @@ import (
 	events "github.com/harness/gitness/internal/events/git"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
+
 	"github.com/rs/zerolog/log"
 )
 
@@ -59,7 +60,7 @@ func (c *Controller) PostReceive(
 	out := &githook.Output{}
 
 	// handle branch updates related to PRs - best effort
-	c.handlePRMessaging(ctx, repo, principalID, in, out)
+	c.handlePRMessaging(ctx, repo, in, out)
 
 	return out, nil
 }
@@ -157,7 +158,6 @@ func (c *Controller) reportTagEvent(
 func (c *Controller) handlePRMessaging(
 	ctx context.Context,
 	repo *types.Repository,
-	principalID int64,
 	in *githook.PostReceiveInput,
 	out *githook.Output,
 ) {

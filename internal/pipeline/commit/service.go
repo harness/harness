@@ -21,10 +21,10 @@ import (
 )
 
 type (
-	// CommitService provides access to commit information via
+	// Service provides access to commit information via
 	// the SCM provider. Today, this is gitness but it can
 	// be extendible to any SCM provider.
-	CommitService interface {
+	Service interface {
 		// ref is the ref to fetch the commit from, eg refs/heads/master
 		FindRef(ctx context.Context, repo *types.Repository, ref string) (*types.Commit, error)
 

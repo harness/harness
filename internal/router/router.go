@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package router provides http handlers for serving the
-// web applicationa and API endpoints.
-
 package router
 
 import (

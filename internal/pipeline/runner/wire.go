@@ -35,7 +35,7 @@ var WireSet = wire.NewSet(
 func ProvideExecutionRunner(
 	config *types.Config,
 	client runnerclient.Client,
-	pluginManager *plugin.PluginManager,
+	pluginManager *plugin.Manager,
 	manager manager.ExecutionManager,
 ) (*runtime2.Runner, error) {
 	return NewExecutionRunner(config, client, pluginManager, manager)

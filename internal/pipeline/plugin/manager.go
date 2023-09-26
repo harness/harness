@@ -35,23 +35,23 @@ import (
 // Lookup returns a resource by name, kind and type.
 type LookupFunc func(name, kind, typ, version string) (*v1yaml.Config, error)
 
-type PluginManager struct {
+type Manager struct {
 	config      *types.Config
 	pluginStore store.PluginStore
 }
 
-func NewPluginManager(
+func NewManager(
 	config *types.Config,
 	pluginStore store.PluginStore,
-) *PluginManager {
-	return &PluginManager{
+) *Manager {
+	return &Manager{
 		config:      config,
 		pluginStore: pluginStore,
 	}
 }
 
 // GetLookupFn returns a lookup function for plugins which can be used in the resolver.
-func (m *PluginManager) GetLookupFn() LookupFunc {
+func (m *Manager) GetLookupFn() LookupFunc {
 	return func(name, kind, typ, version string) (*v1yaml.Config, error) {
 		if kind != "plugin" {
 			return nil, fmt.Errorf("only plugin kind supported")
@@ -75,28 +75,28 @@ func (m *PluginManager) GetLookupFn() LookupFunc {
 
 // Populate fetches plugins information from an external source or a local zip
 // and populates in the DB.
-func (m *PluginManager) Populate(ctx context.Context) error {
-	path := m.config.CI.PluginsZipPath
-	if path == "" {
-		return fmt.Errorf("plugins path not provided to read schemas from")
+func (m *Manager) Populate(ctx context.Context) error {
+	pluginsURL := m.config.CI.PluginsZipURL
+	if pluginsURL == "" {
+		return fmt.Errorf("plugins url not provided to read schemas from")
 	}
 
 	var zipFile *zip.ReadCloser
-	if _, err := os.Stat(path); err != nil { // local path doesn't exist - must be a remote link
+	if _, err := os.Stat(pluginsURL); err != nil { // local path doesn't exist - must be a remote link
 		// Download zip file locally
 		f, err := os.CreateTemp(os.TempDir(), "plugins.zip")
 		if err != nil {
 			return fmt.Errorf("could not create temp file: %w", err)
 		}
 		defer os.Remove(f.Name())
-		err = downloadZip(path, f.Name())
+		err = downloadZip(ctx, pluginsURL, f.Name())
 		if err != nil {
 			return fmt.Errorf("could not download remote zip: %w", err)
 		}
-		path = f.Name()
+		pluginsURL = f.Name()
 	}
 	// open up a zip reader for the file
-	zipFile, err := zip.OpenReader(path)
+	zipFile, err := zip.OpenReader(pluginsURL)
 	if err != nil {
 		return fmt.Errorf("could not open zip for reading: %w", err)
 	}
@@ -113,12 +113,22 @@ func (m *PluginManager) Populate(ctx context.Context) error {
 
 // downloadZip is a helper function that downloads a zip from a URL and
 // writes it to a path in the local filesystem.
-func downloadZip(url, path string) error {
-	response, err := http.Get(url)
+//
+//nolint:gosec // URL is coming from environment variable (user configured it)
+func downloadZip(ctx context.Context, pluginURL, path string) error {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, pluginURL, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return fmt.Errorf("could not get zip from url: %w", err)
 	}
-	defer response.Body.Close()
+	// ensure the body is closed after we read (independent of status code or error)
+	if response != nil && response.Body != nil {
+		// Use function to satisfy the linter which complains about unhandled errors otherwise
+		defer func() { _ = response.Body.Close() }()
+	}
 
 	// Create the file on the local FS. If it exists, it will be truncated.
 	output, err := os.Create(path)
@@ -138,7 +148,9 @@ func downloadZip(url, path string) error {
 
 // traverseAndUpsertPlugins traverses through the zip and upserts plugins into the database
 // if they are not present.
-func (m *PluginManager) traverseAndUpsertPlugins(ctx context.Context, rc *zip.ReadCloser) error {
+//
+//nolint:gocognit // refactor if needed.
+func (m *Manager) traverseAndUpsertPlugins(ctx context.Context, rc *zip.ReadCloser) error {
 	plugins, err := m.pluginStore.ListAll(ctx)
 	if err != nil {
 		return fmt.Errorf("could not list plugins: %w", err)
@@ -164,7 +176,7 @@ func (m *PluginManager) traverseAndUpsertPlugins(ctx context.Context, rc *zip.Re
 		}
 		defer fc.Close()
 		var buf bytes.Buffer
-		_, err = io.Copy(&buf, fc)
+		_, err = io.Copy(&buf, fc) //nolint:gosec // plugin source is configured via environment variables by user
 		if err != nil {
 			log.Warn().Err(err).Str("name", file.Name).Msg("could not read file contents")
 			continue
@@ -212,7 +224,6 @@ func (m *PluginManager) traverseAndUpsertPlugins(ctx context.Context, rc *zip.Re
 			if p.Matches(plugin) {
 				continue
 			}
-
 		}
 
 		// If plugin name exists with a different spec, call update - otherwise call create.

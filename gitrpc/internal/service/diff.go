@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/gitrpc/internal/streamio"
 	"github.com/harness/gitness/gitrpc/internal/types"
 	"github.com/harness/gitness/gitrpc/rpc"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -45,7 +46,6 @@ func NewDiffService(adapter GitAdapter, reposRoot string, reposTempDir string) (
 }
 
 func (s DiffService) RawDiff(request *rpc.DiffRequest, stream rpc.DiffService_RawDiffServer) error {
-
 	sw := streamio.NewWriter(func(p []byte) error {
 		return stream.Send(&rpc.RawDiffResponse{Data: p})
 	})
@@ -115,7 +115,7 @@ func validateCommitDiffRequest(in *rpc.CommitDiffRequest) error {
 func (s DiffService) DiffShortStat(ctx context.Context, r *rpc.DiffRequest) (*rpc.DiffShortStatResponse, error) {
 	err := validateDiffRequest(r)
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate request for short diff statistic, error: %v", err)
+		return nil, fmt.Errorf("failed to validate request for short diff statistic, error: %w", err)
 	}
 
 	base := r.GetBase()
@@ -214,12 +214,12 @@ func (s DiffService) Diff(request *rpc.DiffRequest, stream rpc.DiffService_DiffS
 		}
 	}()
 
-	return parser.Parse(func(f *diff.File) {
-		streamDiffFile(f, request.IncludePatch, stream)
+	return parser.Parse(func(f *diff.File) error {
+		return streamDiffFile(f, request.IncludePatch, stream)
 	})
 }
 
-func streamDiffFile(f *diff.File, includePatch bool, stream rpc.DiffService_DiffServer) {
+func streamDiffFile(f *diff.File, includePatch bool, stream rpc.DiffService_DiffServer) error {
 	var status rpc.DiffResponse_FileStatus
 	switch f.Type {
 	case diff.FileAdd:
@@ -245,7 +245,7 @@ func streamDiffFile(f *diff.File, includePatch bool, stream rpc.DiffService_Diff
 		}
 	}
 
-	stream.Send(&rpc.DiffResponse{
+	err := stream.Send(&rpc.DiffResponse{
 		Path:      f.Path,
 		OldPath:   f.OldPath,
 		Sha:       f.SHA,
@@ -256,4 +256,8 @@ func streamDiffFile(f *diff.File, includePatch bool, stream rpc.DiffService_Diff
 		Changes:   int32(f.NumChanges()),
 		Patch:     patch.Bytes(),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to send diff response on stream: %w", err)
+	}
+	return nil
 }

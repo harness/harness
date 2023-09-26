@@ -87,6 +87,7 @@ func (c *CLICore) PostReceive(ctx context.Context) error {
 	return handleServerHookOutput(out, err)
 }
 
+//nolint:forbidigo // outputing to CMD as that's where git reads the data
 func handleServerHookOutput(out *Output, err error) error {
 	if err != nil {
 		return fmt.Errorf("an error occurred when calling the server: %w", err)

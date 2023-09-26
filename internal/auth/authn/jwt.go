@@ -89,10 +89,7 @@ func (a *JWTAuthenticator) Authenticate(r *http.Request, sourceRouter SourceRout
 			return nil, fmt.Errorf("failed to get metadata from token claims: %w", err)
 		}
 	case claims.Membership != nil:
-		metadata, err = a.metadataFromMembershipClaims(claims.Membership)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get metadata from membership claims: %w", err)
-		}
+		metadata = a.metadataFromMembershipClaims(claims.Membership)
 	default:
 		return nil, fmt.Errorf("jwt is missing sub-claims")
 	}
@@ -128,12 +125,12 @@ func (a *JWTAuthenticator) metadataFromTokenClaims(
 
 func (a *JWTAuthenticator) metadataFromMembershipClaims(
 	mbsClaims *jwt.SubClaimsMembership,
-) (auth.Metadata, error) {
+) auth.Metadata {
 	// We could check if space exists - but also okay to fail later (saves db call)
 	return &auth.MembershipMetadata{
 		SpaceID: mbsClaims.SpaceID,
 		Role:    mbsClaims.Role,
-	}, nil
+	}
 }
 
 func extractToken(r *http.Request, cookieName string) string {

@@ -29,9 +29,9 @@ import (
 )
 
 type ExportInput struct {
-	AccountId         string `json:"accountId"`
-	OrgIdentifier     string `json:"orgIdentifier"`
-	ProjectIdentifier string `json:"projectIdentifier"`
+	AccountID         string `json:"account_id"`
+	OrgIdentifier     string `json:"org_identifier"`
+	ProjectIdentifier string `json:"project_identifier"`
 	Token             string `json:"token"`
 }
 
@@ -52,7 +52,7 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, spaceRef
 	}
 
 	providerInfo := &exporter.HarnessCodeInfo{
-		AccountId:         in.AccountId,
+		AccountID:         in.AccountID,
 		ProjectIdentifier: in.ProjectIdentifier,
 		OrgIdentifier:     in.OrgIdentifier,
 		Token:             in.Token,
@@ -68,7 +68,7 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, spaceRef
 		if len(reposInPage) == 0 {
 			break
 		}
-		page += 1
+		page++
 		repos = append(repos, reposInPage...)
 	}
 
@@ -90,7 +90,7 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, spaceRef
 }
 
 func (c *Controller) sanitizeExportInput(in *ExportInput) error {
-	if in.AccountId == "" {
+	if in.AccountID == "" {
 		return usererror.BadRequest("account id must be provided")
 	}
 

@@ -27,13 +27,13 @@ type (
 		Data []byte
 	}
 
-	// FileService provides access to contents of files in
+	// Service provides access to contents of files in
 	// the SCM provider. Today, this is gitness but it should
 	// be extendible to any SCM provider.
 	// The plan is for all remote repos to be pointers inside gitness
 	// so a repo entry would always exist. If this changes, the interface
 	// can be updated.
-	FileService interface {
+	Service interface {
 		// path is the path in the repo to read
 		// ref is the git ref for the repository e.g. refs/heads/master
 		Get(ctx context.Context, repo *types.Repository, path, ref string) (*File, error)

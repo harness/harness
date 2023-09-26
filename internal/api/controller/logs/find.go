@@ -72,7 +72,10 @@ func (c *Controller) Find(
 
 	lines := []*livelog.Line{}
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(rc)
+	_, err = buf.ReadFrom(rc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read from buffer: %w", err)
+	}
 
 	err = json.Unmarshal(buf.Bytes(), &lines)
 	if err != nil {

@@ -39,7 +39,8 @@ func ProvideController(config *types.Config, db *sqlx.DB, urlProvider *url.Provi
 	pipelineStore store.PipelineStore, secretStore store.SecretStore,
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore,
 	spaceStore store.SpaceStore, repoStore store.RepoStore, principalStore store.PrincipalStore,
-	repoCtrl *repo.Controller, membershipStore store.MembershipStore, importer *importer.Repository, exporter *exporter.Repository,
+	repoCtrl *repo.Controller, membershipStore store.MembershipStore, importer *importer.Repository,
+	exporter *exporter.Repository,
 ) *Controller {
 	return NewController(config, db, urlProvider, sseStreamer, uidCheck, authorizer,
 		spacePathStore, pipelineStore, secretStore,

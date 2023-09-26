@@ -223,7 +223,7 @@ func ConvertToDroneRepo(repo *types.Repository) *drone.Repo {
 		Branch:  repo.DefaultBranch,
 		// TODO: We can get this from configuration once we start populating it.
 		// If this is not set drone runner cancels the build.
-		Timeout: int64(time.Duration(10 * time.Hour).Seconds()),
+		Timeout: int64((10 * time.Hour).Seconds()),
 	}
 }
 

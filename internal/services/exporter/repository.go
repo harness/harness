@@ -25,16 +25,16 @@ import (
 	"time"
 
 	"github.com/harness/gitness/encrypt"
-	"github.com/harness/gitness/internal/api/controller/repo"
-	"github.com/harness/gitness/internal/sse"
-	"github.com/harness/gitness/types/enum"
-	"github.com/rs/zerolog/log"
-
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/internal/api/controller/repo"
 	"github.com/harness/gitness/internal/services/job"
+	"github.com/harness/gitness/internal/sse"
 	"github.com/harness/gitness/internal/store"
 	gitnessurl "github.com/harness/gitness/internal/url"
 	"github.com/harness/gitness/types"
+	"github.com/harness/gitness/types/enum"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -65,7 +65,7 @@ type Input struct {
 }
 
 type HarnessCodeInfo struct {
-	AccountId         string `json:"account_id"`
+	AccountID         string `json:"account_id"`
 	ProjectIdentifier string `json:"project_identifier"`
 	OrgIdentifier     string `json:"org_identifier"`
 	Token             string `json:"token"`
@@ -76,8 +76,8 @@ var _ job.Handler = (*Repository)(nil)
 const (
 	exportJobMaxRetries  = 1
 	exportJobMaxDuration = 45 * time.Minute
-	exportRepoJobUid     = "export_repo_%d"
-	exportSpaceJobUid    = "export_space_%d"
+	exportRepoJobUID     = "export_repo_%d"
+	exportSpaceJobUID    = "export_space_%d"
 	jobType              = "repository_export"
 )
 
@@ -89,24 +89,23 @@ func (r *Repository) Register(executor *job.Executor) error {
 
 func (r *Repository) RunManyForSpace(
 	ctx context.Context,
-	spaceId int64,
+	spaceID int64,
 	repos []*types.Repository,
 	harnessCodeInfo *HarnessCodeInfo,
 ) error {
-	jobGroupId := getJobGroupId(spaceId)
-
-	jobs, err := r.scheduler.GetJobProgressForGroup(ctx, jobGroupId)
+	jobGroupID := getJobGroupID(spaceID)
+	jobs, err := r.scheduler.GetJobProgressForGroup(ctx, jobGroupID)
 	if err != nil {
 		return fmt.Errorf("cannot get job progress before starting. %w", err)
 	}
 
-	if len(jobs) >= 0 {
+	if len(jobs) > 0 {
 		err = checkJobAlreadyRunning(jobs)
 		if err != nil {
 			return err
 		}
 
-		n, err := r.scheduler.PurgeJobsByGroupId(ctx, jobGroupId)
+		n, err := r.scheduler.PurgeJobsByGroupID(ctx, jobGroupID)
 		if err != nil {
 			return err
 		}
@@ -133,7 +132,7 @@ func (r *Repository) RunManyForSpace(
 			return fmt.Errorf("failed to encrypt job input: %w", err)
 		}
 
-		jobUID := fmt.Sprintf(exportRepoJobUid, repository.ID)
+		jobUID := fmt.Sprintf(exportRepoJobUID, repository.ID)
 
 		jobDefinitions[i] = job.Definition{
 			UID:        jobUID,
@@ -144,7 +143,7 @@ func (r *Repository) RunManyForSpace(
 		}
 	}
 
-	return r.scheduler.RunJobs(ctx, jobGroupId, jobDefinitions)
+	return r.scheduler.RunJobs(ctx, jobGroupID, jobDefinitions)
 }
 
 func checkJobAlreadyRunning(jobs []types.JobProgress) error {
@@ -159,8 +158,8 @@ func checkJobAlreadyRunning(jobs []types.JobProgress) error {
 	return nil
 }
 
-func getJobGroupId(spaceId int64) string {
-	return fmt.Sprintf(exportSpaceJobUid, spaceId)
+func getJobGroupID(spaceID int64) string {
+	return fmt.Sprintf(exportSpaceJobUID, spaceID)
 }
 
 // Handle is repository export background job handler.
@@ -172,7 +171,7 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 	harnessCodeInfo := input.HarnessCodeInfo
 	client, err := newHarnessCodeClient(
 		harnessCodeAPIURLRaw,
-		harnessCodeInfo.AccountId,
+		harnessCodeInfo.AccountID,
 		harnessCodeInfo.OrgIdentifier,
 		harnessCodeInfo.ProjectIdentifier,
 		harnessCodeInfo.Token,
@@ -199,14 +198,14 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		return "", err
 	}
 
-	urlWithToken, err := modifyUrl(remoteRepo.GitURL, harnessCodeInfo.Token)
+	urlWithToken, err := modifyURL(remoteRepo.GitURL, harnessCodeInfo.Token)
 	if err != nil {
 		return "", err
 	}
 
 	err = r.git.PushRemote(ctx, &gitrpc.PushRemoteParams{
 		ReadParams: gitrpc.ReadParams{RepoUID: repository.GitUID},
-		RemoteUrl:  urlWithToken,
+		RemoteURL:  urlWithToken,
 	})
 	if err != nil && !strings.Contains(err.Error(), "empty") {
 		errDelete := client.DeleteRepo(ctx, remoteRepo.UID)
@@ -253,8 +252,8 @@ func (r *Repository) getJobInput(data string) (Input, error) {
 }
 
 func (r *Repository) GetProgressForSpace(ctx context.Context, spaceID int64) ([]types.JobProgress, error) {
-	spaceId := getJobGroupId(spaceID)
-	progress, err := r.scheduler.GetJobProgressForGroup(ctx, spaceId)
+	groupID := getJobGroupID(spaceID)
+	progress, err := r.scheduler.GetJobProgressForGroup(ctx, groupID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get job progress for group: %w", err)
 	}
@@ -266,14 +265,13 @@ func (r *Repository) GetProgressForSpace(ctx context.Context, spaceID int64) ([]
 	return progress, nil
 }
 
-func modifyUrl(u string, token string) (string, error) {
-	parsedUrl, err := url.Parse(u)
+func modifyURL(u string, token string) (string, error) {
+	parsedURL, err := url.Parse(u)
 	if err != nil {
-		fmt.Println("Error parsing URL:", err)
-		return "", err
+		return "", fmt.Errorf("failed to parse URL '%s': %w", u, err)
 	}
 
 	// Set the username and password in the URL
-	parsedUrl.User = url.UserPassword("token", token)
-	return parsedUrl.String(), nil
+	parsedURL.User = url.UserPassword("token", token)
+	return parsedURL.String(), nil
 }

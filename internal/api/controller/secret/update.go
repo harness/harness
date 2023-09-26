@@ -50,6 +50,10 @@ func (c *Controller) Update(
 		return nil, fmt.Errorf("failed to authorize: %w", err)
 	}
 
+	if err = c.sanitizeUpdateInput(in); err != nil {
+		return nil, fmt.Errorf("failed to sanitize input: %w", err)
+	}
+
 	secret, err := c.secretStore.FindByUID(ctx, space.ID, uid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find secret: %w", err)
