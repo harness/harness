@@ -43,22 +43,6 @@ var queryParameterQueryPrincipals = openapi3.ParameterOrRef{
 	},
 }
 
-// TODO: this should not be in standalone swagger.
-// https://harness.atlassian.net/browse/CODE-521
-var queryParameterAccountID = openapi3.ParameterOrRef{
-	Parameter: &openapi3.Parameter{
-		Name:        "accountIdentifier",
-		In:          openapi3.ParameterInQuery,
-		Description: ptr.String("The account ID the principals are retrieved for (Not required in standalone)."),
-		Required:    ptr.Bool(false),
-		Schema: &openapi3.SchemaOrRef{
-			Schema: &openapi3.Schema{
-				Type: ptrSchemaType(openapi3.SchemaTypeString),
-			},
-		},
-	},
-}
-
 var queryParameterPrincipalTypes = openapi3.ParameterOrRef{
 	Parameter: &openapi3.Parameter{
 		Name:        request.QueryParamType,
@@ -85,7 +69,7 @@ func buildPrincipals(reflector *openapi3.Reflector) {
 	opList := openapi3.Operation{}
 	opList.WithTags("principals")
 	opList.WithMapOfAnything(map[string]interface{}{"operationId": "listPrincipals"})
-	opList.WithParameters(queryParameterQueryPrincipals, queryParameterAccountID, queryParameterPage,
+	opList.WithParameters(queryParameterQueryPrincipals, queryParameterPage,
 		queryParameterLimit, queryParameterPrincipalTypes)
 	_ = reflector.SetRequest(&opList, new(principalRequest), http.MethodGet)
 	_ = reflector.SetJSONResponse(&opList, new([]types.PrincipalInfo), http.StatusOK)

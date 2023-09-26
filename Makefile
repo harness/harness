@@ -33,9 +33,6 @@ init: ## Install git hooks to perform pre-commit checks
 	git config core.hooksPath .githooks
 	git config commit.template .gitmessage
 
-all: dep tools generate lint build test ## Build and run the test for gitness
-	@echo "Run `make start`  to start the services"
-
 dep: $(deps) ## Install the deps required to generate code and build gitness
 	@echo "Installing dependencies"
 	@go mod download
@@ -53,25 +50,9 @@ build: generate ## Build the all-in-one gitness binary
 	@echo "Building Gitness Server"
 	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./gitness ./cmd/gitness
 
-build-gitrpc: generate ## Build the gitrpc binary
-	@echo "Building GitRPC Server"
-	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./gitrpcserver ./cmd/gitrpcserver
-
-build-githook: generate ## Build the githook binary for gitness
-	@echo "Building gitness GitHook Binary"
-	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./gitness-githook ./cmd/gitness-githook
-
-build-githa: generate ## Build the githa server binary
-	@echo "Building GitHA Server"
-	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./githaserver ./cmd/githaserver
-
-build-githa-githook: generate ## Build the githook binary for githa
-	@echo "Building githa GitHook Binary"
-	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./githa-githook ./cmd/githa-githook
-
 test: generate  ## Run the go tests
 	@echo "Running tests"
-	go test -v -coverprofile=coverage.out ./internal/...
+	go test -v -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
 
 run: dep ## Run the gitness binary from source
@@ -107,21 +88,13 @@ lint: tools generate # lint the golang code
 generate: wire proto
 	@echo "Generating Code"
 
-wire: cmd/gitness/wire_gen.go cmd/gitrpcserver/wire_gen.go cmd/githaserver/wire_gen.go
+wire: cmd/gitness/wire_gen.go
 
 force-wire: ## Force wire code generation
-	@sh ./scripts/wire/server/standalone.sh
-	@sh ./scripts/wire/gitrpcserver/wire.sh
-	@sh ./scripts/wire/githaserver/wire.sh
+	@sh ./scripts/wire/gitness.sh
 
 cmd/gitness/wire_gen.go: cmd/gitness/wire.go
-	@sh ./scripts/wire/server/standalone.sh
-
-cmd/gitrpcserver/wire_gen.go: cmd/gitrpcserver/wire.go
-	@sh ./scripts/wire/gitrpcserver/wire.sh
-
-cmd/githaserver/wire_gen.go: cmd/githaserver/wire.go
-	@sh ./scripts/wire/githaserver/wire.sh
+	@sh ./scripts/wire/gitness.sh
 
 proto: ## generate proto files for gitrpc integration
 	@protoc --proto_path=./gitrpc/proto \

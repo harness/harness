@@ -5,16 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Harness",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "buildFlags": "-tags=sqlite",
-            "program": "./harness",
-            "args": ["server", ".dev.env"]
-        },
-        {
-            "name": "Standalone",
+            "name": "Gitness",
             "type": "go",
             "request": "launch",
             "mode": "auto",

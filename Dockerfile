@@ -30,10 +30,6 @@ WORKDIR /app
 COPY go.mod .
 COPY go.sum .
 
-# TODO: REMOVE ONCE WE SPLIT REPOS
-RUN sed -i '/go-rbac/d' go.mod
-RUN sed -i '/go-rbac/d' go.sum
-
 COPY Makefile .
 RUN make dep
 RUN make tools
