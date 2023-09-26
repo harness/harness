@@ -20,7 +20,7 @@ import (
 
 	"github.com/harness/gitness/cli/provide"
 	"github.com/harness/gitness/cli/textui"
-	"github.com/harness/gitness/internal/api/controller/user"
+	"github.com/harness/gitness/pkg/api/controller/user"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )

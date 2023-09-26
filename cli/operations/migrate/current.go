@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/harness/gitness/internal/store/database/migrate"
+	"github.com/harness/gitness/pkg/store/database/migrate"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )

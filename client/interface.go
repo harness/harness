@@ -17,7 +17,7 @@ package client
 import (
 	"context"
 
-	"github.com/harness/gitness/internal/api/controller/user"
+	"github.com/harness/gitness/pkg/api/controller/user"
 	"github.com/harness/gitness/types"
 )
 

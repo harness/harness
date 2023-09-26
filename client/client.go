@@ -24,7 +24,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/harness/gitness/internal/api/controller/user"
+	"github.com/harness/gitness/pkg/api/controller/user"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
 

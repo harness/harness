@@ -25,9 +25,9 @@ import (
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/gitrpc/server"
-	"github.com/harness/gitness/internal/services/trigger"
-	"github.com/harness/gitness/internal/services/webhook"
 	"github.com/harness/gitness/lock"
+	"github.com/harness/gitness/pkg/services/trigger"
+	"github.com/harness/gitness/pkg/services/webhook"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/types"
 

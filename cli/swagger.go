@@ -17,7 +17,7 @@ package cli
 import (
 	"os"
 
-	"github.com/harness/gitness/internal/api/openapi"
+	"github.com/harness/gitness/pkg/api/openapi"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )

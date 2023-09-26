@@ -17,10 +17,10 @@ package server
 import (
 	gitrpcserver "github.com/harness/gitness/gitrpc/server"
 	gitrpccron "github.com/harness/gitness/gitrpc/server/cron"
-	"github.com/harness/gitness/internal/bootstrap"
-	"github.com/harness/gitness/internal/pipeline/plugin"
-	"github.com/harness/gitness/internal/server"
-	"github.com/harness/gitness/internal/services"
+	"github.com/harness/gitness/pkg/bootstrap"
+	"github.com/harness/gitness/pkg/pipeline/plugin"
+	"github.com/harness/gitness/pkg/server"
+	"github.com/harness/gitness/pkg/services"
 
 	"github.com/drone/runner-go/poller"
 )
