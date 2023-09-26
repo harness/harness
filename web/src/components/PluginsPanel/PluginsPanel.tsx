@@ -472,7 +472,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                                 items={[
                                   { label: getString('pluginsPanel.run.always'), value: 'always' },
                                   { label: getString('pluginsPanel.run.never'), value: 'never' },
-                                  { label: getString('pluginsPanel.run.ifNotExists'), value: 'f-not-exists' }
+                                  { label: getString('pluginsPanel.run.ifNotExists'), value: 'if-not-exists' }
                                 ]}
                               />
                               <FormInput.Text
