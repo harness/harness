@@ -12,7 +12,7 @@ require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/drone-runners/drone-runner-docker v1.8.4-0.20230919202034-23803f6b38c2
+	github.com/drone-runners/drone-runner-docker v1.8.4-0.20230926203554-8fd90cf0f9f5
 	github.com/drone/drone-go v1.7.1
 	github.com/drone/drone-yaml v1.2.3
 	github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d
