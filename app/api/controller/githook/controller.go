@@ -60,7 +60,7 @@ type Controller struct {
 	repoStore      store.RepoStore
 	gitReporter    *eventsgit.Reporter
 	pullreqStore   store.PullReqStore
-	urlProvider    *url.Provider
+	urlProvider    url.Provider
 }
 
 func NewController(
@@ -70,7 +70,7 @@ func NewController(
 	repoStore store.RepoStore,
 	gitReporter *eventsgit.Reporter,
 	pullreqStore store.PullReqStore,
-	urlProvider *url.Provider,
+	urlProvider url.Provider,
 ) *Controller {
 	return &Controller{
 		db:             db,

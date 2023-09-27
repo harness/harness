@@ -32,7 +32,7 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(config *types.Config, db *sqlx.DB, urlProvider *url.Provider,
+func ProvideController(config *types.Config, db *sqlx.DB, urlProvider url.Provider,
 	uidCheck check.PathUID, authorizer authz.Authorizer, repoStore store.RepoStore,
 	spaceStore store.SpaceStore, pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore, rpcClient gitrpc.Interface,

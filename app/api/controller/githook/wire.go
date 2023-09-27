@@ -31,6 +31,6 @@ var WireSet = wire.NewSet(
 
 func ProvideController(db *sqlx.DB, authorizer authz.Authorizer, principalStore store.PrincipalStore,
 	repoStore store.RepoStore, gitReporter *eventsgit.Reporter, pullreqStore store.PullReqStore,
-	urlProvider *url.Provider) *Controller {
+	urlProvider url.Provider) *Controller {
 	return NewController(db, authorizer, principalStore, repoStore, gitReporter, pullreqStore, urlProvider)
 }

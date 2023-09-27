@@ -21,8 +21,36 @@ import (
 	"strings"
 )
 
+// Provider is an abstraction of a component that provides system related URLs.
+// NOTE: Abstract to allow for custom implementation for more complex routing environments.
+type Provider interface {
+	// GetAPIBaseURLInternal returns the internally reachable base url of the api server.
+	// NOTE: url is guaranteed to not have any trailing '/'.
+	GetAPIBaseURLInternal() string
+
+	// GenerateGITCloneURL generates the public git clone URL for the provided repo path.
+	// NOTE: url is guaranteed to not have any trailing '/'.
+	GenerateGITCloneURL(repoPath string) string
+
+	// GenerateGITCloneURLContainer generates a URL that can be used by CI container builds to
+	// interact with gitness and clone a repo.
+	GenerateGITCloneURLContainer(repoPath string) string
+
+	// GenerateUIPRURL returns the url for the UI screen of an existing pr.
+	GenerateUIPRURL(repoPath string, prID int64) string
+
+	// GenerateUICompareURL returns the url for the UI screen comparing two references.
+	GenerateUICompareURL(repoPath string, ref1 string, ref2 string) string
+
+	// GetAPIHostname returns the host for the api endpoint.
+	GetAPIHostname() string
+
+	// GetGITHostname returns the host for the git endpoint.
+	GetGITHostname() string
+}
+
 // Provider provides the URLs of the gitness system.
-type Provider struct {
+type provider struct {
 	// apiURL stores the raw URL the api endpoints are reachable at publicly.
 	apiURL *url.URL
 
@@ -49,7 +77,7 @@ func NewProvider(
 	gitURLRaw,
 	gitURLContainerRaw string,
 	uiURLRaw string,
-) (*Provider, error) {
+) (Provider, error) {
 	// remove trailing '/' to make usage easier
 	apiURLRaw = strings.TrimRight(apiURLRaw, "/")
 	apiURLInternalRaw = strings.TrimRight(apiURLInternalRaw, "/")
@@ -81,7 +109,7 @@ func NewProvider(
 		return nil, fmt.Errorf("provided uiURLRaw '%s' is invalid: %w", uiURLRaw, err)
 	}
 
-	return &Provider{
+	return &provider{
 		apiURL:            apiURL,
 		apiURLInternalRaw: apiURLInternalRaw,
 		gitURL:            gitURL,
@@ -90,15 +118,11 @@ func NewProvider(
 	}, nil
 }
 
-// GetAPIBaseURLInternal returns the internally reachable base url of the api server.
-// NOTE: url is guaranteed to not have any trailing '/'.
-func (p *Provider) GetAPIBaseURLInternal() string {
+func (p *provider) GetAPIBaseURLInternal() string {
 	return p.apiURLInternalRaw
 }
 
-// GenerateGITCloneURL generates the public git clone URL for the provided repo path.
-// NOTE: url is guaranteed to not have any trailing '/'.
-func (p *Provider) GenerateGITCloneURL(repoPath string) string {
+func (p *provider) GenerateGITCloneURL(repoPath string) string {
 	repoPath = path.Clean(repoPath)
 	if !strings.HasSuffix(repoPath, ".git") {
 		repoPath += ".git"
@@ -107,9 +131,7 @@ func (p *Provider) GenerateGITCloneURL(repoPath string) string {
 	return p.gitURL.JoinPath(repoPath).String()
 }
 
-// GenerateGITCloneURLContainer generates a URL that can be used by CI container builds to
-// interact with gitness and clone a repo.
-func (p *Provider) GenerateGITCloneURLContainer(repoPath string) string {
+func (p *provider) GenerateGITCloneURLContainer(repoPath string) string {
 	repoPath = path.Clean(repoPath)
 	if !strings.HasSuffix(repoPath, ".git") {
 		repoPath += ".git"
@@ -118,22 +140,18 @@ func (p *Provider) GenerateGITCloneURLContainer(repoPath string) string {
 	return p.gitURLContainer.JoinPath(repoPath).String()
 }
 
-// GenerateUIPRURL returns the url for the UI screen of an existing pr.
-func (p *Provider) GenerateUIPRURL(repoPath string, prID int64) string {
+func (p *provider) GenerateUIPRURL(repoPath string, prID int64) string {
 	return p.uiURL.JoinPath(repoPath, "pulls", fmt.Sprint(prID)).String()
 }
 
-// GenerateUICompareURL returns the url for the UI screen comparing two references.
-func (p *Provider) GenerateUICompareURL(repoPath string, ref1 string, ref2 string) string {
+func (p *provider) GenerateUICompareURL(repoPath string, ref1 string, ref2 string) string {
 	return p.uiURL.JoinPath(repoPath, "pulls/compare", ref1+"..."+ref2).String()
 }
 
-// GetAPIHostname returns the host for the api endpoint.
-func (p *Provider) GetAPIHostname() string {
+func (p *provider) GetAPIHostname() string {
 	return p.apiURL.Hostname()
 }
 
-// GetGITHostname returns the host for the git endpoint.
-func (p *Provider) GetGITHostname() string {
+func (p *provider) GetGITHostname() string {
 	return p.gitURL.Hostname()
 }

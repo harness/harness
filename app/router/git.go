@@ -43,7 +43,7 @@ type GitHandler interface {
 // NewGitHandler returns a new GitHandler.
 func NewGitHandler(
 	config *types.Config,
-	urlProvider *url.Provider,
+	urlProvider url.Provider,
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer,

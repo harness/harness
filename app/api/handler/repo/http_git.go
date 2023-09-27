@@ -103,7 +103,7 @@ func GetInfoRefs(client gitrpc.Interface, repoStore store.RepoStore, authorizer 
 	}
 }
 
-func GetUploadPack(client gitrpc.Interface, urlProvider *url.Provider,
+func GetUploadPack(client gitrpc.Interface, urlProvider url.Provider,
 	repoStore store.RepoStore, authorizer authz.Authorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const service = "upload-pack"
@@ -120,7 +120,7 @@ func GetUploadPack(client gitrpc.Interface, urlProvider *url.Provider,
 	}
 }
 
-func PostReceivePack(client gitrpc.Interface, urlProvider *url.Provider,
+func PostReceivePack(client gitrpc.Interface, urlProvider url.Provider,
 	repoStore store.RepoStore, authorizer authz.Authorizer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const service = "receive-pack"
@@ -146,7 +146,7 @@ func serviceRPC(
 	w http.ResponseWriter,
 	r *http.Request,
 	client gitrpc.Interface,
-	urlProvider *url.Provider,
+	urlProvider url.Provider,
 	repoStore store.RepoStore,
 	authorizer authz.Authorizer,
 	service string,

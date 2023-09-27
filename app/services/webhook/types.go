@@ -74,7 +74,7 @@ type RepositoryInfo struct {
 }
 
 // repositoryInfoFrom gets the RespositoryInfo from a types.Repository.
-func repositoryInfoFrom(repo *types.Repository, urlProvider *url.Provider) RepositoryInfo {
+func repositoryInfoFrom(repo *types.Repository, urlProvider url.Provider) RepositoryInfo {
 	return RepositoryInfo{
 		ID:            repo.ID,
 		Path:          repo.Path,

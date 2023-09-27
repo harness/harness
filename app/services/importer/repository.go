@@ -52,7 +52,7 @@ var (
 
 type Repository struct {
 	defaultBranch string
-	urlProvider   *gitnessurl.Provider
+	urlProvider   gitnessurl.Provider
 	git           gitrpc.Interface
 	db            *sqlx.DB
 	repoStore     store.RepoStore

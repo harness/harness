@@ -129,7 +129,7 @@ type Manager struct {
 	Config      *types.Config
 	FileService file.Service
 	Pipelines   store.PipelineStore
-	urlProvider *urlprovider.Provider
+	urlProvider urlprovider.Provider
 	Checks      store.CheckStore
 	// Converter  store.ConvertService
 	SSEStreamer sse.Streamer
@@ -152,7 +152,7 @@ func New(
 	config *types.Config,
 	executionStore store.ExecutionStore,
 	pipelineStore store.PipelineStore,
-	urlProvider *urlprovider.Provider,
+	urlProvider urlprovider.Provider,
 	sseStreamer sse.Streamer,
 	fileService file.Service,
 	logStore store.LogStore,

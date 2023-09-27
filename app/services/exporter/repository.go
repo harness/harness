@@ -48,7 +48,7 @@ var (
 )
 
 type Repository struct {
-	urlProvider *gitnessurl.Provider
+	urlProvider gitnessurl.Provider
 	git         gitrpc.Interface
 	repoStore   store.RepoStore
 	scheduler   *job.Scheduler

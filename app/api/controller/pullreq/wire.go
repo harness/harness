@@ -34,7 +34,7 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(db *sqlx.DB, urlProvider *url.Provider, authorizer authz.Authorizer,
+func ProvideController(db *sqlx.DB, urlProvider url.Provider, authorizer authz.Authorizer,
 	pullReqStore store.PullReqStore, pullReqActivityStore store.PullReqActivityStore,
 	codeCommentsView store.CodeCommentView,
 	pullReqReviewStore store.PullReqReviewStore, pullReqReviewerStore store.PullReqReviewerStore,

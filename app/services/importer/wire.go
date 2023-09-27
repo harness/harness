@@ -33,7 +33,7 @@ var WireSet = wire.NewSet(
 
 func ProvideRepoImporter(
 	config *types.Config,
-	urlProvider *url.Provider,
+	urlProvider url.Provider,
 	git gitrpc.Interface,
 	db *sqlx.DB,
 	repoStore store.RepoStore,

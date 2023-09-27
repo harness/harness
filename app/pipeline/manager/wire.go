@@ -38,7 +38,7 @@ func ProvideExecutionManager(
 	config *types.Config,
 	executionStore store.ExecutionStore,
 	pipelineStore store.PipelineStore,
-	urlProvider *url.Provider,
+	urlProvider url.Provider,
 	sseStreamer sse.Streamer,
 	fileService file.Service,
 	logStore store.LogStore,

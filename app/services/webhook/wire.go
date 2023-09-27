@@ -37,7 +37,7 @@ func ProvideService(ctx context.Context, config Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
-	repoStore store.RepoStore, pullreqStore store.PullReqStore, urlProvider *url.Provider,
+	repoStore store.RepoStore, pullreqStore store.PullReqStore, urlProvider url.Provider,
 	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface, encrypter encrypt.Encrypter) (*Service, error) {
 	return NewService(ctx, config, gitReaderFactory, prReaderFactory,
 		webhookStore, webhookExecutionStore, repoStore, pullreqStore,

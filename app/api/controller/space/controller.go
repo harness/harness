@@ -38,7 +38,7 @@ type Controller struct {
 	nestedSpacesEnabled bool
 
 	db              *sqlx.DB
-	urlProvider     *url.Provider
+	urlProvider     url.Provider
 	sseStreamer     sse.Streamer
 	uidCheck        check.PathUID
 	authorizer      authz.Authorizer
@@ -56,7 +56,7 @@ type Controller struct {
 	exporter        *exporter.Repository
 }
 
-func NewController(config *types.Config, db *sqlx.DB, urlProvider *url.Provider,
+func NewController(config *types.Config, db *sqlx.DB, urlProvider url.Provider,
 	sseStreamer sse.Streamer, uidCheck check.PathUID, authorizer authz.Authorizer,
 	spacePathStore store.SpacePathStore, pipelineStore store.PipelineStore, secretStore store.SecretStore,
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,

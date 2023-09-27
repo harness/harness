@@ -67,6 +67,7 @@ func (c *Config) Validate() error {
 		return errors.New("config is required")
 	}
 	if c.Port < 0 {
+		//nolint: stylecheck // that's the name of the field
 		return errors.New("Port is required")
 	}
 	if c.GitRoot == "" {

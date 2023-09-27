@@ -58,7 +58,7 @@ func ProvideRouter(
 	api APIHandler,
 	git GitHandler,
 	web WebHandler,
-	urlProvider *url.Provider,
+	urlProvider url.Provider,
 ) *Router {
 	// use url provider as it has the latest data.
 	gitHostname := urlProvider.GetGITHostname()
@@ -76,7 +76,7 @@ func ProvideRouter(
 
 func ProvideGitHandler(
 	config *types.Config,
-	urlProvider *url.Provider,
+	urlProvider url.Provider,
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer,

@@ -49,7 +49,7 @@ type Service struct {
 	codeCommentMigrator *codecomments.Migrator
 	fileViewStore       store.PullReqFileViewStore
 	sseStreamer         sse.Streamer
-	urlProvider         *url.Provider
+	urlProvider         url.Provider
 
 	cancelMutex        sync.Mutex
 	cancelMergeability map[string]context.CancelFunc
@@ -73,7 +73,7 @@ func New(ctx context.Context,
 	codeCommentMigrator *codecomments.Migrator,
 	fileViewStore store.PullReqFileViewStore,
 	bus pubsub.PubSub,
-	urlProvider *url.Provider,
+	urlProvider url.Provider,
 	sseStreamer sse.Streamer,
 ) (*Service, error) {
 	service := &Service{
@@ -255,7 +255,7 @@ func New(ctx context.Context,
 // createSystemRPCWriteParams creates base write parameters for gitrpc write operations.
 func createSystemRPCWriteParams(
 	ctx context.Context,
-	urlProvider *url.Provider,
+	urlProvider url.Provider,
 	repoID int64,
 	repoGITUID string,
 ) (gitrpc.WriteParams, error) {

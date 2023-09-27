@@ -39,7 +39,7 @@ import (
 
 type Controller struct {
 	db                  *sqlx.DB
-	urlProvider         *url.Provider
+	urlProvider         url.Provider
 	authorizer          authz.Authorizer
 	pullreqStore        store.PullReqStore
 	activityStore       store.PullReqActivityStore
@@ -59,7 +59,7 @@ type Controller struct {
 
 func NewController(
 	db *sqlx.DB,
-	urlProvider *url.Provider,
+	urlProvider url.Provider,
 	authorizer authz.Authorizer,
 	pullreqStore store.PullReqStore,
 	pullreqActivityStore store.PullReqActivityStore,

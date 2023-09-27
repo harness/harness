@@ -51,7 +51,7 @@ func ProvideService(ctx context.Context,
 	codeCommentMigrator *codecomments.Migrator,
 	fileViewStore store.PullReqFileViewStore,
 	pubsub pubsub.PubSub,
-	urlProvider *url.Provider,
+	urlProvider url.Provider,
 	sseStreamer sse.Streamer,
 ) (*Service, error) {
 	return New(ctx, config, gitReaderFactory, pullReqEvFactory, pullReqEvReporter, gitRPCClient,

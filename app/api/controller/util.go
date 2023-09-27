@@ -32,7 +32,7 @@ import (
 // IMPORTANT: session & repo are assumed to be not nil!
 // TODO: this is duplicate function from repo controller, we need to see where this
 // function will be best fit.
-func CreateRPCWriteParams(ctx context.Context, urlProvider *url.Provider,
+func CreateRPCWriteParams(ctx context.Context, urlProvider url.Provider,
 	session *auth.Session, repo *types.Repository) (gitrpc.WriteParams, error) {
 	// generate envars (add everything githook CLI needs for execution)
 	envVars, err := githook.GenerateEnvironmentVariables(

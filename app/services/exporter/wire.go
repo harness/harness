@@ -30,7 +30,7 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideSpaceExporter(
-	urlProvider *url.Provider,
+	urlProvider url.Provider,
 	git gitrpc.Interface,
 	repoStore store.RepoStore,
 	scheduler *job.Scheduler,
