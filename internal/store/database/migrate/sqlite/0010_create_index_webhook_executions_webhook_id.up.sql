@@ -1,2 +1,0 @@
-CREATE INDEX webhook_executions_webhook_id
-ON webhook_executions(webhook_execution_webhook_id);

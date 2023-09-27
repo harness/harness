@@ -1,2 +1,0 @@
-CREATE INDEX principals_sa_parent_id_sa_parent_type
-ON principals(principal_sa_parent_id, principal_sa_parent_type);

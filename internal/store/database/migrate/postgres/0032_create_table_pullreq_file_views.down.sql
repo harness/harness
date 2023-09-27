@@ -1,1 +1,0 @@
-DROP TABLE pullreq_file_views;

@@ -1,2 +1,0 @@
-CREATE UNIQUE INDEX pullreq_activities_pullreq_id_order_sub_order
-ON pullreq_activities(pullreq_activity_pullreq_id, pullreq_activity_order, pullreq_activity_sub_order);

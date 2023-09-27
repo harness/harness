@@ -1,8 +1,0 @@
-ALTER TABLE pullreq_activities DROP COLUMN pullreq_activity_outdated;
-ALTER TABLE pullreq_activities DROP COLUMN pullreq_activity_code_comment_merge_base_sha;
-ALTER TABLE pullreq_activities DROP COLUMN pullreq_activity_code_comment_source_sha;
-ALTER TABLE pullreq_activities DROP COLUMN pullreq_activity_code_comment_path;
-ALTER TABLE pullreq_activities DROP COLUMN pullreq_activity_code_comment_line_new;
-ALTER TABLE pullreq_activities DROP COLUMN pullreq_activity_code_comment_span_new;
-ALTER TABLE pullreq_activities DROP COLUMN pullreq_activity_code_comment_line_old;
-ALTER TABLE pullreq_activities DROP COLUMN pullreq_activity_code_comment_span_old;

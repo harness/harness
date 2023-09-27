@@ -1,2 +1,0 @@
-ALTER TABLE plugins ADD COLUMN plugin_type TEXT NOT NULL;
-ALTER TABLE plugins ADD COLUMN plugin_version TEXT NOT NULL;
