@@ -5,7 +5,7 @@ import { Layout, Text, FormInput, Button, ButtonVariation, ButtonSize } from '@h
 import { FontVariation } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 
-import css from './MultiList.tsx.module.scss'
+import css from './MultiList.module.scss'
 
 interface MultiListConnectedProps extends MultiListProps {
   formik?: FormikContextType<any>
