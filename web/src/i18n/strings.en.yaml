@@ -111,7 +111,7 @@ repos:
 createRepoModal:
   branchLabel: 'Your repository will be initialized with a '
   branch: ' branch.'
-  publicLabel: Anyone with access to the Gitness environment can clone this repo
+  publicLabel: Anyone with access to the Gitness environment can clone this repo.
   privateLabel: You choose who can see and commit to this repository.
 validation:
   repoNamePatternIsNotValid: "Name can only contain alphanumerics, '-', '_', '.', and '$'"
@@ -824,3 +824,6 @@ generateHelptext: Let Gitness build your Pipeline for you.
 enterAddress: Enter Address
 enterGitlabPlaceholder: https://gitlab.com/
 enterGithubPlaceholder: https://api.github.com/
+changeRepoVis: Change repository visibility
+changeRepoVisContent: Are you sure you want to make this repository {repoVis}? {repoText}
+repoVisibility: Repository Visibility

@@ -78,12 +78,24 @@
 
 .label {
   padding-top: var(--spacing-xsmall);
-  width: 120px;
+  width: 220px;
   padding-right: var(--spacing-medium);
 }
 
 .descText {
   align-self: center !important;
+}
+
+.radioContainer {
+  :global(.RadioButton--radio) {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
 }
 
 .content {
@@ -93,6 +105,25 @@
 .deleteContainer {
   display: flex;
   justify-content: space-between;
+}
+
+.text {
+  text-transform: capitalize;
+}
+
+.dividerContainer {
+  opacity: 0.2;
+  height: 1px;
+  color: var(--grey-100);
+  margin: 20px 0;
+}
+
+.dialogContainer {
+  padding-bottom: 27px !important;
+
+  :global(.bp3-dialog-header) {
+    margin-bottom: var(--spacing-medium) !important;
+  }
 }
 
 .saveBtn {
@@ -106,6 +137,7 @@
 .editContainer {
   :global(.TextInput--main) {
     margin-bottom: unset !important;
+    font-size: 20px;
   }
 }
 

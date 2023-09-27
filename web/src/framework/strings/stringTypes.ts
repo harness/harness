@@ -57,6 +57,8 @@ export interface StringsMap {
   cancel: string
   changePassword: string
   changePasswordSuccesfully: string
+  changeRepoVis: string
+  changeRepoVisContent: string
   changeRole: string
   changedSinceLastView: string
   changes: string
@@ -572,6 +574,7 @@ export interface StringsMap {
   repoEmptyMarkdownClonePush: string
   repoEmptyMarkdownExisting: string
   repoUpdate: string
+  repoVisibility: string
   'repos.activities': string
   'repos.data': string
   'repos.enterBranchName': string
