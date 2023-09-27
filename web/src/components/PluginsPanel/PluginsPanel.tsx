@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useState } from 'react'
-import { Formik } from 'formik'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { Formik, FormikContextType } from 'formik'
 import { parse } from 'yaml'
 import { capitalize, get, has, omit, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
@@ -36,6 +36,7 @@ import {
 } from '@harnessio/uicore'
 import type { TypesPlugin } from 'services/code'
 import { useStrings } from 'framework/strings'
+import { MultiList } from 'components/MultiList/MultiList'
 
 import css from './PluginsPanel.module.scss'
 
@@ -47,8 +48,16 @@ export interface PluginForm {
   [key: string]: string | boolean | object
 }
 
+enum ValueType {
+  STRING = 'string',
+  BOOLEAN = 'boolean',
+  NUMBER = 'number',
+  ARRAY = 'array',
+  OBJECT = 'object'
+}
+
 interface PluginInput {
-  type: 'string'
+  type: ValueType
   description?: string
   default?: string
   options?: { isExtended?: boolean }
@@ -106,14 +115,22 @@ const RunStep: TypesPlugin = {
   uid: 'run'
 }
 
+const DockerTemp: TypesPlugin = {
+  uid: 'docker',
+  description: 'The Docker plugin can be used to build and publish images to the Docker\nregistry.\n',
+  logo: '',
+  spec: '{\n  "kind": "plugin",\n  "type": "step",\n  "name": "docker",\n  "spec": {\n    "name": "Docker",\n    "description": "The Docker plugin can be used to build and publish images to the Docker\\nregistry.\\n",\n    "step": {\n      "type": "script",\n      "spec": {\n        "image": "plugins/docker",\n        "envs": {\n          "PLUGIN_ADD_HOST": "${{ inputs.add_host }}",\n          "PLUGIN_AUTO_TAG": "${{ inputs.auto_tag }}",\n          "PLUGIN_AUTO_TAG_SUFFIX": "${{ inputs.auto_tag_suffix }}",\n          "PLUGIN_BIP": "${{ inputs.bip }}",\n          "PLUGIN_BUILD_ARGS": "${{ inputs.build_args }}",\n          "PLUGIN_BUILD_ARGS_FROM_ENV": "${{ inputs.build_args_from_env }}",\n          "PLUGIN_CACHE_FROM": "${{ inputs.cache_from }}",\n          "PLUGIN_COMPRESS": "${{ inputs.compress }}",\n          "PLUGIN_CONTEXT": "${{ inputs.context }}",\n          "PLUGIN_CUSTOM_DNS": "${{ inputs.custom_dns }}",\n          "PLUGIN_CUSTOM_DNS_SEARCH": "${{ inputs.custom_dns_search }}",\n          "PLUGIN_CUSTOM_LABELS": "${{ inputs.custom_labels }}",\n          "PLUGIN_DAEMON_OFF": "${{ inputs.daemon_off }}",\n          "PLUGIN_DEBUG": "${{ inputs.debug }}",\n          "PLUGIN_DOCKERFILE": "${{ inputs.dockerfile }}",\n          "PLUGIN_DRY_RUN": "${{ inputs.dry_run }}",\n          "PLUGIN_EMAIL": "${{ inputs.email }}",\n          "PLUGIN_EXPERIMENTAL": "${{ inputs.experimental }}",\n          "PLUGIN_FORCE_TAG": "${{ inputs.force_tag }}",\n          "PLUGIN_INSECURE": "${{ inputs.insecure }}",\n          "PLUGIN_IPV6": "${{ inputs.ipv6 }}",\n          "PLUGIN_LABEL_SCHEMA": "${{ inputs.label_schema }}",\n          "PLUGIN_LAUNCH_DEBUG": "${{ inputs.launch_debug }}",\n          "PLUGIN_MIRROR": "${{ inputs.mirror }}",\n          "PLUGIN_MTU": "${{ inputs.mtu }}",\n          "PLUGIN_NO_CACHE": "${{ inputs.no_cache }}",\n          "PLUGIN_PASSWORD": "${{ inputs.password }}",\n          "PLUGIN_PLATFORM": "${{ inputs.platform }}",\n          "PLUGIN_PULL_IMAGE": "${{ inputs.pull_image }}",\n          "PLUGIN_PURGE": "${{ inputs.purge }}",\n          "PLUGIN_REGISTRY": "${{ inputs.registry }}",\n          "PLUGIN_REPO": "${{ inputs.repo }}",\n          "PLUGIN_SECRET": "${{ inputs.secret }}",\n          "PLUGIN_SQUASH": "${{ inputs.squash }}",\n          "PLUGIN_SSH-AGENT-KEY": "${{ inputs.ssh-agent-key }}",\n          "PLUGIN_STORAGE_DRIVER": "${{ inputs.storage_driver }}",\n          "PLUGIN_STORAGE_PATH": "${{ inputs.storage_path }}",\n          "PLUGIN_TAGS": "${{ inputs.tags }}",\n          "PLUGIN_TARGET": "${{ inputs.target }}",\n          "PLUGIN_USERNAME": "${{ inputs.username }}"\n        }\n      }\n    },\n    "inputs": {\n      "add_host": {\n        "type": "string",\n        "description": "additional host:IP mapping"\n      },\n      "auto_tag": {\n        "type": "boolean",\n        "description": "generate tag names automatically based on git branch and git tag"\n      },\n      "auto_tag_suffix": {\n        "type": "string",\n        "description": "generate tag names with this suffix"\n      },\n      "bip": {\n        "type": "boolean",\n        "description": "use for pass bridge ip"\n      },\n      "build_args": {\n        "type": "string",\n        "description": "pass custom arguments to docker build"\n      },\n      "build_args_from_env": {\n        "type": "string",\n        "description": "pass the envvars as custom arguments to docker build"\n      },\n      "cache_from": {\n        "type": "string",\n        "description": "images to consider as cache sources"\n      },\n      "compress": {\n        "type": "boolean",\n        "description": "compress the build context using gzip"\n      },\n      "context": {\n        "type": "string",\n        "description": "the context path to use, defaults to root of the git repo"\n      },\n      "custom_dns": {\n        "type": "string",\n        "description": "set custom dns servers for the container"\n      },\n      "custom_dns_search": {\n        "type": "string",\n        "description": "docker daemon dns search domains"\n      },\n      "custom_labels": {\n        "type": "string",\n        "description": "additional k=v labels"\n      },\n      "daemon_off": {\n        "type": "boolean",\n        "description": "don\'t start the docker daemon"\n      },\n      "debug": {\n        "type": "boolean",\n        "description": "launch the docker daemon in verbose debug mode"\n      },\n      "dockerfile": {\n        "type": "string",\n        "description": "dockerfile to be used",\n        "default": "Dockerfile"\n      },\n      "dry_run": {\n        "type": "string",\n        "description": "boolean if the docker image should not be pushed at the end"\n      },\n      "email": {\n        "type": "string",\n        "description": "docker email"\n      },\n      "experimental": {\n        "type": "boolean",\n        "description": "docker daemon Experimental mode"\n      },\n      "force_tag": {\n        "type": "boolean",\n        "description": "replace existing matched image tags"\n      },\n      "insecure": {\n        "type": "boolean",\n        "description": "enable insecure communication to this registry"\n      },\n      "ipv6": {\n        "type": "string",\n        "description": "docker daemon IPv6 networking"\n      },\n      "label_schema": {\n        "type": "string",\n        "description": "label-schema labels"\n      },\n      "launch_debug": {\n        "type": "boolean",\n        "description": "launch the docker daemon in verbose debug mode"\n      },\n      "mirror": {\n        "type": "string",\n        "description": "use a mirror registry instead of pulling images directly from the central Hub"\n      },\n      "mtu": {\n        "type": "string",\n        "description": "docker daemon custom mtu setting"\n      },\n      "no_cache": {\n        "type": "string",\n        "description": "do not use cached intermediate containers"\n      },\n      "password": {\n        "type": "string",\n        "description": "authenticates with this password",\n        "mask": true\n      },\n      "platform": {\n        "type": "string",\n        "description": "specify the target platform for the build output, (for example, linux/amd64, linux/arm64, or darwin/amd64)."\n      },\n      "pull_image": {\n        "type": "boolean",\n        "description": "force pull base image at build time"\n      },\n      "purge": {\n        "type": "boolean",\n        "description": "boolean if cleanup of the docker image should be done at the end",\n        "default": "true"\n      },\n      "registry": {\n        "type": "string",\n        "description": "authenticates to this registry"\n      },\n      "repo": {\n        "type": "string",\n        "description": "repository name for the image"\n      },\n      "secret": {\n        "type": "string",\n        "description": "Use buildkit to pass secrets to the dockerbuild. Eg `id=mysecret,src=secret-file`"\n      },\n      "squash": {\n        "type": "boolean",\n        "description": "squash the layers at build time"\n      },\n      "ssh-agent-key": {\n        "type": "string",\n        "description": "private key to use for ssh passthrough, see https://docs.docker.com/engine/reference/commandline/buildx_build/#ssh\\n",\n        "mask": true\n      },\n      "storage_driver": {\n        "type": "string",\n        "description": "supports `aufs`, `overlay` or `vfs` drivers"\n      },\n      "storage_path": {\n        "type": "string",\n        "description": "docker daemon storage path"\n      },\n      "tags": {\n        "type": "array",\n        "description": "repository tag(s) for the image"\n      },\n      "target": {\n        "type": "string",\n        "description": "the build target to use, must be defined in the docker file"\n      },\n      "username": {\n        "type": "string",\n        "description": "authenticates with this username"\n      }\n    }\n  }\n}\n'
+}
+
 export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.Element => {
   const { getString } = useStrings()
-  const [category, setCategory] = useState<PluginCategory>()
-  const [panelView, setPanelView] = useState<PluginPanelView>(PluginPanelView.Category)
-  const [plugin, setPlugin] = useState<TypesPlugin>()
+  const [category, setCategory] = useState<PluginCategory>(PluginCategory.Drone)
+  const [panelView, setPanelView] = useState<PluginPanelView>(PluginPanelView.Configuration)
+  const [plugin, setPlugin] = useState<TypesPlugin>(DockerTemp)
   const [plugins, setPlugins] = useState<TypesPlugin[]>([])
   const [query, setQuery] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
+  const formikRef = useRef<FormikContextType<PluginForm>>()
 
   const PluginCategories: PluginCategoryInterface[] = [
     {
@@ -315,18 +332,45 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
 
   const renderPluginFormField = ({ name, properties }: { name: string; properties: PluginInput }): JSX.Element => {
     const { type, options } = properties
-    const { isExtended } = options || {}
-    const WrapperComponent = isExtended ? FormInput.TextArea : FormInput.Text
-    return type === 'string' ? (
-      <WrapperComponent
-        name={name}
-        label={generateLabelForPluginField({ name, properties })}
-        style={{ width: '100%' }}
-        key={name}
-      />
-    ) : (
-      <></>
-    )
+
+    switch (type) {
+      case ValueType.STRING: {
+        const { isExtended } = options || {}
+        const WrapperComponent = isExtended ? FormInput.TextArea : FormInput.Text
+        return (
+          <WrapperComponent
+            name={name}
+            label={generateLabelForPluginField({ name, properties })}
+            style={{ width: '100%' }}
+            key={name}
+          />
+        )
+      }
+      case ValueType.BOOLEAN:
+        return (
+          <Container className={css.toggle}>
+            <FormInput.Toggle
+              name={name}
+              label={generateLabelForPluginField({ name, properties }) as string}
+              style={{ width: '100%' }}
+              key={name}
+            />
+          </Container>
+        )
+      case ValueType.ARRAY:
+        return (
+          <Container margin={{ bottom: 'large' }}>
+            <MultiList
+              name={name}
+              label={generateLabelForPluginField({ name, properties }) as string}
+              formik={formikRef.current}
+            />
+          </Container>
+        )
+
+      default:
+        return <></>
+    }
   }
 
   const constructPayloadForYAMLInsertion = (pluginFormData: PluginForm, pluginMetadata?: TypesPlugin): PluginForm => {
@@ -403,7 +447,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
             name="arrow-left"
             size={18}
             onClick={() => {
-              setPlugin(undefined)
+              // setPlugin(undefined)
               if (category === PluginCategory.Drone) {
                 setPanelView(PluginPanelView.Listing)
               } else if (category === PluginCategory.Harness) {
@@ -423,150 +467,161 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
             initialValues={getInitialFormValues(pluginInputs)}
             onSubmit={(formData: PluginForm) => {
               onPluginAddUpdate?.(false, constructPayloadForYAMLInsertion(formData, plugin))
-            }}>
-            <FormikForm height="100%" flex={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <Layout.Vertical flex={{ alignItems: 'flex-start' }} height="inherit" spacing="medium">
-                <Layout.Vertical
-                  width="100%"
-                  className={css.formFields}
-                  spacing="xsmall"
-                  flex={{ justifyContent: 'space-between' }}>
-                  {category === PluginCategory.Harness ? (
-                    <Layout.Vertical width="inherit">
-                      <FormInput.Text name={'name'} label={getString('name')} style={{ width: '100%' }} key={'name'} />
-                      <FormInput.TextArea
-                        name={'script'}
-                        label={getString('pluginsPanel.run.script')}
-                        style={{ width: '100%' }}
-                        key={'script'}
-                      />
-                      <FormInput.Select
-                        name={'shell'}
-                        label={getString('pluginsPanel.run.shell')}
-                        style={{ width: '100%' }}
-                        key={'shell'}
-                        items={[
-                          { label: getString('pluginsPanel.run.sh'), value: 'sh' },
-                          { label: getString('pluginsPanel.run.bash'), value: 'bash' },
-                          { label: getString('pluginsPanel.run.powershell'), value: 'powershell' },
-                          { label: getString('pluginsPanel.run.pwsh'), value: 'pwsh' }
-                        ]}
-                      />
-                      <Accordion activeId="">
-                        <Accordion.Panel
-                          id="container"
-                          summary="Container"
-                          details={
-                            <Layout.Vertical className={css.indent}>
-                              <FormInput.Text
-                                name={'container.image'}
-                                label={getString('pluginsPanel.run.image')}
-                                style={{ width: '100%' }}
-                                key={'container.image'}
-                              />
-                              <FormInput.Select
-                                name={'container.pull'}
-                                label={getString('pluginsPanel.run.pull')}
-                                style={{ width: '100%' }}
-                                key={'container.pull'}
-                                items={[
-                                  { label: getString('pluginsPanel.run.always'), value: 'always' },
-                                  { label: getString('pluginsPanel.run.never'), value: 'never' },
-                                  { label: getString('pluginsPanel.run.ifNotExists'), value: 'if-not-exists' }
-                                ]}
-                              />
-                              <FormInput.Text
-                                name={'container.entrypoint'}
-                                label={getString('pluginsPanel.run.entrypoint')}
-                                style={{ width: '100%' }}
-                                key={'container.entrypoint'}
-                              />
-                              <FormInput.Text
-                                name={'container.network'}
-                                label={getString('pluginsPanel.run.network')}
-                                style={{ width: '100%' }}
-                                key={'container.network'}
-                              />
-                              <FormInput.Text
-                                name={'container.networkMode'}
-                                label={getString('pluginsPanel.run.networkMode')}
-                                style={{ width: '100%' }}
-                                key={'container.networkMode'}
-                              />
-                              <FormInput.Toggle
-                                name={'container.privileged'}
-                                label={getString('pluginsPanel.run.privileged')}
-                                style={{ width: '100%' }}
-                                key={'container.privileged'}
-                              />
-                              <FormInput.Text
-                                name={'container.user'}
-                                label={getString('user')}
-                                style={{ width: '100%' }}
-                                key={'container.user'}
-                              />
-                              <Accordion activeId="">
-                                <Accordion.Panel
-                                  id="container.credentials"
-                                  summary={getString('pluginsPanel.run.credentials')}
-                                  details={
-                                    <Layout.Vertical className={css.indent}>
-                                      <FormInput.Text
-                                        name={'container.credentials.username'}
-                                        label={getString('pluginsPanel.run.username')}
-                                        style={{ width: '100%' }}
-                                        key={'container.credentials.username'}
-                                      />
-                                      <FormInput.Text
-                                        name={'container.credentials.password'}
-                                        label={getString('pluginsPanel.run.password')}
-                                        style={{ width: '100%' }}
-                                        key={'container.credentials.password'}
-                                      />
-                                    </Layout.Vertical>
-                                  }
-                                />
-                              </Accordion>
-                            </Layout.Vertical>
-                          }
-                        />
-                        <Accordion.Panel
-                          id="mount"
-                          summary="Mount"
-                          details={
-                            <Layout.Vertical className={css.indent}>
-                              <FormInput.Text
-                                name={'mount.name'}
-                                label={getString('name')}
-                                style={{ width: '100%' }}
-                                key={'mount.name'}
-                              />
-                              <FormInput.Text
-                                name={'mount.path'}
-                                label={getString('pluginsPanel.run.path')}
-                                style={{ width: '100%' }}
-                                key={'mount.path'}
-                              />
-                            </Layout.Vertical>
-                          }
-                        />
-                      </Accordion>
+            }}
+            validate={(formData: PluginForm) => console.log(formData)}>
+            {formik => {
+              formikRef.current = formik
+              return (
+                <FormikForm height="100%" flex={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <Layout.Vertical flex={{ alignItems: 'flex-start' }} height="inherit" spacing="medium">
+                    <Layout.Vertical
+                      width="100%"
+                      className={css.formFields}
+                      spacing="xsmall"
+                      flex={{ justifyContent: 'space-between' }}>
+                      {category === PluginCategory.Harness ? (
+                        <Layout.Vertical width="inherit">
+                          <FormInput.Text
+                            name={'name'}
+                            label={getString('name')}
+                            style={{ width: '100%' }}
+                            key={'name'}
+                          />
+                          <FormInput.TextArea
+                            name={'script'}
+                            label={getString('pluginsPanel.run.script')}
+                            style={{ width: '100%' }}
+                            key={'script'}
+                          />
+                          <FormInput.Select
+                            name={'shell'}
+                            label={getString('pluginsPanel.run.shell')}
+                            style={{ width: '100%' }}
+                            key={'shell'}
+                            items={[
+                              { label: getString('pluginsPanel.run.sh'), value: 'sh' },
+                              { label: getString('pluginsPanel.run.bash'), value: 'bash' },
+                              { label: getString('pluginsPanel.run.powershell'), value: 'powershell' },
+                              { label: getString('pluginsPanel.run.pwsh'), value: 'pwsh' }
+                            ]}
+                          />
+                          <Accordion activeId="">
+                            <Accordion.Panel
+                              id="container"
+                              summary="Container"
+                              details={
+                                <Layout.Vertical className={css.indent}>
+                                  <FormInput.Text
+                                    name={'container.image'}
+                                    label={getString('pluginsPanel.run.image')}
+                                    style={{ width: '100%' }}
+                                    key={'container.image'}
+                                  />
+                                  <FormInput.Select
+                                    name={'container.pull'}
+                                    label={getString('pluginsPanel.run.pull')}
+                                    style={{ width: '100%' }}
+                                    key={'container.pull'}
+                                    items={[
+                                      { label: getString('pluginsPanel.run.always'), value: 'always' },
+                                      { label: getString('pluginsPanel.run.never'), value: 'never' },
+                                      { label: getString('pluginsPanel.run.ifNotExists'), value: 'if-not-exists' }
+                                    ]}
+                                  />
+                                  <FormInput.Text
+                                    name={'container.entrypoint'}
+                                    label={getString('pluginsPanel.run.entrypoint')}
+                                    style={{ width: '100%' }}
+                                    key={'container.entrypoint'}
+                                  />
+                                  <FormInput.Text
+                                    name={'container.network'}
+                                    label={getString('pluginsPanel.run.network')}
+                                    style={{ width: '100%' }}
+                                    key={'container.network'}
+                                  />
+                                  <FormInput.Text
+                                    name={'container.networkMode'}
+                                    label={getString('pluginsPanel.run.networkMode')}
+                                    style={{ width: '100%' }}
+                                    key={'container.networkMode'}
+                                  />
+                                  <FormInput.Toggle
+                                    name={'container.privileged'}
+                                    label={getString('pluginsPanel.run.privileged')}
+                                    style={{ width: '100%' }}
+                                    key={'container.privileged'}
+                                  />
+                                  <FormInput.Text
+                                    name={'container.user'}
+                                    label={getString('user')}
+                                    style={{ width: '100%' }}
+                                    key={'container.user'}
+                                  />
+                                  <Accordion activeId="">
+                                    <Accordion.Panel
+                                      id="container.credentials"
+                                      summary={getString('pluginsPanel.run.credentials')}
+                                      details={
+                                        <Layout.Vertical className={css.indent}>
+                                          <FormInput.Text
+                                            name={'container.credentials.username'}
+                                            label={getString('pluginsPanel.run.username')}
+                                            style={{ width: '100%' }}
+                                            key={'container.credentials.username'}
+                                          />
+                                          <FormInput.Text
+                                            name={'container.credentials.password'}
+                                            label={getString('pluginsPanel.run.password')}
+                                            style={{ width: '100%' }}
+                                            key={'container.credentials.password'}
+                                          />
+                                        </Layout.Vertical>
+                                      }
+                                    />
+                                  </Accordion>
+                                </Layout.Vertical>
+                              }
+                            />
+                            <Accordion.Panel
+                              id="mount"
+                              summary="Mount"
+                              details={
+                                <Layout.Vertical className={css.indent}>
+                                  <FormInput.Text
+                                    name={'mount.name'}
+                                    label={getString('name')}
+                                    style={{ width: '100%' }}
+                                    key={'mount.name'}
+                                  />
+                                  <FormInput.Text
+                                    name={'mount.path'}
+                                    label={getString('pluginsPanel.run.path')}
+                                    style={{ width: '100%' }}
+                                    key={'mount.path'}
+                                  />
+                                </Layout.Vertical>
+                              }
+                            />
+                          </Accordion>
+                        </Layout.Vertical>
+                      ) : Object.keys(pluginInputs).length > 0 ? (
+                        <Layout.Vertical width="inherit">
+                          {Object.keys(allPluginInputs).map((field: string) => {
+                            return renderPluginFormField({ name: field, properties: get(allPluginInputs, field) })
+                          })}
+                        </Layout.Vertical>
+                      ) : (
+                        <></>
+                      )}
                     </Layout.Vertical>
-                  ) : Object.keys(pluginInputs).length > 0 ? (
-                    <Layout.Vertical width="inherit">
-                      {Object.keys(allPluginInputs).map((field: string) => {
-                        return renderPluginFormField({ name: field, properties: get(allPluginInputs, field) })
-                      })}
-                    </Layout.Vertical>
-                  ) : (
-                    <></>
-                  )}
-                </Layout.Vertical>
-                <Container margin={{ top: 'small', bottom: 'small' }}>
-                  <Button variation={ButtonVariation.PRIMARY} text={getString('addLabel')} type="submit" />
-                </Container>
-              </Layout.Vertical>
-            </FormikForm>
+                    <Container margin={{ top: 'small', bottom: 'small' }}>
+                      <Button variation={ButtonVariation.PRIMARY} text={getString('addLabel')} type="submit" />
+                    </Container>
+                  </Layout.Vertical>
+                </FormikForm>
+              )
+            }}
           </Formik>
         </Container>
       </Layout.Vertical>

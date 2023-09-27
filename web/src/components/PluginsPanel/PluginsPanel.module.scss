@@ -68,6 +68,10 @@
 .formFields {
   height: calc(100% - var(--spacing-xlarge));
   overflow-y: scroll;
+
+  .toggle {
+    margin-left: var(--spacing-1) !important;
+  }
 }
 
 .search {
