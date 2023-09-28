@@ -27,6 +27,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -55,7 +56,7 @@ func Handler() http.HandlerFunc {
 		// we need to always load the index.html file
 		// in the root of the project, unless the path
 		// points to a file with an extension (css, js, etc)
-		if filepath.Ext(r.URL.Path) == "" {
+		if filepath.Ext(r.URL.Path) == "" || strings.Contains(r.URL.Path, "...") {
 			// HACK: alter the path to point to the
 			// root of the project.
 			r.URL.Path = "/"
