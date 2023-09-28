@@ -29,11 +29,12 @@ func TestBackfilURLsPortBind(t *testing.T) {
 	err := backfillURLs(config)
 	require.NoError(t, err)
 
+	require.Equal(t, "http://localhost:1234", config.URL.Internal)
+	require.Equal(t, "http://host.docker.internal:1234", config.URL.Container)
+
 	require.Equal(t, "http://localhost:1234/api", config.URL.API)
 	require.Equal(t, "http://localhost:1234/git", config.URL.Git)
 	require.Equal(t, "http://localhost:1234", config.URL.UI)
-	require.Equal(t, "http://localhost:1234/api", config.URL.APIInternal)
-	require.Equal(t, "http://host.docker.internal:1234/git", config.URL.GitContainer)
 }
 
 func TestBackfilURLsBase(t *testing.T) {
@@ -44,11 +45,12 @@ func TestBackfilURLsBase(t *testing.T) {
 	err := backfillURLs(config)
 	require.NoError(t, err)
 
+	require.Equal(t, "http://localhost:1234", config.URL.Internal)
+	require.Equal(t, "http://host.docker.internal:1234", config.URL.Container)
+
 	require.Equal(t, "https://xyz:4321/test/api", config.URL.API)
 	require.Equal(t, "https://xyz:4321/test/git", config.URL.Git)
 	require.Equal(t, "https://xyz:4321/test", config.URL.UI)
-	require.Equal(t, "http://localhost:1234/api", config.URL.APIInternal)
-	require.Equal(t, "http://host.docker.internal:1234/git", config.URL.GitContainer)
 }
 
 func TestBackfilURLsCustom(t *testing.T) {
@@ -56,17 +58,18 @@ func TestBackfilURLsCustom(t *testing.T) {
 	config.Server.HTTP.Port = 1234
 	config.URL.Base = "https://xyz:4321/test"
 	config.URL.API = "http://API:1111/API/p"
-	config.URL.APIInternal = "http://APIInternal:1111/APIInternal/p"
+	config.URL.Internal = "http://APIInternal:1111/APIInternal/p"
 	config.URL.Git = "http://Git:1111/Git/p"
-	config.URL.GitContainer = "http://GitContainer:1111/GitContainer/p"
+	config.URL.Container = "http://GitContainer:1111/GitContainer/p"
 	config.URL.UI = "http://UI:1111/UI/p"
 
 	err := backfillURLs(config)
 	require.NoError(t, err)
 
+	require.Equal(t, "http://APIInternal:1111/APIInternal/p", config.URL.Internal)
+	require.Equal(t, "http://GitContainer:1111/GitContainer/p", config.URL.Container)
+
 	require.Equal(t, "http://API:1111/API/p", config.URL.API)
 	require.Equal(t, "http://Git:1111/Git/p", config.URL.Git)
 	require.Equal(t, "http://UI:1111/UI/p", config.URL.UI)
-	require.Equal(t, "http://APIInternal:1111/APIInternal/p", config.URL.APIInternal)
-	require.Equal(t, "http://GitContainer:1111/GitContainer/p", config.URL.GitContainer)
 }

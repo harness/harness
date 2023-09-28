@@ -49,7 +49,11 @@ func (g Adapter) PathsDetails(ctx context.Context,
 	results := make([]types.PathDetails, len(paths))
 
 	for i, path := range paths {
+		// store original path in output in case caller is doing exact matching
 		results[i].Path = path
+
+		// use cleaned-up path for calculations to avoid not-founds.
+		path = cleanTreePath(path)
 
 		//nolint:nestif
 		if len(path) > 0 {

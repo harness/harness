@@ -264,7 +264,7 @@ func createSystemRPCWriteParams(
 	// generate envars (add everything githook CLI needs for execution)
 	envVars, err := githook.GenerateEnvironmentVariables(
 		ctx,
-		urlProvider.GetAPIBaseURLInternal(),
+		urlProvider.GetInternalAPIURL(),
 		repoID,
 		principal.ID,
 		false,

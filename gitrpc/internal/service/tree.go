@@ -76,7 +76,7 @@ func (s RepositoryService) GetTreeNode(ctx context.Context,
 
 	gitNode, err := s.adapter.GetTreeNode(ctx, repoPath, request.GitRef, request.Path)
 	if err != nil {
-		return nil, processGitErrorf(err, "no such path '%s' in '%s'", request.Path, request.GetGitRef())
+		return nil, processGitErrorf(err, "failed to find node '%s' in '%s'", request.Path, request.GitRef)
 	}
 
 	res := &rpc.GetTreeNodeResponse{
@@ -95,7 +95,7 @@ func (s RepositoryService) GetTreeNode(ctx context.Context,
 
 	pathDetails, err := s.adapter.PathsDetails(ctx, repoPath, request.GitRef, []string{request.Path})
 	if err != nil {
-		return nil, err
+		return nil, processGitErrorf(err, "failed to get path details for '%s' in '%s'", request.Path, request.GitRef)
 	}
 
 	if len(pathDetails) != 1 || pathDetails[0].LastCommit == nil {

@@ -449,7 +449,7 @@ func (r *Repository) createEnvVars(ctx context.Context,
 ) (map[string]string, error) {
 	envVars, err := githook.GenerateEnvironmentVariables(
 		ctx,
-		r.urlProvider.GetAPIBaseURLInternal(),
+		r.urlProvider.GetInternalAPIURL(),
 		repoID,
 		principal.ID,
 		false,

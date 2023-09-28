@@ -297,7 +297,7 @@ func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext
 		return nil, err
 	}
 	// Backfill clone URL
-	repo.GitURL = m.urlProvider.GenerateGITCloneURLContainer(repo.Path)
+	repo.GitURL = m.urlProvider.GenerateContainerGITCloneURL(repo.Path)
 
 	stages, err := m.Stages.List(noContext, stage.ExecutionID)
 	if err != nil {

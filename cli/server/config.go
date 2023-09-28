@@ -66,11 +66,11 @@ func backfillURLs(config *types.Config) error {
 	// TODO: handle https of server bind
 
 	// backfil internal URLS before continuing override with user provided base (which is external facing)
-	if config.URL.APIInternal == "" {
-		config.URL.APIInternal = fmt.Sprintf("%s://localhost:%s/api", scheme, port)
+	if config.URL.Internal == "" {
+		config.URL.Internal = fmt.Sprintf("%s://localhost:%s", scheme, port)
 	}
-	if config.URL.GitContainer == "" {
-		config.URL.GitContainer = fmt.Sprintf("%s://host.docker.internal:%s/git", scheme, port)
+	if config.URL.Container == "" {
+		config.URL.Container = fmt.Sprintf("%s://host.docker.internal:%s", scheme, port)
 	}
 
 	// override base with whatever user explicit override

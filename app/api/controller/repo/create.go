@@ -181,7 +181,7 @@ func (c *Controller) createGitRPCRepository(ctx context.Context, session *auth.S
 	// generate envars (add everything githook CLI needs for execution)
 	envVars, err := githook.GenerateEnvironmentVariables(
 		ctx,
-		c.urlProvider.GetAPIBaseURLInternal(),
+		c.urlProvider.GetInternalAPIURL(),
 		0,
 		session.Principal.ID,
 		true,
