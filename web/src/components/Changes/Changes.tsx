@@ -327,7 +327,7 @@ export const Changes: React.FC<ChangesProps> = ({
                 />
               </Text>
 
-              <Render when={prHasChanged}>
+              <Render when={prHasChanged && !readOnly}>
                 <PlainButton
                   text={getString('refresh')}
                   className={css.refreshBtn}
