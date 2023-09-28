@@ -60,7 +60,9 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
   const { standalone } = useAppContext()
   const { hooks } = useAppContext()
   const { getString } = useStrings()
-  const [repoVis, setRepoVis] = useState<RepoVisibility>()
+  const currRepoVisibility = repoMetadata?.is_public === true ? RepoVisibility.PUBLIC : RepoVisibility.PRIVATE
+
+  const [repoVis, setRepoVis] = useState<RepoVisibility>(currRepoVisibility)
   const { mutate } = useMutate({
     verb: 'PATCH',
     path: `/api/v1/repos/${repoMetadata?.path}/+/`
@@ -142,7 +144,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
       initialValues={{
         name: repoMetadata?.uid,
         desc: repoMetadata?.description,
-        isPublic: repoMetadata?.is_public === true ? RepoVisibility.PUBLIC : RepoVisibility.PRIVATE
+        isPublic: currRepoVisibility
       }}
       onSubmit={voidFn(mutate)}>
       {formik => {
@@ -236,6 +238,9 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                   <FormInput.RadioGroup
                     name="isPublic"
                     label=""
+                    onChange={evt => {
+                      setRepoVis((evt.target as HTMLInputElement).value as RepoVisibility)
+                    }}
                     className={css.radioContainer}
                     items={[
                       {
@@ -286,17 +291,19 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                   />
                   <hr className={css.dividerContainer} />
                   <Layout.Horizontal className={css.buttonContainer}>
-                    <Button
-                      margin={{ right: 'medium' }}
-                      type="submit"
-                      text={getString('save')}
-                      variation={ButtonVariation.PRIMARY}
-                      size={ButtonSize.SMALL}
-                      onClick={() => {
-                        setRepoVis(formik.values.isPublic)
-                        openModal()
-                      }}
-                    />
+                    {repoVis !== currRepoVisibility ? (
+                      <Button
+                        margin={{ right: 'medium' }}
+                        type="submit"
+                        text={getString('save')}
+                        variation={ButtonVariation.PRIMARY}
+                        size={ButtonSize.SMALL}
+                        onClick={() => {
+                          setRepoVis(formik.values.isPublic)
+                          openModal()
+                        }}
+                      />
+                    ) : null}
                   </Layout.Horizontal>
                 </Container>
               </Layout.Horizontal>
