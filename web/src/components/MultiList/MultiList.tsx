@@ -18,12 +18,19 @@ interface MultiListProps {
   readOnly?: boolean
 }
 
+/* Allows user to create following structure:
+<field-name>:
+  - <field-value-1>,
+  - <field-value-2>,
+  ...
+  */
 export const MultiList = ({ name, label, readOnly, formik }: MultiListConnectedProps): JSX.Element => {
   const { getString } = useStrings()
   const [valueMap, setValueMap] = useState<Map<string, string>>(new Map<string, string>([]))
   /*
   <field-name-1>: <field-value-1>,
-  <field-name-2>: <field-value-2>
+  <field-name-2>: <field-value-2>,
+  ...
   */
   const counter = useRef<number>(0)
 
