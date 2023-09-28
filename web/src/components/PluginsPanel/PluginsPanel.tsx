@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useState } from 'react'
-import { Formik } from 'formik'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { Formik, FormikContextType } from 'formik'
 import { parse } from 'yaml'
-import { capitalize, get, has, omit, set } from 'lodash-es'
+import { capitalize, get, has, omit, pick, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon, IconProps } from '@harnessio/icons'
@@ -36,6 +36,7 @@ import {
 } from '@harnessio/uicore'
 import type { TypesPlugin } from 'services/code'
 import { useStrings } from 'framework/strings'
+import { MultiList } from 'components/MultiList/MultiList'
 
 import css from './PluginsPanel.module.scss'
 
@@ -47,8 +48,16 @@ export interface PluginForm {
   [key: string]: string | boolean | object
 }
 
+enum ValueType {
+  STRING = 'string',
+  BOOLEAN = 'boolean',
+  NUMBER = 'number',
+  ARRAY = 'array',
+  OBJECT = 'object'
+}
+
 interface PluginInput {
-  type: 'string'
+  type: ValueType
   description?: string
   default?: string
   options?: { isExtended?: boolean }
@@ -114,6 +123,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
   const [plugins, setPlugins] = useState<TypesPlugin[]>([])
   const [query, setQuery] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
+  const formikRef = useRef<FormikContextType<PluginForm>>()
 
   const PluginCategories: PluginCategoryInterface[] = [
     {
@@ -315,19 +325,51 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
 
   const renderPluginFormField = ({ name, properties }: { name: string; properties: PluginInput }): JSX.Element => {
     const { type, options } = properties
-    const { isExtended } = options || {}
-    const WrapperComponent = isExtended ? FormInput.TextArea : FormInput.Text
-    return type === 'string' ? (
-      <WrapperComponent
-        name={name}
-        label={generateLabelForPluginField({ name, properties })}
-        style={{ width: '100%' }}
-        key={name}
-      />
-    ) : (
-      <></>
-    )
+
+    switch (type) {
+      case ValueType.STRING: {
+        const { isExtended } = options || {}
+        const WrapperComponent = isExtended ? FormInput.TextArea : FormInput.Text
+        return (
+          <WrapperComponent
+            name={name}
+            label={generateLabelForPluginField({ name, properties })}
+            style={{ width: '100%' }}
+            key={name}
+          />
+        )
+      }
+      case ValueType.BOOLEAN:
+        return (
+          <Container className={css.toggle}>
+            <FormInput.Toggle
+              name={name}
+              label={generateLabelForPluginField({ name, properties }) as string}
+              style={{ width: '100%' }}
+              key={name}
+            />
+          </Container>
+        )
+      case ValueType.ARRAY:
+        return (
+          <Container margin={{ bottom: 'large' }}>
+            <MultiList
+              name={name}
+              label={generateLabelForPluginField({ name, properties }) as string}
+              formik={formikRef.current}
+            />
+          </Container>
+        )
+
+      default:
+        return <></>
+    }
   }
+
+  /* Ensures no junk/unrecognized form values are set in the YAML */
+  const sanitizeFormData = useCallback((existingFormData: PluginForm, pluginInputs: PluginInputs): PluginForm => {
+    return pick(existingFormData, Object.keys(pluginInputs))
+  }, [])
 
   const constructPayloadForYAMLInsertion = (pluginFormData: PluginForm, pluginMetadata?: TypesPlugin): PluginForm => {
     const { name, container = {} } = pluginFormData
@@ -422,151 +464,165 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
           <Formik<PluginForm>
             initialValues={getInitialFormValues(pluginInputs)}
             onSubmit={(formData: PluginForm) => {
-              onPluginAddUpdate?.(false, constructPayloadForYAMLInsertion(formData, plugin))
-            }}>
-            <FormikForm height="100%" flex={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <Layout.Vertical flex={{ alignItems: 'flex-start' }} height="inherit" spacing="medium">
-                <Layout.Vertical
-                  width="100%"
-                  className={css.formFields}
-                  spacing="xsmall"
-                  flex={{ justifyContent: 'space-between' }}>
-                  {category === PluginCategory.Harness ? (
-                    <Layout.Vertical width="inherit">
-                      <FormInput.Text name={'name'} label={getString('name')} style={{ width: '100%' }} key={'name'} />
-                      <FormInput.TextArea
-                        name={'script'}
-                        label={getString('pluginsPanel.run.script')}
-                        style={{ width: '100%' }}
-                        key={'script'}
-                      />
-                      <FormInput.Select
-                        name={'shell'}
-                        label={getString('pluginsPanel.run.shell')}
-                        style={{ width: '100%' }}
-                        key={'shell'}
-                        items={[
-                          { label: getString('pluginsPanel.run.sh'), value: 'sh' },
-                          { label: getString('pluginsPanel.run.bash'), value: 'bash' },
-                          { label: getString('pluginsPanel.run.powershell'), value: 'powershell' },
-                          { label: getString('pluginsPanel.run.pwsh'), value: 'pwsh' }
-                        ]}
-                      />
-                      <Accordion activeId="">
-                        <Accordion.Panel
-                          id="container"
-                          summary="Container"
-                          details={
-                            <Layout.Vertical className={css.indent}>
-                              <FormInput.Text
-                                name={'container.image'}
-                                label={getString('pluginsPanel.run.image')}
-                                style={{ width: '100%' }}
-                                key={'container.image'}
-                              />
-                              <FormInput.Select
-                                name={'container.pull'}
-                                label={getString('pluginsPanel.run.pull')}
-                                style={{ width: '100%' }}
-                                key={'container.pull'}
-                                items={[
-                                  { label: getString('pluginsPanel.run.always'), value: 'always' },
-                                  { label: getString('pluginsPanel.run.never'), value: 'never' },
-                                  { label: getString('pluginsPanel.run.ifNotExists'), value: 'if-not-exists' }
-                                ]}
-                              />
-                              <FormInput.Text
-                                name={'container.entrypoint'}
-                                label={getString('pluginsPanel.run.entrypoint')}
-                                style={{ width: '100%' }}
-                                key={'container.entrypoint'}
-                              />
-                              <FormInput.Text
-                                name={'container.network'}
-                                label={getString('pluginsPanel.run.network')}
-                                style={{ width: '100%' }}
-                                key={'container.network'}
-                              />
-                              <FormInput.Text
-                                name={'container.networkMode'}
-                                label={getString('pluginsPanel.run.networkMode')}
-                                style={{ width: '100%' }}
-                                key={'container.networkMode'}
-                              />
-                              <FormInput.Toggle
-                                name={'container.privileged'}
-                                label={getString('pluginsPanel.run.privileged')}
-                                style={{ width: '100%' }}
-                                key={'container.privileged'}
-                              />
-                              <FormInput.Text
-                                name={'container.user'}
-                                label={getString('user')}
-                                style={{ width: '100%' }}
-                                key={'container.user'}
-                              />
-                              <Accordion activeId="">
-                                <Accordion.Panel
-                                  id="container.credentials"
-                                  summary={getString('pluginsPanel.run.credentials')}
-                                  details={
-                                    <Layout.Vertical className={css.indent}>
-                                      <FormInput.Text
-                                        name={'container.credentials.username'}
-                                        label={getString('pluginsPanel.run.username')}
-                                        style={{ width: '100%' }}
-                                        key={'container.credentials.username'}
-                                      />
-                                      <FormInput.Text
-                                        name={'container.credentials.password'}
-                                        label={getString('pluginsPanel.run.password')}
-                                        style={{ width: '100%' }}
-                                        key={'container.credentials.password'}
-                                      />
-                                    </Layout.Vertical>
-                                  }
-                                />
-                              </Accordion>
-                            </Layout.Vertical>
-                          }
-                        />
-                        <Accordion.Panel
-                          id="mount"
-                          summary="Mount"
-                          details={
-                            <Layout.Vertical className={css.indent}>
-                              <FormInput.Text
-                                name={'mount.name'}
-                                label={getString('name')}
-                                style={{ width: '100%' }}
-                                key={'mount.name'}
-                              />
-                              <FormInput.Text
-                                name={'mount.path'}
-                                label={getString('pluginsPanel.run.path')}
-                                style={{ width: '100%' }}
-                                key={'mount.path'}
-                              />
-                            </Layout.Vertical>
-                          }
-                        />
-                      </Accordion>
+              onPluginAddUpdate?.(
+                false,
+                constructPayloadForYAMLInsertion(sanitizeFormData(formData, pluginInputs), plugin)
+              )
+            }}
+            validate={(formData: PluginForm) => console.log(formData)}>
+            {formik => {
+              formikRef.current = formik
+              return (
+                <FormikForm height="100%" flex={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <Layout.Vertical flex={{ alignItems: 'flex-start' }} height="inherit" spacing="medium">
+                    <Layout.Vertical
+                      width="100%"
+                      className={css.formFields}
+                      spacing="xsmall"
+                      flex={{ justifyContent: 'space-between' }}>
+                      {category === PluginCategory.Harness ? (
+                        <Layout.Vertical width="inherit">
+                          <FormInput.Text
+                            name={'name'}
+                            label={getString('name')}
+                            style={{ width: '100%' }}
+                            key={'name'}
+                          />
+                          <FormInput.TextArea
+                            name={'script'}
+                            label={getString('pluginsPanel.run.script')}
+                            style={{ width: '100%' }}
+                            key={'script'}
+                          />
+                          <FormInput.Select
+                            name={'shell'}
+                            label={getString('pluginsPanel.run.shell')}
+                            style={{ width: '100%' }}
+                            key={'shell'}
+                            items={[
+                              { label: getString('pluginsPanel.run.sh'), value: 'sh' },
+                              { label: getString('pluginsPanel.run.bash'), value: 'bash' },
+                              { label: getString('pluginsPanel.run.powershell'), value: 'powershell' },
+                              { label: getString('pluginsPanel.run.pwsh'), value: 'pwsh' }
+                            ]}
+                          />
+                          <Accordion activeId="">
+                            <Accordion.Panel
+                              id="container"
+                              summary="Container"
+                              details={
+                                <Layout.Vertical className={css.indent}>
+                                  <FormInput.Text
+                                    name={'container.image'}
+                                    label={getString('pluginsPanel.run.image')}
+                                    style={{ width: '100%' }}
+                                    key={'container.image'}
+                                  />
+                                  <FormInput.Select
+                                    name={'container.pull'}
+                                    label={getString('pluginsPanel.run.pull')}
+                                    style={{ width: '100%' }}
+                                    key={'container.pull'}
+                                    items={[
+                                      { label: getString('pluginsPanel.run.always'), value: 'always' },
+                                      { label: getString('pluginsPanel.run.never'), value: 'never' },
+                                      { label: getString('pluginsPanel.run.ifNotExists'), value: 'if-not-exists' }
+                                    ]}
+                                  />
+                                  <FormInput.Text
+                                    name={'container.entrypoint'}
+                                    label={getString('pluginsPanel.run.entrypoint')}
+                                    style={{ width: '100%' }}
+                                    key={'container.entrypoint'}
+                                  />
+                                  <FormInput.Text
+                                    name={'container.network'}
+                                    label={getString('pluginsPanel.run.network')}
+                                    style={{ width: '100%' }}
+                                    key={'container.network'}
+                                  />
+                                  <FormInput.Text
+                                    name={'container.networkMode'}
+                                    label={getString('pluginsPanel.run.networkMode')}
+                                    style={{ width: '100%' }}
+                                    key={'container.networkMode'}
+                                  />
+                                  <FormInput.Toggle
+                                    name={'container.privileged'}
+                                    label={getString('pluginsPanel.run.privileged')}
+                                    style={{ width: '100%' }}
+                                    key={'container.privileged'}
+                                  />
+                                  <FormInput.Text
+                                    name={'container.user'}
+                                    label={getString('user')}
+                                    style={{ width: '100%' }}
+                                    key={'container.user'}
+                                  />
+                                  <Accordion activeId="">
+                                    <Accordion.Panel
+                                      id="container.credentials"
+                                      summary={getString('pluginsPanel.run.credentials')}
+                                      details={
+                                        <Layout.Vertical className={css.indent}>
+                                          <FormInput.Text
+                                            name={'container.credentials.username'}
+                                            label={getString('pluginsPanel.run.username')}
+                                            style={{ width: '100%' }}
+                                            key={'container.credentials.username'}
+                                          />
+                                          <FormInput.Text
+                                            name={'container.credentials.password'}
+                                            label={getString('pluginsPanel.run.password')}
+                                            style={{ width: '100%' }}
+                                            key={'container.credentials.password'}
+                                          />
+                                        </Layout.Vertical>
+                                      }
+                                    />
+                                  </Accordion>
+                                </Layout.Vertical>
+                              }
+                            />
+                            <Accordion.Panel
+                              id="mount"
+                              summary="Mount"
+                              details={
+                                <Layout.Vertical className={css.indent}>
+                                  <FormInput.Text
+                                    name={'mount.name'}
+                                    label={getString('name')}
+                                    style={{ width: '100%' }}
+                                    key={'mount.name'}
+                                  />
+                                  <FormInput.Text
+                                    name={'mount.path'}
+                                    label={getString('pluginsPanel.run.path')}
+                                    style={{ width: '100%' }}
+                                    key={'mount.path'}
+                                  />
+                                </Layout.Vertical>
+                              }
+                            />
+                          </Accordion>
+                        </Layout.Vertical>
+                      ) : Object.keys(pluginInputs).length > 0 ? (
+                        <Layout.Vertical width="inherit">
+                          {Object.keys(allPluginInputs).map((field: string) => {
+                            return renderPluginFormField({ name: field, properties: get(allPluginInputs, field) })
+                          })}
+                        </Layout.Vertical>
+                      ) : (
+                        <></>
+                      )}
                     </Layout.Vertical>
-                  ) : Object.keys(pluginInputs).length > 0 ? (
-                    <Layout.Vertical width="inherit">
-                      {Object.keys(allPluginInputs).map((field: string) => {
-                        return renderPluginFormField({ name: field, properties: get(allPluginInputs, field) })
-                      })}
-                    </Layout.Vertical>
-                  ) : (
-                    <></>
-                  )}
-                </Layout.Vertical>
-                <Container margin={{ top: 'small', bottom: 'small' }}>
-                  <Button variation={ButtonVariation.PRIMARY} text={getString('addLabel')} type="submit" />
-                </Container>
-              </Layout.Vertical>
-            </FormikForm>
+                    <Container margin={{ top: 'small', bottom: 'small' }}>
+                      <Button variation={ButtonVariation.PRIMARY} text={getString('addLabel')} type="submit" />
+                    </Container>
+                  </Layout.Vertical>
+                </FormikForm>
+              )
+            }}
           </Formik>
         </Container>
       </Layout.Vertical>
