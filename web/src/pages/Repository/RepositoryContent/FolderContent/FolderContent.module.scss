@@ -19,7 +19,10 @@
 
   .table {
     background-color: var(--white) !important;
-
+    :global(.TableV2--row:last-child) {
+      border-bottom-left-radius: 4px !important;
+      border-bottom-right-radius: 4px !important;
+    }
     [class*='TableV2--header'] {
       [class*='variation-table-headers'] {
         text-transform: none;
@@ -103,4 +106,8 @@
       }
     }
   }
+}
+
+.fileIcon {
+  color: var(--grey-600) !important;
 }

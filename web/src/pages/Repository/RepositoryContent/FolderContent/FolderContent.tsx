@@ -52,7 +52,7 @@ type FolderContentProps = Pick<GitInfoProps, 'repoMetadata' | 'resourceContent' 
 
 const checkIcon = (row: OpenapiContentInfo): React.ReactElement => {
   if (isFile(row)) {
-    return <Page width={14} height={14} />
+    return <Page className={css.fileIcon} width={14} height={14} />
   } else if (isSymlink(row)) {
     return <img width={14} height={14} src={Symlink} />
   } else if (isSubmodule(row)) {

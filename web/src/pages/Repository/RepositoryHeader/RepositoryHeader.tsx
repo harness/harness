@@ -17,6 +17,8 @@
 import React from 'react'
 import { Layout, Text } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
+import { BookmarkBook } from 'iconoir-react'
+
 import { FontVariation } from '@harnessio/design-system'
 import { RepoPublicLabel } from 'components/RepoPublicLabel/RepoPublicLabel'
 import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
@@ -29,7 +31,10 @@ export function RepositoryHeader({ repoMetadata }: Pick<GitInfoProps, 'repoMetad
       repoMetadata={repoMetadata}
       title={
         <Layout.Horizontal spacing="small" className={css.name}>
-          <Icon name={CodeIcon.Repo} size={20} />
+          <span className={css.customIcon}>
+            <BookmarkBook />
+          </span>
+          {/* <Icon name={CodeIcon.Repo} size={20} /> */}
           <Text inline className={css.repoDropdown} font={{ variation: FontVariation.H4 }}>
             {repoMetadata.uid}
           </Text>

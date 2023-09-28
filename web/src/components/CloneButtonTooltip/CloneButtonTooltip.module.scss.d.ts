@@ -17,6 +17,8 @@
 /* eslint-disable */
 // This is an auto-generated file
 export declare const cloneCopyButton: string
+export declare const closeIcon: string
+export declare const codeText: string
 export declare const container: string
 export declare const label: string
 export declare const layout: string

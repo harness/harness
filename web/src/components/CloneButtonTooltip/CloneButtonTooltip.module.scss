@@ -45,4 +45,16 @@
       margin-left: var(--spacing-small) !important;
     }
   }
+  :global(.StyledProps--font-variation-h4) {
+    margin-top: unset !important;
+  }
+}
+
+.codeText {
+  font-size: 11px !important;
+}
+
+.closeIcon {
+  cursor: pointer !important;
+  float: right !important;
 }

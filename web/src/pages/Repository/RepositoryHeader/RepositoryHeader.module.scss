@@ -36,3 +36,12 @@
 .targetClassName {
   display: inline-flex !important;
 }
+
+.customIcon {
+  padding-top: 2px;
+  color: var(--grey-800);
+  svg {
+    height: 20px !important;
+    width: 20px !important;
+  }
+}

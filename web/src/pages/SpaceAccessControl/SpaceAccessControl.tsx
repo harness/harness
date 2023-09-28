@@ -75,6 +75,8 @@ const SpaceAccessControl = () => {
       [
         {
           Header: getString('user'),
+          accessor: 'user',
+          sort: true,
           width: '30%',
           Cell: ({ row }: CellProps<TypesMembershipUser>) => (
             <Layout.Horizontal style={{ alignItems: 'center' }}>
@@ -94,6 +96,7 @@ const SpaceAccessControl = () => {
         {
           Header: getString('role'),
           width: '40%',
+          accessor: 'role',
           Cell: ({ row }: CellProps<TypesMembershipUser>) => {
             const stringKey = row.original.role ? roleStringKeyMap[row.original.role] : undefined
 
@@ -107,6 +110,8 @@ const SpaceAccessControl = () => {
         {
           Header: getString('email'),
           width: '25%',
+          sort: true,
+          accessor: 'email',
           Cell: ({ row }: CellProps<TypesMembershipUser>) => (
             <Text font={{ variation: FontVariation.SMALL_SEMI }} lineClamp={1}>
               {row.original.principal?.email}
@@ -114,8 +119,9 @@ const SpaceAccessControl = () => {
           )
         },
         {
-          accessor: 'action',
+          accessor: 'actions',
           width: '5%',
+          disableSortBy: true,
           Cell: ({ row }: CellProps<TypesMembershipUser>) => {
             return (
               <OptionsMenuButton
@@ -151,7 +157,7 @@ const SpaceAccessControl = () => {
             margin={{ bottom: 'medium' }}
             onClick={() => openModal()}
           />
-          <TableV2 data={data || []} columns={columns} />
+          <TableV2 sortable data={data || []} columns={columns} className={css.tableContainer} />
         </Container>
       </Page.Body>
     </Container>
