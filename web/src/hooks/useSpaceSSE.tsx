@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+import { useAppContext } from 'AppContext'
 import { useEffect, useRef } from 'react'
+import { getConfig } from 'services/config'
 
 type UseSpaceSSEProps = {
   space: string
@@ -25,6 +27,8 @@ type UseSpaceSSEProps = {
 }
 
 const useSpaceSSE = ({ space, events, onEvent, onError, shouldRun = true }: UseSpaceSSEProps) => {
+  const { standalone, routingId } = useAppContext()
+
   //TODO - this is not working right - need to get to the bottom of too many streams being opened and closed... can miss events!
   const eventSourceRef = useRef<EventSource | null>(null)
 
@@ -32,7 +36,8 @@ const useSpaceSSE = ({ space, events, onEvent, onError, shouldRun = true }: UseS
     // Conditionally establish the event stream - don't want to open on a finished execution
     if (shouldRun && events.length > 0) {
       if (!eventSourceRef.current) {
-        eventSourceRef.current = new EventSource(`/api/v1/spaces/${space}/+/events`)
+        const pathAndQuery = getConfig(`code/api/v1/spaces/${space}/+/events${standalone ? "" : `?routingId=${routingId}`}`)
+        eventSourceRef.current = new EventSource(pathAndQuery)
 
         const handleMessage = (event: MessageEvent) => {
           const data = JSON.parse(event.data)
