@@ -17,7 +17,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Formik, FormikContextType } from 'formik'
 import { parse } from 'yaml'
-import { capitalize, get, has, omit, set } from 'lodash-es'
+import { capitalize, get, has, omit, pick, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
 import { Icon, IconProps } from '@harnessio/icons'
@@ -373,6 +373,11 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
     }
   }
 
+  /* Ensures no junk/unrecognized form values are set in the YAML */
+  const sanitizeFormData = useCallback((existingFormData: PluginForm, pluginInputs: PluginInputs): PluginForm => {
+    return pick(existingFormData, Object.keys(pluginInputs))
+  }, [])
+
   const constructPayloadForYAMLInsertion = (pluginFormData: PluginForm, pluginMetadata?: TypesPlugin): PluginForm => {
     const { name, container = {} } = pluginFormData
     let payload = { ...PluginInsertionTemplate }
@@ -466,7 +471,10 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
           <Formik<PluginForm>
             initialValues={getInitialFormValues(pluginInputs)}
             onSubmit={(formData: PluginForm) => {
-              onPluginAddUpdate?.(false, constructPayloadForYAMLInsertion(formData, plugin))
+              onPluginAddUpdate?.(
+                false,
+                constructPayloadForYAMLInsertion(sanitizeFormData(formData, pluginInputs), plugin)
+              )
             }}
             validate={(formData: PluginForm) => console.log(formData)}>
             {formik => {

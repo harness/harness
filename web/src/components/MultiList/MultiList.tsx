@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { get } from 'lodash'
+import { debounce } from 'lodash'
 import { FormikContextType, connect } from 'formik'
-import { Layout, Text, FormInput, Button, ButtonVariation, ButtonSize } from '@harnessio/uicore'
+import { Layout, Text, FormInput, Button, ButtonVariation, ButtonSize, Container } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 
@@ -20,22 +20,11 @@ interface MultiListProps {
 export const MultiList = ({ name, label, readOnly, formik }: MultiListConnectedProps): JSX.Element => {
   const { getString } = useStrings()
   const [rowCount, setRowCount] = useState<number>(0)
+  const [values, setValues] = useState<string[]>([])
 
   useEffect(() => {
-    formik?.setFieldValue(name, getListValues())
-  }, [rowCount])
-
-  const getListValues = useCallback((): string[] => {
-    const existingValues = []
-    for (let fieldIdx = 0; fieldIdx < rowCount; fieldIdx++) {
-      const fieldName = getFieldName(fieldIdx)
-      const fieldValue = get(formik?.values, fieldName)
-      if (fieldValue) {
-        existingValues.push(get(formik?.values, getFieldName(fieldIdx)))
-      }
-    }
-    return existingValues
-  }, [rowCount])
+    formik?.setFieldValue(name, values)
+  }, [values])
 
   const getFieldName = useCallback(
     (index: number): string => {
@@ -44,12 +33,23 @@ export const MultiList = ({ name, label, readOnly, formik }: MultiListConnectedP
     [name]
   )
 
-  const handleAdd = (): void => {
+  const handleAddRowToList = (): void => {
     setRowCount((existingCount: number) => existingCount + 1)
   }
 
+  const handleAddItemToList = (event: React.FormEvent<HTMLInputElement>): void => {
+    const value = (event.target as HTMLInputElement).value
+    setValues((existingValues: string[]) => [...existingValues, value])
+  }
+
+  const debouncedAddItemToList = useCallback(debounce(handleAddItemToList, 300), [handleAddItemToList])
+
   const renderRow = useCallback((rowIndex: number): React.ReactElement => {
-    return <FormInput.Text name={getFieldName(rowIndex)} disabled={readOnly} />
+    return (
+      <Container margin={{ bottom: 'none' }}>
+        <FormInput.Text name={getFieldName(rowIndex)} disabled={readOnly} onChange={debouncedAddItemToList} />
+      </Container>
+    )
   }, [])
 
   const renderRows = useCallback((numOfRows: number): React.ReactElement => {
@@ -57,20 +57,22 @@ export const MultiList = ({ name, label, readOnly, formik }: MultiListConnectedP
     for (let idx = 0; idx < numOfRows; idx++) {
       rows.push(renderRow(idx))
     }
-    return <Layout.Vertical spacing="small">{rows}</Layout.Vertical>
+    return <Layout.Vertical>{rows}</Layout.Vertical>
   }, [])
 
   return (
-    <Layout.Vertical spacing="xsmall">
-      <Text font={{ variation: FontVariation.FORM_LABEL }}>{label}</Text>
-      {renderRows(rowCount)}
+    <Layout.Vertical spacing="small">
+      <Layout.Vertical>
+        <Text font={{ variation: FontVariation.FORM_LABEL }}>{label}</Text>
+        {rowCount > 0 && <Container padding={{ top: 'small' }}>{renderRows(rowCount)}</Container>}
+      </Layout.Vertical>
       <Button
         text={getString('addLabel')}
         rightIcon="plus"
         variation={ButtonVariation.PRIMARY}
         size={ButtonSize.SMALL}
         className={css.addBtn}
-        onClick={handleAdd}
+        onClick={handleAddRowToList}
       />
     </Layout.Vertical>
   )
