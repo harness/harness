@@ -17,10 +17,10 @@ package user
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
@@ -29,7 +29,7 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(
-	db *sqlx.DB,
+	tx dbtx.Transactor,
 	principalUIDCheck check.PrincipalUID,
 	authorizer authz.Authorizer,
 	principalStore store.PrincipalStore,
@@ -37,7 +37,7 @@ func ProvideController(
 	membershipStore store.MembershipStore,
 ) *Controller {
 	return NewController(
-		db,
+		tx,
 		principalUIDCheck,
 		authorizer,
 		principalStore,

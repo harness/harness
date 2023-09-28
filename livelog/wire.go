@@ -15,8 +15,6 @@
 package livelog
 
 import (
-	"github.com/harness/gitness/types"
-
 	"github.com/google/wire"
 )
 
@@ -26,6 +24,6 @@ var WireSet = wire.NewSet(
 )
 
 // ProvideLogStream provides an implementation of a logs streamer.
-func ProvideLogStream(config *types.Config) LogStream {
+func ProvideLogStream() LogStream {
 	return NewMemory()
 }

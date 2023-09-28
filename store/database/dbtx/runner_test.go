@@ -174,7 +174,7 @@ type dbMock struct {
 
 var _ transactor = (*dbMock)(nil)
 
-func (d *dbMock) startTx(context.Context, *sql.TxOptions) (Tx, error) {
+func (d *dbMock) startTx(context.Context, *sql.TxOptions) (TransactionAccessor, error) {
 	d.createdTx = &txMock{
 		t:         d.t,
 		errCommit: d.errCommit,
@@ -194,7 +194,7 @@ type txMock struct {
 	rollback  bool
 }
 
-var _ Tx = (*txMock)(nil)
+var _ TransactionAccessor = (*txMock)(nil)
 
 func (tx *txMock) Commit() error {
 	if tx.finished {
@@ -218,15 +218,16 @@ func (tx *txMock) Rollback() error {
 	return nil
 }
 
+// nolint:rowserrcheck,sqlclosecheck // it's a unit test, works with mocked DB
 func TestLocking(t *testing.T) {
 	const dummyQuery = ""
 	tests := []struct {
 		name string
-		fn   func(db Transactor, l *lockerCounter)
+		fn   func(db AccessorTx, l *lockerCounter)
 	}{
 		{
 			name: "exec-lock",
-			fn: func(db Transactor, l *lockerCounter) {
+			fn: func(db AccessorTx, l *lockerCounter) {
 				ctx := context.Background()
 				_, _ = db.ExecContext(ctx, dummyQuery)
 				_, _ = db.ExecContext(ctx, dummyQuery)
@@ -240,7 +241,7 @@ func TestLocking(t *testing.T) {
 		},
 		{
 			name: "tx-lock",
-			fn: func(db Transactor, l *lockerCounter) {
+			fn: func(db AccessorTx, l *lockerCounter) {
 				ctx := context.Background()
 				_ = db.WithTx(ctx, func(ctx context.Context) error {
 					_, _ = GetAccessor(ctx, nil).ExecContext(ctx, dummyQuery)
@@ -256,7 +257,7 @@ func TestLocking(t *testing.T) {
 		},
 		{
 			name: "tx-read-lock",
-			fn: func(db Transactor, l *lockerCounter) {
+			fn: func(db AccessorTx, l *lockerCounter) {
 				ctx := context.Background()
 				_ = db.WithTx(ctx, func(ctx context.Context) error {
 					_, _ = GetAccessor(ctx, nil).QueryContext(ctx, dummyQuery)
@@ -342,4 +343,6 @@ func (dbMockNop) SelectContext(context.Context, interface{}, string, ...interfac
 func (dbMockNop) Commit() error   { return nil }
 func (dbMockNop) Rollback() error { return nil }
 
-func (d dbMockNop) startTx(context.Context, *sql.TxOptions) (Tx, error) { return d, nil }
+func (d dbMockNop) startTx(context.Context, *sql.TxOptions) (TransactionAccessor, error) {
+	return d, nil
+}

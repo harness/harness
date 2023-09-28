@@ -18,9 +18,9 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
@@ -29,14 +29,14 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideController(
-	db *sqlx.DB,
+	tx dbtx.Transactor,
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
 	checkStore store.CheckStore,
 	rpcClient gitrpc.Interface,
 ) *Controller {
 	return NewController(
-		db,
+		tx,
 		authorizer,
 		repoStore,
 		checkStore,

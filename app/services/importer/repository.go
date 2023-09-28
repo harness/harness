@@ -33,10 +33,10 @@ import (
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/gitrpc"
 	gitness_store "github.com/harness/gitness/store"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
 
@@ -54,7 +54,7 @@ type Repository struct {
 	defaultBranch string
 	urlProvider   gitnessurl.Provider
 	git           gitrpc.Interface
-	db            *sqlx.DB
+	tx            dbtx.Transactor
 	repoStore     store.RepoStore
 	pipelineStore store.PipelineStore
 	triggerStore  store.TriggerStore

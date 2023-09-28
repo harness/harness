@@ -21,7 +21,6 @@ import (
 	"github.com/harness/gitness/encrypt"
 
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
@@ -29,9 +28,12 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(config webhook.Config, db *sqlx.DB, authorizer authz.Authorizer,
+func ProvideController(config webhook.Config, authorizer authz.Authorizer,
 	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
-	repoStore store.RepoStore, webhookService *webhook.Service, encrypter encrypt.Encrypter) *Controller {
-	return NewController(config.AllowLoopback, config.AllowPrivateNetwork,
-		db, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService, encrypter)
+	repoStore store.RepoStore, webhookService *webhook.Service, encrypter encrypt.Encrypter,
+) *Controller {
+	return NewController(
+		config.AllowLoopback, config.AllowPrivateNetwork, authorizer,
+		webhookStore, webhookExecutionStore,
+		repoStore, webhookService, encrypter)
 }

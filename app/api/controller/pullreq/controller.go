@@ -31,14 +31,13 @@ import (
 	"github.com/harness/gitness/gitrpc"
 	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/lock"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Controller struct {
-	db                  *sqlx.DB
+	tx                  dbtx.Transactor
 	urlProvider         url.Provider
 	authorizer          authz.Authorizer
 	pullreqStore        store.PullReqStore
@@ -58,7 +57,7 @@ type Controller struct {
 }
 
 func NewController(
-	db *sqlx.DB,
+	tx dbtx.Transactor,
 	urlProvider url.Provider,
 	authorizer authz.Authorizer,
 	pullreqStore store.PullReqStore,
@@ -77,7 +76,7 @@ func NewController(
 	sseStreamer sse.Streamer,
 ) *Controller {
 	return &Controller{
-		db:                  db,
+		tx:                  tx,
 		urlProvider:         urlProvider,
 		authorizer:          authorizer,
 		pullreqStore:        pullreqStore,

@@ -20,7 +20,6 @@ import (
 	"github.com/harness/gitness/livelog"
 
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
@@ -28,7 +27,7 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(db *sqlx.DB,
+func ProvideController(
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
 	repoStore store.RepoStore,
@@ -38,6 +37,6 @@ func ProvideController(db *sqlx.DB,
 	logStore store.LogStore,
 	logStream livelog.LogStream,
 ) *Controller {
-	return NewController(db, authorizer, executionStore, repoStore,
+	return NewController(authorizer, executionStore, repoStore,
 		pipelineStore, stageStore, stepStore, logStore, logStream)
 }

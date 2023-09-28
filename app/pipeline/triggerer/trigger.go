@@ -37,7 +37,6 @@ import (
 	"github.com/drone/drone-yaml/yaml/linter"
 	v1yaml "github.com/drone/spec/dist/go"
 	"github.com/drone/spec/dist/go/parse/normalize"
-	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog/log"
 )
 
@@ -80,7 +79,7 @@ type triggerer struct {
 	executionStore store.ExecutionStore
 	checkStore     store.CheckStore
 	stageStore     store.StageStore
-	db             *sqlx.DB
+	tx             dbtx.Transactor
 	pipelineStore  store.PipelineStore
 	fileService    file.Service
 	scheduler      scheduler.Scheduler
@@ -92,7 +91,7 @@ func New(
 	checkStore store.CheckStore,
 	stageStore store.StageStore,
 	pipelineStore store.PipelineStore,
-	db *sqlx.DB,
+	tx dbtx.Transactor,
 	repoStore store.RepoStore,
 	scheduler scheduler.Scheduler,
 	fileService file.Service,
@@ -102,7 +101,7 @@ func New(
 		checkStore:     checkStore,
 		stageStore:     stageStore,
 		scheduler:      scheduler,
-		db:             db,
+		tx:             tx,
 		pipelineStore:  pipelineStore,
 		fileService:    fileService,
 		repoStore:      repoStore,
@@ -449,7 +448,7 @@ func (t *triggerer) createExecutionWithStages(
 	execution *types.Execution,
 	stages []*types.Stage,
 ) error {
-	return dbtx.New(t.db).WithTx(ctx, func(ctx context.Context) error {
+	return t.tx.WithTx(ctx, func(ctx context.Context) error {
 		err := t.executionStore.Create(ctx, execution)
 		if err != nil {
 			return err

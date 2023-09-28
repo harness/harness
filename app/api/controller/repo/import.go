@@ -20,7 +20,6 @@ import (
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 )
 
@@ -51,7 +50,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	}
 
 	var repo *types.Repository
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		repo = remoteRepository.ToRepo(parentSpace.ID, in.UID, in.Description, &session.Principal)
 
 		err = c.repoStore.Create(ctx, repo)

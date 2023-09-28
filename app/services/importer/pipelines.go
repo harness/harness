@@ -90,7 +90,7 @@ func (r *Repository) processPipelines(ctx context.Context,
 
 	nowMilli := now.UnixMilli()
 
-	err = dbtx.New(r.db).WithTx(ctx, func(ctx context.Context) error {
+	err = r.tx.WithTx(ctx, func(ctx context.Context) error {
 		for _, p := range pipelineFiles {
 			pipeline := &types.Pipeline{
 				Description:   "",

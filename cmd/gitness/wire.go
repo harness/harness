@@ -68,6 +68,7 @@ import (
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 
@@ -81,6 +82,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		bootstrap.WireSet,
 		cliserver.ProvideDatabaseConfig,
 		database.WireSet,
+		dbtx.WireSet,
 		cache.WireSet,
 		router.WireSet,
 		pullreqservice.WireSet,

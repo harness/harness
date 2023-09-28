@@ -40,7 +40,7 @@ func (c *Controller) ListPipelines(
 	var count int64
 	var pipelines []*types.Pipeline
 
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
+	err = c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
 		count, err = c.pipelineStore.Count(ctx, repo.ID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to count child executions: %w", err)

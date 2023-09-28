@@ -18,7 +18,6 @@ import (
 	"github.com/harness/gitness/app/store"
 
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
@@ -26,8 +25,6 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(db *sqlx.DB,
-	pluginStore store.PluginStore,
-) *Controller {
-	return NewController(db, pluginStore)
+func ProvideController(pluginStore store.PluginStore) *Controller {
+	return NewController(pluginStore)
 }

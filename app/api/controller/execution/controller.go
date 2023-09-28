@@ -20,12 +20,11 @@ import (
 	"github.com/harness/gitness/app/pipeline/commit"
 	"github.com/harness/gitness/app/pipeline/triggerer"
 	"github.com/harness/gitness/app/store"
-
-	"github.com/jmoiron/sqlx"
+	"github.com/harness/gitness/store/database/dbtx"
 )
 
 type Controller struct {
-	db             *sqlx.DB
+	tx             dbtx.Transactor
 	authorizer     authz.Authorizer
 	executionStore store.ExecutionStore
 	checkStore     store.CheckStore
@@ -38,7 +37,7 @@ type Controller struct {
 }
 
 func NewController(
-	db *sqlx.DB,
+	tx dbtx.Transactor,
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
 	checkStore store.CheckStore,
@@ -50,7 +49,7 @@ func NewController(
 	pipelineStore store.PipelineStore,
 ) *Controller {
 	return &Controller{
-		db:             db,
+		tx:             tx,
 		authorizer:     authorizer,
 		executionStore: executionStore,
 		checkStore:     checkStore,

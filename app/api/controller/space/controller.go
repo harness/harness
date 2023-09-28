@@ -23,10 +23,9 @@ import (
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
-
-	"github.com/jmoiron/sqlx"
 )
 
 var (
@@ -37,7 +36,7 @@ var (
 type Controller struct {
 	nestedSpacesEnabled bool
 
-	db              *sqlx.DB
+	tx              dbtx.Transactor
 	urlProvider     url.Provider
 	sseStreamer     sse.Streamer
 	uidCheck        check.PathUID
@@ -56,7 +55,7 @@ type Controller struct {
 	exporter        *exporter.Repository
 }
 
-func NewController(config *types.Config, db *sqlx.DB, urlProvider url.Provider,
+func NewController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider,
 	sseStreamer sse.Streamer, uidCheck check.PathUID, authorizer authz.Authorizer,
 	spacePathStore store.SpacePathStore, pipelineStore store.PipelineStore, secretStore store.SecretStore,
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore, spaceStore store.SpaceStore,
@@ -65,7 +64,7 @@ func NewController(config *types.Config, db *sqlx.DB, urlProvider url.Provider,
 ) *Controller {
 	return &Controller{
 		nestedSpacesEnabled: config.NestedSpacesEnabled,
-		db:                  db,
+		tx:                  tx,
 		urlProvider:         urlProvider,
 		sseStreamer:         sseStreamer,
 		uidCheck:            uidCheck,

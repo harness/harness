@@ -67,7 +67,7 @@ func (c *Controller) CommentStatus(
 	var pr *types.PullReq
 	var act *types.PullReqActivity
 
-	err = controller.TxOptLock(ctx, c.db, func(ctx context.Context) error {
+	err = controller.TxOptLock(ctx, c.tx, func(ctx context.Context) error {
 		pr, err = c.pullreqStore.FindByNumber(ctx, repo.ID, prNum)
 		if err != nil {
 			return fmt.Errorf("failed to find pull request by number: %w", err)

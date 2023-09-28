@@ -35,7 +35,7 @@ type logs struct {
 	Data []byte `db:"log_data"`
 }
 
-// NewLogStore returns a new LogStore.
+// NewDatabaseLogStore returns a new LogStore.
 func NewDatabaseLogStore(db *sqlx.DB) store.LogStore {
 	return &logStore{
 		db: db,

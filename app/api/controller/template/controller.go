@@ -18,12 +18,9 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types/check"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Controller struct {
-	db            *sqlx.DB
 	uidCheck      check.PathUID
 	templateStore store.TemplateStore
 	authorizer    authz.Authorizer
@@ -31,14 +28,12 @@ type Controller struct {
 }
 
 func NewController(
-	db *sqlx.DB,
 	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
 	templateStore store.TemplateStore,
 	spaceStore store.SpaceStore,
 ) *Controller {
 	return &Controller{
-		db:            db,
 		uidCheck:      uidCheck,
 		templateStore: templateStore,
 		authorizer:    authorizer,

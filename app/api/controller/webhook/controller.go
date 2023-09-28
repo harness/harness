@@ -27,15 +27,12 @@ import (
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Controller struct {
 	allowLoopback       bool
 	allowPrivateNetwork bool
 
-	db                    *sqlx.DB
 	authorizer            authz.Authorizer
 	webhookStore          store.WebhookStore
 	webhookExecutionStore store.WebhookExecutionStore
@@ -47,7 +44,6 @@ type Controller struct {
 func NewController(
 	allowLoopback bool,
 	allowPrivateNetwork bool,
-	db *sqlx.DB,
 	authorizer authz.Authorizer,
 	webhookStore store.WebhookStore,
 	webhookExecutionStore store.WebhookExecutionStore,
@@ -58,7 +54,6 @@ func NewController(
 	return &Controller{
 		allowLoopback:         allowLoopback,
 		allowPrivateNetwork:   allowPrivateNetwork,
-		db:                    db,
 		authorizer:            authorizer,
 		webhookStore:          webhookStore,
 		webhookExecutionStore: webhookExecutionStore,

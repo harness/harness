@@ -18,12 +18,9 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/livelog"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Controller struct {
-	db             *sqlx.DB
 	authorizer     authz.Authorizer
 	executionStore store.ExecutionStore
 	repoStore      store.RepoStore
@@ -35,7 +32,6 @@ type Controller struct {
 }
 
 func NewController(
-	db *sqlx.DB,
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
 	repoStore store.RepoStore,
@@ -46,7 +42,6 @@ func NewController(
 	logStream livelog.LogStream,
 ) *Controller {
 	return &Controller{
-		db:             db,
 		authorizer:     authorizer,
 		executionStore: executionStore,
 		repoStore:      repoStore,
