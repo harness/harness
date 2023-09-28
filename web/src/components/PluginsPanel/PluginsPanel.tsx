@@ -445,7 +445,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
             name="arrow-left"
             size={18}
             onClick={() => {
-              // setPlugin(undefined)
+              setPlugin(undefined)
               if (category === PluginCategory.Drone) {
                 setPanelView(PluginPanelView.Listing)
               } else if (category === PluginCategory.Harness) {
