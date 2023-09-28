@@ -68,7 +68,7 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
     } else {
       ref.current = gitRef as string
     }
-  }, [refetch, gitRef])
+  }, [refetch, gitRef, readmeInfo])
 
   const permPushResult = hooks?.usePermissionTranslate?.(
     {
