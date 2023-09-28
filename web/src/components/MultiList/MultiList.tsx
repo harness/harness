@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { debounce } from 'lodash'
+import { debounce, omit } from 'lodash'
 import { FormikContextType, connect } from 'formik'
 import { Layout, Text, FormInput, Button, ButtonVariation, ButtonSize, Container } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'
+import { Icon } from '@harnessio/icons'
 import { useStrings } from 'framework/strings'
 
 import css from './MultiList.module.scss'
@@ -23,7 +24,11 @@ export const MultiList = ({ name, label, readOnly, formik }: MultiListConnectedP
   const [values, setValues] = useState<string[]>([])
 
   useEffect(() => {
-    formik?.setFieldValue(name, values)
+    if (values.length > 0) {
+      formik?.setFieldValue(name, values)
+    } else {
+      cleanupField()
+    }
   }, [values])
 
   const getFieldName = useCallback(
@@ -33,22 +38,54 @@ export const MultiList = ({ name, label, readOnly, formik }: MultiListConnectedP
     [name]
   )
 
-  const handleAddRowToList = (): void => {
+  const handleAddRowToList = useCallback((): void => {
     setRowCount((existingCount: number) => existingCount + 1)
-  }
+  }, [])
 
-  const handleAddItemToList = (event: React.FormEvent<HTMLInputElement>): void => {
+  const handleRemoveRowFromList = useCallback((removedRowIdx: number): void => {
+    setRowCount((existingCount: number) => existingCount - 1)
+    removeItemFromList(removedRowIdx)
+  }, [])
+
+  const handleAddItemToList = useCallback((event: React.FormEvent<HTMLInputElement>): void => {
     const value = (event.target as HTMLInputElement).value
     setValues((existingValues: string[]) => [...existingValues, value])
-  }
+  }, [])
+
+  const removeItemFromList = useCallback((removedRowIdx: number): void => {
+    setValues((existingValues: string[]) => {
+      const existingValuesCopy = [...existingValues]
+      if (removedRowIdx > -1) {
+        existingValuesCopy.splice(removedRowIdx, 1)
+        return existingValuesCopy
+      }
+      return existingValues
+    })
+  }, [])
+
+  const cleanupField = useCallback((): void => {
+    formik?.setValues(omit({ ...formik?.values }, name))
+  }, [formik?.values])
 
   const debouncedAddItemToList = useCallback(debounce(handleAddItemToList, 300), [handleAddItemToList])
 
   const renderRow = useCallback((rowIndex: number): React.ReactElement => {
     return (
-      <Container margin={{ bottom: 'none' }}>
-        <FormInput.Text name={getFieldName(rowIndex)} disabled={readOnly} onChange={debouncedAddItemToList} />
-      </Container>
+      <Layout.Horizontal margin={{ bottom: 'none' }} flex={{ justifyContent: 'space-between', alignItems: 'center' }}>
+        <Container width="90%">
+          <FormInput.Text name={getFieldName(rowIndex)} disabled={readOnly} onChange={debouncedAddItemToList} />
+        </Container>
+        <Icon
+          name="code-delete"
+          size={25}
+          padding={{ bottom: 'medium' }}
+          className={css.deleteRowBtn}
+          onClick={event => {
+            event.preventDefault()
+            handleRemoveRowFromList(rowIndex)
+          }}
+        />
+      </Layout.Horizontal>
     )
   }, [])
 
