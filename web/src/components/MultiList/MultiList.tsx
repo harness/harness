@@ -67,7 +67,7 @@ export const MultiList = ({ name, label, readOnly, formik }: MultiListConnectedP
     formik?.setValues(omit({ ...formik?.values }, name))
   }, [formik?.values])
 
-  const debouncedAddItemToList = useCallback(debounce(handleAddItemToList, 300), [handleAddItemToList])
+  const debouncedAddItemToList = useCallback(debounce(handleAddItemToList, 500), [handleAddItemToList])
 
   const renderRow = useCallback((rowIndex: number): React.ReactElement => {
     return (
