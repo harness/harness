@@ -44,18 +44,17 @@ func (c *Controller) UpdateAdmin(ctx context.Context, session *auth.Session,
 	}
 
 	// Fail if the user being updated is the only admin in DB.
-	if !request.Admin && user.Admin {
+	if user.Admin && !request.Admin {
 		admUsrCount, err := c.principalStore.CountUsers(ctx, &types.UserFilter{Admin: true})
 		if err != nil {
 			return nil, fmt.Errorf("failed to check admin user count: %w", err)
 		}
 
-		if admUsrCount == 1 {
+		if admUsrCount <= 1 {
 			return nil, usererror.BadRequest("system requires at least one admin user")
 		}
-
-		return user, nil
 	}
+
 	user.Admin = request.Admin
 	user.Updated = time.Now().UnixMilli()
 
