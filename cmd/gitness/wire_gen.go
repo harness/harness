@@ -8,7 +8,6 @@ package main
 
 import (
 	"context"
-
 	check2 "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
 	"github.com/harness/gitness/app/api/controller/execution"
@@ -67,6 +66,7 @@ import (
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 )
@@ -79,6 +79,8 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
+	accessorTx := dbtx.ProvideAccessorTx(db)
+	transactor := dbtx.ProvideTransactor(accessorTx)
 	principalUID := check.ProvidePrincipalUIDCheck()
 	spacePathTransformation := store.ProvidePathTransformation()
 	spacePathStore := database.ProvideSpacePathStore(db, spacePathTransformation)
@@ -92,7 +94,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	principalUIDTransformation := store.ProvidePrincipalUIDTransformation()
 	principalStore := database.ProvidePrincipalStore(db, principalUIDTransformation)
 	tokenStore := database.ProvideTokenStore(db)
-	controller := user.ProvideController(db, principalUID, authorizer, principalStore, tokenStore, membershipStore)
+	controller := user.ProvideController(transactor, principalUID, authorizer, principalStore, tokenStore, membershipStore)
 	serviceController := service.NewController(principalUID, authorizer, principalStore)
 	bootstrapBootstrap := bootstrap.ProvideBootstrap(config, controller, serviceController)
 	authenticator := authn.ProvideAuthenticator(config, principalStore, tokenStore)
@@ -131,11 +133,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	streamer := sse.ProvideEventsStreaming(pubSub)
-	repository, err := importer.ProvideRepoImporter(config, provider, gitrpcInterface, db, repoStore, pipelineStore, triggerStore, encrypter, jobScheduler, executor, streamer)
+	repository, err := importer.ProvideRepoImporter(config, provider, gitrpcInterface, transactor, repoStore, pipelineStore, triggerStore, encrypter, jobScheduler, executor, streamer)
 	if err != nil {
 		return nil, err
 	}
-	repoController := repo.ProvideController(config, db, provider, pathUID, authorizer, repoStore, spaceStore, pipelineStore, principalStore, gitrpcInterface, repository)
+	repoController := repo.ProvideController(config, transactor, provider, pathUID, authorizer, repoStore, spaceStore, pipelineStore, principalStore, gitrpcInterface, repository)
 	executionStore := database.ProvideExecutionStore(db)
 	checkStore := database.ProvideCheckStore(db, principalInfoCache)
 	stageStore := database.ProvideStageStore(db)
@@ -147,11 +149,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	cancelerCanceler := canceler.ProvideCanceler(executionStore, streamer, repoStore, schedulerScheduler, stageStore, stepStore)
 	commitService := commit.ProvideService(gitrpcInterface)
 	fileService := file.ProvideService(gitrpcInterface)
-	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, db, pipelineStore, fileService, schedulerScheduler, repoStore)
-	executionController := execution.ProvideController(db, authorizer, executionStore, checkStore, cancelerCanceler, commitService, triggererTriggerer, repoStore, stageStore, pipelineStore)
+	triggererTriggerer := triggerer.ProvideTriggerer(executionStore, checkStore, stageStore, transactor, pipelineStore, fileService, schedulerScheduler, repoStore)
+	executionController := execution.ProvideController(transactor, authorizer, executionStore, checkStore, cancelerCanceler, commitService, triggererTriggerer, repoStore, stageStore, pipelineStore)
 	logStore := logs.ProvideLogStore(db, config)
-	logStream := livelog.ProvideLogStream(config)
-	logsController := logs2.ProvideController(db, authorizer, executionStore, repoStore, pipelineStore, stageStore, stepStore, logStore, logStream)
+	logStream := livelog.ProvideLogStream()
+	logsController := logs2.ProvideController(authorizer, executionStore, repoStore, pipelineStore, stageStore, stepStore, logStore, logStream)
 	secretStore := database.ProvideSecretStore(db)
 	connectorStore := database.ProvideConnectorStore(db)
 	templateStore := database.ProvideTemplateStore(db)
@@ -159,14 +161,14 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	spaceController := space.ProvideController(config, db, provider, streamer, pathUID, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository)
-	pipelineController := pipeline.ProvideController(db, pathUID, repoStore, triggerStore, authorizer, pipelineStore)
-	secretController := secret.ProvideController(db, pathUID, encrypter, secretStore, authorizer, spaceStore)
-	triggerController := trigger.ProvideController(db, authorizer, triggerStore, pathUID, pipelineStore, repoStore)
-	connectorController := connector.ProvideController(db, pathUID, connectorStore, authorizer, spaceStore)
-	templateController := template.ProvideController(db, pathUID, templateStore, authorizer, spaceStore)
+	spaceController := space.ProvideController(config, transactor, provider, streamer, pathUID, authorizer, spacePathStore, pipelineStore, secretStore, connectorStore, templateStore, spaceStore, repoStore, principalStore, repoController, membershipStore, repository, exporterRepository)
+	pipelineController := pipeline.ProvideController(pathUID, repoStore, triggerStore, authorizer, pipelineStore)
+	secretController := secret.ProvideController(pathUID, encrypter, secretStore, authorizer, spaceStore)
+	triggerController := trigger.ProvideController(authorizer, triggerStore, pathUID, pipelineStore, repoStore)
+	connectorController := connector.ProvideController(pathUID, connectorStore, authorizer, spaceStore)
+	templateController := template.ProvideController(pathUID, templateStore, authorizer, spaceStore)
 	pluginStore := database.ProvidePluginStore(db)
-	pluginController := plugin.ProvideController(db, pluginStore)
+	pluginController := plugin.ProvideController(pluginStore)
 	pullReqStore := database.ProvidePullReqStore(db, principalInfoCache)
 	pullReqActivityStore := database.ProvidePullReqActivityStore(db, principalInfoCache)
 	codeCommentView := database.ProvideCodeCommentView(db)
@@ -196,11 +198,11 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	repoGitInfoView := database.ProvideRepoGitInfoView(db)
 	repoGitInfoCache := cache.ProvideRepoGitInfoCache(repoGitInfoView)
-	pullreqService, err := pullreq.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter, gitrpcInterface, db, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore, codeCommentView, migrator, pullReqFileViewStore, pubSub, provider, streamer)
+	pullreqService, err := pullreq.ProvideService(ctx, config, readerFactory, eventsReaderFactory, reporter, gitrpcInterface, repoGitInfoCache, repoStore, pullReqStore, pullReqActivityStore, codeCommentView, migrator, pullReqFileViewStore, pubSub, provider, streamer)
 	if err != nil {
 		return nil, err
 	}
-	pullreqController := pullreq2.ProvideController(db, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, pullReqFileViewStore, gitrpcInterface, reporter, mutexManager, migrator, pullreqService, streamer)
+	pullreqController := pullreq2.ProvideController(transactor, provider, authorizer, pullReqStore, pullReqActivityStore, codeCommentView, pullReqReviewStore, pullReqReviewerStore, repoStore, principalStore, pullReqFileViewStore, gitrpcInterface, reporter, mutexManager, migrator, pullreqService, streamer)
 	webhookConfig := server.ProvideWebhookConfig(config)
 	webhookStore := database.ProvideWebhookStore(db)
 	webhookExecutionStore := database.ProvideWebhookExecutionStore(db)
@@ -208,15 +210,15 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	webhookController := webhook2.ProvideController(webhookConfig, db, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService, encrypter)
+	webhookController := webhook2.ProvideController(webhookConfig, authorizer, webhookStore, webhookExecutionStore, repoStore, webhookService, encrypter)
 	eventsReporter, err := events3.ProvideReporter(eventsSystem)
 	if err != nil {
 		return nil, err
 	}
-	githookController := githook.ProvideController(db, authorizer, principalStore, repoStore, eventsReporter, pullReqStore, provider)
+	githookController := githook.ProvideController(authorizer, principalStore, repoStore, eventsReporter, pullReqStore, provider)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore)
-	checkController := check2.ProvideController(db, authorizer, repoStore, checkStore, gitrpcInterface)
+	checkController := check2.ProvideController(transactor, authorizer, repoStore, checkStore, gitrpcInterface)
 	systemController := system.NewController(principalStore, config)
 	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController)
 	gitHandler := router.ProvideGitHandler(config, provider, repoStore, authenticator, authorizer, gitrpcInterface)

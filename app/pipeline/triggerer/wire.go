@@ -18,9 +18,9 @@ import (
 	"github.com/harness/gitness/app/pipeline/file"
 	"github.com/harness/gitness/app/pipeline/scheduler"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
@@ -33,12 +33,12 @@ func ProvideTriggerer(
 	executionStore store.ExecutionStore,
 	checkStore store.CheckStore,
 	stageStore store.StageStore,
-	db *sqlx.DB,
+	tx dbtx.Transactor,
 	pipelineStore store.PipelineStore,
 	fileService file.Service,
 	scheduler scheduler.Scheduler,
 	repoStore store.RepoStore,
 ) Triggerer {
 	return New(executionStore, checkStore, stageStore, pipelineStore,
-		db, repoStore, scheduler, fileService)
+		tx, repoStore, scheduler, fileService)
 }

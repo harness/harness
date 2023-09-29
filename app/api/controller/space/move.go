@@ -21,7 +21,6 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -95,7 +94,7 @@ func (c *Controller) moveInner(
 	space *types.Space,
 	inUID *string,
 ) error {
-	return dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+	return c.tx.WithTx(ctx, func(ctx context.Context) error {
 		// delete old primary segment
 		err := c.spacePathStore.DeletePrimarySegment(ctx, space.ID)
 		if err != nil {

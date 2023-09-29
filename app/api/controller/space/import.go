@@ -21,7 +21,6 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/importer"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 )
 
@@ -60,7 +59,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	cloneURLs := make([]string, len(remoteRepositories))
 
 	var space *types.Space
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		space, err = c.createSpaceInnerInTX(ctx, session, parentSpaceID, &in.CreateInput)
 		if err != nil {
 			return err

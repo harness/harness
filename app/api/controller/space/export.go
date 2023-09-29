@@ -23,7 +23,6 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/services/exporter"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -72,7 +71,7 @@ func (c *Controller) Export(ctx context.Context, session *auth.Session, spaceRef
 		repos = append(repos, reposInPage...)
 	}
 
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		err = c.exporter.RunManyForSpace(ctx, space.ID, repos, providerInfo)
 		if errors.Is(err, exporter.ErrJobRunning) {
 			return usererror.ConflictWithPayload("export already in progress")

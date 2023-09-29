@@ -39,6 +39,8 @@ func NewController(principalUIDCheck check.PrincipalUID, authorizer authz.Author
 }
 
 func findServiceFromUID(ctx context.Context,
-	principalStore store.PrincipalStore, serviceUID string) (*types.Service, error) {
+	principalStore store.PrincipalStore,
+	serviceUID string,
+) (*types.Service, error) {
 	return principalStore.FindServiceByUID(ctx, serviceUID)
 }

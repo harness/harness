@@ -16,21 +16,16 @@ package plugin
 
 import (
 	"github.com/harness/gitness/app/store"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Controller struct {
-	db          *sqlx.DB
 	pluginStore store.PluginStore
 }
 
 func NewController(
-	db *sqlx.DB,
 	pluginStore store.PluginStore,
 ) *Controller {
 	return &Controller{
-		db:          db,
 		pluginStore: pluginStore,
 	}
 }

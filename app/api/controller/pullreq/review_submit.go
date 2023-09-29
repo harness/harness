@@ -25,7 +25,6 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/store"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -98,7 +97,7 @@ func (c *Controller) ReviewSubmit(
 
 	var review *types.PullReqReview
 
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		now := time.Now().UnixMilli()
 		review = &types.PullReqReview{
 			ID:        0,

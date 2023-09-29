@@ -20,20 +20,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// ctxKeyDB is context key for storing and retrieving Transactor to and from a context.
-type ctxKeyDB struct{}
-
-// PutTransactor places Transactor into the context.
-func PutTransactor(ctx context.Context, t Transactor) context.Context {
-	return context.WithValue(ctx, ctxKeyDB{}, t)
-}
-
-// WithTx starts a transaction with Transactor interface from the context. It will panic if there is no Transactor.
-func WithTx(ctx context.Context, txFn func(ctx context.Context) error, opts ...interface{}) error {
-	return ctx.Value(ctxKeyDB{}).(Transactor).WithTx(ctx, txFn, opts...)
-}
-
-// ctxKeyTx is context key for storing and retrieving Tx to and from a context.
+// ctxKeyTx is context key for storing and retrieving TransactionAccessor to and from a context.
 type ctxKeyTx struct{}
 
 // GetAccessor returns Accessor interface from the context if it exists or creates a new one from the provided *sql.DB.

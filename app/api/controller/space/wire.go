@@ -22,11 +22,11 @@ import (
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
@@ -34,7 +34,7 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(config *types.Config, db *sqlx.DB, urlProvider url.Provider, sseStreamer sse.Streamer,
+func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url.Provider, sseStreamer sse.Streamer,
 	uidCheck check.PathUID, authorizer authz.Authorizer, spacePathStore store.SpacePathStore,
 	pipelineStore store.PipelineStore, secretStore store.SecretStore,
 	connectorStore store.ConnectorStore, templateStore store.TemplateStore,
@@ -42,7 +42,7 @@ func ProvideController(config *types.Config, db *sqlx.DB, urlProvider url.Provid
 	repoCtrl *repo.Controller, membershipStore store.MembershipStore, importer *importer.Repository,
 	exporter *exporter.Repository,
 ) *Controller {
-	return NewController(config, db, urlProvider, sseStreamer, uidCheck, authorizer,
+	return NewController(config, tx, urlProvider, sseStreamer, uidCheck, authorizer,
 		spacePathStore, pipelineStore, secretStore,
 		connectorStore, templateStore,
 		spaceStore, repoStore, principalStore,

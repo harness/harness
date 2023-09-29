@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"github.com/harness/gitness/app/auth"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -40,7 +39,7 @@ func (c *Controller) ListChecks(
 	var checks []types.Check
 	var count int
 
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
+	err = c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
 		count, err = c.checkStore.Count(ctx, repo.ID, commitSHA, opts)
 		if err != nil {
 			return fmt.Errorf("failed to count status check results for repo=%s: %w", repo.UID, err)

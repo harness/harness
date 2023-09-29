@@ -18,13 +18,10 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types/check"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Controller struct {
 	defaultBranch string
-	db            *sqlx.DB
 	uidCheck      check.PathUID
 	repoStore     store.RepoStore
 	triggerStore  store.TriggerStore
@@ -33,7 +30,6 @@ type Controller struct {
 }
 
 func NewController(
-	db *sqlx.DB,
 	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
 	repoStore store.RepoStore,
@@ -41,7 +37,6 @@ func NewController(
 	pipelineStore store.PipelineStore,
 ) *Controller {
 	return &Controller{
-		db:            db,
 		uidCheck:      uidCheck,
 		repoStore:     repoStore,
 		triggerStore:  triggerStore,

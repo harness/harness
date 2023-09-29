@@ -29,7 +29,7 @@ type runnerDB struct {
 	mx locker
 }
 
-var _ Transactor = runnerDB{}
+var _ AccessorTx = runnerDB{}
 
 func (r runnerDB) WithTx(ctx context.Context, txFn func(context.Context) error, opts ...interface{}) error {
 	var txOpts *sql.TxOptions
@@ -57,9 +57,9 @@ func (r runnerDB) WithTx(ctx context.Context, txFn func(context.Context) error, 
 	}
 
 	rtx := &runnerTx{
-		Tx:       tx,
-		commit:   false,
-		rollback: false,
+		TransactionAccessor: tx,
+		commit:              false,
+		rollback:            false,
 	}
 
 	defer func() {
@@ -69,7 +69,7 @@ func (r runnerDB) WithTx(ctx context.Context, txFn func(context.Context) error, 
 		_ = tx.Rollback() // ignoring the rollback error
 	}()
 
-	err = txFn(context.WithValue(ctx, ctxKeyTx{}, Tx(rtx)))
+	err = txFn(context.WithValue(ctx, ctxKeyTx{}, TransactionAccessor(rtx)))
 	if err != nil {
 		return err
 	}
@@ -162,15 +162,15 @@ func (r runnerDB) SelectContext(ctx context.Context, dest interface{}, query str
 // runnerTx executes sqlx database transaction calls.
 // Locking is not used because runnerDB locks the entire transaction.
 type runnerTx struct {
-	Tx
+	TransactionAccessor
 	commit   bool
 	rollback bool
 }
 
-var _ Tx = (*runnerTx)(nil)
+var _ TransactionAccessor = (*runnerTx)(nil)
 
 func (r *runnerTx) Commit() error {
-	err := r.Tx.Commit()
+	err := r.TransactionAccessor.Commit()
 	if err == nil {
 		r.commit = true
 	}
@@ -178,7 +178,7 @@ func (r *runnerTx) Commit() error {
 }
 
 func (r *runnerTx) Rollback() error {
-	err := r.Tx.Rollback()
+	err := r.TransactionAccessor.Rollback()
 	if err == nil {
 		r.rollback = true
 	}

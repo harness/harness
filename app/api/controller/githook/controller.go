@@ -26,8 +26,6 @@ import (
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/jmoiron/sqlx"
 )
 
 // ServerHookOutput represents the output of server hook api calls.
@@ -54,7 +52,6 @@ type BaseInput struct {
 }
 
 type Controller struct {
-	db             *sqlx.DB
 	authorizer     authz.Authorizer
 	principalStore store.PrincipalStore
 	repoStore      store.RepoStore
@@ -64,7 +61,6 @@ type Controller struct {
 }
 
 func NewController(
-	db *sqlx.DB,
 	authorizer authz.Authorizer,
 	principalStore store.PrincipalStore,
 	repoStore store.RepoStore,
@@ -73,7 +69,6 @@ func NewController(
 	urlProvider url.Provider,
 ) *Controller {
 	return &Controller{
-		db:             db,
 		authorizer:     authorizer,
 		principalStore: principalStore,
 		repoStore:      repoStore,

@@ -20,8 +20,6 @@ import (
 
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/store/database/dbtx"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type TxOptionRetryCount int
@@ -30,7 +28,7 @@ type TxOptionRetryCount int
 // during the operation, the function will retry the whole transaction again (to the maximum of 5 times,
 // but this can be overridden by providing an additional TxOptionRetryCount option).
 func TxOptLock(ctx context.Context,
-	db *sqlx.DB,
+	tx dbtx.Transactor,
 	txFn func(ctx context.Context) error,
 	opts ...interface{},
 ) (err error) {
@@ -42,7 +40,7 @@ func TxOptLock(ctx context.Context,
 	}
 
 	for try := 0; try < tries; try++ {
-		err = dbtx.New(db).WithTx(ctx, txFn, opts...)
+		err = tx.WithTx(ctx, txFn, opts...)
 		if !errors.Is(err, store.ErrVersionConflict) {
 			break
 		}

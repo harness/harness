@@ -29,16 +29,15 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Controller struct {
 	defaultBranch  string
-	db             *sqlx.DB
+	tx             dbtx.Transactor
 	urlProvider    url.Provider
 	uidCheck       check.PathUID
 	authorizer     authz.Authorizer
@@ -52,7 +51,7 @@ type Controller struct {
 
 func NewController(
 	defaultBranch string,
-	db *sqlx.DB,
+	tx dbtx.Transactor,
 	urlProvider url.Provider,
 	uidCheck check.PathUID,
 	authorizer authz.Authorizer,
@@ -65,7 +64,7 @@ func NewController(
 ) *Controller {
 	return &Controller{
 		defaultBranch:  defaultBranch,
-		db:             db,
+		tx:             tx,
 		urlProvider:    urlProvider,
 		uidCheck:       uidCheck,
 		authorizer:     authorizer,

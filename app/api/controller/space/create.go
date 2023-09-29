@@ -26,7 +26,6 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	"github.com/harness/gitness/app/paths"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/check"
 	"github.com/harness/gitness/types/enum"
@@ -61,7 +60,7 @@ func (c *Controller) Create(
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 	var space *types.Space
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		space, err = c.createSpaceInnerInTX(ctx, session, parentID, in)
 		return err
 	})

@@ -52,7 +52,7 @@ func (c *Controller) List(
 
 	filter.TargetRepoID = repo.ID
 
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		list, err = c.pullreqStore.List(ctx, filter)
 		if err != nil {
 			return fmt.Errorf("failed to list pull requests: %w", err)

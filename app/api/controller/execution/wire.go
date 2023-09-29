@@ -20,9 +20,9 @@ import (
 	"github.com/harness/gitness/app/pipeline/commit"
 	"github.com/harness/gitness/app/pipeline/triggerer"
 	"github.com/harness/gitness/app/store"
+	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
@@ -30,7 +30,8 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(db *sqlx.DB,
+func ProvideController(
+	tx dbtx.Transactor,
 	authorizer authz.Authorizer,
 	executionStore store.ExecutionStore,
 	checkStore store.CheckStore,
@@ -41,6 +42,6 @@ func ProvideController(db *sqlx.DB,
 	stageStore store.StageStore,
 	pipelineStore store.PipelineStore,
 ) *Controller {
-	return NewController(db, authorizer, executionStore, checkStore,
+	return NewController(tx, authorizer, executionStore, checkStore,
 		canceler, commitService, triggerer, repoStore, stageStore, pipelineStore)
 }

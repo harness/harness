@@ -51,7 +51,7 @@ func (c *Controller) ListSpacesNoAuth(
 	var spaces []*types.Space
 	var count int64
 
-	err := dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) (err error) {
+	err := c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
 		count, err = c.spaceStore.Count(ctx, spaceID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to count child spaces: %w", err)

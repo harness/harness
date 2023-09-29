@@ -20,7 +20,6 @@ import (
 	"github.com/harness/gitness/types/check"
 
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
@@ -28,13 +27,13 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(db *sqlx.DB,
+func ProvideController(
 	uidCheck check.PathUID,
 	repoStore store.RepoStore,
 	triggerStore store.TriggerStore,
 	authorizer authz.Authorizer,
 	pipelineStore store.PipelineStore,
 ) *Controller {
-	return NewController(db, uidCheck, authorizer,
+	return NewController(uidCheck, authorizer,
 		repoStore, triggerStore, pipelineStore)
 }

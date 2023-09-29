@@ -44,7 +44,7 @@ func (c *Controller) MembershipSpaces(ctx context.Context,
 	var membershipSpaces []types.MembershipSpace
 	var membershipsCount int64
 
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		membershipSpaces, err = c.membershipStore.ListSpaces(ctx, user.ID, filter)
 		if err != nil {
 			return fmt.Errorf("failed to list membership spaces for user: %w", err)

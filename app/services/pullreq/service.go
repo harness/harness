@@ -33,14 +33,11 @@ import (
 	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/stream"
 	"github.com/harness/gitness/types"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Service struct {
 	pullreqEvReporter   *pullreqevents.Reporter
 	gitRPCClient        gitrpc.Interface
-	db                  *sqlx.DB
 	repoGitInfoCache    store.RepoGitInfoCache
 	repoStore           store.RepoStore
 	pullreqStore        store.PullReqStore
@@ -64,7 +61,6 @@ func New(ctx context.Context,
 	pullreqEvReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
 	pullreqEvReporter *pullreqevents.Reporter,
 	gitRPCClient gitrpc.Interface,
-	db *sqlx.DB,
 	repoGitInfoCache store.RepoGitInfoCache,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
@@ -79,7 +75,6 @@ func New(ctx context.Context,
 	service := &Service{
 		pullreqEvReporter:   pullreqEvReporter,
 		gitRPCClient:        gitRPCClient,
-		db:                  db,
 		repoGitInfoCache:    repoGitInfoCache,
 		repoStore:           repoStore,
 		pullreqStore:        pullreqStore,

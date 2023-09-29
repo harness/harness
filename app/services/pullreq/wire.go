@@ -29,7 +29,6 @@ import (
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
 )
 
 var WireSet = wire.NewSet(
@@ -42,7 +41,6 @@ func ProvideService(ctx context.Context,
 	pullReqEvFactory *events.ReaderFactory[*pullreqevents.Reader],
 	pullReqEvReporter *pullreqevents.Reporter,
 	gitRPCClient gitrpc.Interface,
-	db *sqlx.DB,
 	repoGitInfoCache store.RepoGitInfoCache,
 	repoStore store.RepoStore,
 	pullreqStore store.PullReqStore,
@@ -55,6 +53,6 @@ func ProvideService(ctx context.Context,
 	sseStreamer sse.Streamer,
 ) (*Service, error) {
 	return New(ctx, config, gitReaderFactory, pullReqEvFactory, pullReqEvReporter, gitRPCClient,
-		db, repoGitInfoCache, repoStore, pullreqStore, activityStore,
+		repoGitInfoCache, repoStore, pullreqStore, activityStore,
 		codeCommentView, codeCommentMigrator, fileViewStore, pubsub, urlProvider, sseStreamer)
 }

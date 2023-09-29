@@ -24,7 +24,6 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/store"
-	"github.com/harness/gitness/store/database/dbtx"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -95,7 +94,7 @@ func (c *Controller) ReviewerAdd(
 
 	var reviewer *types.PullReqReviewer
 
-	err = dbtx.New(c.db).WithTx(ctx, func(ctx context.Context) error {
+	err = c.tx.WithTx(ctx, func(ctx context.Context) error {
 		reviewer, err = c.reviewerStore.Find(ctx, pr.ID, in.ReviewerID)
 		if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 			return err

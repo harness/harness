@@ -24,9 +24,9 @@ import (
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/lock"
+	"github.com/harness/gitness/store/database/dbtx"
 
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
@@ -34,7 +34,7 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(db *sqlx.DB, urlProvider url.Provider, authorizer authz.Authorizer,
+func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer authz.Authorizer,
 	pullReqStore store.PullReqStore, pullReqActivityStore store.PullReqActivityStore,
 	codeCommentsView store.CodeCommentView,
 	pullReqReviewStore store.PullReqReviewStore, pullReqReviewerStore store.PullReqReviewerStore,
@@ -43,7 +43,7 @@ func ProvideController(db *sqlx.DB, urlProvider url.Provider, authorizer authz.A
 	mtxManager lock.MutexManager, codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service, sseStreamer sse.Streamer,
 ) *Controller {
-	return NewController(db, urlProvider, authorizer,
+	return NewController(tx, urlProvider, authorizer,
 		pullReqStore, pullReqActivityStore,
 		codeCommentsView,
 		pullReqReviewStore, pullReqReviewerStore,

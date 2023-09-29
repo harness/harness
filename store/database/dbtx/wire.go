@@ -12,27 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package trigger
+package dbtx
 
 import (
-	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/types/check"
-
 	"github.com/google/wire"
+	"github.com/jmoiron/sqlx"
 )
 
 // WireSet provides a wire set for this package.
 var WireSet = wire.NewSet(
-	ProvideController,
+	ProvideAccessorTx,
+	ProvideAccessor,
+	ProvideTransactor,
 )
 
-func ProvideController(
-	authorizer authz.Authorizer,
-	triggerStore store.TriggerStore,
-	uidCheck check.PathUID,
-	pipelineStore store.PipelineStore,
-	repoStore store.RepoStore,
-) *Controller {
-	return NewController(authorizer, triggerStore, uidCheck, pipelineStore, repoStore)
+// ProvideAccessorTx provides the most versatile database access interface.
+// All DB queries and transactions can be performed.
+func ProvideAccessorTx(db *sqlx.DB) AccessorTx {
+	return New(db)
+}
+
+// ProvideAccessor provides the database access interface. All DB queries can be performed.
+func ProvideAccessor(a AccessorTx) Accessor {
+	return a
+}
+
+// ProvideTransactor provides ability to run DB transactions.
+func ProvideTransactor(a AccessorTx) Transactor {
+	return a
 }

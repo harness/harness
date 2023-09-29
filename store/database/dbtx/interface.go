@@ -40,15 +40,19 @@ type Transaction interface {
 	Rollback() error
 }
 
-// Transactor is used to access the database. It combines Accessor interface
-// with capability to run functions in a transaction.
 type Transactor interface {
-	Accessor
 	WithTx(ctx context.Context, txFn func(ctx context.Context) error, opts ...interface{}) error
 }
 
-// Tx combines data access capabilities with the transaction commit and rollback.
-type Tx interface {
+// AccessorTx is used to access the database. It combines Accessor interface
+// with Transactor (capability to run functions in a transaction).
+type AccessorTx interface {
 	Accessor
+	Transactor
+}
+
+// TransactionAccessor combines data access capabilities with the transaction commit and rollback.
+type TransactionAccessor interface {
 	Transaction
+	Accessor
 }
