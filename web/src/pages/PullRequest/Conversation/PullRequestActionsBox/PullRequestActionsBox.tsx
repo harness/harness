@@ -140,7 +140,7 @@ export const PullRequestActionsBox: React.FC<PullRequestActionsBoxProps> = ({
 
   const [mergeOption, setMergeOption, resetMergeOption] = useUserPreference<PRMergeOption>(
     UserPreference.PULL_REQUEST_MERGE_STRATEGY,
-    mergeOptions[1],
+    mergeOptions[0],
     option => option.method !== 'close'
   )
   const [draftOption, setDraftOption] = useState<PRDraftOption>(draftOptions[0])
