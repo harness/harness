@@ -15,7 +15,17 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { Container, TableV2 as Table, Text, Avatar, Tag, useToaster, StringSubstitute } from '@harnessio/uicore'
+import {
+  Container,
+  TableV2 as Table,
+  Text,
+  Avatar,
+  Tag,
+  useToaster,
+  StringSubstitute,
+  useIsMounted
+} from '@harnessio/uicore'
+import { noop } from 'lodash-es'
 import { Color, Intent } from '@harnessio/design-system'
 import type { CellProps, Column } from 'react-table'
 import { Link, useHistory } from 'react-router-dom'
@@ -60,15 +70,20 @@ export function BranchesContent({ repoMetadata, searchTerm = '', branches, onDel
       requests: branches?.map(branch => ({ from: branch.name, to: repoMetadata.default_branch }))
     }
   }, [repoMetadata, branches])
+  const isMounted = useIsMounted()
 
   useEffect(() => {
-    if (branchDivergenceRequestBody.requests?.length) {
+    if (isMounted.current && branchDivergenceRequestBody.requests?.length) {
       setDivergence([])
-      getBranchDivergence(branchDivergenceRequestBody).then((response: RepoCommitDivergence[]) => {
-        setDivergence(response)
-      })
+      getBranchDivergence(branchDivergenceRequestBody)
+        .then((response: RepoCommitDivergence[]) => {
+          if (isMounted.current) {
+            setDivergence(response)
+          }
+        })
+        .catch(noop)
     }
-  }, [getBranchDivergence, branchDivergenceRequestBody])
+  }, [getBranchDivergence, branchDivergenceRequestBody, isMounted])
 
   const columns: Column<RepoBranch>[] = useMemo(
     () => [
