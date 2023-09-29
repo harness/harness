@@ -4,7 +4,7 @@ Your lightweight, super fast code hosting and continuous integration service.
 ## Overview
 Gitness is an open source development platform packed with the power of code hosting and automated continuous integration pipelines.
 
-## Running Gitness on Docker
+## Running Gitness locally
 > The latest publicly released docker image can be found on [harness/gitness](https://hub.docker.com/r/harness/gitness).
 
 To install Gitness yourself, simply run the command below. Once the container is up, you can visit http://localhost:3000 in your browser.
@@ -23,8 +23,6 @@ docker run -d \
 See [docs.gitness.com](https://docs.gitness.com) to learn how to get the most out of Gitness.
 
 ## Where is Drone?
-
-Gitness is the next major version of Drone rebranded.
 
 Gitness represents a massive investment in the next generation of Drone. Where Drone focused on continuous integration, Gitness adds source code hosting, bringing code management and pipelines closer together.
 
