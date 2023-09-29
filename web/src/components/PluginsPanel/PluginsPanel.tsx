@@ -37,6 +37,7 @@ import {
 import type { TypesPlugin } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { MultiList } from 'components/MultiList/MultiList'
+import MultiMap from 'components/MultiMap/MultiMap'
 
 import css from './PluginsPanel.module.scss'
 
@@ -360,6 +361,16 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
             />
           </Container>
         )
+      case ValueType.OBJECT:
+        return (
+          <Container margin={{ bottom: 'large' }}>
+            <MultiMap
+              name={name}
+              label={generateLabelForPluginField({ name, properties }) as string}
+              formik={formikRef.current}
+            />
+          </Container>
+        )
 
       default:
         return <></>
@@ -468,8 +479,7 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
                 false,
                 constructPayloadForYAMLInsertion(sanitizeFormData(formData, pluginInputs), plugin)
               )
-            }}
-            validate={(formData: PluginForm) => console.log(formData)}>
+            }}>
             {formik => {
               formikRef.current = formik
               return (

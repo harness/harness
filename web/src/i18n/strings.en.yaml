@@ -130,6 +130,7 @@ validation:
   nameLogic: Name must start with a letter or _ and only contain [a-zA-Z0-9-_.]
   nameTooLong: Name is too long
   nameTooShort: Name is too short
+  key: Key cannot be empty
 commitMessage: Commit message
 optionalExtendedDescription: Optional extended description
 optional: Optional
@@ -827,3 +828,4 @@ enterGithubPlaceholder: https://api.github.com/
 changeRepoVis: Change repository visibility
 changeRepoVisContent: Are you sure you want to make this repository {repoVis}? {repoText}
 repoVisibility: Repository Visibility
+key: Key

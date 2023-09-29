@@ -39,7 +39,7 @@ interface MultiListProps {
   - <field-value-1>,
   - <field-value-2>,
   ...
-  */
+*/
 export const MultiList = ({ name, label, readOnly, formik }: MultiListConnectedProps): JSX.Element => {
   const { getString } = useStrings()
   const [valueMap, setValueMap] = useState<Map<string, string>>(new Map<string, string>([]))
@@ -51,7 +51,7 @@ export const MultiList = ({ name, label, readOnly, formik }: MultiListConnectedP
   const counter = useRef<number>(0)
 
   useEffect(() => {
-    const values = Array.from(valueMap.values())
+    const values = Array.from(valueMap.values() || []).filter((value: string) => !!value)
     if (values.length > 0) {
       formik?.setFieldValue(name, values)
     } else {

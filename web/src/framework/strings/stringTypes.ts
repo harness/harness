@@ -293,6 +293,7 @@ export interface StringsMap {
   in: string
   inactiveBranches: string
   isRequired: string
+  key: string
   killed: string
   leaveAComment: string
   license: string
@@ -715,6 +716,7 @@ export interface StringsMap {
   'validation.expirationDateRequired': string
   'validation.gitBranchNameInvalid': string
   'validation.gitTagNameInvalid': string
+  'validation.key': string
   'validation.nameInvalid': string
   'validation.nameIsRequired': string
   'validation.nameLogic': string
