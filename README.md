@@ -1,32 +1,42 @@
 # Gitness
 Your lightweight, super fast code hosting and continuous integration service.
 
-## What is Gitness and where is Drone
-Gitness is our new open source development platform packed with the power of code hosting and automated CI pipelines.
-
-Gitness represents a massive investment in the next generation of Drone, with the goal to bring code management and pipelines closer together.\
-The idea is for Gitness to eventually be at full parity with Drone in terms of pipeline capabilities, allowing users to seemlessly migrate from Drone to Gitness.\
-But, we expect this to take some time, which is why we took a snapshot of Drone as a feature branch [drone](https://github.com/harness/gitness/tree/drone) ([README](https://github.com/harness/gitness/blob/drone/.github/readme.md)) so it can continue development.\
-As for Gitness, the development is taking place on the [main](https://github.com/harness/gitness/tree/main) branch.
-
-For more information on Gitness, please visit [gitness.com](https://gitness.com/)\
-For more information on Drone, please visit [drone.io](https://www.drone.io/)
+## Overview
+Gitness is an open source development platform packed with the power of code hosting and automated continuous integration pipelines.
 
 ## Running Gitness on Docker
 > The latest publicly released docker image can be found on [harness/gitness](https://hub.docker.com/r/harness/gitness).
 
-One of the main philosophies of Gitness is to make it as easy as possible for anyone to run it.\
-To try it out, simply run the command below. Once the container is running, you can visit http://localhost:3000 in your browser.
+To install Gitness yourself, simply run the command below. Once the container is up, you can visit http://localhost:3000 in your browser.
 
-
-``` bash
-docker run \
+```bash
+docker run -d \
   -p 3000:3000 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v /tmp/gitness:/data \
-  harness/gitness:latest
+  --name gitness \
+  --restart always \
+  harness/gitness
 ```
 > The Gitness image uses a volume to store the database and repositories. It is highly recommended to use a bind mount or named volume as otherwise all data will be lost once the container is stopped.
+
+See [docs.gitness.com](https://docs.gitness.com) to learn how to get the most out of Gitness.
+
+## Where is Drone?
+
+Gitness is the next major version of Drone rebranded.
+
+Gitness represents a massive investment in the next generation of Drone. Where Drone focused on continuous integration, Gitness adds source code hosting, bringing code management and pipelines closer together.
+
+The goal is for Gitness to eventually be at full parity with Drone in terms of pipeline capabilities, allowing users to seemlessly migrate from Drone to Gitness.
+
+But, we expect this to take some time, which is why we took a snapshot of Drone as a feature branch [drone](https://github.com/harness/gitness/tree/drone) ([README](https://github.com/harness/gitness/blob/drone/.github/readme.md)) so it can continue development.
+
+As for Gitness, the development is taking place on the [main](https://github.com/harness/gitness/tree/main) branch.
+
+For more information on Gitness, please visit [gitness.com](https://gitness.com/).
+
+For more information on Drone, please visit [drone.io](https://www.drone.io/).
 
 ## Gitness Development
 ### Pre-Requisites
