@@ -232,9 +232,9 @@ export function MarkdownEditorWithPreview({
 
   useEffect(() => {
     if (autoFocusAndPosition && !dirty) {
-      scrollToAndSetCursorToEnd(containerRef, viewRef, value, true)
+      scrollToAndSetCursorToEnd(containerRef, viewRef, true)
     }
-  }, [autoFocusAndPosition, viewRef, containerRef, scrollToAndSetCursorToEnd, value, dirty])
+  }, [autoFocusAndPosition, viewRef, containerRef, scrollToAndSetCursorToEnd, dirty])
 
   return (
     <Container ref={containerRef} className={cx(css.container, { [css.noBorder]: noBorder }, className)}>
@@ -320,7 +320,6 @@ export function MarkdownEditorWithPreview({
 function scrollToAndSetCursorToEnd(
   containerRef: React.RefObject<HTMLDivElement>,
   viewRef: React.MutableRefObject<EditorView | undefined>,
-  content = '',
   moveCursorToEnd = true
 ) {
   const dom = containerRef?.current as unknown as { scrollIntoViewIfNeeded: () => void }
@@ -330,7 +329,8 @@ function scrollToAndSetCursorToEnd(
   // TODO: polyfill scrollintviewifneeded for other browsers besides chrome for scroll
   dom?.scrollIntoViewIfNeeded?.()
 
-  if (moveCursorToEnd) {
-    viewRef.current?.dispatch({ selection: { anchor: content.length, head: content.length } })
+  if (moveCursorToEnd && viewRef.current) {
+    const length = viewRef.current.state.doc.length
+    viewRef.current.dispatch({ selection: { anchor: length, head: length } })
   }
 }
