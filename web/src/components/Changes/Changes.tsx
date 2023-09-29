@@ -140,7 +140,7 @@ export const Changes: React.FC<ChangesProps> = ({
         ? `diff/${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
         // show range of commits and user did not select a subrange
         : `diff/${targetRef}...${sourceRef}`,
-    [commitRange]
+    [commitSHA, commitRange, targetRef, sourceRef]
   )
 
   const {
