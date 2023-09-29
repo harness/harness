@@ -1,5 +1,5 @@
 # Gitness
-Your lightweight, super fast code hosting and continuous integration service.
+Gitness is an open source development platform packed with the power of code hosting and automated DevOps pipelines.
 
 ## Overview
 Gitness is an open source development platform packed with the power of code hosting and automated continuous integration pipelines.
