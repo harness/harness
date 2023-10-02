@@ -88,6 +88,7 @@ func (q *queue) Request(ctx context.Context, params Filter) (*types.Stage, error
 		variant: params.Variant,
 		labels:  params.Labels,
 		channel: make(chan *types.Stage),
+		done:    ctx.Done(),
 	}
 	q.Lock()
 	q.workers[w] = struct{}{}
@@ -100,9 +101,6 @@ func (q *queue) Request(ctx context.Context, params Filter) (*types.Stage, error
 
 	select {
 	case <-ctx.Done():
-		q.Lock()
-		delete(q.workers, w)
-		q.Unlock()
 		return nil, ctx.Err()
 	case b := <-w.channel:
 		return b, nil
@@ -193,7 +191,11 @@ func (q *queue) signal(ctx context.Context) error {
 				}
 			}
 
-			w.channel <- item
+			select {
+			case w.channel <- item:
+			case <-w.done:
+			}
+
 			delete(q.workers, w)
 			break loop
 		}
@@ -229,6 +231,7 @@ type worker struct {
 	variant string
 	labels  map[string]string
 	channel chan *types.Stage
+	done    <-chan struct{}
 }
 
 func checkLabels(a, b map[string]string) bool {
