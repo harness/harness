@@ -8,7 +8,7 @@ image:
   repository: harness/gitness
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "release-19"
+  tag: "latest"
 
 imagePullSecrets: []
 nameOverride: ""
