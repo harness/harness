@@ -30,6 +30,8 @@ type ImportInput struct {
 
 	Provider     importer.Provider `json:"provider"`
 	ProviderRepo string            `json:"provider_repo"`
+
+	Pipelines importer.PipelineOption `json:"pipelines"`
 }
 
 // Import creates a new empty repository and starts git import to it from a remote repository.
@@ -58,7 +60,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 			return fmt.Errorf("failed to create repository in storage: %w", err)
 		}
 
-		err = c.importer.Run(ctx, in.Provider, repo, remoteRepository.CloneURL)
+		err = c.importer.Run(ctx, in.Provider, repo, remoteRepository.CloneURL, in.Pipelines)
 		if err != nil {
 			return fmt.Errorf("failed to start import repository job: %w", err)
 		}
@@ -81,6 +83,10 @@ func (c *Controller) sanitizeImportInput(in *ImportInput) error {
 
 	if err := c.uidCheck(in.UID, false); err != nil {
 		return err
+	}
+
+	if in.Pipelines == "" {
+		in.Pipelines = importer.PipelineOptionConvert
 	}
 
 	return nil

@@ -65,11 +65,24 @@ type Repository struct {
 
 var _ job.Handler = (*Repository)(nil)
 
+// PipelineOption defines the supported pipeline import options for repository import.
+type PipelineOption string
+
+func (PipelineOption) Enum() []any {
+	return []any{PipelineOptionConvert, PipelineOptionIgnore}
+}
+
+const (
+	PipelineOptionConvert PipelineOption = "convert"
+	PipelineOptionIgnore  PipelineOption = "ignore"
+)
+
 type Input struct {
-	RepoID   int64  `json:"repo_id"`
-	GitUser  string `json:"git_user"`
-	GitPass  string `json:"git_pass"`
-	CloneURL string `json:"clone_url"`
+	RepoID    int64          `json:"repo_id"`
+	GitUser   string         `json:"git_user"`
+	GitPass   string         `json:"git_pass"`
+	CloneURL  string         `json:"clone_url"`
+	Pipelines PipelineOption `json:"pipelines"`
 }
 
 const jobType = "repository_import"
@@ -79,12 +92,19 @@ func (r *Repository) Register(executor *job.Executor) error {
 }
 
 // Run starts a background job that imports the provided repository from the provided clone URL.
-func (r *Repository) Run(ctx context.Context, provider Provider, repo *types.Repository, cloneURL string) error {
+func (r *Repository) Run(
+	ctx context.Context,
+	provider Provider,
+	repo *types.Repository,
+	cloneURL string,
+	pipelines PipelineOption,
+) error {
 	jobDef, err := r.getJobDef(JobIDFromRepoID(repo.ID), Input{
-		RepoID:   repo.ID,
-		GitUser:  provider.Username,
-		GitPass:  provider.Password,
-		CloneURL: cloneURL,
+		RepoID:    repo.ID,
+		GitUser:   provider.Username,
+		GitPass:   provider.Password,
+		CloneURL:  cloneURL,
+		Pipelines: pipelines,
 	})
 	if err != nil {
 		return err
@@ -99,6 +119,7 @@ func (r *Repository) RunMany(ctx context.Context,
 	provider Provider,
 	repoIDs []int64,
 	cloneURLs []string,
+	pipelines PipelineOption,
 ) error {
 	if len(repoIDs) != len(cloneURLs) {
 		return fmt.Errorf("slice length mismatch: have %d repositories and %d clone URLs",
@@ -113,10 +134,11 @@ func (r *Repository) RunMany(ctx context.Context,
 		cloneURL := cloneURLs[k]
 
 		jobDef, err := r.getJobDef(JobIDFromRepoID(repoID), Input{
-			RepoID:   repoID,
-			GitUser:  provider.Username,
-			GitPass:  provider.Password,
-			CloneURL: cloneURL,
+			RepoID:    repoID,
+			GitUser:   provider.Username,
+			GitPass:   provider.Password,
+			CloneURL:  cloneURL,
+			Pipelines: pipelines,
 		})
 		if err != nil {
 			return err
@@ -253,6 +275,10 @@ func (r *Repository) Handle(ctx context.Context, data string, _ job.ProgressRepo
 		})
 		if err != nil {
 			return fmt.Errorf("failed to update repository after import: %w", err)
+		}
+
+		if input.Pipelines != PipelineOptionConvert {
+			return nil // assumes the value is enum.PipelineOptionIgnore
 		}
 
 		const convertPipelinesCommitMessage = "autoconvert pipeline"

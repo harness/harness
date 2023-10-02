@@ -26,8 +26,9 @@ import (
 
 type ImportInput struct {
 	CreateInput
-	Provider      importer.Provider `json:"provider"`
-	ProviderSpace string            `json:"provider_space"`
+	Provider      importer.Provider       `json:"provider"`
+	ProviderSpace string                  `json:"provider_space"`
+	Pipelines     importer.PipelineOption `json:"pipelines"`
 }
 
 // Import creates new space and starts import of all repositories from the remote provider's space into it.
@@ -41,7 +42,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		in.UID = in.ProviderSpace
 	}
 
-	err = c.sanitizeCreateInput(&in.CreateInput)
+	err = c.sanitizeImportInput(in)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
@@ -79,7 +80,7 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		}
 
 		jobGroupID := fmt.Sprintf("space-import-%d", space.ID)
-		err = c.importer.RunMany(ctx, jobGroupID, in.Provider, repoIDs, cloneURLs)
+		err = c.importer.RunMany(ctx, jobGroupID, in.Provider, repoIDs, cloneURLs, in.Pipelines)
 		if err != nil {
 			return fmt.Errorf("failed to start import repository jobs: %w", err)
 		}
@@ -91,4 +92,16 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 	}
 
 	return space, nil
+}
+
+func (c *Controller) sanitizeImportInput(in *ImportInput) error {
+	if err := c.sanitizeCreateInput(&in.CreateInput); err != nil {
+		return err
+	}
+
+	if in.Pipelines == "" {
+		in.Pipelines = importer.PipelineOptionConvert
+	}
+
+	return nil
 }
