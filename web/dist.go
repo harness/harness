@@ -56,7 +56,9 @@ func Handler() http.HandlerFunc {
 		// we need to always load the index.html file
 		// in the root of the project, unless the path
 		// points to a file with an extension (css, js, etc)
-		if filepath.Ext(r.URL.Path) == "" || strings.Contains(r.URL.Path, "...") {
+		if filepath.Ext(r.URL.Path) == "" || // No ext: (1) a browser URL request, not a static asset request
+			(strings.Contains(r.URL.Path, "...") && // "..." : (2a) browser URL with ... in it
+				filepath.Ext(strings.ReplaceAll(r.URL.Path, "...", "")) == "") { // (2b) filter out static asset URLs that browsers make along with it
 			// HACK: alter the path to point to the
 			// root of the project.
 			r.URL.Path = "/"
