@@ -16,6 +16,10 @@ package types
 
 import (
 	"time"
+
+	"github.com/harness/gitness/events"
+	"github.com/harness/gitness/lock"
+	"github.com/harness/gitness/pubsub"
 )
 
 // Config stores the system configuration.
@@ -197,9 +201,16 @@ type Config struct {
 		SentinelEndpoint   string `envconfig:"GITNESS_REDIS_SENTINEL_ENDPOINT"`
 	}
 
+	Events struct {
+		Mode                  events.Mode `envconfig:"GITNESS_EVENTS_MODE"                     default:"inmemory"`
+		Namespace             string      `envconfig:"GITNESS_EVENTS_NAMESPACE"                default:"gitness"`
+		MaxStreamLength       int64       `envconfig:"GITNESS_EVENTS_MAX_STREAM_LENGTH"        default:"10000"`
+		ApproxMaxStreamLength bool        `envconfig:"GITNESS_EVENTS_APPROX_MAX_STREAM_LENGTH" default:"true"`
+	}
+
 	Lock struct {
 		// Provider is a name of distributed lock service like redis, memory, file etc...
-		Provider      string        `envconfig:"GITNESS_LOCK_PROVIDER"          default:"inmemory"`
+		Provider      lock.Provider `envconfig:"GITNESS_LOCK_PROVIDER"          default:"inmemory"`
 		Expiry        time.Duration `envconfig:"GITNESS_LOCK_EXPIRE"            default:"8s"`
 		Tries         int           `envconfig:"GITNESS_LOCK_TRIES"             default:"32"`
 		RetryDelay    time.Duration `envconfig:"GITNESS_LOCK_RETRY_DELAY"       default:"250ms"`
@@ -213,7 +224,7 @@ type Config struct {
 
 	PubSub struct {
 		// Provider is a name of distributed lock service like redis, memory, file etc...
-		Provider string `envconfig:"GITNESS_PUBSUB_PROVIDER"                         default:"inmemory"`
+		Provider pubsub.Provider `envconfig:"GITNESS_PUBSUB_PROVIDER"                default:"inmemory"`
 		// AppNamespace is just service app prefix to avoid conflicts on channel definition
 		AppNamespace string `envconfig:"GITNESS_PUBSUB_APP_NAMESPACE"                default:"gitness"`
 		// DefaultNamespace is custom namespace for their channels
@@ -227,9 +238,9 @@ type Config struct {
 		// MaxRunning is maximum number of jobs that can be running at once.
 		MaxRunning int `envconfig:"GITNESS_JOBS_MAX_RUNNING" default:"10"`
 
-		// PurgeFinishedOlderThan is duration after non-recurring,
+		// RetentionTime is the duration after which non-recurring,
 		// finished and failed jobs will be purged from the DB.
-		PurgeFinishedOlderThan time.Duration `envconfig:"GITNESS_JOBS_PURGE_FINISHED_OLDER_THAN" default:"120h"`
+		RetentionTime time.Duration `envconfig:"GITNESS_JOBS_RETENTION_TIME" default:"120h"` // 5 days
 	}
 
 	Webhook struct {
@@ -243,6 +254,8 @@ type Config struct {
 		MaxRetries          int    `envconfig:"GITNESS_WEBHOOK_MAX_RETRIES" default:"3"`
 		AllowPrivateNetwork bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_PRIVATE_NETWORK" default:"false"`
 		AllowLoopback       bool   `envconfig:"GITNESS_WEBHOOK_ALLOW_LOOPBACK" default:"false"`
+		// RetentionTime is the duration after which webhook executions will be purged from the DB.
+		RetentionTime time.Duration `envconfig:"GITNESS_WEBHOOK_RETENTION_TIME" default:"168h"` // 7 days
 	}
 
 	Trigger struct {

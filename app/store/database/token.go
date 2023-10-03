@@ -16,6 +16,8 @@ package database
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
@@ -23,6 +25,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -89,15 +92,39 @@ func (s *TokenStore) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// DeleteForPrincipal deletes all tokens for a specific principal.
-func (s *TokenStore) DeleteForPrincipal(ctx context.Context, principalID int64) error {
-	db := dbtx.GetAccessor(ctx, s.db)
+// DeleteExpiredBefore deletes all tokens that expired before the provided time.
+// If tokenTypes are provided, then only tokens of that type are deleted.
+func (s *TokenStore) DeleteExpiredBefore(
+	ctx context.Context,
+	before time.Time,
+	tknTypes []enum.TokenType,
+) (int64, error) {
+	stmt := database.Builder.
+		Delete("tokens").
+		Where("token_expires_at < ?", before.UnixMilli())
 
-	if _, err := db.ExecContext(ctx, tokenDeleteForPrincipal, principalID); err != nil {
-		return database.ProcessSQLErrorf(err, "The delete query failed")
+	if len(tknTypes) > 0 {
+		stmt = stmt.Where(squirrel.Eq{"token_type": tknTypes})
 	}
 
-	return nil
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert delete token query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	result, err := db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(err, "failed to execute delete token query")
+	}
+
+	n, err := result.RowsAffected()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(err, "failed to get number of deleted tokens")
+	}
+
+	return n, nil
 }
 
 // Count returns a count of tokens of a specifc type for a specific principal.
@@ -164,11 +191,6 @@ WHERE token_principal_id = $1 AND token_uid = $2
 const tokenDelete = `
 DELETE FROM tokens
 WHERE token_id = $1
-`
-
-const tokenDeleteForPrincipal = `
-DELETE FROM tokens
-WHERE token_principal_id = $1
 `
 
 const tokenInsert = `

@@ -17,6 +17,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
@@ -155,6 +156,32 @@ func (s *WebhookExecutionStore) Create(ctx context.Context, execution *types.Web
 	}
 
 	return nil
+}
+
+// DeleteOld removes all executions that are older than the provided time.
+func (s *WebhookExecutionStore) DeleteOld(ctx context.Context, olderThan time.Time) (int64, error) {
+	stmt := database.Builder.
+		Delete("webhook_executions").
+		Where("webhook_execution_created < ?", olderThan.UnixMilli())
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert delete executions query to sql: %w", err)
+	}
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	result, err := db.ExecContext(ctx, sql, args...)
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(err, "failed to execute delete executions query")
+	}
+
+	n, err := result.RowsAffected()
+	if err != nil {
+		return 0, database.ProcessSQLErrorf(err, "failed to get number of deleted executions")
+	}
+
+	return n, nil
 }
 
 // ListForWebhook lists the webhook executions for a given webhook id.

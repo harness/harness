@@ -35,11 +35,11 @@ type Redis struct {
 // NewRedis create an instance of redis PubSub implementation.
 func NewRedis(client redis.UniversalClient, options ...Option) *Redis {
 	config := Config{
-		app:            "app",
-		namespace:      "default",
-		healthInterval: 3 * time.Second,
-		sendTimeout:    60,
-		channelSize:    100,
+		App:            "app",
+		Namespace:      "default",
+		HealthInterval: 3 * time.Second,
+		SendTimeout:    60,
+		ChannelSize:    100,
 	}
 
 	for _, f := range options {
@@ -64,11 +64,11 @@ func (r *Redis) Subscribe(
 
 	config := SubscribeConfig{
 		topics:         make([]string, 0, 8),
-		app:            r.config.app,
-		namespace:      r.config.namespace,
-		healthInterval: r.config.healthInterval,
-		sendTimeout:    r.config.sendTimeout,
-		channelSize:    r.config.channelSize,
+		app:            r.config.App,
+		namespace:      r.config.Namespace,
+		healthInterval: r.config.HealthInterval,
+		sendTimeout:    r.config.SendTimeout,
+		channelSize:    r.config.ChannelSize,
 	}
 
 	for _, f := range options {
@@ -98,8 +98,8 @@ func (r *Redis) Subscribe(
 // Publish event topic to message broker with payload.
 func (r *Redis) Publish(ctx context.Context, topic string, payload []byte, opts ...PublishOption) error {
 	pubConfig := PublishConfig{
-		app:       r.config.app,
-		namespace: r.config.namespace,
+		app:       r.config.App,
+		namespace: r.config.Namespace,
 	}
 	for _, f := range opts {
 		f.Apply(&pubConfig)

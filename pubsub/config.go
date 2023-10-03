@@ -24,12 +24,12 @@ const (
 )
 
 type Config struct {
-	app       string // app namespace prefix
-	namespace string
+	App       string // app namespace prefix
+	Namespace string
 
-	provider Provider
+	Provider Provider
 
-	healthInterval time.Duration
-	sendTimeout    time.Duration
-	channelSize    int
+	HealthInterval time.Duration
+	SendTimeout    time.Duration
+	ChannelSize    int
 }

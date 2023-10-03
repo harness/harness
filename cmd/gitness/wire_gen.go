@@ -43,6 +43,7 @@ import (
 	"github.com/harness/gitness/app/router"
 	server2 "github.com/harness/gitness/app/server"
 	"github.com/harness/gitness/app/services"
+	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codecomments"
 	"github.com/harness/gitness/app/services/exporter"
 	"github.com/harness/gitness/app/services/importer"
@@ -119,7 +120,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 		return nil, err
 	}
 	jobStore := database.ProvideJobStore(db)
-	pubsubConfig := pubsub.ProvideConfig(config)
+	pubsubConfig := server.ProvidePubsubConfig(config)
 	universalClient, err := server.ProvideRedis(config)
 	if err != nil {
 		return nil, err
@@ -175,10 +176,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	pullReqReviewStore := database.ProvidePullReqReviewStore(db)
 	pullReqReviewerStore := database.ProvidePullReqReviewerStore(db, principalInfoCache)
 	pullReqFileViewStore := database.ProvidePullReqFileViewStore(db)
-	eventsConfig, err := server.ProvideEventsConfig()
-	if err != nil {
-		return nil, err
-	}
+	eventsConfig := server.ProvideEventsConfig(config)
 	eventsSystem, err := events.ProvideSystem(eventsConfig, universalClient)
 	if err != nil {
 		return nil, err
@@ -257,7 +255,12 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector)
+	cleanupConfig := server.ProvideCleanupConfig(config)
+	cleanupService, err := cleanup.ProvideService(cleanupConfig, jobScheduler, executor, webhookExecutionStore, tokenStore)
+	if err != nil {
+		return nil, err
+	}
+	servicesServices := services.ProvideServices(webhookService, pullreqService, triggerService, jobScheduler, collector, cleanupService)
 	serverSystem := server.NewSystem(bootstrapBootstrap, serverServer, poller, grpcServer, pluginManager, cronManager, servicesServices)
 	return serverSystem, nil
 }

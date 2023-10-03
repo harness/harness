@@ -16,7 +16,6 @@ package serviceaccount
 
 import (
 	"context"
-	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/auth"
@@ -35,13 +34,6 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session,
 	if err = apiauth.CheckServiceAccount(ctx, c.authorizer, session, c.spaceStore, c.repoStore,
 		sa.ParentType, sa.ParentID, sa.UID, enum.PermissionServiceAccountDelete); err != nil {
 		return err
-	}
-
-	// delete all tokens (okay if we fail after - user intends to delete service account anyway)
-	// TODO: cascading delete?
-	err = c.tokenStore.DeleteForPrincipal(ctx, sa.ID)
-	if err != nil {
-		return fmt.Errorf("failed to delete tokens for service account: %w", err)
 	}
 
 	return c.principalStore.DeleteServiceAccount(ctx, sa.ID)

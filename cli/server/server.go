@@ -89,11 +89,15 @@ func (c *command) run(*kingpin.ParseContext) error {
 	g.Go(func() error {
 		// initialize metric collector
 		if system.services.MetricCollector != nil {
-			err := system.services.MetricCollector.Register(gCtx)
-			if err != nil {
+			if err := system.services.MetricCollector.Register(gCtx); err != nil {
 				log.Error().Err(err).Msg("failed to register metric collector")
 				return err
 			}
+		}
+
+		if err := system.services.Cleanup.Register(gCtx); err != nil {
+			log.Error().Err(err).Msg("failed to register cleanup service")
+			return err
 		}
 
 		return system.services.JobScheduler.Run(gCtx)

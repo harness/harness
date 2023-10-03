@@ -15,6 +15,7 @@
 package services
 
 import (
+	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/job"
 	"github.com/harness/gitness/app/services/metric"
 	"github.com/harness/gitness/app/services/pullreq"
@@ -34,6 +35,7 @@ type Services struct {
 	Trigger         *trigger.Service
 	JobScheduler    *job.Scheduler
 	MetricCollector *metric.Collector
+	Cleanup         *cleanup.Service
 }
 
 func ProvideServices(
@@ -42,6 +44,7 @@ func ProvideServices(
 	triggerSvc *trigger.Service,
 	jobScheduler *job.Scheduler,
 	metricCollector *metric.Collector,
+	cleanupSvc *cleanup.Service,
 ) Services {
 	return Services{
 		Webhook:         webhooksSvc,
@@ -49,5 +52,6 @@ func ProvideServices(
 		Trigger:         triggerSvc,
 		JobScheduler:    jobScheduler,
 		MetricCollector: metricCollector,
+		Cleanup:         cleanupSvc,
 	}
 }

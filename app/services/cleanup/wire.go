@@ -12,46 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package job
+package cleanup
 
 import (
+	"github.com/harness/gitness/app/services/job"
 	"github.com/harness/gitness/app/store"
-	"github.com/harness/gitness/lock"
-	"github.com/harness/gitness/pubsub"
-	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
 )
 
 var WireSet = wire.NewSet(
-	ProvideExecutor,
-	ProvideScheduler,
+	ProvideService,
 )
 
-func ProvideExecutor(
-	jobStore store.JobStore,
-	pubsubService pubsub.PubSub,
-) *Executor {
-	return NewExecutor(
-		jobStore,
-		pubsubService,
-	)
-}
-
-func ProvideScheduler(
-	jobStore store.JobStore,
-	executor *Executor,
-	mutexManager lock.MutexManager,
-	pubsubService pubsub.PubSub,
-	config *types.Config,
-) (*Scheduler, error) {
-	return NewScheduler(
-		jobStore,
+func ProvideService(
+	config Config,
+	scheduler *job.Scheduler,
+	executor *job.Executor,
+	webhookExecutionStore store.WebhookExecutionStore,
+	tokenStore store.TokenStore,
+) (*Service, error) {
+	return NewService(
+		config,
+		scheduler,
 		executor,
-		mutexManager,
-		pubsubService,
-		config.InstanceID,
-		config.BackgroundJobs.MaxRunning,
-		config.BackgroundJobs.RetentionTime,
+		webhookExecutionStore,
+		tokenStore,
 	)
 }

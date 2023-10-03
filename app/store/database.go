@@ -236,8 +236,9 @@ type (
 		// Delete deletes the token with the given id.
 		Delete(ctx context.Context, id int64) error
 
-		// DeleteForPrincipal deletes all tokens for a specific principal
-		DeleteForPrincipal(ctx context.Context, principalID int64) error
+		// DeleteExpiredBefore deletes all tokens that expired before the provided time.
+		// If tokenTypes are provided, then only tokens of that type are deleted.
+		DeleteExpiredBefore(ctx context.Context, before time.Time, tknTypes []enum.TokenType) (int64, error)
 
 		// List returns a list of tokens of a specific type for a specific principal.
 		List(ctx context.Context, principalID int64, tokenType enum.TokenType) ([]*types.Token, error)
@@ -408,6 +409,9 @@ type (
 
 		// Create creates a new webhook execution entry.
 		Create(ctx context.Context, hook *types.WebhookExecution) error
+
+		// DeleteOld removes all executions that are older than the provided time.
+		DeleteOld(ctx context.Context, olderThan time.Time) (int64, error)
 
 		// ListForWebhook lists the webhook executions for a given webhook id.
 		ListForWebhook(ctx context.Context, webhookID int64,

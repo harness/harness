@@ -37,11 +37,11 @@ type InMemory struct {
 // NewInMemory create an instance of memory pubsub implementation.
 func NewInMemory(options ...Option) *InMemory {
 	config := Config{
-		app:            "app",
-		namespace:      "default",
-		healthInterval: 3 * time.Second,
-		sendTimeout:    60,
-		channelSize:    100,
+		App:            "app",
+		Namespace:      "default",
+		HealthInterval: 3 * time.Second,
+		SendTimeout:    60,
+		ChannelSize:    100,
 	}
 
 	for _, f := range options {
@@ -65,10 +65,10 @@ func (r *InMemory) Subscribe(
 
 	config := SubscribeConfig{
 		topics:      make([]string, 0, 8),
-		app:         r.config.app,
-		namespace:   r.config.namespace,
-		sendTimeout: r.config.sendTimeout,
-		channelSize: r.config.channelSize,
+		app:         r.config.App,
+		namespace:   r.config.Namespace,
+		sendTimeout: r.config.SendTimeout,
+		channelSize: r.config.ChannelSize,
 	}
 
 	for _, f := range options {
@@ -100,8 +100,8 @@ func (r *InMemory) Publish(ctx context.Context, topic string, payload []byte, op
 		return nil
 	}
 	pubConfig := PublishConfig{
-		app:       r.config.app,
-		namespace: r.config.namespace,
+		app:       r.config.App,
+		namespace: r.config.Namespace,
 	}
 	for _, f := range opts {
 		f.Apply(&pubConfig)

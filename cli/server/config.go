@@ -22,12 +22,14 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/gitrpc/server"
 	"github.com/harness/gitness/lock"
+	"github.com/harness/gitness/pubsub"
 	"github.com/harness/gitness/store/database"
 	"github.com/harness/gitness/types"
 
@@ -211,15 +213,14 @@ func ProvideGitRPCClientConfig() (gitrpc.Config, error) {
 	return config, nil
 }
 
-// ProvideEventsConfig loads the events config from the environment.
-func ProvideEventsConfig() (events.Config, error) {
-	config := events.Config{}
-	err := envconfig.Process("", &config)
-	if err != nil {
-		return events.Config{}, fmt.Errorf("failed to load events config: %w", err)
+// ProvideEventsConfig loads the events config from the main config.
+func ProvideEventsConfig(config *types.Config) events.Config {
+	return events.Config{
+		Mode:                  config.Events.Mode,
+		Namespace:             config.Events.Namespace,
+		MaxStreamLength:       config.Events.MaxStreamLength,
+		ApproxMaxStreamLength: config.Events.ApproxMaxStreamLength,
 	}
-
-	return config, nil
 }
 
 // ProvideWebhookConfig loads the webhook service config from the main config.
@@ -249,11 +250,30 @@ func ProvideLockConfig(config *types.Config) lock.Config {
 	return lock.Config{
 		App:           config.Lock.AppNamespace,
 		Namespace:     config.Lock.DefaultNamespace,
-		Provider:      lock.Provider(config.Lock.Provider),
+		Provider:      config.Lock.Provider,
 		Expiry:        config.Lock.Expiry,
 		Tries:         config.Lock.Tries,
 		RetryDelay:    config.Lock.RetryDelay,
 		DriftFactor:   config.Lock.DriftFactor,
 		TimeoutFactor: config.Lock.TimeoutFactor,
+	}
+}
+
+// ProvidePubsubConfig loads the pubsub config from the main config.
+func ProvidePubsubConfig(config *types.Config) pubsub.Config {
+	return pubsub.Config{
+		App:            config.PubSub.AppNamespace,
+		Namespace:      config.PubSub.DefaultNamespace,
+		Provider:       config.PubSub.Provider,
+		HealthInterval: config.PubSub.HealthInterval,
+		SendTimeout:    config.PubSub.SendTimeout,
+		ChannelSize:    config.PubSub.ChannelSize,
+	}
+}
+
+// ProvideCleanupConfig loads the cleanup service config from the main config.
+func ProvideCleanupConfig(config *types.Config) cleanup.Config {
+	return cleanup.Config{
+		WebhookExecutionsRetentionTime: config.Webhook.RetentionTime,
 	}
 }

@@ -50,12 +50,5 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session,
 		return err
 	}
 
-	// delete all tokens (okay if we fail after - user intended to be deleted anyway)
-	// TODO: cascading delete?
-	err = c.tokenStore.DeleteForPrincipal(ctx, user.ID)
-	if err != nil {
-		return fmt.Errorf("failed to delete tokens for user: %w", err)
-	}
-
 	return c.principalStore.DeleteUser(ctx, user.ID)
 }

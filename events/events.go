@@ -49,10 +49,10 @@ const (
 
 // Config defines the config of the events system.
 type Config struct {
-	Mode                  Mode   `envconfig:"GITNESS_EVENTS_MODE"                     default:"inmemory"`
-	Namespace             string `envconfig:"GITNESS_EVENTS_NAMESPACE"                default:"gitness"`
-	MaxStreamLength       int64  `envconfig:"GITNESS_EVENTS_MAX_STREAM_LENGTH"        default:"10000"`
-	ApproxMaxStreamLength bool   `envconfig:"GITNESS_EVENTS_APPROX_MAX_STREAM_LENGTH" default:"true"`
+	Mode                  Mode
+	Namespace             string
+	MaxStreamLength       int64
+	ApproxMaxStreamLength bool
 }
 
 func (c *Config) Validate() error {

@@ -34,14 +34,14 @@ func (f OptionFunc) Apply(config *Config) {
 // WithApp returns an option that set config app name.
 func WithApp(value string) Option {
 	return OptionFunc(func(m *Config) {
-		m.app = value
+		m.App = value
 	})
 }
 
 // WithNamespace returns an option that set config namespace.
 func WithNamespace(value string) Option {
 	return OptionFunc(func(m *Config) {
-		m.namespace = value
+		m.Namespace = value
 	})
 }
 
@@ -51,7 +51,7 @@ func WithNamespace(value string) Option {
 // To disable health check, use zero interval.
 func WithHealthCheckInterval(value time.Duration) Option {
 	return OptionFunc(func(m *Config) {
-		m.healthInterval = value
+		m.HealthInterval = value
 	})
 }
 
@@ -59,7 +59,7 @@ func WithHealthCheckInterval(value time.Duration) Option {
 // the message is dropped.
 func WithSendTimeout(value time.Duration) Option {
 	return OptionFunc(func(m *Config) {
-		m.sendTimeout = value
+		m.SendTimeout = value
 	})
 }
 
@@ -67,7 +67,7 @@ func WithSendTimeout(value time.Duration) Option {
 // incoming messages.
 func WithSize(value int) Option {
 	return OptionFunc(func(m *Config) {
-		m.channelSize = value
+		m.ChannelSize = value
 	})
 }
 

@@ -41,9 +41,9 @@ type Scheduler struct {
 	pubsubService pubsub.PubSub
 
 	// configuration fields
-	instanceID     string
-	maxRunning     int
-	purgeMinOldAge time.Duration
+	instanceID    string
+	maxRunning    int
+	retentionTime time.Duration
 
 	// synchronization stuff
 	signal       chan time.Time
@@ -60,7 +60,7 @@ func NewScheduler(
 	pubsubService pubsub.PubSub,
 	instanceID string,
 	maxRunning int,
-	purgeMinOldAge time.Duration,
+	retentionTime time.Duration,
 ) (*Scheduler, error) {
 	if maxRunning < 1 {
 		maxRunning = 1
@@ -71,9 +71,9 @@ func NewScheduler(
 		mxManager:     mxManager,
 		pubsubService: pubsubService,
 
-		instanceID:     instanceID,
-		maxRunning:     maxRunning,
-		purgeMinOldAge: purgeMinOldAge,
+		instanceID:    instanceID,
+		maxRunning:    maxRunning,
+		retentionTime: retentionTime,
 
 		cancelJobMap: map[string]context.CancelFunc{},
 	}, nil
@@ -750,7 +750,7 @@ func (s *Scheduler) registerNecessaryJobs() error {
 		return err
 	}
 
-	handlerPurge := newJobPurge(s.store, s.mxManager, s.purgeMinOldAge)
+	handlerPurge := newJobPurge(s.store, s.mxManager, s.retentionTime)
 	err = s.executor.Register(jobTypePurge, handlerPurge)
 	if err != nil {
 		return err
