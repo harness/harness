@@ -21,6 +21,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/repo"
 	handlerrepo "github.com/harness/gitness/app/api/handler/repo"
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
+	middlewareauthz "github.com/harness/gitness/app/api/middleware/authz"
 	"github.com/harness/gitness/app/api/middleware/encode"
 	"github.com/harness/gitness/app/api/middleware/logging"
 	"github.com/harness/gitness/app/api/request"
@@ -64,26 +65,35 @@ func NewGitHandler(
 	r.Use(logging.HLogRequestIDHandler())
 	r.Use(logging.HLogAccessLogHandler())
 
+	// for now always attempt auth - enforced per operation.
+	r.Use(middlewareauthn.Attempt(authenticator))
+
 	r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
-		r.Use(middlewareauthn.Attempt(authenticator, authn.SourceRouterGIT))
+		// routes that aren't coming from git
+		r.Group(func(r chi.Router) {
+			// redirect to repo (meant for UI, in case user navigates to clone url in browser)
+			r.Get("/", handlerrepo.HandleGitRedirect(repoCtrl, urlProvider))
+		})
 
-		// redirect to repo (meant for UI, in case user navigates to clone url in browser)
-		r.Get("/", handlerrepo.HandleGitRedirect(repoCtrl, urlProvider))
+		// routes that are coming from git (where we block the usage of session tokens)
+		r.Group(func(r chi.Router) {
+			r.Use(middlewareauthz.BlockSessionToken)
 
-		// smart protocol
-		r.Handle("/git-upload-pack", handlerrepo.GetUploadPack(client, urlProvider, repoStore, authorizer))
-		r.Post("/git-receive-pack", handlerrepo.PostReceivePack(client, urlProvider, repoStore, authorizer))
-		r.Get("/info/refs", handlerrepo.GetInfoRefs(client, repoStore, authorizer))
+			// smart protocol
+			r.Handle("/git-upload-pack", handlerrepo.GetUploadPack(client, urlProvider, repoStore, authorizer))
+			r.Post("/git-receive-pack", handlerrepo.PostReceivePack(client, urlProvider, repoStore, authorizer))
+			r.Get("/info/refs", handlerrepo.GetInfoRefs(client, repoStore, authorizer))
 
-		// dumb protocol
-		r.Get("/HEAD", stubGitHandler(repoStore))
-		r.Get("/objects/info/alternates", stubGitHandler(repoStore))
-		r.Get("/objects/info/http-alternates", stubGitHandler(repoStore))
-		r.Get("/objects/info/packs", stubGitHandler(repoStore))
-		r.Get("/objects/info/{file:[^/]*}", stubGitHandler(repoStore))
-		r.Get("/objects/{head:[0-9a-f]{2}}/{hash:[0-9a-f]{38}}", stubGitHandler(repoStore))
-		r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.pack", stubGitHandler(repoStore))
-		r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.idx", stubGitHandler(repoStore))
+			// dumb protocol
+			r.Get("/HEAD", stubGitHandler(repoStore))
+			r.Get("/objects/info/alternates", stubGitHandler(repoStore))
+			r.Get("/objects/info/http-alternates", stubGitHandler(repoStore))
+			r.Get("/objects/info/packs", stubGitHandler(repoStore))
+			r.Get("/objects/info/{file:[^/]*}", stubGitHandler(repoStore))
+			r.Get("/objects/{head:[0-9a-f]{2}}/{hash:[0-9a-f]{38}}", stubGitHandler(repoStore))
+			r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.pack", stubGitHandler(repoStore))
+			r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.idx", stubGitHandler(repoStore))
+		})
 	})
 
 	// wrap router in git path encoder.

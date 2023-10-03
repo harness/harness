@@ -126,7 +126,7 @@ func NewAPIHandler(
 	r.Use(corsHandler(config))
 
 	// for now always attempt auth - enforced per operation.
-	r.Use(middlewareauthn.Attempt(authenticator, authn.SourceRouterAPI))
+	r.Use(middlewareauthn.Attempt(authenticator))
 
 	r.Route("/v1", func(r chi.Router) {
 		setupRoutesV1(r, config, repoCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,

@@ -51,7 +51,7 @@ func NewTokenAuthenticator(
 	}
 }
 
-func (a *JWTAuthenticator) Authenticate(r *http.Request, sourceRouter SourceRouter) (*auth.Session, error) {
+func (a *JWTAuthenticator) Authenticate(r *http.Request) (*auth.Session, error) {
 	ctx := r.Context()
 	str := extractToken(r, a.cookieName)
 
