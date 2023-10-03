@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBackfilURLsPortBind(t *testing.T) {
+func TestBackfillURLsHTTPPort(t *testing.T) {
 	config := &types.Config{}
 	config.Server.HTTP.Port = 1234
 
@@ -37,7 +37,70 @@ func TestBackfilURLsPortBind(t *testing.T) {
 	require.Equal(t, "http://localhost:1234", config.URL.UI)
 }
 
-func TestBackfilURLsBase(t *testing.T) {
+func TestBackfillURLsHTTPPortStripsDefaultHTTP(t *testing.T) {
+	config := &types.Config{}
+	config.Server.HTTP.Port = 80
+
+	err := backfillURLs(config)
+	require.NoError(t, err)
+
+	require.Equal(t, "http://localhost", config.URL.Internal)
+	require.Equal(t, "http://host.docker.internal", config.URL.Container)
+
+	require.Equal(t, "http://localhost/api", config.URL.API)
+	require.Equal(t, "http://localhost/git", config.URL.Git)
+	require.Equal(t, "http://localhost", config.URL.UI)
+}
+
+// TODO: Update once we add proper https support - as of now nothing is stripped!
+func TestBackfillURLsHTTPPortStripsDefaultHTTPS(t *testing.T) {
+	config := &types.Config{}
+	config.Server.HTTP.Port = 443
+
+	err := backfillURLs(config)
+	require.NoError(t, err)
+
+	require.Equal(t, "http://localhost:443", config.URL.Internal)
+	require.Equal(t, "http://host.docker.internal:443", config.URL.Container)
+
+	require.Equal(t, "http://localhost:443/api", config.URL.API)
+	require.Equal(t, "http://localhost:443/git", config.URL.Git)
+	require.Equal(t, "http://localhost:443", config.URL.UI)
+}
+
+func TestBackfillURLsBaseInvalidProtocol(t *testing.T) {
+	config := &types.Config{}
+	config.URL.Base = "abc://xyz:4321/test"
+
+	err := backfillURLs(config)
+	require.ErrorContains(t, err, "base url scheme 'abc' is not supported")
+}
+
+func TestBackfillURLsBaseNoHost(t *testing.T) {
+	config := &types.Config{}
+	config.URL.Base = "http:///test"
+
+	err := backfillURLs(config)
+	require.ErrorContains(t, err, "a non-empty base url host has to be provided")
+}
+
+func TestBackfillURLsBaseNoHostWithPort(t *testing.T) {
+	config := &types.Config{}
+	config.URL.Base = "http://:4321/test"
+
+	err := backfillURLs(config)
+	require.ErrorContains(t, err, "a non-empty base url host has to be provided")
+}
+
+func TestBackfillURLsBaseInvalidPort(t *testing.T) {
+	config := &types.Config{}
+	config.URL.Base = "http://localhost:abc/test"
+
+	err := backfillURLs(config)
+	require.ErrorContains(t, err, "invalid port \":abc\" after host")
+}
+
+func TestBackfillURLsBase(t *testing.T) {
 	config := &types.Config{}
 	config.Server.HTTP.Port = 1234
 	config.URL.Base = "https://xyz:4321/test"
@@ -53,23 +116,103 @@ func TestBackfilURLsBase(t *testing.T) {
 	require.Equal(t, "https://xyz:4321/test", config.URL.UI)
 }
 
-func TestBackfilURLsCustom(t *testing.T) {
+func TestBackfillURLsBaseDefaultPortHTTP(t *testing.T) {
 	config := &types.Config{}
 	config.Server.HTTP.Port = 1234
-	config.URL.Base = "https://xyz:4321/test"
-	config.URL.API = "http://API:1111/API/p"
-	config.URL.Internal = "http://APIInternal:1111/APIInternal/p"
-	config.URL.Git = "http://Git:1111/Git/p"
-	config.URL.Container = "http://GitContainer:1111/GitContainer/p"
-	config.URL.UI = "http://UI:1111/UI/p"
+	config.URL.Base = "http://xyz/test"
 
 	err := backfillURLs(config)
 	require.NoError(t, err)
 
-	require.Equal(t, "http://APIInternal:1111/APIInternal/p", config.URL.Internal)
-	require.Equal(t, "http://GitContainer:1111/GitContainer/p", config.URL.Container)
+	require.Equal(t, "http://localhost:1234", config.URL.Internal)
+	require.Equal(t, "http://host.docker.internal:1234", config.URL.Container)
+
+	require.Equal(t, "http://xyz/test/api", config.URL.API)
+	require.Equal(t, "http://xyz/test/git", config.URL.Git)
+	require.Equal(t, "http://xyz/test", config.URL.UI)
+}
+
+func TestBackfillURLsBaseDefaultPortHTTPExplicit(t *testing.T) {
+	config := &types.Config{}
+	config.Server.HTTP.Port = 1234
+	config.URL.Base = "http://xyz:80/test"
+
+	err := backfillURLs(config)
+	require.NoError(t, err)
+
+	require.Equal(t, "http://localhost:1234", config.URL.Internal)
+	require.Equal(t, "http://host.docker.internal:1234", config.URL.Container)
+
+	require.Equal(t, "http://xyz:80/test/api", config.URL.API)
+	require.Equal(t, "http://xyz:80/test/git", config.URL.Git)
+	require.Equal(t, "http://xyz:80/test", config.URL.UI)
+}
+
+func TestBackfillURLsBaseDefaultPortHTTPS(t *testing.T) {
+	config := &types.Config{}
+	config.Server.HTTP.Port = 1234
+	config.URL.Base = "https://xyz/test"
+
+	err := backfillURLs(config)
+	require.NoError(t, err)
+
+	require.Equal(t, "http://localhost:1234", config.URL.Internal)
+	require.Equal(t, "http://host.docker.internal:1234", config.URL.Container)
+
+	require.Equal(t, "https://xyz/test/api", config.URL.API)
+	require.Equal(t, "https://xyz/test/git", config.URL.Git)
+	require.Equal(t, "https://xyz/test", config.URL.UI)
+}
+
+func TestBackfillURLsBaseDefaultPortHTTPSExplicit(t *testing.T) {
+	config := &types.Config{}
+	config.Server.HTTP.Port = 1234
+	config.URL.Base = "https://xyz:443/test"
+
+	err := backfillURLs(config)
+	require.NoError(t, err)
+
+	require.Equal(t, "http://localhost:1234", config.URL.Internal)
+	require.Equal(t, "http://host.docker.internal:1234", config.URL.Container)
+
+	require.Equal(t, "https://xyz:443/test/api", config.URL.API)
+	require.Equal(t, "https://xyz:443/test/git", config.URL.Git)
+	require.Equal(t, "https://xyz:443/test", config.URL.UI)
+}
+
+func TestBackfillURLsBaseRootPathStripped(t *testing.T) {
+	config := &types.Config{}
+	config.Server.HTTP.Port = 1234
+	config.URL.Base = "https://xyz:4321/"
+
+	err := backfillURLs(config)
+	require.NoError(t, err)
+
+	require.Equal(t, "http://localhost:1234", config.URL.Internal)
+	require.Equal(t, "http://host.docker.internal:1234", config.URL.Container)
+
+	require.Equal(t, "https://xyz:4321/api", config.URL.API)
+	require.Equal(t, "https://xyz:4321/git", config.URL.Git)
+	require.Equal(t, "https://xyz:4321", config.URL.UI)
+}
+
+func TestBackfillURLsCustom(t *testing.T) {
+	config := &types.Config{}
+	config.Server.HTTP.Port = 1234
+	config.URL.Internal = "http://APIInternal/APIInternal/p"
+	config.URL.Container = "https://GitContainer/GitContainer/p"
+	config.URL.Base = "https://xyz:4321/test"
+	config.URL.API = "http://API:1111/API/p"
+	config.URL.Git = "https://Git:443/Git/p"
+	config.URL.UI = "http://UI:80/UI/p"
+
+	err := backfillURLs(config)
+	require.NoError(t, err)
+
+	require.Equal(t, "http://APIInternal/APIInternal/p", config.URL.Internal)
+	require.Equal(t, "https://GitContainer/GitContainer/p", config.URL.Container)
 
 	require.Equal(t, "http://API:1111/API/p", config.URL.API)
-	require.Equal(t, "http://Git:1111/Git/p", config.URL.Git)
-	require.Equal(t, "http://UI:1111/UI/p", config.URL.UI)
+	require.Equal(t, "https://Git:443/Git/p", config.URL.Git)
+	require.Equal(t, "http://UI:80/UI/p", config.URL.UI)
 }

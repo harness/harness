@@ -39,6 +39,11 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
+const (
+	schemeHTTP  = "http"
+	schemeHTTPS = "https"
+)
+
 // LoadConfig returns the system configuration from the
 // host environment.
 func LoadConfig() (*types.Config, error) {
@@ -61,18 +66,24 @@ func LoadConfig() (*types.Config, error) {
 	return config, nil
 }
 
+//nolint:gocognit // refactor if required
 func backfillURLs(config *types.Config) error {
 	// default base url
-	scheme, host, port, path := "http", "localhost", fmt.Sprint(config.Server.HTTP.Port), ""
+	// TODO: once we actually use the config.Server.HTTP.Proto, we have to update that here.
+	scheme, host, port, path := schemeHTTP, "localhost", "", ""
 
-	// TODO: handle https of server bind
+	// by default drop scheme's default port
+	if (scheme != schemeHTTP || config.Server.HTTP.Port != 80) &&
+		(scheme != schemeHTTPS || config.Server.HTTP.Port != 443) {
+		port = fmt.Sprint(config.Server.HTTP.Port)
+	}
 
 	// backfil internal URLS before continuing override with user provided base (which is external facing)
 	if config.URL.Internal == "" {
-		config.URL.Internal = fmt.Sprintf("%s://localhost:%s", scheme, port)
+		config.URL.Internal = combineToRawURL(scheme, "localhost", port, "")
 	}
 	if config.URL.Container == "" {
-		config.URL.Container = fmt.Sprintf("%s://host.docker.internal:%s", scheme, port)
+		config.URL.Container = combineToRawURL(scheme, "host.docker.internal", port, "")
 	}
 
 	// override base with whatever user explicit override
@@ -82,23 +93,30 @@ func backfillURLs(config *types.Config) error {
 		if err != nil {
 			return fmt.Errorf("failed to parse base url '%s': %w", config.URL.Base, err)
 		}
-		if u.Scheme != "" {
-			scheme = u.Scheme
+		if u.Scheme != schemeHTTP && u.Scheme != schemeHTTPS {
+			return fmt.Errorf(
+				"base url scheme '%s' is not supported (valid values: %v)",
+				u.Scheme,
+				[]string{
+					schemeHTTP,
+					schemeHTTPS,
+				},
+			)
 		}
-		if u.Hostname() != "" {
-			host = u.Hostname()
+		// url parsing allows empty hostname - we don't want that
+		if u.Hostname() == "" {
+			return fmt.Errorf("a non-empty base url host has to be provided")
 		}
-		if u.Port() != "" {
-			port = u.Port()
-		}
-		if u.Path != "" {
-			// ensure path starts with a slash (so we only add slash if path is provided)
-			path = "/" + strings.Trim(u.Path, "/")
-		}
+
+		// take everything as is (e.g. if user explicitly adds port 80 for http we take it)
+		scheme = u.Scheme
+		host = u.Hostname()
+		port = u.Port()
+		path = u.Path
 	}
 
 	// create base URL object
-	baseURLRaw := fmt.Sprintf("%s://%s:%s%s", scheme, host, port, path)
+	baseURLRaw := combineToRawURL(scheme, host, port, path)
 	baseURL, err := url.Parse(baseURLRaw)
 	if err != nil {
 		return fmt.Errorf("failed to parse derived base url '%s': %w", baseURLRaw, err)
@@ -116,6 +134,23 @@ func backfillURLs(config *types.Config) error {
 	}
 
 	return nil
+}
+
+func combineToRawURL(scheme, host, port, path string) string {
+	urlRAW := scheme + "://" + host
+
+	// only add port if explicitly provided
+	if port != "" {
+		urlRAW += ":" + port
+	}
+
+	// only add path if it's not empty and non-root
+	path = strings.Trim(path, "/")
+	if path != "" {
+		urlRAW += "/" + path
+	}
+
+	return urlRAW
 }
 
 // getSanitizedMachineName gets the name of the machine and returns it in sanitized format.
