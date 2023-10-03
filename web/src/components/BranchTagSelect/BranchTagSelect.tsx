@@ -287,7 +287,6 @@ function GitRefList({
               <Button
                 text={
                   <>
-                    <img src={Branches} width={20} height={20}></img>
                     <String
                       stringID={
                         activeGitRefType === GitRefType.BRANCH ? 'createBranchFromBranch' : 'createBranchFromTag'
@@ -299,6 +298,8 @@ function GitRefList({
                     />
                   </>
                 }
+                iconProps={{ size: 22 }}
+                icon={CodeIcon.BranchSmall}
                 variation={ButtonVariation.SECONDARY}
                 onClick={() => onCreateBranch()}
                 className={Classes.POPOVER_DISMISS}

@@ -260,7 +260,7 @@ export const parseUrl = (url: string) => {
   if (match) {
     const provider = match[2]
     const fullRepo = match[3]
-    const repoName = match[3].split('/')[1]
+    const repoName = match[3].split('/')[1].replace('.git', '')
     return { provider, fullRepo, repoName }
   } else {
     return null

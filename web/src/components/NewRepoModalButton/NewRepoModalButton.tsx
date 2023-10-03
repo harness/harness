@@ -167,7 +167,7 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         parent_ref: space,
         uid: formData.name,
         provider: { type: provider?.provider.toLowerCase(), username: formData.username, password: formData.password },
-        provider_repo: provider?.fullRepo
+        provider_repo: provider?.fullRepo.replace(/\.git$/, '')
       }
       importRepo(importPayload)
         .then(response => {
