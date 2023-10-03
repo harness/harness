@@ -47,6 +47,9 @@ type Provider interface {
 	// NOTE: url is guaranteed to not have any trailing '/'.
 	GenerateGITCloneURL(repoPath string) string
 
+	// GenerateUIRepoURL returns the url for the UI screen of a repository.
+	GenerateUIRepoURL(repoPath string) string
+
 	// GenerateUIPRURL returns the url for the UI screen of an existing pr.
 	GenerateUIPRURL(repoPath string, prID int64) string
 
@@ -149,6 +152,10 @@ func (p *provider) GenerateGITCloneURL(repoPath string) string {
 	}
 
 	return p.gitURL.JoinPath(repoPath).String()
+}
+
+func (p *provider) GenerateUIRepoURL(repoPath string) string {
+	return p.uiURL.JoinPath(repoPath).String()
 }
 
 func (p *provider) GenerateUIPRURL(repoPath string, prID int64) string {

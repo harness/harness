@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/harness/gitness/app/api/controller/repo"
 	handlerrepo "github.com/harness/gitness/app/api/handler/repo"
 	middlewareauthn "github.com/harness/gitness/app/api/middleware/authn"
 	"github.com/harness/gitness/app/api/middleware/encode"
@@ -48,6 +49,7 @@ func NewGitHandler(
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer,
 	client gitrpc.Interface,
+	repoCtrl *repo.Controller,
 ) GitHandler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
@@ -64,6 +66,9 @@ func NewGitHandler(
 
 	r.Route(fmt.Sprintf("/{%s}", request.PathParamRepoRef), func(r chi.Router) {
 		r.Use(middlewareauthn.Attempt(authenticator, authn.SourceRouterGIT))
+
+		// redirect to repo (meant for UI, in case user navigates to clone url in browser)
+		r.Get("/", handlerrepo.HandleGitRedirect(repoCtrl, urlProvider))
 
 		// smart protocol
 		r.Handle("/git-upload-pack", handlerrepo.GetUploadPack(client, urlProvider, repoStore, authorizer))

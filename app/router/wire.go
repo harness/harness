@@ -81,8 +81,17 @@ func ProvideGitHandler(
 	authenticator authn.Authenticator,
 	authorizer authz.Authorizer,
 	client gitrpc.Interface,
+	repoCtrl *repo.Controller,
 ) GitHandler {
-	return NewGitHandler(config, urlProvider, repoStore, authenticator, authorizer, client)
+	return NewGitHandler(
+		config,
+		urlProvider,
+		repoStore,
+		authenticator,
+		authorizer,
+		client,
+		repoCtrl,
+	)
 }
 
 func ProvideAPIHandler(
