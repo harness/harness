@@ -14,61 +14,50 @@
  * limitations under the License.
  */
 
-const fs = require('fs');
-const path = require('path');
-const _ = require('lodash');
-const yaml = require('js-yaml');
-const stringify = require('fast-json-stable-stringify');
-
-// Define a mapping of valid transform modules
-const transformModules = {
-  'config1': require('./src/services/config1/transform.js'),
-  'config2': require('./src/services/config2/transform.js'),
-  'config3': require('./src/services/config3/transform.js'),
-};
+const fs = require('fs')
+const path = require('path')
+const _ = require('lodash')
+const yaml = require('js-yaml')
+const stringify = require('fast-json-stable-stringify')
 
 module.exports = inputSchema => {
-  const argv = process.argv.slice(2);
-  const validConfigs = Object.keys(transformModules); // Get valid config names from the mapping
+  // Use a hard-coded configuration to prevent user-defined input.
+  const config = 'code'
 
-  // Ensure that a valid config is provided as an argument
-  const config = argv[0];
-  if (!validConfigs.includes(config)) {
-    console.error('Invalid or missing config argument.');
-    process.exit(1); // Terminate the script if an invalid or missing config is provided
-  }
+  const overridesFile = path.join('src/services', config, 'overrides.yaml')
 
-  const overridesFile = path.join('src/services', config, 'overrides.yaml');
-
-  let paths = inputSchema.paths;
+  let paths = inputSchema.paths
 
   if (fs.existsSync(overridesFile)) {
-    const data = fs.readFileSync(overridesFile, 'utf8');
-    const { allowpaths, operationIdOverrides } = yaml.safeLoad(data);
+    const data = fs.readFileSync(overridesFile, 'utf8')
+    const { allowpaths, operationIdOverrides } = yaml.safeLoad(data)
 
     if (!allowpaths.includes('*')) {
-      paths = _.pick(paths, ...allowpaths);
+      paths = _.pick(paths, ...allowpaths)
     }
 
     _.forIn(operationIdOverrides, (value, key) => {
-      const [path, method] = key.split('.');
+      const [path, method] = key.split('.')
 
       if (path && method && _.has(paths, path) && _.has(paths[path], method)) {
-        _.set(paths, [path, method, 'operationId'], value);
+        _.set(paths, [path, method, 'operationId'], value)
       }
-    });
+    })
   }
 
-  inputSchema.paths = paths;
+  inputSchema.paths = paths
 
-  const transformModule = transformModules[config];
-  if (transformModule) {
-    inputSchema = transformModule(inputSchema);
+  const transformFile = path.join('src/services', config, 'transform.js')
+
+  if (fs.existsSync(transformFile)) {
+    const transform = require(path.resolve(process.cwd(), transformFile))
+
+    inputSchema = transform(inputSchema)
   } else {
-    console.error('Invalid transform module.');
-    process.exit(1); // Terminate the script if an invalid transform module is provided
+    console.error('Transform file not found for the specified config.')
+    process.exit(1)
   }
 
   // stringify and parse JSON to get a stable object
-  return JSON.parse(stringify(inputSchema));
-};
+  return JSON.parse(stringify(inputSchema))
+}

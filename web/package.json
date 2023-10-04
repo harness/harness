@@ -28,7 +28,7 @@
     "check:all": "npm-run-all typecheck lint prettier test",
     "clean": "rm -rf dist && rm -rf node_modules/.cache",
     "fmt": "prettier --write \"./src/**/*.{ts,tsx,css,scss}\"",
-    "services": "restful-react import --config restful-react.config.js code",
+    "services": "restful-react import --config restful-react.config.js --config code",
     "postservices": "prettier --write src/services/**/*.tsx",
     "strings": "npm-run-all strings:*",
     "strings:genTypes": "node scripts/strings/generateTypesCli.mjs"
