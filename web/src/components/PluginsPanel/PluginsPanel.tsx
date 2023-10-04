@@ -477,7 +477,10 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
             onSubmit={(formData: PluginForm) => {
               onPluginAddUpdate?.(
                 false,
-                constructPayloadForYAMLInsertion(sanitizeFormData(formData, pluginInputs), plugin)
+                constructPayloadForYAMLInsertion(
+                  category === PluginCategory.Drone ? sanitizeFormData(formData, pluginInputs) : formData,
+                  plugin
+                )
               )
             }}>
             {formik => {

@@ -98,13 +98,13 @@ const AddUpdatePipeline = (): JSX.Element => {
   const { repoMetadata } = useGetRepositoryMetadata()
   const { showError, showSuccess, clear: clearToaster } = useToaster()
   const [yamlVersion, setYAMLVersion] = useState<YamlVersion>()
-  const [pipelineAsYAML, setPipelineAsYaml] = useState<string>('')
+  const [pipelineYAML, setPipelineYAML] = useState<string>('')
   const { openModal: openRunPipelineModal } = useRunPipelineModal()
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
   const [isExistingPipeline, setIsExistingPipeline] = useState<boolean>(false)
   const [isDirty, setIsDirty] = useState<boolean>(false)
   const [generatingPipeline, setGeneratingPipeline] = useState<boolean>(false)
-  const pipelineAsYAMLRef = useRef<string>('')
+  const editorYAMLRef = useRef<string>('')
 
   const pipelineSaveOption: PipelineSaveAndRunOption = {
     title: getString('save'),
@@ -168,11 +168,11 @@ const AddUpdatePipeline = (): JSX.Element => {
   // load initial content on the editor
   useEffect(() => {
     if (isExistingPipeline) {
-      setPipelineAsYaml(originalPipelineYAMLFileContent)
+      setPipelineYAML(originalPipelineYAMLFileContent)
     } else {
       // load with starter pipeline
       try {
-        setPipelineAsYaml(stringify(yamlVersion === YamlVersion.V1 ? StarterPipelineV1 : StarterPipelineV0))
+        setPipelineYAML(stringify(yamlVersion === YamlVersion.V1 ? StarterPipelineV1 : StarterPipelineV0))
       } catch (ex) {
         // ignore exception
       }
@@ -181,13 +181,17 @@ const AddUpdatePipeline = (): JSX.Element => {
 
   // find if editor content was modified
   useEffect(() => {
-    setIsDirty(originalPipelineYAMLFileContent !== pipelineAsYAML)
-  }, [originalPipelineYAMLFileContent, pipelineAsYAML])
+    setIsDirty(originalPipelineYAMLFileContent !== pipelineYAML)
+  }, [originalPipelineYAMLFileContent, pipelineYAML])
 
   // set initial CTA title
   useEffect(() => {
     setSelectedOption(isDirty ? pipelineSaveAndRunOption : pipelineRunOption)
   }, [isDirty])
+
+  useEffect(() => {
+    editorYAMLRef.current = pipelineYAML
+  }, [pipelineYAML])
 
   const handleSaveAndRun = (option: PipelineSaveAndRunOption): void => {
     if ([PipelineSaveAndRunAction.SAVE_AND_RUN, PipelineSaveAndRunAction.SAVE].includes(option?.action)) {
@@ -197,7 +201,7 @@ const AddUpdatePipeline = (): JSX.Element => {
             {
               action: isExistingPipeline ? 'UPDATE' : 'CREATE',
               path: pipelineData?.config_path,
-              payload: pipelineAsYAML,
+              payload: pipelineYAML,
               sha: isExistingPipeline ? pipelineYAMLFileContent?.sha : ''
             }
           ],
@@ -232,7 +236,7 @@ const AddUpdatePipeline = (): JSX.Element => {
     const pipelineAsObjClone = { ...existingPipeline }
     if (Object.keys(pipelineAsObjClone).length > 0) {
       const stepInsertPath = 'spec.stages.0.spec.steps'
-      let existingSteps = get(pipelineAsObjClone, stepInsertPath, []) as unknown[]
+      let existingSteps = (get(pipelineAsObjClone, stepInsertPath) as unknown[]) || []
       if (existingSteps.length > 0) {
         existingSteps.push(payload)
       } else {
@@ -259,8 +263,8 @@ const AddUpdatePipeline = (): JSX.Element => {
         if (Object.keys(updatedPipelineAsObj).length > 0) {
           // avoid setting to empty pipeline in case pipeline update with plugin data fails
           const updatedPipelineAsYAML = stringify(updatedPipelineAsObj)
-          setPipelineAsYaml(updatedPipelineAsYAML)
-          pipelineAsYAMLRef.current = updatedPipelineAsYAML
+          setPipelineYAML(updatedPipelineAsYAML)
+          editorYAMLRef.current = updatedPipelineAsYAML
         }
       } catch (ex) {
         // ignore exception
@@ -275,7 +279,7 @@ const AddUpdatePipeline = (): JSX.Element => {
       if (response.ok && response.status === 200) {
         const responsePipelineAsYAML = await response.text()
         if (responsePipelineAsYAML) {
-          setPipelineAsYaml(responsePipelineAsYAML)
+          setPipelineYAML(responsePipelineAsYAML)
         }
       }
       setGeneratingPipeline(false)
@@ -358,7 +362,7 @@ const AddUpdatePipeline = (): JSX.Element => {
     pipeline,
     selectedOption,
     isExistingPipeline,
-    pipelineAsYAML,
+    pipelineYAML,
     pipelineData
   ])
 
@@ -417,8 +421,8 @@ const AddUpdatePipeline = (): JSX.Element => {
                 <MonacoSourceCodeEditor
                   language={'yaml'}
                   schema={yamlVersion === YamlVersion.V1 ? pipelineSchemaV1 : pipelineSchemaV0}
-                  source={pipelineAsYAML}
-                  onChange={(value: string) => setPipelineAsYaml(value)}
+                  source={pipelineYAML}
+                  onChange={(value: string) => setPipelineYAML(value)}
                 />
               </Container>
               {yamlVersion === YamlVersion.V1 && (
@@ -428,7 +432,7 @@ const AddUpdatePipeline = (): JSX.Element => {
                       handlePluginAddUpdateToPipeline({
                         isUpdate,
                         pluginFormData,
-                        existingYAML: pipelineAsYAMLRef.current || pipelineAsYAML
+                        existingYAML: editorYAMLRef.current || pipelineYAML
                       })
                     }
                   />
