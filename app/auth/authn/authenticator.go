@@ -24,9 +24,6 @@ import (
 var (
 	// ErrNoAuthData that is returned if the authorizer doesn't find any data in the request that can be used for auth.
 	ErrNoAuthData = errors.New("the request doesn't contain any auth data that can be used by the Authorizer")
-	// ErrNotAcceptedAuthData that is returned if the request is using an auth data that is not accepted by the authorizer.
-	// e.g, don't accept jwt (without allowedResources field) for git clone/pull request.
-	ErrNotAcceptedAuthMethod = errors.New("the request contains auth method that is not accepted by the Authorizer")
 )
 
 // Authenticator is an abstraction of an entity that's responsible for authenticating principals

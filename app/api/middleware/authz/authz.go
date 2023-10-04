@@ -32,8 +32,8 @@ func BlockSessionToken(next http.Handler) http.Handler {
 		ctx := r.Context()
 
 		// only block if auth data was available and it's based on a session token.
-		if session, ok := request.AuthSessionFrom(ctx); ok {
-			if tokenMetadata, ok := session.Metadata.(*auth.TokenMetadata); ok &&
+		if session, oks := request.AuthSessionFrom(ctx); oks {
+			if tokenMetadata, okt := session.Metadata.(*auth.TokenMetadata); okt &&
 				tokenMetadata.TokenType == enum.TokenTypeSession {
 				log.Ctx(ctx).Warn().Msg("blocking git operation - session tokens are not allowed for usage with git")
 
