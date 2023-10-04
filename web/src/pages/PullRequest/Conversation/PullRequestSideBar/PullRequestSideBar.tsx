@@ -191,7 +191,9 @@ const PullRequestSideBar = (props: PullRequestSideBarProps) => {
                         hoverCard={false}
                       />
 
-                      <Text className={css.reviewerName}>{reviewer.reviewer.display_name}</Text>
+                      <Text lineClamp={1} className={css.reviewerName}>
+                        {reviewer.reviewer.display_name}
+                      </Text>
                       <FlexExpander />
                       <OptionsMenuButton
                         isDark={true}
