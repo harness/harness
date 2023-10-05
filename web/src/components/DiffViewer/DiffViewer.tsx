@@ -59,9 +59,15 @@ import {
   getCommentLineInfo,
   createCommentOppositePlaceHolder,
   ViewStyle,
-  contentDOMHasData,
+  contentDOMHasData
 } from './DiffViewerUtils'
-import { CommentAction, CommentBox, CommentBoxOutletPosition, CommentItem, SingleConsumerEventStream } from '../CommentBox/CommentBox'
+import {
+  CommentAction,
+  CommentBox,
+  CommentBoxOutletPosition,
+  CommentItem,
+  SingleConsumerEventStream
+} from '../CommentBox/CommentBox'
 import css from './DiffViewer.module.scss'
 
 interface DiffViewerProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -101,23 +107,23 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     () => `/api/v1/repos/${repoMetadata.path}/+/pullreq/${pullRequestMetadata?.number}/file-views`,
     [repoMetadata.path, pullRequestMetadata?.number]
   )
-  const { mutate: markViewed } = useMutate({ verb: 'PUT', path: viewedPath})
+  const { mutate: markViewed } = useMutate({ verb: 'PUT', path: viewedPath })
   const { mutate: unmarkViewed } = useMutate({ verb: 'DELETE', path: ({ filePath }) => `${viewedPath}/${filePath}` })
 
   // file viewed feature is only enabled if no commit range is provided (otherwise component is hidden, too)
-  const [viewed, setViewed] = useState(commitRange?.length === 0 && diff.fileViews?.get(diff.filePath) === diff.checksumAfter)
+  const [viewed, setViewed] = useState(
+    commitRange?.length === 0 && diff.fileViews?.get(diff.filePath) === diff.checksumAfter
+  )
   useEffect(() => {
     if (commitRange?.length === 0) {
       setViewed(diff.fileViews?.get(diff.filePath) === diff.checksumAfter)
     }
-  },
-  [diff.fileViews, diff.filePath, diff.checksumAfter, commitRange])
-  
+  }, [diff.fileViews, diff.filePath, diff.checksumAfter, commitRange])
+
   const [collapsed, setCollapsed] = useState(viewed)
   useEffect(() => {
     setCollapsed(viewed)
-  },
-  [viewed])
+  }, [viewed])
   const [fileUnchanged] = useState(diff.unchangedPercentage === 100)
   const [fileDeleted] = useState(diff.isDeleted)
   const [renderCustomContent, setRenderCustomContent] = useState(fileUnchanged || fileDeleted)
@@ -157,238 +163,240 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
   }, [diff, viewStyle])
 
   // renderCodeComment renders a single comment (both newly created ones and existing ones frm the db!)
-  const renderCodeComment = useCallback((id: number) => {
-    const comment = comments.get(id)
-    if (!comment || comment.destroy) {
-      return
-    }
+  const renderCodeComment = useCallback(
+    (id: number) => {
+      const comment = comments.get(id)
+      if (!comment || comment.destroy) {
+        return
+      }
 
-    // early exit if there's nothing to render on
-    if (!contentRef.current || !contentDOMHasData(contentRef.current)) {
-      return
-    }
+      // early exit if there's nothing to render on
+      if (!contentRef.current || !contentDOMHasData(contentRef.current)) {
+        return
+      }
 
-    const isSideBySide = viewStyle === ViewStyle.SIDE_BY_SIDE
+      const isSideBySide = viewStyle === ViewStyle.SIDE_BY_SIDE
 
-    const lineInfo = getCommentLineInfo(contentRef.current, comment, viewStyle)
+      const lineInfo = getCommentLineInfo(contentRef.current, comment, viewStyle)
 
-    // TODO: add support for live updating changes and replies to comment!
-    if (!lineInfo.rowElement || lineInfo.hasCommentsRendered) {
-      return
-    }
-    const { rowElement } = lineInfo
+      // TODO: add support for live updating changes and replies to comment!
+      if (!lineInfo.rowElement || lineInfo.hasCommentsRendered) {
+        return
+      }
+      const { rowElement } = lineInfo
 
-    // Annotate row to indicated the row is taken (we only support one per line as of now)
-    rowElement.dataset.annotated = 'true'
+      // Annotate row to indicated the row is taken (we only support one per line as of now)
+      rowElement.dataset.annotated = 'true'
 
-    // always create placeholder (in memory)
-    const oppositeRowPlaceHolder = createCommentOppositePlaceHolder(comment.lineNumber)
+      // always create placeholder (in memory)
+      const oppositeRowPlaceHolder = createCommentOppositePlaceHolder(comment.lineNumber)
 
-    // in split view, actually attach the placeholder
-    if (isSideBySide && lineInfo.oppositeRowElement != null) {
+      // in split view, actually attach the placeholder
+      if (isSideBySide && lineInfo.oppositeRowElement != null) {
         lineInfo.oppositeRowElement.after(oppositeRowPlaceHolder)
-    }
+      }
 
-    // Create a new row below it and render CommentBox inside
-    const commentRowElement = document.createElement('tr')
-    commentRowElement.dataset.annotatedLine = String(comment.lineNumber)
-    commentRowElement.innerHTML = `<td colspan="2"></td>`
-    rowElement.after(commentRowElement)
+      // Create a new row below it and render CommentBox inside
+      const commentRowElement = document.createElement('tr')
+      commentRowElement.dataset.annotatedLine = String(comment.lineNumber)
+      commentRowElement.innerHTML = `<td colspan="2"></td>`
+      rowElement.after(commentRowElement)
 
-    const element = commentRowElement.firstElementChild as HTMLTableCellElement
-    comment.destroy = () => {
-      // Clean up CommentBox rendering and reset states bound to lineInfo
+      const element = commentRowElement.firstElementChild as HTMLTableCellElement
+      comment.destroy = () => {
+        // Clean up CommentBox rendering and reset states bound to lineInfo
+        ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
+        commentRowElement.parentElement?.removeChild(commentRowElement)
+        lineInfo.oppositeRowElement?.parentElement?.removeChild(oppositeRowPlaceHolder as Element)
+        delete lineInfo.rowElement.dataset.annotated
+        comment.destroy = undefined
+        comments.delete(id)
+      }
+
+      comment.eventStream = new SingleConsumerEventStream<CommentItem<TypesPullReqActivity>[]>()
+
+      // Note: CommentBox is rendered as an independent React component
+      //       everything passed to it must be either values, or refs. If you
+      //       pass callbacks or states, they won't be updated and might
+      //       cause unexpected bugs
       ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
-      commentRowElement.parentElement?.removeChild(commentRowElement)
-      lineInfo.oppositeRowElement?.parentElement?.removeChild(
-        oppositeRowPlaceHolder as Element
-      )
-      delete lineInfo.rowElement.dataset.annotated
-      comment.destroy = undefined
-      comments.delete(id)
-    }
-
-    comment.eventStream = new SingleConsumerEventStream<CommentItem<TypesPullReqActivity>[]>
-
-    // Note: CommentBox is rendered as an independent React component
-    //       everything passed to it must be either values, or refs. If you
-    //       pass callbacks or states, they won't be updated and might
-    //       cause unexpected bugs
-    ReactDOM.unmountComponentAtNode(element as HTMLDivElement)
-    ReactDOM.render(
-      <AppWrapper>
-        <CommentBox
-          commentItems={comment.commentItems}
-          eventStream={comment.eventStream}
-          initialContent={''}
-          width={isSideBySide ? 'calc(100vw / 2 - 163px)' : undefined} // TODO: Re-calcualte for standalone version
-          onHeightChange={boxHeight => {
+      ReactDOM.render(
+        <AppWrapper>
+          <CommentBox
+            commentItems={comment.commentItems}
+            eventStream={comment.eventStream}
+            initialContent={''}
+            width={isSideBySide ? 'calc(50vw - 200px)' : undefined}
+            onHeightChange={boxHeight => {
               const first = oppositeRowPlaceHolder?.firstElementChild as HTMLTableCellElement
               const last = oppositeRowPlaceHolder?.lastElementChild as HTMLTableCellElement
               if (first && last) {
                 first.style.height = `${boxHeight}px`
                 last.style.height = `${boxHeight}px`
               }
-          }}
-          autoFocusAndPosition={true}
-          enableReplyPlaceHolder={comment.commentItems?.length > 0}
-          onCancel={comment.destroy}
-          setDirty={setDirty}
-          currentUserName={currentUser.display_name}
-          handleAction={async (action, value, commentItem) => {
-            let result = true
-            let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
-            const existingDBID = (commentItem as CommentItem<TypesPullReqActivity>)?.id
+            }}
+            autoFocusAndPosition={true}
+            enableReplyPlaceHolder={comment.commentItems?.length > 0}
+            onCancel={comment.destroy}
+            setDirty={setDirty}
+            currentUserName={currentUser.display_name}
+            handleAction={async (action, value, commentItem) => {
+              let result = true
+              let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
+              const existingDBID = (commentItem as CommentItem<TypesPullReqActivity>)?.id
 
-            switch (action) {
-              case CommentAction.NEW: {
-                const payload: OpenapiCommentCreatePullReqRequest = {
-                  line_start: comment.lineNumber,
-                  line_end: comment.lineNumber,
-                  line_start_new: !comment.left,
-                  line_end_new: !comment.left,
-                  path: diff.filePath,
-                  source_commit_sha: sourceRef,
-                  target_commit_sha: targetRef,
-                  text: value
+              switch (action) {
+                case CommentAction.NEW: {
+                  const payload: OpenapiCommentCreatePullReqRequest = {
+                    line_start: comment.lineNumber,
+                    line_end: comment.lineNumber,
+                    line_start_new: !comment.left,
+                    line_end_new: !comment.left,
+                    path: diff.filePath,
+                    source_commit_sha: sourceRef,
+                    target_commit_sha: targetRef,
+                    text: value
+                  }
+
+                  await saveComment(payload)
+                    .then((createdActivity: TypesPullReqActivity) => {
+                      if (!createdActivity.id) {
+                        comment.destroy?.()
+                        return
+                      }
+
+                      updatedItem = activityToCommentItem(createdActivity)
+
+                      // recreate comment for now to tie any loose ends
+                      comment.destroy?.()
+                      comments.delete(id)
+                      comments.set(createdActivity.id, comment)
+
+                      // persist comment in activities
+                      diff.activities?.push(createdActivity)
+                    })
+                    .catch(exception => {
+                      result = false
+                      showError(getErrorMessage(exception), 0)
+                    })
+                  break
                 }
 
-                await saveComment(payload)
-                  .then((createdActivity: TypesPullReqActivity) => {
-                    if (!createdActivity.id) {
-                      comment.destroy?.()
-                      return
-                    }
-
-                    updatedItem = activityToCommentItem(createdActivity)
-
-                    // recreate comment for now to tie any loose ends
-                    comment.destroy?.()
-                    comments.delete(id)
-                    comments.set(createdActivity.id, comment)
-
-                    // persist comment in activities
-                    diff.activities?.push(createdActivity)
+                case CommentAction.REPLY: {
+                  await saveComment({
+                    type: CommentType.CODE_COMMENT,
+                    text: value,
+                    parent_id: Number(existingDBID)
                   })
-                  .catch(exception => {
-                    result = false
-                    showError(getErrorMessage(exception), 0)
-                  })
-                break
-              }
+                    .then(createdActivity => {
+                      if (!createdActivity.id) {
+                        comment.destroy?.()
+                        return
+                      }
 
-              case CommentAction.REPLY: {
-                await saveComment({
-                  type: CommentType.CODE_COMMENT,
-                  text: value,
-                  parent_id: Number(existingDBID)
-                })
-                  .then(createdActivity => {
-                    if (!createdActivity.id) {
-                    comment.destroy?.()
-                    return
-                  }
+                      updatedItem = activityToCommentItem(createdActivity)
 
-                  updatedItem = activityToCommentItem(createdActivity)
+                      // persist comment in activities - will update parent comment with latest replies
+                      diff.activities?.push(createdActivity)
+                    })
+                    .catch(exception => {
+                      result = false
+                      showError(getErrorMessage(exception), 0)
+                    })
+                  break
+                }
 
-                  // persist comment in activities - will update parent comment with latest replies
-                  diff.activities?.push(createdActivity)
-                })
-                .catch(exception => {
+                case CommentAction.DELETE: {
                   result = false
-                  showError(getErrorMessage(exception), 0)
-                })
-                break
-              }
-
-              case CommentAction.DELETE: {
-                result = false
-                await confirmAct({
-                  message: getString('deleteCommentConfirm'),
-                  action: async () => {
-                    await deleteComment({}, { pathParams: { id: existingDBID } })
-                      .then(() => {
-                        result = true
-                      })
-                      .catch(exception => {
-                        result = false
-                        showError(getErrorMessage(exception), 0, getString('pr.failedToDeleteComment'))
-                      })
-                  }
-                })
-                break
-              }
-
-              case CommentAction.UPDATE: {
-                await updateComment({ text: value }, { pathParams: { id: existingDBID } })
-                  .then(newComment => {
-                    updatedItem = activityToCommentItem(newComment)
+                  await confirmAct({
+                    message: getString('deleteCommentConfirm'),
+                    action: async () => {
+                      await deleteComment({}, { pathParams: { id: existingDBID } })
+                        .then(() => {
+                          result = true
+                        })
+                        .catch(exception => {
+                          result = false
+                          showError(getErrorMessage(exception), 0, getString('pr.failedToDeleteComment'))
+                        })
+                    }
                   })
-                  .catch(exception => {
-                    result = false
-                    showError(getErrorMessage(exception), 0)
-                  })
-                break
+                  break
+                }
+
+                case CommentAction.UPDATE: {
+                  await updateComment({ text: value }, { pathParams: { id: existingDBID } })
+                    .then(newComment => {
+                      updatedItem = activityToCommentItem(newComment)
+                    })
+                    .catch(exception => {
+                      result = false
+                      showError(getErrorMessage(exception), 0)
+                    })
+                  break
+                }
               }
-            }
 
-            if (result) {
-              onCommentUpdate()
-            }
+              if (result) {
+                onCommentUpdate()
+              }
 
-            return [result, updatedItem]
-          }}
-          outlets={{
-            [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
-              <CodeCommentStatusSelect
-                repoMetadata={repoMetadata}
-                pullRequestMetadata={pullRequestMetadata as TypesPullReq}
-                onCommentUpdate={onCommentUpdate}
-                commentItems={comment.commentItems}
-              />
-            ),
-            [CommentBoxOutletPosition.LEFT_OF_REPLY_PLACEHOLDER]: (
-              <CodeCommentStatusButton
-                repoMetadata={repoMetadata}
-                pullRequestMetadata={pullRequestMetadata as TypesPullReq}
-                onCommentUpdate={onCommentUpdate}
-                commentItems={comment.commentItems}
-              />
-            ),
-            [CommentBoxOutletPosition.BETWEEN_SAVE_AND_CANCEL_BUTTONS]: (props: ButtonProps) => (
-              <CodeCommentSecondarySaveButton
-                repoMetadata={repoMetadata}
-                pullRequestMetadata={pullRequestMetadata as TypesPullReq}
-                commentItems={comment.commentItems}
-                {...props}
-              />
-            )
-          }}
-        />
-      </AppWrapper>,
-      element
-    ) 
-  }, [ // eslint-disable-line react-hooks/exhaustive-deps
-    comments,
-    currentUser.display_name, 
-    deleteComment,
-    diff.activities,
-    diff.filePath, 
-    pullRequestMetadata,
-    repoMetadata,
-    saveComment,
-    showError,
-    sourceRef,
-    targetRef,
-    updateComment,
-    viewStyle,
+              return [result, updatedItem]
+            }}
+            outlets={{
+              [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
+                <CodeCommentStatusSelect
+                  repoMetadata={repoMetadata}
+                  pullRequestMetadata={pullRequestMetadata as TypesPullReq}
+                  onCommentUpdate={onCommentUpdate}
+                  commentItems={comment.commentItems}
+                />
+              ),
+              [CommentBoxOutletPosition.LEFT_OF_REPLY_PLACEHOLDER]: (
+                <CodeCommentStatusButton
+                  repoMetadata={repoMetadata}
+                  pullRequestMetadata={pullRequestMetadata as TypesPullReq}
+                  onCommentUpdate={onCommentUpdate}
+                  commentItems={comment.commentItems}
+                />
+              ),
+              [CommentBoxOutletPosition.BETWEEN_SAVE_AND_CANCEL_BUTTONS]: (props: ButtonProps) => (
+                <CodeCommentSecondarySaveButton
+                  repoMetadata={repoMetadata}
+                  pullRequestMetadata={pullRequestMetadata as TypesPullReq}
+                  commentItems={comment.commentItems}
+                  {...props}
+                />
+              )
+            }}
+          />
+        </AppWrapper>,
+        element
+      )
+    },
+    [
+      // eslint-disable-line react-hooks/exhaustive-deps
+      comments,
+      currentUser.display_name,
+      deleteComment,
+      diff.activities,
+      diff.filePath,
+      pullRequestMetadata,
+      repoMetadata,
+      saveComment,
+      showError,
+      sourceRef,
+      targetRef,
+      updateComment,
+      viewStyle
 
-    // The following three cause the whole thing to re-render and run unnecessary all the time.
-    // disable for now as no issues were found in testing.
-    // getString, 
-    // onCommentUpdate,
-    // confirmAct,
-  ])
+      // The following three cause the whole thing to re-render and run unnecessary all the time.
+      // disable for now as no issues were found in testing.
+      // getString,
+      // onCommentUpdate,
+      // confirmAct,
+    ]
+  )
 
   // reRenderCodeComments is required to trigger comment rendering once all data is the renderer completed drawing..
   const reRenderCodeComments = useCallback(() => {
@@ -401,7 +409,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       return
     }
 
-    comments.forEach((item) => renderCodeComment(item.inner.id || 0))
+    comments.forEach(item => renderCodeComment(item.inner.id || 0))
   }, [readOnly, comments, renderCodeComment])
 
   useEffect(function cleanUpCommentBoxRendering() {
@@ -413,57 +421,75 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     }
   }, [])
 
-
-  useEffect(function handleActivityChanges() {
-    // no activities or commit range view? no comments!
-    if (!diff?.activities || (commitRange?.length || 0) > 0) {
-      return  
-    }
-
-    const latestComments = activitiesToDiffCommentItems(diff.filePath, diff.activities)
-
-    latestComments.forEach(latestComment => {
-      const id = latestComment.inner.id
-      if (!id) {
+  useEffect(
+    function handleActivityChanges() {
+      // no activities or commit range view? no comments!
+      if (!diff?.activities || (commitRange?.length || 0) > 0) {
         return
       }
 
-      const existingComment = comments.get(id)
-      const latestDeleted = latestComment.commentItems.map(x => !!x.deleted).reduce((a,b) => a && b, true)
+      const latestComments = activitiesToDiffCommentItems(diff.filePath, diff.activities)
 
-      // is this a to us new, but already delete comment? perfect, nothing to do
-      if (!existingComment && latestDeleted) {
-        return
-      }
+      latestComments.forEach(latestComment => {
+        const id = latestComment.inner.id
+        if (!id) {
+          return
+        }
 
-      // is this a new comment or we failed to render it before? add to our internal cache and render!
-      if (!existingComment || !existingComment.destroy) {
-        comments.set(id, latestComment)
-        renderCodeComment(id)
-        return
-      }
+        const existingComment = comments.get(id)
+        const latestDeleted = latestComment.commentItems.map(x => !!x.deleted).reduce((a, b) => a && b, true)
 
-      // heuristic: whoever has the latest update timestamp has the latest data
-      const mostRecentExisting = existingComment.commentItems.
-        map(x => max([x.updated as number, x.edited as number, x.deleted as number]) || 0).
-        reduce((x, y) =>  max([x, y]) || 0, max([existingComment.inner.updated, existingComment.inner.edited, existingComment.inner.deleted as number, existingComment.inner.resolved]) || 0)
-      const mostRecentLatest = latestComment.commentItems.
-        map(x => max([x.updated as number, x.edited as number, x.deleted as number]) || 0).
-        reduce((x, y) =>  max([x, y]) || 0, max([latestComment.inner.updated, latestComment.inner.edited, latestComment.inner.deleted as number, latestComment.inner.resolved]) || 0)
-      if (mostRecentExisting >= mostRecentLatest) {
-              return
-      }
+        // is this a to us new, but already delete comment? perfect, nothing to do
+        if (!existingComment && latestDeleted) {
+          return
+        }
 
-      // comment changed -- update everything that can change
-      existingComment.inner = latestComment.inner
-      existingComment.commentItems = [...latestComment.commentItems]
+        // is this a new comment or we failed to render it before? add to our internal cache and render!
+        if (!existingComment || !existingComment.destroy) {
+          comments.set(id, latestComment)
+          renderCodeComment(id)
+          return
+        }
 
-      // push event to subscriber
-      existingComment.eventStream?.publish(existingComment.commentItems)
+        // heuristic: whoever has the latest update timestamp has the latest data
+        const mostRecentExisting = existingComment.commentItems
+          .map(x => max([x.updated as number, x.edited as number, x.deleted as number]) || 0)
+          .reduce(
+            (x, y) => max([x, y]) || 0,
+            max([
+              existingComment.inner.updated,
+              existingComment.inner.edited,
+              existingComment.inner.deleted as number,
+              existingComment.inner.resolved
+            ]) || 0
+          )
+        const mostRecentLatest = latestComment.commentItems
+          .map(x => max([x.updated as number, x.edited as number, x.deleted as number]) || 0)
+          .reduce(
+            (x, y) => max([x, y]) || 0,
+            max([
+              latestComment.inner.updated,
+              latestComment.inner.edited,
+              latestComment.inner.deleted as number,
+              latestComment.inner.resolved
+            ]) || 0
+          )
+        if (mostRecentExisting >= mostRecentLatest) {
+          return
+        }
 
-      // NOTE: no need to render comment as we update in place :)
-    })
-  }, [diff.filePath, diff?.activities, diff?.activities?.length, commitRange, comments, renderCodeComment])
+        // comment changed -- update everything that can change
+        existingComment.inner = latestComment.inner
+        existingComment.commentItems = [...latestComment.commentItems]
+
+        // push event to subscriber
+        existingComment.eventStream?.publish(existingComment.commentItems)
+
+        // NOTE: no need to render comment as we update in place :)
+      })
+    },
+    [diff.filePath, diff?.activities, diff?.activities?.length, commitRange, comments, renderCodeComment]
+  )
 
   useEffect(
     function createDiffRenderer() {
@@ -524,7 +550,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         // use random negative numbers as temporary IDs - never collides with persisted db entries :P
         const randID = -random(1000000000, false)
         const commentItem: DiffCommentItem<TypesPullReqActivity> = {
-          inner: {id: randID} as TypesPullReqActivity,
+          inner: { id: randID } as TypesPullReqActivity,
           left: false,
           right: false,
           lineNumber: 0,
@@ -572,7 +598,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           diffRenderer?.draw()
           reRenderCodeComments()
         }
-        
+
         contentDOM.dataset.rendered = 'true'
       }
     },
@@ -603,15 +629,14 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
               size={ButtonSize.SMALL}
               onClick={() => setCollapsed(!collapsed)}
               iconProps={{
-                  size: 10,
-                  style: {
-                    color: '#383946',
-                    flexGrow: 1,
-                    justifyContent: 'center',
-                    display: 'flex'
-                  }
+                size: 10,
+                style: {
+                  color: '#383946',
+                  flexGrow: 1,
+                  justifyContent: 'center',
+                  display: 'flex'
                 }
-              }
+              }}
               className={css.chevron}
             />
             <Text inline className={css.fname}>
@@ -649,13 +674,11 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
                 diff.fileViews?.get(diff.filePath) !== diff.checksumAfter
               }>
               <Container>
-
                 <Text className={css.fileChanged}>{getString('changedSinceLastView')}</Text>
-
               </Container>
             </Render>
 
-            <Render when={!readOnly && commitRange?.length === 0 }>
+            <Render when={!readOnly && commitRange?.length === 0}>
               <Container>
                 <label className={css.viewLabel}>
                   <Checkbox
@@ -674,13 +697,16 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
                         // update local data first
                         // we could wait for server response for the guaranteed correct SHA, but this is non-crucial data so it's okay
-                        diff.fileViews?.set(diff.filePath, diff.checksumAfter || "unknown")
+                        diff.fileViews?.set(diff.filePath, diff.checksumAfter || 'unknown')
 
                         // best effort attempt to recflect on server (swallow exception - user still sees correct data locally)
-                        await markViewed({
-                          path: diff.filePath,
-                          commit_sha: pullRequestMetadata?.source_sha
-                        }, {}).catch(() => undefined)
+                        await markViewed(
+                          {
+                            path: diff.filePath,
+                            commit_sha: pullRequestMetadata?.source_sha
+                          },
+                          {}
+                        ).catch(() => undefined)
                       }
                     }}
                   />
