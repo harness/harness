@@ -16,7 +16,6 @@ export interface StringsMap {
   addMember: string
   addNewFile: string
   addReadMe: string
-  addUserToSpace1: string
   addUserToSpace2: string
   admin: string
   aiSearch: string

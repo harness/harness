@@ -24,12 +24,15 @@ import ReactTimeago from 'react-timeago'
 import { useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { noop } from 'lodash-es'
-import type { GitrpcBlamePart } from 'services/code'
+import type { GitrpcBlamePart, TypesRepository } from 'services/code'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
 import { Editor } from 'components/Editor/Editor'
 import { lineWidget, LineWidgetPosition, LineWidgetSpec } from './lineWidget'
+import { CommitActions } from 'components/CommitActions/CommitActions'
+import { useAppContext } from 'AppContext'
+import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import css from './GitBlame.module.scss'
 
 interface BlameBlock {
@@ -40,6 +43,10 @@ interface BlameBlock {
   commitInfo: GitrpcBlamePart['commit']
   lines: GitrpcBlamePart['lines']
   numberOfLines: number
+}
+
+interface BlameBlockExtended extends BlameBlock {
+  repoMetaData?: TypesRepository
 }
 
 type BlameBlockRecord = Record<number, BlameBlock>
@@ -179,7 +186,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
       <Layout.Horizontal className={css.layout}>
         <Container className={css.blameColumn}>
           {Object.values(blameBlocks).map(blameInfo => (
-            <GitBlameMetaInfo key={blameInfo.fromLineNumber} {...blameInfo} />
+            <GitBlameMetaInfo repoMetaData={repoMetadata} key={blameInfo.fromLineNumber} {...blameInfo} />
           ))}
         </Container>
 
@@ -318,9 +325,17 @@ function computeHeight(heights: Record<number, number>) {
   return Object.values(heights).reduce((a, b) => a + b, 0)
 }
 
-function GitBlameMetaInfo({ fromLineNumber, toLineNumber, topPosition, heights, commitInfo }: BlameBlock) {
+function GitBlameMetaInfo({
+  fromLineNumber,
+  toLineNumber,
+  topPosition,
+  heights,
+  commitInfo,
+  repoMetaData
+}: BlameBlockExtended) {
   const height = computeHeight(heights)
   const { getString } = useStrings()
+  const { routes } = useAppContext()
 
   return (
     <Container
@@ -336,26 +351,39 @@ function GitBlameMetaInfo({ fromLineNumber, toLineNumber, topPosition, heights, 
           <Avatar name={commitInfo?.author?.identity?.name} size="normal" hoverCard={false} />
         </Container>
         <Container style={{ flexGrow: 1 }}>
-          <Layout.Vertical spacing="xsmall">
+          <Layout.Vertical margin={{ right: 'xsmall' }} spacing="xsmall">
             <Text
-              font={{ variation: FontVariation.BODY }}
+              className={css.commitTitle}
+              font={{ variation: FontVariation.BODY2_SEMI }}
               lineClamp={2}
               tooltipProps={{
                 portalClassName: css.blameCommitPortalClass
               }}>
               {commitInfo?.title}
             </Text>
-            <Text font={{ variation: FontVariation.BODY }} lineClamp={1}>
+            <Text className={css.commitDate} font={{ variation: FontVariation.BODY }} lineClamp={1}>
               <StringSubstitute
                 str={getString('blameCommitLine')}
                 vars={{
-                  author: <strong>{commitInfo?.author?.identity?.name as string}</strong>,
+                  author: <strong style={{ fontWeight: 500 }}>{commitInfo?.author?.identity?.name as string}</strong>,
                   timestamp: <ReactTimeago date={commitInfo?.author?.when as string} />
                 }}
               />
             </Text>
           </Layout.Vertical>
         </Container>
+        {commitInfo?.sha && repoMetaData?.path && (
+          <Container style={{ float: 'right', position: 'relative' }}>
+            <CommitActions
+              sha={commitInfo?.sha}
+              href={routes.toCODECommit({
+                repoPath: repoMetaData.path,
+                commitRef: commitInfo?.sha as string
+              })}
+              enableCopy
+            />
+          </Container>
+        )}
       </Layout.Horizontal>
     </Container>
   )

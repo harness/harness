@@ -153,19 +153,19 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
             <Container padding="large" margin={{ bottom: 'medium' }} className={css.generalContainer}>
               <Layout.Horizontal padding={{ bottom: 'medium' }}>
                 <Container className={css.label}>
-                  <Text color={Color.GREY_600} font={{ size: 'small' }}>
+                  <Text color={Color.GREY_600} className={css.textSize}>
                     {getString('repositoryName')}
                   </Text>
                 </Container>
                 <Container className={css.content}>
-                  <Text color={Color.GREY_800} font={{ size: 'small' }}>
+                  <Text color={Color.GREY_800} className={css.textSize}>
                     {repoMetadata?.uid}
                   </Text>
                 </Container>
               </Layout.Horizontal>
               <Layout.Horizontal>
                 <Container className={cx(css.label, css.descText)}>
-                  <Text color={Color.GREY_600} font={{ size: 'small' }}>
+                  <Text color={Color.GREY_600} className={css.textSize}>
                     {getString('description')}
                   </Text>
                 </Container>
@@ -173,7 +173,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                   {editDesc === ACCESS_MODES.EDIT ? (
                     <Layout.Horizontal className={css.editContainer}>
                       <TextInput
-                        className={css.textContainer}
+                        className={cx(css.textContainer, css.textSize)}
                         onChange={evt => {
                           formik.setFieldValue('desc', (evt.currentTarget as HTMLInputElement)?.value)
                         }}
@@ -211,9 +211,10 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                       </Layout.Horizontal>
                     </Layout.Horizontal>
                   ) : (
-                    <Text color={Color.GREY_800} font={{ size: 'small' }}>
+                    <Text color={Color.GREY_800} className={css.textSize}>
                       {formik?.values?.desc || repoMetadata?.description}
                       <Button
+                        className={css.textSize}
                         text={getString('edit')}
                         icon="Edit"
                         variation={ButtonVariation.LINK}

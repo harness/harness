@@ -38,6 +38,7 @@ export declare const repoInfo: string
 export declare const roleBadge: string
 export declare const saveBtn: string
 export declare const textContainer: string
+export declare const textSize: string
 export declare const upgradeButton: string
 export declare const upgradeContainer: string
 export declare const upgradeHeader: string

@@ -592,8 +592,7 @@ selectSpaceText: Select a Project
 user: User
 role: Role
 addMember: Add Member
-addUserToSpace1: Add user to this Project
-addUserToSpace2: Add {{user}} to this Project
+addUserToSpace2: Add member to this Project
 spaceMemberships:
   addMember: Add a member to {{name}}
   changeRole: Change Role

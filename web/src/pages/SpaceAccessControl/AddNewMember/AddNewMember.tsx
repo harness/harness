@@ -138,13 +138,7 @@ const useAddNewMember = ({ onClose }: { onClose: () => void }) => {
             <Button
               type="submit"
               margin={{ top: 'xxxlarge' }}
-              text={
-                isEditFlow
-                  ? getString('save')
-                  : getString(selectUser ? 'addUserToSpace2' : 'addUserToSpace1', {
-                      user: selectUser?.label || selectUser?.value
-                    })
-              }
+              text={isEditFlow ? getString('save') : getString('addUserToSpace2')}
               variation={ButtonVariation.PRIMARY}
             />
           </FormikForm>

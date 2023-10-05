@@ -20,6 +20,7 @@ export declare const backdrop: string
 export declare const btnColorFix: string
 export declare const layout: string
 export declare const main: string
+export declare const mainBorder: string
 export declare const portal: string
 export declare const refRoot: string
 export declare const rootSlash: string

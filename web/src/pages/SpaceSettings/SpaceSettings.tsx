@@ -29,6 +29,7 @@ import {
   Heading,
   TextInput
 } from '@harnessio/uicore'
+import cx from 'classnames'
 import { noop } from 'lodash-es'
 import { useMutate, useGet } from 'restful-react'
 import { Intent, Color, FontVariation } from '@harnessio/design-system'
@@ -319,7 +320,7 @@ export default function SpaceSettings() {
                   <Container padding="xlarge" margin={{ bottom: 'medium' }} className={css.generalContainer}>
                     <Layout.Horizontal padding={{ bottom: 'medium' }}>
                       <Container className={css.label}>
-                        <Text padding={{ top: 'small' }} color={Color.GREY_600} font={{ size: 'small' }}>
+                        <Text padding={{ top: 'small' }} color={Color.GREY_600} className={css.textSize}>
                           {getString('name')}
                         </Text>
                       </Container>
@@ -329,7 +330,7 @@ export default function SpaceSettings() {
                             <TextInput
                               name="name"
                               value={formik.values.name || data?.uid}
-                              className={css.textContainer}
+                              className={cx(css.textContainer, css.textSize)}
                               onChange={evt => {
                                 formik.setFieldValue('name', (evt.currentTarget as HTMLInputElement)?.value)
                               }}
@@ -365,9 +366,10 @@ export default function SpaceSettings() {
                             </Layout.Horizontal>
                           </Layout.Horizontal>
                         ) : (
-                          <Text color={Color.GREY_800} font={{ size: 'small' }}>
+                          <Text color={Color.GREY_800} className={css.textSize}>
                             {formik?.values?.name || data?.uid}
                             <Button
+                              className={css.textSize}
                               text={getString('edit')}
                               icon="Edit"
                               variation={ButtonVariation.LINK}
@@ -382,7 +384,7 @@ export default function SpaceSettings() {
                     </Layout.Horizontal>
                     <Layout.Horizontal>
                       <Container className={css.label}>
-                        <Text padding={{ top: 'small' }} color={Color.GREY_600} font={{ size: 'small' }}>
+                        <Text padding={{ top: 'small' }} color={Color.GREY_600} className={css.textSize}>
                           {getString('description')}
                         </Text>
                       </Container>
@@ -395,11 +397,11 @@ export default function SpaceSettings() {
                               }}
                               value={formik.values.desc || data?.description}
                               name="desc"
-                              className={css.textContainer}
+                              className={cx(css.textContainer, css.textSize)}
                             />
                             <Layout.Horizontal className={css.buttonContainer}>
                               <Button
-                                className={css.saveBtn}
+                                className={cx(css.saveBtn, css.textSize)}
                                 margin={{ right: 'medium' }}
                                 type="submit"
                                 text={getString('save')}
@@ -428,9 +430,10 @@ export default function SpaceSettings() {
                             </Layout.Horizontal>
                           </Layout.Horizontal>
                         ) : (
-                          <Text color={Color.GREY_800} font={{ size: 'small' }}>
+                          <Text className={css.textSize} color={Color.GREY_800}>
                             {formik?.values?.desc || data?.description}
                             <Button
+                              className={css.textSize}
                               text={getString('edit')}
                               icon="Edit"
                               variation={ButtonVariation.LINK}

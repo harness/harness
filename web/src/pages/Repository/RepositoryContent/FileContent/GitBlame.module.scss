@@ -62,7 +62,7 @@
     border-radius: 4px;
 
     .blameColumn {
-      width: 400px;
+      width: 450px;
       background: var(--grey-50);
       flex-shrink: 0;
       position: relative;
@@ -105,4 +105,15 @@
       max-width: 600px;
     }
   }
+}
+
+.commitTitle {
+  font-size: 13px !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+  color: var(--grey-900) !important;
+}
+
+.commitDate {
+  font-size: 13px !important;
 }

@@ -126,7 +126,7 @@ export function ContentHeader({
 
   return (
     <Container className={css.main}>
-      <Layout.Horizontal spacing="medium">
+      <Layout.Horizontal className={isDir(resourceContent) ? '' : css.mainBorder} spacing="medium">
         <BranchTagSelect
           repoMetadata={repoMetadata}
           gitRef={gitRef}

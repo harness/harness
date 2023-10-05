@@ -22,11 +22,19 @@ import { FontVariation } from '@harnessio/design-system'
 import { RepoPublicLabel } from 'components/RepoPublicLabel/RepoPublicLabel'
 import type { GitInfoProps } from 'utils/GitUtils'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
+import type { TypesRepository } from 'services/code'
 import css from './RepositoryHeader.module.scss'
+interface RepositoryHeaderProps extends Pick<GitInfoProps, 'repoMetadata'> {
+  repoMetadata: TypesRepository
+  className?: string
+  isFile: boolean
+}
 
-export function RepositoryHeader({ repoMetadata }: Pick<GitInfoProps, 'repoMetadata'>) {
+export function RepositoryHeader(props: RepositoryHeaderProps) {
+  const { repoMetadata, className, isFile } = props
   return (
     <RepositoryPageHeader
+      className={isFile ? className : undefined}
       repoMetadata={repoMetadata}
       title={
         <Layout.Horizontal spacing="small" className={css.name}>

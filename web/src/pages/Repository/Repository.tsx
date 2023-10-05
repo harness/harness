@@ -29,6 +29,7 @@ import { RepositoryContent } from './RepositoryContent/RepositoryContent'
 import { RepositoryHeader } from './RepositoryHeader/RepositoryHeader'
 import { ContentHeader } from './RepositoryContent/ContentHeader/ContentHeader'
 import { EmptyRepositoryInfo } from './EmptyRepositoryInfo'
+import { isDir } from 'utils/GitUtils'
 import css from './Repository.module.scss'
 
 export default function Repository() {
@@ -48,7 +49,7 @@ export default function Repository() {
     <Container className={cx(css.main, !!resourceContent && css.withFileViewer)}>
       <Match expr={fileNotExist}>
         <Truthy>
-          <RepositoryHeader repoMetadata={repoMetadata as TypesRepository} />
+          <RepositoryHeader isFile={false} repoMetadata={repoMetadata as TypesRepository} />
           <Layout.Vertical>
             <Container className={css.bannerContainer} padding={{ left: 'xlarge' }}>
               <Text font={'small'} padding={{ left: 'large' }}>
@@ -84,8 +85,11 @@ export default function Repository() {
 
             {!!repoMetadata && (
               <>
-                <RepositoryHeader repoMetadata={repoMetadata} />
-
+                <RepositoryHeader
+                  repoMetadata={repoMetadata}
+                  isFile={!isDir(resourceContent)}
+                  className={css.headerContainer}
+                />
                 {!!resourceContent && (
                   <RepositoryContent
                     repoMetadata={repoMetadata}
@@ -95,7 +99,6 @@ export default function Repository() {
                     commitRef={commitRef}
                   />
                 )}
-
                 {isRepositoryEmpty && <EmptyRepositoryInfo repoMetadata={repoMetadata} />}
               </>
             )}

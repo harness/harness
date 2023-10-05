@@ -33,5 +33,6 @@ export declare const radioContainer: string
 export declare const saveBtn: string
 export declare const text: string
 export declare const textContainer: string
+export declare const textSize: string
 export declare const webhookHeader: string
 export declare const webhooksContent: string
