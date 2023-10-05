@@ -125,7 +125,7 @@ export function ContentHeader({
   }, [resourcePath, gitRef, repoMetadata.path, routes])
 
   return (
-    <Container className={css.main}>
+    <Container className={cx(css.main, { [css.mainContainer]: !isDir(resourceContent) })}>
       <Layout.Horizontal className={isDir(resourceContent) ? '' : css.mainBorder} spacing="medium">
         <BranchTagSelect
           repoMetadata={repoMetadata}
