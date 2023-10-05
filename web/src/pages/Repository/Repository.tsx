@@ -25,11 +25,11 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useStrings } from 'framework/strings'
 import type { OpenapiGetContentOutput, TypesRepository } from 'services/code'
 import { Images } from 'images'
+import { isDir } from 'utils/GitUtils'
 import { RepositoryContent } from './RepositoryContent/RepositoryContent'
 import { RepositoryHeader } from './RepositoryHeader/RepositoryHeader'
 import { ContentHeader } from './RepositoryContent/ContentHeader/ContentHeader'
 import { EmptyRepositoryInfo } from './EmptyRepositoryInfo'
-import { isDir } from 'utils/GitUtils'
 import css from './Repository.module.scss'
 
 export default function Repository() {

@@ -165,7 +165,7 @@ export function getCommentLineInfo(
 ) {
   const isSideBySideView = viewStyle === ViewStyle.SIDE_BY_SIDE
   const { left, lineNumber, filePath } = commentEntry
-  const filePathBody = (filePath ? contentDOM?.querySelector(`[data="${filePath}"`) : contentDOM)
+  const filePathBody = filePath ? contentDOM?.querySelector(`[data="${filePath}"`) : contentDOM
 
   const diffBody = filePathBody?.querySelector(
     `${isSideBySideView ? `.d2h-file-side-diff${left ? '.left' : '.right'} ` : ''}.d2h-diff-tbody`
@@ -200,7 +200,7 @@ export function getCommentLineInfo(
   }
 }
 
-export function createCommentOppositePlaceHolder(lineNumber:number): HTMLTableRowElement {
+export function createCommentOppositePlaceHolder(lineNumber: number): HTMLTableRowElement {
   const placeHolderRow = document.createElement('tr')
 
   placeHolderRow.dataset.placeHolderForLine = String(lineNumber)
@@ -226,29 +226,34 @@ export const activityToCommentItem = (activity: TypesPullReqActivity): CommentIt
   deleted: activity.deleted as number,
   outdated: !!activity.code_comment?.outdated,
   content: (activity.text || (activity.payload as Unknown)?.Message) as string,
-  payload: activity,
+  payload: activity
 })
 
-export function activitiesToDiffCommentItems(filePath: string, activities: TypesPullReqActivity[]): DiffCommentItem<TypesPullReqActivity>[] {
-  return activities?.
-            filter(activity => filePath === activity.code_comment?.path).
-            map(activity => {
-              const replyComments =
-                activities
-                  ?.filter(replyActivity => replyActivity.parent_id === activity.id)
-                  .map(_activity => activityToCommentItem(_activity)) || []
-              const right = get(activity.payload, 'line_start_new', false)
+export function activitiesToDiffCommentItems(
+  filePath: string,
+  activities: TypesPullReqActivity[]
+): DiffCommentItem<TypesPullReqActivity>[] {
+  return (
+    activities
+      ?.filter(activity => filePath === activity.code_comment?.path)
+      .map(activity => {
+        const replyComments =
+          activities
+            ?.filter(replyActivity => replyActivity.parent_id === activity.id)
+            .map(_activity => activityToCommentItem(_activity)) || []
+        const right = get(activity.payload, 'line_start_new', false)
 
-              return {
-                inner: activity,
-                left: !right,
-                right,
-                height: 0,
-                lineNumber: (right ? activity.code_comment?.line_new : activity.code_comment?.line_old) as number,
-                commentItems: [activityToCommentItem(activity)].concat(replyComments),
-                filePath: filePath,
-                destroy: undefined,
-                eventStream: undefined
-              }
-            }) || []
+        return {
+          inner: activity,
+          left: !right,
+          right,
+          height: 0,
+          lineNumber: (right ? activity.code_comment?.line_new : activity.code_comment?.line_old) as number,
+          commentItems: [activityToCommentItem(activity)].concat(replyComments),
+          filePath: filePath,
+          destroy: undefined,
+          eventStream: undefined
+        }
+      }) || []
+  )
 }

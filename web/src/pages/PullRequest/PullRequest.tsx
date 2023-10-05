@@ -72,23 +72,23 @@ export default function PullRequest() {
     lazy: !repoMetadata
   })
 
-  const eventHandler = useCallback((data : TypesPullReq)=> {
-    // ensure this update belongs to the PR we are showing right now - to avoid unnecessary reloads
-    if (!data || !repoMetadata ||
-      data.target_repo_id !== repoMetadata.id ||
-      String(data.number) !== pullRequestId
-    ) {
-      return
-    }
-    // NOTE: we refresh as events don't contain all pr stats yet (can be optimized)
-    refetchPullRequest()
-  }, [pullRequestId, repoMetadata, refetchPullRequest])
+  const eventHandler = useCallback(
+    (data: TypesPullReq) => {
+      // ensure this update belongs to the PR we are showing right now - to avoid unnecessary reloads
+      if (!data || !repoMetadata || data.target_repo_id !== repoMetadata.id || String(data.number) !== pullRequestId) {
+        return
+      }
+      // NOTE: we refresh as events don't contain all pr stats yet (can be optimized)
+      refetchPullRequest()
+    },
+    [pullRequestId, repoMetadata, refetchPullRequest]
+  )
   useSpaceSSE({
     space,
     events: SSE_EVENTS,
     onEvent: eventHandler
   })
-  
+
   const [prData, setPrData] = useState<TypesPullReq>()
   const prChecksDecisionResult = usePRChecksDecision({
     repoMetadata,

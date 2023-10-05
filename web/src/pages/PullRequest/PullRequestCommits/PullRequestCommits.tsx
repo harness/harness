@@ -27,7 +27,7 @@ import { PullRequestTabContentWrapper } from '../PullRequestTabContentWrapper'
 
 export const PullRequestCommits: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'>> = ({
   repoMetadata,
-  pullRequestMetadata,
+  pullRequestMetadata
 }) => {
   const limit = LIST_FETCHING_LIMIT
   const [page, setPage] = usePageIndex()

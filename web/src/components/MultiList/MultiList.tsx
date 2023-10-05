@@ -15,7 +15,7 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { debounce, has, omit } from 'lodash'
+import { debounce, has, omit } from 'lodash-es'
 import { FormikContextType, connect } from 'formik'
 import { Layout, Text, FormInput, Button, ButtonVariation, ButtonSize, Container } from '@harnessio/uicore'
 import { FontVariation } from '@harnessio/design-system'

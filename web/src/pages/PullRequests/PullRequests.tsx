@@ -89,17 +89,18 @@ export default function PullRequests() {
     debounce: 500,
     lazy: !repoMetadata
   })
-  
-  const eventHandler = useCallback((pr : TypesPullReq) => {
-    // ensure this update belongs to the repo we are looking at right now - to avoid unnecessary reloads
-    if (!pr || !repoMetadata ||
-      pr.target_repo_id !== repoMetadata.id
-    ) {
-      return
-    }
 
-    refetchPrs()
-  }, [repoMetadata, refetchPrs])
+  const eventHandler = useCallback(
+    (pr: TypesPullReq) => {
+      // ensure this update belongs to the repo we are looking at right now - to avoid unnecessary reloads
+      if (!pr || !repoMetadata || pr.target_repo_id !== repoMetadata.id) {
+        return
+      }
+
+      refetchPrs()
+    },
+    [repoMetadata, refetchPrs]
+  )
   useSpaceSSE({
     space,
     events: SSE_EVENTS,

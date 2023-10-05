@@ -41,7 +41,13 @@ import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
 import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
 import { NoResultCard } from 'components/NoResultCard/NoResultCard'
-import type { TypesCommit, TypesPullReqFileView, TypesPullReq, TypesPullReqActivity, TypesPullReqStats } from 'services/code'
+import type {
+  TypesCommit,
+  TypesPullReqFileView,
+  TypesPullReq,
+  TypesPullReqActivity,
+  TypesPullReqStats
+} from 'services/code'
 import { useShowRequestError } from 'hooks/useShowRequestError'
 import { useAppContext } from 'AppContext'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
@@ -132,14 +138,14 @@ export const Changes: React.FC<ChangesProps> = ({
 
   const diffSubPath = useMemo(
     () =>
-      commitSHA 
-        // show specific commit
-        ? `commits/${commitSHA}/diff`
-        // show range of commits and user selected subrange
-        : commitRange.length > 0
+      commitSHA
+        ? // show specific commit
+          `commits/${commitSHA}/diff`
+        : // show range of commits and user selected subrange
+        commitRange.length > 0
         ? `diff/${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
-        // show range of commits and user did not select a subrange
-        : `diff/${targetRef}...${sourceRef}`,
+        : // show range of commits and user did not select a subrange
+          `diff/${targetRef}...${sourceRef}`,
     [commitSHA, commitRange, targetRef, sourceRef]
   )
 
@@ -174,7 +180,7 @@ export const Changes: React.FC<ChangesProps> = ({
     rawFileViews
       ?.filter(({ path, sha }) => path && sha) // every entry is expected to have a path and sha - otherwise skip ...
       .forEach(({ path, sha, obsolete }) => {
-        out.set(path || "", obsolete ? 'ffffffffffffffffffffffffffffffffffffffff' : (sha || ""))
+        out.set(path || '', obsolete ? 'ffffffffffffffffffffffffffffffffffffffff' : sha || '')
       })
     return out
   }, [rawFileViews])
@@ -225,7 +231,7 @@ export const Changes: React.FC<ChangesProps> = ({
         return
       }
 
-      setActivities(oldActivities => isEqual(oldActivities, prActivities) ? oldActivities : prActivities)
+      setActivities(oldActivities => (isEqual(oldActivities, prActivities) ? oldActivities : prActivities))
     },
     [prActivities]
   )

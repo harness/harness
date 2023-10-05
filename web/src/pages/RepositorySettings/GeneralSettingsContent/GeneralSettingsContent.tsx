@@ -38,9 +38,9 @@ import { useStrings } from 'framework/strings'
 import type { TypesRepository } from 'services/code'
 import { useAppContext } from 'AppContext'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
+import { RepoVisibility } from 'utils/GitUtils'
 import { useModalHook } from 'hooks/useModalHook'
 import useDeleteRepoModal from './DeleteRepoModal/DeleteRepoModal'
-import { RepoVisibility } from 'utils/GitUtils'
 import Private from '../../../icons/private.svg'
 import css from '../RepositorySettings.module.scss'
 
@@ -136,7 +136,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
       </Dialog>
     )
   }
-  const [openModal, hideModal] = useModalHook(ModalComponent, [() => {}])
+  const [openModal, hideModal] = useModalHook(ModalComponent, [])
 
   return (
     <Formik

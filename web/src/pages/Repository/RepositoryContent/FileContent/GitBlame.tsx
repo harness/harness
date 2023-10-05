@@ -29,10 +29,9 @@ import type { GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
 import { Editor } from 'components/Editor/Editor'
-import { lineWidget, LineWidgetPosition, LineWidgetSpec } from './lineWidget'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useAppContext } from 'AppContext'
-import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
+import { lineWidget, LineWidgetPosition, LineWidgetSpec } from './lineWidget'
 import css from './GitBlame.module.scss'
 
 interface BlameBlock {

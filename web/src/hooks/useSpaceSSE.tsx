@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { useAppContext } from 'AppContext'
 import { useEffect, useRef } from 'react'
+import { useAppContext } from 'AppContext'
 import { getConfig } from 'services/config'
 
 type UseSpaceSSEProps = {
@@ -36,7 +36,9 @@ const useSpaceSSE = ({ space, events, onEvent, onError, shouldRun = true }: UseS
     // Conditionally establish the event stream - don't want to open on a finished execution
     if (shouldRun && events.length > 0) {
       if (!eventSourceRef.current) {
-        const pathAndQuery = getConfig(`code/api/v1/spaces/${space}/+/events${standalone ? "" : `?routingId=${routingId}`}`)
+        const pathAndQuery = getConfig(
+          `code/api/v1/spaces/${space}/+/events${standalone ? '' : `?routingId=${routingId}`}`
+        )
         eventSourceRef.current = new EventSource(pathAndQuery)
 
         const handleMessage = (event: MessageEvent) => {

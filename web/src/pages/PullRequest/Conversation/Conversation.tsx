@@ -169,13 +169,11 @@ export const Conversation: React.FC<ConversationProps> = ({
     pullRequestMetadata?.title,
     pullRequestMetadata?.state,
     pullRequestMetadata?.source_sha,
-    refetchActivities]
-  )
+    refetchActivities
+  ])
 
-
-  
-const newCommentBox = useMemo(() => {
-  return (
+  const newCommentBox = useMemo(() => {
+    return (
       <CommentBox
         fluid
         boxClassName={css.commentBox}
@@ -207,139 +205,139 @@ const newCommentBox = useMemo(() => {
           return [result, updatedItem]
         }}
       />
-  );
-}, [currentUser, onCommentUpdate, saveComment, showError])
+    )
+  }, [currentUser, onCommentUpdate, saveComment, showError])
 
-const renderedActivityBlocks = useMemo(
-  () =>
-    activityBlocks?.map((commentItems, index) => {
-      const threadId = commentItems[0].payload?.id
+  const renderedActivityBlocks = useMemo(
+    () =>
+      activityBlocks?.map((commentItems, index) => {
+        const threadId = commentItems[0].payload?.id
 
-      if (isSystemComment(commentItems)) {
+        if (isSystemComment(commentItems)) {
+          return (
+            <ThreadSection
+              key={`thread-${threadId}`}
+              onlyTitle
+              lastItem={activityBlocks.length - 1 === index}
+              title={
+                <SystemComment
+                  key={`system-${threadId}`}
+                  pullRequestMetadata={pullRequestMetadata}
+                  commentItems={commentItems}
+                  repoMetadataPath={repoMetadata.path}
+                />
+              }></ThreadSection>
+          )
+        }
         return (
           <ThreadSection
-            key={`thread-${threadId}`}
-            onlyTitle
-            lastItem={activityBlocks.length - 1 === index}
+            key={`comment-${threadId}`}
+            onlyTitle={
+              activityBlocks[index + 1] !== undefined && isSystemComment(activityBlocks[index + 1]) ? true : false
+            }
+            inCommentBox={
+              activityBlocks[index + 1] !== undefined && isSystemComment(activityBlocks[index + 1]) ? true : false
+            }
             title={
-              <SystemComment
-                key={`system-${threadId}`}
-                pullRequestMetadata={pullRequestMetadata}
+              <CommentBox
+                key={threadId}
+                fluid
+                boxClassName={css.threadbox}
+                outerClassName={css.hideDottedLine}
                 commentItems={commentItems}
-                repoMetadataPath={repoMetadata.path}
+                currentUserName={currentUser.display_name}
+                setDirty={setDirtyCurrentComments}
+                enableReplyPlaceHolder={true}
+                autoFocusAndPosition={true}
+                handleAction={async (action, value, commentItem) => {
+                  let result = true
+                  let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
+                  const id = (commentItem as CommentItem<TypesPullReqActivity>)?.payload?.id
+
+                  switch (action) {
+                    case CommentAction.DELETE:
+                      result = false
+                      await confirmAct({
+                        message: getString('deleteCommentConfirm'),
+                        action: async () => {
+                          await deleteComment({}, { pathParams: { id } })
+                            .then(() => {
+                              result = true
+                            })
+                            .catch(exception => {
+                              result = false
+                              showError(getErrorMessage(exception), 0, getString('pr.failedToDeleteComment'))
+                            })
+                        }
+                      })
+                      break
+
+                    case CommentAction.REPLY:
+                      await saveComment({ text: value, parent_id: Number(threadId) })
+                        .then(newComment => {
+                          updatedItem = activityToCommentItem(newComment)
+                        })
+                        .catch(exception => {
+                          result = false
+                          showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
+                        })
+                      break
+
+                    case CommentAction.UPDATE:
+                      await updateComment({ text: value }, { pathParams: { id } })
+                        .then(newComment => {
+                          updatedItem = activityToCommentItem(newComment)
+                        })
+                        .catch(exception => {
+                          result = false
+                          showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
+                        })
+                      break
+                  }
+
+                  if (result) {
+                    onCommentUpdate()
+                  }
+
+                  return [result, updatedItem]
+                }}
+                outlets={{
+                  [CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]: isCodeComment(commentItems) && (
+                    <CodeCommentHeader commentItems={commentItems} threadId={threadId} />
+                  ),
+                  [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
+                    <CodeCommentStatusSelect
+                      repoMetadata={repoMetadata}
+                      pullRequestMetadata={pullRequestMetadata}
+                      onCommentUpdate={onCommentUpdate}
+                      commentItems={commentItems}
+                      refetchActivities={refetchActivities}
+                    />
+                  ),
+                  [CommentBoxOutletPosition.LEFT_OF_REPLY_PLACEHOLDER]: (
+                    <CodeCommentStatusButton
+                      repoMetadata={repoMetadata}
+                      pullRequestMetadata={pullRequestMetadata}
+                      onCommentUpdate={onCommentUpdate}
+                      commentItems={commentItems}
+                    />
+                  ),
+                  [CommentBoxOutletPosition.BETWEEN_SAVE_AND_CANCEL_BUTTONS]: (props: ButtonProps) => (
+                    <CodeCommentSecondarySaveButton
+                      repoMetadata={repoMetadata}
+                      pullRequestMetadata={pullRequestMetadata as TypesPullReq}
+                      commentItems={commentItems}
+                      {...props}
+                    />
+                  )
+                }}
               />
             }></ThreadSection>
         )
-      }
-      return (
-        <ThreadSection
-          key={`comment-${threadId}`}
-          onlyTitle={
-            activityBlocks[index + 1] !== undefined && isSystemComment(activityBlocks[index + 1]) ? true : false
-          }
-          inCommentBox={
-            activityBlocks[index + 1] !== undefined && isSystemComment(activityBlocks[index + 1]) ? true : false
-          }
-          title={
-            <CommentBox
-              key={threadId}
-              fluid
-              boxClassName={css.threadbox}
-              outerClassName={css.hideDottedLine}
-              commentItems={commentItems}
-              currentUserName={currentUser.display_name}
-              setDirty={setDirtyCurrentComments}
-              enableReplyPlaceHolder={true}
-              autoFocusAndPosition={true}
-              handleAction={async (action, value, commentItem) => {
-                let result = true
-                let updatedItem: CommentItem<TypesPullReqActivity> | undefined = undefined
-                const id = (commentItem as CommentItem<TypesPullReqActivity>)?.payload?.id
-
-                switch (action) {
-                  case CommentAction.DELETE:
-                    result = false
-                    await confirmAct({
-                      message: getString('deleteCommentConfirm'),
-                      action: async () => {
-                        await deleteComment({}, { pathParams: { id } })
-                          .then(() => {
-                            result = true
-                          })
-                          .catch(exception => {
-                            result = false
-                            showError(getErrorMessage(exception), 0, getString('pr.failedToDeleteComment'))
-                          })
-                      }
-                    })
-                    break
-
-                  case CommentAction.REPLY:
-                    await saveComment({ text: value, parent_id: Number(threadId) })
-                      .then(newComment => {
-                        updatedItem = activityToCommentItem(newComment)
-                      })
-                      .catch(exception => {
-                        result = false
-                        showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
-                      })
-                    break
-
-                  case CommentAction.UPDATE:
-                    await updateComment({ text: value }, { pathParams: { id } })
-                      .then(newComment => {
-                        updatedItem = activityToCommentItem(newComment)
-                      })
-                      .catch(exception => {
-                        result = false
-                        showError(getErrorMessage(exception), 0, getString('pr.failedToSaveComment'))
-                      })
-                    break
-                }
-
-                if (result) {
-                  onCommentUpdate()
-                }
-
-                return [result, updatedItem]
-              }}
-              outlets={{
-                [CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]: isCodeComment(commentItems) && (
-                  <CodeCommentHeader commentItems={commentItems} threadId={threadId} />
-                ),
-                [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
-                  <CodeCommentStatusSelect
-                    repoMetadata={repoMetadata}
-                    pullRequestMetadata={pullRequestMetadata}
-                    onCommentUpdate={onCommentUpdate}
-                    commentItems={commentItems}
-                    refetchActivities={refetchActivities}
-                  />
-                ),
-                [CommentBoxOutletPosition.LEFT_OF_REPLY_PLACEHOLDER]: (
-                  <CodeCommentStatusButton
-                    repoMetadata={repoMetadata}
-                    pullRequestMetadata={pullRequestMetadata}
-                    onCommentUpdate={onCommentUpdate}
-                    commentItems={commentItems}
-                  />
-                ),
-                [CommentBoxOutletPosition.BETWEEN_SAVE_AND_CANCEL_BUTTONS]: (props: ButtonProps) => (
-                  <CodeCommentSecondarySaveButton
-                    repoMetadata={repoMetadata}
-                    pullRequestMetadata={pullRequestMetadata as TypesPullReq}
-                    commentItems={commentItems}
-                    {...props}
-                  />
-                )
-              }}
-            />
-          }></ThreadSection>
-      )
-    }),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  [activityBlocks, currentUser, pullRequestMetadata] 
-)
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activityBlocks, currentUser, pullRequestMetadata]
+  )
 
   return (
     <PullRequestTabContentWrapper loading={showSpinner} error={error} onRetry={refetchActivities}>
@@ -404,22 +402,17 @@ const renderedActivityBlocks = useMemo(
                     </Text>
                   </Layout.Horizontal>
 
-                  {dateOrderSort != orderSortDate.DESC ? null :
-                    <Container className={css.descContainer}>
-                      {newCommentBox}
-                    </Container>
-                  }
+                  {dateOrderSort != orderSortDate.DESC ? null : (
+                    <Container className={css.descContainer}>{newCommentBox}</Container>
+                  )}
 
                   {renderedActivityBlocks}
 
-                  {dateOrderSort != orderSortDate.ASC ? null :
-                    <Container className={css.ascContainer}>
-                      {newCommentBox}
-                    </Container>
-                  }
-
-                  </Layout.Vertical>
-                </Container>
+                  {dateOrderSort != orderSortDate.ASC ? null : (
+                    <Container className={css.ascContainer}>{newCommentBox}</Container>
+                  )}
+                </Layout.Vertical>
+              </Container>
 
               <PullRequestSideBar
                 reviewers={reviewers}

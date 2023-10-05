@@ -16,7 +16,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import cx from 'classnames'
-import { debounce, has, omit, set } from 'lodash'
+import { debounce, has, omit, set } from 'lodash-es'
 import { FormikContextType, connect } from 'formik'
 import { Layout, Text, FormInput, Button, ButtonVariation, ButtonSize, Container } from '@harnessio/uicore'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -83,22 +83,22 @@ export const MultiMap = ({ name, label, readOnly, formik }: MultiMapConnectedPro
     })
   }, [rowValues])
 
-  /* 
-  Convert 
+  /*
+  Convert
   [
-    {key:  <field-name-1-key>, value:  <field-name-1-value>}, 
+    {key:  <field-name-1-key>, value:  <field-name-1-value>},
     {key:  <field-name-2-key>, value:  <field-name-2-value>}
   ]
   to
   {
-    <field-name-1-key>:  <field-name-1-value>, 
+    <field-name-1-key>:  <field-name-1-value>,
     <field-name-2-key>:  <field-name-2-value>
   }
   */
   const createKVMap = useCallback((values: KVPair[]): { [key: string]: string } => {
-    const map: { [key: string]: string } = values.reduce(function (map, obj: KVPair) {
-      set(map, obj.key, obj.value)
-      return map
+    const map: { [key: string]: string } = values.reduce(function (_map, obj: KVPair) {
+      set(_map, obj.key, obj.value)
+      return _map
     }, {})
     return map
   }, [])
@@ -124,9 +124,9 @@ export const MultiMap = ({ name, label, readOnly, formik }: MultiMapConnectedPro
       if (!existingValueMap.has(rowKeyToAdd)) {
         const existingValueMapClone = new Map(existingValueMap)
         /* Add key with default kv pair
-          <field-name-1> : {key: '', value: ''}, 
-          <field-name-2> : {key: '', value: ''}, 
-          ... 
+          <field-name-1> : {key: '', value: ''},
+          <field-name-2> : {key: '', value: ''},
+          ...
         */
         existingValueMapClone.set(rowKeyToAdd, DefaultKVPair)
         counter.current++ /* this counter always increases, even if a row is removed. This ensures no key collision in the existing value map. */

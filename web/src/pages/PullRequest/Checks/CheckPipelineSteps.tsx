@@ -241,7 +241,9 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
 }
 
 const createLogLineElement = (line = '') => {
-  const element = document.createElement('pre')
+  const element = document.createElement('pre') as HTMLPreElement & {
+    setHTML: (html: string, options: Record<string, unknown>) => void
+  }
   element.className = css.consoleLine
 
   const html = Anser.ansiToHtml(line.replace(/\r?\n$/, ''))

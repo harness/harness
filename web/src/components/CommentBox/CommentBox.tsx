@@ -66,19 +66,19 @@ export enum CommentBoxOutletPosition {
   BETWEEN_SAVE_AND_CANCEL_BUTTONS = 'between_save_and_cancel_buttons'
 }
 
-export type CommentItemsHandler<T> = (t: T) => void;
+export type CommentItemsHandler<T> = (t: T) => void
 export class SingleConsumerEventStream<T> {
   consumerHandler: CommentItemsHandler<T> | undefined
-  
+
   subscribe(fn: CommentItemsHandler<T>): () => void {
     this.consumerHandler = fn
-    return () => { 
+    return () => {
       this.consumerHandler = undefined
     }
   }
 
   publish(t: T) {
-    this.consumerHandler?.(t);
+    this.consumerHandler?.(t)
   }
 }
 
@@ -93,8 +93,8 @@ interface CommentBoxProps<T> {
   resetOnSave?: boolean
   hideCancel?: boolean
   currentUserName: string
-  commentItems: CommentItem<T>[],
-  eventStream?: SingleConsumerEventStream<CommentItem<T>[]>,
+  commentItems: CommentItem<T>[]
+  eventStream?: SingleConsumerEventStream<CommentItem<T>[]>
   handleAction: (
     action: CommentAction,
     content: string,
@@ -103,7 +103,7 @@ interface CommentBoxProps<T> {
   onCancel?: () => void
   setDirty: (dirty: boolean) => void
   outlets?: Partial<Record<CommentBoxOutletPosition, React.ReactNode>>
-  autoFocusAndPosition?: boolean,
+  autoFocusAndPosition?: boolean
   enableReplyPlaceHolder?: boolean
 }
 
@@ -125,7 +125,7 @@ export const CommentBox = <T = unknown,>({
   setDirty: setDirtyProp,
   outlets = {},
   autoFocusAndPosition,
-  enableReplyPlaceHolder,
+  enableReplyPlaceHolder
 }: CommentBoxProps<T>) => {
   const { getString } = useStrings()
   const [comments, setComments] = useState<CommentItem<T>[]>(commentItems)
@@ -144,14 +144,16 @@ export const CommentBox = <T = unknown,>({
 
       const payload = updatedComments[0]?.payload
       if (payload && typeof payload == 'object') {
-        emitCodeCommentStatus('resolved' in payload && payload.resolved ? CodeCommentState.RESOLVED : CodeCommentState.ACTIVE)
+        emitCodeCommentStatus(
+          'resolved' in payload && payload.resolved ? CodeCommentState.RESOLVED : CodeCommentState.ACTIVE
+        )
       }
-    });
+    })
 
     return () => {
-      unsubscribe();  // Clean up the subscription on unmount
-    };
-  }, [eventStream, setComments, emitCodeCommentStatus]);
+      unsubscribe() // Clean up the subscription on unmount
+    }
+  }, [eventStream, setComments, emitCodeCommentStatus])
 
   const [showReplyPlaceHolder, setShowReplyPlaceHolder] = useState(enableReplyPlaceHolder)
   const [markdown, setMarkdown] = useState(initialContent)
@@ -220,7 +222,10 @@ export const CommentBox = <T = unknown,>({
           <Match expr={showReplyPlaceHolder && enableReplyPlaceHolder}>
             <Truthy>
               <Container>
-                <Layout.Horizontal spacing="small" className={cx(css.replyPlaceHolder, editorClassName)} padding="medium">
+                <Layout.Horizontal
+                  spacing="small"
+                  className={cx(css.replyPlaceHolder, editorClassName)}
+                  padding="medium">
                   <Avatar name={currentUserName} size="small" hoverCard={false} />
                   <TextInput
                     {...ButtonRoleProps}

@@ -155,11 +155,9 @@ const CommitRangeDropdown: React.FC<CommitRangeDropdownProps> = ({
         color={Color.GREY_700}
         font={{ variation: FontVariation.BODY2 }}
         margin={{ right: 'medium' }}>
-        {
-          areAllCommitsSelected
-            ? getString('allCommits')
-            : `${selectedCommits.length} ${selectedCommits.length > 1 ? getString('commits') : getString('commit')}`
-        }
+        {areAllCommitsSelected
+          ? getString('allCommits')
+          : `${selectedCommits.length} ${selectedCommits.length > 1 ? getString('commits') : getString('commit')}`}
       </Text>
     </Popover>
   )
