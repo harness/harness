@@ -24,14 +24,12 @@ jobs:
         with:
           node-version: 16
           cache: "npm"
+          cache-dependency-path: web/yarn.lock
       - name: install, lint, and build web app
         working-directory: web
         run: |
-          echo "@harness:registry=https://npm.pkg.github.com
-          //npm.pkg.github.com/:_authToken=${{ secrets.GH_TOKEN }}
-          always-auth=true" >> ~/.npmrc
           yarn install
-          yarn checks
+          yarn check:all
           yarn build
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
