@@ -187,7 +187,8 @@ func (c *Controller) State(ctx context.Context,
 		})
 	case changeClose:
 		c.eventReporter.Closed(ctx, &pullreqevents.ClosedPayload{
-			Base: eventBase(pr, &session.Principal),
+			Base:      eventBase(pr, &session.Principal),
+			SourceSHA: pr.SourceSHA,
 		})
 	}
 

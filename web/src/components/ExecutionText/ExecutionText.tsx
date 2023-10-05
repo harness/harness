@@ -129,7 +129,13 @@ export const ExecutionText: React.FC<ExecutionTextProps> = ({
       componentToRender = (
         <>
           <Text font={{ size: 'small' }} className={css.author}>{`${authorName} ${
-            action === 'pullreq_reopened' ? 'reopened' : action === 'pullreq_branch_updated' ? 'updated' : 'created'
+            action === 'pullreq_reopened'
+              ? 'reopened'
+              : action === 'pullreq_branch_updated'
+              ? 'updated'
+              : action === 'pullreq_closed'
+              ? 'closed'
+              : 'created'
           } pull request`}</Text>
           <Pill type={PillType.BRANCH} text={source} />
           <Text font={{ size: 'small' }} className={css.author}>

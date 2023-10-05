@@ -67,6 +67,7 @@ export type EnumTriggerAction =
   | 'branch_created'
   | 'branch_updated'
   | 'pullreq_branch_updated'
+  | 'pullreq_closed'
   | 'pullreq_created'
   | 'pullreq_reopened'
   | 'tag_created'
@@ -81,6 +82,7 @@ export type EnumWebhookTrigger =
   | 'branch_deleted'
   | 'branch_updated'
   | 'pullreq_branch_updated'
+  | 'pullreq_closed'
   | 'pullreq_created'
   | 'pullreq_reopened'
   | 'tag_created'
@@ -133,6 +135,8 @@ export interface GitrpcSignature {
   identity?: GitrpcIdentity
   when?: string
 }
+
+export type ImporterPipelineOption = 'convert' | 'ignore'
 
 export interface ImporterProvider {
   host?: string
@@ -305,9 +309,9 @@ export interface OpenapiDirContent {
 }
 
 export interface OpenapiExportSpaceRequest {
-  accountId?: string
-  orgIdentifier?: string
-  projectIdentifier?: string
+  account_id?: string
+  org_identifier?: string
+  project_identifier?: string
   token?: string
 }
 
@@ -689,7 +693,9 @@ export interface TypesPlugin {
   description?: string
   logo?: string
   spec?: string
+  type?: string
   uid?: string
+  version?: string
 }
 
 export interface TypesPrincipalInfo {
@@ -731,7 +737,6 @@ export interface TypesPullReqActivity {
   author?: TypesPrincipalInfo
   code_comment?: TypesCodeCommentFields
   created?: number
-  updated?: number
   deleted?: number | null
   edited?: number
   id?: number
@@ -747,6 +752,7 @@ export interface TypesPullReqActivity {
   sub_order?: number
   text?: string
   type?: EnumPullReqActivityType
+  updated?: number
 }
 
 export interface TypesPullReqFileView {
@@ -1319,10 +1325,6 @@ export interface ListPrincipalsQueryParams {
    * The substring by which the principals are filtered.
    */
   query?: string
-  /**
-   * The account ID the principals are retrieved for (Not required in standalone).
-   */
-  accountIdentifier?: string
   /**
    * The page to return.
    */
@@ -1913,6 +1915,32 @@ export type UseGetCommitProps = Omit<UseGetProps<TypesCommit, UsererrorError, vo
 export const useGetCommit = ({ repo_ref, commit_sha, ...props }: UseGetCommitProps) =>
   useGet<TypesCommit, UsererrorError, void, GetCommitPathParams>(
     (paramsInPath: GetCommitPathParams) => `/repos/${paramsInPath.repo_ref}/commits/${paramsInPath.commit_sha}`,
+    { base: getConfig('code/api/v1'), pathParams: { repo_ref, commit_sha }, ...props }
+  )
+
+export interface GetCommitDiffPathParams {
+  repo_ref: string
+  commit_sha: string
+}
+
+export type GetCommitDiffProps = Omit<GetProps<void, UsererrorError, void, GetCommitDiffPathParams>, 'path'> &
+  GetCommitDiffPathParams
+
+export const GetCommitDiff = ({ repo_ref, commit_sha, ...props }: GetCommitDiffProps) => (
+  <Get<void, UsererrorError, void, GetCommitDiffPathParams>
+    path={`/repos/${repo_ref}/commits/${commit_sha}/diff`}
+    base={getConfig('code/api/v1')}
+    {...props}
+  />
+)
+
+export type UseGetCommitDiffProps = Omit<UseGetProps<void, UsererrorError, void, GetCommitDiffPathParams>, 'path'> &
+  GetCommitDiffPathParams
+
+export const useGetCommitDiff = ({ repo_ref, commit_sha, ...props }: UseGetCommitDiffProps) =>
+  useGet<void, UsererrorError, void, GetCommitDiffPathParams>(
+    (paramsInPath: GetCommitDiffPathParams) =>
+      `/repos/${paramsInPath.repo_ref}/commits/${paramsInPath.commit_sha}/diff`,
     { base: getConfig('code/api/v1'), pathParams: { repo_ref, commit_sha }, ...props }
   )
 
@@ -4111,6 +4139,7 @@ export interface ImportRepositoryQueryParams {
 export interface ImportRepositoryRequestBody {
   description?: string
   parent_ref?: string
+  pipelines?: ImporterPipelineOption
   provider?: ImporterProvider
   provider_repo?: string
   uid?: string
@@ -4902,6 +4931,7 @@ export interface ImportSpaceRequestBody {
   description?: string
   is_public?: boolean
   parent_ref?: string
+  pipelines?: ImporterPipelineOption
   provider?: ImporterProvider
   provider_space?: string
   uid?: string

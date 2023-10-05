@@ -36,6 +36,8 @@ const (
 	TriggerActionPullReqReopened TriggerAction = "pullreq_reopened"
 	// TriggerActionPullReqBranchUpdated gets triggered when a pull request source branch gets updated.
 	TriggerActionPullReqBranchUpdated TriggerAction = "pullreq_branch_updated"
+	// TriggerActionPullReqClosed gets triggered when a pull request is closed.
+	TriggerActionPullReqClosed = "pullreq_closed"
 )
 
 func (TriggerAction) Enum() []interface{}               { return toInterfaceSlice(triggerActions) }
@@ -43,7 +45,8 @@ func (t TriggerAction) Sanitize() (TriggerAction, bool) { return Sanitize(t, Get
 func (t TriggerAction) GetTriggerEvent() TriggerEvent {
 	if t == TriggerActionPullReqCreated ||
 		t == TriggerActionPullReqBranchUpdated ||
-		t == TriggerActionPullReqReopened {
+		t == TriggerActionPullReqReopened ||
+		t == TriggerActionPullReqClosed {
 		return TriggerEventPullRequest
 	}
 	if t == TriggerActionTagCreated || t == TriggerActionTagUpdated {
@@ -67,6 +70,7 @@ var triggerActions = sortEnum([]TriggerAction{
 	TriggerActionPullReqCreated,
 	TriggerActionPullReqReopened,
 	TriggerActionPullReqBranchUpdated,
+	TriggerActionPullReqClosed,
 })
 
 // Trigger types.

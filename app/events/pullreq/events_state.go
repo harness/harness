@@ -55,6 +55,7 @@ const ClosedEvent events.EventType = "closed"
 
 type ClosedPayload struct {
 	Base
+	SourceSHA string `json:"source_sha"`
 }
 
 func (r *Reporter) Closed(ctx context.Context, payload *ClosedPayload) {

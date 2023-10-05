@@ -171,6 +171,7 @@ func (s *Service) closePullReqOnBranchDelete(ctx context.Context,
 				PrincipalID:  event.Payload.PrincipalID,
 				Number:       pr.Number,
 			},
+			SourceSHA: pr.SourceSHA,
 		})
 
 		if err = s.sseStreamer.Publish(ctx, targetRepo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {

@@ -549,14 +549,6 @@ paths:
           required: false
           schema:
             type: string
-        - description:
-            The account ID the principals are retrieved for (Not required
-            in standalone).
-          in: query
-          name: accountIdentifier
-          required: false
-          schema:
-            type: string
         - description: The page to return.
           in: query
           name: page
@@ -836,8 +828,7 @@ paths:
     get:
       operationId: getBlame
       parameters:
-        - description:
-            The git reference (branch / tag / commitID) that will be used
+        - description: The git reference (branch / tag / commitID) that will be used
             to retrieve the data. If no value is provided the default branch of the
             repository is used.
           in: query
@@ -909,8 +900,7 @@ paths:
     get:
       operationId: listBranches
       parameters:
-        - description:
-            Indicates whether optional commit information should be included
+        - description: Indicates whether optional commit information should be included
             in the response.
           in: query
           name: include_commit
@@ -1268,8 +1258,7 @@ paths:
     get:
       operationId: listCommits
       parameters:
-        - description:
-            The git reference (branch / tag / commitID) that will be used
+        - description: The git reference (branch / tag / commitID) that will be used
             to retrieve the data. If no value is provided the default branch of the
             repository is used.
           in: query
@@ -1278,8 +1267,7 @@ paths:
           schema:
             default: '{Repository Default Branch}'
             type: string
-        - description:
-            The result should only contain commits that occurred after the
+        - description: The result should only contain commits that occurred after the
             provided reference.
           in: query
           name: after
@@ -1467,6 +1455,53 @@ paths:
           description: Internal Server Error
       tags:
         - repository
+  /repos/{repo_ref}/commits/{commit_sha}/diff:
+    get:
+      operationId: getCommitDiff
+      parameters:
+        - in: path
+          name: repo_ref
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: commit_sha
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: OK
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Unauthorized
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Forbidden
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Not Found
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsererrorError'
+          description: Internal Server Error
+      tags:
+        - repository
   /repos/{repo_ref}/commits/calculate-divergence:
     post:
       operationId: calculateCommitDivergence
@@ -1520,8 +1555,7 @@ paths:
     get:
       operationId: getContent
       parameters:
-        - description:
-            The git reference (branch / tag / commitID) that will be used
+        - description: The git reference (branch / tag / commitID) that will be used
             to retrieve the data. If no value is provided the default branch of the
             repository is used.
           in: query
@@ -1530,8 +1564,7 @@ paths:
           schema:
             default: '{Repository Default Branch}'
             type: string
-        - description:
-            Indicates whether optional commit information should be included
+        - description: Indicates whether optional commit information should be included
             in the response.
           in: query
           name: include_commit
@@ -1764,8 +1797,7 @@ paths:
     post:
       operationId: pathDetails
       parameters:
-        - description:
-            The git reference (branch / tag / commitID) that will be used
+        - description: The git reference (branch / tag / commitID) that will be used
             to retrieve the data. If no value is provided the default branch of the
             repository is used.
           in: query
@@ -1821,8 +1853,7 @@ paths:
     get:
       operationId: listPipelines
       parameters:
-        - description:
-            The substring which is used to filter the repositories by their
+        - description: The substring which is used to filter the repositories by their
             path name.
           in: query
           name: query
@@ -2301,8 +2332,8 @@ paths:
           description: Internal Server Error
       tags:
         - pipeline
-  ? /repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/cancel
-  : post:
+  /repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/cancel:
+    post:
       operationId: cancelExecution
       parameters:
         - in: path
@@ -2353,8 +2384,8 @@ paths:
           description: Internal Server Error
       tags:
         - pipeline
-  ? /repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/logs/{stage_number}/{step_number}
-  : get:
+  /repos/{repo_ref}/pipelines/{pipeline_uid}/executions/{execution_number}/logs/{stage_number}/{step_number}:
+    get:
       operationId: viewLogs
       parameters:
         - in: path
@@ -2421,8 +2452,7 @@ paths:
     get:
       operationId: listTriggers
       parameters:
-        - description:
-            The substring which is used to filter the repositories by their
+        - description: The substring which is used to filter the repositories by their
             path name.
           in: query
           name: query
@@ -3006,8 +3036,7 @@ paths:
                 - title-change
               type: string
             type: array
-        - description:
-            The result should contain only entries created at and after this
+        - description: The result should contain only entries created at and after this
             timestamp (unix millis).
           in: query
           name: after
@@ -3015,8 +3044,7 @@ paths:
           schema:
             minimum: 0
             type: integer
-        - description:
-            The result should contain only entries created before this timestamp
+        - description: The result should contain only entries created before this timestamp
             (unix millis).
           in: query
           name: before
@@ -3234,8 +3262,8 @@ paths:
           description: Internal Server Error
       tags:
         - pullreq
-  ? /repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}/status
-  : put:
+  /repos/{repo_ref}/pullreq/{pullreq_number}/comments/{pullreq_comment_id}/status:
+    put:
       operationId: commentStatusPullReq
       parameters:
         - in: path
@@ -3874,8 +3902,7 @@ paths:
     get:
       operationId: getRaw
       parameters:
-        - description:
-            The git reference (branch / tag / commitID) that will be used
+        - description: The git reference (branch / tag / commitID) that will be used
             to retrieve the data. If no value is provided the default branch of the
             repository is used.
           in: query
@@ -3971,8 +3998,7 @@ paths:
     get:
       operationId: listTags
       parameters:
-        - description:
-            Indicates whether optional commit information should be included
+        - description: Indicates whether optional commit information should be included
             in the response.
           in: query
           name: include_commit
@@ -4168,8 +4194,7 @@ paths:
     get:
       operationId: listWebhooks
       parameters:
-        - description:
-            The substring which is used to filter the spaces by their path
+        - description: The substring which is used to filter the spaces by their path
             name.
           in: query
           name: query
@@ -4596,6 +4621,8 @@ paths:
                   type: string
                 parent_ref:
                   type: string
+                pipelines:
+                  $ref: '#/components/schemas/ImporterPipelineOption'
                 provider:
                   $ref: '#/components/schemas/ImporterProvider'
                 provider_repo:
@@ -5053,8 +5080,7 @@ paths:
     get:
       operationId: listConnectors
       parameters:
-        - description:
-            The substring which is used to filter the repositories by their
+        - description: The substring which is used to filter the repositories by their
             path name.
           in: query
           name: query
@@ -5489,8 +5515,7 @@ paths:
     get:
       operationId: listRepos
       parameters:
-        - description:
-            The substring which is used to filter the repositories by their
+        - description: The substring which is used to filter the repositories by their
             path name.
           in: query
           name: query
@@ -5579,8 +5604,7 @@ paths:
     get:
       operationId: listSecrets
       parameters:
-        - description:
-            The substring which is used to filter the repositories by their
+        - description: The substring which is used to filter the repositories by their
             path name.
           in: query
           name: query
@@ -5692,8 +5716,7 @@ paths:
     get:
       operationId: listSpaces
       parameters:
-        - description:
-            The substring which is used to filter the spaces by their path
+        - description: The substring which is used to filter the spaces by their path
             name.
           in: query
           name: query
@@ -5782,8 +5805,7 @@ paths:
     get:
       operationId: listTemplates
       parameters:
-        - description:
-            The substring which is used to filter the repositories by their
+        - description: The substring which is used to filter the repositories by their
             path name.
           in: query
           name: query
@@ -5861,6 +5883,8 @@ paths:
                   type: boolean
                 parent_ref:
                   type: string
+                pipelines:
+                  $ref: '#/components/schemas/ImporterPipelineOption'
                 provider:
                   $ref: '#/components/schemas/ImporterProvider'
                 provider_space:
@@ -6141,8 +6165,7 @@ paths:
     get:
       operationId: membershipSpaces
       parameters:
-        - description:
-            The substring by which the spaces the users is a member of are
+        - description: The substring by which the spaces the users is a member of are
             filtered.
           in: query
           name: query
@@ -6332,6 +6355,7 @@ components:
         - branch_created
         - branch_updated
         - pullreq_branch_updated
+        - pullreq_closed
         - pullreq_created
         - pullreq_reopened
         - tag_created
@@ -6355,6 +6379,7 @@ components:
         - branch_deleted
         - branch_updated
         - pullreq_branch_updated
+        - pullreq_closed
         - pullreq_created
         - pullreq_reopened
         - tag_created
@@ -6445,6 +6470,11 @@ components:
           format: date-time
           type: string
       type: object
+    ImporterPipelineOption:
+      enum:
+        - convert
+        - ignore
+      type: string
     ImporterProvider:
       properties:
         host:
@@ -6743,11 +6773,11 @@ components:
       type: object
     OpenapiExportSpaceRequest:
       properties:
-        accountId:
+        account_id:
           type: string
-        orgIdentifier:
+        org_identifier:
           type: string
-        projectIdentifier:
+        project_identifier:
           type: string
         token:
           type: string
@@ -7405,7 +7435,11 @@ components:
           type: string
         spec:
           type: string
+        type:
+          type: string
         uid:
+          type: string
+        version:
           type: string
       type: object
     TypesPrincipalInfo:
@@ -7484,8 +7518,6 @@ components:
           $ref: '#/components/schemas/TypesCodeCommentFields'
         created:
           type: integer
-        updated:
-          type: integer
         deleted:
           nullable: true
           type: integer
@@ -7520,6 +7552,8 @@ components:
           type: string
         type:
           $ref: '#/components/schemas/EnumPullReqActivityType'
+        updated:
+          type: integer
       type: object
     TypesPullReqFileView:
       properties:

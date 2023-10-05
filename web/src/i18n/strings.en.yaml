@@ -363,6 +363,7 @@ webhookTagDeleted: Tag deleted
 webhookPRBranchUpdated: PR branch updated
 webhookPRCreated: PR created
 webhookPRReopened: PR reopened
+webhookPRClosed: PR closed
 nameYourWebhook: Name your webhook
 submitReview: Submit Review
 approve: Approve

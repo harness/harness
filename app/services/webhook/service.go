@@ -162,6 +162,7 @@ func NewService(ctx context.Context, config Config,
 			_ = r.RegisterCreated(service.handleEventPullReqCreated)
 			_ = r.RegisterReopened(service.handleEventPullReqReopened)
 			_ = r.RegisterBranchUpdated(service.handleEventPullReqBranchUpdated)
+			_ = r.RegisterClosed(service.handleEventPullReqClosed)
 
 			return nil
 		})

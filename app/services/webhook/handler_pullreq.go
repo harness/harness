@@ -185,3 +185,53 @@ func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
 			}, nil
 		})
 }
+
+// PullReqClosedPayload describes the body of the pullreq closed trigger.
+type PullReqClosedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	ReferenceDetailsSegment
+}
+
+func (s *Service) handleEventPullReqClosed(ctx context.Context,
+	event *events.Event[*pullreqevents.ClosedPayload]) error {
+	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqClosed,
+		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
+		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.SourceSHA)
+			if err != nil {
+				return nil, err
+			}
+			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
+
+			return &PullReqClosedPayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerPullReqClosed,
+					Repo:      targetRepoInfo,
+					Principal: principalInfoFrom(principal),
+				},
+				PullReqSegment: PullReqSegment{
+					PullReq: pullReqInfoFrom(pr),
+				},
+				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
+					TargetRef: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+						Repo: targetRepoInfo,
+					},
+				},
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
+						Repo: sourceRepoInfo,
+					},
+				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:    event.Payload.SourceSHA,
+					Commit: &commitInfo,
+				},
+			}, nil
+		})
+}

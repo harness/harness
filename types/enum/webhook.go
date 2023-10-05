@@ -133,6 +133,8 @@ const (
 	WebhookTriggerPullReqReopened WebhookTrigger = "pullreq_reopened"
 	// WebhookTriggerPullReqBranchUpdated gets triggered when a pull request source branch gets updated.
 	WebhookTriggerPullReqBranchUpdated WebhookTrigger = "pullreq_branch_updated"
+	// WebhookTriggerPullReqClosed gets triggered when a pull request is closed.
+	WebhookTriggerPullReqClosed WebhookTrigger = "pullreq_closed"
 )
 
 var webhookTriggers = sortEnum([]WebhookTrigger{
@@ -145,4 +147,5 @@ var webhookTriggers = sortEnum([]WebhookTrigger{
 	WebhookTriggerPullReqCreated,
 	WebhookTriggerPullReqReopened,
 	WebhookTriggerPullReqBranchUpdated,
+	WebhookTriggerPullReqClosed,
 })
