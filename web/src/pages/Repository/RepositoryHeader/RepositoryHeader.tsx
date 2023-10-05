@@ -16,12 +16,11 @@
 
 import React from 'react'
 import { Layout, Text } from '@harnessio/uicore'
-import { Icon } from '@harnessio/icons'
 import { BookmarkBook } from 'iconoir-react'
 
 import { FontVariation } from '@harnessio/design-system'
 import { RepoPublicLabel } from 'components/RepoPublicLabel/RepoPublicLabel'
-import { CodeIcon, GitInfoProps } from 'utils/GitUtils'
+import type { GitInfoProps } from 'utils/GitUtils'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import css from './RepositoryHeader.module.scss'
 

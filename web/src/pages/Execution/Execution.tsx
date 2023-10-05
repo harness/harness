@@ -127,7 +127,7 @@ const Execution = () => {
       />
       <PageBody
         className={cx(css.pageBody, { [css.withError]: !!error })}
-        error={error ? getErrorMessage(error || executionError) : null}
+        error={error || executionError ? getErrorMessage(error || executionError) : null}
         retryOnError={voidFn(refetch)}
         noData={{
           when: () => !execution && !loading && !executionLoading,
