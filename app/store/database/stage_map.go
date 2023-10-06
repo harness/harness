@@ -247,9 +247,13 @@ func scanRowStep(rows *sql.Rows, stage *types.Stage, step *nullstep) error {
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal labJSON: %w", err)
 	}
-	err = json.Unmarshal(stepDepJSON, &step.DependsOn)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal stepDepJSON: %w", err)
+	if step.ID.Valid {
+		// try to unmarshal step dependencies if step exists
+		err = json.Unmarshal(stepDepJSON, &step.DependsOn)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal stepDepJSON: %w", err)
+		}
 	}
+
 	return nil
 }
