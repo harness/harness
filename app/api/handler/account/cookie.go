@@ -33,6 +33,9 @@ func includeTokenCookie(
 		cookie.Expires = time.UnixMilli(*tokenResponse.Token.ExpiresAt)
 	}
 
+	// Set the Secure attribute to true
+	cookie.Secure = true
+
 	http.SetCookie(w, cookie)
 }
 
@@ -48,16 +51,21 @@ func deleteTokenCookieIfPresent(r *http.Request, w http.ResponseWriter, cookieNa
 	cookie.Value = ""
 	cookie.Expires = time.UnixMilli(0) // this effectively tells the browser to delete the cookie
 
+	// Set the Secure attribute to true
+	cookie.Secure = true
+	
 	http.SetCookie(w, cookie)
 }
 
 func newEmptyTokenCookie(r *http.Request, cookieName string) *http.Cookie {
+	isSecure := r.TLS != nil // Check if the request is using HTTPS
+
 	return &http.Cookie{
 		Name:     cookieName,
 		SameSite: http.SameSiteStrictMode,
 		HttpOnly: true,
 		Path:     "/",
 		Domain:   r.URL.Hostname(),
-		Secure:   r.URL.Scheme == "https",
+		Secure:   isSecure, // Set the 'Secure' attribute based on the request's security
 	}
 }
