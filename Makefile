@@ -8,20 +8,12 @@ endif
 tools = $(addprefix $(GOBIN)/, golangci-lint goimports govulncheck protoc-gen-go protoc-gen-go-grpc gci)
 deps = $(addprefix $(GOBIN)/, wire dbmate)
 
-LDFLAGS = "-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.major=${GITNESS_VERSION_MAJOR} -X github.com/harness/gitness/version.minor=${GITNESS_VERSION_MINOR} -X github.com/harness/gitness/version.patch=${GITNESS_VERSION_PATCH}"
-
 ifneq (,$(wildcard ./.local.env))
     include ./.local.env
     export
 endif
 
 .DEFAULT_GOAL := all
-
-ifeq ($(BUILD_TAGS),)
-	BUILD_TAGS := sqlite
-endif
-
-BUILD_TAGS := $(BUILD_TAGS),gogit
 
 ###############################################################################
 #
@@ -48,15 +40,12 @@ tools: $(tools) ## Install tools required for the build
 
 build: generate ## Build the all-in-one gitness binary
 	@echo "Building Gitness Server"
-	go build -tags=${BUILD_TAGS} -ldflags=${LDFLAGS} -o ./gitness ./cmd/gitness
+	go build -tags=gogit -o ./gitness ./cmd/gitness
 
 test: generate  ## Run the go tests
 	@echo "Running tests"
 	go test -v -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
-
-run: dep ## Run the gitness binary from source
-	@go run -race -ldflags=${LDFLAGS} ./cmd/gitness
 
 ###############################################################################
 #

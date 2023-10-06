@@ -1,7 +1,7 @@
 # ---------------------------------------------------------#
 #                     Build web image                      #
 # ---------------------------------------------------------#
-FROM node:16 as web
+FROM --platform=$BUILDPLATFORM node:16 as web
 
 WORKDIR /usr/src/app
 
@@ -18,14 +18,13 @@ RUN yarn && yarn build && yarn cache clean
 # ---------------------------------------------------------#
 #                   Build gitness image                    #
 # ---------------------------------------------------------#
-FROM golang:1.19-alpine as builder
+FROM --platform=$BUILDPLATFORM golang:1.19-alpine as builder
 
 RUN apk update \
     && apk add --no-cache protoc build-base git
 
 # Setup workig dir
 WORKDIR /app
-
 RUN git config --global --add safe.directory '/app'
 
 # Get dependancies - will also be cached if we won't change mod/sum
@@ -45,22 +44,31 @@ ARG GIT_COMMIT
 ARG GITNESS_VERSION_MAJOR
 ARG GITNESS_VERSION_MINOR
 ARG GITNESS_VERSION_PATCH
-ARG BUILD_TAGS
+ARG TARGETOS TARGETARCH
+
+RUN if [ "$TARGETARCH" = "arm64" ]; then \
+        wget -P ~ https://musl.cc/aarch64-linux-musl-cross.tgz && \
+        tar -xvf ~/aarch64-linux-musl-cross.tgz -C ~ ; \
+    fi
 
 # set required build flags
-RUN CGO_ENABLED=1 \
-    BUILD_TAGS=${BUILD_TAGS} \
-    make build
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg \
+    if [ "$TARGETARCH" = "arm64" ]; then CC=~/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc; fi && \
+    LDFLAGS="-X github.com/harness/gitness/version.GitCommit=${GIT_COMMIT} -X github.com/harness/gitness/version.major=${GITNESS_VERSION_MAJOR} -X github.com/harness/gitness/version.minor=${GITNESS_VERSION_MINOR} -X github.com/harness/gitness/version.patch=${GITNESS_VERSION_PATCH} -extldflags '-static'" && \
+    CGO_ENABLED=1 \
+    GOOS=$TARGETOS GOARCH=$TARGETARCH \
+    CC=$CC go build -tags=gogit -ldflags="$LDFLAGS" -o ./gitness ./cmd/gitness
 
 ### Pull CA Certs
-FROM alpine:latest as cert-image
+FROM --platform=$BUILDPLATFORM alpine:latest as cert-image
 
 RUN apk --update add ca-certificates
 
 # ---------------------------------------------------------#
 #                   Create final image                     #
 # ---------------------------------------------------------#
-FROM alpine/git:2.40.1 as final
+FROM --platform=$BUILDPLATFORM alpine/git:2.40.1 as final
 
 # setup app dir and its content
 WORKDIR /app

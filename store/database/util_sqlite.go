@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build !pq
-// +build !pq
+//go:build !nosqlite
+// +build !nosqlite
 
 package database
 
 import (
+	"github.com/lib/pq"
 	"github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
 )
@@ -27,6 +28,11 @@ func isSQLUniqueConstraintError(original error) bool {
 	if errors.As(original, &sqliteErr) {
 		return errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) ||
 			errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintPrimaryKey)
+	}
+
+	var pqErr *pq.Error
+	if errors.As(original, &pqErr) {
+		return pqErr.Code == "23505" // unique_violation
 	}
 
 	return false

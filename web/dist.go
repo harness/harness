@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build !proxy
-// +build !proxy
-
 // Package dist embeds the static web server content.
 package web
 

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build sqlite
-// +build sqlite
+//go:build !nosqlite
+// +build !nosqlite
 
 package main
 
