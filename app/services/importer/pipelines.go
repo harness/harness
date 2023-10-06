@@ -172,7 +172,7 @@ func (r *Repository) convertPipelines(ctx context.Context,
 		}
 	}
 
-	if files := match("", ".gitlab.yml"); len(files) > 0 {
+	if files := match("", ".gitlab-ci.yml"); len(files) > 0 {
 		converted := convertPipelineFiles(ctx, files, func() pipelineConverter { return gitlab.New() })
 		if len(converted) > 0 {
 			return converted
