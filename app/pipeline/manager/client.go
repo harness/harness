@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"os"
 
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
@@ -87,6 +88,15 @@ func (e *embedded) Accept(ctx context.Context, s *drone.Stage) error {
 	return err
 }
 
+// check container runtime, podman or docker
+func getContainerHost() string {
+	if _, err := os.Stat("/run/.containerenv"); err != nil {
+		return "host.containers.internal"
+	}
+
+	return "host.docker.internal"
+}
+
 // Detail gets the build stage details for execution.
 func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Context, error) {
 	details, err := e.manager.Details(ctx, stage.ID)
@@ -103,7 +113,7 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 		Netrc:   ConvertToDroneNetrc(details.Netrc),
 		System: &drone.System{
 			Proto: e.config.Server.HTTP.Proto,
-			Host:  "host.docker.internal",
+			Host:  getContainerHost(),
 		},
 	}, nil
 }
