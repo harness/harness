@@ -133,38 +133,38 @@ func NewProvider(
 }
 
 func JoinPath(u *url.URL, segments ...string) *url.URL {
-    path := u.Path
-    for _, segment := range segments {
-        path = path + "/" + segment
-    }
-    u.Path = path
-    return u
+	path := u.Path
+	for _, segment := range segments {
+		path = path + "/" + segment
+	}
+	u.Path = path
+	return u
 }
 
 func (p *provider) GetInternalAPIURL() string {
-    return p.internalURL.ResolveReference(&url.URL{Path: APIMount}).String()
+	return p.internalURL.ResolveReference(&url.URL{Path: APIMount}).String()
 }
 
 func (p *provider) GenerateContainerGITCloneURL(repoPath string) string {
-    repoPath = path.Clean(repoPath)
-    if !strings.HasSuffix(repoPath, GITSuffix) {
-        repoPath += GITSuffix
-    }
+	repoPath = path.Clean(repoPath)
+	if !strings.HasSuffix(repoPath, GITSuffix) {
+		repoPath += GITSuffix
+	}
 
-    return p.containerURL.ResolveReference(&url.URL{Path: path.Join(GITMount, repoPath)}).String()
+	return p.containerURL.ResolveReference(&url.URL{Path: path.Join(GITMount, repoPath)}).String()
 }
 
 func (p *provider) GenerateGITCloneURL(repoPath string) string {
-    repoPath = path.Clean(repoPath)
-    if !strings.HasSuffix(repoPath, GITSuffix) {
-        repoPath += GITSuffix
-    }
+	repoPath = path.Clean(repoPath)
+	if !strings.HasSuffix(repoPath, GITSuffix) {
+		repoPath += GITSuffix
+	}
 
-    return JoinPath(p.gitURL, repoPath).String()
+	return JoinPath(p.gitURL, repoPath).String()
 }
 
 func (p *provider) GenerateUIRepoURL(repoPath string) string {
-    return p.uiURL.ResolveReference(&url.URL{Path: repoPath}).String()
+	return p.uiURL.ResolveReference(&url.URL{Path: repoPath}).String()
 }
 
 func (p *provider) GenerateUIPRURL(repoPath string, prID int64) string {
