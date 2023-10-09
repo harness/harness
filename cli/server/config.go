@@ -65,7 +65,15 @@ func LoadConfig() (*types.Config, error) {
 
 	return config, nil
 }
-
+// JoinPath joins path segments to a URL.
+func JoinPath(u *url.URL, segments ...string) *url.URL {
+    path := u.Path
+    for _, segment := range segments {
+        path = path + "/" + segment
+    }
+    u.Path = path
+    return u
+}
 //nolint:gocognit // refactor if required
 func backfillURLs(config *types.Config) error {
 	// default base url
@@ -122,16 +130,22 @@ func backfillURLs(config *types.Config) error {
 		return fmt.Errorf("failed to parse derived base url '%s': %w", baseURLRaw, err)
 	}
 
+    baseURL.Scheme = scheme
+    baseURL.Host = host + ":" + port
+    baseURL.Path = path
+
 	// backfill all external URLs that weren't explicitly overwritten
-	if config.URL.API == "" {
-		config.URL.API = baseURL.JoinPath("api").String()
-	}
-	if config.URL.Git == "" {
-		config.URL.Git = baseURL.JoinPath("git").String()
-	}
-	if config.URL.UI == "" {
-		config.URL.UI = baseURL.String()
-	}
+    if config.URL.API == "" {
+        apiURL := JoinPath(baseURL, "api")
+        config.URL.API = apiURL.String()
+    }
+    if config.URL.Git == "" {
+        gitURL := JoinPath(baseURL, "git")
+        config.URL.Git = gitURL.String()
+    }
+    if config.URL.UI == "" {
+        config.URL.UI = baseURL.String()
+    }
 
 	return nil
 }

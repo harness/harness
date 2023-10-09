@@ -132,38 +132,47 @@ func NewProvider(
 	}, nil
 }
 
+func JoinPath(u *url.URL, segments ...string) *url.URL {
+    path := u.Path
+    for _, segment := range segments {
+        path = path + "/" + segment
+    }
+    u.Path = path
+    return u
+}
+
 func (p *provider) GetInternalAPIURL() string {
-	return p.internalURL.JoinPath(APIMount).String()
+    return p.internalURL.ResolveReference(&url.URL{Path: APIMount}).String()
 }
 
 func (p *provider) GenerateContainerGITCloneURL(repoPath string) string {
-	repoPath = path.Clean(repoPath)
-	if !strings.HasSuffix(repoPath, GITSuffix) {
-		repoPath += GITSuffix
-	}
+    repoPath = path.Clean(repoPath)
+    if !strings.HasSuffix(repoPath, GITSuffix) {
+        repoPath += GITSuffix
+    }
 
-	return p.containerURL.JoinPath(GITMount, repoPath).String()
+    return p.containerURL.ResolveReference(&url.URL{Path: path.Join(GITMount, repoPath)}).String()
 }
 
 func (p *provider) GenerateGITCloneURL(repoPath string) string {
-	repoPath = path.Clean(repoPath)
-	if !strings.HasSuffix(repoPath, GITSuffix) {
-		repoPath += GITSuffix
-	}
+    repoPath = path.Clean(repoPath)
+    if !strings.HasSuffix(repoPath, GITSuffix) {
+        repoPath += GITSuffix
+    }
 
-	return p.gitURL.JoinPath(repoPath).String()
+    return JoinPath(p.gitURL, repoPath).String()
 }
 
 func (p *provider) GenerateUIRepoURL(repoPath string) string {
-	return p.uiURL.JoinPath(repoPath).String()
+    return p.uiURL.ResolveReference(&url.URL{Path: repoPath}).String()
 }
 
 func (p *provider) GenerateUIPRURL(repoPath string, prID int64) string {
-	return p.uiURL.JoinPath(repoPath, "pulls", fmt.Sprint(prID)).String()
+	return p.uiURL.ResolveReference(&url.URL{Path: path.Join(repoPath, "pulls", fmt.Sprint(prID))}).String()
 }
 
 func (p *provider) GenerateUICompareURL(repoPath string, ref1 string, ref2 string) string {
-	return p.uiURL.JoinPath(repoPath, "pulls/compare", ref1+"..."+ref2).String()
+	return p.uiURL.ResolveReference(&url.URL{Path: path.Join(repoPath, "pulls/compare", ref1+"..."+ref2)}).String()
 }
 
 func (p *provider) GetAPIHostname() string {
