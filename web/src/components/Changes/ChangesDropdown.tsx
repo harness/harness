@@ -25,7 +25,6 @@ import { waitUntil } from 'utils/Utils'
 import { PipeSeparator } from 'components/PipeSeparator/PipeSeparator'
 import type { DiffFileEntry } from 'utils/types'
 import css from './ChangesDropdown.module.scss'
-// import { TreeExample } from 'pages/Repository/RepositoryTree/TreeExample'
 
 const STICKY_TOP_POSITION = 64
 
@@ -38,7 +37,6 @@ export const ChangesDropdown: React.FC<{ diffs: DiffFileEntry[] }> = ({ diffs })
       className={css.link}
       tooltip={
         <Container padding="small" className={css.filesMenu}>
-          {/* <TreeExample /> */}
           <Menu>
             {diffs?.map((diff, index) => (
               <MenuItem
