@@ -302,6 +302,7 @@ const EXTENSION_TO_LANG: Record<string, string> = {
   cc: 'cpp',
   env: 'shell',
   Makefile: 'shell',
+  gitignore: 'shell',
   toml: 'ini'
 }
 

@@ -266,3 +266,6 @@ export const parseUrl = (url: string) => {
     return null
   }
 }
+
+// Check if gitRef is a git commit hash (https://github.com/diegohaz/is-git-rev, MIT © Diego Haz)
+export const isGitRev = (gitRef = ''): boolean => /^[0-9a-f]{7,40}$/i.test(gitRef)

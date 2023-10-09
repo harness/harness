@@ -24,6 +24,7 @@ import { useStrings } from 'framework/strings'
 import type { TypesSpace } from 'services/code'
 import { SpaceSelector } from 'components/SpaceSelector/SpaceSelector'
 import { useAppContext } from 'AppContext'
+import { isGitRev } from 'utils/GitUtils'
 import { NavMenuItem } from './NavMenuItem'
 import css from './DefaultMenu.module.scss'
 
@@ -35,12 +36,20 @@ export const DefaultMenu: React.FC = () => {
   const { getString } = useStrings()
   const repoPath = useMemo(() => repoMetadata?.path || '', [repoMetadata])
   const routeMatch = useRouteMatch()
-  const isFilesSelected = useMemo(
-    () => routeMatch.path === '/:space*/:repoName' || routeMatch.path.startsWith('/:space*/:repoName/edit'),
-    [routeMatch]
-  )
   const isCommitSelected = useMemo(() => routeMatch.path === '/:space*/:repoName/commit/:commitRef*', [routeMatch])
+
+  const isFilesSelected = useMemo(
+    () =>
+      !isCommitSelected &&
+      (routeMatch.path === '/:space*/:repoName' || routeMatch.path.startsWith('/:space*/:repoName/edit')),
+    [routeMatch, isCommitSelected]
+  )
   const isWebhookSelected = useMemo(() => routeMatch.path.startsWith('/:space*/:repoName/webhook'), [routeMatch])
+  const _gitRef = useMemo(() => {
+    const ref = commitRef || gitRef
+    return !isGitRev(ref) ? ref : ''
+  }, [commitRef, gitRef])
+
   return (
     <Container className={css.main}>
       <Layout.Vertical spacing="small">
@@ -74,7 +83,7 @@ export const DefaultMenu: React.FC = () => {
                 isSubLink
                 isSelected={isFilesSelected}
                 label={getString('files')}
-                to={routes.toCODERepository({ repoPath, gitRef: commitRef || gitRef })}
+                to={routes.toCODERepository({ repoPath, gitRef: _gitRef || repoMetadata?.default_branch })}
               />
 
               <NavMenuItem
@@ -84,7 +93,7 @@ export const DefaultMenu: React.FC = () => {
                 label={getString('commits')}
                 to={routes.toCODECommits({
                   repoPath,
-                  commitRef: commitRef || gitRef
+                  commitRef: _gitRef
                 })}
               />
 
