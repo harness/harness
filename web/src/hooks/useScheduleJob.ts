@@ -74,7 +74,7 @@ export function useScheduleJob<T>({
     function sendDataToScheduler(item: T | T[]) {
       if (Array.isArray(item)) {
         data.current.push(...item)
-      } else {
+      } else if (item) {
         data.current.push(item)
       }
 
