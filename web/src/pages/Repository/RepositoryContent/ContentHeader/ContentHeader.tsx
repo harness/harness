@@ -37,7 +37,7 @@ import { Link, useHistory } from 'react-router-dom'
 import { useStrings } from 'framework/strings'
 import { useAppContext } from 'AppContext'
 import { CloneButtonTooltip } from 'components/CloneButtonTooltip/CloneButtonTooltip'
-import { CodeIcon, GitInfoProps, isDir, isRefATag } from 'utils/GitUtils'
+import { CodeIcon, GitInfoProps, isDir, isGitRev, isRefATag } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { useCreateBranchModal } from 'components/CreateBranchModal/CreateBranchModal'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -183,7 +183,7 @@ export function ContentHeader({
               text={getString('newFile')}
               icon={CodeIcon.Add}
               variation={ButtonVariation.PRIMARY}
-              disabled={isRefATag(gitRef)}
+              disabled={isRefATag(gitRef) || isGitRev(gitRef)}
               tooltip={isRefATag(gitRef) ? getString('newFileNotAllowed') : undefined}
               tooltipProps={{ isDark: true }}
               onClick={() => {

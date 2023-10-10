@@ -35,10 +35,12 @@ import { Link, useHistory } from 'react-router-dom'
 import { SourceCodeViewer } from 'components/SourceCodeViewer/SourceCodeViewer'
 import type { OpenapiContentInfo, RepoFileContent, TypesCommit } from 'services/code'
 import {
+  normalizeGitRef,
   decodeGitContent,
   findMarkdownInfo,
   GitCommitAction,
   GitInfoProps,
+  isGitRev,
   isRefATag,
   makeDiffRefs
 } from 'utils/GitUtils'
@@ -149,7 +151,7 @@ export function FileContent({
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
       page,
-      git_ref: commitRef || gitRef || repoMetadata?.default_branch,
+      git_ref: normalizeGitRef(commitRef || gitRef || repoMetadata?.default_branch),
       path: resourcePath
     },
     lazy: !repoMetadata
@@ -197,7 +199,7 @@ export function FileContent({
                           icon="code-edit"
                           tooltipProps={{ isDark: true }}
                           tooltip={permsFinal.tooltip}
-                          disabled={editButtonDisabled && !editAsText}
+                          disabled={(editButtonDisabled && !editAsText) || isGitRev(gitRef)}
                           onClick={() => {
                             history.push(
                               routes.toCODEFileEdit({
@@ -268,7 +270,12 @@ export function FileContent({
                                 to={rawURL}
                                 onClick={e => {
                                   Utils.stopEvent(e)
-                                  downloadFile({ repoMetadata, resourcePath, gitRef, filename })
+                                  downloadFile({
+                                    repoMetadata,
+                                    resourcePath,
+                                    gitRef: normalizeGitRef(gitRef) as string,
+                                    filename
+                                  })
                                 }}>
                                 <Layout.Horizontal spacing="small">
                                   <Icon name="cloud-download" size={16} />
@@ -322,7 +329,12 @@ export function FileContent({
                                               to={rawURL} // TODO: Link component generates wrong copy link
                                               onClick={e => {
                                                 Utils.stopEvent(e)
-                                                downloadFile({ repoMetadata, resourcePath, gitRef, filename })
+                                                downloadFile({
+                                                  repoMetadata,
+                                                  resourcePath,
+                                                  gitRef: normalizeGitRef(gitRef) as string,
+                                                  filename
+                                                })
                                               }}>
                                               <Layout.Horizontal spacing="small" padding={{ left: 'small' }}>
                                                 <Icon name="cloud-download" size={16} />

@@ -27,6 +27,7 @@ import { RepositoryPageHeader } from 'components/RepositoryPageHeader/Repository
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { Changes } from 'components/Changes/Changes'
 import CommitInfo from 'components/CommitInfo/CommitInfo'
+import { normalizeGitRef } from 'utils/GitUtils'
 import css from './RepositoryCommit.module.scss'
 
 export default function RepositoryCommits() {
@@ -42,7 +43,7 @@ export default function RepositoryCommits() {
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
-      git_ref: commitRef || repoMetadata?.default_branch
+      git_ref: normalizeGitRef(commitRef || repoMetadata?.default_branch)
     },
     lazy: !repoMetadata
   })

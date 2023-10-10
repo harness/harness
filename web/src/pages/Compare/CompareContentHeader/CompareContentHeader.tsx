@@ -22,7 +22,7 @@ import { Color } from '@harnessio/design-system'
 import { Menu, PopoverPosition, Icon as BIcon } from '@blueprintjs/core'
 import type { RepoMergeCheck } from 'services/code'
 import { useStrings } from 'framework/strings'
-import type { GitInfoProps } from 'utils/GitUtils'
+import { normalizeGitRef, type GitInfoProps } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
 import { UserPreference, useUserPreference } from 'hooks/useUserPreference'
@@ -146,7 +146,9 @@ const MergeableLabel: React.FC<Pick<CompareContentHeaderProps, 'repoMetadata' | 
     error
   } = useMutate<RepoMergeCheck>({
     verb: 'POST',
-    path: `/api/v1/repos/${repoMetadata.path}/+/merge-check/${targetGitRef}..${sourceGitRef}`
+    path: `/api/v1/repos/${repoMetadata.path}/+/merge-check/${normalizeGitRef(targetGitRef)}..${normalizeGitRef(
+      sourceGitRef
+    )}`
   })
   const [mergeable, setMergable] = useState<boolean | undefined>()
   const color = mergeable ? Color.GREEN_700 : mergeable === false ? Color.RED_500 : undefined

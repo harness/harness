@@ -176,7 +176,22 @@ export enum Organization {
   GITLAB = 'Gitlab'
 }
 
+export const normalizeGitRef = (gitRef: string | undefined) => {
+  if (isRefATag(gitRef)) {
+    return gitRef
+  } else if (isRefABranch(gitRef)) {
+    return gitRef
+  } else if (gitRef === '') {
+    return ''
+  } else if (gitRef && isGitRev(gitRef)) {
+    return gitRef
+  } else {
+    return `refs/heads/${gitRef}`
+  }
+}
+
 export const REFS_TAGS_PREFIX = 'refs/tags/'
+export const REFS_BRANCH_PREFIX = 'refs/heads/'
 
 export function formatTriggers(triggers: EnumWebhookTrigger[]) {
   return triggers.map(trigger => {
@@ -215,6 +230,7 @@ export const findMarkdownInfo = (content: Nullable<OpenapiGetContentOutput>): Op
   content?.type === GitContentType.FILE && /.md$/.test(content?.name?.toLowerCase() || '') ? content : undefined
 
 export const isRefATag = (gitRef: string | undefined) => gitRef?.includes(REFS_TAGS_PREFIX) || false
+export const isRefABranch = (gitRef: string | undefined) => gitRef?.includes(REFS_BRANCH_PREFIX) || false
 
 /**
  * Make a diff refs string to use in URL.

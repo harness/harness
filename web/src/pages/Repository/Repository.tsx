@@ -25,7 +25,7 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useStrings } from 'framework/strings'
 import type { OpenapiGetContentOutput, TypesRepository } from 'services/code'
 import { Images } from 'images'
-import { isDir } from 'utils/GitUtils'
+import { normalizeGitRef, isDir } from 'utils/GitUtils'
 import { RepositoryContent } from './RepositoryContent/RepositoryContent'
 import { RepositoryHeader } from './RepositoryHeader/RepositoryHeader'
 import { ContentHeader } from './RepositoryContent/ContentHeader/ContentHeader'
@@ -39,7 +39,12 @@ export default function Repository() {
     error: resourceError,
     loading: resourceLoading,
     isRepositoryEmpty
-  } = useGetResourceContent({ repoMetadata, gitRef, resourcePath, includeCommit: true })
+  } = useGetResourceContent({
+    repoMetadata,
+    gitRef: normalizeGitRef(gitRef) as string,
+    resourcePath,
+    includeCommit: true
+  })
   const [fileNotExist, setFileNotExist] = useState(false)
   const { getString } = useStrings()
 

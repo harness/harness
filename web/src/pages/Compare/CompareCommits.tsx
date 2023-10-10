@@ -17,7 +17,7 @@
 import React from 'react'
 import { useGet } from 'restful-react'
 import type { TypesCommit } from 'services/code'
-import type { GitInfoProps } from 'utils/GitUtils'
+import { normalizeGitRef, type GitInfoProps } from 'utils/GitUtils'
 import { voidFn, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useStrings } from 'framework/strings'
@@ -41,8 +41,8 @@ export const CompareCommits: React.FC<CommitProps> = ({ repoMetadata, sourceSha,
     queryParams: {
       limit,
       page,
-      git_ref: sourceSha,
-      after: targetSha
+      git_ref: normalizeGitRef(sourceSha),
+      after: normalizeGitRef(targetSha)
     },
     lazy: !repoMetadata
   })

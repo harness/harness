@@ -21,6 +21,7 @@ import { useGetResourceContent } from 'hooks/useGetResourceContent'
 import { useDisableCodeMainLinks } from 'hooks/useDisableCodeMainLinks'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { voidFn, getErrorMessage } from 'utils/Utils'
+import { normalizeGitRef } from 'utils/GitUtils'
 import { RepositoryFileEditHeader } from './RepositoryFileEditHeader/RepositoryFileEditHeader'
 import { FileEditor } from './FileEditor/FileEditor'
 import css from './RepositoryFileEdit.module.scss'
@@ -32,7 +33,7 @@ export default function RepositoryFileEdit() {
     error: resourceError,
     loading: resourceLoading,
     isRepositoryEmpty
-  } = useGetResourceContent({ repoMetadata, gitRef, resourcePath })
+  } = useGetResourceContent({ repoMetadata, gitRef: normalizeGitRef(gitRef) as string, resourcePath })
 
   useDisableCodeMainLinks(!!isRepositoryEmpty)
 

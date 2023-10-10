@@ -39,7 +39,7 @@ import { get } from 'lodash-es'
 import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage, permissionProps } from 'utils/Utils'
-import { GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
+import { GitInfoProps, normalizeGitRef, isGitBranchNameValid } from 'utils/GitUtils'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import type { RepoBranch } from 'services/code'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
@@ -88,7 +88,7 @@ export function useCreateTagModal({
         createTag({
           name,
           message: description,
-          target: sourceBranch
+          target: normalizeGitRef(sourceBranch)
         })
           .then(response => {
             hideModal()

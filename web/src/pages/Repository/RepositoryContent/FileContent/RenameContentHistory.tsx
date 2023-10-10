@@ -26,7 +26,7 @@ import type { TypesCommit, TypesRepository } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { CommitsView } from 'components/CommitsView/CommitsView'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
-
+import { normalizeGitRef } from 'utils/GitUtils'
 import css from './RenameContentHistory.module.scss'
 
 const SingleFileRenameHistory = (props: {
@@ -61,7 +61,7 @@ const SingleFileRenameHistory = (props: {
         queryParams: {
           limit: LIST_FETCHING_LIMIT,
           page,
-          git_ref: details.commit_sha_before,
+          git_ref: normalizeGitRef(details.commit_sha_before),
           path: details.old_path
         }
       })

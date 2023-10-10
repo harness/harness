@@ -263,15 +263,18 @@ function GitRefList({
       {!!data?.length && (
         <Container className={css.listContainer} padding={{ top: 'small', bottom: 'small' }}>
           <Menu>
-            {data.map(({ name }) => (
-              <MenuItem
-                key={name}
-                text={name}
-                labelElement={name === gitRef ? <BPIcon icon="small-tick" /> : undefined}
-                disabled={name === gitRef}
-                onClick={() => onSelect(name as string, gitRefType)}
-              />
-            ))}
+            {data.map(({ name }) => {
+              const isItemSelected = name === gitRef && activeGitRefType === gitRefType
+              return (
+                <MenuItem
+                  key={name}
+                  text={name}
+                  labelElement={isItemSelected ? <BPIcon icon="small-tick" /> : undefined}
+                  disabled={isItemSelected}
+                  onClick={() => onSelect(name as string, gitRefType)}
+                />
+              )
+            })}
           </Menu>
         </Container>
       )}
