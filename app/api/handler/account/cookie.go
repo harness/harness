@@ -26,20 +26,18 @@ func includeTokenCookie(
 	r *http.Request, w http.ResponseWriter,
 	tokenResponse *types.TokenResponse,
 	cookieName string,
+	enforceSecure bool, // Add this parameter
 ) {
-	cookie := newEmptyTokenCookie(r, cookieName)
+	cookie := newEmptyTokenCookie(r, cookieName, enforceSecure) // Include enforceSecure
 	cookie.Value = tokenResponse.AccessToken
 	if tokenResponse.Token.ExpiresAt != nil {
 		cookie.Expires = time.UnixMilli(*tokenResponse.Token.ExpiresAt)
 	}
 
-	// Set the Secure attribute to true
-	cookie.Secure = true
-
 	http.SetCookie(w, cookie)
 }
 
-func deleteTokenCookieIfPresent(r *http.Request, w http.ResponseWriter, cookieName string) {
+func deleteTokenCookieIfPresent(r *http.Request, w http.ResponseWriter, cookieName string, enforceSecure bool) {
 	// if no token is present in the cookies, nothing todo.
 	// No other error type expected here - and even if there is, let's try best effort deletion.
 	_, err := r.Cookie(cookieName)
@@ -47,25 +45,34 @@ func deleteTokenCookieIfPresent(r *http.Request, w http.ResponseWriter, cookieNa
 		return
 	}
 
-	cookie := newEmptyTokenCookie(r, cookieName)
+	cookie := newEmptyTokenCookie(r, cookieName, enforceSecure) // Include enforceSecure
 	cookie.Value = ""
 	cookie.Expires = time.UnixMilli(0) // this effectively tells the browser to delete the cookie
-
-	// Set the Secure attribute to true
-	cookie.Secure = true
 	
 	http.SetCookie(w, cookie)
 }
 
-func newEmptyTokenCookie(r *http.Request, cookieName string) *http.Cookie {
-	isSecure := r.TLS != nil // Check if the request is using HTTPS
+func newEmptyTokenCookie(r *http.Request, cookieName string, enforceSecure bool) *http.Cookie {
+    isSecure := false
 
-	return &http.Cookie{
-		Name:     cookieName,
-		SameSite: http.SameSiteStrictMode,
-		HttpOnly: true,
-		Path:     "/",
-		Domain:   r.URL.Hostname(),
-		Secure:   isSecure, // Set the 'Secure' attribute based on the request's security
-	}
+    // Check for the X-Forwarded-Proto header
+    if proto := r.Header.Get("X-Forwarded-Proto"); proto == "https" {
+        isSecure = true
+    } else if r.TLS != nil || r.URL.Scheme == "https" {
+        isSecure = true
+    }
+
+    // Enforce 'Secure' based on the provided flag
+    if enforceSecure {
+        isSecure = true
+    }
+
+    return &http.Cookie{
+        Name:     cookieName,
+        SameSite: http.SameSiteStrictMode,
+        HttpOnly: true,
+        Path:     "/",
+        Domain:   r.URL.Hostname(),
+        Secure:   isSecure,
+    }
 }
