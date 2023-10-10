@@ -18,6 +18,7 @@ import React, { useCallback } from 'react'
 import {
   Button,
   Container,
+  FlexExpander,
   FormInput,
   Formik,
   FormikForm,
@@ -78,9 +79,17 @@ export const SignUp: React.FC = () => {
   return (
     <AuthLayout>
       <Container className={css.signUpContainer}>
-        <Text font={{ size: 'large', weight: 'bold' }} color={Color.BLACK}>
-          {getString('signUp')}
-        </Text>
+        <Layout.Horizontal flex={{ alignItems: 'center' }}>
+          <Text font={{ size: 'large', weight: 'bold' }} color={Color.BLACK}>
+            {getString('signUp')}
+          </Text>
+          <FlexExpander />
+
+          <Layout.Horizontal spacing="xsmall">
+            <Text>{getString('alreadyHaveAccount')}</Text>
+            <Link to={routes.toSignIn()}>{getString('signIn')}</Link>
+          </Layout.Horizontal>
+        </Layout.Horizontal>
 
         <Container margin={{ top: 'xlarge' }}>
           <Formik<RegisterForm>
@@ -136,10 +145,6 @@ export const SignUp: React.FC = () => {
               }}
             />
           </Text>
-        </Layout.Horizontal>
-        <Layout.Horizontal margin={{ top: 'small' }} spacing="xsmall">
-          <Text>{getString('alreadyHaveAccount')}</Text>
-          <Link to={routes.toSignIn()}>{getString('signIn')}</Link>
         </Layout.Horizontal>
       </Container>
     </AuthLayout>
