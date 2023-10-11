@@ -414,7 +414,7 @@ func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 		log.Warn().Err(err).Msg("manager: cannot update step")
 	}
 
-	if err := m.Logz.Delete(noContext, step.ID); err != nil {
+	if err := m.Logz.Delete(noContext, step.ID); err != nil && !errors.Is(err, livelog.ErrStreamNotFound) {
 		log.Warn().Err(err).Msg("manager: cannot teardown log stream")
 	}
 	return retErr

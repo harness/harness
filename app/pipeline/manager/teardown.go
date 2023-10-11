@@ -101,7 +101,7 @@ func (t *teardown) do(ctx context.Context, stage *types.Stage) error {
 
 	for _, step := range stage.Steps {
 		err = t.Logs.Delete(noContext, step.ID)
-		if err != nil {
+		if err != nil && !errors.Is(err, livelog.ErrStreamNotFound) {
 			log.Warn().Err(err).Msgf("failed to delete log stream for step %d", step.ID)
 		}
 	}

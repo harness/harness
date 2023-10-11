@@ -20,9 +20,9 @@ import (
 	"sync"
 )
 
-// error returned when a stream is not registered with
+// ErrStreamNotFound is returned when a stream is not registered with
 // the streamer.
-var errStreamNotFound = errors.New("stream: not found")
+var ErrStreamNotFound = errors.New("stream: not found")
 
 type streamer struct {
 	sync.Mutex
@@ -52,7 +52,7 @@ func (s *streamer) Delete(ctx context.Context, id int64) error {
 	}
 	s.Unlock()
 	if !ok {
-		return errStreamNotFound
+		return ErrStreamNotFound
 	}
 	return stream.close()
 }
@@ -62,7 +62,7 @@ func (s *streamer) Write(ctx context.Context, id int64, line *Line) error {
 	stream, ok := s.streams[id]
 	s.Unlock()
 	if !ok {
-		return errStreamNotFound
+		return ErrStreamNotFound
 	}
 	return stream.write(line)
 }
