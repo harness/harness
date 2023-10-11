@@ -86,19 +86,19 @@ export const DIFF2HTML_CONFIG = {
           {{{lineNumber}}} {{{filePath}}}
         </td>
         <td class="{{type}}" data-content-for-line-number="{{lineNumber}}" data-content-for-file-path="{{file.filePath}}">
-            <div data-annotation-for-line="{{lineNumber}}" tab-index="0" role="button">+</div>
             <div class="{{contentClass}}">
+              <span data-annotation-for-line="{{lineNumber}}" tab-index="0" role="button">+</span>
             {{#prefix}}
-                <span class="d2h-code-line-prefix">{{{prefix}}}</span>
+              <span class="d2h-code-line-prefix">{{{prefix}}}</span>
             {{/prefix}}
             {{^prefix}}
-                <span class="d2h-code-line-prefix">&nbsp;</span>
+              <span class="d2h-code-line-prefix">&nbsp;</span>
             {{/prefix}}
             {{#content}}
-                <span class="d2h-code-line-ctn">{{{content}}}</span>
+              <span class="d2h-code-line-ctn">{{{content}}}</span>
             {{/content}}
             {{^content}}
-                <span class="d2h-code-line-ctn"><br></span>
+              <span class="d2h-code-line-ctn"><br></span>
             {{/content}}
             </div>
         </td>
