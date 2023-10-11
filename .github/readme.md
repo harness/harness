@@ -18,7 +18,7 @@ Drone is a continuous delivery system built on container technology. Drone uses 
 - [Documentation and Other Links](#documentation-and-Other-Links)
 
 ## Community and Support
-[Harness Community Slack](https://join.slack.com/t/harnesscommunity/shared_invite/zt-y4hdqh7p-RVuEQyIl5Hcx4Ck8VCvzBw) - Join the #drone slack channel to connect with our engineers and other users running Drone CI.
+[Harness (@harness.io address is required to join the Slack)](https://join.slack.com/t/harnesscommunity/shared_invite/zt-y4hdqh7p-RVuEQyIl5Hcx4Ck8VCvzBw) - Join the #drone slack channel to connect with our engineers and other users running Drone CI.
 </br>
 [Harness Community Forum](https://community.harness.io/) - Ask questions, find answers, and help other users.
 </br>
