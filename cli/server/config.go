@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
+	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/gitrpc/server"
@@ -40,8 +41,10 @@ import (
 )
 
 const (
-	schemeHTTP  = "http"
-	schemeHTTPS = "https"
+	schemeHTTP     = "http"
+	schemeHTTPS    = "https"
+	gitnessHomeDir = ".gitness"
+	blobDir        = "blob"
 )
 
 // LoadConfig returns the system configuration from the
@@ -205,6 +208,25 @@ func ProvideDatabaseConfig(config *types.Config) database.Config {
 		Driver:     config.Database.Driver,
 		Datasource: config.Database.Datasource,
 	}
+}
+
+// ProvideBlobStoreConfig loads the blob store config from the main config.
+func ProvideBlobStoreConfig(config *types.Config) (blob.Config, error) {
+	// Prefix home directory in case of filesystem blobstore
+	if config.BlobStore.Provider == blob.ProviderFileSystem && config.BlobStore.Bucket == "" {
+		var homedir string
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			return blob.Config{}, err
+		}
+
+		config.BlobStore.Bucket = filepath.Join(homedir, gitnessHomeDir, blobDir)
+	}
+	return blob.Config{
+		Provider: config.BlobStore.Provider,
+		Bucket:   config.BlobStore.Bucket,
+		KeyPath:  config.BlobStore.KeyPath,
+	}, nil
 }
 
 // ProvideGitRPCServerConfig loads the gitrpc server config from the environment.

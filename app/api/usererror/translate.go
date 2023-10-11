@@ -20,6 +20,7 @@ import (
 
 	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/services/webhook"
+	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types/check"
@@ -32,6 +33,7 @@ func Translate(err error) *Error {
 		rError      *Error
 		checkError  *check.ValidationError
 		gitrpcError *gitrpc.Error
+		maxBytesErr *http.MaxBytesError
 	)
 
 	// TODO: Improve performance of checking multiple errors with errors.Is
@@ -66,6 +68,12 @@ func Translate(err error) *Error {
 		return ErrCyclicHierarchy
 	case errors.Is(err, store.ErrSpaceWithChildsCantBeDeleted):
 		return ErrSpaceWithChildsCantBeDeleted
+
+	//	upload errors
+	case errors.Is(err, blob.ErrNotFound):
+		return ErrNotFound
+	case errors.As(err, &maxBytesErr):
+		return ErrRequestTooLargeF("The request is too large. maximum allowed size is %d bytes", maxBytesErr.Limit)
 
 	// gitrpc errors
 	case errors.As(err, &gitrpcError):

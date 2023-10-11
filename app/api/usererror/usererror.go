@@ -121,6 +121,10 @@ func BadRequestf(format string, args ...any) *Error {
 	return Newf(http.StatusBadRequest, format, args...)
 }
 
+func ErrRequestTooLargeF(format string, args ...any) *Error {
+	return Newf(http.StatusRequestEntityTooLarge, format, args...)
+}
+
 // BadRequestWithPayload returns a new user facing bad request error with payload.
 func BadRequestWithPayload(message string, values ...map[string]any) *Error {
 	return NewWithPayload(http.StatusBadRequest, message, values...)

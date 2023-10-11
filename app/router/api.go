@@ -34,6 +34,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/system"
 	"github.com/harness/gitness/app/api/controller/template"
 	"github.com/harness/gitness/app/api/controller/trigger"
+	"github.com/harness/gitness/app/api/controller/upload"
 	"github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/api/handler/account"
@@ -54,6 +55,7 @@ import (
 	handlersystem "github.com/harness/gitness/app/api/handler/system"
 	handlertemplate "github.com/harness/gitness/app/api/handler/template"
 	handlertrigger "github.com/harness/gitness/app/api/handler/trigger"
+	handlerupload "github.com/harness/gitness/app/api/handler/upload"
 	handleruser "github.com/harness/gitness/app/api/handler/user"
 	"github.com/harness/gitness/app/api/handler/users"
 	handlerwebhook "github.com/harness/gitness/app/api/handler/webhook"
@@ -107,6 +109,7 @@ func NewAPIHandler(
 	principalCtrl principal.Controller,
 	checkCtrl *check.Controller,
 	sysCtrl *system.Controller,
+	uploadCtrl *upload.Controller,
 ) APIHandler {
 	// Use go-chi router for inner routing.
 	r := chi.NewRouter()
@@ -131,7 +134,7 @@ func NewAPIHandler(
 	r.Route("/v1", func(r chi.Router) {
 		setupRoutesV1(r, config, repoCtrl, executionCtrl, triggerCtrl, logCtrl, pipelineCtrl,
 			connectorCtrl, templateCtrl, pluginCtrl, secretCtrl, spaceCtrl, pullreqCtrl,
-			webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl)
+			webhookCtrl, githookCtrl, saCtrl, userCtrl, principalCtrl, checkCtrl, sysCtrl, uploadCtrl)
 	})
 
 	// wrap router in terminatedPath encoder.
@@ -171,9 +174,11 @@ func setupRoutesV1(r chi.Router,
 	principalCtrl principal.Controller,
 	checkCtrl *check.Controller,
 	sysCtrl *system.Controller,
+	uploadCtrl *upload.Controller,
 ) {
 	setupSpaces(r, spaceCtrl)
-	setupRepos(r, repoCtrl, pipelineCtrl, executionCtrl, triggerCtrl, logCtrl, pullreqCtrl, webhookCtrl, checkCtrl)
+	setupRepos(r, repoCtrl, pipelineCtrl, executionCtrl, triggerCtrl, logCtrl, pullreqCtrl, webhookCtrl, checkCtrl,
+		uploadCtrl)
 	setupConnectors(r, connectorCtrl)
 	setupTemplates(r, templateCtrl)
 	setupSecrets(r, secretCtrl)
@@ -233,6 +238,7 @@ func setupRepos(r chi.Router,
 	pullreqCtrl *pullreq.Controller,
 	webhookCtrl *webhook.Controller,
 	checkCtrl *check.Controller,
+	uploadCtrl *upload.Controller,
 ) {
 	r.Route("/repos", func(r chi.Router) {
 		// Create takes path and parentId via body, not uri
@@ -315,7 +321,16 @@ func setupRepos(r chi.Router,
 			setupPipelines(r, repoCtrl, pipelineCtrl, executionCtrl, triggerCtrl, logCtrl)
 
 			SetupChecks(r, checkCtrl)
+
+			setupUploads(r, uploadCtrl)
 		})
+	})
+}
+
+func setupUploads(r chi.Router, uploadCtrl *upload.Controller) {
+	r.Route("/uploads", func(r chi.Router) {
+		r.Post("/", handlerupload.HandleUpload(uploadCtrl))
+		r.Get("/*", handlerupload.HandleDownoad(uploadCtrl))
 	})
 }
 
