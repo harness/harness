@@ -37,7 +37,7 @@ import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { LIST_FETCHING_LIMIT, getErrorMessage, showToaster } from 'utils/Utils'
 import { Images } from 'images'
-import { CodeIcon, normalizeGitRef, isRefATag, makeDiffRefs } from 'utils/GitUtils'
+import { CodeIcon, normalizeGitRef, isRefATag, makeDiffRefs, isGitRev } from 'utils/GitUtils'
 import { Changes } from 'components/Changes/Changes'
 import type {
   OpenapiCreatePullReqRequest,
@@ -94,7 +94,7 @@ export default function Compare() {
         return showToaster(getString('prMustSelectSourceAndTargetBranches'))
       }
 
-      if (isRefATag(sourceGitRef) || isRefATag(targetGitRef)) {
+      if (isRefATag(sourceGitRef) || isRefATag(targetGitRef) || isGitRev(targetGitRef) || isGitRev(sourceGitRef)) {
         return showToaster(getString('pullMustBeMadeFromBranches'))
       }
 

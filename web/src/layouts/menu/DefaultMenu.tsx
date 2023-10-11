@@ -18,7 +18,7 @@ import React, { useMemo, useState } from 'react'
 import { Container, Layout } from '@harnessio/uicore'
 import { Render } from 'react-jsx-match'
 import { useHistory, useRouteMatch } from 'react-router-dom'
-import { LockKey, BookmarkBook, UserSquare, Settings } from 'iconoir-react'
+import { FingerprintLockCircle, BookmarkBook, UserSquare, Settings } from 'iconoir-react'
 import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import type { TypesSpace } from 'services/code'
@@ -173,7 +173,7 @@ export const DefaultMenu: React.FC = () => {
             <NavMenuItem
               label={getString('pageTitle.secrets')}
               to={routes.toCODESecrets({ space: selectedSpace?.path as string })}
-              customIcon={<LockKey />}
+              customIcon={<FingerprintLockCircle />}
             />
           </Render>
         )}
