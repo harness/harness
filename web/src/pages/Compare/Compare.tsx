@@ -108,8 +108,8 @@ export default function Compare() {
 
       const pullReqUrl = window.location.href.split('compare')?.[0]
       const payload: OpenapiCreatePullReqRequest = {
-        target_branch: normalizeGitRef(targetGitRef),
-        source_branch: normalizeGitRef(sourceGitRef),
+        target_branch: targetGitRef,
+        source_branch: sourceGitRef,
         title: title,
         description: description || '',
         is_draft: creationType === PRCreationType.DRAFT
