@@ -302,6 +302,7 @@ const EXTENSION_TO_LANG: Record<string, string> = {
   cc: 'cpp',
   env: 'shell',
   Makefile: 'shell',
+  gitignore: 'shell',
   toml: 'ini'
 }
 
@@ -388,9 +389,5 @@ export function isInViewport(element: Element) {
   )
 }
 
-export const truncateString = (str: string, length: number): string => {
-  if (str.length <= length) {
-    return str
-  }
-  return str.slice(0, length - 3) + '...'
-}
+export const truncateString = (str: string, length: number): string =>
+  str.length <= length ? str : str.slice(0, length - 3) + '...'

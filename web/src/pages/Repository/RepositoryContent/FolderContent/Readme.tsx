@@ -27,7 +27,7 @@ import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiGetContentOutput, RepoFileContent, TypesRepository } from 'services/code'
 import { useStrings } from 'framework/strings'
 import { useShowRequestError } from 'hooks/useShowRequestError'
-import { decodeGitContent, isRefATag } from 'utils/GitUtils'
+import { normalizeGitRef, decodeGitContent, isRefATag } from 'utils/GitUtils'
 import { PlainButton } from 'components/PlainButton/PlainButton'
 import { useGetSpaceParam } from 'hooks/useGetSpaceParam'
 import { permissionProps } from 'utils/Utils'
@@ -50,7 +50,7 @@ function ReadmeViewer({ metadata, gitRef, readmeInfo, contentOnly, maxWidth }: F
     path: `/api/v1/repos/${metadata.path}/+/content/${readmeInfo?.path}`,
     queryParams: {
       include_commit: false,
-      git_ref: gitRef
+      git_ref: normalizeGitRef(gitRef)
     },
     lazy: true
   })

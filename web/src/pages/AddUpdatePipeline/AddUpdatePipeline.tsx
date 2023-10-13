@@ -34,7 +34,7 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useAppContext } from 'AppContext'
 import type { CODEProps } from 'RouteDefinitions'
 import { getErrorMessage } from 'utils/Utils'
-import { decodeGitContent } from 'utils/GitUtils'
+import { normalizeGitRef, decodeGitContent } from 'utils/GitUtils'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import pipelineSchemaV1 from './schema/pipeline-schema-v1.json'
 import pipelineSchemaV0 from './schema/pipeline-schema-v0.json'
@@ -142,7 +142,7 @@ const AddUpdatePipeline = (): JSX.Element => {
     refetch: fetchPipelineYAMLFileContent
   } = useGetResourceContent({
     repoMetadata,
-    gitRef: pipelineData?.default_branch || '',
+    gitRef: normalizeGitRef(pipelineData?.default_branch || '') as string,
     resourcePath: pipelineData?.config_path || ''
   })
 

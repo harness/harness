@@ -37,7 +37,7 @@ import { Link, useHistory } from 'react-router-dom'
 import { useAppContext } from 'AppContext'
 import type { OpenapiContentInfo, OpenapiDirContent, TypesCommit } from 'services/code'
 import { formatDate, isInViewport, LIST_FETCHING_LIMIT } from 'utils/Utils'
-import { findReadmeInfo, GitInfoProps, isFile, isSymlink, isSubmodule } from 'utils/GitUtils'
+import { findReadmeInfo, GitInfoProps, isFile, isSymlink, isSubmodule, normalizeGitRef } from 'utils/GitUtils'
 import { LatestCommitForFolder } from 'components/LatestCommit/LatestCommit'
 import { CommitActions } from 'components/CommitActions/CommitActions'
 import { useEventListener } from 'hooks/useEventListener'
@@ -129,7 +129,7 @@ export function FolderContent({ repoMetadata, resourceContent, gitRef }: FolderC
     verb: 'POST',
     path: `/api/v1/repos/${repoMetadata.path as string}/+/path-details`,
     queryParams: {
-      git_ref: gitRef
+      git_ref: normalizeGitRef(gitRef)
     }
   })
   const lastCommitMapping = useRef<Record<string, TypesCommit>>({})

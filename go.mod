@@ -5,6 +5,7 @@ go 1.19
 replace github.com/docker/docker => github.com/docker/engine v17.12.0-ce-rc1.0.20200309214505-aa6a9891b09c+incompatible
 
 require (
+	cloud.google.com/go/storage v1.33.0
 	code.gitea.io/gitea v1.17.2
 	github.com/Masterminds/squirrel v1.5.1
 	github.com/adrg/xdg v0.3.2
@@ -12,7 +13,7 @@ require (
 	github.com/coreos/go-semver v0.3.0
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/drone-runners/drone-runner-docker v1.8.4-0.20230926203554-8fd90cf0f9f5
+	github.com/drone-runners/drone-runner-docker v1.8.4-0.20230919202034-23803f6b38c2
 	github.com/drone/drone-go v1.7.1
 	github.com/drone/drone-yaml v1.2.3
 	github.com/drone/funcmap v0.0.0-20190918184546-d4ef6e88376d
@@ -27,6 +28,7 @@ require (
 	github.com/go-redsync/redsync/v4 v4.7.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/go-cmp v0.5.9
+	github.com/google/uuid v1.3.1
 	github.com/google/wire v0.5.0
 	github.com/gorhill/cronexpr v0.0.0-20180427100037-88b0669f7d75
 	github.com/gotidy/ptr v1.4.0
@@ -58,16 +60,18 @@ require (
 	golang.org/x/sync v0.3.0
 	golang.org/x/term v0.12.0
 	golang.org/x/text v0.13.0
-	google.golang.org/grpc v1.55.0
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/grpc v1.56.2
+	google.golang.org/protobuf v1.31.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
 
 require (
-	cloud.google.com/go v0.110.0 // indirect
-	cloud.google.com/go/compute v1.18.0 // indirect
+	cloud.google.com/go v0.110.4 // indirect
+	cloud.google.com/go/compute v1.20.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/iam v1.1.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
+	github.com/99designs/basicauth-go v0.0.0-20160802081356-2a93ba0f464d // indirect
 	github.com/99designs/httpsignatures-go v0.0.0-20170731043157-88528bf4ca7e // indirect
 	github.com/antonmedv/expr v1.15.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -82,13 +86,14 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/drone/envsubst v1.0.3 // indirect
+	github.com/drone/signal v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/uuid v1.3.1 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
-	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
+	github.com/google/s2a-go v0.1.4 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.2.5 // indirect
+	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/natessilva/dag v0.0.0-20180124060714-7194b8dcc5c4 // indirect
@@ -101,9 +106,12 @@ require (
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/skeema/knownhosts v1.2.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/oauth2 v0.6.0 // indirect
-	google.golang.org/api v0.110.0 // indirect
+	golang.org/x/oauth2 v0.10.0 // indirect
+	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
+	google.golang.org/api v0.132.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230706204954-ccb25ca9f130 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
 )
 
 require (
@@ -158,7 +166,7 @@ require (
 	golang.org/x/net v0.15.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
-	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
+	google.golang.org/genproto v0.0.0-20230706204954-ccb25ca9f130 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

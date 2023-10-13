@@ -31,6 +31,7 @@ import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { ResourceListingPagination } from 'components/ResourceListingPagination/ResourceListingPagination'
 import { BranchTagSelect } from 'components/BranchTagSelect/BranchTagSelect'
 import { CommitsView } from 'components/CommitsView/CommitsView'
+import { normalizeGitRef } from 'utils/GitUtils'
 import css from './RepositoryCommits.module.scss'
 
 export default function RepositoryCommits() {
@@ -43,7 +44,6 @@ export default function RepositoryCommits() {
   const pageBrowser = useQueryParams<PageBrowserProps>()
   const pageInit = pageBrowser.page ? parseInt(pageBrowser.page) : 1
   const [page, setPage] = usePageIndex(pageInit)
-
   const {
     data: commits,
     response,
@@ -54,7 +54,7 @@ export default function RepositoryCommits() {
     queryParams: {
       limit: LIST_FETCHING_LIMIT,
       page,
-      git_ref: commitRef || repoMetadata?.default_branch
+      git_ref: normalizeGitRef(commitRef || repoMetadata?.default_branch)
     },
     lazy: !repoMetadata
   })

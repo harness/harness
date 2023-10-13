@@ -22,16 +22,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/harness/gitness/app/pipeline/logger"
 	"github.com/harness/gitness/profiler"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/version"
 
-	"github.com/drone/runner-go/logger"
 	"github.com/joho/godotenv"
 	"github.com/mattn/go-isatty"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -117,11 +116,10 @@ func (c *command) run(*kingpin.ParseContext) error {
 		})
 		// start poller for CI build executions.
 		g.Go(func() error {
-			log := logrus.New()
-			log.Out = os.Stdout
-			log.Level = logrus.DebugLevel // print all debug logs in common runner code.
-			ctx = logger.WithContext(ctx, logger.Logrus(log.WithContext(ctx)))
-			system.poller.Poll(ctx, config.CI.ParallelWorkers)
+			system.poller.Poll(
+				logger.WithWrappedZerolog(ctx),
+				config.CI.ParallelWorkers,
+			)
 			return nil
 		})
 	}

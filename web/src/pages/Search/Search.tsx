@@ -39,7 +39,7 @@ import { useGetRepositoryMetadata } from 'hooks/useGetRepositoryMetadata'
 import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { Split } from 'components/Split/Split'
-import { CodeIcon, decodeGitContent } from 'utils/GitUtils'
+import { CodeIcon, normalizeGitRef, decodeGitContent } from 'utils/GitUtils'
 import { LoadingSpinner } from 'components/LoadingSpinner/LoadingSpinner'
 import { useQueryParams } from 'hooks/useQueryParams'
 import { useAppContext } from 'AppContext'
@@ -105,7 +105,13 @@ export default function Search() {
     data: resourceContent,
     error: resourceError = null,
     loading: resourceLoading
-  } = useGetResourceContent({ repoMetadata, gitRef, resourcePath, includeCommit: false, lazy: !resourcePath })
+  } = useGetResourceContent({
+    repoMetadata,
+    gitRef: normalizeGitRef(gitRef) as string,
+    resourcePath,
+    includeCommit: false,
+    lazy: !resourcePath
+  })
   const fileContent: string = useMemo(
     () =>
       resourceContent?.path === resourcePath

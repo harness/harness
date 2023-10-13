@@ -32,7 +32,7 @@ import { useHistory } from 'react-router-dom'
 import { useGet } from 'restful-react'
 import { isEqual, noop } from 'lodash-es'
 import { useStrings } from 'framework/strings'
-import type { GitInfoProps } from 'utils/GitUtils'
+import { normalizeGitRef, type GitInfoProps } from 'utils/GitUtils'
 import { PullRequestSection, formatNumber, getErrorMessage, voidFn } from 'utils/Utils'
 import { DiffViewer } from 'components/DiffViewer/DiffViewer'
 import { useEventListener } from 'hooks/useEventListener'
@@ -110,8 +110,8 @@ export const Changes: React.FC<ChangesProps> = ({
   }>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
-      git_ref: sourceRef,
-      after: targetRef
+      git_ref: normalizeGitRef(sourceRef),
+      after: normalizeGitRef(targetRef)
     },
     lazy: !pullRequestMetadata?.number
   })
@@ -145,7 +145,7 @@ export const Changes: React.FC<ChangesProps> = ({
         commitRange.length > 0
         ? `diff/${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
         : // show range of commits and user did not select a subrange
-          `diff/${targetRef}...${sourceRef}`,
+          `diff/${normalizeGitRef(targetRef)}...${normalizeGitRef(sourceRef)}`,
     [commitSHA, commitRange, targetRef, sourceRef]
   )
 

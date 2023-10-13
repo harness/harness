@@ -82,15 +82,11 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
   )
   const lazy =
     !expanded || isRunning || step.status === ExecutionState.PENDING || step.status === ExecutionState.SKIPPED
-  const {
-    data: logs,
-    error,
-    loading,
-    refetch
-  } = useGet<LivelogLine[]>({
+  const { data, error, loading, refetch } = useGet<LivelogLine[]>({
     path,
     lazy: true
   })
+  const logs = useMemo(() => data?.map(({ out = '' }) => out), [data])
   const [isStreamingDone, setIsStreamingDone] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [autoCollapse, setAutoCollapse] = useState(false)
@@ -140,58 +136,62 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
     maxProcessingBlockSize: 100
   })
 
-  useEffect(() => {
-    if (expanded && isRunning) {
-      setAutoCollapse(false)
+  useEffect(
+    function initStreamingLogs() {
+      if (expanded && isRunning) {
+        setAutoCollapse(false)
 
-      if (containerRef.current) {
-        containerRef.current.textContent = ''
+        if (containerRef.current) {
+          containerRef.current.textContent = ''
+        }
+
+        eventSourceRef.current = new EventSource(`${path}/stream`)
+        eventSourceRef.current.onmessage = event => {
+          try {
+            sendStreamLogToRenderer((JSON.parse(event.data) as LivelogLine).out || '')
+          } catch (exception) {
+            showError(getErrorMessage(exception))
+            closeEventStream()
+          }
+        }
+
+        eventSourceRef.current.onerror = event => {
+          setIsStreamingDone(true)
+          setAutoCollapse(true)
+          closeEventStream(event)
+        }
+      } else {
+        closeEventStream()
       }
 
-      eventSourceRef.current = new EventSource(`${path}/stream`)
-      eventSourceRef.current.onmessage = event => {
-        try {
-          sendStreamLogToRenderer((JSON.parse(event.data) as LivelogLine).out || '')
-        } catch (exception) {
-          showError(getErrorMessage(exception))
-          closeEventStream()
+      return closeEventStream
+    },
+    [expanded, isRunning, showError, path, step.status, closeEventStream, sendStreamLogToRenderer]
+  )
+
+  useEffect(
+    function fetchAndRenderCompleteLogs() {
+      if (!lazy && !error && !isRunning && !isStreamingDone && expanded) {
+        if (!logs) {
+          refetch()
+        } else if (Array.isArray(logs)) {
+          sendCompleteLogsToRenderer(logs)
         }
       }
+    },
+    [lazy, error, logs, refetch, isStreamingDone, expanded, isRunning, sendCompleteLogsToRenderer]
+  )
 
-      eventSourceRef.current.onerror = event => {
-        setIsStreamingDone(true)
-        setAutoCollapse(true)
-        closeEventStream(event)
+  useEffect(
+    function autoCollapseWhenStreamingIsDone() {
+      if (autoCollapse && expanded && step.status === ExecutionState.SUCCESS) {
+        setIsStreamingDone(false)
+        setAutoCollapse(false)
+        setExpanded(false)
       }
-    } else {
-      closeEventStream()
-    }
-
-    return closeEventStream
-  }, [expanded, isRunning, showError, path, step.status, closeEventStream, sendStreamLogToRenderer])
-
-  useEffect(() => {
-    if (!lazy && !error && !isRunning && !isStreamingDone && expanded) {
-      if (!logs) {
-        refetch()
-      } else {
-        sendCompleteLogsToRenderer(logs.map(({ out = '' }) => out))
-      }
-    }
-  }, [lazy, error, logs, refetch, isStreamingDone, expanded, isRunning, sendCompleteLogsToRenderer])
-
-  useEffect(() => {
-    if (autoCollapse && expanded && step.status === ExecutionState.SUCCESS) {
-      setAutoCollapse(false)
-      setExpanded(false)
-    }
-  }, [autoCollapse, expanded, step.status])
-
-  useEffect(() => {
-    if (!isRunning && logs?.length) {
-      sendCompleteLogsToRenderer(logs.map(({ out = '' }) => out))
-    }
-  }, [isRunning, logs, sendCompleteLogsToRenderer])
+    },
+    [autoCollapse, expanded, step.status]
+  )
 
   useShowRequestError(error, 0)
 
@@ -202,9 +202,6 @@ const CheckPipelineStep: React.FC<CheckPipelineStepsProps & { step: TypesStep }>
         className={cx(css.stepHeader, { [css.expanded]: expanded, [css.selected]: expanded })}
         {...ButtonRoleProps}
         onClick={() => {
-          if (expanded && isStreamingDone) {
-            setIsStreamingDone(false)
-          }
           setExpanded(!expanded)
         }}>
         <NavArrowRight color={Utils.getRealCSSColor(Color.GREY_500)} className={cx(css.noShrink, css.chevron)} />

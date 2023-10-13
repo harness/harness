@@ -17,7 +17,7 @@
 import React from 'react'
 import { useGet } from 'restful-react'
 import type { TypesCommit } from 'services/code'
-import type { GitInfoProps } from 'utils/GitUtils'
+import { normalizeGitRef, type GitInfoProps } from 'utils/GitUtils'
 import { voidFn, LIST_FETCHING_LIMIT } from 'utils/Utils'
 import { usePageIndex } from 'hooks/usePageIndex'
 import { useStrings } from 'framework/strings'
@@ -39,8 +39,8 @@ export const PullRequestCommits: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'p
     queryParams: {
       limit,
       page,
-      git_ref: pullRequestMetadata.source_sha,
-      after: pullRequestMetadata.merge_base_sha
+      git_ref: normalizeGitRef(pullRequestMetadata.source_sha),
+      after: normalizeGitRef(pullRequestMetadata.merge_base_sha)
     },
     lazy: !repoMetadata
   })

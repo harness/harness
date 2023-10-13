@@ -17,6 +17,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Formik, FormikContextType } from 'formik'
 import { parse } from 'yaml'
+import cx from 'classnames'
 import { capitalize, get, has, omit, pick, set } from 'lodash-es'
 import { Classes, PopoverInteractionKind, PopoverPosition } from '@blueprintjs/core'
 import { Color, FontVariation } from '@harnessio/design-system'
@@ -192,7 +193,10 @@ export const PluginsPanel = ({ onPluginAddUpdate }: PluginsPanelInterface): JSX.
         {PluginCategories.map((item: PluginCategoryInterface) => {
           const { name, category: pluginCategory, description, icon } = item
           return (
-            <Card className={css.pluginCard} key={pluginCategory}>
+            <Card
+              className={cx(css.pluginCard, css.plugin)}
+              key={pluginCategory}
+              onClick={() => handlePluginCategoryClick(pluginCategory)}>
               <Layout.Horizontal flex={{ justifyContent: 'space-between' }}>
                 <Layout.Horizontal
                   onClick={() => handlePluginCategoryClick(pluginCategory)}

@@ -9,6 +9,8 @@ package main
 
 import (
 	"context"
+	"github.com/harness/gitness/app/api/controller/upload"
+	"github.com/harness/gitness/blob"
 
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
@@ -83,6 +85,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		bootstrap.WireSet,
 		cliserver.ProvideDatabaseConfig,
 		database.WireSet,
+		cliserver.ProvideBlobStoreConfig,
+		blob.WireSet,
 		dbtx.WireSet,
 		cache.WireSet,
 		router.WireSet,
@@ -96,6 +100,7 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		controllerwebhook.WireSet,
 		serviceaccount.WireSet,
 		user.WireSet,
+		upload.WireSet,
 		service.WireSet,
 		principal.WireSet,
 		system.WireSet,

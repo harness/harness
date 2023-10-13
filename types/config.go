@@ -17,6 +17,7 @@ package types
 import (
 	"time"
 
+	"github.com/harness/gitness/blob"
 	"github.com/harness/gitness/events"
 	"github.com/harness/gitness/lock"
 	"github.com/harness/gitness/pubsub"
@@ -121,6 +122,18 @@ type Config struct {
 	Database struct {
 		Driver     string `envconfig:"GITNESS_DATABASE_DRIVER" default:"sqlite3"`
 		Datasource string `envconfig:"GITNESS_DATABASE_DATASOURCE" default:"database.sqlite3"`
+	}
+
+	// BlobStore defines the blob storage configuration parameters.
+	BlobStore struct {
+		// Provider is a name of blob storage service like filesystem or gcs
+		Provider blob.Provider `envconfig:"GITNESS_BLOBSTORE_PROVIDER" default:"filesystem"`
+		// Bucket is a path to the directory where the files will be stored when using filesystem blob storage,
+		// in case of gcs provider this will be the actual bucket where the images are stored.
+		Bucket string `envconfig:"GITNESS_BLOBSTORE_BUCKET"`
+
+		// In case of GCS provider, this is expected to be the path to the service account key file.
+		KeyPath string `envconfig:"GITNESS_BLOBSTORE_KEY_PATH" default:""`
 	}
 
 	// Token defines token configuration parameters.

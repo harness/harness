@@ -32,6 +32,7 @@ import {
 import cx from 'classnames'
 import { Color, FontVariation, Intent } from '@harnessio/design-system'
 import { Icon } from '@harnessio/icons'
+import { noop } from 'lodash-es'
 import { useMutate } from 'restful-react'
 import { ACCESS_MODES, permissionProps, voidFn } from 'utils/Utils'
 import { useStrings } from 'framework/strings'
@@ -136,7 +137,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
       </Dialog>
     )
   }
-  const [openModal, hideModal] = useModalHook(ModalComponent, [])
+  const [openModal, hideModal] = useModalHook(ModalComponent, [voidFn(noop)])
 
   return (
     <Formik

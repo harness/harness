@@ -34,7 +34,15 @@ import cx from 'classnames'
 import { SourceCodeEditor } from 'components/SourceCodeEditor/SourceCodeEditor'
 import type { RepoFileContent } from 'services/code'
 import { useAppContext } from 'AppContext'
-import { decodeGitContent, GitCommitAction, GitContentType, GitInfoProps, isDir, makeDiffRefs } from 'utils/GitUtils'
+import {
+  normalizeGitRef,
+  decodeGitContent,
+  GitCommitAction,
+  GitContentType,
+  GitInfoProps,
+  isDir,
+  makeDiffRefs
+} from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { filenameToLanguage, FILE_SEPERATOR } from 'utils/Utils'
 import { useGetResourceContent } from 'hooks/useGetResourceContent'
@@ -70,7 +78,7 @@ function Editor({ resourceContent, repoMetadata, gitRef, resourcePath, isReposit
   )
   const { data: folderContent, refetch: verifyFolder } = useGetResourceContent({
     repoMetadata,
-    gitRef,
+    gitRef: normalizeGitRef(gitRef) as string,
     resourcePath: fileResourcePath,
     includeCommit: false,
     lazy: true

@@ -200,7 +200,7 @@ createPullRequest: Create pull request
 prefixBase: 'base: '
 prefixCompare: 'compare: '
 selectBranchPlaceHolder: select a branch here
-pullMustBeMadeFromBranches: Pull Request can only be created from two diffrent branches
+pullMustBeMadeFromBranches: Pull Request can only be created from two different branches
 prMustSelectSourceAndTargetBranches: You must select source and target branches
 prSourceAndTargetMustBeDifferent: Source and target branches must be different
 payloadUrl: 'Payload URL'

@@ -25,7 +25,7 @@ import { useGet } from 'restful-react'
 import { Render } from 'react-jsx-match'
 import { noop } from 'lodash-es'
 import type { GitrpcBlamePart, TypesRepository } from 'services/code'
-import type { GitInfoProps } from 'utils/GitUtils'
+import { normalizeGitRef, type GitInfoProps } from 'utils/GitUtils'
 import { useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
 import { Editor } from 'components/Editor/Editor'
@@ -70,7 +70,7 @@ export const GitBlame: React.FC<Pick<GitInfoProps, 'repoMetadata' | 'resourcePat
   } = useGet<GitrpcBlamePart[]>({
     path,
     queryParams: {
-      git_ref: gitRef
+      git_ref: normalizeGitRef(gitRef)
     },
     lazy: !repoMetadata || !resourcePath
   })

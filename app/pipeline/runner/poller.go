@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"runtime/debug"
 
+	"github.com/harness/gitness/app/pipeline/logger"
 	"github.com/harness/gitness/types"
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
@@ -26,6 +27,7 @@ import (
 	"github.com/drone/drone-go/drone"
 	runnerclient "github.com/drone/runner-go/client"
 	"github.com/drone/runner-go/poller"
+	"github.com/rs/zerolog/log"
 )
 
 func NewExecutionPoller(
@@ -33,11 +35,16 @@ func NewExecutionPoller(
 	config *types.Config,
 	client runnerclient.Client,
 ) *poller.Poller {
-	// taking the cautious approach of recovering in case of panics
 	runWithRecovery := func(ctx context.Context, stage *drone.Stage) (err error) {
+		ctx = logger.WithUnwrappedZerolog(ctx)
 		defer func() {
 			if r := recover(); r != nil {
-				err = fmt.Errorf("panic received while executing run: %s", debug.Stack())
+				err = fmt.Errorf("panic received: %s", debug.Stack())
+			}
+
+			// the caller of this method (poller.Poller) discards the error - log it here
+			if err != nil {
+				log.Ctx(ctx).Error().Err(err).Msgf("An error occured while calling runner.Run in Poller")
 			}
 		}()
 		return runner.Run(ctx, stage)

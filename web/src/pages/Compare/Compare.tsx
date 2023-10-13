@@ -37,7 +37,7 @@ import { useStrings } from 'framework/strings'
 import { RepositoryPageHeader } from 'components/RepositoryPageHeader/RepositoryPageHeader'
 import { LIST_FETCHING_LIMIT, getErrorMessage, showToaster } from 'utils/Utils'
 import { Images } from 'images'
-import { CodeIcon, isRefATag, makeDiffRefs } from 'utils/GitUtils'
+import { CodeIcon, normalizeGitRef, isRefATag, makeDiffRefs, isGitRev } from 'utils/GitUtils'
 import { Changes } from 'components/Changes/Changes'
 import type {
   OpenapiCreatePullReqRequest,
@@ -66,9 +66,10 @@ export default function Compare() {
   const [description, setDescription] = useState('')
   const { showError } = useToaster()
   const [page, setPage] = usePageIndex()
-
   const { data, error: errorStats } = useGet<TypesDiffStats>({
-    path: `/api/v1/repos/${repoMetadata?.path}/+/diff-stats/${targetGitRef}...${sourceGitRef}`,
+    path: `/api/v1/repos/${repoMetadata?.path}/+/diff-stats/${normalizeGitRef(targetGitRef)}...${normalizeGitRef(
+      sourceGitRef
+    )}`,
     lazy: !repoMetadata || sourceGitRef === ''
   })
   const { mutate: createPullRequest, loading: creatingInProgress } = useMutate<TypesPullReq>({
@@ -80,10 +81,10 @@ export default function Compare() {
   }>({
     path: `/api/v1/repos/${repoMetadata?.path}/+/commits`,
     queryParams: {
-      LIST_FETCHING_LIMIT,
+      limit: LIST_FETCHING_LIMIT,
       page,
-      git_ref: sourceGitRef,
-      after: targetGitRef
+      git_ref: normalizeGitRef(sourceGitRef),
+      after: normalizeGitRef(targetGitRef)
     },
     lazy: !repoMetadata || sourceGitRef === ''
   })
@@ -93,7 +94,7 @@ export default function Compare() {
         return showToaster(getString('prMustSelectSourceAndTargetBranches'))
       }
 
-      if (isRefATag(sourceGitRef) || isRefATag(targetGitRef)) {
+      if (isRefATag(sourceGitRef) || isRefATag(targetGitRef) || isGitRev(targetGitRef) || isGitRev(sourceGitRef)) {
         return showToaster(getString('pullMustBeMadeFromBranches'))
       }
 

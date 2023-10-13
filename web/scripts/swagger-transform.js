@@ -21,9 +21,7 @@ const yaml = require('js-yaml')
 const stringify = require('fast-json-stable-stringify')
 
 module.exports = inputSchema => {
-  // Use a hard-coded configuration to prevent user-defined input.
   const config = 'code'
-
   const overridesFile = path.join('src/services', config, 'overrides.yaml')
 
   let paths = inputSchema.paths
