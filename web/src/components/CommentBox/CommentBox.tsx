@@ -408,7 +408,7 @@ const CommentsThread = <T = unknown,>({
                 </Layout.Horizontal>
               }
               hideGutter={isLastItem}>
-              <Container padding={{ bottom: isLastItem ? undefined : 'xsmall' }}>
+              <Container padding={{ bottom: isLastItem ? undefined : 'xsmall' }} data-comment-id={commentItem.id}>
                 <Render when={index === 0 && outlets[CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]}>
                   <Container className={cx(css.outletTopOfFirstOfComment, { [css.standalone]: standalone })}>
                     {outlets[CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]}

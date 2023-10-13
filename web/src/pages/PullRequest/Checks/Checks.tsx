@@ -95,7 +95,11 @@ export const Checks: React.FC<ChecksProps> = ({ repoMetadata, pullRequestMetadat
                       noBackground
                       iconOnly
                     />
-                    <Text font={{ variation: FontVariation.BODY1 }} color={Color.WHITE}>
+                    <Text
+                      font={{ variation: FontVariation.BODY1 }}
+                      color={Color.WHITE}
+                      lineClamp={1}
+                      tooltipProps={{ portalClassName: css.popover }}>
                       {selectedItemData?.uid}
                       {selectedStage ? ` / ${selectedStage.name}` : ''}
                     </Text>

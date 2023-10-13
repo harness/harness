@@ -15,22 +15,32 @@
  */
 
 import React, { useEffect } from 'react'
-import { Container, Layout, Text } from '@harnessio/uicore'
+import { Link } from 'react-router-dom'
+import { Container, Layout } from '@harnessio/uicore'
 import { Diff2HtmlUI } from 'diff2html/lib-esm/ui/js/diff2html-ui'
 import * as Diff2Html from 'diff2html'
 import { get } from 'lodash-es'
 import type { TypesPullReqActivity } from 'services/code'
 import type { CommentItem } from 'components/CommentBox/CommentBox'
 import { DIFF2HTML_CONFIG, ViewStyle } from 'components/DiffViewer/DiffViewerUtils'
+import { useAppContext } from 'AppContext'
+import type { GitInfoProps } from 'utils/GitUtils'
+import { PullRequestSection } from 'utils/Utils'
 import { isCodeComment } from '../PullRequestUtils'
 import css from './Conversation.module.scss'
 
-interface CodeCommentHeaderProps {
+interface CodeCommentHeaderProps extends Pick<GitInfoProps, 'repoMetadata' | 'pullRequestMetadata'> {
   commentItems: CommentItem<TypesPullReqActivity>[]
   threadId: number | undefined
 }
 
-export const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({ commentItems, threadId }) => {
+export const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({
+  commentItems,
+  threadId,
+  repoMetadata,
+  pullRequestMetadata
+}) => {
+  const { routes } = useAppContext()
   const _isCodeComment = isCodeComment(commentItems) && !commentItems[0].deleted
   const id = `code-comment-snapshot-${threadId}`
 
@@ -60,9 +70,15 @@ export const CodeCommentHeader: React.FC<CodeCommentHeaderProps> = ({ commentIte
     <Container className={css.snapshot}>
       <Layout.Vertical>
         <Container className={css.title}>
-          <Text inline className={css.fname}>
+          <Link
+            className={css.fname}
+            to={`${routes.toCODEPullRequest({
+              repoPath: repoMetadata?.path as string,
+              pullRequestId: String(pullRequestMetadata?.number),
+              pullRequestSection: PullRequestSection.FILES_CHANGED
+            })}?path=${commentItems[0].payload?.code_comment?.path}&commentId=${commentItems[0].payload?.id}`}>
             {commentItems[0].payload?.code_comment?.path}
-          </Text>
+          </Link>
         </Container>
         <Container className={css.snapshotContent} id={id} />
       </Layout.Vertical>

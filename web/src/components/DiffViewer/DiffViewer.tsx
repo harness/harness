@@ -28,7 +28,8 @@ import {
   ButtonSize,
   useToaster,
   ButtonProps,
-  Checkbox
+  Checkbox,
+  useIsMounted
 } from '@harnessio/uicore'
 import cx from 'classnames'
 import { Render } from 'react-jsx-match'
@@ -42,13 +43,14 @@ import type { DiffFileEntry } from 'utils/types'
 import { useConfirmAct } from 'hooks/useConfirmAction'
 import { useAppContext } from 'AppContext'
 import type { OpenapiCommentCreatePullReqRequest, TypesPullReq, TypesPullReqActivity } from 'services/code'
-import { getErrorMessage } from 'utils/Utils'
+import { getErrorMessage, waitUntil } from 'utils/Utils'
 import { CopyButton } from 'components/CopyButton/CopyButton'
 import { AppWrapper } from 'App'
 import { NavigationCheck } from 'components/NavigationCheck/NavigationCheck'
 import { CodeCommentStatusButton } from 'components/CodeCommentStatusButton/CodeCommentStatusButton'
 import { CodeCommentSecondarySaveButton } from 'components/CodeCommentSecondarySaveButton/CodeCommentSecondarySaveButton'
 import { CodeCommentStatusSelect } from 'components/CodeCommentStatusSelect/CodeCommentStatusSelect'
+import { useQueryParams } from 'hooks/useQueryParams'
 import {
   activitiesToDiffCommentItems,
   activityToCommentItem,
@@ -614,6 +616,36 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     [inView, diffRenderer, renderDiffAndUpdateContainerHeightIfNeeded]
   )
 
+  const isMounted = useIsMounted()
+  const { path, commentId } = useQueryParams<{ path: string; commentId: string }>()
+
+  useEffect(
+    function scrollToComment() {
+      if (path && commentId && path === diff.filePath) {
+        containerRef.current?.scrollIntoView({ block: 'start' })
+
+        waitUntil(
+          () => !!containerRef.current?.querySelector(`[data-comment-id="${commentId}"]`),
+          () => {
+            const dom = containerRef.current?.querySelector(`[data-comment-id="${commentId}"]`)?.parentElement
+              ?.parentElement?.parentElement?.parentElement
+
+            if (dom) {
+              window.requestAnimationFrame(() => {
+                setTimeout(() => {
+                  if (isMounted.current) {
+                    dom?.scrollIntoView({ block: 'center' })
+                  }
+                }, 500)
+              })
+            }
+          }
+        )
+      }
+    },
+    [path, commentId]
+  )
+
   return (
     <Container
       ref={setContainerRef}
@@ -719,6 +751,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
 
         <Container
           id={diff.contentId}
+          data-path={diff.filePath}
           className={cx(css.diffContent, { [css.standalone]: standalone })}
           ref={contentRef}>
           <Render when={renderCustomContent}>
