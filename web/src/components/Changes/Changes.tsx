@@ -117,7 +117,7 @@ export const Changes: React.FC<ChangesProps> = ({
   })
 
   useEffect(() => {
-    if (!pullRequestMetadata?.number) {
+    if (!pullRequestMetadata?.number || commitRange.length === 0) {
       return
     }
 
@@ -127,11 +127,7 @@ export const Changes: React.FC<ChangesProps> = ({
         pullRequestId: String(pullRequestMetadata?.number),
         pullRequestSection: PullRequestSection.FILES_CHANGED,
         commitSHA:
-          commitRange.length === 0
-            ? undefined
-            : commitRange.length === 1
-            ? commitRange[0]
-            : `${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
+          commitRange.length === 1 ? commitRange[0] : `${commitRange[0]}~1...${commitRange[commitRange.length - 1]}`
       })
     )
   }, [commitRange, history, routes, repoMetadata.path, pullRequestMetadata?.number])
@@ -292,14 +288,13 @@ export const Changes: React.FC<ChangesProps> = ({
     scrollElement
   )
 
-  useShowRequestError(errorActivities)
-  useShowRequestError(errorFileViews)
+  useShowRequestError(errorActivities || errorFileViews)
 
   return (
     <Container className={cx(css.container, className)} {...(!!loading || !!error ? { flex: true } : {})}>
       <LoadingSpinner visible={loading || showSpinner} withBorder={true} />
       <Render when={error}>
-        <PageError message={getErrorMessage(error || errorActivities || errorFileViews)} onClick={voidFn(refetch)} />
+        <PageError message={getErrorMessage(error)} onClick={voidFn(refetch)} />
       </Render>
       <Render when={!error && !loading}>
         <Container className={cx(css.header, { [css.stickied]: isSticky })}>
@@ -377,34 +372,32 @@ export const Changes: React.FC<ChangesProps> = ({
       <Render when={!loading && !error}>
         <Match expr={diffs?.length}>
           <Case val={(len: number) => len > 0}>
-            <>
-              {/* TODO: lineBreaks is broken in line-by-line view, enable it for side-by-side only now */}
-              <Layout.Vertical
-                spacing="medium"
-                className={cx(css.main, {
-                  [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
-                })}>
-                {diffs?.map((diff, index) => (
-                  // Note: `key={viewStyle + index + lineBreaks}` resets DiffView when view configuration
-                  // is changed. Making it easier to control states inside DiffView itself, as it does not
-                  //  have to deal with any view configuration
-                  <DiffViewer
-                    readOnly={readOnly || (commitRange?.length || 0) > 0} // render in readonly mode in case a commit is selected
-                    key={viewStyle + index + lineBreaks}
-                    diff={diff}
-                    viewStyle={viewStyle}
-                    stickyTopPosition={STICKY_TOP_POSITION}
-                    repoMetadata={repoMetadata}
-                    pullRequestMetadata={pullRequestMetadata}
-                    onCommentUpdate={onCommentUpdate}
-                    targetRef={targetRef}
-                    sourceRef={_sourceRef}
-                    commitRange={commitRange}
-                    scrollElement={scrollElement}
-                  />
-                ))}
-              </Layout.Vertical>
-            </>
+            {/* TODO: lineBreaks is broken in line-by-line view, enable it for side-by-side only now */}
+            <Layout.Vertical
+              spacing="medium"
+              className={cx(css.main, {
+                [css.enableDiffLineBreaks]: lineBreaks && viewStyle === ViewStyle.SIDE_BY_SIDE
+              })}>
+              {diffs?.map((diff, index) => (
+                // Note: `key={viewStyle + index + lineBreaks}` resets DiffView when view configuration
+                // is changed. Making it easier to control states inside DiffView itself, as it does not
+                //  have to deal with any view configuration
+                <DiffViewer
+                  readOnly={readOnly || (commitRange?.length || 0) > 0} // render in readonly mode in case a commit is selected
+                  key={viewStyle + index + lineBreaks}
+                  diff={diff}
+                  viewStyle={viewStyle}
+                  stickyTopPosition={STICKY_TOP_POSITION}
+                  repoMetadata={repoMetadata}
+                  pullRequestMetadata={pullRequestMetadata}
+                  onCommentUpdate={onCommentUpdate}
+                  targetRef={targetRef}
+                  sourceRef={_sourceRef}
+                  commitRange={commitRange}
+                  scrollElement={scrollElement}
+                />
+              ))}
+            </Layout.Vertical>
           </Case>
           <Case val={0}>
             <Container padding="xlarge">

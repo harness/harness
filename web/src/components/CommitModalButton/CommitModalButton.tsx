@@ -39,7 +39,7 @@ import { useModalHook } from 'hooks/useModalHook'
 import { String, useStrings } from 'framework/strings'
 import { getErrorMessage } from 'utils/Utils'
 import type { OpenapiCommitFilesRequest, RepoCommitFilesResponse } from 'services/code'
-import { GitCommitAction, GitInfoProps, normalizeGitRef, isGitBranchNameValid } from 'utils/GitUtils'
+import { GitCommitAction, GitInfoProps, isGitBranchNameValid } from 'utils/GitUtils'
 import css from './CommitModalButton.module.scss'
 
 enum CommitToGitRefOption {

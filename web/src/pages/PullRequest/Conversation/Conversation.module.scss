@@ -130,9 +130,13 @@
   --radius: 4px;
   margin-top: var(--spacing-small) !important;
 
+  :global {
+    .d2h-code-linenumber {
+      cursor: default;
+    }
+  }
+
   .title {
-    display: grid;
-    align-items: center;
     background-color: var(--grey-100);
     padding: 5px 10px 5px 10px;
     border: 1px solid var(--border-color);
@@ -143,7 +147,7 @@
       font-size: 13px !important;
       font-weight: 600 !important;
       color: var(--grey-900) !important;
-      align-self: center;
+      display: inline;
     }
   }
 

@@ -37,6 +37,7 @@ export declare const name: string
 export declare const noShrink: string
 export declare const pipelineStages: string
 export declare const pipelineSteps: string
+export declare const popover: string
 export declare const selected: string
 export declare const spinner: string
 export declare const status: string

@@ -80,6 +80,8 @@ export const ChangesDropdown: React.FC<{ diffs: DiffFileEntry[] }> = ({ diffs })
                       () => {
                         containerDOM.scrollIntoView()
 
+                        // Check to adjust scroll position to make sure content is not
+                        // cut off due to current scroll position
                         if (containerDOM.getBoundingClientRect().y - STICKY_TOP_POSITION < 1) {
                           if (STICKY_TOP_POSITION) {
                             window.scroll({ top: window.scrollY - STICKY_TOP_POSITION })

@@ -292,3 +292,13 @@
     }
   }
 }
+
+.popover {
+  :global {
+    .bp3-popover-content {
+      padding: var(--spacing-medium);
+      max-width: 700px;
+      word-break: break-all;
+    }
+  }
+}

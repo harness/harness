@@ -303,7 +303,12 @@ export const Conversation: React.FC<ConversationProps> = ({
                 }}
                 outlets={{
                   [CommentBoxOutletPosition.TOP_OF_FIRST_COMMENT]: isCodeComment(commentItems) && (
-                    <CodeCommentHeader commentItems={commentItems} threadId={threadId} />
+                    <CodeCommentHeader
+                      commentItems={commentItems}
+                      threadId={threadId}
+                      repoMetadata={repoMetadata}
+                      pullRequestMetadata={pullRequestMetadata}
+                    />
                   ),
                   [CommentBoxOutletPosition.LEFT_OF_OPTIONS_MENU]: (
                     <CodeCommentStatusSelect
