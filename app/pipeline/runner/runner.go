@@ -45,7 +45,7 @@ func NewExecutionRunner(
 ) (*runtime2.Runner, error) {
 	// For linux, containers need to have extra hosts set in order to interact with
 	// the gitness container.
-	extraHosts := []string{"host.docker.internal:host-gateway"}
+	extraHosts := []string{config.URL.Container + ":host-gateway"}
 	compiler := &compiler.Compiler{
 		Environ:    provider.Static(map[string]string{}),
 		Registry:   registry.Static([]*drone.Registry{}),

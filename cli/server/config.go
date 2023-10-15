@@ -69,6 +69,15 @@ func LoadConfig() (*types.Config, error) {
 	return config, nil
 }
 
+// check container runtime, podman or docker
+func getContainerHost() string {
+	if _, err := os.Stat("/run/.containerenv"); err != nil {
+		return "host.containers.internal"
+	}
+
+	return "host.docker.internal"
+}
+
 //nolint:gocognit // refactor if required
 func backfillURLs(config *types.Config) error {
 	// default base url
@@ -86,7 +95,7 @@ func backfillURLs(config *types.Config) error {
 		config.URL.Internal = combineToRawURL(scheme, "localhost", port, "")
 	}
 	if config.URL.Container == "" {
-		config.URL.Container = combineToRawURL(scheme, "host.docker.internal", port, "")
+		config.URL.Container = combineToRawURL(scheme, getContainerHost(), port, "")
 	}
 
 	// override base with whatever user explicit override
