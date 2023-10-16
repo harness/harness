@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/gitrpc"
@@ -36,17 +37,19 @@ import (
 )
 
 type Controller struct {
-	defaultBranch  string
-	tx             dbtx.Transactor
-	urlProvider    url.Provider
-	uidCheck       check.PathUID
-	authorizer     authz.Authorizer
-	repoStore      store.RepoStore
-	spaceStore     store.SpaceStore
-	pipelineStore  store.PipelineStore
-	principalStore store.PrincipalStore
-	gitRPCClient   gitrpc.Interface
-	importer       *importer.Repository
+	defaultBranch     string
+	tx                dbtx.Transactor
+	urlProvider       url.Provider
+	uidCheck          check.PathUID
+	authorizer        authz.Authorizer
+	repoStore         store.RepoStore
+	spaceStore        store.SpaceStore
+	pipelineStore     store.PipelineStore
+	principalStore    store.PrincipalStore
+	ruleStore         store.RuleStore
+	protectionManager *protection.Manager
+	gitRPCClient      gitrpc.Interface
+	importer          *importer.Repository
 }
 
 func NewController(
@@ -59,21 +62,25 @@ func NewController(
 	spaceStore store.SpaceStore,
 	pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore,
+	ruleStore store.RuleStore,
+	protectionManager *protection.Manager,
 	gitRPCClient gitrpc.Interface,
 	importer *importer.Repository,
 ) *Controller {
 	return &Controller{
-		defaultBranch:  defaultBranch,
-		tx:             tx,
-		urlProvider:    urlProvider,
-		uidCheck:       uidCheck,
-		authorizer:     authorizer,
-		repoStore:      repoStore,
-		spaceStore:     spaceStore,
-		pipelineStore:  pipelineStore,
-		principalStore: principalStore,
-		gitRPCClient:   gitRPCClient,
-		importer:       importer,
+		defaultBranch:     defaultBranch,
+		tx:                tx,
+		urlProvider:       urlProvider,
+		uidCheck:          uidCheck,
+		authorizer:        authorizer,
+		repoStore:         repoStore,
+		spaceStore:        spaceStore,
+		pipelineStore:     pipelineStore,
+		principalStore:    principalStore,
+		ruleStore:         ruleStore,
+		protectionManager: protectionManager,
+		gitRPCClient:      gitRPCClient,
+		importer:          importer,
 	}
 }
 

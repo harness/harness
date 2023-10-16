@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/codecomments"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -38,16 +39,21 @@ func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer 
 	pullReqStore store.PullReqStore, pullReqActivityStore store.PullReqActivityStore,
 	codeCommentsView store.CodeCommentView,
 	pullReqReviewStore store.PullReqReviewStore, pullReqReviewerStore store.PullReqReviewerStore,
-	repoStore store.RepoStore, principalStore store.PrincipalStore, fileViewStore store.PullReqFileViewStore,
+	repoStore store.RepoStore, principalStore store.PrincipalStore,
+	fileViewStore store.PullReqFileViewStore, membershipStore store.MembershipStore,
+	checkStore store.CheckStore,
 	rpcClient gitrpc.Interface, eventReporter *pullreqevents.Reporter,
 	mtxManager lock.MutexManager, codeCommentMigrator *codecomments.Migrator,
-	pullreqService *pullreq.Service, sseStreamer sse.Streamer,
+	pullreqService *pullreq.Service, ruleManager *protection.Manager, sseStreamer sse.Streamer,
 ) *Controller {
 	return NewController(tx, urlProvider, authorizer,
 		pullReqStore, pullReqActivityStore,
 		codeCommentsView,
 		pullReqReviewStore, pullReqReviewerStore,
-		repoStore, principalStore, fileViewStore,
+		repoStore, principalStore,
+		fileViewStore, membershipStore,
+		checkStore,
 		rpcClient, eventReporter,
-		mtxManager, codeCommentMigrator, pullreqService, sseStreamer)
+		mtxManager, codeCommentMigrator,
+		pullreqService, ruleManager, sseStreamer)
 }

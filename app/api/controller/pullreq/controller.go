@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/codecomments"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/sse"
 	"github.com/harness/gitness/app/store"
@@ -48,11 +49,14 @@ type Controller struct {
 	repoStore           store.RepoStore
 	principalStore      store.PrincipalStore
 	fileViewStore       store.PullReqFileViewStore
+	membershipStore     store.MembershipStore
+	checkStore          store.CheckStore
 	gitRPCClient        gitrpc.Interface
 	eventReporter       *pullreqevents.Reporter
 	mtxManager          lock.MutexManager
 	codeCommentMigrator *codecomments.Migrator
 	pullreqService      *pullreq.Service
+	protectionManager   *protection.Manager
 	sseStreamer         sse.Streamer
 }
 
@@ -68,11 +72,14 @@ func NewController(
 	repoStore store.RepoStore,
 	principalStore store.PrincipalStore,
 	fileViewStore store.PullReqFileViewStore,
+	membershipStore store.MembershipStore,
+	checkStore store.CheckStore,
 	gitRPCClient gitrpc.Interface,
 	eventReporter *pullreqevents.Reporter,
 	mtxManager lock.MutexManager,
 	codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service,
+	protectionManager *protection.Manager,
 	sseStreamer sse.Streamer,
 ) *Controller {
 	return &Controller{
@@ -87,11 +94,14 @@ func NewController(
 		repoStore:           repoStore,
 		principalStore:      principalStore,
 		fileViewStore:       fileViewStore,
+		membershipStore:     membershipStore,
+		checkStore:          checkStore,
 		gitRPCClient:        gitRPCClient,
 		codeCommentMigrator: codeCommentMigrator,
 		eventReporter:       eventReporter,
 		mtxManager:          mtxManager,
 		pullreqService:      pullreqService,
+		protectionManager:   protectionManager,
 		sseStreamer:         sseStreamer,
 	}
 }

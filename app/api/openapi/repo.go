@@ -370,6 +370,36 @@ var queryParameterCommitter = openapi3.ParameterOrRef{
 	},
 }
 
+var queryParameterQueryRuleList = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring by which the repository protection rules are filtered."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterSortRuleList = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSort,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The field by which the protection rules are sorted."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(enum.RuleSortCreated),
+				Enum:    enum.RuleSort("").Enum(),
+			},
+		},
+	},
+}
+
 //nolint:funlen
 func repoOperations(reflector *openapi3.Reflector) {
 	createRepository := openapi3.Operation{}
@@ -676,4 +706,78 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/merge-check/{range}", opMergeCheck)
+
+	opRuleAdd := openapi3.Operation{}
+	opRuleAdd.WithTags("repository")
+	opRuleAdd.WithMapOfAnything(map[string]interface{}{"operationId": "ruleAdd"})
+	_ = reflector.SetRequest(&opRuleAdd, struct {
+		repoRequest
+		repo.RuleCreateInput
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opRuleAdd, &types.Rule{}, http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/rules", opRuleAdd)
+
+	opRuleDelete := openapi3.Operation{}
+	opRuleDelete.WithTags("repository")
+	opRuleDelete.WithMapOfAnything(map[string]interface{}{"operationId": "ruleDelete"})
+	_ = reflector.SetRequest(&opRuleDelete, struct {
+		repoRequest
+		RuleUID string `path:"rule_uid"`
+	}{}, http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opRuleDelete, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/rules/{rule_uid}", opRuleDelete)
+
+	opRuleUpdate := openapi3.Operation{}
+	opRuleUpdate.WithTags("repository")
+	opRuleUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "ruleUpdate"})
+	_ = reflector.SetRequest(&opRuleUpdate, &struct {
+		repoRequest
+		RuleUID string `path:"rule_uid"`
+		repo.RuleUpdateInput
+	}{}, http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opRuleUpdate, &types.Rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPatch, "/repos/{repo_ref}/rules/{rule_uid}", opRuleUpdate)
+
+	opRuleList := openapi3.Operation{}
+	opRuleList.WithTags("repository")
+	opRuleList.WithMapOfAnything(map[string]interface{}{"operationId": "ruleList"})
+	opRuleList.WithParameters(
+		queryParameterQueryRuleList,
+		queryParameterOrder, queryParameterSortRuleList,
+		queryParameterPage, queryParameterLimit)
+	_ = reflector.SetRequest(&opRuleList, &struct {
+		repoRequest
+	}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&opRuleList, []types.Rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/rules", opRuleList)
+
+	opRuleGet := openapi3.Operation{}
+	opRuleGet.WithTags("repository")
+	opRuleGet.WithMapOfAnything(map[string]interface{}{"operationId": "ruleGet"})
+	_ = reflector.SetRequest(&opRuleGet, &struct {
+		repoRequest
+		RuleUID string `path:"rule_uid"`
+	}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&opRuleGet, []types.Rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/rules/{rule_uid}", opRuleGet)
 }

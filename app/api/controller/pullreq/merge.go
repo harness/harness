@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/gitrpc"
 	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
 	"github.com/harness/gitness/types"
@@ -93,6 +94,13 @@ func (c *Controller) Merge(
 		return types.MergeResponse{}, usererror.BadRequest("Pull request must be open")
 	}
 
+	/*
+		if pr.SourceSHA != in.SourceSHA {
+			return types.MergeResponse{},
+				usererror.BadRequest("A newer commit is available. Only the latest commit can be merged.")
+		}
+	*/
+
 	if pr.IsDraft {
 		return types.MergeResponse{}, usererror.BadRequest(
 			"Draft pull requests can't be merged. Clear the draft flag first.",
@@ -104,20 +112,50 @@ func (c *Controller) Merge(
 		return types.MergeResponse{}, fmt.Errorf("failed to load list of reviwers: %w", err)
 	}
 
-	// TODO: We need to extend this section. A review decision might be for an older commit.
-	// TODO: Repository admin users should be able to override this and proceed with the merge.
-	for _, reviewer := range reviewers {
-		if reviewer.ReviewDecision == enum.PullReqReviewDecisionChangeReq {
-			return types.MergeResponse{}, usererror.BadRequest("At least one reviewer still requests changes.")
-		}
-	}
-
 	sourceRepo := targetRepo
 	if pr.SourceRepoID != pr.TargetRepoID {
 		sourceRepo, err = c.repoStore.Find(ctx, pr.SourceRepoID)
 		if err != nil {
 			return types.MergeResponse{}, fmt.Errorf("failed to get source repository: %w", err)
 		}
+	}
+
+	membership, err := c.membershipStore.Find(ctx, types.MembershipKey{
+		SpaceID:     targetRepo.ParentID,
+		PrincipalID: session.Principal.ID,
+	})
+	if err != nil {
+		return types.MergeResponse{}, fmt.Errorf("failed to find space membership: %w", err)
+	}
+
+	statusChecks, err := c.checkStore.List(ctx, targetRepo.ID, pr.SourceSHA, types.CheckListOptions{
+		Page: 1,
+		Size: 1000,
+	})
+	if err != nil {
+		return types.MergeResponse{}, fmt.Errorf("failed to list status checks: %w", err)
+	}
+
+	protectionRules, err := c.protectionManager.Repo(ctx, targetRepo.ID, enum.RuleStateActive, enum.RuleStateMonitor)
+	if err != nil {
+		return types.MergeResponse{}, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
+	}
+
+	violations, err := protectionRules.CanMerge(ctx, protection.CanMergeInput{
+		Actor:      &session.Principal,
+		Membership: membership,
+		TargetRepo: targetRepo,
+		SourceRepo: sourceRepo,
+		PullReq:    pr,
+		Reviewers:  reviewers,
+		Method:     in.Method,
+		Checks:     statusChecks,
+	})
+	if err != nil {
+		return types.MergeResponse{}, fmt.Errorf("failed to verify protection rules: %w", err)
+	}
+	if protection.IsCritical(violations) {
+		return types.MergeResponse{RuleViolations: violations}, nil
 	}
 
 	var writeParams gitrpc.WriteParams
@@ -155,7 +193,8 @@ func (c *Controller) Merge(
 	if err != nil {
 		if gitrpc.ErrorStatus(err) == gitrpc.StatusNotMergeable {
 			return types.MergeResponse{
-				ConflictFiles: gitrpc.AsConflictFilesError(err),
+				ConflictFiles:  gitrpc.AsConflictFilesError(err),
+				RuleViolations: violations,
 			}, nil
 		}
 		return types.MergeResponse{}, fmt.Errorf("merge check execution failed: %w", err)
@@ -203,6 +242,7 @@ func (c *Controller) Merge(
 	})
 
 	return types.MergeResponse{
-		SHA: sha,
+		SHA:            sha,
+		RuleViolations: violations,
 	}, nil
 }
