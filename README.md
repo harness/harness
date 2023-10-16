@@ -9,6 +9,8 @@ Gitness is an open source development platform packed with the power of code hos
 
 To install Gitness yourself, simply run the command below. Once the container is up, you can visit http://localhost:3000 in your browser.
 
+### For Docker
+
 ```bash
 docker run -d \
   -p 3000:3000 \
@@ -18,7 +20,19 @@ docker run -d \
   --restart always \
   harness/gitness
 ```
-> The Gitness image uses a volume to store the database and repositories. It is highly recommended to use a bind mount or named volume as otherwise all data will be lost once the container is stopped.
+
+### For Podman
+
+```bash
+podman run -d \
+  -p 3000:3000 \
+  -v /tmp/gitness:/data \
+  --name gitness \
+  --restart always \
+  docker.io/harness/gitness
+```
+
+> The Gitness image uses a volume to store the database and repositories. The /tmp used in the commands above is regularly cleaned by many Operating Systems(such as CentOS and Fedora). It is highly recommended to use a bind mount or named volume as otherwise all data will be lost once the container is stopped.
 
 See [docs.gitness.com](https://docs.gitness.com) to learn how to get the most out of Gitness.
 
