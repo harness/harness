@@ -55,16 +55,24 @@ func (s ruleSet) CanMerge(ctx context.Context, in CanMergeInput) ([]types.RuleVi
 			return nil, err
 		}
 
-		backFillRule(vs, &r)
+		violations = append(violations, backFillRule(vs, &r)...)
 
-		violations = append(violations, vs...)
 	}
 
 	return violations, nil
 }
 
-func backFillRule(vs []types.RuleViolations, rule *types.Rule) {
+func backFillRule(vs []types.RuleViolations, rule *types.Rule) []types.RuleViolations {
+	violations := make([]types.RuleViolations, 0, len(vs))
+
 	for i := range vs {
+		if len(vs[i].Violations) == 0 {
+			continue
+		}
+
 		vs[i].Rule = rule
+		violations = append(violations, vs[i])
 	}
+
+	return violations
 }
