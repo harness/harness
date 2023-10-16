@@ -39,6 +39,6 @@ func HandleUpload(controller *upload.Controller) http.HandlerFunc {
 			render.TranslatedUserError(w, err)
 			return
 		}
-		render.JSON(w, http.StatusOK, res)
+		render.JSON(w, http.StatusCreated, res)
 	}
 }
