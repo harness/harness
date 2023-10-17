@@ -37,6 +37,17 @@ import (
 	"github.com/drone/runner-go/secret"
 )
 
+// Privileged provides a list of plugins that execute
+// with privileged capabilities in order to run Docker
+// in Docker.
+var Privileged = []string{
+	"plugins/docker",
+	"plugins/acr",
+	"plugins/ecr",
+	"plugins/gcr",
+	"plugins/heroku",
+}
+
 func NewExecutionRunner(
 	config *types.Config,
 	client runnerclient.Client,
@@ -51,6 +62,7 @@ func NewExecutionRunner(
 		Registry:   registry.Static([]*drone.Registry{}),
 		Secret:     secret.Encrypted(),
 		ExtraHosts: extraHosts,
+		Privileged: Privileged,
 	}
 
 	remote := remote.New(client)
@@ -86,6 +98,7 @@ func NewExecutionRunner(
 		Registry:   registry.Static([]*drone.Registry{}),
 		Secret:     secret.Encrypted(),
 		ExtraHosts: extraHosts,
+		Privileged: Privileged,
 	}
 
 	runner := &runtime2.Runner{
