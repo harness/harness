@@ -29,7 +29,8 @@ type ruleSet struct {
 
 var _ Protection = ruleSet{} // ensure that ruleSet implements the Protection interface.
 
-func (s ruleSet) CanMerge(ctx context.Context, in CanMergeInput) ([]types.RuleViolations, error) {
+func (s ruleSet) CanMerge(ctx context.Context, in CanMergeInput) (CanMergeOutput, []types.RuleViolations, error) {
+	var out CanMergeOutput
 	var violations []types.RuleViolations
 
 	for i := range s.rules {
@@ -38,7 +39,7 @@ func (s ruleSet) CanMerge(ctx context.Context, in CanMergeInput) ([]types.RuleVi
 		bp := Pattern{}
 
 		if err := json.Unmarshal(r.Pattern, &bp); err != nil {
-			return nil, fmt.Errorf("failed to parse branch pattern: %w", err)
+			return out, nil, fmt.Errorf("failed to parse branch pattern: %w", err)
 		}
 
 		if !bp.Matches(in.PullReq.TargetBranch, in.TargetRepo.DefaultBranch) {
@@ -47,19 +48,20 @@ func (s ruleSet) CanMerge(ctx context.Context, in CanMergeInput) ([]types.RuleVi
 
 		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse protection definition ID=%d Type=%s: %w", r.ID, r.Type, err)
+			return out, nil,
+				fmt.Errorf("failed to parse protection definition ID=%d Type=%s: %w", r.ID, r.Type, err)
 		}
 
-		vs, err := protection.CanMerge(ctx, in)
+		rOut, rVs, err := protection.CanMerge(ctx, in)
 		if err != nil {
-			return nil, err
+			return out, nil, err
 		}
 
-		violations = append(violations, backFillRule(vs, &r)...)
-
+		violations = append(violations, backFillRule(rVs, &r)...)
+		out.DeleteSourceBranch = out.DeleteSourceBranch || rOut.DeleteSourceBranch
 	}
 
-	return violations, nil
+	return out, violations, nil
 }
 
 func backFillRule(vs []types.RuleViolations, rule *types.Rule) []types.RuleViolations {

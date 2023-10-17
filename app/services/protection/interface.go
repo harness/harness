@@ -34,7 +34,7 @@ type (
 	// Protection defines interface for branch protection.
 	Protection interface {
 		// CanMerge tests if a pull request can be merged.
-		CanMerge(ctx context.Context, in CanMergeInput) ([]types.RuleViolations, error)
+		CanMerge(ctx context.Context, in CanMergeInput) (CanMergeOutput, []types.RuleViolations, error)
 	}
 
 	CanMergeInput struct {
@@ -47,6 +47,10 @@ type (
 		Method     enum.MergeMethod
 		Checks     []types.Check
 		// TODO: Add code owners
+	}
+
+	CanMergeOutput struct {
+		DeleteSourceBranch bool
 	}
 )
 

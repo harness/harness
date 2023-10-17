@@ -112,8 +112,19 @@ func (c *Controller) Merge(
 		return types.MergeResponse{}, fmt.Errorf("failed to load list of reviwers: %w", err)
 	}
 
+	targetWriteParams, err := controller.CreateRPCWriteParams(ctx, c.urlProvider, session, targetRepo)
+	if err != nil {
+		return types.MergeResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
+	}
+
 	sourceRepo := targetRepo
+	sourceWriteParams := targetWriteParams
 	if pr.SourceRepoID != pr.TargetRepoID {
+		sourceWriteParams, err = controller.CreateRPCWriteParams(ctx, c.urlProvider, session, sourceRepo)
+		if err != nil {
+			return types.MergeResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
+		}
+
 		sourceRepo, err = c.repoStore.Find(ctx, pr.SourceRepoID)
 		if err != nil {
 			return types.MergeResponse{}, fmt.Errorf("failed to get source repository: %w", err)
@@ -141,7 +152,7 @@ func (c *Controller) Merge(
 		return types.MergeResponse{}, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}
 
-	violations, err := protectionRules.CanMerge(ctx, protection.CanMergeInput{
+	ruleOut, violations, err := protectionRules.CanMerge(ctx, protection.CanMergeInput{
 		Actor:      &session.Principal,
 		Membership: membership,
 		TargetRepo: targetRepo,
@@ -158,12 +169,6 @@ func (c *Controller) Merge(
 		return types.MergeResponse{RuleViolations: violations}, nil
 	}
 
-	var writeParams gitrpc.WriteParams
-	writeParams, err = controller.CreateRPCWriteParams(ctx, c.urlProvider, session, targetRepo)
-	if err != nil {
-		return types.MergeResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
-	}
-
 	// TODO: for forking merge title might be different?
 	var mergeTitle string
 	if in.Method == enum.MergeMethod(gitrpcenum.MergeMethodSquash) {
@@ -175,7 +180,7 @@ func (c *Controller) Merge(
 	now := time.Now()
 	var mergeOutput gitrpc.MergeOutput
 	mergeOutput, err = c.gitRPCClient.Merge(ctx, &gitrpc.MergeParams{
-		WriteParams:     writeParams,
+		WriteParams:     targetWriteParams,
 		BaseBranch:      pr.TargetBranch,
 		HeadRepoUID:     sourceRepo.GitUID,
 		HeadBranch:      pr.SourceBranch,
@@ -203,8 +208,8 @@ func (c *Controller) Merge(
 	pr, err = c.pullreqStore.UpdateOptLock(ctx, pr, func(pr *types.PullReq) error {
 		pr.State = enum.PullReqStateMerged
 
-		now := time.Now().UnixMilli()
-		pr.Merged = &now
+		nowMilli := now.UnixMilli()
+		pr.Merged = &nowMilli
 		pr.MergedBy = &session.Principal.ID
 		pr.MergeMethod = &in.Method
 
@@ -240,6 +245,17 @@ func (c *Controller) Merge(
 		TargetSHA:   mergeOutput.BaseSHA,
 		SourceSHA:   mergeOutput.HeadSHA,
 	})
+
+	if ruleOut.DeleteSourceBranch {
+		errDelete := c.gitRPCClient.DeleteBranch(ctx, &gitrpc.DeleteBranchParams{
+			WriteParams: sourceWriteParams,
+			BranchName:  pr.SourceBranch,
+		})
+		if errDelete != nil {
+			// non-critical error
+			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete source branch after merging")
+		}
+	}
 
 	return types.MergeResponse{
 		SHA:            sha,

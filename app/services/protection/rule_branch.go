@@ -37,18 +37,21 @@ type Branch struct {
 var _ Definition = (*Branch)(nil) // ensures that the Branch type implements Definition interface.
 
 //nolint:gocognit // well aware of this
-func (v *Branch) CanMerge(_ context.Context, in CanMergeInput) ([]types.RuleViolations, error) {
+func (v *Branch) CanMerge(_ context.Context, in CanMergeInput) (CanMergeOutput, []types.RuleViolations, error) {
+	var out CanMergeOutput
 	var violations types.RuleViolations
+
+	out.DeleteSourceBranch = v.PullReq.Merge.DeleteBranch
 
 	// bypass
 
 	if v.Bypass.SpaceOwners && in.Membership != nil && in.Membership.Role == enum.MembershipRoleSpaceOwner {
-		return nil, nil
+		return out, nil, nil
 	}
 
 	for _, bypassUserID := range v.Bypass.UserIDs {
 		if in.Actor.ID == bypassUserID {
-			return nil, nil
+			return out, nil, nil
 		}
 	}
 
@@ -119,7 +122,7 @@ func (v *Branch) CanMerge(_ context.Context, in CanMergeInput) ([]types.RuleViol
 		}
 	}
 
-	return []types.RuleViolations{violations}, nil
+	return out, []types.RuleViolations{violations}, nil
 }
 
 func (v *Branch) Sanitize() error {
