@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React from 'react'
+import React, { ElementType } from 'react'
 import mustache from 'mustache'
 import { get } from 'lodash-es'
 import { useStringsContext, StringKeys } from './StringsContext'
@@ -54,8 +54,9 @@ export interface StringProps extends React.DetailedHTMLProps<React.HTMLAttribute
 }
 
 export function String(props: StringProps): React.ReactElement | null {
-  const { stringID, vars, useRichText, tagName: Tag, ...rest } = props
+  const { stringID, vars, useRichText, tagName, ...rest } = props
   const { getString } = useStrings()
+  const Tag = tagName as ElementType
 
   try {
     const text = getString(stringID, vars)
