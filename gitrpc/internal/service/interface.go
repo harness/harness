@@ -110,4 +110,10 @@ type GitAdapter interface {
 		dirPath string,
 		regExpDef string,
 		maxSize int) ([]types.FileContent, error)
+
+	DiffFileStat(
+		ctx context.Context,
+		repoPath string,
+		baseRef string,
+		headRef string) ([]string, error)
 }
