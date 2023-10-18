@@ -37,17 +37,20 @@ import { useModalHook } from 'hooks/useModalHook'
 import { useStrings } from 'framework/strings'
 import type { OpenapiCreateSecretRequest, TypesSecret } from 'services/code'
 import { getErrorMessage } from 'utils/Utils'
+import css from './NewSecretModalButton.module.scss'
 
 export interface SecretFormData {
   value: string
   description: string
   name: string
+  showValue: boolean
 }
 
 const formInitialValues: SecretFormData = {
   value: '',
   description: '',
-  name: ''
+  name: '',
+  showValue: false
 }
 
 export interface NewSecretModalButtonProps extends Omit<ButtonProps, 'onClick' | 'onSubmit'> {
@@ -122,57 +125,66 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
               validateOnChange
               validateOnBlur
               onSubmit={handleSubmit}>
-              <FormikForm>
-                <Container>
-                  <FormInput.Text
-                    name="name"
-                    label={getString('name')}
-                    placeholder={getString('secrets.enterSecretName')}
-                    tooltipProps={{
-                      dataTooltipId: 'secretNameTextField'
-                    }}
-                    inputGroup={{ autoFocus: true }}
-                  />
-                  <FormInput.Text
-                    name="value"
-                    label={getString('value')}
-                    placeholder={getString('secrets.value')}
-                    tooltipProps={{
-                      dataTooltipId: 'secretDescriptionTextField'
-                    }}
-                    inputGroup={{ type: 'password', autoComplete: 'new-password' }}
-                  />
-                  <FormInput.Text
-                    name="description"
-                    label={getString('description')}
-                    placeholder={getString('enterDescription')}
-                    tooltipProps={{
-                      dataTooltipId: 'secretDescriptionTextField'
-                    }}
-                    isOptional
-                  />
-                </Container>
+              {formik => (
+                <FormikForm>
+                  <Container>
+                    <FormInput.Text
+                      name="name"
+                      label={getString('name')}
+                      placeholder={getString('secrets.enterSecretName')}
+                      tooltipProps={{
+                        dataTooltipId: 'secretNameTextField'
+                      }}
+                      inputGroup={{ autoFocus: true }}
+                    />
+                    <FormInput.TextArea
+                      name="value"
+                      label={getString('value')}
+                      tooltipProps={{
+                        dataTooltipId: 'secretDescriptionTextField'
+                      }}
+                      autoComplete="off"
+                      className={formik.values.showValue ? '' : css.textArea}
+                    />
+                    <FormInput.CheckBox
+                      name="showValue"
+                      label={getString('secrets.showValue')}
+                      tooltipProps={{
+                        dataTooltipId: 'secretDescriptionTextField'
+                      }}
+                    />
+                    <FormInput.Text
+                      name="description"
+                      label={getString('description')}
+                      placeholder={getString('enterDescription')}
+                      tooltipProps={{
+                        dataTooltipId: 'secretDescriptionTextField'
+                      }}
+                      isOptional
+                    />
+                  </Container>
 
-                <Layout.Horizontal
-                  spacing="small"
-                  padding={{ right: 'xxlarge', top: 'xxxlarge' }}
-                  style={{ alignItems: 'center' }}>
-                  <Button
-                    type="submit"
-                    text={getString('secrets.createSecret')}
-                    variation={ButtonVariation.PRIMARY}
-                    disabled={loading}
-                  />
-                  <Button
-                    text={cancelButtonTitle || getString('cancel')}
-                    minimal
-                    onClick={hideModal}
-                    variation={ButtonVariation.SECONDARY}
-                  />
-                  <FlexExpander />
-                  {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
-                </Layout.Horizontal>
-              </FormikForm>
+                  <Layout.Horizontal
+                    spacing="small"
+                    padding={{ right: 'xxlarge', top: 'xxxlarge' }}
+                    style={{ alignItems: 'center' }}>
+                    <Button
+                      type="submit"
+                      text={getString('secrets.createSecret')}
+                      variation={ButtonVariation.PRIMARY}
+                      disabled={loading}
+                    />
+                    <Button
+                      text={cancelButtonTitle || getString('cancel')}
+                      minimal
+                      onClick={hideModal}
+                      variation={ButtonVariation.SECONDARY}
+                    />
+                    <FlexExpander />
+                    {loading && <Icon intent={Intent.PRIMARY} name="steps-spinner" size={16} />}
+                  </Layout.Horizontal>
+                </FormikForm>
+              )}
             </Formik>
           </Container>
         </Layout.Vertical>

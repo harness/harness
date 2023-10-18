@@ -618,8 +618,8 @@ export interface StringsMap {
   'secrets.noData': string
   'secrets.secretDeleted': string
   'secrets.secretUpdated': string
+  'secrets.showValue': string
   'secrets.updateSecret': string
-  'secrets.value': string
   selectBranchPlaceHolder: string
   selectRange: string
   selectSpace: string
