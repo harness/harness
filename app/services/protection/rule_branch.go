@@ -103,16 +103,6 @@ func (v *Branch) CanMerge(_ context.Context, in CanMergeInput) (CanMergeOutput, 
 		}
 	}
 
-	if v.PullReq.StatusChecks.AllMustSucceed {
-		for i := range in.Checks {
-			if in.Checks[i].Status != enum.CheckStatusSuccess {
-				violations.Add("pullreq.status_checks.all_must_succeed",
-					"All status checks must complete successfully.")
-				break
-			}
-		}
-	}
-
 	// pullreq.merge
 
 	if len(v.PullReq.Merge.StrategiesAllowed) > 0 { // Note: Empty allowed strategies list means all are allowed
@@ -177,8 +167,7 @@ func (v DefComments) Validate() error {
 }
 
 type DefStatusChecks struct {
-	RequireUIDs    []string `json:"require_uids,omitempty"`
-	AllMustSucceed bool     `json:"all_must_succeed,omitempty"`
+	RequireUIDs []string `json:"require_uids,omitempty"`
 }
 
 func (v DefStatusChecks) Validate() error {
