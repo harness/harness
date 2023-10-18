@@ -16,6 +16,7 @@ package repo
 
 import (
 	"github.com/harness/gitness/app/auth/authz"
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
@@ -37,11 +38,11 @@ func ProvideController(config *types.Config, tx dbtx.Transactor, urlProvider url
 	uidCheck check.PathUID, authorizer authz.Authorizer, repoStore store.RepoStore,
 	spaceStore store.SpaceStore, pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore, ruleStore store.RuleStore, protectionManager *protection.Manager,
-	rpcClient gitrpc.Interface, importer *importer.Repository,
+	rpcClient gitrpc.Interface, importer *importer.Repository, codeOwners *codeowners.Service,
 ) *Controller {
 	return NewController(config.Git.DefaultBranch, tx, urlProvider,
 		uidCheck, authorizer, repoStore,
 		spaceStore, pipelineStore,
 		principalStore, ruleStore, protectionManager,
-		rpcClient, importer)
+		rpcClient, importer, codeOwners)
 }

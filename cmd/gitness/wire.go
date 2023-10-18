@@ -9,8 +9,6 @@ package main
 
 import (
 	"context"
-	"github.com/harness/gitness/app/api/controller/upload"
-	"github.com/harness/gitness/blob"
 
 	checkcontroller "github.com/harness/gitness/app/api/controller/check"
 	"github.com/harness/gitness/app/api/controller/connector"
@@ -29,6 +27,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/system"
 	"github.com/harness/gitness/app/api/controller/template"
 	controllertrigger "github.com/harness/gitness/app/api/controller/trigger"
+	"github.com/harness/gitness/app/api/controller/upload"
 	"github.com/harness/gitness/app/api/controller/user"
 	controllerwebhook "github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/auth/authn"
@@ -49,6 +48,7 @@ import (
 	"github.com/harness/gitness/app/services"
 	"github.com/harness/gitness/app/services/cleanup"
 	"github.com/harness/gitness/app/services/codecomments"
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/exporter"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/job"
@@ -63,6 +63,7 @@ import (
 	"github.com/harness/gitness/app/store/database"
 	"github.com/harness/gitness/app/store/logs"
 	"github.com/harness/gitness/app/url"
+	"github.com/harness/gitness/blob"
 	cliserver "github.com/harness/gitness/cli/server"
 	"github.com/harness/gitness/encrypt"
 	"github.com/harness/gitness/events"
@@ -156,6 +157,8 @@ func initSystem(ctx context.Context, config *types.Config) (*cliserver.System, e
 		canceler.WireSet,
 		exporter.WireSet,
 		metric.WireSet,
+		cliserver.ProvideCodeOwnerConfig,
+		codeowners.WireSet,
 	)
 	return &cliserver.System{}, nil
 }

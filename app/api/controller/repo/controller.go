@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	"github.com/harness/gitness/app/githook"
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
@@ -50,6 +51,7 @@ type Controller struct {
 	protectionManager *protection.Manager
 	gitRPCClient      gitrpc.Interface
 	importer          *importer.Repository
+	codeOwners        *codeowners.Service
 }
 
 func NewController(
@@ -66,6 +68,7 @@ func NewController(
 	protectionManager *protection.Manager,
 	gitRPCClient gitrpc.Interface,
 	importer *importer.Repository,
+	codeOwners *codeowners.Service,
 ) *Controller {
 	return &Controller{
 		defaultBranch:     defaultBranch,
@@ -81,6 +84,7 @@ func NewController(
 		protectionManager: protectionManager,
 		gitRPCClient:      gitRPCClient,
 		importer:          importer,
+		codeOwners:        codeOwners,
 	}
 }
 

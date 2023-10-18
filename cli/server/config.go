@@ -23,6 +23,7 @@ import (
 	"unicode"
 
 	"github.com/harness/gitness/app/services/cleanup"
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/trigger"
 	"github.com/harness/gitness/app/services/webhook"
 	"github.com/harness/gitness/blob"
@@ -332,5 +333,12 @@ func ProvidePubsubConfig(config *types.Config) pubsub.Config {
 func ProvideCleanupConfig(config *types.Config) cleanup.Config {
 	return cleanup.Config{
 		WebhookExecutionsRetentionTime: config.Webhook.RetentionTime,
+	}
+}
+
+// ProvideCodeOwnerConfig loads the codeowner config from the main config.
+func ProvideCodeOwnerConfig(config *types.Config) codeowners.Config {
+	return codeowners.Config{
+		CodeOwnerFilePath: config.CodeOwners.CodeOwnerFilePath,
 	}
 }

@@ -281,4 +281,8 @@ type Config struct {
 		Endpoint string `envconfig:"GITNESS_METRIC_ENDPOINT" default:"https://stats.drone.ci/api/v1/gitness"`
 		Token    string `envconfig:"GITNESS_METRIC_TOKEN"`
 	}
+
+	CodeOwners struct {
+		CodeOwnerFilePath string `envconfig:"GITNESS_CODEOWNERS_FILEPATH" default:".gitness/CODEOWNERS"`
+	}
 }
