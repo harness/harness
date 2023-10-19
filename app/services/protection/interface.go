@@ -38,14 +38,14 @@ type (
 	}
 
 	CanMergeInput struct {
-		Actor      *types.Principal
-		Membership *types.Membership
-		TargetRepo *types.Repository
-		SourceRepo *types.Repository
-		PullReq    *types.PullReq
-		Reviewers  []*types.PullReqReviewer
-		Method     enum.MergeMethod
-		Checks     []types.Check
+		Actor        *types.Principal
+		Membership   *types.Membership
+		TargetRepo   *types.Repository
+		SourceRepo   *types.Repository
+		PullReq      *types.PullReq
+		Reviewers    []*types.PullReqReviewer
+		Method       enum.MergeMethod
+		CheckResults []types.CheckResult
 		// TODO: Add code owners
 	}
 

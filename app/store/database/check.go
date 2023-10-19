@@ -231,6 +231,34 @@ func (s *CheckStore) ListRecent(ctx context.Context, repoID int64, since time.Ti
 	return dst, nil
 }
 
+// ListResults returns a list of status check results for a specific commit in a repo.
+func (s *CheckStore) ListResults(ctx context.Context,
+	repoID int64,
+	commitSHA string,
+) ([]types.CheckResult, error) {
+	const checkColumns = "check_uid, check_status"
+	stmt := database.Builder.
+		Select(checkColumns).
+		From("checks").
+		Where("check_repo_id = ?", repoID).
+		Where("check_commit_sha = ?", commitSHA)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	result := make([]types.CheckResult, 0)
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if err = db.SelectContext(ctx, &result, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed to execute list status checks results query")
+	}
+
+	return result, nil
+}
+
 func mapInternalCheck(c *types.Check) *check {
 	m := &check{
 		ID:             c.ID,

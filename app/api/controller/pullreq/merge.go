@@ -139,10 +139,7 @@ func (c *Controller) Merge(
 		return types.MergeResponse{}, fmt.Errorf("failed to find space membership: %w", err)
 	}
 
-	statusChecks, err := c.checkStore.List(ctx, targetRepo.ID, pr.SourceSHA, types.CheckListOptions{
-		Page: 1,
-		Size: 1000,
-	})
+	checkResults, err := c.checkStore.ListResults(ctx, targetRepo.ID, pr.SourceSHA)
 	if err != nil {
 		return types.MergeResponse{}, fmt.Errorf("failed to list status checks: %w", err)
 	}
@@ -153,14 +150,14 @@ func (c *Controller) Merge(
 	}
 
 	ruleOut, violations, err := protectionRules.CanMerge(ctx, protection.CanMergeInput{
-		Actor:      &session.Principal,
-		Membership: membership,
-		TargetRepo: targetRepo,
-		SourceRepo: sourceRepo,
-		PullReq:    pr,
-		Reviewers:  reviewers,
-		Method:     in.Method,
-		Checks:     statusChecks,
+		Actor:        &session.Principal,
+		Membership:   membership,
+		TargetRepo:   targetRepo,
+		SourceRepo:   sourceRepo,
+		PullReq:      pr,
+		Reviewers:    reviewers,
+		Method:       in.Method,
+		CheckResults: checkResults,
 	})
 	if err != nil {
 		return types.MergeResponse{}, fmt.Errorf("failed to verify protection rules: %w", err)

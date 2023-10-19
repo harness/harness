@@ -90,9 +90,9 @@ func (v *Branch) CanMerge(_ context.Context, in CanMergeInput) (CanMergeOutput, 
 	for _, requiredUID := range v.PullReq.StatusChecks.RequireUIDs {
 		var succeeded bool
 
-		for i := range in.Checks {
-			if in.Checks[i].UID == requiredUID {
-				succeeded = in.Checks[i].Status == enum.CheckStatusSuccess
+		for i := range in.CheckResults {
+			if in.CheckResults[i].UID == requiredUID {
+				succeeded = in.CheckResults[i].Status == enum.CheckStatusSuccess
 				break
 			}
 		}

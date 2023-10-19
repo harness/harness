@@ -37,6 +37,11 @@ type Check struct {
 	ReportedBy PrincipalInfo `json:"reported_by"`
 }
 
+type CheckResult struct {
+	UID    string           `json:"uid" db:"check_uid"`
+	Status enum.CheckStatus `json:"status" db:"check_status"`
+}
+
 type CheckPayload struct {
 	Version string                `json:"version"`
 	Kind    enum.CheckPayloadKind `json:"kind"`

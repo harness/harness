@@ -460,6 +460,9 @@ type (
 
 		// ListRecent returns a list of recently executed status checks in a repository.
 		ListRecent(ctx context.Context, repoID int64, since time.Time) ([]string, error)
+
+		// ListResults returns a list of status check results for a specific commit in a repo.
+		ListResults(ctx context.Context, repoID int64, commitSHA string) ([]types.CheckResult, error)
 	}
 
 	ReqCheckStore interface {
