@@ -16,6 +16,7 @@ package pullreq
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -27,6 +28,7 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/gitrpc"
 	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
+	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -131,11 +133,13 @@ func (c *Controller) Merge(
 		}
 	}
 
+	// membership is optional (otherwise admin without membership fails, or with other RBAC it fails)
+	// TODO: Is there a nicer way to handle this - the space owner rule shouldn't exist with other RBAC systems?
 	membership, err := c.membershipStore.Find(ctx, types.MembershipKey{
 		SpaceID:     targetRepo.ParentID,
 		PrincipalID: session.Principal.ID,
 	})
-	if err != nil {
+	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
 		return types.MergeResponse{}, fmt.Errorf("failed to find space membership: %w", err)
 	}
 
