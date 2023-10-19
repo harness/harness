@@ -510,6 +510,10 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
       if (collapsed) {
         containerClassList.add(css.collapsed)
 
+        if (parseInt(containerStyle.height) != DIFF_VIEWER_HEADER_HEIGHT) {
+          containerStyle.height = `${DIFF_VIEWER_HEADER_HEIGHT}px`
+        }
+
         // Fix scrolling position messes up with sticky header: When content of the diff content
         // is above the diff header, we need to scroll it back to below the header, adjust window
         // scrolling position to avoid the next diff scroll jump
@@ -520,10 +524,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
           if (stickyTopPosition) {
             scrollElement.scroll({ top: scrollElement.scrollTop - stickyTopPosition })
           }
-        }
-
-        if (parseInt(containerStyle.height) != DIFF_VIEWER_HEADER_HEIGHT) {
-          containerStyle.height = `${DIFF_VIEWER_HEADER_HEIGHT}px`
         }
       } else {
         containerClassList.remove(css.collapsed)
