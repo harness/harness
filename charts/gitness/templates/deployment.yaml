@@ -48,6 +48,11 @@ spec:
             httpGet:
               path: /
               port: http
+          env:
+            {{- range $key, $value := $.Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
