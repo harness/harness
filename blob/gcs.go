@@ -88,6 +88,6 @@ func (c *GCSStore) GetSignedURL(filePath string) (string, error) {
 	}
 	return signedURL, nil
 }
-func (c *GCSStore) Download(ctx context.Context, filePath string) (io.ReadCloser, error) {
+func (c *GCSStore) Download(_ context.Context, _ string) (io.ReadCloser, error) {
 	return nil, fmt.Errorf("not implemented")
 }

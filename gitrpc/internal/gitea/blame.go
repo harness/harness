@@ -114,7 +114,7 @@ func (r *BlameReader) unreadLine(line string) {
 	r.lastLine = line
 }
 
-//nolint:complexity,gocognit,nestif // it's ok
+//nolint:gocognit,nestif // it's ok
 func (r *BlameReader) NextPart() (*types.BlamePart, error) {
 	var commit *types.Commit
 	var lines []string

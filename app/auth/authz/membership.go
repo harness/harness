@@ -138,7 +138,8 @@ func (a *MembershipAuthorizer) Check(
 
 func (a *MembershipAuthorizer) CheckAll(ctx context.Context, session *auth.Session,
 	permissionChecks ...types.PermissionCheck) (bool, error) {
-	for _, p := range permissionChecks {
+	for i := range permissionChecks {
+		p := permissionChecks[i]
 		if _, err := a.Check(ctx, session, &p.Scope, &p.Resource, p.Permission); err != nil {
 			return false, err
 		}

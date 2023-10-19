@@ -339,6 +339,6 @@ func ProvideCleanupConfig(config *types.Config) cleanup.Config {
 // ProvideCodeOwnerConfig loads the codeowner config from the main config.
 func ProvideCodeOwnerConfig(config *types.Config) codeowners.Config {
 	return codeowners.Config{
-		CodeOwnerFilePath: config.CodeOwners.CodeOwnerFilePath,
+		FilePath: config.CodeOwners.FilePath,
 	}
 }

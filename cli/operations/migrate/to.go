@@ -28,7 +28,7 @@ type commandTo struct {
 	version string
 }
 
-func (c *commandTo) run(k *kingpin.ParseContext) error {
+func (c *commandTo) run(_ *kingpin.ParseContext) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 

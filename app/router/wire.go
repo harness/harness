@@ -55,7 +55,6 @@ var WireSet = wire.NewSet(
 )
 
 func ProvideRouter(
-	config *types.Config,
 	api APIHandler,
 	git GitHandler,
 	web WebHandler,
@@ -76,7 +75,6 @@ func ProvideRouter(
 }
 
 func ProvideGitHandler(
-	config *types.Config,
 	urlProvider url.Provider,
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
@@ -85,7 +83,6 @@ func ProvideGitHandler(
 	repoCtrl *repo.Controller,
 ) GitHandler {
 	return NewGitHandler(
-		config,
 		urlProvider,
 		repoStore,
 		authenticator,

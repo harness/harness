@@ -15,7 +15,6 @@
 package runner
 
 import (
-	"github.com/harness/gitness/app/pipeline/manager"
 	"github.com/harness/gitness/app/pipeline/plugin"
 	"github.com/harness/gitness/types"
 
@@ -52,7 +51,6 @@ func NewExecutionRunner(
 	config *types.Config,
 	client runnerclient.Client,
 	pluginManager *plugin.Manager,
-	m manager.ExecutionManager,
 ) (*runtime2.Runner, error) {
 	// For linux, containers need to have extra hosts set in order to interact with
 	// the gitness container.

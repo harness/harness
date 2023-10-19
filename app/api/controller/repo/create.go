@@ -85,7 +85,7 @@ func (c *Controller) Create(ctx context.Context, session *auth.Session, in *Crea
 	}
 	err = c.repoStore.Create(ctx, repo)
 	if err != nil {
-		if dErr := c.DeleteGitRPCRepositories(ctx, session, repo); dErr != nil {
+		if dErr := c.deleteGitRPCRepository(ctx, session, repo); dErr != nil {
 			log.Ctx(ctx).Warn().Err(dErr).Msg("gitrpc failed to delete repo for cleanup")
 		}
 		return nil, fmt.Errorf("failed to create repository in storage: %w", err)

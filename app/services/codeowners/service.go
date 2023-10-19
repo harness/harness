@@ -33,13 +33,13 @@ const (
 )
 
 type Config struct {
-	CodeOwnerFilePath string
+	FilePath string
 }
 
 type Service struct {
 	repoStore store.RepoStore
 	git       gitrpc.Interface
-	Config    Config
+	config    Config
 }
 
 type codeOwnerFile struct {
@@ -48,11 +48,11 @@ type codeOwnerFile struct {
 }
 
 type CodeOwners struct {
-	CodeOwnerFileSha string
-	CodeOwnerDetails []codeOwnerDetail
+	FileSHA string
+	Entries []Entry
 }
 
-type codeOwnerDetail struct {
+type Entry struct {
 	Pattern string
 	Owners  []string
 }
@@ -62,11 +62,10 @@ func New(
 	git gitrpc.Interface,
 	config Config,
 ) (*Service, error) {
-
 	service := &Service{
 		repoStore: repoStore,
 		git:       git,
-		Config:    config,
+		config:    config,
 	}
 	return service, nil
 }
@@ -79,22 +78,22 @@ func (s *Service) Get(ctx context.Context,
 	}
 	codeOwnerFile, err := s.getCodeOwnerFile(ctx, repo)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get codeowner details %w", err)
+		return nil, fmt.Errorf("unable to get codeowner file %w", err)
 	}
 
-	owner, err := s.ParseCodeOwner(codeOwnerFile.Content)
+	owner, err := s.parseCodeOwner(codeOwnerFile.Content)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse codeowner %w", err)
 	}
 
 	return &CodeOwners{
-		CodeOwnerFileSha: codeOwnerFile.SHA,
-		CodeOwnerDetails: owner,
+		FileSHA: codeOwnerFile.SHA,
+		Entries: owner,
 	}, nil
 }
 
-func (s *Service) ParseCodeOwner(codeOwnersContent string) ([]codeOwnerDetail, error) {
-	var codeOwners []codeOwnerDetail
+func (s *Service) parseCodeOwner(codeOwnersContent string) ([]Entry, error) {
+	var codeOwners []Entry
 	scanner := bufio.NewScanner(strings.NewReader(codeOwnersContent))
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -105,13 +104,13 @@ func (s *Service) ParseCodeOwner(codeOwnersContent string) ([]codeOwnerDetail, e
 
 		parts := strings.Split(line, " ")
 		if len(parts) < 2 {
-			return nil, fmt.Errorf("invalid line: %s", line)
+			return nil, fmt.Errorf("line has invalid format: '%s'", line)
 		}
 
 		pattern := parts[0]
 		owners := parts[1:]
 
-		codeOwner := codeOwnerDetail{
+		codeOwner := Entry{
 			Pattern: pattern,
 			Owners:  owners,
 		}
@@ -119,7 +118,7 @@ func (s *Service) ParseCodeOwner(codeOwnersContent string) ([]codeOwnerDetail, e
 		codeOwners = append(codeOwners, codeOwner)
 	}
 	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading input: %v", err)
+		return nil, fmt.Errorf("error reading input: %w", err)
 	}
 
 	return codeOwners, nil
@@ -132,16 +131,19 @@ func (s *Service) getCodeOwnerFile(ctx context.Context,
 	node, err := s.git.GetTreeNode(ctx, &gitrpc.GetTreeNodeParams{
 		ReadParams: params,
 		GitREF:     "refs/heads/" + repo.DefaultBranch,
-		Path:       s.Config.CodeOwnerFilePath,
+		Path:       s.config.FilePath,
 	})
-
 	if err != nil {
-		// todo: check for path not found and return empty codeowners
+		// TODO: check for path not found and return empty codeowners
 		return nil, fmt.Errorf("unable to retrieve codeowner file %w", err)
 	}
 
 	if node.Node.Mode != gitrpc.TreeNodeModeFile {
-		return nil, fmt.Errorf("codeowner file not of right format")
+		return nil, fmt.Errorf(
+			"codeowner file is of format '%s' but expected to be of format '%s'",
+			node.Node.Mode,
+			gitrpc.TreeNodeModeFile,
+		)
 	}
 
 	output, err := s.git.GetBlob(ctx, &gitrpc.GetBlobParams{

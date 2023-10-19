@@ -84,7 +84,7 @@ func PaginationNoTotal(r *http.Request, w http.ResponseWriter, page int, size in
 }
 
 // PaginationLimit writes the x-total header.
-func PaginationLimit(r *http.Request, w http.ResponseWriter, total int) {
+func PaginationLimit(_ *http.Request, w http.ResponseWriter, total int) {
 	w.Header().Set("x-total", strconv.Itoa(total))
 }
 

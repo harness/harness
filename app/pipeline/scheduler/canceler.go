@@ -34,7 +34,7 @@ func newCanceler() *canceler {
 	}
 }
 
-func (c *canceler) Cancel(ctx context.Context, id int64) error {
+func (c *canceler) Cancel(_ context.Context, id int64) error {
 	c.Lock()
 	defer c.Unlock()
 	c.cancelled[id] = time.Now().Add(time.Minute * 5)

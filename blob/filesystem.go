@@ -76,11 +76,11 @@ func (c FileSystemStore) Upload(ctx context.Context,
 	return nil
 }
 
-func (c FileSystemStore) GetSignedURL(filePath string) (string, error) {
+func (c FileSystemStore) GetSignedURL(_ string) (string, error) {
 	return "", ErrNotSupported
 }
 
-func (c *FileSystemStore) Download(ctx context.Context, filePath string) (io.ReadCloser, error) {
+func (c *FileSystemStore) Download(_ context.Context, filePath string) (io.ReadCloser, error) {
 	fileDiskPath := fmt.Sprintf(fileDiskPathFmt, c.basePath, filePath)
 
 	file, err := os.Open(fileDiskPath)

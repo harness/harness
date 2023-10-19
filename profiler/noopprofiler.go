@@ -20,5 +20,5 @@ type NoopProfiler struct {
 }
 
 func (noopProfiler *NoopProfiler) StartProfiling(serviceName, serviceVersion string) {
-	log.Info().Msg("Not starting profiler")
+	log.Info().Msgf("Not starting profiler for service '%s' with version '%s'", serviceName, serviceVersion)
 }

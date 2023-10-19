@@ -77,6 +77,7 @@ import (
 	"github.com/harness/gitness/types/check"
 
 	_ "github.com/lib/pq"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -246,18 +247,18 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	uploadController := upload.ProvideController(authorizer, repoStore, blobStore)
 	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController, uploadController)
-	gitHandler := router.ProvideGitHandler(config, provider, repoStore, authenticator, authorizer, gitrpcInterface, repoController)
+	gitHandler := router.ProvideGitHandler(provider, repoStore, authenticator, authorizer, gitrpcInterface, repoController)
 	webHandler := router.ProvideWebHandler(config)
-	routerRouter := router.ProvideRouter(config, apiHandler, gitHandler, webHandler, provider)
+	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler, provider)
 	serverServer := server2.ProvideServer(config, routerRouter)
 	executionManager := manager.ProvideExecutionManager(config, executionStore, pipelineStore, provider, streamer, fileService, logStore, logStream, checkStore, repoStore, schedulerScheduler, secretStore, stageStore, stepStore, principalStore)
 	client := manager.ProvideExecutionClient(executionManager, config)
 	pluginManager := plugin2.ProvidePluginManager(config, pluginStore)
-	runtimeRunner, err := runner.ProvideExecutionRunner(config, client, pluginManager, executionManager)
+	runtimeRunner, err := runner.ProvideExecutionRunner(config, client, pluginManager)
 	if err != nil {
 		return nil, err
 	}
-	poller := runner.ProvideExecutionPoller(runtimeRunner, config, client)
+	poller := runner.ProvideExecutionPoller(runtimeRunner, client)
 	serverConfig, err := server.ProvideGitRPCServerConfig()
 	if err != nil {
 		return nil, err

@@ -116,8 +116,12 @@ func createAdminUser(
 	var findErr error
 	usr, findErr = userCtrl.FindNoAuth(ctx, config.Principal.Admin.UID)
 	if findErr != nil {
-		return nil, fmt.Errorf("failed to find user with uid '%s' (%s) after duplicate error: %w",
-			config.Principal.Admin.UID, findErr, createErr)
+		return nil, fmt.Errorf(
+			"failed to find user with uid '%s' (%w) after duplicate error: %w",
+			config.Principal.Admin.UID,
+			findErr,
+			createErr,
+		)
 	}
 
 	return usr, nil
@@ -210,7 +214,7 @@ func createServicePrincipal(
 	svc, findErr = serviceCtrl.FindNoAuth(ctx, uid)
 	if findErr != nil {
 		return nil, fmt.Errorf(
-			"failed to find service with uid '%s' (%s) after duplicate error: %w",
+			"failed to find service with uid '%s' (%w) after duplicate error: %w",
 			uid,
 			findErr,
 			createErr,

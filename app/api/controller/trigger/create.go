@@ -95,7 +95,7 @@ func (c *Controller) checkCreateInput(in *CreateInput) error {
 	if err := checkActions(in.Actions); err != nil {
 		return err
 	}
-	if err := c.uidCheck(in.UID, false); err != nil {
+	if err := c.uidCheck(in.UID, false); err != nil { //nolint:revive
 		return err
 	}
 

@@ -56,7 +56,7 @@ type s3store struct {
 	session *session.Session
 }
 
-func (s *s3store) Find(ctx context.Context, step int64) (io.ReadCloser, error) {
+func (s *s3store) Find(_ context.Context, step int64) (io.ReadCloser, error) {
 	svc := s3.New(s.session)
 	out, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
@@ -68,7 +68,7 @@ func (s *s3store) Find(ctx context.Context, step int64) (io.ReadCloser, error) {
 	return out.Body, nil
 }
 
-func (s *s3store) Create(ctx context.Context, step int64, r io.Reader) error {
+func (s *s3store) Create(_ context.Context, step int64, r io.Reader) error {
 	uploader := s3manager.NewUploader(s.session)
 	input := &s3manager.UploadInput{
 		ACL:    aws.String("private"),
@@ -84,7 +84,7 @@ func (s *s3store) Update(ctx context.Context, step int64, r io.Reader) error {
 	return s.Create(ctx, step, r)
 }
 
-func (s *s3store) Delete(ctx context.Context, step int64) error {
+func (s *s3store) Delete(_ context.Context, step int64) error {
 	svc := s3.New(s.session)
 	_, err := svc.DeleteObject(&s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),

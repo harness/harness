@@ -1,3 +1,17 @@
+// Copyright 2023 Harness, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package codeowners
 
 import (
@@ -9,9 +23,14 @@ import (
 )
 
 func TestService_ParseCodeOwner(t *testing.T) {
-	content1 := "**/contracts/openapi/v1/ mankrit.singh@harness.io ashish.sanodia@harness.io\n"
-	content2 := "**/contracts/openapi/v1/ mankrit.singh@harness.io ashish.sanodia@harness.io\n/scripts/api mankrit.singh@harness.io ashish.sanodia@harness.io"
-	content3 := "# codeowner file \n**/contracts/openapi/v1/ mankrit.singh@harness.io ashish.sanodia@harness.io\n#\n/scripts/api mankrit.singh@harness.io ashish.sanodia@harness.io"
+	content1 := `**/contracts/openapi/v1/ mankrit.singh@harness.io ashish.sanodia@harness.io
+	`
+	content2 := `**/contracts/openapi/v1/ mankrit.singh@harness.io ashish.sanodia@harness.io
+/scripts/api mankrit.singh@harness.io ashish.sanodia@harness.io`
+	content3 := `# codeowner file 
+**/contracts/openapi/v1/ mankrit.singh@harness.io ashish.sanodia@harness.io
+#
+/scripts/api mankrit.singh@harness.io ashish.sanodia@harness.io`
 	type fields struct {
 		repoStore store.RepoStore
 		git       gitrpc.Interface
@@ -24,13 +43,13 @@ func TestService_ParseCodeOwner(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    []codeOwnerDetail
+		want    []Entry
 		wantErr bool
 	}{
 		{
 			name: "Code owners Single",
 			args: args{codeOwnersContent: content1},
-			want: []codeOwnerDetail{{
+			want: []Entry{{
 				Pattern: "**/contracts/openapi/v1/",
 				Owners:  []string{"mankrit.singh@harness.io", "ashish.sanodia@harness.io"},
 			},
@@ -39,7 +58,7 @@ func TestService_ParseCodeOwner(t *testing.T) {
 		{
 			name: "Code owners Multiple",
 			args: args{codeOwnersContent: content2},
-			want: []codeOwnerDetail{{
+			want: []Entry{{
 				Pattern: "**/contracts/openapi/v1/",
 				Owners:  []string{"mankrit.singh@harness.io", "ashish.sanodia@harness.io"},
 			},
@@ -52,7 +71,7 @@ func TestService_ParseCodeOwner(t *testing.T) {
 		{
 			name: "Code owners With comments",
 			args: args{codeOwnersContent: content3},
-			want: []codeOwnerDetail{{
+			want: []Entry{{
 				Pattern: "**/contracts/openapi/v1/",
 				Owners:  []string{"mankrit.singh@harness.io", "ashish.sanodia@harness.io"},
 			},
@@ -68,9 +87,9 @@ func TestService_ParseCodeOwner(t *testing.T) {
 			s := &Service{
 				repoStore: tt.fields.repoStore,
 				git:       tt.fields.git,
-				Config:    tt.fields.Config,
+				config:    tt.fields.Config,
 			}
-			got, err := s.ParseCodeOwner(tt.args.codeOwnersContent)
+			got, err := s.parseCodeOwner(tt.args.codeOwnersContent)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ParseCodeOwner() error = %v, wantErr %v", err, tt.wantErr)
 				return

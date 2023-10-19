@@ -28,6 +28,8 @@ import (
 )
 
 // PreReceive executes the pre-receive hook for a git repository.
+//
+//nolint:revive // not yet fully implemented
 func (c *Controller) PreReceive(
 	ctx context.Context,
 	session *auth.Session,

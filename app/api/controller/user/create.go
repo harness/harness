@@ -117,7 +117,7 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 		return err
 	}
 
-	if err := check.Password(in.Password); err != nil {
+	if err := check.Password(in.Password); err != nil { //nolint:revive
 		return err
 	}
 

@@ -20,7 +20,6 @@ import (
 
 	"github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/api/render"
-	"github.com/harness/gitness/app/api/request"
 )
 
 // HandleLogin returns an http.HandlerFunc that authenticates
@@ -28,7 +27,6 @@ import (
 func HandleLogin(userCtrl *user.Controller, cookieName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		session, _ := request.AuthSessionFrom(ctx)
 
 		in := new(user.LoginInput)
 		err := json.NewDecoder(r.Body).Decode(in)
@@ -37,7 +35,7 @@ func HandleLogin(userCtrl *user.Controller, cookieName string) http.HandlerFunc 
 			return
 		}
 
-		tokenResponse, err := userCtrl.Login(ctx, session, in)
+		tokenResponse, err := userCtrl.Login(ctx, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

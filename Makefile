@@ -56,7 +56,7 @@ test: generate  ## Run the go tests
 format: tools # Format go code and error if any changes are made
 	@echo "Formating ..."
 	@goimports -w .
-	@gci write --custom-order -s standard -s "prefix(github.com/harness/gitness)" -s default -s blank -s dot .
+	@gci write --skip-generated --custom-order -s standard -s "prefix(github.com/harness/gitness)" -s default -s blank -s dot .
 	@echo "Formatting complete"
 
 sec:
@@ -75,7 +75,7 @@ lint: tools generate # lint the golang code
 ###############################################################################
 
 generate: wire proto
-	@echo "Generating Code"
+	@echo "Generated Code"
 
 wire: cmd/gitness/wire_gen.go
 
@@ -85,13 +85,14 @@ force-wire: ## Force wire code generation
 cmd/gitness/wire_gen.go: cmd/gitness/wire.go
 	@sh ./scripts/wire/gitness.sh
 
-proto: ## generate proto files for gitrpc integration
+proto: ## generate proto files for gitrpc integration (and format, as we can't exclude it from being formatted easily)
 	@protoc --proto_path=./gitrpc/proto \
 			--go_out=./gitrpc/rpc \
 			--go_opt=paths=source_relative \
 			--go-grpc_out=./gitrpc/rpc \
 			--go-grpc_opt=paths=source_relative \
 			./gitrpc/proto/*.proto
+	@goimports -w ./gitrpc/rpc
 
 ###############################################################################
 # Install Tools and deps
