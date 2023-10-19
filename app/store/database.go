@@ -459,7 +459,7 @@ type (
 		List(ctx context.Context, repoID int64, commitSHA string, opts types.CheckListOptions) ([]types.Check, error)
 
 		// ListRecent returns a list of recently executed status checks in a repository.
-		ListRecent(ctx context.Context, repoID int64, since time.Time) ([]string, error)
+		ListRecent(ctx context.Context, repoID int64, opts types.CheckRecentOptions) ([]string, error)
 
 		// ListResults returns a list of status check results for a specific commit in a repo.
 		ListResults(ctx context.Context, repoID int64, commitSHA string) ([]types.CheckResult, error)

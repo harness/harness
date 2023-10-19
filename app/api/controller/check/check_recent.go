@@ -17,49 +17,33 @@ package check
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
-// ListChecks return an array of status check results for a commit in a repository.
-func (c *Controller) ListChecks(
+// ListRecentChecks return an array of status check UIDs that have been run recently.
+func (c *Controller) ListRecentChecks(
 	ctx context.Context,
 	session *auth.Session,
 	repoRef string,
-	commitSHA string,
-	opts types.CheckListOptions,
-) ([]types.Check, int, error) {
+	opts types.CheckRecentOptions,
+) ([]string, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoView)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to acquire access access to repo: %w", err)
+		return nil, fmt.Errorf("failed to acquire access access to repo: %w", err)
 	}
 
-	var checks []types.Check
-	var count int
+	if opts.Since == 0 {
+		opts.Since = time.Now().Add(-30 * 24 * time.Hour).UnixMilli()
+	}
 
-	err = c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
-		checks, err = c.checkStore.List(ctx, repo.ID, commitSHA, opts)
-		if err != nil {
-			return fmt.Errorf("failed to list status check results for repo=%s: %w", repo.UID, err)
-		}
-
-		if opts.Page == 1 && len(checks) < opts.Size {
-			count = len(checks)
-			return nil
-		}
-
-		count, err = c.checkStore.Count(ctx, repo.ID, commitSHA, opts)
-		if err != nil {
-			return fmt.Errorf("failed to count status check results for repo=%s: %w", repo.UID, err)
-		}
-
-		return nil
-	})
+	checkUIDs, err := c.checkStore.ListRecent(ctx, repo.ID, opts)
 	if err != nil {
-		return nil, 0, err
+		return nil, fmt.Errorf("failed to list status check results for repo=%s: %w", repo.UID, err)
 	}
 
-	return checks, count, nil
+	return checkUIDs, nil
 }

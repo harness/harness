@@ -48,10 +48,15 @@ type CheckPayload struct {
 	Data    json.RawMessage       `json:"data"`
 }
 
-// CheckListOptions holds check list query parameters.
+// CheckListOptions holds list status checks query parameters.
 type CheckListOptions struct {
-	Page int `json:"page"`
-	Size int `json:"size"`
+	ListQueryFilter
+}
+
+// CheckRecentOptions holds list recent status check query parameters.
+type CheckRecentOptions struct {
+	Query string
+	Since int64
 }
 
 type ReqCheck struct {

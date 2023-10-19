@@ -18,11 +18,41 @@ import (
 	"net/http"
 
 	"github.com/harness/gitness/app/api/controller/check"
+	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/types"
 
+	"github.com/gotidy/ptr"
 	"github.com/swaggest/openapi-go/openapi3"
 )
+
+var queryParameterStatusCheckQuery = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring which is used to filter the status checks by their UID."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterStatusCheckSince = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSince,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The timestamp (in Unix time millis) since the status checks have been run."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeInteger),
+			},
+		},
+	},
+}
 
 func checkOperations(reflector *openapi3.Reflector) {
 	const tag = "status_checks"
@@ -46,7 +76,7 @@ func checkOperations(reflector *openapi3.Reflector) {
 	listStatusCheckResults := openapi3.Operation{}
 	listStatusCheckResults.WithTags(tag)
 	listStatusCheckResults.WithParameters(
-		queryParameterPage, queryParameterLimit)
+		queryParameterPage, queryParameterLimit, queryParameterStatusCheckQuery)
 	listStatusCheckResults.WithMapOfAnything(map[string]interface{}{"operationId": "listStatusCheckResults"})
 	_ = reflector.SetRequest(&listStatusCheckResults, struct {
 		repoRequest
@@ -59,4 +89,21 @@ func checkOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&listStatusCheckResults, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/checks/commits/{commit_sha}",
 		listStatusCheckResults)
+
+	listStatusCheckRecent := openapi3.Operation{}
+	listStatusCheckRecent.WithTags(tag)
+	listStatusCheckRecent.WithParameters(
+		queryParameterStatusCheckQuery, queryParameterStatusCheckSince)
+	listStatusCheckRecent.WithMapOfAnything(map[string]interface{}{"operationId": "listStatusCheckRecent"})
+	_ = reflector.SetRequest(&listStatusCheckRecent, struct {
+		repoRequest
+		Since int
+	}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&listStatusCheckRecent, new([]string), http.StatusOK)
+	_ = reflector.SetJSONResponse(&listStatusCheckRecent, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&listStatusCheckRecent, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&listStatusCheckRecent, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&listStatusCheckRecent, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/checks/recent",
+		listStatusCheckRecent)
 }
