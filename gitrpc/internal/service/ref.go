@@ -115,6 +115,7 @@ func createReferenceWalkPatternsFromQuery(basePath string, query string) []strin
 		}
 
 		// suffix only match (refs/tags/**/*QUERY)
+		//nolint:goconst
 		return []string{basePath + "**/*" + query}
 	}
 

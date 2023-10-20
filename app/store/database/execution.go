@@ -127,6 +127,7 @@ const (
 
 // Find returns an execution given an execution ID.
 func (s *executionStore) Find(ctx context.Context, id int64) (*types.Execution, error) {
+	//nolint:goconst
 	const findQueryStmt = `
 	SELECT` + executionColumns + `
 	FROM executions

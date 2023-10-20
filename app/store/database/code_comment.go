@@ -135,6 +135,7 @@ func (s *CodeCommentView) UpdateAll(ctx context.Context, codeComments []*types.C
 
 	db := dbtx.GetAccessor(ctx, s.db)
 
+	//nolint:sqlclosecheck
 	stmt, err := db.PrepareNamedContext(ctx, sqlQuery)
 	if err != nil {
 		return database.ProcessSQLErrorf(err, "Failed to prepare update statement for update code comments")
