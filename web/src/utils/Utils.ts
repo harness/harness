@@ -114,7 +114,7 @@ export const timeDistance = (date1 = 0, date2 = 0, onlyHighestDenomination = fal
   let distance = Math.abs(date1 - date2)
 
   if (!distance) {
-    return ''
+    return '0s'
   }
 
   const days = Math.floor(distance / (24 * 3600000))

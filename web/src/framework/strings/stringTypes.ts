@@ -409,6 +409,7 @@ export interface StringsMap {
   'pipelines.deletePipelineError': string
   'pipelines.deletePipelineSuccess': string
   'pipelines.deletePipelineWarning': string
+  'pipelines.edit': string
   'pipelines.editPipeline': string
   'pipelines.enterPipelineName': string
   'pipelines.enterYAMLPath': string

@@ -29,7 +29,7 @@ import {
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { Color } from '@harnessio/design-system'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useHistory } from 'react-router-dom'
 import { Calendar, GitFork, Timer } from 'iconoir-react'
 import { useMutate } from 'restful-react'
 import { useStrings } from 'framework/strings'
@@ -80,6 +80,7 @@ export function ExecutionPageHeader({
   execution
 }: ExecutionPageHeaderProps) {
   const { gitRef } = useParams<CODEProps>()
+  const history = useHistory()
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { routes } = useAppContext()
@@ -170,6 +171,19 @@ export function ExecutionPageHeader({
                 )}
               </Layout.Horizontal>
             )}
+            <>
+              <PipeSeparator height={7} />
+              <Button
+                variation={ButtonVariation.PRIMARY}
+                text={getString('pipelines.edit')}
+                onClick={e => {
+                  e.stopPropagation()
+                  if (repoMetadata?.path && pipeline) {
+                    history.push(routes.toCODEPipelineEdit({ repoPath: repoMetadata.path, pipeline }))
+                  }
+                }}
+              />
+            </>
             {[ExecutionState.RUNNING, ExecutionState.PENDING].includes(getStatus(executionInfo?.status)) && (
               <>
                 <PipeSeparator height={7} />
