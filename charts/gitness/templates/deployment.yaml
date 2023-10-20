@@ -5,9 +5,7 @@ metadata:
   labels:
     {{- include "gitness.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  replicas: 1
   selector:
     matchLabels:
       {{- include "gitness.selectorLabels" . | nindent 6 }}
@@ -49,12 +47,35 @@ spec:
               path: /
               port: http
           env:
+            - name: DOCKER_HOST
+              value: tcp://localhost:2375
             {{- range $key, $value := $.Values.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+        {{- if .Values.dind.enabled }}
+        - name: dind
+          image: {{ .Values.dind.image }}
+          command: ["dockerd", "--host", "tcp://127.0.0.1:2375"]
+          resources:
+            requests:
+              cpu: 20m
+              memory: 512Mi
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - "/bin/sh"
+                  - "-c"
+                  - "echo '127.0.0.1 host.docker.internal' >> /etc/hosts"
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: datadir
+              mountPath: /certs
+        {{- end }}
       volumes:
         - name: datadir
         {{- if .Values.storage.persistentVolume.enabled }}
