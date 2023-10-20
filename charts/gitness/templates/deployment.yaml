@@ -60,9 +60,7 @@ spec:
           image: {{ .Values.dind.image }}
           command: ["dockerd", "--host", "tcp://127.0.0.1:2375"]
           resources:
-            requests:
-              cpu: 20m
-              memory: 512Mi
+            {{- toYaml .Values.dind.resources | nindent 12 }}
           lifecycle:
             postStart:
               exec:
