@@ -247,6 +247,7 @@ func (c *Controller) Merge(
 		SourceSHA:   mergeOutput.HeadSHA,
 	})
 
+	var branchDeleted bool
 	if ruleOut.DeleteSourceBranch {
 		errDelete := c.gitRPCClient.DeleteBranch(ctx, &gitrpc.DeleteBranchParams{
 			WriteParams: sourceWriteParams,
@@ -255,11 +256,14 @@ func (c *Controller) Merge(
 		if errDelete != nil {
 			// non-critical error
 			log.Ctx(ctx).Err(errDelete).Msgf("failed to delete source branch after merging")
+		} else {
+			branchDeleted = true
 		}
 	}
 
 	return types.MergeResponse{
 		SHA:            sha,
+		BranchDeleted:  branchDeleted,
 		RuleViolations: violations,
 	}, nil
 }

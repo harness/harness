@@ -140,6 +140,7 @@ type PullReqFileView struct {
 
 type MergeResponse struct {
 	SHA            string           `json:"sha,omitempty"`
+	BranchDeleted  bool             `json:"branch_deleted"`
 	ConflictFiles  []string         `json:"conflict_files,omitempty"`
 	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
 }
