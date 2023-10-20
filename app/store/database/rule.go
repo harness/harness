@@ -341,6 +341,86 @@ func (s *RuleStore) List(ctx context.Context, spaceID, repoID *int64, filter *ty
 	return s.mapToRules(ctx, dst), nil
 }
 
+type ruleInfo struct {
+	SpacePath  string         `db:"space_path"`
+	RepoPath   string         `db:"repo_path"`
+	ID         int64          `db:"rule_id"`
+	UID        string         `db:"rule_uid"`
+	Type       types.RuleType `db:"rule_type"`
+	State      enum.RuleState `db:"rule_state"`
+	Pattern    string         `db:"rule_pattern"`
+	Definition string         `db:"rule_definition"`
+}
+
+// ListAllRepoRules returns a list of all protection rules that can be applied on a repository.
+// This includes the rules defined directly on the repository and all those defined on the parent spaces.
+func (s *RuleStore) ListAllRepoRules(ctx context.Context, repoID int64) ([]types.RuleInfoInternal, error) {
+	const query = `
+		WITH RECURSIVE
+			repo_info(repo_id, repo_uid, repo_space_id) AS (
+				SELECT repo_id, repo_uid, repo_parent_id
+				FROM repositories
+				WHERE repo_id = $1
+			),
+			space_parents(space_id, space_uid, space_parent_id) AS (
+				SELECT space_id, space_uid, space_parent_id
+				FROM spaces
+				INNER JOIN repo_info ON repo_info.repo_space_id = spaces.space_id
+				UNION ALL
+				SELECT spaces.space_id, spaces.space_uid, spaces.space_parent_id
+				FROM spaces
+				INNER JOIN space_parents ON space_parents.space_parent_id = spaces.space_id
+			),
+			spaces_with_path(space_id, space_parent_id, space_uid, space_full_path) AS (
+				SELECT space_id, space_parent_id, space_uid, space_uid
+				FROM space_parents
+				WHERE space_parent_id IS NULL
+				UNION ALL
+				SELECT
+					space_parents.space_id,
+					space_parents.space_parent_id,
+					space_parents.space_uid,
+					spaces_with_path.space_full_path || '/' || space_parents.space_uid
+				FROM space_parents
+				INNER JOIN spaces_with_path ON spaces_with_path.space_id = space_parents.space_parent_id
+			)
+		SELECT
+			 space_full_path AS "space_path"
+			,'' as "repo_path"
+			,rule_id
+			,rule_uid
+			,rule_type
+			,rule_state
+			,rule_pattern
+			,rule_definition
+		FROM spaces_with_path
+		INNER JOIN rules ON rules.rule_space_id = spaces_with_path.space_id
+		WHERE rule_state IN ('active', 'monitor')
+		UNION ALL
+		SELECT
+			 '' as "space_path"
+			,space_full_path || '/' || repo_info.repo_uid AS "repo_path"
+			,rule_id
+			,rule_uid
+			,rule_type
+			,rule_state
+			,rule_pattern
+			,rule_definition
+		FROM rules
+		INNER JOIN repo_info ON repo_info.repo_id = rules.rule_repo_id
+		INNER JOIN spaces_with_path ON spaces_with_path.space_id = repo_info.repo_space_id
+		WHERE rule_state IN ('active', 'monitor')`
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	result := make([]ruleInfo, 0)
+	if err := db.SelectContext(ctx, &result, query, repoID); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed executing custom list query")
+	}
+
+	return s.mapToRuleInfos(result), nil
+}
+
 func (*RuleStore) applyParentID(
 	stmt squirrel.SelectBuilder,
 	spaceID, repoID *int64,
@@ -432,4 +512,29 @@ func mapToInternalRule(in *types.Rule) rule {
 		Pattern:     string(in.Pattern),
 		Definition:  string(in.Definition),
 	}
+}
+
+func (*RuleStore) mapToRuleInfo(in *ruleInfo) types.RuleInfoInternal {
+	return types.RuleInfoInternal{
+		RuleInfo: types.RuleInfo{
+			SpacePath: in.SpacePath,
+			RepoPath:  in.RepoPath,
+			ID:        in.ID,
+			UID:       in.UID,
+			Type:      in.Type,
+			State:     in.State,
+		},
+		Pattern:    json.RawMessage(in.Pattern),
+		Definition: json.RawMessage(in.Definition),
+	}
+}
+
+func (s *RuleStore) mapToRuleInfos(
+	ruleInfos []ruleInfo,
+) []types.RuleInfoInternal {
+	res := make([]types.RuleInfoInternal, len(ruleInfos))
+	for i := 0; i < len(ruleInfos); i++ {
+		res[i] = s.mapToRuleInfo(&ruleInfos[i])
+	}
+	return res
 }

@@ -148,7 +148,7 @@ func (c *Controller) Merge(
 		return types.MergeResponse{}, fmt.Errorf("failed to list status checks: %w", err)
 	}
 
-	protectionRules, err := c.protectionManager.Repo(ctx, targetRepo.ID, enum.RuleStateActive, enum.RuleStateMonitor)
+	protectionRules, err := c.protectionManager.ForRepository(ctx, targetRepo.ID)
 	if err != nil {
 		return types.MergeResponse{}, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}

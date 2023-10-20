@@ -22,7 +22,6 @@ import (
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
-	"github.com/harness/gitness/types/enum"
 )
 
 // NewManager creates new protection Manager.
@@ -88,54 +87,14 @@ func (m *Manager) SanitizeJSON(ruleType types.RuleType, message json.RawMessage)
 	return toJSON(r)
 }
 
-func (m *Manager) Space(ctx context.Context, spaceID int64, ruleStates ...enum.RuleState) (Protection, error) {
-	// TODO: Include the rules of the parent spaces if any.
-	// TODO: Use some other function to fetch the rules, that returns just basic info about the rule
-
-	rules, err := m.ruleStore.List(ctx, &spaceID, nil, &types.RuleFilter{
-		ListQueryFilter: types.ListQueryFilter{
-			Pagination: types.Pagination{
-				Page: 1,
-				Size: 1000,
-			},
-			Query: "",
-		},
-		States: ruleStates,
-		Sort:   enum.RuleSortCreated,
-		Order:  enum.OrderAsc,
-	})
+func (m *Manager) ForRepository(ctx context.Context, repoID int64) (Protection, error) {
+	ruleInfos, err := m.ruleStore.ListAllRepoRules(ctx, repoID)
 	if err != nil {
-		return ruleSet{}, fmt.Errorf("failed to list rules for space: %w", err)
+		return nil, fmt.Errorf("failed to list rules for repository: %w", err)
 	}
 
 	return ruleSet{
-		rules:   rules,
-		manager: m,
-	}, nil
-}
-
-func (m *Manager) Repo(ctx context.Context, repoID int64, ruleStates ...enum.RuleState) (Protection, error) {
-	// TODO: Include rules of the space and its parent spaces.
-	// TODO: Use some other function to fetch the rules, that returns just basic info about the rule
-
-	rules, err := m.ruleStore.List(ctx, nil, &repoID, &types.RuleFilter{
-		ListQueryFilter: types.ListQueryFilter{
-			Pagination: types.Pagination{
-				Page: 1,
-				Size: 1000,
-			},
-			Query: "",
-		},
-		States: ruleStates,
-		Sort:   enum.RuleSortCreated,
-		Order:  enum.OrderAsc,
-	})
-	if err != nil {
-		return ruleSet{}, fmt.Errorf("failed to list rules for repository: %w", err)
-	}
-
-	return ruleSet{
-		rules:   rules,
+		rules:   ruleInfos,
 		manager: m,
 	}, nil
 }

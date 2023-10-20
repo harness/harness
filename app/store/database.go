@@ -400,6 +400,9 @@ type (
 
 		// List returns a list of protection rules of a repository or a space that matches the provided criteria.
 		List(ctx context.Context, spaceID, repoID *int64, filter *types.RuleFilter) ([]types.Rule, error)
+
+		// ListAllRepoRules returns a list of all protection rules that can be applied on a repository.
+		ListAllRepoRules(ctx context.Context, repoID int64) ([]types.RuleInfoInternal, error)
 	}
 
 	// WebhookStore defines the webhook data storage.

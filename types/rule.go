@@ -61,7 +61,7 @@ type Violation struct {
 
 // RuleViolations holds several violations of a rule.
 type RuleViolations struct {
-	Rule       *Rule       `json:"rule"`
+	Rule       RuleInfo    `json:"rule"`
 	Violations []Violation `json:"violations"`
 }
 
@@ -80,5 +80,22 @@ func (violations *RuleViolations) Addf(code, format string, params ...any) {
 }
 
 func (violations *RuleViolations) IsCritical() bool {
-	return violations.Rule == nil || violations.Rule.State == enum.RuleStateActive
+	return violations.Rule.State == enum.RuleStateActive
+}
+
+// RuleInfo holds basic info about a rule that is used to describe the rule in RuleViolations.
+type RuleInfo struct {
+	SpacePath string `json:"space_path,omitempty"`
+	RepoPath  string `json:"repo_path,omitempty"`
+
+	ID    int64          `json:"-"`
+	UID   string         `json:"uid"`
+	Type  RuleType       `json:"type"`
+	State enum.RuleState `json:"state"`
+}
+
+type RuleInfoInternal struct {
+	RuleInfo
+	Pattern    json.RawMessage
+	Definition json.RawMessage
 }

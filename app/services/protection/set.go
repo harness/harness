@@ -23,7 +23,7 @@ import (
 )
 
 type ruleSet struct {
-	rules   []types.Rule
+	rules   []types.RuleInfoInternal
 	manager *Manager
 }
 
@@ -33,9 +33,7 @@ func (s ruleSet) CanMerge(ctx context.Context, in CanMergeInput) (CanMergeOutput
 	var out CanMergeOutput
 	var violations []types.RuleViolations
 
-	for i := range s.rules {
-		r := s.rules[i]
-
+	for _, r := range s.rules {
 		bp := Pattern{}
 
 		if err := json.Unmarshal(r.Pattern, &bp); err != nil {
@@ -57,14 +55,14 @@ func (s ruleSet) CanMerge(ctx context.Context, in CanMergeInput) (CanMergeOutput
 			return out, nil, err
 		}
 
-		violations = append(violations, backFillRule(rVs, &r)...)
+		violations = append(violations, backFillRule(rVs, r.RuleInfo)...)
 		out.DeleteSourceBranch = out.DeleteSourceBranch || rOut.DeleteSourceBranch
 	}
 
 	return out, violations, nil
 }
 
-func backFillRule(vs []types.RuleViolations, rule *types.Rule) []types.RuleViolations {
+func backFillRule(vs []types.RuleViolations, rule types.RuleInfo) []types.RuleViolations {
 	violations := make([]types.RuleViolations, 0, len(vs))
 
 	for i := range vs {
