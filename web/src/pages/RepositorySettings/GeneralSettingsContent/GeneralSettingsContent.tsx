@@ -119,6 +119,7 @@ const GeneralSettingsContent = (props: GeneralSettingsProps) => {
                 .then(() => {
                   showSuccess(getString('repoUpdate'))
                   hideModal()
+                  refetch()
                 })
                 .catch(err => {
                   showError(err)
