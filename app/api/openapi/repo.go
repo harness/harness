@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -154,6 +155,31 @@ type deleteTagRequest struct {
 type getRawDiffRequest struct {
 	repoRequest
 	Range string `path:"range" example:"main..dev"`
+}
+
+// ruleType is a plugin for types.RuleType to allow using oneof.
+type ruleType string
+
+func (ruleType) Enum() []interface{} {
+	return []interface{}{protection.TypeBranch}
+}
+
+// ruleDefinition is a plugin for types.Rule Definition to allow using oneof.
+type ruleDefinition struct{}
+
+func (ruleDefinition) JSONSchemaOneOf() []interface{} {
+	return []interface{}{protection.Branch{}}
+}
+
+type rule struct {
+	types.Rule
+
+	// overshadow Type and Definition to enable oneof.
+	Type       ruleType       `json:"type"`
+	Definition ruleDefinition `json:"definition"`
+
+	// overshadow Pattern to correct the type
+	Pattern protection.Pattern `json:"pattern"`
 }
 
 var queryParameterGitRef = openapi3.ParameterOrRef{
@@ -713,8 +739,12 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetRequest(&opRuleAdd, struct {
 		repoRequest
 		repo.RuleCreateInput
+
+		// overshadow "definition"
+		Type       ruleType       `json:"type"`
+		Definition ruleDefinition `json:"definition"`
 	}{}, http.MethodPost)
-	_ = reflector.SetJSONResponse(&opRuleAdd, &types.Rule{}, http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opRuleAdd, rule{}, http.StatusCreated)
 	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusForbidden)
@@ -742,8 +772,12 @@ func repoOperations(reflector *openapi3.Reflector) {
 		repoRequest
 		RuleUID string `path:"rule_uid"`
 		repo.RuleUpdateInput
+
+		// overshadow Type and Definition to enable oneof.
+		Type       ruleType       `json:"type"`
+		Definition ruleDefinition `json:"definition"`
 	}{}, http.MethodPatch)
-	_ = reflector.SetJSONResponse(&opRuleUpdate, &types.Rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRuleUpdate, rule{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusForbidden)
@@ -760,7 +794,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetRequest(&opRuleList, &struct {
 		repoRequest
 	}{}, http.MethodGet)
-	_ = reflector.SetJSONResponse(&opRuleList, []types.Rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRuleList, []rule{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusForbidden)
@@ -774,7 +808,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 		repoRequest
 		RuleUID string `path:"rule_uid"`
 	}{}, http.MethodGet)
-	_ = reflector.SetJSONResponse(&opRuleGet, []types.Rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRuleGet, []rule{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusForbidden)
