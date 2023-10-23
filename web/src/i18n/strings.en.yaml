@@ -695,6 +695,7 @@ secrets:
   name: Secret Name
   failedToCreate: Failed to create Secret. Please try again.
   enterSecretName: Enter Secret name
+  enterSecretValue: Enter Secret value
   createSecret: Create Secret
   createSuccess: Secret created successfully
   secretDeleted: Secret {uid} deleted.
@@ -704,7 +705,7 @@ secrets:
   failedToUpdateSecret: Failed to update Secret. Please try again.
   deleteSecret: Delete secret
   updateSecret: Update secret
-  showValue: Show Value?
+  showValue: Show Value
 userUpdateSuccess: 'User updated successfully'
 viewFile: View File
 searchResult: 'Search Result {count}'

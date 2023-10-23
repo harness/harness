@@ -187,6 +187,7 @@ const AddUpdatePipeline = (): JSX.Element => {
   // set initial CTA title
   useEffect(() => {
     setSelectedOption(isDirty ? pipelineSaveAndRunOption : pipelineRunOption)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDirty])
 
   useEffect(() => {
@@ -287,6 +288,7 @@ const AddUpdatePipeline = (): JSX.Element => {
       showError(getErrorMessage(exception), 0, getString('pipelines.failedToGenerate'))
       setGeneratingPipeline(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repoPath])
 
   const renderCTA = useCallback(() => {
@@ -353,6 +355,7 @@ const AddUpdatePipeline = (): JSX.Element => {
       default:
         return <></>
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     loading,
     fetchingPipeline,
@@ -375,7 +378,7 @@ const AddUpdatePipeline = (): JSX.Element => {
       <Container className={css.main}>
         <RepositoryPageHeader
           repoMetadata={repoMetadata}
-          title={getString('pageTitle.executions')}
+          title={pipeline as string}
           dataTooltipId="repositoryExecutions"
           extraBreadcrumbLinks={
             repoMetadata && [

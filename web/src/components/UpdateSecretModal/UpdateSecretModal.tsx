@@ -130,11 +130,12 @@ const useUpdateSecretModal = () => {
                   <FormInput.TextArea
                     name="value"
                     label={getString('value')}
+                    placeholder={getString('secrets.enterSecretValue')}
                     tooltipProps={{
                       dataTooltipId: 'secretDescriptionTextField'
                     }}
                     autoComplete="off"
-                    className={formik.values.showValue ? '' : css.textArea}
+                    className={formik.values.showValue ? css.showValue : css.hideValue}
                   />
                   <FormInput.CheckBox
                     name="showValue"
@@ -142,6 +143,7 @@ const useUpdateSecretModal = () => {
                     tooltipProps={{
                       dataTooltipId: 'secretDescriptionTextField'
                     }}
+                    style={{ display: 'flex' }}
                   />
                   <FormInput.Text
                     name="description"

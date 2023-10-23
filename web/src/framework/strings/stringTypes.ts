@@ -611,6 +611,7 @@ export interface StringsMap {
   'secrets.deleteSecret': string
   'secrets.deleteSecretConfirm': string
   'secrets.enterSecretName': string
+  'secrets.enterSecretValue': string
   'secrets.failedToCreate': string
   'secrets.failedToDeleteSecret': string
   'secrets.failedToUpdateSecret': string

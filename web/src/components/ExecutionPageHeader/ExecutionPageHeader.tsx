@@ -28,7 +28,7 @@ import {
   useToaster
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import { Color } from '@harnessio/design-system'
+import { Color, FontVariation } from '@harnessio/design-system'
 import { Link, useParams, useHistory } from 'react-router-dom'
 import { Calendar, GitFork, Timer } from 'iconoir-react'
 import { useMutate } from 'restful-react'
@@ -116,7 +116,14 @@ export function ExecutionPageHeader({
           {extraBreadcrumbLinks.map(link => (
             <Fragment key={link.url}>
               <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
-              <Link to={link.url}>{link.label}</Link>
+              {/* This allows for outer most entities to not necessarily be links */}
+              {link.url ? (
+                <Link to={link.url}>{link.label}</Link>
+              ) : (
+                <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
+                  {link.label}
+                </Text>
+              )}
             </Fragment>
           ))}
         </Layout.Horizontal>

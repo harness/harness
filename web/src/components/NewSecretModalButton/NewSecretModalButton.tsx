@@ -140,11 +140,12 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
                     <FormInput.TextArea
                       name="value"
                       label={getString('value')}
+                      placeholder={getString('secrets.enterSecretValue')}
                       tooltipProps={{
                         dataTooltipId: 'secretDescriptionTextField'
                       }}
                       autoComplete="off"
-                      className={formik.values.showValue ? '' : css.textArea}
+                      className={formik.values.showValue ? css.showValue : css.hideValue}
                     />
                     <FormInput.CheckBox
                       name="showValue"
@@ -152,6 +153,7 @@ export const NewSecretModalButton: React.FC<NewSecretModalButtonProps> = ({
                       tooltipProps={{
                         dataTooltipId: 'secretDescriptionTextField'
                       }}
+                      style={{ display: 'flex' }}
                     />
                     <FormInput.Text
                       name="description"

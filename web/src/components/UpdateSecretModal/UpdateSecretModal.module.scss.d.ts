@@ -16,4 +16,5 @@
 
 /* eslint-disable */
 // This is an auto-generated file
-export declare const textArea: string
+export declare const hideValue: string
+export declare const showValue: string
