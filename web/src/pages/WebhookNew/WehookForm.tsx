@@ -55,7 +55,8 @@ enum WebhookIndividualEvent {
   PR_CREATED = 'pullreq_created',
   PR_REOPENED = 'pullreq_reopened',
   PR_BRANCH_UPDATED = 'pullreq_branch_updated',
-  PR_CLOSED = 'pullreq_closed'
+  PR_CLOSED = 'pullreq_closed',
+  PR_COMMENT_CREATED = 'pullreq_comment_created'
 }
 
 const SECRET_MASK = '********'
@@ -78,6 +79,7 @@ interface FormData {
   prReopened: boolean
   prBranchUpdated: boolean
   prClosed: boolean
+  prCommentCreated: boolean
 }
 
 interface WebHookFormProps extends Pick<GitInfoProps, 'repoMetadata'> {
@@ -116,6 +118,7 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
             prReopened: webhook?.triggers?.includes(WebhookIndividualEvent.PR_REOPENED) || false,
             prBranchUpdated: webhook?.triggers?.includes(WebhookIndividualEvent.PR_BRANCH_UPDATED) || false,
             prClosed: webhook?.triggers?.includes(WebhookIndividualEvent.PR_CLOSED) || false,
+            prCommentCreated: webhook?.triggers?.includes(WebhookIndividualEvent.PR_COMMENT_CREATED) || false,
             events: (webhook?.triggers?.length || 0) > 0 ? WebhookEventType.INDIVIDUAL : WebhookEventType.ALL
           }}
           formName="create-webhook-form"
@@ -161,6 +164,9 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
               }
               if (formData.prClosed) {
                 triggers.push(WebhookIndividualEvent.PR_CLOSED)
+              }
+              if (formData.prCommentCreated) {
+                triggers.push(WebhookIndividualEvent.PR_COMMENT_CREATED)
               }
               if (!triggers.length) {
                 return showError(getString('oneMustBeSelected'))
@@ -293,6 +299,11 @@ export function WehookForm({ repoMetadata, isEdit, webhook }: WebHookFormProps) 
                         <FormInput.CheckBox
                           label={getString('webhookPRClosed')}
                           name="prClosed"
+                          className={css.checkbox}
+                        />
+                        <FormInput.CheckBox
+                          label={getString('webhookPRCommentCreated')}
+                          name="prCommentCreated"
                           className={css.checkbox}
                         />
                       </section>

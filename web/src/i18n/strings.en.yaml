@@ -364,6 +364,7 @@ webhookPRBranchUpdated: PR branch updated
 webhookPRCreated: PR created
 webhookPRReopened: PR reopened
 webhookPRClosed: PR closed
+webhookPRCommentCreated: PR comment created
 nameYourWebhook: Name your webhook
 submitReview: Submit Review
 approve: Approve

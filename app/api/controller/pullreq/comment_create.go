@@ -22,6 +22,7 @@ import (
 
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	events "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -192,7 +193,19 @@ func (c *Controller) CommentCreate(
 	if err = c.sseStreamer.Publish(ctx, repo.ParentID, enum.SSETypePullrequesUpdated, pr); err != nil {
 		log.Ctx(ctx).Warn().Msg("failed to publish PR changed event")
 	}
-
+	// if it's a regular comment publish a comment create event
+	if !act.IsReply() && act.Type == enum.PullReqActivityTypeComment && act.Kind == enum.PullReqActivityKindComment {
+		c.eventReporter.CommentCreated(ctx, &events.CommentCreatedPayload{
+			Base: events.Base{
+				PullReqID:    pr.ID,
+				SourceRepoID: pr.SourceRepoID,
+				TargetRepoID: pr.TargetRepoID,
+				PrincipalID:  session.Principal.ID,
+				Number:       pr.Number,
+			},
+			ActivityID: act.ID,
+		})
+	}
 	return act, nil
 }
 

@@ -753,6 +753,7 @@ export interface StringsMap {
   webhookListingContent: string
   webhookPRBranchUpdated: string
   webhookPRClosed: string
+  webhookPRCommentCreated: string
   webhookPRCreated: string
   webhookPRReopened: string
   webhookSelectAllEvents: string

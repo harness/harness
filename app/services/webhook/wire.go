@@ -33,13 +33,21 @@ var WireSet = wire.NewSet(
 	ProvideService,
 )
 
-func ProvideService(ctx context.Context, config Config,
+func ProvideService(ctx context.Context,
+	config Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
-	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
-	repoStore store.RepoStore, pullreqStore store.PullReqStore, urlProvider url.Provider,
-	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface, encrypter encrypt.Encrypter) (*Service, error) {
+	webhookStore store.WebhookStore,
+	webhookExecutionStore store.WebhookExecutionStore,
+	repoStore store.RepoStore,
+	pullreqStore store.PullReqStore,
+	activityStore store.PullReqActivityStore,
+	urlProvider url.Provider,
+	principalStore store.PrincipalStore,
+	gitRPCClient gitrpc.Interface,
+	encrypter encrypt.Encrypter,
+) (*Service, error) {
 	return NewService(ctx, config, gitReaderFactory, prReaderFactory,
-		webhookStore, webhookExecutionStore, repoStore, pullreqStore,
+		webhookStore, webhookExecutionStore, repoStore, pullreqStore, activityStore,
 		urlProvider, principalStore, gitRPCClient, encrypter)
 }

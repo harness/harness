@@ -83,6 +83,7 @@ type Service struct {
 	pullreqStore          store.PullReqStore
 	principalStore        store.PrincipalStore
 	gitRPCClient          gitrpc.Interface
+	activityStore         store.PullReqActivityStore
 	encrypter             encrypt.Encrypter
 
 	secureHTTPClient   *http.Client
@@ -94,12 +95,20 @@ type Service struct {
 	config Config
 }
 
-func NewService(ctx context.Context, config Config,
+func NewService(
+	ctx context.Context,
+	config Config,
 	gitReaderFactory *events.ReaderFactory[*gitevents.Reader],
 	prReaderFactory *events.ReaderFactory[*pullreqevents.Reader],
-	webhookStore store.WebhookStore, webhookExecutionStore store.WebhookExecutionStore,
-	repoStore store.RepoStore, pullreqStore store.PullReqStore, urlProvider url.Provider,
-	principalStore store.PrincipalStore, gitRPCClient gitrpc.Interface, encrypter encrypt.Encrypter,
+	webhookStore store.WebhookStore,
+	webhookExecutionStore store.WebhookExecutionStore,
+	repoStore store.RepoStore,
+	pullreqStore store.PullReqStore,
+	activityStore store.PullReqActivityStore,
+	urlProvider url.Provider,
+	principalStore store.PrincipalStore,
+	gitRPCClient gitrpc.Interface,
+	encrypter encrypt.Encrypter,
 ) (*Service, error) {
 	if err := config.Prepare(); err != nil {
 		return nil, fmt.Errorf("provided webhook service config is invalid: %w", err)
@@ -109,6 +118,7 @@ func NewService(ctx context.Context, config Config,
 		webhookExecutionStore: webhookExecutionStore,
 		repoStore:             repoStore,
 		pullreqStore:          pullreqStore,
+		activityStore:         activityStore,
 		urlProvider:           urlProvider,
 		principalStore:        principalStore,
 		gitRPCClient:          gitRPCClient,
@@ -163,6 +173,7 @@ func NewService(ctx context.Context, config Config,
 			_ = r.RegisterReopened(service.handleEventPullReqReopened)
 			_ = r.RegisterBranchUpdated(service.handleEventPullReqBranchUpdated)
 			_ = r.RegisterClosed(service.handleEventPullReqClosed)
+			_ = r.RegisterCommentCreated(service.handleEventPullReqComment)
 
 			return nil
 		})
