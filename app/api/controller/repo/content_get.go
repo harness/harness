@@ -109,7 +109,7 @@ func (c *Controller) GetContent(ctx context.Context,
 	}
 
 	// create read params once
-	readParams := CreateRPCReadParams(repo)
+	readParams := gitrpc.CreateRPCReadParams(repo)
 
 	treeNodeOutput, err := c.gitRPCClient.GetTreeNode(ctx, &gitrpc.GetTreeNodeParams{
 		ReadParams:          readParams,

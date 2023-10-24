@@ -43,7 +43,7 @@ func (c *Controller) ListCommits(ctx context.Context,
 	}
 
 	rpcOut, err := c.gitRPCClient.ListCommits(ctx, &gitrpc.ListCommitsParams{
-		ReadParams: CreateRPCReadParams(repo),
+		ReadParams: gitrpc.CreateRPCReadParams(repo),
 		GitREF:     gitRef,
 		After:      filter.After,
 		Page:       int32(filter.Page),

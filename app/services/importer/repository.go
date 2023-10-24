@@ -479,6 +479,7 @@ func (r *Repository) createEnvVars(ctx context.Context,
 		repoID,
 		principal.ID,
 		false,
+		true,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate git hook environment variables: %w", err)

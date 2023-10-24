@@ -50,7 +50,7 @@ func (c *Controller) Blame(ctx context.Context,
 
 	reader := gitrpc.NewStreamReader(
 		c.gitRPCClient.Blame(ctx, &gitrpc.BlameParams{
-			ReadParams: CreateRPCReadParams(repo),
+			ReadParams: gitrpc.CreateRPCReadParams(repo),
 			GitRef:     gitRef,
 			Path:       path,
 			LineFrom:   lineFrom,

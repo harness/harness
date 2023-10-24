@@ -31,6 +31,7 @@ var TypeBranch types.RuleType = "branch"
 type Branch struct {
 	Bypass    DefBypass    `json:"bypass"`
 	PullReq   DefPullReq   `json:"pullreq"`
+	Push      DefPush      `json:"push"`
 	Lifecycle DefLifecycle `json:"lifecycle"`
 }
 
@@ -45,14 +46,8 @@ func (v *Branch) CanMerge(_ context.Context, in CanMergeInput) (CanMergeOutput, 
 
 	// bypass
 
-	if v.Bypass.SpaceOwners && in.Membership != nil && in.Membership.Role == enum.MembershipRoleSpaceOwner {
+	if v.isBypassed(in.Actor, in.IsSpaceOwner) {
 		return out, nil, nil
-	}
-
-	for _, bypassUserID := range v.Bypass.UserIDs {
-		if in.Actor.ID == bypassUserID {
-			return out, nil, nil
-		}
 	}
 
 	// pullreq.approvals
@@ -115,6 +110,30 @@ func (v *Branch) CanMerge(_ context.Context, in CanMergeInput) (CanMergeOutput, 
 	return out, []types.RuleViolations{violations}, nil
 }
 
+func (v *Branch) CanPush(_ context.Context, in CanPushInput) (CanPushOutput, []types.RuleViolations, error) {
+	var out CanPushOutput
+	var violations types.RuleViolations
+
+	if v.isBypassed(in.Actor, in.IsSpaceOwner) {
+		return out, nil, nil
+	}
+
+	if v.Push.Block {
+		violations.Add("pullreq.push.block",
+			"Push is not allowed. Please use pull requests.")
+	}
+
+	return out, []types.RuleViolations{violations}, nil
+}
+
+func (v *Branch) isBypassed(actor *types.Principal, isSpaceOwner bool) bool {
+	if v.Bypass.SpaceOwners && isSpaceOwner {
+		return true
+	}
+
+	return slices.Contains(v.Bypass.UserIDs, actor.ID)
+}
+
 func (v *Branch) Sanitize() error {
 	if err := v.Bypass.Validate(); err != nil {
 		return fmt.Errorf("bypass: %w", err)
@@ -122,6 +141,10 @@ func (v *Branch) Sanitize() error {
 
 	if err := v.PullReq.Validate(); err != nil {
 		return fmt.Errorf("pull request: %w", err)
+	}
+
+	if err := v.Push.Validate(); err != nil {
+		return fmt.Errorf("push: %w", err)
 	}
 
 	if err := v.Lifecycle.Validate(); err != nil {
@@ -197,6 +220,14 @@ func (v DefMerge) Validate() error {
 		m[strategy] = struct{}{}
 	}
 
+	return nil
+}
+
+type DefPush struct {
+	Block bool `json:"block,omitempty"`
+}
+
+func (v DefPush) Validate() error {
 	return nil
 }
 

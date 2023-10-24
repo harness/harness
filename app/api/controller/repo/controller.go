@@ -24,7 +24,6 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/githook"
 	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/importer"
 	"github.com/harness/gitness/app/services/protection"
@@ -115,40 +114,6 @@ func (c *Controller) getRepoCheckAccess(
 	}
 
 	return repo, nil
-}
-
-// CreateRPCWriteParams creates base write parameters for gitrpc write operations.
-// IMPORTANT: session & repo are assumed to be not nil!
-func CreateRPCWriteParams(ctx context.Context, urlProvider url.Provider,
-	session *auth.Session, repo *types.Repository) (gitrpc.WriteParams, error) {
-	// generate envars (add everything githook CLI needs for execution)
-	envVars, err := githook.GenerateEnvironmentVariables(
-		ctx,
-		urlProvider.GetInternalAPIURL(),
-		repo.ID,
-		session.Principal.ID,
-		false,
-	)
-	if err != nil {
-		return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
-	}
-
-	return gitrpc.WriteParams{
-		Actor: gitrpc.Identity{
-			Name:  session.Principal.DisplayName,
-			Email: session.Principal.Email,
-		},
-		RepoUID: repo.GitUID,
-		EnvVars: envVars,
-	}, nil
-}
-
-// CreateRPCReadParams creates base read parameters for gitrpc read operations.
-// IMPORTANT: repo is assumed to be not nil!
-func CreateRPCReadParams(repo *types.Repository) gitrpc.ReadParams {
-	return gitrpc.ReadParams{
-		RepoUID: repo.GitUID,
-	}
 }
 
 func (c *Controller) validateParentRef(parentRef string) error {

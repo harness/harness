@@ -42,14 +42,20 @@ func HandlePreReceive(githookCtrl *controllergithook.Controller) http.HandlerFun
 			return
 		}
 
-		in := new(githook.PreReceiveInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		internal, err := request.GetInternalFromQueryOrDefault(r, false)
+		if err != nil {
+			render.TranslatedUserError(w, err)
+			return
+		}
+
+		in := githook.PreReceiveInput{}
+		err = json.NewDecoder(r.Body).Decode(&in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid Request Body: %s.", err)
 			return
 		}
 
-		out, err := githookCtrl.PreReceive(ctx, session, repoID, principalID, in)
+		out, err := githookCtrl.PreReceive(ctx, session, repoID, principalID, internal, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
 			return

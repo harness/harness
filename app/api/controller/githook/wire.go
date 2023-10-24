@@ -17,6 +17,7 @@ package githook
 import (
 	"github.com/harness/gitness/app/auth/authz"
 	eventsgit "github.com/harness/gitness/app/events/git"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 
@@ -28,8 +29,21 @@ var WireSet = wire.NewSet(
 	ProvideController,
 )
 
-func ProvideController(authorizer authz.Authorizer, principalStore store.PrincipalStore,
-	repoStore store.RepoStore, gitReporter *eventsgit.Reporter, pullreqStore store.PullReqStore,
-	urlProvider url.Provider) *Controller {
-	return NewController(authorizer, principalStore, repoStore, gitReporter, pullreqStore, urlProvider)
+func ProvideController(
+	authorizer authz.Authorizer,
+	principalStore store.PrincipalStore,
+	repoStore store.RepoStore,
+	gitReporter *eventsgit.Reporter,
+	pullreqStore store.PullReqStore,
+	urlProvider url.Provider,
+	protectionManager *protection.Manager,
+) *Controller {
+	return NewController(
+		authorizer,
+		principalStore,
+		repoStore,
+		gitReporter,
+		pullreqStore,
+		urlProvider,
+		protectionManager)
 }

@@ -683,7 +683,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opCommitFiles.WithTags("repository")
 	opCommitFiles.WithMapOfAnything(map[string]interface{}{"operationId": "commitFiles"})
 	_ = reflector.SetRequest(&opCommitFiles, new(commitFilesRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opCommitFiles, repo.CommitFilesResponse{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opCommitFiles, types.CommitFilesResponse{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusUnauthorized)

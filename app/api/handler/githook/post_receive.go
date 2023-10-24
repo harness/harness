@@ -42,8 +42,8 @@ func HandlePostReceive(githookCtrl *controllergithook.Controller) http.HandlerFu
 			return
 		}
 
-		in := new(githook.PostReceiveInput)
-		err = json.NewDecoder(r.Body).Decode(in)
+		in := githook.PostReceiveInput{}
+		err = json.NewDecoder(r.Body).Decode(&in)
 		if err != nil {
 			render.BadRequestf(w, "Invalid Request Body: %s.", err)
 			return

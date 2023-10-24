@@ -59,11 +59,8 @@ func (c *Controller) PathsDetails(ctx context.Context,
 		gitRef = repo.DefaultBranch
 	}
 
-	// create read params once
-	readParams := CreateRPCReadParams(repo)
-
 	result, err := c.gitRPCClient.PathsDetails(ctx, gitrpc.PathsDetailsParams{
-		ReadParams: readParams,
+		ReadParams: gitrpc.CreateRPCReadParams(repo),
 		GitREF:     gitRef,
 		Paths:      input.Paths,
 	})

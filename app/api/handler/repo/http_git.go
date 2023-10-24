@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
-	repoctrl "github.com/harness/gitness/app/api/controller/repo"
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth/authz"
@@ -90,7 +90,7 @@ func GetInfoRefs(client gitrpc.Interface, repoStore store.RepoStore, authorizer 
 		w.Header().Set("Content-Type", fmt.Sprintf("application/x-git-%s-advertisement", service))
 
 		if err = client.GetInfoRefs(ctx, w, &gitrpc.InfoRefsParams{
-			ReadParams:  repoctrl.CreateRPCReadParams(repo),
+			ReadParams:  gitrpc.CreateRPCReadParams(repo),
 			Service:     service,
 			Options:     nil,
 			GitProtocol: r.Header.Get("Git-Protocol"),
@@ -208,13 +208,13 @@ func serviceRPC(
 	// setup read/writeparams depending on whether it's a write operation
 	if isWriteOperation {
 		var writeParams gitrpc.WriteParams
-		writeParams, err = repoctrl.CreateRPCWriteParams(ctx, urlProvider, session, repo)
+		writeParams, err = controller.CreateRPCExternalWriteParams(ctx, urlProvider, session, repo)
 		if err != nil {
 			return fmt.Errorf("failed to create RPC write params: %w", err)
 		}
 		params.WriteParams = &writeParams
 	} else {
-		readParams := repoctrl.CreateRPCReadParams(repo)
+		readParams := gitrpc.CreateRPCReadParams(repo)
 		params.ReadParams = &readParams
 	}
 

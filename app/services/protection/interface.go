@@ -35,10 +35,13 @@ type (
 	Protection interface {
 		// CanMerge tests if a pull request can be merged.
 		CanMerge(ctx context.Context, in CanMergeInput) (CanMergeOutput, []types.RuleViolations, error)
+
+		CanPush(ctx context.Context, in CanPushInput) (CanPushOutput, []types.RuleViolations, error)
 	}
 
 	CanMergeInput struct {
 		Actor        *types.Principal
+		IsSpaceOwner bool
 		Membership   *types.Membership
 		TargetRepo   *types.Repository
 		SourceRepo   *types.Repository
@@ -51,6 +54,16 @@ type (
 
 	CanMergeOutput struct {
 		DeleteSourceBranch bool
+	}
+
+	CanPushInput struct {
+		Actor        *types.Principal
+		IsSpaceOwner bool
+		Repo         *types.Repository
+		BranchNames  []string
+	}
+
+	CanPushOutput struct {
 	}
 )
 

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/types/enum"
@@ -52,7 +53,9 @@ func (c *Controller) CreateCommitTag(ctx context.Context,
 		in.Target = repo.DefaultBranch
 	}
 
-	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
+	// TODO: Verify protection rules
+
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}

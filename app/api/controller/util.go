@@ -25,15 +25,15 @@ import (
 	"github.com/harness/gitness/types"
 )
 
-// TODO: this file should be in gitrpc package and should accept
-// params as interface (contract)
-
-// CreateRPCWriteParams creates base write parameters for gitrpc write operations.
-// IMPORTANT: session & repo are assumed to be not nil!
-// TODO: this is duplicate function from repo controller, we need to see where this
-// function will be best fit.
-func CreateRPCWriteParams(ctx context.Context, urlProvider url.Provider,
-	session *auth.Session, repo *types.Repository) (gitrpc.WriteParams, error) {
+// createRPCWriteParams creates base write parameters for gitrpc write operations.
+// TODO: this function should be in gitrpc package and should accept params as interface (contract)
+func createRPCWriteParams(
+	ctx context.Context,
+	urlProvider url.Provider,
+	session *auth.Session,
+	repo *types.Repository,
+	isInternal bool,
+) (gitrpc.WriteParams, error) {
 	// generate envars (add everything githook CLI needs for execution)
 	envVars, err := githook.GenerateEnvironmentVariables(
 		ctx,
@@ -41,6 +41,7 @@ func CreateRPCWriteParams(ctx context.Context, urlProvider url.Provider,
 		repo.ID,
 		session.Principal.ID,
 		false,
+		isInternal,
 	)
 	if err != nil {
 		return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
@@ -54,6 +55,28 @@ func CreateRPCWriteParams(ctx context.Context, urlProvider url.Provider,
 		RepoUID: repo.GitUID,
 		EnvVars: envVars,
 	}, nil
+}
+
+// CreateRPCExternalWriteParams creates base write parameters for gitrpc external write operations.
+// External write operations are direct git pushes.
+func CreateRPCExternalWriteParams(
+	ctx context.Context,
+	urlProvider url.Provider,
+	session *auth.Session,
+	repo *types.Repository,
+) (gitrpc.WriteParams, error) {
+	return createRPCWriteParams(ctx, urlProvider, session, repo, false)
+}
+
+// CreateRPCInternalWriteParams creates base write parameters for gitrpc internal write operations.
+// Internal write operations are git pushes that originate from the Gitness server.
+func CreateRPCInternalWriteParams(
+	ctx context.Context,
+	urlProvider url.Provider,
+	session *auth.Session,
+	repo *types.Repository,
+) (gitrpc.WriteParams, error) {
+	return createRPCWriteParams(ctx, urlProvider, session, repo, true)
 }
 
 func MapCommit(c *gitrpc.Commit) (*types.Commit, error) {

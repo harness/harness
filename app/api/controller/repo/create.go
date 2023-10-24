@@ -185,6 +185,7 @@ func (c *Controller) createGitRPCRepository(ctx context.Context, session *auth.S
 		0,
 		session.Principal.ID,
 		true,
+		true,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate git hook environment variables: %w", err)

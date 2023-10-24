@@ -232,7 +232,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	if err != nil {
 		return nil, err
 	}
-	githookController := githook.ProvideController(authorizer, principalStore, repoStore, eventsReporter, pullReqStore, provider)
+	githookController := githook.ProvideController(authorizer, principalStore, repoStore, eventsReporter, pullReqStore, provider, protectionManager)
 	serviceaccountController := serviceaccount.NewController(principalUID, authorizer, principalStore, spaceStore, repoStore, tokenStore)
 	principalController := principal.ProvideController(principalStore)
 	checkController := check2.ProvideController(transactor, authorizer, repoStore, checkStore, gitrpcInterface)

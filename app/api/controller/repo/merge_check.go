@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/types/enum"
@@ -44,7 +45,7 @@ func (c *Controller) MergeCheck(
 		return MergeCheck{}, err
 	}
 
-	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return MergeCheck{}, fmt.Errorf("failed to create rpc write params: %w", err)
 	}

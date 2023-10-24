@@ -35,7 +35,7 @@ func (c *Controller) PipelineGenerate(
 	}
 
 	result, err := c.gitRPCClient.GeneratePipeline(ctx, &gitrpc.GeneratePipelineParams{
-		ReadParams: CreateRPCReadParams(repo),
+		ReadParams: gitrpc.CreateRPCReadParams(repo),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate pipeline: %w", err)

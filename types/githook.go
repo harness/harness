@@ -25,6 +25,7 @@ type GithookPayload struct {
 	PrincipalID int64
 	RequestID   string
 	Disabled    bool
+	Internal    bool // Internal calls comer for the Gitness, and external calls are direct git pushes.
 }
 
 func (p *GithookPayload) Validate() error {

@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/types"
@@ -70,7 +71,7 @@ func (c *Controller) deleteGitRPCRepository(
 	session *auth.Session,
 	repo *types.Repository,
 ) error {
-	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return fmt.Errorf("failed to create RPC write params: %w", err)
 	}

@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/gitrpc"
@@ -43,7 +44,9 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		return usererror.ErrDefaultBranchCantBeDeleted
 	}
 
-	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
+	// TODO: Verify protection rules
+
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return fmt.Errorf("failed to create RPC write params: %w", err)
 	}

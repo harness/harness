@@ -37,7 +37,7 @@ func (c *Controller) GetCommit(ctx context.Context,
 	}
 
 	rpcOut, err := c.gitRPCClient.GetCommit(ctx, &gitrpc.GetCommitParams{
-		ReadParams: CreateRPCReadParams(repo),
+		ReadParams: gitrpc.CreateRPCReadParams(repo),
 		SHA:        sha,
 	})
 	if err != nil {

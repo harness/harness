@@ -16,10 +16,10 @@ package pullreq
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
@@ -28,7 +28,6 @@ import (
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/gitrpc"
 	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
-	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -114,7 +113,7 @@ func (c *Controller) Merge(
 		return types.MergeResponse{}, fmt.Errorf("failed to load list of reviwers: %w", err)
 	}
 
-	targetWriteParams, err := controller.CreateRPCWriteParams(ctx, c.urlProvider, session, targetRepo)
+	targetWriteParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, targetRepo)
 	if err != nil {
 		return types.MergeResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
@@ -122,7 +121,7 @@ func (c *Controller) Merge(
 	sourceRepo := targetRepo
 	sourceWriteParams := targetWriteParams
 	if pr.SourceRepoID != pr.TargetRepoID {
-		sourceWriteParams, err = controller.CreateRPCWriteParams(ctx, c.urlProvider, session, sourceRepo)
+		sourceWriteParams, err = controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, sourceRepo)
 		if err != nil {
 			return types.MergeResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
 		}
@@ -133,14 +132,9 @@ func (c *Controller) Merge(
 		}
 	}
 
-	// membership is optional (otherwise admin without membership fails, or with other RBAC it fails)
-	// TODO: Is there a nicer way to handle this - the space owner rule shouldn't exist with other RBAC systems?
-	membership, err := c.membershipStore.Find(ctx, types.MembershipKey{
-		SpaceID:     targetRepo.ParentID,
-		PrincipalID: session.Principal.ID,
-	})
-	if err != nil && !errors.Is(err, store.ErrResourceNotFound) {
-		return types.MergeResponse{}, fmt.Errorf("failed to find space membership: %w", err)
+	isSpaceOwner, err := apiauth.IsSpaceAdmin(ctx, c.authorizer, session, targetRepo)
+	if err != nil {
+		return types.MergeResponse{}, fmt.Errorf("failed to determine if the user is space admin: %w", err)
 	}
 
 	checkResults, err := c.checkStore.ListResults(ctx, targetRepo.ID, pr.SourceSHA)
@@ -155,7 +149,7 @@ func (c *Controller) Merge(
 
 	ruleOut, violations, err := protectionRules.CanMerge(ctx, protection.CanMergeInput{
 		Actor:        &session.Principal,
-		Membership:   membership,
+		IsSpaceOwner: isSpaceOwner,
 		TargetRepo:   targetRepo,
 		SourceRepo:   sourceRepo,
 		PullReq:      pr,

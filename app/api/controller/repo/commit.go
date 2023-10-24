@@ -20,9 +20,13 @@ import (
 	"fmt"
 	"time"
 
+	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -44,19 +48,41 @@ type CommitFilesOptions struct {
 	Actions   []CommitFileAction `json:"actions"`
 }
 
-// CommitFilesResponse holds commit id.
-type CommitFilesResponse struct {
-	CommitID string `json:"commit_id"`
-}
-
 func (c *Controller) CommitFiles(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *CommitFilesOptions,
-) (CommitFilesResponse, error) {
+) (types.CommitFilesResponse, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
-		return CommitFilesResponse{}, err
+		return types.CommitFilesResponse{}, err
+	}
+
+	if in.NewBranch == "" {
+		isSpaceOwner, err := apiauth.IsSpaceAdmin(ctx, c.authorizer, session, repo)
+		if err != nil {
+			return types.CommitFilesResponse{}, err
+		}
+
+		protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
+		if err != nil {
+			return types.CommitFilesResponse{},
+				fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
+		}
+
+		_, violations, err := protectionRules.CanPush(ctx, protection.CanPushInput{
+			Actor:        &session.Principal,
+			IsSpaceOwner: isSpaceOwner,
+			Repo:         repo,
+			BranchNames:  []string{in.Branch},
+		})
+		if err != nil {
+			return types.CommitFilesResponse{}, fmt.Errorf("failed to verify protection rules for git push: %w", err)
+		}
+
+		if protection.IsCritical(violations) {
+			return types.CommitFilesResponse{RuleViolations: violations}, nil
+		}
 	}
 
 	actions := make([]gitrpc.CommitFileAction, len(in.Actions))
@@ -66,7 +92,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		case enum.ContentEncodingTypeBase64:
 			rawPayload, err = base64.StdEncoding.DecodeString(action.Payload)
 			if err != nil {
-				return CommitFilesResponse{}, fmt.Errorf("failed to decode base64 payload: %w", err)
+				return types.CommitFilesResponse{}, fmt.Errorf("failed to decode base64 payload: %w", err)
 			}
 		case enum.ContentEncodingTypeUTF8:
 			fallthrough
@@ -83,9 +109,10 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		}
 	}
 
-	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
+	// Create internal write params. Note: This will skip the pre-commit protection rules check.
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return CommitFilesResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
+		return types.CommitFilesResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	now := time.Now()
@@ -102,9 +129,9 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		AuthorDate:    &now,
 	})
 	if err != nil {
-		return CommitFilesResponse{}, err
+		return types.CommitFilesResponse{}, err
 	}
-	return CommitFilesResponse{
+	return types.CommitFilesResponse{
 		CommitID: commit.CommitID,
 	}, nil
 }

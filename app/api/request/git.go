@@ -31,6 +31,7 @@ const (
 	QueryParamSince         = "since"
 	QueryParamUntil         = "until"
 	QueryParamCommitter     = "committer"
+	QueryParamInternal      = "internal"
 )
 
 func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
@@ -104,4 +105,9 @@ func ParseCommitFilter(r *http.Request) (*types.CommitFilter, error) {
 		Until:     until,
 		Committer: QueryParamOrDefault(r, QueryParamCommitter, ""),
 	}, nil
+}
+
+// GetInternalFromQueryOrDefault returns the internal flag from the request query.
+func GetInternalFromQueryOrDefault(r *http.Request, dflt bool) (bool, error) {
+	return QueryParamAsBoolOrDefault(r, QueryParamInternal, dflt)
 }

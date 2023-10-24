@@ -35,7 +35,7 @@ func (c *Controller) GetBranch(ctx context.Context,
 	}
 
 	rpcOut, err := c.gitRPCClient.GetBranch(ctx, &gitrpc.GetBranchParams{
-		ReadParams: CreateRPCReadParams(repo),
+		ReadParams: gitrpc.CreateRPCReadParams(repo),
 		BranchName: branchName,
 	})
 	if err != nil {

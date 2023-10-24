@@ -22,6 +22,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
 	eventsgit "github.com/harness/gitness/app/events/git"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/types"
@@ -52,12 +53,13 @@ type BaseInput struct {
 }
 
 type Controller struct {
-	authorizer     authz.Authorizer
-	principalStore store.PrincipalStore
-	repoStore      store.RepoStore
-	gitReporter    *eventsgit.Reporter
-	pullreqStore   store.PullReqStore
-	urlProvider    url.Provider
+	authorizer        authz.Authorizer
+	principalStore    store.PrincipalStore
+	repoStore         store.RepoStore
+	gitReporter       *eventsgit.Reporter
+	pullreqStore      store.PullReqStore
+	urlProvider       url.Provider
+	protectionManager *protection.Manager
 }
 
 func NewController(
@@ -67,14 +69,16 @@ func NewController(
 	gitReporter *eventsgit.Reporter,
 	pullreqStore store.PullReqStore,
 	urlProvider url.Provider,
+	protectionManager *protection.Manager,
 ) *Controller {
 	return &Controller{
-		authorizer:     authorizer,
-		principalStore: principalStore,
-		repoStore:      repoStore,
-		gitReporter:    gitReporter,
-		pullreqStore:   pullreqStore,
-		urlProvider:    urlProvider,
+		authorizer:        authorizer,
+		principalStore:    principalStore,
+		repoStore:         repoStore,
+		gitReporter:       gitReporter,
+		pullreqStore:      pullreqStore,
+		urlProvider:       urlProvider,
+		protectionManager: protectionManager,
 	}
 }
 
