@@ -20,7 +20,6 @@ import (
 	"runtime/debug"
 
 	"github.com/harness/gitness/app/pipeline/logger"
-	"github.com/harness/gitness/types"
 
 	"github.com/drone-runners/drone-runner-docker/engine/resource"
 	runtime2 "github.com/drone-runners/drone-runner-docker/engine2/runtime"
@@ -32,7 +31,6 @@ import (
 
 func NewExecutionPoller(
 	runner *runtime2.Runner,
-	config *types.Config,
 	client runnerclient.Client,
 ) *poller.Poller {
 	runWithRecovery := func(ctx context.Context, stage *drone.Stage) (err error) {
@@ -44,7 +42,7 @@ func NewExecutionPoller(
 
 			// the caller of this method (poller.Poller) discards the error - log it here
 			if err != nil {
-				log.Ctx(ctx).Error().Err(err).Msgf("An error occured while calling runner.Run in Poller")
+				log.Ctx(ctx).Error().Err(err).Msgf("An error occurred while calling runner.Run in Poller")
 			}
 		}()
 		return runner.Run(ctx, stage)

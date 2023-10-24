@@ -188,6 +188,22 @@ func (g Adapter) DiffCut(
 	return diffCutHeader, linesHunk, nil
 }
 
+func (g Adapter) DiffFileStat(
+	ctx context.Context,
+	repoPath string,
+	baseRef string,
+	headRef string,
+) ([]string, error) {
+	cmd := git.NewCommand(ctx,
+		"diff", "--name-only", headRef, baseRef)
+	stdout, _, runErr := cmd.RunStdBytes(&git.RunOpts{Dir: repoPath})
+	if runErr != nil {
+		return nil, processGiteaErrorf(runErr, "failed to trigger diff command")
+	}
+
+	return parseLinesToSlice(stdout), nil
+}
+
 func parseDiffStderr(stderr *bytes.Buffer) error {
 	errRaw := stderr.String() // assume there will never be a lot of output to stdout
 	if len(errRaw) == 0 {

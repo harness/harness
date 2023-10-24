@@ -81,9 +81,8 @@ func (r *SharedRepo) Clone(ctx context.Context, branchName string) error {
 			}
 		} else if matched, _ = regexp.MatchString(".* repository .* does not exist.*", stderr); matched {
 			return fmt.Errorf("%s %w", r.repoUID, types.ErrNotFound)
-		} else {
-			return fmt.Errorf("Clone: %w %s", err, stderr)
 		}
+		return fmt.Errorf("Clone: %w %s", err, stderr)
 	}
 	gitRepo, err := git.OpenRepository(ctx, r.tmpPath)
 	if err != nil {

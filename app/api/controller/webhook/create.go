@@ -104,7 +104,7 @@ func checkCreateInput(in *CreateInput, allowLoopback bool, allowPrivateNetwork b
 	if err := checkSecret(in.Secret); err != nil {
 		return err
 	}
-	if err := checkTriggers(in.Triggers); err != nil {
+	if err := checkTriggers(in.Triggers); err != nil { //nolint:revive
 		return err
 	}
 

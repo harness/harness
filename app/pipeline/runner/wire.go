@@ -15,7 +15,6 @@
 package runner
 
 import (
-	"github.com/harness/gitness/app/pipeline/manager"
 	"github.com/harness/gitness/app/pipeline/plugin"
 	"github.com/harness/gitness/types"
 
@@ -36,17 +35,15 @@ func ProvideExecutionRunner(
 	config *types.Config,
 	client runnerclient.Client,
 	pluginManager *plugin.Manager,
-	manager manager.ExecutionManager,
 ) (*runtime2.Runner, error) {
-	return NewExecutionRunner(config, client, pluginManager, manager)
+	return NewExecutionRunner(config, client, pluginManager)
 }
 
 // ProvideExecutionPoller provides a poller which can poll the manager
 // for new builds and execute them.
 func ProvideExecutionPoller(
 	runner *runtime2.Runner,
-	config *types.Config,
 	client runnerclient.Client,
 ) *poller.Poller {
-	return NewExecutionPoller(runner, config, client)
+	return NewExecutionPoller(runner, client)
 }

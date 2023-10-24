@@ -37,16 +37,26 @@ type Check struct {
 	ReportedBy PrincipalInfo `json:"reported_by"`
 }
 
+type CheckResult struct {
+	UID    string           `json:"uid" db:"check_uid"`
+	Status enum.CheckStatus `json:"status" db:"check_status"`
+}
+
 type CheckPayload struct {
 	Version string                `json:"version"`
 	Kind    enum.CheckPayloadKind `json:"kind"`
 	Data    json.RawMessage       `json:"data"`
 }
 
-// CheckListOptions holds check list query parameters.
+// CheckListOptions holds list status checks query parameters.
 type CheckListOptions struct {
-	Page int `json:"page"`
-	Size int `json:"size"`
+	ListQueryFilter
+}
+
+// CheckRecentOptions holds list recent status check query parameters.
+type CheckRecentOptions struct {
+	Query string
+	Since int64
 }
 
 type ReqCheck struct {

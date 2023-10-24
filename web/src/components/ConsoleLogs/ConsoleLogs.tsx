@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { FlexExpander, Layout, Text } from '@harnessio/uicore'
+import { FlexExpander, Layout } from '@harnessio/uicore'
 import React, { FC } from 'react'
 import type { LivelogLine } from 'services/code'
 import css from './ConsoleLogs.module.scss'
@@ -57,10 +57,10 @@ const ConsoleLogs: FC<ConsoleLogsProps> = ({ logs }) => {
       {logs.map((log, index) => {
         return (
           <Layout.Horizontal key={index} spacing={'small'} className={css.logLayout}>
-            {typeof log.pos === 'number' && <Text className={css.lineNumber}>{log.pos + 1}</Text>}
-            <Text className={css.log}>{log.out}</Text>
+            {typeof log.pos === 'number' && <span className={css.lineNumber}>{log.pos + 1}</span>}
+            <span className={css.log}>{log.out}</span>
             <FlexExpander />
-            <Text className={css.time}>{log.time}s</Text>
+            <span className={css.time}>{log.time}s</span>
           </Layout.Horizontal>
         )
       })}

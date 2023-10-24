@@ -68,8 +68,12 @@ export function useFileContentViewerDecision({
       SpecialTextFiles.find(name => name.toLowerCase() === filename?.toLowerCase()) ||
       TextExtensions.includes(extension.toLowerCase()) ||
       isSymlink ||
-      isSubmodule
+      isSubmodule ||
+      !extension ||
+      extension === filename ||
+      '.' + extension === filename
     )
+
     const category = isMarkdown
       ? FileCategory.MARKDOWN
       : isSVG
@@ -155,6 +159,7 @@ const TextExtensions = [
   'bat',
   'bbcolors',
   'bcp',
+  'bazel',
   'bdsgroup',
   'bdsproj',
   'bib',
@@ -473,7 +478,9 @@ const TextExtensions = [
   'uot',
   'ahk',
   'asciidoc',
-  'slk'
+  'slk',
+  'env',
+  'alpine'
 ]
 
 const SpecialTextFiles = [

@@ -30,7 +30,6 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/gitrpc"
-	"github.com/harness/gitness/types"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -44,7 +43,6 @@ type GitHandler interface {
 
 // NewGitHandler returns a new GitHandler.
 func NewGitHandler(
-	config *types.Config,
 	urlProvider url.Provider,
 	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
@@ -85,14 +83,14 @@ func NewGitHandler(
 			r.Get("/info/refs", handlerrepo.GetInfoRefs(client, repoStore, authorizer))
 
 			// dumb protocol
-			r.Get("/HEAD", stubGitHandler(repoStore))
-			r.Get("/objects/info/alternates", stubGitHandler(repoStore))
-			r.Get("/objects/info/http-alternates", stubGitHandler(repoStore))
-			r.Get("/objects/info/packs", stubGitHandler(repoStore))
-			r.Get("/objects/info/{file:[^/]*}", stubGitHandler(repoStore))
-			r.Get("/objects/{head:[0-9a-f]{2}}/{hash:[0-9a-f]{38}}", stubGitHandler(repoStore))
-			r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.pack", stubGitHandler(repoStore))
-			r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.idx", stubGitHandler(repoStore))
+			r.Get("/HEAD", stubGitHandler())
+			r.Get("/objects/info/alternates", stubGitHandler())
+			r.Get("/objects/info/http-alternates", stubGitHandler())
+			r.Get("/objects/info/packs", stubGitHandler())
+			r.Get("/objects/info/{file:[^/]*}", stubGitHandler())
+			r.Get("/objects/{head:[0-9a-f]{2}}/{hash:[0-9a-f]{38}}", stubGitHandler())
+			r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.pack", stubGitHandler())
+			r.Get("/objects/pack/pack-{file:[0-9a-f]{40}}.idx", stubGitHandler())
 		})
 	})
 
@@ -100,7 +98,7 @@ func NewGitHandler(
 	return encode.GitPathBefore(r)
 }
 
-func stubGitHandler(repoStore store.RepoStore) http.HandlerFunc {
+func stubGitHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("Seems like an asteroid destroyed the ancient git protocol"))
 		w.WriteHeader(http.StatusBadGateway)

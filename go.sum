@@ -74,6 +74,8 @@ github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kB
 github.com/bmatcuk/doublestar v1.1.1/go.mod h1:UD6OnuiIn0yFxxA2le/rnRU1G4RaI4UvFv1sNto9p6w=
 github.com/bmatcuk/doublestar v1.3.4 h1:gPypJ5xD31uhX6Tf54sDPUOBXTqKH4c9aPY66CyQrS0=
 github.com/bmatcuk/doublestar v1.3.4/go.mod h1:wiQtGV+rzVYxB7WIlirSN++5HPtPlXEo9MEoZQC/PmE=
+github.com/bmatcuk/doublestar/v4 v4.6.0 h1:HTuxyug8GyFbRkrffIpzNCSK4luc0TY3wzXvzIZhEXc=
+github.com/bmatcuk/doublestar/v4 v4.6.0/go.mod h1:xBQ8jztBU6kakFMg+8WGxn0c6z1fTSPVIjEY1Wr7jzc=
 github.com/bool64/dev v0.1.41/go.mod h1:cTHiTDNc8EewrQPy3p1obNilpMpdmlUesDkFTF2zRWU=
 github.com/bool64/dev v0.1.42/go.mod h1:cTHiTDNc8EewrQPy3p1obNilpMpdmlUesDkFTF2zRWU=
 github.com/bool64/dev v0.2.22 h1:YJFKBRKplkt+0Emq/5Xk1Z5QRmMNzc1UOJkR3rxJksA=
@@ -147,10 +149,8 @@ github.com/docker/go-units v0.3.3/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDD
 github.com/docker/go-units v0.4.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/docker/go-units v0.5.0 h1:69rxXcBk27SvSaaxTtLh/8llcHD8vYHT7WSdRZ/jvr4=
 github.com/docker/go-units v0.5.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
-github.com/drone-runners/drone-runner-docker v1.8.4-0.20230919202034-23803f6b38c2 h1:NmYT2bCmacG9mFWql0hKlJ7KOjfXDlusrpWbjUDYKoA=
-github.com/drone-runners/drone-runner-docker v1.8.4-0.20230919202034-23803f6b38c2/go.mod h1:iXTCJv+tESfI/ggWZwinI2ZAzHTGS+Ic5A9gcUElTns=
-github.com/drone-runners/drone-runner-docker v1.8.4-0.20230926203554-8fd90cf0f9f5 h1:NRDZyE6sS+RflioQknWK/2ZNFRTpNkQoYTip/CsYEfs=
-github.com/drone-runners/drone-runner-docker v1.8.4-0.20230926203554-8fd90cf0f9f5/go.mod h1:iXTCJv+tESfI/ggWZwinI2ZAzHTGS+Ic5A9gcUElTns=
+github.com/drone-runners/drone-runner-docker v1.8.4-0.20231017141518-b8f2abebce54 h1:x/cUhafXzMsCA8OfUn1NyMSbzbDfqAP5zuT+D5tErD0=
+github.com/drone-runners/drone-runner-docker v1.8.4-0.20231017141518-b8f2abebce54/go.mod h1:iXTCJv+tESfI/ggWZwinI2ZAzHTGS+Ic5A9gcUElTns=
 github.com/drone/drone-go v1.7.1 h1:ZX+3Rs8YHUSUQ5mkuMLmm1zr1ttiiE2YGNxF3AnyDKw=
 github.com/drone/drone-go v1.7.1/go.mod h1:fxCf9jAnXDZV1yDr0ckTuWd1intvcQwfJmTRpTZ1mXg=
 github.com/drone/drone-runtime v1.0.7-0.20190729202838-87c84080f4a1/go.mod h1:+osgwGADc/nyl40J0fdsf8Z09bgcBZXvXXnLOY48zYs=

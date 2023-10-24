@@ -23,6 +23,6 @@ import (
 
 // HandleVersion writes the server version number
 // to the http.Response body in plain text.
-func HandleVersion(w http.ResponseWriter, r *http.Request) {
+func HandleVersion(w http.ResponseWriter, _ *http.Request) {
 	fmt.Fprintf(w, "%s", version.Version)
 }

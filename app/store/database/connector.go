@@ -33,6 +33,7 @@ import (
 var _ store.ConnectorStore = (*connectorStore)(nil)
 
 const (
+	//nolint:goconst
 	connectorQueryBase = `
 		SELECT` + connectorColumns + `
 		FROM connectors`

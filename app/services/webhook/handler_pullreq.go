@@ -16,6 +16,7 @@ package webhook
 
 import (
 	"context"
+	"fmt"
 
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/events"
@@ -231,6 +232,58 @@ func (s *Service) handleEventPullReqClosed(ctx context.Context,
 				ReferenceDetailsSegment: ReferenceDetailsSegment{
 					SHA:    event.Payload.SourceSHA,
 					Commit: &commitInfo,
+				},
+			}, nil
+		})
+}
+
+// PullReqCommentPayload describes the body of the pullreq comment create trigger.
+type PullReqCommentPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	PullReqCommentSegment
+}
+
+func (s *Service) handleEventPullReqComment(
+	ctx context.Context,
+	event *events.Event[*pullreqevents.CommentCreatedPayload],
+) error {
+	return s.triggerForEventWithPullReq(ctx, enum.WebhookTriggerPullReqCommentCreated,
+		event.ID, event.Payload.PrincipalID, event.Payload.PullReqID,
+		func(principal *types.Principal, pr *types.PullReq, targetRepo, sourceRepo *types.Repository) (any, error) {
+			targetRepoInfo := repositoryInfoFrom(targetRepo, s.urlProvider)
+			sourceRepoInfo := repositoryInfoFrom(sourceRepo, s.urlProvider)
+			activity, err := s.activityStore.Find(ctx, event.Payload.ActivityID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get activity by id for acitivity id %d: %w", event.Payload.ActivityID, err)
+			}
+			return &PullReqCommentPayload{
+				BaseSegment: BaseSegment{
+					Trigger:   enum.WebhookTriggerPullReqCommentCreated,
+					Repo:      targetRepoInfo,
+					Principal: principalInfoFrom(principal),
+				},
+				PullReqSegment: PullReqSegment{
+					PullReq: pullReqInfoFrom(pr),
+				},
+				PullReqTargetReferenceSegment: PullReqTargetReferenceSegment{
+					TargetRef: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.TargetBranch,
+						Repo: targetRepoInfo,
+					},
+				},
+				ReferenceSegment: ReferenceSegment{
+					Ref: ReferenceInfo{
+						Name: gitReferenceNamePrefixBranch + pr.SourceBranch,
+						Repo: sourceRepoInfo,
+					},
+				},
+				PullReqCommentSegment: PullReqCommentSegment{
+					CommentInfo: CommentInfo{
+						Text: activity.Text,
+					},
 				},
 			}, nil
 		})

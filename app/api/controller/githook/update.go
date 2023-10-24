@@ -23,6 +23,8 @@ import (
 )
 
 // Update executes the update hook for a git repository.
+//
+//nolint:revive // not yet implemented
 func (c *Controller) Update(
 	ctx context.Context,
 	session *auth.Session,

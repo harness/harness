@@ -7,10 +7,11 @@
 package rpc
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -216,7 +217,6 @@ type CreateRepositoryRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Data:
-	//
 	//	*CreateRepositoryRequest_Header
 	//	*CreateRepositoryRequest_File
 	Data isCreateRepositoryRequest_Data `protobuf_oneof:"data"`
@@ -1312,7 +1312,6 @@ type GetBlobResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Data:
-	//
 	//	*GetBlobResponse_Header
 	//	*GetBlobResponse_Content
 	Data isGetBlobResponse_Data `protobuf_oneof:"data"`

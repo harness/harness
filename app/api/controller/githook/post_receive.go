@@ -42,12 +42,8 @@ func (c *Controller) PostReceive(
 	session *auth.Session,
 	repoID int64,
 	principalID int64,
-	in *githook.PostReceiveInput,
+	in githook.PostReceiveInput,
 ) (*githook.Output, error) {
-	if in == nil {
-		return nil, fmt.Errorf("input is nil")
-	}
-
 	repo, err := c.getRepoCheckAccess(ctx, session, repoID, enum.PermissionRepoEdit)
 	if err != nil {
 		return nil, err
@@ -72,7 +68,7 @@ func (c *Controller) reportReferenceEvents(
 	ctx context.Context,
 	repoID int64,
 	principalID int64,
-	in *githook.PostReceiveInput,
+	in githook.PostReceiveInput,
 ) {
 	for _, refUpdate := range in.RefUpdates {
 		switch {
@@ -158,7 +154,7 @@ func (c *Controller) reportTagEvent(
 func (c *Controller) handlePRMessaging(
 	ctx context.Context,
 	repo *types.Repository,
-	in *githook.PostReceiveInput,
+	in githook.PostReceiveInput,
 	out *githook.Output,
 ) {
 	// skip anything that was a batch push / isn't branch related / isn't updating/creating a branch.
@@ -170,6 +166,22 @@ func (c *Controller) handlePRMessaging(
 
 	// for now we only care about first branch that was pushed.
 	branchName := in.RefUpdates[0].Ref[len(gitReferenceNamePrefixBranch):]
+
+	c.suggestPullRequest(ctx, repo, branchName, out)
+
+	// TODO: store latest pushed branch for user in cache and send out SSE
+}
+
+func (c *Controller) suggestPullRequest(
+	ctx context.Context,
+	repo *types.Repository,
+	branchName string,
+	out *githook.Output,
+) {
+	if branchName == repo.DefaultBranch {
+		// Don't suggest a pull request if this is a push to the default branch.
+		return
+	}
 
 	// do we have a PR related to it?
 	prs, err := c.pullreqStore.List(ctx, &types.PullReqFilter{
@@ -195,7 +207,7 @@ func (c *Controller) handlePRMessaging(
 	// for already existing PRs, print them to users terminal for easier access.
 	if len(prs) > 0 {
 		msgs := make([]string, 2*len(prs)+1)
-		msgs[0] = fmt.Sprintf("Branch '%s' has open PRs:", branchName)
+		msgs[0] = fmt.Sprintf("Branch %q has open PRs:", branchName)
 		for i, pr := range prs {
 			msgs[2*i+1] = fmt.Sprintf("  (#%d) %s", pr.Number, pr.Title)
 			msgs[2*i+2] = "    " + c.urlProvider.GenerateUIPRURL(repo.Path, pr.Number)
@@ -206,9 +218,7 @@ func (c *Controller) handlePRMessaging(
 
 	// this is a new PR!
 	out.Messages = append(out.Messages,
-		fmt.Sprintf("Create a new PR for branch '%s'", branchName),
+		fmt.Sprintf("Create a new PR for branch %q", branchName),
 		"  "+c.urlProvider.GenerateUICompareURL(repo.Path, repo.DefaultBranch, branchName),
 	)
-
-	// TODO: store latest pushed branch for user in cache and send out SSE
 }

@@ -18,6 +18,6 @@ import "net/http"
 
 // HandleHealth writes a 200 OK status to the http.Response
 // if the server is healthy.
-func HandleHealth(w http.ResponseWriter, r *http.Request) {
+func HandleHealth(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }

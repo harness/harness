@@ -24,8 +24,9 @@ import (
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/githook"
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/importer"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
 	"github.com/harness/gitness/gitrpc"
@@ -36,17 +37,20 @@ import (
 )
 
 type Controller struct {
-	defaultBranch  string
-	tx             dbtx.Transactor
-	urlProvider    url.Provider
-	uidCheck       check.PathUID
-	authorizer     authz.Authorizer
-	repoStore      store.RepoStore
-	spaceStore     store.SpaceStore
-	pipelineStore  store.PipelineStore
-	principalStore store.PrincipalStore
-	gitRPCClient   gitrpc.Interface
-	importer       *importer.Repository
+	defaultBranch     string
+	tx                dbtx.Transactor
+	urlProvider       url.Provider
+	uidCheck          check.PathUID
+	authorizer        authz.Authorizer
+	repoStore         store.RepoStore
+	spaceStore        store.SpaceStore
+	pipelineStore     store.PipelineStore
+	principalStore    store.PrincipalStore
+	ruleStore         store.RuleStore
+	protectionManager *protection.Manager
+	gitRPCClient      gitrpc.Interface
+	importer          *importer.Repository
+	codeOwners        *codeowners.Service
 }
 
 func NewController(
@@ -59,21 +63,27 @@ func NewController(
 	spaceStore store.SpaceStore,
 	pipelineStore store.PipelineStore,
 	principalStore store.PrincipalStore,
+	ruleStore store.RuleStore,
+	protectionManager *protection.Manager,
 	gitRPCClient gitrpc.Interface,
 	importer *importer.Repository,
+	codeOwners *codeowners.Service,
 ) *Controller {
 	return &Controller{
-		defaultBranch:  defaultBranch,
-		tx:             tx,
-		urlProvider:    urlProvider,
-		uidCheck:       uidCheck,
-		authorizer:     authorizer,
-		repoStore:      repoStore,
-		spaceStore:     spaceStore,
-		pipelineStore:  pipelineStore,
-		principalStore: principalStore,
-		gitRPCClient:   gitRPCClient,
-		importer:       importer,
+		defaultBranch:     defaultBranch,
+		tx:                tx,
+		urlProvider:       urlProvider,
+		uidCheck:          uidCheck,
+		authorizer:        authorizer,
+		repoStore:         repoStore,
+		spaceStore:        spaceStore,
+		pipelineStore:     pipelineStore,
+		principalStore:    principalStore,
+		ruleStore:         ruleStore,
+		protectionManager: protectionManager,
+		gitRPCClient:      gitRPCClient,
+		importer:          importer,
+		codeOwners:        codeOwners,
 	}
 }
 
@@ -104,40 +114,6 @@ func (c *Controller) getRepoCheckAccess(
 	}
 
 	return repo, nil
-}
-
-// CreateRPCWriteParams creates base write parameters for gitrpc write operations.
-// IMPORTANT: session & repo are assumed to be not nil!
-func CreateRPCWriteParams(ctx context.Context, urlProvider url.Provider,
-	session *auth.Session, repo *types.Repository) (gitrpc.WriteParams, error) {
-	// generate envars (add everything githook CLI needs for execution)
-	envVars, err := githook.GenerateEnvironmentVariables(
-		ctx,
-		urlProvider.GetInternalAPIURL(),
-		repo.ID,
-		session.Principal.ID,
-		false,
-	)
-	if err != nil {
-		return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)
-	}
-
-	return gitrpc.WriteParams{
-		Actor: gitrpc.Identity{
-			Name:  session.Principal.DisplayName,
-			Email: session.Principal.Email,
-		},
-		RepoUID: repo.GitUID,
-		EnvVars: envVars,
-	}, nil
-}
-
-// CreateRPCReadParams creates base read parameters for gitrpc read operations.
-// IMPORTANT: repo is assumed to be not nil!
-func CreateRPCReadParams(repo *types.Repository) gitrpc.ReadParams {
-	return gitrpc.ReadParams{
-		RepoUID: repo.GitUID,
-	}
 }
 
 func (c *Controller) validateParentRef(parentRef string) error {

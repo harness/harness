@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	apiauth "github.com/harness/gitness/app/api/auth"
+	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/types"
@@ -54,21 +55,23 @@ func (c *Controller) Delete(ctx context.Context, session *auth.Session, repoRef 
 }
 
 func (c *Controller) DeleteNoAuth(ctx context.Context, session *auth.Session, repo *types.Repository) error {
-	if err := c.DeleteGitRPCRepositories(ctx, session, repo); err != nil {
-		return err
+	if err := c.deleteGitRPCRepository(ctx, session, repo); err != nil {
+		return fmt.Errorf("failed to delete git repository: %w", err)
 	}
 
 	if err := c.repoStore.Delete(ctx, repo.ID); err != nil {
-		return err
+		return fmt.Errorf("failed to delete repo from db: %w", err)
 	}
+
 	return nil
 }
 
-func (c *Controller) DeleteGitRPCRepositories(
+func (c *Controller) deleteGitRPCRepository(
 	ctx context.Context,
-	session *auth.Session, repo *types.Repository,
+	session *auth.Session,
+	repo *types.Repository,
 ) error {
-	writeParams, err := CreateRPCWriteParams(ctx, c.urlProvider, session, repo)
+	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
 		return fmt.Errorf("failed to create RPC write params: %w", err)
 	}

@@ -201,7 +201,7 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	}
 
 	in.Description = strings.TrimSpace(in.Description)
-	if err := check.Description(in.Description); err != nil {
+	if err := check.Description(in.Description); err != nil { //nolint:revive
 		return err
 	}
 

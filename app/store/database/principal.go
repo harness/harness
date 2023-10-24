@@ -72,6 +72,7 @@ const principalCommonColumns = `
 const principalColumns = principalCommonColumns + `
 	,principal_type`
 
+//nolint:goconst
 const principalSelectBase = `
 	SELECT` + principalColumns + `
 	FROM principals`

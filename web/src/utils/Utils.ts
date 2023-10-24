@@ -114,7 +114,7 @@ export const timeDistance = (date1 = 0, date2 = 0, onlyHighestDenomination = fal
   let distance = Math.abs(date1 - date2)
 
   if (!distance) {
-    return ''
+    return '0s'
   }
 
   const days = Math.floor(distance / (24 * 3600000))
@@ -296,14 +296,20 @@ const MONACO_SUPPORTED_LANGUAGES = [
   'yaml'
 ]
 
+// Some of the below languages are mapped to Monaco's built-in supported languages
+// due to their similarity. We'll still need to get native support for them at
+// some point.
 const EXTENSION_TO_LANG: Record<string, string> = {
   tsx: 'typescript',
   jsx: 'typescript',
   cc: 'cpp',
   env: 'shell',
-  Makefile: 'shell',
+  makefile: 'shell',
   gitignore: 'shell',
-  toml: 'ini'
+  toml: 'ini',
+  bazel: 'python',
+  workspace: 'python',
+  alpine: 'dockerfile'
 }
 
 export const PLAIN_TEXT = 'plaintext'

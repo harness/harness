@@ -63,6 +63,11 @@ type PullReqSegment struct {
 	PullReq PullReqInfo `json:"pull_req"`
 }
 
+// PullReqCommentSegment contains details for all pull req comment related payloads for webhooks.
+type PullReqCommentSegment struct {
+	CommentInfo CommentInfo `json:"comment"`
+}
+
 // RepositoryInfo describes the repo related info for a webhook payload.
 // NOTE: don't use types package as we want webhook payload to be independent from API calls.
 type RepositoryInfo struct {
@@ -192,4 +197,8 @@ func identityInfoFrom(identity gitrpc.Identity) IdentityInfo {
 type ReferenceInfo struct {
 	Name string         `json:"name"`
 	Repo RepositoryInfo `json:"repo"`
+}
+
+type CommentInfo struct {
+	Text string `json:"text"`
 }

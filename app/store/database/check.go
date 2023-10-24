@@ -18,7 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
+	"strings"
 
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/store/database"
@@ -26,6 +26,7 @@ import (
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -146,13 +147,15 @@ func (s *CheckStore) Upsert(ctx context.Context, check *types.Check) error {
 func (s *CheckStore) Count(ctx context.Context,
 	repoID int64,
 	commitSHA string,
-	_ types.CheckListOptions,
+	opts types.CheckListOptions,
 ) (int, error) {
 	stmt := database.Builder.
 		Select("count(*)").
 		From("checks").
 		Where("check_repo_id = ?", repoID).
 		Where("check_commit_sha = ?", commitSHA)
+
+	stmt = s.applyOpts(stmt, opts.Query)
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
@@ -180,7 +183,11 @@ func (s *CheckStore) List(ctx context.Context,
 		Select(checkColumns).
 		From("checks").
 		Where("check_repo_id = ?", repoID).
-		Where("check_commit_sha = ?", commitSHA).
+		Where("check_commit_sha = ?", commitSHA)
+
+	stmt = s.applyOpts(stmt, opts.Query)
+
+	stmt = stmt.
 		Limit(database.Limit(opts.Size)).
 		Offset(database.Offset(opts.Page, opts.Size)).
 		OrderBy("check_updated desc")
@@ -207,17 +214,23 @@ func (s *CheckStore) List(ctx context.Context,
 }
 
 // ListRecent returns a list of recently executed status checks in a repository.
-func (s *CheckStore) ListRecent(ctx context.Context, repoID int64, since time.Time) ([]string, error) {
+func (s *CheckStore) ListRecent(ctx context.Context,
+	repoID int64,
+	opts types.CheckRecentOptions,
+) ([]string, error) {
 	stmt := database.Builder.
 		Select("distinct check_uid").
 		From("checks").
 		Where("check_repo_id = ?", repoID).
-		Where("check_created > ?", since.UnixMilli()).
-		OrderBy("check_uid")
+		Where("check_created > ?", opts.Since)
+
+	stmt = s.applyOpts(stmt, opts.Query)
+
+	stmt = stmt.OrderBy("check_uid")
 
 	sql, args, err := stmt.ToSql()
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to convert query to sql")
+		return nil, errors.Wrap(err, "Failed to convert list recent status checks query to sql")
 	}
 
 	dst := make([]string, 0)
@@ -229,6 +242,42 @@ func (s *CheckStore) ListRecent(ctx context.Context, repoID int64, since time.Ti
 	}
 
 	return dst, nil
+}
+
+// ListResults returns a list of status check results for a specific commit in a repo.
+func (s *CheckStore) ListResults(ctx context.Context,
+	repoID int64,
+	commitSHA string,
+) ([]types.CheckResult, error) {
+	const checkColumns = "check_uid, check_status"
+	stmt := database.Builder.
+		Select(checkColumns).
+		From("checks").
+		Where("check_repo_id = ?", repoID).
+		Where("check_commit_sha = ?", commitSHA)
+
+	sql, args, err := stmt.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "Failed to convert query to sql")
+	}
+
+	result := make([]types.CheckResult, 0)
+
+	db := dbtx.GetAccessor(ctx, s.db)
+
+	if err = db.SelectContext(ctx, &result, sql, args...); err != nil {
+		return nil, database.ProcessSQLErrorf(err, "Failed to execute list status checks results query")
+	}
+
+	return result, nil
+}
+
+func (*CheckStore) applyOpts(stmt squirrel.SelectBuilder, query string) squirrel.SelectBuilder {
+	if query != "" {
+		stmt = stmt.Where("LOWER(check_uid) LIKE ?", fmt.Sprintf("%%%s%%", strings.ToLower(query)))
+	}
+
+	return stmt
 }
 
 func mapInternalCheck(c *types.Check) *check {

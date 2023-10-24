@@ -107,7 +107,7 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput, uid string) error {
 		return err
 	}
 
-	if err := check.ServiceAccountParent(in.ParentType, in.ParentID); err != nil {
+	if err := check.ServiceAccountParent(in.ParentType, in.ParentID); err != nil { //nolint:revive
 		return err
 	}
 

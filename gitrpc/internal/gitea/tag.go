@@ -140,40 +140,43 @@ func giteaGetAnnotatedTags(ctx context.Context, repoPath string, shas []string) 
 }
 
 // parseTagDataFromCatFile parses a tag from a cat-file output.
-func parseTagDataFromCatFile(data []byte) (tag types.Tag, err error) {
+func parseTagDataFromCatFile(data []byte) (types.Tag, error) {
 	p := 0
+
+	var err error
+	var tag types.Tag
 
 	// parse object Id
 	tag.TargetSha, p, err = giteaParseCatFileLine(data, p, "object")
 	if err != nil {
-		return
+		return types.Tag{}, fmt.Errorf("failed to parse cat file 'object' line: %w", err)
 	}
 
 	// parse object type
 	rawType, p, err := giteaParseCatFileLine(data, p, "type")
 	if err != nil {
-		return
+		return types.Tag{}, fmt.Errorf("failed to parse cat file 'type' line: %w", err)
 	}
 
 	tag.TargetType, err = types.ParseGitObjectType(rawType)
 	if err != nil {
-		return
+		return types.Tag{}, fmt.Errorf("failed to parse raw git object type: %w", err)
 	}
 
 	// parse tag name
 	tag.Name, p, err = giteaParseCatFileLine(data, p, "tag")
 	if err != nil {
-		return
+		return types.Tag{}, fmt.Errorf("failed to parse cat file 'tag' line: %w", err)
 	}
 
 	// parse tagger
 	rawTaggerInfo, p, err := giteaParseCatFileLine(data, p, "tagger")
 	if err != nil {
-		return
+		return types.Tag{}, fmt.Errorf("failed to parse cat file 'tagger' line: %w", err)
 	}
 	tag.Tagger, err = parseSignatureFromCatFileLine(rawTaggerInfo)
 	if err != nil {
-		return
+		return types.Tag{}, fmt.Errorf("failed to parse tagger signature: %w", err)
 	}
 
 	// remainder is message and gpg (remove leading and tailing new lines)

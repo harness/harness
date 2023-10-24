@@ -71,9 +71,9 @@ func streamBlamePart(
 		return nil
 	}
 
-	commit, errMap := mapGitCommit(&part.Commit)
-	if errMap != nil {
-		return fmt.Errorf("failed to map git commit: %w", errMap)
+	commit, err := mapGitCommit(&part.Commit)
+	if err != nil {
+		return fmt.Errorf("failed to map git commit: %w", err)
 	}
 
 	lines := make([][]byte, len(part.Lines))
@@ -86,8 +86,8 @@ func streamBlamePart(
 		Lines:  lines,
 	}
 
-	if errStream := stream.Send(pack); errStream != nil {
-		return errStream
+	if err = stream.Send(pack); err != nil {
+		return fmt.Errorf("failed to send blame part: %w", err)
 	}
 
 	return nil

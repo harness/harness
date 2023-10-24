@@ -58,33 +58,28 @@ const useRunPipelineModal = () => {
     path: `/api/v1/repos/${repoPath}/+/pipelines/${pipeline}/executions`
   })
 
-  const runPipeline = (formData: FormData): void => {
+  const runPipeline = async (formData: FormData): Promise<void> => {
     const { branch } = formData
     try {
-      startExecution(
+      const response = await startExecution(
         {},
         {
           pathParams: { path: `/api/v1/repos/${repoPath}/+/pipelines/${pipeline}/executions` },
           queryParams: { branch } as CreateExecutionQueryParams
         }
       )
-        .then(response => {
-          clearToaster()
-          showSuccess(getString('pipelines.executionStarted'))
-          if (response?.number && !isNaN(response.number)) {
-            history.push(routes.toCODEExecution({ repoPath, pipeline, execution: response.number.toString() }))
-          }
-          hideModal()
-        })
-        .catch(error => {
-          const errorMssg = getErrorMessage(error)
-          const pipelineDoesNotExistOnGit = errorMssg === getString('pipelines.failedToFindPath')
-          pipelineDoesNotExistOnGit
-            ? showError(`${getString('pipelines.executionCouldNotStart')}, ${errorMssg}.`)
-            : showError(getErrorMessage(error), 0, 'pipelines.executionCouldNotStart')
-        })
-    } catch (exception) {
-      showError(getErrorMessage(exception), 0, 'pipelines.executionCouldNotStart')
+      clearToaster()
+      showSuccess(getString('pipelines.executionStarted'))
+      if (response?.number && !isNaN(response.number)) {
+        history.push(routes.toCODEExecution({ repoPath, pipeline, execution: response.number.toString() }))
+      }
+      hideModal()
+    } catch (error) {
+      const errorMssg = getErrorMessage(error)
+      const pipelineDoesNotExistOnGit = errorMssg === getString('pipelines.failedToFindPath')
+      pipelineDoesNotExistOnGit
+        ? showError(`${getString('pipelines.executionCouldNotStart')}, ${errorMssg}.`)
+        : showError(getErrorMessage(error), 0, 'pipelines.executionCouldNotStart')
     }
   }
 

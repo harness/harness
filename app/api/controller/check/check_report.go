@@ -37,7 +37,7 @@ type ReportInput struct {
 	Payload  types.CheckPayload `json:"payload"`
 }
 
-var regexpCheckUID = "^[a-zA-Z_][0-9a-zA-Z-_.$]{0,127}$"
+var regexpCheckUID = "^[0-9a-zA-Z-_.$]{1,127}$"
 var matcherCheckUID = regexp.MustCompile(regexpCheckUID)
 
 // Validate validates and sanitizes the ReportInput data.

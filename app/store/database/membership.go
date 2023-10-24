@@ -439,7 +439,8 @@ func (s *MembershipStore) mapToMembershipUsers(ctx context.Context,
 
 	// attach the principal infos back to the slice items
 	res := make([]types.MembershipUser, len(ms))
-	for i, m := range ms {
+	for i := range ms {
+		m := ms[i]
 		res[i].Membership = mapToMembership(&m.membership)
 		res[i].Principal = mapToPrincipalInfo(&m.principalInfo)
 		if addedBy, ok := infoMap[m.membership.CreatedBy]; ok {
@@ -467,7 +468,8 @@ func (s *MembershipStore) mapToMembershipSpaces(ctx context.Context,
 
 	// attach the principal infos back to the slice items
 	res := make([]types.MembershipSpace, len(ms))
-	for i, m := range ms {
+	for i := range ms {
+		m := ms[i]
 		res[i].Membership = mapToMembership(&m.membership)
 		space, err := mapToSpace(ctx, s.spacePathStore, &m.space)
 		if err != nil {

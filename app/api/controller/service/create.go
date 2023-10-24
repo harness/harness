@@ -90,7 +90,7 @@ func (c *Controller) sanitizeCreateInput(in *CreateInput) error {
 	}
 
 	in.DisplayName = strings.TrimSpace(in.DisplayName)
-	if err := check.DisplayName(in.DisplayName); err != nil {
+	if err := check.DisplayName(in.DisplayName); err != nil { //nolint:revive
 		return err
 	}
 

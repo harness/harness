@@ -24,6 +24,8 @@
       border-bottom-right-radius: 4px !important;
     }
     [class*='TableV2--header'] {
+      box-shadow: 0px 0px 1px rgba(40, 41, 61, 0.08), 0px 0.5px 2px rgba(96, 97, 112, 0.16);
+
       [class*='variation-table-headers'] {
         text-transform: none;
         color: var(--grey-400);

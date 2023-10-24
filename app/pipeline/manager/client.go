@@ -43,19 +43,19 @@ func NewEmbeddedClient(manager ExecutionManager, config *types.Config) client.Cl
 
 // Join notifies the server the runner is joining the cluster.
 // Since the runner is embedded, this can just return nil.
-func (e *embedded) Join(ctx context.Context, machine string) error {
+func (e *embedded) Join(_ context.Context, _ string) error {
 	return nil
 }
 
 // Leave notifies the server the runner is leaving the cluster.
 // Since the runner is embedded, this can just return nil.
-func (e *embedded) Leave(ctx context.Context, machine string) error {
+func (e *embedded) Leave(_ context.Context, _ string) error {
 	return nil
 }
 
 // Ping sends a ping message to the server to test connectivity.
 // Since the runner is embedded, this can just return nil.
-func (e *embedded) Ping(ctx context.Context, machine string) error {
+func (e *embedded) Ping(_ context.Context, _ string) error {
 	return nil
 }
 
@@ -172,7 +172,7 @@ func (e *embedded) Upload(ctx context.Context, step int64, l []*drone.Line) erro
 }
 
 // UploadCard uploads a card to drone server.
-func (e *embedded) UploadCard(ctx context.Context, step int64, card *drone.CardInput) error {
+func (e *embedded) UploadCard(_ context.Context, _ int64, _ *drone.CardInput) error {
 	// Implement UploadCard logic here
 	return nil // Replace with appropriate error handling and logic
 }

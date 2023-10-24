@@ -36,12 +36,15 @@ var (
 
 // GenerateEnvironmentVariables generates the required environment variables for a payload
 // constructed from the provided parameters.
+// The parameter `internal` should be true if the call is coming from the Gitness
+// and therefore protection from rules shouldn't be verified.
 func GenerateEnvironmentVariables(
 	ctx context.Context,
 	apiBaseURL string,
 	repoID int64,
 	principalID int64,
 	disabled bool,
+	internal bool,
 ) (map[string]string, error) {
 	// best effort retrieving of requestID - log in case we can't find it but don't fail operation.
 	requestID, ok := request.RequestIDFrom(ctx)
@@ -58,6 +61,7 @@ func GenerateEnvironmentVariables(
 		PrincipalID: principalID,
 		RequestID:   requestID,
 		Disabled:    disabled,
+		Internal:    internal,
 	}
 
 	if err := payload.Validate(); err != nil {
@@ -92,7 +96,9 @@ func LoadFromEnvironment() (*githook.CLICore, error) {
 				query := r.URL.Query()
 				query.Add(request.QueryParamRepoID, fmt.Sprint(payload.RepoID))
 				query.Add(request.QueryParamPrincipalID, fmt.Sprint(payload.PrincipalID))
-
+				if payload.Internal {
+					query.Add(request.QueryParamInternal, "true")
+				}
 				r.URL.RawQuery = query.Encode()
 
 				// add headers

@@ -25,14 +25,14 @@ fi
 # The files are then git-added
 FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep .go | sed 's| |\\ |g')
 if [ -n "$FILES" ]; then
-  make format
-	make lint
-	if [ $? -ne 0 ]; then
-    		echo "Error running make check - please fix before committing"
-		echo "if this is a mistake you can skip the checks with 'git commit --no-verify'"
-		exit 1
-	fi
-	echo "$FILES" | xargs git add
+    make format
+    make lint
+    if [ $? -ne 0 ]; then
+            echo "Error running make check - please fix before committing"
+        echo "if this is a mistake you can skip the checks with 'git commit --no-verify'"
+        exit 1
+    fi
+    echo "$FILES" | xargs git add
 fi
 
 exit 0

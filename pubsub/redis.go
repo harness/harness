@@ -115,7 +115,7 @@ func (r *Redis) Publish(ctx context.Context, topic string, payload []byte, opts 
 	return nil
 }
 
-func (r *Redis) Close(ctx context.Context) error {
+func (r *Redis) Close(_ context.Context) error {
 	for _, subscriber := range r.registry {
 		err := subscriber.Close()
 		if err != nil {

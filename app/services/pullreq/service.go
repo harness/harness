@@ -263,6 +263,7 @@ func createSystemRPCWriteParams(
 		repoID,
 		principal.ID,
 		false,
+		true,
 	)
 	if err != nil {
 		return gitrpc.WriteParams{}, fmt.Errorf("failed to generate git hook environment variables: %w", err)

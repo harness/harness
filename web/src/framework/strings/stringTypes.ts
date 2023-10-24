@@ -409,6 +409,7 @@ export interface StringsMap {
   'pipelines.deletePipelineError': string
   'pipelines.deletePipelineSuccess': string
   'pipelines.deletePipelineWarning': string
+  'pipelines.edit': string
   'pipelines.editPipeline': string
   'pipelines.enterPipelineName': string
   'pipelines.enterYAMLPath': string
@@ -610,6 +611,7 @@ export interface StringsMap {
   'secrets.deleteSecret': string
   'secrets.deleteSecretConfirm': string
   'secrets.enterSecretName': string
+  'secrets.enterSecretValue': string
   'secrets.failedToCreate': string
   'secrets.failedToDeleteSecret': string
   'secrets.failedToUpdateSecret': string
@@ -618,8 +620,8 @@ export interface StringsMap {
   'secrets.noData': string
   'secrets.secretDeleted': string
   'secrets.secretUpdated': string
+  'secrets.showValue': string
   'secrets.updateSecret': string
-  'secrets.value': string
   selectBranchPlaceHolder: string
   selectRange: string
   selectSpace: string
@@ -751,6 +753,7 @@ export interface StringsMap {
   webhookListingContent: string
   webhookPRBranchUpdated: string
   webhookPRClosed: string
+  webhookPRCommentCreated: string
   webhookPRCreated: string
   webhookPRReopened: string
   webhookSelectAllEvents: string

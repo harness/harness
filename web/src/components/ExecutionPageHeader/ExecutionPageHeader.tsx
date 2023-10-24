@@ -28,8 +28,8 @@ import {
   useToaster
 } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
-import { Color } from '@harnessio/design-system'
-import { Link, useParams } from 'react-router-dom'
+import { Color, FontVariation } from '@harnessio/design-system'
+import { Link, useParams, useHistory } from 'react-router-dom'
 import { Calendar, GitFork, Timer } from 'iconoir-react'
 import { useMutate } from 'restful-react'
 import { useStrings } from 'framework/strings'
@@ -80,6 +80,7 @@ export function ExecutionPageHeader({
   execution
 }: ExecutionPageHeaderProps) {
   const { gitRef } = useParams<CODEProps>()
+  const history = useHistory()
   const { getString } = useStrings()
   const space = useGetSpaceParam()
   const { routes } = useAppContext()
@@ -115,7 +116,14 @@ export function ExecutionPageHeader({
           {extraBreadcrumbLinks.map(link => (
             <Fragment key={link.url}>
               <Icon name="main-chevron-right" size={8} color={Color.GREY_500} />
-              <Link to={link.url}>{link.label}</Link>
+              {/* This allows for outer most entities to not necessarily be links */}
+              {link.url ? (
+                <Link to={link.url}>{link.label}</Link>
+              ) : (
+                <Text font={{ variation: FontVariation.SMALL }} color={Color.GREY_500}>
+                  {link.label}
+                </Text>
+              )}
             </Fragment>
           ))}
         </Layout.Horizontal>
@@ -170,6 +178,19 @@ export function ExecutionPageHeader({
                 )}
               </Layout.Horizontal>
             )}
+            <>
+              <PipeSeparator height={7} />
+              <Button
+                variation={ButtonVariation.PRIMARY}
+                text={getString('pipelines.edit')}
+                onClick={e => {
+                  e.stopPropagation()
+                  if (repoMetadata?.path && pipeline) {
+                    history.push(routes.toCODEPipelineEdit({ repoPath: repoMetadata.path, pipeline }))
+                  }
+                }}
+              />
+            </>
             {[ExecutionState.RUNNING, ExecutionState.PENDING].includes(getStatus(executionInfo?.status)) && (
               <>
                 <PipeSeparator height={7} />

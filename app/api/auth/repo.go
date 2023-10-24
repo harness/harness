@@ -16,6 +16,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/auth/authz"
@@ -30,8 +31,13 @@ import (
 // in the scope of its parent.
 // Returns nil if the permission is granted, otherwise returns an error.
 // NotAuthenticated, NotAuthorized, or any underlying error.
-func CheckRepo(ctx context.Context, authorizer authz.Authorizer, session *auth.Session,
-	repo *types.Repository, permission enum.Permission, orPublic bool,
+func CheckRepo(
+	ctx context.Context,
+	authorizer authz.Authorizer,
+	session *auth.Session,
+	repo *types.Repository,
+	permission enum.Permission,
+	orPublic bool,
 ) error {
 	if orPublic && repo.IsPublic {
 		return nil
@@ -49,4 +55,18 @@ func CheckRepo(ctx context.Context, authorizer authz.Authorizer, session *auth.S
 	}
 
 	return Check(ctx, authorizer, session, scope, resource, permission)
+}
+
+func IsSpaceAdmin(
+	ctx context.Context,
+	authorizer authz.Authorizer,
+	session *auth.Session,
+	repo *types.Repository,
+) (bool, error) {
+	err := CheckRepo(ctx, authorizer, session, repo, enum.PermissionSpaceCreate, false)
+	if err != nil && !errors.Is(err, ErrNotAuthorized) {
+		return false, fmt.Errorf("failed to check access to find if the user is space admin: %w", err)
+	}
+
+	return err == nil, nil
 }

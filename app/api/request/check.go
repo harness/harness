@@ -23,7 +23,19 @@ import (
 // ParseCheckListOptions extracts the status check list API options from the url.
 func ParseCheckListOptions(r *http.Request) types.CheckListOptions {
 	return types.CheckListOptions{
-		Page: ParsePage(r),
-		Size: ParseLimit(r),
+		ListQueryFilter: ParseListQueryFilterFromRequest(r),
 	}
+}
+
+// ParseCheckRecentOptions extracts the list recent status checks API options from the url.
+func ParseCheckRecentOptions(r *http.Request) (types.CheckRecentOptions, error) {
+	since, err := QueryParamAsPositiveInt64OrDefault(r, QueryParamSince, 0)
+	if err != nil {
+		return types.CheckRecentOptions{}, err
+	}
+
+	return types.CheckRecentOptions{
+		Query: ParseQuery(r),
+		Since: since,
+	}, nil
 }

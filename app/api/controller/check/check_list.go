@@ -40,14 +40,19 @@ func (c *Controller) ListChecks(
 	var count int
 
 	err = c.tx.WithTx(ctx, func(ctx context.Context) (err error) {
-		count, err = c.checkStore.Count(ctx, repo.ID, commitSHA, opts)
-		if err != nil {
-			return fmt.Errorf("failed to count status check results for repo=%s: %w", repo.UID, err)
-		}
-
 		checks, err = c.checkStore.List(ctx, repo.ID, commitSHA, opts)
 		if err != nil {
 			return fmt.Errorf("failed to list status check results for repo=%s: %w", repo.UID, err)
+		}
+
+		if opts.Page == 1 && len(checks) < opts.Size {
+			count = len(checks)
+			return nil
+		}
+
+		count, err = c.checkStore.Count(ctx, repo.ID, commitSHA, opts)
+		if err != nil {
+			return fmt.Errorf("failed to count status check results for repo=%s: %w", repo.UID, err)
 		}
 
 		return nil

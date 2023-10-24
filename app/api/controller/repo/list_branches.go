@@ -44,7 +44,7 @@ func (c *Controller) ListBranches(ctx context.Context,
 	}
 
 	rpcOut, err := c.gitRPCClient.ListBranches(ctx, &gitrpc.ListBranchesParams{
-		ReadParams:    CreateRPCReadParams(repo),
+		ReadParams:    gitrpc.CreateRPCReadParams(repo),
 		IncludeCommit: includeCommit,
 		Query:         filter.Query,
 		Sort:          mapToRPCBranchSortOption(filter.Sort),

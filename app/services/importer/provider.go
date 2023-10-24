@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/sha512"
 	"encoding/base32"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -26,22 +27,28 @@ import (
 	"github.com/harness/gitness/types"
 
 	"github.com/drone/go-scm/scm"
+	"github.com/drone/go-scm/scm/driver/bitbucket"
 	"github.com/drone/go-scm/scm/driver/github"
 	"github.com/drone/go-scm/scm/driver/gitlab"
+	"github.com/drone/go-scm/scm/driver/stash"
 	"github.com/drone/go-scm/scm/transport/oauth2"
 )
 
 type ProviderType string
 
 const (
-	ProviderTypeGitHub ProviderType = "github"
-	ProviderTypeGitLab ProviderType = "gitlab"
+	ProviderTypeGitHub    ProviderType = "github"
+	ProviderTypeGitLab    ProviderType = "gitlab"
+	ProviderTypeBitbucket ProviderType = "bitbucket"
+	ProviderTypeStash     ProviderType = "stash"
 )
 
 func (p ProviderType) Enum() []any {
 	return []any{
 		ProviderTypeGitHub,
 		ProviderTypeGitLab,
+		ProviderTypeBitbucket,
+		ProviderTypeStash,
 	}
 }
 
@@ -91,40 +98,14 @@ func hash(s string) string {
 	return base32.StdEncoding.EncodeToString(h.Sum(nil)[:10])
 }
 
-func getClient(provider Provider, authReq bool) (*scm.Client, error) {
+func getScmClientWithTransport(provider Provider, authReq bool) (*scm.Client, error) {
 	if authReq && (provider.Username == "" || provider.Password == "") {
 		return nil, usererror.BadRequest("scm provider authentication credentials missing")
 	}
 
-	var c *scm.Client
-	var err error
-
-	switch provider.Type {
-	case "":
-		return nil, usererror.BadRequest("scm provider can not be empty")
-
-	case ProviderTypeGitHub:
-		if provider.Host != "" {
-			c, err = github.New(provider.Host)
-			if err != nil {
-				return nil, usererror.BadRequestf("scm provider Host invalid: %s", err.Error())
-			}
-		} else {
-			c = github.NewDefault()
-		}
-
-	case ProviderTypeGitLab:
-		if provider.Host != "" {
-			c, err = gitlab.New(provider.Host)
-			if err != nil {
-				return nil, usererror.BadRequestf("scm provider Host invalid: %s", err.Error())
-			}
-		} else {
-			c = gitlab.NewDefault()
-		}
-
-	default:
-		return nil, usererror.BadRequestf("unsupported scm provider: %s", provider)
+	c, err := getScmClient(provider)
+	if err != nil {
+		return nil, usererror.BadRequestf("could not create scm client: %s", err)
 	}
 
 	if provider.Password != "" {
@@ -137,8 +118,63 @@ func getClient(provider Provider, authReq bool) (*scm.Client, error) {
 
 	return c, nil
 }
+
+func getScmClient(provider Provider) (*scm.Client, error) { //nolint:gocognit
+	var c *scm.Client
+	var err error
+	switch provider.Type {
+	case "":
+		return nil, errors.New("scm provider can not be empty")
+
+	case ProviderTypeGitHub:
+		if provider.Host != "" {
+			c, err = github.New(provider.Host)
+			if err != nil {
+				return nil, fmt.Errorf("scm provider Host invalid: %w", err)
+			}
+		} else {
+			c = github.NewDefault()
+		}
+
+	case ProviderTypeGitLab:
+		if provider.Host != "" {
+			c, err = gitlab.New(provider.Host)
+			if err != nil {
+				return nil, fmt.Errorf("scm provider Host invalid: %w", err)
+			}
+		} else {
+			c = gitlab.NewDefault()
+		}
+
+	case ProviderTypeBitbucket:
+		if provider.Host != "" {
+			c, err = bitbucket.New(provider.Host)
+			if err != nil {
+				return nil, fmt.Errorf("scm provider Host invalid: %w", err)
+			}
+		} else {
+			c = bitbucket.NewDefault()
+		}
+
+	case ProviderTypeStash:
+		if provider.Host != "" {
+			c, err = stash.New(provider.Host)
+			if err != nil {
+				return nil, fmt.Errorf("scm provider Host invalid: %w", err)
+			}
+		} else {
+			c = stash.NewDefault()
+		}
+
+	default:
+		return nil, fmt.Errorf("unsupported scm provider: %s", provider)
+	}
+
+	return c, nil
+}
+
 func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug string) (RepositoryInfo, error) {
-	scmClient, err := getClient(provider, false)
+	scmClient, err := getScmClientWithTransport(provider, false)
 	if err != nil {
 		return RepositoryInfo{}, err
 	}
@@ -166,7 +202,7 @@ func LoadRepositoriesFromProviderSpace(
 	provider Provider,
 	spaceSlug string,
 ) ([]RepositoryInfo, error) {
-	scmClient, err := getClient(provider, true)
+	scmClient, err := getScmClientWithTransport(provider, true)
 	if err != nil {
 		return nil, err
 	}

@@ -48,7 +48,7 @@ func (c *Controller) ListCommitTags(ctx context.Context,
 	}
 
 	rpcOut, err := c.gitRPCClient.ListCommitTags(ctx, &gitrpc.ListCommitTagsParams{
-		ReadParams:    CreateRPCReadParams(repo),
+		ReadParams:    gitrpc.CreateRPCReadParams(repo),
 		IncludeCommit: includeCommit,
 		Query:         filter.Query,
 		Sort:          mapToRPCTagSortOption(filter.Sort),

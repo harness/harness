@@ -323,6 +323,8 @@ func setupRepos(r chi.Router,
 			SetupChecks(r, checkCtrl)
 
 			setupUploads(r, uploadCtrl)
+
+			setupRules(r, repoCtrl)
 		})
 	})
 }
@@ -526,9 +528,22 @@ func setupWebhook(r chi.Router, webhookCtrl *webhook.Controller) {
 
 func SetupChecks(r chi.Router, checkCtrl *check.Controller) {
 	r.Route("/checks", func(r chi.Router) {
+		r.Get("/recent", handlercheck.HandleCheckListRecent(checkCtrl))
 		r.Route(fmt.Sprintf("/commits/{%s}", request.PathParamCommitSHA), func(r chi.Router) {
 			r.Put("/", handlercheck.HandleCheckReport(checkCtrl))
 			r.Get("/", handlercheck.HandleCheckList(checkCtrl))
+		})
+	})
+}
+
+func setupRules(r chi.Router, repoCtrl *repo.Controller) {
+	r.Route("/rules", func(r chi.Router) {
+		r.Post("/", handlerrepo.HandleRuleCreate(repoCtrl))
+		r.Get("/", handlerrepo.HandleRuleList(repoCtrl))
+		r.Route(fmt.Sprintf("/{%s}", request.PathParamRuleUID), func(r chi.Router) {
+			r.Patch("/", handlerrepo.HandleRuleUpdate(repoCtrl))
+			r.Delete("/", handlerrepo.HandleRuleDelete(repoCtrl))
+			r.Get("/", handlerrepo.HandleRuleFind(repoCtrl))
 		})
 	})
 }

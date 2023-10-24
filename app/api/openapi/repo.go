@@ -20,6 +20,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/repo"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/api/usererror"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
@@ -154,6 +155,31 @@ type deleteTagRequest struct {
 type getRawDiffRequest struct {
 	repoRequest
 	Range string `path:"range" example:"main..dev"`
+}
+
+// ruleType is a plugin for types.RuleType to allow using oneof.
+type ruleType string
+
+func (ruleType) Enum() []interface{} {
+	return []interface{}{protection.TypeBranch}
+}
+
+// ruleDefinition is a plugin for types.Rule Definition to allow using oneof.
+type ruleDefinition struct{}
+
+func (ruleDefinition) JSONSchemaOneOf() []interface{} {
+	return []interface{}{protection.Branch{}}
+}
+
+type rule struct {
+	types.Rule
+
+	// overshadow Type and Definition to enable oneof.
+	Type       ruleType       `json:"type"`
+	Definition ruleDefinition `json:"definition"`
+
+	// overshadow Pattern to correct the type
+	Pattern protection.Pattern `json:"pattern"`
 }
 
 var queryParameterGitRef = openapi3.ParameterOrRef{
@@ -365,6 +391,36 @@ var queryParameterCommitter = openapi3.ParameterOrRef{
 		Schema: &openapi3.SchemaOrRef{
 			Schema: &openapi3.Schema{
 				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterQueryRuleList = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamQuery,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The substring by which the repository protection rules are filtered."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type: ptrSchemaType(openapi3.SchemaTypeString),
+			},
+		},
+	},
+}
+
+var queryParameterSortRuleList = openapi3.ParameterOrRef{
+	Parameter: &openapi3.Parameter{
+		Name:        request.QueryParamSort,
+		In:          openapi3.ParameterInQuery,
+		Description: ptr.String("The field by which the protection rules are sorted."),
+		Required:    ptr.Bool(false),
+		Schema: &openapi3.SchemaOrRef{
+			Schema: &openapi3.Schema{
+				Type:    ptrSchemaType(openapi3.SchemaTypeString),
+				Default: ptrptr(enum.RuleSortCreated),
+				Enum:    enum.RuleSort("").Enum(),
 			},
 		},
 	},
@@ -627,7 +683,7 @@ func repoOperations(reflector *openapi3.Reflector) {
 	opCommitFiles.WithTags("repository")
 	opCommitFiles.WithMapOfAnything(map[string]interface{}{"operationId": "commitFiles"})
 	_ = reflector.SetRequest(&opCommitFiles, new(commitFilesRequest), http.MethodPost)
-	_ = reflector.SetJSONResponse(&opCommitFiles, repo.CommitFilesResponse{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opCommitFiles, types.CommitFilesResponse{}, http.StatusOK)
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusInternalServerError)
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusBadRequest)
 	_ = reflector.SetJSONResponse(&opCommitFiles, new(usererror.Error), http.StatusUnauthorized)
@@ -676,4 +732,86 @@ func repoOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusUnauthorized)
 	_ = reflector.SetJSONResponse(&opMergeCheck, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/merge-check/{range}", opMergeCheck)
+
+	opRuleAdd := openapi3.Operation{}
+	opRuleAdd.WithTags("repository")
+	opRuleAdd.WithMapOfAnything(map[string]interface{}{"operationId": "ruleAdd"})
+	_ = reflector.SetRequest(&opRuleAdd, struct {
+		repoRequest
+		repo.RuleCreateInput
+
+		// overshadow "definition"
+		Type       ruleType       `json:"type"`
+		Definition ruleDefinition `json:"definition"`
+	}{}, http.MethodPost)
+	_ = reflector.SetJSONResponse(&opRuleAdd, rule{}, http.StatusCreated)
+	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRuleAdd, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPost, "/repos/{repo_ref}/rules", opRuleAdd)
+
+	opRuleDelete := openapi3.Operation{}
+	opRuleDelete.WithTags("repository")
+	opRuleDelete.WithMapOfAnything(map[string]interface{}{"operationId": "ruleDelete"})
+	_ = reflector.SetRequest(&opRuleDelete, struct {
+		repoRequest
+		RuleUID string `path:"rule_uid"`
+	}{}, http.MethodDelete)
+	_ = reflector.SetJSONResponse(&opRuleDelete, nil, http.StatusNoContent)
+	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRuleDelete, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodDelete, "/repos/{repo_ref}/rules/{rule_uid}", opRuleDelete)
+
+	opRuleUpdate := openapi3.Operation{}
+	opRuleUpdate.WithTags("repository")
+	opRuleUpdate.WithMapOfAnything(map[string]interface{}{"operationId": "ruleUpdate"})
+	_ = reflector.SetRequest(&opRuleUpdate, &struct {
+		repoRequest
+		RuleUID string `path:"rule_uid"`
+		repo.RuleUpdateInput
+
+		// overshadow Type and Definition to enable oneof.
+		Type       ruleType       `json:"type"`
+		Definition ruleDefinition `json:"definition"`
+	}{}, http.MethodPatch)
+	_ = reflector.SetJSONResponse(&opRuleUpdate, rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRuleUpdate, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodPatch, "/repos/{repo_ref}/rules/{rule_uid}", opRuleUpdate)
+
+	opRuleList := openapi3.Operation{}
+	opRuleList.WithTags("repository")
+	opRuleList.WithMapOfAnything(map[string]interface{}{"operationId": "ruleList"})
+	opRuleList.WithParameters(
+		queryParameterQueryRuleList,
+		queryParameterOrder, queryParameterSortRuleList,
+		queryParameterPage, queryParameterLimit)
+	_ = reflector.SetRequest(&opRuleList, &struct {
+		repoRequest
+	}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&opRuleList, []rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRuleList, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/rules", opRuleList)
+
+	opRuleGet := openapi3.Operation{}
+	opRuleGet.WithTags("repository")
+	opRuleGet.WithMapOfAnything(map[string]interface{}{"operationId": "ruleGet"})
+	_ = reflector.SetRequest(&opRuleGet, &struct {
+		repoRequest
+		RuleUID string `path:"rule_uid"`
+	}{}, http.MethodGet)
+	_ = reflector.SetJSONResponse(&opRuleGet, []rule{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.SetJSONResponse(&opRuleGet, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.Spec.AddOperation(http.MethodGet, "/repos/{repo_ref}/rules/{rule_uid}", opRuleGet)
 }

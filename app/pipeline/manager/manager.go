@@ -218,7 +218,7 @@ func (m *Manager) Request(ctx context.Context, args *Request) (*types.Stage, err
 
 // Accept accepts the build stage for execution. It is possible for multiple
 // agents to pull the same stage from the queue.
-func (m *Manager) Accept(ctx context.Context, id int64, machine string) (*types.Stage, error) {
+func (m *Manager) Accept(_ context.Context, id int64, machine string) (*types.Stage, error) {
 	log := log.With().
 		Int64("stage-id", id).
 		Str("machine", machine).
@@ -270,7 +270,7 @@ func (m *Manager) UploadLogs(ctx context.Context, step int64, r io.Reader) error
 }
 
 // Details provides details about the stage.
-func (m *Manager) Details(ctx context.Context, stageID int64) (*ExecutionContext, error) {
+func (m *Manager) Details(_ context.Context, stageID int64) (*ExecutionContext, error) {
 	log := log.With().
 		Int64("stage-id", stageID).
 		Logger()
@@ -367,7 +367,7 @@ func (m *Manager) createNetrc(repo *types.Repository) (*Netrc, error) {
 }
 
 // Before signals the build step is about to start.
-func (m *Manager) BeforeStep(ctx context.Context, step *types.Step) error {
+func (m *Manager) BeforeStep(_ context.Context, step *types.Step) error {
 	log := log.With().
 		Str("step.status", string(step.Status)).
 		Str("step.name", step.Name).
@@ -392,7 +392,7 @@ func (m *Manager) BeforeStep(ctx context.Context, step *types.Step) error {
 }
 
 // After signals the build step is complete.
-func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
+func (m *Manager) AfterStep(_ context.Context, step *types.Step) error {
 	log := log.With().
 		Str("step.status", string(step.Status)).
 		Str("step.name", step.Name).
@@ -421,7 +421,7 @@ func (m *Manager) AfterStep(ctx context.Context, step *types.Step) error {
 }
 
 // BeforeAll signals the build stage is about to start.
-func (m *Manager) BeforeStage(ctx context.Context, stage *types.Stage) error {
+func (m *Manager) BeforeStage(_ context.Context, stage *types.Stage) error {
 	s := &setup{
 		Executions:  m.Executions,
 		Checks:      m.Checks,
@@ -437,7 +437,7 @@ func (m *Manager) BeforeStage(ctx context.Context, stage *types.Stage) error {
 }
 
 // AfterAll signals the build stage is complete.
-func (m *Manager) AfterStage(ctx context.Context, stage *types.Stage) error {
+func (m *Manager) AfterStage(_ context.Context, stage *types.Stage) error {
 	t := &teardown{
 		Executions:  m.Executions,
 		Pipelines:   m.Pipelines,

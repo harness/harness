@@ -63,7 +63,7 @@ func newQueue(store store.StageStore, lock lock.MutexManager) (*queue, error) {
 	return q, nil
 }
 
-func (q *queue) Schedule(ctx context.Context, stage *types.Stage) error {
+func (q *queue) Schedule(_ context.Context, _ *types.Stage) error {
 	select {
 	case q.ready <- struct{}{}:
 	default:
@@ -71,7 +71,7 @@ func (q *queue) Schedule(ctx context.Context, stage *types.Stage) error {
 	return nil
 }
 
-func (q *queue) Pause(ctx context.Context) error {
+func (q *queue) Pause(_ context.Context) error {
 	q.Lock()
 	q.paused = true
 	q.Unlock()

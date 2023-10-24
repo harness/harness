@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
-	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/token"
 	"github.com/harness/gitness/store"
 	"github.com/harness/gitness/types"
@@ -40,8 +39,10 @@ type LoginInput struct {
 /*
  * Login attempts to login as a specific user - returns the session token if successful.
  */
-func (c *Controller) Login(ctx context.Context, session *auth.Session,
-	in *LoginInput) (*types.TokenResponse, error) {
+func (c *Controller) Login(
+	ctx context.Context,
+	in *LoginInput,
+) (*types.TokenResponse, error) {
 	// no auth check required, password is used for it.
 
 	user, err := findUserFromUID(ctx, c.principalStore, in.LoginIdentifier)

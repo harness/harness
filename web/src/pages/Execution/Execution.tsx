@@ -109,9 +109,17 @@ const Execution = () => {
               url: routes.toCODEPipelines({ repoPath: repoMetadata.path as string })
             },
             {
-              label: getString('pageTitle.executions'),
+              label: pipeline as string,
               url: routes.toCODEExecutions({ repoPath: repoMetadata.path as string, pipeline: pipeline as string })
-            }
+            },
+            ...(executionNum
+              ? [
+                  {
+                    label: executionNum,
+                    url: ''
+                  }
+                ]
+              : [])
           ]
         }
         executionInfo={{

@@ -208,7 +208,15 @@ const ExecutionList = () => {
             {
               label: getString('pageTitle.pipelines'),
               url: routes.toCODEPipelines({ repoPath: repoMetadata.path as string })
-            }
+            },
+            ...(pipeline
+              ? [
+                  {
+                    label: pipeline,
+                    url: ''
+                  }
+                ]
+              : [])
           ]
         }
       />

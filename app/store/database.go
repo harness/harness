@@ -375,6 +375,36 @@ type (
 		List(ctx context.Context, prID int64, principalID int64) ([]*types.PullReqFileView, error)
 	}
 
+	// RuleStore defines database interface for protection rules.
+	RuleStore interface {
+		// Find finds a protection rule by ID.
+		Find(ctx context.Context, id int64) (*types.Rule, error)
+
+		// FindByUID finds a protection rule by parent ID and UID.
+		FindByUID(ctx context.Context, spaceID, repoID *int64, uid string) (*types.Rule, error)
+
+		// Create inserts a new protection rule.
+		Create(ctx context.Context, rule *types.Rule) error
+
+		// Update updates an existing protection rule.
+		Update(ctx context.Context, rule *types.Rule) error
+
+		// Delete removes a protection rule by its ID.
+		Delete(ctx context.Context, id int64) error
+
+		// DeleteByUID removes a protection rule by its UID.
+		DeleteByUID(ctx context.Context, spaceID, repoID *int64, uid string) error
+
+		// Count returns count of protection rules matching the provided criteria.
+		Count(ctx context.Context, spaceID, repoID *int64, filter *types.RuleFilter) (int64, error)
+
+		// List returns a list of protection rules of a repository or a space that matches the provided criteria.
+		List(ctx context.Context, spaceID, repoID *int64, filter *types.RuleFilter) ([]types.Rule, error)
+
+		// ListAllRepoRules returns a list of all protection rules that can be applied on a repository.
+		ListAllRepoRules(ctx context.Context, repoID int64) ([]types.RuleInfoInternal, error)
+	}
+
 	// WebhookStore defines the webhook data storage.
 	WebhookStore interface {
 		// Find finds the webhook by id.
@@ -432,7 +462,10 @@ type (
 		List(ctx context.Context, repoID int64, commitSHA string, opts types.CheckListOptions) ([]types.Check, error)
 
 		// ListRecent returns a list of recently executed status checks in a repository.
-		ListRecent(ctx context.Context, repoID int64, since time.Time) ([]string, error)
+		ListRecent(ctx context.Context, repoID int64, opts types.CheckRecentOptions) ([]string, error)
+
+		// ListResults returns a list of status check results for a specific commit in a repo.
+		ListResults(ctx context.Context, repoID int64, commitSHA string) ([]types.CheckResult, error)
 	}
 
 	ReqCheckStore interface {

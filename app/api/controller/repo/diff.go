@@ -45,7 +45,7 @@ func (c *Controller) RawDiff(
 	}
 
 	return c.gitRPCClient.RawDiff(ctx, &gitrpc.DiffParams{
-		ReadParams: CreateRPCReadParams(repo),
+		ReadParams: gitrpc.CreateRPCReadParams(repo),
 		BaseRef:    info.BaseRef,
 		HeadRef:    info.HeadRef,
 		MergeBase:  info.MergeBase,
@@ -65,7 +65,7 @@ func (c *Controller) CommitDiff(
 	}
 
 	return c.gitRPCClient.CommitDiff(ctx, &gitrpc.GetCommitParams{
-		ReadParams: CreateRPCReadParams(repo),
+		ReadParams: gitrpc.CreateRPCReadParams(repo),
 		SHA:        sha,
 	}, w)
 }

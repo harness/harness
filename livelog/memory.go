@@ -37,14 +37,14 @@ func NewMemory() LogStream {
 	}
 }
 
-func (s *streamer) Create(ctx context.Context, id int64) error {
+func (s *streamer) Create(_ context.Context, id int64) error {
 	s.Lock()
 	s.streams[id] = newStream()
 	s.Unlock()
 	return nil
 }
 
-func (s *streamer) Delete(ctx context.Context, id int64) error {
+func (s *streamer) Delete(_ context.Context, id int64) error {
 	s.Lock()
 	stream, ok := s.streams[id]
 	if ok {
@@ -57,7 +57,7 @@ func (s *streamer) Delete(ctx context.Context, id int64) error {
 	return stream.close()
 }
 
-func (s *streamer) Write(ctx context.Context, id int64, line *Line) error {
+func (s *streamer) Write(_ context.Context, id int64, line *Line) error {
 	s.Lock()
 	stream, ok := s.streams[id]
 	s.Unlock()
@@ -77,7 +77,7 @@ func (s *streamer) Tail(ctx context.Context, id int64) (<-chan *Line, <-chan err
 	return stream.subscribe(ctx)
 }
 
-func (s *streamer) Info(ctx context.Context) *LogStreamInfo {
+func (s *streamer) Info(_ context.Context) *LogStreamInfo {
 	s.Lock()
 	defer s.Unlock()
 	info := &LogStreamInfo{

@@ -287,10 +287,20 @@
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
 
-    max-width: max(calc(100vw - 400px), 960px);
+    max-width: max(100vw - 387px, 960px);
 
     &.standalone {
-      max-width: max(calc(100vw - 280px), 960px);
+      max-width: max(100vw - 280px, 960px);
+    }
+
+    // Harness Nav2.0 is enabled
+    &.navV2 {
+      max-width: max(100vw - 347px, 960px);
+    }
+
+    // Harness Nav1.0 / Sidebar is collapsed
+    &.sidebarCollapsed {
+      max-width: max(100vw - 215px, 960px);
     }
   }
 }
