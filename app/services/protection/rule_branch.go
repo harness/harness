@@ -31,7 +31,6 @@ var TypeBranch types.RuleType = "branch"
 type Branch struct {
 	Bypass    DefBypass    `json:"bypass"`
 	PullReq   DefPullReq   `json:"pullreq"`
-	Push      DefPush      `json:"push"`
 	Lifecycle DefLifecycle `json:"lifecycle"`
 }
 
@@ -110,28 +109,38 @@ func (v *Branch) CanMerge(_ context.Context, in CanMergeInput) (CanMergeOutput, 
 	return out, []types.RuleViolations{violations}, nil
 }
 
-func (v *Branch) CanPush(_ context.Context, in CanPushInput) (CanPushOutput, []types.RuleViolations, error) {
-	var out CanPushOutput
+func (v *Branch) CanModifyRef(_ context.Context, in CanModifyRefInput) ([]types.RuleViolations, error) {
 	var violations types.RuleViolations
 
-	if v.isBypassed(in.Actor, in.IsSpaceOwner) {
-		return out, nil, nil
+	if v.isBypassed(in.Actor, in.IsSpaceOwner) || in.RefType != RefTypeBranch || len(in.RefNames) == 0 {
+		return nil, nil
 	}
 
-	if v.Push.Block {
-		violations.Add("pullreq.push.block",
-			"Push is not allowed. Please use pull requests.")
+	switch in.RefAction {
+	case RefActionCreate:
+		if v.Lifecycle.CreateForbidden {
+			violations.Addf("pullreq.lifecycle.create",
+				"Creation of branch %q is not allowed.", in.RefNames[0])
+		}
+	case RefActionDelete:
+		if v.Lifecycle.DeleteForbidden {
+			violations.Addf("pullreq.lifecycle.delete",
+				"Delete of branch %q is not allowed.", in.RefNames[0])
+		}
+	case RefActionUpdate:
+		if v.Lifecycle.UpdateForbidden {
+			violations.Addf("pullreq.lifecycle.update",
+				"Push to branch %q is not allowed. Please use pull requests.", in.RefNames[0])
+		}
 	}
 
-	return out, []types.RuleViolations{violations}, nil
+	return []types.RuleViolations{violations}, nil
 }
 
 func (v *Branch) isBypassed(actor *types.Principal, isSpaceOwner bool) bool {
-	if v.Bypass.SpaceOwners && isSpaceOwner {
-		return true
-	}
-
-	return slices.Contains(v.Bypass.UserIDs, actor.ID)
+	return actor.Admin ||
+		v.Bypass.SpaceOwners && isSpaceOwner ||
+		slices.Contains(v.Bypass.UserIDs, actor.ID)
 }
 
 func (v *Branch) Sanitize() error {
@@ -141,10 +150,6 @@ func (v *Branch) Sanitize() error {
 
 	if err := v.PullReq.Validate(); err != nil {
 		return fmt.Errorf("pull request: %w", err)
-	}
-
-	if err := v.Push.Validate(); err != nil {
-		return fmt.Errorf("push: %w", err)
 	}
 
 	if err := v.Lifecycle.Validate(); err != nil {
@@ -234,6 +239,7 @@ func (v DefPush) Validate() error {
 type DefLifecycle struct {
 	CreateForbidden bool `json:"create_forbidden,omitempty"`
 	DeleteForbidden bool `json:"delete_forbidden,omitempty"`
+	UpdateForbidden bool `json:"update_forbidden,omitempty"`
 }
 
 func (v DefLifecycle) Validate() error {

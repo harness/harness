@@ -58,31 +58,41 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		return types.CommitFilesResponse{}, err
 	}
 
-	if in.NewBranch == "" {
-		isSpaceOwner, err := apiauth.IsSpaceAdmin(ctx, c.authorizer, session, repo)
-		if err != nil {
-			return types.CommitFilesResponse{}, err
-		}
+	isSpaceOwner, err := apiauth.IsSpaceAdmin(ctx, c.authorizer, session, repo)
+	if err != nil {
+		return types.CommitFilesResponse{}, err
+	}
 
-		protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
-		if err != nil {
-			return types.CommitFilesResponse{},
-				fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
-		}
+	protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
+	if err != nil {
+		return types.CommitFilesResponse{},
+			fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
+	}
 
-		_, violations, err := protectionRules.CanPush(ctx, protection.CanPushInput{
-			Actor:        &session.Principal,
-			IsSpaceOwner: isSpaceOwner,
-			Repo:         repo,
-			BranchNames:  []string{in.Branch},
-		})
-		if err != nil {
-			return types.CommitFilesResponse{}, fmt.Errorf("failed to verify protection rules for git push: %w", err)
-		}
+	var refAction protection.RefAction
+	var branchName string
+	if in.NewBranch != "" {
+		refAction = protection.RefActionCreate
+		branchName = in.NewBranch
+	} else {
+		refAction = protection.RefActionUpdate
+		branchName = in.Branch
+	}
 
-		if protection.IsCritical(violations) {
-			return types.CommitFilesResponse{RuleViolations: violations}, nil
-		}
+	violations, err := protectionRules.CanModifyRef(ctx, protection.CanModifyRefInput{
+		Actor:        &session.Principal,
+		IsSpaceOwner: isSpaceOwner,
+		Repo:         repo,
+		RefAction:    refAction,
+		RefType:      protection.RefTypeBranch,
+		RefNames:     []string{branchName},
+	})
+	if err != nil {
+		return types.CommitFilesResponse{}, fmt.Errorf("failed to verify protection rules for git push: %w", err)
+	}
+
+	if protection.IsCritical(violations) {
+		return types.CommitFilesResponse{RuleViolations: violations}, nil
 	}
 
 	actions := make([]gitrpc.CommitFileAction, len(in.Actions))

@@ -59,14 +59,13 @@ func (s ruleSet) CanMerge(ctx context.Context, in CanMergeInput) (CanMergeOutput
 	return out, violations, nil
 }
 
-func (s ruleSet) CanPush(ctx context.Context, in CanPushInput) (CanPushOutput, []types.RuleViolations, error) {
-	var out CanPushOutput
+func (s ruleSet) CanModifyRef(ctx context.Context, in CanModifyRefInput) ([]types.RuleViolations, error) {
 	var violations []types.RuleViolations
 
 	for _, r := range s.rules {
-		matched, err := matchedNames(r.Pattern, in.Repo.DefaultBranch, in.BranchNames...)
+		matched, err := matchedNames(r.Pattern, in.Repo.DefaultBranch, in.RefNames...)
 		if err != nil {
-			return out, nil, err
+			return nil, err
 		}
 		if len(matched) == 0 {
 			continue
@@ -74,22 +73,22 @@ func (s ruleSet) CanPush(ctx context.Context, in CanPushInput) (CanPushOutput, [
 
 		protection, err := s.manager.FromJSON(r.Type, r.Definition, false)
 		if err != nil {
-			return out, nil,
+			return nil,
 				fmt.Errorf("failed to parse protection definition ID=%d Type=%s: %w", r.ID, r.Type, err)
 		}
 
 		ruleIn := in
-		in.BranchNames = matched
+		ruleIn.RefNames = matched
 
-		_, rVs, err := protection.CanPush(ctx, ruleIn)
+		rVs, err := protection.CanModifyRef(ctx, ruleIn)
 		if err != nil {
-			return out, nil, err
+			return nil, err
 		}
 
 		violations = append(violations, backFillRule(rVs, r.RuleInfo)...)
 	}
 
-	return out, violations, nil
+	return violations, nil
 }
 
 func backFillRule(vs []types.RuleViolations, rule types.RuleInfo) []types.RuleViolations {

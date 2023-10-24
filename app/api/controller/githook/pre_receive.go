@@ -64,7 +64,7 @@ func (c *Controller) PreReceive(
 
 	// TODO: Remove the dummy session and use the real session, once that has been done and the session has a value.
 	dummySession := &auth.Session{
-		Principal: types.Principal{ID: principalID},
+		Principal: types.Principal{ID: principalID, Admin: false}, // TODO: In the dummySession "Admin" is always false
 		Metadata:  nil,
 	}
 
@@ -94,25 +94,35 @@ func (c *Controller) checkProtectionRules(
 	}
 
 	var ruleViolations []types.RuleViolations
+	var errCheckAction error
 
-	// TODO: protectionRules.CanCreateBranch
-	// if len(refUpdates.branches.created) > 0 {}
+	checkAction := func(refAction protection.RefAction, refType protection.RefType, names []string) {
+		if errCheckAction != nil || len(names) == 0 {
+			return
+		}
 
-	// TODO: protectionRules.CanDeleteBranch
-	// if len(refUpdates.branches.deleted) > 0 {}
-
-	if len(refUpdates.branches.updated) > 0 {
-		_, violations, err := protectionRules.CanPush(ctx, protection.CanPushInput{
+		violations, err := protectionRules.CanModifyRef(ctx, protection.CanModifyRefInput{
 			Actor:        &session.Principal,
 			IsSpaceOwner: isSpaceOwner,
 			Repo:         repo,
-			BranchNames:  refUpdates.branches.updated,
+			RefAction:    refAction,
+			RefType:      refType,
+			RefNames:     names,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to verify protection rules for git push: %w", err)
+			errCheckAction = fmt.Errorf("failed to verify protection rules for git push: %w", err)
+			return
 		}
 
 		ruleViolations = append(ruleViolations, violations...)
+	}
+
+	checkAction(protection.RefActionCreate, protection.RefTypeBranch, refUpdates.branches.created)
+	checkAction(protection.RefActionDelete, protection.RefTypeBranch, refUpdates.branches.deleted)
+	checkAction(protection.RefActionUpdate, protection.RefTypeBranch, refUpdates.branches.updated)
+
+	if errCheckAction != nil {
+		return errCheckAction
 	}
 
 	var criticalViolation bool

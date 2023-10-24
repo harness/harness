@@ -33,10 +33,8 @@ type (
 
 	// Protection defines interface for branch protection.
 	Protection interface {
-		// CanMerge tests if a pull request can be merged.
 		CanMerge(ctx context.Context, in CanMergeInput) (CanMergeOutput, []types.RuleViolations, error)
-
-		CanPush(ctx context.Context, in CanPushInput) (CanPushOutput, []types.RuleViolations, error)
+		CanModifyRef(ctx context.Context, in CanModifyRefInput) ([]types.RuleViolations, error)
 	}
 
 	CanMergeInput struct {
@@ -56,15 +54,30 @@ type (
 		DeleteSourceBranch bool
 	}
 
-	CanPushInput struct {
+	CanModifyRefInput struct {
 		Actor        *types.Principal
 		IsSpaceOwner bool
 		Repo         *types.Repository
-		BranchNames  []string
+		RefAction    RefAction
+		RefType      RefType
+		RefNames     []string
 	}
 
-	CanPushOutput struct {
-	}
+	RefType int
+
+	RefAction int
+)
+
+const (
+	RefTypeRaw RefType = iota
+	RefTypeBranch
+	RefTypeTag
+)
+
+const (
+	RefActionCreate RefAction = iota
+	RefActionDelete
+	RefActionUpdate
 )
 
 var (
