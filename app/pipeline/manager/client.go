@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/url"
 
 	"github.com/harness/gitness/livelog"
 	"github.com/harness/gitness/types"
@@ -94,6 +95,11 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 		return nil, err
 	}
 
+	u, err := url.Parse(e.config.URL.Container)
+	if err != nil {
+		return nil, err
+	}
+
 	return &client.Context{
 		Build:   ConvertToDroneBuild(details.Execution),
 		Repo:    ConvertToDroneRepo(details.Repo),
@@ -103,7 +109,7 @@ func (e *embedded) Detail(ctx context.Context, stage *drone.Stage) (*client.Cont
 		Netrc:   ConvertToDroneNetrc(details.Netrc),
 		System: &drone.System{
 			Proto: e.config.Server.HTTP.Proto,
-			Host:  e.config.URL.Container,
+			Host:  u.Hostname(),
 		},
 	}, nil
 }

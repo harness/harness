@@ -15,6 +15,8 @@
 package runner
 
 import (
+	"net/url"
+
 	"github.com/harness/gitness/app/pipeline/plugin"
 	"github.com/harness/gitness/types"
 
@@ -54,7 +56,11 @@ func NewExecutionRunner(
 ) (*runtime2.Runner, error) {
 	// For linux, containers need to have extra hosts set in order to interact with
 	// the gitness container.
-	extraHosts := []string{config.URL.Container + ":host-gateway"}
+	u, err := url.Parse(config.URL.Container)
+	if err != nil {
+		return nil, err
+	}
+	extraHosts := []string{u.Hostname() + ":host-gateway"}
 	compiler := &compiler.Compiler{
 		Environ:    provider.Static(map[string]string{}),
 		Registry:   registry.Static([]*drone.Registry{}),
