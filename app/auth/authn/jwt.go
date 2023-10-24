@@ -27,7 +27,7 @@ import (
 	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/types"
 
-	gojwt "github.com/dgrijalva/jwt-go"
+	gojwt "github.com/golang-jwt/jwt"
 )
 
 var _ Authenticator = (*JWTAuthenticator)(nil)
