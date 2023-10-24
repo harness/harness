@@ -645,6 +645,15 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     },
     [path, commentId]
   )
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true)
+  const sideBarExpandedHandler = useCallback((event: Event) => {
+    setIsSidebarExpanded(_ => !!(event as CustomEvent).detail)
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener(SIDE_NAV_EXPANDED_EVENT, sideBarExpandedHandler)
+    return () => window.removeEventListener(SIDE_NAV_EXPANDED_EVENT, sideBarExpandedHandler)
+  }, [sideBarExpandedHandler])
 
   return (
     <Container
@@ -752,7 +761,11 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
         <Container
           id={diff.contentId}
           data-path={diff.filePath}
-          className={cx(css.diffContent, { [css.standalone]: standalone })}
+          className={cx(css.diffContent, {
+            [css.standalone]: standalone,
+            [css.navV2]: !!document.querySelector('[data-code-nav-version="2"]'),
+            [css.sidebarCollapsed]: !isSidebarExpanded
+          })}
           ref={contentRef}>
           <Render when={renderCustomContent}>
             <Container>
@@ -777,3 +790,5 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({
     </Container>
   )
 }
+
+const SIDE_NAV_EXPANDED_EVENT = 'SIDE_NAV_EXPANDED_EVENT'

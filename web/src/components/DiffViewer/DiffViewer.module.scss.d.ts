@@ -25,6 +25,8 @@ export declare const diffHeader: string
 export declare const fileChanged: string
 export declare const fname: string
 export declare const main: string
+export declare const navV2: string
 export declare const readOnly: string
+export declare const sidebarCollapsed: string
 export declare const standalone: string
 export declare const viewLabel: string
