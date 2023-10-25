@@ -480,7 +480,7 @@ func getFileEntry(
 	}
 
 	// If a SHA was given and the SHA given doesn't match the SHA of the fromTreePath, throw error
-	if sha == "" || sha != entry.ID.String() {
+	if sha != "" && sha != entry.ID.String() {
 		return nil, ErrInvalidArgumentf("sha does not match for path %s [given: %s, expected: %s]",
 			path, sha, entry.ID.String())
 	}

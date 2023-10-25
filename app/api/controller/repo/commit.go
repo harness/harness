@@ -36,7 +36,12 @@ type CommitFileAction struct {
 	Path     string                   `json:"path"`
 	Payload  string                   `json:"payload"`
 	Encoding enum.ContentEncodingType `json:"encoding"`
-	SHA      string                   `json:"sha"`
+
+	// SHA can be used for optimistic locking of an update action (Optional).
+	// The provided value is compared against the latest sha of the file that's being updated.
+	// If the SHA doesn't match, the update fails.
+	// WARNING: If no SHA is provided, the update action will blindly overwrite the file's content.
+	SHA string `json:"sha"`
 }
 
 // CommitFilesOptions holds the data for file operations.
