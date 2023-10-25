@@ -68,7 +68,7 @@ RUN apk --update add ca-certificates
 # ---------------------------------------------------------#
 #                   Create final image                     #
 # ---------------------------------------------------------#
-FROM --platform=$BUILDPLATFORM alpine/git:2.40.1 as final
+FROM --platform=$TARGETPLATFORM alpine/git:2.40.1 as final
 
 # setup app dir and its content
 WORKDIR /app
