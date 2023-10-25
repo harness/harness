@@ -57,7 +57,7 @@ func (s *Service) handleEventPullReqCreated(ctx context.Context,
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerPullReqCreated,
 					Repo:      targetRepoInfo,
-					Principal: principalInfoFrom(principal),
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
 					PullReq: pullReqInfoFrom(pr),
@@ -104,7 +104,7 @@ func (s *Service) handleEventPullReqReopened(ctx context.Context,
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerPullReqReopened,
 					Repo:      targetRepoInfo,
-					Principal: principalInfoFrom(principal),
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
 					PullReq: pullReqInfoFrom(pr),
@@ -158,7 +158,7 @@ func (s *Service) handleEventPullReqBranchUpdated(ctx context.Context,
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerPullReqBranchUpdated,
 					Repo:      targetRepoInfo,
-					Principal: principalInfoFrom(principal),
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
 					PullReq: pullReqInfoFrom(pr),
@@ -212,7 +212,7 @@ func (s *Service) handleEventPullReqClosed(ctx context.Context,
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerPullReqClosed,
 					Repo:      targetRepoInfo,
-					Principal: principalInfoFrom(principal),
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
 					PullReq: pullReqInfoFrom(pr),
@@ -243,6 +243,7 @@ type PullReqCommentPayload struct {
 	PullReqSegment
 	PullReqTargetReferenceSegment
 	ReferenceSegment
+	ReferenceDetailsSegment
 	PullReqCommentSegment
 }
 
@@ -259,11 +260,15 @@ func (s *Service) handleEventPullReqComment(
 			if err != nil {
 				return nil, fmt.Errorf("failed to get activity by id for acitivity id %d: %w", event.Payload.ActivityID, err)
 			}
+			commitInfo, err := s.fetchCommitInfoForEvent(ctx, sourceRepo.GitUID, event.Payload.SourceSHA)
+			if err != nil {
+				return nil, err
+			}
 			return &PullReqCommentPayload{
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerPullReqCommentCreated,
 					Repo:      targetRepoInfo,
-					Principal: principalInfoFrom(principal),
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				PullReqSegment: PullReqSegment{
 					PullReq: pullReqInfoFrom(pr),
@@ -280,9 +285,14 @@ func (s *Service) handleEventPullReqComment(
 						Repo: sourceRepoInfo,
 					},
 				},
+				ReferenceDetailsSegment: ReferenceDetailsSegment{
+					SHA:    event.Payload.SourceSHA,
+					Commit: &commitInfo,
+				},
 				PullReqCommentSegment: PullReqCommentSegment{
 					CommentInfo: CommentInfo{
 						Text: activity.Text,
+						ID:   activity.ID,
 					},
 				},
 			}, nil

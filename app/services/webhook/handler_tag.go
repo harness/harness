@@ -40,7 +40,7 @@ func (s *Service) handleEventTagCreated(ctx context.Context,
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerTagCreated,
 					Repo:      repoInfo,
-					Principal: principalInfoFrom(principal),
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				ReferenceSegment: ReferenceSegment{
 					Ref: ReferenceInfo{
@@ -77,7 +77,7 @@ func (s *Service) handleEventTagUpdated(ctx context.Context,
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerTagUpdated,
 					Repo:      repoInfo,
-					Principal: principalInfoFrom(principal),
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				ReferenceSegment: ReferenceSegment{
 					Ref: ReferenceInfo{
@@ -110,7 +110,7 @@ func (s *Service) handleEventTagDeleted(ctx context.Context,
 				BaseSegment: BaseSegment{
 					Trigger:   enum.WebhookTriggerTagDeleted,
 					Repo:      repoInfo,
-					Principal: principalInfoFrom(principal),
+					Principal: principalInfoFrom(principal.ToPrincipalInfo()),
 				},
 				ReferenceSegment: ReferenceSegment{
 					Ref: ReferenceInfo{
