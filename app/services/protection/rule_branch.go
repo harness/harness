@@ -119,17 +119,17 @@ func (v *Branch) CanModifyRef(_ context.Context, in CanModifyRefInput) ([]types.
 	switch in.RefAction {
 	case RefActionCreate:
 		if v.Lifecycle.CreateForbidden {
-			violations.Addf("pullreq.lifecycle.create",
+			violations.Addf("lifecycle.create",
 				"Creation of branch %q is not allowed.", in.RefNames[0])
 		}
 	case RefActionDelete:
 		if v.Lifecycle.DeleteForbidden {
-			violations.Addf("pullreq.lifecycle.delete",
+			violations.Addf("lifecycle.delete",
 				"Delete of branch %q is not allowed.", in.RefNames[0])
 		}
 	case RefActionUpdate:
 		if v.Lifecycle.UpdateForbidden {
-			violations.Addf("pullreq.lifecycle.update",
+			violations.Addf("lifecycle.update",
 				"Push to branch %q is not allowed. Please use pull requests.", in.RefNames[0])
 		}
 	}
