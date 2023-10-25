@@ -247,7 +247,7 @@ func initSystem(ctx context.Context, config *types.Config) (*server.System, erro
 	}
 	uploadController := upload.ProvideController(authorizer, repoStore, blobStore)
 	apiHandler := router.ProvideAPIHandler(config, authenticator, repoController, executionController, logsController, spaceController, pipelineController, secretController, triggerController, connectorController, templateController, pluginController, pullreqController, webhookController, githookController, serviceaccountController, controller, principalController, checkController, systemController, uploadController)
-	gitHandler := router.ProvideGitHandler(provider, repoStore, authenticator, authorizer, gitrpcInterface, repoController)
+	gitHandler := router.ProvideGitHandler(provider, authenticator, repoController)
 	webHandler := router.ProvideWebHandler(config)
 	routerRouter := router.ProvideRouter(apiHandler, gitHandler, webHandler, provider)
 	serverServer := server2.ProvideServer(config, routerRouter)

@@ -15,8 +15,11 @@
 package request
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -32,6 +35,8 @@ const (
 	QueryParamUntil         = "until"
 	QueryParamCommitter     = "committer"
 	QueryParamInternal      = "internal"
+	QueryParamService       = "service"
+	HeaderParamGitProtocol  = "Git-Protocol"
 )
 
 func GetGitRefFromQueryOrDefault(r *http.Request, deflt string) string {
@@ -110,4 +115,25 @@ func ParseCommitFilter(r *http.Request) (*types.CommitFilter, error) {
 // GetInternalFromQueryOrDefault returns the internal flag from the request query.
 func GetInternalFromQueryOrDefault(r *http.Request, dflt bool) (bool, error) {
 	return QueryParamAsBoolOrDefault(r, QueryParamInternal, dflt)
+}
+
+// GetGitProtocolFromHeadersOrDefault returns the git protocol from the request headers.
+func GetGitProtocolFromHeadersOrDefault(r *http.Request, deflt string) string {
+	return GetHeaderOrDefault(r, HeaderParamGitProtocol, deflt)
+}
+
+// GetGitServiceTypeFromQuery returns the git service type from the request query.
+func GetGitServiceTypeFromQuery(r *http.Request) (enum.GitServiceType, error) {
+	// git prefixes the service names with "git-" in the query
+	const gitPrefix = "git-"
+
+	val, err := QueryParamOrError(r, QueryParamService)
+	if err != nil {
+		return "", fmt.Errorf("failed to get param from query: %w", err)
+	}
+	if !strings.HasPrefix(val, gitPrefix) {
+		return "", usererror.BadRequestf("not a git service type: %q", val)
+	}
+
+	return enum.ParseGitServiceType(val[len(gitPrefix):])
 }

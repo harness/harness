@@ -75,7 +75,7 @@ type ServicePackParams struct {
 	*WriteParams
 	Service     string
 	GitProtocol string
-	Data        io.ReadCloser
+	Data        io.Reader
 	Options     []string // (key, value) pair
 }
 

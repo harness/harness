@@ -37,10 +37,7 @@ import (
 	"github.com/harness/gitness/app/api/controller/user"
 	"github.com/harness/gitness/app/api/controller/webhook"
 	"github.com/harness/gitness/app/auth/authn"
-	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/gitrpc"
 	"github.com/harness/gitness/types"
 
 	"github.com/google/wire"
@@ -76,18 +73,12 @@ func ProvideRouter(
 
 func ProvideGitHandler(
 	urlProvider url.Provider,
-	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
-	authorizer authz.Authorizer,
-	client gitrpc.Interface,
 	repoCtrl *repo.Controller,
 ) GitHandler {
 	return NewGitHandler(
 		urlProvider,
-		repoStore,
 		authenticator,
-		authorizer,
-		client,
 		repoCtrl,
 	)
 }

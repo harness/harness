@@ -26,10 +26,8 @@ import (
 	"github.com/harness/gitness/app/api/middleware/logging"
 	"github.com/harness/gitness/app/api/request"
 	"github.com/harness/gitness/app/auth/authn"
-	"github.com/harness/gitness/app/auth/authz"
-	"github.com/harness/gitness/app/store"
 	"github.com/harness/gitness/app/url"
-	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/types/enum"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -44,10 +42,7 @@ type GitHandler interface {
 // NewGitHandler returns a new GitHandler.
 func NewGitHandler(
 	urlProvider url.Provider,
-	repoStore store.RepoStore,
 	authenticator authn.Authenticator,
-	authorizer authz.Authorizer,
-	client gitrpc.Interface,
 	repoCtrl *repo.Controller,
 ) GitHandler {
 	// Use go-chi router for inner routing.
@@ -78,9 +73,11 @@ func NewGitHandler(
 			r.Use(middlewareauthz.BlockSessionToken)
 
 			// smart protocol
-			r.Handle("/git-upload-pack", handlerrepo.GetUploadPack(client, urlProvider, repoStore, authorizer))
-			r.Post("/git-receive-pack", handlerrepo.PostReceivePack(client, urlProvider, repoStore, authorizer))
-			r.Get("/info/refs", handlerrepo.GetInfoRefs(client, repoStore, authorizer))
+			r.Post("/git-upload-pack", handlerrepo.HandleGitServicePack(
+				enum.GitServiceTypeUploadPack, repoCtrl, urlProvider))
+			r.Post("/git-receive-pack", handlerrepo.HandleGitServicePack(
+				enum.GitServiceTypeReceivePack, repoCtrl, urlProvider))
+			r.Get("/info/refs", handlerrepo.HandleGitInfoRefs(repoCtrl, urlProvider))
 
 			// dumb protocol
 			r.Get("/HEAD", stubGitHandler())
