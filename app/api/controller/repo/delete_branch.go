@@ -21,7 +21,9 @@ import (
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/api/usererror"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -30,10 +32,10 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	branchName string,
-) error {
+) ([]types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// make sure user isn't deleting the default branch
@@ -41,14 +43,32 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 	// and 'refs/heads/branch1' would fail if 'branch1' exists.
 	// TODO: Add functional test to ensure the scenario is covered!
 	if branchName == repo.DefaultBranch {
-		return usererror.ErrDefaultBranchCantBeDeleted
+		return nil, usererror.ErrDefaultBranchCantBeDeleted
 	}
 
-	// TODO: Verify protection rules
+	rules, isSpaceOwner, err := c.fetchRules(ctx, session, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	violations, err := rules.CanModifyRef(ctx, protection.CanModifyRefInput{
+		Actor:        &session.Principal,
+		IsSpaceOwner: isSpaceOwner,
+		Repo:         repo,
+		RefAction:    protection.RefActionDelete,
+		RefType:      protection.RefTypeBranch,
+		RefNames:     []string{branchName},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify protection rules: %w", err)
+	}
+	if protection.IsCritical(violations) {
+		return violations, nil
+	}
 
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return fmt.Errorf("failed to create RPC write params: %w", err)
+		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	err = c.gitRPCClient.DeleteBranch(ctx, &gitrpc.DeleteBranchParams{
@@ -56,8 +76,8 @@ func (c *Controller) DeleteBranch(ctx context.Context,
 		BranchName:  branchName,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }

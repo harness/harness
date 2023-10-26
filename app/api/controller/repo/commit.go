@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	apiauth "github.com/harness/gitness/app/api/auth"
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
@@ -63,15 +62,9 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		return types.CommitFilesResponse{}, nil, err
 	}
 
-	isSpaceOwner, err := apiauth.IsSpaceAdmin(ctx, c.authorizer, session, repo)
+	rules, isSpaceOwner, err := c.fetchRules(ctx, session, repo)
 	if err != nil {
 		return types.CommitFilesResponse{}, nil, err
-	}
-
-	protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
-	if err != nil {
-		return types.CommitFilesResponse{}, nil,
-			fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}
 
 	var refAction protection.RefAction
@@ -84,7 +77,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		branchName = in.Branch
 	}
 
-	violations, err := protectionRules.CanModifyRef(ctx, protection.CanModifyRefInput{
+	violations, err := rules.CanModifyRef(ctx, protection.CanModifyRefInput{
 		Actor:        &session.Principal,
 		IsSpaceOwner: isSpaceOwner,
 		Repo:         repo,

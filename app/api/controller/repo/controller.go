@@ -124,3 +124,21 @@ func (c *Controller) validateParentRef(parentRef string) error {
 
 	return nil
 }
+
+func (c *Controller) fetchRules(
+	ctx context.Context,
+	session *auth.Session,
+	repo *types.Repository,
+) (protection.Protection, bool, error) {
+	isSpaceOwner, err := apiauth.IsSpaceAdmin(ctx, c.authorizer, session, repo)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to determine space ownership: %w", err)
+	}
+
+	protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
+	}
+
+	return protectionRules, isSpaceOwner, nil
+}

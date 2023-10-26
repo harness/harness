@@ -22,9 +22,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-/*
- * Deletes a given branch.
- */
+// HandleDeleteBranch deletes a given branch.
 func HandleDeleteBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -40,9 +38,13 @@ func HandleDeleteBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		err = repoCtrl.DeleteBranch(ctx, session, repoRef, branchName)
+		violations, err := repoCtrl.DeleteBranch(ctx, session, repoRef, branchName)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+		}
+		if violations != nil {
+			render.Violations(w, violations)
+			return
 		}
 
 		render.DeleteSuccessful(w)

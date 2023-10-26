@@ -23,9 +23,7 @@ import (
 	"github.com/harness/gitness/app/api/request"
 )
 
-/*
- * Writes json-encoded branch information to the http response body.
- */
+// HandleCreateBranch writes json-encoded branch information to the http response body.
 func HandleCreateBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -43,9 +41,13 @@ func HandleCreateBranch(repoCtrl *repo.Controller) http.HandlerFunc {
 			return
 		}
 
-		branch, err := repoCtrl.CreateBranch(ctx, session, repoRef, in)
+		branch, violations, err := repoCtrl.CreateBranch(ctx, session, repoRef, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+			return
+		}
+		if violations != nil {
+			render.Violations(w, violations)
 			return
 		}
 

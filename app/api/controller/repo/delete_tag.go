@@ -20,7 +20,9 @@ import (
 
 	"github.com/harness/gitness/app/api/controller"
 	"github.com/harness/gitness/app/auth"
+	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/gitrpc"
+	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
 
@@ -29,17 +31,35 @@ func (c *Controller) DeleteTag(ctx context.Context,
 	session *auth.Session,
 	repoRef,
 	tagName string,
-) error {
+) ([]types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// TODO: Verify protection rules
+	rules, isSpaceOwner, err := c.fetchRules(ctx, session, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	violations, err := rules.CanModifyRef(ctx, protection.CanModifyRefInput{
+		Actor:        &session.Principal,
+		IsSpaceOwner: isSpaceOwner,
+		Repo:         repo,
+		RefAction:    protection.RefActionDelete,
+		RefType:      protection.RefTypeTag,
+		RefNames:     []string{tagName},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify protection rules: %w", err)
+	}
+	if protection.IsCritical(violations) {
+		return violations, nil
+	}
 
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return fmt.Errorf("failed to create RPC write params: %w", err)
+		return nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	err = c.gitRPCClient.DeleteTag(ctx, &gitrpc.DeleteTagParams{
@@ -47,7 +67,8 @@ func (c *Controller) DeleteTag(ctx context.Context,
 		WriteParams: writeParams,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+
+	return nil, nil
 }
