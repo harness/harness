@@ -44,7 +44,7 @@ func (c *Controller) PostReceive(
 	principalID int64,
 	in githook.PostReceiveInput,
 ) (*githook.Output, error) {
-	repo, err := c.getRepoCheckAccess(ctx, session, repoID, enum.PermissionRepoEdit)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoID, enum.PermissionRepoPush)
 	if err != nil {
 		return nil, err
 	}

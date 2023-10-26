@@ -44,7 +44,7 @@ func (c *Controller) PreReceive(
 ) (*githook.Output, error) {
 	output := &githook.Output{}
 
-	repo, err := c.getRepoCheckAccess(ctx, session, repoID, enum.PermissionRepoEdit)
+	repo, err := c.getRepoCheckAccess(ctx, session, repoID, enum.PermissionRepoPush)
 	if err != nil {
 		return nil, err
 	}
