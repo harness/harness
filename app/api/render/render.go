@@ -65,12 +65,7 @@ func BadRequest(w http.ResponseWriter) {
 	UserError(w, usererror.ErrBadRequest)
 }
 
-// BadRequestError writes the json-encoded error with a bad request status code.
-func BadRequestError(w http.ResponseWriter, err *usererror.Error) {
-	UserError(w, err)
-}
-
-// BadRequest writes the json-encoded message with a bad request status code.
+// BadRequestf writes the json-encoded message with a bad request status code.
 func BadRequestf(w http.ResponseWriter, format string, args ...interface{}) {
 	ErrorMessagef(w, http.StatusBadRequest, format, args...)
 }
@@ -98,21 +93,9 @@ func DeleteSuccessful(w http.ResponseWriter) {
 // JSON writes the json-encoded value to the response
 // with the provides status.
 func JSON(w http.ResponseWriter, code int, v interface{}) {
-	// set common headers
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
-
-	// flush the headers - before body or status will be 200 OK
+	setCommonHeaders(w)
 	w.WriteHeader(code)
-
-	// write body
-	enc := json.NewEncoder(w)
-	if indent { // is this necessary? it will affect performance
-		enc.SetIndent("", "  ")
-	}
-	if err := enc.Encode(v); err != nil {
-		log.Err(err).Msgf("Failed to write json encoding to response body.")
-	}
+	writeJSON(w, v)
 }
 
 // Reader reads the content from the provided reader and writes it as is to the response body.
@@ -157,8 +140,7 @@ func JSONArrayDynamic[T comparable](ctx context.Context, w http.ResponseWriter, 
 		}
 
 		if count == 0 {
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			w.Header().Set("X-Content-Type-Options", "nosniff")
+			setCommonHeaders(w)
 			w.WriteHeader(http.StatusOK)
 			_, _ = w.Write([]byte{'['})
 		} else {
@@ -175,4 +157,29 @@ func JSONArrayDynamic[T comparable](ctx context.Context, w http.ResponseWriter, 
 	}
 
 	_, _ = w.Write([]byte{']'})
+}
+
+func Unprocessable(w http.ResponseWriter, v any) {
+	JSON(w, http.StatusUnprocessableEntity, v)
+}
+
+func Violations(w http.ResponseWriter, violations []types.RuleViolations) {
+	Unprocessable(w, types.RulesViolations{
+		Violations: violations,
+	})
+}
+
+func setCommonHeaders(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+}
+
+func writeJSON(w http.ResponseWriter, v any) {
+	enc := json.NewEncoder(w)
+	if indent {
+		enc.SetIndent("", "  ")
+	}
+	if err := enc.Encode(v); err != nil {
+		log.Err(err).Msgf("Failed to write json encoding to response body.")
+	}
 }

@@ -57,20 +57,20 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	session *auth.Session,
 	repoRef string,
 	in *CommitFilesOptions,
-) (types.CommitFilesResponse, error) {
+) (types.CommitFilesResponse, []types.RuleViolations, error) {
 	repo, err := c.getRepoCheckAccess(ctx, session, repoRef, enum.PermissionRepoPush, false)
 	if err != nil {
-		return types.CommitFilesResponse{}, err
+		return types.CommitFilesResponse{}, nil, err
 	}
 
 	isSpaceOwner, err := apiauth.IsSpaceAdmin(ctx, c.authorizer, session, repo)
 	if err != nil {
-		return types.CommitFilesResponse{}, err
+		return types.CommitFilesResponse{}, nil, err
 	}
 
 	protectionRules, err := c.protectionManager.ForRepository(ctx, repo.ID)
 	if err != nil {
-		return types.CommitFilesResponse{},
+		return types.CommitFilesResponse{}, nil,
 			fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}
 
@@ -93,11 +93,11 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		RefNames:     []string{branchName},
 	})
 	if err != nil {
-		return types.CommitFilesResponse{}, fmt.Errorf("failed to verify protection rules for git push: %w", err)
+		return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to verify protection rules: %w", err)
 	}
 
 	if protection.IsCritical(violations) {
-		return types.CommitFilesResponse{RuleViolations: violations}, nil
+		return types.CommitFilesResponse{}, violations, nil
 	}
 
 	actions := make([]gitrpc.CommitFileAction, len(in.Actions))
@@ -107,7 +107,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		case enum.ContentEncodingTypeBase64:
 			rawPayload, err = base64.StdEncoding.DecodeString(action.Payload)
 			if err != nil {
-				return types.CommitFilesResponse{}, fmt.Errorf("failed to decode base64 payload: %w", err)
+				return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to decode base64 payload: %w", err)
 			}
 		case enum.ContentEncodingTypeUTF8:
 			fallthrough
@@ -127,7 +127,7 @@ func (c *Controller) CommitFiles(ctx context.Context,
 	// Create internal write params. Note: This will skip the pre-commit protection rules check.
 	writeParams, err := controller.CreateRPCInternalWriteParams(ctx, c.urlProvider, session, repo)
 	if err != nil {
-		return types.CommitFilesResponse{}, fmt.Errorf("failed to create RPC write params: %w", err)
+		return types.CommitFilesResponse{}, nil, fmt.Errorf("failed to create RPC write params: %w", err)
 	}
 
 	now := time.Now()
@@ -144,9 +144,10 @@ func (c *Controller) CommitFiles(ctx context.Context,
 		AuthorDate:    &now,
 	})
 	if err != nil {
-		return types.CommitFilesResponse{}, err
+		return types.CommitFilesResponse{}, nil, err
 	}
+
 	return types.CommitFilesResponse{
 		CommitID: commit.CommitID,
-	}, nil
+	}, nil, nil
 }

@@ -102,3 +102,7 @@ type RuleInfoInternal struct {
 	Pattern    json.RawMessage
 	Definition json.RawMessage
 }
+
+type RulesViolations struct {
+	Violations []RuleViolations `json:"violations"`
+}

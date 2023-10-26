@@ -16,6 +16,5 @@ package types
 
 // CommitFilesResponse holds commit id.
 type CommitFilesResponse struct {
-	CommitID       string           `json:"commit_id"`
-	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
+	CommitID string `json:"commit_id"`
 }

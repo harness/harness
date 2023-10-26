@@ -40,9 +40,13 @@ func HandleCommitFiles(repoCtrl *repo.Controller) http.HandlerFunc {
 			render.BadRequestf(w, "Invalid request body: %s.", err)
 			return
 		}
-		response, err := repoCtrl.CommitFiles(ctx, session, repoRef, in)
+		response, violations, err := repoCtrl.CommitFiles(ctx, session, repoRef, in)
 		if err != nil {
 			render.TranslatedUserError(w, err)
+			return
+		}
+		if violations != nil {
+			render.Violations(w, violations)
 			return
 		}
 

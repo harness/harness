@@ -144,3 +144,8 @@ type MergeResponse struct {
 	ConflictFiles  []string         `json:"conflict_files,omitempty"`
 	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
 }
+
+type MergeViolations struct {
+	ConflictFiles  []string         `json:"conflict_files,omitempty"`
+	RuleViolations []RuleViolations `json:"rule_violations,omitempty"`
+}
