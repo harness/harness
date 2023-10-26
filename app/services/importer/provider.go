@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/harness/gitness/app/api/usererror"
@@ -239,7 +240,7 @@ func LoadRepositoriesFromProviderSpace(
 
 		for _, scmRepo := range scmRepos {
 			// in some cases the namespace filter isn't working (e.g. Gitlab)
-			if scmRepo.Namespace != spaceSlug {
+			if !strings.EqualFold(scmRepo.Namespace, spaceSlug) {
 				continue
 			}
 

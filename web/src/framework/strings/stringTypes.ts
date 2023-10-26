@@ -170,6 +170,7 @@ export interface StringsMap {
   enableWebhookTitle: string
   enabled: string
   enterAddress: string
+  enterBitbucketPlaceholder: string
   enterBranchPlaceholder: string
   enterDescription: string
   enterGithubPlaceholder: string
@@ -258,9 +259,17 @@ export interface StringsMap {
   importGitRepo: string
   importProgress: string
   'importRepo.failedToImportRepo': string
+  'importRepo.group': string
+  'importRepo.groupPlaceholder': string
+  'importRepo.org': string
+  'importRepo.orgPlaceholder': string
   'importRepo.passToken': string
   'importRepo.passwordPlaceholder': string
   'importRepo.passwordReq': string
+  'importRepo.project': string
+  'importRepo.projectPlaceholder': string
+  'importRepo.repo': string
+  'importRepo.repoPlaceholder': string
   'importRepo.reqAuth': string
   'importRepo.required': string
   'importRepo.spaceNameReq': string
@@ -270,6 +279,8 @@ export interface StringsMap {
   'importRepo.userPlaceholder': string
   'importRepo.usernameReq': string
   'importRepo.validation': string
+  'importRepo.workspace': string
+  'importRepo.workspacePlaceholder': string
   'importSpace.authorization': string
   'importSpace.content': string
   'importSpace.createASpace': string

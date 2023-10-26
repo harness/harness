@@ -21,7 +21,7 @@ import { Color } from '@harnessio/design-system'
 import { Button, Container, Label, Layout, FlexExpander, Formik, FormikForm, FormInput, Text } from '@harnessio/uicore'
 import { Icon } from '@harnessio/icons'
 import { useStrings } from 'framework/strings'
-import { Organization, type ImportSpaceFormData } from 'utils/GitUtils'
+import { type ImportSpaceFormData, GitProviders, getProviders, getOrgLabel, getOrgPlaceholder } from 'utils/GitUtils'
 import css from '../NewSpaceModalButton.module.scss'
 
 interface ImportFormProps {
@@ -29,6 +29,22 @@ interface ImportFormProps {
   loading: boolean
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   hideModal: any
+}
+
+const getHostPlaceHolder = (gitProvider: string) => {
+  switch (gitProvider) {
+    case GitProviders.GITHUB:
+    case GitProviders.GITHUB_ENTERPRISE:
+      return 'enterGithubPlaceholder'
+    case GitProviders.GITLAB:
+    case GitProviders.GITLAB_SELF_HOSTED:
+      return 'enterGitlabPlaceholder'
+    case GitProviders.BITBUCKET:
+    case GitProviders.BITBUCKET_SERVER:
+      return 'enterBitbucketPlaceholder'
+    default:
+      return 'enterAddress'
+  }
 }
 
 const ImportSpaceForm = (props: ImportFormProps) => {
@@ -39,7 +55,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
   const [buttonLoading, setButtonLoading] = useState(false)
 
   const formInitialValues: ImportSpaceFormData = {
-    gitProvider: '',
+    gitProvider: GitProviders.GITHUB,
     username: '',
     password: '',
     name: '',
@@ -48,10 +64,6 @@ const ImportSpaceForm = (props: ImportFormProps) => {
     host: ''
   }
 
-  const providers = [
-    { value: 'GitHub', label: 'GitHub' },
-    { value: 'GitLab', label: 'GitLab' }
-  ]
   const validationSchemaStepOne = yup.object().shape({
     gitProvider: yup.string().trim().required(getString('importSpace.providerRequired'))
   })
@@ -93,15 +105,7 @@ const ImportSpaceForm = (props: ImportFormProps) => {
           await handleSubmit(formik.values)
           setButtonLoading(false)
         }
-        const getHostPlaceHolder = (host: string) => {
-          if (host.toLowerCase() === Organization.GITHUB.toLowerCase()) {
-            return getString('enterGithubPlaceholder')
-          } else if (host.toLowerCase() === Organization.GITLAB.toLowerCase()) {
-            return getString('enterGitlabPlaceholder')
-          } else {
-            return getString('enterAddress')
-          }
-        }
+
         return (
           <Container className={css.hideContainer} width={'97%'}>
             <FormikForm>
@@ -118,10 +122,9 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                   <hr className={css.dividerContainer} />
                   <Container className={css.textContainer} width={'70%'}>
                     <FormInput.Select
-                      value={{ value: values.gitProvider, label: values.gitProvider } || providers[0]}
                       name={'gitProvider'}
                       label={getString('importSpace.gitProvider')}
-                      items={providers}
+                      items={getProviders()}
                       className={css.selectBox}
                     />
                     {formik.errors.gitProvider ? (
@@ -133,15 +136,19 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                         {formik.errors.gitProvider}
                       </Text>
                     ) : null}
-                    <FormInput.Text
-                      name="host"
-                      label={'Address (optional)'}
-                      placeholder={getHostPlaceHolder(formik.values.gitProvider)}
-                      tooltipProps={{
-                        dataTooltipId: 'spaceUserTextField'
-                      }}
-                      className={css.hostContainer}
-                    />
+                    {![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(
+                      values.gitProvider
+                    ) && (
+                      <FormInput.Text
+                        name="host"
+                        label={getString('importRepo.url')}
+                        placeholder={getString(getHostPlaceHolder(values.gitProvider))}
+                        tooltipProps={{
+                          dataTooltipId: 'spaceUserTextField'
+                        }}
+                        className={css.hostContainer}
+                      />
+                    )}
                     {formik.errors.host ? (
                       <Text
                         margin={{ top: 'small', bottom: 'small' }}
@@ -210,12 +217,8 @@ const ImportSpaceForm = (props: ImportFormProps) => {
                   <Container className={css.textContainer} width={'70%'}>
                     <FormInput.Text
                       name="organization"
-                      label={
-                        formik.values.gitProvider.toLowerCase() === Organization.GITHUB.toLowerCase()
-                          ? getString('importSpace.githubOrg')
-                          : getString('importSpace.gitlabGroup')
-                      }
-                      placeholder={getString('importSpace.orgNamePlaceholder')}
+                      label={getString(getOrgLabel(values.gitProvider))}
+                      placeholder={getString(getOrgPlaceholder(values.gitProvider))}
                       tooltipProps={{
                         dataTooltipId: 'importSpaceOrgName'
                       }}

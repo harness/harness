@@ -23,7 +23,14 @@ import { Icon } from '@harnessio/icons'
 import { FontVariation } from '@harnessio/design-system'
 import { useStrings } from 'framework/strings'
 import { REGEX_VALID_REPO_NAME } from 'utils/Utils'
-import { ImportFormData, RepoVisibility, parseUrl } from 'utils/GitUtils'
+import {
+  ImportFormData,
+  RepoVisibility,
+  GitProviders,
+  getProviders,
+  getOrgLabel,
+  getOrgPlaceholder
+} from 'utils/GitUtils'
 import Private from '../../../icons/private.svg'
 import css from '../NewRepoModalButton.module.scss'
 
@@ -39,30 +46,41 @@ const ImportForm = (props: ImportFormProps) => {
   const [auth, setAuth] = useState(false)
 
   // eslint-disable-next-line no-control-regex
-  const MATCH_REPOURL_REGEX = /^(https?:\/\/(?:www\.)?(github|gitlab)\.com\/([^/]+\/[^/]+))/
+  // const MATCH_REPOURL_REGEX = /^(https?:\/\/(?:www\.)?(github|gitlab)\.com\/([^/]+\/[^/]+))/
 
   const formInitialValues: ImportFormData = {
-    repoUrl: '',
+    gitProvider: GitProviders.GITHUB,
+    hostUrl: '',
+    org: '',
+    repo: '',
     username: '',
     password: '',
     name: '',
     description: '',
     isPublic: RepoVisibility.PRIVATE
   }
+
   const validationSchemaStepOne = yup.object().shape({
-    repoUrl: yup
+    gitProvider: yup.string().required(),
+    hostUrl: yup
       .string()
-      .matches(MATCH_REPOURL_REGEX, getString('importSpace.invalidUrl'))
-      .required(getString('importRepo.required')),
+      // .matches(MATCH_REPOURL_REGEX, getString('importSpace.invalidUrl'))
+      .when('gitProvider', {
+        is: gitProvider => ![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(gitProvider),
+        then: yup.string().required(getString('importRepo.required')),
+        otherwise: yup.string().notRequired() // Optional based on your needs
+      }),
     name: yup
       .string()
       .trim()
       .required(getString('validation.nameIsRequired'))
       .matches(REGEX_VALID_REPO_NAME, getString('validation.repoNamePatternIsNotValid'))
   })
+
   return (
     <Formik onSubmit={handleSubmit} initialValues={formInitialValues} formName="importRepoForm">
       {formik => {
+        const { values } = formik
         const handleValidationClick = async () => {
           try {
             await validationSchemaStepOne.validate(formik.values, { abortEarly: false })
@@ -80,33 +98,77 @@ const ImportForm = (props: ImportFormProps) => {
         }
         return (
           <FormikForm>
-            <FormInput.Text
-              className={css.hideContainer}
-              name="repoUrl"
-              label={getString('importRepo.url')}
-              placeholder={getString('importRepo.urlPlaceholder')}
-              tooltipProps={{
-                dataTooltipId: 'repositoryURLTextField'
-              }}
-              onChange={event => {
-                const target = event.target as HTMLInputElement
-                formik.setFieldValue('repoUrl', target.value)
-                if (target.value) {
-                  const provider = parseUrl(target.value)
-                  if (provider?.fullRepo) {
-                    formik.setFieldValue('name', provider.repoName ? provider.repoName : provider?.fullRepo)
-                    formik.validateField('repoUrl')
-                  }
-                }
-              }}
+            <FormInput.Select
+              name={'gitProvider'}
+              label={getString('importSpace.gitProvider')}
+              items={getProviders()}
+              // className={css.selectBox}
             />
-            {formik.errors.repoUrl ? (
+            {formik.errors.gitProvider ? (
               <Text
                 margin={{ top: 'small', bottom: 'small' }}
                 color={Color.RED_500}
                 icon="circle-cross"
                 iconProps={{ color: Color.RED_500 }}>
-                {formik.errors.repoUrl}
+                {formik.errors.gitProvider}
+              </Text>
+            ) : null}
+            {![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(values.gitProvider) && (
+              <FormInput.Text
+                className={css.hideContainer}
+                name="hostUrl"
+                label={getString('importRepo.url')}
+                placeholder={getString('importRepo.urlPlaceholder')}
+                tooltipProps={{
+                  dataTooltipId: 'repositoryURLTextField'
+                }}
+              />
+            )}
+            {formik.errors.hostUrl ? (
+              <Text
+                margin={{ top: 'small', bottom: 'small' }}
+                color={Color.RED_500}
+                icon="circle-cross"
+                iconProps={{ color: Color.RED_500 }}>
+                {formik.errors.hostUrl}
+              </Text>
+            ) : null}
+            <FormInput.Text
+              className={css.hideContainer}
+              name="org"
+              label={getString(getOrgLabel(values.gitProvider))}
+              placeholder={getString(getOrgPlaceholder(values.gitProvider))}
+            />
+            {formik.errors.org ? (
+              <Text
+                margin={{ top: 'small', bottom: 'small' }}
+                color={Color.RED_500}
+                icon="circle-cross"
+                iconProps={{ color: Color.RED_500 }}>
+                {formik.errors.org}
+              </Text>
+            ) : null}
+            <FormInput.Text
+              className={css.hideContainer}
+              name="repo"
+              label={getString('importRepo.repo')}
+              placeholder={getString('importRepo.repoPlaceholder')}
+              onChange={event => {
+                const target = event.target as HTMLInputElement
+                formik.setFieldValue('repo', target.value)
+                if (target.value) {
+                  formik.setFieldValue('name', target.value)
+                  formik.validateField('repo')
+                }
+              }}
+            />
+            {formik.errors.repo ? (
+              <Text
+                margin={{ top: 'small', bottom: 'small' }}
+                color={Color.RED_500}
+                icon="circle-cross"
+                iconProps={{ color: Color.RED_500 }}>
+                {formik.errors.repo}
               </Text>
             ) : null}
             <FormInput.CheckBox

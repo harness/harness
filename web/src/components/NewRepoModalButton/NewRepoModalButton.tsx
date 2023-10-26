@@ -57,12 +57,13 @@ import {
   SUGGESTED_BRANCH_NAMES
 } from 'utils/Utils'
 import {
+  GitProviders,
   ImportFormData,
   RepoCreationType,
   RepoFormData,
   RepoVisibility,
   isGitBranchNameValid,
-  parseUrl
+  getProviderTypeMapping
 } from 'utils/GitUtils'
 import type { TypesRepository, OpenapiCreateRepositoryRequest } from 'services/code'
 import { useAppContext } from 'AppContext'
@@ -160,14 +161,27 @@ export const NewRepoModalButton: React.FC<NewRepoModalButtonProps> = ({
         showError(getErrorMessage(exception), 0, getString('failedToCreateRepo'))
       }
     }
+
     const handleImportSubmit = (formData: ImportFormData) => {
-      const provider = parseUrl(formData.repoUrl)
+      const type = getProviderTypeMapping(formData.gitProvider)
+
+      const provider = {
+        type,
+        username: formData.username,
+        password: formData.password,
+        host: ''
+      }
+
+      if (![GitProviders.GITHUB, GitProviders.GITLAB, GitProviders.BITBUCKET].includes(formData.gitProvider)) {
+        provider.host = formData.hostUrl
+      }
+
       const importPayload = {
         description: formData.description || '',
         parent_ref: space,
         uid: formData.name,
-        provider: { type: provider?.provider.toLowerCase(), username: formData.username, password: formData.password },
-        provider_repo: provider?.fullRepo.replace(/\.git$/, '')
+        provider,
+        provider_repo: `${formData.org}/${formData.name}`.replace(/\.git$/, '')
       }
       importRepo(importPayload)
         .then(response => {

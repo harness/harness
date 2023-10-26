@@ -48,7 +48,10 @@ export interface RepoFormData {
   isPublic: RepoVisibility
 }
 export interface ImportFormData {
-  repoUrl: string
+  gitProvider: GitProviders
+  hostUrl: string
+  org: string
+  repo: string
   username: string
   password: string
   name: string
@@ -68,7 +71,7 @@ export interface ExportFormDataExtended extends ExportFormData {
 }
 
 export interface ImportSpaceFormData {
-  gitProvider: string
+  gitProvider: GitProviders
   username: string
   password: string
   name: string
@@ -129,6 +132,16 @@ export enum PullRequestState {
   CLOSED = 'closed'
 }
 
+export enum GitProviders {
+  GITHUB = 'GitHub',
+  GITHUB_ENTERPRISE = 'GitHub Enterprise',
+  GITLAB = 'GitLab',
+  GITLAB_SELF_HOSTED = 'GitLab Self-Hosted',
+  BITBUCKET = 'Bitbucket',
+  BITBUCKET_SERVER = 'Bitbucket Server'
+  // GITEA = 'Gitea' - not added on back end yet
+}
+
 export const PullRequestFilterOption = {
   ...PullRequestState,
   // REJECTED: 'rejected',
@@ -169,11 +182,6 @@ export const CodeIcon = {
   Chat: 'code-chat' as IconName,
   Checks: 'main-tick' as IconName,
   ChecksSuccess: 'success-tick' as IconName
-}
-
-export enum Organization {
-  GITHUB = 'Github',
-  GITLAB = 'Gitlab'
 }
 
 export const normalizeGitRef = (gitRef: string | undefined) => {
@@ -270,14 +278,13 @@ export const decodeGitContent = (content = '') => {
 }
 
 export const parseUrl = (url: string) => {
-  const pattern = /^(https?:\/\/(?:www\.)?(github|gitlab)\.com\/([^/]+\/[^/]+))/
+  const pattern = /^(https?:\/\/[^/]+)\/([^/]+\/[^/]+)/
   const match = url.match(pattern)
 
   if (match) {
-    const provider = match[2]
-    const fullRepo = match[3]
-    const repoName = match[3].split('/')[1].replace('.git', '')
-    return { provider, fullRepo, repoName }
+    const fullRepo = match[2]
+    const repoName = match[2].split('/')[1].replace('.git', '')
+    return { fullRepo, repoName }
   } else {
     return null
   }
@@ -285,3 +292,49 @@ export const parseUrl = (url: string) => {
 
 // Check if gitRef is a git commit hash (https://github.com/diegohaz/is-git-rev, MIT © Diego Haz)
 export const isGitRev = (gitRef = ''): boolean => /^[0-9a-f]{7,40}$/i.test(gitRef)
+
+export const getProviderTypeMapping = (provider: GitProviders): string => {
+  switch (provider) {
+    case GitProviders.BITBUCKET_SERVER:
+      return 'stash'
+    case GitProviders.GITHUB_ENTERPRISE:
+      return 'github'
+    case GitProviders.GITLAB_SELF_HOSTED:
+      return 'gitlab'
+    default:
+      return provider.toLowerCase()
+  }
+}
+
+export const getOrgLabel = (gitProvider: string) => {
+  switch (gitProvider) {
+    case GitProviders.BITBUCKET:
+      return 'importRepo.workspace'
+    case GitProviders.BITBUCKET_SERVER:
+      return 'importRepo.project'
+    case GitProviders.GITLAB:
+    case GitProviders.GITLAB_SELF_HOSTED:
+      return 'importRepo.group'
+    default:
+      return 'importRepo.org'
+  }
+}
+
+export const getOrgPlaceholder = (gitProvider: string) => {
+  switch (gitProvider) {
+    case GitProviders.BITBUCKET:
+      return 'importRepo.workspacePlaceholder'
+    case GitProviders.BITBUCKET_SERVER:
+      return 'importRepo.projectPlaceholder'
+    case GitProviders.GITLAB:
+    case GitProviders.GITLAB_SELF_HOSTED:
+      return 'importRepo.groupPlaceholder'
+    default:
+      return 'importRepo.orgPlaceholder'
+  }
+}
+
+export const getProviders = () =>
+  Object.values(GitProviders).map(value => {
+    return { value, label: value }
+  })
