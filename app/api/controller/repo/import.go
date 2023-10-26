@@ -46,12 +46,6 @@ func (c *Controller) Import(ctx context.Context, session *auth.Session, in *Impo
 		return nil, fmt.Errorf("failed to sanitize input: %w", err)
 	}
 
-	// Bitbucket access token authentication requires the literal substitution of x-token-auth
-	// in place of the username (ref: https://support.atlassian.com/bitbucket-cloud/docs/use-oauth-on-bitbucket-cloud/).
-	if in.Provider.Type == importer.ProviderTypeBitbucket {
-		in.Provider.Username = "x-token-auth"
-	}
-
 	remoteRepository, err := importer.LoadRepositoryFromProvider(ctx, in.Provider, in.ProviderRepo)
 	if err != nil {
 		return nil, err

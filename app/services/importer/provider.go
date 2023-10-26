@@ -31,6 +31,7 @@ import (
 	"github.com/drone/go-scm/scm/driver/github"
 	"github.com/drone/go-scm/scm/driver/gitlab"
 	"github.com/drone/go-scm/scm/driver/stash"
+	"github.com/drone/go-scm/scm/transport"
 	"github.com/drone/go-scm/scm/transport/oauth2"
 )
 
@@ -98,30 +99,32 @@ func hash(s string) string {
 	return base32.StdEncoding.EncodeToString(h.Sum(nil)[:10])
 }
 
-func getScmClientWithTransport(provider Provider, authReq bool) (*scm.Client, error) {
-	if authReq && (provider.Username == "" || provider.Password == "") {
-		return nil, usererror.BadRequest("scm provider authentication credentials missing")
+func oauthTransport(token string) (http.RoundTripper, error) {
+	if token == "" {
+		return nil, errors.New("no token provided")
 	}
-
-	c, err := getScmClient(provider)
-	if err != nil {
-		return nil, usererror.BadRequestf("could not create scm client: %s", err)
-	}
-
-	if provider.Password != "" {
-		c.Client = &http.Client{
-			Transport: &oauth2.Transport{
-				Source: oauth2.StaticTokenSource(&scm.Token{Token: provider.Password}),
-			},
-		}
-	}
-
-	return c, nil
+	return &oauth2.Transport{
+		Source: oauth2.StaticTokenSource(&scm.Token{Token: token}),
+	}, nil
 }
 
-func getScmClient(provider Provider) (*scm.Client, error) { //nolint:gocognit
+func basicAuthTransport(username, password string) (http.RoundTripper, error) {
+	if username == "" || password == "" {
+		return nil, errors.New("username or password not provided")
+	}
+	return &transport.BasicAuth{
+		Username: username,
+		Password: password,
+	}, nil
+}
+
+// getScmClientWithTransport creates an SCM client along with the necessary transport
+// layer depending on the provider. For example, for bitbucket we support app passwords
+// so the auth transport is BasicAuth whereas it's Oauth for other providers.
+func getScmClientWithTransport(provider Provider) (*scm.Client, error) { //nolint:gocognit
 	var c *scm.Client
-	var err error
+	var err, transportErr error
+	var transport http.RoundTripper
 	switch provider.Type {
 	case "":
 		return nil, errors.New("scm provider can not be empty")
@@ -135,6 +138,7 @@ func getScmClient(provider Provider) (*scm.Client, error) { //nolint:gocognit
 		} else {
 			c = github.NewDefault()
 		}
+		transport, transportErr = oauthTransport(provider.Password)
 
 	case ProviderTypeGitLab:
 		if provider.Host != "" {
@@ -145,6 +149,7 @@ func getScmClient(provider Provider) (*scm.Client, error) { //nolint:gocognit
 		} else {
 			c = gitlab.NewDefault()
 		}
+		transport, transportErr = oauthTransport(provider.Password)
 
 	case ProviderTypeBitbucket:
 		if provider.Host != "" {
@@ -155,6 +160,7 @@ func getScmClient(provider Provider) (*scm.Client, error) { //nolint:gocognit
 		} else {
 			c = bitbucket.NewDefault()
 		}
+		transport, transportErr = basicAuthTransport(provider.Username, provider.Password)
 
 	case ProviderTypeStash:
 		if provider.Host != "" {
@@ -165,18 +171,25 @@ func getScmClient(provider Provider) (*scm.Client, error) { //nolint:gocognit
 		} else {
 			c = stash.NewDefault()
 		}
+		transport, transportErr = oauthTransport(provider.Password)
 
 	default:
 		return nil, fmt.Errorf("unsupported scm provider: %s", provider)
 	}
 
+	if transportErr != nil {
+		return nil, fmt.Errorf("could not create transport: %w", transportErr)
+	}
+
+	c.Client = &http.Client{Transport: transport}
+
 	return c, nil
 }
 
 func LoadRepositoryFromProvider(ctx context.Context, provider Provider, repoSlug string) (RepositoryInfo, error) {
-	scmClient, err := getScmClientWithTransport(provider, false)
+	scmClient, err := getScmClientWithTransport(provider)
 	if err != nil {
-		return RepositoryInfo{}, err
+		return RepositoryInfo{}, usererror.BadRequestf("could not create client: %s", err)
 	}
 
 	if repoSlug == "" {
@@ -202,31 +215,20 @@ func LoadRepositoriesFromProviderSpace(
 	provider Provider,
 	spaceSlug string,
 ) ([]RepositoryInfo, error) {
-	scmClient, err := getScmClientWithTransport(provider, true)
+	scmClient, err := getScmClientWithTransport(provider)
 	if err != nil {
-		return nil, err
+		return nil, usererror.BadRequestf("could not create client: %s", err)
 	}
 
 	if spaceSlug == "" {
 		return nil, usererror.BadRequest("provider space identifier is missing")
 	}
 
-	const pageSize = 100
-	opts := scm.RepoListOptions{
-		ListOptions: scm.ListOptions{
-			Page: 0,
-			Size: pageSize,
-		},
-		RepoSearchTerm: scm.RepoSearchTerm{
-			User: spaceSlug,
-		},
-	}
-
 	repos := make([]RepositoryInfo, 0)
-	for {
-		opts.Page++
+	opts := scm.ListOptions{Size: 100}
 
-		scmRepos, scmResp, err := scmClient.Repositories.ListV2(ctx, opts)
+	for {
+		scmRepos, scmResp, err := scmClient.Repositories.List(ctx, opts)
 		if err = convertSCMError(provider, spaceSlug, scmResp, err); err != nil {
 			return nil, err
 		}
@@ -248,6 +250,13 @@ func LoadRepositoriesFromProviderSpace(
 				IsPublic:      !scmRepo.Private,
 				DefaultBranch: scmRepo.Branch,
 			})
+		}
+
+		opts.Page = scmResp.Page.Next
+		opts.URL = scmResp.Page.NextURL
+
+		if opts.Page == 0 && opts.URL == "" {
+			break
 		}
 	}
 
