@@ -271,6 +271,9 @@ func (s *Service) Evaluate(
 	owners *CodeOwners,
 	reviewer []*types.PullReqReviewer,
 ) (*Evaluation, error) {
+	if owners == nil {
+		return &Evaluation{}, nil
+	}
 	flattenedReviewers := flattenReviewers(reviewer)
 	evaluationEntries := make([]EvaluationEntry, len(owners.Entries))
 

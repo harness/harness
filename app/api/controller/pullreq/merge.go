@@ -16,6 +16,7 @@ package pullreq
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -147,7 +148,7 @@ func (c *Controller) Merge(
 	if codeowners.IsTooLargeError(err) {
 		return nil, nil, usererror.UnprocessableEntityf(err.Error())
 	}
-	if err != nil {
+	if err != nil && !errors.Is(err, codeowners.ErrNotFound) {
 		return nil, nil, fmt.Errorf("failed to find codeOwners for PR: %w", err)
 	}
 
