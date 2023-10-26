@@ -18,6 +18,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/codecomments"
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/sse"
@@ -45,6 +46,7 @@ func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer 
 	rpcClient gitrpc.Interface, eventReporter *pullreqevents.Reporter,
 	mtxManager lock.MutexManager, codeCommentMigrator *codecomments.Migrator,
 	pullreqService *pullreq.Service, ruleManager *protection.Manager, sseStreamer sse.Streamer,
+	codeOwners *codeowners.Service,
 ) *Controller {
 	return NewController(tx, urlProvider, authorizer,
 		pullReqStore, pullReqActivityStore,
@@ -55,5 +57,5 @@ func ProvideController(tx dbtx.Transactor, urlProvider url.Provider, authorizer 
 		checkStore,
 		rpcClient, eventReporter,
 		mtxManager, codeCommentMigrator,
-		pullreqService, ruleManager, sseStreamer)
+		pullreqService, ruleManager, sseStreamer, codeOwners)
 }

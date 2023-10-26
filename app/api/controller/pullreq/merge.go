@@ -25,6 +25,7 @@ import (
 	"github.com/harness/gitness/app/auth"
 	"github.com/harness/gitness/app/bootstrap"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/gitrpc"
 	gitrpcenum "github.com/harness/gitness/gitrpc/enum"
@@ -142,6 +143,19 @@ func (c *Controller) Merge(
 		return nil, nil, fmt.Errorf("failed to fetch protection rules for the repository: %w", err)
 	}
 
+	ownersForPR, err := c.codeOwners.GetApplicableCodeOwnersForPR(ctx, sourceRepo, pr)
+	if codeowners.IsTooLargeError(err) {
+		return nil, nil, usererror.UnprocessableEntityf(err.Error())
+	}
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to find codeOwners for PR: %w", err)
+	}
+
+	codeOwnerWithApproval, err := c.codeOwners.Evaluate(ctx, ownersForPR, reviewers)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get code owners with approval: %w", err)
+	}
+
 	ruleOut, violations, err := protectionRules.CanMerge(ctx, protection.CanMergeInput{
 		Actor:        &session.Principal,
 		IsSpaceOwner: isSpaceOwner,
@@ -151,6 +165,7 @@ func (c *Controller) Merge(
 		Reviewers:    reviewers,
 		Method:       in.Method,
 		CheckResults: checkResults,
+		CodeOwners:   codeOwnerWithApproval,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to verify protection rules: %w", err)

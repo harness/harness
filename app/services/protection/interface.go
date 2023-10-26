@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 )
@@ -47,7 +48,7 @@ type (
 		Reviewers    []*types.PullReqReviewer
 		Method       enum.MergeMethod
 		CheckResults []types.CheckResult
-		// TODO: Add code owners
+		CodeOwners   *codeowners.Evaluation
 	}
 
 	CanMergeOutput struct {

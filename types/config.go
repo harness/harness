@@ -283,6 +283,6 @@ type Config struct {
 	}
 
 	CodeOwners struct {
-		FilePath string `envconfig:"GITNESS_CODEOWNERS_FILEPATH" default:".gitness/CODEOWNERS"`
+		FilePath string `envconfig:"GITNESS_CODEOWNERS_FILEPATH" default:".harness/CODEOWNERS"`
 	}
 }

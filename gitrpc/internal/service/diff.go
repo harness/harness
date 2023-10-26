@@ -151,18 +151,18 @@ func (s DiffService) GetDiffHunkHeaders(
 	}, nil
 }
 
-func (s DiffService) DiffFileStat(
+func (s DiffService) DiffFileNames(
 	ctx context.Context,
 	r *rpc.DiffRequest,
-) (*rpc.DiffFileStatResponse, error) {
+) (*rpc.DiffFileNameResponse, error) {
 	base := r.GetBase()
 	repoPath := getFullPathForRepo(s.reposRoot, base.GetRepoUid())
 
-	files, err := s.adapter.DiffFileStat(ctx, repoPath, r.BaseRef, r.HeadRef)
+	files, err := s.adapter.DiffFileName(ctx, repoPath, r.BaseRef, r.HeadRef, r.MergeBase)
 	if err != nil {
 		return nil, processGitErrorf(err, "failed to get diff file stat")
 	}
-	return &rpc.DiffFileStatResponse{Files: files}, nil
+	return &rpc.DiffFileNameResponse{Files: files}, nil
 }
 
 func (s DiffService) DiffCut(

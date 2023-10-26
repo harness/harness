@@ -24,6 +24,7 @@ import (
 	"github.com/harness/gitness/app/auth/authz"
 	pullreqevents "github.com/harness/gitness/app/events/pullreq"
 	"github.com/harness/gitness/app/services/codecomments"
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/app/services/protection"
 	"github.com/harness/gitness/app/services/pullreq"
 	"github.com/harness/gitness/app/sse"
@@ -58,6 +59,7 @@ type Controller struct {
 	pullreqService      *pullreq.Service
 	protectionManager   *protection.Manager
 	sseStreamer         sse.Streamer
+	codeOwners          *codeowners.Service
 }
 
 func NewController(
@@ -81,6 +83,7 @@ func NewController(
 	pullreqService *pullreq.Service,
 	protectionManager *protection.Manager,
 	sseStreamer sse.Streamer,
+	codeowners *codeowners.Service,
 ) *Controller {
 	return &Controller{
 		tx:                  tx,
@@ -103,6 +106,7 @@ func NewController(
 		pullreqService:      pullreqService,
 		protectionManager:   protectionManager,
 		sseStreamer:         sseStreamer,
+		codeOwners:          codeowners,
 	}
 }
 

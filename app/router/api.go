@@ -500,6 +500,7 @@ func SetupPullReq(r chi.Router, pullreqCtrl *pullreq.Controller) {
 				r.Get("/", handlerpullreq.HandleFileViewList(pullreqCtrl))
 				r.Delete("/*", handlerpullreq.HandleFileViewDelete(pullreqCtrl))
 			})
+			r.Get("/codeowners", handlerpullreq.HandleCodeOwner(pullreqCtrl))
 		})
 	})
 }

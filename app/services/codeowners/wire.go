@@ -29,11 +29,7 @@ func ProvideCodeOwners(
 	gitRPCClient gitrpc.Interface,
 	repoStore store.RepoStore,
 	config Config,
-) (*Service, error) {
-	service, err := New(repoStore, gitRPCClient, config)
-	if err != nil {
-		return nil, err
-	}
-
-	return service, nil
+	principalStore store.PrincipalStore,
+) *Service {
+	return New(repoStore, gitRPCClient, config, principalStore)
 }

@@ -152,6 +152,7 @@ type ServicePackRequest struct {
 	// Depending on the service the matching base type has to be passed
 	//
 	// Types that are assignable to Base:
+	//
 	//	*ServicePackRequest_ReadBase
 	//	*ServicePackRequest_WriteBase
 	Base isServicePackRequest_Base `protobuf_oneof:"base"`

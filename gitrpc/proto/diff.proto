@@ -14,7 +14,7 @@ service DiffService {
   rpc DiffShortStat(DiffRequest) returns (DiffShortStatResponse) {}
   rpc GetDiffHunkHeaders(GetDiffHunkHeadersRequest) returns (GetDiffHunkHeadersResponse) {}
   rpc DiffCut(DiffCutRequest) returns (DiffCutResponse) {}
-  rpc DiffFileStat(DiffRequest) returns (DiffFileStatResponse) {}
+  rpc DiffFileNames(DiffRequest) returns (DiffFileNameResponse) {}
 }
 
 message DiffRequest {
@@ -138,6 +138,6 @@ message CommitDiffResponse {
   bytes data = 1;
 }
 
-message DiffFileStatResponse {
+message DiffFileNameResponse {
   repeated string files = 1;
 }

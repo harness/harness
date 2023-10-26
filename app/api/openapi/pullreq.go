@@ -541,4 +541,18 @@ func pullReqOperations(reflector *openapi3.Reflector) {
 	_ = reflector.SetJSONResponse(&fileViewDelete, new(usererror.Error), http.StatusForbidden)
 	_ = reflector.Spec.AddOperation(http.MethodDelete,
 		"/repos/{repo_ref}/pullreq/{pullreq_number}/file-views/{file_path}", fileViewDelete)
+
+	codeOwners := openapi3.Operation{}
+	codeOwners.WithTags("pullreq")
+	codeOwners.WithMapOfAnything(map[string]interface{}{"operationId": "codeownersPullReq"})
+	_ = reflector.SetRequest(&codeOwners, new(pullReqRequest), http.MethodGet)
+	_ = reflector.SetJSONResponse(&codeOwners, types.CodeOwnerEvaluation{}, http.StatusOK)
+	_ = reflector.SetJSONResponse(&codeOwners, new(usererror.Error), http.StatusUnprocessableEntity)
+	_ = reflector.SetJSONResponse(&codeOwners, new(usererror.Error), http.StatusNotFound)
+	_ = reflector.SetJSONResponse(&codeOwners, new(usererror.Error), http.StatusBadRequest)
+	_ = reflector.SetJSONResponse(&codeOwners, new(usererror.Error), http.StatusInternalServerError)
+	_ = reflector.SetJSONResponse(&codeOwners, new(usererror.Error), http.StatusUnauthorized)
+	_ = reflector.SetJSONResponse(&codeOwners, new(usererror.Error), http.StatusForbidden)
+	_ = reflector.Spec.AddOperation(http.MethodGet,
+		"/repos/{repo_ref}/pullreq/{pullreq_number}/codeowners", codeOwners)
 }

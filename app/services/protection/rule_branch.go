@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/harness/gitness/app/services/codeowners"
 	"github.com/harness/gitness/types"
 	"github.com/harness/gitness/types/enum"
 
@@ -32,6 +33,11 @@ type Branch struct {
 	Bypass    DefBypass    `json:"bypass"`
 	PullReq   DefPullReq   `json:"pullreq"`
 	Lifecycle DefLifecycle `json:"lifecycle"`
+}
+
+type Review struct {
+	ReviewSHA string
+	Decision  enum.PullReqReviewDecision
 }
 
 var _ Definition = (*Branch)(nil) // ensures that the Branch type implements Definition interface.
@@ -69,7 +75,40 @@ func (v *Branch) CanMerge(_ context.Context, in CanMergeInput) (CanMergeOutput, 
 			len(approvedBy), v.PullReq.Approvals.RequireMinimumCount)
 	}
 
-	// TODO: implement v.PullReq.Approvals.RequireCodeOwners
+	//nolint:nestif
+	if v.PullReq.Approvals.RequireCodeOwners {
+		for _, entry := range in.CodeOwners.EvaluationEntries {
+			reviewDecision, approvers := getCodeOwnerApprovalStatus(entry.OwnerEvaluations)
+
+			if reviewDecision == enum.PullReqReviewDecisionPending {
+				violations.Addf("pullreq.approvals.require_code_owners",
+					"Code owners approval pending for %s", entry.Pattern)
+				continue
+			}
+
+			if reviewDecision == enum.PullReqReviewDecisionChangeReq {
+				violations.Addf("pullreq.approvals.require_code_owners",
+					"Code owners requested changes for %s", entry.Pattern)
+				continue
+			}
+			// pull req approved. check other settings
+			if !v.PullReq.Approvals.RequireLatestCommit {
+				continue
+			}
+			// check for latest commit approved or not
+			latestSHAApproved := false
+			for _, approver := range approvers {
+				if approver.ReviewSHA == in.PullReq.SourceSHA {
+					latestSHAApproved = true
+					break
+				}
+			}
+			if !latestSHAApproved {
+				violations.Addf("pullreq.approvals.require_code_owners",
+					"Code owners approval pending on latest commit for %s", entry.Pattern)
+			}
+		}
+	}
 
 	// pullreq.comments
 
@@ -272,4 +311,22 @@ func (v DefPullReq) Validate() error {
 	}
 
 	return nil
+}
+
+func getCodeOwnerApprovalStatus(
+	ownerStatus []codeowners.OwnerEvaluation,
+) (enum.PullReqReviewDecision, []codeowners.OwnerEvaluation) {
+	approvers := make([]codeowners.OwnerEvaluation, 0)
+	for _, o := range ownerStatus {
+		if o.ReviewDecision == enum.PullReqReviewDecisionChangeReq {
+			return enum.PullReqReviewDecisionChangeReq, nil
+		}
+		if o.ReviewDecision == enum.PullReqReviewDecisionApproved {
+			approvers = append(approvers, o)
+		}
+	}
+	if len(approvers) > 0 {
+		return enum.PullReqReviewDecisionApproved, approvers
+	}
+	return enum.PullReqReviewDecisionPending, nil
 }

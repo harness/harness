@@ -65,7 +65,7 @@ type Interface interface {
 	 */
 	RawDiff(ctx context.Context, in *DiffParams, w io.Writer) error
 	Diff(ctx context.Context, in *DiffParams) (<-chan *FileDiff, <-chan error)
-	DiffFileStat(ctx context.Context, in *DiffParams) (DiffFileStatOutput, error)
+	DiffFileNames(ctx context.Context, in *DiffParams) (DiffFileNamesOutput, error)
 	CommitDiff(ctx context.Context, params *GetCommitParams, w io.Writer) error
 	DiffShortStat(ctx context.Context, params *DiffParams) (DiffShortStatOutput, error)
 	DiffStats(ctx context.Context, params *DiffParams) (DiffStatsOutput, error)

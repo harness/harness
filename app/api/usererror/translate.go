@@ -73,7 +73,7 @@ func Translate(err error) *Error {
 	case errors.Is(err, blob.ErrNotFound):
 		return ErrNotFound
 	case errors.As(err, &maxBytesErr):
-		return ErrRequestTooLargeF("The request is too large. maximum allowed size is %d bytes", maxBytesErr.Limit)
+		return RequestTooLargef("The request is too large. maximum allowed size is %d bytes", maxBytesErr.Limit)
 
 	// gitrpc errors
 	case errors.As(err, &gitrpcError):

@@ -121,8 +121,14 @@ func BadRequestf(format string, args ...any) *Error {
 	return Newf(http.StatusBadRequest, format, args...)
 }
 
-func ErrRequestTooLargeF(format string, args ...any) *Error {
+// RequestTooLargef returns a new user facing request too large error.
+func RequestTooLargef(format string, args ...any) *Error {
 	return Newf(http.StatusRequestEntityTooLarge, format, args...)
+}
+
+// UnprocessableEntityf returns a new user facing unprocessable entity error.
+func UnprocessableEntityf(format string, args ...any) *Error {
+	return Newf(http.StatusUnprocessableEntity, format, args...)
 }
 
 // BadRequestWithPayload returns a new user facing bad request error with payload.

@@ -111,9 +111,9 @@ type GitAdapter interface {
 		regExpDef string,
 		maxSize int) ([]types.FileContent, error)
 
-	DiffFileStat(
-		ctx context.Context,
+	DiffFileName(ctx context.Context,
 		repoPath string,
 		baseRef string,
-		headRef string) ([]string, error)
+		headRef string,
+		mergeBase bool) ([]string, error)
 }
