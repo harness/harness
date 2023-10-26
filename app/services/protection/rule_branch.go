@@ -101,8 +101,9 @@ func (v *Branch) CanMerge(_ context.Context, in CanMergeInput) (CanMergeOutput, 
 
 	if len(v.PullReq.Merge.StrategiesAllowed) > 0 { // Note: Empty allowed strategies list means all are allowed
 		if !slices.Contains(v.PullReq.Merge.StrategiesAllowed, in.Method) {
-			violations.Add("pullreq.merge.strategies_allowed",
-				"The requested merge strategy is not allowed.")
+			violations.Addf("pullreq.merge.strategies_allowed",
+				"The requested merge strategy %q is not allowed. Allowed strategies are %v.",
+				in.Method, v.PullReq.Merge.StrategiesAllowed)
 		}
 	}
 

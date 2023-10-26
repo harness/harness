@@ -57,6 +57,7 @@ type RuleFilter struct {
 type Violation struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+	Params  []any  `json:"params"`
 }
 
 // RuleViolations holds several violations of a rule.
@@ -69,6 +70,7 @@ func (violations *RuleViolations) Add(code, message string) {
 	violations.Violations = append(violations.Violations, Violation{
 		Code:    code,
 		Message: message,
+		Params:  nil,
 	})
 }
 
@@ -76,6 +78,7 @@ func (violations *RuleViolations) Addf(code, format string, params ...any) {
 	violations.Violations = append(violations.Violations, Violation{
 		Code:    code,
 		Message: fmt.Sprintf(format, params...),
+		Params:  params,
 	})
 }
 
